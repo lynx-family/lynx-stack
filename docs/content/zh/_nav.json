@@ -1,0 +1,53 @@
+[
+  {
+    "text": "指南",
+    "link": "/zh/guide/installation",
+    "activeMatch": "^/zh/guide/(?!genui)"
+  },
+  {
+    "text": "Rspeedy",
+    "link": "/zh/rspeedy/config/",
+    "activeMatch": "^/zh/rspeedy/"
+  },
+  {
+    "text": "ReactLynx",
+    "link": "/zh/react/api/",
+    "activeMatch": "^/zh/react/"
+  },
+  {
+    "text": "包",
+    "link": "/zh/packages/",
+    "activeMatch": "^/zh/packages/"
+  },
+  {
+    "text": "GenUI",
+    "link": "/zh/guide/genui/",
+    "activeMatch": "^/zh/guide/genui"
+  },
+  {
+    "text": "REPL",
+    "link": "/repl"
+  },
+  {
+    "text": "更新日志",
+    "link": "/zh/changelog/lynx-js--react",
+    "activeMatch": "^/zh/changelog/"
+  },
+  {
+    "text": "更多",
+    "items": [
+      {
+        "text": "关于",
+        "link": "/zh/about"
+      },
+      {
+        "text": "贡献",
+        "link": "/zh/contribute"
+      },
+      {
+        "text": "lynxjs.org",
+        "link": "https://lynxjs.org/zh/"
+      }
+    ]
+  }
+]

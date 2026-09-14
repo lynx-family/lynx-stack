@@ -1,0 +1,126 @@
+---
+title: pluginQRCode
+---
+
+# pluginQRCode
+
+{/* @api PackageHeader package="qrcode-rsbuild-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/qrcode-rsbuild-plugin</code> <span className="api-pkg-version">v0.7.1</span> · <a href="https://www.npmjs.com/package/@lynx-js/qrcode-rsbuild-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-qrcode" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-qrcode/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+在 `dev` 期间于终端打印 bundle URL 的二维码，供 Lynx Explorer 应用扫码并从本地服务器加载 bundle。
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/qrcode-rsbuild-plugin -D" />
+
+## 用法
+
+```ts title="lynx.config.ts"
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [pluginQRCode()],
+})
+```
+
+## 选项
+
+{/* @api ApiOptions package="qrcode-rsbuild-plugin" type="PluginQRCodeOptions" */}
+
+### `schema` \{#schema\}
+
+- **类型:** `CustomizedSchemaFn`
+
+自定义生成的 schema。
+
+```js
+import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  plugins: [
+    pluginQRCode({
+      schema(url) {
+        return `lynx://${url}?dev=1`
+      },
+    }),
+  ],
+})
+```
+
+- 使用多个 schema：
+
+可以在终端中按 `a` 切换 schema。
+
+```js
+import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  plugins: [
+    pluginQRCode({
+      schema(url) {
+        return {
+          http: url,
+          foo: `foo://lynx?url=${encodeURIComponent(url)}&dev=1`,
+          bar: `bar://lynx?url=${encodeURIComponent(url)}`,
+        }
+      },
+    }),
+  ],
+})
+```
+
+### 其他选项 \{#other-options\}
+
+| 名称 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="fullscreen"></a>`fullscreen` | `boolean` | `false` | 启用 Lynx bundle URL 的全屏变体（追加 `?fullscreen=true`，在 LynxExplorer 中打开 bundle 时会隐藏应用内 导航栏）。 启用后，插件会： - 在 schema 轮换列表中追加一个 `fullscreen` 项：二维码仍然   打开默认 schema，在开发控制台中按 `a` 可切换   到 `fullscreen` 变体。 - 在开发服务器打印的每个 Lynx bundle URL   下方追加一行 `∟ Fullscreen` URL。 |
+
+{/* @api-end */}
+
+## API
+
+{/* @api ApiExports package="qrcode-rsbuild-plugin" exclude="PluginQRCodeOptions" optionsType="PluginQRCodeOptions" */}
+
+## 函数 \{#\}
+
+### `pluginQRCode()` \{#pluginqrcode\}
+
+```ts
+pluginQRCode(options?: PluginQRCodeOptions): RsbuildPlugin
+```
+
+创建一个用于打印二维码的 Rsbuild 插件。
+
+```ts
+// rsbuild.config.ts
+import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
+export default {
+  plugins: [pluginQRCode()],
+}
+```
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `options?` | `PluginQRCodeOptions` |  |
+
+**返回值:** `RsbuildPlugin`
+
+## 类型 \{#\}
+
+### `CustomizedSchemaFn` \{#customizedschemafn\}
+
+```ts
+type CustomizedSchemaFn = (url: string) => string | Record<string, string>
+```
+
+`PluginQRCodeOptions.schema`
+
+{/* @api-end */}

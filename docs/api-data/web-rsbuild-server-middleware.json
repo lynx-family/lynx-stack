@@ -1,0 +1,29 @@
+{
+  "id": "web-rsbuild-server-middleware",
+  "package": "@lynx-js/web-rsbuild-server-middleware",
+  "version": "0.26.0",
+  "description": "a dev server middleware for rsbuild to serve Lynx Web Platform shell project",
+  "section": "packages",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-rsbuild-server-middleware",
+  "exports": [
+    {
+      "name": "createWebVirtualFilesMiddleware",
+      "kind": "function",
+      "type": "createWebVirtualFilesMiddleware(subPath: string): NextHandleFunction",
+      "signatures": [
+        {
+          "text": "createWebVirtualFilesMiddleware(subPath: string): NextHandleFunction",
+          "params": [
+            {
+              "name": "subPath",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "NextHandleFunction"
+          }
+        }
+      ]
+    }
+  ]
+}

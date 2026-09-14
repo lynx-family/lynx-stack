@@ -1,0 +1,26 @@
+{
+  "RewriteSourceMappingURLsOptions.summary": {
+    "hash": "5a04c36d",
+    "text": "[`rewriteSourceMappingURLs`](api:rewriteSourceMappingURLs) 的选项。"
+  },
+  "RewriteSourceMappingURLsOptions.getSourceMappingURL.summary": {
+    "hash": "baba6f40",
+    "text": "覆盖写入每个被重写的 sourceMappingURL 的 URL。默认\n为 `${debugMetadataUrl}?field=source-map&path=<encoded mapPath>`。"
+  },
+  "DEBUG_METADATA_ASSET_NAME.summary": {
+    "hash": "449574e6",
+    "text": "与每个模板一同输出的调试元数据产物的默认名称。"
+  },
+  "DEBUG_METADATA_ASSET_NAME.default": {
+    "hash": "c124d9b0",
+    "text": "'debug-metadata.json'"
+  },
+  "pluginLynxDebugMetadata.summary": {
+    "hash": "8e5e6d0a",
+    "text": "为每个 Lynx 模板构建注册 `debug-metadata.json` 的输出，\n并通过 connect 风格的开发服务器中间件提供子字段查询。\n\n由 Rspeedy 核心自动注册。\n\n开发服务器中间件暴露以下端点（相对于每个\n入口的中间目录）：\n\n```text\nGET .../debug-metadata.json\nGET .../debug-metadata.json?field=source-map&path=…\nGET .../debug-metadata.json?field=source-map&filename=…\nGET .../debug-metadata.json?field=source-map&key=…\nGET .../debug-metadata.json?field=bytecode-debug-info&filename=…\nGET .../debug-metadata.json?field=artifact&filename=…\nGET .../debug-metadata.json?field=artifacts\nGET .../debug-metadata.json?field=ui-source-map\nGET .../debug-metadata.json?field=buildInfo\nGET .../debug-metadata.json?field=git\nGET .../debug-metadata.json?field=rspeedy\n\nGET .../*.js.map    → transparently forwarded to ?field=source-map\nGET .../*.css.map   → transparently forwarded to ?field=source-map\n```"
+  },
+  "rewriteSourceMappingURLs.summary": {
+    "hash": "fde3a7fb",
+    "text": "将当前模板中每个 JS 产物的 `//# sourceMappingURL=...` 指令重写为\n绝对 URL。当 `debugMetadataUrl`\n（`args.encodeData.sourceContent.config['debugMetadataUrl']`）未设置时不做任何处理。"
+  }
+}

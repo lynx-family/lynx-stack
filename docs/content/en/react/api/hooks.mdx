@@ -1,0 +1,206 @@
+---
+title: Hooks
+---
+
+# Hooks
+
+Hooks that ReactLynx adds on top of React, plus the two React hooks it re-implements for the dual-thread model.
+
+{/* @api ApiExports package="react" include="useInitData,useInitDataChanged,useGlobalProps,useGlobalPropsChanged,useLynxGlobalEventListener,useMainThreadRef,useEffect,useLayoutEffect" */}
+
+## Functions \{#functions\}
+
+### `useInitData()` \{#useinitdata\}
+
+```ts
+useInitData(): InitData
+```
+
+A React Hooks for you to get `initData`.
+If `initData` is changed, a re-render will be triggered automatically.
+
+```ts
+function App() {
+  const initData = useInitData();
+
+  initData.someProperty // use it
+}
+```
+
+**Returns:** `InitData`
+
+### `useInitDataChanged()` \{#useinitdatachanged\}
+
+```ts
+useInitDataChanged(callback: (data: InitData) => void): void
+```
+
+A React Hooks for you to get notified when `initData` changed.
+
+```ts
+function App() {
+  useInitDataChanged((data) => {
+    data.someProperty // can use it
+  })
+}
+```
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `callback` | `(data: InitData) => void` |  |
+
+### `useGlobalProps()` \{#useglobalprops\}
+
+```ts
+useGlobalProps(): GlobalProps
+```
+
+A React Hooks for you to get `lynx.__globalProps`.
+If `lynx.__globalProps` is changed, a re-render will be triggered automatically.
+
+```ts
+function App() {
+  const globalProps = useGlobalProps();
+
+  globalProps.someProperty // use it
+}
+```
+
+**Returns:** `GlobalProps`
+
+### `useGlobalPropsChanged()` \{#useglobalpropschanged\}
+
+```ts
+useGlobalPropsChanged(callback: (data: GlobalProps) => void): void
+```
+
+A React Hooks for you to get notified when `__globalProps` changed.
+
+```ts
+function App() {
+  useGlobalPropsChanged((data) => {
+    lynx.__globalProps.someProperty // can use lynx.__globalProps
+    data.someProperty // can use data
+  })
+}
+```
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `callback` | `(data: GlobalProps) => void` |  |
+
+### `useLynxGlobalEventListener()` \{#uselynxglobaleventlistener\}
+
+```ts
+useLynxGlobalEventListener(eventName: string, listener: T): void
+```
+
+`useLynxGlobalEventListener` helps you `addListener` as early as possible.
+
+Use this hooks to listen to event 'exposure' and event 'disexposure'
+
+```jsx
+function App() {
+  useLynxGlobalEventListener('exposure', (e) => {
+    console.log("exposure", e)
+  })
+  useLynxGlobalEventListener('disexposure', (e) => {
+    console.log("disexposure", e)
+  })
+  return (
+    <view
+      style='width: 100px; height: 100px; background-color: red;'
+      exposure-id='a'
+    />
+  )
+}
+```
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `eventName` | `string` | Event name to listen |
+| `listener` | `T` | Event handler |
+
+### `useMainThreadRef()` \{#usemainthreadref\}
+
+```ts
+useMainThreadRef(initValue: T): MainThreadRef<T>
+useMainThreadRef(initValue: T | null): RefObject<T>
+useMainThreadRef(): MainThreadRef<T | undefined>
+```
+
+Create A `MainThreadRef`.
+
+A `MainThreadRef` is a ref that can only be accessed on the main thread. It is used to preserve
+states between main thread function calls.
+The data saved in `current` property of the `MainThreadRef` can be read and written in
+multiple main thread functions.
+
+It is a hook and it should only be called at the top level of your component.
+
+```ts
+import { useMainThreadRef } from '@lynx-js/react'
+import type { MainThread } from '@lynx-js/types'
+
+export function App() {
+  const ref = useMainThreadRef<MainThread.Element>(null)
+
+  const handleTap = () => {
+    'main thread'
+    ref.current?.setStyleProperty('background-color', 'blue')
+  }
+
+  return (
+    <view
+      main-thread:ref={ref}
+      main-thread:bindtap={handleTap}
+      style={{ width: '300px', height: '300px' }}
+    />
+  )
+}
+```
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `initValue` | `T` | The init value of the `MainThreadRef`. |
+
+**Returns:** `MainThreadRef<T>`
+
+### `useEffect()` \{#useeffect\}
+
+```ts
+useEffect(effect: EffectCallback, deps?: DependencyList): void
+```
+
+Accepts a function that contains imperative, possibly effectful code.
+The effects run after main thread dom update without blocking it.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `effect` | `EffectCallback` | Imperative function that can return a cleanup function |
+| `deps?` | `DependencyList` | If present, effect will only activate if the values in the list change (using ===). |
+
+### `useLayoutEffect()` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#uselayouteffect\}
+
+```ts
+useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void
+```
+
+:::warning Deprecated
+Deprecated.
+:::
+
+`useLayoutEffect` is now an alias of `useEffect`. Use `useEffect` instead.
+
+Accepts a function that contains imperative, possibly effectful code. The effects run after main thread dom update without blocking it.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `effect` | `EffectCallback` | Imperative function that can return a cleanup function |
+| `deps?` | `DependencyList` | If present, effect will only activate if the values in the list change (using ===).  `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React. |
+
+{/* @api-end */}
+
+## Built-in React hooks
+
+`useCallback`, `useContext`, `useDebugValue`, `useImperativeHandle`, `useMemo`, `useReducer`, `useRef`, `useState` and `useSyncExternalStore` are re-exported from React unchanged. See the [React reference](https://react.dev/reference/react/hooks).

@@ -1,0 +1,229 @@
+---
+title: '@lynx-js/motion'
+---
+
+# @lynx-js/motion
+
+{/* @api PackageHeader package="motion" */}
+
+<div className="api-pkg-header"><code>@lynx-js/motion</code> <span className="api-pkg-version">v0.0.6</span> · <a href="https://www.npmjs.com/package/@lynx-js/motion" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/motion" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/motion/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+
+A powerful animation library for Lynx, ported from [Motion for React (framer-motion)](https://motion.dev/). It brings declarative animations and gesture handling to the Lynx ecosystem.
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/motion" />
+
+## API
+
+{/* @api ApiExports package="motion" */}
+
+## Functions \{#functions\}
+
+### `animate()` \{#animate\}
+
+```ts
+animate(sequence: AnimationSequence, options?: SequenceOptions): AnimationPlaybackControlsWithThen
+animate(value: string, keyframes: DOMKeyframesDefinition, options?: AnimationOptions): AnimationPlaybackControlsWithThen
+animate(value: string | MotionValue<string>, keyframes: string | UnresolvedValueKeyframe<string>[], options?: ValueAnimationTransition<string>): AnimationPlaybackControlsWithThen
+animate(value: number | MotionValue<number>, keyframes: number | UnresolvedValueKeyframe<number>[], options?: ValueAnimationTransition<number>): AnimationPlaybackControlsWithThen
+animate(value: V | MotionValue<V>, keyframes: V | UnresolvedValueKeyframe<V>[], options?: ValueAnimationTransition<V>): AnimationPlaybackControlsWithThen
+animate(object: O | O[], keyframes: ObjectTarget<O>, options?: AnimationOptions): AnimationPlaybackControlsWithThen
+animate(value: ElementOrElements, keyframes: DOMKeyframesDefinition, options?: AnimationOptions): AnimationPlaybackControlsWithThen
+```
+
+Animate a sequence
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `sequence` | `AnimationSequence` |  |
+| `options?` | `SequenceOptions` |  |
+
+**Returns:** `AnimationPlaybackControlsWithThen`
+
+### `clamp()` \{#clamp\}
+
+```ts
+clamp(min: number, max: number, v: number): number
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `min` | `number` |  |
+| `max` | `number` |  |
+| `v` | `number` |  |
+
+**Returns:** `number`
+
+### `mapValue()` \{#mapvalue\}
+
+```ts
+mapValue(inputValue: MotionValue<number>, inputRange: MapInputRange, outputRange: O[], options?: TransformOptions<O>): MotionValue<O>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `inputValue` | `MotionValue<number>` |  |
+| `inputRange` | `MapInputRange` |  |
+| `outputRange` | `O[]` |  |
+| `options?` | `TransformOptions<O>` |  |
+
+**Returns:** `MotionValue<O>`
+
+### `mix()` \{#mix\}
+
+```ts
+mix(from: T, to: T): Mixer<T>
+mix(from: number, to: number, p: number): number
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `from` | `T` |  |
+| `to` | `T` |  |
+
+**Returns:** `Mixer<T>`
+
+### `motionValue()` \{#motionvalue\}
+
+```ts
+motionValue(init: V, options?: MotionValueOptions): MotionValue<V>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `init` | `V` |  |
+| `options?` | `MotionValueOptions` |  |
+
+**Returns:** `MotionValue<V>`
+
+### `progress()` \{#progress\}
+
+```ts
+progress(from: number, to: number, value: number): number
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `from` | `number` |  |
+| `to` | `number` |  |
+| `value` | `number` |  |
+
+**Returns:** `number`
+
+### `spring()` \{#spring\}
+
+```ts
+spring(args: [optionsOrVisualDuration?: number | ValueAnimationOptions<number>, bounce?: number]): KeyframeGenerator<number>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[optionsOrVisualDuration?: number \| ValueAnimationOptions<number>, bounce?: number]` |  |
+
+**Returns:** `KeyframeGenerator<number>`
+
+### `springValue()` \{#springvalue\}
+
+```ts
+springValue(source: T | MotionValue<T>, options?: SpringOptions): MotionValue<T>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `source` | `T \| MotionValue<T>` |  |
+| `options?` | `SpringOptions` |  |
+
+**Returns:** `MotionValue<T>`
+
+### `stagger()` \{#stagger\}
+
+```ts
+stagger(args: [duration?: number, StaggerOptions?]): DynamicOption<number>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[duration?: number, StaggerOptions?]` |  |
+
+**Returns:** `DynamicOption<number>`
+
+### `styleEffect()` \{#styleeffect\}
+
+```ts
+styleEffect(subject: string | ElementOrElements, values: Record<string, MotionValue>): () => void
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `subject` | `string \| ElementOrElements` |  |
+| `values` | `Record<string, MotionValue>` |  |
+
+**Returns:** `() => void`
+
+### `transformValue()` \{#transformvalue\}
+
+```ts
+transformValue(transform: () => O): MotionValue<O>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `transform` | `() => O` |  |
+
+**Returns:** `MotionValue<O>`
+
+### `useMotionValueRef()` \{#usemotionvalueref\}
+
+```ts
+useMotionValueRef(value: T): MainThreadRef<MotionValue<T>>
+```
+
+useMotionValue, but in MainThreadRef format, highly experimental, subject to change
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `value` | `T` |  |
+
+**Returns:** `MainThreadRef<MotionValue<T>>`
+
+### `useMotionValueRefEvent()` \{#usemotionvaluerefevent\}
+
+```ts
+useMotionValueRefEvent(valueRef: MainThreadRef<Listenable<V>>, event: "change", callback: MotionValueEventCallbacks<V>[EventName]): void
+```
+
+useMotionValueEvent, but only accepts motionValueRef format, highly experimental, subject to change
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `valueRef` | `MainThreadRef<Listenable<V>>` |  |
+| `event` | `"change"` |  |
+| `callback` | `MotionValueEventCallbacks<V>[EventName]` |  |
+
+{/* @api-end */}

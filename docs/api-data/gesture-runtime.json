@@ -1,0 +1,3666 @@
+{
+  "id": "gesture-runtime",
+  "package": "@lynx-js/gesture-runtime",
+  "version": "2.1.3",
+  "description": "Lynx Gesture",
+  "section": "packages",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/lynx/gesture-runtime",
+  "exports": [
+    {
+      "name": "GestureTypeInner",
+      "kind": "enum",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "COMPOSED",
+          "type": "-1",
+          "kind": "enummember"
+        },
+        {
+          "name": "DEFAULT",
+          "type": "2",
+          "kind": "enummember"
+        },
+        {
+          "name": "FLING",
+          "type": "1",
+          "kind": "enummember"
+        },
+        {
+          "name": "LONGPRESS",
+          "type": "4",
+          "kind": "enummember"
+        },
+        {
+          "name": "NATIVE",
+          "type": "7",
+          "kind": "enummember"
+        },
+        {
+          "name": "PAN",
+          "type": "0",
+          "kind": "enummember"
+        },
+        {
+          "name": "PINCH",
+          "type": "6",
+          "kind": "enummember"
+        },
+        {
+          "name": "ROTATION",
+          "type": "5",
+          "kind": "enummember"
+        },
+        {
+          "name": "TAP",
+          "type": "3",
+          "kind": "enummember"
+        }
+      ]
+    },
+    {
+      "name": "LynxNativeIOSGestureRecognizer",
+      "kind": "enum",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "Base",
+          "type": "\"Base\"",
+          "kind": "enummember"
+        },
+        {
+          "name": "Hover",
+          "type": "\"Hover\"",
+          "kind": "enummember"
+        },
+        {
+          "name": "LongPress",
+          "type": "\"LongPress\"",
+          "kind": "enummember"
+        },
+        {
+          "name": "Pan",
+          "type": "\"Pan\"",
+          "kind": "enummember"
+        },
+        {
+          "name": "Pinch",
+          "type": "\"Pinch\"",
+          "kind": "enummember"
+        },
+        {
+          "name": "Rotation",
+          "type": "\"Rotation\"",
+          "kind": "enummember"
+        },
+        {
+          "name": "ScreenEdgePan",
+          "type": "\"ScreenEdgePan\"",
+          "kind": "enummember"
+        },
+        {
+          "name": "Swipe",
+          "type": "\"Swipe\"",
+          "kind": "enummember"
+        },
+        {
+          "name": "Tap",
+          "type": "\"Tap\"",
+          "kind": "enummember"
+        }
+      ]
+    },
+    {
+      "name": "SetGestureStateType",
+      "kind": "enum",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "active",
+          "type": "1",
+          "kind": "enummember"
+        },
+        {
+          "name": "end",
+          "type": "3",
+          "kind": "enummember"
+        },
+        {
+          "name": "fail",
+          "type": "2",
+          "kind": "enummember"
+        }
+      ]
+    },
+    {
+      "name": "BaseGesture",
+      "kind": "class",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(gesture?: BaseGesture<TConfig, TEvent>): BaseGesture<TConfig, TEvent>",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "BaseGesture<TConfig, TEvent>",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "BaseGesture<TConfig, TEvent>"
+          }
+        },
+        {
+          "name": "__isGesture",
+          "type": "true",
+          "kind": "property"
+        },
+        {
+          "name": "callbacks",
+          "type": "BaseGestureCallbacks<TEvent>",
+          "ref": "BaseGestureCallbacks",
+          "kind": "property"
+        },
+        {
+          "name": "config",
+          "type": "TConfig",
+          "kind": "property"
+        },
+        {
+          "name": "continueWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "execId",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "id",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "simultaneousWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "toJSON",
+          "type": "(this: BaseGesture) => Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "GestureTypeInner",
+          "kind": "property"
+        },
+        {
+          "name": "waitFor",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "clone",
+          "type": "clone(): this",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "enabled",
+          "type": "enabled(enabled: boolean): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "enabled",
+              "type": "boolean"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalContinueWith",
+          "type": "externalContinueWith(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalSimultaneous",
+          "type": "externalSimultaneous(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalWaitFor",
+          "type": "externalWaitFor(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onBegin",
+          "type": "onBegin(cb: GestureCallback<TEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onEnd",
+          "type": "onEnd(cb: GestureCallback<TEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onStart",
+          "type": "onStart(cb: GestureCallback<TEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesCancel",
+          "type": "onTouchesCancel(cb: GestureCallback<TEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesDown",
+          "type": "onTouchesDown(cb: GestureCallback<TEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesMove",
+          "type": "onTouchesMove(cb: GestureCallback<TEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesUp",
+          "type": "onTouchesUp(cb: GestureCallback<TEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "serialize",
+          "type": "serialize(): Record<string, unknown>",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "Record<string, unknown>"
+          }
+        },
+        {
+          "name": "toGestureArray",
+          "type": "toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]"
+          }
+        },
+        {
+          "name": "updateCallback",
+          "type": "updateCallback(k: keyof BaseGestureCallbacks<TEvent>, cb: GestureCallback<TEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "k",
+              "type": "keyof BaseGestureCallbacks<TEvent>"
+            },
+            {
+              "name": "cb",
+              "type": "GestureCallback<TEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "updateConfig",
+          "type": "updateConfig(k: string, v: unknown): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "k",
+              "type": "string"
+            },
+            {
+              "name": "v",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ComposedGesture",
+      "kind": "class",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(gestures: GestureKind[]): ComposedGesture",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "gestures",
+              "type": "GestureKind[]"
+            }
+          ],
+          "returns": {
+            "type": "ComposedGesture"
+          }
+        },
+        {
+          "name": "__isGesture",
+          "type": "true",
+          "kind": "property"
+        },
+        {
+          "name": "continueWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "gestures",
+          "type": "GestureKind[]",
+          "kind": "property"
+        },
+        {
+          "name": "panProcessed",
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "simultaneousWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "toJSON",
+          "type": "(this: ComposedGesture) => Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "GestureTypeInner",
+          "kind": "property"
+        },
+        {
+          "name": "waitFor",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "prepare",
+          "type": "prepare(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "prepareSingleGesture",
+          "type": "prepareSingleGesture(gesture: GestureKind, simultaneousGestures: BaseGesture<BaseGestureConfig, GestureChangeEvent>[], waitFor: BaseGesture<BaseGestureConfig, GestureChangeEvent>[]): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            },
+            {
+              "name": "simultaneousGestures",
+              "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]"
+            },
+            {
+              "name": "waitFor",
+              "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "processPanDistance",
+          "type": "processPanDistance(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "If pan gesture has relationship with tap or longPress, its default minDistance should be overridden"
+        },
+        {
+          "name": "serialize",
+          "type": "serialize(): Record<string, unknown>",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "Record<string, unknown>"
+          }
+        },
+        {
+          "name": "toGestureArray",
+          "type": "toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ContinuousGesture",
+      "kind": "class",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(gesture?: BaseGesture<TConfig, TEvent>): ContinuousGesture<TConfig, TEvent>",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "BaseGesture<TConfig, TEvent>",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "ContinuousGesture<TConfig, TEvent>"
+          }
+        },
+        {
+          "name": "__isGesture",
+          "type": "true",
+          "kind": "property"
+        },
+        {
+          "name": "callbacks",
+          "type": "BaseGestureCallbacks<TEvent> & ContinuousGestureCallbacks<TEvent>",
+          "kind": "property"
+        },
+        {
+          "name": "config",
+          "type": "TConfig",
+          "kind": "property"
+        },
+        {
+          "name": "continueWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "execId",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "id",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "simultaneousWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "toJSON",
+          "type": "(this: BaseGesture) => Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "GestureTypeInner",
+          "kind": "property"
+        },
+        {
+          "name": "waitFor",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "clone",
+          "type": "clone(): this",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "enabled",
+          "type": "enabled(enabled: boolean): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "enabled",
+              "type": "boolean"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalContinueWith",
+          "type": "externalContinueWith(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalSimultaneous",
+          "type": "externalSimultaneous(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalWaitFor",
+          "type": "externalWaitFor(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onBegin",
+          "type": "onBegin(cb: GestureCallback<TEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onEnd",
+          "type": "onEnd(cb: GestureCallback<TEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onStart",
+          "type": "onStart(cb: GestureCallback<TEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesCancel",
+          "type": "onTouchesCancel(cb: GestureCallback<TEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesDown",
+          "type": "onTouchesDown(cb: GestureCallback<TEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesMove",
+          "type": "onTouchesMove(cb: GestureCallback<TEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesUp",
+          "type": "onTouchesUp(cb: GestureCallback<TEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onUpdate",
+          "type": "onUpdate(cb: GestureCallback<TEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "serialize",
+          "type": "serialize(): Record<string, unknown>",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "Record<string, unknown>"
+          }
+        },
+        {
+          "name": "toGestureArray",
+          "type": "toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]"
+          }
+        },
+        {
+          "name": "updateCallback",
+          "type": "updateCallback(k: (keyof BaseGestureCallbacks<TEvent>) | \"onUpdate\", cb: GestureCallback<TEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "k",
+              "type": "(keyof BaseGestureCallbacks<TEvent>) | \"onUpdate\""
+            },
+            {
+              "name": "cb",
+              "type": "GestureCallback<TEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "updateConfig",
+          "type": "updateConfig(k: string, v: unknown): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "k",
+              "type": "string"
+            },
+            {
+              "name": "v",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        }
+      ]
+    },
+    {
+      "name": "DefaultScrollGesture",
+      "kind": "class",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(gesture?: BaseGesture<DefaultGestureConfig, DefaultGestureChangeEvent>): DefaultScrollGesture",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "BaseGesture<DefaultGestureConfig, DefaultGestureChangeEvent>",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "DefaultScrollGesture"
+          }
+        },
+        {
+          "name": "__isGesture",
+          "type": "true",
+          "kind": "property"
+        },
+        {
+          "name": "callbacks",
+          "type": "BaseGestureCallbacks<DefaultGestureChangeEvent> & ContinuousGestureCallbacks<DefaultGestureChangeEvent>",
+          "kind": "property"
+        },
+        {
+          "name": "config",
+          "type": "DefaultGestureConfig",
+          "ref": "DefaultGestureConfig",
+          "kind": "property"
+        },
+        {
+          "name": "continueWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "execId",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "id",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "simultaneousWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "toJSON",
+          "type": "(this: BaseGesture) => Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "GestureTypeInner",
+          "kind": "property"
+        },
+        {
+          "name": "waitFor",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "clone",
+          "type": "clone(): this",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "enabled",
+          "type": "enabled(enabled: boolean): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "enabled",
+              "type": "boolean"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalContinueWith",
+          "type": "externalContinueWith(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalSimultaneous",
+          "type": "externalSimultaneous(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalWaitFor",
+          "type": "externalWaitFor(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onBegin",
+          "type": "onBegin(cb: GestureCallback<DefaultGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<DefaultGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onEnd",
+          "type": "onEnd(cb: GestureCallback<DefaultGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<DefaultGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onStart",
+          "type": "onStart(cb: GestureCallback<DefaultGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<DefaultGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesCancel",
+          "type": "onTouchesCancel(cb: GestureCallback<DefaultGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<DefaultGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesDown",
+          "type": "onTouchesDown(cb: GestureCallback<DefaultGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<DefaultGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesMove",
+          "type": "onTouchesMove(cb: GestureCallback<DefaultGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<DefaultGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesUp",
+          "type": "onTouchesUp(cb: GestureCallback<DefaultGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<DefaultGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onUpdate",
+          "type": "onUpdate(cb: GestureCallback<DefaultGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<DefaultGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "serialize",
+          "type": "serialize(): Record<string, unknown>",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "Record<string, unknown>"
+          }
+        },
+        {
+          "name": "tapSlop",
+          "type": "tapSlop(tapSlop: number): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "tapSlop",
+              "type": "number"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "toGestureArray",
+          "type": "toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]"
+          }
+        },
+        {
+          "name": "updateCallback",
+          "type": "updateCallback(k: (keyof BaseGestureCallbacks<TEvent>) | \"onUpdate\", cb: GestureCallback<DefaultGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "k",
+              "type": "(keyof BaseGestureCallbacks<TEvent>) | \"onUpdate\""
+            },
+            {
+              "name": "cb",
+              "type": "GestureCallback<DefaultGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "updateConfig",
+          "type": "updateConfig(k: string, v: unknown): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "k",
+              "type": "string"
+            },
+            {
+              "name": "v",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ExclusiveGesture",
+      "kind": "class",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(gestures: GestureKind[]): ExclusiveGesture",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "gestures",
+              "type": "GestureKind[]"
+            }
+          ],
+          "returns": {
+            "type": "ExclusiveGesture"
+          }
+        },
+        {
+          "name": "__isGesture",
+          "type": "true",
+          "kind": "property"
+        },
+        {
+          "name": "continueWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "gestures",
+          "type": "GestureKind[]",
+          "kind": "property"
+        },
+        {
+          "name": "panProcessed",
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "simultaneousWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "toJSON",
+          "type": "(this: ComposedGesture) => Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "GestureTypeInner",
+          "kind": "property"
+        },
+        {
+          "name": "waitFor",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "prepare",
+          "type": "prepare(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "prepareSingleGesture",
+          "type": "prepareSingleGesture(gesture: GestureKind, simultaneousGestures: BaseGesture<BaseGestureConfig, GestureChangeEvent>[], waitFor: BaseGesture<BaseGestureConfig, GestureChangeEvent>[]): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            },
+            {
+              "name": "simultaneousGestures",
+              "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]"
+            },
+            {
+              "name": "waitFor",
+              "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "processPanDistance",
+          "type": "processPanDistance(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "If pan gesture has relationship with tap or longPress, its default minDistance should be overridden"
+        },
+        {
+          "name": "serialize",
+          "type": "serialize(): Record<string, unknown>",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "Record<string, unknown>"
+          }
+        },
+        {
+          "name": "toGestureArray",
+          "type": "toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]"
+          }
+        }
+      ]
+    },
+    {
+      "name": "FlingGesture",
+      "kind": "class",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(gesture?: BaseGesture<FlingGestureConfig, FlingGestureChangeEvent>): FlingGesture",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "BaseGesture<FlingGestureConfig, FlingGestureChangeEvent>",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "FlingGesture"
+          }
+        },
+        {
+          "name": "__isGesture",
+          "type": "true",
+          "kind": "property"
+        },
+        {
+          "name": "callbacks",
+          "type": "BaseGestureCallbacks<FlingGestureChangeEvent> & ContinuousGestureCallbacks<FlingGestureChangeEvent>",
+          "kind": "property"
+        },
+        {
+          "name": "config",
+          "type": "FlingGestureConfig",
+          "ref": "FlingGestureConfig",
+          "kind": "property"
+        },
+        {
+          "name": "continueWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "execId",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "id",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "simultaneousWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "toJSON",
+          "type": "(this: BaseGesture) => Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "GestureTypeInner",
+          "kind": "property"
+        },
+        {
+          "name": "waitFor",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "clone",
+          "type": "clone(): this",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "enabled",
+          "type": "enabled(enabled: boolean): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "enabled",
+              "type": "boolean"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalContinueWith",
+          "type": "externalContinueWith(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalSimultaneous",
+          "type": "externalSimultaneous(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalWaitFor",
+          "type": "externalWaitFor(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onBegin",
+          "type": "onBegin(cb: GestureCallback<FlingGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<FlingGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onEnd",
+          "type": "onEnd(cb: GestureCallback<FlingGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<FlingGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onStart",
+          "type": "onStart(cb: GestureCallback<FlingGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<FlingGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesCancel",
+          "type": "onTouchesCancel(cb: GestureCallback<FlingGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<FlingGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesDown",
+          "type": "onTouchesDown(cb: GestureCallback<FlingGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<FlingGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesMove",
+          "type": "onTouchesMove(cb: GestureCallback<FlingGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<FlingGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesUp",
+          "type": "onTouchesUp(cb: GestureCallback<FlingGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<FlingGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onUpdate",
+          "type": "onUpdate(cb: GestureCallback<FlingGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<FlingGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "serialize",
+          "type": "serialize(): Record<string, unknown>",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "Record<string, unknown>"
+          }
+        },
+        {
+          "name": "toGestureArray",
+          "type": "toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]"
+          }
+        },
+        {
+          "name": "updateCallback",
+          "type": "updateCallback(k: (keyof BaseGestureCallbacks<TEvent>) | \"onUpdate\", cb: GestureCallback<FlingGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "k",
+              "type": "(keyof BaseGestureCallbacks<TEvent>) | \"onUpdate\""
+            },
+            {
+              "name": "cb",
+              "type": "GestureCallback<FlingGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "updateConfig",
+          "type": "updateConfig(k: string, v: unknown): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "k",
+              "type": "string"
+            },
+            {
+              "name": "v",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        }
+      ]
+    },
+    {
+      "name": "LongPressGesture",
+      "kind": "class",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(gesture?: BaseGesture<LongPressGestureConfig, LongPressGestureChangeEvent>): LongPressGesture",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "BaseGesture<LongPressGestureConfig, LongPressGestureChangeEvent>",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "LongPressGesture"
+          }
+        },
+        {
+          "name": "__isGesture",
+          "type": "true",
+          "kind": "property"
+        },
+        {
+          "name": "callbacks",
+          "type": "BaseGestureCallbacks<LongPressGestureChangeEvent>",
+          "ref": "BaseGestureCallbacks",
+          "kind": "property"
+        },
+        {
+          "name": "config",
+          "type": "LongPressGestureConfig",
+          "ref": "LongPressGestureConfig",
+          "kind": "property"
+        },
+        {
+          "name": "continueWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "execId",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "id",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "simultaneousWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "toJSON",
+          "type": "(this: BaseGesture) => Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "GestureTypeInner",
+          "kind": "property"
+        },
+        {
+          "name": "waitFor",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "clone",
+          "type": "clone(): this",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "enabled",
+          "type": "enabled(enabled: boolean): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "enabled",
+              "type": "boolean"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalContinueWith",
+          "type": "externalContinueWith(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalSimultaneous",
+          "type": "externalSimultaneous(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalWaitFor",
+          "type": "externalWaitFor(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "maxDistance",
+          "type": "maxDistance(distance: number): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "distance",
+              "type": "number"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "minDuration",
+          "type": "minDuration(duration: number): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "duration",
+              "type": "number"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onBegin",
+          "type": "onBegin(cb: GestureCallback<LongPressGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<LongPressGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onEnd",
+          "type": "onEnd(cb: GestureCallback<LongPressGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<LongPressGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onStart",
+          "type": "onStart(cb: GestureCallback<LongPressGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<LongPressGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesCancel",
+          "type": "onTouchesCancel(cb: GestureCallback<LongPressGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<LongPressGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesDown",
+          "type": "onTouchesDown(cb: GestureCallback<LongPressGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<LongPressGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesMove",
+          "type": "onTouchesMove(cb: GestureCallback<LongPressGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<LongPressGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesUp",
+          "type": "onTouchesUp(cb: GestureCallback<LongPressGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<LongPressGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "serialize",
+          "type": "serialize(): Record<string, unknown>",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "Record<string, unknown>"
+          }
+        },
+        {
+          "name": "toGestureArray",
+          "type": "toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]"
+          }
+        },
+        {
+          "name": "updateCallback",
+          "type": "updateCallback(k: keyof BaseGestureCallbacks<TEvent>, cb: GestureCallback<LongPressGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "k",
+              "type": "keyof BaseGestureCallbacks<TEvent>"
+            },
+            {
+              "name": "cb",
+              "type": "GestureCallback<LongPressGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "updateConfig",
+          "type": "updateConfig(k: string, v: unknown): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "k",
+              "type": "string"
+            },
+            {
+              "name": "v",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        }
+      ]
+    },
+    {
+      "name": "NativeGesture",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "Currently highly experimental and subject to change.\nNativeGesture is a gesture that represents native platform gestures.\nIt can be used to integrate with native gesture handling mechanisms.",
+      "experimental": true,
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(gesture?: BaseGesture<NativeGestureConfig, NativeGestureChangeEvent>): NativeGesture",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "BaseGesture<NativeGestureConfig, NativeGestureChangeEvent>",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "NativeGesture"
+          }
+        },
+        {
+          "name": "__isGesture",
+          "type": "true",
+          "experimental": true,
+          "kind": "property"
+        },
+        {
+          "name": "callbacks",
+          "type": "BaseGestureCallbacks<NativeGestureChangeEvent> & ContinuousGestureCallbacks<NativeGestureChangeEvent>",
+          "experimental": true,
+          "kind": "property"
+        },
+        {
+          "name": "config",
+          "type": "NativeGestureConfig",
+          "ref": "NativeGestureConfig",
+          "experimental": true,
+          "kind": "property"
+        },
+        {
+          "name": "continueWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "experimental": true,
+          "kind": "property"
+        },
+        {
+          "name": "execId",
+          "type": "number",
+          "experimental": true,
+          "kind": "property"
+        },
+        {
+          "name": "id",
+          "type": "number",
+          "experimental": true,
+          "kind": "property"
+        },
+        {
+          "name": "simultaneousWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "experimental": true,
+          "kind": "property"
+        },
+        {
+          "name": "toJSON",
+          "type": "(this: BaseGesture) => Record<string, unknown>",
+          "experimental": true,
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "GestureTypeInner",
+          "experimental": true,
+          "kind": "property"
+        },
+        {
+          "name": "waitFor",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "experimental": true,
+          "kind": "property"
+        },
+        {
+          "name": "clone",
+          "type": "clone(): this",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "enabled",
+          "type": "enabled(enabled: boolean): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "enabled",
+              "type": "boolean"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalContinueWith",
+          "type": "externalContinueWith(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalSimultaneous",
+          "type": "externalSimultaneous(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalWaitFor",
+          "type": "externalWaitFor(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onBegin",
+          "type": "onBegin(cb: GestureCallback<NativeGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<NativeGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onEnd",
+          "type": "onEnd(cb: GestureCallback<NativeGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<NativeGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onStart",
+          "type": "onStart(cb: GestureCallback<NativeGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<NativeGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesCancel",
+          "type": "onTouchesCancel(cb: GestureCallback<NativeGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<NativeGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesDown",
+          "type": "onTouchesDown(cb: GestureCallback<NativeGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<NativeGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesMove",
+          "type": "onTouchesMove(cb: GestureCallback<NativeGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<NativeGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesUp",
+          "type": "onTouchesUp(cb: GestureCallback<NativeGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<NativeGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onUpdate",
+          "type": "onUpdate(cb: GestureCallback<NativeGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<NativeGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "serialize",
+          "type": "serialize(): Record<string, unknown>",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "Record<string, unknown>"
+          }
+        },
+        {
+          "name": "toGestureArray",
+          "type": "toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]"
+          }
+        },
+        {
+          "name": "updateCallback",
+          "type": "updateCallback(k: (keyof BaseGestureCallbacks<TEvent>) | \"onUpdate\", cb: GestureCallback<NativeGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "k",
+              "type": "(keyof BaseGestureCallbacks<TEvent>) | \"onUpdate\""
+            },
+            {
+              "name": "cb",
+              "type": "GestureCallback<NativeGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "updateConfig",
+          "type": "updateConfig(k: string, v: unknown): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "k",
+              "type": "string"
+            },
+            {
+              "name": "v",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        }
+      ]
+    },
+    {
+      "name": "PanGesture",
+      "kind": "class",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(gesture?: BaseGesture<PanGestureConfig, PanGestureChangeEvent>): PanGesture",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "BaseGesture<PanGestureConfig, PanGestureChangeEvent>",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "PanGesture"
+          }
+        },
+        {
+          "name": "__isGesture",
+          "type": "true",
+          "kind": "property"
+        },
+        {
+          "name": "callbacks",
+          "type": "BaseGestureCallbacks<PanGestureChangeEvent> & ContinuousGestureCallbacks<PanGestureChangeEvent>",
+          "kind": "property"
+        },
+        {
+          "name": "config",
+          "type": "PanGestureConfig",
+          "ref": "PanGestureConfig",
+          "kind": "property"
+        },
+        {
+          "name": "continueWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "distanceSet",
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "execId",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "id",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "simultaneousWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "toJSON",
+          "type": "(this: BaseGesture) => Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "GestureTypeInner",
+          "kind": "property"
+        },
+        {
+          "name": "waitFor",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "clone",
+          "type": "clone(): this",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "enabled",
+          "type": "enabled(enabled: boolean): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "enabled",
+              "type": "boolean"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalContinueWith",
+          "type": "externalContinueWith(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalSimultaneous",
+          "type": "externalSimultaneous(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalWaitFor",
+          "type": "externalWaitFor(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "minDistance",
+          "type": "minDistance(distance: number): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "distance",
+              "type": "number"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onBegin",
+          "type": "onBegin(cb: GestureCallback<PanGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<PanGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onEnd",
+          "type": "onEnd(cb: GestureCallback<PanGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<PanGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onStart",
+          "type": "onStart(cb: GestureCallback<PanGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<PanGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesCancel",
+          "type": "onTouchesCancel(cb: GestureCallback<PanGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<PanGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesDown",
+          "type": "onTouchesDown(cb: GestureCallback<PanGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<PanGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesMove",
+          "type": "onTouchesMove(cb: GestureCallback<PanGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<PanGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesUp",
+          "type": "onTouchesUp(cb: GestureCallback<PanGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<PanGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onUpdate",
+          "type": "onUpdate(cb: GestureCallback<PanGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<PanGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "overrideDefaultMinDistance",
+          "type": "overrideDefaultMinDistance(): this",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "serialize",
+          "type": "serialize(): Record<string, unknown>",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "Record<string, unknown>"
+          }
+        },
+        {
+          "name": "toGestureArray",
+          "type": "toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]"
+          }
+        },
+        {
+          "name": "updateCallback",
+          "type": "updateCallback(k: (keyof BaseGestureCallbacks<TEvent>) | \"onUpdate\", cb: GestureCallback<PanGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "k",
+              "type": "(keyof BaseGestureCallbacks<TEvent>) | \"onUpdate\""
+            },
+            {
+              "name": "cb",
+              "type": "GestureCallback<PanGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "updateConfig",
+          "type": "updateConfig(k: string, v: unknown): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "k",
+              "type": "string"
+            },
+            {
+              "name": "v",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SimultaneousGesture",
+      "kind": "class",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(gestures: GestureKind[]): SimultaneousGesture",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "gestures",
+              "type": "GestureKind[]"
+            }
+          ],
+          "returns": {
+            "type": "SimultaneousGesture"
+          }
+        },
+        {
+          "name": "__isGesture",
+          "type": "true",
+          "kind": "property"
+        },
+        {
+          "name": "continueWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "gestures",
+          "type": "GestureKind[]",
+          "kind": "property"
+        },
+        {
+          "name": "panProcessed",
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "simultaneousWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "toJSON",
+          "type": "(this: ComposedGesture) => Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "GestureTypeInner",
+          "kind": "property"
+        },
+        {
+          "name": "waitFor",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "prepare",
+          "type": "prepare(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "prepareSingleGesture",
+          "type": "prepareSingleGesture(gesture: GestureKind, simultaneousGestures: BaseGesture<BaseGestureConfig, GestureChangeEvent>[], waitFor: BaseGesture<BaseGestureConfig, GestureChangeEvent>[]): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            },
+            {
+              "name": "simultaneousGestures",
+              "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]"
+            },
+            {
+              "name": "waitFor",
+              "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "processPanDistance",
+          "type": "processPanDistance(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "If pan gesture has relationship with tap or longPress, its default minDistance should be overridden"
+        },
+        {
+          "name": "serialize",
+          "type": "serialize(): Record<string, unknown>",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "Record<string, unknown>"
+          }
+        },
+        {
+          "name": "toGestureArray",
+          "type": "toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]"
+          }
+        }
+      ]
+    },
+    {
+      "name": "TapGesture",
+      "kind": "class",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(gesture?: BaseGesture<TapGestureConfig, TapGestureChangeEvent>): TapGesture",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "BaseGesture<TapGestureConfig, TapGestureChangeEvent>",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "TapGesture"
+          }
+        },
+        {
+          "name": "__isGesture",
+          "type": "true",
+          "kind": "property"
+        },
+        {
+          "name": "callbacks",
+          "type": "BaseGestureCallbacks<TapGestureChangeEvent>",
+          "ref": "BaseGestureCallbacks",
+          "kind": "property"
+        },
+        {
+          "name": "config",
+          "type": "TapGestureConfig",
+          "ref": "TapGestureConfig",
+          "kind": "property"
+        },
+        {
+          "name": "continueWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "execId",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "id",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "simultaneousWith",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "toJSON",
+          "type": "(this: BaseGesture) => Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "GestureTypeInner",
+          "kind": "property"
+        },
+        {
+          "name": "waitFor",
+          "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "clone",
+          "type": "clone(): this",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "enabled",
+          "type": "enabled(enabled: boolean): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "enabled",
+              "type": "boolean"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalContinueWith",
+          "type": "externalContinueWith(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalSimultaneous",
+          "type": "externalSimultaneous(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "externalWaitFor",
+          "type": "externalWaitFor(gesture: GestureKind): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "gesture",
+              "type": "GestureKind"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "maxDistance",
+          "type": "maxDistance(distance: number): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "distance",
+              "type": "number"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "maxDuration",
+          "type": "maxDuration(duration: number): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "duration",
+              "type": "number"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "numberOfTaps",
+          "type": "numberOfTaps(count: number): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "count",
+              "type": "number"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onBegin",
+          "type": "onBegin(cb: GestureCallback<TapGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TapGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onEnd",
+          "type": "onEnd(cb: GestureCallback<TapGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TapGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onStart",
+          "type": "onStart(cb: GestureCallback<TapGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TapGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesCancel",
+          "type": "onTouchesCancel(cb: GestureCallback<TapGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TapGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesDown",
+          "type": "onTouchesDown(cb: GestureCallback<TapGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TapGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesMove",
+          "type": "onTouchesMove(cb: GestureCallback<TapGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TapGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "onTouchesUp",
+          "type": "onTouchesUp(cb: GestureCallback<TapGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cb",
+              "type": "GestureCallback<TapGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "serialize",
+          "type": "serialize(): Record<string, unknown>",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "Record<string, unknown>"
+          }
+        },
+        {
+          "name": "toGestureArray",
+          "type": "toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "BaseGesture<BaseGestureConfig, GestureChangeEvent>[]"
+          }
+        },
+        {
+          "name": "updateCallback",
+          "type": "updateCallback(k: keyof BaseGestureCallbacks<TEvent>, cb: GestureCallback<TapGestureChangeEvent>): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "k",
+              "type": "keyof BaseGestureCallbacks<TEvent>"
+            },
+            {
+              "name": "cb",
+              "type": "GestureCallback<TapGestureChangeEvent>"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        },
+        {
+          "name": "updateConfig",
+          "type": "updateConfig(k: string, v: unknown): this",
+          "kind": "method",
+          "params": [
+            {
+              "name": "k",
+              "type": "string"
+            },
+            {
+              "name": "v",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "this"
+          }
+        }
+      ]
+    },
+    {
+      "name": "BaseGestureCallbacks",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Generic base gesture callbacks interface.",
+      "members": [
+        {
+          "name": "onBegin",
+          "optional": true,
+          "type": "GestureCallback<TEvent>",
+          "ref": "GestureCallback",
+          "kind": "property"
+        },
+        {
+          "name": "onEnd",
+          "optional": true,
+          "type": "GestureCallback<TEvent>",
+          "ref": "GestureCallback",
+          "kind": "property"
+        },
+        {
+          "name": "onStart",
+          "optional": true,
+          "type": "GestureCallback<TEvent>",
+          "ref": "GestureCallback",
+          "kind": "property"
+        },
+        {
+          "name": "onTouchesCancel",
+          "optional": true,
+          "type": "GestureCallback<TEvent>",
+          "ref": "GestureCallback",
+          "kind": "property"
+        },
+        {
+          "name": "onTouchesDown",
+          "optional": true,
+          "type": "GestureCallback<TEvent>",
+          "ref": "GestureCallback",
+          "kind": "property"
+        },
+        {
+          "name": "onTouchesMove",
+          "optional": true,
+          "type": "GestureCallback<TEvent>",
+          "ref": "GestureCallback",
+          "kind": "property"
+        },
+        {
+          "name": "onTouchesUp",
+          "optional": true,
+          "type": "GestureCallback<TEvent>",
+          "ref": "GestureCallback",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "BaseGestureConfig",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Base configuration interface for all gestures.\nAll gesture-specific configurations extend this interface.",
+      "members": [
+        {
+          "name": "enabled",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether the gesture is enabled. Defaults to true.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ConsumeGestureParams",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "consume",
+          "optional": true,
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "inner",
+          "optional": true,
+          "type": "boolean",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ContinuousGestureCallbacks",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Generic continuous gesture callbacks interface.",
+      "members": [
+        {
+          "name": "onUpdate",
+          "optional": true,
+          "type": "GestureCallback<TEvent>",
+          "ref": "GestureCallback",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "DefaultGestureChangeEvent",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Default gesture change event.\nUses the base GestureChangeEvent without additional properties.",
+      "members": [
+        {
+          "name": "currentTarget",
+          "type": "Element",
+          "kind": "property"
+        },
+        {
+          "name": "params",
+          "type": "{ clientX: number; clientY: number; pageX: number; pageY: number; timestamp: number; type: string; x: number; y: number } & { deltaX: number; deltaY: number; isAtEnd: boolean; isAtStart: boolean; scrollX: number; scrollY: number }",
+          "kind": "property"
+        },
+        {
+          "name": "target",
+          "type": "Element",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "DefaultGestureConfig",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Configuration interface for DefaultGesture.\nDefault gesture is a basic gesture handler.",
+      "members": [
+        {
+          "name": "enabled",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether the gesture is enabled. Defaults to true.",
+          "kind": "property"
+        },
+        {
+          "name": "tapSlop",
+          "optional": true,
+          "type": "number",
+          "summary": "Tap slop value (in points). Defaults to 3.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "FlingGestureChangeEvent",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Fling gesture change event with fling location and velocity information.",
+      "members": [
+        {
+          "name": "currentTarget",
+          "type": "Element",
+          "kind": "property"
+        },
+        {
+          "name": "params",
+          "type": "{ clientX: number; clientY: number; pageX: number; pageY: number; timestamp: number; type: string; x: number; y: number } & { deltaX: number; deltaY: number; isAtEnd: boolean; isAtStart: boolean; scrollX: number; scrollY: number }",
+          "kind": "property"
+        },
+        {
+          "name": "target",
+          "type": "Element",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "FlingGestureConfig",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Configuration interface for FlingGesture.\nFling gesture recognizes fling (swipe) gestures.",
+      "members": [
+        {
+          "name": "direction",
+          "optional": true,
+          "type": "\"up\" | \"down\" | \"left\" | \"right\"",
+          "summary": "Direction of the fling gesture",
+          "kind": "property"
+        },
+        {
+          "name": "enabled",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether the gesture is enabled. Defaults to true.",
+          "kind": "property"
+        },
+        {
+          "name": "numberOfPointers",
+          "optional": true,
+          "type": "number",
+          "summary": "Number of pointers (fingers) required. Defaults to 1.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "GestureChangeEvent",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Base gesture change event interface.\nAll gesture-specific events extend this interface.",
+      "members": [
+        {
+          "name": "currentTarget",
+          "type": "Element",
+          "kind": "property"
+        },
+        {
+          "name": "params",
+          "type": "{ clientX: number; clientY: number; pageX: number; pageY: number; timestamp: number; type: string; x: number; y: number }",
+          "kind": "property"
+        },
+        {
+          "name": "target",
+          "type": "Element",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "GestureKind",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "__isGesture",
+          "type": "true",
+          "kind": "property"
+        },
+        {
+          "name": "continueWith",
+          "type": "GestureKind[]",
+          "kind": "property"
+        },
+        {
+          "name": "serialize",
+          "type": "() => Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "simultaneousWith",
+          "type": "GestureKind[]",
+          "kind": "property"
+        },
+        {
+          "name": "toGestureArray",
+          "type": "() => BaseGesture<BaseGestureConfig, GestureChangeEvent>[]",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "GestureTypeInner",
+          "kind": "property"
+        },
+        {
+          "name": "waitFor",
+          "type": "GestureKind[]",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "GestureKindSerialized",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "__isSerialized",
+          "type": "true",
+          "kind": "property"
+        },
+        {
+          "name": "continueWith",
+          "type": "number[]",
+          "kind": "property"
+        },
+        {
+          "name": "simultaneousWith",
+          "type": "number[]",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "GestureTypeInner",
+          "kind": "property"
+        },
+        {
+          "name": "waitFor",
+          "type": "number[]",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "InterceptGestureOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "class",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "tag",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "LynxNativeIOSGestureRecognizer",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "InternalStateManager",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Used internally, not meant to be public",
+      "members": [
+        {
+          "name": "__ConsumeGesture",
+          "type": "(dom: FiberElement, id: number, params: ConsumeGestureParams) => void",
+          "kind": "property"
+        },
+        {
+          "name": "__SetGestureState",
+          "type": "(dom: FiberElement, id: number, type: SetGestureStateType) => void",
+          "kind": "property"
+        },
+        {
+          "name": "active",
+          "type": "(id: number) => void",
+          "kind": "property"
+        },
+        {
+          "name": "end",
+          "type": "(id: number) => void",
+          "kind": "property"
+        },
+        {
+          "name": "fail",
+          "type": "(id: number) => void",
+          "kind": "property"
+        },
+        {
+          "name": "scrollBy",
+          "type": "(deltaX: number, deltaY: number) => number[]",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LongPressGestureChangeEvent",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Long press gesture change event with press location and duration information.",
+      "members": [
+        {
+          "name": "currentTarget",
+          "type": "Element",
+          "kind": "property"
+        },
+        {
+          "name": "params",
+          "type": "{ clientX: number; clientY: number; pageX: number; pageY: number; timestamp: number; type: string; x: number; y: number }",
+          "kind": "property"
+        },
+        {
+          "name": "target",
+          "type": "Element",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LongPressGestureConfig",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Configuration interface for LongPressGesture.\nLong press gesture recognizes long press gestures.",
+      "members": [
+        {
+          "name": "enabled",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether the gesture is enabled. Defaults to true.",
+          "kind": "property"
+        },
+        {
+          "name": "maxDistance",
+          "optional": true,
+          "type": "number",
+          "summary": "Maximum distance (in points) the touch can move and still be considered a long press. Defaults to 10.",
+          "kind": "property"
+        },
+        {
+          "name": "minDuration",
+          "optional": true,
+          "type": "number",
+          "summary": "Minimum duration (in milliseconds) for a long press. Defaults to 500ms.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "NativeGestureChangeEvent",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Native gesture change event.\nUses the base GestureChangeEvent without additional properties.",
+      "members": [
+        {
+          "name": "currentTarget",
+          "type": "Element",
+          "kind": "property"
+        },
+        {
+          "name": "params",
+          "type": "{ clientX: number; clientY: number; pageX: number; pageY: number; timestamp: number; type: string; x: number; y: number } & { deltaX: number; deltaY: number; isAtEnd: boolean; isAtStart: boolean; scrollX: number; scrollY: number }",
+          "kind": "property"
+        },
+        {
+          "name": "target",
+          "type": "Element",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "NativeGestureConfig",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Configuration interface for NativeGesture.\nNative gesture uses platform-specific gesture recognizers.",
+      "members": [
+        {
+          "name": "enabled",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether the gesture is enabled. Defaults to true.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "PanGestureChangeEvent",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Pan gesture change event with translation and velocity information.",
+      "members": [
+        {
+          "name": "currentTarget",
+          "type": "Element",
+          "kind": "property"
+        },
+        {
+          "name": "params",
+          "type": "{ clientX: number; clientY: number; pageX: number; pageY: number; timestamp: number; type: string; x: number; y: number } & { isAtEnd: boolean; isAtStart: boolean; scrollX: number; scrollY: number }",
+          "kind": "property"
+        },
+        {
+          "name": "target",
+          "type": "Element",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "PanGestureConfig",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Configuration interface for PanGesture.\nPan gesture recognizes pan (dragging) gestures.",
+      "members": [
+        {
+          "name": "activeOffsetX",
+          "optional": true,
+          "type": "number",
+          "summary": "Active offset for X axis",
+          "kind": "property"
+        },
+        {
+          "name": "activeOffsetY",
+          "optional": true,
+          "type": "number",
+          "summary": "Active offset for Y axis",
+          "kind": "property"
+        },
+        {
+          "name": "enabled",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether the gesture is enabled. Defaults to true.",
+          "kind": "property"
+        },
+        {
+          "name": "failOffsetX",
+          "optional": true,
+          "type": "number",
+          "summary": "Fail offset for X axis",
+          "kind": "property"
+        },
+        {
+          "name": "failOffsetY",
+          "optional": true,
+          "type": "number",
+          "summary": "Fail offset for Y axis",
+          "kind": "property"
+        },
+        {
+          "name": "minDistance",
+          "optional": true,
+          "type": "number",
+          "summary": "Minimum distance (in points) that must be traveled before the gesture activates. Defaults to 0.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "StateManager",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "active",
+          "type": "() => void",
+          "kind": "property"
+        },
+        {
+          "name": "consumeGesture",
+          "type": "(shouldConsume: boolean) => void",
+          "kind": "property"
+        },
+        {
+          "name": "end",
+          "type": "() => void",
+          "kind": "property"
+        },
+        {
+          "name": "fail",
+          "type": "() => void",
+          "kind": "property"
+        },
+        {
+          "name": "interceptGesture",
+          "type": "(shouldIntercept: boolean) => void",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "TapGestureChangeEvent",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Tap gesture change event with tap location and count information.",
+      "members": [
+        {
+          "name": "currentTarget",
+          "type": "Element",
+          "kind": "property"
+        },
+        {
+          "name": "params",
+          "type": "{ clientX: number; clientY: number; pageX: number; pageY: number; timestamp: number; type: string; x: number; y: number }",
+          "kind": "property"
+        },
+        {
+          "name": "target",
+          "type": "Element",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "TapGestureConfig",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Configuration interface for TapGesture.\nTap gesture recognizes tap gestures.",
+      "members": [
+        {
+          "name": "enabled",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether the gesture is enabled. Defaults to true.",
+          "kind": "property"
+        },
+        {
+          "name": "maxDistance",
+          "optional": true,
+          "type": "number",
+          "summary": "Maximum distance (in points) the touch can move and still be considered a tap. Defaults to 10.",
+          "kind": "property"
+        },
+        {
+          "name": "maxDuration",
+          "optional": true,
+          "type": "number",
+          "summary": "Maximum duration (in milliseconds) for a tap. Defaults to 500ms.",
+          "kind": "property"
+        },
+        {
+          "name": "numberOfTaps",
+          "optional": true,
+          "type": "number",
+          "summary": "Number of taps required. Defaults to 1.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "GestureCallback",
+      "kind": "typealias",
+      "type": "(event: TEvent, stateManager: StateManager) => void",
+      "summary": "Generic gesture callback type that receives typed events."
+    },
+    {
+      "name": "GestureControlCallback",
+      "kind": "typealias",
+      "type": "(event: GestureChangeEvent, stateManager: StateManager) => void"
+    },
+    {
+      "name": "GestureControlInternalCallback",
+      "kind": "typealias",
+      "type": "(event: GestureChangeEvent, stateManager: InternalStateManager) => void"
+    },
+    {
+      "name": "Gesture",
+      "kind": "variable",
+      "type": "{ Exclusive: any; Race: any; Simultaneous: any }",
+      "default": "..."
+    },
+    {
+      "name": "useGesture",
+      "kind": "function",
+      "type": "useGesture(GestureConstructor: () => T): T",
+      "signatures": [
+        {
+          "text": "useGesture(GestureConstructor: () => T): T",
+          "params": [
+            {
+              "name": "GestureConstructor",
+              "type": "() => T"
+            }
+          ],
+          "returns": {
+            "type": "T"
+          }
+        }
+      ]
+    }
+  ]
+}

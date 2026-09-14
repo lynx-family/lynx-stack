@@ -1,0 +1,45 @@
+---
+title: 配置
+---
+
+# 配置
+
+Rspeedy 从项目根目录读取 `lynx.config.ts`（或 `.js`、`.mjs`）。使用 `@lynx-js/rspeedy` 导出的 `defineConfig` 包裹配置对象，即可获得自动补全和类型检查：
+
+```ts title="lynx.config.ts"
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  source: {
+    entry: './src/index.tsx',
+  },
+  plugins: [pluginReactLynx()],
+})
+```
+
+这些选项是 [Rsbuild 配置](https://rsbuild.rs/zh/config/) 的子集。会破坏 Lynx bundle 的选项（`html`、`security`、`moduleFederation` 以及 polyfill 相关设置）不对外暴露；下面列出的是可用的选项，与 Rsbuild 默认值不同时采用 Lynx 专属的默认值。
+
+## 全部选项
+
+{/* @api ConfigOverview package="rspeedy" type="Config" */}
+
+| 名称 | 类型 | 说明 |
+| --- | --- | --- |
+| [`dev`](#dev) | `Dev` | [`Dev`](#dev) 选项用于控制与开发相关的行为，包括 HMR、DevServer 等。 |
+| [`environments`](#environments) | `Record<string, EnvironmentConfig>` | [`Config.environments`](#config-environments) 选项用于设置输出的 environment。 |
+| [`mode`](#mode) | `"production" \| "development" \| "none"` | 指定 Rsbuild 和 Rspack 的构建模式，不同模式有不同的默认行为和优化。 |
+| [`output`](#output) | `Output` | [`Output`](#output) 选项用于设置 bundle 和静态资源的输出方式与输出位置。 |
+| [`performance`](#performance) | `Performance` | [`Performance`](#performance) 选项用于优化构建时和运行时的性能。 |
+| [`plugins`](#plugins) | `RsbuildPlugins` | `plugins` 选项用于以多种方式自定义构建流程。 |
+| [`resolve`](#resolve) | `Resolve` | [`Resolve`](#resolve) 选项用于控制 Rspack 的模块解析行为。 |
+| [`server`](#server) | `Server` | [`Server`](#server) 选项用于修改开发服务器的行为。 |
+| [`source`](#source) | `Source` | [`Source`](#source) 选项用于修改源文件相关的行为。 |
+| [`splitChunks`](#splitchunks) | `false \| SplitChunksConfig` | 配置 chunk 拆分。 |
+| [`tools`](#tools) | `Tools` | [`Tools`](#tools) 选项用于修改各类构建工具的行为。 |
+
+{/* @api-end */}
+
+## 命名空间
+
+- [dev](/zh/rspeedy/config/dev) · [environments](/zh/rspeedy/config/environments) · [mode](/zh/rspeedy/config/mode) · [output](/zh/rspeedy/config/output) · [performance](/zh/rspeedy/config/performance) · [plugins](/zh/rspeedy/config/plugins) · [resolve](/zh/rspeedy/config/resolve) · [server](/zh/rspeedy/config/server) · [source](/zh/rspeedy/config/source) · [splitChunks](/zh/rspeedy/config/splitChunks) · [tools](/zh/rspeedy/config/tools)

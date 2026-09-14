@@ -1,0 +1,218 @@
+{
+  "LynxTestingEnv.summary": {
+    "hash": "1fab592d",
+    "text": "[Lynx 规范](https://lynxjs.org/guide/spec.html)的纯 JavaScript 实现，\n主要包括 [Element PAPI](https://lynxjs.org/api/engine/element-api) 和[双线程模型](https://lynxjs.org/guide/spec#dual-threaded-model)，可在 Node.js 中使用。"
+  },
+  "LynxTestingEnv.example.0": {
+    "hash": "b70e9e23",
+    "text": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToMainThread();\n// use the main thread Element PAPI\nconst page = __CreatePage('0', 0);\nconst view = __CreateView(0);\n__AppendElement(page, view);\n\n```"
+  },
+  "LynxTestingEnv.backgroundThread.summary": {
+    "hash": "881e919c",
+    "text": "后台线程的全局对象。"
+  },
+  "LynxTestingEnv.backgroundThread.example.0": {
+    "hash": "fe604a1f",
+    "text": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToBackgroundThread();\n// use the background thread global object\nglobalThis.lynxCoreInject.tt.OnLifecycleEvent(...args);\n```"
+  },
+  "LynxTestingEnv.mainThread.summary": {
+    "hash": "eb691dc1",
+    "text": "主线程的全局对象。"
+  },
+  "LynxTestingEnv.mainThread.example.0": {
+    "hash": "dc064f92",
+    "text": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToMainThread();\n// use the main thread global object\nconst page = globalThis.__CreatePage('0', 0);\nconst view = globalThis.__CreateView(0);\nglobalThis.__AppendElement(page, view);\n```"
+  },
+  "ByRoleOptions.busy.summary": {
+    "hash": "5dd0f6e2",
+    "text": "若为 true，则仅包含查询集合中在无障碍树中被标记为\nbusy 的元素，即 `aria-busy=\"true\"`"
+  },
+  "ByRoleOptions.checked.summary": {
+    "hash": "ad9c1f0a",
+    "text": "若为 true，则仅包含查询集合中在无障碍树中被标记为\nchecked 的元素，即 `aria-checked=\"true\"`"
+  },
+  "ByRoleOptions.current.summary": {
+    "hash": "d701a149",
+    "text": "按元素的 `aria-current` 状态进行过滤。`true` 和 `false` 分别匹配 `aria-current=\"true\"` 和 `aria-current=\"false\"`（以及缺少 `aria-current` 属性的情况）。"
+  },
+  "ByRoleOptions.description.summary": {
+    "hash": "74c6c1b7",
+    "text": "仅考虑具有指定无障碍描述（accessible description）的元素。"
+  },
+  "ByRoleOptions.expanded.summary": {
+    "hash": "aa7f9f2e",
+    "text": "若为 true，则仅包含查询集合中在无障碍树中被标记为\nexpanded 的元素，即 `aria-expanded=\"true\"`"
+  },
+  "ByRoleOptions.hidden.summary": {
+    "hash": "83476f0c",
+    "text": "若为 true，则在查询集合中包含通常会被排除在\n无障碍树之外的元素。`role=\"none\"` 或 `role=\"presentation\"`\n在任何情况下都会被包含。"
+  },
+  "ByRoleOptions.level.summary": {
+    "hash": "b4aaac41",
+    "text": "包含具有 `\"heading\"` 角色且与指定层级匹配的元素，\n既可以是语义化 HTML 标题元素 `<h1>-<h6>`，也可以是匹配\n`aria-level` 属性的元素。"
+  },
+  "ByRoleOptions.name.summary": {
+    "hash": "9ab3da14",
+    "text": "仅考虑具有指定无障碍名称（accessible name）的元素。"
+  },
+  "ByRoleOptions.pressed.summary": {
+    "hash": "5b73d588",
+    "text": "若为 true，则仅包含查询集合中在无障碍树中被标记为\npressed 的元素，即 `aria-pressed=\"true\"`"
+  },
+  "ByRoleOptions.queryFallbacks.summary": {
+    "hash": "bfb1fc9a",
+    "text": "包含 `role` 属性中使用的所有角色\n例如 *ByRole('progressbar', {queryFallbacks: true})` will find <div role=\"meter progressbar\">`。"
+  },
+  "ByRoleOptions.selected.summary": {
+    "hash": "9304d9ee",
+    "text": "若为 true，则仅包含查询集合中在无障碍树中被标记为\nselected 的元素，即 `aria-selected=\"true\"`"
+  },
+  "ByRoleOptions.suggest.summary": {
+    "hash": "c5fe35a9",
+    "text": "为特定查询禁用建议"
+  },
+  "Config.defaultIgnore.summary": {
+    "hash": "42dfc241",
+    "text": "`ByText` 查询中 `ignore` 选项的默认值"
+  },
+  "Config.unstable_advanceTimersWrapper.summary": {
+    "hash": "f29a0e15",
+    "text": "警告：`unstable` 前缀表示此 API 可能会在补丁版本和次版本中发生变化。"
+  },
+  "MatcherOptions.collapseWhitespace.summary": {
+    "hash": "a2c20ba1",
+    "text": "请改为使用 normalizer 配合 getDefaultNormalizer"
+  },
+  "MatcherOptions.suggest.summary": {
+    "hash": "c5fe35a9",
+    "text": "为特定查询禁用建议"
+  },
+  "MatcherOptions.trim.summary": {
+    "hash": "a2c20ba1",
+    "text": "请改为使用 normalizer 配合 getDefaultNormalizer"
+  },
+  "PrettyDOMOptions.filterNode.summary": {
+    "hash": "1d96a56a",
+    "text": "给定一个 `Node`，如果希望在输出中忽略该节点，则返回 `false`。\n默认会忽略 `<style />`、`<script />` 和注释节点。"
+  },
+  "RenderHookOptions.summary": {
+    "hash": "de486c38",
+    "text": "[`renderHook`](api:renderHook) 的选项"
+  },
+  "RenderHookOptions.initialProps.summary": {
+    "hash": "c3fb938e",
+    "text": "传递给 renderHook 回调的参数。如果你计划\n使用 rerender 工具函数来更改传递给 hook 的值，这会很有用。"
+  },
+  "RenderHookOptions.wrapper.summary": {
+    "hash": "fa0bfd41",
+    "text": "传入一个 React 组件作为 wrapper 选项，使其渲染在内部元素的外层。这在为常见的数据提供者创建\n 可复用的自定义渲染函数时最为有用。示例参见 setup。"
+  },
+  "RenderHookOptions.wrapper.example.0": {
+    "hash": "58f168b6",
+    "text": "```ts\nimport { renderHook } from '@lynx-js/react/testing-library'\nimport { ThemeProvider } from 'my-ui-lib'\nimport { TranslationProvider } from 'my-i18n-lib'\nimport defaultStrings from 'i18n/en-x-default'\n\nconst AllTheProviders = ({children}) => {\n  return (\n    <ThemeProvider theme=\"light\">\n      <TranslationProvider messages={defaultStrings}>\n        {children}\n      </TranslationProvider>\n    </ThemeProvider>\n  )\n}\n\nconst customRenderHook = (ui, options) =>\n  renderHook(ui, { wrapper: AllTheProviders, ...options })\n\n// re-export everything\nexport * from '@lynx-js/react/testing-library'\n\n// override renderHook method\nexport { customRender as renderHook }\n```"
+  },
+  "RenderHookResult.summary": {
+    "hash": "0f718959",
+    "text": "[`renderHook`](api:renderHook) 的返回结果"
+  },
+  "RenderHookResult.rerender.summary": {
+    "hash": "a6b2cb71",
+    "text": "触发一次重新渲染。props 会被传递给你的 renderHook 回调。"
+  },
+  "RenderHookResult.result.summary": {
+    "hash": "76a4000d",
+    "text": "这是一个稳定的引用，指向 renderHook\n回调最近一次返回的值"
+  },
+  "RenderHookResult.unmount.summary": {
+    "hash": "7e396715",
+    "text": "卸载测试组件。当你需要测试\nuseEffect 中的清理逻辑时，这会很有用。"
+  },
+  "RenderOptions.summary": {
+    "hash": "0a72c5e4",
+    "text": "[`render`](api:render) 的选项。"
+  },
+  "RenderOptions.enableBackgroundThread.summary": {
+    "hash": "7894a162",
+    "text": "是否在后台线程中渲染组件。\n\n注意，默认情况下所有顶层用户代码都会在后台线程中执行（例如，顶层的 `__BACKGROUND__` 为 `true`）。"
+  },
+  "RenderOptions.enableBackgroundThread.default": {
+    "hash": "f041dde5",
+    "text": "`true`"
+  },
+  "RenderOptions.enableMainThread.summary": {
+    "hash": "db119edf",
+    "text": "是否在主线程中渲染组件。\n\n建议仅在需要测试 [IFR](https://lynxjs.org/zh/guide/interaction/ifr.html) 行为时使用此选项。"
+  },
+  "RenderOptions.enableMainThread.default": {
+    "hash": "d69d0e50",
+    "text": "`false`"
+  },
+  "RenderOptions.queries.summary": {
+    "hash": "661d20d9",
+    "text": "要绑定的查询。除非进行合并，否则会覆盖 DOM Testing Library 提供的默认查询集合。"
+  },
+  "RenderOptions.queries.example.0": {
+    "hash": "93df5433",
+    "text": "```ts\n// Example, a function to traverse table contents\nimport * as tableQueries from 'my-table-query-library'\nimport { queries } from '@lynx-js/react/testing-library'\n\nconst { getByRowColumn, getByText } = render(<MyTable />, {\n  queries: {...queries, ...tableQueries},\n})\n\n```"
+  },
+  "RenderOptions.wrapper.summary": {
+    "hash": "fa0bfd41",
+    "text": "传入一个 React 组件作为 wrapper 选项，使其渲染在内部元素的外层。这在为常见的数据提供者创建\n 可复用的自定义渲染函数时最为有用。示例参见 setup。"
+  },
+  "RenderOptions.wrapper.example.0": {
+    "hash": "995fc0c1",
+    "text": "```ts\nimport { render } from '@lynx-js/react/testing-library'\nimport { ThemeProvider } from 'my-ui-lib'\nimport { TranslationProvider } from 'my-i18n-lib'\nimport defaultStrings from 'i18n/en-x-default'\n\nconst AllTheProviders = ({children}) => {\n  return (\n    <ThemeProvider theme=\"light\">\n      <TranslationProvider messages={defaultStrings}>\n        {children}\n      </TranslationProvider>\n    </ThemeProvider>\n  )\n}\n\nconst customRender = (ui, options) =>\n  render(ui, { wrapper: AllTheProviders, ...options })\n\n// re-export everything\nexport * from '@lynx-js/react/testing-library'\n\n// override render method\nexport { customRender as render }\n```"
+  },
+  "SelectorMatcherOptions.collapseWhitespace.summary": {
+    "hash": "a2c20ba1",
+    "text": "请改为使用 normalizer 配合 getDefaultNormalizer"
+  },
+  "SelectorMatcherOptions.suggest.summary": {
+    "hash": "c5fe35a9",
+    "text": "为特定查询禁用建议"
+  },
+  "SelectorMatcherOptions.trim.summary": {
+    "hash": "a2c20ba1",
+    "text": "请改为使用 normalizer 配合 getDefaultNormalizer"
+  },
+  "ElementTree.summary": {
+    "hash": "2331b92b",
+    "text": "Lynx 元素树"
+  },
+  "QueryMethod.summary": {
+    "hash": "daeb9eef",
+    "text": "查询方法具有相同的调用签名，仅返回类型不同。"
+  },
+  "RenderResult.summary": {
+    "hash": "81087317",
+    "text": "[`render`](api:render) 的返回结果"
+  },
+  "cleanup.summary": {
+    "hash": "3e920613",
+    "text": "清理渲染到页面上的元素，以及通过 render 挂载的 Preact 树。"
+  },
+  "isInaccessible.summary": {
+    "hash": "1f53683e",
+    "text": "https://testing-library.com/docs/dom-testing-library/api-helpers#isinaccessible"
+  },
+  "render.summary": {
+    "hash": "15e26941",
+    "text": "渲染到页面中。应与 cleanup 配合使用。"
+  },
+  "render.example.0": {
+    "hash": "84390e85",
+    "text": "```ts\nimport { render} from '@lynx-js/react/testing-library'\n\nconst WrapperComponent = ({ children }) => (\n    <view data-testid='wrapper'>{children}</view>\n);\nconst Comp = () => {\n  return <view data-testid='inner' style=\"background-color: yellow;\" />;\n};\nconst { container, getByTestId } = render(<Comp />, {\n  wrapper: WrapperComponent,\n});\nexpect(getByTestId('wrapper')).toBeInTheDocument();\nexpect(container.firstChild).toMatchInlineSnapshot(`\n  <view\n    data-testid=\"wrapper\"\n  >\n    <view\n      data-testid=\"inner\"\n      style=\"background-color: yellow;\"\n    />\n  </view>\n`);\n```"
+  },
+  "renderHook.summary": {
+    "hash": "afcc643c",
+    "text": "允许你在测试用的 React 组件中渲染 hook，而无需\n自己创建该组件。"
+  },
+  "renderHook.example.0": {
+    "hash": "b38ad151",
+    "text": "```ts\nimport { renderHook } from '@lynx-js/react/testing-library'\n\nconst Context = createContext('default');\nfunction Wrapper({ children }) {\n  return <Context.Provider value='provided'>{children}</Context.Provider>;\n}\nconst { result } = renderHook(\n  () => {\n    return useContext(Context);\n  },\n  {\n    wrapper: Wrapper,\n  },\n);\n\nexpect(result.current).toEqual('provided');\n```"
+  },
+  "waitSchedule.summary": {
+    "hash": "5f591700",
+    "text": "等待下一个事件循环。\n\n当你想等待下一个事件循环完成时，这会很有用。\n\n 请改用 `act`"
+  }
+}

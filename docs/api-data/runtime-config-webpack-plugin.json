@@ -1,0 +1,56 @@
+{
+  "id": "runtime-config-webpack-plugin",
+  "package": "@lynx-js/runtime-config-webpack-plugin",
+  "version": "0.0.1",
+  "description": "Inject runtime configuration into the page-scoped Lynx runtime.",
+  "section": "packages",
+  "internal": true,
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/runtime-config-webpack-plugin",
+  "exports": [
+    {
+      "name": "RuntimeConfigWebpackPlugin",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "Merges and shallow-freezes runtime configuration in\n`lynx.__runtime_configs__`.\n\nBundles are merged in execution order. Later bundle values overwrite\nearlier values with the same key.",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(options: Readonly<RuntimeConfigWebpackPluginOptions>): RuntimeConfigWebpackPlugin",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "options",
+              "type": "Readonly<RuntimeConfigWebpackPluginOptions>"
+            }
+          ],
+          "returns": {
+            "type": "RuntimeConfigWebpackPlugin"
+          }
+        },
+        {
+          "name": "apply",
+          "type": "apply(compiler: Compiler): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "compiler",
+              "type": "Compiler",
+              "description": "the webpack compiler"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "The entry point of a webpack plugin."
+        }
+      ]
+    },
+    {
+      "name": "RuntimeConfigWebpackPluginOptions",
+      "kind": "typealias",
+      "type": "Record<string, unknown>",
+      "external": "typescript",
+      "summary": "Page-scoped runtime configuration contributed by a bundle.\n\nThe plugin deliberately leaves configuration keys and values to the DSL\nthat consumes them."
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "cssChunksToMap.summary": {
+    "hash": "e37cca32",
+    "text": "将 CSS chunk 转换为 `cssMap` / `cssSource`。\n\n`loc` 字段保留 bundle CSS 中的坐标，以便后续\n通过 `main.css.map` 解析。\n\n`cssSource` 有意保留历史上的 `/cssId/<id>.css` 形式。"
+  }
+}

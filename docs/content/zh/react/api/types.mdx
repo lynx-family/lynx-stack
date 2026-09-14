@@ -1,0 +1,149 @@
+---
+title: 类型
+---
+
+# 类型
+
+`@lynx-js/react` 导出的类型和类。在项目中扩展 `InitData` 和 `GlobalProps`，即可为页面接收的数据声明类型。
+
+{/* @api ApiExports package="react" include="MainThreadRef,InitData,InitDataRaw,GlobalProps,Lynx,Root,DataProcessors,DataProcessorDefinition,CloneElement,CreateElement,ReactLynxChildren" */}
+
+## 类 \{#\}
+
+### `MainThreadRef` \{#mainthreadref\}
+
+`MainThreadRef` 是一种只能在主线程访问的 ref，
+用于在主线程函数调用之间保存状态。
+保存在 `MainThreadRef` 的 `current` 属性中的数据，
+可以在多个主线程函数中读写。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="mainthreadref-constructor"></a>`constructor` | `constructor(initValue: T): MainThreadRef<T>` |  |
+| <a id="mainthreadref-current"></a>`current` | `T` |  |
+
+## 类型 \{#\}
+
+### `InitData` \{#initdata\}
+
+可扩展此接口，以自定义 `defaultDataProcessor` 的返回值类型
+
+需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](#lynx)。
+
+### `InitDataRaw` \{#initdataraw\}
+
+可扩展此接口，以自定义 `defaultDataProcessor` 的参数类型
+
+需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](#lynx)。
+
+### `GlobalProps` \{#globalprops\}
+
+可扩展此接口，以自定义 `useGlobalProps` 的返回值类型
+
+### `Lynx` \{#lynx\}
+
+ReactLynx 在全局变量 `lynx` 上添加的 API。
+
+```ts
+lynx.registerDataProcessors(...);
+lynx.querySelector(...);
+lynx.querySelectorAll(...);
+```
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="lynx-registerdataprocessors"></a>`registerDataProcessors` | `(dataProcessorDefinition?: DataProcessorDefinition) => void` | 注册 DataProcessor。必须在 `root.render()` 之前调用。 |
+| <a id="lynx-triggerglobaleventfromlepus"></a>`triggerGlobalEventFromLepus` | `(eventName: string, params: any) => void` | 仅在 Lepus 中可用，是 `lynx.getJSModule("GlobalEventEmitter").trigger(eventName, params)` 的别名 |
+
+### `Root` \{#root\}
+
+`@lynx-js/react` 默认导出的 root，用于渲染 JSX
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="root-registerdataprocessors"></a>`registerDataProcessors` <span className="api-badge api-badge-deprecated">已废弃</span> | `(dataProcessorDefinition: DataProcessorDefinition) => void` | 注册 DataProcessor。必须在 `root.render()` 之前调用。 **已废弃.** 已废弃。 |
+| <a id="root-render"></a>`render` | `(jsx: ReactNode) => void` | 使用此 API 传入要渲染的 JSX |
+
+### `DataProcessors` \{#dataprocessors\}
+
+通过 [`Lynx.registerDataProcessors`](#lynx) 注册的数据处理器。
+
+扩展 `dataProcessors` 接口
+
+```ts
+import type { DataProcessors as WellKnownDataProcessors } from '@lynx-js/react';
+
+declare module '@lynx-js/react' {
+  interface DataProcessors extends WellKnownDataProcessors {
+    foo(bar: string): number;
+  }
+}
+```
+
+之后即可带类型地使用 `lynx.registerDataProcessors`。
+
+```js
+lynx.registerDataProcessors({
+  dataProcessors: {
+    foo(bar) {
+      return 1;
+    }
+  }
+})
+```
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="dataprocessors-getscreenmetricsoverride"></a>`getScreenMetricsOverride?` | `getScreenMetricsOverride(metrics: { height: number; width: number }): { height: number; width: number }` | 可选的处理器，用于覆盖应用所使用的屏幕度量信息 |
+
+### `DataProcessorDefinition` \{#dataprocessordefinition\}
+
+DataProcessor 的定义
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="dataprocessordefinition-dataprocessors"></a>`dataProcessors?` | `DataProcessors` | 需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](#lynx)。 |
+| <a id="dataprocessordefinition-defaultdataprocessor"></a>`defaultDataProcessor?` | `(rawInitData: InitDataRaw) => InitData` | 可以通过扩展 [`InitDataRaw`](#initdataraw) 和 [`InitData`](#initdata) 来自定义 `defaultDataProcessor` 的输入和输出类型 需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](#lynx)。 |
+
+### `CloneElement` \{#cloneelement\}
+
+```ts
+CloneElement(element: ReactElement<Props>, props?: Partial<Props> & Attributes | null, children: ReactNode[]): ReactElement<Props>
+```
+
+ReactLynx `cloneElement` 的调用签名。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `element` | `ReactElement<Props>` |  |
+| `props?` | `Partial<Props> & Attributes \| null` |  |
+| `children` | `ReactNode[]` |  |
+
+**返回值:** `ReactElement<Props>`
+
+### `CreateElement` \{#createelement\}
+
+```ts
+CreateElement(type: Type, props?: IntrinsicElements[Type] | null, children: ReactNode[]): ReactElement<IntrinsicElements[Type], Type>
+CreateElement(type: string | ComponentType<Props>, props?: Attributes & Props | null, children: ReactNode[]): ReactElement<Props>
+```
+
+ReactLynx `createElement` 的调用签名。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `type` | `Type` |  |
+| `props?` | `IntrinsicElements[Type] \| null` |  |
+| `children` | `ReactNode[]` |  |
+
+**返回值:** `ReactElement<IntrinsicElements[Type], Type>`
+
+### `ReactLynxChildren` \{#reactlynxchildren\}
+
+```ts
+type ReactLynxChildren = Omit<typeof PreactChildren, "map" | "forEach" | "toArray"> & { forEach: any; map: any; toArray: any }
+```
+
+ReactLynx children 工具的类型。
+
+{/* @api-end */}

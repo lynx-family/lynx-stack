@@ -1,0 +1,181 @@
+---
+title: pluginVanillaLynx
+---
+
+# pluginVanillaLynx
+
+{/* @api PackageHeader package="vanilla-rsbuild-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/vanilla-rsbuild-plugin</code> <span className="api-pkg-version">v0.1.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/vanilla-rsbuild-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-vanilla" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-vanilla/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+The Vanilla DSL plugin. It builds a Lynx bundle from plain JavaScript that talks to the Element PAPI directly, without a UI framework.
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/vanilla-rsbuild-plugin -D" />
+
+## Usage
+
+```ts title="lynx.config.ts"
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginVanillaLynx } from '@lynx-js/vanilla-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [pluginVanillaLynx()],
+})
+```
+
+## Options
+
+{/* @api ApiOptions package="vanilla-rsbuild-plugin" type="PluginVanillaLynxOptions" */}
+
+### `bundleFilename` \{#bundlefilename\}
+
+- **Type:** `VanillaBundleFilename`
+
+Override the final `.bundle` filename.
+
+When omitted under Rspeedy, `output.filename.bundle` is used.
+The default outside Rspeedy is `[name].[platform].bundle`.
+
+### `entries` \{#entries\}
+
+- **Type:** `Record<string, VanillaLynxEntry>` (from typescript)
+
+Explicit two-thread entries.
+
+When omitted, every Rsbuild `source.entry` is treated as a main-thread
+entry and optional sibling `background.ts` and `style.css` files are
+discovered by convention.
+
+### `targetSdkVersion` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#targetsdkversion\}
+
+- **Type:** `string`
+
+:::warning Deprecated
+Deprecated.
+:::
+
+Alias of [`PluginVanillaLynxOptions.engineVersion`](#pluginvanillalynxoptions-engineversion).
+
+ Use `engineVersion` instead.
+
+### Other options \{#other-options\}
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="engineversion"></a>`engineVersion` | `string` | `'3.5'` | The minimum Lynx Engine version required by the emitted bundle. |
+
+{/* @api-end */}
+
+## API
+
+{/* @api ApiExports package="vanilla-rsbuild-plugin" exclude="PluginVanillaLynxOptions" optionsType="PluginVanillaLynxOptions" */}
+
+## Functions \{#functions\}
+
+### `pluginVanillaLynx()` \{#pluginvanillalynx\}
+
+```ts
+pluginVanillaLynx(options: PluginVanillaLynxOptions): RsbuildPlugin
+```
+
+Create the Vanilla Lynx DSL integration for Rsbuild or Rspeedy.
+
+A logical entry can explicitly declare its main-thread and background-thread
+sources. As a shorthand, an Rsbuild entry is treated as the main-thread
+source and optional sibling `background.ts` and `style.css` files are
+discovered by convention.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | `PluginVanillaLynxOptions` |  |
+
+**Returns:** `RsbuildPlugin`
+
+## Constants \{#constants\}
+
+### `LAYERS` \{#layers\}
+
+```ts
+const LAYERS: Readonly<{ BACKGROUND: "vanilla:background"; MAIN_THREAD: "vanilla:main-thread" }>
+```
+
+Rspack layers used by Vanilla Lynx entries.
+
+## Types \{#types\}
+
+### `LynxTemplatePlugin` \{#lynxtemplateplugin\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="lynxtemplateplugin-getlynxtemplatepluginhooks"></a>`getLynxTemplatePluginHooks` | `(compilation: Compilation) => TemplateHooks` |  |
+
+### `TemplateHooks` \{#templatehooks\}
+
+To allow other plugins to alter the Template, this plugin executes
+[tapable](https://github.com/webpack/tapable) hooks.
+
+```js
+class MyPlugin {
+  apply(compiler) {
+    compiler.hooks.compilation.tap("MyPlugin", (compilation) => {
+      console.log("The compiler is starting a new compilation...");
+
+      LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(
+        "MyPlugin", // <-- Set a meaningful name here for stacktraces
+        (data, cb) => {
+          // Manipulate the content
+          modifyTemplate(data.template)
+          // Tell webpack to move on
+          cb(null, data);
+        },
+      );
+    });
+  }
+}
+```
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="templatehooks-afteremit"></a>`afterEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ outputName: string }>` | Called after the template is emitted. |
+| <a id="templatehooks-asyncchunkname"></a>`asyncChunkName` <span className="api-badge api-badge-alpha">Alpha</span> | `SyncWaterfallHook<string>` | Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template. |
+| <a id="templatehooks-beforeemit"></a>`beforeEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: EncodeOptions; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>` | Called before the template is emitted. Can be used to modify the template. |
+| <a id="templatehooks-beforeencode"></a>`beforeEncode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>` | Called before the encode process. Can be used to modify the encode options. |
+| <a id="templatehooks-encode"></a>`encode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesBailHook<{ encodeOptions: EncodeOptions; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>` | Call the encode process. |
+
+### `VanillaBundleFilenameContext` \{#vanillabundlefilenamecontext\}
+
+Context passed to a Vanilla Lynx bundle filename function.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="vanillabundlefilenamecontext-entryname"></a>`entryName` | `string` | The logical Rsbuild entry name. |
+| <a id="vanillabundlefilenamecontext-lazybundle"></a>`lazyBundle` | `false` | Vanilla Lynx currently emits only the main card bundle. |
+| <a id="vanillabundlefilenamecontext-platform"></a>`platform` | `string` | The Rsbuild environment name. |
+
+### `VanillaLynxEntry` \{#vanillalynxentry\}
+
+The two thread source files of a logical Vanilla Lynx entry.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="vanillalynxentry-background"></a>`background?` | `string \| false` | Source executed in the background JavaScript thread. |
+| <a id="vanillalynxentry-css"></a>`css?` | `string \| false` | CSS source encoded into the Lynx template. |
+| <a id="vanillalynxentry-mainthread"></a>`mainThread` | `string` | Module request executed on the Lynx main thread with Element PAPI globals. |
+
+### `VanillaBundleFilename` \{#vanillabundlefilename\}
+
+```ts
+type VanillaBundleFilename = string | ((context: VanillaBundleFilenameContext) => string)
+```
+
+The final Vanilla Lynx bundle filename.
+
+{/* @api-end */}

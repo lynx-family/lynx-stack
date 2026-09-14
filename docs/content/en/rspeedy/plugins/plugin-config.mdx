@@ -1,0 +1,99 @@
+---
+title: pluginLynxConfig
+---
+
+# pluginLynxConfig
+
+{/* @api PackageHeader package="config-rsbuild-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/config-rsbuild-plugin</code> <span className="api-pkg-version">v0.2.3</span> · <a href="https://www.npmjs.com/package/@lynx-js/config-rsbuild-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-config" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-config/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+Writes Lynx engine configuration (page config such as `enableCSSSelector` or `enableRemoveCSSScope`) into the bundle. This is not a DSL plugin; use it next to one.
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/config-rsbuild-plugin -D" />
+
+## Usage
+
+```ts title="lynx.config.ts"
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginLynxConfig } from '@lynx-js/config-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [pluginLynxConfig()],
+})
+```
+
+## Options
+
+{/* @api ApiOptions package="config-rsbuild-plugin" type="Options" */}
+
+### `dslPluginName2PkgName` \{#dslpluginname2pkgname\}
+
+- **Type:** `Record<string, string>` (from typescript)
+
+A map from DSL plugin name to its package name.
+
+```ts
+{
+  'lynx:react': '@lynx-js/react-rsbuild-plugin',
+}
+```
+
+### Other options \{#other-options\}
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="compileroptionskeys"></a>`compilerOptionsKeys` | `string[]` |  | The keys of compiler options to set. |
+| <a id="configkeys"></a>`configKeys` | `string[]` |  | The keys of config options to set. |
+| <a id="upgraderspeedylink"></a>`upgradeRspeedyLink` | `string` |  | The link to upgrade Rspeedy. |
+| <a id="validate"></a>`validate` | `(input: unknown) => Config` |  | Custom validation function for the Lynx config. |
+
+{/* @api-end */}
+
+## API
+
+{/* @api ApiExports package="config-rsbuild-plugin" exclude="Options" optionsType="Options" */}
+
+## Functions \{#functions\}
+
+### `pluginLynxConfig()` \{#pluginlynxconfig\}
+
+```ts
+pluginLynxConfig(config: Config, options?: Options): RsbuildPlugin
+```
+
+An rsbuild plugin for config Lynx Config defined by `@lynx-js/type-config`.
+
+```ts
+import { pluginLynxConfig } from '@lynx-js/config-rsbuild-plugin'
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  plugins: [
+    pluginLynxConfig({
+      alignMouseEventWithW3C: true,
+    }),
+  ],
+})
+```
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `config` | `Config` | The Lynx config to set. |
+| `options?` | `Options` |  |
+
+**Returns:** `RsbuildPlugin`
+
+## Types \{#types\}
+
+### `Config` \{#config\}
+
+A configuration interface for Lynx Config defined by `@lynx-js/type-config`.
+
+{/* @api-end */}

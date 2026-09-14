@@ -1,0 +1,73 @@
+---
+title: '@lynx-js/chunk-loading-webpack-plugin'
+---
+
+# @lynx-js/chunk-loading-webpack-plugin
+
+{/* @api PackageHeader package="chunk-loading-webpack-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/chunk-loading-webpack-plugin</code> <span className="api-pkg-version">v0.4.2</span> · <a href="https://www.npmjs.com/package/@lynx-js/chunk-loading-webpack-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/chunk-loading-webpack-plugin" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/chunk-loading-webpack-plugin/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+:::tip 内部包
+此包是 Lynx 构建引擎的一部分，由 [`pluginLynx`](/zh/rspeedy/plugins/plugin-lynx) 自动应用。其 API 文档面向插件作者，应用代码不会直接使用它。
+:::
+
+为 Lynx 生成 chunk 加载运行时的 webpack 插件。
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/chunk-loading-webpack-plugin -D" />
+
+## API
+
+{/* @api ApiExports package="chunk-loading-webpack-plugin" */}
+
+## 类 \{#\}
+
+### `ChunkLoadingWebpackPlugin` \{#chunkloadingwebpackplugin\}
+
+ChunkLoadingWebpackPlugin 为 Lynx 中的 webpack/Rspack 启用 chunk 加载能力。
+
+- 与 Rspack 一起使用。
+
+```js
+// rspack.config.js
+import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'
+export default {
+  output: {
+    chunkFormat: 'require',
+  },
+  plugins: [new ChunkLoadingWebpackPlugin()],
+}
+```
+
+- 与 webpack 一起使用。
+
+```js
+// webpack.config.js
+import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'
+export default {
+  output: {
+    chunkFormat: 'lynx',
+  },
+  plugins: [new ChunkLoadingWebpackPlugin()],
+}
+```
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="chunkloadingwebpackplugin-constructor"></a>`constructor` | `constructor(options: Partial<ChunkLoadingWebpackPluginOptions>): ChunkLoadingWebpackPlugin` |  |
+| <a id="chunkloadingwebpackplugin-defaultoptions"></a>`defaultOptions` | `Readonly<Required<ChunkLoadingWebpackPluginOptions>>` | `defaultOptions` 是 [`ChunkLoadingWebpackPlugin`](#chunkloadingwebpackplugin) 使用的默认选项。 |
+| <a id="chunkloadingwebpackplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` | webpack 插件的入口。 |
+
+## 类型 \{#\}
+
+### `ChunkLoadingWebpackPluginOptions` \{#chunkloadingwebpackpluginoptions\}
+
+ChunkLoadingWebpackPlugin 的选项
+
+{/* @api-end */}

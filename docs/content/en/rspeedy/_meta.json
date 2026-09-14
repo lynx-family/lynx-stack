@@ -1,0 +1,28 @@
+[
+  {
+    "type": "dir",
+    "name": "config",
+    "label": "Configuration",
+    "collapsible": false
+  },
+  {
+    "type": "dir",
+    "name": "plugins",
+    "label": "Plugins",
+    "collapsible": false
+  },
+  {
+    "type": "dir",
+    "name": "api",
+    "label": "JavaScript API",
+    "collapsible": false
+  },
+  {
+    "type": "divider"
+  },
+  {
+    "type": "custom-link",
+    "label": "Guides on lynxjs.org",
+    "link": "https://lynxjs.org/rspeedy/"
+  }
+]

@@ -1,0 +1,76 @@
+.api-badge {
+  display: inline-block;
+  vertical-align: 2px;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--rp-font-family-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.api-badge-deprecated {
+  background: var(--rp-c-danger-soft, #fbe9e8);
+  color: var(--rp-c-danger, #b12a22);
+}
+
+.api-badge-beta,
+.api-badge-alpha {
+  background: var(--rp-c-brand-tint, #e6eefa);
+  color: var(--rp-c-brand-dark, #2560a6);
+}
+
+.api-badge-stale {
+  background: var(--rp-c-warning-soft, #fbf1df);
+  color: var(--rp-c-warning, #a4660f);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.api-pkg-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 8px 0 20px;
+  font-size: 13px;
+  color: var(--rp-c-text-2);
+}
+
+.api-pkg-header code {
+  color: var(--rp-c-text-1);
+}
+
+.api-pkg-version {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--rp-c-brand-tint);
+  color: var(--rp-c-brand-dark);
+  font-family: var(--rp-font-family-mono);
+  font-size: 12px;
+}
+
+.rspress-doc table code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.rspress-doc table td:first-child code {
+  white-space: nowrap;
+}
+
+.rspress-doc h3 code,
+.rspress-doc h4 code,
+.rspress-doc h5 code {
+  font-size: 0.92em;
+  background: transparent;
+  padding: 0;
+}
+
+.rspress-doc h4 code span,
+.rspress-doc h5 code span {
+  color: var(--rp-c-text-2);
+}

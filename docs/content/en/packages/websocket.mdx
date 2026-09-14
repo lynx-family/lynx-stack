@@ -1,0 +1,80 @@
+---
+title: '@lynx-js/websocket'
+---
+
+# @lynx-js/websocket
+
+{/* @api PackageHeader package="websocket" */}
+
+<div className="api-pkg-header"><code>@lynx-js/websocket</code> <span className="api-pkg-version">v0.0.4</span> · <a href="https://www.npmjs.com/package/@lynx-js/websocket" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/websocket" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/websocket/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+
+A WebSocket implementation for Lynx
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/websocket" />
+
+## API
+
+{/* @api ApiExports package="websocket" */}
+
+## Classes \{#classes\}
+
+### `WebSocket` \{#websocket\}
+
+The implementation of [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
+for Lynx.
+
+This only works in environment that has `NativeModules.LynxWebSocketModule`.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="websocket-constructor"></a>`constructor` | `constructor(url: string, protocols?: string \| string[], options: { headers?: Record<string, string> }): WebSocket` |  |
+| <a id="websocket-closed"></a>`CLOSED` | `ReadyState` | `@lynx-js/websocket#ReadyState.CLOSED` |
+| <a id="websocket-closing"></a>`CLOSING` | `ReadyState` | `@lynx-js/websocket#ReadyState.CLOSING` |
+| <a id="websocket-connecting"></a>`CONNECTING` | `ReadyState` | `@lynx-js/websocket#ReadyState.CONNECTING` |
+| <a id="websocket-open"></a>`OPEN` | `ReadyState` | `@lynx-js/websocket#ReadyState.OPEN` |
+| <a id="websocket-onclose"></a>`onclose` | `((event: Event<"close"> & { code: number; reason: string }) => void) \| null` | onclose is the Web-style callback of [`WebSocket`](#websocket). |
+| <a id="websocket-onerror"></a>`onerror` | `((event: Event<"error"> & { message: string }) => void) \| null` | onerror is the Web-style callback of [`WebSocket`](#websocket). |
+| <a id="websocket-onmessage"></a>`onmessage` | `((event: Event<"message"> & { data: string }) => void) \| null` | onmessage is the Web-style callback of [`WebSocket`](#websocket). |
+| <a id="websocket-onopen"></a>`onopen` | `((event: Event<"open">) => void) \| null` | onopen is the Web-style callback of [`WebSocket`](#websocket). |
+| <a id="websocket-protocol"></a>`protocol` | `string \| undefined` | The WebSocket.protocol read-only property returns the name of the sub-protocol the server selected. |
+| <a id="websocket-readystate"></a>`readyState` | `ReadyState` | The `readyState` read-only property returns the current state of the [`WebSocket`](#websocket) connection. |
+| <a id="websocket-url"></a>`url` | `string` | The `url` read-only property returns the URL of the [`WebSocket`](#websocket) passed by the constructor. |
+| <a id="websocket-addeventlistener"></a>`addEventListener` | `addEventListener(type: T, callback?: (event: EventMap[T]) => void): void` | The `addEventListener()` method of the `EventTarget` interface sets up a function that will be called whenever the specified event is delivered to the target. |
+| <a id="websocket-close"></a>`close` | `close(code?: number, reason?: string): void` | The `close()` method closes the [`WebSocket`](#websocket) connection or connection attempt, if any. |
+| <a id="websocket-ping"></a>`ping` | `ping(): void` | The `ping` method send an empty message to the server over the [`WebSocket`](#websocket) connection. |
+| <a id="websocket-removeeventlistener"></a>`removeEventListener` | `removeEventListener(type: T, callback: (event: EventMap[T]) => void): void` | The `removeEventListener()` method of the `EventTarget` interface removes an event listener from the WebSocket. |
+| <a id="websocket-send"></a>`send` | `send(data: string): void` | The `send` method send the specified data to be transmitted to the server over the [`WebSocket`](#websocket) connection. |
+
+## Types \{#types\}
+
+### `ReadyState` \{#readystate\}
+
+The `ReadyState` describe the state of a `WebSocket` connection.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="readystate-closed"></a>`CLOSED` | `3` | The connection is closed or couldn't be opened. |
+| <a id="readystate-closing"></a>`CLOSING` | `2` | The connection is in the process of closing. |
+| <a id="readystate-connecting"></a>`CONNECTING` | `0` | Socket has been created. The connection is not yet open. |
+| <a id="readystate-open"></a>`OPEN` | `1` | The connection is open and ready to communicate. |
+
+### `Event` \{#event\}
+
+An implementation of `Event` interface, that wraps a given event object.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="event-type"></a>`type` | `T` | The type os this event. |
+
+### `EventMap` \{#eventmap\}
+
+The `EventMap` describe the events that `@lynx-js/websocket#WebSocket` may fire.
+
+{/* @api-end */}

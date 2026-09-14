@@ -1,0 +1,66 @@
+---
+title: mode
+---
+
+# mode
+
+The build mode. It is the [Rsbuild `mode` option](https://rsbuild.rs/config/mode) and defaults to `production` for `rspeedy build` and `development` for `rspeedy dev`.
+
+## At a glance
+
+{/* @api ConfigOverview package="rspeedy" type="Config" path="mode" */}
+
+| Name | Type | Description |
+| --- | --- | --- |
+| [`mode`](#mode) | `"production" \| "development" \| "none"` | Specify the build mode for Rsbuild and Rspack, as each mode has different default behavior and optimizations. |
+
+{/* @api-end */}
+
+## Options
+
+{/* @api ConfigOptions package="rspeedy" type="Config" path="mode" */}
+
+### `mode` \{#mode\}
+
+- **Type:** `"production" | "development" | "none"`
+- **Default:** Depends on `process.env.NODE_ENV`: `'production'` when `NODE_ENV` is `'production'`, `'development'` when `NODE_ENV` is `'development'`, and `'none'` otherwise. When using Rspeedy's CLI, `rspeedy dev` and `rspeedy preview` default to `'development'`, while `rspeedy build` defaults to `'production'`.
+
+Specify the build mode for Rsbuild and Rspack, as each mode has different default behavior and optimizations.
+
+```ts
+If the value of `mode` is `'development'`:
+
+- Enable HMR and register the {@link https://rspack.rs/plugins/webpack/hot-module-replacement-plugin | HotModuleReplacementPlugin}.
+
+- Generate JavaScript and CSS source maps. In Lynx environments, all `.map` assets are removed before emit. See {@link Output.sourceMap} for details.
+
+- The `process.env.NODE_ENV` in the source code will be replaced with `'development'`.
+
+- The `import.meta.env.MODE` in the source code will be replaced with `'development'`.
+
+- The `import.meta.env.DEV` in the source code will be replaced with `true`.
+
+- The `import.meta.env.PROD` in the source code will be replaced with `false`.
+```
+
+```ts
+If the value of `mode` is `'production'`:
+
+- Enable JavaScript code minification and register the {@link https://rspack.rs/plugins/rspack/swc-js-minimizer-rspack-plugin | SwcJsMinimizerRspackPlugin}.
+
+- Generated JavaScript and CSS filenames will have hash suffixes, see {@link Output.filenameHash}.
+
+- Generated CSS Modules classnames will be shorter, see {@link CssModules.localIdentName}.
+
+- Generate JavaScript and CSS source maps. In Lynx environments, all `.map` assets are removed before emit. See {@link Output.sourceMap}.
+
+- The `process.env.NODE_ENV` in the source code will be replaced with `'production'`.
+
+- The `import.meta.env.MODE` in the source code will be replaced with `'production'`.
+
+- The `import.meta.env.DEV` in the source code will be replaced with `false`.
+
+- The `import.meta.env.PROD` in the source code will be replaced with `true`.
+```
+
+{/* @api-end */}

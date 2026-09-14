@@ -1,0 +1,34 @@
+{
+  "WebComponentClass.notToFilterFalseAttributes.summary": {
+    "hash": "40b8b2c2",
+    "text": "对于 attribute=\"false\"，\n默认会执行 removeAttribute；\n在此设置以禁用该行为；"
+  },
+  "commonComponentEventSetting.default": {
+    "hash": "0b877caf",
+    "text": "..."
+  },
+  "layoutChangeTarget.default": {
+    "hash": "0b877caf",
+    "text": "..."
+  },
+  "registerAttributeHandler.default": {
+    "hash": "0b877caf",
+    "text": "..."
+  },
+  "registerEventEnableStatusChangeHandler.default": {
+    "hash": "0b877caf",
+    "text": "..."
+  },
+  "registerStyleChangeHandler.default": {
+    "hash": "0b877caf",
+    "text": "..."
+  },
+  "scrollContainerDom.default": {
+    "hash": "0b877caf",
+    "text": "..."
+  },
+  "useScrollEnd.default": {
+    "hash": "0b877caf",
+    "text": "..."
+  }
+}

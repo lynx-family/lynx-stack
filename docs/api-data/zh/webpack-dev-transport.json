@@ -1,0 +1,38 @@
+{
+  "default.summary": {
+    "hash": "7bf65c3f",
+    "text": "LynxTransportClient 是 webpack-dev-server 的客户端传输实现。\n可用于 webpack 的\n[`devServer.client.webSocketTransport`](https://webpack.js.org/configuration/dev-server/#websockettransport)\n配置中。\n需要与 `LynxTransportServer` 配合使用。"
+  },
+  "default.example.0": {
+    "hash": "ba4ed9ab",
+    "text": "```js\n// webpack.config.js\nimport { createRequire } from 'node:module'\nimport { LynxTransportServer } from '@lynx-js/webpack-dev-transport'\n\nconst require = createRequire(import.meta.url)\nexport default {\n  devServer: {\n    client: {\n      webSocketTransport: require.resolve('@lynx-js/webpack-dev-transport/client')\n    },\n    allowedHosts: 'all',\n    webSocketServer: LynxTransportServer\n  }\n}\n```"
+  },
+  "default.onClose.summary": {
+    "hash": "23baa2c5",
+    "text": "`Client.onClose`"
+  },
+  "default.onMessage.summary": {
+    "hash": "25fbabb4",
+    "text": "`Client.onMessage`"
+  },
+  "default.onOpen.summary": {
+    "hash": "e2e89621",
+    "text": "`Client.onOpen`"
+  },
+  "Client.summary": {
+    "hash": "d78253eb",
+    "text": "Client 是 [`webpack-dev-server`](https://github.com/webpack/webpack-dev-server/blob/48f56d57775dc4cf78bfcf51c3761adf852b0310/client-src/socket.js#L30) 用于 WebSocket 客户端的接口。"
+  },
+  "Client.onClose.summary": {
+    "hash": "734b66ae",
+    "text": "注册关闭回调"
+  },
+  "Client.onMessage.summary": {
+    "hash": "8c4e4d9d",
+    "text": "注册消息回调"
+  },
+  "Client.onOpen.summary": {
+    "hash": "44532e8a",
+    "text": "注册打开回调"
+  }
+}

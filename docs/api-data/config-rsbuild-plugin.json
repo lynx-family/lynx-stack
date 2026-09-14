@@ -1,0 +1,97 @@
+{
+  "id": "config-rsbuild-plugin",
+  "package": "@lynx-js/config-rsbuild-plugin",
+  "version": "0.2.3",
+  "description": "An rsbuild plugin for config Lynx Config defined by @lynx-js/type-config.",
+  "section": "rspeedy",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-config",
+  "exports": [
+    {
+      "name": "Config",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "A configuration interface for Lynx Config defined by `@lynx-js/type-config`.",
+      "members": []
+    },
+    {
+      "name": "Options",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options for the Lynx Config rsbuild plugin.",
+      "members": [
+        {
+          "name": "compilerOptionsKeys",
+          "optional": true,
+          "type": "string[]",
+          "summary": "The keys of compiler options to set.",
+          "kind": "property"
+        },
+        {
+          "name": "configKeys",
+          "optional": true,
+          "type": "string[]",
+          "summary": "The keys of config options to set.",
+          "kind": "property"
+        },
+        {
+          "name": "dslPluginName2PkgName",
+          "optional": true,
+          "type": "Record<string, string>",
+          "external": "typescript",
+          "summary": "A map from DSL plugin name to its package name.",
+          "examples": [
+            "```ts\n{\n  'lynx:react': '@lynx-js/react-rsbuild-plugin',\n}\n```"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "upgradeRspeedyLink",
+          "optional": true,
+          "type": "string",
+          "summary": "The link to upgrade Rspeedy.",
+          "kind": "property"
+        },
+        {
+          "name": "validate",
+          "optional": true,
+          "type": "(input: unknown) => Config",
+          "summary": "Custom validation function for the Lynx config.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "pluginLynxConfig",
+      "kind": "function",
+      "type": "pluginLynxConfig(config: Config, options?: Options): RsbuildPlugin",
+      "signatures": [
+        {
+          "text": "pluginLynxConfig(config: Config, options?: Options): RsbuildPlugin",
+          "params": [
+            {
+              "name": "config",
+              "type": "Config",
+              "description": "The Lynx config to set."
+            },
+            {
+              "name": "options",
+              "type": "Options",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "RsbuildPlugin"
+          },
+          "summary": "An rsbuild plugin for config Lynx Config defined by `@lynx-js/type-config`.",
+          "examples": [
+            "```ts\nimport { pluginLynxConfig } from '@lynx-js/config-rsbuild-plugin'\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  plugins: [\n    pluginLynxConfig({\n      alignMouseEventWithW3C: true,\n    }),\n  ],\n})\n```"
+          ]
+        }
+      ],
+      "summary": "An rsbuild plugin for config Lynx Config defined by `@lynx-js/type-config`.",
+      "examples": [
+        "```ts\nimport { pluginLynxConfig } from '@lynx-js/config-rsbuild-plugin'\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  plugins: [\n    pluginLynxConfig({\n      alignMouseEventWithW3C: true,\n    }),\n  ],\n})\n```"
+      ]
+    }
+  ]
+}

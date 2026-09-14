@@ -1,0 +1,18 @@
+[
+  {
+    "type": "file",
+    "name": "index",
+    "label": "Overview"
+  },
+  "dev",
+  "environments",
+  "mode",
+  "output",
+  "performance",
+  "plugins",
+  "resolve",
+  "server",
+  "source",
+  "splitChunks",
+  "tools"
+]

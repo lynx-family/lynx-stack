@@ -1,0 +1,150 @@
+{
+  "ReadyState.summary": {
+    "hash": "452d625a",
+    "text": "`ReadyState` 描述 `WebSocket` 连接的状态。"
+  },
+  "ReadyState.CLOSED.summary": {
+    "hash": "82d64f3d",
+    "text": "连接已关闭或无法打开。"
+  },
+  "ReadyState.CLOSING.summary": {
+    "hash": "5b59951b",
+    "text": "连接正在关闭。"
+  },
+  "ReadyState.CONNECTING.summary": {
+    "hash": "335cf2ba",
+    "text": "Socket 已创建，连接尚未打开。"
+  },
+  "ReadyState.OPEN.summary": {
+    "hash": "5ea42fd2",
+    "text": "连接已打开，可以进行通信。"
+  },
+  "WebSocket.summary": {
+    "hash": "35035823",
+    "text": "[WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)\n的 Lynx 实现。"
+  },
+  "WebSocket.remarks": {
+    "hash": "5e46bf02",
+    "text": "仅在存在 `NativeModules.LynxWebSocketModule` 的环境中可用。"
+  },
+  "WebSocket.constructor.params.url": {
+    "hash": "31dddf8f",
+    "text": "要连接的 URL，即 WebSocket 服务器将响应的 URL。"
+  },
+  "WebSocket.constructor.params.protocols": {
+    "hash": "fcb49870",
+    "text": "单个协议字符串或协议字符串数组。省略时默认使用空数组，即 `[]`。"
+  },
+  "WebSocket.constructor.params.options": {
+    "hash": "59292277",
+    "text": "仅适用于 Lynx 的额外选项。"
+  },
+  "WebSocket.CLOSED.summary": {
+    "hash": "95202151",
+    "text": "`@lynx-js/websocket#ReadyState.CLOSED`"
+  },
+  "WebSocket.CLOSING.summary": {
+    "hash": "3926a4a6",
+    "text": "`@lynx-js/websocket#ReadyState.CLOSING`"
+  },
+  "WebSocket.CONNECTING.summary": {
+    "hash": "77578a1f",
+    "text": "`@lynx-js/websocket#ReadyState.CONNECTING`"
+  },
+  "WebSocket.OPEN.summary": {
+    "hash": "d0cd5569",
+    "text": "`@lynx-js/websocket#ReadyState.OPEN`"
+  },
+  "WebSocket.onclose.summary": {
+    "hash": "b7f515cc",
+    "text": "onclose 是 [`WebSocket`](api:WebSocket) 的 Web 风格回调。"
+  },
+  "WebSocket.onerror.summary": {
+    "hash": "fe5f30e0",
+    "text": "onerror 是 [`WebSocket`](api:WebSocket) 的 Web 风格回调。"
+  },
+  "WebSocket.onmessage.summary": {
+    "hash": "8d08d03b",
+    "text": "onmessage 是 [`WebSocket`](api:WebSocket) 的 Web 风格回调。"
+  },
+  "WebSocket.onopen.summary": {
+    "hash": "554e85c8",
+    "text": "onopen 是 [`WebSocket`](api:WebSocket) 的 Web 风格回调。"
+  },
+  "WebSocket.protocol.summary": {
+    "hash": "9de1f820",
+    "text": "WebSocket.protocol 只读属性返回服务器所选子协议的名称。"
+  },
+  "WebSocket.readyState.summary": {
+    "hash": "6f02b683",
+    "text": "`readyState` 只读属性返回 [`WebSocket`](api:WebSocket) 连接的当前状态。"
+  },
+  "WebSocket.url.summary": {
+    "hash": "a3353a21",
+    "text": "`url` 只读属性返回通过构造函数传入 [`WebSocket`](api:WebSocket) 的 URL。"
+  },
+  "WebSocket.addEventListener.summary": {
+    "hash": "3d0c8835",
+    "text": "`EventTarget` 接口的 `addEventListener()` 方法用于设置一个函数，每当指定事件派发到目标时都会调用该函数。"
+  },
+  "WebSocket.addEventListener.params.type": {
+    "hash": "28eb50e2",
+    "text": "表示要监听的事件类型的字符串，区分大小写。"
+  },
+  "WebSocket.addEventListener.params.callback": {
+    "hash": "76fc8019",
+    "text": "接收通知的函数。事件详情参见 `@lynx-js/websocket#EventMap`。"
+  },
+  "WebSocket.close.summary": {
+    "hash": "3b5733b4",
+    "text": "`close()` 方法关闭 [`WebSocket`](api:WebSocket) 连接或正在进行的连接尝试（如有）。"
+  },
+  "WebSocket.close.remarks": {
+    "hash": "0084f8be",
+    "text": "如果连接已处于 [`CLOSED `](api:WebSocket.CLOSED) 状态，该方法不执行任何操作。"
+  },
+  "WebSocket.ping.summary": {
+    "hash": "6e2d6703",
+    "text": "`ping` 方法通过 [`WebSocket`](api:WebSocket) 连接向服务器发送一条空消息。"
+  },
+  "WebSocket.ping.remarks": {
+    "hash": "add0bcfc",
+    "text": "在连接处于 [`CONNECTING `](api:WebSocket.CONNECTING) 状态时调用 `ping()` 会抛出异常。在连接处于 [`CLOSING `](api:WebSocket.CLOSING) 或 [`CLOSED `](api:WebSocket.CLOSED) 状态时调用 `ping()`，数据会被静默丢弃。"
+  },
+  "WebSocket.removeEventListener.summary": {
+    "hash": "4d5fdb40",
+    "text": "`EventTarget` 接口的 `removeEventListener()` 方法从 WebSocket 上移除一个事件监听器。"
+  },
+  "WebSocket.removeEventListener.params.type": {
+    "hash": "d0d26e8a",
+    "text": "要停止监听的事件类型。"
+  },
+  "WebSocket.removeEventListener.params.callback": {
+    "hash": "05fbfb96",
+    "text": "要移除的事件监听函数。"
+  },
+  "WebSocket.send.summary": {
+    "hash": "1b2cd21c",
+    "text": "`send` 方法通过 [`WebSocket`](api:WebSocket) 连接将指定数据发送到服务器。"
+  },
+  "WebSocket.send.remarks": {
+    "hash": "1c3c7634",
+    "text": "在连接处于 [`CONNECTING `](api:WebSocket.CONNECTING) 状态时调用 `send()` 会抛出异常。在连接处于 [`CLOSING `](api:WebSocket.CLOSING) 或 [`CLOSED `](api:WebSocket.CLOSED) 状态时调用 `send()`，数据会被静默丢弃。"
+  },
+  "WebSocket.send.params.data": {
+    "hash": "ab3d0eb3",
+    "text": "要发送的数据。"
+  },
+  "Event.summary": {
+    "hash": "c91bbdad",
+    "text": "`Event` 接口的实现，用于包装给定的事件对象。"
+  },
+  "Event.type.summary": {
+    "hash": "21e10232",
+    "text": "该事件的类型。"
+  },
+  "EventMap.summary": {
+    "hash": "041dd2de",
+    "text": "`EventMap` 描述 `@lynx-js/websocket#WebSocket` 可能触发的事件。"
+  }
+}

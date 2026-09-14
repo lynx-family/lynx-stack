@@ -1,0 +1,213 @@
+---
+title: server
+---
+
+# server
+
+开发期间向设备提供 bundle 的本地服务器相关选项：host、端口、响应头和基础路径。
+
+## 概览
+
+{/* @api ConfigOverview package="rspeedy" type="Config" path="server" */}
+
+| 名称 | 类型 | 说明 |
+| --- | --- | --- |
+| [`base`](#server-base) | `string` | 配置服务器的基础路径。 |
+| [`compress`](#server-compress) | `boolean \| CompressOptions` | 配置是否对开发服务器或预览服务器提供的静态资源启用 [gzip 压缩](https://developer.mozilla.org/en-US/docs/Glossary/gzip_compression)。 |
+| [`cors`](#server-cors) | `boolean \| CorsOptions` | 为开发服务器或预览服务器配置 CORS。 |
+| [`headers`](#server-headers) | `Record<string, string \| string[]>` | 为所有响应添加响应头。 |
+| [`host`](#server-host) | `string` | 指定 Rspeedy Server 监听的 host。 |
+| [`port`](#server-port) | `number` | 指定 Rspeedy Server 监听的端口。 |
+| [`proxy`](#server-proxy) | `ProxyConfig` | 为开发服务器或预览服务器配置代理规则，将请求代理到指定的服务。 |
+| [`strictPort`](#server-strictport) | `boolean` | 当端口被占用时，Rspeedy 会自动递增端口号，直到找到可用的端口。 |
+
+{/* @api-end */}
+
+## 选项
+
+{/* @api ConfigOptions package="rspeedy" type="Config" path="server" */}
+
+### `server.base` \{#server-base\}
+
+- **类型:** `string`
+- **默认值:** `'/'`
+
+配置服务器的基础路径。
+
+默认情况下，用户可以通过 `http://<host>:<port>/main.lynx.bundle` 访问 lynx bundle。
+
+如果希望通过 `http://<host>:<port>/foo/main.lynx.bundle` 访问 lynx bundle，可以将 `server.base` 修改为 `/foo`。
+
+更多信息可参考 [server.base](https://rsbuild.rs/config/server/base)。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  server: {
+    base: '/dist'
+  },
+})
+```
+
+### `server.compress` \{#server-compress\}
+
+- **类型:** `boolean | CompressOptions`
+- **默认值:** true
+
+详见 [Rsbuild - server.compress](https://rsbuild.rs/config/server/compress)。
+
+配置是否对开发服务器或预览服务器提供的静态资源启用 [gzip 压缩](https://developer.mozilla.org/en-US/docs/Glossary/gzip_compression)。
+
+如需禁用 gzip 压缩，可将 compress 设置为 false：
+
+```js
+export default {
+  server: {
+    compress: false,
+  },
+}
+```
+
+以 /foo 开头时进行压缩
+
+```js
+export default {
+  server: {
+    compress: {
+      filter: (req) => {
+        if (req.url?.includes('/foo')) {
+          return false;
+        }
+        return true;
+      },
+    },
+  },
+}
+```
+
+设置 zlib 压缩级别
+
+```js
+export default {
+  server: {
+    compress: {
+      level: 6,
+    },
+  },
+}
+```
+
+### `server.cors` \{#server-cors\}
+
+- **类型:** `boolean | CorsOptions`
+- **默认值:** 使用 Rsbuild 默认的 CORS 选项。
+
+- 设置为对象时，使用指定的选项启用 CORS。
+
+- 设置为 `true` 时，使用默认选项启用 CORS（允许所有来源，不推荐）。
+
+- 设置为 `false` 时，禁用 CORS。
+
+详见 [Rsbuild - server.cors](https://rsbuild.rs/config/server/cors)。
+
+为开发服务器或预览服务器配置 CORS。
+
+```js
+export default {
+  server: {
+    cors: {
+      origin: 'https://example.com',
+    },
+  },
+}
+```
+
+### `server.headers` \{#server-headers\}
+
+- **类型:** `Record<string, string | string[]>` (来自 typescript)
+- **默认值:** `undefined`
+
+为所有响应添加响应头。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  server: {
+    headers: {
+      'Access-Control-Allow-Origin': '**',
+    },
+  },
+})
+```
+
+### `server.host` \{#server-host\}
+
+- **类型:** `string`
+- **默认值:** `"0.0.0.0"`
+
+指定 Rspeedy Server 监听的 host。
+
+在 `rspeedy dev` 期间，如果未设置 `server.host`，dev 插件会让服务器保持绑定在 IPv4 通配地址上，同时使用检测到的非回环 IPv4 地址（如 `192.168.1.50`）来解析开发服务器相关的 URL 和客户端 host 设置。如果不存在符合条件的 IPv4 地址，则绑定到 IPv6 通配地址，并使用检测到的 IPv6 地址生成 URL。当没有可用的非回环 IP 时，会回退为 IPv4 回环地址的 URL。如果你有多个网络接口，请显式设置 `server.host` 以选择所需的地址。
+
+将 host 设置为自定义值：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  server: {
+    host: "192.168.1.50",
+  },
+})
+```
+
+### `server.port` \{#server-port\}
+
+- **类型:** `number`
+- **默认值:** Rsbuild 默认将该选项设置为 `3000`。
+
+指定 Rspeedy Server 监听的端口。
+
+默认情况下，当配置的端口被占用时，服务器会自动递增端口号。
+
+将端口设置为自定义值：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  server: {
+    port: 3470,
+  },
+})
+```
+
+### `server.proxy` \{#server-proxy\}
+
+- **类型:** `ProxyConfig` (来自 [@rsbuild/core](https://rsbuild.rs/config/))
+- **默认值:** `undefined`
+
+为开发服务器或预览服务器配置代理规则，将请求代理到指定的服务。
+
+```js
+export default {
+  server: {
+    proxy: {
+      // http://localhost:3000/api -> http://localhost:3000/api
+      // http://localhost:3000/api/foo -> http://localhost:3000/api/foo
+      '/api': 'http://localhost:3000',
+    },
+  },
+}
+```
+
+### `server.strictPort` \{#server-strictport\}
+
+- **类型:** `boolean`
+- **默认值:** ```ts
+false
+
+By default, strict port mode is disabled. Set strictPort to true and Rspeedy will throw an exception when the port is occupied.
+```
+
+当端口被占用时，Rspeedy 会自动递增端口号，直到找到可用的端口。
+
+{/* @api-end */}

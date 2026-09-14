@@ -1,0 +1,149 @@
+---
+title: Types
+---
+
+# Types
+
+The types and classes exported by `@lynx-js/react`. Augment `InitData` and `GlobalProps` in your project to type the data your page receives.
+
+{/* @api ApiExports package="react" include="MainThreadRef,InitData,InitDataRaw,GlobalProps,Lynx,Root,DataProcessors,DataProcessorDefinition,CloneElement,CreateElement,ReactLynxChildren" */}
+
+## Classes \{#classes\}
+
+### `MainThreadRef` \{#mainthreadref\}
+
+A `MainThreadRef` is a ref that can only be accessed on the main thread. It is used to preserve
+states between main thread function calls.
+The data saved in `current` property of the `MainThreadRef` can be read and written in
+multiple main thread functions.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="mainthreadref-constructor"></a>`constructor` | `constructor(initValue: T): MainThreadRef<T>` |  |
+| <a id="mainthreadref-current"></a>`current` | `T` |  |
+
+## Types \{#types\}
+
+### `InitData` \{#initdata\}
+
+The interface you can extends so that the `defaultDataProcessor` returning value can be customized
+
+Should be used with `lynx.registerDataProcessors`. See more examples at [`Lynx.registerDataProcessors`](#lynx).
+
+### `InitDataRaw` \{#initdataraw\}
+
+The interface you can extends so that the `defaultDataProcessor` parameter can be customized
+
+Should be used with `lynx.registerDataProcessors`. See more examples at [`Lynx.registerDataProcessors`](#lynx).
+
+### `GlobalProps` \{#globalprops\}
+
+The interface you can extends so that the `useGlobalProps` returning value can be customized
+
+### `Lynx` \{#lynx\}
+
+APIs under `lynx` global variable that added by ReactLynx.
+
+```ts
+lynx.registerDataProcessors(...);
+lynx.querySelector(...);
+lynx.querySelectorAll(...);
+```
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="lynx-registerdataprocessors"></a>`registerDataProcessors` | `(dataProcessorDefinition?: DataProcessorDefinition) => void` | Register DataProcessors. You MUST call this before `root.render()`. |
+| <a id="lynx-triggerglobaleventfromlepus"></a>`triggerGlobalEventFromLepus` | `(eventName: string, params: any) => void` | An alias of `lynx.getJSModule("GlobalEventEmitter").trigger(eventName, params)` only in Lepus |
+
+### `Root` \{#root\}
+
+The default root exported by `@lynx-js/react` for you to render a JSX
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="root-registerdataprocessors"></a>`registerDataProcessors` <span className="api-badge api-badge-deprecated">Deprecated</span> | `(dataProcessorDefinition: DataProcessorDefinition) => void` | Register DataProcessors. You MUST call this before `root.render()`. **Deprecated.** Deprecated. |
+| <a id="root-render"></a>`render` | `(jsx: ReactNode) => void` | Use this API to pass in your JSX to render |
+
+### `DataProcessors` \{#dataprocessors\}
+
+The data processors that registered with [`Lynx.registerDataProcessors`](#lynx).
+
+Extending `dataProcessors` interface
+
+```ts
+import type { DataProcessors as WellKnownDataProcessors } from '@lynx-js/react';
+
+declare module '@lynx-js/react' {
+  interface DataProcessors extends WellKnownDataProcessors {
+    foo(bar: string): number;
+  }
+}
+```
+
+Then you can use `lynx.registerDataProcessors` with types.
+
+```js
+lynx.registerDataProcessors({
+  dataProcessors: {
+    foo(bar) {
+      return 1;
+    }
+  }
+})
+```
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="dataprocessors-getscreenmetricsoverride"></a>`getScreenMetricsOverride?` | `getScreenMetricsOverride(metrics: { height: number; width: number }): { height: number; width: number }` | Optional processor to override screen metrics used by the app |
+
+### `DataProcessorDefinition` \{#dataprocessordefinition\}
+
+Definition of DataProcessor(s)
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="dataprocessordefinition-dataprocessors"></a>`dataProcessors?` | `DataProcessors` | Should be used with `lynx.registerDataProcessors`. See more examples at [`Lynx.registerDataProcessors`](#lynx). |
+| <a id="dataprocessordefinition-defaultdataprocessor"></a>`defaultDataProcessor?` | `(rawInitData: InitDataRaw) => InitData` | You can custom input and output type of `defaultDataProcessor` by extends [`InitDataRaw`](#initdataraw) and [`InitData`](#initdata) Should be used with `lynx.registerDataProcessors`. See more examples at [`Lynx.registerDataProcessors`](#lynx). |
+
+### `CloneElement` \{#cloneelement\}
+
+```ts
+CloneElement(element: ReactElement<Props>, props?: Partial<Props> & Attributes | null, children: ReactNode[]): ReactElement<Props>
+```
+
+The call signature of ReactLynx `cloneElement`.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `element` | `ReactElement<Props>` |  |
+| `props?` | `Partial<Props> & Attributes \| null` |  |
+| `children` | `ReactNode[]` |  |
+
+**Returns:** `ReactElement<Props>`
+
+### `CreateElement` \{#createelement\}
+
+```ts
+CreateElement(type: Type, props?: IntrinsicElements[Type] | null, children: ReactNode[]): ReactElement<IntrinsicElements[Type], Type>
+CreateElement(type: string | ComponentType<Props>, props?: Attributes & Props | null, children: ReactNode[]): ReactElement<Props>
+```
+
+The call signature of ReactLynx `createElement`.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `type` | `Type` |  |
+| `props?` | `IntrinsicElements[Type] \| null` |  |
+| `children` | `ReactNode[]` |  |
+
+**Returns:** `ReactElement<IntrinsicElements[Type], Type>`
+
+### `ReactLynxChildren` \{#reactlynxchildren\}
+
+```ts
+type ReactLynxChildren = Omit<typeof PreactChildren, "map" | "forEach" | "toArray"> & { forEach: any; map: any; toArray: any }
+```
+
+Type of ReactLynx children utilities.
+
+{/* @api-end */}

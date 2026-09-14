@@ -1,0 +1,40 @@
+{
+  "id": "use-sync-external-store",
+  "package": "@lynx-js/use-sync-external-store",
+  "version": "1.5.0",
+  "description": "A pure ESM fork of use-sync-external-store. Works with @lynx-js/react.",
+  "section": "packages",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/use-sync-external-store",
+  "exports": [
+    {
+      "name": "useSyncExternalStore",
+      "kind": "function",
+      "type": "useSyncExternalStore(subscribe: (onStoreChange: () => void) => () => void, getSnapshot: () => Snapshot, getServerSnapshot?: () => Snapshot): Snapshot",
+      "signatures": [
+        {
+          "text": "useSyncExternalStore(subscribe: (onStoreChange: () => void) => () => void, getSnapshot: () => Snapshot, getServerSnapshot?: () => Snapshot): Snapshot",
+          "params": [
+            {
+              "name": "subscribe",
+              "type": "(onStoreChange: () => void) => () => void",
+              "description": ""
+            },
+            {
+              "name": "getSnapshot",
+              "type": "() => Snapshot",
+              "description": ""
+            },
+            {
+              "name": "getServerSnapshot",
+              "type": "() => Snapshot",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "Snapshot"
+          }
+        }
+      ]
+    }
+  ]
+}

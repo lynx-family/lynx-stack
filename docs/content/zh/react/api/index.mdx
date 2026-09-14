@@ -1,0 +1,23 @@
+---
+title: ReactLynx API
+---
+
+# ReactLynx API
+
+{/* @api PackageHeader package="react" */}
+
+<div className="api-pkg-header"><code>@lynx-js/react</code> <span className="api-pkg-version">v0.126.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/react" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/react" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/react/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+`@lynx-js/react` 是面向 Lynx 的 React。它保留了 React 17 的 API，重新导出标准的 Hooks 和 API，并补充了双线程模型所需的能力：主线程函数、页面从 Native 侧接收的数据，以及若干编译时指令和宏。
+
+| | |
+| --- | --- |
+| [Hooks](/zh/react/api/hooks) | `useInitData`、`useGlobalProps`、`useMainThreadRef`、`useLynxGlobalEventListener` … |
+| [组件](/zh/react/api/components) | `InitDataProvider`、`GlobalPropsProvider` 及对应的 Consumer |
+| [函数](/zh/react/api/functions) | `runOnMainThread`、`runOnBackground`、`createPortal`、`root` … |
+| [类型](/zh/react/api/types) | `InitData`、`GlobalProps`、`Lynx`、`MainThreadRef` … |
+| [指令](/zh/react/api/directives) | `'background only'`、`'main thread'` |
+| [宏](/zh/react/api/macros) | `__BACKGROUND__`、`__MAIN_THREAD__`、`__DEV__`、`__PROFILE__` … |
+| [Testing Library](/zh/react/api/testing-library) | `@lynx-js/react/testing-library` 提供的 `render`、`fireEvent`、`waitFor` |

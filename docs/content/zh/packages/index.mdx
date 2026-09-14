@@ -1,0 +1,74 @@
+---
+title: 包
+---
+
+# 包
+
+[lynx-stack](https://github.com/lynx-family/lynx-stack) 发布的所有公开包。拥有独立文档章节的包会链接到对应章节。
+
+## Rspeedy 及插件
+
+| 包 | |
+| --- | --- |
+| `@lynx-js/rspeedy` | [配置](/zh/rspeedy/config/) · [JavaScript API](/zh/rspeedy/api/) |
+| `@lynx-js/rsbuild-plugin` | [pluginLynx](/zh/rspeedy/plugins/plugin-lynx) |
+| `@lynx-js/react-rsbuild-plugin` | [pluginReactLynx](/zh/rspeedy/plugins/plugin-react) |
+| `@lynx-js/qrcode-rsbuild-plugin` | [pluginQRCode](/zh/rspeedy/plugins/plugin-qrcode) |
+| `@lynx-js/external-bundle-rsbuild-plugin` | [pluginExternalBundle](/zh/rspeedy/plugins/plugin-external-bundle) |
+| `@lynx-js/vanilla-rsbuild-plugin` | [pluginVanillaLynx](/zh/rspeedy/plugins/plugin-vanilla) |
+| `@lynx-js/config-rsbuild-plugin` | [pluginLynxConfig](/zh/rspeedy/plugins/plugin-config) |
+| `@lynx-js/debug-metadata-rsbuild-plugin` | [pluginLynxDebugMetadata](/zh/rspeedy/plugins/plugin-debug-metadata) |
+| `@lynx-js/react-alias-rsbuild-plugin` | [pluginReactAlias](/zh/rspeedy/plugins/plugin-react-alias) |
+| `@lynx-js/lynx-bundle-rslib-config` | [lynxBundle](/zh/rspeedy/plugins/lynx-bundle-rslib-config) |
+
+## ReactLynx
+
+| 包 | |
+| --- | --- |
+| `@lynx-js/react` | [API 参考](/zh/react/api/) |
+| `@lynx-js/react/testing-library` | [Testing Library](/zh/react/api/testing-library) |
+
+## Web 平台
+
+| 包 | 版本 | 描述 |
+| --- | --- | --- |
+| [`@lynx-js/web-core`](/zh/packages/web-core) |  |  |
+| [`@lynx-js/web-elements`](/zh/packages/web-elements) | 0.12.10 |  |
+| [`@lynx-js/web-platform-rsbuild-plugin`](/zh/packages/web-platform-rsbuild-plugin) | 0.1.2 | 用于 Lynx Web 平台中 Web 项目的 Rsbuild 插件 |
+| [`@lynx-js/web-rsbuild-server-middleware`](/zh/packages/web-rsbuild-server-middleware) | 0.26.0 | Rsbuild 的 dev server 中间件，用于托管 Lynx Web 平台的 shell 项目 |
+| [`@lynx-js/web-worker-rpc`](/zh/packages/web-worker-rpc) | 0.26.0 |  |
+| [`@lynx-js/web-explorer`](/zh/packages/web-explorer) | 0.0.17 |  |
+
+## 构建内部包（webpack 插件）
+
+| 包 | 版本 | 描述 |
+| --- | --- | --- |
+| [`@lynx-js/template-webpack-plugin`](/zh/packages/template-webpack-plugin) | 0.16.0 | 简化 Lynx 模板文件的创建，用于承载你的 webpack bundle |
+| [`@lynx-js/css-extract-webpack-plugin`](/zh/packages/css-extract-webpack-plugin) | 0.11.0 | 此插件将 CSS 提取到单独的文件中，为每个包含 CSS 的 JS 文件创建一个 CSS 文件。 |
+| [`@lynx-js/chunk-loading-webpack-plugin`](/zh/packages/chunk-loading-webpack-plugin) | 0.4.2 | 为 Lynx 生成 chunk 加载运行时的 webpack 插件。 |
+| [`@lynx-js/runtime-wrapper-webpack-plugin`](/zh/packages/runtime-wrapper-webpack-plugin) | 0.2.4 | 使用运行时包装器，使 JavaScript 能够被 Lynx 加载。 |
+| [`@lynx-js/react-webpack-plugin`](/zh/packages/react-webpack-plugin) | 0.11.3 | ReactLynx 的 webpack 插件 |
+| [`@lynx-js/react-refresh-webpack-plugin`](/zh/packages/react-refresh-webpack-plugin) | 0.4.2 | 为 Lynx 提供热刷新的 webpack 插件。 |
+| [`@lynx-js/externals-loading-webpack-plugin`](/zh/packages/externals-loading-webpack-plugin) | 0.2.1 | 用于加载 Lynx 外部 bundle 的 webpack 插件。 |
+| [`@lynx-js/cache-events-webpack-plugin`](/zh/packages/cache-events-webpack-plugin) | 0.2.1 | 在 BTS chunk 完全加载前缓存 Lynx 原生事件，并在 BTS chunk 就绪后重放这些事件。 |
+| [`@lynx-js/runtime-config-webpack-plugin`](/zh/packages/runtime-config-webpack-plugin) | 0.0.1 | 将运行时配置注入页面级的 Lynx 运行时。 |
+| [`@lynx-js/webpack-dev-transport`](/zh/packages/webpack-dev-transport) | 0.4.0 | Lynx 的 webpack dev-server transport 实现 |
+| [`@lynx-js/webpack-runtime-globals`](/zh/packages/webpack-runtime-globals) | 0.0.8 | 使用运行时包装器，使 JavaScript 能够被 Lynx 加载。 |
+| [`@lynx-js/css-serializer`](/zh/packages/css-serializer) | 0.1.9 |  |
+| [`@lynx-js/debug-metadata`](/zh/packages/debug-metadata) | 0.1.0 | Lynx `debug-metadata.json` 格式的 schema 类型与解析器。 |
+
+## 库与工具
+
+| 包 | 版本 | 描述 |
+| --- | --- | --- |
+| [`@lynx-js/websocket`](/zh/packages/websocket) | 0.0.4 | Lynx 的 WebSocket 实现 |
+| [`@lynx-js/testing-environment`](/zh/packages/testing-environment) | 0.3.4 | 可用于测试的 Lynx 环境子集 |
+| [`@lynx-js/motion`](/zh/packages/motion) | 0.0.6 | Lynx.js 的 motion 适配器 |
+| [`@lynx-js/react-signals`](/zh/packages/react-signals) | 0.0.3 | 面向 ReactLynx 的线程感知 Preact Signals 集成。 |
+| [`@lynx-js/use-sync-external-store`](/zh/packages/use-sync-external-store) | 1.5.0 | use-sync-external-store 的纯 ESM 分支，可与 @lynx-js/react 配合使用。 |
+| [`@lynx-js/tailwind-preset`](/zh/packages/tailwind-preset) | 0.5.1 | ReactLynx 的 tailwindcss 预设 |
+| [`@lynx-js/gesture-runtime`](/zh/packages/gesture-runtime) | 2.1.3 | Lynx 手势 |
+| [`@lynx-js/autolink-codegen`](/zh/packages/autolink-codegen) | 0.5.0 | Lynx 库代码生成器 |
+| [`background-only`](/zh/packages/background-only) | 0.0.1 | 标记包，用于表明某个模块只能在后台线程中使用。 |
+| [`@lynx-js/i18next-translation-dedupe`](/zh/packages/i18next-translation-dedupe) | 0.0.1 | 对 Lynx bundle 中的 i18next 翻译进行去重。 |
+| [`@lynx-js/genui`](/zh/packages/genui) | 0.4.0 | Lynx 的生成式 UI。 |

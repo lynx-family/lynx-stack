@@ -1,0 +1,38 @@
+{
+  "ReactRefreshRspackPlugin.summary": {
+    "hash": "1069e00a",
+    "text": "ReactRefreshRspackPlugin 用于在 ReactLynx 中启用 fast refresh。"
+  },
+  "ReactRefreshRspackPlugin.example.0": {
+    "hash": "9acb3a01",
+    "text": "```js\n// rspack.config.js\nimport { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'\nexport default {\n  module: {\n    rules: [\n      {\n        test: /\\.[jt]sx?$/,\n        exclude: [\n          /node_modules/,\n          /@lynx-js/,\n          /react-refresh/,\n          /compiler-nodiff-runtime3/,\n          ReactRefreshRspackPlugin.loader,\n        ],\n        use: [ReactRefreshRspackPlugin.loader],\n      },\n    ],\n  },\n  plugins: [new ReactRefreshRspackPlugin()],\n}\n```"
+  },
+  "ReactRefreshRspackPlugin.constructor.params.options": {
+    "hash": "978709a5",
+    "text": "React Refresh 的选项。"
+  },
+  "ReactRefreshRspackPlugin.loader.summary": {
+    "hash": "92c7e350",
+    "text": "React Refresh 的 loader。"
+  },
+  "ReactRefreshRspackPlugin.loader.remarks": {
+    "hash": "ae095d18",
+    "text": "注意需要忽略 React 的运行时，参见下方示例："
+  },
+  "ReactRefreshRspackPlugin.loader.example.0": {
+    "hash": "2cf314a4",
+    "text": "```js\n// rspack.config.js\nimport { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'\nimport { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'\n\nexport default {\n  module: {\n    rules: [\n      {\n        issueLayer: ReactWebpackPlugin.LAYERS.BACKGROUND,\n        test: /\\.[jt]sx?$/,\n        exclude: [\n          /node_modules/,\n          /@lynx-js/react/,\n          ReactRefreshRspackPlugin.loader,\n        ],\n        use: [ReactRefreshRspackPlugin.loader],\n      },\n    ],\n  },\n  plugins: [new ReactRefreshRspackPlugin()],\n}\n```"
+  },
+  "ReactRefreshRspackPlugin.apply.summary": {
+    "hash": "a1a11e19",
+    "text": "Rspack 插件的入口。"
+  },
+  "ReactRefreshRspackPlugin.apply.params.compiler": {
+    "hash": "b6c54125",
+    "text": "Rspack 编译器"
+  },
+  "ReactRefreshRspackPluginOptions.summary": {
+    "hash": "c67b34e6",
+    "text": "[`ReactRefreshRspackPlugin`](api:ReactRefreshRspackPlugin) 的选项。"
+  }
+}

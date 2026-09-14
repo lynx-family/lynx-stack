@@ -1,0 +1,80 @@
+---
+title: '@lynx-js/websocket'
+---
+
+# @lynx-js/websocket
+
+{/* @api PackageHeader package="websocket" */}
+
+<div className="api-pkg-header"><code>@lynx-js/websocket</code> <span className="api-pkg-version">v0.0.4</span> · <a href="https://www.npmjs.com/package/@lynx-js/websocket" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/websocket" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/websocket/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+
+Lynx 的 WebSocket 实现
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/websocket" />
+
+## API
+
+{/* @api ApiExports package="websocket" */}
+
+## 类 \{#\}
+
+### `WebSocket` \{#websocket\}
+
+[WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
+的 Lynx 实现。
+
+仅在存在 `NativeModules.LynxWebSocketModule` 的环境中可用。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="websocket-constructor"></a>`constructor` | `constructor(url: string, protocols?: string \| string[], options: { headers?: Record<string, string> }): WebSocket` |  |
+| <a id="websocket-closed"></a>`CLOSED` | `ReadyState` | `@lynx-js/websocket#ReadyState.CLOSED` |
+| <a id="websocket-closing"></a>`CLOSING` | `ReadyState` | `@lynx-js/websocket#ReadyState.CLOSING` |
+| <a id="websocket-connecting"></a>`CONNECTING` | `ReadyState` | `@lynx-js/websocket#ReadyState.CONNECTING` |
+| <a id="websocket-open"></a>`OPEN` | `ReadyState` | `@lynx-js/websocket#ReadyState.OPEN` |
+| <a id="websocket-onclose"></a>`onclose` | `((event: Event<"close"> & { code: number; reason: string }) => void) \| null` | onclose 是 [`WebSocket`](#websocket) 的 Web 风格回调。 |
+| <a id="websocket-onerror"></a>`onerror` | `((event: Event<"error"> & { message: string }) => void) \| null` | onerror 是 [`WebSocket`](#websocket) 的 Web 风格回调。 |
+| <a id="websocket-onmessage"></a>`onmessage` | `((event: Event<"message"> & { data: string }) => void) \| null` | onmessage 是 [`WebSocket`](#websocket) 的 Web 风格回调。 |
+| <a id="websocket-onopen"></a>`onopen` | `((event: Event<"open">) => void) \| null` | onopen 是 [`WebSocket`](#websocket) 的 Web 风格回调。 |
+| <a id="websocket-protocol"></a>`protocol` | `string \| undefined` | WebSocket.protocol 只读属性返回服务器所选子协议的名称。 |
+| <a id="websocket-readystate"></a>`readyState` | `ReadyState` | `readyState` 只读属性返回 [`WebSocket`](#websocket) 连接的当前状态。 |
+| <a id="websocket-url"></a>`url` | `string` | `url` 只读属性返回通过构造函数传入 [`WebSocket`](#websocket) 的 URL。 |
+| <a id="websocket-addeventlistener"></a>`addEventListener` | `addEventListener(type: T, callback?: (event: EventMap[T]) => void): void` | `EventTarget` 接口的 `addEventListener()` 方法用于设置一个函数，每当指定事件派发到目标时都会调用该函数。 |
+| <a id="websocket-close"></a>`close` | `close(code?: number, reason?: string): void` | `close()` 方法关闭 [`WebSocket`](#websocket) 连接或正在进行的连接尝试（如有）。 |
+| <a id="websocket-ping"></a>`ping` | `ping(): void` | `ping` 方法通过 [`WebSocket`](#websocket) 连接向服务器发送一条空消息。 |
+| <a id="websocket-removeeventlistener"></a>`removeEventListener` | `removeEventListener(type: T, callback: (event: EventMap[T]) => void): void` | `EventTarget` 接口的 `removeEventListener()` 方法从 WebSocket 上移除一个事件监听器。 |
+| <a id="websocket-send"></a>`send` | `send(data: string): void` | `send` 方法通过 [`WebSocket`](#websocket) 连接将指定数据发送到服务器。 |
+
+## 类型 \{#\}
+
+### `ReadyState` \{#readystate\}
+
+`ReadyState` 描述 `WebSocket` 连接的状态。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="readystate-closed"></a>`CLOSED` | `3` | 连接已关闭或无法打开。 |
+| <a id="readystate-closing"></a>`CLOSING` | `2` | 连接正在关闭。 |
+| <a id="readystate-connecting"></a>`CONNECTING` | `0` | Socket 已创建，连接尚未打开。 |
+| <a id="readystate-open"></a>`OPEN` | `1` | 连接已打开，可以进行通信。 |
+
+### `Event` \{#event\}
+
+`Event` 接口的实现，用于包装给定的事件对象。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="event-type"></a>`type` | `T` | 该事件的类型。 |
+
+### `EventMap` \{#eventmap\}
+
+`EventMap` 描述 `@lynx-js/websocket#WebSocket` 可能触发的事件。
+
+{/* @api-end */}

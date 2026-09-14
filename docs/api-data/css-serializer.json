@@ -1,0 +1,547 @@
+{
+  "id": "css-serializer",
+  "package": "@lynx-js/css-serializer",
+  "version": "0.1.9",
+  "section": "packages",
+  "internal": true,
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/tools/css-serializer",
+  "exports": [
+    {
+      "name": "Plugins",
+      "kind": "namespace",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "removeFunctionWhiteSpace",
+          "type": "unknown",
+          "kind": "function"
+        }
+      ]
+    },
+    {
+      "name": "Severity",
+      "kind": "enum",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "Deprecated",
+          "type": "4",
+          "kind": "enummember"
+        },
+        {
+          "name": "Error",
+          "type": "0",
+          "kind": "enummember"
+        },
+        {
+          "name": "Experimental",
+          "type": "5",
+          "kind": "enummember"
+        },
+        {
+          "name": "NotSupport",
+          "type": "3",
+          "kind": "enummember"
+        },
+        {
+          "name": "Unused",
+          "type": "2",
+          "kind": "enummember"
+        },
+        {
+          "name": "Warning",
+          "type": "1",
+          "kind": "enummember"
+        }
+      ]
+    },
+    {
+      "name": "BaseDeclaration",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "keyLoc",
+          "type": "Location",
+          "ref": "Location",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "valLoc",
+          "type": "Location",
+          "ref": "Location",
+          "kind": "property"
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "CSSSourceMap",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "file",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "mappings",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "names",
+          "optional": true,
+          "type": "string[]",
+          "kind": "property"
+        },
+        {
+          "name": "sourceRoot",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "sources",
+          "type": "string[]",
+          "kind": "property"
+        },
+        {
+          "name": "sourcesContent",
+          "optional": true,
+          "type": "(string | null)[]",
+          "kind": "property"
+        },
+        {
+          "name": "version",
+          "type": "number",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "FontFaceRule",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "style",
+          "type": "Declaration[]",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "\"FontFaceRule\"",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ImportRule",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "href",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "origin",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "\"ImportRule\"",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "KeyframesRule",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "name",
+          "type": "Value",
+          "ref": "Value",
+          "kind": "property"
+        },
+        {
+          "name": "styles",
+          "type": "KeyframesStyle[]",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "\"KeyframesRule\"",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "KeyframesStyle",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "keyText",
+          "type": "Value",
+          "ref": "Value",
+          "kind": "property"
+        },
+        {
+          "name": "style",
+          "type": "Declaration[]",
+          "kind": "property"
+        },
+        {
+          "name": "variables",
+          "type": "Record<string, string>",
+          "external": "typescript",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LayerRule",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "prelude",
+          "optional": true,
+          "type": "Value",
+          "ref": "Value",
+          "kind": "property"
+        },
+        {
+          "name": "rules",
+          "type": "LynxStyleNode[]",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "\"LayerRule\"",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "Location",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "column",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "line",
+          "type": "number",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "MediaRule",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "prelude",
+          "type": "Value",
+          "ref": "Value",
+          "kind": "property"
+        },
+        {
+          "name": "rules",
+          "type": "LynxStyleNode[]",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "\"MediaRule\"",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ParserError",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "detail",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "range",
+          "type": "Range",
+          "ref": "Range",
+          "kind": "property"
+        },
+        {
+          "name": "severity",
+          "type": "Severity",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "Plugin",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "phaseStandard",
+          "optional": true,
+          "type": "phaseStandard(root: StyleSheet, context: { report: (error: ParserError) => void }): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "root",
+              "type": "StyleSheet"
+            },
+            {
+              "name": "context",
+              "type": "{ report: (error: ParserError) => void }"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Range",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "end",
+          "type": "Location",
+          "ref": "Location",
+          "kind": "property"
+        },
+        {
+          "name": "start",
+          "type": "Location",
+          "ref": "Location",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "StyleRule",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "selectorText",
+          "type": "Value",
+          "ref": "Value",
+          "kind": "property"
+        },
+        {
+          "name": "style",
+          "type": "Declaration[]",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "\"StyleRule\"",
+          "kind": "property"
+        },
+        {
+          "name": "variables",
+          "type": "Record<string, string>",
+          "external": "typescript",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "SupportsRule",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "prelude",
+          "type": "Value",
+          "ref": "Value",
+          "kind": "property"
+        },
+        {
+          "name": "rules",
+          "type": "LynxStyleNode[]",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "\"SupportsRule\"",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "Value",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "loc",
+          "type": "Location",
+          "ref": "Location",
+          "kind": "property"
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "VariableDeclaration",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "defaultValue",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "defaultValueMap",
+          "optional": true,
+          "type": "Record<string, string>",
+          "external": "typescript",
+          "kind": "property"
+        },
+        {
+          "name": "keyLoc",
+          "type": "Location",
+          "ref": "Location",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "\"css_var\"",
+          "kind": "property"
+        },
+        {
+          "name": "valLoc",
+          "type": "Location",
+          "ref": "Location",
+          "kind": "property"
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "Declaration",
+      "kind": "typealias",
+      "type": "BaseDeclaration | VariableDeclaration"
+    },
+    {
+      "name": "LynxStyleNode",
+      "kind": "typealias",
+      "type": "StyleRule | FontFaceRule | ImportRule | KeyframesRule | MediaRule | SupportsRule | LayerRule"
+    },
+    {
+      "name": "cssChunksToMap",
+      "kind": "function",
+      "type": "cssChunksToMap(cssChunks: (string | CSSChunkAsset)[], plugins: Plugin[], enableCSSSelector: boolean): { contentMap: Map<number, string[]>; cssMap: Record<string, LynxStyleNode[]>; cssSource: Record<string, string> }",
+      "signatures": [
+        {
+          "text": "cssChunksToMap(cssChunks: (string | CSSChunkAsset)[], plugins: Plugin[], enableCSSSelector: boolean): { contentMap: Map<number, string[]>; cssMap: Record<string, LynxStyleNode[]>; cssSource: Record<string, string> }",
+          "params": [
+            {
+              "name": "cssChunks",
+              "type": "(string | CSSChunkAsset)[]"
+            },
+            {
+              "name": "plugins",
+              "type": "Plugin[]"
+            },
+            {
+              "name": "enableCSSSelector",
+              "type": "boolean"
+            }
+          ],
+          "returns": {
+            "type": "{ contentMap: Map<number, string[]>; cssMap: Record<string, LynxStyleNode[]>; cssSource: Record<string, string> }"
+          },
+          "summary": "Convert CSS chunks into `cssMap` / `cssSource`.\n\n`loc` fields remain in bundle CSS coordinates so they can be resolved later\nvia `main.css.map`.\n\n`cssSource` intentionally keeps the historical `/cssId/<id>.css` shape."
+        }
+      ],
+      "summary": "Convert CSS chunks into `cssMap` / `cssSource`.\n\n`loc` fields remain in bundle CSS coordinates so they can be resolved later\nvia `main.css.map`.\n\n`cssSource` intentionally keeps the historical `/cssId/<id>.css` shape."
+    },
+    {
+      "name": "parse",
+      "kind": "function",
+      "type": "parse(content: string, options: { filename?: string; plugins?: Plugin[]; projectRoot?: string }): { errors: ParserError[]; root: LynxStyleNode[] }",
+      "signatures": [
+        {
+          "text": "parse(content: string, options: { filename?: string; plugins?: Plugin[]; projectRoot?: string }): { errors: ParserError[]; root: LynxStyleNode[] }",
+          "params": [
+            {
+              "name": "content",
+              "type": "string"
+            },
+            {
+              "name": "options",
+              "type": "{ filename?: string; plugins?: Plugin[]; projectRoot?: string }"
+            }
+          ],
+          "returns": {
+            "type": "{ errors: ParserError[]; root: LynxStyleNode[] }"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+doc_build
+.rspress
+content/*/changelog
+content/*/guide/genui

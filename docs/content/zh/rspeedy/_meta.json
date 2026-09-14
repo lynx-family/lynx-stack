@@ -1,0 +1,28 @@
+[
+  {
+    "type": "dir",
+    "name": "config",
+    "label": "配置",
+    "collapsible": false
+  },
+  {
+    "type": "dir",
+    "name": "plugins",
+    "label": "插件",
+    "collapsible": false
+  },
+  {
+    "type": "dir",
+    "name": "api",
+    "label": "JavaScript API",
+    "collapsible": false
+  },
+  {
+    "type": "divider"
+  },
+  {
+    "type": "custom-link",
+    "label": "lynxjs.org 上的指南",
+    "link": "https://lynxjs.org/zh/rspeedy/"
+  }
+]

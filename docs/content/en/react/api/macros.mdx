@@ -1,0 +1,284 @@
+---
+title: Built-in macros
+---
+
+# Built-in Macros
+
+The `@lynx-js/react` package processes built-in macro definitions such as `__BACKGROUND__` and `__MAIN_THREAD__`. During compilation, code blocks with `false` conditions are automatically removed.
+
+## `__BACKGROUND__`
+
+- Type: `boolean`
+- Purpose: Controls code execution in background thread environment. Used to determine which code segments should be preserved in background thread code after compilation.
+
+### Usage Examples
+
+#### In Function Components
+
+Here's an example using the `App` component:
+
+```tsx
+import { noop } from 'lodash-es';
+import { useEffect } from '@lynx-js/react';
+
+function App() {
+  const showToast = __BACKGROUND__
+    ? () => {
+        bridge.call('showToast', {
+          message: t('toast'),
+          icon: 'success',
+        });
+      }
+    : noop;
+
+  useEffect(showToast, []);
+  return <view />;
+}
+```
+
+After compilation, this code is transformed into:
+
+- Background thread code (`background.js` in the compilation intermediate directory):
+
+```tsx
+function App() {
+  const showToast = () => {
+    bridge.call('showToast', {
+      message: t('toast'),
+      icon: 'success',
+    });
+  };
+  useEffect(showToast, []);
+  return createSnapshotInstance(__snapshot_5ab440, null, []);
+}
+```
+
+- Main thread code (`main-thread.js` in the compilation intermediate directory):
+
+```tsx
+function App() {
+  const showToast = noop_default;
+
+  useEffect();
+  return createSnapshotInstance(__snapshot_5ab440, null, []);
+}
+```
+
+#### In Class Components
+
+Here's an example using the `Conversations` component:
+
+```tsx
+import { AppLoggerFactory } from '../utils/appLoggerFactory';
+
+class Conversations extends Component<Props, State> {
+  appLogger: AppLogger;
+
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      showConversationItemAction: false,
+      loading: true,
+    };
+    if (__BACKGROUND__) {
+      this.appLogger = AppLoggerFactory();
+    }
+  }
+}
+```
+
+After compilation, this code is transformed into:
+
+- Background thread code (`background.js` in the compilation intermediate directory):
+
+```tsx
+class Conversations extends Component<Props, State> {
+  appLogger: AppLogger;
+
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      showConversationItemAction: false,
+      loading: true,
+    };
+    this.appLogger = AppLoggerFactory();
+  }
+}
+```
+
+- Main thread code (`main-thread.js` in the compilation intermediate directory):
+
+```tsx
+class Conversations extends Component<Props, State> {
+  appLogger: AppLogger;
+
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      showConversationItemAction: false,
+      loading: true,
+    };
+  }
+}
+```
+
+## `__MAIN_THREAD__`
+
+- Type: `boolean`
+- Purpose: Controls code execution in main thread environment. Used to determine which code segments should be preserved in main thread code during compilation.
+
+### Usage Examples
+
+#### In Function Components
+
+Here's an example using the `App` component:
+
+```tsx
+import { noop } from 'lodash-es';
+import { useEffect } from '@lynx-js/react';
+
+function App() {
+  const showToast = !__MAIN_THREAD__
+    ? () => {
+        bridge.call('showToast', {
+          message: t('toast'),
+          icon: 'success',
+        });
+      }
+    : noop;
+
+  useEffect(showToast, []);
+  return <view />;
+}
+```
+
+After compilation, this code is transformed into:
+
+- Background thread code (`background.js` in the compilation intermediate directory):
+
+```tsx
+function App() {
+  const showToast = () => {
+    bridge.call('showToast', {
+      message: t('toast'),
+      icon: 'success',
+    });
+  };
+  useEffect(showToast, []);
+  return createSnapshotInstance(__snapshot_5ab440, null, []);
+}
+```
+
+- Main thread code (`main-thread.js` in the compilation intermediate directory):
+
+```tsx
+function App() {
+  const showToast = noop_default;
+
+  useEffect();
+  return createSnapshotInstance(__snapshot_5ab440, null, []);
+}
+```
+
+#### In Class Components
+
+Here's an example using the `Conversations` component:
+
+```tsx
+import { AppLoggerFactory } from '../utils/appLoggerFactory';
+
+class Conversations extends Component<Props, State> {
+  appLogger: AppLogger;
+
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      showConversationItemAction: false,
+      loading: true,
+    };
+    if (!__MAIN_THREAD__) {
+      this.appLogger = AppLoggerFactory();
+    }
+  }
+}
+```
+
+After compilation, this code is transformed into:
+
+- Background thread code (`background.js` in the compilation intermediate directory):
+
+```tsx
+class Conversations extends Component<Props, State> {
+  appLogger: AppLogger;
+
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      showConversationItemAction: false,
+      loading: true,
+    };
+    this.appLogger = AppLoggerFactory();
+  }
+}
+```
+
+- Main thread code (`main-thread.js` in the compilation intermediate directory):
+
+```tsx
+class Conversations extends Component<Props, State> {
+  appLogger: AppLogger;
+
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      showConversationItemAction: false,
+      loading: true,
+    };
+  }
+}
+```
+
+## `__JS__`
+
+- Type: `boolean`
+- Purpose: Alias of [`__BACKGROUND__`](#__background__).
+
+:::warning Deprecated
+Use `__BACKGROUND__` instead.
+:::
+
+## `__LEPUS__`
+
+- Type: `boolean`
+- Purpose: Alias of [`__MAIN_THREAD__`](#__main_thread__).
+
+:::warning Deprecated
+Use `__MAIN_THREAD__` instead.
+:::
+
+## `__DEV__`
+
+- Type: `boolean`
+- Purpose: `true` in development builds, `false` in production. Use it to guard development-only code — prop validation, invariant checks, friendlier error messages — so none of it reaches production.
+
+```tsx
+if (__DEV__) {
+  // Stripped from production builds.
+  console.log('debug only');
+}
+```
+
+## `__PROFILE__`
+
+- Type: `boolean`
+- Purpose: `true` when the build carries profiling instrumentation. It is on by default in development and off in production. See [Performance Profiling](https://lynxjs.org/react/performance/profiling.mdx) for the traces it produces, and [Runtime Profiling](https://lynxjs.org/rspeedy/runtime-profiling.md) for how to turn it on for a production build.
+
+## `__REACT_DEVTOOL__`
+
+- Type: `boolean | undefined`
+- Purpose: `true` when the runtime hooks that [Preact DevTools](https://lynxjs.org/guide/devtool/panels/preact-devtools-panel.mdx) depends on are compiled in. Enabled by default in development; in production it can be enabled with the `REACT_DEVTOOL=true` environment variable.
+
+## `__LAZY_BUNDLE_FETCHER__`
+
+- Type: `'FetchBundle' | 'QueryComponent'`
+- Purpose: Which lazy bundle fetcher the build is wired up to. `'FetchBundle'` enables the `lynx.fetchBundle`-based path (and `import(..., { with: { mode } })` mode hints); `'QueryComponent'` is the legacy `lynx.QueryComponent` path. How the value is selected, the `REACT_LAZY_BUNDLE_FETCHER` override and the version scope are documented in [Lazy bundle loaders](https://lynxjs.org/react/code-splitting.md#lazy-bundle-loaders).

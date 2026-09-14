@@ -1,0 +1,18 @@
+{
+  "RuntimeConfigWebpackPlugin.summary": {
+    "hash": "ce7a5b65",
+    "text": "合并位于\n`lynx.__runtime_configs__` 中的运行时配置，并对其进行浅冻结。\n\n各 bundle 按执行顺序合并。\n后执行的 bundle 中的值会覆盖先前相同 key 的值。"
+  },
+  "RuntimeConfigWebpackPlugin.apply.summary": {
+    "hash": "90722b12",
+    "text": "webpack 插件的入口。"
+  },
+  "RuntimeConfigWebpackPlugin.apply.params.compiler": {
+    "hash": "edb43efe",
+    "text": "webpack compiler"
+  },
+  "RuntimeConfigWebpackPluginOptions.summary": {
+    "hash": "c13b0f8c",
+    "text": "由 bundle 提供的页面级运行时配置。\n\n该插件有意不限定配置的 key 和 value，\n交由使用它们的 DSL 决定。"
+  }
+}

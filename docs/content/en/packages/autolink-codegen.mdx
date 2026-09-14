@@ -1,0 +1,183 @@
+---
+title: '@lynx-js/autolink-codegen'
+---
+
+# @lynx-js/autolink-codegen
+
+{/* @api PackageHeader package="autolink-codegen" */}
+
+<div className="api-pkg-header"><code>@lynx-js/autolink-codegen</code> <span className="api-pkg-version">v0.5.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/autolink-codegen" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/lynx/autolink-codegen" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/lynx/autolink-codegen/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+
+Lynx library code generator.
+
+It scans native module declarations annotated with `/** @lynxmodule */`, reads `lynx.lib.json`, and generates:
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/autolink-codegen" />
+
+## API
+
+{/* @api ApiExports package="autolink-codegen" */}
+
+## Functions \{#functions\}
+
+### `generate()` \{#generate\}
+
+```ts
+generate(options: CodegenOptions): GeneratedFile[]
+```
+
+Builds the generated JS facade and platform spec file contents for a library package.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | `CodegenOptions` |  |
+
+**Returns:** `GeneratedFile[]`
+
+### `parseNativeModules()` \{#parsenativemodules\}
+
+```ts
+parseNativeModules(source: string, filename: string): NativeModuleSpec[]
+```
+
+Parses native module declarations marked with `@lynxmodule` from a TypeScript declaration source.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `source` | `string` |  |
+| `filename` | `string` |  |
+
+**Returns:** `NativeModuleSpec[]`
+
+### `runCodegen()` \{#runcodegen\}
+
+```ts
+runCodegen(options: CodegenOptions): GeneratedFile[]
+```
+
+Writes generated files to disk and returns the generated file descriptors.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | `CodegenOptions` |  |
+
+**Returns:** `GeneratedFile[]`
+
+## Types \{#types\}
+
+### `CodegenOptions` \{#codegenoptions\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="codegenoptions-root"></a>`root?` | `string` |  |
+
+### `GeneratedFile` \{#generatedfile\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="generatedfile-content"></a>`content` | `string` |  |
+| <a id="generatedfile-overwrite"></a>`overwrite?` | `boolean` |  |
+| <a id="generatedfile-path"></a>`path` | `string` |  |
+
+### `LynxtronPlatformManifest` \{#lynxtronplatformmanifest\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="lynxtronplatformmanifest-targets"></a>`targets` | `LynxtronRuntimeTarget[]` |  |
+
+### `LynxtronRuntimeTarget` \{#lynxtronruntimetarget\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="lynxtronruntimetarget-appbundles"></a>`appBundles?` | `string[]` |  |
+| <a id="lynxtronruntimetarget-arch"></a>`arch` | `string` |  |
+| <a id="lynxtronruntimetarget-files"></a>`files?` | `string[]` |  |
+| <a id="lynxtronruntimetarget-frameworks"></a>`frameworks?` | `string[]` |  |
+| <a id="lynxtronruntimetarget-os"></a>`os` | `string` |  |
+
+### `NativeModuleMethod` \{#nativemodulemethod\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="nativemodulemethod-name"></a>`name` | `string` |  |
+| <a id="nativemodulemethod-params"></a>`params` | `NativeModuleParam[]` |  |
+| <a id="nativemodulemethod-returntype"></a>`returnType` | `NativeModuleType` |  |
+| <a id="nativemodulemethod-source"></a>`source?` | `NativeModuleSourceLocation` |  |
+
+### `NativeModuleObjectProperty` \{#nativemoduleobjectproperty\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="nativemoduleobjectproperty-name"></a>`name` | `string` |  |
+| <a id="nativemoduleobjectproperty-optional"></a>`optional?` | `boolean` |  |
+| <a id="nativemoduleobjectproperty-type"></a>`type` | `NativeModuleType` |  |
+
+### `NativeModuleObjectSpec` \{#nativemoduleobjectspec\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="nativemoduleobjectspec-name"></a>`name` | `string` |  |
+| <a id="nativemoduleobjectspec-properties"></a>`properties` | `NativeModuleObjectProperty[]` |  |
+
+### `NativeModuleParam` \{#nativemoduleparam\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="nativemoduleparam-name"></a>`name` | `string` |  |
+| <a id="nativemoduleparam-optional"></a>`optional?` | `boolean` |  |
+| <a id="nativemoduleparam-source"></a>`source?` | `NativeModuleSourceLocation` |  |
+| <a id="nativemoduleparam-type"></a>`type` | `NativeModuleType` |  |
+
+### `NativeModuleSpec` \{#nativemodulespec\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="nativemodulespec-interfaces"></a>`interfaces?` | `NativeModuleObjectSpec[]` |  |
+| <a id="nativemodulespec-methods"></a>`methods` | `NativeModuleMethod[]` |  |
+| <a id="nativemodulespec-name"></a>`name` | `string` |  |
+| <a id="nativemodulespec-source"></a>`source?` | `NativeModuleSourceLocation` |  |
+
+### `NativeModuleType` \{#nativemoduletype\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="nativemoduletype-name"></a>`name` | `NativeModuleTypeName` |  |
+| <a id="nativemoduletype-nullable"></a>`nullable` | `boolean` |  |
+| <a id="nativemoduletype-referencename"></a>`referenceName?` | `string` |  |
+
+### `NativeModuleTypeName` \{#nativemoduletypename\}
+
+```ts
+type NativeModuleTypeName = "void" | "string" | "number" | "boolean" | "bigint" | "date" | "symbol" | "array" | "arraybuffer" | "typedarray" | "int8array" | "uint8array" | "int16array" | "uint16array" | "int32array" | "uint32array" | "float32array" | "float64array" | "bigint64array" | "biguint64array" | "dataview" | "object" | "function" | "promise" | "buffer" | "named-object" | "value"
+```
+
+*No description yet.*
+
+{/* @api-end */}

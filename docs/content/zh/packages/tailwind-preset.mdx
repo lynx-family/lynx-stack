@@ -1,0 +1,86 @@
+---
+title: '@lynx-js/tailwind-preset'
+---
+
+# @lynx-js/tailwind-preset
+
+{/* @api PackageHeader package="tailwind-preset" */}
+
+<div className="api-pkg-header"><code>@lynx-js/tailwind-preset</code> <span className="api-pkg-version">v0.5.1</span> · <a href="https://www.npmjs.com/package/@lynx-js/tailwind-preset" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/tailwind-preset" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/tailwind-preset/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+
+面向 Lynx 生态的 [Tailwind CSS v3](https://v3.tailwindcss.com/) 预设。
+
+该预设通过以下方式让 Tailwind CSS v3 适配 Lynx 的渲染模型和生态：
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/tailwind-preset" />
+
+## API
+
+{/* @api ApiExports package="tailwind-preset" */}
+
+## 函数 \{#\}
+
+### `createLynxPreset()` \{#createlynxpreset\}
+
+```ts
+createLynxPreset(options: { debug?: boolean; lynxPlugins?: LynxPluginsOption; lynxUIPlugins?: LynxUIPluginsOption; theme?: Partial<CustomThemeConfig & {}> }): Partial<Config>
+```
+
+创建为 Lynx 生态定制的 Tailwind preset。
+
+- 需要 **Tailwind v3+**（默认启用 JIT）。
+- 请在 Tailwind 配置中设置 `content` 选项；
+  否则生成的 CSS bundle 可能包含未使用的工具类。
+- 无论如何配置，`defaults` 插件始终启用。
+- Debug 模式会在控制台输出已启用的插件。
+
+```ts
+const preset = createLynxPreset();
+```
+
+```ts
+// turn off all UI plugins
+createLynxPreset({ lynxUIPlugins: false });
+
+// turn off a single UI plugin
+createLynxPreset({ lynxUIPlugins: { uiVariants: false } });
+
+// enable debug mode
+createLynxPreset({ debug: true });
+
+```
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `options` | `{ debug?: boolean; lynxPlugins?: LynxPluginsOption; lynxUIPlugins?: LynxUIPluginsOption; theme?: Partial<CustomThemeConfig & {}> }` | Configuration options for the preset |
+
+**返回值:** `Partial<Config>` — 部分 Tailwind 配置对象
+
+## 常量 \{#\}
+
+### `default` \{#default\}
+
+```ts
+const default: Partial<Config>
+```
+
+*暂无说明。*
+
+## 类型 \{#\}
+
+### `LynxPluginName` \{#lynxpluginname\}
+
+```ts
+type LynxPluginName = keyof typeof PluginModules
+```
+
+*暂无说明。*
+
+{/* @api-end */}

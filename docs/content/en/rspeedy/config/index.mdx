@@ -1,0 +1,45 @@
+---
+title: Configuration
+---
+
+# Configuration
+
+Rspeedy reads `lynx.config.ts` (or `.js`, `.mjs`) from the project root. Wrap the object in `defineConfig` from `@lynx-js/rspeedy` to get completion and type checking:
+
+```ts title="lynx.config.ts"
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  source: {
+    entry: './src/index.tsx',
+  },
+  plugins: [pluginReactLynx()],
+})
+```
+
+The options are a subset of the [Rsbuild configuration](https://rsbuild.rs/config/). Options that would break a Lynx bundle (`html`, `security`, `moduleFederation`, the polyfill settings) are not exposed; the ones below are, with Lynx-specific defaults where they differ from Rsbuild.
+
+## All options
+
+{/* @api ConfigOverview package="rspeedy" type="Config" */}
+
+| Name | Type | Description |
+| --- | --- | --- |
+| [`dev`](#dev) | `Dev` | The [`Dev`](#dev) option is used to control the behavior related with development. Including: HMR, DevServer, etc. |
+| [`environments`](#environments) | `Record<string, EnvironmentConfig>` | The [`Config.environments`](#config-environments) option is used to set the output environment. |
+| [`mode`](#mode) | `"production" \| "development" \| "none"` | Specify the build mode for Rsbuild and Rspack, as each mode has different default behavior and optimizations. |
+| [`output`](#output) | `Output` | The [`Output`](#output) option is used to set how and where should the bundles and assets output. |
+| [`performance`](#performance) | `Performance` | The [`Performance`](#performance) option is used to optimize the build-time and runtime performance. |
+| [`plugins`](#plugins) | `RsbuildPlugins` | The `plugins` option is used to customize the build process in a variety of ways. |
+| [`resolve`](#resolve) | `Resolve` | The [`Resolve`](#resolve) option is used to control the resolution behavior of Rspack. |
+| [`server`](#server) | `Server` | The [`Server`](#server) option changes the behavior of dev-server. |
+| [`source`](#source) | `Source` | The [`Source`](#source) option changes the behavior of source files. |
+| [`splitChunks`](#splitchunks) | `false \| SplitChunksConfig` | Configure chunk splitting. |
+| [`tools`](#tools) | `Tools` | The [`Tools`](#tools) options changes the behavior of various building tools. |
+
+{/* @api-end */}
+
+## Namespaces
+
+- [dev](/rspeedy/config/dev) · [environments](/rspeedy/config/environments) · [mode](/rspeedy/config/mode) · [output](/rspeedy/config/output) · [performance](/rspeedy/config/performance) · [plugins](/rspeedy/config/plugins) · [resolve](/rspeedy/config/resolve) · [server](/rspeedy/config/server) · [source](/rspeedy/config/source) · [splitChunks](/rspeedy/config/splitChunks) · [tools](/rspeedy/config/tools)

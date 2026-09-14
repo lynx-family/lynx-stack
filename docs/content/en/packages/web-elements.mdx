@@ -1,0 +1,317 @@
+---
+title: '@lynx-js/web-elements'
+---
+
+# @lynx-js/web-elements
+
+{/* @api PackageHeader package="web-elements" */}
+
+<div className="api-pkg-header"><code>@lynx-js/web-elements</code> <span className="api-pkg-version">v0.12.10</span> · <a href="https://www.npmjs.com/package/@lynx-js/web-elements" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-elements" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-elements/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+
+It provides the custom-element implementation of Lynx Elements in Web.
+
+So far, support compared to Lynx Elements on the client:
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/web-elements" />
+
+## API
+
+{/* @api ApiExports package="web-elements" */}
+
+## Functions \{#functions\}
+
+### `registerAttributeHandler()` \{#registerattributehandler\}
+
+```ts
+registerAttributeHandler(key: string, args: [boolean]): (this: T, target: AttributeChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any
+```
+
+*No description yet.*
+
+- **Default:** ...
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `key` | `string` |  |
+| `args` | `[boolean]` |  |
+
+**Returns:** `(this: T, target: AttributeChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any`
+
+### `registerEventEnableStatusChangeHandler()` \{#registereventenablestatuschangehandler\}
+
+```ts
+registerEventEnableStatusChangeHandler(key: string, args: []): (this: T, target: EventStatusChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any
+```
+
+*No description yet.*
+
+- **Default:** ...
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `key` | `string` |  |
+| `args` | `[]` |  |
+
+**Returns:** `(this: T, target: EventStatusChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any`
+
+### `registerStyleChangeHandler()` \{#registerstylechangehandler\}
+
+```ts
+registerStyleChangeHandler(key: string, args: []): (this: T, target: StyleChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any
+```
+
+*No description yet.*
+
+- **Default:** ...
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `key` | `string` |  |
+| `args` | `[]` |  |
+
+**Returns:** `(this: T, target: StyleChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any`
+
+### `bindSwitchToEventListener()` \{#bindswitchtoeventlistener\}
+
+```ts
+bindSwitchToEventListener(this: T, elementGetter: (this: T) => HTMLElement, eventName: string, eventListener: EventListener, options?: AddEventListenerOptions): (this: T, enable: boolean) => void
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `this` | `T` |  |
+| `elementGetter` | `(this: T) => HTMLElement` |  |
+| `eventName` | `string` |  |
+| `eventListener` | `EventListener` |  |
+| `options?` | `AddEventListenerOptions` |  |
+
+**Returns:** `(this: T, enable: boolean) => void`
+
+### `bindToAttribute()` \{#bindtoattribute\}
+
+```ts
+bindToAttribute(this: T, elementGetter: (this: T) => HTMLElement, attributeName: string, valProcessor?: (value: string | null) => string | null): (this: T, newVal: string | null) => void
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `this` | `T` |  |
+| `elementGetter` | `(this: T) => HTMLElement` |  |
+| `attributeName` | `string` |  |
+| `valProcessor?` | `(value: string \| null) => string \| null` |  |
+
+**Returns:** `(this: T, newVal: string | null) => void`
+
+### `bindToStyle()` \{#bindtostyle\}
+
+```ts
+bindToStyle(this: T, elementGetter: (this: T) => HTMLElement, styleName: string, valProcessor?: (value: string) => string, important?: boolean): (this: T, newVal: string | null) => void
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `this` | `T` |  |
+| `elementGetter` | `(this: T) => HTMLElement` |  |
+| `styleName` | `string` |  |
+| `valProcessor?` | `(value: string) => string` |  |
+| `important?` | `boolean` |  |
+
+**Returns:** `(this: T, newVal: string | null) => void`
+
+### `boostedQueueMicrotask()` \{#boostedqueuemicrotask\}
+
+```ts
+boostedQueueMicrotask(foo: CallableFunction, that?: any): void
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `foo` | `CallableFunction` |  |
+| `that?` | `any` |  |
+
+### `Component()` \{#component\}
+
+```ts
+Component(tag: string, attributeReactiveClassesOptional: (AttributeReactiveClass<T> | undefined)[], template?: string): (target: T, context: ClassDecoratorContext<T>) => T
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `tag` | `string` |  |
+| `attributeReactiveClassesOptional` | `(AttributeReactiveClass<T> \| undefined)[]` |  |
+| `template?` | `string` |  |
+
+**Returns:** `(target: T, context: ClassDecoratorContext<T>) => T`
+
+### `genDomGetter()` \{#gendomgetter\}
+
+```ts
+genDomGetter(queryableElementGetter: () => ShadowRoot, selector: string): InternalDomGetter<T>
+genDomGetter(queryableElementGetter: () => HTMLElement, selector: string): PlainDomGetter<T>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `queryableElementGetter` | `() => ShadowRoot` |  |
+| `selector` | `string` |  |
+
+**Returns:** `InternalDomGetter<T>`
+
+### `html()` \{#html\}
+
+```ts
+html(strings: TemplateStringsArray, values: any[]): string
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `strings` | `TemplateStringsArray` |  |
+| `values` | `any[]` |  |
+
+**Returns:** `string`
+
+## Classes \{#classes\}
+
+### `CommonEventsAndMethods` \{#commoneventsandmethods\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="commoneventsandmethods-constructor"></a>`constructor` | `constructor(currentElement: HTMLElement & { [layoutChangeTarget]?: HTMLElement }): CommonEventsAndMethods` |  |
+| <a id="commoneventsandmethods-observedattributes"></a>`observedAttributes` | `never[]` |  |
+| <a id="commoneventsandmethods-handlescrollupperthresholdeventenabled"></a>`__handleScrollUpperThresholdEventEnabled` | `__handleScrollUpperThresholdEventEnabled(enabled: boolean): void` |  |
+| <a id="commoneventsandmethods-dispose"></a>`dispose` | `dispose(): void` |  |
+
+## Constants \{#constants\}
+
+### `commonComponentEventSetting` \{#commoncomponenteventsetting\}
+
+```ts
+const commonComponentEventSetting: { bubbles: false; cancelable: true; composed: false }
+```
+
+*No description yet.*
+
+### `layoutChangeTarget` \{#layoutchangetarget\}
+
+```ts
+const layoutChangeTarget: typeof layoutChangeTarget
+```
+
+*No description yet.*
+
+### `scrollContainerDom` \{#scrollcontainerdom\}
+
+```ts
+const scrollContainerDom: typeof scrollContainerDom
+```
+
+*No description yet.*
+
+### `useScrollEnd` \{#usescrollend\}
+
+```ts
+const useScrollEnd: boolean
+```
+
+*No description yet.*
+
+## Types \{#types\}
+
+### `AttributeReactiveClass` \{#attributereactiveclass\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="attributereactiveclass-constructor"></a>`constructor` | `constructor(dom: InstanceType<T>): any` |  |
+| <a id="attributereactiveclass-observedattributes"></a>`observedAttributes` | `readonly string[]` |  |
+| <a id="attributereactiveclass-observedcssproperties"></a>`observedCSSProperties?` | `readonly string[]` |  |
+
+### `WebComponentClass` \{#webcomponentclass\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="webcomponentclass-constructor"></a>`constructor` | `constructor(): HTMLElement & { cssPropertyChangedHandler?: undefined; adoptedCallback?: any; attributeChangedCallback?: any; connectedCallback?: any; disconnectedCallback?: any }` |  |
+| <a id="webcomponentclass-nottofilterfalseattributes"></a>`notToFilterFalseAttributes?` | `Set<string>` | for attribute="false", we will do removeAttribute by default; set here for dont do this; |
+| <a id="webcomponentclass-observedattributes"></a>`observedAttributes?` | `string[]` |  |
+| <a id="webcomponentclass-observedcssproperties"></a>`observedCSSProperties?` | `undefined` |  |
+| <a id="webcomponentclass-registerplugin"></a>`registerPlugin?` | `(reactiveClass: AttributeReactiveClass<WebComponentClass>) => void` |  |
+
+### `AttributeChangeHandler` \{#attributechangehandler\}
+
+```ts
+type AttributeChangeHandler = (newValue: string | null, oldValue: string | null, attributeName: string) => void
+```
+
+*No description yet.*
+
+### `AttributeReactiveObject` \{#attributereactiveobject\}
+
+*No description yet.*
+
+### `BindToAttributeProxy` \{#bindtoattributeproxy\}
+
+```ts
+type BindToAttributeProxy = ReturnType<typeof bindToAttribute>
+```
+
+*No description yet.*
+
+### `BindToStyleProxy` \{#bindtostyleproxy\}
+
+```ts
+type BindToStyleProxy = ReturnType<typeof bindToStyle>
+```
+
+*No description yet.*
+
+### `EventStatusChangeHandler` \{#eventstatuschangehandler\}
+
+```ts
+type EventStatusChangeHandler = (enable: boolean, eventName: string) => void
+```
+
+*No description yet.*
+
+### `StyleChangeHandler` \{#stylechangehandler\}
+
+```ts
+type StyleChangeHandler = (newValue: string | null, styleHyphenName: string) => void
+```
+
+*No description yet.*
+
+### `UseCSSCustomPropertyHandler` \{#usecsscustompropertyhandler\}
+
+```ts
+type UseCSSCustomPropertyHandler = (newValue: string, propertyName: string) => void
+```
+
+*No description yet.*
+
+{/* @api-end */}

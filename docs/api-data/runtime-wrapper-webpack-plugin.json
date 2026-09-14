@@ -1,0 +1,98 @@
+{
+  "id": "runtime-wrapper-webpack-plugin",
+  "package": "@lynx-js/runtime-wrapper-webpack-plugin",
+  "version": "0.2.4",
+  "description": "Use runtime wrapper which allow JavaScript to be load by Lynx.",
+  "section": "packages",
+  "internal": true,
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/runtime-wrapper-webpack-plugin",
+  "exports": [
+    {
+      "name": "RuntimeWrapperWebpackPlugin",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "RuntimeWrapperWebpackPlugin adds runtime wrappers to JavaScript and allow to be loaded by Lynx.",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(options: Partial<RuntimeWrapperWebpackPluginOptions>): RuntimeWrapperWebpackPlugin",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "options",
+              "type": "Partial<RuntimeWrapperWebpackPluginOptions>"
+            }
+          ],
+          "returns": {
+            "type": "RuntimeWrapperWebpackPlugin"
+          }
+        },
+        {
+          "name": "defaultOptions",
+          "type": "Readonly<Required<RuntimeWrapperWebpackPluginOptions>>",
+          "external": "typescript",
+          "summary": "`defaultOptions` is the default options that the [`RuntimeWrapperWebpackPlugin`](api:RuntimeWrapperWebpackPlugin) uses.",
+          "kind": "property"
+        },
+        {
+          "name": "apply",
+          "type": "apply(compiler: Compiler): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "compiler",
+              "type": "Compiler",
+              "description": "the webpack compiler"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "The entry point of a webpack plugin."
+        }
+      ]
+    },
+    {
+      "name": "RuntimeWrapperWebpackPluginOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The options for RuntimeWrapperWebpackPluginOptions",
+      "members": [
+        {
+          "name": "bannerType",
+          "type": "(filename: string) => \"script\" | \"bundle\"",
+          "summary": "There are two types of banners: script(for app-service) and bundle(for js-render). You can decide to use which banner by the filename.",
+          "default": "`() => 'script'`",
+          "kind": "property"
+        },
+        {
+          "name": "experimental_isLazyBundle",
+          "optional": true,
+          "type": "boolean",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle`",
+          "kind": "property"
+        },
+        {
+          "name": "injectVars",
+          "optional": true,
+          "type": "((vars: string[]) => string[]) | string[]",
+          "summary": "The variables to be injected into the chunk.",
+          "kind": "property"
+        },
+        {
+          "name": "targetSdkVersion",
+          "type": "string",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion`",
+          "kind": "property"
+        },
+        {
+          "name": "test",
+          "type": "Rules | undefined",
+          "summary": "Include all modules that pass test assertion.",
+          "default": "`/\\.js$/`",
+          "kind": "property"
+        }
+      ]
+    }
+  ]
+}

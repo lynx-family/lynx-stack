@@ -1,0 +1,145 @@
+---
+title: '@lynx-js/web-worker-rpc'
+---
+
+# @lynx-js/web-worker-rpc
+
+{/* @api PackageHeader package="web-worker-rpc" */}
+
+<div className="api-pkg-header"><code>@lynx-js/web-worker-rpc</code> <span className="api-pkg-version">v0.26.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/web-worker-rpc" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-worker-rpc" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-worker-rpc/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+
+
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/web-worker-rpc" />
+
+## API
+
+{/* @api ApiExports package="web-worker-rpc" */}
+
+## Functions \{#functions\}
+
+### `createRpcEndpoint()` \{#createrpcendpoint\}
+
+```ts
+createRpcEndpoint(name: string, isSync: false, hasReturn: false): RpcEndpointAsyncVoid<Parameters>
+createRpcEndpoint(name: string, isSync: false, hasReturn: true): RpcEndpointAsync<Parameters, Return>
+createRpcEndpoint(name: string, isSync: false, hasReturn: true, hasReturnTransfer: false): RpcEndpointAsync<Parameters, Return>
+createRpcEndpoint(name: string, isSync: false, hasReturn: true, hasReturnTransfer: true): RpcEndpointAsyncWithTransfer<Parameters, Return>
+createRpcEndpoint(name: string, isSync: true, hasReturn: false): RpcEndpointSyncVoid<Parameters>
+createRpcEndpoint(name: string, isSync: true, hasReturn: true, hasReturnTransfer: false, bufferSize: number): RpcEndpointSync<Parameters, Return>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `name` | `string` |  |
+| `isSync` | `false` |  |
+| `hasReturn` | `false` |  |
+
+**Returns:** `RpcEndpointAsyncVoid<Parameters>`
+
+## Classes \{#classes\}
+
+### `Rpc` \{#rpc\}
+
+The instance for handling MessagePort Remote Process Call
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="rpc-constructor"></a>`constructor` | `constructor(port: MessagePort, name: string): Rpc` |  |
+| <a id="rpc-nextretid"></a>`nextRetId` | `string` |  |
+| <a id="rpc-createcall"></a>`createCall` | `createCall(endpoint: E): (args: E["_TypeParameters"]) => E["_TypeReturn"]` | initialize a endpoint into a function |
+| <a id="rpc-createcallbackify"></a>`createCallbackify` | `createCallbackify(endpoint: E, callbackAt: number): (params: [...E["_TypeParameters"][], (param: E["_TypeReturn"]) => void]) => void` | create a call with callbackify parameters |
+| <a id="rpc-invoke"></a>`invoke` | `invoke(endpoint: T, parameters: T["_TypeParameters"]): void` | the low level api for sending a rpc message recommend to use the `createCall` |
+| <a id="rpc-postmessage"></a>`postMessage` | `postMessage(message: unknown, detail?: { transfer: Transferable[] }): void` |  |
+| <a id="rpc-registerhandler"></a>`registerHandler` | `registerHandler(endpoint: T, handler: (args: T["_TypeParameters"]) => void): void` | register a handler for an endpoint |
+| <a id="rpc-registerhandlerlazy"></a>`registerHandlerLazy` | `registerHandlerLazy(endpoint: T, target: { [key in string]: Handler \| undefined }, propertyName: PropertyName): void` | register a handler for an endpoint |
+| <a id="rpc-registerhandlerref"></a>`registerHandlerRef` | `registerHandlerRef(endpoint: T, target: { [key in string]: Handler \| undefined }, propertyName: PropertyName): void` | register a property of an object as a handler |
+| <a id="rpc-removehandler"></a>`removeHandler` | `removeHandler(rpc: RpcEndpoint<unknown[], unknown>): void` | Remove the handler for the name |
+| <a id="rpc-setmessageport"></a>`setMessagePort` | `setMessagePort(port: MessagePort): void` |  |
+
+## Types \{#types\}
+
+### `RpcEndpointAsync` \{#rpcendpointasync\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="rpcendpointasync-typeparameters"></a>`_TypeParameters` | `Parameters` |  |
+| <a id="rpcendpointasync-typereturn"></a>`_TypeReturn` | `Return` |  |
+| <a id="rpcendpointasync-buffersize"></a>`bufferSize` | `number` | The byte size for return value buffer. The return value will be encoded to json string in utf-8 So you should ensure this size is enough for your stringified return value. |
+| <a id="rpcendpointasync-hasreturn"></a>`hasReturn` | `true` | if this endpoint has return value. Only valid for sync endpoints. Always true for async endpoints. |
+| <a id="rpcendpointasync-hasreturntransfer"></a>`hasReturnTransfer` | `false` | Make the message invoke created by hasReturn support transfer. Only valid for async and hasReturn endpoints |
+| <a id="rpcendpointasync-issync"></a>`isSync` | `false` | the call is a async call or not |
+| <a id="rpcendpointasync-name"></a>`name` | `string` | The name of this rpc endpoint. Rpc instance use this name to recognize which callback to call. Keep in mind: this should be unique. |
+
+### `RpcEndpointAsyncWithTransfer` \{#rpcendpointasyncwithtransfer\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="rpcendpointasyncwithtransfer-typeparameters"></a>`_TypeParameters` | `Parameters` |  |
+| <a id="rpcendpointasyncwithtransfer-typereturn"></a>`_TypeReturn` | `Return` |  |
+| <a id="rpcendpointasyncwithtransfer-buffersize"></a>`bufferSize` | `number` | The byte size for return value buffer. The return value will be encoded to json string in utf-8 So you should ensure this size is enough for your stringified return value. |
+| <a id="rpcendpointasyncwithtransfer-hasreturn"></a>`hasReturn` | `true` | if this endpoint has return value. Only valid for sync endpoints. Always true for async endpoints. |
+| <a id="rpcendpointasyncwithtransfer-hasreturntransfer"></a>`hasReturnTransfer` | `true` | Make the message invoke created by hasReturn support transfer. Only valid for async and hasReturn endpoints |
+| <a id="rpcendpointasyncwithtransfer-issync"></a>`isSync` | `true` | the call is a async call or not |
+| <a id="rpcendpointasyncwithtransfer-name"></a>`name` | `string` | The name of this rpc endpoint. Rpc instance use this name to recognize which callback to call. Keep in mind: this should be unique. |
+
+### `RpcEndpointSync` \{#rpcendpointsync\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="rpcendpointsync-typeparameters"></a>`_TypeParameters` | `Parameters` |  |
+| <a id="rpcendpointsync-typereturn"></a>`_TypeReturn` | `Return` |  |
+| <a id="rpcendpointsync-buffersize"></a>`bufferSize` | `number` | The byte size for return value buffer. The return value will be encoded to json string in utf-8 So you should ensure this size is enough for your stringified return value. |
+| <a id="rpcendpointsync-hasreturn"></a>`hasReturn` | `true` | if this endpoint has return value. Only valid for sync endpoints. Always true for async endpoints. |
+| <a id="rpcendpointsync-hasreturntransfer"></a>`hasReturnTransfer` | `boolean` | Make the message invoke created by hasReturn support transfer. Only valid for async and hasReturn endpoints |
+| <a id="rpcendpointsync-issync"></a>`isSync` | `true` | the call is a async call or not |
+| <a id="rpcendpointsync-name"></a>`name` | `string` | The name of this rpc endpoint. Rpc instance use this name to recognize which callback to call. Keep in mind: this should be unique. |
+
+### `RpcCallType` \{#rpccalltype\}
+
+```ts
+type RpcCallType = E extends RpcEndpointSync<unknown[], unknown> ? (args: E["_TypeParameters"]) => E["_TypeReturn"] : E extends RpcEndpointSyncVoid<unknown[]> ? (args: E["_TypeParameters"]) => void : E extends RpcEndpointAsync<unknown[], unknown> ? (args: E["_TypeParameters"]) => Promise<E["_TypeReturn"]> : E extends RpcEndpointAsyncVoid<unknown[]> ? (args: E["_TypeParameters"]) => void : never
+```
+
+*No description yet.*
+
+### `RpcEndpoint` \{#rpcendpoint\}
+
+```ts
+type RpcEndpoint = RpcEndpointSyncVoid<Parameters> | RpcEndpointSync<Parameters, Return> | RpcEndpointAsync<Parameters, Return> | RpcEndpointAsyncVoid<Parameters> | RpcEndpointAsyncWithTransfer<Parameters, Return>
+```
+
+*No description yet.*
+
+### `RpcEndpointAsyncVoid` \{#rpcendpointasyncvoid\}
+
+```ts
+type RpcEndpointAsyncVoid = RpcEndpointBase<Parameters, void, false, false>
+```
+
+*No description yet.*
+
+### `RpcEndpointSyncVoid` \{#rpcendpointsyncvoid\}
+
+```ts
+type RpcEndpointSyncVoid = RpcEndpointBase<Parameters, void, true, false>
+```
+
+*No description yet.*
+
+{/* @api-end */}

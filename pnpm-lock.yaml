@@ -400,6 +400,55 @@ importers:
         specifier: ^19.2.18
         version: 19.2.18
 
+  docs:
+    dependencies:
+      '@rstack-dev/doc-ui':
+        specifier: 1.14.8
+        version: 1.14.8(@rspress/core@2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))
+      react:
+        specifier: 19.2.8
+        version: 19.2.8
+      react-dom:
+        specifier: 19.2.8
+        version: 19.2.8(react@19.2.8)
+    devDependencies:
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../packages/rspeedy/plugin-react
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../packages/rspeedy/core
+      '@rsbuild/plugin-sass':
+        specifier: 2.0.1
+        version: 2.0.1(@rsbuild/core@2.2.4(core-js@3.50.0))
+      '@rsbuild/plugin-type-check':
+        specifier: 1.6.0
+        version: 1.6.0(@rsbuild/core@2.2.4(core-js@3.50.0))(@rspack/core@2.2.2(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(typescript@6.0.3)
+      '@rspress/core':
+        specifier: 2.0.21
+        version: 2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
+      '@rspress/plugin-client-redirects':
+        specifier: 2.0.21
+        version: 2.0.21(@rspress/core@2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))
+      '@shikijs/transformers':
+        specifier: 4.4.3
+        version: 4.4.3
+      '@types/react':
+        specifier: npm:@types/react@^19.2.18
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.2.4
+        version: 19.2.4(@types/react@19.2.18)
+      tailwindcss:
+        specifier: ^3.4.19
+        version: 3.4.19
+      typedoc:
+        specifier: ^0.28.20
+        version: 0.28.20(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
   examples/gesture:
     dependencies:
       '@lynx-js/gesture-runtime':
@@ -3261,115 +3310,6 @@ importers:
         specifier: catalog:rstest
         version: 0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.0.1)
 
-  website:
-    dependencies:
-      '@rstack-dev/doc-ui':
-        specifier: 1.14.8
-        version: 1.14.8(@rspress/core@2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))
-      react:
-        specifier: 19.2.8
-        version: 19.2.8
-      react-dom:
-        specifier: 19.2.8
-        version: 19.2.8(react@19.2.8)
-    devDependencies:
-      '@lynx-js/chunk-loading-webpack-plugin':
-        specifier: workspace:*
-        version: link:../packages/webpack/chunk-loading-webpack-plugin
-      '@lynx-js/config-rsbuild-plugin':
-        specifier: workspace:*
-        version: link:../packages/rspeedy/plugin-config
-      '@lynx-js/css-extract-webpack-plugin':
-        specifier: workspace:*
-        version: link:../packages/webpack/css-extract-webpack-plugin
-      '@lynx-js/external-bundle-rsbuild-plugin':
-        specifier: workspace:*
-        version: link:../packages/rspeedy/plugin-external-bundle
-      '@lynx-js/externals-loading-webpack-plugin':
-        specifier: workspace:*
-        version: link:../packages/webpack/externals-loading-webpack-plugin
-      '@lynx-js/genui':
-        specifier: workspace:*
-        version: link:../packages/genui
-      '@lynx-js/genui-cli':
-        specifier: workspace:*
-        version: link:../packages/genui/cli
-      '@lynx-js/lynx-bundle-rslib-config':
-        specifier: workspace:*
-        version: link:../packages/rspeedy/lynx-bundle-rslib-config
-      '@lynx-js/qrcode-rsbuild-plugin':
-        specifier: workspace:*
-        version: link:../packages/rspeedy/plugin-qrcode
-      '@lynx-js/react':
-        specifier: workspace:*
-        version: link:../packages/react
-      '@lynx-js/react-refresh-webpack-plugin':
-        specifier: workspace:*
-        version: link:../packages/webpack/react-refresh-webpack-plugin
-      '@lynx-js/react-rsbuild-plugin':
-        specifier: workspace:*
-        version: link:../packages/rspeedy/plugin-react
-      '@lynx-js/react-webpack-plugin':
-        specifier: workspace:*
-        version: link:../packages/webpack/react-webpack-plugin
-      '@lynx-js/rspeedy':
-        specifier: workspace:*
-        version: link:../packages/rspeedy/core
-      '@lynx-js/runtime-wrapper-webpack-plugin':
-        specifier: workspace:*
-        version: link:../packages/webpack/runtime-wrapper-webpack-plugin
-      '@lynx-js/template-webpack-plugin':
-        specifier: workspace:*
-        version: link:../packages/webpack/template-webpack-plugin
-      '@lynx-js/web-core':
-        specifier: workspace:*
-        version: link:../packages/web-platform/web-core
-      '@lynx-js/web-elements':
-        specifier: workspace:*
-        version: link:../packages/web-platform/web-elements
-      '@lynx-js/web-platform-rsbuild-plugin':
-        specifier: workspace:*
-        version: link:../packages/web-platform/web-rsbuild-plugin
-      '@lynx-js/webpack-runtime-globals':
-        specifier: workspace:*
-        version: link:../packages/webpack/webpack-runtime-globals
-      '@microsoft/api-documenter':
-        specifier: ~7.30.0
-        version: 7.30.0(@types/node@24.13.3)
-      '@microsoft/api-extractor-model':
-        specifier: ^7.33.12
-        version: 7.33.12(@types/node@24.13.3)
-      '@rsbuild/plugin-sass':
-        specifier: 2.0.1
-        version: 2.0.1(@rsbuild/core@2.2.4(core-js@3.50.0))
-      '@rsbuild/plugin-type-check':
-        specifier: 1.6.0
-        version: 1.6.0(@rsbuild/core@2.2.4(core-js@3.50.0))(@rspack/core@2.2.2(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(typescript@6.0.3)
-      '@rsbuild/plugin-typed-css-modules':
-        specifier: 1.2.4
-        version: 1.2.4(@rsbuild/core@2.2.4(core-js@3.50.0))
-      '@rspress/core':
-        specifier: 2.0.21
-        version: 2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
-      '@rspress/plugin-client-redirects':
-        specifier: 2.0.21
-        version: 2.0.21(@rspress/core@2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))
-      '@shikijs/transformers':
-        specifier: 4.4.3
-        version: 4.4.3
-      '@types/react':
-        specifier: npm:@types/react@^19.2.18
-        version: 19.2.18
-      '@types/react-dom':
-        specifier: ^19.2.4
-        version: 19.2.4(@types/react@19.2.18)
-      change-case:
-        specifier: ^5.4.4
-        version: 5.4.4
-      tailwindcss:
-        specifier: ^3.4.19
-        version: 3.4.19
-
 packages:
 
   '@a2a-js/sdk@0.3.14':
@@ -5152,16 +5092,9 @@ packages:
       '@types/react': '>=16'
       react: '>=16'
 
-  '@microsoft/api-documenter@7.30.0':
-    resolution: {integrity: sha512-VjnsEe4UhOanW0ERdGbsegLU4eoPuYPEpFwW8nILWlzBXBLneATHvQEIQfDokOP0nmHfSXAygRBrIx1wp9e9/w==}
-    hasBin: true
-
   '@microsoft/api-extractor-model@7.33.12':
     resolution: {integrity: sha512-TdKOYgwf98xLjNW+y3iXIiCf4ZLQbilGAlqkMTTAqqAWfgRXAn9YCSGMsaiB1U7OPRvslUWg6n08EqQPbP93tA==}
     engines: {node: '>=20.9.0'}
-
-  '@microsoft/api-extractor-model@7.33.6':
-    resolution: {integrity: sha512-E9iI4yGEVVusbTAqSLetVFxDuBVCVqCigcoQwdJuOjsLq5Hry3MkBgUQhSZNzLCu17pgjk58MI80GRDJLht/1A==}
 
   '@microsoft/api-extractor@7.59.1':
     resolution: {integrity: sha512-GjRUqx1MTY7xuH36urwASkfBPzrdxYG+irVeV7C9JEdRtn509AgMmwit/BhvztQzIoFk9vhFDTVYOp2cjw+9Uw==}
@@ -6428,14 +6361,6 @@ packages:
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
 
-  '@rushstack/node-core-library@5.22.0':
-    resolution: {integrity: sha512-S/Dm/N+8tkbasS6yM5cF6q4iDFt14mQQniiVIwk1fd0zpPwWESspO4qtPyIl8szEaN86XOYC1HRRzZrOowxjtw==}
-    peerDependencies:
-      '@types/node': '*'
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-
   '@rushstack/node-core-library@5.24.1':
     resolution: {integrity: sha512-ZlOrzv92MwnsCXA45qWfDj4L/kTasKghXezu+M2WmdtkbnXyPnZSCovfeBZx1Yc5qm+LkElbLw6IeSSWZDhZUg==}
     engines: {node: '>=20.9.0'}
@@ -6456,14 +6381,6 @@ packages:
   '@rushstack/rig-package@0.7.3':
     resolution: {integrity: sha512-aAA518n6wxxjCfnTAOjQnm7ngNE0FVHxHAw2pxKlIhxrMn0XQjGcXKF0oKWpjBgJOmsaJpVob/v+zr3zxgPWuA==}
 
-  '@rushstack/terminal@0.22.5':
-    resolution: {integrity: sha512-umej8J6A+WRbfQV1G/uNfnz4bMa8CzFU9IJzQb/ZcH4j7Ybg3BQ8UBKOCF3o5U3/2yah1TDU/zE71ugg2JJv+Q==}
-    peerDependencies:
-      '@types/node': '*'
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-
   '@rushstack/terminal@0.24.4':
     resolution: {integrity: sha512-3fRBWK0IMY293lBx5ycgit1DTMUi+nhOjALHlrIad9hQsqzM9Ak+XdBI1gJ/tZPxW+LraeAc4SsmMdcOflBmAQ==}
     engines: {node: '>=20.9.0'}
@@ -6476,9 +6393,6 @@ packages:
   '@rushstack/ts-command-line@5.3.14':
     resolution: {integrity: sha512-lT2JKZk2dukBMp4GFOh4RaDfVzpZehGgQOGpzpSliUn317NgEmOOCXyd7/d0eU46HHsbRxizP83GAm39s0lAlg==}
     engines: {node: '>=20.9.0'}
-
-  '@rushstack/ts-command-line@5.3.5':
-    resolution: {integrity: sha512-ToJQu3+o6aEdDoApGrwb/RsbwDi/NSC7jIEaAezzWM470TRrsXfSHoYAm1eWkhh34xJ+kZxU1ZzKSHiOMlOFPA==}
 
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
@@ -9754,10 +9668,6 @@ packages:
     resolution: {integrity: sha512-okMH7OXXJ7YrN9Ok3/SXrnu4iX9yOk+25nqX4imS2npuvTYDmo/QEZoqwZkYaIDk3jVvBOTOIEgEhaLOynBS9g==}
     hasBin: true
 
-  js-yaml@4.1.1:
-    resolution: {integrity: sha512-qQKT4zQxXl8lLwBtHMWwaTcGfFOZviOJet3Oy/xmGk2gZH677CJM9EvtfdSkgWcATZhj/55JZ0rmy3myCT5lsA==}
-    hasBin: true
-
   js-yaml@4.3.0:
     resolution: {integrity: sha512-1td788aAnnZ5qs7V2QIRl1owjtYpbKt749Y3xauqQgwIIGF/xXWz1wMTEBx5O3LK3lXLVuqXPdPxj2BoFHaW9Q==}
     hasBin: true
@@ -10102,10 +10012,6 @@ packages:
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
-
-  lru-cache@6.0.0:
-    resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
-    engines: {node: '>=10'}
 
   lucide-react@1.38.0:
     resolution: {integrity: sha512-xZCyBd/wiVUDactoCc+42TjL0aB7EBOXsuX+tjz+W/sGzw2KhHpL1NOH3FIaVUcpimvUBpIYfz34Ofj9S5JEzQ==}
@@ -11841,11 +11747,6 @@ packages:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
     hasBin: true
 
-  semver@7.5.4:
-    resolution: {integrity: sha512-1bCSESV6Pv+i21Hvpxp3Dx+pSD8lIPt8uVjRrxAUt/nbswYc+tK6Y2btiULjd4+fnq15PX+nqQDC7Oft7WkwcA==}
-    engines: {node: '>=10'}
-    hasBin: true
-
   semver@7.7.4:
     resolution: {integrity: sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA==}
     engines: {node: '>=10'}
@@ -12994,9 +12895,6 @@ packages:
 
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
-
-  yallist@4.0.0:
-    resolution: {integrity: sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==}
 
   yaml@2.9.0:
     resolution: {integrity: sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA==}
@@ -15104,31 +15002,11 @@ snapshots:
       '@types/react': 19.2.18
       react: 19.2.8
 
-  '@microsoft/api-documenter@7.30.0(@types/node@24.13.3)':
-    dependencies:
-      '@microsoft/api-extractor-model': 7.33.6(@types/node@24.13.3)
-      '@microsoft/tsdoc': 0.16.0
-      '@rushstack/node-core-library': 5.22.0(@types/node@24.13.3)
-      '@rushstack/terminal': 0.22.5(@types/node@24.13.3)
-      '@rushstack/ts-command-line': 5.3.5(@types/node@24.13.3)
-      js-yaml: 4.1.1
-      resolve: 1.22.12
-    transitivePeerDependencies:
-      - '@types/node'
-
   '@microsoft/api-extractor-model@7.33.12(@types/node@24.13.3)':
     dependencies:
       '@microsoft/tsdoc': 0.16.0
       '@microsoft/tsdoc-config': 0.18.1
       '@rushstack/node-core-library': 5.24.1(@types/node@24.13.3)
-    transitivePeerDependencies:
-      - '@types/node'
-
-  '@microsoft/api-extractor-model@7.33.6(@types/node@24.13.3)':
-    dependencies:
-      '@microsoft/tsdoc': 0.16.0
-      '@microsoft/tsdoc-config': 0.18.1
-      '@rushstack/node-core-library': 5.22.0(@types/node@24.13.3)
     transitivePeerDependencies:
       - '@types/node'
 
@@ -16436,19 +16314,6 @@ snapshots:
 
   '@rtsao/scc@1.1.0': {}
 
-  '@rushstack/node-core-library@5.22.0(@types/node@24.13.3)':
-    dependencies:
-      ajv: 8.18.0
-      ajv-draft-04: 1.0.0(ajv@8.18.0)
-      ajv-formats: 3.0.1(ajv@8.18.0)
-      fs-extra: 11.3.6
-      import-lazy: 4.0.0
-      jju: 1.4.0
-      resolve: 1.22.12
-      semver: 7.5.4
-    optionalDependencies:
-      '@types/node': 24.13.3
-
   '@rushstack/node-core-library@5.24.1(@types/node@24.13.3)':
     dependencies:
       ajv: 8.20.0
@@ -16471,14 +16336,6 @@ snapshots:
       jju: 1.4.0
       resolve: 1.22.12
 
-  '@rushstack/terminal@0.22.5(@types/node@24.13.3)':
-    dependencies:
-      '@rushstack/node-core-library': 5.22.0(@types/node@24.13.3)
-      '@rushstack/problem-matcher': 0.2.1(@types/node@24.13.3)
-      supports-color: 8.1.1
-    optionalDependencies:
-      '@types/node': 24.13.3
-
   '@rushstack/terminal@0.24.4(@types/node@24.13.3)':
     dependencies:
       '@rushstack/node-core-library': 5.24.1(@types/node@24.13.3)
@@ -16490,15 +16347,6 @@ snapshots:
   '@rushstack/ts-command-line@5.3.14(@types/node@24.13.3)':
     dependencies:
       '@rushstack/terminal': 0.24.4(@types/node@24.13.3)
-      '@types/argparse': 1.0.38
-      argparse: 1.0.10
-      string-argv: 0.3.2
-    transitivePeerDependencies:
-      - '@types/node'
-
-  '@rushstack/ts-command-line@5.3.5(@types/node@24.13.3)':
-    dependencies:
-      '@rushstack/terminal': 0.22.5(@types/node@24.13.3)
       '@types/argparse': 1.0.38
       argparse: 1.0.10
       string-argv: 0.3.2
@@ -17551,10 +17399,6 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ajv-draft-04@1.0.0(ajv@8.18.0):
-    optionalDependencies:
-      ajv: 8.18.0
-
   ajv-draft-04@1.0.0(ajv@8.20.0):
     optionalDependencies:
       ajv: 8.20.0
@@ -17562,10 +17406,6 @@ snapshots:
   ajv-formats@2.1.1(ajv@8.20.0):
     optionalDependencies:
       ajv: 8.20.0
-
-  ajv-formats@3.0.1(ajv@8.18.0):
-    optionalDependencies:
-      ajv: 8.18.0
 
   ajv-formats@3.0.1(ajv@8.20.0):
     optionalDependencies:
@@ -20047,10 +19887,6 @@ snapshots:
       argparse: 1.0.10
       esprima: 4.0.1
 
-  js-yaml@4.1.1:
-    dependencies:
-      argparse: 2.0.1
-
   js-yaml@4.3.0:
     dependencies:
       argparse: 2.0.1
@@ -20372,10 +20208,6 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
-
-  lru-cache@6.0.0:
-    dependencies:
-      yallist: 4.0.0
 
   lucide-react@1.38.0(react@19.2.8):
     dependencies:
@@ -22415,10 +22247,6 @@ snapshots:
 
   semver@6.3.1: {}
 
-  semver@7.5.4:
-    dependencies:
-      lru-cache: 6.0.0
-
   semver@7.7.4: {}
 
   semver@7.8.5: {}
@@ -23669,8 +23497,6 @@ snapshots:
   y18n@4.0.3: {}
 
   yallist@3.1.1: {}
-
-  yallist@4.0.0: {}
 
   yaml@2.9.0: {}
 

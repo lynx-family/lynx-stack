@@ -1,0 +1,40 @@
+{
+  "name": "docs",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The documentation site for lynx-stack",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "rspress build",
+    "check": "pnpm run generate && git diff --exit-code -- api-data content",
+    "dev": "rspress dev",
+    "generate": "node scripts/generate-api-data.ts && node scripts/expand-api-docs.ts",
+    "i18n:apply": "python3 scripts/i18n-segments.py apply-dir",
+    "i18n:dump": "python3 scripts/i18n-segments.py dump",
+    "i18n:extract": "node scripts/i18n-extract.ts zh",
+    "preview": "rspress preview"
+  },
+  "dependencies": {
+    "@rstack-dev/doc-ui": "1.14.8",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@rsbuild/plugin-sass": "2.0.1",
+    "@rsbuild/plugin-type-check": "1.6.0",
+    "@rspress/core": "2.0.21",
+    "@rspress/plugin-client-redirects": "2.0.21",
+    "@shikijs/transformers": "4.4.3",
+    "@types/react": "npm:@types/react@^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "tailwindcss": "^3.4.19",
+    "typedoc": "^0.28.20",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": "^22 || ^24"
+  }
+}

@@ -1,0 +1,370 @@
+{
+  "LynxEncodePlugin.summary": {
+    "hash": "30e6172d",
+    "text": "LynxEncodePlugin"
+  },
+  "LynxEncodePlugin.BEFORE_EMIT_STAGE.summary": {
+    "hash": "efb4fa71",
+    "text": "beforeEmit 钩子的阶段。"
+  },
+  "LynxEncodePlugin.BEFORE_ENCODE_STAGE.summary": {
+    "hash": "f9576870",
+    "text": "beforeEncode 钩子的阶段。"
+  },
+  "LynxEncodePlugin.defaultOptions.summary": {
+    "hash": "3cffc031",
+    "text": "`defaultOptions` 是 [`LynxEncodePlugin`](api:LynxEncodePlugin) 使用的默认选项。"
+  },
+  "LynxEncodePlugin.defaultOptions.example.0": {
+    "hash": "bc285d8e",
+    "text": "`defaultOptions` 可用于修改部分选项，同时让其余选项保持默认值。\n\n```js\n// webpack.config.js\nimport { LynxEncodePlugin } from '@lynx-js/template-webpack-plugin'\nexport default {\n  plugins: [\n    new LynxEncodePlugin({\n      ...LynxEncodePlugin.defaultOptions,\n      enableRemoveCSSScope: true,\n    }),\n  ],\n}\n```"
+  },
+  "LynxEncodePlugin.ENCODE_STAGE.summary": {
+    "hash": "c22d2d9d",
+    "text": "encode 钩子的阶段。"
+  },
+  "LynxEncodePlugin.encodePool.summary": {
+    "hash": "398f094c",
+    "text": "共享的 TASM 编码 worker 池：多个入口（以及同一进程中的多个 `LynxEncodePlugin` 实例）会共享其 worker 槽位\n以并行编码；\nwatch 模式下的重新构建会复用同一批已预热的 worker。\n`availableParallelism()` 会遵循 cgroup CPU 限制（容器、CI runner），\n因此无需自行减去一个核心。"
+  },
+  "LynxEncodePlugin.apply.summary": {
+    "hash": "90722b12",
+    "text": "webpack 插件的入口。"
+  },
+  "LynxEncodePlugin.apply.params.compiler": {
+    "hash": "edb43efe",
+    "text": "webpack compiler"
+  },
+  "LynxTemplatePlugin.summary": {
+    "hash": "36f227bb",
+    "text": "LynxTemplatePlugin"
+  },
+  "LynxTemplatePlugin.defaultOptions.summary": {
+    "hash": "f4276fcd",
+    "text": "`defaultOptions` 是 [`LynxTemplatePlugin`](api:LynxTemplatePlugin) 使用的默认选项。"
+  },
+  "LynxTemplatePlugin.defaultOptions.example.0": {
+    "hash": "6e90d738",
+    "text": "`defaultOptions` 可用于修改部分选项，同时让其余选项保持默认值。\n\n```js\n// webpack.config.js\nimport { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'\nexport default {\n  plugins: [\n    new LynxTemplatePlugin({\n      ...LynxTemplatePlugin.defaultOptions,\n      enableRemoveCSSScope: true,\n    }),\n  ],\n}\n```"
+  },
+  "LynxTemplatePlugin.apply.summary": {
+    "hash": "90722b12",
+    "text": "webpack 插件的入口。"
+  },
+  "LynxTemplatePlugin.apply.params.compiler": {
+    "hash": "edb43efe",
+    "text": "webpack compiler"
+  },
+  "LynxTemplatePlugin.convertCSSChunksToMap.summary": {
+    "hash": "ce1d1014",
+    "text": "将 CSS chunk 转换为 CSS map。"
+  },
+  "LynxTemplatePlugin.convertCSSChunksToMap.remarks": {
+    "hash": "bdc8e5ab",
+    "text": "该辅助函数目前直接转发至 `cssChunksToMap`。\n\n返回的 `cssSource` 以 `cssId` 为键，\n并使用合成的文件名格式 `/cssId/<id>.css`。\n\n该辅助函数不会将生成的 `loc` 字段\n重新映射回原始源码坐标。"
+  },
+  "LynxTemplatePlugin.convertCSSChunksToMap.example.0": {
+    "hash": "e4dd224e",
+    "text": "```\n(console.log(await convertCSSChunksToMap(\n  '.red { color: red; }',\n  {\n    targetSdkVersion: '3.2',\n    enableCSSSelector: true,\n  },\n)));\n```"
+  },
+  "LynxTemplatePlugin.convertCSSChunksToMap.params.cssChunks": {
+    "hash": "00488dc4",
+    "text": "CSS chunk 的内容。"
+  },
+  "LynxTemplatePlugin.getAsyncChunkLayoutName.summary": {
+    "hash": "19738f22",
+    "text": "将异步 chunk id 映射为 `<lazy bundle name>/<layer>`，\n用于将 lazy bundle 的中间 js/css/hmr 产物归入每个 bundle 独立的目录。\n对于非 lazy chunk 返回 undefined。"
+  },
+  "LynxTemplatePlugin.getLynxTemplatePluginHooks.summary": {
+    "hash": "6581e39d",
+    "text": "返回 Lynx template webpack 插件在给定 compilation 下的所有公开钩子"
+  },
+  "WebEncodePlugin.deleteDebuggingAssets.summary": {
+    "hash": "ee617c69",
+    "text": "deleteDebuggingAssets 会删除所有已内联到 template 中的资源。"
+  },
+  "CustomSectionNaming.summary": {
+    "hash": "0965168e",
+    "text": "指定 chunk 输出时所用的自定义 section 名称。"
+  },
+  "CustomSectionNaming.remarks": {
+    "hash": "a39d24cf",
+    "text": "返回 `undefined` 会使该 chunk 不进入自定义 section。\n未进入自定义 section 的后台线程 chunk 会保留在 manifest 中，\n运行时也正是从 manifest 中查找它。"
+  },
+  "CustomSectionNaming.background.params.manifestKey": {
+    "hash": "46589fe3",
+    "text": "该 chunk 在 manifest 中的键。\nlazy bundle 以路径（`/.rspeedy/lazy-bundle/…/background.js`）作为键，\nexternal bundle 则以资源名作为键。"
+  },
+  "EncodeOptions.summary": {
+    "hash": "d0d7cf54",
+    "text": "编码 Lynx bundle 的选项。"
+  },
+  "EncodeOptions.elementTemplate.summary": {
+    "hash": "9d9b0a17",
+    "text": "供支持 element template 输出的编码器使用的 element template 数据。"
+  },
+  "LynxEncodePluginOptions.summary": {
+    "hash": "a9acae6d",
+    "text": "LynxEncodePluginOptions 的选项"
+  },
+  "LynxTemplatePluginOptions.summary": {
+    "hash": "647a440f",
+    "text": "LynxTemplatePlugin 的选项"
+  },
+  "LynxTemplatePluginOptions.appType.summary": {
+    "hash": "cd87b19a",
+    "text": "要编码的 bundle 类型。"
+  },
+  "LynxTemplatePluginOptions.appType.default": {
+    "hash": "755620a9",
+    "text": "lazy bundle 为 `'DynamicComponent'`，其他情况为 `'card'`。"
+  },
+  "LynxTemplatePluginOptions.chunks.summary": {
+    "hash": "475f21c3",
+    "text": "列出所有需要注入的入口"
+  },
+  "LynxTemplatePluginOptions.chunks.default": {
+    "hash": "43a7e8ec",
+    "text": "`'all'`"
+  },
+  "LynxTemplatePluginOptions.cssPlugins.summary": {
+    "hash": "af16dcf7",
+    "text": "传递给 parser 的插件"
+  },
+  "LynxTemplatePluginOptions.customCSSInheritanceList.summary": {
+    "hash": "c91c62a6",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.customCSSInheritanceList`"
+  },
+  "LynxTemplatePluginOptions.customCSSInheritanceList.example.0": {
+    "hash": "7c29cf5c",
+    "text": "设置 `customCSSInheritanceList: ['direction', 'overflow']` 后，只有 `direction` 和 `overflow` 属性可继承。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n plugins: [\n   pluginReactLynx({\n     enableCSSInheritance: true,\n     customCSSInheritanceList: ['direction', 'overflow']\n   }),\n ],\n}\n```"
+  },
+  "LynxTemplatePluginOptions.customSectionNaming.summary": {
+    "hash": "a1696025",
+    "text": "将每个 chunk 组装为自定义 section，并按此策略命名。"
+  },
+  "LynxTemplatePluginOptions.customSectionNaming.remarks": {
+    "hash": "90e861eb",
+    "text": "以这种方式组装的 bundle 不包含 `lepusCode`，\n只有未被命名的 chunk 会保留在 manifest 中。\n`FetchBundle` lazy bundle 默认以这种方式组装，使用其运行时所解析的三个 section 名称。"
+  },
+  "LynxTemplatePluginOptions.debugInfoOutside.summary": {
+    "hash": "276e154c",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.debugInfoOutside`"
+  },
+  "LynxTemplatePluginOptions.defaultDisplayLinear.summary": {
+    "hash": "331fc572",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.defaultDisplayLinear`"
+  },
+  "LynxTemplatePluginOptions.defaultOverflowVisible.summary": {
+    "hash": "c35ed117",
+    "text": "启用后，view 和组件的默认 overflow CSS 属性为 `'visible'`，否则为 `'hidden'`。"
+  },
+  "LynxTemplatePluginOptions.defaultOverflowVisible.default": {
+    "hash": "f041dde5",
+    "text": "`true`"
+  },
+  "LynxTemplatePluginOptions.dsl.summary": {
+    "hash": "acef466e",
+    "text": "向编码器声明当前的 DSL。"
+  },
+  "LynxTemplatePluginOptions.enableA11y.summary": {
+    "hash": "4ab646f2",
+    "text": "使用 Android View 层级的 API 与系统实现。"
+  },
+  "LynxTemplatePluginOptions.enableAccessibilityElement.summary": {
+    "hash": "0c2a7575",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableAccessibilityElement`"
+  },
+  "LynxTemplatePluginOptions.enableCSSInheritance.summary": {
+    "hash": "1c9e5fd6",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInheritance`"
+  },
+  "LynxTemplatePluginOptions.enableCSSInvalidation.summary": {
+    "hash": "6133978e",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInvalidation`"
+  },
+  "LynxTemplatePluginOptions.enableCSSSelector.summary": {
+    "hash": "ce2066ad",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSSelector`"
+  },
+  "LynxTemplatePluginOptions.enableNewGesture.summary": {
+    "hash": "c6e7994c",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableNewGesture`"
+  },
+  "LynxTemplatePluginOptions.enableRemoveCSSScope.summary": {
+    "hash": "4c085b94",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope`"
+  },
+  "LynxTemplatePluginOptions.enableSectionBytecode.summary": {
+    "hash": "524fac8b",
+    "text": "是否将主线程 section 编译为 `JsBytecode`。"
+  },
+  "LynxTemplatePluginOptions.enableSectionBytecode.default": {
+    "hash": "7bcd282a",
+    "text": "```ts\nEnabled outside of development and debug builds, which keeps\nthe sections readable while debugging.\n```"
+  },
+  "LynxTemplatePluginOptions.excludeChunks.summary": {
+    "hash": "5cff1d14",
+    "text": "列出所有不应注入的入口"
+  },
+  "LynxTemplatePluginOptions.excludeChunks.default": {
+    "hash": "7c93435d",
+    "text": "`[]`"
+  },
+  "LynxTemplatePluginOptions.experimental_isLazyBundle.summary": {
+    "hash": "60b3103f",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle`"
+  },
+  "LynxTemplatePluginOptions.filename.summary": {
+    "hash": "b0b98d5e",
+    "text": "template 的输出文件。\n支持子目录，例如：`assets/template.js`。\n[name] 会被替换为入口名称。\n也支持传入函数来生成名称。"
+  },
+  "LynxTemplatePluginOptions.filename.default": {
+    "hash": "7ae4c7f4",
+    "text": "`'[name].bundle'`"
+  },
+  "LynxTemplatePluginOptions.intermediate.summary": {
+    "hash": "143997dd",
+    "text": "bundle 中间文件所在的目录。"
+  },
+  "LynxTemplatePluginOptions.intermediate.default": {
+    "hash": "787e526c",
+    "text": "`'.lynx'`"
+  },
+  "LynxTemplatePluginOptions.lazyBundleFetcher.summary": {
+    "hash": "309f2e73",
+    "text": "已解析的 lazy bundle fetcher 模式。\n由调用方（例如 `pluginReactLynx`）根据宿主引擎版本，\n以及 `REACT_LAZY_BUNDLE_FETCHER` 环境变量覆盖值决定。"
+  },
+  "LynxTemplatePluginOptions.lazyBundleFilename.summary": {
+    "hash": "f2f1e2a5",
+    "text": "lazy bundle 的文件名。"
+  },
+  "LynxTemplatePluginOptions.lazyBundleFilename.default": {
+    "hash": "52f6cec7",
+    "text": "`'lazy-bundle/[name].[fullhash].bundle'`"
+  },
+  "LynxTemplatePluginOptions.removeDescendantSelectorScope.summary": {
+    "hash": "b47c56be",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.removeDescendantSelectorScope`"
+  },
+  "LynxTemplatePluginOptions.targetSdkVersion.summary": {
+    "hash": "6bfed00b",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion`"
+  },
+  "ProcessTasmCSSDiagnosticsOptions.summary": {
+    "hash": "47fabc0d",
+    "text": "[`processTasmCSSDiagnostics`](api:processTasmCSSDiagnostics) 的选项。"
+  },
+  "ProcessTasmCSSDiagnosticsOptions.context.summary": {
+    "hash": "14df2b12",
+    "text": "用于解析相对源码路径的 webpack compiler context。"
+  },
+  "ProcessTasmCSSDiagnosticsOptions.cssDiagnostics.summary": {
+    "hash": "169c8e74",
+    "text": "TASM 返回的原始 `css_diagnostics` 值。"
+  },
+  "ProcessTasmCSSDiagnosticsOptions.cssSourceMaps.summary": {
+    "hash": "b824a72a",
+    "text": "当前 template 对应的 CSS chunk 中的 CSS source map 内容。"
+  },
+  "ProcessTasmCSSDiagnosticsOptions.emittedWarnings.summary": {
+    "hash": "97b0ea3f",
+    "text": "一个可变的 Set，用于跳过已输出过的诊断。"
+  },
+  "ProcessTasmCSSDiagnosticsOptions.fileExists.summary": {
+    "hash": "6529cf73",
+    "text": "在附加映射后的源码位置之前，用于检查文件是否存在的函数。"
+  },
+  "ResolvedTasmCSSDiagnostic.summary": {
+    "hash": "627be1aa",
+    "text": "带有格式化消息和可选 source map 位置的\nTASM CSS 诊断。"
+  },
+  "ResolvedTasmCSSDiagnostic.column.summary": {
+    "hash": "28a81aef",
+    "text": "TASM 报告的生成后 CSS 列号。"
+  },
+  "ResolvedTasmCSSDiagnostic.line.summary": {
+    "hash": "350614c9",
+    "text": "TASM 报告的生成后 CSS 行号。"
+  },
+  "ResolvedTasmCSSDiagnostic.message.summary": {
+    "hash": "3f04b004",
+    "text": "适用于 webpack 诊断的警告消息。"
+  },
+  "ResolvedTasmCSSDiagnostic.name.summary": {
+    "hash": "5c3a4692",
+    "text": "不受支持的 CSS 语法名称（仅当 TASM 报告时提供）。"
+  },
+  "ResolvedTasmCSSDiagnostic.sourceColumn.summary": {
+    "hash": "8a258cf9",
+    "text": "通过 CSS source map 解析得到的原始源码列号。"
+  },
+  "ResolvedTasmCSSDiagnostic.sourceFile.summary": {
+    "hash": "6e74aacb",
+    "text": "通过 CSS source map 解析得到的原始源文件。"
+  },
+  "ResolvedTasmCSSDiagnostic.sourceLine.summary": {
+    "hash": "3f44d753",
+    "text": "通过 CSS source map 解析得到的原始源码行号。"
+  },
+  "ResolvedTasmCSSDiagnostic.type.summary": {
+    "hash": "c579e52f",
+    "text": "诊断类别，例如 `property`。"
+  },
+  "TasmCSSDiagnostic.summary": {
+    "hash": "103f32d1",
+    "text": "TASM 在 template 编码过程中输出的 CSS 诊断。"
+  },
+  "TasmCSSDiagnostic.column.summary": {
+    "hash": "28a81aef",
+    "text": "TASM 报告的生成后 CSS 列号。"
+  },
+  "TasmCSSDiagnostic.line.summary": {
+    "hash": "350614c9",
+    "text": "TASM 报告的生成后 CSS 行号。"
+  },
+  "TasmCSSDiagnostic.name.summary": {
+    "hash": "5c3a4692",
+    "text": "不受支持的 CSS 语法名称（仅当 TASM 报告时提供）。"
+  },
+  "TasmCSSDiagnostic.type.summary": {
+    "hash": "c579e52f",
+    "text": "诊断类别，例如 `property`。"
+  },
+  "TemplateHooks.summary": {
+    "hash": "895b8729",
+    "text": "为了让其他插件能够修改 template，此插件会执行\n[tapable](https://github.com/webpack/tapable) 钩子。"
+  },
+  "TemplateHooks.example.0": {
+    "hash": "bd114c8d",
+    "text": "```js\nclass MyPlugin {\n  apply(compiler) {\n    compiler.hooks.compilation.tap(\"MyPlugin\", (compilation) => {\n      console.log(\"The compiler is starting a new compilation...\");\n\n      LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(\n        \"MyPlugin\", // <-- Set a meaningful name here for stacktraces\n        (data, cb) => {\n          // Manipulate the content\n          modifyTemplate(data.template)\n          // Tell webpack to move on\n          cb(null, data);\n        },\n      );\n    });\n  }\n}\n```"
+  },
+  "TemplateHooks.afterEmit.summary": {
+    "hash": "3f5bcb0f",
+    "text": "在 template 输出后调用。"
+  },
+  "TemplateHooks.asyncChunkName.summary": {
+    "hash": "0c18f853",
+    "text": "获取异步 chunk 的真实名称。具有相同 `asyncChunkName` 的文件会被放入同一个 template。"
+  },
+  "TemplateHooks.beforeEmit.summary": {
+    "hash": "7853b6b0",
+    "text": "在 template 输出前调用，可用于修改 template。"
+  },
+  "TemplateHooks.beforeEncode.summary": {
+    "hash": "84081537",
+    "text": "在编码流程开始前调用，可用于修改编码选项。"
+  },
+  "TemplateHooks.encode.summary": {
+    "hash": "82b1143d",
+    "text": "调用编码流程。"
+  },
+  "CSSPlugins.default": {
+    "hash": "0b877caf",
+    "text": "..."
+  },
+  "processTasmCSSDiagnostics.summary": {
+    "hash": "12f2f6d5",
+    "text": "解析 TASM CSS 诊断，通过 source map 解析其源码位置，并进行去重。"
+  }
+}

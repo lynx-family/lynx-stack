@@ -1,0 +1,66 @@
+---
+title: mode
+---
+
+# mode
+
+构建模式。即 [Rsbuild 的 `mode` 选项](https://rsbuild.rs/zh/config/mode)，执行 `rspeedy build` 时默认为 `production`，执行 `rspeedy dev` 时默认为 `development`。
+
+## 概览
+
+{/* @api ConfigOverview package="rspeedy" type="Config" path="mode" */}
+
+| 名称 | 类型 | 说明 |
+| --- | --- | --- |
+| [`mode`](#mode) | `"production" \| "development" \| "none"` | 指定 Rsbuild 和 Rspack 的构建模式，不同模式有不同的默认行为和优化。 |
+
+{/* @api-end */}
+
+## 选项
+
+{/* @api ConfigOptions package="rspeedy" type="Config" path="mode" */}
+
+### `mode` \{#mode\}
+
+- **类型:** `"production" | "development" | "none"`
+- **默认值:** 取决于 `process.env.NODE_ENV`：当 `NODE_ENV` 为 `'production'` 时为 `'production'`，为 `'development'` 时为 `'development'`，其他情况下为 `'none'`。使用 Rspeedy CLI 时，`rspeedy dev` 和 `rspeedy preview` 默认为 `'development'`，而 `rspeedy build` 默认为 `'production'`。
+
+指定 Rsbuild 和 Rspack 的构建模式，不同模式有不同的默认行为和优化。
+
+```ts
+If the value of `mode` is `'development'`:
+
+- Enable HMR and register the {@link https://rspack.rs/plugins/webpack/hot-module-replacement-plugin | HotModuleReplacementPlugin}.
+
+- Generate JavaScript and CSS source maps. In Lynx environments, all `.map` assets are removed before emit. See {@link Output.sourceMap} for details.
+
+- The `process.env.NODE_ENV` in the source code will be replaced with `'development'`.
+
+- The `import.meta.env.MODE` in the source code will be replaced with `'development'`.
+
+- The `import.meta.env.DEV` in the source code will be replaced with `true`.
+
+- The `import.meta.env.PROD` in the source code will be replaced with `false`.
+```
+
+```ts
+If the value of `mode` is `'production'`:
+
+- Enable JavaScript code minification and register the {@link https://rspack.rs/plugins/rspack/swc-js-minimizer-rspack-plugin | SwcJsMinimizerRspackPlugin}.
+
+- Generated JavaScript and CSS filenames will have hash suffixes, see {@link Output.filenameHash}.
+
+- Generated CSS Modules classnames will be shorter, see {@link CssModules.localIdentName}.
+
+- Generate JavaScript and CSS source maps. In Lynx environments, all `.map` assets are removed before emit. See {@link Output.sourceMap}.
+
+- The `process.env.NODE_ENV` in the source code will be replaced with `'production'`.
+
+- The `import.meta.env.MODE` in the source code will be replaced with `'production'`.
+
+- The `import.meta.env.DEV` in the source code will be replaced with `false`.
+
+- The `import.meta.env.PROD` in the source code will be replaced with `true`.
+```
+
+{/* @api-end */}

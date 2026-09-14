@@ -1,0 +1,520 @@
+{
+  "id": "web-worker-rpc",
+  "package": "@lynx-js/web-worker-rpc",
+  "version": "0.26.0",
+  "section": "packages",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-worker-rpc",
+  "exports": [
+    {
+      "name": "Rpc",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "The instance for handling MessagePort Remote Process Call",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(port: MessagePort, name: string): Rpc",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "port",
+              "type": "MessagePort",
+              "description": "one size of a message channel"
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "description": "instance name"
+            }
+          ],
+          "returns": {
+            "type": "Rpc"
+          }
+        },
+        {
+          "name": "nextRetId",
+          "type": "string",
+          "kind": "accessor",
+          "summary": ""
+        },
+        {
+          "name": "createCall",
+          "type": "createCall(endpoint: E): (args: E[\"_TypeParameters\"]) => E[\"_TypeReturn\"]",
+          "kind": "method",
+          "params": [
+            {
+              "name": "endpoint",
+              "type": "E",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "(args: E[\"_TypeParameters\"]) => E[\"_TypeReturn\"]"
+          },
+          "summary": "initialize a endpoint into a function"
+        },
+        {
+          "name": "createCallbackify",
+          "type": "createCallbackify(endpoint: E, callbackAt: number): (params: [...E[\"_TypeParameters\"][], (param: E[\"_TypeReturn\"]) => void]) => void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "endpoint",
+              "type": "E"
+            },
+            {
+              "name": "callbackAt",
+              "type": "number"
+            }
+          ],
+          "returns": {
+            "type": "(params: [...E[\"_TypeParameters\"][], (param: E[\"_TypeReturn\"]) => void]) => void"
+          },
+          "summary": "create a call with callbackify parameters"
+        },
+        {
+          "name": "invoke",
+          "type": "invoke(endpoint: T, parameters: T[\"_TypeParameters\"]): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "endpoint",
+              "type": "T",
+              "description": ""
+            },
+            {
+              "name": "parameters",
+              "type": "T[\"_TypeParameters\"]",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "the low level api for sending a rpc message\nrecommend to use the `createCall`"
+        },
+        {
+          "name": "postMessage",
+          "type": "postMessage(message: unknown, detail?: { transfer: Transferable[] }): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "message",
+              "type": "unknown"
+            },
+            {
+              "name": "detail",
+              "type": "{ transfer: Transferable[] }",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "registerHandler",
+          "type": "registerHandler(endpoint: T, handler: (args: T[\"_TypeParameters\"]) => void): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "endpoint",
+              "type": "T",
+              "description": ""
+            },
+            {
+              "name": "handler",
+              "type": "(args: T[\"_TypeParameters\"]) => void",
+              "description": ""
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "register a handler for an endpoint"
+        },
+        {
+          "name": "registerHandlerLazy",
+          "type": "registerHandlerLazy(endpoint: T, target: { [key in string]: Handler | undefined }, propertyName: PropertyName): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "endpoint",
+              "type": "T",
+              "description": ""
+            },
+            {
+              "name": "target",
+              "type": "{ [key in string]: Handler | undefined }"
+            },
+            {
+              "name": "propertyName",
+              "type": "PropertyName"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "register a handler for an endpoint"
+        },
+        {
+          "name": "registerHandlerRef",
+          "type": "registerHandlerRef(endpoint: T, target: { [key in string]: Handler | undefined }, propertyName: PropertyName): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "endpoint",
+              "type": "T",
+              "description": ""
+            },
+            {
+              "name": "target",
+              "type": "{ [key in string]: Handler | undefined }"
+            },
+            {
+              "name": "propertyName",
+              "type": "PropertyName"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "register a property of an object as a handler"
+        },
+        {
+          "name": "removeHandler",
+          "type": "removeHandler(rpc: RpcEndpoint<unknown[], unknown>): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "rpc",
+              "type": "RpcEndpoint<unknown[], unknown>"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "Remove the handler for the name"
+        },
+        {
+          "name": "setMessagePort",
+          "type": "setMessagePort(port: MessagePort): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "port",
+              "type": "MessagePort"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "RpcEndpointAsync",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "_TypeParameters",
+          "type": "Parameters",
+          "kind": "property"
+        },
+        {
+          "name": "_TypeReturn",
+          "type": "Return",
+          "kind": "property"
+        },
+        {
+          "name": "bufferSize",
+          "type": "number",
+          "summary": "The byte size for return value buffer.\nThe return value will be encoded to json string in utf-8\nSo you should ensure this size is enough for your stringified return value.",
+          "kind": "property"
+        },
+        {
+          "name": "hasReturn",
+          "type": "true",
+          "summary": "if this endpoint has return value.\nOnly valid for sync endpoints.\nAlways true for async endpoints.",
+          "kind": "property"
+        },
+        {
+          "name": "hasReturnTransfer",
+          "type": "false",
+          "summary": "Make the message invoke created by hasReturn support transfer.\nOnly valid for async and hasReturn endpoints",
+          "kind": "property"
+        },
+        {
+          "name": "isSync",
+          "type": "false",
+          "summary": "the call is a async call or not",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "summary": "The name of this rpc endpoint.\nRpc instance use this name to recognize which callback to call.\nKeep in mind: this should be unique.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "RpcEndpointAsyncWithTransfer",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "_TypeParameters",
+          "type": "Parameters",
+          "kind": "property"
+        },
+        {
+          "name": "_TypeReturn",
+          "type": "Return",
+          "kind": "property"
+        },
+        {
+          "name": "bufferSize",
+          "type": "number",
+          "summary": "The byte size for return value buffer.\nThe return value will be encoded to json string in utf-8\nSo you should ensure this size is enough for your stringified return value.",
+          "kind": "property"
+        },
+        {
+          "name": "hasReturn",
+          "type": "true",
+          "summary": "if this endpoint has return value.\nOnly valid for sync endpoints.\nAlways true for async endpoints.",
+          "kind": "property"
+        },
+        {
+          "name": "hasReturnTransfer",
+          "type": "true",
+          "summary": "Make the message invoke created by hasReturn support transfer.\nOnly valid for async and hasReturn endpoints",
+          "kind": "property"
+        },
+        {
+          "name": "isSync",
+          "type": "true",
+          "summary": "the call is a async call or not",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "summary": "The name of this rpc endpoint.\nRpc instance use this name to recognize which callback to call.\nKeep in mind: this should be unique.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "RpcEndpointSync",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "_TypeParameters",
+          "type": "Parameters",
+          "kind": "property"
+        },
+        {
+          "name": "_TypeReturn",
+          "type": "Return",
+          "kind": "property"
+        },
+        {
+          "name": "bufferSize",
+          "type": "number",
+          "summary": "The byte size for return value buffer.\nThe return value will be encoded to json string in utf-8\nSo you should ensure this size is enough for your stringified return value.",
+          "kind": "property"
+        },
+        {
+          "name": "hasReturn",
+          "type": "true",
+          "summary": "if this endpoint has return value.\nOnly valid for sync endpoints.\nAlways true for async endpoints.",
+          "kind": "property"
+        },
+        {
+          "name": "hasReturnTransfer",
+          "type": "boolean",
+          "summary": "Make the message invoke created by hasReturn support transfer.\nOnly valid for async and hasReturn endpoints",
+          "kind": "property"
+        },
+        {
+          "name": "isSync",
+          "type": "true",
+          "summary": "the call is a async call or not",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "summary": "The name of this rpc endpoint.\nRpc instance use this name to recognize which callback to call.\nKeep in mind: this should be unique.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "RpcCallType",
+      "kind": "typealias",
+      "type": "E extends RpcEndpointSync<unknown[], unknown> ? (args: E[\"_TypeParameters\"]) => E[\"_TypeReturn\"] : E extends RpcEndpointSyncVoid<unknown[]> ? (args: E[\"_TypeParameters\"]) => void : E extends RpcEndpointAsync<unknown[], unknown> ? (args: E[\"_TypeParameters\"]) => Promise<E[\"_TypeReturn\"]> : E extends RpcEndpointAsyncVoid<unknown[]> ? (args: E[\"_TypeParameters\"]) => void : never"
+    },
+    {
+      "name": "RpcEndpoint",
+      "kind": "typealias",
+      "type": "RpcEndpointSyncVoid<Parameters> | RpcEndpointSync<Parameters, Return> | RpcEndpointAsync<Parameters, Return> | RpcEndpointAsyncVoid<Parameters> | RpcEndpointAsyncWithTransfer<Parameters, Return>"
+    },
+    {
+      "name": "RpcEndpointAsyncVoid",
+      "kind": "typealias",
+      "type": "RpcEndpointBase<Parameters, void, false, false>"
+    },
+    {
+      "name": "RpcEndpointSyncVoid",
+      "kind": "typealias",
+      "type": "RpcEndpointBase<Parameters, void, true, false>"
+    },
+    {
+      "name": "createRpcEndpoint",
+      "kind": "function",
+      "type": "createRpcEndpoint(name: string, isSync: false, hasReturn: false): RpcEndpointAsyncVoid<Parameters>",
+      "signatures": [
+        {
+          "text": "createRpcEndpoint(name: string, isSync: false, hasReturn: false): RpcEndpointAsyncVoid<Parameters>",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "isSync",
+              "type": "false"
+            },
+            {
+              "name": "hasReturn",
+              "type": "false"
+            }
+          ],
+          "returns": {
+            "type": "RpcEndpointAsyncVoid<Parameters>"
+          }
+        },
+        {
+          "text": "createRpcEndpoint(name: string, isSync: false, hasReturn: true): RpcEndpointAsync<Parameters, Return>",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "isSync",
+              "type": "false"
+            },
+            {
+              "name": "hasReturn",
+              "type": "true"
+            }
+          ],
+          "returns": {
+            "type": "RpcEndpointAsync<Parameters, Return>"
+          }
+        },
+        {
+          "text": "createRpcEndpoint(name: string, isSync: false, hasReturn: true, hasReturnTransfer: false): RpcEndpointAsync<Parameters, Return>",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "isSync",
+              "type": "false"
+            },
+            {
+              "name": "hasReturn",
+              "type": "true"
+            },
+            {
+              "name": "hasReturnTransfer",
+              "type": "false"
+            }
+          ],
+          "returns": {
+            "type": "RpcEndpointAsync<Parameters, Return>"
+          }
+        },
+        {
+          "text": "createRpcEndpoint(name: string, isSync: false, hasReturn: true, hasReturnTransfer: true): RpcEndpointAsyncWithTransfer<Parameters, Return>",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "isSync",
+              "type": "false"
+            },
+            {
+              "name": "hasReturn",
+              "type": "true"
+            },
+            {
+              "name": "hasReturnTransfer",
+              "type": "true"
+            }
+          ],
+          "returns": {
+            "type": "RpcEndpointAsyncWithTransfer<Parameters, Return>"
+          }
+        },
+        {
+          "text": "createRpcEndpoint(name: string, isSync: true, hasReturn: false): RpcEndpointSyncVoid<Parameters>",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "isSync",
+              "type": "true"
+            },
+            {
+              "name": "hasReturn",
+              "type": "false"
+            }
+          ],
+          "returns": {
+            "type": "RpcEndpointSyncVoid<Parameters>"
+          }
+        },
+        {
+          "text": "createRpcEndpoint(name: string, isSync: true, hasReturn: true, hasReturnTransfer: false, bufferSize: number): RpcEndpointSync<Parameters, Return>",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "isSync",
+              "type": "true"
+            },
+            {
+              "name": "hasReturn",
+              "type": "true"
+            },
+            {
+              "name": "hasReturnTransfer",
+              "type": "false"
+            },
+            {
+              "name": "bufferSize",
+              "type": "number"
+            }
+          ],
+          "returns": {
+            "type": "RpcEndpointSync<Parameters, Return>"
+          }
+        }
+      ]
+    }
+  ]
+}

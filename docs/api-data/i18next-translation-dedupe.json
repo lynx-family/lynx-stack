@@ -1,0 +1,63 @@
+{
+  "id": "i18next-translation-dedupe",
+  "package": "@lynx-js/i18next-translation-dedupe",
+  "version": "0.0.1",
+  "description": "Dedupe i18next translations in Lynx bundles.",
+  "section": "packages",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/i18n/i18next-translation-dedupe",
+  "exports": [
+    {
+      "name": "I18N_TRANSLATIONS_SECTION_KEY",
+      "kind": "variable",
+      "type": "\"i18next-translations\"",
+      "default": "'i18next-translations'"
+    },
+    {
+      "name": "loadI18nextTranslations",
+      "kind": "function",
+      "type": "loadI18nextTranslations(): Resource",
+      "signatures": [
+        {
+          "text": "loadI18nextTranslations(): Resource",
+          "params": [],
+          "returns": {
+            "type": "Resource"
+          }
+        }
+      ]
+    },
+    {
+      "name": "pluginLynxI18nextTranslationDedupe",
+      "kind": "function",
+      "type": "pluginLynxI18nextTranslationDedupe(): RsbuildPlugin",
+      "signatures": [
+        {
+          "text": "pluginLynxI18nextTranslationDedupe(): RsbuildPlugin",
+          "params": [],
+          "returns": {
+            "type": "RsbuildPlugin"
+          }
+        }
+      ]
+    },
+    {
+      "name": "toI18nextTranslations",
+      "kind": "function",
+      "type": "toI18nextTranslations(translationsByLocale: TranslationsByLocale): Resource",
+      "signatures": [
+        {
+          "text": "toI18nextTranslations(translationsByLocale: TranslationsByLocale): Resource",
+          "params": [
+            {
+              "name": "translationsByLocale",
+              "type": "TranslationsByLocale"
+            }
+          ],
+          "returns": {
+            "type": "Resource"
+          }
+        }
+      ]
+    }
+  ]
+}

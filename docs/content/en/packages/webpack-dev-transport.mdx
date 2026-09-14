@@ -1,0 +1,97 @@
+---
+title: '@lynx-js/webpack-dev-transport'
+---
+
+# @lynx-js/webpack-dev-transport
+
+{/* @api PackageHeader package="webpack-dev-transport" */}
+
+<div className="api-pkg-header"><code>@lynx-js/webpack-dev-transport</code> <span className="api-pkg-version">v0.4.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/webpack-dev-transport" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/webpack-dev-transport" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/webpack-dev-transport/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+:::tip Internal package
+This package is part of the Lynx build engine and is applied for you by [`pluginLynx`](/rspeedy/plugins/plugin-lynx). Its API is documented for plugin authors; application code does not use it directly.
+:::
+
+The client transport can be used in the [`devServer.client.webSocketTransport`](https://webpack.js.org/configuration/dev-server/#websockettransport) configuration of `webpack.config.js`.
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/webpack-dev-transport -D" />
+
+## API
+
+{/* @api ApiExports package="webpack-dev-transport" */}
+
+## Classes \{#classes\}
+
+### `default` \{#default\}
+
+LynxTransportClient is the client transport implementation for webpack-dev-server.
+It can be used in the
+[`devServer.client.webSocketTransport`](https://webpack.js.org/configuration/dev-server/#websockettransport)
+configuration of webpack.
+It should be used with `LynxTransportServer`.
+
+```js
+// webpack.config.js
+import { createRequire } from 'node:module'
+import { LynxTransportServer } from '@lynx-js/webpack-dev-transport'
+
+const require = createRequire(import.meta.url)
+export default {
+  devServer: {
+    client: {
+      webSocketTransport: require.resolve('@lynx-js/webpack-dev-transport/client')
+    },
+    allowedHosts: 'all',
+    webSocketServer: LynxTransportServer
+  }
+}
+```
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="default-constructor"></a>`constructor` | `constructor(): default` |  |
+| <a id="default-onclose"></a>`onClose` | `onClose(_callback: () => void): void` | `Client.onClose` |
+| <a id="default-onmessage"></a>`onMessage` | `onMessage(callback: (message: string) => void): void` | `Client.onMessage` |
+| <a id="default-onopen"></a>`onOpen` | `onOpen(callback: () => void): void` | `Client.onOpen` |
+
+## Types \{#types\}
+
+### `Client` \{#client\}
+
+Client is the interface that [`webpack-dev-server`](https://github.com/webpack/webpack-dev-server/blob/48f56d57775dc4cf78bfcf51c3761adf852b0310/client-src/socket.js#L30) uses for a websocket client.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="client-onclose"></a>`onClose` | `onClose(callback: () => void): void` | Register a close callback |
+| <a id="client-onmessage"></a>`onMessage` | `onMessage(callback: (message: string) => void): void` | Register a message callback |
+| <a id="client-onopen"></a>`onOpen` | `onOpen(callback: () => void): void` | Register a open callback |
+
+### `Options` \{#options\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="options-hot"></a>`hot` | `boolean` |  |
+| <a id="options-livereload"></a>`liveReload` | `boolean` |  |
+| <a id="options-logging"></a>`logging?` | `string` |  |
+| <a id="options-progress"></a>`progress` | `boolean` |  |
+| <a id="options-reconnect"></a>`reconnect?` | `number` |  |
+
+### `Status` \{#status\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="status-currenthash"></a>`currentHash` | `string` |  |
+| <a id="status-isreconnecting"></a>`isReconnecting` | `boolean` |  |
+| <a id="status-previoushash"></a>`previousHash?` | `string` |  |
+
+{/* @api-end */}

@@ -1,0 +1,102 @@
+{
+  "Rpc.summary": {
+    "hash": "4e0a5b98",
+    "text": "用于处理 MessagePort 远程过程调用（Remote Process Call）的实例"
+  },
+  "Rpc.constructor.params.port": {
+    "hash": "eb81c916",
+    "text": "消息通道的一端"
+  },
+  "Rpc.constructor.params.name": {
+    "hash": "1b4766fb",
+    "text": "实例名称"
+  },
+  "Rpc.createCall.summary": {
+    "hash": "5245cf5a",
+    "text": "将一个端点初始化为函数"
+  },
+  "Rpc.createCallbackify.summary": {
+    "hash": "e8a7b81b",
+    "text": "创建一个参数为 callbackify 形式的调用"
+  },
+  "Rpc.invoke.summary": {
+    "hash": "df4f8de9",
+    "text": "发送 RPC 消息的底层 API\n推荐使用 `createCall`"
+  },
+  "Rpc.registerHandler.summary": {
+    "hash": "bc51e000",
+    "text": "为端点注册处理函数"
+  },
+  "Rpc.registerHandlerLazy.summary": {
+    "hash": "bc51e000",
+    "text": "为端点注册处理函数"
+  },
+  "Rpc.registerHandlerRef.summary": {
+    "hash": "814b5e1e",
+    "text": "将对象的某个属性注册为处理函数"
+  },
+  "Rpc.removeHandler.summary": {
+    "hash": "b96c61bb",
+    "text": "移除该名称对应的处理函数"
+  },
+  "RpcEndpointAsync.bufferSize.summary": {
+    "hash": "605dfa91",
+    "text": "返回值缓冲区的字节大小。\n返回值会被编码为 UTF-8 的 JSON 字符串，\n因此需确保该大小足以容纳序列化后的返回值。"
+  },
+  "RpcEndpointAsync.hasReturn.summary": {
+    "hash": "ba568278",
+    "text": "该端点是否有返回值。\n仅对同步端点有效。\n异步端点始终为 true。"
+  },
+  "RpcEndpointAsync.hasReturnTransfer.summary": {
+    "hash": "3122ab78",
+    "text": "使由 hasReturn 创建的消息调用支持 transfer。\n仅对异步且设置了 hasReturn 的端点有效"
+  },
+  "RpcEndpointAsync.isSync.summary": {
+    "hash": "f105254b",
+    "text": "该调用是否为异步调用"
+  },
+  "RpcEndpointAsync.name.summary": {
+    "hash": "9c6b06e3",
+    "text": "该 RPC 端点的名称。\nRpc 实例通过该名称识别要调用的回调。\n注意：该名称必须唯一。"
+  },
+  "RpcEndpointAsyncWithTransfer.bufferSize.summary": {
+    "hash": "605dfa91",
+    "text": "返回值缓冲区的字节大小。\n返回值会被编码为 UTF-8 的 JSON 字符串，\n因此需确保该大小足以容纳序列化后的返回值。"
+  },
+  "RpcEndpointAsyncWithTransfer.hasReturn.summary": {
+    "hash": "ba568278",
+    "text": "该端点是否有返回值。\n仅对同步端点有效。\n异步端点始终为 true。"
+  },
+  "RpcEndpointAsyncWithTransfer.hasReturnTransfer.summary": {
+    "hash": "3122ab78",
+    "text": "使由 hasReturn 创建的消息调用支持 transfer。\n仅对异步且设置了 hasReturn 的端点有效"
+  },
+  "RpcEndpointAsyncWithTransfer.isSync.summary": {
+    "hash": "f105254b",
+    "text": "该调用是否为异步调用"
+  },
+  "RpcEndpointAsyncWithTransfer.name.summary": {
+    "hash": "9c6b06e3",
+    "text": "该 RPC 端点的名称。\nRpc 实例通过该名称识别要调用的回调。\n注意：该名称必须唯一。"
+  },
+  "RpcEndpointSync.bufferSize.summary": {
+    "hash": "605dfa91",
+    "text": "返回值缓冲区的字节大小。\n返回值会被编码为 UTF-8 的 JSON 字符串，\n因此需确保该大小足以容纳序列化后的返回值。"
+  },
+  "RpcEndpointSync.hasReturn.summary": {
+    "hash": "ba568278",
+    "text": "该端点是否有返回值。\n仅对同步端点有效。\n异步端点始终为 true。"
+  },
+  "RpcEndpointSync.hasReturnTransfer.summary": {
+    "hash": "3122ab78",
+    "text": "使由 hasReturn 创建的消息调用支持 transfer。\n仅对异步且设置了 hasReturn 的端点有效"
+  },
+  "RpcEndpointSync.isSync.summary": {
+    "hash": "f105254b",
+    "text": "该调用是否为异步调用"
+  },
+  "RpcEndpointSync.name.summary": {
+    "hash": "9c6b06e3",
+    "text": "该 RPC 端点的名称。\nRpc 实例通过该名称识别要调用的回调。\n注意：该名称必须唯一。"
+  }
+}

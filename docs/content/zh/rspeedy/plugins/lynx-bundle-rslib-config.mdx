@@ -1,0 +1,269 @@
+---
+title: lynx-bundle-rslib-config
+---
+
+# lynx-bundle-rslib-config
+
+{/* @api PackageHeader package="lynx-bundle-rslib-config" */}
+
+<div className="api-pkg-header"><code>@lynx-js/lynx-bundle-rslib-config</code> <span className="api-pkg-version">v0.8.1</span> · <a href="https://www.npmjs.com/package/@lynx-js/lynx-bundle-rslib-config" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/lynx-bundle-rslib-config" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/lynx-bundle-rslib-config/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+Rslib 配置辅助工具，用于借助 `@rslib/core` 将 Lynx bundle 构建为库产物。
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/lynx-bundle-rslib-config -D" />
+
+## 用法
+
+```ts title="rslib.config.ts"
+import { defineConfig } from '@rslib/core'
+import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'
+
+export default defineConfig({
+  ...defineExternalBundleRslibConfig({ /* ExternalBundleLibConfig */ }),
+})
+```
+
+## 选项
+
+{/* @api ApiOptions package="lynx-bundle-rslib-config" type="ExternalBundleLibConfig" */}
+
+| 名称 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="output"></a>`output` | `OutputConfig` |  |  |
+
+{/* @api-end */}
+
+## API
+
+{/* @api ApiExports package="lynx-bundle-rslib-config" exclude="ExternalBundleLibConfig" optionsType="ExternalBundleLibConfig" */}
+
+## 函数 \{#\}
+
+### `defineExternalBundleRslibConfig()` \{#defineexternalbundlerslibconfig\}
+
+```ts
+defineExternalBundleRslibConfig(userLibConfig: ExternalBundleLibConfig, encodeOptions: EncodeOptions): RslibConfig
+```
+
+获取用于构建 Lynx external bundle 的 Rslib 配置。
+
+如果要构建在 Lynx 后台线程中使用的 external bundle，可以使用以下代码：
+
+```js
+// rslib.config.js
+import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'
+
+export default defineExternalBundleRslibConfig({
+  id: 'utils-lib',
+  source: {
+    entry: {
+      utils: {
+        import: './src/utils.ts',
+        layer: 'background',
+      }
+    }
+  }
+})
+```
+
+然后即可在后台线程中使用 `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })`。
+
+如果要构建在 Lynx 主线程中使用的 external bundle，可以使用以下代码：
+
+```js
+// rslib.config.js
+import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'
+
+export default defineExternalBundleRslibConfig({
+  id: 'utils-lib',
+  source: {
+    entry: {
+      utils: {
+        import: './src/utils.ts',
+        layer: 'main-thread',
+      }
+    }
+  }
+})
+```
+
+然后即可在主线程中使用 `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })`。
+
+如果要构建同时在 Lynx 主线程和后台线程中使用的 external bundle，无需设置 layer。
+
+```js
+// rslib.config.js
+import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'
+
+export default defineExternalBundleRslibConfig({
+  id: 'utils-lib',
+  source: {
+    entry: {
+      utils: './src/utils.ts',
+    },
+  }
+})
+```
+
+然后即可在后台线程中使用 `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })`，在主线程中使用 `lynx.loadScript('utils__main-thread', { bundleName: 'utils-lib-bundle-url' })`。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `userLibConfig` | `ExternalBundleLibConfig` |  |
+| `encodeOptions` | `EncodeOptions` |  |
+
+**返回值:** `RslibConfig`
+
+## 类 \{#\}
+
+### `MainThreadRuntimeWrapperWebpackPlugin` \{#mainthreadruntimewrapperwebpackplugin\}
+
+external bundle 的主线程运行时包装器。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="mainthreadruntimewrapperwebpackplugin-constructor"></a>`constructor` | `constructor(options: Partial<MainThreadRuntimeWrapperWebpackPluginOptions>): MainThreadRuntimeWrapperWebpackPlugin` |  |
+| <a id="mainthreadruntimewrapperwebpackplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` |  |
+
+## 常量 \{#\}
+
+### `builtInExternalsPresetDefinitions` \{#builtinexternalspresetdefinitions\}
+
+```ts
+const builtInExternalsPresetDefinitions: ExternalsPresetDefinitions
+```
+
+内置的 externals 预设定义。
+
+### `defaultExternalBundleLibConfig` \{#defaultexternalbundlelibconfig\}
+
+```ts
+const defaultExternalBundleLibConfig: LibConfig
+```
+
+external bundle 的默认 lib 配置 `LibConfig`。
+
+### `LAYERS` \{#layers\}
+
+```ts
+const LAYERS: ExposedLayers
+```
+
+没有 DSL 插件时，entry 拆分所依据的 layer 名称。
+
+### `reactLynxExternalsPreset` \{#reactlynxexternalspreset\}
+
+```ts
+const reactLynxExternalsPreset: Externals
+```
+
+内置 `reactlynx`
+预设使用的标准 ReactLynx external 映射。
+
+## 类型 \{#\}
+
+### `EncodeOptions` \{#encodeoptions\}
+
+编码 external bundle 的选项。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="encodeoptions-enablejsbytecode"></a>`enableJsBytecode?` | `boolean` | 是否在产出的 bundle 中将主线程 chunk 编译为 JsBytecode。 |
+| <a id="encodeoptions-engineversion"></a>`engineVersion?` | `string` | external bundle 的引擎版本。 |
+| <a id="encodeoptions-target"></a>`target?` | `"web" \| "lynx"` | 编码后 bundle 的输出格式。 - `'lynx'`：Lynx 引擎加载的原生 bundle，通过 `@lynx-js/tasm` 生成。 - `'web'`：通过 `@lynx-js/web-core/encode` 生成的 web 二进制 bundle，可被   web 平台解码。各 section 以原始 JS 形式产出（web 运行时会在   `lynx.loadScript` 时对其进行包装），CSS 会被合并到 StyleInfo   section 中。 |
+
+### `ExposedLayers` \{#exposedlayers\}
+
+external bundle 拆分所依据的 layer 名称。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="exposedlayers-background"></a>`BACKGROUND` | `string` |  |
+| <a id="exposedlayers-main-thread"></a>`MAIN_THREAD` | `string` |  |
+
+### `ExternalObject` \{#externalobject\}
+
+external 映射的对象形式。
+
+当外部库由使用方应用异步（以 Promise 形式）挂载时，即
+对应的 `pluginExternalBundle` external 配置了 `async: true` 时，
+使用该形式替代普通的全局名称形式。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="externalobject-async"></a>`async?` | `boolean` | 库是否以 Promise 的形式挂载，该 Promise resolve 为库的 命名空间。启用后，该 external 会作为 `promise` external 产出， 导入它的模块会 await 挂载的值，而不是同步 读取。 |
+| <a id="externalobject-libraryname"></a>`libraryName` | `string \| string[]` | 外部库的全局名称（可包含子路径）。 |
+
+### `ExternalsPresetDefinition` \{#externalspresetdefinition\}
+
+具名 externals 预设的定义。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="externalspresetdefinition-extends"></a>`extends?` | `string \| string[]` | 在应用当前预设之前需要包含的其他预设名称。 |
+| <a id="externalspresetdefinition-externals"></a>`externals?` | `Externals` | 该预设提供的 externals。 |
+
+### `MainThreadRuntimeWrapperWebpackPluginOptions` \{#mainthreadruntimewrapperwebpackpluginoptions\}
+
+[`MainThreadRuntimeWrapperWebpackPlugin`](#mainthreadruntimewrapperwebpackplugin) 的选项。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="mainthreadruntimewrapperwebpackpluginoptions-test"></a>`test` | `Rules \| undefined` | 包含标记为 `lynx:main-thread` 且通过 test 断言的资源。 |
+
+### `Externals` \{#externals\}
+
+```ts
+type Externals = Record<string, string | string[] | ExternalObject>
+```
+
+外部模块到全局名称的映射，
+用于构建 Lynx external bundle。
+
+### `ExternalsPresetDefinitions` \{#externalspresetdefinitions\}
+
+```ts
+type ExternalsPresetDefinitions = Record<string, ExternalsPresetDefinition>
+```
+
+可用的 externals 预设定义。
+
+### `ExternalsPresets` \{#externalspresets\}
+
+```ts
+type ExternalsPresets = { reactlynx?: ExternalsPresetValue } & Record<string, ExternalsPresetValue>
+```
+
+已启用的 externals 预设。
+
+预设名称会从内置预设定义以及传给
+[`defineExternalBundleRslibConfig`](#defineexternalbundlerslibconfig) 的自定义定义中解析。
+
+### `ExternalsPresetValue` \{#externalspresetvalue\}
+
+```ts
+type ExternalsPresetValue = boolean | { async?: boolean }
+```
+
+externals 预设的启用方式。
+
+`true` 会同步挂载该预设的库。`{ async: true }`
+对象形式会异步（以 Promise 形式）挂载它们，适用于 web 目标，
+该目标下 external bundle 通过 `fetchBundle().then` 加载，参见
+[`ExternalObject.async`](#externalobject)。
+
+### `OutputConfig` \{#outputconfig\}
+
+```ts
+type OutputConfig = Required<LibConfig>["output"] & { externals?: Externals; externalsPresetDefinitions?: ExternalsPresetDefinitions; externalsPresets?: ExternalsPresets; globalObject?: "lynx" | "globalThis" }
+```
+
+Lynx external bundle 构建接受的输出配置。
+
+{/* @api-end */}

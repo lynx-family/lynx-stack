@@ -1,0 +1,86 @@
+---
+title: '@lynx-js/tailwind-preset'
+---
+
+# @lynx-js/tailwind-preset
+
+{/* @api PackageHeader package="tailwind-preset" */}
+
+<div className="api-pkg-header"><code>@lynx-js/tailwind-preset</code> <span className="api-pkg-version">v0.5.1</span> · <a href="https://www.npmjs.com/package/@lynx-js/tailwind-preset" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/tailwind-preset" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/tailwind-preset/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+
+A [Tailwind CSS v3](https://v3.tailwindcss.com/) preset for the Lynx ecosystem.
+
+This preset adapts Tailwind CSS v3 to Lynx's rendering model and ecosystem by:
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/tailwind-preset" />
+
+## API
+
+{/* @api ApiExports package="tailwind-preset" */}
+
+## Functions \{#functions\}
+
+### `createLynxPreset()` \{#createlynxpreset\}
+
+```ts
+createLynxPreset(options: { debug?: boolean; lynxPlugins?: LynxPluginsOption; lynxUIPlugins?: LynxUIPluginsOption; theme?: Partial<CustomThemeConfig & {}> }): Partial<Config>
+```
+
+Creates a Tailwind preset tailored for the Lynx ecosystem.
+
+- Requires **Tailwind v3+** (JIT enabled by default).
+- Configure the `content` option in your Tailwind config;
+  otherwise the generated CSS bundle may include unused utilities.
+- The `defaults` plugin is always enabled regardless of configuration.
+- Debug mode will log enabled plugins to the console.
+
+```ts
+const preset = createLynxPreset();
+```
+
+```ts
+// turn off all UI plugins
+createLynxPreset({ lynxUIPlugins: false });
+
+// turn off a single UI plugin
+createLynxPreset({ lynxUIPlugins: { uiVariants: false } });
+
+// enable debug mode
+createLynxPreset({ debug: true });
+
+```
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | `{ debug?: boolean; lynxPlugins?: LynxPluginsOption; lynxUIPlugins?: LynxUIPluginsOption; theme?: Partial<CustomThemeConfig & {}> }` | Configuration options for the preset |
+
+**Returns:** `Partial<Config>` — A partial Tailwind configuration object
+
+## Constants \{#constants\}
+
+### `default` \{#default\}
+
+```ts
+const default: Partial<Config>
+```
+
+*No description yet.*
+
+## Types \{#types\}
+
+### `LynxPluginName` \{#lynxpluginname\}
+
+```ts
+type LynxPluginName = keyof typeof PluginModules
+```
+
+*No description yet.*
+
+{/* @api-end */}

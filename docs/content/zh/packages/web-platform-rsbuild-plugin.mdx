@@ -1,0 +1,83 @@
+---
+title: '@lynx-js/web-platform-rsbuild-plugin'
+---
+
+# @lynx-js/web-platform-rsbuild-plugin
+
+{/* @api PackageHeader package="web-platform-rsbuild-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/web-platform-rsbuild-plugin</code> <span className="api-pkg-version">v0.1.2</span> · <a href="https://www.npmjs.com/package/@lynx-js/web-platform-rsbuild-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-rsbuild-plugin" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-rsbuild-plugin/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+
+Lynx3 Web 平台 Rsbuild 插件
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/web-platform-rsbuild-plugin -D" />
+
+## API
+
+{/* @api ApiExports package="web-platform-rsbuild-plugin" */}
+
+## 函数 \{#\}
+
+### `getNapiModulesPathRule()` \{#getnapimodulespathrule\}
+
+```ts
+getNapiModulesPathRule(napiModulesPath: string): { loader: string; options: { napiModulesPath: string }; test: RegExp }
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `napiModulesPath` | `string` |  |
+
+**返回值:** `{ loader: string; options: { napiModulesPath: string }; test: RegExp }`
+
+### `getNativeModulesPathRule()` \{#getnativemodulespathrule\}
+
+```ts
+getNativeModulesPathRule(nativeModulesPath: string): { loader: string; options: { nativeModulesPath: string }; test: RegExp }
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `nativeModulesPath` | `string` |  |
+
+**返回值:** `{ loader: string; options: { nativeModulesPath: string }; test: RegExp }`
+
+### `pluginWebPlatform()` \{#pluginwebplatform\}
+
+```ts
+pluginWebPlatform(userOptions?: PluginWebPlatformOptions): RsbuildPlugin
+```
+
+创建用于 Lynx Web Platform 的 Rsbuild 插件。
+
+```ts
+// rsbuild.config.ts
+import { pluginWebPlatform } from '@lynx-js/web-platform-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core';
+
+export default defineConfig({
+  plugins: [pluginWebPlatform({
+    // replace with your actual native-modules file path
+    nativeModulesPath: path.resolve(__dirname, './index.native-modules.ts'),
+  })],
+})
+```
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `userOptions?` | `PluginWebPlatformOptions` |  |
+
+**返回值:** `RsbuildPlugin`
+
+{/* @api-end */}

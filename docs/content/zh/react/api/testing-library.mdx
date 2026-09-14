@@ -1,0 +1,1753 @@
+---
+title: Testing Library
+---
+
+# Testing Library
+
+{/* @api PackageHeader package="react-testing-library" */}
+
+<div className="api-pkg-header"><code>@lynx-js/reactlynx-testing-library</code> <span className="api-pkg-version">v0.0.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/reactlynx-testing-library" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/react/testing-library" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/react/testing-library/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+`@lynx-js/react/testing-library` 在模拟的双线程环境中渲染 ReactLynx 组件，让它们可以用 Vitest 或 Rstest 测试。它遵循 [Testing Library](https://testing-library.com/) 的约定：渲染组件，像用户一样在元素树中查找内容，触发事件，然后对结果做断言。
+
+```tsx title="App.test.tsx"
+import { expect, test } from 'vitest'
+import { fireEvent, render } from '@lynx-js/react/testing-library'
+
+import { App } from './App.jsx'
+
+test('increments the counter', () => {
+  const { getByText } = render(<App />)
+  fireEvent.tap(getByText('Count: 0'))
+  expect(getByText('Count: 1')).toBeTruthy()
+})
+```
+
+安装配置和双线程渲染选项见 [lynxjs.org 上的指南](https://lynxjs.org/zh/react/reactlynx-testing-library)。
+
+## API
+
+{/* @api ApiExports package="react-testing-library" */}
+
+## 函数 \{#\}
+
+### `buildQueries()` \{#buildqueries\}
+
+```ts
+buildQueries(queryAllBy: GetAllBy<Arguments>, getMultipleError: GetErrorFunction<Arguments>, getMissingError: GetErrorFunction<Arguments>): BuiltQueryMethods<Arguments>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `queryAllBy` | `GetAllBy<Arguments>` |  |
+| `getMultipleError` | `GetErrorFunction<Arguments>` |  |
+| `getMissingError` | `GetErrorFunction<Arguments>` |  |
+
+**返回值:** `BuiltQueryMethods<Arguments>`
+
+### `cleanup()` \{#cleanup\}
+
+```ts
+cleanup(): void
+```
+
+清理渲染到页面上的元素，以及通过 render 挂载的 Preact 树。
+
+### `computeHeadingLevel()` \{#computeheadinglevel\}
+
+```ts
+computeHeadingLevel(element: Element): number | undefined
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `element` | `Element` |  |
+
+**返回值:** `number | undefined`
+
+### `configure()` \{#configure\}
+
+```ts
+configure(configDelta: ConfigFn | Partial<Config>): void
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `configDelta` | `ConfigFn \| Partial<Config>` |  |
+
+### `findAllByAltText()` \{#findallbyalttext\}
+
+```ts
+findAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+
+**返回值:** `Promise<T[]>`
+
+### `findAllByDisplayValue()` \{#findallbydisplayvalue\}
+
+```ts
+findAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+
+**返回值:** `Promise<T[]>`
+
+### `findAllByLabelText()` \{#findallbylabeltext\}
+
+```ts
+findAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+
+**返回值:** `Promise<T[]>`
+
+### `findAllByPlaceholderText()` \{#findallbyplaceholdertext\}
+
+```ts
+findAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+
+**返回值:** `Promise<T[]>`
+
+### `findAllByRole()` \{#findallbyrole\}
+
+```ts
+findAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, role: any, options?: ByRoleOptions, waitForElementOptions?: waitForOptions]` |  |
+
+**返回值:** `Promise<T[]>`
+
+### `findAllByTestId()` \{#findallbytestid\}
+
+```ts
+findAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+
+**返回值:** `Promise<T[]>`
+
+### `findAllByText()` \{#findallbytext\}
+
+```ts
+findAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+
+**返回值:** `Promise<T[]>`
+
+### `findAllByTitle()` \{#findallbytitle\}
+
+```ts
+findAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+
+**返回值:** `Promise<T[]>`
+
+### `findByAltText()` \{#findbyalttext\}
+
+```ts
+findByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+
+**返回值:** `Promise<T>`
+
+### `findByDisplayValue()` \{#findbydisplayvalue\}
+
+```ts
+findByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+
+**返回值:** `Promise<T>`
+
+### `findByLabelText()` \{#findbylabeltext\}
+
+```ts
+findByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+
+**返回值:** `Promise<T>`
+
+### `findByPlaceholderText()` \{#findbyplaceholdertext\}
+
+```ts
+findByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+
+**返回值:** `Promise<T>`
+
+### `findByRole()` \{#findbyrole\}
+
+```ts
+findByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, role: any, options?: ByRoleOptions, waitForElementOptions?: waitForOptions]` |  |
+
+**返回值:** `Promise<T>`
+
+### `findByTestId()` \{#findbytestid\}
+
+```ts
+findByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+
+**返回值:** `Promise<T>`
+
+### `findByText()` \{#findbytext\}
+
+```ts
+findByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+
+**返回值:** `Promise<T>`
+
+### `findByTitle()` \{#findbytitle\}
+
+```ts
+findByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]` |  |
+
+**返回值:** `Promise<T>`
+
+### `getAllByAltText()` \{#getallbyalttext\}
+
+```ts
+getAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T[]`
+
+### `getAllByDisplayValue()` \{#getallbydisplayvalue\}
+
+```ts
+getAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T[]`
+
+### `getAllByLabelText()` \{#getallbylabeltext\}
+
+```ts
+getAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T[]
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+
+**返回值:** `T[]`
+
+### `getAllByPlaceholderText()` \{#getallbyplaceholdertext\}
+
+```ts
+getAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T[]`
+
+### `getAllByRole()` \{#getallbyrole\}
+
+```ts
+getAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]): T[]
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, role: any, options?: ByRoleOptions]` |  |
+
+**返回值:** `T[]`
+
+### `getAllByTestId()` \{#getallbytestid\}
+
+```ts
+getAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T[]`
+
+### `getAllByText()` \{#getallbytext\}
+
+```ts
+getAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T[]
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+
+**返回值:** `T[]`
+
+### `getAllByTitle()` \{#getallbytitle\}
+
+```ts
+getAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T[]`
+
+### `getByAltText()` \{#getbyalttext\}
+
+```ts
+getByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T`
+
+### `getByDisplayValue()` \{#getbydisplayvalue\}
+
+```ts
+getByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T`
+
+### `getByLabelText()` \{#getbylabeltext\}
+
+```ts
+getByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+
+**返回值:** `T`
+
+### `getByPlaceholderText()` \{#getbyplaceholdertext\}
+
+```ts
+getByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T`
+
+### `getByRole()` \{#getbyrole\}
+
+```ts
+getByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]): T
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, role: any, options?: ByRoleOptions]` |  |
+
+**返回值:** `T`
+
+### `getByTestId()` \{#getbytestid\}
+
+```ts
+getByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T`
+
+### `getByText()` \{#getbytext\}
+
+```ts
+getByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+
+**返回值:** `T`
+
+### `getByTitle()` \{#getbytitle\}
+
+```ts
+getByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T`
+
+### `getConfig()` \{#getconfig\}
+
+```ts
+getConfig(): Config
+```
+
+*暂无说明。*
+
+**返回值:** `Config`
+
+### `getDefaultNormalizer()` \{#getdefaultnormalizer\}
+
+```ts
+getDefaultNormalizer(options?: DefaultNormalizerOptions): NormalizerFn
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `options?` | `DefaultNormalizerOptions` |  |
+
+**返回值:** `NormalizerFn`
+
+### `getElementError()` \{#getelementerror\}
+
+```ts
+getElementError(message: string | null, container: HTMLElement): Error
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `message` | `string \| null` |  |
+| `container` | `HTMLElement` |  |
+
+**返回值:** `Error`
+
+### `getNodeText()` \{#getnodetext\}
+
+```ts
+getNodeText(node: HTMLElement): string
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `node` | `HTMLElement` |  |
+
+**返回值:** `string`
+
+### `getQueriesForElement()` \{#getqueriesforelement\}
+
+```ts
+getQueriesForElement(element: HTMLElement, queriesToBind?: T): BoundFunctions<T>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `element` | `HTMLElement` |  |
+| `queriesToBind?` | `T` |  |
+
+**返回值:** `BoundFunctions<T>`
+
+### `getRoles()` \{#getroles\}
+
+```ts
+getRoles(container: HTMLElement): { [index: string]: HTMLElement[] }
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `container` | `HTMLElement` |  |
+
+**返回值:** `{ [index: string]: HTMLElement[] }`
+
+### `getSuggestedQuery()` \{#getsuggestedquery\}
+
+```ts
+getSuggestedQuery(element: HTMLElement, variant?: Variant, method?: Method): Suggestion | undefined
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `element` | `HTMLElement` |  |
+| `variant?` | `Variant` |  |
+| `method?` | `Method` |  |
+
+**返回值:** `Suggestion | undefined`
+
+### `isInaccessible()` \{#isinaccessible\}
+
+```ts
+isInaccessible(element: Element): boolean
+```
+
+https://testing-library.com/docs/dom-testing-library/api-helpers#isinaccessible
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `element` | `Element` |  |
+
+**返回值:** `boolean`
+
+### `logDOM()` \{#logdom\}
+
+```ts
+logDOM(dom?: Element | HTMLDocument, maxLength?: number, options?: PrettyDOMOptions): void
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `dom?` | `Element \| HTMLDocument` |  |
+| `maxLength?` | `number` |  |
+| `options?` | `PrettyDOMOptions` |  |
+
+### `logRoles()` \{#logroles\}
+
+```ts
+logRoles(container: HTMLElement, options?: LogRolesOptions): string
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `container` | `HTMLElement` |  |
+| `options?` | `LogRolesOptions` |  |
+
+**返回值:** `string`
+
+### `prettyDOM()` \{#prettydom\}
+
+```ts
+prettyDOM(dom?: Element | HTMLDocument, maxLength?: number, options?: PrettyDOMOptions): string | false
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `dom?` | `Element \| HTMLDocument` |  |
+| `maxLength?` | `number` |  |
+| `options?` | `PrettyDOMOptions` |  |
+
+**返回值:** `string | false`
+
+### `queryAllByAltText()` \{#queryallbyalttext\}
+
+```ts
+queryAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T[]`
+
+### `queryAllByDisplayValue()` \{#queryallbydisplayvalue\}
+
+```ts
+queryAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T[]`
+
+### `queryAllByLabelText()` \{#queryallbylabeltext\}
+
+```ts
+queryAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T[]
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+
+**返回值:** `T[]`
+
+### `queryAllByPlaceholderText()` \{#queryallbyplaceholdertext\}
+
+```ts
+queryAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T[]`
+
+### `queryAllByRole()` \{#queryallbyrole\}
+
+```ts
+queryAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]): T[]
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, role: any, options?: ByRoleOptions]` |  |
+
+**返回值:** `T[]`
+
+### `queryAllByTestId()` \{#queryallbytestid\}
+
+```ts
+queryAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T[]`
+
+### `queryAllByText()` \{#queryallbytext\}
+
+```ts
+queryAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T[]
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+
+**返回值:** `T[]`
+
+### `queryAllByTitle()` \{#queryallbytitle\}
+
+```ts
+queryAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T[]`
+
+### `queryByAltText()` \{#querybyalttext\}
+
+```ts
+queryByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T | null`
+
+### `queryByDisplayValue()` \{#querybydisplayvalue\}
+
+```ts
+queryByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T | null`
+
+### `queryByLabelText()` \{#querybylabeltext\}
+
+```ts
+queryByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T | null
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+
+**返回值:** `T | null`
+
+### `queryByPlaceholderText()` \{#querybyplaceholdertext\}
+
+```ts
+queryByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T | null`
+
+### `queryByRole()` \{#querybyrole\}
+
+```ts
+queryByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]): T | null
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, role: any, options?: ByRoleOptions]` |  |
+
+**返回值:** `T | null`
+
+### `queryByTestId()` \{#querybytestid\}
+
+```ts
+queryByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T | null`
+
+### `queryByText()` \{#querybytext\}
+
+```ts
+queryByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T | null
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]` |  |
+
+**返回值:** `T | null`
+
+### `queryByTitle()` \{#querybytitle\}
+
+```ts
+queryByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: Matcher, options?: MatcherOptions]` |  |
+
+**返回值:** `T | null`
+
+### `render()` \{#render\}
+
+```ts
+render(ui: ReactNode, options?: RenderOptions<Q>): RenderResult<Q>
+```
+
+渲染到页面中。应与 cleanup 配合使用。
+
+```ts
+import { render} from '@lynx-js/react/testing-library'
+
+const WrapperComponent = ({ children }) => (
+    <view data-testid='wrapper'>{children}</view>
+);
+const Comp = () => {
+  return <view data-testid='inner' style="background-color: yellow;" />;
+};
+const { container, getByTestId } = render(<Comp />, {
+  wrapper: WrapperComponent,
+});
+expect(getByTestId('wrapper')).toBeInTheDocument();
+expect(container.firstChild).toMatchInlineSnapshot(`
+  <view
+    data-testid="wrapper"
+  >
+    <view
+      data-testid="inner"
+      style="background-color: yellow;"
+    />
+  </view>
+`);
+```
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `ui` | `ReactNode` |  |
+| `options?` | `RenderOptions<Q>` |  |
+
+**返回值:** `RenderResult<Q>`
+
+### `renderHook()` \{#renderhook\}
+
+```ts
+renderHook(render: (initialProps: Props) => Result, options?: RenderHookOptions<Props>): RenderHookResult<Result, Props>
+```
+
+允许你在测试用的 React 组件中渲染 hook，而无需
+自己创建该组件。
+
+```ts
+import { renderHook } from '@lynx-js/react/testing-library'
+
+const Context = createContext('default');
+function Wrapper({ children }) {
+  return <Context.Provider value='provided'>{children}</Context.Provider>;
+}
+const { result } = renderHook(
+  () => {
+    return useContext(Context);
+  },
+  {
+    wrapper: Wrapper,
+  },
+);
+
+expect(result.current).toEqual('provided');
+```
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `render` | `(initialProps: Props) => Result` |  |
+| `options?` | `RenderHookOptions<Props>` |  |
+
+**返回值:** `RenderHookResult<Result, Props>`
+
+### `waitFor()` \{#waitfor\}
+
+```ts
+waitFor(callback: () => T | Promise<T>, options?: waitForOptions): Promise<T>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `callback` | `() => T \| Promise<T>` |  |
+| `options?` | `waitForOptions` |  |
+
+**返回值:** `Promise<T>`
+
+### `waitForElementToBeRemoved()` \{#waitforelementtoberemoved\}
+
+```ts
+waitForElementToBeRemoved(callback: T | (() => T), options?: waitForOptions): Promise<void>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `callback` | `T \| (() => T)` |  |
+| `options?` | `waitForOptions` |  |
+
+**返回值:** `Promise<void>`
+
+### `waitSchedule()` \{#waitschedule\}
+
+```ts
+waitSchedule(): Promise<void>
+```
+
+等待下一个事件循环。
+
+当你想等待下一个事件循环完成时，这会很有用。
+
+ 请改用 `act`
+
+**返回值:** `Promise<void>`
+
+## 类 \{#\}
+
+### `LynxTestingEnv` \{#lynxtestingenv\}
+
+[Lynx 规范](https://lynxjs.org/guide/spec.html)的纯 JavaScript 实现，
+主要包括 [Element PAPI](https://lynxjs.org/api/engine/element-api) 和[双线程模型](https://lynxjs.org/guide/spec#dual-threaded-model)，可在 Node.js 中使用。
+
+```ts
+import { LynxTestingEnv } from '@lynx-js/testing-environment';
+import { JSDOM } from 'jsdom';
+
+const lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });
+
+lynxTestingEnv.switchToMainThread();
+// use the main thread Element PAPI
+const page = __CreatePage('0', 0);
+const view = __CreateView(0);
+__AppendElement(page, view);
+
+```
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="lynxtestingenv-constructor"></a>`constructor` | `constructor(env?: LynxEnv): LynxTestingEnv` |  |
+| <a id="lynxtestingenv-backgroundthread"></a>`backgroundThread` | `LynxGlobalThis` | 后台线程的全局对象。 |
+| <a id="lynxtestingenv-env"></a>`env` | `LynxEnv` |  |
+| <a id="lynxtestingenv-mainthread"></a>`mainThread` | `LynxGlobalThis & ElementTreeGlobals` | 主线程的全局对象。 |
+| <a id="lynxtestingenv-clearglobal"></a>`clearGlobal` | `clearGlobal(): void` |  |
+| <a id="lynxtestingenv-injectglobals"></a>`injectGlobals` | `injectGlobals(): void` |  |
+| <a id="lynxtestingenv-reset"></a>`reset` | `reset(): void` |  |
+| <a id="lynxtestingenv-switchtobackgroundthread"></a>`switchToBackgroundThread` | `switchToBackgroundThread(): void` |  |
+| <a id="lynxtestingenv-switchtomainthread"></a>`switchToMainThread` | `switchToMainThread(): void` |  |
+
+## 常量 \{#\}
+
+### `createEvent` \{#createevent\}
+
+```ts
+const createEvent: CreateObject & CreateFunction
+```
+
+*暂无说明。*
+
+### `fireEvent` \{#fireevent\}
+
+```ts
+const fireEvent: FireFunction & FireObject
+```
+
+*暂无说明。*
+
+### `prettyFormat` \{#prettyformat\}
+
+```ts
+const prettyFormat: any
+```
+
+*暂无说明。*
+
+### `queryAllByAttribute` \{#queryallbyattribute\}
+
+```ts
+const queryAllByAttribute: AllByAttribute
+```
+
+*暂无说明。*
+
+### `queryByAttribute` \{#querybyattribute\}
+
+```ts
+const queryByAttribute: QueryByAttribute
+```
+
+*暂无说明。*
+
+### `screen` \{#screen\}
+
+```ts
+const screen: Screen
+```
+
+*暂无说明。*
+
+### `within` \{#within\}
+
+```ts
+const within: typeof getQueriesForElement
+```
+
+*暂无说明。*
+
+## 类型 \{#\}
+
+### `queries` \{#queries\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="queries-allbyboundattribute"></a>`AllByBoundAttribute` | `unknown` |  |
+| <a id="queries-allbyrole"></a>`AllByRole` | `unknown` |  |
+| <a id="queries-allbytext"></a>`AllByText` | `unknown` |  |
+| <a id="queries-byroleoptions"></a>`ByRoleOptions` | `unknown` |  |
+| <a id="queries-findallbyalttext"></a>`findAllByAltText` | `unknown` |  |
+| <a id="queries-findallbyboundattribute"></a>`FindAllByBoundAttribute` | `unknown` |  |
+| <a id="queries-findallbydisplayvalue"></a>`findAllByDisplayValue` | `unknown` |  |
+| <a id="queries-findallbylabeltext"></a>`findAllByLabelText` | `unknown` |  |
+| <a id="queries-findallbyplaceholdertext"></a>`findAllByPlaceholderText` | `unknown` |  |
+| <a id="queries-findallbyrole"></a>`findAllByRole` | `unknown` |  |
+| <a id="queries-findallbyrole"></a>`FindAllByRole` | `unknown` |  |
+| <a id="queries-findallbytestid"></a>`findAllByTestId` | `unknown` |  |
+| <a id="queries-findallbytext"></a>`findAllByText` | `unknown` |  |
+| <a id="queries-findallbytext"></a>`FindAllByText` | `unknown` |  |
+| <a id="queries-findallbytitle"></a>`findAllByTitle` | `unknown` |  |
+| <a id="queries-findbyalttext"></a>`findByAltText` | `unknown` |  |
+| <a id="queries-findbyboundattribute"></a>`FindByBoundAttribute` | `unknown` |  |
+| <a id="queries-findbydisplayvalue"></a>`findByDisplayValue` | `unknown` |  |
+| <a id="queries-findbylabeltext"></a>`findByLabelText` | `unknown` |  |
+| <a id="queries-findbyplaceholdertext"></a>`findByPlaceholderText` | `unknown` |  |
+| <a id="queries-findbyrole"></a>`findByRole` | `unknown` |  |
+| <a id="queries-findbyrole"></a>`FindByRole` | `unknown` |  |
+| <a id="queries-findbytestid"></a>`findByTestId` | `unknown` |  |
+| <a id="queries-findbytext"></a>`findByText` | `unknown` |  |
+| <a id="queries-findbytext"></a>`FindByText` | `unknown` |  |
+| <a id="queries-findbytitle"></a>`findByTitle` | `unknown` |  |
+| <a id="queries-getallbyalttext"></a>`getAllByAltText` | `unknown` |  |
+| <a id="queries-getallbydisplayvalue"></a>`getAllByDisplayValue` | `unknown` |  |
+| <a id="queries-getallbylabeltext"></a>`getAllByLabelText` | `unknown` |  |
+| <a id="queries-getallbyplaceholdertext"></a>`getAllByPlaceholderText` | `unknown` |  |
+| <a id="queries-getallbyrole"></a>`getAllByRole` | `unknown` |  |
+| <a id="queries-getallbytestid"></a>`getAllByTestId` | `unknown` |  |
+| <a id="queries-getallbytext"></a>`getAllByText` | `unknown` |  |
+| <a id="queries-getallbytitle"></a>`getAllByTitle` | `unknown` |  |
+| <a id="queries-getbyalttext"></a>`getByAltText` | `unknown` |  |
+| <a id="queries-getbyboundattribute"></a>`GetByBoundAttribute` | `unknown` |  |
+| <a id="queries-getbydisplayvalue"></a>`getByDisplayValue` | `unknown` |  |
+| <a id="queries-getbylabeltext"></a>`getByLabelText` | `unknown` |  |
+| <a id="queries-getbyplaceholdertext"></a>`getByPlaceholderText` | `unknown` |  |
+| <a id="queries-getbyrole"></a>`getByRole` | `unknown` |  |
+| <a id="queries-getbyrole"></a>`GetByRole` | `unknown` |  |
+| <a id="queries-getbytestid"></a>`getByTestId` | `unknown` |  |
+| <a id="queries-getbytext"></a>`getByText` | `unknown` |  |
+| <a id="queries-getbytext"></a>`GetByText` | `unknown` |  |
+| <a id="queries-getbytitle"></a>`getByTitle` | `unknown` |  |
+| <a id="queries-queryallbyalttext"></a>`queryAllByAltText` | `unknown` |  |
+| <a id="queries-queryallbydisplayvalue"></a>`queryAllByDisplayValue` | `unknown` |  |
+| <a id="queries-queryallbylabeltext"></a>`queryAllByLabelText` | `unknown` |  |
+| <a id="queries-queryallbyplaceholdertext"></a>`queryAllByPlaceholderText` | `unknown` |  |
+| <a id="queries-queryallbyrole"></a>`queryAllByRole` | `unknown` |  |
+| <a id="queries-queryallbytestid"></a>`queryAllByTestId` | `unknown` |  |
+| <a id="queries-queryallbytext"></a>`queryAllByText` | `unknown` |  |
+| <a id="queries-queryallbytitle"></a>`queryAllByTitle` | `unknown` |  |
+| <a id="queries-querybyalttext"></a>`queryByAltText` | `unknown` |  |
+| <a id="queries-querybyboundattribute"></a>`QueryByBoundAttribute` | `unknown` |  |
+| <a id="queries-querybydisplayvalue"></a>`queryByDisplayValue` | `unknown` |  |
+| <a id="queries-querybylabeltext"></a>`queryByLabelText` | `unknown` |  |
+| <a id="queries-querybyplaceholdertext"></a>`queryByPlaceholderText` | `unknown` |  |
+| <a id="queries-querybyrole"></a>`queryByRole` | `unknown` |  |
+| <a id="queries-querybyrole"></a>`QueryByRole` | `unknown` |  |
+| <a id="queries-querybytestid"></a>`queryByTestId` | `unknown` |  |
+| <a id="queries-querybytext"></a>`queryByText` | `unknown` |  |
+| <a id="queries-querybytext"></a>`QueryByText` | `unknown` |  |
+| <a id="queries-querybytitle"></a>`queryByTitle` | `unknown` |  |
+
+### `queryHelpers` \{#queryhelpers\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="queryhelpers-allbyattribute"></a>`AllByAttribute` | `unknown` |  |
+| <a id="queryhelpers-buildqueries"></a>`buildQueries` | `unknown` |  |
+| <a id="queryhelpers-builtquerymethods"></a>`BuiltQueryMethods` | `unknown` |  |
+| <a id="queryhelpers-findallby"></a>`FindAllBy` | `unknown` |  |
+| <a id="queryhelpers-findby"></a>`FindBy` | `unknown` |  |
+| <a id="queryhelpers-getallby"></a>`GetAllBy` | `unknown` |  |
+| <a id="queryhelpers-getby"></a>`GetBy` | `unknown` |  |
+| <a id="queryhelpers-getelementerror"></a>`getElementError` | `unknown` |  |
+| <a id="queryhelpers-geterrorfunction"></a>`GetErrorFunction` | `unknown` |  |
+| <a id="queryhelpers-queryallbyattribute"></a>`queryAllByAttribute` | `unknown` |  |
+| <a id="queryhelpers-queryby"></a>`QueryBy` | `unknown` |  |
+| <a id="queryhelpers-querybyattribute"></a>`queryByAttribute` | `unknown` |  |
+| <a id="queryhelpers-querybyattribute"></a>`QueryByAttribute` | `unknown` |  |
+| <a id="queryhelpers-querymethod"></a>`QueryMethod` | `unknown` |  |
+| <a id="queryhelpers-selectormatcheroptions"></a>`SelectorMatcherOptions` | `unknown` |  |
+| <a id="queryhelpers-withsuggest"></a>`WithSuggest` | `unknown` |  |
+
+### `ByRoleOptions` \{#byroleoptions\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="byroleoptions-busy"></a>`busy?` | `boolean` | 若为 true，则仅包含查询集合中在无障碍树中被标记为 busy 的元素，即 `aria-busy="true"` |
+| <a id="byroleoptions-checked"></a>`checked?` | `boolean` | 若为 true，则仅包含查询集合中在无障碍树中被标记为 checked 的元素，即 `aria-checked="true"` |
+| <a id="byroleoptions-current"></a>`current?` | `string \| boolean` | 按元素的 `aria-current` 状态进行过滤。`true` 和 `false` 分别匹配 `aria-current="true"` 和 `aria-current="false"`（以及缺少 `aria-current` 属性的情况）。 |
+| <a id="byroleoptions-description"></a>`description?` | `string \| RegExp \| ((accessibleDescription: string, element: Element) => boolean)` | 仅考虑具有指定无障碍描述（accessible description）的元素。 |
+| <a id="byroleoptions-expanded"></a>`expanded?` | `boolean` | 若为 true，则仅包含查询集合中在无障碍树中被标记为 expanded 的元素，即 `aria-expanded="true"` |
+| <a id="byroleoptions-hidden"></a>`hidden?` | `boolean` | 若为 true，则在查询集合中包含通常会被排除在 无障碍树之外的元素。`role="none"` 或 `role="presentation"` 在任何情况下都会被包含。 |
+| <a id="byroleoptions-level"></a>`level?` | `number` | 包含具有 `"heading"` 角色且与指定层级匹配的元素， 既可以是语义化 HTML 标题元素 `<h1>-<h6>`，也可以是匹配 `aria-level` 属性的元素。 |
+| <a id="byroleoptions-name"></a>`name?` | `string \| RegExp \| ((accessibleName: string, element: Element) => boolean)` | 仅考虑具有指定无障碍名称（accessible name）的元素。 |
+| <a id="byroleoptions-pressed"></a>`pressed?` | `boolean` | 若为 true，则仅包含查询集合中在无障碍树中被标记为 pressed 的元素，即 `aria-pressed="true"` |
+| <a id="byroleoptions-queryfallbacks"></a>`queryFallbacks?` | `boolean` | 包含 `role` 属性中使用的所有角色 例如 *ByRole('progressbar', \{queryFallbacks: true\})` will find <div role="meter progressbar">`。 |
+| <a id="byroleoptions-selected"></a>`selected?` | `boolean` | 若为 true，则仅包含查询集合中在无障碍树中被标记为 selected 的元素，即 `aria-selected="true"` |
+| <a id="byroleoptions-suggest"></a>`suggest?` | `boolean` | 为特定查询禁用建议 |
+| <a id="byroleoptions-value"></a>`value?` | `{ max?: number; min?: number; now?: number; text?: Matcher }` |  |
+
+### `Config` \{#config\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="config-asyncutiltimeout"></a>`asyncUtilTimeout` | `number` |  |
+| <a id="config-computedstylesupportspseudoelements"></a>`computedStyleSupportsPseudoElements` | `boolean` |  |
+| <a id="config-defaulthidden"></a>`defaultHidden` | `boolean` |  |
+| <a id="config-defaultignore"></a>`defaultIgnore` | `string` | `ByText` 查询中 `ignore` 选项的默认值 |
+| <a id="config-getelementerror"></a>`getElementError` | `(message: string \| null, container: Element) => Error` |  |
+| <a id="config-showoriginalstacktrace"></a>`showOriginalStackTrace` | `boolean` |  |
+| <a id="config-testidattribute"></a>`testIdAttribute` | `string` |  |
+| <a id="config-throwsuggestions"></a>`throwSuggestions` | `boolean` |  |
+| <a id="config-asyncwrapper"></a>`asyncWrapper` | `asyncWrapper(cb: (args: any[]) => any): Promise<any>` |  |
+| <a id="config-eventwrapper"></a>`eventWrapper` | `eventWrapper(cb: (args: any[]) => any): void` |  |
+| <a id="config-unstable-advancetimerswrapper"></a>`unstable_advanceTimersWrapper` | `unstable_advanceTimersWrapper(cb: (args: unknown[]) => unknown): unknown` | 警告：`unstable` 前缀表示此 API 可能会在补丁版本和次版本中发生变化。 |
+
+### `ConfigFn` \{#configfn\}
+
+```ts
+ConfigFn(existingConfig: Config): Partial<Config>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `existingConfig` | `Config` |  |
+
+**返回值:** `Partial<Config>`
+
+### `DefaultNormalizerOptions` \{#defaultnormalizeroptions\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="defaultnormalizeroptions-collapsewhitespace"></a>`collapseWhitespace?` | `boolean` |  |
+| <a id="defaultnormalizeroptions-trim"></a>`trim?` | `boolean` |  |
+
+### `LogRolesOptions` \{#logrolesoptions\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="logrolesoptions-hidden"></a>`hidden?` | `boolean` |  |
+
+### `MatcherOptions` \{#matcheroptions\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="matcheroptions-collapsewhitespace"></a>`collapseWhitespace?` | `boolean` | 请改为使用 normalizer 配合 getDefaultNormalizer |
+| <a id="matcheroptions-exact"></a>`exact?` | `boolean` |  |
+| <a id="matcheroptions-normalizer"></a>`normalizer?` | `NormalizerFn` |  |
+| <a id="matcheroptions-suggest"></a>`suggest?` | `boolean` | 为特定查询禁用建议 |
+| <a id="matcheroptions-trim"></a>`trim?` | `boolean` | 请改为使用 normalizer 配合 getDefaultNormalizer |
+
+### `NormalizerOptions` \{#normalizeroptions\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="normalizeroptions-collapsewhitespace"></a>`collapseWhitespace?` | `boolean` |  |
+| <a id="normalizeroptions-normalizer"></a>`normalizer?` | `NormalizerFn` |  |
+| <a id="normalizeroptions-trim"></a>`trim?` | `boolean` |  |
+
+### `PrettyDOMOptions` \{#prettydomoptions\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="prettydomoptions-filternode"></a>`filterNode?` | `(node: Node) => boolean` | 给定一个 `Node`，如果希望在输出中忽略该节点，则返回 `false`。 默认会忽略 `<style />`、`<script />` 和注释节点。 |
+
+### `Queries` \{#queries\}
+
+*暂无说明。*
+
+### `QueryOptions` \{#queryoptions\}
+
+*暂无说明。*
+
+### `RenderHookOptions` \{#renderhookoptions\}
+
+[`renderHook`](#renderhook) 的选项
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="renderhookoptions-initialprops"></a>`initialProps?` | `Props` | 传递给 renderHook 回调的参数。如果你计划 使用 rerender 工具函数来更改传递给 hook 的值，这会很有用。 |
+| <a id="renderhookoptions-wrapper"></a>`wrapper?` | `any` | 传入一个 React 组件作为 wrapper 选项，使其渲染在内部元素的外层。这在为常见的数据提供者创建  可复用的自定义渲染函数时最为有用。示例参见 setup。 |
+
+### `RenderHookResult` \{#renderhookresult\}
+
+[`renderHook`](#renderhook) 的返回结果
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="renderhookresult-rerender"></a>`rerender` | `(props?: Props) => void` | 触发一次重新渲染。props 会被传递给你的 renderHook 回调。 |
+| <a id="renderhookresult-result"></a>`result` | `{ current: Result }` | 这是一个稳定的引用，指向 renderHook 回调最近一次返回的值 |
+| <a id="renderhookresult-unmount"></a>`unmount` | `() => void` | 卸载测试组件。当你需要测试 useEffect 中的清理逻辑时，这会很有用。 |
+
+### `RenderOptions` \{#renderoptions\}
+
+[`render`](#render) 的选项。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="renderoptions-enablebackgroundthread"></a>`enableBackgroundThread?` | `boolean` | 是否在后台线程中渲染组件。 注意，默认情况下所有顶层用户代码都会在后台线程中执行（例如，顶层的 `__BACKGROUND__` 为 `true`）。 |
+| <a id="renderoptions-enablemainthread"></a>`enableMainThread?` | `boolean` | 是否在主线程中渲染组件。 建议仅在需要测试 [IFR](https://lynxjs.org/zh/guide/interaction/ifr.html) 行为时使用此选项。 |
+| <a id="renderoptions-queries"></a>`queries?` | `Q` | 要绑定的查询。除非进行合并，否则会覆盖 DOM Testing Library 提供的默认查询集合。 |
+| <a id="renderoptions-wrapper"></a>`wrapper?` | `any` | 传入一个 React 组件作为 wrapper 选项，使其渲染在内部元素的外层。这在为常见的数据提供者创建  可复用的自定义渲染函数时最为有用。示例参见 setup。 |
+
+### `SelectorMatcherOptions` \{#selectormatcheroptions\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="selectormatcheroptions-collapsewhitespace"></a>`collapseWhitespace?` | `boolean` | 请改为使用 normalizer 配合 getDefaultNormalizer |
+| <a id="selectormatcheroptions-exact"></a>`exact?` | `boolean` |  |
+| <a id="selectormatcheroptions-ignore"></a>`ignore?` | `string \| boolean` |  |
+| <a id="selectormatcheroptions-normalizer"></a>`normalizer?` | `NormalizerFn` |  |
+| <a id="selectormatcheroptions-selector"></a>`selector?` | `string` |  |
+| <a id="selectormatcheroptions-suggest"></a>`suggest?` | `boolean` | 为特定查询禁用建议 |
+| <a id="selectormatcheroptions-trim"></a>`trim?` | `boolean` | 请改为使用 normalizer 配合 getDefaultNormalizer |
+
+### `Suggestion` \{#suggestion\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="suggestion-queryargs"></a>`queryArgs` | `QueryArgs` |  |
+| <a id="suggestion-querymethod"></a>`queryMethod` | `string` |  |
+| <a id="suggestion-queryname"></a>`queryName` | `string` |  |
+| <a id="suggestion-variant"></a>`variant` | `string` |  |
+| <a id="suggestion-warning"></a>`warning?` | `string` |  |
+| <a id="suggestion-tostring"></a>`toString` | `toString(): string` |  |
+
+### `waitForOptions` \{#waitforoptions\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="waitforoptions-container"></a>`container?` | `HTMLElement` |  |
+| <a id="waitforoptions-interval"></a>`interval?` | `number` |  |
+| <a id="waitforoptions-mutationobserveroptions"></a>`mutationObserverOptions?` | `MutationObserverInit` |  |
+| <a id="waitforoptions-ontimeout"></a>`onTimeout?` | `(error: Error) => Error` |  |
+| <a id="waitforoptions-timeout"></a>`timeout?` | `number` |  |
+
+### `AllByAttribute` \{#allbyattribute\}
+
+```ts
+type AllByAttribute = (attribute: string, container: HTMLElement, id: Matcher, options?: MatcherOptions) => HTMLElement[]
+```
+
+*暂无说明。*
+
+### `AllByBoundAttribute` \{#allbyboundattribute\}
+
+```ts
+type AllByBoundAttribute = (container: HTMLElement, id: Matcher, options?: MatcherOptions) => T[]
+```
+
+*暂无说明。*
+
+### `AllByRole` \{#allbyrole\}
+
+```ts
+type AllByRole = (container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions) => T[]
+```
+
+*暂无说明。*
+
+### `AllByText` \{#allbytext\}
+
+```ts
+type AllByText = (container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions) => T[]
+```
+
+*暂无说明。*
+
+### `BoundFunction` \{#boundfunction\}
+
+```ts
+type BoundFunction = T extends (container: HTMLElement, args: infer P) => infer R ? (args: P) => R : never
+```
+
+*暂无说明。*
+
+### `BoundFunctions` \{#boundfunctions\}
+
+```ts
+type BoundFunctions = Q extends typeof queries ? { findAllByAltText: any; findAllByDisplayValue: any; findAllByLabelText: any; findAllByPlaceholderText: any; findAllByRole: any; findAllByTestId: any; findAllByText: any; findAllByTitle: any; findByAltText: any; findByDisplayValue: any; findByLabelText: any; findByPlaceholderText: any; findByRole: any; findByTestId: any; findByText: any; findByTitle: any; getAllByAltText: any; getAllByDisplayValue: any; getAllByLabelText: any; getAllByPlaceholderText: any; getAllByRole: any; getAllByTestId: any; getAllByText: any; getAllByTitle: any; getByAltText: any; getByDisplayValue: any; getByLabelText: any; getByPlaceholderText: any; getByRole: any; getByTestId: any; getByText: any; getByTitle: any; queryAllByAltText: any; queryAllByDisplayValue: any; queryAllByLabelText: any; queryAllByPlaceholderText: any; queryAllByRole: any; queryAllByTestId: any; queryAllByText: any; queryAllByTitle: any; queryByAltText: any; queryByDisplayValue: any; queryByLabelText: any; queryByPlaceholderText: any; queryByRole: any; queryByTestId: any; queryByText: any; queryByTitle: any } & { [P in keyof Q]: BoundFunction<Q[P]> } : { [P in keyof Q]: BoundFunction<Q[P]> }
+```
+
+*暂无说明。*
+
+### `BuiltQueryMethods` \{#builtquerymethods\}
+
+```ts
+type BuiltQueryMethods = [QueryBy<Arguments>, GetAllBy<Arguments>, GetBy<Arguments>, FindAllBy<Arguments>, FindBy<Arguments>]
+```
+
+*暂无说明。*
+
+### `ByRoleMatcher` \{#byrolematcher\}
+
+```ts
+type ByRoleMatcher = prettyFormat | string & {}
+```
+
+*暂无说明。*
+
+### `CreateFunction` \{#createfunction\}
+
+```ts
+type CreateFunction = (eventName: string, node: Document | Element | Window | Node, init?: {}, options?: { defaultInit?: {}; EventType?: string }) => Event
+```
+
+*暂无说明。*
+
+### `CreateObject` \{#createobject\}
+
+```ts
+type CreateObject = { [K in EventType_2]: (element: Document | Element | Window | Node, options?: {}) => Event }
+```
+
+*暂无说明。*
+
+### `ElementTree` \{#elementtree\}
+
+```ts
+type ElementTree = ReturnType<typeof initElementTree>
+```
+
+Lynx 元素树
+
+### `EventType` \{#eventtype\}
+
+```ts
+type EventType = "focus" | "blur" | "scroll" | "wheel" | "tap" | "longtap" | "bgload" | "bgerror" | "touchstart" | "touchmove" | "touchcancel" | "touchend" | "longpress" | "transitionstart" | "transitioncancel" | "transitionend" | "animationstart" | "animationiteration" | "animationcancel" | "animationend" | "mousedown" | "mouseup" | "mousemove" | "mouseclick" | "mousedblclick" | "mouselongpress" | "keydown" | "keyup" | "layoutchange" | "scrolltoupper" | "scrolltolower" | "scrollend" | "contentsizechanged" | "scrolltoupperedge" | "scrolltoloweredge" | "scrolltonormalstate"
+```
+
+*暂无说明。*
+
+### `FindAllBy` \{#findallby\}
+
+```ts
+type FindAllBy = QueryMethod<[Arguments[0], Arguments[1]?, waitForOptions?], Promise<HTMLElement[]>>
+```
+
+*暂无说明。*
+
+### `FindAllByBoundAttribute` \{#findallbyboundattribute\}
+
+```ts
+type FindAllByBoundAttribute = (container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions) => Promise<T[]>
+```
+
+*暂无说明。*
+
+### `FindAllByRole` \{#findallbyrole\}
+
+```ts
+type FindAllByRole = (container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions, waitForElementOptions?: waitForOptions) => Promise<T[]>
+```
+
+*暂无说明。*
+
+### `FindAllByText` \{#findallbytext\}
+
+```ts
+type FindAllByText = (container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions) => Promise<T[]>
+```
+
+*暂无说明。*
+
+### `FindBy` \{#findby\}
+
+```ts
+type FindBy = QueryMethod<[Arguments[0], Arguments[1]?, waitForOptions?], Promise<HTMLElement>>
+```
+
+*暂无说明。*
+
+### `FindByBoundAttribute` \{#findbyboundattribute\}
+
+```ts
+type FindByBoundAttribute = (container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions) => Promise<T>
+```
+
+*暂无说明。*
+
+### `FindByRole` \{#findbyrole\}
+
+```ts
+type FindByRole = (container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions, waitForElementOptions?: waitForOptions) => Promise<T>
+```
+
+*暂无说明。*
+
+### `FindByText` \{#findbytext\}
+
+```ts
+type FindByText = (container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions) => Promise<T>
+```
+
+*暂无说明。*
+
+### `FireFunction` \{#firefunction\}
+
+```ts
+type FireFunction = (element: Document | Element | Window | Node, event: Event) => boolean
+```
+
+*暂无说明。*
+
+### `FireObject` \{#fireobject\}
+
+```ts
+type FireObject = { [K in EventType]: FireObject_2[EventType_2] }
+```
+
+*暂无说明。*
+
+### `GetAllBy` \{#getallby\}
+
+```ts
+type GetAllBy = QueryMethod<Arguments, HTMLElement[]>
+```
+
+*暂无说明。*
+
+### `GetBy` \{#getby\}
+
+```ts
+type GetBy = QueryMethod<Arguments, HTMLElement>
+```
+
+*暂无说明。*
+
+### `GetByBoundAttribute` \{#getbyboundattribute\}
+
+```ts
+type GetByBoundAttribute = (container: HTMLElement, id: Matcher, options?: MatcherOptions) => T
+```
+
+*暂无说明。*
+
+### `GetByRole` \{#getbyrole\}
+
+```ts
+type GetByRole = (container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions) => T
+```
+
+*暂无说明。*
+
+### `GetByText` \{#getbytext\}
+
+```ts
+type GetByText = (container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions) => T
+```
+
+*暂无说明。*
+
+### `GetErrorFunction` \{#geterrorfunction\}
+
+```ts
+type GetErrorFunction = (c: Element | null, args: Arguments) => string
+```
+
+*暂无说明。*
+
+### `Match` \{#match\}
+
+```ts
+type Match = (textToMatch: string, node: HTMLElement | null, matcher: Matcher, options?: MatcherOptions) => boolean
+```
+
+*暂无说明。*
+
+### `Matcher` \{#matcher\}
+
+```ts
+type Matcher = MatcherFunction | RegExp | number | string
+```
+
+*暂无说明。*
+
+### `MatcherFunction` \{#matcherfunction\}
+
+```ts
+type MatcherFunction = (content: string, element: Element | null) => boolean
+```
+
+*暂无说明。*
+
+### `Method` \{#method\}
+
+```ts
+type Method = "AltText" | "alttext" | "DisplayValue" | "displayvalue" | "LabelText" | "labeltext" | "PlaceholderText" | "placeholdertext" | "Role" | "role" | "TestId" | "testid" | "Text" | "text" | "Title" | "title"
+```
+
+*暂无说明。*
+
+### `NormalizerFn` \{#normalizerfn\}
+
+```ts
+type NormalizerFn = (text: string) => string
+```
+
+*暂无说明。*
+
+### `Query` \{#query\}
+
+```ts
+type Query = (container: HTMLElement, args: any[]) => Error | HTMLElement | HTMLElement[] | Promise<HTMLElement[]> | Promise<HTMLElement> | null
+```
+
+*暂无说明。*
+
+### `QueryArgs` \{#queryargs\}
+
+```ts
+type QueryArgs = [string, QueryOptions?]
+```
+
+*暂无说明。*
+
+### `QueryBy` \{#queryby\}
+
+```ts
+type QueryBy = QueryMethod<Arguments, HTMLElement | null>
+```
+
+*暂无说明。*
+
+### `QueryByAttribute` \{#querybyattribute\}
+
+```ts
+type QueryByAttribute = (attribute: string, container: HTMLElement, id: Matcher, options?: MatcherOptions) => HTMLElement | null
+```
+
+*暂无说明。*
+
+### `QueryByBoundAttribute` \{#querybyboundattribute\}
+
+```ts
+type QueryByBoundAttribute = (container: HTMLElement, id: Matcher, options?: MatcherOptions) => T | null
+```
+
+*暂无说明。*
+
+### `QueryByRole` \{#querybyrole\}
+
+```ts
+type QueryByRole = (container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions) => T | null
+```
+
+*暂无说明。*
+
+### `QueryByText` \{#querybytext\}
+
+```ts
+type QueryByText = (container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions) => T | null
+```
+
+*暂无说明。*
+
+### `QueryMethod` \{#querymethod\}
+
+```ts
+type QueryMethod = (container: HTMLElement, args: Arguments) => Return
+```
+
+查询方法具有相同的调用签名，仅返回类型不同。
+
+### `RenderResult` \{#renderresult\}
+
+```ts
+type RenderResult = { asFragment: () => DocumentFragment; container: LynxElement; rerender: (ui: React.ReactNode) => void; unmount: () => boolean } & { [P in keyof Q]: BoundFunction<Q[P]> }
+```
+
+[`render`](#render) 的返回结果
+
+### `Screen` \{#screen\}
+
+```ts
+type Screen = BoundFunctions<Q> & { debug: (element?: (Element | HTMLDocument)[] | Element | HTMLDocument, maxLength?: number, options?: prettyFormat) => void; logTestingPlaygroundURL: (element?: Element | HTMLDocument) => string }
+```
+
+*暂无说明。*
+
+### `Variant` \{#variant\}
+
+```ts
+type Variant = "find" | "findAll" | "get" | "getAll" | "query" | "queryAll"
+```
+
+*暂无说明。*
+
+### `WithSuggest` \{#withsuggest\}
+
+*暂无说明。*
+
+{/* @api-end */}

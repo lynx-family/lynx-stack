@@ -1,0 +1,145 @@
+---
+title: '@lynx-js/web-worker-rpc'
+---
+
+# @lynx-js/web-worker-rpc
+
+{/* @api PackageHeader package="web-worker-rpc" */}
+
+<div className="api-pkg-header"><code>@lynx-js/web-worker-rpc</code> <span className="api-pkg-version">v0.26.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/web-worker-rpc" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-worker-rpc" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-worker-rpc/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+
+
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/web-worker-rpc" />
+
+## API
+
+{/* @api ApiExports package="web-worker-rpc" */}
+
+## 函数 \{#\}
+
+### `createRpcEndpoint()` \{#createrpcendpoint\}
+
+```ts
+createRpcEndpoint(name: string, isSync: false, hasReturn: false): RpcEndpointAsyncVoid<Parameters>
+createRpcEndpoint(name: string, isSync: false, hasReturn: true): RpcEndpointAsync<Parameters, Return>
+createRpcEndpoint(name: string, isSync: false, hasReturn: true, hasReturnTransfer: false): RpcEndpointAsync<Parameters, Return>
+createRpcEndpoint(name: string, isSync: false, hasReturn: true, hasReturnTransfer: true): RpcEndpointAsyncWithTransfer<Parameters, Return>
+createRpcEndpoint(name: string, isSync: true, hasReturn: false): RpcEndpointSyncVoid<Parameters>
+createRpcEndpoint(name: string, isSync: true, hasReturn: true, hasReturnTransfer: false, bufferSize: number): RpcEndpointSync<Parameters, Return>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `name` | `string` |  |
+| `isSync` | `false` |  |
+| `hasReturn` | `false` |  |
+
+**返回值:** `RpcEndpointAsyncVoid<Parameters>`
+
+## 类 \{#\}
+
+### `Rpc` \{#rpc\}
+
+用于处理 MessagePort 远程过程调用（Remote Process Call）的实例
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="rpc-constructor"></a>`constructor` | `constructor(port: MessagePort, name: string): Rpc` |  |
+| <a id="rpc-nextretid"></a>`nextRetId` | `string` |  |
+| <a id="rpc-createcall"></a>`createCall` | `createCall(endpoint: E): (args: E["_TypeParameters"]) => E["_TypeReturn"]` | 将一个端点初始化为函数 |
+| <a id="rpc-createcallbackify"></a>`createCallbackify` | `createCallbackify(endpoint: E, callbackAt: number): (params: [...E["_TypeParameters"][], (param: E["_TypeReturn"]) => void]) => void` | 创建一个参数为 callbackify 形式的调用 |
+| <a id="rpc-invoke"></a>`invoke` | `invoke(endpoint: T, parameters: T["_TypeParameters"]): void` | 发送 RPC 消息的底层 API 推荐使用 `createCall` |
+| <a id="rpc-postmessage"></a>`postMessage` | `postMessage(message: unknown, detail?: { transfer: Transferable[] }): void` |  |
+| <a id="rpc-registerhandler"></a>`registerHandler` | `registerHandler(endpoint: T, handler: (args: T["_TypeParameters"]) => void): void` | 为端点注册处理函数 |
+| <a id="rpc-registerhandlerlazy"></a>`registerHandlerLazy` | `registerHandlerLazy(endpoint: T, target: { [key in string]: Handler \| undefined }, propertyName: PropertyName): void` | 为端点注册处理函数 |
+| <a id="rpc-registerhandlerref"></a>`registerHandlerRef` | `registerHandlerRef(endpoint: T, target: { [key in string]: Handler \| undefined }, propertyName: PropertyName): void` | 将对象的某个属性注册为处理函数 |
+| <a id="rpc-removehandler"></a>`removeHandler` | `removeHandler(rpc: RpcEndpoint<unknown[], unknown>): void` | 移除该名称对应的处理函数 |
+| <a id="rpc-setmessageport"></a>`setMessagePort` | `setMessagePort(port: MessagePort): void` |  |
+
+## 类型 \{#\}
+
+### `RpcEndpointAsync` \{#rpcendpointasync\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="rpcendpointasync-typeparameters"></a>`_TypeParameters` | `Parameters` |  |
+| <a id="rpcendpointasync-typereturn"></a>`_TypeReturn` | `Return` |  |
+| <a id="rpcendpointasync-buffersize"></a>`bufferSize` | `number` | 返回值缓冲区的字节大小。 返回值会被编码为 UTF-8 的 JSON 字符串， 因此需确保该大小足以容纳序列化后的返回值。 |
+| <a id="rpcendpointasync-hasreturn"></a>`hasReturn` | `true` | 该端点是否有返回值。 仅对同步端点有效。 异步端点始终为 true。 |
+| <a id="rpcendpointasync-hasreturntransfer"></a>`hasReturnTransfer` | `false` | 使由 hasReturn 创建的消息调用支持 transfer。 仅对异步且设置了 hasReturn 的端点有效 |
+| <a id="rpcendpointasync-issync"></a>`isSync` | `false` | 该调用是否为异步调用 |
+| <a id="rpcendpointasync-name"></a>`name` | `string` | 该 RPC 端点的名称。 Rpc 实例通过该名称识别要调用的回调。 注意：该名称必须唯一。 |
+
+### `RpcEndpointAsyncWithTransfer` \{#rpcendpointasyncwithtransfer\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="rpcendpointasyncwithtransfer-typeparameters"></a>`_TypeParameters` | `Parameters` |  |
+| <a id="rpcendpointasyncwithtransfer-typereturn"></a>`_TypeReturn` | `Return` |  |
+| <a id="rpcendpointasyncwithtransfer-buffersize"></a>`bufferSize` | `number` | 返回值缓冲区的字节大小。 返回值会被编码为 UTF-8 的 JSON 字符串， 因此需确保该大小足以容纳序列化后的返回值。 |
+| <a id="rpcendpointasyncwithtransfer-hasreturn"></a>`hasReturn` | `true` | 该端点是否有返回值。 仅对同步端点有效。 异步端点始终为 true。 |
+| <a id="rpcendpointasyncwithtransfer-hasreturntransfer"></a>`hasReturnTransfer` | `true` | 使由 hasReturn 创建的消息调用支持 transfer。 仅对异步且设置了 hasReturn 的端点有效 |
+| <a id="rpcendpointasyncwithtransfer-issync"></a>`isSync` | `true` | 该调用是否为异步调用 |
+| <a id="rpcendpointasyncwithtransfer-name"></a>`name` | `string` | 该 RPC 端点的名称。 Rpc 实例通过该名称识别要调用的回调。 注意：该名称必须唯一。 |
+
+### `RpcEndpointSync` \{#rpcendpointsync\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="rpcendpointsync-typeparameters"></a>`_TypeParameters` | `Parameters` |  |
+| <a id="rpcendpointsync-typereturn"></a>`_TypeReturn` | `Return` |  |
+| <a id="rpcendpointsync-buffersize"></a>`bufferSize` | `number` | 返回值缓冲区的字节大小。 返回值会被编码为 UTF-8 的 JSON 字符串， 因此需确保该大小足以容纳序列化后的返回值。 |
+| <a id="rpcendpointsync-hasreturn"></a>`hasReturn` | `true` | 该端点是否有返回值。 仅对同步端点有效。 异步端点始终为 true。 |
+| <a id="rpcendpointsync-hasreturntransfer"></a>`hasReturnTransfer` | `boolean` | 使由 hasReturn 创建的消息调用支持 transfer。 仅对异步且设置了 hasReturn 的端点有效 |
+| <a id="rpcendpointsync-issync"></a>`isSync` | `true` | 该调用是否为异步调用 |
+| <a id="rpcendpointsync-name"></a>`name` | `string` | 该 RPC 端点的名称。 Rpc 实例通过该名称识别要调用的回调。 注意：该名称必须唯一。 |
+
+### `RpcCallType` \{#rpccalltype\}
+
+```ts
+type RpcCallType = E extends RpcEndpointSync<unknown[], unknown> ? (args: E["_TypeParameters"]) => E["_TypeReturn"] : E extends RpcEndpointSyncVoid<unknown[]> ? (args: E["_TypeParameters"]) => void : E extends RpcEndpointAsync<unknown[], unknown> ? (args: E["_TypeParameters"]) => Promise<E["_TypeReturn"]> : E extends RpcEndpointAsyncVoid<unknown[]> ? (args: E["_TypeParameters"]) => void : never
+```
+
+*暂无说明。*
+
+### `RpcEndpoint` \{#rpcendpoint\}
+
+```ts
+type RpcEndpoint = RpcEndpointSyncVoid<Parameters> | RpcEndpointSync<Parameters, Return> | RpcEndpointAsync<Parameters, Return> | RpcEndpointAsyncVoid<Parameters> | RpcEndpointAsyncWithTransfer<Parameters, Return>
+```
+
+*暂无说明。*
+
+### `RpcEndpointAsyncVoid` \{#rpcendpointasyncvoid\}
+
+```ts
+type RpcEndpointAsyncVoid = RpcEndpointBase<Parameters, void, false, false>
+```
+
+*暂无说明。*
+
+### `RpcEndpointSyncVoid` \{#rpcendpointsyncvoid\}
+
+```ts
+type RpcEndpointSyncVoid = RpcEndpointBase<Parameters, void, true, false>
+```
+
+*暂无说明。*
+
+{/* @api-end */}

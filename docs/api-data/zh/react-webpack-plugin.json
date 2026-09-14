@@ -1,0 +1,166 @@
+{
+  "ReactWebpackPlugin.summary": {
+    "hash": "f68b424b",
+    "text": "ReactWebpackPlugin 用于在 webpack 中使用 ReactLynx"
+  },
+  "ReactWebpackPlugin.example.0": {
+    "hash": "0e983006",
+    "text": "```js\n// webpack.config.js\nimport { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'\nexport default {\n  plugins: [new ReactWebpackPlugin()],\n}\n```"
+  },
+  "ReactWebpackPlugin.defaultOptions.summary": {
+    "hash": "3694ac37",
+    "text": "`defaultOptions` 是 [`ReactWebpackPlugin`](api:ReactWebpackPlugin) 使用的默认选项。"
+  },
+  "ReactWebpackPlugin.loaders.summary": {
+    "hash": "a490f5ff",
+    "text": "ReactLynx 的 loader。"
+  },
+  "ReactWebpackPlugin.loaders.remarks": {
+    "hash": "a1493e51",
+    "text": "注意，该 loader 只会将 JSX/TSX 转换为合法的 JavaScript。\n对于 `.tsx` 文件，类型注解不会被移除。\n你应使用 `babel-loader` 或 `swc-loader` 来加载 TypeScript 文件。"
+  },
+  "ReactWebpackPlugin.loaders.example.0": {
+    "hash": "c5ad5073",
+    "text": "```js\n// webpack.config.js\nimport { ReactWebpackPlugin, LAYERS } from '@lynx-js/react-webpack-plugin'\nexport default {\n  module: {\n    rules: [\n      {\n        test: /\\.tsx?$/,\n        layer: LAYERS.MAIN_THREAD,\n        use: ['swc-loader', ReactWebpackPlugin.loaders.MAIN_THREAD]\n      },\n      {\n        test: /\\.tsx?$/,\n        layer: LAYERS.BACKGROUND,\n        use: ['swc-loader', ReactWebpackPlugin.loaders.BACKGROUND]\n      },\n    ],\n  },\n  plugins: [new ReactWebpackPlugin()],\n}\n```"
+  },
+  "ReactWebpackPlugin.apply.summary": {
+    "hash": "90722b12",
+    "text": "webpack 插件的入口。"
+  },
+  "ReactWebpackPlugin.apply.params.compiler": {
+    "hash": "edb43efe",
+    "text": "webpack compiler"
+  },
+  "ExtractStrConfig.summary": {
+    "hash": "22571edc",
+    "text": "`PluginReactLynxOptions.extractStr`"
+  },
+  "ExtractStrConfig.strLength.summary": {
+    "hash": "a5a41c0c",
+    "text": "需要提取的字符串字面量的最小长度。"
+  },
+  "ExtractStrConfig.strLength.default": {
+    "hash": "7c928f27",
+    "text": "`20`"
+  },
+  "ExtractStrConfig.strLength.example.0": {
+    "hash": "c76e2900",
+    "text": "```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nimport { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\n\nexport default defineConfig({\n  plugins: [\n    pluginReactLynx({\n      extractStr: {\n        strLength: 10,\n      },\n    })\n  ],\n})\n```"
+  },
+  "ReactLoaderOptions.summary": {
+    "hash": "a3d85e7f",
+    "text": "ReactLynx 插件的选项。"
+  },
+  "ReactLoaderOptions.compat.summary": {
+    "hash": "ce1e8440",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat`"
+  },
+  "ReactLoaderOptions.defineDCE.summary": {
+    "hash": "ef9aa668",
+    "text": "类似于各类打包工具中的 `define`，但它发生在转换阶段，并且会执行一次 DCE。"
+  },
+  "ReactLoaderOptions.enableRemoveCSSScope.summary": {
+    "hash": "c6408f76",
+    "text": "`@lynx-js/template-webpack-plugin#LynxTemplatePluginOptions.enableRemoveCSSScope`"
+  },
+  "ReactLoaderOptions.enableUiSourceMap.summary": {
+    "hash": "002fe2f0",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableUiSourceMap`"
+  },
+  "ReactLoaderOptions.engineVersion.summary": {
+    "hash": "1b934e10",
+    "text": "引擎版本。"
+  },
+  "ReactLoaderOptions.experimental_transformBuiltinAttributeNames.summary": {
+    "hash": "a0f99904",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_transformBuiltinAttributeNames`"
+  },
+  "ReactLoaderOptions.experimental_useElementTemplate.summary": {
+    "hash": "97458219",
+    "text": "是否启用 Element Template 编译。"
+  },
+  "ReactLoaderOptions.inlineSourcesContent.summary": {
+    "hash": "9e5aad9c",
+    "text": "在 source map 中生成内联的源码内容。"
+  },
+  "ReactLoaderOptions.jsx.summary": {
+    "hash": "766fad31",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.jsx`"
+  },
+  "ReactLoaderOptions.refresh.summary": {
+    "hash": "2b0d4b59",
+    "text": "为 ReactLynx 启用 Fast Refresh。"
+  },
+  "ReactLoaderOptions.shake.summary": {
+    "hash": "14b83c1f",
+    "text": "主线程代码的 shake 方式。"
+  },
+  "ReactWebpackPluginOptions.summary": {
+    "hash": "e83ae414",
+    "text": "ReactWebpackPlugin 的选项"
+  },
+  "ReactWebpackPluginOptions.disableCreateSelectorQueryIncompatibleWarning.summary": {
+    "hash": "6edf3cfa",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat.disableCreateSelectorQueryIncompatibleWarning`"
+  },
+  "ReactWebpackPluginOptions.enableSSR.summary": {
+    "hash": "2d4a1adb",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableSSR`"
+  },
+  "ReactWebpackPluginOptions.entryPairs.summary": {
+    "hash": "15686b51",
+    "text": "主线程与后台入口对，用于在其间合并主线程\n定义。"
+  },
+  "ReactWebpackPluginOptions.experimental_isLazyBundle.summary": {
+    "hash": "5a3d306e",
+    "text": "是否启用 lazy bundle。"
+  },
+  "ReactWebpackPluginOptions.experimental_transformBuiltinAttributeNames.summary": {
+    "hash": "48491381",
+    "text": "运行时展开属性（spread attributes）所使用的\n内置属性名转换配置。"
+  },
+  "ReactWebpackPluginOptions.experimental_useElementTemplate.summary": {
+    "hash": "97458219",
+    "text": "是否启用 Element Template 编译。"
+  },
+  "ReactWebpackPluginOptions.extractStr.summary": {
+    "hash": "293f605a",
+    "text": "合并 JS 和 Lepus 中相同的字符串字面量，以减小输出 bundle 的体积。\n设置为 `false` 可禁用。"
+  },
+  "ReactWebpackPluginOptions.extractStr.default": {
+    "hash": "d69d0e50",
+    "text": "`false`"
+  },
+  "ReactWebpackPluginOptions.firstScreenSyncTiming.summary": {
+    "hash": "9592a789",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.firstScreenSyncTiming`"
+  },
+  "ReactWebpackPluginOptions.globalPropsMode.summary": {
+    "hash": "0f763506",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.globalPropsMode`"
+  },
+  "ReactWebpackPluginOptions.lazyBundleFetcher.summary": {
+    "hash": "309f2e73",
+    "text": "解析后的 lazy bundle fetcher 模式。由调用方（例如\n`pluginReactLynx`）根据宿主引擎版本以及\n`REACT_LAZY_BUNDLE_FETCHER` 环境变量覆盖值决定。"
+  },
+  "ReactWebpackPluginOptions.mainThreadChunks.summary": {
+    "hash": "86cc22a8",
+    "text": "被视为主线程 chunk 的 chunk 名称。"
+  },
+  "ReactWebpackPluginOptions.profile.summary": {
+    "hash": "0dbf4025",
+    "text": "是否启用 profile。"
+  },
+  "ReactWebpackPluginOptions.profile.default": {
+    "hash": "9d1a608a",
+    "text": "生产环境下为 `false`，开发环境下为 `true`"
+  },
+  "ReactWebpackPluginOptions.workletRuntimePath.summary": {
+    "hash": "18ba36f1",
+    "text": "`@lynx-js/react/worklet-runtime` 的文件路径。"
+  },
+  "LAYERS.default": {
+    "hash": "0b877caf",
+    "text": "..."
+  }
+}

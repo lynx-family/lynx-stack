@@ -1,0 +1,42 @@
+{
+  "Config.summary": {
+    "hash": "7714c0d8",
+    "text": "由 `@lynx-js/type-config` 定义的 Lynx Config 配置接口。"
+  },
+  "Options.summary": {
+    "hash": "86b9c7cc",
+    "text": "Lynx Config Rsbuild 插件的选项。"
+  },
+  "Options.compilerOptionsKeys.summary": {
+    "hash": "a3bc473b",
+    "text": "要设置的编译器选项的 key。"
+  },
+  "Options.configKeys.summary": {
+    "hash": "0d048ed6",
+    "text": "要设置的配置选项的 key。"
+  },
+  "Options.dslPluginName2PkgName.summary": {
+    "hash": "ec0dd4f9",
+    "text": "DSL 插件名到其包名的映射。"
+  },
+  "Options.dslPluginName2PkgName.example.0": {
+    "hash": "ceb22393",
+    "text": "```ts\n{\n  'lynx:react': '@lynx-js/react-rsbuild-plugin',\n}\n```"
+  },
+  "Options.upgradeRspeedyLink.summary": {
+    "hash": "73940869",
+    "text": "升级 Rspeedy 的链接。"
+  },
+  "Options.validate.summary": {
+    "hash": "879e57a8",
+    "text": "Lynx 配置的自定义校验函数。"
+  },
+  "pluginLynxConfig.summary": {
+    "hash": "77fe89b7",
+    "text": "用于配置由 `@lynx-js/type-config` 定义的 Lynx Config 的 Rsbuild 插件。"
+  },
+  "pluginLynxConfig.example.0": {
+    "hash": "fc95c468",
+    "text": "```ts\nimport { pluginLynxConfig } from '@lynx-js/config-rsbuild-plugin'\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  plugins: [\n    pluginLynxConfig({\n      alignMouseEventWithW3C: true,\n    }),\n  ],\n})\n```"
+  }
+}

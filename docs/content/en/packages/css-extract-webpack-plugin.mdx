@@ -1,0 +1,80 @@
+---
+title: '@lynx-js/css-extract-webpack-plugin'
+---
+
+# @lynx-js/css-extract-webpack-plugin
+
+{/* @api PackageHeader package="css-extract-webpack-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/css-extract-webpack-plugin</code> <span className="api-pkg-version">v0.11.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/css-extract-webpack-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/css-extract-webpack-plugin" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/css-extract-webpack-plugin/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+:::tip Internal package
+This package is part of the Lynx build engine and is applied for you by [`pluginLynx`](/rspeedy/plugins/plugin-lynx). Its API is documented for plugin authors; application code does not use it directly.
+:::
+
+This plugin extracts CSS into separate files. It creates a CSS file per JS file which contains CSS.
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/css-extract-webpack-plugin -D" />
+
+## API
+
+{/* @api ApiExports package="css-extract-webpack-plugin" */}
+
+## Classes \{#classes\}
+
+### `CssExtractRspackPlugin` \{#cssextractrspackplugin\}
+
+CssExtractRspackPlugin is the CSS extract plugin for Lynx.
+It works just like the [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin.html) in Web.
+
+```js
+import { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'
+export default {
+  plugins: [new CssExtractRspackPlugin()],
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        uses: [CssExtractRspackPlugin.loader, 'css-loader'],
+      },
+    ],
+  },
+}
+```
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="cssextractrspackplugin-constructor"></a>`constructor` | `constructor(options?: CssExtractRspackPluginOptions): CssExtractRspackPlugin` |  |
+| <a id="cssextractrspackplugin-defaultoptions"></a>`defaultOptions` | `Readonly<CssExtractRspackPluginOptions & Pick<Required<CssExtractRspackPluginOptions>, "cssPlugins">>` | `defaultOptions` is the default options that the [`CssExtractRspackPlugin`](#cssextractrspackplugin) uses. |
+| <a id="cssextractrspackplugin-loader"></a>`loader` | `string` | The loader to extract CSS. |
+| <a id="cssextractrspackplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` | The entry point of a webpack plugin. |
+
+## Types \{#types\}
+
+### `CssExtractRspackPluginOptions` \{#cssextractrspackpluginoptions\}
+
+The options for `@lynx-js/css-extract-webpack-plugin#CssExtractRspackPlugin`
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="cssextractrspackpluginoptions-chunkfilename"></a>`chunkFilename?` | `string` | The name of non-initial CSS chunk files |
+| <a id="cssextractrspackpluginoptions-cssplugins"></a>`cssPlugins?` | `Plugin[]` | plugins passed to parser |
+| <a id="cssextractrspackpluginoptions-filename"></a>`filename?` | `string` | The name of each output bundle. |
+
+### `LoaderOptions` \{#loaderoptions\}
+
+The options of CSS extract loader.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="loaderoptions-emit"></a>`emit?` | `boolean` | The same as [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin/tree/master?tab=readme-ov-file#emit). Control whether emit the CSS to filesystem. - If `true`(default), emits a file (writes a file to the filesystem). - If `false`, the plugin will extract the CSS but will not emit the file. It is often useful to disable this option for server-side packages. |
+| <a id="loaderoptions-esmodule"></a>`esModule?` | `boolean` | `@lynx-js/rspeedy#CssExtractRspackLoaderOptions.esModule` |
+| <a id="loaderoptions-layer"></a>`layer?` | `string` | The layer of the CSS execution. |
+
+{/* @api-end */}

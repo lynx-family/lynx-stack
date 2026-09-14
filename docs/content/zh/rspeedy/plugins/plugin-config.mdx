@@ -1,0 +1,99 @@
+---
+title: pluginLynxConfig
+---
+
+# pluginLynxConfig
+
+{/* @api PackageHeader package="config-rsbuild-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/config-rsbuild-plugin</code> <span className="api-pkg-version">v0.2.3</span> · <a href="https://www.npmjs.com/package/@lynx-js/config-rsbuild-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-config" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-config/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+将 Lynx 引擎配置（如 `enableCSSSelector`、`enableRemoveCSSScope` 等 page config）写入 bundle。它不是 DSL 插件，需要与 DSL 插件搭配使用。
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/config-rsbuild-plugin -D" />
+
+## 用法
+
+```ts title="lynx.config.ts"
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginLynxConfig } from '@lynx-js/config-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [pluginLynxConfig()],
+})
+```
+
+## 选项
+
+{/* @api ApiOptions package="config-rsbuild-plugin" type="Options" */}
+
+### `dslPluginName2PkgName` \{#dslpluginname2pkgname\}
+
+- **类型:** `Record<string, string>` (来自 typescript)
+
+DSL 插件名到其包名的映射。
+
+```ts
+{
+  'lynx:react': '@lynx-js/react-rsbuild-plugin',
+}
+```
+
+### 其他选项 \{#other-options\}
+
+| 名称 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="compileroptionskeys"></a>`compilerOptionsKeys` | `string[]` |  | 要设置的编译器选项的 key。 |
+| <a id="configkeys"></a>`configKeys` | `string[]` |  | 要设置的配置选项的 key。 |
+| <a id="upgraderspeedylink"></a>`upgradeRspeedyLink` | `string` |  | 升级 Rspeedy 的链接。 |
+| <a id="validate"></a>`validate` | `(input: unknown) => Config` |  | Lynx 配置的自定义校验函数。 |
+
+{/* @api-end */}
+
+## API
+
+{/* @api ApiExports package="config-rsbuild-plugin" exclude="Options" optionsType="Options" */}
+
+## 函数 \{#\}
+
+### `pluginLynxConfig()` \{#pluginlynxconfig\}
+
+```ts
+pluginLynxConfig(config: Config, options?: Options): RsbuildPlugin
+```
+
+用于配置由 `@lynx-js/type-config` 定义的 Lynx Config 的 Rsbuild 插件。
+
+```ts
+import { pluginLynxConfig } from '@lynx-js/config-rsbuild-plugin'
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  plugins: [
+    pluginLynxConfig({
+      alignMouseEventWithW3C: true,
+    }),
+  ],
+})
+```
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `config` | `Config` | The Lynx config to set. |
+| `options?` | `Options` |  |
+
+**返回值:** `RsbuildPlugin`
+
+## 类型 \{#\}
+
+### `Config` \{#config\}
+
+由 `@lynx-js/type-config` 定义的 Lynx Config 配置接口。
+
+{/* @api-end */}

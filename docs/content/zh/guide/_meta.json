@@ -1,0 +1,34 @@
+[
+  {
+    "type": "section-header",
+    "label": "入门"
+  },
+  "installation",
+  {
+    "type": "section-header",
+    "label": "特性"
+  },
+  "cli",
+  "typescript",
+  "css",
+  "assets",
+  "output",
+  "resolve",
+  "i18n",
+  "plugin",
+  "code-splitting",
+  "upgrade-rspeedy",
+  {
+    "type": "section-header",
+    "label": "调试"
+  },
+  "build-profiling",
+  "use-rsdoctor",
+  {
+    "type": "dir",
+    "name": "genui",
+    "label": "GenUI",
+    "collapsible": true,
+    "collapsed": false
+  }
+]

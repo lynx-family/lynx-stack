@@ -1,0 +1,271 @@
+{
+  "id": "lynx-bundle-rslib-config",
+  "package": "@lynx-js/lynx-bundle-rslib-config",
+  "version": "0.8.1",
+  "description": "The rsbuild config for building Lynx bundle",
+  "section": "rspeedy",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/lynx-bundle-rslib-config",
+  "exports": [
+    {
+      "name": "MainThreadRuntimeWrapperWebpackPlugin",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "The main-thread runtime wrapper for external bundle.",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(options: Partial<MainThreadRuntimeWrapperWebpackPluginOptions>): MainThreadRuntimeWrapperWebpackPlugin",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "options",
+              "type": "Partial<MainThreadRuntimeWrapperWebpackPluginOptions>"
+            }
+          ],
+          "returns": {
+            "type": "MainThreadRuntimeWrapperWebpackPlugin"
+          }
+        },
+        {
+          "name": "apply",
+          "type": "apply(compiler: Compiler): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "compiler",
+              "type": "Compiler"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "EncodeOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The options for encoding the external bundle.",
+      "members": [
+        {
+          "name": "enableJsBytecode",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether to compile main thread chunks to JsBytecode in the emitted bundle.",
+          "remarks": "When disabled, main thread chunks are encoded as plain JavaScript source,\nwhich keeps them readable for debugging and speeds up encoding.\n\nOnly takes effect for the `'lynx'` target. For the `'web'` target the\n`JsBytecode` tag only routes main thread chunks to the correct bundle\nslot (the chunk is never bytecode-compiled), so it is always kept.",
+          "default": "`false` when `NODE_ENV` is `'development'`, otherwise `true`",
+          "kind": "property"
+        },
+        {
+          "name": "engineVersion",
+          "optional": true,
+          "type": "string",
+          "summary": "The engine version of the external bundle.",
+          "default": "`'3.5'`",
+          "kind": "property"
+        },
+        {
+          "name": "target",
+          "optional": true,
+          "type": "\"web\" | \"lynx\"",
+          "summary": "The output format of the encoded bundle.\n\n- `'lynx'`: the native bundle a Lynx engine loads, via `@lynx-js/tasm`.\n- `'web'`: a web binary bundle via `@lynx-js/web-core/encode`, decodable by\n  the web platform. Sections are emitted as raw JS (the web runtime wraps\n  them at `lynx.loadScript` time), and CSS is folded into the StyleInfo\n  section.",
+          "default": "`'lynx'`",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ExposedLayers",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The layer names an external bundle is split by.",
+      "members": [
+        {
+          "name": "BACKGROUND",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "MAIN_THREAD",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ExternalBundleLibConfig",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Rslib config shape accepted by `defineExternalBundleRslibConfig`.",
+      "members": [
+        {
+          "name": "output",
+          "optional": true,
+          "type": "OutputConfig",
+          "ref": "OutputConfig",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ExternalObject",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Object form of an external mapping.\n\nUse this instead of the plain global-name form when the external library is\nmounted asynchronously (as a Promise) by the consuming application, i.e. the\nmatching `pluginExternalBundle` external is configured with `async: true`.",
+      "members": [
+        {
+          "name": "async",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether the library is mounted as a Promise resolving to the library\nnamespace. When enabled, the external is emitted as a `promise` external\nso importing modules await the mounted value instead of reading it\nsynchronously.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "libraryName",
+          "type": "string | string[]",
+          "summary": "The global name (with optional subpath) of the external library.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ExternalsPresetDefinition",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Definition for a named externals preset.",
+      "members": [
+        {
+          "name": "extends",
+          "optional": true,
+          "type": "string | string[]",
+          "summary": "Other preset names to include before applying the current preset.",
+          "kind": "property"
+        },
+        {
+          "name": "externals",
+          "optional": true,
+          "type": "Externals",
+          "ref": "Externals",
+          "summary": "Externals contributed by this preset.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "MainThreadRuntimeWrapperWebpackPluginOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The options of [`MainThreadRuntimeWrapperWebpackPlugin`](api:MainThreadRuntimeWrapperWebpackPlugin).",
+      "members": [
+        {
+          "name": "test",
+          "type": "Rules | undefined",
+          "summary": "Include the assets marked `lynx:main-thread` that pass test assertion.",
+          "default": "`/\\.js$/`",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "Externals",
+      "kind": "typealias",
+      "type": "Record<string, string | string[] | ExternalObject>",
+      "external": "typescript",
+      "summary": "External module to global-name mappings used when building Lynx external\nbundles."
+    },
+    {
+      "name": "ExternalsPresetDefinitions",
+      "kind": "typealias",
+      "type": "Record<string, ExternalsPresetDefinition>",
+      "external": "typescript",
+      "summary": "Available externals preset definitions."
+    },
+    {
+      "name": "ExternalsPresets",
+      "kind": "typealias",
+      "type": "{ reactlynx?: ExternalsPresetValue } & Record<string, ExternalsPresetValue>",
+      "summary": "Enabled externals presets.\n\nPreset names are resolved from the built-in preset definitions plus any\ncustom definitions passed to [`defineExternalBundleRslibConfig`](api:defineExternalBundleRslibConfig)."
+    },
+    {
+      "name": "ExternalsPresetValue",
+      "kind": "typealias",
+      "type": "boolean | { async?: boolean }",
+      "summary": "How an externals preset is enabled.\n\n`true` mounts the preset's libraries synchronously. The `{ async: true }`\nobject form mounts them asynchronously (as Promises), for the web target\nwhere external bundles are loaded via `fetchBundle().then` — see\n[`ExternalObject.async`](api:ExternalObject.async)."
+    },
+    {
+      "name": "OutputConfig",
+      "kind": "typealias",
+      "type": "Required<LibConfig>[\"output\"] & { externals?: Externals; externalsPresetDefinitions?: ExternalsPresetDefinitions; externalsPresets?: ExternalsPresets; globalObject?: \"lynx\" | \"globalThis\" }",
+      "summary": "Output config accepted by Lynx external bundle builds."
+    },
+    {
+      "name": "builtInExternalsPresetDefinitions",
+      "kind": "variable",
+      "type": "ExternalsPresetDefinitions",
+      "ref": "ExternalsPresetDefinitions",
+      "summary": "Built-in externals preset definitions.",
+      "default": "..."
+    },
+    {
+      "name": "defaultExternalBundleLibConfig",
+      "kind": "variable",
+      "type": "LibConfig",
+      "external": "@rslib/core",
+      "summary": "The default lib config`LibConfig` for external bundle.",
+      "default": "..."
+    },
+    {
+      "name": "LAYERS",
+      "kind": "variable",
+      "type": "ExposedLayers",
+      "ref": "ExposedLayers",
+      "summary": "The layer names an entry is split by without a DSL plugin.",
+      "default": "..."
+    },
+    {
+      "name": "reactLynxExternalsPreset",
+      "kind": "variable",
+      "type": "Externals",
+      "ref": "Externals",
+      "summary": "Standard ReactLynx external mappings used by the built-in `reactlynx`\npreset.",
+      "default": "..."
+    },
+    {
+      "name": "defineExternalBundleRslibConfig",
+      "kind": "function",
+      "type": "defineExternalBundleRslibConfig(userLibConfig: ExternalBundleLibConfig, encodeOptions: EncodeOptions): RslibConfig",
+      "signatures": [
+        {
+          "text": "defineExternalBundleRslibConfig(userLibConfig: ExternalBundleLibConfig, encodeOptions: EncodeOptions): RslibConfig",
+          "params": [
+            {
+              "name": "userLibConfig",
+              "type": "ExternalBundleLibConfig"
+            },
+            {
+              "name": "encodeOptions",
+              "type": "EncodeOptions"
+            }
+          ],
+          "returns": {
+            "type": "RslibConfig"
+          },
+          "summary": "Get the rslib config for building Lynx external bundles.",
+          "examples": [
+            "If you want to build an external bundle which use in Lynx background thread, you can use the following code:\n\n```js\n// rslib.config.js\nimport { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'\n\nexport default defineExternalBundleRslibConfig({\n  id: 'utils-lib',\n  source: {\n    entry: {\n      utils: {\n        import: './src/utils.ts',\n        layer: 'background',\n      }\n    }\n  }\n})\n```\n\nThen you can use `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })` in background thread.",
+            "If you want to build an external bundle which use in Lynx main thread, you can use the following code:\n\n```js\n// rslib.config.js\nimport { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'\n\nexport default defineExternalBundleRslibConfig({\n  id: 'utils-lib',\n  source: {\n    entry: {\n      utils: {\n        import: './src/utils.ts',\n        layer: 'main-thread',\n      }\n    }\n  }\n})\n```\nThen you can use `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })` in main-thread.",
+            "If you want to build an external bundle which use both in Lynx main thread and background thread. You don't need to set the layer.\n\n```js\n// rslib.config.js\nimport { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'\n\nexport default defineExternalBundleRslibConfig({\n  id: 'utils-lib',\n  source: {\n    entry: {\n      utils: './src/utils.ts',\n    },\n  }\n})\n```\n\nThen you can use `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })` in background thread and `lynx.loadScript('utils__main-thread', { bundleName: 'utils-lib-bundle-url' })` in main-thread."
+          ]
+        }
+      ],
+      "summary": "Get the rslib config for building Lynx external bundles.",
+      "examples": [
+        "If you want to build an external bundle which use in Lynx background thread, you can use the following code:\n\n```js\n// rslib.config.js\nimport { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'\n\nexport default defineExternalBundleRslibConfig({\n  id: 'utils-lib',\n  source: {\n    entry: {\n      utils: {\n        import: './src/utils.ts',\n        layer: 'background',\n      }\n    }\n  }\n})\n```\n\nThen you can use `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })` in background thread.",
+        "If you want to build an external bundle which use in Lynx main thread, you can use the following code:\n\n```js\n// rslib.config.js\nimport { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'\n\nexport default defineExternalBundleRslibConfig({\n  id: 'utils-lib',\n  source: {\n    entry: {\n      utils: {\n        import: './src/utils.ts',\n        layer: 'main-thread',\n      }\n    }\n  }\n})\n```\nThen you can use `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })` in main-thread.",
+        "If you want to build an external bundle which use both in Lynx main thread and background thread. You don't need to set the layer.\n\n```js\n// rslib.config.js\nimport { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'\n\nexport default defineExternalBundleRslibConfig({\n  id: 'utils-lib',\n  source: {\n    entry: {\n      utils: './src/utils.ts',\n    },\n  }\n})\n```\n\nThen you can use `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })` in background thread and `lynx.loadScript('utils__main-thread', { bundleName: 'utils-lib-bundle-url' })` in main-thread."
+      ]
+    }
+  ]
+}

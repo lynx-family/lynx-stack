@@ -1,0 +1,72 @@
+---
+title: '@lynx-js/i18next-translation-dedupe'
+---
+
+# @lynx-js/i18next-translation-dedupe
+
+{/* @api PackageHeader package="i18next-translation-dedupe" */}
+
+<div className="api-pkg-header"><code>@lynx-js/i18next-translation-dedupe</code> <span className="api-pkg-version">v0.0.1</span> · <a href="https://www.npmjs.com/package/@lynx-js/i18next-translation-dedupe" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/i18n/i18next-translation-dedupe" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/i18n/i18next-translation-dedupe/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+
+对 Lynx bundle 中的 i18next 翻译进行去重。
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/i18next-translation-dedupe" />
+
+## API
+
+{/* @api ApiExports package="i18next-translation-dedupe" */}
+
+## 函数 \{#\}
+
+### `loadI18nextTranslations()` \{#loadi18nexttranslations\}
+
+```ts
+loadI18nextTranslations(): Resource
+```
+
+*暂无说明。*
+
+**返回值:** `Resource`
+
+### `pluginLynxI18nextTranslationDedupe()` \{#pluginlynxi18nexttranslationdedupe\}
+
+```ts
+pluginLynxI18nextTranslationDedupe(): RsbuildPlugin
+```
+
+*暂无说明。*
+
+**返回值:** `RsbuildPlugin`
+
+### `toI18nextTranslations()` \{#toi18nexttranslations\}
+
+```ts
+toI18nextTranslations(translationsByLocale: TranslationsByLocale): Resource
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `translationsByLocale` | `TranslationsByLocale` |  |
+
+**返回值:** `Resource`
+
+## 常量 \{#\}
+
+### `I18N_TRANSLATIONS_SECTION_KEY` \{#i18n-translations-section-key\}
+
+```ts
+const I18N_TRANSLATIONS_SECTION_KEY: "i18next-translations"
+```
+
+*暂无说明。*
+
+{/* @api-end */}

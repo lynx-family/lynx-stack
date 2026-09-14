@@ -1,0 +1,273 @@
+---
+title: '@lynx-js/css-serializer'
+---
+
+# @lynx-js/css-serializer
+
+{/* @api PackageHeader package="css-serializer" */}
+
+<div className="api-pkg-header"><code>@lynx-js/css-serializer</code> <span className="api-pkg-version">v0.1.9</span> · <a href="https://www.npmjs.com/package/@lynx-js/css-serializer" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/tools/css-serializer" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/tools/css-serializer/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+:::tip 内部包
+此包是 Lynx 构建引擎的一部分，由 [`pluginLynx`](/zh/rspeedy/plugins/plugin-lynx) 自动应用。其 API 文档面向插件作者，应用代码不会直接使用它。
+:::
+
+
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/css-serializer -D" />
+
+## API
+
+{/* @api ApiExports package="css-serializer" */}
+
+## 函数 \{#\}
+
+### `cssChunksToMap()` \{#csschunkstomap\}
+
+```ts
+cssChunksToMap(cssChunks: (string | CSSChunkAsset)[], plugins: Plugin[], enableCSSSelector: boolean): { contentMap: Map<number, string[]>; cssMap: Record<string, LynxStyleNode[]>; cssSource: Record<string, string> }
+```
+
+将 CSS chunk 转换为 `cssMap` / `cssSource`。
+
+`loc` 字段保留 bundle CSS 中的坐标，以便后续
+通过 `main.css.map` 解析。
+
+`cssSource` 有意保留历史上的 `/cssId/<id>.css` 形式。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `cssChunks` | `(string \| CSSChunkAsset)[]` |  |
+| `plugins` | `Plugin[]` |  |
+| `enableCSSSelector` | `boolean` |  |
+
+**返回值:** `{ contentMap: Map<number, string[]>; cssMap: Record<string, LynxStyleNode[]>; cssSource: Record<string, string> }`
+
+### `parse()` \{#parse\}
+
+```ts
+parse(content: string, options: { filename?: string; plugins?: Plugin[]; projectRoot?: string }): { errors: ParserError[]; root: LynxStyleNode[] }
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `content` | `string` |  |
+| `options` | `{ filename?: string; plugins?: Plugin[]; projectRoot?: string }` |  |
+
+**返回值:** `{ errors: ParserError[]; root: LynxStyleNode[] }`
+
+## 类型 \{#\}
+
+### `Plugins` \{#plugins\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="plugins-removefunctionwhitespace"></a>`removeFunctionWhiteSpace` | `unknown` |  |
+
+### `Severity` \{#severity\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="severity-deprecated"></a>`Deprecated` | `4` |  |
+| <a id="severity-error"></a>`Error` | `0` |  |
+| <a id="severity-experimental"></a>`Experimental` | `5` |  |
+| <a id="severity-notsupport"></a>`NotSupport` | `3` |  |
+| <a id="severity-unused"></a>`Unused` | `2` |  |
+| <a id="severity-warning"></a>`Warning` | `1` |  |
+
+### `BaseDeclaration` \{#basedeclaration\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="basedeclaration-keyloc"></a>`keyLoc` | `Location` |  |
+| <a id="basedeclaration-name"></a>`name` | `string` |  |
+| <a id="basedeclaration-valloc"></a>`valLoc` | `Location` |  |
+| <a id="basedeclaration-value"></a>`value` | `string` |  |
+
+### `CSSSourceMap` \{#csssourcemap\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="csssourcemap-file"></a>`file?` | `string` |  |
+| <a id="csssourcemap-mappings"></a>`mappings` | `string` |  |
+| <a id="csssourcemap-names"></a>`names?` | `string[]` |  |
+| <a id="csssourcemap-sourceroot"></a>`sourceRoot?` | `string` |  |
+| <a id="csssourcemap-sources"></a>`sources` | `string[]` |  |
+| <a id="csssourcemap-sourcescontent"></a>`sourcesContent?` | `(string \| null)[]` |  |
+| <a id="csssourcemap-version"></a>`version` | `number` |  |
+
+### `FontFaceRule` \{#fontfacerule\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="fontfacerule-style"></a>`style` | `Declaration[]` |  |
+| <a id="fontfacerule-type"></a>`type` | `"FontFaceRule"` |  |
+
+### `ImportRule` \{#importrule\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="importrule-href"></a>`href` | `string` |  |
+| <a id="importrule-origin"></a>`origin` | `string` |  |
+| <a id="importrule-type"></a>`type` | `"ImportRule"` |  |
+
+### `KeyframesRule` \{#keyframesrule\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="keyframesrule-name"></a>`name` | `Value` |  |
+| <a id="keyframesrule-styles"></a>`styles` | `KeyframesStyle[]` |  |
+| <a id="keyframesrule-type"></a>`type` | `"KeyframesRule"` |  |
+
+### `KeyframesStyle` \{#keyframesstyle\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="keyframesstyle-keytext"></a>`keyText` | `Value` |  |
+| <a id="keyframesstyle-style"></a>`style` | `Declaration[]` |  |
+| <a id="keyframesstyle-variables"></a>`variables` | `Record<string, string>` |  |
+
+### `LayerRule` \{#layerrule\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="layerrule-prelude"></a>`prelude?` | `Value` |  |
+| <a id="layerrule-rules"></a>`rules` | `LynxStyleNode[]` |  |
+| <a id="layerrule-type"></a>`type` | `"LayerRule"` |  |
+
+### `Location` \{#location\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="location-column"></a>`column` | `number` |  |
+| <a id="location-line"></a>`line` | `number` |  |
+
+### `MediaRule` \{#mediarule\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="mediarule-prelude"></a>`prelude` | `Value` |  |
+| <a id="mediarule-rules"></a>`rules` | `LynxStyleNode[]` |  |
+| <a id="mediarule-type"></a>`type` | `"MediaRule"` |  |
+
+### `ParserError` \{#parsererror\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="parsererror-detail"></a>`detail?` | `string` |  |
+| <a id="parsererror-message"></a>`message` | `string` |  |
+| <a id="parsererror-name"></a>`name` | `string` |  |
+| <a id="parsererror-range"></a>`range` | `Range` |  |
+| <a id="parsererror-severity"></a>`severity` | `Severity` |  |
+
+### `Plugin` \{#plugin\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="plugin-name"></a>`name` | `string` |  |
+| <a id="plugin-phasestandard"></a>`phaseStandard?` | `phaseStandard(root: StyleSheet, context: { report: (error: ParserError) => void }): void` |  |
+
+### `Range` \{#range\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="range-end"></a>`end` | `Location` |  |
+| <a id="range-start"></a>`start` | `Location` |  |
+
+### `StyleRule` \{#stylerule\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="stylerule-selectortext"></a>`selectorText` | `Value` |  |
+| <a id="stylerule-style"></a>`style` | `Declaration[]` |  |
+| <a id="stylerule-type"></a>`type` | `"StyleRule"` |  |
+| <a id="stylerule-variables"></a>`variables` | `Record<string, string>` |  |
+
+### `SupportsRule` \{#supportsrule\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="supportsrule-prelude"></a>`prelude` | `Value` |  |
+| <a id="supportsrule-rules"></a>`rules` | `LynxStyleNode[]` |  |
+| <a id="supportsrule-type"></a>`type` | `"SupportsRule"` |  |
+
+### `Value` \{#value\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="value-loc"></a>`loc` | `Location` |  |
+| <a id="value-value"></a>`value` | `string` |  |
+
+### `VariableDeclaration` \{#variabledeclaration\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="variabledeclaration-defaultvalue"></a>`defaultValue?` | `string` |  |
+| <a id="variabledeclaration-defaultvaluemap"></a>`defaultValueMap?` | `Record<string, string>` |  |
+| <a id="variabledeclaration-keyloc"></a>`keyLoc` | `Location` |  |
+| <a id="variabledeclaration-name"></a>`name` | `string` |  |
+| <a id="variabledeclaration-type"></a>`type` | `"css_var"` |  |
+| <a id="variabledeclaration-valloc"></a>`valLoc` | `Location` |  |
+| <a id="variabledeclaration-value"></a>`value` | `string` |  |
+
+### `Declaration` \{#declaration\}
+
+```ts
+type Declaration = BaseDeclaration | VariableDeclaration
+```
+
+*暂无说明。*
+
+### `LynxStyleNode` \{#lynxstylenode\}
+
+```ts
+type LynxStyleNode = StyleRule | FontFaceRule | ImportRule | KeyframesRule | MediaRule | SupportsRule | LayerRule
+```
+
+*暂无说明。*
+
+{/* @api-end */}

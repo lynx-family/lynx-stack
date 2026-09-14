@@ -1,0 +1,108 @@
+---
+title: '@lynx-js/react-webpack-plugin'
+---
+
+# @lynx-js/react-webpack-plugin
+
+{/* @api PackageHeader package="react-webpack-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/react-webpack-plugin</code> <span className="api-pkg-version">v0.11.3</span> · <a href="https://www.npmjs.com/package/@lynx-js/react-webpack-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/react-webpack-plugin" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/react-webpack-plugin/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+:::tip 内部包
+此包是 Lynx 构建引擎的一部分，由 [`pluginLynx`](/zh/rspeedy/plugins/plugin-lynx) 自动应用。其 API 文档面向插件作者，应用代码不会直接使用它。
+:::
+
+ReactLynx 的 webpack 插件
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/react-webpack-plugin -D" />
+
+## API
+
+{/* @api ApiExports package="react-webpack-plugin" */}
+
+## 类 \{#\}
+
+### `ReactWebpackPlugin` \{#reactwebpackplugin\}
+
+ReactWebpackPlugin 用于在 webpack 中使用 ReactLynx
+
+```js
+// webpack.config.js
+import { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
+export default {
+  plugins: [new ReactWebpackPlugin()],
+}
+```
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="reactwebpackplugin-constructor"></a>`constructor` | `constructor(options?: ReactWebpackPluginOptions): ReactWebpackPlugin` |  |
+| <a id="reactwebpackplugin-defaultoptions"></a>`defaultOptions` | `Readonly<Required<ReactWebpackPluginOptions>>` | `defaultOptions` 是 [`ReactWebpackPlugin`](#reactwebpackplugin) 使用的默认选项。 |
+| <a id="reactwebpackplugin-loaders"></a>`loaders` | `Record<keyof typeof LAYERS \| "TESTING", string>` | ReactLynx 的 loader。 |
+| <a id="reactwebpackplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` | webpack 插件的入口。 |
+
+## 常量 \{#\}
+
+### `LAYERS` \{#layers\}
+
+```ts
+const LAYERS: { BACKGROUND: "react:background"; MAIN_THREAD: "react:main-thread" }
+```
+
+*暂无说明。*
+
+## 类型 \{#\}
+
+### `ExtractStrConfig` \{#extractstrconfig\}
+
+`PluginReactLynxOptions.extractStr`
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="extractstrconfig-strlength"></a>`strLength` | `number` | 需要提取的字符串字面量的最小长度。 |
+
+### `ReactLoaderOptions` \{#reactloaderoptions\}
+
+ReactLynx 插件的选项。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="reactloaderoptions-compat"></a>`compat?` | `CompatVisitorConfig` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat` |
+| <a id="reactloaderoptions-definedce"></a>`defineDCE?` | `DefineDceVisitorConfig` | 类似于各类打包工具中的 `define`，但它发生在转换阶段，并且会执行一次 DCE。 |
+| <a id="reactloaderoptions-enableremovecssscope"></a>`enableRemoveCSSScope?` | `boolean` | `@lynx-js/template-webpack-plugin#LynxTemplatePluginOptions.enableRemoveCSSScope` |
+| <a id="reactloaderoptions-enableuisourcemap"></a>`enableUiSourceMap?` | `boolean` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableUiSourceMap` |
+| <a id="reactloaderoptions-engineversion"></a>`engineVersion?` | `string` | 引擎版本。 |
+| <a id="reactloaderoptions-experimental-transformbuiltinattributenames"></a>`experimental_transformBuiltinAttributeNames?` | `boolean \| TransformBuiltinAttributeNamesOptions` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_transformBuiltinAttributeNames` |
+| <a id="reactloaderoptions-experimental-useelementtemplate"></a>`experimental_useElementTemplate?` <span className="api-badge api-badge-beta">实验性</span> | `boolean` | 是否启用 Element Template 编译。 |
+| <a id="reactloaderoptions-inlinesourcescontent"></a>`inlineSourcesContent?` | `boolean` | 在 source map 中生成内联的源码内容。 |
+| <a id="reactloaderoptions-jsx"></a>`jsx?` | `JsxTransformerConfig` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.jsx` |
+| <a id="reactloaderoptions-refresh"></a>`refresh?` | `boolean` | 为 ReactLynx 启用 Fast Refresh。 |
+| <a id="reactloaderoptions-shake"></a>`shake?` | `ShakeVisitorConfig` | 主线程代码的 shake 方式。 |
+
+### `ReactWebpackPluginOptions` \{#reactwebpackpluginoptions\}
+
+ReactWebpackPlugin 的选项
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="reactwebpackpluginoptions-disablecreateselectorqueryincompatiblewarning"></a>`disableCreateSelectorQueryIncompatibleWarning?` | `boolean` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat.disableCreateSelectorQueryIncompatibleWarning` |
+| <a id="reactwebpackpluginoptions-enablessr"></a>`enableSSR?` | `boolean` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableSSR` |
+| <a id="reactwebpackpluginoptions-entrypairs"></a>`entryPairs?` | `{ background: string; mainThread: string }[]` | 主线程与后台入口对，用于在其间合并主线程 定义。 |
+| <a id="reactwebpackpluginoptions-experimental-islazybundle"></a>`experimental_isLazyBundle?` <span className="api-badge api-badge-alpha">Alpha</span> | `boolean` | 是否启用 lazy bundle。 |
+| <a id="reactwebpackpluginoptions-experimental-transformbuiltinattributenames"></a>`experimental_transformBuiltinAttributeNames?` <span className="api-badge api-badge-beta">实验性</span> | `boolean \| TransformBuiltinAttributeNamesOptions` | 运行时展开属性（spread attributes）所使用的 内置属性名转换配置。 |
+| <a id="reactwebpackpluginoptions-experimental-useelementtemplate"></a>`experimental_useElementTemplate?` <span className="api-badge api-badge-beta">实验性</span> | `boolean` | 是否启用 Element Template 编译。 |
+| <a id="reactwebpackpluginoptions-extractstr"></a>`extractStr?` | `boolean \| Partial<ExtractStrConfig>` | 合并 JS 和 Lepus 中相同的字符串字面量，以减小输出 bundle 的体积。 设置为 `false` 可禁用。 |
+| <a id="reactwebpackpluginoptions-firstscreensynctiming"></a>`firstScreenSyncTiming?` | `"immediately" \| "jsReady" \| "manual"` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.firstScreenSyncTiming` |
+| <a id="reactwebpackpluginoptions-globalpropsmode"></a>`globalPropsMode?` | `"reactive" \| "event"` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.globalPropsMode` |
+| <a id="reactwebpackpluginoptions-lazybundlefetcher"></a>`lazyBundleFetcher?` | `"FetchBundle" \| "QueryComponent"` | 解析后的 lazy bundle fetcher 模式。由调用方（例如 `pluginReactLynx`）根据宿主引擎版本以及 `REACT_LAZY_BUNDLE_FETCHER` 环境变量覆盖值决定。 |
+| <a id="reactwebpackpluginoptions-mainthreadchunks"></a>`mainThreadChunks?` | `string[]` | 被视为主线程 chunk 的 chunk 名称。 |
+| <a id="reactwebpackpluginoptions-profile"></a>`profile?` | `boolean` | 是否启用 profile。 |
+| <a id="reactwebpackpluginoptions-workletruntimepath"></a>`workletRuntimePath` | `string` | `@lynx-js/react/worklet-runtime` 的文件路径。 |
+
+{/* @api-end */}

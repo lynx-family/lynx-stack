@@ -1,0 +1,64 @@
+---
+title: environments
+---
+
+# environments
+
+Rspeedy 为每个 Rsbuild environment 构建一个 Lynx bundle。`environments` 即 [Rsbuild 的 `environments` 选项](https://rsbuild.rs/zh/config/environments)；environment 名称会作为 `output.filename.bundle` 中的 `[platform]` 占位符。
+
+## 概览
+
+{/* @api ConfigOverview package="rspeedy" type="Config" path="environments" */}
+
+| 名称 | 类型 | 说明 |
+| --- | --- | --- |
+| [`environments`](#environments) | `Record<string, EnvironmentConfig>` | [`Config.environments`](#config-environments) 选项用于设置输出的 environment。 |
+
+{/* @api-end */}
+
+## 选项
+
+{/* @api ConfigOptions package="rspeedy" type="Config" path="environments" */}
+
+### `environments` \{#environments\}
+
+- **类型:** `Record<string, EnvironmentConfig>` (来自 typescript)
+- **默认值:** 未设置该选项时，Rspeedy 会向 Rsbuild 传入 `{ lynx: {} }`。
+
+[`Config.environments`](#config-environments) 选项用于设置输出的 environment。
+
+如果你没有使用 Lynx for Web，通常不需要此选项。
+
+- 为 Lynx 和 Web 使用不同的入口。
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  environments: {
+    lynx: {},
+    web: {
+      source: { entry: { web: './src/index.web.jsx' } },
+    },
+  },
+  source: {
+    entry: './src/index.jsx',
+  },
+})
+```
+
+- 仅构建 Web 产物。
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  environments: {
+    web: {
+      source: { entry: { web: './src/index.web.jsx' } },
+    },
+  },
+})
+```
+
+{/* @api-end */}

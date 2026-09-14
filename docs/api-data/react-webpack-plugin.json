@@ -1,0 +1,284 @@
+{
+  "id": "react-webpack-plugin",
+  "package": "@lynx-js/react-webpack-plugin",
+  "version": "0.11.3",
+  "description": "A webpack plugin for ReactLynx",
+  "section": "packages",
+  "internal": true,
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/react-webpack-plugin",
+  "exports": [
+    {
+      "name": "ReactWebpackPlugin",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "ReactWebpackPlugin allows using ReactLynx with webpack",
+      "examples": [
+        "```js\n// webpack.config.js\nimport { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'\nexport default {\n  plugins: [new ReactWebpackPlugin()],\n}\n```"
+      ],
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(options?: ReactWebpackPluginOptions): ReactWebpackPlugin",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "options",
+              "type": "ReactWebpackPluginOptions",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "ReactWebpackPlugin"
+          }
+        },
+        {
+          "name": "defaultOptions",
+          "type": "Readonly<Required<ReactWebpackPluginOptions>>",
+          "external": "typescript",
+          "summary": "`defaultOptions` is the default options that the [`ReactWebpackPlugin`](api:ReactWebpackPlugin) uses.",
+          "kind": "property"
+        },
+        {
+          "name": "loaders",
+          "type": "Record<keyof typeof LAYERS | \"TESTING\", string>",
+          "external": "typescript",
+          "summary": "The loaders for ReactLynx.",
+          "remarks": "Note that this loader will only transform JSX/TSX to valid JavaScript.\nFor `.tsx` files, the type annotations would not be eliminated.\nYou should use `babel-loader` or `swc-loader` to load TypeScript files.",
+          "examples": [
+            "```js\n// webpack.config.js\nimport { ReactWebpackPlugin, LAYERS } from '@lynx-js/react-webpack-plugin'\nexport default {\n  module: {\n    rules: [\n      {\n        test: /\\.tsx?$/,\n        layer: LAYERS.MAIN_THREAD,\n        use: ['swc-loader', ReactWebpackPlugin.loaders.MAIN_THREAD]\n      },\n      {\n        test: /\\.tsx?$/,\n        layer: LAYERS.BACKGROUND,\n        use: ['swc-loader', ReactWebpackPlugin.loaders.BACKGROUND]\n      },\n    ],\n  },\n  plugins: [new ReactWebpackPlugin()],\n}\n```"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "apply",
+          "type": "apply(compiler: Compiler): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "compiler",
+              "type": "Compiler",
+              "description": "the webpack compiler"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "The entry point of a webpack plugin."
+        }
+      ]
+    },
+    {
+      "name": "ExtractStrConfig",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "`PluginReactLynxOptions.extractStr`",
+      "members": [
+        {
+          "name": "strLength",
+          "type": "number",
+          "summary": "The minimum length of string literals to be extracted.",
+          "examples": [
+            "```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nimport { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\n\nexport default defineConfig({\n  plugins: [\n    pluginReactLynx({\n      extractStr: {\n        strLength: 10,\n      },\n    })\n  ],\n})\n```"
+          ],
+          "default": "`20`",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ReactLoaderOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The options of the ReactLynx plugin.",
+      "members": [
+        {
+          "name": "compat",
+          "optional": true,
+          "type": "CompatVisitorConfig",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat`",
+          "kind": "property"
+        },
+        {
+          "name": "defineDCE",
+          "optional": true,
+          "type": "DefineDceVisitorConfig",
+          "summary": "Like `define` in various bundlers, but this one happens at transform time, and a DCE pass will be performed.",
+          "kind": "property"
+        },
+        {
+          "name": "enableRemoveCSSScope",
+          "optional": true,
+          "type": "boolean",
+          "summary": "`@lynx-js/template-webpack-plugin#LynxTemplatePluginOptions.enableRemoveCSSScope`",
+          "kind": "property"
+        },
+        {
+          "name": "enableUiSourceMap",
+          "optional": true,
+          "type": "boolean",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableUiSourceMap`",
+          "kind": "property"
+        },
+        {
+          "name": "engineVersion",
+          "optional": true,
+          "type": "string",
+          "summary": "The engine version.",
+          "kind": "property"
+        },
+        {
+          "name": "experimental_transformBuiltinAttributeNames",
+          "optional": true,
+          "type": "boolean | TransformBuiltinAttributeNamesOptions",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_transformBuiltinAttributeNames`",
+          "kind": "property"
+        },
+        {
+          "name": "experimental_useElementTemplate",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether to enable Element Template compilation.",
+          "experimental": true,
+          "kind": "property"
+        },
+        {
+          "name": "inlineSourcesContent",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Generate inline source content in source-map.",
+          "kind": "property"
+        },
+        {
+          "name": "jsx",
+          "optional": true,
+          "type": "JsxTransformerConfig",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.jsx`",
+          "kind": "property"
+        },
+        {
+          "name": "refresh",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Enable the Fast Refresh for ReactLynx.",
+          "kind": "property"
+        },
+        {
+          "name": "shake",
+          "optional": true,
+          "type": "ShakeVisitorConfig",
+          "summary": "How main-thread code will be shaken.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ReactWebpackPluginOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The options for ReactWebpackPlugin",
+      "members": [
+        {
+          "name": "disableCreateSelectorQueryIncompatibleWarning",
+          "optional": true,
+          "type": "boolean",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat.disableCreateSelectorQueryIncompatibleWarning`",
+          "kind": "property"
+        },
+        {
+          "name": "enableSSR",
+          "optional": true,
+          "type": "boolean",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableSSR`",
+          "kind": "property"
+        },
+        {
+          "name": "entryPairs",
+          "optional": true,
+          "type": "{ background: string; mainThread: string }[]",
+          "summary": "The main-thread and background entry pairs to merge the main-thread\ndefinitions across.",
+          "kind": "property"
+        },
+        {
+          "name": "experimental_isLazyBundle",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether to enable lazy bundle.",
+          "alpha": true,
+          "kind": "property"
+        },
+        {
+          "name": "experimental_transformBuiltinAttributeNames",
+          "optional": true,
+          "type": "boolean | TransformBuiltinAttributeNamesOptions",
+          "summary": "The builtin attribute-name transform configuration used by runtime spread\nattributes.",
+          "experimental": true,
+          "kind": "property"
+        },
+        {
+          "name": "experimental_useElementTemplate",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether to enable Element Template compilation.",
+          "experimental": true,
+          "kind": "property"
+        },
+        {
+          "name": "extractStr",
+          "optional": true,
+          "type": "boolean | Partial<ExtractStrConfig>",
+          "summary": "Merge same string literals in JS and Lepus to reduce output bundle size.\nSet to `false` to disable.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "firstScreenSyncTiming",
+          "optional": true,
+          "type": "\"immediately\" | \"jsReady\" | \"manual\"",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.firstScreenSyncTiming`",
+          "kind": "property"
+        },
+        {
+          "name": "globalPropsMode",
+          "optional": true,
+          "type": "\"reactive\" | \"event\"",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.globalPropsMode`",
+          "kind": "property"
+        },
+        {
+          "name": "lazyBundleFetcher",
+          "optional": true,
+          "type": "\"FetchBundle\" | \"QueryComponent\"",
+          "summary": "Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.\n`pluginReactLynx`) from the host engine version and any\n`REACT_LAZY_BUNDLE_FETCHER` env override.",
+          "kind": "property"
+        },
+        {
+          "name": "mainThreadChunks",
+          "optional": true,
+          "type": "string[]",
+          "summary": "The chunk names to be considered as main thread chunks.",
+          "kind": "property"
+        },
+        {
+          "name": "profile",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether to enable profile.",
+          "default": "`false` when production, `true` when development",
+          "kind": "property"
+        },
+        {
+          "name": "workletRuntimePath",
+          "type": "string",
+          "summary": "The file path of `@lynx-js/react/worklet-runtime`.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LAYERS",
+      "kind": "variable",
+      "type": "{ BACKGROUND: \"react:background\"; MAIN_THREAD: \"react:main-thread\" }",
+      "default": "..."
+    }
+  ]
+}

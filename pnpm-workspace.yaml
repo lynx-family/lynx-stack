@@ -27,7 +27,7 @@ packages:
   - packages/use-sync-external-store
   - packages/web-platform/*
   - packages/webpack/*
-  - website
+  - docs
 
 # From `@pnpm/plugin-better-defaults`
 enablePrePostScripts: false

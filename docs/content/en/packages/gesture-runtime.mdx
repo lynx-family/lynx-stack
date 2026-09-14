@@ -1,0 +1,714 @@
+---
+title: '@lynx-js/gesture-runtime'
+---
+
+# @lynx-js/gesture-runtime
+
+{/* @api PackageHeader package="gesture-runtime" */}
+
+<div className="api-pkg-header"><code>@lynx-js/gesture-runtime</code> <span className="api-pkg-version">v2.1.3</span> · <a href="https://www.npmjs.com/package/@lynx-js/gesture-runtime" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/lynx/gesture-runtime" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/lynx/gesture-runtime/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+
+`@lynx-js/gesture-runtime` provides typed gesture primitives and simple composition utilities for Lynx.
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/gesture-runtime" />
+
+## API
+
+{/* @api ApiExports package="gesture-runtime" */}
+
+## Functions \{#functions\}
+
+### `useGesture()` \{#usegesture\}
+
+```ts
+useGesture(GestureConstructor: () => T): T
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `GestureConstructor` | `() => T` |  |
+
+**Returns:** `T`
+
+## Classes \{#classes\}
+
+### `BaseGesture` \{#basegesture\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="basegesture-constructor"></a>`constructor` | `constructor(gesture?: BaseGesture<TConfig, TEvent>): BaseGesture<TConfig, TEvent>` |  |
+| <a id="basegesture-isgesture"></a>`__isGesture` | `true` |  |
+| <a id="basegesture-callbacks"></a>`callbacks` | `BaseGestureCallbacks<TEvent>` |  |
+| <a id="basegesture-config"></a>`config` | `TConfig` |  |
+| <a id="basegesture-continuewith"></a>`continueWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="basegesture-execid"></a>`execId` | `number` |  |
+| <a id="basegesture-id"></a>`id` | `number` |  |
+| <a id="basegesture-simultaneouswith"></a>`simultaneousWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="basegesture-tojson"></a>`toJSON` | `(this: BaseGesture) => Record<string, unknown>` |  |
+| <a id="basegesture-type"></a>`type` | `GestureTypeInner` |  |
+| <a id="basegesture-waitfor"></a>`waitFor` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="basegesture-clone"></a>`clone` | `clone(): this` |  |
+| <a id="basegesture-enabled"></a>`enabled` | `enabled(enabled: boolean): this` |  |
+| <a id="basegesture-externalcontinuewith"></a>`externalContinueWith` | `externalContinueWith(gesture: GestureKind): this` |  |
+| <a id="basegesture-externalsimultaneous"></a>`externalSimultaneous` | `externalSimultaneous(gesture: GestureKind): this` |  |
+| <a id="basegesture-externalwaitfor"></a>`externalWaitFor` | `externalWaitFor(gesture: GestureKind): this` |  |
+| <a id="basegesture-onbegin"></a>`onBegin` | `onBegin(cb: GestureCallback<TEvent>): this` |  |
+| <a id="basegesture-onend"></a>`onEnd` | `onEnd(cb: GestureCallback<TEvent>): this` |  |
+| <a id="basegesture-onstart"></a>`onStart` | `onStart(cb: GestureCallback<TEvent>): this` |  |
+| <a id="basegesture-ontouchescancel"></a>`onTouchesCancel` | `onTouchesCancel(cb: GestureCallback<TEvent>): this` |  |
+| <a id="basegesture-ontouchesdown"></a>`onTouchesDown` | `onTouchesDown(cb: GestureCallback<TEvent>): this` |  |
+| <a id="basegesture-ontouchesmove"></a>`onTouchesMove` | `onTouchesMove(cb: GestureCallback<TEvent>): this` |  |
+| <a id="basegesture-ontouchesup"></a>`onTouchesUp` | `onTouchesUp(cb: GestureCallback<TEvent>): this` |  |
+| <a id="basegesture-serialize"></a>`serialize` | `serialize(): Record<string, unknown>` |  |
+| <a id="basegesture-togesturearray"></a>`toGestureArray` | `toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="basegesture-updatecallback"></a>`updateCallback` | `updateCallback(k: keyof BaseGestureCallbacks<TEvent>, cb: GestureCallback<TEvent>): this` |  |
+| <a id="basegesture-updateconfig"></a>`updateConfig` | `updateConfig(k: string, v: unknown): this` |  |
+
+### `ComposedGesture` \{#composedgesture\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="composedgesture-constructor"></a>`constructor` | `constructor(gestures: GestureKind[]): ComposedGesture` |  |
+| <a id="composedgesture-isgesture"></a>`__isGesture` | `true` |  |
+| <a id="composedgesture-continuewith"></a>`continueWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="composedgesture-gestures"></a>`gestures` | `GestureKind[]` |  |
+| <a id="composedgesture-panprocessed"></a>`panProcessed` | `boolean` |  |
+| <a id="composedgesture-simultaneouswith"></a>`simultaneousWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="composedgesture-tojson"></a>`toJSON` | `(this: ComposedGesture) => Record<string, unknown>` |  |
+| <a id="composedgesture-type"></a>`type` | `GestureTypeInner` |  |
+| <a id="composedgesture-waitfor"></a>`waitFor` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="composedgesture-prepare"></a>`prepare` | `prepare(): void` |  |
+| <a id="composedgesture-preparesinglegesture"></a>`prepareSingleGesture` | `prepareSingleGesture(gesture: GestureKind, simultaneousGestures: BaseGesture<BaseGestureConfig, GestureChangeEvent>[], waitFor: BaseGesture<BaseGestureConfig, GestureChangeEvent>[]): void` |  |
+| <a id="composedgesture-processpandistance"></a>`processPanDistance` | `processPanDistance(): void` | If pan gesture has relationship with tap or longPress, its default minDistance should be overridden |
+| <a id="composedgesture-serialize"></a>`serialize` | `serialize(): Record<string, unknown>` |  |
+| <a id="composedgesture-togesturearray"></a>`toGestureArray` | `toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+
+### `ContinuousGesture` \{#continuousgesture\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="continuousgesture-constructor"></a>`constructor` | `constructor(gesture?: BaseGesture<TConfig, TEvent>): ContinuousGesture<TConfig, TEvent>` |  |
+| <a id="continuousgesture-isgesture"></a>`__isGesture` | `true` |  |
+| <a id="continuousgesture-callbacks"></a>`callbacks` | `BaseGestureCallbacks<TEvent> & ContinuousGestureCallbacks<TEvent>` |  |
+| <a id="continuousgesture-config"></a>`config` | `TConfig` |  |
+| <a id="continuousgesture-continuewith"></a>`continueWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="continuousgesture-execid"></a>`execId` | `number` |  |
+| <a id="continuousgesture-id"></a>`id` | `number` |  |
+| <a id="continuousgesture-simultaneouswith"></a>`simultaneousWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="continuousgesture-tojson"></a>`toJSON` | `(this: BaseGesture) => Record<string, unknown>` |  |
+| <a id="continuousgesture-type"></a>`type` | `GestureTypeInner` |  |
+| <a id="continuousgesture-waitfor"></a>`waitFor` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="continuousgesture-clone"></a>`clone` | `clone(): this` |  |
+| <a id="continuousgesture-enabled"></a>`enabled` | `enabled(enabled: boolean): this` |  |
+| <a id="continuousgesture-externalcontinuewith"></a>`externalContinueWith` | `externalContinueWith(gesture: GestureKind): this` |  |
+| <a id="continuousgesture-externalsimultaneous"></a>`externalSimultaneous` | `externalSimultaneous(gesture: GestureKind): this` |  |
+| <a id="continuousgesture-externalwaitfor"></a>`externalWaitFor` | `externalWaitFor(gesture: GestureKind): this` |  |
+| <a id="continuousgesture-onbegin"></a>`onBegin` | `onBegin(cb: GestureCallback<TEvent>): this` |  |
+| <a id="continuousgesture-onend"></a>`onEnd` | `onEnd(cb: GestureCallback<TEvent>): this` |  |
+| <a id="continuousgesture-onstart"></a>`onStart` | `onStart(cb: GestureCallback<TEvent>): this` |  |
+| <a id="continuousgesture-ontouchescancel"></a>`onTouchesCancel` | `onTouchesCancel(cb: GestureCallback<TEvent>): this` |  |
+| <a id="continuousgesture-ontouchesdown"></a>`onTouchesDown` | `onTouchesDown(cb: GestureCallback<TEvent>): this` |  |
+| <a id="continuousgesture-ontouchesmove"></a>`onTouchesMove` | `onTouchesMove(cb: GestureCallback<TEvent>): this` |  |
+| <a id="continuousgesture-ontouchesup"></a>`onTouchesUp` | `onTouchesUp(cb: GestureCallback<TEvent>): this` |  |
+| <a id="continuousgesture-onupdate"></a>`onUpdate` | `onUpdate(cb: GestureCallback<TEvent>): this` |  |
+| <a id="continuousgesture-serialize"></a>`serialize` | `serialize(): Record<string, unknown>` |  |
+| <a id="continuousgesture-togesturearray"></a>`toGestureArray` | `toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="continuousgesture-updatecallback"></a>`updateCallback` | `updateCallback(k: (keyof BaseGestureCallbacks<TEvent>) \| "onUpdate", cb: GestureCallback<TEvent>): this` |  |
+| <a id="continuousgesture-updateconfig"></a>`updateConfig` | `updateConfig(k: string, v: unknown): this` |  |
+
+### `DefaultScrollGesture` \{#defaultscrollgesture\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="defaultscrollgesture-constructor"></a>`constructor` | `constructor(gesture?: BaseGesture<DefaultGestureConfig, DefaultGestureChangeEvent>): DefaultScrollGesture` |  |
+| <a id="defaultscrollgesture-isgesture"></a>`__isGesture` | `true` |  |
+| <a id="defaultscrollgesture-callbacks"></a>`callbacks` | `BaseGestureCallbacks<DefaultGestureChangeEvent> & ContinuousGestureCallbacks<DefaultGestureChangeEvent>` |  |
+| <a id="defaultscrollgesture-config"></a>`config` | `DefaultGestureConfig` |  |
+| <a id="defaultscrollgesture-continuewith"></a>`continueWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="defaultscrollgesture-execid"></a>`execId` | `number` |  |
+| <a id="defaultscrollgesture-id"></a>`id` | `number` |  |
+| <a id="defaultscrollgesture-simultaneouswith"></a>`simultaneousWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="defaultscrollgesture-tojson"></a>`toJSON` | `(this: BaseGesture) => Record<string, unknown>` |  |
+| <a id="defaultscrollgesture-type"></a>`type` | `GestureTypeInner` |  |
+| <a id="defaultscrollgesture-waitfor"></a>`waitFor` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="defaultscrollgesture-clone"></a>`clone` | `clone(): this` |  |
+| <a id="defaultscrollgesture-enabled"></a>`enabled` | `enabled(enabled: boolean): this` |  |
+| <a id="defaultscrollgesture-externalcontinuewith"></a>`externalContinueWith` | `externalContinueWith(gesture: GestureKind): this` |  |
+| <a id="defaultscrollgesture-externalsimultaneous"></a>`externalSimultaneous` | `externalSimultaneous(gesture: GestureKind): this` |  |
+| <a id="defaultscrollgesture-externalwaitfor"></a>`externalWaitFor` | `externalWaitFor(gesture: GestureKind): this` |  |
+| <a id="defaultscrollgesture-onbegin"></a>`onBegin` | `onBegin(cb: GestureCallback<DefaultGestureChangeEvent>): this` |  |
+| <a id="defaultscrollgesture-onend"></a>`onEnd` | `onEnd(cb: GestureCallback<DefaultGestureChangeEvent>): this` |  |
+| <a id="defaultscrollgesture-onstart"></a>`onStart` | `onStart(cb: GestureCallback<DefaultGestureChangeEvent>): this` |  |
+| <a id="defaultscrollgesture-ontouchescancel"></a>`onTouchesCancel` | `onTouchesCancel(cb: GestureCallback<DefaultGestureChangeEvent>): this` |  |
+| <a id="defaultscrollgesture-ontouchesdown"></a>`onTouchesDown` | `onTouchesDown(cb: GestureCallback<DefaultGestureChangeEvent>): this` |  |
+| <a id="defaultscrollgesture-ontouchesmove"></a>`onTouchesMove` | `onTouchesMove(cb: GestureCallback<DefaultGestureChangeEvent>): this` |  |
+| <a id="defaultscrollgesture-ontouchesup"></a>`onTouchesUp` | `onTouchesUp(cb: GestureCallback<DefaultGestureChangeEvent>): this` |  |
+| <a id="defaultscrollgesture-onupdate"></a>`onUpdate` | `onUpdate(cb: GestureCallback<DefaultGestureChangeEvent>): this` |  |
+| <a id="defaultscrollgesture-serialize"></a>`serialize` | `serialize(): Record<string, unknown>` |  |
+| <a id="defaultscrollgesture-tapslop"></a>`tapSlop` | `tapSlop(tapSlop: number): this` |  |
+| <a id="defaultscrollgesture-togesturearray"></a>`toGestureArray` | `toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="defaultscrollgesture-updatecallback"></a>`updateCallback` | `updateCallback(k: (keyof BaseGestureCallbacks<TEvent>) \| "onUpdate", cb: GestureCallback<DefaultGestureChangeEvent>): this` |  |
+| <a id="defaultscrollgesture-updateconfig"></a>`updateConfig` | `updateConfig(k: string, v: unknown): this` |  |
+
+### `ExclusiveGesture` \{#exclusivegesture\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="exclusivegesture-constructor"></a>`constructor` | `constructor(gestures: GestureKind[]): ExclusiveGesture` |  |
+| <a id="exclusivegesture-isgesture"></a>`__isGesture` | `true` |  |
+| <a id="exclusivegesture-continuewith"></a>`continueWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="exclusivegesture-gestures"></a>`gestures` | `GestureKind[]` |  |
+| <a id="exclusivegesture-panprocessed"></a>`panProcessed` | `boolean` |  |
+| <a id="exclusivegesture-simultaneouswith"></a>`simultaneousWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="exclusivegesture-tojson"></a>`toJSON` | `(this: ComposedGesture) => Record<string, unknown>` |  |
+| <a id="exclusivegesture-type"></a>`type` | `GestureTypeInner` |  |
+| <a id="exclusivegesture-waitfor"></a>`waitFor` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="exclusivegesture-prepare"></a>`prepare` | `prepare(): void` |  |
+| <a id="exclusivegesture-preparesinglegesture"></a>`prepareSingleGesture` | `prepareSingleGesture(gesture: GestureKind, simultaneousGestures: BaseGesture<BaseGestureConfig, GestureChangeEvent>[], waitFor: BaseGesture<BaseGestureConfig, GestureChangeEvent>[]): void` |  |
+| <a id="exclusivegesture-processpandistance"></a>`processPanDistance` | `processPanDistance(): void` | If pan gesture has relationship with tap or longPress, its default minDistance should be overridden |
+| <a id="exclusivegesture-serialize"></a>`serialize` | `serialize(): Record<string, unknown>` |  |
+| <a id="exclusivegesture-togesturearray"></a>`toGestureArray` | `toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+
+### `FlingGesture` \{#flinggesture\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="flinggesture-constructor"></a>`constructor` | `constructor(gesture?: BaseGesture<FlingGestureConfig, FlingGestureChangeEvent>): FlingGesture` |  |
+| <a id="flinggesture-isgesture"></a>`__isGesture` | `true` |  |
+| <a id="flinggesture-callbacks"></a>`callbacks` | `BaseGestureCallbacks<FlingGestureChangeEvent> & ContinuousGestureCallbacks<FlingGestureChangeEvent>` |  |
+| <a id="flinggesture-config"></a>`config` | `FlingGestureConfig` |  |
+| <a id="flinggesture-continuewith"></a>`continueWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="flinggesture-execid"></a>`execId` | `number` |  |
+| <a id="flinggesture-id"></a>`id` | `number` |  |
+| <a id="flinggesture-simultaneouswith"></a>`simultaneousWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="flinggesture-tojson"></a>`toJSON` | `(this: BaseGesture) => Record<string, unknown>` |  |
+| <a id="flinggesture-type"></a>`type` | `GestureTypeInner` |  |
+| <a id="flinggesture-waitfor"></a>`waitFor` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="flinggesture-clone"></a>`clone` | `clone(): this` |  |
+| <a id="flinggesture-enabled"></a>`enabled` | `enabled(enabled: boolean): this` |  |
+| <a id="flinggesture-externalcontinuewith"></a>`externalContinueWith` | `externalContinueWith(gesture: GestureKind): this` |  |
+| <a id="flinggesture-externalsimultaneous"></a>`externalSimultaneous` | `externalSimultaneous(gesture: GestureKind): this` |  |
+| <a id="flinggesture-externalwaitfor"></a>`externalWaitFor` | `externalWaitFor(gesture: GestureKind): this` |  |
+| <a id="flinggesture-onbegin"></a>`onBegin` | `onBegin(cb: GestureCallback<FlingGestureChangeEvent>): this` |  |
+| <a id="flinggesture-onend"></a>`onEnd` | `onEnd(cb: GestureCallback<FlingGestureChangeEvent>): this` |  |
+| <a id="flinggesture-onstart"></a>`onStart` | `onStart(cb: GestureCallback<FlingGestureChangeEvent>): this` |  |
+| <a id="flinggesture-ontouchescancel"></a>`onTouchesCancel` | `onTouchesCancel(cb: GestureCallback<FlingGestureChangeEvent>): this` |  |
+| <a id="flinggesture-ontouchesdown"></a>`onTouchesDown` | `onTouchesDown(cb: GestureCallback<FlingGestureChangeEvent>): this` |  |
+| <a id="flinggesture-ontouchesmove"></a>`onTouchesMove` | `onTouchesMove(cb: GestureCallback<FlingGestureChangeEvent>): this` |  |
+| <a id="flinggesture-ontouchesup"></a>`onTouchesUp` | `onTouchesUp(cb: GestureCallback<FlingGestureChangeEvent>): this` |  |
+| <a id="flinggesture-onupdate"></a>`onUpdate` | `onUpdate(cb: GestureCallback<FlingGestureChangeEvent>): this` |  |
+| <a id="flinggesture-serialize"></a>`serialize` | `serialize(): Record<string, unknown>` |  |
+| <a id="flinggesture-togesturearray"></a>`toGestureArray` | `toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="flinggesture-updatecallback"></a>`updateCallback` | `updateCallback(k: (keyof BaseGestureCallbacks<TEvent>) \| "onUpdate", cb: GestureCallback<FlingGestureChangeEvent>): this` |  |
+| <a id="flinggesture-updateconfig"></a>`updateConfig` | `updateConfig(k: string, v: unknown): this` |  |
+
+### `LongPressGesture` \{#longpressgesture\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="longpressgesture-constructor"></a>`constructor` | `constructor(gesture?: BaseGesture<LongPressGestureConfig, LongPressGestureChangeEvent>): LongPressGesture` |  |
+| <a id="longpressgesture-isgesture"></a>`__isGesture` | `true` |  |
+| <a id="longpressgesture-callbacks"></a>`callbacks` | `BaseGestureCallbacks<LongPressGestureChangeEvent>` |  |
+| <a id="longpressgesture-config"></a>`config` | `LongPressGestureConfig` |  |
+| <a id="longpressgesture-continuewith"></a>`continueWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="longpressgesture-execid"></a>`execId` | `number` |  |
+| <a id="longpressgesture-id"></a>`id` | `number` |  |
+| <a id="longpressgesture-simultaneouswith"></a>`simultaneousWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="longpressgesture-tojson"></a>`toJSON` | `(this: BaseGesture) => Record<string, unknown>` |  |
+| <a id="longpressgesture-type"></a>`type` | `GestureTypeInner` |  |
+| <a id="longpressgesture-waitfor"></a>`waitFor` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="longpressgesture-clone"></a>`clone` | `clone(): this` |  |
+| <a id="longpressgesture-enabled"></a>`enabled` | `enabled(enabled: boolean): this` |  |
+| <a id="longpressgesture-externalcontinuewith"></a>`externalContinueWith` | `externalContinueWith(gesture: GestureKind): this` |  |
+| <a id="longpressgesture-externalsimultaneous"></a>`externalSimultaneous` | `externalSimultaneous(gesture: GestureKind): this` |  |
+| <a id="longpressgesture-externalwaitfor"></a>`externalWaitFor` | `externalWaitFor(gesture: GestureKind): this` |  |
+| <a id="longpressgesture-maxdistance"></a>`maxDistance` | `maxDistance(distance: number): this` |  |
+| <a id="longpressgesture-minduration"></a>`minDuration` | `minDuration(duration: number): this` |  |
+| <a id="longpressgesture-onbegin"></a>`onBegin` | `onBegin(cb: GestureCallback<LongPressGestureChangeEvent>): this` |  |
+| <a id="longpressgesture-onend"></a>`onEnd` | `onEnd(cb: GestureCallback<LongPressGestureChangeEvent>): this` |  |
+| <a id="longpressgesture-onstart"></a>`onStart` | `onStart(cb: GestureCallback<LongPressGestureChangeEvent>): this` |  |
+| <a id="longpressgesture-ontouchescancel"></a>`onTouchesCancel` | `onTouchesCancel(cb: GestureCallback<LongPressGestureChangeEvent>): this` |  |
+| <a id="longpressgesture-ontouchesdown"></a>`onTouchesDown` | `onTouchesDown(cb: GestureCallback<LongPressGestureChangeEvent>): this` |  |
+| <a id="longpressgesture-ontouchesmove"></a>`onTouchesMove` | `onTouchesMove(cb: GestureCallback<LongPressGestureChangeEvent>): this` |  |
+| <a id="longpressgesture-ontouchesup"></a>`onTouchesUp` | `onTouchesUp(cb: GestureCallback<LongPressGestureChangeEvent>): this` |  |
+| <a id="longpressgesture-serialize"></a>`serialize` | `serialize(): Record<string, unknown>` |  |
+| <a id="longpressgesture-togesturearray"></a>`toGestureArray` | `toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="longpressgesture-updatecallback"></a>`updateCallback` | `updateCallback(k: keyof BaseGestureCallbacks<TEvent>, cb: GestureCallback<LongPressGestureChangeEvent>): this` |  |
+| <a id="longpressgesture-updateconfig"></a>`updateConfig` | `updateConfig(k: string, v: unknown): this` |  |
+
+### `NativeGesture` <span className="api-badge api-badge-beta">Experimental</span> \{#nativegesture\}
+
+Currently highly experimental and subject to change.
+NativeGesture is a gesture that represents native platform gestures.
+It can be used to integrate with native gesture handling mechanisms.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="nativegesture-constructor"></a>`constructor` | `constructor(gesture?: BaseGesture<NativeGestureConfig, NativeGestureChangeEvent>): NativeGesture` |  |
+| <a id="nativegesture-isgesture"></a>`__isGesture` <span className="api-badge api-badge-beta">Experimental</span> | `true` |  |
+| <a id="nativegesture-callbacks"></a>`callbacks` <span className="api-badge api-badge-beta">Experimental</span> | `BaseGestureCallbacks<NativeGestureChangeEvent> & ContinuousGestureCallbacks<NativeGestureChangeEvent>` |  |
+| <a id="nativegesture-config"></a>`config` <span className="api-badge api-badge-beta">Experimental</span> | `NativeGestureConfig` |  |
+| <a id="nativegesture-continuewith"></a>`continueWith` <span className="api-badge api-badge-beta">Experimental</span> | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="nativegesture-execid"></a>`execId` <span className="api-badge api-badge-beta">Experimental</span> | `number` |  |
+| <a id="nativegesture-id"></a>`id` <span className="api-badge api-badge-beta">Experimental</span> | `number` |  |
+| <a id="nativegesture-simultaneouswith"></a>`simultaneousWith` <span className="api-badge api-badge-beta">Experimental</span> | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="nativegesture-tojson"></a>`toJSON` <span className="api-badge api-badge-beta">Experimental</span> | `(this: BaseGesture) => Record<string, unknown>` |  |
+| <a id="nativegesture-type"></a>`type` <span className="api-badge api-badge-beta">Experimental</span> | `GestureTypeInner` |  |
+| <a id="nativegesture-waitfor"></a>`waitFor` <span className="api-badge api-badge-beta">Experimental</span> | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="nativegesture-clone"></a>`clone` | `clone(): this` |  |
+| <a id="nativegesture-enabled"></a>`enabled` | `enabled(enabled: boolean): this` |  |
+| <a id="nativegesture-externalcontinuewith"></a>`externalContinueWith` | `externalContinueWith(gesture: GestureKind): this` |  |
+| <a id="nativegesture-externalsimultaneous"></a>`externalSimultaneous` | `externalSimultaneous(gesture: GestureKind): this` |  |
+| <a id="nativegesture-externalwaitfor"></a>`externalWaitFor` | `externalWaitFor(gesture: GestureKind): this` |  |
+| <a id="nativegesture-onbegin"></a>`onBegin` | `onBegin(cb: GestureCallback<NativeGestureChangeEvent>): this` |  |
+| <a id="nativegesture-onend"></a>`onEnd` | `onEnd(cb: GestureCallback<NativeGestureChangeEvent>): this` |  |
+| <a id="nativegesture-onstart"></a>`onStart` | `onStart(cb: GestureCallback<NativeGestureChangeEvent>): this` |  |
+| <a id="nativegesture-ontouchescancel"></a>`onTouchesCancel` | `onTouchesCancel(cb: GestureCallback<NativeGestureChangeEvent>): this` |  |
+| <a id="nativegesture-ontouchesdown"></a>`onTouchesDown` | `onTouchesDown(cb: GestureCallback<NativeGestureChangeEvent>): this` |  |
+| <a id="nativegesture-ontouchesmove"></a>`onTouchesMove` | `onTouchesMove(cb: GestureCallback<NativeGestureChangeEvent>): this` |  |
+| <a id="nativegesture-ontouchesup"></a>`onTouchesUp` | `onTouchesUp(cb: GestureCallback<NativeGestureChangeEvent>): this` |  |
+| <a id="nativegesture-onupdate"></a>`onUpdate` | `onUpdate(cb: GestureCallback<NativeGestureChangeEvent>): this` |  |
+| <a id="nativegesture-serialize"></a>`serialize` | `serialize(): Record<string, unknown>` |  |
+| <a id="nativegesture-togesturearray"></a>`toGestureArray` | `toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="nativegesture-updatecallback"></a>`updateCallback` | `updateCallback(k: (keyof BaseGestureCallbacks<TEvent>) \| "onUpdate", cb: GestureCallback<NativeGestureChangeEvent>): this` |  |
+| <a id="nativegesture-updateconfig"></a>`updateConfig` | `updateConfig(k: string, v: unknown): this` |  |
+
+### `PanGesture` \{#pangesture\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="pangesture-constructor"></a>`constructor` | `constructor(gesture?: BaseGesture<PanGestureConfig, PanGestureChangeEvent>): PanGesture` |  |
+| <a id="pangesture-isgesture"></a>`__isGesture` | `true` |  |
+| <a id="pangesture-callbacks"></a>`callbacks` | `BaseGestureCallbacks<PanGestureChangeEvent> & ContinuousGestureCallbacks<PanGestureChangeEvent>` |  |
+| <a id="pangesture-config"></a>`config` | `PanGestureConfig` |  |
+| <a id="pangesture-continuewith"></a>`continueWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="pangesture-distanceset"></a>`distanceSet` | `boolean` |  |
+| <a id="pangesture-execid"></a>`execId` | `number` |  |
+| <a id="pangesture-id"></a>`id` | `number` |  |
+| <a id="pangesture-simultaneouswith"></a>`simultaneousWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="pangesture-tojson"></a>`toJSON` | `(this: BaseGesture) => Record<string, unknown>` |  |
+| <a id="pangesture-type"></a>`type` | `GestureTypeInner` |  |
+| <a id="pangesture-waitfor"></a>`waitFor` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="pangesture-clone"></a>`clone` | `clone(): this` |  |
+| <a id="pangesture-enabled"></a>`enabled` | `enabled(enabled: boolean): this` |  |
+| <a id="pangesture-externalcontinuewith"></a>`externalContinueWith` | `externalContinueWith(gesture: GestureKind): this` |  |
+| <a id="pangesture-externalsimultaneous"></a>`externalSimultaneous` | `externalSimultaneous(gesture: GestureKind): this` |  |
+| <a id="pangesture-externalwaitfor"></a>`externalWaitFor` | `externalWaitFor(gesture: GestureKind): this` |  |
+| <a id="pangesture-mindistance"></a>`minDistance` | `minDistance(distance: number): this` |  |
+| <a id="pangesture-onbegin"></a>`onBegin` | `onBegin(cb: GestureCallback<PanGestureChangeEvent>): this` |  |
+| <a id="pangesture-onend"></a>`onEnd` | `onEnd(cb: GestureCallback<PanGestureChangeEvent>): this` |  |
+| <a id="pangesture-onstart"></a>`onStart` | `onStart(cb: GestureCallback<PanGestureChangeEvent>): this` |  |
+| <a id="pangesture-ontouchescancel"></a>`onTouchesCancel` | `onTouchesCancel(cb: GestureCallback<PanGestureChangeEvent>): this` |  |
+| <a id="pangesture-ontouchesdown"></a>`onTouchesDown` | `onTouchesDown(cb: GestureCallback<PanGestureChangeEvent>): this` |  |
+| <a id="pangesture-ontouchesmove"></a>`onTouchesMove` | `onTouchesMove(cb: GestureCallback<PanGestureChangeEvent>): this` |  |
+| <a id="pangesture-ontouchesup"></a>`onTouchesUp` | `onTouchesUp(cb: GestureCallback<PanGestureChangeEvent>): this` |  |
+| <a id="pangesture-onupdate"></a>`onUpdate` | `onUpdate(cb: GestureCallback<PanGestureChangeEvent>): this` |  |
+| <a id="pangesture-overridedefaultmindistance"></a>`overrideDefaultMinDistance` | `overrideDefaultMinDistance(): this` |  |
+| <a id="pangesture-serialize"></a>`serialize` | `serialize(): Record<string, unknown>` |  |
+| <a id="pangesture-togesturearray"></a>`toGestureArray` | `toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="pangesture-updatecallback"></a>`updateCallback` | `updateCallback(k: (keyof BaseGestureCallbacks<TEvent>) \| "onUpdate", cb: GestureCallback<PanGestureChangeEvent>): this` |  |
+| <a id="pangesture-updateconfig"></a>`updateConfig` | `updateConfig(k: string, v: unknown): this` |  |
+
+### `SimultaneousGesture` \{#simultaneousgesture\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="simultaneousgesture-constructor"></a>`constructor` | `constructor(gestures: GestureKind[]): SimultaneousGesture` |  |
+| <a id="simultaneousgesture-isgesture"></a>`__isGesture` | `true` |  |
+| <a id="simultaneousgesture-continuewith"></a>`continueWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="simultaneousgesture-gestures"></a>`gestures` | `GestureKind[]` |  |
+| <a id="simultaneousgesture-panprocessed"></a>`panProcessed` | `boolean` |  |
+| <a id="simultaneousgesture-simultaneouswith"></a>`simultaneousWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="simultaneousgesture-tojson"></a>`toJSON` | `(this: ComposedGesture) => Record<string, unknown>` |  |
+| <a id="simultaneousgesture-type"></a>`type` | `GestureTypeInner` |  |
+| <a id="simultaneousgesture-waitfor"></a>`waitFor` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="simultaneousgesture-prepare"></a>`prepare` | `prepare(): void` |  |
+| <a id="simultaneousgesture-preparesinglegesture"></a>`prepareSingleGesture` | `prepareSingleGesture(gesture: GestureKind, simultaneousGestures: BaseGesture<BaseGestureConfig, GestureChangeEvent>[], waitFor: BaseGesture<BaseGestureConfig, GestureChangeEvent>[]): void` |  |
+| <a id="simultaneousgesture-processpandistance"></a>`processPanDistance` | `processPanDistance(): void` | If pan gesture has relationship with tap or longPress, its default minDistance should be overridden |
+| <a id="simultaneousgesture-serialize"></a>`serialize` | `serialize(): Record<string, unknown>` |  |
+| <a id="simultaneousgesture-togesturearray"></a>`toGestureArray` | `toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+
+### `TapGesture` \{#tapgesture\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="tapgesture-constructor"></a>`constructor` | `constructor(gesture?: BaseGesture<TapGestureConfig, TapGestureChangeEvent>): TapGesture` |  |
+| <a id="tapgesture-isgesture"></a>`__isGesture` | `true` |  |
+| <a id="tapgesture-callbacks"></a>`callbacks` | `BaseGestureCallbacks<TapGestureChangeEvent>` |  |
+| <a id="tapgesture-config"></a>`config` | `TapGestureConfig` |  |
+| <a id="tapgesture-continuewith"></a>`continueWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="tapgesture-execid"></a>`execId` | `number` |  |
+| <a id="tapgesture-id"></a>`id` | `number` |  |
+| <a id="tapgesture-simultaneouswith"></a>`simultaneousWith` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="tapgesture-tojson"></a>`toJSON` | `(this: BaseGesture) => Record<string, unknown>` |  |
+| <a id="tapgesture-type"></a>`type` | `GestureTypeInner` |  |
+| <a id="tapgesture-waitfor"></a>`waitFor` | `BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="tapgesture-clone"></a>`clone` | `clone(): this` |  |
+| <a id="tapgesture-enabled"></a>`enabled` | `enabled(enabled: boolean): this` |  |
+| <a id="tapgesture-externalcontinuewith"></a>`externalContinueWith` | `externalContinueWith(gesture: GestureKind): this` |  |
+| <a id="tapgesture-externalsimultaneous"></a>`externalSimultaneous` | `externalSimultaneous(gesture: GestureKind): this` |  |
+| <a id="tapgesture-externalwaitfor"></a>`externalWaitFor` | `externalWaitFor(gesture: GestureKind): this` |  |
+| <a id="tapgesture-maxdistance"></a>`maxDistance` | `maxDistance(distance: number): this` |  |
+| <a id="tapgesture-maxduration"></a>`maxDuration` | `maxDuration(duration: number): this` |  |
+| <a id="tapgesture-numberoftaps"></a>`numberOfTaps` | `numberOfTaps(count: number): this` |  |
+| <a id="tapgesture-onbegin"></a>`onBegin` | `onBegin(cb: GestureCallback<TapGestureChangeEvent>): this` |  |
+| <a id="tapgesture-onend"></a>`onEnd` | `onEnd(cb: GestureCallback<TapGestureChangeEvent>): this` |  |
+| <a id="tapgesture-onstart"></a>`onStart` | `onStart(cb: GestureCallback<TapGestureChangeEvent>): this` |  |
+| <a id="tapgesture-ontouchescancel"></a>`onTouchesCancel` | `onTouchesCancel(cb: GestureCallback<TapGestureChangeEvent>): this` |  |
+| <a id="tapgesture-ontouchesdown"></a>`onTouchesDown` | `onTouchesDown(cb: GestureCallback<TapGestureChangeEvent>): this` |  |
+| <a id="tapgesture-ontouchesmove"></a>`onTouchesMove` | `onTouchesMove(cb: GestureCallback<TapGestureChangeEvent>): this` |  |
+| <a id="tapgesture-ontouchesup"></a>`onTouchesUp` | `onTouchesUp(cb: GestureCallback<TapGestureChangeEvent>): this` |  |
+| <a id="tapgesture-serialize"></a>`serialize` | `serialize(): Record<string, unknown>` |  |
+| <a id="tapgesture-togesturearray"></a>`toGestureArray` | `toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="tapgesture-updatecallback"></a>`updateCallback` | `updateCallback(k: keyof BaseGestureCallbacks<TEvent>, cb: GestureCallback<TapGestureChangeEvent>): this` |  |
+| <a id="tapgesture-updateconfig"></a>`updateConfig` | `updateConfig(k: string, v: unknown): this` |  |
+
+## Constants \{#constants\}
+
+### `Gesture` \{#gesture\}
+
+```ts
+const Gesture: { Exclusive: any; Race: any; Simultaneous: any }
+```
+
+*No description yet.*
+
+## Types \{#types\}
+
+### `GestureTypeInner` \{#gesturetypeinner\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="gesturetypeinner-composed"></a>`COMPOSED` | `-1` |  |
+| <a id="gesturetypeinner-default"></a>`DEFAULT` | `2` |  |
+| <a id="gesturetypeinner-fling"></a>`FLING` | `1` |  |
+| <a id="gesturetypeinner-longpress"></a>`LONGPRESS` | `4` |  |
+| <a id="gesturetypeinner-native"></a>`NATIVE` | `7` |  |
+| <a id="gesturetypeinner-pan"></a>`PAN` | `0` |  |
+| <a id="gesturetypeinner-pinch"></a>`PINCH` | `6` |  |
+| <a id="gesturetypeinner-rotation"></a>`ROTATION` | `5` |  |
+| <a id="gesturetypeinner-tap"></a>`TAP` | `3` |  |
+
+### `LynxNativeIOSGestureRecognizer` \{#lynxnativeiosgesturerecognizer\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="lynxnativeiosgesturerecognizer-base"></a>`Base` | `"Base"` |  |
+| <a id="lynxnativeiosgesturerecognizer-hover"></a>`Hover` | `"Hover"` |  |
+| <a id="lynxnativeiosgesturerecognizer-longpress"></a>`LongPress` | `"LongPress"` |  |
+| <a id="lynxnativeiosgesturerecognizer-pan"></a>`Pan` | `"Pan"` |  |
+| <a id="lynxnativeiosgesturerecognizer-pinch"></a>`Pinch` | `"Pinch"` |  |
+| <a id="lynxnativeiosgesturerecognizer-rotation"></a>`Rotation` | `"Rotation"` |  |
+| <a id="lynxnativeiosgesturerecognizer-screenedgepan"></a>`ScreenEdgePan` | `"ScreenEdgePan"` |  |
+| <a id="lynxnativeiosgesturerecognizer-swipe"></a>`Swipe` | `"Swipe"` |  |
+| <a id="lynxnativeiosgesturerecognizer-tap"></a>`Tap` | `"Tap"` |  |
+
+### `SetGestureStateType` \{#setgesturestatetype\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="setgesturestatetype-active"></a>`active` | `1` |  |
+| <a id="setgesturestatetype-end"></a>`end` | `3` |  |
+| <a id="setgesturestatetype-fail"></a>`fail` | `2` |  |
+
+### `BaseGestureCallbacks` \{#basegesturecallbacks\}
+
+Generic base gesture callbacks interface.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="basegesturecallbacks-onbegin"></a>`onBegin?` | `GestureCallback<TEvent>` |  |
+| <a id="basegesturecallbacks-onend"></a>`onEnd?` | `GestureCallback<TEvent>` |  |
+| <a id="basegesturecallbacks-onstart"></a>`onStart?` | `GestureCallback<TEvent>` |  |
+| <a id="basegesturecallbacks-ontouchescancel"></a>`onTouchesCancel?` | `GestureCallback<TEvent>` |  |
+| <a id="basegesturecallbacks-ontouchesdown"></a>`onTouchesDown?` | `GestureCallback<TEvent>` |  |
+| <a id="basegesturecallbacks-ontouchesmove"></a>`onTouchesMove?` | `GestureCallback<TEvent>` |  |
+| <a id="basegesturecallbacks-ontouchesup"></a>`onTouchesUp?` | `GestureCallback<TEvent>` |  |
+
+### `BaseGestureConfig` \{#basegestureconfig\}
+
+Base configuration interface for all gestures.
+All gesture-specific configurations extend this interface.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="basegestureconfig-enabled"></a>`enabled?` | `boolean` | Whether the gesture is enabled. Defaults to true. |
+
+### `ConsumeGestureParams` \{#consumegestureparams\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="consumegestureparams-consume"></a>`consume?` | `boolean` |  |
+| <a id="consumegestureparams-inner"></a>`inner?` | `boolean` |  |
+
+### `ContinuousGestureCallbacks` \{#continuousgesturecallbacks\}
+
+Generic continuous gesture callbacks interface.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="continuousgesturecallbacks-onupdate"></a>`onUpdate?` | `GestureCallback<TEvent>` |  |
+
+### `DefaultGestureChangeEvent` \{#defaultgesturechangeevent\}
+
+Default gesture change event.
+Uses the base GestureChangeEvent without additional properties.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="defaultgesturechangeevent-currenttarget"></a>`currentTarget` | `Element` |  |
+| <a id="defaultgesturechangeevent-params"></a>`params` | `{ clientX: number; clientY: number; pageX: number; pageY: number; timestamp: number; type: string; x: number; y: number } & { deltaX: number; deltaY: number; isAtEnd: boolean; isAtStart: boolean; scrollX: number; scrollY: number }` |  |
+| <a id="defaultgesturechangeevent-target"></a>`target` | `Element` |  |
+
+### `DefaultGestureConfig` \{#defaultgestureconfig\}
+
+Configuration interface for DefaultGesture.
+Default gesture is a basic gesture handler.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="defaultgestureconfig-enabled"></a>`enabled?` | `boolean` | Whether the gesture is enabled. Defaults to true. |
+| <a id="defaultgestureconfig-tapslop"></a>`tapSlop?` | `number` | Tap slop value (in points). Defaults to 3. |
+
+### `FlingGestureChangeEvent` \{#flinggesturechangeevent\}
+
+Fling gesture change event with fling location and velocity information.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="flinggesturechangeevent-currenttarget"></a>`currentTarget` | `Element` |  |
+| <a id="flinggesturechangeevent-params"></a>`params` | `{ clientX: number; clientY: number; pageX: number; pageY: number; timestamp: number; type: string; x: number; y: number } & { deltaX: number; deltaY: number; isAtEnd: boolean; isAtStart: boolean; scrollX: number; scrollY: number }` |  |
+| <a id="flinggesturechangeevent-target"></a>`target` | `Element` |  |
+
+### `FlingGestureConfig` \{#flinggestureconfig\}
+
+Configuration interface for FlingGesture.
+Fling gesture recognizes fling (swipe) gestures.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="flinggestureconfig-direction"></a>`direction?` | `"up" \| "down" \| "left" \| "right"` | Direction of the fling gesture |
+| <a id="flinggestureconfig-enabled"></a>`enabled?` | `boolean` | Whether the gesture is enabled. Defaults to true. |
+| <a id="flinggestureconfig-numberofpointers"></a>`numberOfPointers?` | `number` | Number of pointers (fingers) required. Defaults to 1. |
+
+### `GestureChangeEvent` \{#gesturechangeevent\}
+
+Base gesture change event interface.
+All gesture-specific events extend this interface.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="gesturechangeevent-currenttarget"></a>`currentTarget` | `Element` |  |
+| <a id="gesturechangeevent-params"></a>`params` | `{ clientX: number; clientY: number; pageX: number; pageY: number; timestamp: number; type: string; x: number; y: number }` |  |
+| <a id="gesturechangeevent-target"></a>`target` | `Element` |  |
+
+### `GestureKind` \{#gesturekind\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="gesturekind-isgesture"></a>`__isGesture` | `true` |  |
+| <a id="gesturekind-continuewith"></a>`continueWith` | `GestureKind[]` |  |
+| <a id="gesturekind-serialize"></a>`serialize` | `() => Record<string, unknown>` |  |
+| <a id="gesturekind-simultaneouswith"></a>`simultaneousWith` | `GestureKind[]` |  |
+| <a id="gesturekind-togesturearray"></a>`toGestureArray` | `() => BaseGesture<BaseGestureConfig, GestureChangeEvent>[]` |  |
+| <a id="gesturekind-type"></a>`type` | `GestureTypeInner` |  |
+| <a id="gesturekind-waitfor"></a>`waitFor` | `GestureKind[]` |  |
+
+### `GestureKindSerialized` \{#gesturekindserialized\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="gesturekindserialized-isserialized"></a>`__isSerialized` | `true` |  |
+| <a id="gesturekindserialized-continuewith"></a>`continueWith` | `number[]` |  |
+| <a id="gesturekindserialized-simultaneouswith"></a>`simultaneousWith` | `number[]` |  |
+| <a id="gesturekindserialized-type"></a>`type` | `GestureTypeInner` |  |
+| <a id="gesturekindserialized-waitfor"></a>`waitFor` | `number[]` |  |
+
+### `InterceptGestureOptions` \{#interceptgestureoptions\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="interceptgestureoptions-class"></a>`class` | `string` |  |
+| <a id="interceptgestureoptions-tag"></a>`tag` | `number` |  |
+| <a id="interceptgestureoptions-type"></a>`type` | `LynxNativeIOSGestureRecognizer` |  |
+
+### `InternalStateManager` \{#internalstatemanager\}
+
+Used internally, not meant to be public
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="internalstatemanager-consumegesture"></a>`__ConsumeGesture` | `(dom: FiberElement, id: number, params: ConsumeGestureParams) => void` |  |
+| <a id="internalstatemanager-setgesturestate"></a>`__SetGestureState` | `(dom: FiberElement, id: number, type: SetGestureStateType) => void` |  |
+| <a id="internalstatemanager-active"></a>`active` | `(id: number) => void` |  |
+| <a id="internalstatemanager-end"></a>`end` | `(id: number) => void` |  |
+| <a id="internalstatemanager-fail"></a>`fail` | `(id: number) => void` |  |
+| <a id="internalstatemanager-scrollby"></a>`scrollBy` | `(deltaX: number, deltaY: number) => number[]` |  |
+
+### `LongPressGestureChangeEvent` \{#longpressgesturechangeevent\}
+
+Long press gesture change event with press location and duration information.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="longpressgesturechangeevent-currenttarget"></a>`currentTarget` | `Element` |  |
+| <a id="longpressgesturechangeevent-params"></a>`params` | `{ clientX: number; clientY: number; pageX: number; pageY: number; timestamp: number; type: string; x: number; y: number }` |  |
+| <a id="longpressgesturechangeevent-target"></a>`target` | `Element` |  |
+
+### `LongPressGestureConfig` \{#longpressgestureconfig\}
+
+Configuration interface for LongPressGesture.
+Long press gesture recognizes long press gestures.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="longpressgestureconfig-enabled"></a>`enabled?` | `boolean` | Whether the gesture is enabled. Defaults to true. |
+| <a id="longpressgestureconfig-maxdistance"></a>`maxDistance?` | `number` | Maximum distance (in points) the touch can move and still be considered a long press. Defaults to 10. |
+| <a id="longpressgestureconfig-minduration"></a>`minDuration?` | `number` | Minimum duration (in milliseconds) for a long press. Defaults to 500ms. |
+
+### `NativeGestureChangeEvent` \{#nativegesturechangeevent\}
+
+Native gesture change event.
+Uses the base GestureChangeEvent without additional properties.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="nativegesturechangeevent-currenttarget"></a>`currentTarget` | `Element` |  |
+| <a id="nativegesturechangeevent-params"></a>`params` | `{ clientX: number; clientY: number; pageX: number; pageY: number; timestamp: number; type: string; x: number; y: number } & { deltaX: number; deltaY: number; isAtEnd: boolean; isAtStart: boolean; scrollX: number; scrollY: number }` |  |
+| <a id="nativegesturechangeevent-target"></a>`target` | `Element` |  |
+
+### `NativeGestureConfig` \{#nativegestureconfig\}
+
+Configuration interface for NativeGesture.
+Native gesture uses platform-specific gesture recognizers.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="nativegestureconfig-enabled"></a>`enabled?` | `boolean` | Whether the gesture is enabled. Defaults to true. |
+
+### `PanGestureChangeEvent` \{#pangesturechangeevent\}
+
+Pan gesture change event with translation and velocity information.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="pangesturechangeevent-currenttarget"></a>`currentTarget` | `Element` |  |
+| <a id="pangesturechangeevent-params"></a>`params` | `{ clientX: number; clientY: number; pageX: number; pageY: number; timestamp: number; type: string; x: number; y: number } & { isAtEnd: boolean; isAtStart: boolean; scrollX: number; scrollY: number }` |  |
+| <a id="pangesturechangeevent-target"></a>`target` | `Element` |  |
+
+### `PanGestureConfig` \{#pangestureconfig\}
+
+Configuration interface for PanGesture.
+Pan gesture recognizes pan (dragging) gestures.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="pangestureconfig-activeoffsetx"></a>`activeOffsetX?` | `number` | Active offset for X axis |
+| <a id="pangestureconfig-activeoffsety"></a>`activeOffsetY?` | `number` | Active offset for Y axis |
+| <a id="pangestureconfig-enabled"></a>`enabled?` | `boolean` | Whether the gesture is enabled. Defaults to true. |
+| <a id="pangestureconfig-failoffsetx"></a>`failOffsetX?` | `number` | Fail offset for X axis |
+| <a id="pangestureconfig-failoffsety"></a>`failOffsetY?` | `number` | Fail offset for Y axis |
+| <a id="pangestureconfig-mindistance"></a>`minDistance?` | `number` | Minimum distance (in points) that must be traveled before the gesture activates. Defaults to 0. |
+
+### `StateManager` \{#statemanager\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="statemanager-active"></a>`active` | `() => void` |  |
+| <a id="statemanager-consumegesture"></a>`consumeGesture` | `(shouldConsume: boolean) => void` |  |
+| <a id="statemanager-end"></a>`end` | `() => void` |  |
+| <a id="statemanager-fail"></a>`fail` | `() => void` |  |
+| <a id="statemanager-interceptgesture"></a>`interceptGesture` | `(shouldIntercept: boolean) => void` |  |
+
+### `TapGestureChangeEvent` \{#tapgesturechangeevent\}
+
+Tap gesture change event with tap location and count information.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="tapgesturechangeevent-currenttarget"></a>`currentTarget` | `Element` |  |
+| <a id="tapgesturechangeevent-params"></a>`params` | `{ clientX: number; clientY: number; pageX: number; pageY: number; timestamp: number; type: string; x: number; y: number }` |  |
+| <a id="tapgesturechangeevent-target"></a>`target` | `Element` |  |
+
+### `TapGestureConfig` \{#tapgestureconfig\}
+
+Configuration interface for TapGesture.
+Tap gesture recognizes tap gestures.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="tapgestureconfig-enabled"></a>`enabled?` | `boolean` | Whether the gesture is enabled. Defaults to true. |
+| <a id="tapgestureconfig-maxdistance"></a>`maxDistance?` | `number` | Maximum distance (in points) the touch can move and still be considered a tap. Defaults to 10. |
+| <a id="tapgestureconfig-maxduration"></a>`maxDuration?` | `number` | Maximum duration (in milliseconds) for a tap. Defaults to 500ms. |
+| <a id="tapgestureconfig-numberoftaps"></a>`numberOfTaps?` | `number` | Number of taps required. Defaults to 1. |
+
+### `GestureCallback` \{#gesturecallback\}
+
+```ts
+type GestureCallback = (event: TEvent, stateManager: StateManager) => void
+```
+
+Generic gesture callback type that receives typed events.
+
+### `GestureControlCallback` \{#gesturecontrolcallback\}
+
+```ts
+type GestureControlCallback = (event: GestureChangeEvent, stateManager: StateManager) => void
+```
+
+*No description yet.*
+
+### `GestureControlInternalCallback` \{#gesturecontrolinternalcallback\}
+
+```ts
+type GestureControlInternalCallback = (event: GestureChangeEvent, stateManager: InternalStateManager) => void
+```
+
+*No description yet.*
+
+{/* @api-end */}

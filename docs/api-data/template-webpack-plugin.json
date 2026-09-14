@@ -1,0 +1,893 @@
+{
+  "id": "template-webpack-plugin",
+  "package": "@lynx-js/template-webpack-plugin",
+  "version": "0.16.0",
+  "description": "Simplifies creation of Lynx template files to serve your webpack bundles",
+  "section": "packages",
+  "internal": true,
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/template-webpack-plugin",
+  "exports": [
+    {
+      "name": "CSS",
+      "kind": "namespace",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "Plugins",
+          "type": "unknown",
+          "kind": "namespace"
+        },
+        {
+          "name": "Severity",
+          "type": "unknown",
+          "kind": "enum"
+        },
+        {
+          "name": "BaseDeclaration",
+          "type": "unknown",
+          "kind": "interface"
+        },
+        {
+          "name": "CSSSourceMap",
+          "type": "unknown",
+          "kind": "interface"
+        },
+        {
+          "name": "FontFaceRule",
+          "type": "unknown",
+          "kind": "interface"
+        },
+        {
+          "name": "ImportRule",
+          "type": "unknown",
+          "kind": "interface"
+        },
+        {
+          "name": "KeyframesRule",
+          "type": "unknown",
+          "kind": "interface"
+        },
+        {
+          "name": "KeyframesStyle",
+          "type": "unknown",
+          "kind": "interface"
+        },
+        {
+          "name": "LayerRule",
+          "type": "unknown",
+          "kind": "interface"
+        },
+        {
+          "name": "Location",
+          "type": "unknown",
+          "kind": "interface"
+        },
+        {
+          "name": "MediaRule",
+          "type": "unknown",
+          "kind": "interface"
+        },
+        {
+          "name": "ParserError",
+          "type": "unknown",
+          "kind": "interface"
+        },
+        {
+          "name": "Plugin",
+          "type": "unknown",
+          "kind": "interface"
+        },
+        {
+          "name": "Range",
+          "type": "unknown",
+          "kind": "interface"
+        },
+        {
+          "name": "StyleRule",
+          "type": "unknown",
+          "kind": "interface"
+        },
+        {
+          "name": "SupportsRule",
+          "type": "unknown",
+          "kind": "interface"
+        },
+        {
+          "name": "Value",
+          "type": "unknown",
+          "kind": "interface"
+        },
+        {
+          "name": "VariableDeclaration",
+          "type": "unknown",
+          "kind": "interface"
+        },
+        {
+          "name": "Declaration",
+          "type": "BaseDeclaration | VariableDeclaration",
+          "kind": "typealias"
+        },
+        {
+          "name": "LynxStyleNode",
+          "type": "StyleRule | FontFaceRule | ImportRule | KeyframesRule | MediaRule | SupportsRule | LayerRule",
+          "kind": "typealias"
+        },
+        {
+          "name": "cssChunksToMap",
+          "type": "unknown",
+          "kind": "function"
+        },
+        {
+          "name": "parse",
+          "type": "unknown",
+          "kind": "function"
+        }
+      ]
+    },
+    {
+      "name": "LynxEncodePlugin",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "LynxEncodePlugin",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(options?: LynxEncodePluginOptions): LynxEncodePlugin",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "options",
+              "type": "LynxEncodePluginOptions",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "LynxEncodePlugin"
+          }
+        },
+        {
+          "name": "BEFORE_EMIT_STAGE",
+          "type": "number",
+          "summary": "The stage of the beforeEmit hook.",
+          "kind": "property"
+        },
+        {
+          "name": "BEFORE_ENCODE_STAGE",
+          "type": "number",
+          "summary": "The stage of the beforeEncode hook.",
+          "kind": "property"
+        },
+        {
+          "name": "defaultOptions",
+          "type": "Readonly<Required<LynxEncodePluginOptions>>",
+          "external": "typescript",
+          "summary": "`defaultOptions` is the default options that the [`LynxEncodePlugin`](api:LynxEncodePlugin) uses.",
+          "examples": [
+            "`defaultOptions` can be used to change part of the option and keep others as the default value.\n\n```js\n// webpack.config.js\nimport { LynxEncodePlugin } from '@lynx-js/template-webpack-plugin'\nexport default {\n  plugins: [\n    new LynxEncodePlugin({\n      ...LynxEncodePlugin.defaultOptions,\n      enableRemoveCSSScope: true,\n    }),\n  ],\n}\n```"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "ENCODE_STAGE",
+          "type": "number",
+          "summary": "The stage of the encode hook.",
+          "kind": "property"
+        },
+        {
+          "name": "encodePool",
+          "type": "Tinypool",
+          "external": "tinypool",
+          "summary": "Shared TASM encode worker pool: multiple entries (and multiple\n`LynxEncodePlugin` instances in the same process) share its worker\nslots for parallel encode; watch-mode rebuilds keep the same workers\nwarm. `availableParallelism()` honors cgroup CPU limits (containers,\nCI runners), so we don't need to subtract a core ourselves.",
+          "kind": "property"
+        },
+        {
+          "name": "apply",
+          "type": "apply(compiler: Compiler): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "compiler",
+              "type": "Compiler",
+              "description": "the webpack compiler"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "The entry point of a webpack plugin."
+        }
+      ]
+    },
+    {
+      "name": "LynxTemplatePlugin",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "LynxTemplatePlugin",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(options?: LynxTemplatePluginOptions): LynxTemplatePlugin",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "options",
+              "type": "LynxTemplatePluginOptions",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "LynxTemplatePlugin"
+          }
+        },
+        {
+          "name": "defaultOptions",
+          "type": "Readonly<Required<LynxTemplatePluginOptions>>",
+          "external": "typescript",
+          "summary": "`defaultOptions` is the default options that the [`LynxTemplatePlugin`](api:LynxTemplatePlugin) uses.",
+          "examples": [
+            "`defaultOptions` can be used to change part of the option and keep others as the default value.\n\n```js\n// webpack.config.js\nimport { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'\nexport default {\n  plugins: [\n    new LynxTemplatePlugin({\n      ...LynxTemplatePlugin.defaultOptions,\n      enableRemoveCSSScope: true,\n    }),\n  ],\n}\n```"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "apply",
+          "type": "apply(compiler: Compiler): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "compiler",
+              "type": "Compiler",
+              "description": "the webpack compiler"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "The entry point of a webpack plugin."
+        },
+        {
+          "name": "convertCSSChunksToMap",
+          "type": "convertCSSChunksToMap(cssChunks: (string | { content: string })[], plugins: Plugin[], enableCSSSelector: boolean): { cssMap: Record<string, LynxStyleNode[]>; cssSource: Record<string, string> }",
+          "kind": "method",
+          "params": [
+            {
+              "name": "cssChunks",
+              "type": "(string | { content: string })[]",
+              "description": "The CSS chunks content."
+            },
+            {
+              "name": "plugins",
+              "type": "Plugin[]"
+            },
+            {
+              "name": "enableCSSSelector",
+              "type": "boolean"
+            }
+          ],
+          "returns": {
+            "type": "{ cssMap: Record<string, LynxStyleNode[]>; cssSource: Record<string, string> }",
+            "description": "The CSS map and css source."
+          },
+          "summary": "Convert the css chunks to css map.",
+          "remarks": "This helper currently forwards to `cssChunksToMap`.\n\nThe returned `cssSource` is keyed by `cssId` and uses the synthetic\nfilename format `/cssId/<id>.css`.\n\nThis helper does not remap generated `loc` fields to original source\ncoordinates.",
+          "examples": [
+            "```\n(console.log(await convertCSSChunksToMap(\n  '.red { color: red; }',\n  {\n    targetSdkVersion: '3.2',\n    enableCSSSelector: true,\n  },\n)));\n```"
+          ]
+        },
+        {
+          "name": "getAsyncChunkLayoutName",
+          "type": "getAsyncChunkLayoutName(compilation: Compilation, chunkId: string | number): string | undefined",
+          "kind": "method",
+          "params": [
+            {
+              "name": "compilation",
+              "type": "Compilation"
+            },
+            {
+              "name": "chunkId",
+              "type": "string | number"
+            }
+          ],
+          "returns": {
+            "type": "string | undefined"
+          },
+          "summary": "Map an async chunk id to `<lazy bundle name>/<layer>`, used to route a lazy\nbundle's intermediate js/css/hmr outputs into a single per-bundle directory.\nReturns undefined for non-lazy chunks."
+        },
+        {
+          "name": "getLynxTemplatePluginHooks",
+          "type": "getLynxTemplatePluginHooks(compilation: Compilation): TemplateHooks",
+          "kind": "method",
+          "params": [
+            {
+              "name": "compilation",
+              "type": "Compilation"
+            }
+          ],
+          "returns": {
+            "type": "TemplateHooks"
+          },
+          "summary": "Returns all public hooks of the Lynx template webpack plugin for the given compilation"
+        }
+      ]
+    },
+    {
+      "name": "WebEncodePlugin",
+      "kind": "class",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(): WebEncodePlugin",
+          "kind": "constructor",
+          "params": [],
+          "returns": {
+            "type": "WebEncodePlugin"
+          }
+        },
+        {
+          "name": "BEFORE_ENCODE_HOOK_STAGE",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "ENCODE_HOOK_STAGE",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "apply",
+          "type": "apply(compiler: Compiler): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "compiler",
+              "type": "Compiler"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "deleteDebuggingAssets",
+          "type": "deleteDebuggingAssets(compilation: Compilation, assets: ({ name: string } | undefined)[]): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "compilation",
+              "type": "Compilation"
+            },
+            {
+              "name": "assets",
+              "type": "({ name: string } | undefined)[]"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "The deleteDebuggingAssets delete all the assets that are inlined into the template."
+        }
+      ]
+    },
+    {
+      "name": "CustomSectionNaming",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Names the custom section a chunk is emitted as.",
+      "remarks": "Returning `undefined` keeps a chunk out of the custom sections. A background\nchunk left out stays in the manifest, which is where the runtime looks for\nit.",
+      "members": [
+        {
+          "name": "background",
+          "type": "background(manifestKey: string, index: number): string | undefined",
+          "kind": "method",
+          "params": [
+            {
+              "name": "manifestKey",
+              "type": "string",
+              "description": "The key the chunk has in the manifest. A lazy bundle\nkeys it by path (`/.rspeedy/lazy-bundle/…/background.js`), an external\nbundle by asset name."
+            },
+            {
+              "name": "index",
+              "type": "number"
+            }
+          ],
+          "returns": {
+            "type": "string | undefined"
+          }
+        },
+        {
+          "name": "css",
+          "type": "css(assetName: string, index: number): string | undefined",
+          "kind": "method",
+          "params": [
+            {
+              "name": "assetName",
+              "type": "string"
+            },
+            {
+              "name": "index",
+              "type": "number"
+            }
+          ],
+          "returns": {
+            "type": "string | undefined"
+          }
+        },
+        {
+          "name": "mainThread",
+          "type": "mainThread(assetName: string, index: number): string | undefined",
+          "kind": "method",
+          "params": [
+            {
+              "name": "assetName",
+              "type": "string"
+            },
+            {
+              "name": "index",
+              "type": "number"
+            }
+          ],
+          "returns": {
+            "type": "string | undefined"
+          }
+        }
+      ]
+    },
+    {
+      "name": "EncodeOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The options for encoding a Lynx bundle.",
+      "members": [
+        {
+          "name": "compilerOptions",
+          "type": "Record<string, string | boolean>",
+          "external": "typescript",
+          "kind": "property"
+        },
+        {
+          "name": "customSections",
+          "type": "Record<string, { content: string | Record<string, unknown> | undefined; encoding?: \"JsBytecode\" | \"CSS\"; type?: \"lazy\" }>",
+          "external": "typescript",
+          "kind": "property"
+        },
+        {
+          "name": "elementTemplate",
+          "optional": true,
+          "type": "Record<string, unknown>",
+          "external": "typescript",
+          "summary": "Element template data used by encoders that support element template output.",
+          "kind": "property"
+        },
+        {
+          "name": "lepusCode",
+          "type": "{ filename: string | undefined; lepusChunk: Record<string, string>; root: string | undefined } | undefined",
+          "kind": "property"
+        },
+        {
+          "name": "manifest",
+          "optional": true,
+          "type": "Record<string, string | undefined>",
+          "external": "typescript",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LynxEncodePluginOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The options for LynxEncodePluginOptions",
+      "members": [
+        {
+          "name": "inlineScripts",
+          "optional": true,
+          "type": "InlineChunkConfig",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LynxTemplatePluginOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The options for LynxTemplatePlugin",
+      "members": [
+        {
+          "name": "appType",
+          "optional": true,
+          "type": "\"card\" | \"DynamicComponent\"",
+          "summary": "The kind of bundle to encode.",
+          "default": "`'DynamicComponent'` for a lazy bundle, `'card'` otherwise.",
+          "kind": "property"
+        },
+        {
+          "name": "chunks",
+          "optional": true,
+          "type": "\"all\" | string[]",
+          "summary": "List all entries which should be injected",
+          "default": "`'all'`",
+          "kind": "property"
+        },
+        {
+          "name": "cssPlugins",
+          "type": "Plugin[]",
+          "summary": "plugins passed to parser",
+          "kind": "property"
+        },
+        {
+          "name": "customCSSInheritanceList",
+          "type": "string[] | undefined",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.customCSSInheritanceList`",
+          "examples": [
+            "By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n plugins: [\n   pluginReactLynx({\n     enableCSSInheritance: true,\n     customCSSInheritanceList: ['direction', 'overflow']\n   }),\n ],\n}\n```"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "customSectionNaming",
+          "optional": true,
+          "type": "(compilation: Compilation) => CustomSectionNaming",
+          "summary": "Assemble every chunk into a custom section, named by this strategy.",
+          "remarks": "A bundle assembled this way carries no `lepusCode`, and only the chunks\nleft unnamed stay in the manifest. A `FetchBundle` lazy bundle is assembled\nthis way by default, under the three section names its runtime resolves.",
+          "kind": "property"
+        },
+        {
+          "name": "debugInfoOutside",
+          "type": "boolean",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.debugInfoOutside`",
+          "kind": "property"
+        },
+        {
+          "name": "defaultDisplayLinear",
+          "type": "boolean",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.defaultDisplayLinear`",
+          "kind": "property"
+        },
+        {
+          "name": "defaultOverflowVisible",
+          "optional": true,
+          "type": "boolean",
+          "summary": "When enabled, the default overflow CSS property for views and components will be `'visible'`. Otherwise, it will be `'hidden'`.",
+          "default": "`true`",
+          "kind": "property"
+        },
+        {
+          "name": "dsl",
+          "optional": true,
+          "type": "\"tt\" | \"react\" | \"react_nodiff\"",
+          "summary": "Declare the current dsl to the encoder.",
+          "kind": "property"
+        },
+        {
+          "name": "enableA11y",
+          "type": "boolean",
+          "summary": "Use Android View level APIs and system implementations.",
+          "kind": "property"
+        },
+        {
+          "name": "enableAccessibilityElement",
+          "type": "boolean",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableAccessibilityElement`",
+          "kind": "property"
+        },
+        {
+          "name": "enableCSSInheritance",
+          "type": "boolean",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInheritance`",
+          "kind": "property"
+        },
+        {
+          "name": "enableCSSInvalidation",
+          "type": "boolean",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInvalidation`",
+          "kind": "property"
+        },
+        {
+          "name": "enableCSSSelector",
+          "type": "boolean",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSSelector`",
+          "kind": "property"
+        },
+        {
+          "name": "enableNewGesture",
+          "type": "boolean",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableNewGesture`",
+          "kind": "property"
+        },
+        {
+          "name": "enableRemoveCSSScope",
+          "type": "boolean",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope`",
+          "kind": "property"
+        },
+        {
+          "name": "enableSectionBytecode",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether to compile the main thread sections to `JsBytecode`.",
+          "default": "```ts\nEnabled outside of development and debug builds, which keeps\nthe sections readable while debugging.\n```",
+          "kind": "property"
+        },
+        {
+          "name": "excludeChunks",
+          "optional": true,
+          "type": "string[]",
+          "summary": "List all entries which should not be injected",
+          "default": "`[]`",
+          "kind": "property"
+        },
+        {
+          "name": "experimental_isLazyBundle",
+          "optional": true,
+          "type": "boolean",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle`",
+          "alpha": true,
+          "kind": "property"
+        },
+        {
+          "name": "filename",
+          "optional": true,
+          "type": "string | ((entryName: string) => string)",
+          "summary": "The file to write the template to.\nSupports subdirectories eg: `assets/template.js`.\n[name] will be replaced by the entry name.\nSupports a function to generate the name.",
+          "default": "`'[name].bundle'`",
+          "kind": "property"
+        },
+        {
+          "name": "intermediate",
+          "optional": true,
+          "type": "string",
+          "summary": "The directory of the intermediate files of a bundle.",
+          "default": "`'.lynx'`",
+          "kind": "property"
+        },
+        {
+          "name": "lazyBundleFetcher",
+          "optional": true,
+          "type": "\"FetchBundle\" | \"QueryComponent\"",
+          "summary": "Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.\n`pluginReactLynx`) from the host engine version and any\n`REACT_LAZY_BUNDLE_FETCHER` env override.",
+          "kind": "property"
+        },
+        {
+          "name": "lazyBundleFilename",
+          "optional": true,
+          "type": "string",
+          "summary": "The filename of the lazy bundle.",
+          "default": "`'lazy-bundle/[name].[fullhash].bundle'`",
+          "kind": "property"
+        },
+        {
+          "name": "removeDescendantSelectorScope",
+          "type": "boolean",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.removeDescendantSelectorScope`",
+          "kind": "property"
+        },
+        {
+          "name": "targetSdkVersion",
+          "type": "string",
+          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion`",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ProcessTasmCSSDiagnosticsOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options for [`processTasmCSSDiagnostics`](api:processTasmCSSDiagnostics).",
+      "members": [
+        {
+          "name": "context",
+          "type": "string",
+          "summary": "The webpack compiler context used to resolve relative source paths.",
+          "kind": "property"
+        },
+        {
+          "name": "cssDiagnostics",
+          "type": "unknown",
+          "summary": "The raw `css_diagnostics` value returned by TASM.",
+          "kind": "property"
+        },
+        {
+          "name": "cssSourceMaps",
+          "type": "string[]",
+          "summary": "CSS source map contents from the CSS chunks for the current template.",
+          "kind": "property"
+        },
+        {
+          "name": "emittedWarnings",
+          "optional": true,
+          "type": "Set<string>",
+          "external": "typescript",
+          "summary": "A mutable set used to skip diagnostics that were already emitted.",
+          "kind": "property"
+        },
+        {
+          "name": "fileExists",
+          "optional": true,
+          "type": "(path: string) => boolean",
+          "summary": "A file existence check used before attaching a mapped source location.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ResolvedTasmCSSDiagnostic",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "A TASM CSS diagnostic with a formatted message and optional source map\nlocation.",
+      "members": [
+        {
+          "name": "column",
+          "type": "number",
+          "summary": "The generated CSS column reported by TASM.",
+          "kind": "property"
+        },
+        {
+          "name": "line",
+          "type": "number",
+          "summary": "The generated CSS line reported by TASM.",
+          "kind": "property"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "summary": "The warning message suitable for webpack diagnostics.",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "optional": true,
+          "type": "string",
+          "summary": "The unsupported CSS syntax name, when TASM reports one.",
+          "kind": "property"
+        },
+        {
+          "name": "sourceColumn",
+          "optional": true,
+          "type": "number",
+          "summary": "The original source column resolved from the CSS source map.",
+          "kind": "property"
+        },
+        {
+          "name": "sourceFile",
+          "optional": true,
+          "type": "string",
+          "summary": "The original source file resolved from the CSS source map.",
+          "kind": "property"
+        },
+        {
+          "name": "sourceLine",
+          "optional": true,
+          "type": "number",
+          "summary": "The original source line resolved from the CSS source map.",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "optional": true,
+          "type": "string",
+          "summary": "The diagnostic category, such as `property`.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "TasmCSSDiagnostic",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "A CSS diagnostic emitted by TASM during template encode.",
+      "members": [
+        {
+          "name": "column",
+          "type": "number",
+          "summary": "The generated CSS column reported by TASM.",
+          "kind": "property"
+        },
+        {
+          "name": "line",
+          "type": "number",
+          "summary": "The generated CSS line reported by TASM.",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "optional": true,
+          "type": "string",
+          "summary": "The unsupported CSS syntax name, when TASM reports one.",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "optional": true,
+          "type": "string",
+          "summary": "The diagnostic category, such as `property`.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "TemplateHooks",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "To allow other plugins to alter the Template, this plugin executes\n[tapable](https://github.com/webpack/tapable) hooks.",
+      "examples": [
+        "```js\nclass MyPlugin {\n  apply(compiler) {\n    compiler.hooks.compilation.tap(\"MyPlugin\", (compilation) => {\n      console.log(\"The compiler is starting a new compilation...\");\n\n      LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(\n        \"MyPlugin\", // <-- Set a meaningful name here for stacktraces\n        (data, cb) => {\n          // Manipulate the content\n          modifyTemplate(data.template)\n          // Tell webpack to move on\n          cb(null, data);\n        },\n      );\n    });\n  }\n}\n```"
+      ],
+      "members": [
+        {
+          "name": "afterEmit",
+          "type": "AsyncSeriesWaterfallHook<{ outputName: string }>",
+          "external": "@rspack/lite-tapable",
+          "summary": "Called after the template is emitted.",
+          "alpha": true,
+          "kind": "property"
+        },
+        {
+          "name": "asyncChunkName",
+          "type": "SyncWaterfallHook<string>",
+          "external": "@rspack/lite-tapable",
+          "summary": "Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template.",
+          "alpha": true,
+          "kind": "property"
+        },
+        {
+          "name": "beforeEmit",
+          "type": "AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: EncodeOptions; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>",
+          "external": "@rspack/lite-tapable",
+          "summary": "Called before the template is emitted. Can be used to modify the template.",
+          "alpha": true,
+          "kind": "property"
+        },
+        {
+          "name": "beforeEncode",
+          "type": "AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>",
+          "external": "@rspack/lite-tapable",
+          "summary": "Called before the encode process. Can be used to modify the encode options.",
+          "alpha": true,
+          "kind": "property"
+        },
+        {
+          "name": "encode",
+          "type": "AsyncSeriesBailHook<{ encodeOptions: EncodeOptions; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>",
+          "external": "@rspack/lite-tapable",
+          "summary": "Call the encode process.",
+          "alpha": true,
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "CSSPlugins",
+      "kind": "variable",
+      "type": "{ parserPlugins: typeof Plugins }",
+      "default": "..."
+    },
+    {
+      "name": "processTasmCSSDiagnostics",
+      "kind": "function",
+      "type": "processTasmCSSDiagnostics(__namedParameters: ProcessTasmCSSDiagnosticsOptions): ResolvedTasmCSSDiagnostic[]",
+      "signatures": [
+        {
+          "text": "processTasmCSSDiagnostics(__namedParameters: ProcessTasmCSSDiagnosticsOptions): ResolvedTasmCSSDiagnostic[]",
+          "params": [
+            {
+              "name": "__namedParameters",
+              "type": "ProcessTasmCSSDiagnosticsOptions"
+            }
+          ],
+          "returns": {
+            "type": "ResolvedTasmCSSDiagnostic[]"
+          },
+          "summary": "Parses, source-map-resolves, and deduplicates TASM CSS diagnostics."
+        }
+      ],
+      "summary": "Parses, source-map-resolves, and deduplicates TASM CSS diagnostics."
+    }
+  ]
+}

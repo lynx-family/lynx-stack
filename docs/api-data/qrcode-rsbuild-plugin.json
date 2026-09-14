@@ -1,0 +1,72 @@
+{
+  "id": "qrcode-rsbuild-plugin",
+  "package": "@lynx-js/qrcode-rsbuild-plugin",
+  "version": "0.7.1",
+  "description": "A rsbuild plugin for printing QRCode in terminal",
+  "section": "rspeedy",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-qrcode",
+  "exports": [
+    {
+      "name": "PluginQRCodeOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The options for [`pluginQRCode`](api:pluginQRCode).",
+      "members": [
+        {
+          "name": "fullscreen",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Opt in to the fullscreen variant of the Lynx bundle URL (appends\n`?fullscreen=true`, opening the bundle in LynxExplorer with the in-app\nnavigation chrome stripped).\n\nWhen enabled, the plugin:\n- Appends a `fullscreen` entry to the schema rotation — the QR keeps\n  opening on your default schema; press `a` in the dev console to switch\n  to the `fullscreen` variant.\n- Appends an `∟ Fullscreen` URL line under each Lynx bundle URL printed\n  by the dev server.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "schema",
+          "optional": true,
+          "type": "CustomizedSchemaFn",
+          "ref": "CustomizedSchemaFn",
+          "summary": "Customize the generated schema.",
+          "examples": [
+            "```js\nimport { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  plugins: [\n    pluginQRCode({\n      schema(url) {\n        return `lynx://${url}?dev=1`\n      },\n    }),\n  ],\n})\n```",
+            "- Use multiple schemas:\n\nYou may press `a` in the terminal to switch between schemas.\n\n```js\nimport { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  plugins: [\n    pluginQRCode({\n      schema(url) {\n        return {\n          http: url,\n          foo: `foo://lynx?url=${encodeURIComponent(url)}&dev=1`,\n          bar: `bar://lynx?url=${encodeURIComponent(url)}`,\n        }\n      },\n    }),\n  ],\n})\n```"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "CustomizedSchemaFn",
+      "kind": "typealias",
+      "type": "(url: string) => string | Record<string, string>",
+      "summary": "`PluginQRCodeOptions.schema`"
+    },
+    {
+      "name": "pluginQRCode",
+      "kind": "function",
+      "type": "pluginQRCode(options?: PluginQRCodeOptions): RsbuildPlugin",
+      "signatures": [
+        {
+          "text": "pluginQRCode(options?: PluginQRCodeOptions): RsbuildPlugin",
+          "params": [
+            {
+              "name": "options",
+              "type": "PluginQRCodeOptions",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "RsbuildPlugin"
+          },
+          "summary": "Create a rsbuild plugin for printing QRCode.",
+          "examples": [
+            "```ts\n// rsbuild.config.ts\nimport { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'\nexport default {\n  plugins: [pluginQRCode()],\n}\n```"
+          ]
+        }
+      ],
+      "summary": "Create a rsbuild plugin for printing QRCode.",
+      "examples": [
+        "```ts\n// rsbuild.config.ts\nimport { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'\nexport default {\n  plugins: [pluginQRCode()],\n}\n```"
+      ]
+    }
+  ]
+}

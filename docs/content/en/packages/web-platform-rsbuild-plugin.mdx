@@ -1,0 +1,83 @@
+---
+title: '@lynx-js/web-platform-rsbuild-plugin'
+---
+
+# @lynx-js/web-platform-rsbuild-plugin
+
+{/* @api PackageHeader package="web-platform-rsbuild-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/web-platform-rsbuild-plugin</code> <span className="api-pkg-version">v0.1.2</span> · <a href="https://www.npmjs.com/package/@lynx-js/web-platform-rsbuild-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-rsbuild-plugin" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-rsbuild-plugin/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+
+Lynx3 Web Platform rsbuild plugin
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/web-platform-rsbuild-plugin -D" />
+
+## API
+
+{/* @api ApiExports package="web-platform-rsbuild-plugin" */}
+
+## Functions \{#functions\}
+
+### `getNapiModulesPathRule()` \{#getnapimodulespathrule\}
+
+```ts
+getNapiModulesPathRule(napiModulesPath: string): { loader: string; options: { napiModulesPath: string }; test: RegExp }
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `napiModulesPath` | `string` |  |
+
+**Returns:** `{ loader: string; options: { napiModulesPath: string }; test: RegExp }`
+
+### `getNativeModulesPathRule()` \{#getnativemodulespathrule\}
+
+```ts
+getNativeModulesPathRule(nativeModulesPath: string): { loader: string; options: { nativeModulesPath: string }; test: RegExp }
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `nativeModulesPath` | `string` |  |
+
+**Returns:** `{ loader: string; options: { nativeModulesPath: string }; test: RegExp }`
+
+### `pluginWebPlatform()` \{#pluginwebplatform\}
+
+```ts
+pluginWebPlatform(userOptions?: PluginWebPlatformOptions): RsbuildPlugin
+```
+
+Create a rsbuild plugin for Lynx Web Platform.
+
+```ts
+// rsbuild.config.ts
+import { pluginWebPlatform } from '@lynx-js/web-platform-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core';
+
+export default defineConfig({
+  plugins: [pluginWebPlatform({
+    // replace with your actual native-modules file path
+    nativeModulesPath: path.resolve(__dirname, './index.native-modules.ts'),
+  })],
+})
+```
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `userOptions?` | `PluginWebPlatformOptions` |  |
+
+**Returns:** `RsbuildPlugin`
+
+{/* @api-end */}

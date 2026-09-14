@@ -1,0 +1,80 @@
+---
+title: '@lynx-js/css-extract-webpack-plugin'
+---
+
+# @lynx-js/css-extract-webpack-plugin
+
+{/* @api PackageHeader package="css-extract-webpack-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/css-extract-webpack-plugin</code> <span className="api-pkg-version">v0.11.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/css-extract-webpack-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/css-extract-webpack-plugin" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/css-extract-webpack-plugin/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+:::tip 内部包
+此包是 Lynx 构建引擎的一部分，由 [`pluginLynx`](/zh/rspeedy/plugins/plugin-lynx) 自动应用。其 API 文档面向插件作者，应用代码不会直接使用它。
+:::
+
+此插件将 CSS 提取到单独的文件中，为每个包含 CSS 的 JS 文件创建一个 CSS 文件。
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/css-extract-webpack-plugin -D" />
+
+## API
+
+{/* @api ApiExports package="css-extract-webpack-plugin" */}
+
+## 类 \{#\}
+
+### `CssExtractRspackPlugin` \{#cssextractrspackplugin\}
+
+CssExtractRspackPlugin 是 Lynx 的 CSS 提取插件。
+其用法与 Web 中的 [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin.html) 相同。
+
+```js
+import { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'
+export default {
+  plugins: [new CssExtractRspackPlugin()],
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        uses: [CssExtractRspackPlugin.loader, 'css-loader'],
+      },
+    ],
+  },
+}
+```
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="cssextractrspackplugin-constructor"></a>`constructor` | `constructor(options?: CssExtractRspackPluginOptions): CssExtractRspackPlugin` |  |
+| <a id="cssextractrspackplugin-defaultoptions"></a>`defaultOptions` | `Readonly<CssExtractRspackPluginOptions & Pick<Required<CssExtractRspackPluginOptions>, "cssPlugins">>` | `defaultOptions` 是 [`CssExtractRspackPlugin`](#cssextractrspackplugin) 使用的默认选项。 |
+| <a id="cssextractrspackplugin-loader"></a>`loader` | `string` | 用于提取 CSS 的 loader。 |
+| <a id="cssextractrspackplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` | webpack 插件的入口。 |
+
+## 类型 \{#\}
+
+### `CssExtractRspackPluginOptions` \{#cssextractrspackpluginoptions\}
+
+`@lynx-js/css-extract-webpack-plugin#CssExtractRspackPlugin` 的选项
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="cssextractrspackpluginoptions-chunkfilename"></a>`chunkFilename?` | `string` | 非初始 CSS chunk 文件的名称 |
+| <a id="cssextractrspackpluginoptions-cssplugins"></a>`cssPlugins?` | `Plugin[]` | 传递给解析器的插件 |
+| <a id="cssextractrspackpluginoptions-filename"></a>`filename?` | `string` | 每个输出产物的名称。 |
+
+### `LoaderOptions` \{#loaderoptions\}
+
+CSS 提取 loader 的选项。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="loaderoptions-emit"></a>`emit?` | `boolean` | 与 [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin/tree/master?tab=readme-ov-file#emit) 相同。 控制是否将 CSS 输出到文件系统。 - 若为 `true`（默认），则输出文件（将文件写入文件系统）。 - 若为 `false`，插件会提取 CSS，但不会输出文件。 对于服务端包，通常可以禁用该选项。 |
+| <a id="loaderoptions-esmodule"></a>`esModule?` | `boolean` | `@lynx-js/rspeedy#CssExtractRspackLoaderOptions.esModule` |
+| <a id="loaderoptions-layer"></a>`layer?` | `string` | CSS 执行所在的 layer。 |
+
+{/* @api-end */}

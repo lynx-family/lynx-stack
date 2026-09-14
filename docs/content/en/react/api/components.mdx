@@ -1,0 +1,87 @@
+---
+title: Components
+---
+
+# Components
+
+Provider and consumer components for the data a Lynx page receives from the native side.
+
+{/* @api ApiExports package="react" include="GlobalPropsProvider,GlobalPropsConsumer,InitDataProvider,InitDataConsumer" */}
+
+## Constants \{#constants\}
+
+### `GlobalPropsProvider` \{#globalpropsprovider\}
+
+```ts
+const GlobalPropsProvider: FC<{ children?: ReactNode }>
+```
+
+The [Provider](https://react.dev/reference/react/createContext#provider) Component that provide `lynx.__globalProps`,
+you must wrap your JSX inside it
+
+```ts
+import { root } from "@lynx-js/react"
+
+function App() {
+  return (
+    <GlobalPropsConsumer children={(globalProps) => <view>...</view>}/>
+  )
+}
+
+root.render(
+  <GlobalPropsProvider>
+     <App/>
+  </GlobalPropsProvider>
+);
+
+```
+
+### `GlobalPropsConsumer` \{#globalpropsconsumer\}
+
+```ts
+const GlobalPropsConsumer: Consumer<GlobalProps>
+```
+
+The [Consumer](https://react.dev/reference/react/createContext#consumer) Component that provide `lynx.__globalProps`.
+This should be used with [`GlobalPropsProvider`](#globalpropsprovider)
+
+### `InitDataProvider` \{#initdataprovider\}
+
+```ts
+const InitDataProvider: FC<{ children?: ReactNode }>
+```
+
+The [Provider](https://react.dev/reference/react/createContext#provider) Component that provide `initData`,
+you must wrap your JSX inside it
+
+```ts
+import { root } from "@lynx-js/react"
+
+function App() {
+  return (
+    <InitDataConsumer children={(initData) => <view>...</view>}/>
+  )
+}
+
+root.render(
+  <InitDataProvider>
+     <App/>
+  </InitDataProvider>
+);
+
+```
+
+### `InitDataConsumer` \{#initdataconsumer\}
+
+```ts
+const InitDataConsumer: Consumer<InitData>
+```
+
+The [Consumer](https://react.dev/reference/react/createContext#consumer) Component that provide `initData`.
+This should be used with [`InitDataProvider`](#initdataprovider)
+
+{/* @api-end */}
+
+## Built-in React components
+
+`Fragment` and `Suspense` are re-exported from React. `Component` and `PureComponent` are the React class component base classes; see the [React reference](https://react.dev/reference/react/components).

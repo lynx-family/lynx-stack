@@ -1,0 +1,181 @@
+---
+title: pluginVanillaLynx
+---
+
+# pluginVanillaLynx
+
+{/* @api PackageHeader package="vanilla-rsbuild-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/vanilla-rsbuild-plugin</code> <span className="api-pkg-version">v0.1.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/vanilla-rsbuild-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-vanilla" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-vanilla/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+Vanilla DSL 插件。它从直接调用 Element PAPI 的纯 JavaScript 构建 Lynx bundle，不依赖 UI 框架。
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/vanilla-rsbuild-plugin -D" />
+
+## 用法
+
+```ts title="lynx.config.ts"
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginVanillaLynx } from '@lynx-js/vanilla-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [pluginVanillaLynx()],
+})
+```
+
+## 选项
+
+{/* @api ApiOptions package="vanilla-rsbuild-plugin" type="PluginVanillaLynxOptions" */}
+
+### `bundleFilename` \{#bundlefilename\}
+
+- **类型:** `VanillaBundleFilename`
+
+覆盖最终的 `.bundle` 文件名。
+
+在 Rspeedy 下省略时，使用 `output.filename.bundle`。
+在 Rspeedy 之外，默认值为 `[name].[platform].bundle`。
+
+### `entries` \{#entries\}
+
+- **类型:** `Record<string, VanillaLynxEntry>` (来自 typescript)
+
+显式声明的双线程入口。
+
+省略时，每个 Rsbuild `source.entry` 都会被视为主线程
+入口，并按约定发现同级目录下可选的 `background.ts` 和
+`style.css` 文件。
+
+### `targetSdkVersion` <span className="api-badge api-badge-deprecated">已废弃</span> \{#targetsdkversion\}
+
+- **类型:** `string`
+
+:::warning 已废弃
+已废弃。
+:::
+
+[`PluginVanillaLynxOptions.engineVersion`](#pluginvanillalynxoptions-engineversion) 的别名。
+
+ 请改用 `engineVersion`。
+
+### 其他选项 \{#other-options\}
+
+| 名称 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="engineversion"></a>`engineVersion` | `string` | `'3.5'` | 输出的 bundle 所要求的最低 Lynx Engine 版本。 |
+
+{/* @api-end */}
+
+## API
+
+{/* @api ApiExports package="vanilla-rsbuild-plugin" exclude="PluginVanillaLynxOptions" optionsType="PluginVanillaLynxOptions" */}
+
+## 函数 \{#\}
+
+### `pluginVanillaLynx()` \{#pluginvanillalynx\}
+
+```ts
+pluginVanillaLynx(options: PluginVanillaLynxOptions): RsbuildPlugin
+```
+
+为 Rsbuild 或 Rspeedy 创建 Vanilla Lynx DSL 集成。
+
+逻辑入口可以显式声明其主线程与后台线程
+源文件。作为简写，Rsbuild 入口会被视为主线程
+源文件，并按约定发现同级可选的 `background.ts` 和 `style.css`
+文件。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `options` | `PluginVanillaLynxOptions` |  |
+
+**返回值:** `RsbuildPlugin`
+
+## 常量 \{#\}
+
+### `LAYERS` \{#layers\}
+
+```ts
+const LAYERS: Readonly<{ BACKGROUND: "vanilla:background"; MAIN_THREAD: "vanilla:main-thread" }>
+```
+
+Vanilla Lynx 入口使用的 Rspack layer。
+
+## 类型 \{#\}
+
+### `LynxTemplatePlugin` \{#lynxtemplateplugin\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="lynxtemplateplugin-getlynxtemplatepluginhooks"></a>`getLynxTemplatePluginHooks` | `(compilation: Compilation) => TemplateHooks` |  |
+
+### `TemplateHooks` \{#templatehooks\}
+
+为便于其他插件修改 template，该插件会执行
+[tapable](https://github.com/webpack/tapable) 钩子。
+
+```js
+class MyPlugin {
+  apply(compiler) {
+    compiler.hooks.compilation.tap("MyPlugin", (compilation) => {
+      console.log("The compiler is starting a new compilation...");
+
+      LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(
+        "MyPlugin", // <-- Set a meaningful name here for stacktraces
+        (data, cb) => {
+          // Manipulate the content
+          modifyTemplate(data.template)
+          // Tell webpack to move on
+          cb(null, data);
+        },
+      );
+    });
+  }
+}
+```
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="templatehooks-afteremit"></a>`afterEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ outputName: string }>` | 在 template 输出后调用。 |
+| <a id="templatehooks-asyncchunkname"></a>`asyncChunkName` <span className="api-badge api-badge-alpha">Alpha</span> | `SyncWaterfallHook<string>` | 获取异步 chunk 的真实名称。`asyncChunkName` 相同的文件会被放入同一个 template。 |
+| <a id="templatehooks-beforeemit"></a>`beforeEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: EncodeOptions; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>` | 在 template 输出前调用，可用于修改 template。 |
+| <a id="templatehooks-beforeencode"></a>`beforeEncode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>` | 在编码流程开始前调用，可用于修改编码选项。 |
+| <a id="templatehooks-encode"></a>`encode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesBailHook<{ encodeOptions: EncodeOptions; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>` | 执行编码流程。 |
+
+### `VanillaBundleFilenameContext` \{#vanillabundlefilenamecontext\}
+
+传递给 Vanilla Lynx bundle 文件名函数的上下文。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="vanillabundlefilenamecontext-entryname"></a>`entryName` | `string` | Rsbuild 逻辑入口名称。 |
+| <a id="vanillabundlefilenamecontext-lazybundle"></a>`lazyBundle` | `false` | Vanilla Lynx 目前仅输出主卡片 bundle。 |
+| <a id="vanillabundlefilenamecontext-platform"></a>`platform` | `string` | Rsbuild environment 名称。 |
+
+### `VanillaLynxEntry` \{#vanillalynxentry\}
+
+Vanilla Lynx 逻辑入口的双线程源文件。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="vanillalynxentry-background"></a>`background?` | `string \| false` | 在后台 JavaScript 线程中执行的源文件。 |
+| <a id="vanillalynxentry-css"></a>`css?` | `string \| false` | 编码进 Lynx template 的 CSS 源文件。 |
+| <a id="vanillalynxentry-mainthread"></a>`mainThread` | `string` | 在 Lynx 主线程上执行的模块请求，可使用 Element PAPI 全局变量。 |
+
+### `VanillaBundleFilename` \{#vanillabundlefilename\}
+
+```ts
+type VanillaBundleFilename = string | ((context: VanillaBundleFilenameContext) => string)
+```
+
+最终的 Vanilla Lynx bundle 文件名。
+
+{/* @api-end */}

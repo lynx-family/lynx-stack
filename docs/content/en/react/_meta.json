@@ -1,0 +1,16 @@
+[
+  {
+    "type": "dir",
+    "name": "api",
+    "label": "API",
+    "collapsible": false
+  },
+  {
+    "type": "divider"
+  },
+  {
+    "type": "custom-link",
+    "label": "Guides on lynxjs.org",
+    "link": "https://lynxjs.org/react/"
+  }
+]

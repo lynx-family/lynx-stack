@@ -1,0 +1,16 @@
+[
+  {
+    "type": "file",
+    "name": "index",
+    "label": "总览"
+  },
+  "hooks",
+  "components",
+  "functions",
+  "types",
+  "directives",
+  "macros",
+  "global-events",
+  "import-attributes",
+  "testing-library"
+]

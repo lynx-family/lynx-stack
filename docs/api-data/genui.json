@@ -1,0 +1,425 @@
+{
+  "id": "genui",
+  "package": "@lynx-js/genui",
+  "version": "0.4.0",
+  "description": "Generative UI for Lynx.",
+  "section": "packages",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/genui",
+  "exports": [
+    {
+      "name": "A2UI",
+      "kind": "variable",
+      "type": "any"
+    },
+    {
+      "name": "A2UI_PROTOCOL_VERSION",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "A2UIClientEventMessage",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "A2UIComponentProp",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "A2UIComponentSpec",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "A2UIEvent",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "A2UIExample",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "A2UIFunctionSpec",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "A2UIPromptCatalog",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "A2UIPromptJsonSchema",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "A2UIProps",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "ActionProps",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "BASIC_CATALOG_EXAMPLES",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "BASIC_CATALOG_ID",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "basicFunctions",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "buildA2UISystemPrompt",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "buildA2UISystemPromptAsync",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "buildLynxXmlSystemPrompt",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "BuildLynxXmlSystemPromptOptions",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "buildOpenUiSystemPrompt",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "BuildOpenUiSystemPromptOptions",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "BuildSystemPromptOptions",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "CatalogFunction",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "CheckLike",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "ComponentInstance",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "createA2UICatalog",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "createA2UICatalogFromManifests",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "createFallbackMessagesFromPlainText",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "createMessageStore",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "createOpenUiPromptLibrary",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "CreateOpenUiPromptLibraryOptions",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "createResource",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "createTextCardMessages",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "executeFunctionCall",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "extractCatalogComponents",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "extractCatalogFunctions",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "ExtractCatalogOptions",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "ExtractedA2UICatalog",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "ExtractedCatalogComponent",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "ExtractedJsonSchema",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "findCatalogSourceFiles",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "FunctionCallContext",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "FunctionDefinition",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "FunctionEntry",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "FunctionImpl",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "functionRegistry",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "FunctionRegistry",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "GenericComponentProps",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "isDataBinding",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "isFunctionCall",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "loadBasicCatalog",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "LYNX_XML_ENGINE_VERSION",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "LYNX_XML_SYSTEM_PROMPT",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "MessageProcessor",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "MessageStore",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "MessageStoreOptions",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "NodeRenderer",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "normalizePayloadToMessages",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "OPENUI_SYSTEM_PROMPT",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "openUiPromptActionPropSchema",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "OpenUiPromptComponent",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "OpenUiPromptLibrary",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "prepareMessagesForProcessing",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "RawResource",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "ReadA2UICatalogDirectoryOptions",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "readA2UICatalogFromDirectory",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "registerBasicFunctions",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "renderCatalogReference",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "resolveDynamicValue",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "resolveFunctionArguments",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "ResolveFunctionOptions",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "Resource",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "ResourceInfo",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "ResourceStatus",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "ServerToClientMessage",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "SignalStore",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "Surface",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "SurfaceId",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "useAction",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "useChecks",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "useDataBinding",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "UserActionPayload",
+      "kind": "reference",
+      "type": "unknown"
+    },
+    {
+      "name": "useResolvedProps",
+      "kind": "reference",
+      "type": "unknown"
+    }
+  ]
+}

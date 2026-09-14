@@ -1,0 +1,181 @@
+---
+title: '@lynx-js/testing-environment'
+---
+
+# @lynx-js/testing-environment
+
+{/* @api PackageHeader package="testing-environment" */}
+
+<div className="api-pkg-header"><code>@lynx-js/testing-environment</code> <span className="api-pkg-version">v0.3.4</span> · <a href="https://www.npmjs.com/package/@lynx-js/testing-environment" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/testing-library/testing-environment" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/testing-library/testing-environment/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+
+`@lynx-js/testing-environment` is a pure-JavaScript implementation of the [Lynx Spec](https://lynxjs.org/api/engine/element-api), notably the [Element PAPI](https://lynxjs.org/api/engine/element-api) and [Dual-threaded Model](https://lynxjs.org/guide/spec#dual-threaded-model) for use with Node.js. In general, the goal of the project is to emulate enough of a subset of a Lynx environment to be useful for testing.
+
+The Element PAPI implementation is based on jsdom, for example `__CreateElement` will return a `LynxElement`, which extends `HTMLElement` from jsdom. You can reuse the testing utilities that are commonly used for DOM testing, such as [`@testing-library/dom`](https://github.com/testing-library/dom-testing-library) (for DOM querying) and [`@testing-library/jest-dom`](https://github.com/testing-library/jest-dom) (custom jest matchers for the DOM), etc.
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/testing-environment" />
+
+## API
+
+{/* @api ApiExports package="testing-environment" */}
+
+## Functions \{#functions\}
+
+### `initElementTree()` \{#initelementtree\}
+
+```ts
+initElementTree(): ElementTree
+```
+
+*No description yet.*
+
+**Returns:** `ElementTree`
+
+### `installLynxTestingEnv()` \{#installlynxtestingenv\}
+
+```ts
+installLynxTestingEnv(target: typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }, env: LynxEnv): void
+```
+
+Installs a `LynxTestingEnv` instance and its required globals onto a target.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `target` | `typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }` |  |
+| `env` | `LynxEnv` |  |
+
+### `uninstallLynxTestingEnv()` \{#uninstalllynxtestingenv\}
+
+```ts
+uninstallLynxTestingEnv(target: typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }): void
+```
+
+Removes the globals installed by `installLynxTestingEnv`.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `target` | `typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }` |  |
+
+## Classes \{#classes\}
+
+### `GlobalEventEmitter` \{#globaleventemitter\}
+
+The Lynx `GlobalEventEmitter` module, accessible via `lynx.getJSModule('GlobalEventEmitter')`.
+
+Framework testing libraries can use this to trigger and listen to cross-thread events.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="globaleventemitter-constructor"></a>`constructor` | `constructor(): GlobalEventEmitter` |  |
+| <a id="globaleventemitter-listeners"></a>`listeners` | `Record<string, Function[]>` |  |
+| <a id="globaleventemitter-addlistener"></a>`addListener` | `addListener(eventName: string, listener: Function): void` |  |
+| <a id="globaleventemitter-clear"></a>`clear` | `clear(): void` |  |
+| <a id="globaleventemitter-emit"></a>`emit` | `emit(eventName: string, args: any[]): void` |  |
+| <a id="globaleventemitter-removealllisteners"></a>`removeAllListeners` | `removeAllListeners(eventName?: string): void` |  |
+| <a id="globaleventemitter-removelistener"></a>`removeListener` | `removeListener(eventName: string, listener: Function): void` |  |
+| <a id="globaleventemitter-toggle"></a>`toggle` | `toggle(eventName: string, data: unknown[]): void` |  |
+| <a id="globaleventemitter-trigger"></a>`trigger` | `trigger(eventName: string, params: string \| Record<any, any>): void` |  |
+
+### `LynxTestingEnv` \{#lynxtestingenv\}
+
+A pure-JavaScript implementation of the [Lynx Spec](https://lynxjs.org/guide/spec.html),
+notably the [Element PAPI](https://lynxjs.org/api/engine/element-api) and [Dual-threaded Model](https://lynxjs.org/guide/spec#dual-threaded-model) for use with Node.js.
+
+```ts
+import { LynxTestingEnv } from '@lynx-js/testing-environment';
+import { JSDOM } from 'jsdom';
+
+const lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });
+
+lynxTestingEnv.switchToMainThread();
+// use the main thread Element PAPI
+const page = __CreatePage('0', 0);
+const view = __CreateView(0);
+__AppendElement(page, view);
+
+```
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="lynxtestingenv-constructor"></a>`constructor` | `constructor(env?: LynxEnv): LynxTestingEnv` |  |
+| <a id="lynxtestingenv-backgroundthread"></a>`backgroundThread` | `LynxGlobalThis` | The global object for the background thread. |
+| <a id="lynxtestingenv-env"></a>`env` | `LynxEnv` |  |
+| <a id="lynxtestingenv-mainthread"></a>`mainThread` | `LynxGlobalThis & ElementTreeGlobals` | The global object for the main thread. |
+| <a id="lynxtestingenv-clearglobal"></a>`clearGlobal` | `clearGlobal(): void` |  |
+| <a id="lynxtestingenv-injectglobals"></a>`injectGlobals` | `injectGlobals(): void` |  |
+| <a id="lynxtestingenv-reset"></a>`reset` | `reset(): void` |  |
+| <a id="lynxtestingenv-switchtobackgroundthread"></a>`switchToBackgroundThread` | `switchToBackgroundThread(): void` |  |
+| <a id="lynxtestingenv-switchtomainthread"></a>`switchToMainThread` | `switchToMainThread(): void` |  |
+
+## Types \{#types\}
+
+### `LynxElement` \{#lynxelement\}
+
+Any Lynx Element, such as `view`, `text`, `image`, etc.
+
+[Lynx Spec Reference](https://lynxjs.org/living-spec/index.html?ts=1743416098203#element%E2%91%A0)
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="lynxelement-cssid"></a>`cssId?` | `string` | The cssId of the element |
+| <a id="lynxelement-eventmap"></a>`eventMap?` | `{ [key: string]: any }` | The map of events bound to the element. |
+| <a id="lynxelement-firstchild"></a>`firstChild` | `LynxElement` | Returns the first child. [MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/firstChild) |
+| <a id="lynxelement-gesture"></a>`gesture?` | `{ [key: string]: any }` | The gestures bound to the element. |
+| <a id="lynxelement-nextsibling"></a>`nextSibling` | `LynxElement` | Returns the next sibling. [MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/nextSibling) |
+| <a id="lynxelement-parentnode"></a>`parentNode` | `LynxElement` | Returns the parent. [MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/parentNode) |
+
+### `LynxEnv` \{#lynxenv\}
+
+The host environment used to initialize `LynxTestingEnv`.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="lynxenv-window"></a>`window` | `Window & typeof globalThis` |  |
+
+### `LynxGlobalThis` \{#lynxglobalthis\}
+
+The `globalThis` object of Lynx dual thread environment.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="lynxglobalthis-globalthis"></a>`globalThis` | `LynxGlobalThis` | The globalThis object. |
+
+### `ElementTree` \{#elementtree\}
+
+```ts
+type ElementTree = ReturnType<typeof initElementTree>
+```
+
+The lynx element tree
+
+### `ElementTreeGlobals` \{#elementtreeglobals\}
+
+```ts
+type ElementTreeGlobals = PickUnderscoreKeys<ElementTree>
+```
+
+The Element PAPI Types
+
+### `FilterUnderscoreKeys` \{#filterunderscorekeys\}
+
+```ts
+type FilterUnderscoreKeys = { [K in keyof T]: K extends `__${string}` ? K : never }[keyof T]
+```
+
+*No description yet.*
+
+### `PickUnderscoreKeys` \{#pickunderscorekeys\}
+
+```ts
+type PickUnderscoreKeys = Pick<T, FilterUnderscoreKeys<T>>
+```
+
+*No description yet.*
+
+{/* @api-end */}

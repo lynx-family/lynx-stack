@@ -1,0 +1,32 @@
+---
+title: plugins
+---
+
+# plugins
+
+要应用的 Rsbuild 插件列表。即 [Rsbuild 的 `plugins` 选项](https://rsbuild.rs/zh/config/plugins)；Rspeedy 会在这里列出的插件之前自行应用 [`pluginLynx`](/zh/rspeedy/plugins/plugin-lynx)。
+
+## 概览
+
+{/* @api ConfigOverview package="rspeedy" type="Config" path="plugins" */}
+
+| 名称 | 类型 | 说明 |
+| --- | --- | --- |
+| [`plugins`](#plugins) | `RsbuildPlugins` | `plugins` 选项用于以多种方式自定义构建流程。 |
+
+{/* @api-end */}
+
+## 选项
+
+{/* @api ConfigOptions package="rspeedy" type="Config" path="plugins" */}
+
+### `plugins` \{#plugins\}
+
+- **类型:** `RsbuildPlugins` (来自 [@rsbuild/core](https://rsbuild.rs/config/))
+- **默认值:** `undefined`
+
+`plugins` 选项用于以多种方式自定义构建流程。
+
+Rspeedy 使用 [Rsbuild](https://rsbuild.rs/plugins/dev/index) 的插件 API。开发插件请参阅相应文档。
+
+{/* @api-end */}

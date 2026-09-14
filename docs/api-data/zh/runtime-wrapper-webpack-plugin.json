@@ -1,0 +1,50 @@
+{
+  "RuntimeWrapperWebpackPlugin.summary": {
+    "hash": "b648c2fd",
+    "text": "RuntimeWrapperWebpackPlugin 为 JavaScript 添加运行时包装，使其能够被 Lynx 加载。"
+  },
+  "RuntimeWrapperWebpackPlugin.defaultOptions.summary": {
+    "hash": "d66a5163",
+    "text": "`defaultOptions` 是 [`RuntimeWrapperWebpackPlugin`](api:RuntimeWrapperWebpackPlugin) 使用的默认选项。"
+  },
+  "RuntimeWrapperWebpackPlugin.apply.summary": {
+    "hash": "90722b12",
+    "text": "webpack 插件的入口。"
+  },
+  "RuntimeWrapperWebpackPlugin.apply.params.compiler": {
+    "hash": "edb43efe",
+    "text": "webpack 编译器"
+  },
+  "RuntimeWrapperWebpackPluginOptions.summary": {
+    "hash": "82c09436",
+    "text": "RuntimeWrapperWebpackPluginOptions 的选项"
+  },
+  "RuntimeWrapperWebpackPluginOptions.bannerType.summary": {
+    "hash": "90aed376",
+    "text": "banner 有两种类型：script（用于 app-service）和 bundle（用于 js-render）。可以根据文件名决定使用哪种 banner。"
+  },
+  "RuntimeWrapperWebpackPluginOptions.bannerType.default": {
+    "hash": "6cb56734",
+    "text": "`() => 'script'`"
+  },
+  "RuntimeWrapperWebpackPluginOptions.experimental_isLazyBundle.summary": {
+    "hash": "60b3103f",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle`"
+  },
+  "RuntimeWrapperWebpackPluginOptions.injectVars.summary": {
+    "hash": "f76aaef1",
+    "text": "要注入到 chunk 中的变量。"
+  },
+  "RuntimeWrapperWebpackPluginOptions.targetSdkVersion.summary": {
+    "hash": "6bfed00b",
+    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion`"
+  },
+  "RuntimeWrapperWebpackPluginOptions.test.summary": {
+    "hash": "f51654c9",
+    "text": "包含所有通过 test 断言的模块。"
+  },
+  "RuntimeWrapperWebpackPluginOptions.test.default": {
+    "hash": "1dd5f72e",
+    "text": "`/\\.js$/`"
+  }
+}

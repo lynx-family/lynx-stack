@@ -1,0 +1,57 @@
+---
+title: '@lynx-js/runtime-config-webpack-plugin'
+---
+
+# @lynx-js/runtime-config-webpack-plugin
+
+{/* @api PackageHeader package="runtime-config-webpack-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/runtime-config-webpack-plugin</code> <span className="api-pkg-version">v0.0.1</span> · <a href="https://www.npmjs.com/package/@lynx-js/runtime-config-webpack-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/runtime-config-webpack-plugin" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/runtime-config-webpack-plugin/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+:::tip Internal package
+This package is part of the Lynx build engine and is applied for you by [`pluginLynx`](/rspeedy/plugins/plugin-lynx). Its API is documented for plugin authors; application code does not use it directly.
+:::
+
+Inject runtime configuration into the page-scoped Lynx runtime.
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/runtime-config-webpack-plugin -D" />
+
+## API
+
+{/* @api ApiExports package="runtime-config-webpack-plugin" */}
+
+## Classes \{#classes\}
+
+### `RuntimeConfigWebpackPlugin` \{#runtimeconfigwebpackplugin\}
+
+Merges and shallow-freezes runtime configuration in
+`lynx.__runtime_configs__`.
+
+Bundles are merged in execution order. Later bundle values overwrite
+earlier values with the same key.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="runtimeconfigwebpackplugin-constructor"></a>`constructor` | `constructor(options: Readonly<RuntimeConfigWebpackPluginOptions>): RuntimeConfigWebpackPlugin` |  |
+| <a id="runtimeconfigwebpackplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` | The entry point of a webpack plugin. |
+
+## Types \{#types\}
+
+### `RuntimeConfigWebpackPluginOptions` \{#runtimeconfigwebpackpluginoptions\}
+
+```ts
+type RuntimeConfigWebpackPluginOptions = Record<string, unknown>
+```
+
+Page-scoped runtime configuration contributed by a bundle.
+
+The plugin deliberately leaves configuration keys and values to the DSL
+that consumes them.
+
+{/* @api-end */}

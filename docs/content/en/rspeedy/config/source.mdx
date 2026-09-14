@@ -1,0 +1,468 @@
+---
+title: source
+---
+
+# source
+
+Options for what goes into the build: entries, `define` constants, `include`/`exclude` rules and the TypeScript path aliases Rspeedy reads from `tsconfig.json`.
+
+## At a glance
+
+{/* @api ConfigOverview package="rspeedy" type="Config" path="source" */}
+
+| Name | Type | Description |
+| --- | --- | --- |
+| [`alias`](#source-alias) <span className="api-badge api-badge-deprecated">Deprecated</span> | `Record<string, string \| false \| string[]>` | `Resolve.alias`  - Use [`Resolve.alias`](#resolve-alias) instead. |
+| [`assetsInclude`](#source-assetsinclude) | `RuleSetCondition` | Include additional files that should be treated as static assets. |
+| [`decorators`](#source-decorators) | `Decorators` | Used to configure the decorators syntax. |
+| [`define`](#source-define) | `DefinePluginOptions` | The `define` options is used to define some values or expressions at compile time. |
+| [`entry`](#source-entry) | `Entry` | The [`Entry`](#entry) option is used to set the entry module. |
+| [`exclude`](#source-exclude) | `RuleSetCondition[]` | The `source.exclude` is used to specify JavaScript files that should be excluded from compilation. |
+| [`include`](#source-include) | `RuleSetCondition[]` | The `source.include` is used to specify additional JavaScript files that need to be compiled. |
+| [`preEntry`](#source-preentry) | `string \| string[]` | Add a script before the entry file of each page. This script will be executed before the page code. It can be used to execute global logics, such as injecting polyfills, setting global styles, etc. |
+| [`transformImport`](#source-transformimport) | `TransformImport[]` | The [`TransformImport`](#transformimport) option transforms the import paths to enable modular imports from subpaths of third-party packages, similar to the functionality provided by [babel-plugin-import](https://npmjs.com/package/babel-plugin-import). |
+| [`tsconfigPath`](#source-tsconfigpath) | `string` | Configure a custom `tsconfig.json` file path to use, can be a relative or absolute path. |
+
+{/* @api-end */}
+
+## Options
+
+{/* @api ConfigOptions package="rspeedy" type="Config" path="source" */}
+
+### `source.alias` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#source-alias\}
+
+- **Type:** `Record<string, string | false | string[]>` (from typescript)
+- **Default:** `undefined`
+
+:::warning Deprecated
+Deprecated.
+:::
+
+`Resolve.alias`
+
+ - Use [`Resolve.alias`](#resolve-alias) instead.
+
+### `source.assetsInclude` \{#source-assetsinclude\}
+
+- **Type:** `RuleSetCondition` (from [@rspack/core](https://rspack.rs/config/))
+- **Default:** `undefined`
+
+Include additional files that should be treated as static assets.
+
+By default, Rsbuild treats common image, font, audio, and video files as static assets.
+Through the source.assetsInclude config, you can specify additional file types that should be treated as static assets.
+These added static assets are processed using the same rules as the built-in supported static assets。
+
+The usage of `source.assetsInclude` is consistent with [Condition](https://rspack.rs/config/module#condition)
+in Rspack, which supports passing in strings, regular expressions, arrays of conditions, or logical conditions
+to match the module path or assets.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    assetsInclude: /\.json5$/,
+  },
+})
+```
+
+### `source.decorators` \{#source-decorators\}
+
+- **Type:** [`Decorators`](#source-decorators)
+- **Default:** `undefined`
+
+Used to configure the decorators syntax.
+
+See [`Decorators.version`](#source-decorators-version) for more information.
+
+#### `source.decorators.version` \{#source-decorators-version\}
+
+- **Type:** `"legacy" | "2022-03"`
+- **Default:** `'2022-03'`
+
+Specify the decorator syntax version to be used.
+
+If you want to know the differences between different decorators versions, you can refer to: [How does this proposal compare to other versions of decorators?](https://github.com/tc39/proposal-decorators?tab=readme-ov-file#how-does-this-proposal-compare-to-other-versions-of-decorators)
+
+`'2022-03'` corresponds to the Stage 3 decorator proposal, equivalent to the decorator syntax supported by TypeScript 5.0 by default.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  source: {
+    decorators: { version: '2022-03' },
+  },
+})
+```
+
+`'legacy'` corresponds to TypeScript's `experimentalDecorators: true`.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  source: {
+    decorators: { version: 'legacy' },
+  },
+})
+```
+
+### `source.define` \{#source-define\}
+
+- **Type:** `DefinePluginOptions` (from [@rspack/core](https://rspack.rs/config/))
+- **Default:** `undefined`
+
+The `define` options is used to define some values or expressions at compile time.
+
+- If the value provided is a string, it will be utilized as a code fragment.
+
+- If the value provided is an object, all its keys will be defined in the same manner.
+
+- If the value isn't a string, it will be stringified, with functions included.
+
+- Notably, if a `typeof` prefix is attached to the key, it will be exclusively defined for `typeof` calls."
+
+Using `define` for environment variables.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    define: {
+      BUILD_VERSION: JSON.stringify(process.env.BUILD_VERSION ?? 'unknown_version'),
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+    },
+  },
+})
+```
+
+Expressions will be replaced with the corresponding code fragments:
+
+```js
+const version = BUILD_VERSION;
+if (process.env.NODE_ENV === 'development') {}
+
+// ⬇️ Turn into being...
+const version = "unknown_version";
+if ("development" === 'development') {}
+```
+
+Using `define` for `typeof`.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    define: {
+      'typeof window': JSON.stringify("undefined"),
+    },
+  },
+})
+```
+
+The `typeof` expressions will be replaced with the corresponding code fragments:
+
+```js
+if (typeof window !== 'undefined') {}
+
+// ⬇️ Turn into being...
+if ("undefined" !== 'undefined') {}
+```
+
+Using `define` with objects.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    define: {
+      'import.meta': {
+        foo: JSON.stringify('foo'),
+        bar: { baz: 0 },
+      },
+    },
+  },
+})
+```
+
+Expressions will be replaced with the corresponding code fragments:
+
+```js
+console.log(import.meta)
+
+// ⬇️ Turn into being...
+console.log({ foo: "foo", bar: { baz: 0 } })
+```
+
+### `source.entry` \{#source-entry\}
+
+- **Type:** `Entry`
+- **Default:** `'./src/index.js'`
+
+The [`Entry`](#entry) option is used to set the entry module.
+
+- Use a single entry:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    entry: './src/pages/main/index.js',
+  },
+})
+```
+
+- Use a single entry with multiple entry modules:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    entry: ['./src/prefetch.js', './src/pages/main/index.js'],
+  },
+})
+```
+
+- Use multiple entries(with multiple entry modules):
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    entry: {
+      foo: './src/pages/foo/index.js',
+      bar: ['./src/pages/bar/index.js', './src/post.js'], // multiple entry modules is allowed
+    },
+  },
+})
+```
+
+- Use multiple entries with [`EntryDescription`](#entrydescription):
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    entry: {
+      foo: './src/pages/foo/index.js',
+      bar: {
+        import: ['./src/prefetch.js', './src/pages/bar'],
+      },
+    },
+  },
+})
+```
+
+### `source.exclude` \{#source-exclude\}
+
+- **Type:** `RuleSetCondition[]`
+- **Default:** `undefined`
+
+The `source.exclude` is used to specify JavaScript files that should be excluded from compilation.
+
+By default, Rsbuild compiles JavaScript files in the current directory and TypeScript/JSX files
+in all directories. Through the `source.exclude` config, you can specify files or directories
+that should be excluded from compilation.
+The usage of `source.exclude` is consistent with [Rule.exclude](https://rspack.rs/config/module#ruleexclude)
+in Rspack, which supports passing in strings or regular expressions to match module paths.
+
+- Exclude specific files or directories
+
+You can exclude specific files or directories from compilation to improve build performance
+or avoid processing certain files:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  source: {
+    exclude: [
+      // Exclude all files in the test directory
+      /[\\/]test[\\/]/,
+      // Exclude specific file
+      './src/legacy-file.js',
+      // Exclude files matching a pattern
+      /\.stories\.(js|ts)x?$/,
+    ],
+  },
+})
+```
+
+- Exclude third-party dependencies
+
+You can exclude specific third-party dependencies that don't need compilation:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import path from 'node:path'
+import { createRequire } from 'node:module'
+
+const require = createRequire(import.meta.url)
+
+export default defineConfig({
+  source: {
+    exclude: [
+      // Exclude specific package
+      path.dirname(require.resolve('lodash')),
+      // Exclude using regex pattern
+      /node_modules[\\/]lodash-es[\\/]/,
+    ],
+  },
+})
+```
+
+### `source.include` \{#source-include\}
+
+- **Type:** `RuleSetCondition[]`
+- **Default:** When unset, Rsbuild compiles JavaScript files in the current directory and TypeScript or JSX files in all directories, while excluding JavaScript files under `node_modules`.
+
+The `source.include` is used to specify additional JavaScript files that need to be compiled.
+
+To avoid redundant compilation, by default, Rsbuild only compiles JavaScript
+files in the current directory and TypeScript and JSX files in all directories.
+It does not compile JavaScript files under `node_modules`.
+
+Through the `source.include` config, you can specify directories or modules
+that need to be compiled by Rsbuild.
+The usage of `source.include` is consistent with [Rule.include](https://rspack.rs/config/module#ruleinclude)
+in Rspack, which supports passing in strings or regular expressions to match the module path.
+
+- Compile Npm Packages
+
+A typical usage scenario is to compile npm packages under `node_modules`,
+because some third-party dependencies have ESNext syntax, which may not be supported in Lynx.
+You can solve the problem by using this config to specify the dependencies
+that need to be compiled.
+
+```js
+import { createRequire } from 'node:module'
+import path from 'node:path'
+
+import { defineConfig } from '@lynx-js/rspeedy'
+
+const require = createRequire(import.meta.url)
+
+export default defineConfig({
+  source: {
+    include: [
+      // Method 1:
+      // First get the path of the module by `require.resolve`
+      // Then pass path.dirname to point to the corresponding directory
+      path.dirname(require.resolve('query-string')),
+      // Method 2:
+      // Match by regular expression
+      // All paths containing `node_modules/query-string/` will be matched
+      /node_modules[\\/]query-string[\\/]/,
+    ],
+  },
+})
+```
+
+- Compile Libraries in Monorepo
+
+```js
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+import { defineConfig } from '@lynx-js/rspeedy'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+const packagesDir = path.resolve(__dirname, '../../packages')
+
+export default defineConfig({
+  source: {
+    include: [
+      // Compile all files in Monorepo's package directory
+      // It is recommended to exclude the node_modules
+      {
+        and: [packagesDir, { not: /[\\/]node_modules[\\/]/ }],
+      },
+    ],
+  },
+})
+```
+
+### `source.preEntry` \{#source-preentry\}
+
+- **Type:** `string | string[]`
+- **Default:** `undefined`
+
+Add a script before the entry file of each page. This script will be executed before the page code.
+It can be used to execute global logics, such as injecting polyfills, setting global styles, etc.
+
+See [source.preEntry](https://rsbuild.rs/config/source/pre-entry) for more details.
+
+Relative path will be resolved relative to the project root directory.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    preEntry: './src/polyfill.ts',
+  },
+})
+```
+
+### `source.transformImport` \{#source-transformimport\}
+
+- **Type:** `TransformImport[]`
+- **Default:** `undefined`
+
+The [`TransformImport`](#transformimport) option transforms the import paths to enable modular imports from subpaths of third-party packages, similar to the functionality provided by [babel-plugin-import](https://npmjs.com/package/babel-plugin-import).
+
+When using the TUX component library, you can import components on demand with the following config:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  source: {
+    transformImport: [
+      {
+        libraryName: 'foo',
+        customName: 'foo/src/components/{{ member }}/{{ member }}',
+      },
+    ],
+  },
+})
+```
+
+This will transform the following source code:
+
+```js
+import { Button } from 'foo'
+```
+
+to:
+
+```js
+import { Button } from 'foo/src/components/Button/Button'
+```
+
+### `source.tsconfigPath` \{#source-tsconfigpath\}
+
+- **Type:** `string`
+- **Default:** `'./tsconfig.json'`
+
+Configure a custom `tsconfig.json` file path to use, can be a relative or absolute path.
+
+The `tsconfigPath` configuration affects the following behaviors:
+
+- The `paths` field is used to configure [`Path Aliases`](#source-alias).
+
+- Sets the scope and rules for the [Type Check Plugin](https://rsbuild.rs/guide/basic/typescript#type-checking).
+
+Relative path will be resolved relative to the project root directory.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    tsconfigPath: './tsconfig.build.json',
+  },
+})
+```
+
+{/* @api-end */}

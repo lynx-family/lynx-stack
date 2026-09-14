@@ -1,0 +1,322 @@
+{
+  "id": "external-bundle-rsbuild-plugin",
+  "package": "@lynx-js/external-bundle-rsbuild-plugin",
+  "version": "0.4.2",
+  "description": "An rsbuild plugin for loading lynx external bundles.",
+  "section": "rspeedy",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-external-bundle",
+  "exports": [
+    {
+      "name": "ExternalsPresetContext",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Context passed to externals preset resolvers.",
+      "members": [
+        {
+          "name": "environmentName",
+          "optional": true,
+          "type": "string",
+          "summary": "The Rsbuild environment being resolved (e.g. `'lynx'`, `'web'`).",
+          "remarks": "Presets use this to pick environment-specific artifacts — for example the\nbuilt-in `reactlynx` preset resolves the web-encoded `react.web.bundle`\nfor the `web` environment and `react.lynx.bundle` otherwise.",
+          "kind": "property"
+        },
+        {
+          "name": "rootPath",
+          "type": "string",
+          "summary": "The current Rsbuild project root path.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ExternalsPresetDefinition",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Definition for a named externals preset.",
+      "members": [
+        {
+          "name": "extends",
+          "optional": true,
+          "type": "string | string[]",
+          "summary": "Other preset names to apply before the current preset.",
+          "kind": "property"
+        },
+        {
+          "name": "resolveExternals",
+          "optional": true,
+          "type": "(value: boolean | object, context: ExternalsPresetContext) => Record<string, ExternalValue>",
+          "summary": "Resolve external request mappings contributed by this preset.",
+          "kind": "property"
+        },
+        {
+          "name": "resolveManagedAssets",
+          "optional": true,
+          "type": "(value: boolean | object, context: ExternalsPresetContext) => Map<string, string> | Record<string, string>",
+          "summary": "Resolve managed bundle assets contributed by this preset.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ExternalsPresets",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Presets for external bundle dependencies.",
+      "members": [
+        {
+          "name": "reactlynx",
+          "optional": true,
+          "type": "boolean | ReactLynxExternalsPresetOptions",
+          "summary": "Load the ReactLynx runtime bundle and wire its standard module globals.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "PluginExternalBundleOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options for the external-bundle-rsbuild-plugin.",
+      "members": [
+        {
+          "name": "externalBundleRoot",
+          "optional": true,
+          "type": "string",
+          "summary": "Root directory that stores project-owned external bundles referenced by\n`bundlePath`.\n\n`pluginExternalBundle` uses this directory for both development serving\nand build-time asset emission. Prefer setting this explicitly when\nexternal bundles are built into a separate output folder, such as\n`dist-external-bundle`.",
+          "kind": "property"
+        },
+        {
+          "name": "externals",
+          "optional": true,
+          "type": "Record<string, PluginExternalConfig>",
+          "external": "typescript",
+          "summary": "Additional explicit externals to load.",
+          "kind": "property"
+        },
+        {
+          "name": "externalsPresetDefinitions",
+          "optional": true,
+          "type": "ExternalsPresetDefinitions",
+          "ref": "ExternalsPresetDefinitions",
+          "summary": "Definitions for custom externals presets enabled by `externalsPresets`.\n\nUse this to add business-specific presets such as `lynxUi`, or to extend a\nbuilt-in preset through `extends`.",
+          "kind": "property"
+        },
+        {
+          "name": "externalsPresets",
+          "optional": true,
+          "type": "ExternalsPresets",
+          "ref": "ExternalsPresets",
+          "summary": "Presets for external libraries.\n\nSame as https://rspack.rs/config/externals#externalspresets but for Lynx.",
+          "kind": "property"
+        },
+        {
+          "name": "globalObject",
+          "optional": true,
+          "type": "\"lynx\" | \"globalThis\"",
+          "summary": "This option indicates what global object will be used to mount the library.\n\nIn Lynx, the library will be mounted to `lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")]` by default.\n\nIf you have enabled share js context and want to reuse the library by mounting to the global object, you can set this option to `'globalThis'`.",
+          "default": "`'lynx'`",
+          "kind": "property"
+        },
+        {
+          "name": "retries",
+          "optional": true,
+          "type": "number",
+          "summary": "The number of additional attempts when fetching the external bundle times out (`response.code === -2`).",
+          "default": "`0`",
+          "kind": "property"
+        },
+        {
+          "name": "timeout",
+          "optional": true,
+          "type": "number",
+          "summary": "The timeout in milliseconds for loading the externals.",
+          "default": "`2000`",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "PluginExternalValue",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "External bundle reference accepted by `pluginExternalBundle`.",
+      "members": [
+        {
+          "name": "async",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether the source should be loaded asynchronously or not.",
+          "default": "`true`",
+          "kind": "property"
+        },
+        {
+          "name": "background",
+          "optional": true,
+          "type": "LayerOptions",
+          "summary": "The options of the background layer.",
+          "default": "`undefined`",
+          "kind": "property"
+        },
+        {
+          "name": "bundlePath",
+          "optional": true,
+          "type": "string",
+          "summary": "Bundle path resolved against the runtime public path.\n\nPrefer this over `url` when the external bundle should be emitted or served\nas part of the current project. `pluginExternalBundle` can use this\ninformation to manage local bundle files, while the runtime keeps the final\nURL aligned with the active `publicPath`.",
+          "kind": "property"
+        },
+        {
+          "name": "libraryName",
+          "optional": true,
+          "type": "string | string[]",
+          "summary": "The name of the library. Same as https://webpack.js.org/configuration/externals/#string.\n\nBy default, the library name is the same as the externals key. For example:\n\nThe config\n\n```js\nExternalsLoadingPlugin({\n  externals: {\n    lodash: {\n      url: '……',\n    }\n  }\n})\n```\n\nWill generate the following webpack externals config:\n\n```js\nexternals: {\n  lodash: 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].lodash',\n}\n```\n\nIf one external bundle contains multiple modules, should set the same library name to ensure it's loaded only once. For example:\n\n```js\nExternalsLoadingPlugin({\n  externals: {\n    lodash: {\n      libraryName: 'Lodash',\n      url: '……',\n    },\n    'lodash-es': {\n      libraryName: 'Lodash',\n      url: '……',\n    }\n  }\n})\n```\nWill generate the following webpack externals config:\n\n```js\nexternals: {\n  lodash: 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].Lodash',\n  'lodash-es': 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].Lodash',\n}\n```\n\nYou can pass an array to specify subpath of the external. Same as https://webpack.js.org/configuration/externals/#string-1. For example:\n\n```js\nExternalsLoadingPlugin({\n  externals: {\n    preact: {\n      libraryName: ['ReactLynx', 'Preact'],\n      url: '……',\n    },\n  }\n})\n```\n\nWill generate the following webpack externals config:\n\n```js\nexternals: {\n  preact: 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].ReactLynx.Preact',\n}\n```",
+          "examples": [
+            "```ts\n`Lodash`\n```"
+          ],
+          "default": "`undefined`",
+          "kind": "property"
+        },
+        {
+          "name": "mainThread",
+          "optional": true,
+          "type": "LayerOptions",
+          "summary": "The options of the main-thread layer.",
+          "default": "`undefined`",
+          "kind": "property"
+        },
+        {
+          "name": "retries",
+          "optional": true,
+          "type": "number",
+          "summary": "The number of additional attempts when fetching the external bundle times out (`response.code === -2`).",
+          "default": "`0`",
+          "kind": "property"
+        },
+        {
+          "name": "timeout",
+          "optional": true,
+          "type": "number",
+          "summary": "The wait time in milliseconds.",
+          "default": "`2000`",
+          "kind": "property"
+        },
+        {
+          "name": "url",
+          "optional": true,
+          "type": "string",
+          "summary": "Bundle URL.\n\nUse this only when the external bundle lives outside the current build\noutput and should not be emitted or served by `pluginExternalBundle`.\n\n Prefer `bundlePath`, which resolves through the runtime public\npath and lets higher-level tooling manage asset emission.",
+          "deprecated": "Deprecated.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ReactLynxExternalsPresetOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options for the built-in `reactlynx` externals preset.",
+      "members": [
+        {
+          "name": "async",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Load the ReactLynx runtime bundle asynchronously, for the web target.\n\nThe web runtime (`@lynx-js/web-core`) can only fetch external bundles\nasynchronously (`fetchBundle().then`), so ReactLynx must be mounted as a\npromise that consuming modules await before reading a subpath (otherwise\n`React.memo` etc. are read off a pending promise and are `undefined`).\nEnabling this also resolves the web-encoded `@lynx-js/react-umd/{dev,prod}-web`\nbundle and defaults `bundlePath` to `react.web.bundle`.",
+          "default": "`false`",
+          "kind": "property"
+        },
+        {
+          "name": "bundlePath",
+          "optional": true,
+          "type": "string",
+          "summary": "Emit the ReactLynx runtime bundle into the current build output and load it\nthrough the generated runtime public path.\n\nPrefer this over `url` for normal Rspeedy projects. In addition to letting\nthe runtime resolve the final URL from `publicPath`, the plugin will also\ncopy the corresponding `@lynx-js/react-umd` bundle into the emitted assets,\nso application bundles can reference it without requiring an extra manual\ncopy step when publishing.",
+          "default": "`'react.lynx.bundle'`",
+          "kind": "property"
+        },
+        {
+          "name": "reactUmdPackageName",
+          "optional": true,
+          "type": "string",
+          "summary": "Package name that provides the ReactLynx runtime bundle.\n\nOverride this when wrapping the plugin for another distribution, such as\n`@byted-lynx/react-umd`.",
+          "default": "`'@lynx-js/react-umd'`",
+          "kind": "property"
+        },
+        {
+          "name": "url",
+          "optional": true,
+          "type": "string",
+          "summary": "Override the runtime bundle URL directly.\n\nUse this only when the ReactLynx runtime is hosted outside the current\nbuild output, for example on a CDN. Unlike `bundlePath`, this does not emit\nany extra asset into the current compilation.\n\n Prefer `bundlePath`, which resolves through the runtime public\npath and enables automatic asset emission.",
+          "deprecated": "Deprecated.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ExternalsPresetDefinitions",
+      "kind": "typealias",
+      "type": "Record<string, ExternalsPresetDefinition>",
+      "external": "typescript",
+      "summary": "Available externals preset definitions."
+    },
+    {
+      "name": "PluginExternalConfig",
+      "kind": "typealias",
+      "type": "PluginExternalValue | string",
+      "summary": "External bundle shorthand accepted by `pluginExternalBundle`.\n\nWhen a string is provided, it is treated as `bundlePath` and the plugin will\ninfer:\n- `libraryName`: the external request key\n- `background.sectionPath`: the external request key\n- `mainThread.sectionPath`: `${request}__main-thread`"
+    },
+    {
+      "name": "builtInExternalsPresetDefinitions",
+      "kind": "variable",
+      "type": "ExternalsPresetDefinitions",
+      "ref": "ExternalsPresetDefinitions",
+      "summary": "Built-in externals preset definitions.",
+      "default": "..."
+    },
+    {
+      "name": "normalizeBundlePath",
+      "kind": "function",
+      "type": "normalizeBundlePath(bundlePath: string): string",
+      "signatures": [
+        {
+          "text": "normalizeBundlePath(bundlePath: string): string",
+          "params": [
+            {
+              "name": "bundlePath",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "string"
+          },
+          "summary": "Normalize a public bundle path by removing leading slashes."
+        }
+      ],
+      "summary": "Normalize a public bundle path by removing leading slashes."
+    },
+    {
+      "name": "pluginExternalBundle",
+      "kind": "function",
+      "type": "pluginExternalBundle(options: PluginExternalBundleOptions): RsbuildPlugin",
+      "signatures": [
+        {
+          "text": "pluginExternalBundle(options: PluginExternalBundleOptions): RsbuildPlugin",
+          "params": [
+            {
+              "name": "options",
+              "type": "PluginExternalBundleOptions"
+            }
+          ],
+          "returns": {
+            "type": "RsbuildPlugin"
+          },
+          "summary": "Create a rsbuild plugin for loading external bundles.\n\nThis plugin wraps the externals-loading-webpack-plugin and automatically\nretrieves layer names from the react-rsbuild-plugin via api.useExposed.",
+          "examples": [
+            "```ts\n// lynx.config.ts\nimport { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin'\nimport { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\n\nexport default {\n  plugins: [\n    pluginReactLynx(),\n    pluginExternalBundle({\n      externals: {\n        lodash: {\n          bundlePath: 'lodash.lynx.bundle',\n          background: { sectionPath: 'background' },\n          mainThread: { sectionPath: 'mainThread' },\n        },\n      },\n    }),\n  ],\n}\n```"
+          ]
+        }
+      ],
+      "summary": "Create a rsbuild plugin for loading external bundles.\n\nThis plugin wraps the externals-loading-webpack-plugin and automatically\nretrieves layer names from the react-rsbuild-plugin via api.useExposed.",
+      "examples": [
+        "```ts\n// lynx.config.ts\nimport { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin'\nimport { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\n\nexport default {\n  plugins: [\n    pluginReactLynx(),\n    pluginExternalBundle({\n      externals: {\n        lodash: {\n          bundlePath: 'lodash.lynx.bundle',\n          background: { sectionPath: 'background' },\n          mainThread: { sectionPath: 'mainThread' },\n        },\n      },\n    }),\n  ],\n}\n```"
+      ]
+    }
+  ]
+}

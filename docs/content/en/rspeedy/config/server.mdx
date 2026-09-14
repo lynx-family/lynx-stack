@@ -1,0 +1,213 @@
+---
+title: server
+---
+
+# server
+
+Options for the local server that serves the bundle to the device during development: host, port, headers and the base path.
+
+## At a glance
+
+{/* @api ConfigOverview package="rspeedy" type="Config" path="server" */}
+
+| Name | Type | Description |
+| --- | --- | --- |
+| [`base`](#server-base) | `string` | Configure the base path of the server. |
+| [`compress`](#server-compress) | `boolean \| CompressOptions` | Configure whether to enable [gzip compression](https://developer.mozilla.org/en-US/docs/Glossary/gzip_compression) for static assets served by the dev server or preview server. |
+| [`cors`](#server-cors) | `boolean \| CorsOptions` | Configure CORS for the dev server or preview server. |
+| [`headers`](#server-headers) | `Record<string, string \| string[]>` | Adds headers to all responses. |
+| [`host`](#server-host) | `string` | Specify the host that the Rspeedy Server listens to. |
+| [`port`](#server-port) | `number` | Specify the port that the Rspeedy Server listens to. |
+| [`proxy`](#server-proxy) | `ProxyConfig` | Configure proxy rules for the dev server or preview server to proxy requests to the specified service. |
+| [`strictPort`](#server-strictport) | `boolean` | When a port is occupied, Rspeedy will automatically increment the port number until an available port is found. |
+
+{/* @api-end */}
+
+## Options
+
+{/* @api ConfigOptions package="rspeedy" type="Config" path="server" */}
+
+### `server.base` \{#server-base\}
+
+- **Type:** `string`
+- **Default:** `'/'`
+
+Configure the base path of the server.
+
+Users can access lynx bundle through `http://<host>:<port>/main.lynx.bundle` by default.
+
+If you want to access lynx bundle through `http://<host>:<port>/foo/main.lynx.bundle`, you can change `server.base` to `/foo`
+
+you can refer to [server.base](https://rsbuild.rs/config/server/base) for more information.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  server: {
+    base: '/dist'
+  },
+})
+```
+
+### `server.compress` \{#server-compress\}
+
+- **Type:** `boolean | CompressOptions`
+- **Default:** true
+
+See [Rsbuild - server.compress](https://rsbuild.rs/config/server/compress) for details.
+
+Configure whether to enable [gzip compression](https://developer.mozilla.org/en-US/docs/Glossary/gzip_compression) for static assets served by the dev server or preview server.
+
+To disable the gzip compression, set compress to false:
+
+```js
+export default {
+  server: {
+    compress: false,
+  },
+}
+```
+
+Compress if it starts with /foo
+
+```js
+export default {
+  server: {
+    compress: {
+      filter: (req) => {
+        if (req.url?.includes('/foo')) {
+          return false;
+        }
+        return true;
+      },
+    },
+  },
+}
+```
+
+set level of zlib compression
+
+```js
+export default {
+  server: {
+    compress: {
+      level: 6,
+    },
+  },
+}
+```
+
+### `server.cors` \{#server-cors\}
+
+- **Type:** `boolean | CorsOptions`
+- **Default:** Uses Rsbuild's default CORS options.
+
+- Set to an object to enable CORS with the specified options.
+
+- Set to `true` to enable CORS with the default options (allows all origins, not recommended).
+
+- Set to `false` to disable CORS.
+
+See [Rsbuild - server.cors](https://rsbuild.rs/config/server/cors) for details.
+
+Configure CORS for the dev server or preview server.
+
+```js
+export default {
+  server: {
+    cors: {
+      origin: 'https://example.com',
+    },
+  },
+}
+```
+
+### `server.headers` \{#server-headers\}
+
+- **Type:** `Record<string, string | string[]>` (from typescript)
+- **Default:** `undefined`
+
+Adds headers to all responses.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  server: {
+    headers: {
+      'Access-Control-Allow-Origin': '**',
+    },
+  },
+})
+```
+
+### `server.host` \{#server-host\}
+
+- **Type:** `string`
+- **Default:** `"0.0.0.0"`
+
+Specify the host that the Rspeedy Server listens to.
+
+During `rspeedy dev`, if `server.host` is unset, the dev plugin keeps the server bound to the IPv4 wildcard address while resolving dev-server-related URLs and client host settings with a detected non-loopback IPv4 address, such as `192.168.1.50`. If no eligible IPv4 address exists, it binds to the IPv6 wildcard address and uses a detected IPv6 address for URLs. It falls back to an IPv4 loopback URL when no non-loopback IP is available. If you have multiple network interfaces, set `server.host` explicitly to choose the desired address.
+
+Set the host to a custom value:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  server: {
+    host: "192.168.1.50",
+  },
+})
+```
+
+### `server.port` \{#server-port\}
+
+- **Type:** `number`
+- **Default:** Rsbuild defaults this option to `3000`.
+
+Specify the port that the Rspeedy Server listens to.
+
+By default, the server automatically increments the port number when the configured port is occupied.
+
+Set the port to a custom value:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  server: {
+    port: 3470,
+  },
+})
+```
+
+### `server.proxy` \{#server-proxy\}
+
+- **Type:** `ProxyConfig` (from [@rsbuild/core](https://rsbuild.rs/config/))
+- **Default:** `undefined`
+
+Configure proxy rules for the dev server or preview server to proxy requests to the specified service.
+
+```js
+export default {
+  server: {
+    proxy: {
+      // http://localhost:3000/api -> http://localhost:3000/api
+      // http://localhost:3000/api/foo -> http://localhost:3000/api/foo
+      '/api': 'http://localhost:3000',
+    },
+  },
+}
+```
+
+### `server.strictPort` \{#server-strictport\}
+
+- **Type:** `boolean`
+- **Default:** ```ts
+false
+
+By default, strict port mode is disabled. Set strictPort to true and Rspeedy will throw an exception when the port is occupied.
+```
+
+When a port is occupied, Rspeedy will automatically increment the port number until an available port is found.
+
+{/* @api-end */}

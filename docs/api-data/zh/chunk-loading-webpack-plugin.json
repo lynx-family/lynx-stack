@@ -1,0 +1,30 @@
+{
+  "ChunkLoadingWebpackPlugin.summary": {
+    "hash": "7ab2bf61",
+    "text": "ChunkLoadingWebpackPlugin 为 Lynx 中的 webpack/Rspack 启用 chunk 加载能力。"
+  },
+  "ChunkLoadingWebpackPlugin.example.0": {
+    "hash": "98b9f62e",
+    "text": "- 与 Rspack 一起使用。\n\n```js\n// rspack.config.js\nimport { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'\nexport default {\n  output: {\n    chunkFormat: 'require',\n  },\n  plugins: [new ChunkLoadingWebpackPlugin()],\n}\n```"
+  },
+  "ChunkLoadingWebpackPlugin.example.1": {
+    "hash": "6d33ceae",
+    "text": "- 与 webpack 一起使用。\n\n```js\n// webpack.config.js\nimport { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'\nexport default {\n  output: {\n    chunkFormat: 'lynx',\n  },\n  plugins: [new ChunkLoadingWebpackPlugin()],\n}\n```"
+  },
+  "ChunkLoadingWebpackPlugin.defaultOptions.summary": {
+    "hash": "f9425987",
+    "text": "`defaultOptions` 是 [`ChunkLoadingWebpackPlugin`](api:ChunkLoadingWebpackPlugin) 使用的默认选项。"
+  },
+  "ChunkLoadingWebpackPlugin.apply.summary": {
+    "hash": "90722b12",
+    "text": "webpack 插件的入口。"
+  },
+  "ChunkLoadingWebpackPlugin.apply.params.compiler": {
+    "hash": "edb43efe",
+    "text": "webpack compiler"
+  },
+  "ChunkLoadingWebpackPluginOptions.summary": {
+    "hash": "4c3fa7fc",
+    "text": "ChunkLoadingWebpackPlugin 的选项"
+  }
+}

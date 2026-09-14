@@ -1,0 +1,87 @@
+---
+title: 组件
+---
+
+# 组件
+
+Provider 与 Consumer 组件，用于读取 Lynx 页面从 Native 侧接收的数据。
+
+{/* @api ApiExports package="react" include="GlobalPropsProvider,GlobalPropsConsumer,InitDataProvider,InitDataConsumer" */}
+
+## 常量 \{#\}
+
+### `GlobalPropsProvider` \{#globalpropsprovider\}
+
+```ts
+const GlobalPropsProvider: FC<{ children?: ReactNode }>
+```
+
+提供 `lynx.__globalProps` 的 [Provider](https://react.dev/reference/react/createContext#provider) 组件，
+必须将 JSX 包裹在其中
+
+```ts
+import { root } from "@lynx-js/react"
+
+function App() {
+  return (
+    <GlobalPropsConsumer children={(globalProps) => <view>...</view>}/>
+  )
+}
+
+root.render(
+  <GlobalPropsProvider>
+     <App/>
+  </GlobalPropsProvider>
+);
+
+```
+
+### `GlobalPropsConsumer` \{#globalpropsconsumer\}
+
+```ts
+const GlobalPropsConsumer: Consumer<GlobalProps>
+```
+
+提供 `lynx.__globalProps` 的 [Consumer](https://react.dev/reference/react/createContext#consumer) 组件。
+需与 [`GlobalPropsProvider`](#globalpropsprovider) 配合使用
+
+### `InitDataProvider` \{#initdataprovider\}
+
+```ts
+const InitDataProvider: FC<{ children?: ReactNode }>
+```
+
+提供 `initData` 的 [Provider](https://react.dev/reference/react/createContext#provider) 组件，
+必须将 JSX 包裹在其中
+
+```ts
+import { root } from "@lynx-js/react"
+
+function App() {
+  return (
+    <InitDataConsumer children={(initData) => <view>...</view>}/>
+  )
+}
+
+root.render(
+  <InitDataProvider>
+     <App/>
+  </InitDataProvider>
+);
+
+```
+
+### `InitDataConsumer` \{#initdataconsumer\}
+
+```ts
+const InitDataConsumer: Consumer<InitData>
+```
+
+提供 `initData` 的 [Consumer](https://react.dev/reference/react/createContext#consumer) 组件。
+需与 [`InitDataProvider`](#initdataprovider) 配合使用
+
+{/* @api-end */}
+
+## 内置 React 组件
+
+`Fragment` 和 `Suspense` 从 React 重新导出。`Component` 和 `PureComponent` 是 React 类组件的基类，参见 [React 参考文档](https://react.dev/reference/react/components)。

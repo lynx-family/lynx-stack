@@ -1,0 +1,78 @@
+{
+  "id": "debug-metadata-rsbuild-plugin",
+  "package": "@lynx-js/debug-metadata-rsbuild-plugin",
+  "version": "0.2.2",
+  "description": "An rsbuild plugin that emits Lynx debug metadata (debug-metadata.json) alongside template builds.",
+  "section": "rspeedy",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-debug-metadata",
+  "exports": [
+    {
+      "name": "RewriteSourceMappingURLsOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options for [`rewriteSourceMappingURLs`](api:rewriteSourceMappingURLs).",
+      "members": [
+        {
+          "name": "getSourceMappingURL",
+          "optional": true,
+          "type": "(info: { debugMetadataUrl: string; mapPath: string }) => string",
+          "summary": "Override the URL written into each rewritten sourceMappingURL. Defaults\nto `${debugMetadataUrl}?field=source-map&path=<encoded mapPath>`.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "DEBUG_METADATA_ASSET_NAME",
+      "kind": "variable",
+      "type": "\"debug-metadata.json\"",
+      "summary": "Default name of the debug metadata asset emitted alongside each template.",
+      "default": "'debug-metadata.json'"
+    },
+    {
+      "name": "pluginLynxDebugMetadata",
+      "kind": "function",
+      "type": "pluginLynxDebugMetadata(): RsbuildPlugin",
+      "signatures": [
+        {
+          "text": "pluginLynxDebugMetadata(): RsbuildPlugin",
+          "params": [],
+          "returns": {
+            "type": "RsbuildPlugin"
+          },
+          "summary": "Register `debug-metadata.json` emission for every Lynx template build\nand serve sub-field queries via a connect-style dev-server middleware.\n\nAuto-registered by Rspeedy core.\n\nThe dev-server middleware exposes these endpoints (relative to each\nentry's intermediate dir):\n\n```text\nGET .../debug-metadata.json\nGET .../debug-metadata.json?field=source-map&path=…\nGET .../debug-metadata.json?field=source-map&filename=…\nGET .../debug-metadata.json?field=source-map&key=…\nGET .../debug-metadata.json?field=bytecode-debug-info&filename=…\nGET .../debug-metadata.json?field=artifact&filename=…\nGET .../debug-metadata.json?field=artifacts\nGET .../debug-metadata.json?field=ui-source-map\nGET .../debug-metadata.json?field=buildInfo\nGET .../debug-metadata.json?field=git\nGET .../debug-metadata.json?field=rspeedy\n\nGET .../*.js.map    → transparently forwarded to ?field=source-map\nGET .../*.css.map   → transparently forwarded to ?field=source-map\n```"
+        }
+      ],
+      "summary": "Register `debug-metadata.json` emission for every Lynx template build\nand serve sub-field queries via a connect-style dev-server middleware.\n\nAuto-registered by Rspeedy core.\n\nThe dev-server middleware exposes these endpoints (relative to each\nentry's intermediate dir):\n\n```text\nGET .../debug-metadata.json\nGET .../debug-metadata.json?field=source-map&path=…\nGET .../debug-metadata.json?field=source-map&filename=…\nGET .../debug-metadata.json?field=source-map&key=…\nGET .../debug-metadata.json?field=bytecode-debug-info&filename=…\nGET .../debug-metadata.json?field=artifact&filename=…\nGET .../debug-metadata.json?field=artifacts\nGET .../debug-metadata.json?field=ui-source-map\nGET .../debug-metadata.json?field=buildInfo\nGET .../debug-metadata.json?field=git\nGET .../debug-metadata.json?field=rspeedy\n\nGET .../*.js.map    → transparently forwarded to ?field=source-map\nGET .../*.css.map   → transparently forwarded to ?field=source-map\n```"
+    },
+    {
+      "name": "rewriteSourceMappingURLs",
+      "kind": "function",
+      "type": "rewriteSourceMappingURLs(compilation: Compilation, args: { chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }, options?: RewriteSourceMappingURLsOptions): void",
+      "signatures": [
+        {
+          "text": "rewriteSourceMappingURLs(compilation: Compilation, args: { chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }, options?: RewriteSourceMappingURLsOptions): void",
+          "params": [
+            {
+              "name": "compilation",
+              "type": "Compilation"
+            },
+            {
+              "name": "args",
+              "type": "{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }"
+            },
+            {
+              "name": "options",
+              "type": "RewriteSourceMappingURLsOptions",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "Rewrite the `//# sourceMappingURL=...` directive of every JS asset in the\ncurrent template to an absolute URL. No-op when `debugMetadataUrl`\n(`args.encodeData.sourceContent.config['debugMetadataUrl']`) is unset."
+        }
+      ],
+      "summary": "Rewrite the `//# sourceMappingURL=...` directive of every JS asset in the\ncurrent template to an absolute URL. No-op when `debugMetadataUrl`\n(`args.encodeData.sourceContent.config['debugMetadataUrl']`) is unset."
+    }
+  ]
+}

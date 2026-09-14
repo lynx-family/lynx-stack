@@ -1,0 +1,32 @@
+---
+title: splitChunks
+---
+
+# splitChunks
+
+Chunk 拆分即提升到顶层的 [Rsbuild `performance.chunkSplit` 选项](https://rsbuild.rs/zh/config/performance/chunk-split)。启用后会关闭 `output.inlineScripts`，使后台线程的 chunk 作为独立文件输出。
+
+## 概览
+
+{/* @api ConfigOverview package="rspeedy" type="Config" path="splitChunks" */}
+
+| 名称 | 类型 | 说明 |
+| --- | --- | --- |
+| [`splitChunks`](#splitchunks) | `false \| SplitChunksConfig` | 配置 chunk 拆分。 |
+
+{/* @api-end */}
+
+## 选项
+
+{/* @api ConfigOptions package="rspeedy" type="Config" path="splitChunks" */}
+
+### `splitChunks` \{#splitchunks\}
+
+- **类型:** `false | SplitChunksConfig`
+- **默认值:** Rspeedy 默认将其设置为 `false`；如果进行了配置，则由 Rsbuild 的顶层 `splitChunks` 选项处理。
+
+详见 [Rsbuild - splitChunks](https://rsbuild.rs/config/split-chunks)。
+
+配置 chunk 拆分。
+
+{/* @api-end */}

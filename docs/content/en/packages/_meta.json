@@ -1,0 +1,49 @@
+[
+  {
+    "type": "file",
+    "name": "index",
+    "label": "All packages"
+  },
+  {
+    "type": "section-header",
+    "label": "Web platform"
+  },
+  "web-core",
+  "web-elements",
+  "web-platform-rsbuild-plugin",
+  "web-rsbuild-server-middleware",
+  "web-worker-rpc",
+  "web-explorer",
+  {
+    "type": "section-header",
+    "label": "Build internals (webpack plugins)"
+  },
+  "template-webpack-plugin",
+  "css-extract-webpack-plugin",
+  "chunk-loading-webpack-plugin",
+  "runtime-wrapper-webpack-plugin",
+  "react-webpack-plugin",
+  "react-refresh-webpack-plugin",
+  "externals-loading-webpack-plugin",
+  "cache-events-webpack-plugin",
+  "runtime-config-webpack-plugin",
+  "webpack-dev-transport",
+  "webpack-runtime-globals",
+  "css-serializer",
+  "debug-metadata",
+  {
+    "type": "section-header",
+    "label": "Libraries and tools"
+  },
+  "websocket",
+  "testing-environment",
+  "motion",
+  "react-signals",
+  "use-sync-external-store",
+  "tailwind-preset",
+  "gesture-runtime",
+  "autolink-codegen",
+  "background-only",
+  "i18next-translation-dedupe",
+  "genui"
+]

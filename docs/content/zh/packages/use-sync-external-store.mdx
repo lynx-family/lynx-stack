@@ -1,0 +1,44 @@
+---
+title: '@lynx-js/use-sync-external-store'
+---
+
+# @lynx-js/use-sync-external-store
+
+{/* @api PackageHeader package="use-sync-external-store" */}
+
+<div className="api-pkg-header"><code>@lynx-js/use-sync-external-store</code> <span className="api-pkg-version">v1.5.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/use-sync-external-store" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/use-sync-external-store" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/use-sync-external-store/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+
+这是 [`use-sync-external-store`](https://www.npmjs.com/package/use-sync-external-store) 包的纯 ESM 分支，专门为配合 [ReactLynx](https://lynxjs.org/zh/react) 使用而适配。
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/use-sync-external-store" />
+
+## API
+
+{/* @api ApiExports package="use-sync-external-store" */}
+
+## 函数 \{#\}
+
+### `useSyncExternalStore()` \{#usesyncexternalstore\}
+
+```ts
+useSyncExternalStore(subscribe: (onStoreChange: () => void) => () => void, getSnapshot: () => Snapshot, getServerSnapshot?: () => Snapshot): Snapshot
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `subscribe` | `(onStoreChange: () => void) => () => void` |  |
+| `getSnapshot` | `() => Snapshot` |  |
+| `getServerSnapshot?` | `() => Snapshot` |  |
+
+**返回值:** `Snapshot`
+
+{/* @api-end */}

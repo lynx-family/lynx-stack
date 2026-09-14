@@ -1,0 +1,97 @@
+---
+title: '@lynx-js/webpack-dev-transport'
+---
+
+# @lynx-js/webpack-dev-transport
+
+{/* @api PackageHeader package="webpack-dev-transport" */}
+
+<div className="api-pkg-header"><code>@lynx-js/webpack-dev-transport</code> <span className="api-pkg-version">v0.4.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/webpack-dev-transport" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/webpack-dev-transport" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/webpack-dev-transport/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+:::tip 内部包
+此包是 Lynx 构建引擎的一部分，由 [`pluginLynx`](/zh/rspeedy/plugins/plugin-lynx) 自动应用。其 API 文档面向插件作者，应用代码不会直接使用它。
+:::
+
+该客户端 transport 可用于 `webpack.config.js` 中的 [`devServer.client.webSocketTransport`](https://webpack.js.org/configuration/dev-server/#websockettransport) 配置。
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/webpack-dev-transport -D" />
+
+## API
+
+{/* @api ApiExports package="webpack-dev-transport" */}
+
+## 类 \{#\}
+
+### `default` \{#default\}
+
+LynxTransportClient 是 webpack-dev-server 的客户端传输实现。
+可用于 webpack 的
+[`devServer.client.webSocketTransport`](https://webpack.js.org/configuration/dev-server/#websockettransport)
+配置中。
+需要与 `LynxTransportServer` 配合使用。
+
+```js
+// webpack.config.js
+import { createRequire } from 'node:module'
+import { LynxTransportServer } from '@lynx-js/webpack-dev-transport'
+
+const require = createRequire(import.meta.url)
+export default {
+  devServer: {
+    client: {
+      webSocketTransport: require.resolve('@lynx-js/webpack-dev-transport/client')
+    },
+    allowedHosts: 'all',
+    webSocketServer: LynxTransportServer
+  }
+}
+```
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="default-constructor"></a>`constructor` | `constructor(): default` |  |
+| <a id="default-onclose"></a>`onClose` | `onClose(_callback: () => void): void` | `Client.onClose` |
+| <a id="default-onmessage"></a>`onMessage` | `onMessage(callback: (message: string) => void): void` | `Client.onMessage` |
+| <a id="default-onopen"></a>`onOpen` | `onOpen(callback: () => void): void` | `Client.onOpen` |
+
+## 类型 \{#\}
+
+### `Client` \{#client\}
+
+Client 是 [`webpack-dev-server`](https://github.com/webpack/webpack-dev-server/blob/48f56d57775dc4cf78bfcf51c3761adf852b0310/client-src/socket.js#L30) 用于 WebSocket 客户端的接口。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="client-onclose"></a>`onClose` | `onClose(callback: () => void): void` | 注册关闭回调 |
+| <a id="client-onmessage"></a>`onMessage` | `onMessage(callback: (message: string) => void): void` | 注册消息回调 |
+| <a id="client-onopen"></a>`onOpen` | `onOpen(callback: () => void): void` | 注册打开回调 |
+
+### `Options` \{#options\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="options-hot"></a>`hot` | `boolean` |  |
+| <a id="options-livereload"></a>`liveReload` | `boolean` |  |
+| <a id="options-logging"></a>`logging?` | `string` |  |
+| <a id="options-progress"></a>`progress` | `boolean` |  |
+| <a id="options-reconnect"></a>`reconnect?` | `number` |  |
+
+### `Status` \{#status\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="status-currenthash"></a>`currentHash` | `string` |  |
+| <a id="status-isreconnecting"></a>`isReconnecting` | `boolean` |  |
+| <a id="status-previoushash"></a>`previousHash?` | `string` |  |
+
+{/* @api-end */}

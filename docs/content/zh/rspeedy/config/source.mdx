@@ -1,0 +1,468 @@
+---
+title: source
+---
+
+# source
+
+控制构建输入的选项：入口、`define` 常量、`include`/`exclude` 规则，以及 Rspeedy 从 `tsconfig.json` 读取的 TypeScript 路径别名。
+
+## 概览
+
+{/* @api ConfigOverview package="rspeedy" type="Config" path="source" */}
+
+| 名称 | 类型 | 说明 |
+| --- | --- | --- |
+| [`alias`](#source-alias) <span className="api-badge api-badge-deprecated">已废弃</span> | `Record<string, string \| false \| string[]>` | `Resolve.alias`  - 请改用 [`Resolve.alias`](#resolve-alias)。 |
+| [`assetsInclude`](#source-assetsinclude) | `RuleSetCondition` | 指定额外需要被视为静态资源的文件。 |
+| [`decorators`](#source-decorators) | `Decorators` | 用于配置装饰器语法。 |
+| [`define`](#source-define) | `DefinePluginOptions` | `define` 选项用于在编译时定义一些值或表达式。 |
+| [`entry`](#source-entry) | `Entry` | [`Entry`](#entry) 选项用于设置入口模块。 |
+| [`exclude`](#source-exclude) | `RuleSetCondition[]` | `source.exclude` 用于指定需要从编译中排除的 JavaScript 文件。 |
+| [`include`](#source-include) | `RuleSetCondition[]` | `source.include` 用于指定额外需要编译的 JavaScript 文件。 |
+| [`preEntry`](#source-preentry) | `string \| string[]` | 在每个页面的入口文件之前添加一段脚本。该脚本会在页面代码之前执行。 它可以用于执行全局逻辑，如注入 polyfill、设置全局样式等。 |
+| [`transformImport`](#source-transformimport) | `TransformImport[]` | [`TransformImport`](#transformimport) 选项用于转换导入路径，以便从第三方包的子路径中按需导入模块，功能类似于 [babel-plugin-import](https://npmjs.com/package/babel-plugin-import)。 |
+| [`tsconfigPath`](#source-tsconfigpath) | `string` | 配置自定义的 `tsconfig.json` 文件路径，可以是相对路径或绝对路径。 |
+
+{/* @api-end */}
+
+## 选项
+
+{/* @api ConfigOptions package="rspeedy" type="Config" path="source" */}
+
+### `source.alias` <span className="api-badge api-badge-deprecated">已废弃</span> \{#source-alias\}
+
+- **类型:** `Record<string, string | false | string[]>` (来自 typescript)
+- **默认值:** `undefined`
+
+:::warning 已废弃
+已废弃。
+:::
+
+`Resolve.alias`
+
+ - 请改用 [`Resolve.alias`](#resolve-alias)。
+
+### `source.assetsInclude` \{#source-assetsinclude\}
+
+- **类型:** `RuleSetCondition` (来自 [@rspack/core](https://rspack.rs/config/))
+- **默认值:** `undefined`
+
+指定额外需要被视为静态资源的文件。
+
+默认情况下，Rsbuild 会将常见的图片、字体、音频和视频文件视为静态资源。
+通过 source.assetsInclude 配置，你可以指定额外需要被视为静态资源的文件类型。
+这些新增的静态资源会按照与内置支持的静态资源相同的规则进行处理。
+
+`source.assetsInclude` 的用法与 Rspack 中的 [Condition](https://rspack.rs/config/module#condition) 一致，
+支持传入字符串、正则表达式、条件数组或逻辑条件，
+用于匹配模块路径或资源。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    assetsInclude: /\.json5$/,
+  },
+})
+```
+
+### `source.decorators` \{#source-decorators\}
+
+- **类型:** [`Decorators`](#source-decorators)
+- **默认值:** `undefined`
+
+用于配置装饰器语法。
+
+更多信息请参见 [`Decorators.version`](#source-decorators-version)。
+
+#### `source.decorators.version` \{#source-decorators-version\}
+
+- **类型:** `"legacy" | "2022-03"`
+- **默认值:** `'2022-03'`
+
+指定使用的装饰器语法版本。
+
+如果你想了解不同装饰器版本之间的差异，可以参考：[How does this proposal compare to other versions of decorators?](https://github.com/tc39/proposal-decorators?tab=readme-ov-file#how-does-this-proposal-compare-to-other-versions-of-decorators)
+
+`'2022-03'` 对应 Stage 3 装饰器提案，等同于 TypeScript 5.0 默认支持的装饰器语法。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  source: {
+    decorators: { version: '2022-03' },
+  },
+})
+```
+
+`'legacy'` 对应 TypeScript 的 `experimentalDecorators: true`。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  source: {
+    decorators: { version: 'legacy' },
+  },
+})
+```
+
+### `source.define` \{#source-define\}
+
+- **类型:** `DefinePluginOptions` (来自 [@rspack/core](https://rspack.rs/config/))
+- **默认值:** `undefined`
+
+`define` 选项用于在编译时定义一些值或表达式。
+
+- 如果提供的值是字符串，它将被用作代码片段。
+
+- 如果提供的值是对象，它的所有 key 都会以相同的方式定义。
+
+- 如果提供的值不是字符串，它会被字符串化（包括函数）。
+
+- 需要注意的是，如果 key 带有 `typeof` 前缀，它将只针对 `typeof` 调用进行定义。
+
+使用 `define` 定义环境变量。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    define: {
+      BUILD_VERSION: JSON.stringify(process.env.BUILD_VERSION ?? 'unknown_version'),
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+    },
+  },
+})
+```
+
+表达式会被替换为对应的代码片段：
+
+```js
+const version = BUILD_VERSION;
+if (process.env.NODE_ENV === 'development') {}
+
+// ⬇️ Turn into being...
+const version = "unknown_version";
+if ("development" === 'development') {}
+```
+
+对 `typeof` 使用 `define`。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    define: {
+      'typeof window': JSON.stringify("undefined"),
+    },
+  },
+})
+```
+
+`typeof` 表达式会被替换为对应的代码片段：
+
+```js
+if (typeof window !== 'undefined') {}
+
+// ⬇️ Turn into being...
+if ("undefined" !== 'undefined') {}
+```
+
+使用 `define` 定义对象。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    define: {
+      'import.meta': {
+        foo: JSON.stringify('foo'),
+        bar: { baz: 0 },
+      },
+    },
+  },
+})
+```
+
+表达式会被替换为对应的代码片段：
+
+```js
+console.log(import.meta)
+
+// ⬇️ Turn into being...
+console.log({ foo: "foo", bar: { baz: 0 } })
+```
+
+### `source.entry` \{#source-entry\}
+
+- **类型:** `Entry`
+- **默认值:** `'./src/index.js'`
+
+[`Entry`](#entry) 选项用于设置入口模块。
+
+- 使用单个入口：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    entry: './src/pages/main/index.js',
+  },
+})
+```
+
+- 使用包含多个入口模块的单个入口：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    entry: ['./src/prefetch.js', './src/pages/main/index.js'],
+  },
+})
+```
+
+- 使用多个入口（每个入口包含多个入口模块）：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    entry: {
+      foo: './src/pages/foo/index.js',
+      bar: ['./src/pages/bar/index.js', './src/post.js'], // multiple entry modules is allowed
+    },
+  },
+})
+```
+
+- 使用 [`EntryDescription`](#entrydescription) 配置多个入口：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    entry: {
+      foo: './src/pages/foo/index.js',
+      bar: {
+        import: ['./src/prefetch.js', './src/pages/bar'],
+      },
+    },
+  },
+})
+```
+
+### `source.exclude` \{#source-exclude\}
+
+- **类型:** `RuleSetCondition[]`
+- **默认值:** `undefined`
+
+`source.exclude` 用于指定需要从编译中排除的 JavaScript 文件。
+
+默认情况下，Rsbuild 会编译当前目录下的 JavaScript 文件，
+以及所有目录下的 TypeScript/JSX 文件。通过 `source.exclude` 配置，你可以指定
+需要从编译中排除的文件或目录。
+`source.exclude` 的用法与 Rspack 中的 [Rule.exclude](https://rspack.rs/config/module#ruleexclude) 一致，
+支持传入字符串或正则表达式来匹配模块路径。
+
+- 排除特定的文件或目录
+
+你可以将特定的文件或目录排除在编译之外，以提升构建性能
+或避免处理某些文件：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  source: {
+    exclude: [
+      // Exclude all files in the test directory
+      /[\\/]test[\\/]/,
+      // Exclude specific file
+      './src/legacy-file.js',
+      // Exclude files matching a pattern
+      /\.stories\.(js|ts)x?$/,
+    ],
+  },
+})
+```
+
+- 排除第三方依赖
+
+你可以排除不需要编译的特定第三方依赖：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import path from 'node:path'
+import { createRequire } from 'node:module'
+
+const require = createRequire(import.meta.url)
+
+export default defineConfig({
+  source: {
+    exclude: [
+      // Exclude specific package
+      path.dirname(require.resolve('lodash')),
+      // Exclude using regex pattern
+      /node_modules[\\/]lodash-es[\\/]/,
+    ],
+  },
+})
+```
+
+### `source.include` \{#source-include\}
+
+- **类型:** `RuleSetCondition[]`
+- **默认值:** 未设置时，Rsbuild 会编译当前目录下的 JavaScript 文件以及所有目录下的 TypeScript 或 JSX 文件，同时排除 `node_modules` 下的 JavaScript 文件。
+
+`source.include` 用于指定额外需要编译的 JavaScript 文件。
+
+为了避免重复编译，默认情况下，Rsbuild 只会编译当前目录下的 JavaScript
+文件以及所有目录下的 TypeScript 和 JSX 文件。
+它不会编译 `node_modules` 下的 JavaScript 文件。
+
+通过 `source.include` 配置，你可以指定
+需要被 Rsbuild 编译的目录或模块。
+`source.include` 的用法与 Rspack 中的 [Rule.include](https://rspack.rs/config/module#ruleinclude) 一致，
+支持传入字符串或正则表达式来匹配模块路径。
+
+- 编译 npm 包
+
+一个典型的使用场景是编译 `node_modules` 下的 npm 包，
+因为部分第三方依赖包含 ESNext 语法，而 Lynx 可能不支持这些语法。
+你可以通过该配置指定需要编译的依赖，
+从而解决这个问题。
+
+```js
+import { createRequire } from 'node:module'
+import path from 'node:path'
+
+import { defineConfig } from '@lynx-js/rspeedy'
+
+const require = createRequire(import.meta.url)
+
+export default defineConfig({
+  source: {
+    include: [
+      // Method 1:
+      // First get the path of the module by `require.resolve`
+      // Then pass path.dirname to point to the corresponding directory
+      path.dirname(require.resolve('query-string')),
+      // Method 2:
+      // Match by regular expression
+      // All paths containing `node_modules/query-string/` will be matched
+      /node_modules[\\/]query-string[\\/]/,
+    ],
+  },
+})
+```
+
+- 编译 Monorepo 中的库
+
+```js
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+import { defineConfig } from '@lynx-js/rspeedy'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+const packagesDir = path.resolve(__dirname, '../../packages')
+
+export default defineConfig({
+  source: {
+    include: [
+      // Compile all files in Monorepo's package directory
+      // It is recommended to exclude the node_modules
+      {
+        and: [packagesDir, { not: /[\\/]node_modules[\\/]/ }],
+      },
+    ],
+  },
+})
+```
+
+### `source.preEntry` \{#source-preentry\}
+
+- **类型:** `string | string[]`
+- **默认值:** `undefined`
+
+在每个页面的入口文件之前添加一段脚本。该脚本会在页面代码之前执行。
+它可以用于执行全局逻辑，如注入 polyfill、设置全局样式等。
+
+更多详情请参见 [source.preEntry](https://rsbuild.rs/config/source/pre-entry)。
+
+相对路径会基于项目根目录进行解析。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    preEntry: './src/polyfill.ts',
+  },
+})
+```
+
+### `source.transformImport` \{#source-transformimport\}
+
+- **类型:** `TransformImport[]`
+- **默认值:** `undefined`
+
+[`TransformImport`](#transformimport) 选项用于转换导入路径，以便从第三方包的子路径中按需导入模块，功能类似于 [babel-plugin-import](https://npmjs.com/package/babel-plugin-import)。
+
+使用 TUX 组件库时，可以通过以下配置按需引入组件：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  source: {
+    transformImport: [
+      {
+        libraryName: 'foo',
+        customName: 'foo/src/components/{{ member }}/{{ member }}',
+      },
+    ],
+  },
+})
+```
+
+这会将以下源代码：
+
+```js
+import { Button } from 'foo'
+```
+
+转换为：
+
+```js
+import { Button } from 'foo/src/components/Button/Button'
+```
+
+### `source.tsconfigPath` \{#source-tsconfigpath\}
+
+- **类型:** `string`
+- **默认值:** `'./tsconfig.json'`
+
+配置自定义的 `tsconfig.json` 文件路径，可以是相对路径或绝对路径。
+
+`tsconfigPath` 配置会影响以下行为：
+
+- `paths` 字段用于配置 [`Path Aliases`](#source-alias)。
+
+- 设置[类型检查插件](https://rsbuild.rs/guide/basic/typescript#type-checking)的作用范围和规则。
+
+相对路径会基于项目根目录进行解析。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  source: {
+    tsconfigPath: './tsconfig.build.json',
+  },
+})
+```
+
+{/* @api-end */}

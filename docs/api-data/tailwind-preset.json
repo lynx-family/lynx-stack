@@ -1,0 +1,55 @@
+{
+  "id": "tailwind-preset",
+  "package": "@lynx-js/tailwind-preset",
+  "version": "0.5.1",
+  "description": "A tailwindcss preset for ReactLynx",
+  "section": "packages",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/tailwind-preset",
+  "exports": [
+    {
+      "name": "LynxPluginName",
+      "kind": "typealias",
+      "type": "keyof typeof PluginModules"
+    },
+    {
+      "name": "default",
+      "kind": "variable",
+      "type": "Partial<Config>",
+      "external": "typescript",
+      "default": "..."
+    },
+    {
+      "name": "createLynxPreset",
+      "kind": "function",
+      "type": "createLynxPreset(options: { debug?: boolean; lynxPlugins?: LynxPluginsOption; lynxUIPlugins?: LynxUIPluginsOption; theme?: Partial<CustomThemeConfig & {}> }): Partial<Config>",
+      "signatures": [
+        {
+          "text": "createLynxPreset(options: { debug?: boolean; lynxPlugins?: LynxPluginsOption; lynxUIPlugins?: LynxUIPluginsOption; theme?: Partial<CustomThemeConfig & {}> }): Partial<Config>",
+          "params": [
+            {
+              "name": "options",
+              "type": "{ debug?: boolean; lynxPlugins?: LynxPluginsOption; lynxUIPlugins?: LynxUIPluginsOption; theme?: Partial<CustomThemeConfig & {}> }",
+              "description": "Configuration options for the preset"
+            }
+          ],
+          "returns": {
+            "type": "Partial<Config>",
+            "description": "A partial Tailwind configuration object"
+          },
+          "summary": "Creates a Tailwind preset tailored for the Lynx ecosystem.",
+          "remarks": "- Requires **Tailwind v3+** (JIT enabled by default).\n- Configure the `content` option in your Tailwind config;\n  otherwise the generated CSS bundle may include unused utilities.\n- The `defaults` plugin is always enabled regardless of configuration.\n- Debug mode will log enabled plugins to the console.",
+          "examples": [
+            "```ts\nconst preset = createLynxPreset();\n```",
+            "```ts\n// turn off all UI plugins\ncreateLynxPreset({ lynxUIPlugins: false });\n\n// turn off a single UI plugin\ncreateLynxPreset({ lynxUIPlugins: { uiVariants: false } });\n\n// enable debug mode\ncreateLynxPreset({ debug: true });\n\n```"
+          ]
+        }
+      ],
+      "summary": "Creates a Tailwind preset tailored for the Lynx ecosystem.",
+      "remarks": "- Requires **Tailwind v3+** (JIT enabled by default).\n- Configure the `content` option in your Tailwind config;\n  otherwise the generated CSS bundle may include unused utilities.\n- The `defaults` plugin is always enabled regardless of configuration.\n- Debug mode will log enabled plugins to the console.",
+      "examples": [
+        "```ts\nconst preset = createLynxPreset();\n```",
+        "```ts\n// turn off all UI plugins\ncreateLynxPreset({ lynxUIPlugins: false });\n\n// turn off a single UI plugin\ncreateLynxPreset({ lynxUIPlugins: { uiVariants: false } });\n\n// enable debug mode\ncreateLynxPreset({ debug: true });\n\n```"
+      ]
+    }
+  ]
+}

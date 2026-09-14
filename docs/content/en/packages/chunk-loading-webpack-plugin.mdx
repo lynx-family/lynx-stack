@@ -1,0 +1,73 @@
+---
+title: '@lynx-js/chunk-loading-webpack-plugin'
+---
+
+# @lynx-js/chunk-loading-webpack-plugin
+
+{/* @api PackageHeader package="chunk-loading-webpack-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/chunk-loading-webpack-plugin</code> <span className="api-pkg-version">v0.4.2</span> · <a href="https://www.npmjs.com/package/@lynx-js/chunk-loading-webpack-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/chunk-loading-webpack-plugin" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/chunk-loading-webpack-plugin/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+:::tip Internal package
+This package is part of the Lynx build engine and is applied for you by [`pluginLynx`](/rspeedy/plugins/plugin-lynx). Its API is documented for plugin authors; application code does not use it directly.
+:::
+
+A webpack plugin to generate chunk loading runtime for Lynx.
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/chunk-loading-webpack-plugin -D" />
+
+## API
+
+{/* @api ApiExports package="chunk-loading-webpack-plugin" */}
+
+## Classes \{#classes\}
+
+### `ChunkLoadingWebpackPlugin` \{#chunkloadingwebpackplugin\}
+
+The ChunkLoadingWebpackPlugin enables chunk loading for webpack/Rspack in Lynx.
+
+- Use with Rspack.
+
+```js
+// rspack.config.js
+import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'
+export default {
+  output: {
+    chunkFormat: 'require',
+  },
+  plugins: [new ChunkLoadingWebpackPlugin()],
+}
+```
+
+- Use with Webpack.
+
+```js
+// webpack.config.js
+import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'
+export default {
+  output: {
+    chunkFormat: 'lynx',
+  },
+  plugins: [new ChunkLoadingWebpackPlugin()],
+}
+```
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="chunkloadingwebpackplugin-constructor"></a>`constructor` | `constructor(options: Partial<ChunkLoadingWebpackPluginOptions>): ChunkLoadingWebpackPlugin` |  |
+| <a id="chunkloadingwebpackplugin-defaultoptions"></a>`defaultOptions` | `Readonly<Required<ChunkLoadingWebpackPluginOptions>>` | `defaultOptions` is the default options that the [`ChunkLoadingWebpackPlugin`](#chunkloadingwebpackplugin) uses. |
+| <a id="chunkloadingwebpackplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` | The entry point of a webpack plugin. |
+
+## Types \{#types\}
+
+### `ChunkLoadingWebpackPluginOptions` \{#chunkloadingwebpackpluginoptions\}
+
+The options for ChunkLoadingWebpackPlugin
+
+{/* @api-end */}
