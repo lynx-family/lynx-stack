@@ -22,7 +22,7 @@ import {
 } from '../common/messages.js';
 import {
   ProviderAgentCache,
-  buildResourceRunOptions,
+  buildOpenAIRunOptions,
   resolveModelOutputTokenBudget,
 } from '../common/provider.js';
 import {
@@ -58,9 +58,10 @@ export function buildLynxXmlRunOptions(
     opts,
     LYNX_XML_MAX_OUTPUT_TOKENS,
   );
+  const runOptions = buildOpenAIRunOptions(opts, abortSignal);
   return {
-    ...buildResourceRunOptions(opts, abortSignal),
-    modelSettings: { maxOutputTokens },
+    ...runOptions,
+    modelSettings: { ...runOptions.modelSettings, maxOutputTokens },
   };
 }
 
@@ -125,6 +126,7 @@ export default class LynxXmlAgentService {
       createLynxXmlAgent({
         ...pickAgentCapabilityConfig(opts),
         enableHtmlFragment: opts.enableHtmlFragment,
+        enableDesignGuidance: opts.enableDesignGuidance,
       }).agent;
     if (opts.disableAgentCache) return Promise.resolve().then(createAgent);
     return this.agentCache.get(

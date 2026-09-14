@@ -23,6 +23,7 @@ coverage:
     patch:
       default:
         threshold: "1%"
+        only_pulls: true
 
 ignore:
   - ".github/**"
@@ -60,6 +61,7 @@ component_management:
         target: auto
       - type: patch
         threshold: "1%"
+        only_pulls: true
   individual_components:
     - component_id: react
       name: React

@@ -34,7 +34,7 @@ function normalizeAttributeSlots(rawSlots: readonly unknown[]): SerializableValu
 }
 
 function queuePlannedRefAttributeSlotUpdates(
-  handleId: number,
+  instance: { readonly instanceId: number },
   attrPlan: readonly (number | EtAttrAdapter)[],
   previousRawSlots?: readonly unknown[],
   nextRawSlots?: readonly unknown[],
@@ -47,7 +47,7 @@ function queuePlannedRefAttributeSlotUpdates(
       queueRefAttrUpdate(
         previousRawSlots?.[attrSlotIndex],
         nextRawSlots?.[attrSlotIndex],
-        handleId,
+        instance,
         attrSlotIndex,
       );
       continue;
@@ -62,7 +62,7 @@ function queuePlannedRefAttributeSlotUpdates(
       queueRefAttrUpdate(
         previousSpreadRef,
         nextSpreadRef ?? null,
-        handleId,
+        instance,
         attrSlotIndex,
       );
     }
@@ -104,7 +104,7 @@ export function prepareAttributeSlots(
 
 export function queueRefAttributeSlotUpdates(
   templateKey: string,
-  handleId: number,
+  instance: { readonly instanceId: number },
   previousRawSlots?: readonly unknown[],
   nextRawSlots?: readonly unknown[],
   attributePlan?: EtAttrPlan,
@@ -114,7 +114,7 @@ export function queueRefAttributeSlotUpdates(
     return;
   }
 
-  queuePlannedRefAttributeSlotUpdates(handleId, attrPlan, previousRawSlots, nextRawSlots);
+  queuePlannedRefAttributeSlotUpdates(instance, attrPlan, previousRawSlots, nextRawSlots);
 }
 
 export function getAttributeSlotUpdateOp(

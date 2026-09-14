@@ -1,5 +1,21 @@
 # @lynx-js/react
 
+## 0.126.1
+
+### Patch Changes
+
+- Type the context argument of `use` with React's `Context`, matching the rest of the public surface. `@lynx-js/react` re-exports `createContext` from `react`, so declaring `use` against Preact's `Context` made a context created through the package fail to type-check. ([#3837](https://github.com/lynx-family/lynx-stack/pull/3837))
+
+- Keep ordinary callback ref cleanup separate for each node binding. Sharing one callback between multiple nodes no longer cleans up another node's binding during attachment, replacement, or removal. Bindings retain their cleanup across hydration and keyed moves in both Snapshot and Element Template. ([#3902](https://github.com/lynx-family/lynx-stack/pull/3902))
+
+- `withLynxConfig()` now loads `rsbuild.config.*` in an Rsbuild project, not only `lynx.config.*` in an Rspeedy one, so Rstest runs in both. ([#3864](https://github.com/lynx-family/lynx-stack/pull/3864))
+
+- Clean up direct callback refs when they are set to `null` or `undefined` after hydration in the Snapshot backend. Call the binding's returned cleanup, or pass `null` to the callback when no cleanup was returned, without repeating cleanup on a later unmount. ([#3911](https://github.com/lynx-family/lynx-stack/pull/3911))
+
+- Fix the queries returned by `render` from `@lynx-js/react/testing-library` being typed as a union of every query's result when no `queries` option is passed, which made `fireEvent.tap(await findByText(...))` fail to type-check. ([#3864](https://github.com/lynx-family/lynx-stack/pull/3864))
+
+- Fix `use()` from `@lynx-js/react/compat` throwing `cannot read property '__cC0' of undefined` on the main thread. The main-thread renderer never set `_globalContext` on the components it builds, and `use` reads its context provider from there. `useContext` was unaffected because it reads `context` instead. ([#3838](https://github.com/lynx-family/lynx-stack/pull/3838))
+
 ## 0.126.0
 
 ### Minor Changes

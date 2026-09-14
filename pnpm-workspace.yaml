@@ -71,6 +71,10 @@ minimumReleaseAgeStrict: true
 
 peerDependencyRules:
   allowedVersions:
+    # Temporary compatibility exceptions for the PR #3043 Rspack preview.
+    "sass-loader>@rspack/core": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/core@843bab005b2413345eb6efc3aaaba2a398fca908"
+    "css-loader>@rspack/core": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/core@843bab005b2413345eb6efc3aaaba2a398fca908"
+    "@rspack/test-tools>@rspack/core": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/core@843bab005b2413345eb6efc3aaaba2a398fca908"
     # `vite-plugin-babel` only calls `loadOptions`, `loadPartialConfig` and
     # `transformAsync`, which all still exist in Babel 8; its `^7.0.0` range
     # predates the release. Verified by building and testing the one package
@@ -106,7 +110,7 @@ peerDependencyRules:
 
 # Default catalogs
 catalog:
-  "@microsoft/api-extractor": "7.58.12"
+  "@microsoft/api-extractor": "7.59.1"
   typescript: &typescript-version "6.0.3"
 
 catalogs:
@@ -144,6 +148,7 @@ catalogs:
   # Rstest monorepo packages
   rstest:
     "@rstest/adapter-rsbuild": "0.11.12"
+    "@rstest/adapter-rslib": "0.11.12"
     "@rstest/coverage-istanbul": "0.11.12"
     "@rstest/core": "0.11.12"
 

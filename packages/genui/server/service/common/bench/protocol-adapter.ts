@@ -23,11 +23,12 @@ export type ProtocolBenchJudgePayload =
     rawText: string;
   }
   | {
-    kind: 'lynx-xml-source';
+    kind: 'lynx-xml-source' | 'html-source';
     rawText: string;
   };
 
 export interface ProtocolBenchAdapterInput {
+  enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
   runId: string;
   pairId: string;

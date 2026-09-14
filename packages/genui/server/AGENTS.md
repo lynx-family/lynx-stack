@@ -239,7 +239,7 @@ growth, then extract and validate one complete HTML5 document before sending
 without same-origin access; do not add a server-side browser runtime or route
 HTML through Lynx.
 
-To enable UI Judge scoring, configure `UI_JUDGE_SERVER_URL` in the Playground's
+For Lynx-protocol UI Judge scoring, configure `UI_JUDGE_SERVER_URL` in the Playground's
 Bench run settings. The address stays in browser local storage; GenUI Server
 must never read it or access the screenshot service. The browser checks
 `GET /health` before creating a job with `playground.browserScreenshots: true`.
@@ -254,6 +254,14 @@ the Bench group's selected model, or the GenUI default. Reuse
 `createLLMProvider`, `GENUI_MODEL_CONFIG_JSON`, reasoning settings, token limits,
 and cancellation. The screenshot service receives no task, model, or credentials.
 Nonempty `judgeSteps` remain unsupported and are rejected before capture.
+
+HTML Bench uses `native` with no catalog and reuses the HTML generation service,
+with search and image generation disabled. Its `browser/html` screenshot tasks
+carry the complete HTML source and viewport dimensions to the Playground.
+The browser uses Element Capture on the sandboxed iframe and uploads the same
+top-down 32-bit BMP format. No server browser, Lynx bundle, or screenshot
+service URL is involved for HTML-only jobs. Keep shared scoring, cancellation,
+usage accounting, and report storage unchanged.
 
 PNG conversion preserves RGBA pixels and happens before model evaluation. Model
 inputs retain the full capture; Bench report storage separately applies its

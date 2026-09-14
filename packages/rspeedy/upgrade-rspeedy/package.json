@@ -1,6 +1,6 @@
 {
   "name": "upgrade-rspeedy",
-  "version": "0.17.1",
+  "version": "0.17.2",
   "description": "Upgrade Rspeedy-related packages",
   "keywords": [
     "webpack",
@@ -30,7 +30,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rslib build",
+    "build": "rslib",
     "test": "vitest"
   },
   "devDependencies": {

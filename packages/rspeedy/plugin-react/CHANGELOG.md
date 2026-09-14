@@ -1,5 +1,19 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.20.2
+
+### Patch Changes
+
+- Upgrade Rsbuild to 2.2.4 and fix CSS rule cloning with its stricter bundler chain types. ([#3885](https://github.com/lynx-family/lynx-stack/pull/3885))
+- Updated dependencies [[`4cde2f4`](https://github.com/lynx-family/lynx-stack/commit/4cde2f42601fa58a6936481eb2f486c68ebd3f55), [`c044a0b`](https://github.com/lynx-family/lynx-stack/commit/c044a0b8c581658ed75611503b72d0fbfad3cd7e), [`b900a78`](https://github.com/lynx-family/lynx-stack/commit/b900a78a43914adf2aae60849e2d6433be5eb797), [`9a56957`](https://github.com/lynx-family/lynx-stack/commit/9a5695786d050b395e262e0964747aaa3eae69d7), [`c171d53`](https://github.com/lynx-family/lynx-stack/commit/c171d53a110e64062371357efef290fabf95dd9e), [`9b4693f`](https://github.com/lynx-family/lynx-stack/commit/9b4693f4277bf637fceaeb39022664f49428d4f2), [`958ffb4`](https://github.com/lynx-family/lynx-stack/commit/958ffb4d591f0c3be4affe7ffc2da97c3044c701)]:
+  - @lynx-js/rsbuild-plugin@0.1.2
+  - @lynx-js/react-webpack-plugin@0.11.4
+  - @lynx-js/template-webpack-plugin@0.16.1
+  - @lynx-js/react-alias-rsbuild-plugin@0.20.2
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.4.2
+  - @lynx-js/css-extract-webpack-plugin@0.11.0
+
 ## 0.20.1
 
 ### Patch Changes

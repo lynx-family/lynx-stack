@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { MAX_BENCH_GROUPS } from './concurrency.js';
 import type {
   BenchCatalogLabel,
   BenchGroupRequest,
@@ -16,10 +17,8 @@ import type {
 import { configuredModelName } from '../model-config.js';
 import { BENCH_PROTOCOLS } from './protocol-types.js';
 
-const MAX_GROUPS = 8;
 const MAX_SCENARIOS = 20;
 const MAX_REPEATS = 10;
-const MAX_PARALLELISM = 4;
 const MAX_PROMPT_CHARS = 4_000;
 const MAX_TEXT_FIELD_CHARS = 1_000;
 const MAX_PLANNED_GENERATION_ATTEMPTS = 120;
@@ -126,15 +125,18 @@ function readStringArray(value: unknown): string[] | undefined {
 
 function normalizeSettings(value: unknown): BenchSettings {
   const record = isRecord(value) ? value : {};
+  const uiJudgeModel = configuredModelName(
+    readOptionalString(record.uiJudgeModel, 240),
+  );
   const maxRepairAttempts = 'maxRepairAttempts' in record
     ? clampInt(record.maxRepairAttempts, 2, 0, 4)
     : (record.repairEnabled === false ? 0 : 2);
   return {
     repeats: clampInt(record.repeats, 3, 1, MAX_REPEATS),
-    parallelism: clampInt(record.parallelism, 2, 1, MAX_PARALLELISM),
     maxRepairAttempts,
     repairEnabled: maxRepairAttempts > 0,
     judgeEnabled: record.judgeEnabled === true,
+    ...(uiJudgeModel ? { uiJudgeModel } : {}),
     renderMetricsEnabled: record.renderMetricsEnabled === true
       || record.collectLiveRenderMetrics === true,
     ...(record.timeoutMs === undefined
@@ -148,7 +150,6 @@ function normalizeGroups(
 ): BenchGroupRequest[] {
   if (!Array.isArray(value)) return [];
   return value
-    .slice(0, MAX_GROUPS)
     .map((item, index): BenchGroupRequest | null => {
       if (!isRecord(item)) return null;
       const id = readString(item.id, `group-${index + 1}`, 120);
@@ -165,6 +166,7 @@ function normalizeGroups(
         variable: readVariable(item.variable),
         enabled: item.enabled !== false,
         protocol,
+        enableDesignGuidance: item.enableDesignGuidance !== false,
         ...(protocol === 'lynx-xml'
           ? { enableHtmlFragment: item.enableHtmlFragment === true }
           : {}),
@@ -262,6 +264,14 @@ export function normalizeBenchJobRequest(
     provider = { model: configuredProviderModel };
   }
 
+  if (Array.isArray(value.groups) && value.groups.length > MAX_BENCH_GROUPS) {
+    return {
+      ok: false,
+      status: 422,
+      error:
+        `Bench supports at most ${MAX_BENCH_GROUPS} comparison groups, including the baseline.`,
+    };
+  }
   const groups = normalizeGroups(value.groups);
   if (
     Array.isArray(value.groups)
@@ -275,6 +285,20 @@ export function normalizeBenchJobRequest(
       ok: false,
       status: 400,
       error: 'enableHtmlFragment must be a boolean',
+    };
+  }
+  if (
+    Array.isArray(value.groups)
+    && value.groups.some((group) =>
+      isRecord(group)
+      && group.enableDesignGuidance !== undefined
+      && typeof group.enableDesignGuidance !== 'boolean'
+    )
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'enableDesignGuidance must be a boolean',
     };
   }
   const enabledGroups = groups.filter((group) => group.enabled);
@@ -309,6 +333,18 @@ export function normalizeBenchJobRequest(
     };
   }
 
+  if (
+    enabledGroups.some((group) =>
+      group.protocol === 'html' && group.profile !== 'native'
+    )
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'html groups require the "native" profile',
+    };
+  }
+
   const scenarios = normalizeScenarios(value.scenarios);
   if (scenarios.length === 0) {
     return {
@@ -319,8 +355,6 @@ export function normalizeBenchJobRequest(
   }
 
   const settings = normalizeSettings(value.settings);
-  const mixedProtocols = new Set(enabledGroups.map((group) => group.protocol))
-    .size > 1;
   const totalRuns = enabledGroups.length * scenarios.length * settings.repeats;
   const plannedGenerationAttempts = totalRuns
     * (settings.maxRepairAttempts + 1);
@@ -329,6 +363,7 @@ export function normalizeBenchJobRequest(
       || enabledGroups.some((group) =>
         group.profile === 'matched-core'
         || group.protocol === 'lynx-xml'
+        || group.protocol === 'html'
       ))
     && plannedGenerationAttempts > MAX_PLANNED_GENERATION_ATTEMPTS
   ) {
@@ -340,12 +375,6 @@ export function normalizeBenchJobRequest(
     };
   }
   const warnings: string[] = [];
-  if (mixedProtocols && settings.parallelism !== 1) {
-    settings.parallelism = 1;
-    warnings.push(
-      'Mixed-protocol jobs run one sample at a time so benchmark arms remain paired; settings.parallelism was set to 1.',
-    );
-  }
   if (
     requestedApiKey !== undefined
     || requestedBaseURL !== undefined

@@ -11,7 +11,7 @@ const MAX_SCREENSHOT_BYTES = 10 * 1024 * 1024 + 1024;
 const route = new Hono();
 
 route.get('/:jobId/screenshots/:captureId', (context) => {
-  const request = getBenchJobStore().getScreenshotRequest(
+  const request = getBenchJobStore().startScreenshot(
     context.req.param('jobId'),
     context.req.param('captureId'),
   );

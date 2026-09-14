@@ -47,6 +47,20 @@ export type ChatMessageTone = 'info' | 'pending' | 'success' | 'error';
 
 export type ChatMessageIcon = 'spinner' | 'sparkles' | 'zap' | 'error';
 
+export interface ChatInteractionEntry {
+  event: string;
+  elapsedMs: number;
+  detail: string;
+  count: number;
+  truncated: boolean;
+}
+
+export interface ChatInteractionLog {
+  entries: readonly ChatInteractionEntry[];
+  omittedEntries: number;
+  rawOutput?: ChatInteractionEntry;
+}
+
 export interface ChatMessageModel {
   id?: string;
   kind: ChatMessageKind;
@@ -58,6 +72,7 @@ export interface ChatMessageModel {
   payload?: unknown;
   payloadLayout?: 'single' | 'chunks';
   metrics?: PreviewPerformanceMetrics;
+  interaction?: ChatInteractionLog;
 }
 
 export interface ChatArtifactView {
@@ -127,7 +142,7 @@ export interface ChatSettingControl {
   id: string;
   label: string;
   value: string;
-  kind: 'select' | 'text' | 'password';
+  kind: 'select' | 'text' | 'password' | 'checkbox';
   disabled?: boolean;
   placeholder?: string;
   options?: readonly ChatSettingOption[];

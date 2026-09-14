@@ -334,16 +334,29 @@ export const LYNX_XML_CHAT_ADAPTER = {
   suggestions: SUGGESTIONS,
   settings: {
     ...CHAT_PROVIDER_SETTINGS_ADAPTER,
+    initial(): ProviderSettings {
+      return {
+        ...CHAT_PROVIDER_SETTINGS_ADAPTER.initial(),
+        enableHtmlFragment: true,
+      };
+    },
+    parseStored(raw: unknown): ProviderSettings {
+      return {
+        ...CHAT_PROVIDER_SETTINGS_ADAPTER.parseStored(raw),
+        enableHtmlFragment: true,
+      };
+    },
+    serialize(settings: ProviderSettings) {
+      const stored = CHAT_PROVIDER_SETTINGS_ADAPTER.serialize(settings);
+      delete stored.enableHtmlFragment;
+      return stored;
+    },
     controls(settings: ProviderSettings) {
       return [...CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings), {
         id: 'enableHtmlFragment',
         label: 'XML fragment',
-        kind: 'select' as const,
-        value: settings.enableHtmlFragment === true ? 'on' : 'off',
-        options: [{ value: 'off', label: 'Fragment Off' }, {
-          value: 'on',
-          label: 'Fragment On',
-        }],
+        kind: 'checkbox' as const,
+        value: settings.enableHtmlFragment === false ? 'off' : 'on',
       }];
     },
     update(settings: ProviderSettings, id: string, next: string) {
@@ -362,7 +375,7 @@ export const LYNX_XML_CHAT_ADAPTER = {
       },
       body: {
         resourceId: 'lynx-xml-create',
-        enableHtmlFragment: settings.enableHtmlFragment === true,
+        enableHtmlFragment: settings.enableHtmlFragment !== false,
         messages: [{ role: 'user', content: prompt }],
         conversation: {
           ...conversation,

@@ -65,6 +65,8 @@ async function postA2UIBenchJob(req: Request) {
   return jsonWithCors(req, {
     ok: true,
     jobId: job.id,
+    startedAt: job.createdAt,
+    durationMs: store.getSnapshot(job.id)?.durationMs,
     statusUrl: `/a2ui/bench/jobs/${job.id}`,
     eventsUrl: `/a2ui/bench/jobs/${job.id}/events`,
     reportUrl: `/a2ui/bench/jobs/${job.id}/report`,

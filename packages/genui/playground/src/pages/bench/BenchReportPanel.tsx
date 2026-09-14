@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 import { findComparableBaseline, getBenchProtocolLabel } from './benchData.js';
 import type { BenchSettings } from './benchData.js';
 import type { BenchGroupSummary, BenchReport } from './benchReportTypes.js';
+import { BenchTaskTiming } from './BenchTaskTiming.js';
 import { BenchTokens } from './BenchTokens.js';
 import { groupBenchTokenUsage } from './benchTokenUsage.js';
 import { Button } from '../../components/Button.js';
@@ -156,6 +157,14 @@ export function BenchReportPanel(props: {
           </div>
         }
       />
+
+      {props.report && (
+        <BenchTaskTiming
+          startedAt={props.report.startedAt}
+          completedAt={props.report.completedAt}
+          durationMs={props.report.durationMs}
+        />
+      )}
 
       {props.report && props.report.summaries.length > 0 && screenshotSummary
         ? (

@@ -15,19 +15,18 @@ import {
   BENCH_CATALOG_OPTIONS,
   DEFAULT_BENCH_SCENARIOS,
   DEFAULT_BENCH_SETTINGS,
+  MAX_BENCH_GROUPS,
+  createBenchPresetGroups,
   createCustomBenchScenario,
-  createDefaultBenchGroups,
   findComparableBaseline,
   getBenchProtocolLabel,
   inferBenchVariable,
-  nextBenchComparisonProtocol,
   usesCatalog,
   withBenchProtocol,
 } from './benchData.js';
 import type {
-  BenchComparisonDirection,
   BenchGroup,
-  BenchProfile,
+  BenchPreset,
   BenchProtocol,
   BenchScenario,
   BenchSettings,
@@ -39,18 +38,26 @@ import {
 } from './benchHistory.js';
 import type { BenchHistoryEntry } from './benchHistory.js';
 import { BenchHistoryRail } from './BenchHistoryRail.js';
+import { startBenchHtmlCapture } from './benchHtmlCapture.js';
+import { mergeBenchRunProgress } from './benchProgress.js';
 import { BenchReportPanel } from './BenchReportPanel.js';
 import { sanitizeBenchReportValue } from './benchReportSerialization.js';
-import type { BenchReport, BenchStatus } from './benchReportTypes.js';
+import type {
+  BenchReport,
+  BenchRunProgress,
+  BenchStatus,
+} from './benchReportTypes.js';
 import { BenchRunFooter } from './BenchRunFooter.js';
 import { BenchRunNotice } from './BenchRunNotice.js';
 import { BenchRunPanel } from './BenchRunPanel.js';
+import { BenchRunWorkflow } from './BenchRunWorkflow.js';
 import { BenchScenarioSection } from './BenchScenarioSection.js';
 import {
   checkBenchScreenshotService,
   createBenchScreenshotRelay,
 } from './benchScreenshots.js';
 import { BenchScreenshotsDialog } from './BenchScreenshotsDialog.js';
+import type { BenchLiveTiming } from './benchTiming.js';
 import { useBenchHistory } from './useBenchHistory.js';
 import { PageHeader } from '../../components/PageHeader.js';
 import { PanelResizeHandle } from '../../components/PanelResizeHandle.js';
@@ -190,6 +197,7 @@ type BenchHealthError =
 interface BenchJobCreated {
   ok?: boolean;
   jobId?: string;
+  durationMs?: number;
   eventsUrl?: string;
   reportUrl?: string;
   error?: string;
@@ -200,6 +208,7 @@ interface BenchJobSnapshot {
   ok?: boolean;
   status?: BenchStatus;
   progress?: {
+    runs?: BenchRunProgress[];
     completedRuns?: number;
     totalRuns?: number;
     current?: {
@@ -484,6 +493,9 @@ function createBenchRequestGroups(
     variable: group.variable,
     model: group.model,
     catalog: group.catalog,
+    ...(group.enableDesignGuidance === false
+      ? { enableDesignGuidance: false }
+      : {}),
     ...(group.protocol === 'lynx-xml'
       ? { enableHtmlFragment: group.enableHtmlFragment === true }
       : {}),
@@ -523,6 +535,7 @@ function createBenchPlanSignature(
       name: group.name,
       model: group.model,
       catalog: usesCatalog(group) ? group.catalog : undefined,
+      enableDesignGuidance: group.enableDesignGuidance !== false,
       ...(group.protocol === 'lynx-xml'
         ? { enableHtmlFragment: group.enableHtmlFragment === true }
         : {}),
@@ -670,8 +683,14 @@ export function getBenchRunBlockers(
   enabledControlCount: number,
   scenarioCount: number,
   repeats: number,
+  groupCount = activeGroupCount,
 ): string[] {
   const issues: string[] = [];
+  if (groupCount > MAX_BENCH_GROUPS) {
+    issues.push(
+      `Bench supports at most ${MAX_BENCH_GROUPS} comparison groups, including the baseline.`,
+    );
+  }
   if (activeGroupCount === 0) {
     issues.push(
       'Enable at least one comparison group.',
@@ -700,7 +719,7 @@ export function BenchPage() {
     readBenchUiJudgeServerUrl,
   );
   const [groups, setGroups] = useState<BenchGroup[]>(() =>
-    createDefaultBenchGroups(DEFAULT_ENV.model)
+    createBenchPresetGroups('protocol', DEFAULT_ENV.model)
   );
   const [scenarios, setScenarios] = useState<BenchScenario[]>(
     () => cloneBenchScenarios(DEFAULT_BENCH_SCENARIOS),
@@ -710,6 +729,8 @@ export function BenchPage() {
   );
   const [status, setStatus] = useState<BenchStatus>('idle');
   const [progress, setProgress] = useState(0);
+  const [runProgress, setRunProgress] = useState<BenchRunProgress[]>([]);
+  const [jobTiming, setJobTiming] = useState<BenchLiveTiming | null>(null);
   const [runMessage, setRunMessage] = useState<BenchRunMessage>({
     code: 'ready',
   });
@@ -871,14 +892,19 @@ export function BenchPage() {
     }
     return undefined;
   }, [activeGroups, env]);
+  const hasHtmlGroups = activeGroups.some((group) => group.protocol === 'html');
+  const needsScreenshotService = activeGroups.some((group) =>
+    group.protocol !== 'html'
+  );
   const uiJudgeServerUrlValidationError = useMemo(() => {
+    if (!needsScreenshotService || !settings.judgeEnabled) return '';
     if (normalizeBenchUiJudgeServerUrl(uiJudgeServerUrl) === null) {
       return 'UI_JUDGE_SERVER_URL must be an HTTP(S) URL without credentials.';
     }
     return settings.judgeEnabled && !uiJudgeServerUrl.trim()
       ? 'Enter the screenshot service URL to enable UI Judge.'
       : '';
-  }, [uiJudgeServerUrl, settings.judgeEnabled]);
+  }, [needsScreenshotService, uiJudgeServerUrl, settings.judgeEnabled]);
   const providerConfigured = useMemo(
     () => isProviderConfigured(env),
     [env],
@@ -893,6 +919,7 @@ export function BenchPage() {
         enabledControlGroupCount,
         scenarios.length,
         settings.repeats,
+        groups.length,
       ),
       ...(modelValidationError ? [modelValidationError] : []),
       ...(uiJudgeServerUrlValidationError
@@ -902,6 +929,7 @@ export function BenchPage() {
     [
       activeGroups.length,
       enabledControlGroupCount,
+      groups.length,
       historyReady,
       modelValidationError,
       scenarios.length,
@@ -1122,43 +1150,34 @@ export function BenchPage() {
     [],
   );
 
-  const addComparisonGroup = useCallback((
-    direction: BenchComparisonDirection,
-  ) => {
+  const addComparisonGroup = useCallback(() => {
     setGroups((current) => {
+      if (current.length >= MAX_BENCH_GROUPS) return current;
       const baseline = current.find((group) => group.role === 'control')
         ?? current[0];
       if (!baseline) return current;
 
       const model = baseline.model || selectedModel || DEFAULT_ENV.model;
-      const nextModel = direction === 'model'
-        ? (env.models.find((item) => item.id !== model)?.id ?? model)
-        : model;
-      const nextProtocol = direction === 'protocol'
-        ? nextBenchComparisonProtocol(current, baseline)
-        : baseline.protocol;
-      const protocolGroup = withBenchProtocol(baseline, nextProtocol);
       const nextGroup: BenchGroup = {
         ...baseline,
-        id: createId(`${direction}-comparison`),
+        id: createId('group'),
         role: 'experiment',
-        protocol: protocolGroup.protocol,
-        profile: protocolGroup.profile,
-        name: `${direction} comparison`,
-        variable: direction,
-        model: nextModel,
-        catalog: protocolGroup.catalog,
-        extraInstruction: direction === 'prompt'
-          ? 'Use concise copy and minimize unnecessary UI structure while preserving the requested content and interaction.'
-          : baseline.extraInstruction,
+        name: `Group-${String(current.length + 1).padStart(2, '0')}`,
+        variable: 'custom',
+        model,
         enabled: true,
       };
 
       return [...current, nextGroup];
     });
-    if (direction === 'protocol') {
-      setSettings((current) => ({ ...current, parallelism: 1 }));
-    }
+  }, [selectedModel]);
+
+  const applyBenchPreset = useCallback((preset: BenchPreset) => {
+    setGroups(createBenchPresetGroups(
+      preset,
+      selectedModel || DEFAULT_ENV.model,
+      env.models.map((item) => item.id),
+    ));
   }, [env.models, selectedModel]);
 
   const updateGroupProtocol = useCallback(
@@ -1167,28 +1186,6 @@ export function BenchPage() {
         current.map((group) =>
           group.id === id
             ? withBenchProtocol(group, protocol)
-            : group
-        )
-      );
-      if (protocol !== 'a2ui') {
-        setSettings((current) => ({ ...current, parallelism: 1 }));
-      }
-    },
-    [],
-  );
-
-  const updateGroupProfile = useCallback(
-    (id: string, profile: BenchProfile) => {
-      setGroups((current) =>
-        current.map((group) =>
-          group.id === id
-            ? {
-              ...group,
-              profile,
-              catalog: profile === 'matched-core'
-                ? 'Core Catalog'
-                : group.catalog,
-            }
             : group
         )
       );
@@ -1240,7 +1237,7 @@ export function BenchPage() {
   const resetBench = useCallback(() => {
     void cancelActiveBenchJob();
     const nextGroups = reconcileBenchGroupModels(
-      createDefaultBenchGroups(DEFAULT_ENV.model),
+      createBenchPresetGroups('protocol', DEFAULT_ENV.model),
       env,
     );
     const nextScenarios = cloneBenchScenarios(DEFAULT_BENCH_SCENARIOS);
@@ -1255,6 +1252,8 @@ export function BenchPage() {
     setSettings(nextSettings);
     setStatus('idle');
     setProgress(0);
+    setJobTiming(null);
+    setRunProgress([]);
     setRunMessage({ code: 'ready' });
     setReport(null);
     setReportPlanSignature(null);
@@ -1314,6 +1313,8 @@ export function BenchPage() {
     const operationId = ++benchOperationIdRef.current;
     setStatus('running');
     setProgress(0);
+    setJobTiming(null);
+    setRunProgress([]);
     setRunMessage(
       activeJobIdRef.current || pendingCancellationJobIdsRef.current.size > 0
         ? { code: 'stopping-previous-job' }
@@ -1323,32 +1324,48 @@ export function BenchPage() {
     setReportPlanSignature(null);
     setScreenshotsOpen(false);
 
+    // Begin cancellation synchronously, then acquire capture from this click's
+    // user activation before awaiting anything (required by getDisplayMedia).
+    const previousCancellation = cancelActiveBenchJob({
+      invalidatePendingStart: false,
+    });
+    const screenshotController = new AbortController();
+    screenshotAbortRef.current = screenshotController;
+    const htmlCapture = settings.judgeEnabled && hasHtmlGroups
+      ? startBenchHtmlCapture(screenshotController.signal)
+      : Promise.resolve(undefined);
+    // Attach a rejection handler immediately while previous cancellation settles.
+    const captureReady = htmlCapture.then(
+      (capture) => ({ capture }),
+      (error: unknown) => ({ error }),
+    );
     void (async () => {
-      const previousJobsCancelled = await cancelActiveBenchJob({
-        invalidatePendingStart: false,
-      });
-      if (
-        !previousJobsCancelled
-        || benchOperationIdRef.current !== operationId
-      ) {
+      let connected = false;
+      try {
+        const previousJobsCancelled = await previousCancellation;
         if (
           !previousJobsCancelled
-          && benchOperationIdRef.current === operationId
+          || benchOperationIdRef.current !== operationId
         ) {
-          setStatus('failed');
+          if (
+            !previousJobsCancelled
+            && benchOperationIdRef.current === operationId
+          ) {
+            setStatus('failed');
+          }
+          return;
         }
-        return;
-      }
 
-      setRunMessage({ code: 'creating-job' });
-      try {
+        setRunMessage({ code: 'creating-job' });
+        const captureResult = await captureReady;
+        if ('error' in captureResult) throw captureResult.error;
         const jobsEndpoint = getA2UIBenchJobsEndpoint();
         const normalizedUiJudgeServerUrl = normalizeBenchUiJudgeServerUrl(
           uiJudgeServerUrl,
         );
-        const screenshotController = new AbortController();
-        screenshotAbortRef.current = screenshotController;
-        if (settings.judgeEnabled) {
+        const uiJudgeModel = settings.uiJudgeModel
+          ?? runGroups[0]?.model;
+        if (settings.judgeEnabled && needsScreenshotService) {
           await checkBenchScreenshotService(
             normalizedUiJudgeServerUrl ?? '',
             screenshotController.signal,
@@ -1366,10 +1383,12 @@ export function BenchPage() {
             provider: {},
             settings: {
               repeats: settings.repeats,
-              parallelism: settings.parallelism,
               maxRepairAttempts: settings.repairEnabled ? 2 : 0,
               repairEnabled: settings.repairEnabled,
               judgeEnabled: settings.judgeEnabled,
+              ...(uiJudgeModel
+                ? { uiJudgeModel }
+                : {}),
               renderMetricsEnabled: settings.collectLiveRenderMetrics,
             },
             groups: createBenchRequestGroups(runGroups),
@@ -1411,6 +1430,15 @@ export function BenchPage() {
         }
 
         const jobId = payload.jobId;
+        if (
+          typeof payload.durationMs === 'number'
+          && Number.isFinite(payload.durationMs) && payload.durationMs >= 0
+        ) {
+          setJobTiming({
+            durationMs: payload.durationMs,
+            receivedAtMs: performance.now(),
+          });
+        }
         activeJobIdRef.current = jobId;
         pendingCancellationJobIdsRef.current.delete(jobId);
         setRunMessage(
@@ -1430,8 +1458,10 @@ export function BenchPage() {
           jobUrl: `${jobsEndpoint}/${encodeURIComponent(jobId)}`,
           serverUrl: normalizedUiJudgeServerUrl ?? '',
           signal: screenshotController.signal,
+          captureHtml: captureResult.capture,
           onError: (text) => setRunMessage({ code: 'raw', text }),
         });
+        connected = true;
         source.addEventListener('screenshot-requested', (event) => {
           const task = readEventData<{ captureId?: unknown }>(
             event as MessageEvent<unknown>,
@@ -1470,7 +1500,7 @@ export function BenchPage() {
             : undefined;
           const phase = typeof record.phase === 'string'
             ? record.phase
-            : 'agent';
+            : (typeof record.status === 'string' ? record.status : 'agent');
           return {
             code: 'run-progress',
             group: runGroups.find((group) => group.id === groupId),
@@ -1485,6 +1515,9 @@ export function BenchPage() {
             event as MessageEvent<unknown>,
           );
           if (!snapshot) return;
+          setRunProgress(current =>
+            mergeBenchRunProgress(current, snapshot.progress?.runs)
+          );
           updateProgress(snapshot.progress);
           if (snapshot.status === 'failed') {
             setStatus('failed');
@@ -1509,7 +1542,10 @@ export function BenchPage() {
             event as MessageEvent<unknown>,
           );
           if (!data) return;
-          setRunMessage(describeRun(data));
+          setRunProgress(current =>
+            mergeBenchRunProgress(current, data.runProgress)
+          );
+          setRunMessage(describeRun(data.runProgress ?? data.result ?? data));
           const progressPayload = data.progress as BenchJobSnapshot['progress'];
           updateProgress(progressPayload);
         };
@@ -1592,9 +1628,13 @@ export function BenchPage() {
         screenshotAbortRef.current?.abort();
         setStatus('failed');
         setRunMessage({ code: 'raw', text: getErrorMessage(error) });
+      } finally {
+        if (!connected) screenshotController.abort();
       }
     })();
   }, [
+    hasHtmlGroups,
+    needsScreenshotService,
     setHistoryItems,
     activeHistoryEntry,
     benchRunBlockers.length,
@@ -1659,6 +1699,8 @@ export function BenchPage() {
   }, [historyItems, historyReady, saveHistory]);
   const restoreHistoryEntry = useCallback((entry: BenchHistoryEntry) => {
     void cancelActiveBenchJob();
+    setJobTiming(null);
+    setRunProgress([]);
     setActiveHistoryId(entry.id);
     const restoredSignature = createBenchPlanSignature(
       entry.config.groups,
@@ -1767,6 +1809,27 @@ export function BenchPage() {
     setHistoryItems((current) => current.filter((entry) => entry.id !== id));
   }, [setHistoryItems]);
 
+  const copyHistoryEntry = useCallback((entry: BenchHistoryEntry) => {
+    const draft = createBenchDraftHistoryEntry(
+      entry.config.groups,
+      entry.config.scenarios,
+      entry.config.settings,
+    );
+    const copied = { ...draft, title: `${entry.title} copy` };
+    setGroups(cloneBenchGroups(copied.config.groups));
+    setScenarios(cloneBenchScenarios(copied.config.scenarios));
+    setSettings(cloneBenchSettings(copied.config.settings));
+    setReport(null);
+    setReportPlanSignature(null);
+    setStatus('idle');
+    setProgress(0);
+    setRunProgress([]);
+    setJobTiming(null);
+    setRunMessage({ code: 'ready' });
+    setActiveHistoryId(copied.id);
+    setHistoryItems((current) => saveBenchHistoryEntry(current, copied));
+  }, [setHistoryItems]);
+
   const clearHistory = useCallback(() => {
     setActiveHistoryId(null);
     setHistoryItems([]);
@@ -1826,12 +1889,6 @@ export function BenchPage() {
 
   return (
     <div className='benchPage'>
-      <PageHeader
-        className='benchHeader'
-        title='Bench Runner'
-        description={'Combine Protocol, Model, Prompt, and Catalog freely, then review the results in one report.'}
-      />
-
       <div
         className='benchBody'
         ref={benchBodyRef}
@@ -1846,6 +1903,7 @@ export function BenchPage() {
           reportNotice={historyReportNotice}
           storageNotice={historyStorageNotice}
           onDelete={deleteHistoryEntry}
+          onCopy={copyHistoryEntry}
           onNew={resetBench}
           onRestore={restoreHistoryEntry}
         />
@@ -1853,14 +1911,22 @@ export function BenchPage() {
           className='benchMain'
           aria-label={'Bench workspace'}
         >
+          <PageHeader
+            className='benchHeader'
+            title='Bench Runner'
+            description={'Combine Protocol, Model, Prompt, and Catalog freely, then review the results in one report.'}
+          />
           <div className='benchWorkflow'>
             <div className='benchWorkflowScroll'>
               <BenchRunPanel
                 locked={planLocked}
+                modelOptions={env.models}
                 onSettingsChange={(patch) =>
                   setSettings((current) => ({ ...current, ...patch }))}
                 onUiJudgeServerUrlChange={setUiJudgeServerUrl}
                 settings={settings}
+                hasHtmlGroups={hasHtmlGroups}
+                needsScreenshotService={needsScreenshotService}
                 uiJudgeServerUrl={uiJudgeServerUrl}
                 uiJudgeServerUrlValidationError={uiJudgeServerUrlValidationError}
               />
@@ -1880,11 +1946,14 @@ export function BenchPage() {
                 locked={planLocked}
                 modelOptions={env.models}
                 onAdd={addComparisonGroup}
+                onPresetChange={applyBenchPreset}
                 onFragmentChange={(id, enabled) =>
                   updateGroup(
                     id,
                     groupPatch('enableHtmlFragment', enabled),
                   )}
+                onDesignGuidanceChange={(id, enabled) =>
+                  updateGroup(id, groupPatch('enableDesignGuidance', enabled))}
                 onCatalogChange={(id, catalog) =>
                   updateGroup(id, groupPatch('catalog', catalog))}
                 onEnabledChange={(id, enabled) =>
@@ -1892,7 +1961,6 @@ export function BenchPage() {
                 onModelChange={(id, model) =>
                   updateGroup(id, groupPatch('model', model))}
                 onNameChange={(id, name) => updateGroup(id, { name })}
-                onProfileChange={updateGroupProfile}
                 onPromptChange={(id, extraInstruction) =>
                   updateGroup(
                     id,
@@ -1900,11 +1968,11 @@ export function BenchPage() {
                   )}
                 onProtocolChange={updateGroupProtocol}
                 onRemove={removeGroup}
-                onRoleChange={(id, role) =>
-                  updateGroup(id, groupPatch('role', role))}
               />
             </div>
             <BenchRunFooter
+              durationMs={report?.durationMs}
+              liveTiming={jobTiming}
               groupCount={activeGroups.length}
               messageText={getBenchRunMessageText(runMessage)}
               onAction={status === 'running' ? pauseBench : () => startBench()}
@@ -1915,6 +1983,17 @@ export function BenchPage() {
               runCount={runCount}
               scenarioCount={scenarios.length}
               status={status}
+              workflow={
+                <BenchRunWorkflow
+                  groups={runGroups}
+                  scenarios={scenarios}
+                  repeats={settings.repeats}
+                  runs={report ? report.runProgress ?? [] : runProgress}
+                  results={report?.results}
+                  judgeEnabled={settings.judgeEnabled}
+                  status={status}
+                />
+              }
             />
           </div>
         </main>

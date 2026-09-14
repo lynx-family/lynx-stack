@@ -45,8 +45,8 @@ reject nested elements or ambiguous simultaneous text sources.
 Keep `eslint-scope` external in the intermediate library build; bundle it once
 in the consuming server to avoid duplicated CommonJS module tables.
 
-Keep mobile design intent in `src/mobile-design.ts` and concrete Lynx APIs in
-`src/prompt.ts`. Require applied classes with explicit `display: flex` and
+Keep shared product and mobile design intent in `packages/genui/server/design/design-guidance.ts`
+and concrete Lynx APIs in `src/prompt.ts`. Require applied classes with explicit `display: flex` and
 `flex-direction` on layout containers. Both `__AppendElement` arguments must
 be nodes; reserve `pageId` for page-owned creation APIs. For long content, append
 one definite-height vertical scroll view directly to Page, without a business

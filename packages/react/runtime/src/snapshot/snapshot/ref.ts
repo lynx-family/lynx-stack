@@ -4,7 +4,7 @@
 import type { Element, Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { workletUnRef } from './workletRef.js';
-import { OrdinaryRefEffectQueue, applyOrdinaryRef, normalizeRefValue } from '../../core/ref.js';
+import { OrdinaryRefEffectQueue, normalizeRefValue } from '../../core/ref.js';
 import type { OrdinaryRef } from '../../core/ref.js';
 import { RefProxy } from '../lifecycle/ref/delay.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
@@ -30,10 +30,6 @@ function unref(snapshot: SnapshotInstance, recursive: boolean): void {
       unref(it, recursive);
     });
   }
-}
-
-function clearRef(ref: Ref): void {
-  applyOrdinaryRef(ref, null);
 }
 
 function updateRef(
@@ -95,10 +91,10 @@ function applyQueuedRefs(): void {
 function queueRefAttrUpdate(
   oldRef: Ref | null | undefined,
   newRef: Ref | null | undefined,
-  snapshotInstanceId: number,
+  snapshot: { readonly __id: number },
   expIndex: number,
 ): void {
-  refEffectQueue.queue(oldRef, newRef, [snapshotInstanceId, expIndex]);
+  refEffectQueue.queue(oldRef, newRef, snapshot, expIndex, [snapshot.__id, expIndex]);
 }
 
 function clearQueuedRefs(): void {
@@ -113,7 +109,6 @@ export {
   updateRef,
   unref,
   transformRef,
-  clearRef,
   applyQueuedRefs,
   clearQueuedRefs,
   getRefFromValue,

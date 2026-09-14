@@ -68,7 +68,8 @@ function isBenchVariable(value: unknown): value is BenchVariable {
 }
 
 function isBenchProtocol(value: unknown): value is BenchProtocol {
-  return value === 'a2ui' || value === 'openui' || value === 'lynx-xml';
+  return value === 'a2ui' || value === 'openui' || value === 'lynx-xml'
+    || value === 'html';
 }
 
 function isBenchProfile(value: unknown): value is BenchProfile {
@@ -84,10 +85,6 @@ export function createBenchSettingsFromReport(
       reportSettings.repeats,
       DEFAULT_BENCH_SETTINGS.repeats,
     ),
-    parallelism: readFiniteNumber(
-      reportSettings.parallelism,
-      DEFAULT_BENCH_SETTINGS.parallelism,
-    ),
     repairEnabled: readBoolean(
       reportSettings.repairEnabled,
       DEFAULT_BENCH_SETTINGS.repairEnabled,
@@ -96,6 +93,10 @@ export function createBenchSettingsFromReport(
       reportSettings.judgeEnabled,
       DEFAULT_BENCH_SETTINGS.judgeEnabled,
     ),
+    ...(typeof reportSettings.uiJudgeModel === 'string'
+        && reportSettings.uiJudgeModel.trim().length > 0
+      ? { uiJudgeModel: reportSettings.uiJudgeModel.trim() }
+      : {}),
     collectLiveRenderMetrics: readBoolean(
       reportSettings.collectLiveRenderMetrics,
       readBoolean(
@@ -122,6 +123,9 @@ export function createBenchGroupsFromReport(
       id: item.id ?? createId(`history-group-${index + 1}`),
       role: isBenchRole(item.role) ? item.role : 'experiment',
       protocol,
+      ...(item.enableDesignGuidance === false
+        ? { enableDesignGuidance: false }
+        : {}),
       ...(protocol === 'lynx-xml'
         ? {
           enableHtmlFragment:
@@ -134,7 +138,7 @@ export function createBenchGroupsFromReport(
       name: item.name ?? `Group ${index + 1}`,
       variable: isBenchVariable(item.variable) ? item.variable : 'custom',
       model: item.model ?? fallbackModel,
-      catalog: protocol === 'lynx-xml'
+      catalog: protocol === 'lynx-xml' || protocol === 'html'
         ? 'none'
         : item.catalog ?? 'Full Catalog',
       extraInstruction: item.extraInstruction ?? '',

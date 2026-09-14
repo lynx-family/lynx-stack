@@ -35,24 +35,23 @@ const reduceA2UIStream = A2UI_CHAT_ADAPTER.stream.reduce.bind(
   A2UI_CHAT_ADAPTER.stream,
 );
 
-test('Lynx XML Create persists and sends the fragment switch, defaulting off', () => {
+test('Lynx XML Create defaults the fragment checkbox on and keeps toggles in page memory', () => {
   const adapter = LYNX_XML_CHAT_ADAPTER;
   let settings = adapter.settings.initial();
   expect(
     adapter.settings.controls(settings).find((control) =>
       control.id === 'enableHtmlFragment'
-    )?.value,
-  ).toBe('off');
-  for (const value of ['off', 'on', 'off']) {
-    settings = adapter.settings.update(
-      settings,
-      'enableHtmlFragment',
-      value,
-    );
-    settings = adapter.settings.parseStored(
-      JSON.stringify(adapter.settings.serialize(settings)),
-    );
-    expect(settings.enableHtmlFragment).toBe(value === 'on');
+    ),
+  ).toMatchObject({ kind: 'checkbox', value: 'on' });
+  for (const value of [undefined, 'off', 'on', 'off']) {
+    if (value !== undefined) {
+      settings = adapter.settings.update(
+        settings,
+        'enableHtmlFragment',
+        value,
+      );
+    }
+    expect(settings.enableHtmlFragment !== false).toBe(value !== 'off');
     const request = adapter.createRequest({
       prompt: 'Hello',
       settings,
@@ -67,7 +66,22 @@ test('Lynx XML Create persists and sends the fragment switch, defaulting off', (
       signal: new AbortController().signal,
     });
     expect(request.body).toMatchObject({
-      enableHtmlFragment: value === 'on',
+      enableHtmlFragment: value !== 'off',
+    });
+    const stored = adapter.settings.serialize(settings);
+    expect(stored).not.toHaveProperty('enableHtmlFragment');
+    expect(adapter.settings.parseStored(JSON.stringify(stored)))
+      .toMatchObject({ enableHtmlFragment: true });
+  }
+  for (const key of ['enableHtmlFragment', 'enableHtmlFragmentTool']) {
+    expect(adapter.settings.parseStored(JSON.stringify({
+      provider: 'test-model',
+      enableDesignGuidance: false,
+      [key]: false,
+    }))).toMatchObject({
+      provider: 'test-model',
+      enableDesignGuidance: false,
+      enableHtmlFragment: true,
     });
   }
   expect(
@@ -214,7 +228,13 @@ describe('chat protocol adapters', () => {
         CHAT_PROVIDER_SETTINGS_ADAPTER.controls(customSettings).map(
           (control) => control.id,
         ),
-      ).toEqual(['provider', 'model', 'apiKey', 'baseURL']);
+      ).toEqual([
+        'provider',
+        'model',
+        'apiKey',
+        'baseURL',
+        'enableDesignGuidance',
+      ]);
       expect(CHAT_PROVIDER_SETTINGS_ADAPTER.controls(customSettings)[3])
         .toMatchObject({
           kind: 'select',
@@ -367,7 +387,13 @@ describe('chat protocol adapters', () => {
         CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings).map(
           (control) => control.id,
         ),
-      ).toEqual(['provider', 'model', 'apiKey', 'baseURL']);
+      ).toEqual([
+        'provider',
+        'model',
+        'apiKey',
+        'baseURL',
+        'enableDesignGuidance',
+      ]);
       expect(CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings)[0])
         .toMatchObject(
           {

@@ -403,7 +403,7 @@ export class BackgroundElementTemplateInstance {
     if (this.rawAttributeSlots) {
       queueRefAttributeSlotUpdates(
         this.type,
-        this.instanceId,
+        this,
         this.rawAttributeSlots,
         undefined,
         this.getAttributeSlotPlan(),
@@ -445,7 +445,7 @@ export class BackgroundElementTemplateInstance {
     if (options?.publishRefEffects ?? true) {
       queueRefAttributeSlotUpdates(
         this.type,
-        this.instanceId,
+        this,
         undefined,
         this.rawAttributeSlots,
         this.getAttributeSlotPlan(),
@@ -492,7 +492,7 @@ export class BackgroundElementTemplateInstance {
       if (shouldQueueRefEffects) {
         queueRefAttributeSlotUpdates(
           this.type,
-          this.instanceId,
+          this,
           previousRawSlots,
           value,
           this.getAttributeSlotPlan(),

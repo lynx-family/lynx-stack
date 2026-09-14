@@ -68,6 +68,26 @@ describe('Element APIs', () => {
       true,
     );
   });
+  test.each([true, false, undefined])(
+    'creates a page with CSS inheritance config %s',
+    (enabled) => {
+      const api = createElementAPI(
+        rootDom,
+        mtsBinding,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        enabled,
+      );
+      const page = api.__CreatePage('0', 0);
+      expect(page.getAttribute('lynx-enable-css-inheritance')).toBe(
+        enabled ? 'true' : null,
+      );
+    },
+  );
   test('#commonEventHandler should filter out -1 uniqueId', () => {
     mtsBinding.wasmContext = Object.assign(mtsBinding.wasmContext || {}, {
       common_event_handler: rstest.fn(),

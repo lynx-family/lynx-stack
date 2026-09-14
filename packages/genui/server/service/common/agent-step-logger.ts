@@ -12,6 +12,7 @@ import type {
 import { readBenchTokenUsage, sumBenchTokenUsage } from './bench/usage.js';
 import type { BenchTokenUsage } from './bench/usage.js';
 import { redactModelConfigSecrets } from './model-config.js';
+import { resolveReasoningEffort } from './provider.js';
 import type { ChatOptions } from './types.js';
 
 function record(value: unknown): Record<string, unknown> {
@@ -58,13 +59,38 @@ function errorDetails(
       typeof candidate === 'string' && candidate.trim().length > 0
     );
   const nested = error.cause ?? error.error;
+  const headers = record(error.responseHeaders);
+  const requestId = Object.entries(headers).find(([name, header]) =>
+    name.toLowerCase() === 'x-request-id' && typeof header === 'string'
+  )?.[1];
+  const contentType = Object.entries(headers).find(([name, header]) =>
+    name.toLowerCase() === 'content-type' && typeof header === 'string'
+  )?.[1];
+  // SDK JSON parse errors and their SyntaxError causes quote the response body.
+  const jsonParseError = error.name === 'AI_JSONParseError';
   return {
     ...(typeof error.name === 'string' ? { name: sanitize(error.name) } : {}),
     ...(typeof error.code === 'string' ? { code: sanitize(error.code) } : {}),
-    message: message
-      ? sanitize(message)
-      : 'Tool failed; no error message was provided',
-    ...(nested !== undefined && nested !== value && depth < 2
+    ...(typeof error.statusCode === 'number'
+        && Number.isInteger(error.statusCode)
+        && error.statusCode >= 100 && error.statusCode <= 599
+      ? { statusCode: error.statusCode }
+      : {}),
+    ...(typeof requestId === 'string'
+      ? { upstreamRequestId: sanitize(requestId) }
+      : {}),
+    ...(typeof contentType === 'string'
+      ? { responseContentType: sanitize(contentType) }
+      : {}),
+    ...(typeof error.responseBody === 'string'
+      ? { responseBodyChars: error.responseBody.length }
+      : {}),
+    message: jsonParseError
+      ? 'JSON parsing failed.'
+      : (message
+        ? sanitize(message)
+        : 'Operation failed; no error message was provided'),
+    ...(!jsonParseError && nested !== undefined && nested !== value && depth < 2
       ? { cause: errorDetails(nested, opts, depth + 1) }
       : {}),
   };
@@ -122,6 +148,7 @@ export function createAgentStepLogger<OUTPUT = undefined>(
   configuration?: Record<string, boolean>,
 ) {
   const invocationId = randomUUID();
+  const reasoningEffort = resolveReasoningEffort(opts);
   const startedAt = performance.now();
   let previousStepAt = startedAt;
   const usages: BenchTokenUsage[] = [];
@@ -131,6 +158,7 @@ export function createAgentStepLogger<OUTPUT = undefined>(
       invocationId,
       resourceId: opts.resourceId,
       model: opts.model,
+      reasoningEffort,
       configuration,
       ...details,
     };
@@ -139,6 +167,16 @@ export function createAgentStepLogger<OUTPUT = undefined>(
   };
   emit('agent.model.started', {});
   return {
+    // A direct SDK failure can throw before Mastra invokes onFinish.
+    onError({ error }: { error: unknown }) {
+      emit('agent.model.error', {
+        failed: true,
+        stepCount: usages.length,
+        durationMs: Math.round(performance.now() - startedAt),
+        stepUsageTotal: sumBenchTokenUsage(usages),
+        error: errorDetails(error, opts),
+      });
+    },
     onStepFinish(step: LLMStepResult<OUTPUT> & { runId?: string }) {
       const now = performance.now();
       const usage = readUsage(step.usage);
@@ -209,7 +247,10 @@ export function createAgentStepLogger<OUTPUT = undefined>(
         reportedStepCount: result.steps?.length,
         durationMs: Math.round(performance.now() - startedAt),
         finishReason: result.finishReason,
-        failed: result.error !== undefined,
+        failed: result.error != null || result.finishReason === 'error',
+        ...(result.error == null
+          ? {}
+          : { error: errorDetails(result.error, opts) }),
         stepUsageTotal: sumBenchTokenUsage(usages),
         totalUsage: readUsage(result.totalUsage),
       });

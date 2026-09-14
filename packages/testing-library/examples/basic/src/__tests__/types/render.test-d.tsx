@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
-import { expect, test } from 'vitest';
-import { render } from '@lynx-js/react/testing-library';
+import { expect, expectTypeOf, test } from 'vitest';
+import { fireEvent, render } from '@lynx-js/react/testing-library';
 
 test('render basic component', () => {
   const Comp = () => {
@@ -30,4 +30,12 @@ test('render ReactNode types other than ReactElement', () => {
   ].forEach((node) => {
     render(node);
   });
+});
+
+test('render without options keeps the default query types', async () => {
+  const { findByText } = render(<text>Hello</text>);
+
+  expectTypeOf(findByText).returns.toEqualTypeOf<Promise<HTMLElement>>();
+
+  fireEvent.tap(await findByText('Hello'));
 });

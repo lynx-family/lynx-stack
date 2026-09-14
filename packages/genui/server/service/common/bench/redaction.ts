@@ -89,6 +89,12 @@ export function sanitizeBenchPublicValue(
   return Object.fromEntries(
     Object.entries(value).flatMap(([key, item]) => {
       const normalizedKey = key.replace(/[^a-z]/giu, '').toLowerCase();
+      // Group and scenario names are user-facing labels. They may contain a
+      // configured model name (for example, "Group 01-gemini"), but that
+      // label is not a provider credential and must remain stable in reports.
+      if ((key === 'name' || key === 'groupName') && typeof item === 'string') {
+        return [[key, item]];
+      }
       // Public model names are already exposed by /models. A name can equal
       // an upstream id, which remains private everywhere outside this field.
       if (

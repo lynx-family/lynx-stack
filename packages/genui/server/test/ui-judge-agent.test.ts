@@ -151,4 +151,37 @@ describe('GenUI screenshot evaluation', () => {
       generate.mock.calls.every(([, options]) => options.abortSignal?.aborted),
     ).toBe(true);
   });
+
+  test('waits for aborted dimensions to settle before releasing the scoring task', async () => {
+    let settle!: () => void;
+    generate.mockImplementationOnce(() =>
+      new Promise((resolve) => {
+        settle = () =>
+          resolve({
+            object: {
+              score: 4,
+              reason: 'Evidence.',
+              summary: 'Visible details.',
+            },
+          });
+      })
+    );
+    generate.mockRejectedValue(new Error('Dimension failed'));
+    let finished = false;
+    const pending = evaluateScreenshot({
+      screenshotDataUrl,
+      task: 'Build a greeting',
+    })
+      .catch((error: unknown) => {
+        finished = true;
+        return error;
+      });
+    await rstest.waitUntil(() =>
+      generate.mock.calls.every(([, options]) => options.abortSignal?.aborted)
+    );
+    expect(finished).toBe(false);
+    settle();
+    expect(await pending).toEqual(new Error('Dimension failed'));
+    expect(finished).toBe(true);
+  });
 });

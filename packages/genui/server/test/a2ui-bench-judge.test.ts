@@ -16,6 +16,7 @@ import {
   runBenchUiJudge,
   runBenchUiJudgeRequest,
 } from '../service/a2ui/a2ui-bench-judge.js';
+import { BenchTaskPool } from '../service/common/bench/concurrency.js';
 import {
   BENCH_SCREENSHOT_DATA_URL_PREFIX,
   MAX_BENCH_SCREENSHOT_DECODED_BYTES,
@@ -123,6 +124,53 @@ function geqiResponse(score: number): {
     score,
   };
 }
+
+test('excludes capture and scoring queue waits from the execution timeout', async () => {
+  const scheduling = {
+    evaluation: new BenchTaskPool(1),
+  };
+  let startCapture!: () => void;
+  const started = new Promise<void>((resolve) => {
+    startCapture = resolve;
+  });
+  const queueEvaluation = rstest.spyOn(scheduling.evaluation, 'run');
+  const releaseEvaluation = await scheduling.evaluation.acquire();
+  let now = 0;
+  const clock = rstest.spyOn(performance, 'now').mockImplementation(() => now);
+  const timeout = rstest.spyOn(AbortSignal, 'timeout');
+  const capture = rstest.fn(() => ({
+    started,
+    response: Promise.resolve(evaluationResponse(geqiResponse(4))),
+  }));
+  const running = runBenchUiJudgeRequest({
+    globalProps: {},
+    scenario: { prompt: 'Build a card' },
+    session: {
+      screenshotPath: 'screenshot/zip/url',
+      zipUrl: 'https://assets.test/app.zip',
+    },
+    timeoutMs: 1_000,
+    scheduling,
+  }, capture);
+  try {
+    expect(capture).toHaveBeenCalledTimes(1);
+    expect(timeout).not.toHaveBeenCalled();
+    now = 10_000;
+    startCapture();
+    await rstest.waitUntil(() => queueEvaluation.mock.calls.length === 1);
+    now = 20_000;
+    releaseEvaluation();
+    const result = await running;
+    expect(result.status).toBe('complete');
+    expect(timeout.mock.calls).toEqual([[2_000], [2_000]]);
+  } finally {
+    startCapture();
+    releaseEvaluation();
+    clock.mockRestore();
+    timeout.mockRestore();
+    queueEvaluation.mockRestore();
+  }
+});
 
 describe('resolveBenchUiJudge', () => {
   test('resolves capture inputs without using a screenshot service URL', async () => {
@@ -832,7 +880,9 @@ describe('screenshot evaluation boundary', () => {
         expect(result).toMatchObject({
           status: 'failed',
           score: 0,
-          errors: ['GenUI screenshot evaluation failed.'],
+          errors: [
+            expect.stringContaining('GenUI screenshot evaluation failed:'),
+          ],
         });
         expect(cancel).toHaveBeenCalledTimes(1);
         expect(pull).not.toHaveBeenCalled();
@@ -851,7 +901,9 @@ describe('screenshot evaluation boundary', () => {
       expect(result).toMatchObject({
         status: 'failed',
         score: 0,
-        errors: ['GenUI screenshot evaluation failed.'],
+        errors: [
+          expect.stringContaining('GenUI screenshot evaluation failed:'),
+        ],
       });
       expect(evaluate).not.toHaveBeenCalled();
     });

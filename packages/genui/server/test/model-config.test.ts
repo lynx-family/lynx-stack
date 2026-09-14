@@ -63,6 +63,29 @@ describe('GenUI model configuration', () => {
     }
   });
 
+  test('preserves renamed group labels containing configured model names', () => {
+    const previous = process.env[GENUI_MODEL_CONFIG_ENV];
+    process.env[GENUI_MODEL_CONFIG_ENV] = JSON.stringify(CONFIG);
+    try {
+      expect(sanitizeBenchPublicValue({
+        groups: [{ name: 'Group 01-doubao-seed-upstream' }],
+        results: [{
+          groupName: 'Group 01-doubao-seed-upstream',
+          model: 'doubao-seed-upstream',
+        }],
+      }, {})).toEqual({
+        groups: [{ name: 'Group 01-doubao-seed-upstream' }],
+        results: [{
+          groupName: 'Group 01-doubao-seed-upstream',
+          model: '[REDACTED]',
+        }],
+      });
+    } finally {
+      if (previous === undefined) delete process.env[GENUI_MODEL_CONFIG_ENV];
+      else process.env[GENUI_MODEL_CONFIG_ENV] = previous;
+    }
+  });
+
   test('parses a provider config map keyed by public model name', () => {
     expect(parseModelConfig(JSON.stringify(CONFIG))).toEqual({
       defaultModel: 'Doubao Seed',

@@ -2,7 +2,16 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import {
+  BenchTaskPool,
+  MAX_BENCH_GROUPS,
+  MAX_BENCH_JUDGE_CONCURRENCY,
+  benchInFlightLimit,
+} from './concurrency.js';
+import type { BenchJudgeScheduling } from './concurrency.js';
 import { resolveGenuiBenchUiJudge, runGenuiBenchUiJudge } from './judge.js';
+import type { GenuiBenchJudgeArtifact } from './judge.js';
+import { benchProgressSummary } from './progress.js';
 import type {
   ProtocolBenchAdapter,
   ProtocolBenchJudgePayload,
@@ -33,6 +42,8 @@ import {
   createArkImageGenerationRunScope,
   generatedArkImageURLs,
 } from '../../../agent/common/ark-image-generation-tool.js';
+import { createScreenshotEvaluator } from '../../../agent/common/ui-judge-agent.js';
+import type { ScreenshotEvaluator } from '../../../agent/common/ui-judge-agent.js';
 import { getA2UIAgentService } from '../../a2ui/a2ui-agent.js';
 import { createA2UIBenchAdapter } from '../../a2ui/a2ui-bench-adapter.js';
 import { resolveBenchCatalog } from '../../a2ui/a2ui-bench-catalog.js';
@@ -42,6 +53,7 @@ import type {
   BenchUiJudgeResult,
 } from '../../a2ui/a2ui-bench-judge.js';
 // import { runBenchPreview } from '../../a2ui/a2ui-bench-preview.js';
+import { createHtmlBenchAdapter } from '../../html/html-bench-adapter.js';
 import { createLynxXmlBenchAdapter } from '../../lynx-xml/lynx-xml-bench-adapter.js';
 import { createOpenUIBenchAdapter } from '../../openui/openui-bench-adapter.js';
 import { defaultModelName } from '../model-config.js';
@@ -53,8 +65,9 @@ interface BenchRunItem {
   repeatIndex: number;
 }
 
-interface BenchRunSample {
-  items: BenchRunItem[];
+interface GeneratedBenchRun {
+  result: BenchRunResult;
+  judgeArtifact?: GenuiBenchJudgeArtifact;
 }
 
 export interface BenchRunnerDependencies {
@@ -62,6 +75,10 @@ export interface BenchRunnerDependencies {
 }
 
 type BenchJudgeCapabilities = Map<string, BenchUiJudgeCapability>;
+
+// Shared by all jobs in this process. Admission waits stay outside Agent/Judge time.
+const generationPool = new BenchTaskPool(MAX_BENCH_GROUPS);
+const evaluationPool = new BenchTaskPool(MAX_BENCH_JUDGE_CONCURRENCY);
 
 function averagePlanned(values: number[], plannedRuns: number): number {
   if (plannedRuns === 0) return 0;
@@ -79,32 +96,6 @@ function profileForGroup(group: BenchGroupRequest): BenchProfile {
 
 function judgeCapabilityKey(group: BenchGroupRequest): string {
   return `${protocolForGroup(group)}:${profileForGroup(group)}`;
-}
-
-function buildRunSamples(request: BenchJobRequest): BenchRunSample[] {
-  const enabledGroups = request.groups.filter((group) => group.enabled);
-  const samples: BenchRunSample[] = [];
-  let sampleOrdinal = 0;
-  for (const scenario of request.scenarios) {
-    for (
-      let repeatIndex = 1;
-      repeatIndex <= request.settings.repeats;
-      repeatIndex++
-    ) {
-      const offset = enabledGroups.length === 0
-        ? 0
-        : sampleOrdinal % enabledGroups.length;
-      const groups = [
-        ...enabledGroups.slice(offset),
-        ...enabledGroups.slice(0, offset),
-      ];
-      samples.push({
-        items: groups.map((group) => ({ group, scenario, repeatIndex })),
-      });
-      sampleOrdinal++;
-    }
-  }
-  return samples;
 }
 
 function buildBenchPrompt(
@@ -151,6 +142,7 @@ function emitRunPhase(
   phase: BenchRunPhase,
 ): void {
   const store = getBenchJobStore();
+  if (store.getJob(jobId)?.abortController.signal.aborted) return;
   const job = store.updateProgress(jobId, {
     current: {
       groupId: item.group.id,
@@ -165,7 +157,11 @@ function emitRunPhase(
     scenarioId: item.scenario.id,
     repeatIndex: item.repeatIndex,
     phase,
-    progress: job.progress,
+    runProgress: job.progress.runs?.find(run =>
+      run.groupId === item.group.id && run.scenarioId === item.scenario.id
+      && run.repeatIndex === item.repeatIndex
+    ),
+    progress: benchProgressSummary(job.progress),
   });
 }
 
@@ -217,7 +213,6 @@ async function generateA2UINative(
         disableAgentCache: true,
         enableWebSearch: false,
         enableImageGeneration: false,
-        inheritReasoningEffort: false,
       },
       undefined,
       signal,
@@ -268,9 +263,8 @@ async function runA2UINativeOne(
   jobId: string,
   request: BenchJobRequest,
   item: BenchRunItem,
-  judgeCapability: BenchUiJudgeCapability,
   signal: AbortSignal,
-): Promise<BenchRunResult> {
+): Promise<GeneratedBenchRun> {
   const store = getBenchJobStore();
   const runId = `${item.group.id}-${item.scenario.id}-${item.repeatIndex}`;
   const model = pickRunModel(request, item.group);
@@ -282,7 +276,7 @@ async function runA2UINativeOne(
     groupId: item.group.id,
     scenarioId: item.scenario.id,
     repeatIndex: item.repeatIndex,
-    progress: store.getJob(jobId)?.progress,
+    progress: benchProgressSummary(store.getJob(jobId)!.progress),
   });
 
   const messages: ChatMessage[] = [
@@ -304,37 +298,6 @@ async function runA2UINativeOne(
     emitRunPhase(jobId, item, 'validate');
     const agentMs = performance.now() - startedAt;
     const outputChars = result.text.length;
-    const judgeSession = judgeCapability.session;
-    const judge: BenchUiJudgeResult | {
-      errors: [];
-      score: 0;
-      status: 'skipped';
-      warnings: [];
-    } = result.ok
-        && request.settings.judgeEnabled
-        && judgeSession
-        && !signal.aborted
-      ? await (async () => {
-        emitRunPhase(jobId, item, 'judge');
-        return await runGenuiBenchUiJudge(
-          {
-            model,
-            artifact: {
-              protocol: 'a2ui',
-              messages: result.messages ?? [],
-            },
-            scenario: item.scenario,
-            session: judgeSession,
-            signal,
-            timeoutMs: request.settings.timeoutMs,
-          },
-          (capture, captureSignal) =>
-            store.requestScreenshot(jobId, capture, captureSignal),
-        );
-      })()
-      : { errors: [], score: 0, status: 'skipped', warnings: [] };
-    const runErrors = [...result.errors, ...judge.errors];
-    const runOk = result.ok && judge.status !== 'failed';
     /*
     const preview = result.ok
       ? await runBenchPreviewForItem(jobId, request, item, result.messages)
@@ -346,100 +309,92 @@ async function runA2UINativeOne(
         ttiMs: 0,
       };
     */
-    return sanitizeBenchPublicValue({
-      id: runId,
-      groupId: item.group.id,
-      groupName: item.group.name,
-      role: item.group.role,
-      protocol: 'a2ui',
-      profile: 'native',
-      scenarioId: item.scenario.id,
-      scenarioName: item.scenario.name,
-      repeatIndex: item.repeatIndex,
-      status: runOk ? 'complete' : 'failed',
-      ok: runOk,
-      model: model ?? defaultModelName() ?? 'server default',
-      catalog: catalogLabel,
-      tokens: result.usage.reduce<number>(
-        (total, usage) => total + benchAttemptTokenCounts(usage).totalTokens,
-        0,
-      ),
-      agentMs: Math.round(agentMs),
-      // fmpMs: preview.fmpMs,
-      fmpMs: 0,
-      // ttiMs: preview.ttiMs,
-      ttiMs: 0,
-      // renderMs: preview.renderMs,
-      renderMs: 0,
-      attempts: result.attempts,
-      ...(judge.status === 'complete' && 'dimensions' in judge
-          && judge.dimensions
-        ? { judgeDimensions: judge.dimensions }
+    return {
+      ...(result.ok
+        ? {
+          judgeArtifact: {
+            protocol: 'a2ui' as const,
+            messages: result.messages,
+          },
+        }
         : {}),
-      ...(judge.status === 'complete' && 'geqiScore' in judge
-          && judge.geqiScore !== undefined
-        ? { judgeGeqiScore: judge.geqiScore }
-        : {}),
-      judgeScore: judge.status === 'complete' ? judge.score : 0,
-      judgeStatus: judge.status,
-      ...(judge.status === 'complete' && 'reason' in judge && judge.reason
-        ? { judgeReason: judge.reason }
-        : {}),
-      ...(judge.status === 'complete' && 'summary' in judge && judge.summary
-        ? { judgeSummary: judge.summary }
-        : {}),
-      ...([...result.warnings, ...judge.warnings].length > 0
-        ? { judgeWarnings: [...result.warnings, ...judge.warnings] }
-        : {}),
-      messageCount: result.messages.length,
-      outputChars,
-      errors: runErrors,
-      ...(runOk
-        ? {}
-        : {
-          error: runErrors.join('; ')
-            || (judge.status === 'failed'
-              ? 'UI Judge failed'
-              : 'A2UI output failed validation'),
-        }),
-      finishReason: result.finishReason,
-      usage: result.usage,
-      messages: result.messages,
-      ...('screenshotDataUrl' in judge && judge.screenshotDataUrl
-        ? { screenshotDataUrl: judge.screenshotDataUrl }
-        : {}),
-      text: result.text,
-    }, request.provider) as BenchRunResult;
+      result: sanitizeBenchPublicValue({
+        id: runId,
+        groupId: item.group.id,
+        groupName: item.group.name,
+        role: item.group.role,
+        protocol: 'a2ui',
+        profile: 'native',
+        scenarioId: item.scenario.id,
+        scenarioName: item.scenario.name,
+        repeatIndex: item.repeatIndex,
+        status: result.ok ? 'complete' : 'failed',
+        ok: result.ok,
+        model: model ?? defaultModelName() ?? 'server default',
+        catalog: catalogLabel,
+        tokens: result.usage.reduce<number>(
+          (total, usage) => total + benchAttemptTokenCounts(usage).totalTokens,
+          0,
+        ),
+        agentMs: Math.round(agentMs),
+        // fmpMs: preview.fmpMs,
+        fmpMs: 0,
+        // ttiMs: preview.ttiMs,
+        ttiMs: 0,
+        // renderMs: preview.renderMs,
+        renderMs: 0,
+        attempts: result.attempts,
+        judgeScore: 0,
+        judgeStatus: 'skipped',
+        ...(result.warnings.length > 0
+          ? { judgeWarnings: result.warnings }
+          : {}),
+        messageCount: result.messages.length,
+        outputChars,
+        errors: result.errors,
+        ...(result.ok
+          ? {}
+          : {
+            error: result.errors.join('; ') || 'A2UI output failed validation',
+          }),
+        finishReason: result.finishReason,
+        usage: result.usage,
+        messages: result.messages,
+        text: result.text,
+      }, request.provider) as BenchRunResult,
+    };
   } catch (error) {
     const agentMs = performance.now() - startedAt;
     const message = error instanceof Error ? error.message : String(error);
-    return sanitizeBenchPublicValue({
-      id: runId,
-      groupId: item.group.id,
-      groupName: item.group.name,
-      role: item.group.role,
-      protocol: 'a2ui',
-      profile: 'native',
-      scenarioId: item.scenario.id,
-      scenarioName: item.scenario.name,
-      repeatIndex: item.repeatIndex,
-      status: 'failed',
-      ok: false,
-      model: model ?? defaultModelName() ?? 'server default',
-      catalog: catalogLabel,
-      tokens: 0,
-      agentMs: Math.round(agentMs),
-      fmpMs: 0,
-      ttiMs: 0,
-      renderMs: 0,
-      attempts: 0,
-      judgeScore: 0,
-      judgeStatus: 'skipped',
-      messageCount: 0,
-      outputChars: 0,
-      errors: [message],
-      error: message,
-    }, request.provider) as BenchRunResult;
+    return {
+      result: sanitizeBenchPublicValue({
+        id: runId,
+        groupId: item.group.id,
+        groupName: item.group.name,
+        role: item.group.role,
+        protocol: 'a2ui',
+        profile: 'native',
+        scenarioId: item.scenario.id,
+        scenarioName: item.scenario.name,
+        repeatIndex: item.repeatIndex,
+        status: 'failed',
+        ok: false,
+        model: model ?? defaultModelName() ?? 'server default',
+        catalog: catalogLabel,
+        tokens: 0,
+        agentMs: Math.round(agentMs),
+        fmpMs: 0,
+        ttiMs: 0,
+        renderMs: 0,
+        attempts: 0,
+        judgeScore: 0,
+        judgeStatus: 'skipped',
+        messageCount: 0,
+        outputChars: 0,
+        errors: [message],
+        error: message,
+      }, request.provider) as BenchRunResult,
+    };
   }
 }
 
@@ -469,16 +424,15 @@ async function runProtocolAdapterOne(
   jobId: string,
   request: BenchJobRequest,
   item: BenchRunItem,
-  judgeCapability: BenchUiJudgeCapability,
   adapter: ProtocolBenchAdapter | undefined,
   signal: AbortSignal,
-): Promise<BenchRunResult> {
+): Promise<GeneratedBenchRun> {
   const store = getBenchJobStore();
   const runId = `${item.group.id}-${item.scenario.id}-${item.repeatIndex}`;
   const protocol = protocolForGroup(item.group);
   const profile = profileForGroup(item.group);
   const model = pickRunModel(request, item.group);
-  const catalogLabel = protocol === 'lynx-xml'
+  const catalogLabel = protocol === 'lynx-xml' || protocol === 'html'
     ? 'none' as const
     : (profile === 'matched-core'
       ? 'matched-core' as const
@@ -491,7 +445,7 @@ async function runProtocolAdapterOne(
     profile,
     scenarioId: item.scenario.id,
     repeatIndex: item.repeatIndex,
-    progress: store.getJob(jobId)?.progress,
+    progress: benchProgressSummary(store.getJob(jobId)!.progress),
   });
   emitRunPhase(jobId, item, 'agent');
   const startedAt = performance.now();
@@ -503,6 +457,7 @@ async function runProtocolAdapterOne(
       );
     }
     const artifact = await adapter.generate({
+      enableDesignGuidance: item.group.enableDesignGuidance !== false,
       ...(protocol === 'lynx-xml'
         ? { enableHtmlFragment: item.group.enableHtmlFragment === true }
         : {}),
@@ -519,48 +474,12 @@ async function runProtocolAdapterOne(
       },
     }, signal);
     emitRunPhase(jobId, item, 'validate');
+    const agentMs = performance.now() - startedAt;
 
     const judgePayload: ProtocolBenchJudgePayload | undefined =
       artifact.finalValid
         ? artifact.judgePayload
         : undefined;
-    const judge: BenchUiJudgeResult | {
-      errors: [];
-      score: 0;
-      status: 'skipped';
-      warnings: [];
-    } = request.settings.judgeEnabled
-        && judgeCapability.session
-        && judgePayload
-        && !signal.aborted
-      ? await (async () => {
-        emitRunPhase(jobId, item, 'judge');
-        return await runGenuiBenchUiJudge(
-          {
-            model,
-            artifact: judgePayload.kind === 'a2ui-messages'
-              ? {
-                protocol: 'a2ui',
-                messages: judgePayload.messages as NonNullable<
-                  BenchRunResult['messages']
-                >,
-              }
-              : {
-                protocol: judgePayload.kind === 'lynx-xml-source'
-                  ? 'lynx-xml'
-                  : 'openui',
-                rawText: judgePayload.rawText,
-              },
-            scenario: item.scenario,
-            session: judgeCapability.session!,
-            signal,
-            timeoutMs: request.settings.timeoutMs,
-          },
-          (capture, captureSignal) =>
-            store.requestScreenshot(jobId, capture, captureSignal),
-        );
-      })()
-      : { errors: [], score: 0, status: 'skipped', warnings: [] };
     const attempts = artifact.attempts;
     const tokens = attempts.reduce(
       (total, attempt) => total + attempt.totalTokens,
@@ -569,13 +488,7 @@ async function runProtocolAdapterOne(
     const messages = judgePayload?.kind === 'a2ui-messages'
       ? judgePayload.messages as NonNullable<BenchRunResult['messages']>
       : undefined;
-    const judgeWarnings = [
-      ...(artifact.warnings ?? []),
-      ...judge.warnings,
-    ];
-    const agentMs = performance.now() - startedAt;
-    const runErrors = [...artifact.finalErrors, ...judge.errors];
-    const runOk = artifact.finalValid && judge.status !== 'failed';
+    const judgeWarnings = artifact.warnings ?? [];
     const result: BenchRunResult = {
       id: runId,
       groupId: item.group.id,
@@ -586,8 +499,8 @@ async function runProtocolAdapterOne(
       scenarioId: item.scenario.id,
       scenarioName: item.scenario.name,
       repeatIndex: item.repeatIndex,
-      status: runOk ? 'complete' : 'failed',
-      ok: runOk,
+      status: artifact.finalValid ? 'complete' : 'failed',
+      ok: artifact.finalValid,
       model: model ?? defaultModelName() ?? 'server default',
       catalog: catalogLabel,
       tokens,
@@ -596,35 +509,19 @@ async function runProtocolAdapterOne(
       ttiMs: 0,
       renderMs: 0,
       attempts: attempts.length,
-      ...(judge.status === 'complete' && 'dimensions' in judge
-          && judge.dimensions
-        ? { judgeDimensions: judge.dimensions }
-        : {}),
-      ...(judge.status === 'complete' && 'geqiScore' in judge
-          && judge.geqiScore !== undefined
-        ? { judgeGeqiScore: judge.geqiScore }
-        : {}),
-      judgeScore: judge.status === 'complete' ? judge.score : 0,
-      judgeStatus: judge.status,
-      ...(judge.status === 'complete' && 'reason' in judge && judge.reason
-        ? { judgeReason: judge.reason }
-        : {}),
-      ...(judge.status === 'complete' && 'summary' in judge && judge.summary
-        ? { judgeSummary: judge.summary }
-        : {}),
+      judgeScore: 0,
+      judgeStatus: 'skipped',
       ...(judgeWarnings.length > 0 ? { judgeWarnings } : {}),
       messageCount: messages?.length ?? 0,
       outputChars: artifact.finalText?.length
         ?? attempts[attempts.length - 1]?.outputChars
         ?? 0,
-      errors: runErrors,
-      ...(runOk
+      errors: artifact.finalErrors,
+      ...(artifact.finalValid
         ? {}
         : {
-          error: runErrors.join('; ')
-            || (judge.status === 'failed'
-              ? 'UI Judge failed'
-              : `${protocol} output failed validation`),
+          error: artifact.finalErrors.join('; ')
+            || `${protocol} output failed validation`,
         }),
       ...(attempts[attempts.length - 1]?.finishReason === undefined
         ? {}
@@ -636,61 +533,78 @@ async function runProtocolAdapterOne(
         totalTokens: tokens,
       },
       ...(messages ? { messages } : {}),
-      ...('screenshotDataUrl' in judge && judge.screenshotDataUrl
-        ? { screenshotDataUrl: judge.screenshotDataUrl }
-        : {}),
       ...(artifact.metadata
         ? { adapterMetadata: artifact.metadata }
         : {}),
       ...(artifact.finalText ? { text: artifact.finalText } : {}),
     };
-    return sanitizeBenchPublicValue(
-      result,
-      request.provider,
-    ) as BenchRunResult;
+    return {
+      result: sanitizeBenchPublicValue(
+        result,
+        request.provider,
+      ) as BenchRunResult,
+      ...(judgePayload
+        ? {
+          judgeArtifact: judgePayload.kind === 'a2ui-messages'
+            ? {
+              protocol: 'a2ui' as const,
+              messages: judgePayload.messages as NonNullable<
+                BenchRunResult['messages']
+              >,
+            }
+            : {
+              protocol: judgePayload.kind === 'lynx-xml-source'
+                ? 'lynx-xml' as const
+                : (judgePayload.kind === 'html-source'
+                  ? 'html' as const
+                  : 'openui' as const),
+              rawText: judgePayload.rawText,
+            },
+        }
+        : {}),
+    };
   } catch (error) {
     const agentMs = performance.now() - startedAt;
     const message = error instanceof Error ? error.message : String(error);
-    return sanitizeBenchPublicValue({
-      id: runId,
-      groupId: item.group.id,
-      groupName: item.group.name,
-      role: item.group.role,
-      protocol,
-      profile,
-      scenarioId: item.scenario.id,
-      scenarioName: item.scenario.name,
-      repeatIndex: item.repeatIndex,
-      status: 'failed',
-      ok: false,
-      model: model ?? defaultModelName() ?? 'server default',
-      catalog: catalogLabel,
-      tokens: 0,
-      agentMs: Math.round(agentMs),
-      fmpMs: 0,
-      ttiMs: 0,
-      renderMs: 0,
-      attempts: 0,
-      judgeScore: 0,
-      judgeStatus: 'skipped',
-      messageCount: 0,
-      outputChars: 0,
-      errors: [message],
-      error: message,
-    }, request.provider) as BenchRunResult;
+    return {
+      result: sanitizeBenchPublicValue({
+        id: runId,
+        groupId: item.group.id,
+        groupName: item.group.name,
+        role: item.group.role,
+        protocol,
+        profile,
+        scenarioId: item.scenario.id,
+        scenarioName: item.scenario.name,
+        repeatIndex: item.repeatIndex,
+        status: 'failed',
+        ok: false,
+        model: model ?? defaultModelName() ?? 'server default',
+        catalog: catalogLabel,
+        tokens: 0,
+        agentMs: Math.round(agentMs),
+        fmpMs: 0,
+        ttiMs: 0,
+        renderMs: 0,
+        attempts: 0,
+        judgeScore: 0,
+        judgeStatus: 'skipped',
+        messageCount: 0,
+        outputChars: 0,
+        errors: [message],
+        error: message,
+      }, request.provider) as BenchRunResult,
+    };
   }
 }
 
-async function runOne(
+async function generateOne(
   jobId: string,
   request: BenchJobRequest,
   item: BenchRunItem,
-  judgeCapabilities: BenchJudgeCapabilities,
   adapters: Partial<Record<BenchProtocol, ProtocolBenchAdapter>>,
   signal: AbortSignal,
-): Promise<BenchRunResult> {
-  const capability = judgeCapabilities.get(judgeCapabilityKey(item.group))
-    ?? { enabled: false };
+): Promise<GeneratedBenchRun> {
   if (
     protocolForGroup(item.group) === 'a2ui'
     && profileForGroup(item.group) === 'native'
@@ -699,7 +613,6 @@ async function runOne(
       jobId,
       request,
       item,
-      capability,
       signal,
     );
   }
@@ -707,10 +620,83 @@ async function runOne(
     jobId,
     request,
     item,
-    capability,
     adapters[protocolForGroup(item.group)],
     signal,
   );
+}
+
+async function finishRun(
+  jobId: string,
+  request: BenchJobRequest,
+  item: BenchRunItem,
+  generated: GeneratedBenchRun,
+  judgeCapabilities: BenchJudgeCapabilities,
+  scheduling: BenchJudgeScheduling,
+  signal: AbortSignal,
+  evaluate?: ScreenshotEvaluator,
+): Promise<BenchRunResult> {
+  const { result, judgeArtifact } = generated;
+  const session = judgeCapabilities.get(judgeCapabilityKey(item.group))
+    ?.session;
+  if (
+    !request.settings.judgeEnabled || !judgeArtifact || !session
+    || signal.aborted
+  ) {
+    return result;
+  }
+  emitRunPhase(jobId, item, 'screenshot-queued');
+  let judge: BenchUiJudgeResult;
+  try {
+    judge = await runGenuiBenchUiJudge(
+      {
+        model: request.settings.uiJudgeModel
+          ?? pickRunModel(request, item.group),
+        artifact: judgeArtifact,
+        scenario: item.scenario,
+        session,
+        signal,
+        timeoutMs: request.settings.timeoutMs,
+        scheduling,
+        onPhase: phase => emitRunPhase(jobId, item, phase),
+        ...(evaluate ? { evaluate } : {}),
+      },
+      (capture, captureSignal) =>
+        getBenchJobStore().requestScreenshot(jobId, capture, captureSignal),
+    );
+  } catch (error) {
+    judge = {
+      status: 'failed',
+      score: 0,
+      errors: [error instanceof Error ? error.message : String(error)],
+      warnings: [],
+    };
+  }
+  const errors = [...result.errors, ...judge.errors];
+  const warnings = [...(result.judgeWarnings ?? []), ...judge.warnings];
+  const ok = result.ok && judge.status !== 'failed';
+  return sanitizeBenchPublicValue({
+    ...result,
+    ok,
+    status: ok ? 'complete' : 'failed',
+    errors,
+    ...(ok ? {} : { error: errors.join('; ') || 'UI Judge failed' }),
+    judgeScore: judge.status === 'complete' ? judge.score : 0,
+    judgeStatus: judge.status,
+    ...(judge.status === 'complete'
+      ? {
+        ...(judge.dimensions ? { judgeDimensions: judge.dimensions } : {}),
+        ...(judge.geqiScore === undefined
+          ? {}
+          : { judgeGeqiScore: judge.geqiScore }),
+        ...(judge.reason ? { judgeReason: judge.reason } : {}),
+        ...(judge.summary ? { judgeSummary: judge.summary } : {}),
+      }
+      : {}),
+    ...(warnings.length > 0 ? { judgeWarnings: warnings } : {}),
+    ...(judge.screenshotDataUrl
+      ? { screenshotDataUrl: judge.screenshotDataUrl }
+      : {}),
+  }, request.provider) as BenchRunResult;
 }
 
 /*
@@ -944,12 +930,13 @@ function resolveProtocolAdapters(
   );
   const adapters: Partial<Record<BenchProtocol, ProtocolBenchAdapter>> = {};
   for (const protocol of protocols) {
-    adapters[protocol] = overrides?.[protocol]
-      ?? (protocol === 'a2ui'
-        ? createA2UIBenchAdapter()
-        : (protocol === 'openui'
-          ? createOpenUIBenchAdapter()
-          : createLynxXmlBenchAdapter()));
+    const factories = {
+      a2ui: createA2UIBenchAdapter,
+      openui: createOpenUIBenchAdapter,
+      'lynx-xml': createLynxXmlBenchAdapter,
+      html: createHtmlBenchAdapter,
+    };
+    adapters[protocol] = overrides?.[protocol] ?? factories[protocol]();
   }
   return adapters;
 }
@@ -963,14 +950,18 @@ export async function runBenchJob(
   if (!job) return;
   const activeJob = job;
   const request = activeJob.request;
-  const samples = buildRunSamples(request);
-  const totalRuns = samples.reduce(
-    (total, sample) => total + sample.items.length,
-    0,
-  );
+  const groups = request.groups.filter((group) => group.enabled);
+  const workerCount = groups.length;
+  const totalRuns = workerCount * request.scenarios.length
+    * request.settings.repeats;
   let judgeCapabilities: BenchJudgeCapabilities = new Map();
 
   try {
+    if (request.groups.length > MAX_BENCH_GROUPS) {
+      throw new Error(
+        `Bench supports at most ${MAX_BENCH_GROUPS} comparison groups, including the baseline.`,
+      );
+    }
     if (
       activeJob.abortController.signal.aborted
       || store.getJob(jobId)?.status === 'cancelled'
@@ -1020,52 +1011,97 @@ export async function runBenchJob(
       }
     }
 
-    let nextIndex = 0;
-    const mixedProtocols = new Set(
-      request.groups.filter((group) => group.enabled).map((group) =>
-        protocolForGroup(group)
-      ),
-    ).size > 1;
-    const workerCount = Math.min(
-      mixedProtocols ? 1 : request.settings.parallelism,
-      samples.length,
+    const scheduling: BenchJudgeScheduling = {
+      evaluation: evaluationPool,
+    };
+    const judgeEvaluator = request.settings.judgeEnabled
+        && request.settings.uiJudgeModel
+      ? createScreenshotEvaluator(request.settings.uiJudgeModel).evaluate
+      : undefined;
+    // Reserve space before generation so announced browser tasks and pending
+    // scores stay bounded even when the client drains its capture queue slowly.
+    const inFlight = new BenchTaskPool(
+      benchInFlightLimit(workerCount),
     );
+    const pending = new Set<Promise<void>>();
+    const failureController = new AbortController();
+    const signal = AbortSignal.any([
+      activeJob.abortController.signal,
+      failureController.signal,
+    ]);
+    let failure: { error: unknown } | undefined;
+    const fail = (error: unknown) => {
+      if (signal.aborted) return;
+      failure = { error };
+      failureController.abort(error);
+    };
 
-    async function worker(): Promise<void> {
-      while (!activeJob.abortController.signal.aborted) {
-        const index = nextIndex++;
-        const sample = samples[index];
-        if (!sample) return;
+    function publishResult(result: BenchRunResult): void {
+      if (signal.aborted) return;
+      const updated = store.addResult(jobId, result);
+      if (!updated) return;
+      const storedResult = updated.results[updated.results.length - 1]
+        ?? result;
+      const eventResult = { ...storedResult };
+      delete eventResult.screenshotDataUrl;
+      store.emit(jobId, storedResult.ok ? 'run-complete' : 'run-error', {
+        result: eventResult,
+        runProgress: updated.progress.runs?.find(run =>
+          run.groupId === storedResult.groupId
+          && run.scenarioId === storedResult.scenarioId
+          && run.repeatIndex === storedResult.repeatIndex
+        ),
+        progress: benchProgressSummary(updated.progress),
+      });
+    }
 
-        for (const item of sample.items) {
-          if (activeJob.abortController.signal.aborted) return;
-          const result = await runOne(
-            jobId,
-            request,
-            item,
-            judgeCapabilities,
-            adapters,
-            activeJob.abortController.signal,
-          );
-          if (activeJob.abortController.signal.aborted) return;
-          const updated = store.addResult(jobId, result);
-          if (!updated) return;
-          const storedResult = updated.results[updated.results.length - 1]
-            ?? result;
-          const eventResult = { ...storedResult };
-          delete eventResult.screenshotDataUrl;
-          const event = storedResult.ok ? 'run-complete' : 'run-error';
-          store.emit(jobId, event, {
-            result: eventResult,
-            progress: updated.progress,
-          });
+    async function worker(group: BenchGroupRequest): Promise<void> {
+      for (const scenario of request.scenarios) {
+        for (
+          let repeatIndex = 1;
+          repeatIndex <= request.settings.repeats;
+          repeatIndex++
+        ) {
+          if (signal.aborted) return;
+          const item = { group, scenario, repeatIndex };
+          const release = await inFlight.acquire(signal);
+          let handedOff = false;
+          try {
+            if (signal.aborted) return;
+            const generated = await generationPool.run(
+              () => generateOne(jobId, request, item, adapters, signal),
+              signal,
+            );
+            if (signal.aborted) return;
+            const completion = finishRun(
+              jobId,
+              request,
+              item,
+              generated,
+              judgeCapabilities,
+              scheduling,
+              signal,
+              judgeEvaluator,
+            ).then(publishResult).catch(fail).finally(() => {
+              release();
+              pending.delete(completion);
+            });
+            pending.add(completion);
+            handedOff = true;
+          } finally {
+            if (!handedOff) release();
+          }
         }
       }
     }
 
     await Promise.all(
-      Array.from({ length: workerCount }, () => worker()),
+      groups.map((group) => worker(group).catch(fail)),
     );
+    // A terminal report releases the job slot and credentials, so all stages
+    // must settle first, including cancellation and unexpected worker failures.
+    await Promise.all(pending);
+    if (failure) throw failure.error;
 
     const latest = store.getJob(jobId);
     if (!latest) return;
@@ -1086,6 +1122,7 @@ export async function runBenchJob(
     }
 
     latest.progress = {
+      ...latest.progress,
       completedRuns: latest.results.length,
       totalRuns,
     };

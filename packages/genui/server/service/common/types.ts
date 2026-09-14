@@ -26,12 +26,16 @@ export type OpenAIReasoningEffort =
 export interface ChatOptions
   extends SearchCapabilityOptions, ImageGenerationCapabilityOptions
 {
+  /** Include the shared product and mobile design guidance in generation prompts. */
+  enableDesignGuidance?: boolean | undefined;
   resourceId?: string | undefined;
   apiKey?: string | undefined;
   baseURL?: string | undefined;
   model?: string | undefined;
   api?: 'chat' | 'responses' | undefined;
   reasoningEffort?: OpenAIReasoningEffort | undefined;
+  /** SDK retries per model call; Bench owns retries and explicitly sets zero. */
+  maxRetries?: number | undefined;
   /** Do not retain request-scoped provider credentials in the shared cache. */
   disableAgentCache?: boolean | undefined;
   /**
