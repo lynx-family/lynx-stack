@@ -2,11 +2,13 @@
   {
     "type": "file",
     "name": "progress-bar",
-    "label": "dev.progressBar"
+    "label": "dev.progressBar",
+    "tag": "Default changed"
   },
   {
     "type": "file",
     "name": "write-to-disk",
-    "label": "dev.writeToDisk"
+    "label": "dev.writeToDisk",
+    "tag": "Default changed"
   }
 ]

@@ -2,6 +2,7 @@
   {
     "type": "file",
     "name": "profile",
-    "label": "performance.profile"
+    "label": "performance.profile",
+    "tag": "Lynx"
   }
 ]

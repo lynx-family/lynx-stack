@@ -7,17 +7,20 @@
   {
     "type": "file",
     "name": "environments",
-    "label": "environments"
+    "label": "environments",
+    "tag": "Default changed"
   },
   {
     "type": "file",
     "name": "mode",
-    "label": "mode"
+    "label": "mode",
+    "tag": "Default changed"
   },
   {
     "type": "file",
     "name": "split-chunks",
-    "label": "splitChunks"
+    "label": "splitChunks",
+    "tag": "Default changed"
   },
   {
     "type": "dir-section-header",

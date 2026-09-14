@@ -2,6 +2,7 @@
   {
     "type": "file",
     "name": "host",
-    "label": "server.host"
+    "label": "server.host",
+    "tag": "Default changed"
   }
 ]

@@ -2,6 +2,7 @@
   {
     "type": "file",
     "name": "rsdoctor",
-    "label": "tools.rsdoctor"
+    "label": "tools.rsdoctor",
+    "tag": "Lynx"
   }
 ]

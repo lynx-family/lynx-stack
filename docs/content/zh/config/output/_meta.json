@@ -2,46 +2,55 @@
   {
     "type": "file",
     "name": "data-uri-limit",
-    "label": "output.dataUriLimit"
+    "label": "output.dataUriLimit",
+    "tag": "默认值不同"
   },
   {
     "type": "file",
     "name": "filename",
-    "label": "output.filename"
+    "label": "output.filename",
+    "tag": "默认值不同"
   },
   {
     "type": "file",
     "name": "filename-bundle",
-    "label": "output.filename.bundle"
+    "label": "output.filename.bundle",
+    "tag": "Lynx"
   },
   {
     "type": "file",
     "name": "filename-template",
-    "label": "output.filename.template"
+    "label": "output.filename.template",
+    "tag": "Lynx"
   },
   {
     "type": "file",
     "name": "inline-scripts",
-    "label": "output.inlineScripts"
+    "label": "output.inlineScripts",
+    "tag": "默认值不同"
   },
   {
     "type": "file",
     "name": "legal-comments",
-    "label": "output.legalComments"
+    "label": "output.legalComments",
+    "tag": "默认值不同"
   },
   {
     "type": "file",
     "name": "minify-background-options",
-    "label": "output.minify.backgroundOptions"
+    "label": "output.minify.backgroundOptions",
+    "tag": "Lynx"
   },
   {
     "type": "file",
     "name": "minify-main-thread-options",
-    "label": "output.minify.mainThreadOptions"
+    "label": "output.minify.mainThreadOptions",
+    "tag": "Lynx"
   },
   {
     "type": "file",
     "name": "source-map",
-    "label": "output.sourceMap"
+    "label": "output.sourceMap",
+    "tag": "默认值不同"
   }
 ]

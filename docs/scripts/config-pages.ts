@@ -12,7 +12,7 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { configPagePaths, configPageUrl } from './render.ts';
+import { EN, ZH, configPagePaths, configPageUrl } from './render.ts';
 
 const OVERVIEW_LABEL = { en: 'Overview', zh: '概览' } as const;
 const MARKER = '{/* @api ConfigOption ';
@@ -67,22 +67,24 @@ export function syncConfigPages(docsRoot: string): void {
       { type: 'file', name: 'index', label: OVERVIEW_LABEL[locale] },
     ];
     const sections = new Map<string, unknown[]>();
+    const l = locale === 'zh' ? ZH : EN;
     for (const { path, lynx, rel } of pages) {
       const file = join(root, `${rel}.mdx`);
       if (!existsSync(file)) {
         mkdirSync(dirname(file), { recursive: true });
         writeFileSync(file, skeleton(path, lynx));
       }
+      const tag = lynx ? l.lynxBadge : l.defaultBadge;
       const [ns, name] = rel.split('/');
       if (!name) {
-        meta.push({ type: 'file', name: ns, label: path });
+        meta.push({ type: 'file', name: ns, label: path, tag });
         continue;
       }
       if (!sections.has(ns!)) {
         sections.set(ns!, []);
         meta.push({ type: 'dir-section-header', name: ns, label: ns });
       }
-      sections.get(ns!)!.push({ type: 'file', name, label: path });
+      sections.get(ns!)!.push({ type: 'file', name, label: path, tag });
     }
     writeJson(join(root, '_meta.json'), meta);
     for (const [ns, items] of sections) {

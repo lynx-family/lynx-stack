@@ -7,17 +7,20 @@
   {
     "type": "file",
     "name": "environments",
-    "label": "environments"
+    "label": "environments",
+    "tag": "默认值不同"
   },
   {
     "type": "file",
     "name": "mode",
-    "label": "mode"
+    "label": "mode",
+    "tag": "默认值不同"
   },
   {
     "type": "file",
     "name": "split-chunks",
-    "label": "splitChunks"
+    "label": "splitChunks",
+    "tag": "默认值不同"
   },
   {
     "type": "dir-section-header",
