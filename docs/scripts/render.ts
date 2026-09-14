@@ -107,7 +107,7 @@ export const EN: Locale = {
   rsbuildDocsLink: 'Rsbuild documentation',
   overview: 'Overview',
   packageGroups: {
-    build: 'Build',
+    build: 'Build tools',
     react: 'ReactLynx',
     web: 'Web platform',
     libraries: 'Libraries and tools',
@@ -155,7 +155,7 @@ export const ZH: Locale = {
   rsbuildDocsLink: 'Rsbuild 文档',
   overview: '概览',
   packageGroups: {
-    build: '构建',
+    build: '构建工具',
     react: 'ReactLynx',
     web: 'Web 平台',
     libraries: '库与工具',
