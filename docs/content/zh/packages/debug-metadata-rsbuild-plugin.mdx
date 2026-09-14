@@ -20,14 +20,7 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 
 ## 用法
 
-```ts title="lynx.config.ts"
-import { defineConfig } from '@lynx-js/rspeedy'
-import { pluginLynxDebugMetadata } from '@lynx-js/debug-metadata-rsbuild-plugin'
-
-export default defineConfig({
-  plugins: [pluginLynxDebugMetadata()],
-})
-```
+无需手动注册：[`pluginLynx`](/zh/packages/rsbuild-plugin) 会应用它，而 Rspeedy 和 [`pluginReactLynx`](/zh/packages/react-rsbuild-plugin) 等 DSL 插件都会替你加上 `pluginLynx`。
 
 ## API
 
