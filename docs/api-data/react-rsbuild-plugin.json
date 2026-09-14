@@ -3,7 +3,7 @@
   "package": "@lynx-js/react-rsbuild-plugin",
   "version": "0.20.1",
   "description": "A rsbuild plugin for ReactLynx",
-  "section": "rspeedy",
+  "group": "build",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-react",
   "exports": [
     {

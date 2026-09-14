@@ -3,7 +3,7 @@
   "package": "@lynx-js/use-sync-external-store",
   "version": "1.5.0",
   "description": "A pure ESM fork of use-sync-external-store. Works with @lynx-js/react.",
-  "section": "packages",
+  "group": "react",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/use-sync-external-store",
   "exports": [
     {

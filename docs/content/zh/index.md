@@ -10,9 +10,6 @@ hero:
       text: 构建配置
       link: /zh/config/
     - theme: alt
-      text: 插件
-      link: /zh/plugins/plugin-lynx
-    - theme: alt
       text: ReactLynx
       link: /zh/react/api/
     - theme: alt

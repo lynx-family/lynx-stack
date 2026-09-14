@@ -1,8 +1,8 @@
 ---
-title: pluginLynx
+title: '@lynx-js/rsbuild-plugin'
 ---
 
-# pluginLynx
+# @lynx-js/rsbuild-plugin
 
 {/* @api PackageHeader package="rsbuild-plugin" */}
 
@@ -12,7 +12,7 @@ title: pluginLynx
 
 以 Rsbuild 插件形式提供的 Lynx 构建引擎。借助它可以直接使用 Rsbuild CLI 构建 Lynx 应用，无需 Rspeedy CLI。
 
-[`pluginReactLynx`](/zh/plugins/plugin-react) 等 DSL 插件会在构建引擎缺失时自动注册它，因此只有在需要传入下列选项时才需要自行添加 `pluginLynx`。Rspeedy 同样会自动注册它，并转发 `lynx.config.ts` 中的 `output.filename` 和 `performance.profile`。
+[`pluginReactLynx`](/zh/packages/react-rsbuild-plugin) 等 DSL 插件会在构建引擎缺失时自动注册它，因此只有在需要传入下列选项时才需要自行添加 `pluginLynx`。Rspeedy 同样会自动注册它，并转发 `lynx.config.ts` 中的 `output.filename` 和 `performance.profile`。
 
 ## 安装
 

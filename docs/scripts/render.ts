@@ -10,6 +10,8 @@ import type {
   ApiMember,
   ApiParam,
 } from './generate-api-data.ts';
+import { PACKAGES, PACKAGE_GROUPS } from './packages.ts';
+import type { PackageEntry, PackageGroup } from './packages.ts';
 import type { RsbuildOption } from './rsbuild-config.ts';
 
 const cache = new Map<string, ApiData>();
@@ -61,6 +63,8 @@ export interface Locale {
   defaultBadge: string;
   rsbuildOption: string;
   rsbuildDocsLink: string;
+  overview: string;
+  packageGroups: Record<PackageGroup, string>;
 }
 
 export const EN: Locale = {
@@ -101,6 +105,14 @@ export const EN: Locale = {
   rsbuildOption:
     'Lynx changes the default of this Rsbuild option; everything else works as in Rsbuild. See the {link}.',
   rsbuildDocsLink: 'Rsbuild documentation',
+  overview: 'Overview',
+  packageGroups: {
+    build: 'Build',
+    react: 'ReactLynx',
+    web: 'Web platform',
+    libraries: 'Libraries and tools',
+    internals: 'Build internals',
+  },
 };
 
 export const ZH: Locale = {
@@ -141,6 +153,14 @@ export const ZH: Locale = {
   rsbuildOption:
     'Lynx 修改了这个 Rsbuild 配置的默认值，其他用法与 Rsbuild 相同，详见 {link}。',
   rsbuildDocsLink: 'Rsbuild 文档',
+  overview: '概览',
+  packageGroups: {
+    build: '构建',
+    react: 'ReactLynx',
+    web: 'Web 平台',
+    libraries: '库与工具',
+    internals: '构建内部包',
+  },
 };
 
 export const slug = (s: string) =>
@@ -1013,6 +1033,44 @@ export function renderExports(
   return s;
 }
 
+let packageIndex: Record<string, { package: string }> | undefined;
+
+export function packageLabel(dataDir: string, entry: PackageEntry): string {
+  packageIndex ??= JSON.parse(
+    readFileSync(join(dataDir, 'index.json'), 'utf8'),
+  ) as Record<string, { package: string }>;
+  const name = entry.name ?? packageIndex[entry.id]?.package
+    ?? `@lynx-js/${entry.id}`;
+  return name.replace(/^@lynx-js\//, '');
+}
+
+export const packagePageUrl = (entry: PackageEntry) =>
+  entry.page ?? `/packages/${entry.id}`;
+
+function renderPackagesOverview(
+  dataDir: string,
+  l: Locale,
+  prefix: string,
+): string {
+  let s = '<div className="api-config-overview api-packages-overview">\n\n';
+  for (const group of PACKAGE_GROUPS) {
+    s += `<div className="api-config-group" id="${group}">\n\n`;
+    s += `<div className="api-config-group-title">${
+      l.packageGroups[group]
+    }</div>\n\n`;
+    for (const entry of PACKAGES.filter(e => e.group === group)) {
+      const main = entry.main
+        ? ` <span className="api-package-main">${entry.main}</span>`
+        : '';
+      s += `- <span id="${entry.id}"></span>[${
+        packageLabel(dataDir, entry)
+      }](${prefix}${packagePageUrl(entry)})${main}\n`;
+    }
+    s += '\n</div>\n\n';
+  }
+  return `${s}</div>\n\n`;
+}
+
 export function renderHeader(ctx: Ctx): string {
   const a = ctx.api;
   const npm = `https://www.npmjs.com/package/${a.package}`;
@@ -1038,6 +1096,9 @@ export function renderDirective(
   translations?: Translations,
   options: RenderOptions = {},
 ): string {
+  if (d.name === 'PackagesOverview') {
+    return renderPackagesOverview(dataDir, locale, options.prefix ?? '');
+  }
   const api = loadApi(dataDir, d.attrs['package']!);
   const ctx: Ctx = {
     api,

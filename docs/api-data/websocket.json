@@ -3,7 +3,7 @@
   "package": "@lynx-js/websocket",
   "version": "0.0.4",
   "description": "A WebSocket implementation for Lynx",
-  "section": "packages",
+  "group": "libraries",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/websocket",
   "exports": [
     {

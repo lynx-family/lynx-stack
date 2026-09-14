@@ -3,7 +3,7 @@
   "package": "@lynx-js/motion",
   "version": "0.0.6",
   "description": "This is a motion adapter for Lynx.js",
-  "section": "packages",
+  "group": "libraries",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/motion",
   "exports": [
     {

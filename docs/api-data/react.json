@@ -3,7 +3,7 @@
   "package": "@lynx-js/react",
   "version": "0.126.0",
   "description": "ReactLynx is a framework for developing Lynx applications with familiar React.",
-  "section": "react",
+  "group": "react",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/react",
   "exports": [
     {

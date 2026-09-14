@@ -177,6 +177,15 @@
   li a::after {
     content: none !important;
   }
+
+  .api-package-main {
+    flex-basis: 100%;
+    padding: 0 8px;
+    color: var(--rp-c-text-3);
+    font-family: var(--rp-font-family-mono);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
 }
 
 @media (width <= 1280px) {

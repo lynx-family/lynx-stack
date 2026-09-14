@@ -3,8 +3,7 @@
   "package": "@lynx-js/debug-metadata",
   "version": "0.1.0",
   "description": "Schema types and parser for the Lynx `debug-metadata.json` format.",
-  "section": "packages",
-  "internal": true,
+  "group": "internals",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/tools/debug-metadata",
   "exports": [
     {

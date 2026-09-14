@@ -92,8 +92,7 @@ export interface ApiData {
   package: string;
   version: string;
   description?: string;
-  section: string;
-  internal?: boolean;
+  group: string;
   srcUrl: string;
   exports: ApiExport[];
 }
@@ -463,8 +462,7 @@ async function generate(entry: PackageEntry): Promise<ApiData | null> {
     package: pkg.name,
     version: pkg.version,
     ...(pkg.description ? { description: pkg.description } : {}),
-    section: entry.section,
-    ...(entry.internal ? { internal: true } : {}),
+    group: entry.group,
     srcUrl: `https://github.com/lynx-family/lynx-stack/tree/main/${entry.dir}`,
     exports: apiExports,
   };
@@ -543,8 +541,7 @@ const index: Record<
   {
     package: string;
     version: string;
-    section: string;
-    internal?: boolean;
+    group: string;
     description?: string;
     exports: number;
   }
@@ -565,8 +562,7 @@ for (const entry of PACKAGES) {
     index[entry.id] = {
       package: data.package,
       version: data.version,
-      section: data.section,
-      ...(data.internal ? { internal: true } : {}),
+      group: data.group,
       ...(data.description ? { description: data.description } : {}),
       exports: data.exports.length,
     };

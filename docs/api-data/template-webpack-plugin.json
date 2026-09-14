@@ -3,8 +3,7 @@
   "package": "@lynx-js/template-webpack-plugin",
   "version": "0.16.0",
   "description": "Simplifies creation of Lynx template files to serve your webpack bundles",
-  "section": "packages",
-  "internal": true,
+  "group": "internals",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/template-webpack-plugin",
   "exports": [
     {

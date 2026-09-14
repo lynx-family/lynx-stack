@@ -8,7 +8,7 @@ outline: false
 
 构建 Lynx 应用的配置项。无论用哪种方式构建，配置项都是同一套：
 
-- **Rsbuild + [`pluginLynx`](/zh/plugins/plugin-lynx)**：`rsbuild.config.ts` 中放 Rsbuild 配置，Lynx 特有配置传给 `pluginLynx`。
+- **Rsbuild + [`pluginLynx`](/zh/packages/rsbuild-plugin)**：`rsbuild.config.ts` 中放 Rsbuild 配置，Lynx 特有配置传给 `pluginLynx`。
 - **Rspeedy**：所有配置都放在 `lynx.config.ts` 中。Rspeedy 会自动应用 `pluginLynx`，并把 Lynx 特有配置转交给它。
 
 ```ts title="rsbuild.config.ts"

@@ -2,7 +2,7 @@
   "id": "web-worker-rpc",
   "package": "@lynx-js/web-worker-rpc",
   "version": "0.26.0",
-  "section": "packages",
+  "group": "web",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-worker-rpc",
   "exports": [
     {

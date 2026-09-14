@@ -1,304 +1,291 @@
 {
-  "rsbuild-plugin": {
-    "package": "@lynx-js/rsbuild-plugin",
-    "version": "0.1.1",
-    "section": "rspeedy",
-    "description": "An Rsbuild plugin that builds a Lynx app with the Rsbuild CLI directly, without the Rspeedy CLI.",
-    "exports": 11
-  },
   "rspeedy": {
     "package": "@lynx-js/rspeedy",
     "version": "0.17.1",
-    "section": "rspeedy",
+    "group": "build",
     "description": "A webpack/rspack-based frontend toolchain for Lynx",
     "exports": 42
+  },
+  "rsbuild-plugin": {
+    "package": "@lynx-js/rsbuild-plugin",
+    "version": "0.1.1",
+    "group": "build",
+    "description": "An Rsbuild plugin that builds a Lynx app with the Rsbuild CLI directly, without the Rspeedy CLI.",
+    "exports": 11
   },
   "react-rsbuild-plugin": {
     "package": "@lynx-js/react-rsbuild-plugin",
     "version": "0.20.1",
-    "section": "rspeedy",
+    "group": "build",
     "description": "A rsbuild plugin for ReactLynx",
     "exports": 11
+  },
+  "vanilla-rsbuild-plugin": {
+    "package": "@lynx-js/vanilla-rsbuild-plugin",
+    "version": "0.1.0",
+    "group": "build",
+    "description": "An Rsbuild plugin for building Vanilla Lynx applications with Element PAPI.",
+    "exports": 8
   },
   "qrcode-rsbuild-plugin": {
     "package": "@lynx-js/qrcode-rsbuild-plugin",
     "version": "0.7.1",
-    "section": "rspeedy",
+    "group": "build",
     "description": "A rsbuild plugin for printing QRCode in terminal",
     "exports": 3
   },
   "external-bundle-rsbuild-plugin": {
     "package": "@lynx-js/external-bundle-rsbuild-plugin",
     "version": "0.4.2",
-    "section": "rspeedy",
+    "group": "build",
     "description": "An rsbuild plugin for loading lynx external bundles.",
     "exports": 11
-  },
-  "vanilla-rsbuild-plugin": {
-    "package": "@lynx-js/vanilla-rsbuild-plugin",
-    "version": "0.1.0",
-    "section": "rspeedy",
-    "description": "An Rsbuild plugin for building Vanilla Lynx applications with Element PAPI.",
-    "exports": 8
   },
   "config-rsbuild-plugin": {
     "package": "@lynx-js/config-rsbuild-plugin",
     "version": "0.2.3",
-    "section": "rspeedy",
+    "group": "build",
     "description": "An rsbuild plugin for config Lynx Config defined by @lynx-js/type-config.",
     "exports": 3
   },
   "debug-metadata-rsbuild-plugin": {
     "package": "@lynx-js/debug-metadata-rsbuild-plugin",
     "version": "0.2.2",
-    "section": "rspeedy",
+    "group": "build",
     "description": "An rsbuild plugin that emits Lynx debug metadata (debug-metadata.json) alongside template builds.",
     "exports": 4
   },
   "react-alias-rsbuild-plugin": {
     "package": "@lynx-js/react-alias-rsbuild-plugin",
     "version": "0.20.1",
-    "section": "rspeedy",
+    "group": "build",
     "description": "A rsbuild plugin for making alias in ReactLynx",
     "exports": 3
   },
   "lynx-bundle-rslib-config": {
     "package": "@lynx-js/lynx-bundle-rslib-config",
     "version": "0.8.1",
-    "section": "rspeedy",
+    "group": "build",
     "description": "The rsbuild config for building Lynx bundle",
     "exports": 17
-  },
-  "websocket": {
-    "package": "@lynx-js/websocket",
-    "version": "0.0.4",
-    "section": "packages",
-    "description": "A WebSocket implementation for Lynx",
-    "exports": 5
   },
   "react": {
     "package": "@lynx-js/react",
     "version": "0.126.0",
-    "section": "react",
+    "group": "react",
     "description": "ReactLynx is a framework for developing Lynx applications with familiar React.",
     "exports": 32
   },
   "react-testing-library": {
     "package": "@lynx-js/reactlynx-testing-library",
     "version": "0.0.0",
-    "section": "react",
+    "group": "react",
     "exports": 139
-  },
-  "testing-environment": {
-    "package": "@lynx-js/testing-environment",
-    "version": "0.3.4",
-    "section": "packages",
-    "description": "A subset of a Lynx environment to be useful for testing",
-    "exports": 12
-  },
-  "web-core": {
-    "package": "@lynx-js/web-core",
-    "version": "0.26.0",
-    "section": "packages",
-    "description": "The Web Platform of Lynx / Lynx for Web",
-    "exports": 25
-  },
-  "web-elements": {
-    "package": "@lynx-js/web-elements",
-    "version": "0.12.10",
-    "section": "packages",
-    "exports": 24
-  },
-  "web-platform-rsbuild-plugin": {
-    "package": "@lynx-js/web-platform-rsbuild-plugin",
-    "version": "0.1.2",
-    "section": "packages",
-    "description": "A rsbuild plugin for Web projects in Lynx Web Platform",
-    "exports": 3
-  },
-  "web-rsbuild-server-middleware": {
-    "package": "@lynx-js/web-rsbuild-server-middleware",
-    "version": "0.26.0",
-    "section": "packages",
-    "description": "a dev server middleware for rsbuild to serve Lynx Web Platform shell project",
-    "exports": 1
-  },
-  "web-worker-rpc": {
-    "package": "@lynx-js/web-worker-rpc",
-    "version": "0.26.0",
-    "section": "packages",
-    "exports": 9
-  },
-  "web-explorer": {
-    "package": "@lynx-js/web-explorer",
-    "version": "0.0.17",
-    "section": "packages",
-    "exports": 0
-  },
-  "template-webpack-plugin": {
-    "package": "@lynx-js/template-webpack-plugin",
-    "version": "0.16.0",
-    "section": "packages",
-    "internal": true,
-    "description": "Simplifies creation of Lynx template files to serve your webpack bundles",
-    "exports": 14
-  },
-  "css-extract-webpack-plugin": {
-    "package": "@lynx-js/css-extract-webpack-plugin",
-    "version": "0.11.0",
-    "section": "packages",
-    "internal": true,
-    "description": "This plugin extracts CSS into separate files. It creates a CSS file per JS file which contains CSS.",
-    "exports": 4
-  },
-  "chunk-loading-webpack-plugin": {
-    "package": "@lynx-js/chunk-loading-webpack-plugin",
-    "version": "0.4.2",
-    "section": "packages",
-    "internal": true,
-    "description": "A webpack plugin to generate chunk loading runtime for Lynx.",
-    "exports": 2
-  },
-  "runtime-wrapper-webpack-plugin": {
-    "package": "@lynx-js/runtime-wrapper-webpack-plugin",
-    "version": "0.2.4",
-    "section": "packages",
-    "internal": true,
-    "description": "Use runtime wrapper which allow JavaScript to be load by Lynx.",
-    "exports": 2
-  },
-  "react-webpack-plugin": {
-    "package": "@lynx-js/react-webpack-plugin",
-    "version": "0.11.3",
-    "section": "packages",
-    "internal": true,
-    "description": "A webpack plugin for ReactLynx",
-    "exports": 5
-  },
-  "react-refresh-webpack-plugin": {
-    "package": "@lynx-js/react-refresh-webpack-plugin",
-    "version": "0.4.2",
-    "section": "packages",
-    "internal": true,
-    "description": "A webpack plugin to hot refresh for Lynx.",
-    "exports": 2
-  },
-  "externals-loading-webpack-plugin": {
-    "package": "@lynx-js/externals-loading-webpack-plugin",
-    "version": "0.2.1",
-    "section": "packages",
-    "internal": true,
-    "description": "A webpack plugin to load lynx external bundles.",
-    "exports": 4
-  },
-  "cache-events-webpack-plugin": {
-    "package": "@lynx-js/cache-events-webpack-plugin",
-    "version": "0.2.1",
-    "section": "packages",
-    "internal": true,
-    "description": "Cache Lynx native events until the BTS chunk is fully loaded, and replay them when the BTS chunk is ready.",
-    "exports": 2
-  },
-  "runtime-config-webpack-plugin": {
-    "package": "@lynx-js/runtime-config-webpack-plugin",
-    "version": "0.0.1",
-    "section": "packages",
-    "internal": true,
-    "description": "Inject runtime configuration into the page-scoped Lynx runtime.",
-    "exports": 2
-  },
-  "webpack-dev-transport": {
-    "package": "@lynx-js/webpack-dev-transport",
-    "version": "0.4.0",
-    "section": "packages",
-    "internal": true,
-    "description": "A webpack dev-server transport implementation for Lynx",
-    "exports": 4
-  },
-  "webpack-runtime-globals": {
-    "package": "@lynx-js/webpack-runtime-globals",
-    "version": "0.0.8",
-    "section": "packages",
-    "internal": true,
-    "description": "Use runtime wrapper which allow JavaScript to be load by Lynx.",
-    "exports": 1
-  },
-  "motion": {
-    "package": "@lynx-js/motion",
-    "version": "0.0.6",
-    "section": "packages",
-    "description": "This is a motion adapter for Lynx.js",
-    "exports": 13
   },
   "react-signals": {
     "package": "@lynx-js/react-signals",
     "version": "0.0.3",
-    "section": "packages",
+    "group": "react",
     "description": "Thread-aware Preact Signals integration for ReactLynx.",
     "exports": 0
   },
   "use-sync-external-store": {
     "package": "@lynx-js/use-sync-external-store",
     "version": "1.5.0",
-    "section": "packages",
+    "group": "react",
     "description": "A pure ESM fork of use-sync-external-store. Works with @lynx-js/react.",
     "exports": 1
-  },
-  "tailwind-preset": {
-    "package": "@lynx-js/tailwind-preset",
-    "version": "0.5.1",
-    "section": "packages",
-    "description": "A tailwindcss preset for ReactLynx",
-    "exports": 3
-  },
-  "gesture-runtime": {
-    "package": "@lynx-js/gesture-runtime",
-    "version": "2.1.3",
-    "section": "packages",
-    "description": "Lynx Gesture",
-    "exports": 41
-  },
-  "autolink-codegen": {
-    "package": "@lynx-js/autolink-codegen",
-    "version": "0.5.0",
-    "section": "packages",
-    "description": "Lynx library code generator",
-    "exports": 14
   },
   "background-only": {
     "package": "background-only",
     "version": "0.0.1",
-    "section": "packages",
+    "group": "react",
     "description": "This is a marker package to indicate that a module can only be used in the Background Thread.",
     "exports": 0
+  },
+  "web-core": {
+    "package": "@lynx-js/web-core",
+    "version": "0.26.0",
+    "group": "web",
+    "description": "The Web Platform of Lynx / Lynx for Web",
+    "exports": 25
+  },
+  "web-elements": {
+    "package": "@lynx-js/web-elements",
+    "version": "0.12.10",
+    "group": "web",
+    "exports": 24
+  },
+  "web-platform-rsbuild-plugin": {
+    "package": "@lynx-js/web-platform-rsbuild-plugin",
+    "version": "0.1.2",
+    "group": "web",
+    "description": "A rsbuild plugin for Web projects in Lynx Web Platform",
+    "exports": 3
+  },
+  "web-rsbuild-server-middleware": {
+    "package": "@lynx-js/web-rsbuild-server-middleware",
+    "version": "0.26.0",
+    "group": "web",
+    "description": "a dev server middleware for rsbuild to serve Lynx Web Platform shell project",
+    "exports": 1
+  },
+  "web-explorer": {
+    "package": "@lynx-js/web-explorer",
+    "version": "0.0.17",
+    "group": "web",
+    "exports": 0
+  },
+  "web-worker-rpc": {
+    "package": "@lynx-js/web-worker-rpc",
+    "version": "0.26.0",
+    "group": "web",
+    "exports": 9
+  },
+  "tailwind-preset": {
+    "package": "@lynx-js/tailwind-preset",
+    "version": "0.5.1",
+    "group": "libraries",
+    "description": "A tailwindcss preset for ReactLynx",
+    "exports": 3
+  },
+  "motion": {
+    "package": "@lynx-js/motion",
+    "version": "0.0.6",
+    "group": "libraries",
+    "description": "This is a motion adapter for Lynx.js",
+    "exports": 13
+  },
+  "gesture-runtime": {
+    "package": "@lynx-js/gesture-runtime",
+    "version": "2.1.3",
+    "group": "libraries",
+    "description": "Lynx Gesture",
+    "exports": 41
+  },
+  "websocket": {
+    "package": "@lynx-js/websocket",
+    "version": "0.0.4",
+    "group": "libraries",
+    "description": "A WebSocket implementation for Lynx",
+    "exports": 5
+  },
+  "genui": {
+    "package": "@lynx-js/genui",
+    "version": "0.4.0",
+    "group": "libraries",
+    "description": "Generative UI for Lynx.",
+    "exports": 83
   },
   "i18next-translation-dedupe": {
     "package": "@lynx-js/i18next-translation-dedupe",
     "version": "0.0.1",
-    "section": "packages",
+    "group": "libraries",
     "description": "Dedupe i18next translations in Lynx bundles.",
     "exports": 4
+  },
+  "autolink-codegen": {
+    "package": "@lynx-js/autolink-codegen",
+    "version": "0.5.0",
+    "group": "libraries",
+    "description": "Lynx library code generator",
+    "exports": 14
+  },
+  "testing-environment": {
+    "package": "@lynx-js/testing-environment",
+    "version": "0.3.4",
+    "group": "libraries",
+    "description": "A subset of a Lynx environment to be useful for testing",
+    "exports": 12
+  },
+  "template-webpack-plugin": {
+    "package": "@lynx-js/template-webpack-plugin",
+    "version": "0.16.0",
+    "group": "internals",
+    "description": "Simplifies creation of Lynx template files to serve your webpack bundles",
+    "exports": 14
+  },
+  "css-extract-webpack-plugin": {
+    "package": "@lynx-js/css-extract-webpack-plugin",
+    "version": "0.11.0",
+    "group": "internals",
+    "description": "This plugin extracts CSS into separate files. It creates a CSS file per JS file which contains CSS.",
+    "exports": 4
+  },
+  "chunk-loading-webpack-plugin": {
+    "package": "@lynx-js/chunk-loading-webpack-plugin",
+    "version": "0.4.2",
+    "group": "internals",
+    "description": "A webpack plugin to generate chunk loading runtime for Lynx.",
+    "exports": 2
+  },
+  "runtime-wrapper-webpack-plugin": {
+    "package": "@lynx-js/runtime-wrapper-webpack-plugin",
+    "version": "0.2.4",
+    "group": "internals",
+    "description": "Use runtime wrapper which allow JavaScript to be load by Lynx.",
+    "exports": 2
+  },
+  "react-webpack-plugin": {
+    "package": "@lynx-js/react-webpack-plugin",
+    "version": "0.11.3",
+    "group": "internals",
+    "description": "A webpack plugin for ReactLynx",
+    "exports": 5
+  },
+  "react-refresh-webpack-plugin": {
+    "package": "@lynx-js/react-refresh-webpack-plugin",
+    "version": "0.4.2",
+    "group": "internals",
+    "description": "A webpack plugin to hot refresh for Lynx.",
+    "exports": 2
+  },
+  "externals-loading-webpack-plugin": {
+    "package": "@lynx-js/externals-loading-webpack-plugin",
+    "version": "0.2.1",
+    "group": "internals",
+    "description": "A webpack plugin to load lynx external bundles.",
+    "exports": 4
+  },
+  "cache-events-webpack-plugin": {
+    "package": "@lynx-js/cache-events-webpack-plugin",
+    "version": "0.2.1",
+    "group": "internals",
+    "description": "Cache Lynx native events until the BTS chunk is fully loaded, and replay them when the BTS chunk is ready.",
+    "exports": 2
+  },
+  "runtime-config-webpack-plugin": {
+    "package": "@lynx-js/runtime-config-webpack-plugin",
+    "version": "0.0.1",
+    "group": "internals",
+    "description": "Inject runtime configuration into the page-scoped Lynx runtime.",
+    "exports": 2
+  },
+  "webpack-dev-transport": {
+    "package": "@lynx-js/webpack-dev-transport",
+    "version": "0.4.0",
+    "group": "internals",
+    "description": "A webpack dev-server transport implementation for Lynx",
+    "exports": 4
+  },
+  "webpack-runtime-globals": {
+    "package": "@lynx-js/webpack-runtime-globals",
+    "version": "0.0.8",
+    "group": "internals",
+    "description": "Use runtime wrapper which allow JavaScript to be load by Lynx.",
+    "exports": 1
   },
   "css-serializer": {
     "package": "@lynx-js/css-serializer",
     "version": "0.1.9",
-    "section": "packages",
-    "internal": true,
+    "group": "internals",
     "exports": 22
   },
   "debug-metadata": {
     "package": "@lynx-js/debug-metadata",
     "version": "0.1.0",
-    "section": "packages",
-    "internal": true,
+    "group": "internals",
     "description": "Schema types and parser for the Lynx `debug-metadata.json` format.",
     "exports": 33
-  },
-  "genui": {
-    "package": "@lynx-js/genui",
-    "version": "0.4.0",
-    "section": "packages",
-    "description": "Generative UI for Lynx.",
-    "exports": 83
   }
 }

@@ -51,28 +51,40 @@ const API_DOCUMENTER_REDIRECTS = [
   { from: '^/(zh/)?api/rspeedy(\\..*)?$', to: '/$1packages/rspeedy' },
   {
     from: '^/(zh/)?api/react-rsbuild-plugin(\\..*)?$',
-    to: '/$1plugins/plugin-react',
+    to: '/$1packages/react-rsbuild-plugin',
   },
   {
     from: '^/(zh/)?api/qrcode-rsbuild-plugin(\\..*)?$',
-    to: '/$1plugins/plugin-qrcode',
+    to: '/$1packages/qrcode-rsbuild-plugin',
   },
   {
     from: '^/(zh/)?api/external-bundle-rsbuild-plugin(\\..*)?$',
-    to: '/$1plugins/plugin-external-bundle',
+    to: '/$1packages/external-bundle-rsbuild-plugin',
   },
   {
     from: '^/(zh/)?api/(config-rsbuild-plugin|type-config)(\\..*)?$',
-    to: '/$1plugins/plugin-config',
+    to: '/$1packages/config-rsbuild-plugin',
   },
   {
     from: '^/(zh/)?api/lynx-bundle-rslib-config(\\..*)?$',
-    to: '/$1plugins/lynx-bundle-rslib-config',
+    to: '/$1packages/lynx-bundle-rslib-config',
   },
   { from: `^/(zh/)?api/(${WEBPACK_PACKAGES})(\\..*)?$`, to: '/$1packages/$2' },
   { from: '^/(zh/)?api/react([./].*)?$', to: '/$1react/api/' },
   { from: '^/(zh/)?api/?$', to: '/$1packages/' },
 ];
+
+const PLUGIN_PAGES: Record<string, string> = {
+  'plugin-lynx': 'rsbuild-plugin',
+  'plugin-react': 'react-rsbuild-plugin',
+  'plugin-qrcode': 'qrcode-rsbuild-plugin',
+  'plugin-external-bundle': 'external-bundle-rsbuild-plugin',
+  'plugin-vanilla': 'vanilla-rsbuild-plugin',
+  'plugin-config': 'config-rsbuild-plugin',
+  'plugin-debug-metadata': 'debug-metadata-rsbuild-plugin',
+  'plugin-react-alias': 'react-alias-rsbuild-plugin',
+  'lynx-bundle-rslib-config': 'lynx-bundle-rslib-config',
+};
 
 const MOVED_SECTION_REDIRECTS = [
   {
@@ -85,7 +97,11 @@ const MOVED_SECTION_REDIRECTS = [
     to: '/$1config/',
   },
   { from: '^/(zh/)?rspeedy/config(/.*)?$', to: '/$1config$2' },
-  { from: '^/(zh/)?rspeedy/plugins(/.*)?$', to: '/$1plugins$2' },
+  ...Object.entries(PLUGIN_PAGES).map(([page, id]) => ({
+    from: `^/(zh/)?(?:rspeedy/)?plugins/${page}(?:\\.html)?$`,
+    to: `/$1packages/${id}`,
+  })),
+  { from: '^/(zh/)?(?:rspeedy/)?plugins(?:/.*)?$', to: '/$1packages/' },
   { from: '^/(zh/)?rspeedy/api(/.*)?$', to: '/$1packages/rspeedy' },
 ];
 

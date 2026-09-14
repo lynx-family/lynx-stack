@@ -3,7 +3,7 @@
   "package": "@lynx-js/web-core",
   "version": "0.26.0",
   "description": "The Web Platform of Lynx / Lynx for Web",
-  "section": "packages",
+  "group": "web",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-core",
   "exports": [
     {

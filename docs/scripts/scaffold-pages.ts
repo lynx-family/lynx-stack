@@ -74,10 +74,10 @@ The options for building a Lynx app, whether with Rsbuild and \`pluginLynx\` or 
 write(
   'packages/rspeedy.mdx',
   `---
-title: JavaScript API
+title: '@lynx-js/rspeedy'
 ---
 
-# JavaScript API
+# @lynx-js/rspeedy
 
 The programmatic API of \`@lynx-js/rspeedy\`: load a config, create an Rspeedy instance and drive builds from a script instead of the CLI.
 
@@ -98,22 +98,19 @@ await rspeedy.build()
 );
 
 const PLUGINS: {
-  file: string;
   id: string;
   fn: string;
   options: string;
   intro: string;
 }[] = [
   {
-    file: 'plugin-react',
     id: 'react-rsbuild-plugin',
     fn: 'pluginReactLynx',
     options: 'PluginReactLynxOptions',
     intro:
-      'The ReactLynx DSL plugin. It compiles JSX into the dual-thread output of ReactLynx, wires up the runtime and enables Fast Refresh in development. It registers [`pluginLynx`](/plugins/plugin-lynx) automatically when the build engine is not already there.',
+      'The ReactLynx DSL plugin. It compiles JSX into the dual-thread output of ReactLynx, wires up the runtime and enables Fast Refresh in development. It registers [`pluginLynx`](/packages/rsbuild-plugin) automatically when the build engine is not already there.',
   },
   {
-    file: 'plugin-qrcode',
     id: 'qrcode-rsbuild-plugin',
     fn: 'pluginQRCode',
     options: 'PluginQRCodeOptions',
@@ -121,7 +118,6 @@ const PLUGINS: {
       'Prints a QR code of the bundle URL in the terminal during `dev`, so a Lynx Explorer app can scan it and load the bundle from the local server.',
   },
   {
-    file: 'plugin-external-bundle',
     id: 'external-bundle-rsbuild-plugin',
     fn: 'pluginExternalBundle',
     options: 'PluginExternalBundleOptions',
@@ -129,7 +125,6 @@ const PLUGINS: {
       'Builds an external bundle: a Lynx bundle whose modules are loaded on demand by a host bundle at runtime instead of being inlined.',
   },
   {
-    file: 'plugin-vanilla',
     id: 'vanilla-rsbuild-plugin',
     fn: 'pluginVanillaLynx',
     options: 'PluginVanillaLynxOptions',
@@ -137,7 +132,6 @@ const PLUGINS: {
       'The Vanilla DSL plugin. It builds a Lynx bundle from plain JavaScript that talks to the Element PAPI directly, without a UI framework.',
   },
   {
-    file: 'plugin-config',
     id: 'config-rsbuild-plugin',
     fn: 'pluginLynxConfig',
     options: 'PluginLynxConfigOptions',
@@ -145,15 +139,13 @@ const PLUGINS: {
       'Writes Lynx engine configuration (page config such as `enableCSSSelector` or `enableRemoveCSSScope`) into the bundle. This is not a DSL plugin; use it next to one.',
   },
   {
-    file: 'plugin-debug-metadata',
     id: 'debug-metadata-rsbuild-plugin',
     fn: 'pluginLynxDebugMetadata',
     options: 'PluginLynxDebugMetadataOptions',
     intro:
-      'Emits a `debug-metadata.json` next to the bundle with the information Lynx DevTool needs to map runtime errors back to the source. [`pluginLynx`](/plugins/plugin-lynx) applies it by default.',
+      'Emits a `debug-metadata.json` next to the bundle with the information Lynx DevTool needs to map runtime errors back to the source. [`pluginLynx`](/packages/rsbuild-plugin) applies it by default.',
   },
   {
-    file: 'plugin-react-alias',
     id: 'react-alias-rsbuild-plugin',
     fn: 'pluginReactAlias',
     options: 'PluginReactAliasOptions',
@@ -161,7 +153,6 @@ const PLUGINS: {
       'Aliases `react` and `react-dom` imports to `@lynx-js/react`, so libraries written against React resolve to the ReactLynx runtime.',
   },
   {
-    file: 'lynx-bundle-rslib-config',
     id: 'lynx-bundle-rslib-config',
     fn: 'lynxBundle',
     options: 'LynxBundleOptions',
@@ -173,12 +164,12 @@ const PLUGINS: {
 for (const p of PLUGINS) {
   const src = PACKAGES.find(e => e.id === p.id)!;
   write(
-    `plugins/${p.file}.mdx`,
+    `packages/${p.id}.mdx`,
     `---
-title: ${p.fn}
+title: '@lynx-js/${p.id}'
 ---
 
-# ${p.fn}
+# @lynx-js/${p.id}
 
 {/* @api PackageHeader package="${p.id}" */}
 {/* @api-end */}
@@ -337,28 +328,16 @@ const index = JSON.parse(
   {
     package: string;
     version: string;
-    section: string;
-    internal?: boolean;
+    group: string;
     description?: string;
     exports: number;
   }
 >;
 
-const groups: Record<string, string[]> = {
-  'Web platform': [],
-  'Build internals (webpack plugins)': [],
-  'Libraries and tools': [],
-};
 for (const entry of PACKAGES) {
-  if (entry.section !== 'packages') continue;
+  if (entry.group === 'build' || entry.page) continue;
   const meta = index[entry.id];
   const name = meta?.package ?? `@lynx-js/${entry.id}`;
-  const g = entry.dir.startsWith('packages/web-platform')
-    ? 'Web platform'
-    : (entry.internal
-      ? 'Build internals (webpack plugins)'
-      : 'Libraries and tools');
-  groups[g]!.push(entry.id);
   const intro = readmeIntro(entry.dir) || (meta?.description ?? '');
   const hasApi = (meta?.exports ?? 0) > 0;
   write(
@@ -377,9 +356,9 @@ ${
         : ''
     }
 ${
-      entry.internal
+      entry.group === 'internals'
         ? `:::tip Internal package
-This package is part of the Lynx build engine and is applied for you by [\`pluginLynx\`](/plugins/plugin-lynx). Its API is documented for plugin authors; application code does not use it directly.
+This package is part of the Lynx build engine and is applied for you by [\`pluginLynx\`](/packages/rsbuild-plugin). Its API is documented for plugin authors; application code does not use it directly.
 :::
 `
         : ''
@@ -391,7 +370,9 @@ ${intro}
 import { PackageManagerTabs } from '@rspress/core/theme';
 
 <PackageManagerTabs command="add ${name}${
-      entry.internal || /plugin|config|webpack/.test(entry.id) ? ' -D' : ''
+      entry.group === 'internals' || /plugin|config|webpack/.test(entry.id)
+        ? ' -D'
+        : ''
     }" />
 ${
       hasApi
@@ -410,57 +391,19 @@ This package has no TypeScript exports to document. See its [README](https://git
   );
 }
 
-let idx = `---
-title: Packages
+write(
+  'packages/index.mdx',
+  `---
+title: Packages overview
+pageType: doc-wide
+outline: false
 ---
 
-# Packages
+# Packages overview
 
-Every public package published from [lynx-stack](https://github.com/lynx-family/lynx-stack). Packages with a dedicated section link there.
+Every public package published from [lynx-stack](https://github.com/lynx-family/lynx-stack), from the build tools every Lynx app uses to the internals of the build engine. The name under a package is its main export.
 
-## Build configuration and plugins
-
-| Package | |
-| --- | --- |
-| \`@lynx-js/rspeedy\` | [Configuration](/config/) · [JavaScript API](/packages/rspeedy) |
-| \`@lynx-js/rsbuild-plugin\` | [pluginLynx](/plugins/plugin-lynx) |
-| \`@lynx-js/react-rsbuild-plugin\` | [pluginReactLynx](/plugins/plugin-react) |
-| \`@lynx-js/qrcode-rsbuild-plugin\` | [pluginQRCode](/plugins/plugin-qrcode) |
-| \`@lynx-js/external-bundle-rsbuild-plugin\` | [pluginExternalBundle](/plugins/plugin-external-bundle) |
-| \`@lynx-js/vanilla-rsbuild-plugin\` | [pluginVanillaLynx](/plugins/plugin-vanilla) |
-| \`@lynx-js/config-rsbuild-plugin\` | [pluginLynxConfig](/plugins/plugin-config) |
-| \`@lynx-js/debug-metadata-rsbuild-plugin\` | [pluginLynxDebugMetadata](/plugins/plugin-debug-metadata) |
-| \`@lynx-js/react-alias-rsbuild-plugin\` | [pluginReactAlias](/plugins/plugin-react-alias) |
-| \`@lynx-js/lynx-bundle-rslib-config\` | [lynxBundle](/plugins/lynx-bundle-rslib-config) |
-
-## ReactLynx
-
-| Package | |
-| --- | --- |
-| \`@lynx-js/react\` | [API reference](/react/api/) |
-| \`@lynx-js/react/testing-library\` | [Testing Library](/react/api/testing-library) |
-`;
-for (const [g, ids] of Object.entries(groups)) {
-  if (ids.length === 0) continue;
-  idx +=
-    `\n## ${g}\n\n| Package | Version | Description |\n| --- | --- | --- |\n`;
-  for (const id of ids) {
-    const m = index[id];
-    idx += `| [\`${m?.package ?? '@lynx-js/' + id}\`](/packages/${id}) | ${
-      m ? m.version : ''
-    } | ${(m?.description ?? '').replace(/\|/g, '\\|')} |\n`;
-  }
-}
-write('packages/index.mdx', idx);
-
-const pkgMeta: (string | { type: string; label: string })[] = ['index'];
-for (const [g, ids] of Object.entries(groups)) {
-  if (ids.length === 0) continue;
-  pkgMeta.push({ type: 'section-header', label: g });
-  pkgMeta.push(...ids);
-}
-const metaPath = join(EN, 'packages/_meta.json');
-if (!existsSync(metaPath)) {
-  writeFileSync(metaPath, JSON.stringify(pkgMeta, null, 2) + '\n');
-  console.info('created packages/_meta.json');
-}
+{/* @api PackagesOverview */}
+{/* @api-end */}
+`,
+);

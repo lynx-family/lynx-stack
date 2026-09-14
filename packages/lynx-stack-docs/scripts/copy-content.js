@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 const PACKAGE = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SOURCE = join(PACKAGE, '../../docs/content');
 const TARGET = join(PACKAGE, 'content');
-const SECTIONS = ['config', 'plugins', 'react/api', 'packages'];
+const SECTIONS = ['config', 'react/api', 'packages'];
 
 function copyDir(from, to) {
   mkdirSync(to, { recursive: true });

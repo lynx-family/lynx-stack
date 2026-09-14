@@ -3,8 +3,7 @@
   "package": "@lynx-js/react-webpack-plugin",
   "version": "0.11.3",
   "description": "A webpack plugin for ReactLynx",
-  "section": "packages",
-  "internal": true,
+  "group": "internals",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/react-webpack-plugin",
   "exports": [
     {

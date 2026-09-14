@@ -10,9 +10,8 @@ The pages are generated from the TSDoc comments of the packages. Each version of
 content/
   en/
     config/      build configuration
-    plugins/     Rsbuild plugins
     react/api/   ReactLynx API
-    packages/    the other @lynx-js packages
+    packages/    every @lynx-js package, the Rsbuild plugins included
   zh/            the same pages in Chinese
 ```
 
@@ -22,4 +21,4 @@ Each directory carries its Rspress `_meta.json`. Copy a directory to the same pa
 
 - Rspress 2. The only MDX import is `PackageManagerTabs` from `@rspress/core/theme`.
 - Links between the pages are absolute (`/config/output/filename-bundle`), so keep the layout above. Links to other Lynx pages point to `https://lynxjs.org`.
-- A few elements use class names for the theme to style: `api-badge`, `api-badge-*`, `api-pkg-header`, `api-config-overview` and `api-config-group`. `docs/src/styles/_api.scss` in lynx-stack has the styles.
+- A few elements use class names for the theme to style: `api-badge`, `api-badge-*`, `api-pkg-header`, `api-config-overview`, `api-config-group`, `api-packages-overview` and `api-package-main`. `docs/src/styles/_api.scss` in lynx-stack has the styles.

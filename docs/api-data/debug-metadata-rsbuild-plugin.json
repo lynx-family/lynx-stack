@@ -3,7 +3,7 @@
   "package": "@lynx-js/debug-metadata-rsbuild-plugin",
   "version": "0.2.2",
   "description": "An rsbuild plugin that emits Lynx debug metadata (debug-metadata.json) alongside template builds.",
-  "section": "rspeedy",
+  "group": "build",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-debug-metadata",
   "exports": [
     {

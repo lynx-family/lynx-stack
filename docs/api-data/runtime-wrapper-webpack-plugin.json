@@ -3,8 +3,7 @@
   "package": "@lynx-js/runtime-wrapper-webpack-plugin",
   "version": "0.2.4",
   "description": "Use runtime wrapper which allow JavaScript to be load by Lynx.",
-  "section": "packages",
-  "internal": true,
+  "group": "internals",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/runtime-wrapper-webpack-plugin",
   "exports": [
     {

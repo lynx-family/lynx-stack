@@ -3,7 +3,7 @@
   "package": "@lynx-js/i18next-translation-dedupe",
   "version": "0.0.1",
   "description": "Dedupe i18next translations in Lynx bundles.",
-  "section": "packages",
+  "group": "libraries",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/i18n/i18next-translation-dedupe",
   "exports": [
     {

@@ -1,74 +1,94 @@
 ---
-title: Packages
+title: Packages overview
+pageType: doc-wide
+outline: false
 ---
 
-# Packages
+# Packages overview
 
-Every public package published from [lynx-stack](https://github.com/lynx-family/lynx-stack). Packages with a dedicated section link there.
+Every public package published from [lynx-stack](https://github.com/lynx-family/lynx-stack), from the build tools every Lynx app uses to the internals of the build engine. The name under a package is its main export.
 
-## Build configuration and plugins
+{/* @api PackagesOverview */}
 
-| Package | |
-| --- | --- |
-| `@lynx-js/rspeedy` | [Configuration](/config/) · [JavaScript API](/packages/rspeedy) |
-| `@lynx-js/rsbuild-plugin` | [pluginLynx](/plugins/plugin-lynx) |
-| `@lynx-js/react-rsbuild-plugin` | [pluginReactLynx](/plugins/plugin-react) |
-| `@lynx-js/qrcode-rsbuild-plugin` | [pluginQRCode](/plugins/plugin-qrcode) |
-| `@lynx-js/external-bundle-rsbuild-plugin` | [pluginExternalBundle](/plugins/plugin-external-bundle) |
-| `@lynx-js/vanilla-rsbuild-plugin` | [pluginVanillaLynx](/plugins/plugin-vanilla) |
-| `@lynx-js/config-rsbuild-plugin` | [pluginLynxConfig](/plugins/plugin-config) |
-| `@lynx-js/debug-metadata-rsbuild-plugin` | [pluginLynxDebugMetadata](/plugins/plugin-debug-metadata) |
-| `@lynx-js/react-alias-rsbuild-plugin` | [pluginReactAlias](/plugins/plugin-react-alias) |
-| `@lynx-js/lynx-bundle-rslib-config` | [lynxBundle](/plugins/lynx-bundle-rslib-config) |
+<div className="api-config-overview api-packages-overview">
 
-## ReactLynx
+<div className="api-config-group" id="build">
 
-| Package | |
-| --- | --- |
-| `@lynx-js/react` | [API reference](/react/api/) |
-| `@lynx-js/react/testing-library` | [Testing Library](/react/api/testing-library) |
+<div className="api-config-group-title">Build</div>
 
-## Web platform
+- <span id="rspeedy"></span>[rspeedy](/packages/rspeedy) <span className="api-package-main">defineConfig</span>
+- <span id="rsbuild-plugin"></span>[rsbuild-plugin](/packages/rsbuild-plugin) <span className="api-package-main">pluginLynx</span>
+- <span id="react-rsbuild-plugin"></span>[react-rsbuild-plugin](/packages/react-rsbuild-plugin) <span className="api-package-main">pluginReactLynx</span>
+- <span id="vanilla-rsbuild-plugin"></span>[vanilla-rsbuild-plugin](/packages/vanilla-rsbuild-plugin) <span className="api-package-main">pluginVanillaLynx</span>
+- <span id="qrcode-rsbuild-plugin"></span>[qrcode-rsbuild-plugin](/packages/qrcode-rsbuild-plugin) <span className="api-package-main">pluginQRCode</span>
+- <span id="external-bundle-rsbuild-plugin"></span>[external-bundle-rsbuild-plugin](/packages/external-bundle-rsbuild-plugin) <span className="api-package-main">pluginExternalBundle</span>
+- <span id="config-rsbuild-plugin"></span>[config-rsbuild-plugin](/packages/config-rsbuild-plugin) <span className="api-package-main">pluginLynxConfig</span>
+- <span id="debug-metadata-rsbuild-plugin"></span>[debug-metadata-rsbuild-plugin](/packages/debug-metadata-rsbuild-plugin) <span className="api-package-main">pluginLynxDebugMetadata</span>
+- <span id="react-alias-rsbuild-plugin"></span>[react-alias-rsbuild-plugin](/packages/react-alias-rsbuild-plugin) <span className="api-package-main">pluginReactAlias</span>
+- <span id="lynx-bundle-rslib-config"></span>[lynx-bundle-rslib-config](/packages/lynx-bundle-rslib-config) <span className="api-package-main">defineExternalBundleRslibConfig</span>
 
-| Package | Version | Description |
-| --- | --- | --- |
-| [`@lynx-js/web-core`](/packages/web-core) |  |  |
-| [`@lynx-js/web-elements`](/packages/web-elements) | 0.12.10 |  |
-| [`@lynx-js/web-platform-rsbuild-plugin`](/packages/web-platform-rsbuild-plugin) | 0.1.2 | A rsbuild plugin for Web projects in Lynx Web Platform |
-| [`@lynx-js/web-rsbuild-server-middleware`](/packages/web-rsbuild-server-middleware) | 0.26.0 | a dev server middleware for rsbuild to serve Lynx Web Platform shell project |
-| [`@lynx-js/web-worker-rpc`](/packages/web-worker-rpc) | 0.26.0 |  |
-| [`@lynx-js/web-explorer`](/packages/web-explorer) | 0.0.17 |  |
+</div>
 
-## Build internals (webpack plugins)
+<div className="api-config-group" id="react">
 
-| Package | Version | Description |
-| --- | --- | --- |
-| [`@lynx-js/template-webpack-plugin`](/packages/template-webpack-plugin) | 0.16.0 | Simplifies creation of Lynx template files to serve your webpack bundles |
-| [`@lynx-js/css-extract-webpack-plugin`](/packages/css-extract-webpack-plugin) | 0.11.0 | This plugin extracts CSS into separate files. It creates a CSS file per JS file which contains CSS. |
-| [`@lynx-js/chunk-loading-webpack-plugin`](/packages/chunk-loading-webpack-plugin) | 0.4.2 | A webpack plugin to generate chunk loading runtime for Lynx. |
-| [`@lynx-js/runtime-wrapper-webpack-plugin`](/packages/runtime-wrapper-webpack-plugin) | 0.2.4 | Use runtime wrapper which allow JavaScript to be load by Lynx. |
-| [`@lynx-js/react-webpack-plugin`](/packages/react-webpack-plugin) | 0.11.3 | A webpack plugin for ReactLynx |
-| [`@lynx-js/react-refresh-webpack-plugin`](/packages/react-refresh-webpack-plugin) | 0.4.2 | A webpack plugin to hot refresh for Lynx. |
-| [`@lynx-js/externals-loading-webpack-plugin`](/packages/externals-loading-webpack-plugin) | 0.2.1 | A webpack plugin to load lynx external bundles. |
-| [`@lynx-js/cache-events-webpack-plugin`](/packages/cache-events-webpack-plugin) | 0.2.1 | Cache Lynx native events until the BTS chunk is fully loaded, and replay them when the BTS chunk is ready. |
-| [`@lynx-js/runtime-config-webpack-plugin`](/packages/runtime-config-webpack-plugin) | 0.0.1 | Inject runtime configuration into the page-scoped Lynx runtime. |
-| [`@lynx-js/webpack-dev-transport`](/packages/webpack-dev-transport) | 0.4.0 | A webpack dev-server transport implementation for Lynx |
-| [`@lynx-js/webpack-runtime-globals`](/packages/webpack-runtime-globals) | 0.0.8 | Use runtime wrapper which allow JavaScript to be load by Lynx. |
-| [`@lynx-js/css-serializer`](/packages/css-serializer) | 0.1.9 |  |
-| [`@lynx-js/debug-metadata`](/packages/debug-metadata) | 0.1.0 | Schema types and parser for the Lynx `debug-metadata.json` format. |
+<div className="api-config-group-title">ReactLynx</div>
 
-## Libraries and tools
+- <span id="react"></span>[react](/react/api/)
+- <span id="react-testing-library"></span>[react/testing-library](/react/api/testing-library)
+- <span id="react-signals"></span>[react-signals](/packages/react-signals)
+- <span id="use-sync-external-store"></span>[use-sync-external-store](/packages/use-sync-external-store)
+- <span id="background-only"></span>[background-only](/packages/background-only)
 
-| Package | Version | Description |
-| --- | --- | --- |
-| [`@lynx-js/websocket`](/packages/websocket) | 0.0.4 | A WebSocket implementation for Lynx |
-| [`@lynx-js/testing-environment`](/packages/testing-environment) | 0.3.4 | A subset of a Lynx environment to be useful for testing |
-| [`@lynx-js/motion`](/packages/motion) | 0.0.6 | This is a motion adapter for Lynx.js |
-| [`@lynx-js/react-signals`](/packages/react-signals) | 0.0.3 | Thread-aware Preact Signals integration for ReactLynx. |
-| [`@lynx-js/use-sync-external-store`](/packages/use-sync-external-store) | 1.5.0 | A pure ESM fork of use-sync-external-store. Works with @lynx-js/react. |
-| [`@lynx-js/tailwind-preset`](/packages/tailwind-preset) | 0.5.1 | A tailwindcss preset for ReactLynx |
-| [`@lynx-js/gesture-runtime`](/packages/gesture-runtime) | 2.1.3 | Lynx Gesture |
-| [`@lynx-js/autolink-codegen`](/packages/autolink-codegen) | 0.5.0 | Lynx library code generator |
-| [`background-only`](/packages/background-only) | 0.0.1 | This is a marker package to indicate that a module can only be used in the Background Thread. |
-| [`@lynx-js/i18next-translation-dedupe`](/packages/i18next-translation-dedupe) | 0.0.1 | Dedupe i18next translations in Lynx bundles. |
-| [`@lynx-js/genui`](/packages/genui) | 0.4.0 | Generative UI for Lynx. |
+</div>
+
+<div className="api-config-group" id="web">
+
+<div className="api-config-group-title">Web platform</div>
+
+- <span id="web-core"></span>[web-core](/packages/web-core)
+- <span id="web-elements"></span>[web-elements](/packages/web-elements)
+- <span id="web-platform-rsbuild-plugin"></span>[web-platform-rsbuild-plugin](/packages/web-platform-rsbuild-plugin) <span className="api-package-main">pluginWebPlatform</span>
+- <span id="web-rsbuild-server-middleware"></span>[web-rsbuild-server-middleware](/packages/web-rsbuild-server-middleware)
+- <span id="web-explorer"></span>[web-explorer](/packages/web-explorer)
+- <span id="web-worker-rpc"></span>[web-worker-rpc](/packages/web-worker-rpc)
+
+</div>
+
+<div className="api-config-group" id="libraries">
+
+<div className="api-config-group-title">Libraries and tools</div>
+
+- <span id="tailwind-preset"></span>[tailwind-preset](/packages/tailwind-preset) <span className="api-package-main">createLynxPreset</span>
+- <span id="motion"></span>[motion](/packages/motion)
+- <span id="gesture-runtime"></span>[gesture-runtime](/packages/gesture-runtime)
+- <span id="websocket"></span>[websocket](/packages/websocket)
+- <span id="genui"></span>[genui](/packages/genui)
+- <span id="i18next-translation-dedupe"></span>[i18next-translation-dedupe](/packages/i18next-translation-dedupe) <span className="api-package-main">pluginLynxI18nextTranslationDedupe</span>
+- <span id="autolink-codegen"></span>[autolink-codegen](/packages/autolink-codegen)
+- <span id="testing-environment"></span>[testing-environment](/packages/testing-environment)
+
+</div>
+
+<div className="api-config-group" id="internals">
+
+<div className="api-config-group-title">Build internals</div>
+
+- <span id="template-webpack-plugin"></span>[template-webpack-plugin](/packages/template-webpack-plugin) <span className="api-package-main">LynxTemplatePlugin</span>
+- <span id="css-extract-webpack-plugin"></span>[css-extract-webpack-plugin](/packages/css-extract-webpack-plugin) <span className="api-package-main">CssExtractRspackPlugin</span>
+- <span id="chunk-loading-webpack-plugin"></span>[chunk-loading-webpack-plugin](/packages/chunk-loading-webpack-plugin) <span className="api-package-main">ChunkLoadingWebpackPlugin</span>
+- <span id="runtime-wrapper-webpack-plugin"></span>[runtime-wrapper-webpack-plugin](/packages/runtime-wrapper-webpack-plugin) <span className="api-package-main">RuntimeWrapperWebpackPlugin</span>
+- <span id="react-webpack-plugin"></span>[react-webpack-plugin](/packages/react-webpack-plugin) <span className="api-package-main">ReactWebpackPlugin</span>
+- <span id="react-refresh-webpack-plugin"></span>[react-refresh-webpack-plugin](/packages/react-refresh-webpack-plugin) <span className="api-package-main">ReactRefreshRspackPlugin</span>
+- <span id="externals-loading-webpack-plugin"></span>[externals-loading-webpack-plugin](/packages/externals-loading-webpack-plugin) <span className="api-package-main">ExternalsLoadingPlugin</span>
+- <span id="cache-events-webpack-plugin"></span>[cache-events-webpack-plugin](/packages/cache-events-webpack-plugin) <span className="api-package-main">LynxCacheEventsPlugin</span>
+- <span id="runtime-config-webpack-plugin"></span>[runtime-config-webpack-plugin](/packages/runtime-config-webpack-plugin) <span className="api-package-main">RuntimeConfigWebpackPlugin</span>
+- <span id="webpack-dev-transport"></span>[webpack-dev-transport](/packages/webpack-dev-transport)
+- <span id="webpack-runtime-globals"></span>[webpack-runtime-globals](/packages/webpack-runtime-globals)
+- <span id="css-serializer"></span>[css-serializer](/packages/css-serializer)
+- <span id="debug-metadata"></span>[debug-metadata](/packages/debug-metadata)
+
+</div>
+
+</div>
+
+{/* @api-end */}

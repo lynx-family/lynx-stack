@@ -3,7 +3,7 @@
   "package": "@lynx-js/autolink-codegen",
   "version": "0.5.0",
   "description": "Lynx library code generator",
-  "section": "packages",
+  "group": "libraries",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/lynx/autolink-codegen",
   "exports": [
     {

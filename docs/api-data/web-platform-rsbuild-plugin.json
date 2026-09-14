@@ -3,7 +3,7 @@
   "package": "@lynx-js/web-platform-rsbuild-plugin",
   "version": "0.1.2",
   "description": "A rsbuild plugin for Web projects in Lynx Web Platform",
-  "section": "packages",
+  "group": "web",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-rsbuild-plugin",
   "exports": [
     {

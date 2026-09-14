@@ -3,8 +3,7 @@
   "package": "@lynx-js/externals-loading-webpack-plugin",
   "version": "0.2.1",
   "description": "A webpack plugin to load lynx external bundles.",
-  "section": "packages",
-  "internal": true,
+  "group": "internals",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/externals-loading-webpack-plugin",
   "exports": [
     {

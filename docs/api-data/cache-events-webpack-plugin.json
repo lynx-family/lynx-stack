@@ -3,8 +3,7 @@
   "package": "@lynx-js/cache-events-webpack-plugin",
   "version": "0.2.1",
   "description": "Cache Lynx native events until the BTS chunk is fully loaded, and replay them when the BTS chunk is ready.",
-  "section": "packages",
-  "internal": true,
+  "group": "internals",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/cache-events-webpack-plugin",
   "exports": [
     {

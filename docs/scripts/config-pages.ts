@@ -14,7 +14,6 @@ import { dirname, join } from 'node:path';
 
 import { EN, ZH, configPagePaths, configPageUrl } from './render.ts';
 
-const OVERVIEW_LABEL = { en: 'Overview', zh: '概览' } as const;
 const MARKER = '{/* @api ConfigOption ';
 
 const skeleton = (path: string, lynx: boolean) =>
@@ -63,11 +62,11 @@ export function syncConfigPages(docsRoot: string): void {
   for (const locale of ['en', 'zh'] as const) {
     const root = join(docsRoot, 'content', locale, 'config');
     removeStale(root, '', wanted);
+    const l = locale === 'zh' ? ZH : EN;
     const meta: unknown[] = [
-      { type: 'file', name: 'index', label: OVERVIEW_LABEL[locale] },
+      { type: 'file', name: 'index', label: l.overview },
     ];
     const sections = new Map<string, unknown[]>();
-    const l = locale === 'zh' ? ZH : EN;
     for (const { path, lynx, rel } of pages) {
       const file = join(root, `${rel}.mdx`);
       if (!existsSync(file)) {

@@ -8,7 +8,7 @@ outline: false
 
 The options for building a Lynx app. The same options apply whichever way you build:
 
-- **Rsbuild with [`pluginLynx`](/plugins/plugin-lynx)**: `rsbuild.config.ts` holds the Rsbuild options, and the Lynx-specific options are passed to `pluginLynx`.
+- **Rsbuild with [`pluginLynx`](/packages/rsbuild-plugin)**: `rsbuild.config.ts` holds the Rsbuild options, and the Lynx-specific options are passed to `pluginLynx`.
 - **Rspeedy**: `lynx.config.ts` holds all of them. Rspeedy applies `pluginLynx` for you and passes the Lynx-specific options on to it.
 
 ```ts title="rsbuild.config.ts"

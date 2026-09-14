@@ -2,61 +2,61 @@
   {
     "type": "file",
     "name": "index",
-    "label": "全部包"
+    "label": "概览"
   },
   {
     "type": "section-header",
-    "label": "构建配置与插件"
+    "label": "构建"
   },
   {
     "type": "file",
     "name": "rspeedy",
-    "label": "@lynx-js/rspeedy"
+    "label": "rspeedy"
   },
   {
-    "type": "custom-link",
-    "label": "@lynx-js/rsbuild-plugin",
-    "link": "/zh/plugins/plugin-lynx"
+    "type": "file",
+    "name": "rsbuild-plugin",
+    "label": "rsbuild-plugin"
   },
   {
-    "type": "custom-link",
-    "label": "@lynx-js/react-rsbuild-plugin",
-    "link": "/zh/plugins/plugin-react"
+    "type": "file",
+    "name": "react-rsbuild-plugin",
+    "label": "react-rsbuild-plugin"
   },
   {
-    "type": "custom-link",
-    "label": "@lynx-js/qrcode-rsbuild-plugin",
-    "link": "/zh/plugins/plugin-qrcode"
+    "type": "file",
+    "name": "vanilla-rsbuild-plugin",
+    "label": "vanilla-rsbuild-plugin"
   },
   {
-    "type": "custom-link",
-    "label": "@lynx-js/external-bundle-rsbuild-plugin",
-    "link": "/zh/plugins/plugin-external-bundle"
+    "type": "file",
+    "name": "qrcode-rsbuild-plugin",
+    "label": "qrcode-rsbuild-plugin"
   },
   {
-    "type": "custom-link",
-    "label": "@lynx-js/vanilla-rsbuild-plugin",
-    "link": "/zh/plugins/plugin-vanilla"
+    "type": "file",
+    "name": "external-bundle-rsbuild-plugin",
+    "label": "external-bundle-rsbuild-plugin"
   },
   {
-    "type": "custom-link",
-    "label": "@lynx-js/config-rsbuild-plugin",
-    "link": "/zh/plugins/plugin-config"
+    "type": "file",
+    "name": "config-rsbuild-plugin",
+    "label": "config-rsbuild-plugin"
   },
   {
-    "type": "custom-link",
-    "label": "@lynx-js/debug-metadata-rsbuild-plugin",
-    "link": "/zh/plugins/plugin-debug-metadata"
+    "type": "file",
+    "name": "debug-metadata-rsbuild-plugin",
+    "label": "debug-metadata-rsbuild-plugin"
   },
   {
-    "type": "custom-link",
-    "label": "@lynx-js/react-alias-rsbuild-plugin",
-    "link": "/zh/plugins/plugin-react-alias"
+    "type": "file",
+    "name": "react-alias-rsbuild-plugin",
+    "label": "react-alias-rsbuild-plugin"
   },
   {
-    "type": "custom-link",
-    "label": "@lynx-js/lynx-bundle-rslib-config",
-    "link": "/zh/plugins/lynx-bundle-rslib-config"
+    "type": "file",
+    "name": "lynx-bundle-rslib-config",
+    "label": "lynx-bundle-rslib-config"
   },
   {
     "type": "section-header",
@@ -64,54 +64,174 @@
   },
   {
     "type": "custom-link",
-    "label": "@lynx-js/react",
+    "label": "react",
     "link": "/zh/react/api/"
   },
   {
     "type": "custom-link",
-    "label": "@lynx-js/react/testing-library",
+    "label": "react/testing-library",
     "link": "/zh/react/api/testing-library"
+  },
+  {
+    "type": "file",
+    "name": "react-signals",
+    "label": "react-signals"
+  },
+  {
+    "type": "file",
+    "name": "use-sync-external-store",
+    "label": "use-sync-external-store"
+  },
+  {
+    "type": "file",
+    "name": "background-only",
+    "label": "background-only"
   },
   {
     "type": "section-header",
     "label": "Web 平台"
   },
-  "web-core",
-  "web-elements",
-  "web-platform-rsbuild-plugin",
-  "web-rsbuild-server-middleware",
-  "web-worker-rpc",
-  "web-explorer",
   {
-    "type": "section-header",
-    "label": "构建内部包（webpack 插件）"
+    "type": "file",
+    "name": "web-core",
+    "label": "web-core"
   },
-  "template-webpack-plugin",
-  "css-extract-webpack-plugin",
-  "chunk-loading-webpack-plugin",
-  "runtime-wrapper-webpack-plugin",
-  "react-webpack-plugin",
-  "react-refresh-webpack-plugin",
-  "externals-loading-webpack-plugin",
-  "cache-events-webpack-plugin",
-  "runtime-config-webpack-plugin",
-  "webpack-dev-transport",
-  "webpack-runtime-globals",
-  "css-serializer",
-  "debug-metadata",
+  {
+    "type": "file",
+    "name": "web-elements",
+    "label": "web-elements"
+  },
+  {
+    "type": "file",
+    "name": "web-platform-rsbuild-plugin",
+    "label": "web-platform-rsbuild-plugin"
+  },
+  {
+    "type": "file",
+    "name": "web-rsbuild-server-middleware",
+    "label": "web-rsbuild-server-middleware"
+  },
+  {
+    "type": "file",
+    "name": "web-explorer",
+    "label": "web-explorer"
+  },
+  {
+    "type": "file",
+    "name": "web-worker-rpc",
+    "label": "web-worker-rpc"
+  },
   {
     "type": "section-header",
     "label": "库与工具"
   },
-  "websocket",
-  "testing-environment",
-  "motion",
-  "react-signals",
-  "use-sync-external-store",
-  "tailwind-preset",
-  "gesture-runtime",
-  "autolink-codegen",
-  "background-only",
-  "i18next-translation-dedupe",
-  "genui"
+  {
+    "type": "file",
+    "name": "tailwind-preset",
+    "label": "tailwind-preset"
+  },
+  {
+    "type": "file",
+    "name": "motion",
+    "label": "motion"
+  },
+  {
+    "type": "file",
+    "name": "gesture-runtime",
+    "label": "gesture-runtime"
+  },
+  {
+    "type": "file",
+    "name": "websocket",
+    "label": "websocket"
+  },
+  {
+    "type": "file",
+    "name": "genui",
+    "label": "genui"
+  },
+  {
+    "type": "file",
+    "name": "i18next-translation-dedupe",
+    "label": "i18next-translation-dedupe"
+  },
+  {
+    "type": "file",
+    "name": "autolink-codegen",
+    "label": "autolink-codegen"
+  },
+  {
+    "type": "file",
+    "name": "testing-environment",
+    "label": "testing-environment"
+  },
+  {
+    "type": "section-header",
+    "label": "构建内部包"
+  },
+  {
+    "type": "file",
+    "name": "template-webpack-plugin",
+    "label": "template-webpack-plugin"
+  },
+  {
+    "type": "file",
+    "name": "css-extract-webpack-plugin",
+    "label": "css-extract-webpack-plugin"
+  },
+  {
+    "type": "file",
+    "name": "chunk-loading-webpack-plugin",
+    "label": "chunk-loading-webpack-plugin"
+  },
+  {
+    "type": "file",
+    "name": "runtime-wrapper-webpack-plugin",
+    "label": "runtime-wrapper-webpack-plugin"
+  },
+  {
+    "type": "file",
+    "name": "react-webpack-plugin",
+    "label": "react-webpack-plugin"
+  },
+  {
+    "type": "file",
+    "name": "react-refresh-webpack-plugin",
+    "label": "react-refresh-webpack-plugin"
+  },
+  {
+    "type": "file",
+    "name": "externals-loading-webpack-plugin",
+    "label": "externals-loading-webpack-plugin"
+  },
+  {
+    "type": "file",
+    "name": "cache-events-webpack-plugin",
+    "label": "cache-events-webpack-plugin"
+  },
+  {
+    "type": "file",
+    "name": "runtime-config-webpack-plugin",
+    "label": "runtime-config-webpack-plugin"
+  },
+  {
+    "type": "file",
+    "name": "webpack-dev-transport",
+    "label": "webpack-dev-transport"
+  },
+  {
+    "type": "file",
+    "name": "webpack-runtime-globals",
+    "label": "webpack-runtime-globals"
+  },
+  {
+    "type": "file",
+    "name": "css-serializer",
+    "label": "css-serializer"
+  },
+  {
+    "type": "file",
+    "name": "debug-metadata",
+    "label": "debug-metadata"
+  }
 ]

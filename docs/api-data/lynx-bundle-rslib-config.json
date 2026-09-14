@@ -3,7 +3,7 @@
   "package": "@lynx-js/lynx-bundle-rslib-config",
   "version": "0.8.1",
   "description": "The rsbuild config for building Lynx bundle",
-  "section": "rspeedy",
+  "group": "build",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/lynx-bundle-rslib-config",
   "exports": [
     {

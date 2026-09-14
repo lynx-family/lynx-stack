@@ -3,8 +3,7 @@
   "package": "@lynx-js/chunk-loading-webpack-plugin",
   "version": "0.4.2",
   "description": "A webpack plugin to generate chunk loading runtime for Lynx.",
-  "section": "packages",
-  "internal": true,
+  "group": "internals",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/chunk-loading-webpack-plugin",
   "exports": [
     {

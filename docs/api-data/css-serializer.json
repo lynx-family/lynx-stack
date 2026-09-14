@@ -2,8 +2,7 @@
   "id": "css-serializer",
   "package": "@lynx-js/css-serializer",
   "version": "0.1.9",
-  "section": "packages",
-  "internal": true,
+  "group": "internals",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/tools/css-serializer",
   "exports": [
     {

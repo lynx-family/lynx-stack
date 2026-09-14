@@ -10,9 +10,6 @@ hero:
       text: Build configuration
       link: /config/
     - theme: alt
-      text: Plugins
-      link: /plugins/plugin-lynx
-    - theme: alt
       text: ReactLynx
       link: /react/api/
     - theme: alt

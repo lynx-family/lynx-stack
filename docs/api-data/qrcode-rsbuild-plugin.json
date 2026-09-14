@@ -3,7 +3,7 @@
   "package": "@lynx-js/qrcode-rsbuild-plugin",
   "version": "0.7.1",
   "description": "A rsbuild plugin for printing QRCode in terminal",
-  "section": "rspeedy",
+  "group": "build",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-qrcode",
   "exports": [
     {

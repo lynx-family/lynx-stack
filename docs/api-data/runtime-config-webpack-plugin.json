@@ -3,8 +3,7 @@
   "package": "@lynx-js/runtime-config-webpack-plugin",
   "version": "0.0.1",
   "description": "Inject runtime configuration into the page-scoped Lynx runtime.",
-  "section": "packages",
-  "internal": true,
+  "group": "internals",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/runtime-config-webpack-plugin",
   "exports": [
     {

@@ -2,7 +2,7 @@
   "id": "react-testing-library",
   "package": "@lynx-js/reactlynx-testing-library",
   "version": "0.0.0",
-  "section": "react",
+  "group": "react",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/react/testing-library",
   "exports": [
     {

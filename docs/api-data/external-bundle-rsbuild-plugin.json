@@ -3,7 +3,7 @@
   "package": "@lynx-js/external-bundle-rsbuild-plugin",
   "version": "0.4.2",
   "description": "An rsbuild plugin for loading lynx external bundles.",
-  "section": "rspeedy",
+  "group": "build",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-external-bundle",
   "exports": [
     {

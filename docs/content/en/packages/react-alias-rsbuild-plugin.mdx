@@ -1,24 +1,24 @@
 ---
-title: pluginReactAlias
+title: '@lynx-js/react-alias-rsbuild-plugin'
 ---
 
-# pluginReactAlias
+# @lynx-js/react-alias-rsbuild-plugin
 
 {/* @api PackageHeader package="react-alias-rsbuild-plugin" */}
 
-<div className="api-pkg-header"><code>@lynx-js/react-alias-rsbuild-plugin</code> <span className="api-pkg-version">v0.20.1</span> · <a href="https://www.npmjs.com/package/@lynx-js/react-alias-rsbuild-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-react-alias" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-react-alias/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+<div className="api-pkg-header"><code>@lynx-js/react-alias-rsbuild-plugin</code> <span className="api-pkg-version">v0.20.1</span> · <a href="https://www.npmjs.com/package/@lynx-js/react-alias-rsbuild-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-react-alias" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-react-alias/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
 
 {/* @api-end */}
 
-将 `react` 和 `react-dom` 的导入通过别名指向 `@lynx-js/react`，使基于 React 编写的库解析到 ReactLynx 运行时。
+Aliases `react` and `react-dom` imports to `@lynx-js/react`, so libraries written against React resolve to the ReactLynx runtime.
 
-## 安装
+## Installation
 
 import { PackageManagerTabs } from '@rspress/core/theme';
 
 <PackageManagerTabs command="add @lynx-js/react-alias-rsbuild-plugin -D" />
 
-## 用法
+## Usage
 
 ```ts title="lynx.config.ts"
 import { defineConfig } from '@lynx-js/rspeedy'
@@ -29,13 +29,13 @@ export default defineConfig({
 })
 ```
 
-## 选项
+## Options
 
 {/* @api ApiOptions package="react-alias-rsbuild-plugin" type="Options" */}
 
 <a id="options"></a>
 
-| 名称 | 类型 | 默认值 | 说明 |
+| Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | <a id="elementtemplate"></a>`elementTemplate` | `boolean` |  |  |
 | <a id="layers"></a>`LAYERS` | `{ BACKGROUND: string; MAIN_THREAD: string }` |  |  |
@@ -48,7 +48,7 @@ export default defineConfig({
 
 {/* @api ApiExports package="react-alias-rsbuild-plugin" exclude="Options" optionsType="Options" */}
 
-## 函数 \{#\}
+## Functions \{#functions\}
 
 ### `createLazyResolver()` \{#createlazyresolver\}
 
@@ -56,15 +56,15 @@ export default defineConfig({
 createLazyResolver(rspack: Rspack, directory: string, conditionNames: string[]): (request: string) => Promise<string>
 ```
 
-*暂无说明。*
+*No description yet.*
 
-| 参数 | 类型 | 说明 |
+| Parameters | Type | Description |
 | --- | --- | --- |
 | `rspack` | `Rspack` |  |
 | `directory` | `string` |  |
 | `conditionNames` | `string[]` |  |
 
-**返回值：** `(request: string) => Promise<string>`
+**Returns:** `(request: string) => Promise<string>`
 
 ### `pluginReactAlias()` \{#pluginreactalias\}
 
@@ -72,12 +72,12 @@ createLazyResolver(rspack: Rspack, directory: string, conditionNames: string[]):
 pluginReactAlias(options: Options): RsbuildPlugin
 ```
 
-*暂无说明。*
+*No description yet.*
 
-| 参数 | 类型 | 说明 |
+| Parameters | Type | Description |
 | --- | --- | --- |
 | `options` | [`Options`](#options) |  |
 
-**返回值：** `RsbuildPlugin`
+**Returns:** `RsbuildPlugin`
 
 {/* @api-end */}

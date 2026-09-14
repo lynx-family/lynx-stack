@@ -3,7 +3,7 @@
   "package": "@lynx-js/rspeedy",
   "version": "0.17.1",
   "description": "A webpack/rspack-based frontend toolchain for Lynx",
-  "section": "rspeedy",
+  "group": "build",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/core",
   "exports": [
     {

@@ -2,7 +2,7 @@
   "id": "web-explorer",
   "package": "@lynx-js/web-explorer",
   "version": "0.0.17",
-  "section": "packages",
+  "group": "web",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-explorer",
   "exports": []
 }

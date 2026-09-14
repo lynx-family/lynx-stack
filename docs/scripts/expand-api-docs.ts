@@ -12,6 +12,7 @@ import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { syncConfigPages } from './config-pages.ts';
+import { syncPackagesMeta } from './packages-meta.ts';
 import { EN, ZH, renderDirective } from './render.ts';
 import type { Directive, SiteAnchors, Translations } from './render.ts';
 
@@ -92,6 +93,7 @@ function collectSiteAnchors(): SiteAnchors {
 }
 
 syncConfigPages(DOCS);
+syncPackagesMeta(DOCS);
 
 const site = collectSiteAnchors();
 

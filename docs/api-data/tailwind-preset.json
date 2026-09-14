@@ -3,7 +3,7 @@
   "package": "@lynx-js/tailwind-preset",
   "version": "0.5.1",
   "description": "A tailwindcss preset for ReactLynx",
-  "section": "packages",
+  "group": "libraries",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/tailwind-preset",
   "exports": [
     {
