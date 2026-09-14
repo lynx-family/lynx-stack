@@ -2,7 +2,7 @@
 
 English | [简体中文](./README_zh.md)
 
-`@lynx-js/genui/a2ui` is the ReactLynx client runtime for A2UI v1.0 and v1.0. It
+`@lynx-js/genui/a2ui` is the ReactLynx client runtime for A2UI v1.0 only. It
 consumes validated A2UI server-to-client JSON messages and renders trusted
 ReactLynx components in your app.
 

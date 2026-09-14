@@ -63,7 +63,7 @@ export interface A2UIProps {
   onMessage?: (
     message: RendererToAgentMessage,
     metadata: Record<string, unknown>,
-  ) => void;
+  ) => void | Promise<void>;
   /**
    * Optional class name applied to the top-level `surface-${surfaceId}`
    * view for the active surface. Use this when theme switching is
@@ -223,10 +223,13 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
       // back into the protocol. Responses arrive via the buffer.
       resolve([]);
       try {
-        onMessageRef.current?.(
+        const pending = onMessageRef.current?.(
           message as RendererToAgentMessage,
           proc.getDataModelMetadata(),
         );
+        void pending?.catch((error: unknown) => {
+          console.error('[a2ui] onMessage handler rejected:', error);
+        });
       } catch (e) {
         console.error('[a2ui] onMessage handler threw:', e);
       }

@@ -50,6 +50,10 @@ function createUpstreamContext(
  */
 function adaptUpstreamImpl(impl: FunctionImplementation): FunctionImpl {
   return (args, context) => {
+    // Upstream string coercion accepts undefined, but v1.0 requires value.
+    if (impl.name === 'formatString' && args['value'] === undefined) {
+      throw new Error('formatString requires a value argument');
+    }
     const safeArgs = impl.schema.parse(args) as Record<string, unknown>;
     const result: unknown = impl.execute(
       safeArgs,
@@ -76,6 +80,7 @@ function createBasicFunctionManifests(): Map<string, FunctionManifest> {
       schema: unknown,
       options: { $refStrategy: 'none' },
     ) => Record<string, unknown>)(fn.schema, { $refStrategy: 'none' });
+    if (fn.name === 'formatString') parameters['required'] = ['value'];
     const definition: CatalogFunctionDefinition = {
       name: fn.name,
       parameters,

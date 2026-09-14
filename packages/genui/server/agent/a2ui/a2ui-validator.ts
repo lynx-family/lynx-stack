@@ -404,7 +404,11 @@ export function validateA2UIOutput(
   }
 
   const surfaces = new Set<string>(options.existingSurfaceIds ?? []);
-  const catalogBySurface = new Map<string, string | undefined>();
+  const catalogBySurface = new Map<string, string | undefined>(
+    (options.existingSurfaceIds ?? []).map(
+      surfaceId => [surfaceId, catalog.id],
+    ),
+  );
   const componentsBySurface = new Map<string, Map<string, A2UIComponent>>();
   const dataModelBySurface = new Map<string, unknown>();
   const allPaths: { surfaceId: string; path: string }[] = [];
@@ -445,10 +449,7 @@ export function validateA2UIOutput(
       for (const rawComponent of msg.updateComponents.components) {
         const comp = rawComponent as A2UIComponent;
         if (
-          (comp.catalogId ?? catalogBySurface.get(sId)
-            ?? (options.existingSurfaceIds?.includes(sId)
-              ? catalog.id
-              : undefined)) !== catalog.id
+          (comp.catalogId ?? catalogBySurface.get(sId)) !== catalog.id
         ) {
           errors.push(
             `Component "${comp.id}" must resolve to catalog "${catalog.id}".`,
@@ -581,7 +582,16 @@ export function validateA2UIOutput(
         );
       }
     } else if ('deleteSurface' in msg && msg.deleteSurface) {
-      surfaces.delete(msg.deleteSurface.surfaceId);
+      const surfaceId = msg.deleteSurface.surfaceId;
+      surfaces.delete(surfaceId);
+      catalogBySurface.delete(surfaceId);
+      componentsBySurface.delete(surfaceId);
+      dataModelBySurface.delete(surfaceId);
+      for (const paths of [allPaths, providedPaths, templatePaths]) {
+        for (let index = paths.length - 1; index >= 0; index--) {
+          if (paths[index]?.surfaceId === surfaceId) paths.splice(index, 1);
+        }
+      }
     }
   }
 

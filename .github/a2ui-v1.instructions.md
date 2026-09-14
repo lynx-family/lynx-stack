@@ -11,3 +11,5 @@ Resolve remotely invoked renderer functions against an explicitly registered cat
 Catalog generation and serialization use protocolVersion 1.0, $id, and maps of component/function schemas. Put function returnType and allowedCallers outside properties; function calls carry only call, catalogId, and args. The pinned upstream dependency is used only for basic function implementations and argument schemas, never its message processor or capabilities envelope. Adapt built-in validation functions to ValidationResult objects.
 
 A2UI v1.0 CheckRule.message remains an optional fallback. Prefer ValidationResult.message, then the rule message, then a generic error. Preserve this field in component prop types and generated catalogs; it is not a legacy protocol feature.
+
+Validate completed streaming envelopes with the shared message schema before delivery; final response validation runs too late to protect rendered state. Deleting a surface must clear all validator component, catalog, data-model, and binding-path state before the ID is reused.

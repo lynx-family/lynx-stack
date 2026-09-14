@@ -2,7 +2,7 @@
 
 [English](./README.md) | 简体中文
 
-`@lynx-js/genui/a2ui` 是支持 A2UI v1.0 和 v1.0 的 ReactLynx 客户端运行时。它消费经过校验的
+`@lynx-js/genui/a2ui` 是仅支持 A2UI v1.0 的 ReactLynx 客户端运行时。它消费经过校验的
 A2UI server-to-client JSON messages，并在你的应用中渲染可信的 ReactLynx 组件。
 
 当你已经有、或准备构建一个返回 A2UI messages 的 Agent 服务时，使用这个包。它不托管 Agent，不调用

@@ -24,7 +24,8 @@ ReactLynx 组件。
 
 在 ReactLynx 应用里安装这个包，然后用 `<A2UI>` 渲染一个 `MessageStore`。你的
 传输层把 Agent 的 messages 写入 store；renderer 把它们变成 UI，并通过
-`onAction` 把用户 action 交还给你。
+`onMessage` 把带版本的协议消息及传输元数据交给 Agent。可选的 `onAction`
+回调只接收 action payload，供应用处理本地逻辑。
 
 ```sh
 pnpm add @lynx-js/genui @lynx-js/react
@@ -56,12 +57,12 @@ async function sendPrompt(input: string) {
   store.push(normalizePayloadToMessages(await res.json()));
 }
 
-// 4. 渲染。onAction 把用户点击回传给 Agent。
+// 4. 渲染。onMessage 把协议事件及元数据回传给 Agent。
 <A2UI
   messageStore={store}
   catalogs={catalogs}
   onMessage={(message, metadata) => {
-    void fetch('/a2ui/action', {
+    return fetch('/a2ui/action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...message, metadata }),
@@ -257,17 +258,18 @@ MessageStore ──subscribe──► <A2UI> ──► MessageProcessor ──�
 
 `<A2UI>` 接收两个必填 prop 和一组可选的 render hooks。
 
-| Prop                | 类型                                     | 必填 | 用途                                                                              |
-| ------------------- | ---------------------------------------- | ---- | --------------------------------------------------------------------------------- |
-| `messageStore`      | `MessageStore`                           | 是   | 你的传输层写入的 raw-message buffer。`<A2UI>` 订阅它并处理新的 tail messages。    |
-| `catalogs`          | `readonly CatalogInput[]`                | 是   | renderer 被允许实例化的 component 和 function entries。                           |
-| `onAction`          | `(action: UserActionPayload) => void`    | 否   | 树中发生用户 action 时触发。转发给你的 Agent；把响应推回 store。                  |
-| `className`         | `string`                                 | 否   | 加在 surface root view（`surface-${surfaceId}`）上。适合做 surface 级主题 class。 |
-| `wrapSurface`       | `(children, { surfaceId }) => ReactNode` | 否   | 包裹每个 surface，便于套一层外部主题壳或 wrapper 样式。                           |
-| `renderEmpty`       | `() => ReactNode`                        | 否   | 在第一条 `beginRendering` 到达前渲染。默认什么都不渲染。                          |
-| `renderFallback`    | `() => ReactNode`                        | 否   | 在 active resource 处于 pending 时渲染。默认是内置的 `<Loading>`。                |
-| `renderError`       | `(err: unknown) => ReactNode`            | 否   | 在 active resource 失败时渲染。                                                   |
-| `renderUnsupported` | `(info) => ReactNode`                    | 否   | 在遇到不支持的 component 或数据语法时渲染。                                       |
+| Prop                | 类型                                           | 必填 | 用途                                                                              |
+| ------------------- | ---------------------------------------------- | ---- | --------------------------------------------------------------------------------- |
+| `messageStore`      | `MessageStore`                                 | 是   | 你的传输层写入的 raw-message buffer。`<A2UI>` 订阅它并处理新的 tail messages。    |
+| `catalogs`          | `readonly CatalogInput[]`                      | 是   | renderer 被允许实例化的 component 和 function entries。                           |
+| `onMessage`         | `(message, metadata) => void \| Promise<void>` | 否   | 向 Agent 转发 v1.0 协议消息和数据模型元数据；把响应推回 store。                   |
+| `onAction`          | `(action: UserActionPayload) => void`          | 否   | 只接收 action payload，不包含版本封装或传输元数据。                               |
+| `className`         | `string`                                       | 否   | 加在 surface root view（`surface-${surfaceId}`）上。适合做 surface 级主题 class。 |
+| `wrapSurface`       | `(children, { surfaceId }) => ReactNode`       | 否   | 包裹每个 surface，便于套一层外部主题壳或 wrapper 样式。                           |
+| `renderEmpty`       | `() => ReactNode`                              | 否   | 在第一条 `beginRendering` 到达前渲染。默认什么都不渲染。                          |
+| `renderFallback`    | `() => ReactNode`                              | 否   | 在 active resource 处于 pending 时渲染。默认是内置的 `<Loading>`。                |
+| `renderError`       | `(err: unknown) => ReactNode`                  | 否   | 在 active resource 失败时渲染。                                                   |
+| `renderUnsupported` | `(info) => ReactNode`                          | 否   | 在遇到不支持的 component 或数据语法时渲染。                                       |
 
 能省下调试时间的生命周期说明：
 

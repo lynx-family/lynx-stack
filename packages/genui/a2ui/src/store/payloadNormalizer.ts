@@ -200,7 +200,7 @@ export function prepareMessagesForProcessing(
     }
 
     if (
-      'createSurface' in msg && (msg.createSurface.components?.length ?? 0) > 0
+      'createSurface' in msg && (msg.createSurface?.components?.length ?? 0) > 0
     ) {
       hasComponentUpdate = true;
     }

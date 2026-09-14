@@ -63,6 +63,25 @@ describe('payloadNormalizer', () => {
     expect(update.updateComponents.components).toHaveLength(2);
   });
 
+  test.each([null, undefined])(
+    'preprocessing tolerates createSurface=%s',
+    (createSurface) => {
+      const messages = [{
+        version: 'v1.0',
+        createSurface,
+      }] as unknown as ServerToClientMessage[];
+      const active = new Set<string>();
+      const result = prepareMessagesForProcessing(messages, 'task', active);
+      expect(result.hasComponentUpdate).toBe(false);
+      expect(result.messages).toEqual([{
+        version: 'v1.0',
+        createSurface,
+        messageId: 'task',
+      }]);
+      expect(active.size).toBe(0);
+    },
+  );
+
   test('prepareMessagesForProcessing tags messageId and leaves duplicate validation to the processor', () => {
     const messages = [
       { version: 'v1.0', createSurface: { surfaceId: 's1' } },

@@ -69,6 +69,14 @@ describe('basicFunctions adapter', () => {
     expect(parameters?.properties?.['b']).toMatchObject({ type: 'number' });
   });
 
+  test('requires formatString.value in its schema and implementation', () => {
+    const formatter = basicFunctions.find(fn => fn.name === 'formatString')!;
+    expect(formatter.definition?.parameters['required']).toEqual(['value']);
+    expect(() => formatter.impl({})).toThrow('formatString requires a value');
+    expect(formatter.impl({ value: '' })).toBe('');
+    expect(formatter.impl({ value: 'Hello' })).toBe('Hello');
+  });
+
   describe('registerBasicFunctions', () => {
     const snapshot = new FunctionRegistry();
     void beforeAll(() => {

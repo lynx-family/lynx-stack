@@ -39,45 +39,9 @@ function stableStringify(value: unknown): string {
   return JSON.stringify(value);
 }
 
-function hasRecordKey(
-  value: Record<string, unknown>,
-  key: string,
-): value is Record<string, Record<string, unknown>> {
-  return isRecord(value[key]);
-}
-
+/** Validate completed envelopes before exposing them to stream consumers. */
 function isA2UIMessage(value: unknown): value is A2UIMessage {
-  if (
-    !isRecord(value)
-    || value.version !== 'v1.0'
-  ) return false;
-  if ('callRendererFunction' in value || 'agentFunctionResponse' in value) {
-    return A2UIMessageArray.safeParse([value]).success;
-  }
-
-  if (hasRecordKey(value, 'createSurface')) {
-    const createSurface = value.createSurface;
-    return typeof createSurface.surfaceId === 'string'
-      && (typeof createSurface.catalogId === 'string'
-        || createSurface.catalogId === undefined);
-  }
-
-  if (hasRecordKey(value, 'updateComponents')) {
-    const updateComponents = value.updateComponents;
-    return typeof updateComponents.surfaceId === 'string'
-      && Array.isArray(updateComponents.components);
-  }
-
-  if (hasRecordKey(value, 'updateDataModel')) {
-    const updateDataModel = value.updateDataModel;
-    return typeof updateDataModel.surfaceId === 'string';
-  }
-
-  if (hasRecordKey(value, 'deleteSurface')) {
-    return typeof value.deleteSurface.surfaceId === 'string';
-  }
-
-  return false;
+  return A2UIMessageArray.safeParse([value]).success;
 }
 
 function isUpdateComponentsMessage(

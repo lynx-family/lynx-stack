@@ -204,6 +204,102 @@ describe('A2UI v1.0 server', () => {
     },
   );
 
+  test('deleting a surface clears validation state before its ID is reused', async () => {
+    const catalog = await loadBasicCatalog();
+    const previous = [
+      {
+        version: 'v1.0',
+        createSurface: {
+          surfaceId: 's',
+          catalogId: catalog.id,
+          components: [
+            { id: 'root', component: 'Column', children: ['old'] },
+            { id: 'old', component: 'Text', text: { path: '/old' } },
+          ],
+          dataModel: { old: 'Deleted' },
+        },
+      },
+      { version: 'v1.0', deleteSurface: { surfaceId: 's' } },
+    ];
+    for (
+      const [components, expected] of [
+        [
+          [{ id: 'orphan', component: 'Text', text: 'New' }],
+          'no component with id "root"',
+        ],
+        [
+          [{ id: 'root', component: 'Column', children: ['old'] }],
+          'missing child "old"',
+        ],
+        [
+          [{ id: 'root', component: 'Text', text: { path: '/old' } }],
+          'not populated',
+        ],
+      ] as const
+    ) {
+      const result = validateA2UIOutput(
+        JSON.stringify([...previous, {
+          version: 'v1.0',
+          createSurface: { surfaceId: 's', catalogId: catalog.id, components },
+        }]),
+        catalog,
+      );
+      expect(result.ok).toBe(false);
+      expect(result.errors.join(' ')).toContain(expected);
+    }
+    expect(
+      validateA2UIOutput(
+        JSON.stringify([...previous, {
+          version: 'v1.0',
+          createSurface: {
+            surfaceId: 's',
+            catalogId: catalog.id,
+            components: [{ id: 'root', component: 'Text', text: 'New' }],
+          },
+        }]),
+        catalog,
+      ).errors,
+    ).toEqual([]);
+  });
+
+  test('recreated existing surfaces do not inherit their previous catalog', async () => {
+    const catalog = await loadBasicCatalog();
+    const result = validateA2UIOutput(
+      JSON.stringify([
+        { version: 'v1.0', deleteSurface: { surfaceId: 's' } },
+        {
+          version: 'v1.0',
+          createSurface: {
+            surfaceId: 's',
+            components: [{ id: 'root', component: 'Text', text: 'New' }],
+          },
+        },
+      ]),
+      catalog,
+      { requireCreateSurface: false, existingSurfaceIds: ['s'] },
+    );
+    expect(result.ok).toBe(false);
+    expect(result.errors.join(' ')).toContain('must resolve to catalog');
+  });
+
+  test('never streams data updates with missing values at any chunk boundary', () => {
+    const valid = [false, 0, '', null, { name: 'Alice' }].map(value => ({
+      version: 'v1.0',
+      updateDataModel: { surfaceId: 's', value },
+    }));
+    const raw = JSON.stringify([
+      { version: 'v1.0', updateDataModel: { surfaceId: 's' } },
+      ...valid,
+    ]);
+    for (let split = 1; split < raw.length; split++) {
+      const parser = new A2UIProtocolMessageStreamParser();
+      expect([
+        ...parser.push(raw.slice(0, split)),
+        ...parser.push(raw.slice(split)),
+      ]).toEqual(valid);
+    }
+  });
+
   test('maps action surface and data-model metadata into the stateless conversation', () => {
     const body = normalizeRendererEvent({
       version: 'v1.0',
