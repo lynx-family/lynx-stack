@@ -66,6 +66,7 @@ function init(): void {
   }
 
   if (__BACKGROUND__) {
+    /* v8 ignore next */
     if (__DEV__) {
       setupComponentStack();
     }
