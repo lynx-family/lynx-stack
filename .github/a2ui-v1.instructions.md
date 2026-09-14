@@ -1,5 +1,5 @@
 ---
-applyTo: "packages/genui/{a2ui,server}/**"
+applyTo: "packages/genui/{a2ui,server,playground}/**"
 ---
 
 Support only A2UI v1.0. Reject older and versionless protocol envelopes at message and action ingress; do not add version negotiation or legacy data-model/action branches. Expand inline createSurface initialization through the existing component/data handlers, emit v1.0 on streamed loading placeholders and snapshots, and apply the same source validation to inline components as updateComponents. Reject duplicate creation before expanding its embedded updates.
@@ -15,3 +15,5 @@ A2UI v1.0 CheckRule.message remains an optional fallback. Prefer ValidationResul
 Validate completed streaming envelopes with the shared message schema before delivery; final response validation runs too late to protect rendered state. Deleting a surface must clear all validator component, catalog, data-model, and binding-path state before the ID is reused.
 
 Check actual emitted messages and catalogs against pinned official v1.0 schemas. Logical functions must unwrap ValidationResult.valid before boolean operations. Preserve component reference semantics in generated schemas, and never advertise schema-less runtime components as empty schemas. The Lynx JavaScript engine does not support Unicode property escapes in regular expressions; keep interpolation tokenization compatible with the native build.
+
+Migrate raw Playground JSON examples as well as TypeScript-generated demos. Every message must declare v1.0 and use a registered catalog ID. Display renderer protocol errors through onMessage in the preview; onAction alone leaves rejected streams blank without explaining the failure.

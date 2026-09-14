@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 
 import { describe, expect, test } from '@rstest/core';
 import Ajv2020 from 'ajv/dist/2020.js';
@@ -43,6 +43,52 @@ const catalog = JSON.parse(
 ) as SerializedCatalog & {
   components: Record<string, { properties: Record<string, { $ref?: string }> }>;
 };
+
+const localExamples = new URL(
+  '../../playground/src/mock/basic/',
+  import.meta.url,
+);
+
+test.each(readdirSync(localExamples).filter(name => name.endsWith('.json')))(
+  'replays local example %s with v1.0 envelopes and the built-in catalog',
+  (name) => {
+    const messages = JSON.parse(
+      readFileSync(new URL(name, localExamples), 'utf8'),
+    ) as ServerToClientMessage[];
+    const processor = new MessageProcessor();
+    const errors: unknown[] = [];
+    processor.onEvent(({ message, resolve }) => {
+      if ('error' in message) errors.push(message);
+      resolve([]);
+    });
+    for (const message of messages) {
+      expect(message.version).toBe('v1.0');
+      processor.processMessages([message]);
+    }
+    expect(errors).toEqual([]);
+    expect(processor.getSurfaces().size).toBeGreaterThan(0);
+    for (const surface of processor.getSurfaces().values()) {
+      expect(surface.catalogId).toBe(catalog.catalogId);
+      expect(surface.rootComponentId).toBe('root');
+      expect(surface.components.has('root')).toBe(true);
+    }
+    if (name === 'recs.json') {
+      const validate = schemaValidator().compile(agentSchema);
+      for (const message of messages) {
+        expect(validate(message), JSON.stringify(validate.errors)).toBe(true);
+      }
+      const surface = processor.getSurfaces().get('default')!;
+      expect(surface.components.get('recs')?.['children']).toEqual([
+        'recCard-1',
+        'recCard-2',
+        'recCard-3',
+      ]);
+      expect(surface.components.get('recCard-3-text')?.['text']).toContain(
+        'Sea Breeze Kitchen',
+      );
+    }
+  },
+);
 
 function Text() {
   return null;

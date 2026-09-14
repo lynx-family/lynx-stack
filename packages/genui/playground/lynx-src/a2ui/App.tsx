@@ -659,6 +659,15 @@ export function App() {
                   <A2UI
                     messageStore={store}
                     catalogs={ALL_BUILTINS}
+                    onMessage={(message) => {
+                      if ('error' in message) {
+                        const { code, message: detail } = message.error;
+                        setError((previous) =>
+                          previous || `${code}: ${detail}`
+                        );
+                        agentRef.current?.stop();
+                      }
+                    }}
                     onAction={(action) => {
                       if (effectiveData.liveAction) {
                         NativeModules.bridge.call(
