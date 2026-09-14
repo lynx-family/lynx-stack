@@ -175,7 +175,7 @@
     "version": "0.4.0",
     "group": "libraries",
     "description": "Generative UI for Lynx.",
-    "exports": 83
+    "exports": 116
   },
   "i18next-translation-dedupe": {
     "package": "@lynx-js/i18next-translation-dedupe",
