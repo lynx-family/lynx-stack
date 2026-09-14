@@ -40,6 +40,7 @@
     "**/dist/**",
     "**/etc/*.md",
     "packages/lynx/headless-rust-test-runner/fixtures/**",
+    "packages/lynx-stack-docs/content/**",
     "docs/api-data/**",
     "docs/content/*/changelog/**",
     "docs/doc_build/**",

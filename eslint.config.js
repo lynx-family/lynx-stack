@@ -48,6 +48,7 @@ export default tseslint.config(
       '.changeset/*',
       '**/CHANGELOG.md',
       '**/etc/*.md',
+      'packages/lynx-stack-docs/content/**',
       'docs/api-data/**',
       'docs/content/*/changelog/**',
       'docs/api-data/**',

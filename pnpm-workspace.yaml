@@ -6,6 +6,7 @@ packages:
   - packages/genui/*
   - packages/i18n/*
   - packages/lynx/*
+  - packages/lynx-stack-docs
   - packages/mcp-servers/*
   - packages/repl
   - packages/react
