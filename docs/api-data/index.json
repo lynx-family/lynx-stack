@@ -1,11 +1,4 @@
 {
-  "rspeedy": {
-    "package": "@lynx-js/rspeedy",
-    "version": "0.17.1",
-    "group": "build",
-    "description": "A webpack/rspack-based frontend toolchain for Lynx",
-    "exports": 42
-  },
   "rsbuild-plugin": {
     "package": "@lynx-js/rsbuild-plugin",
     "version": "0.1.1",
@@ -68,6 +61,13 @@
     "group": "build",
     "description": "The rsbuild config for building Lynx bundle",
     "exports": 17
+  },
+  "rspeedy": {
+    "package": "@lynx-js/rspeedy",
+    "version": "0.17.1",
+    "group": "build",
+    "description": "A webpack/rspack-based frontend toolchain for Lynx",
+    "exports": 42
   },
   "react": {
     "package": "@lynx-js/react",

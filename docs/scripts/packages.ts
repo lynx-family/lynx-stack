@@ -25,13 +25,6 @@ export interface PackageEntry {
 
 export const PACKAGES: PackageEntry[] = [
   {
-    id: 'rspeedy',
-    dir: 'packages/rspeedy/core',
-    entry: 'src/index.ts',
-    group: 'build',
-    main: 'defineConfig',
-  },
-  {
     id: 'rsbuild-plugin',
     dir: 'packages/rspeedy/plugin-lynx',
     entry: 'src/index.ts',
@@ -94,6 +87,13 @@ export const PACKAGES: PackageEntry[] = [
     entry: 'src/index.ts',
     group: 'build',
     main: 'defineExternalBundleRslibConfig',
+  },
+  {
+    id: 'rspeedy',
+    dir: 'packages/rspeedy/core',
+    entry: 'src/index.ts',
+    group: 'build',
+    main: 'defineConfig',
   },
 
   {

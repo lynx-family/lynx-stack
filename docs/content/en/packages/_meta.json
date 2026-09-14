@@ -10,11 +10,6 @@
   },
   {
     "type": "file",
-    "name": "rspeedy",
-    "label": "rspeedy"
-  },
-  {
-    "type": "file",
     "name": "rsbuild-plugin",
     "label": "rsbuild-plugin"
   },
@@ -57,6 +52,11 @@
     "type": "file",
     "name": "lynx-bundle-rslib-config",
     "label": "lynx-bundle-rslib-config"
+  },
+  {
+    "type": "file",
+    "name": "rspeedy",
+    "label": "rspeedy"
   },
   {
     "type": "section-header",
