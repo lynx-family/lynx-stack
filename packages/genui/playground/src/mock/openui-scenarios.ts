@@ -2,7 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { createParser } from '@openuidev/lang-core';
-import type { LibraryJSONSchema, ParseResult } from '@openuidev/lang-core';
+import type { ParseResult } from '@openuidev/lang-core';
+
+import { createOpenUiPromptLibrary } from '@lynx-js/genui/openui/prompt';
 
 export interface OpenUIScenario {
   id: string;
@@ -12,179 +14,11 @@ export interface OpenUIScenario {
   parsed: string;
 }
 
-const OPENUI_SCENARIO_SCHEMA: LibraryJSONSchema = {
-  $defs: {
-    Stack: {
-      properties: {
-        children: {},
-        direction: {},
-        wrap: {},
-        gap: {},
-        align: {},
-        justify: {},
-      },
-      required: ['children'],
-    },
-    Row: {
-      properties: {
-        children: {},
-        justify: {},
-        align: {},
-        gap: {},
-        wrap: {},
-      },
-      required: ['children'],
-    },
-    Column: {
-      properties: {
-        children: {},
-        justify: {},
-        align: {},
-        gap: {},
-      },
-      required: ['children'],
-    },
-    List: {
-      properties: {
-        children: {},
-        items: {},
-        direction: {},
-        align: {},
-        gap: {},
-        divider: {},
-      },
-    },
-    Card: {
-      properties: {
-        children: {},
-        variant: {},
-        direction: {},
-        wrap: {},
-        gap: {},
-        align: {},
-        justify: {},
-      },
-      required: ['children'],
-    },
-    CardHeader: {
-      properties: { title: {}, subtitle: {} },
-      required: ['title'],
-    },
-    Text: {
-      properties: { text: {}, variant: {} },
-      required: ['text'],
-    },
-    TextContent: {
-      properties: { text: {}, size: {} },
-      required: ['text'],
-    },
-    Separator: {
-      properties: { orientation: {}, decorative: {} },
-    },
-    Divider: {
-      properties: { axis: {} },
-    },
-    Button: {
-      properties: {
-        label: {},
-        action: {},
-        variant: {},
-        type: {},
-        size: {},
-      },
-      required: ['label'],
-    },
-    Buttons: {
-      properties: { buttons: {} },
-      required: ['buttons'],
-    },
-    Tag: {
-      properties: { text: {} },
-      required: ['text'],
-    },
-    Image: {
-      properties: { url: {}, fit: {}, variant: {} },
-      required: ['url'],
-    },
-    Icon: {
-      properties: { name: {}, size: {}, color: {} },
-      required: ['name'],
-    },
-    Video: {
-      properties: { url: {}, title: {} },
-      required: ['url'],
-    },
-    AudioPlayer: {
-      properties: { url: {}, description: {} },
-      required: ['url'],
-    },
-    Loading: {
-      properties: { variant: {} },
-    },
-    Tabs: {
-      properties: { tabs: {}, value: {} },
-      required: ['tabs'],
-    },
-    Modal: {
-      properties: { trigger: {}, content: {}, title: {} },
-      required: ['trigger', 'content'],
-    },
-    CheckBox: {
-      properties: { label: {}, value: {}, action: {}, name: {} },
-      required: ['label'],
-    },
-    RadioGroup: {
-      properties: { items: {}, value: {}, usageHint: {}, action: {}, name: {} },
-      required: ['items'],
-    },
-    ChoicePicker: {
-      properties: {
-        label: {},
-        options: {},
-        value: {},
-        variant: {},
-        displayStyle: {},
-        filterable: {},
-      },
-      required: ['options'],
-    },
-    Slider: {
-      properties: {
-        label: {},
-        min: {},
-        max: {},
-        value: {},
-        step: {},
-        action: {},
-        name: {},
-      },
-    },
-    TextField: {
-      properties: {
-        label: {},
-        value: {},
-        variant: {},
-        validationRegexp: {},
-        action: {},
-        name: {},
-      },
-      required: ['label'],
-    },
-    DateTimeInput: {
-      properties: {
-        value: {},
-        enableDate: {},
-        enableTime: {},
-        min: {},
-        max: {},
-        label: {},
-      },
-      required: ['value'],
-    },
-  },
-};
-
-const openUiScenarioParser = createParser(OPENUI_SCENARIO_SCHEMA, 'Stack');
+const openUiLibrary = createOpenUiPromptLibrary();
+const openUiScenarioParser = createParser(
+  openUiLibrary.toJSONSchema(),
+  openUiLibrary.root,
+);
 
 export function parseOpenUIScenario(raw: string): ParseResult {
   return openUiScenarioParser.parse(raw);
