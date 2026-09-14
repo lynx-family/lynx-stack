@@ -7,419 +7,3396 @@
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/genui",
   "exports": [
     {
-      "name": "A2UI",
-      "kind": "variable",
-      "type": "any"
-    },
-    {
-      "name": "A2UI_PROTOCOL_VERSION",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "A2UIClientEventMessage",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "A2UIComponentProp",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "A2UIComponentSpec",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "A2UIEvent",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "A2UIExample",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "A2UIFunctionSpec",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "A2UIPromptCatalog",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "A2UIPromptJsonSchema",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "A2UIProps",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "ActionProps",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "BASIC_CATALOG_EXAMPLES",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "BASIC_CATALOG_ID",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "basicFunctions",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "buildA2UISystemPrompt",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "buildA2UISystemPromptAsync",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "buildLynxXmlSystemPrompt",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "BuildLynxXmlSystemPromptOptions",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "buildOpenUiSystemPrompt",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "BuildOpenUiSystemPromptOptions",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "BuildSystemPromptOptions",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "CatalogFunction",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "CheckLike",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "ComponentInstance",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "createA2UICatalog",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "createA2UICatalogFromManifests",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "createFallbackMessagesFromPlainText",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "createMessageStore",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "createOpenUiPromptLibrary",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "CreateOpenUiPromptLibraryOptions",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "createResource",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "createTextCardMessages",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "executeFunctionCall",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "extractCatalogComponents",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "extractCatalogFunctions",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "ExtractCatalogOptions",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "ExtractedA2UICatalog",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "ExtractedCatalogComponent",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "ExtractedJsonSchema",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "findCatalogSourceFiles",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "FunctionCallContext",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "FunctionDefinition",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "FunctionEntry",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "FunctionImpl",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "functionRegistry",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
       "name": "FunctionRegistry",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "GenericComponentProps",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "isDataBinding",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "isFunctionCall",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "loadBasicCatalog",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "LYNX_XML_ENGINE_VERSION",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "LYNX_XML_SYSTEM_PROMPT",
-      "kind": "reference",
-      "type": "unknown"
+      "kind": "class",
+      "type": "unknown",
+      "summary": "Lookup table that routes protocol `FunctionCall.call` names to local\nJavaScript implementations.",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(): FunctionRegistry",
+          "kind": "constructor",
+          "params": [],
+          "returns": {
+            "type": "FunctionRegistry",
+            "refs": [
+              "FunctionRegistry"
+            ]
+          }
+        },
+        {
+          "name": "has",
+          "type": "has(name: string): boolean",
+          "kind": "method",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "list",
+          "type": "list(): FunctionEntry[]",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "FunctionEntry[]",
+            "refs": [
+              "FunctionEntry"
+            ]
+          }
+        },
+        {
+          "name": "register",
+          "type": "register(entry: FunctionEntry): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "entry",
+              "type": "FunctionEntry",
+              "ref": "FunctionEntry",
+              "refs": [
+                "FunctionEntry"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "resolve",
+          "type": "resolve(name: string): FunctionImpl | undefined",
+          "kind": "method",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "FunctionImpl | undefined",
+            "refs": [
+              "FunctionImpl"
+            ]
+          }
+        },
+        {
+          "name": "unregister",
+          "type": "unregister(name: string): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        }
+      ]
     },
     {
       "name": "MessageProcessor",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "MessageStore",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "MessageStoreOptions",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "NodeRenderer",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "normalizePayloadToMessages",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "OPENUI_SYSTEM_PROMPT",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "openUiPromptActionPropSchema",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "OpenUiPromptComponent",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "OpenUiPromptLibrary",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "prepareMessagesForProcessing",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "RawResource",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "ReadA2UICatalogDirectoryOptions",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "readA2UICatalogFromDirectory",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "registerBasicFunctions",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "renderCatalogReference",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "resolveDynamicValue",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "resolveFunctionArguments",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "ResolveFunctionOptions",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "Resource",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "ResourceInfo",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "ResourceStatus",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "ServerToClientMessage",
-      "kind": "reference",
-      "type": "unknown"
+      "kind": "class",
+      "type": "unknown",
+      "summary": "Stateful A2UI protocol processor that turns raw v0.9 messages into\nrenderable surfaces, resources, data-model signals, and user-action events.",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(): MessageProcessor",
+          "kind": "constructor",
+          "params": [],
+          "returns": {
+            "type": "MessageProcessor",
+            "refs": [
+              "MessageProcessor"
+            ]
+          }
+        },
+        {
+          "name": "surfaces",
+          "type": "Map<string, Surface>",
+          "refs": [
+            "Surface"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "clearSurfaces",
+          "type": "clearSurfaces(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "dispatch",
+          "type": "dispatch(message: Record<string, unknown>): Promise<unknown>",
+          "kind": "method",
+          "params": [
+            {
+              "name": "message",
+              "type": "Record<string, unknown>"
+            }
+          ],
+          "returns": {
+            "type": "Promise<unknown>"
+          }
+        },
+        {
+          "name": "getOrCreateSurface",
+          "type": "getOrCreateSurface(surfaceId: string): Surface",
+          "kind": "method",
+          "params": [
+            {
+              "name": "surfaceId",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "Surface",
+            "refs": [
+              "Surface"
+            ]
+          }
+        },
+        {
+          "name": "getSurfaces",
+          "type": "getSurfaces(): ReadonlyMap<string, Surface>",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "ReadonlyMap<string, Surface>",
+            "refs": [
+              "Surface"
+            ]
+          }
+        },
+        {
+          "name": "onEvent",
+          "type": "onEvent(callback: (event: A2UIEvent) => void): () => void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "callback",
+              "type": "(event: A2UIEvent) => void",
+              "refs": [
+                "A2UIEvent"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "() => void"
+          }
+        },
+        {
+          "name": "onUpdate",
+          "type": "onUpdate(callback: (data: Record<string, unknown>) => void): () => void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "callback",
+              "type": "(data: Record<string, unknown>) => void"
+            }
+          ],
+          "returns": {
+            "type": "() => void"
+          }
+        },
+        {
+          "name": "processMessages",
+          "type": "processMessages(messages: ServerToClientMessage[]): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "messages",
+              "type": "ServerToClientMessage[]",
+              "refs": [
+                "ServerToClientMessage"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "resolvePath",
+          "type": "resolvePath(path: string, dataContextPath?: string): string",
+          "kind": "method",
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "dataContextPath",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "string"
+          },
+          "summary": "Resolve a JSON Pointer taking into account the current data context.\n\n- Absolute paths (starting with '/') are returned as-is.\n- Relative paths are resolved against the provided dataContextPath."
+        }
+      ]
     },
     {
       "name": "SignalStore",
-      "kind": "reference",
-      "type": "unknown"
+      "kind": "class",
+      "type": "unknown",
+      "summary": "Path-keyed store of ReactLynx signals backing a surface's data model.",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(): SignalStore",
+          "kind": "constructor",
+          "params": [],
+          "returns": {
+            "type": "SignalStore",
+            "refs": [
+              "SignalStore"
+            ]
+          }
+        },
+        {
+          "name": "getSignal",
+          "type": "getSignal(path: string, initialValue?: unknown): Signal<unknown>",
+          "kind": "method",
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "initialValue",
+              "type": "unknown",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "Signal<unknown>"
+          }
+        },
+        {
+          "name": "update",
+          "type": "update(path: string, value: unknown): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "value",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "updateBatch",
+          "type": "updateBatch(updates: { path: string; value: unknown }[]): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "updates",
+              "type": "{ path: string; value: unknown }[]"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "A2UIComponentProp",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Prompt-facing description of a single A2UI component prop.",
+      "members": [
+        {
+          "name": "description",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "enums",
+          "optional": true,
+          "type": "readonly string[]",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "required",
+          "optional": true,
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "schema",
+          "optional": true,
+          "type": "A2UIPromptJsonSchema",
+          "ref": "A2UIPromptJsonSchema",
+          "refs": [
+            "A2UIPromptJsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "A2UIComponentSpec",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Prompt-facing component specification derived from a catalog manifest.",
+      "members": [
+        {
+          "name": "containerShape",
+          "optional": true,
+          "type": "\"children\" | \"child\" | \"tabs\" | \"trigger-content\" | \"none\"",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "props",
+          "type": "A2UIComponentProp[]",
+          "refs": [
+            "A2UIComponentProp"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "requiresAction",
+          "optional": true,
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "summary",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "A2UIEvent",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Event envelope emitted by `MessageProcessor.dispatch`.",
+      "members": [
+        {
+          "name": "message",
+          "type": "Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "resolve",
+          "type": "(response: unknown) => void",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "A2UIExample",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Validated user request and message sequence included as an in-context A2UI\nexample.",
+      "members": [
+        {
+          "name": "messages",
+          "type": "unknown[]",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "user",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "A2UIFunctionSpec",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Prompt-facing schema for a client-side function the agent may call.",
+      "members": [
+        {
+          "name": "description",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "parameters",
+          "type": "A2UIPromptJsonSchema",
+          "ref": "A2UIPromptJsonSchema",
+          "refs": [
+            "A2UIPromptJsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "returnType",
+          "type": "\"string\" | \"number\" | \"boolean\" | \"object\" | \"array\" | \"void\" | \"any\"",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "A2UIPromptCatalog",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Prompt-ready A2UI catalog including components, rules, examples, and\noptional client functions.",
+      "members": [
+        {
+          "name": "components",
+          "type": "A2UIComponentSpec[]",
+          "refs": [
+            "A2UIComponentSpec"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "examples",
+          "optional": true,
+          "type": "A2UIExample[]",
+          "refs": [
+            "A2UIExample"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "extraRules",
+          "optional": true,
+          "type": "string[]",
+          "kind": "property"
+        },
+        {
+          "name": "functions",
+          "optional": true,
+          "type": "A2UIFunctionSpec[]",
+          "refs": [
+            "A2UIFunctionSpec"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "version",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "A2UIPromptJsonSchema",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "JSON Schema subset used in prompt-facing catalog descriptions.",
+      "members": [
+        {
+          "name": "additionalProperties",
+          "optional": true,
+          "type": "unknown",
+          "kind": "property"
+        },
+        {
+          "name": "const",
+          "optional": true,
+          "type": "unknown",
+          "kind": "property"
+        },
+        {
+          "name": "description",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "enum",
+          "optional": true,
+          "type": "unknown",
+          "kind": "property"
+        },
+        {
+          "name": "items",
+          "optional": true,
+          "type": "A2UIPromptJsonSchema",
+          "ref": "A2UIPromptJsonSchema",
+          "refs": [
+            "A2UIPromptJsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "oneOf",
+          "optional": true,
+          "type": "A2UIPromptJsonSchema[]",
+          "refs": [
+            "A2UIPromptJsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "properties",
+          "optional": true,
+          "type": "Record<string, A2UIPromptJsonSchema>",
+          "refs": [
+            "A2UIPromptJsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "required",
+          "optional": true,
+          "type": "string[]",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "unevaluatedProperties",
+          "optional": true,
+          "type": "unknown",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "A2UIProps",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Props for the all-in-one A2UI ReactLynx renderer.",
+      "members": [
+        {
+          "name": "catalogs",
+          "type": "readonly CatalogInput[]",
+          "summary": "Components the renderer is allowed to instantiate. Each item is either\na bare component (name read from `displayName ?? name`) or a tuple\n`[component, manifest]` where the manifest is the JSON the extractor\nemits at `dist/catalog/<Name>/catalog.json`.",
+          "kind": "property"
+        },
+        {
+          "name": "className",
+          "optional": true,
+          "type": "string",
+          "summary": "Optional class name applied to the top-level `surface-${surfaceId}`\nview for the active surface. Use this when theme switching is\nexpressed as surface-level classes.",
+          "kind": "property"
+        },
+        {
+          "name": "messageStore",
+          "type": "MessageStore",
+          "ref": "MessageStore",
+          "refs": [
+            "MessageStore"
+          ],
+          "summary": "The raw-message buffer the developer pushes protocol messages into.\n`<A2UI>` subscribes via `useSyncExternalStore` and processes new\nmessages incrementally.\n\nThe internal `MessageProcessor` (surfaces, signals, resources) is\ncreated once per mount and is **not reset** if `messageStore` is\nlater replaced with a different instance. Pass a `key` prop derived\nfrom the store's identity if you want a fresh session, e.g.\n`<A2UI key={turnId} messageStore={turnStore} ... />`.",
+          "kind": "property"
+        },
+        {
+          "name": "onAction",
+          "optional": true,
+          "type": "(action: UserActionPayload) => void",
+          "refs": [
+            "UserActionPayload"
+          ],
+          "summary": "Called when a user action fires inside the rendered tree (button\ntap, etc.). Forward to your agent and push the response messages\nback into the same `messageStore` to update the UI. Fire-and-forget;\nthe renderer never awaits this.",
+          "kind": "property"
+        },
+        {
+          "name": "renderEmpty",
+          "optional": true,
+          "type": "() => ReactNode",
+          "summary": "Render before the first `beginRendering` arrives from the buffer.",
+          "kind": "property"
+        },
+        {
+          "name": "renderError",
+          "optional": true,
+          "type": "(err: unknown) => ReactNode",
+          "summary": "Render when the active resource fails.",
+          "kind": "property"
+        },
+        {
+          "name": "renderFallback",
+          "optional": true,
+          "type": "() => ReactNode",
+          "summary": "Render while the active resource is pending.",
+          "kind": "property"
+        },
+        {
+          "name": "renderUnsupported",
+          "optional": true,
+          "type": "(info: UnsupportedInfo) => ReactNode",
+          "summary": "Render when unsupported data syntax or an unsupported component is encountered.",
+          "kind": "property"
+        },
+        {
+          "name": "wrapSurface",
+          "optional": true,
+          "type": "(children: ReactNode, ctx: { surfaceId: string }) => ReactNode",
+          "summary": "Wrap each top-level surface so consumers can apply an outer theme\nshell, wrapper className, or additional styles.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ActionProps",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Identifies the component and surface that emitted an A2UI action.",
+      "members": [
+        {
+          "name": "dataContext",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "surfaceId",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "BuildLynxXmlSystemPromptOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options used to customize the Lynx XML generation system prompt.",
+      "members": [
+        {
+          "name": "appendix",
+          "optional": true,
+          "type": "string",
+          "summary": "Append caller-specific instructions after the built-in contract.",
+          "kind": "property"
+        },
+        {
+          "name": "enableHtmlFragment",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Generate an intermediate document for deterministic fragment compilation.",
+          "kind": "property"
+        },
+        {
+          "name": "engineVersion",
+          "optional": true,
+          "type": "string",
+          "summary": "Override the generated artifact's Lynx engine version.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "BuildOpenUiSystemPromptOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options used to customize the generated OpenUI system prompt.",
+      "members": [
+        {
+          "name": "appendix",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "componentGroups",
+          "optional": true,
+          "type": "ComponentGroup[]",
+          "summary": "Replace or extend the built-in component groups.",
+          "kind": "property"
+        },
+        {
+          "name": "componentNames",
+          "optional": true,
+          "type": "readonly string[]",
+          "summary": "Limit built-ins to these names. Custom `components` are still appended.",
+          "kind": "property"
+        },
+        {
+          "name": "components",
+          "optional": true,
+          "type": "OpenUiPromptComponent[]",
+          "refs": [
+            "OpenUiPromptComponent"
+          ],
+          "summary": "Replace or extend the built-in component set.",
+          "kind": "property"
+        },
+        {
+          "name": "promptOptions",
+          "optional": true,
+          "type": "PromptOptions",
+          "kind": "property"
+        },
+        {
+          "name": "root",
+          "optional": true,
+          "type": "string",
+          "summary": "Override the root component name. Defaults to `'Stack'`.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "BuildSystemPromptOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options used to customize the generated A2UI system prompt.",
+      "members": [
+        {
+          "name": "appendix",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "catalog",
+          "optional": true,
+          "type": "A2UIPromptCatalog",
+          "ref": "A2UIPromptCatalog",
+          "refs": [
+            "A2UIPromptCatalog"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "CatalogFunction",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "A function discovered in source via `@a2uiFunction`, with its origin path.",
+      "members": [
+        {
+          "name": "description",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "filePath",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "parameters",
+          "type": "ExtractedJsonSchema",
+          "ref": "ExtractedJsonSchema",
+          "refs": [
+            "ExtractedJsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "returnType",
+          "type": "\"string\" | \"number\" | \"boolean\" | \"object\" | \"array\" | \"void\" | \"any\"",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "CheckLike",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "A v0.9 `CheckRule` is `{ condition, message }` where `condition` is a\nboolean, a `DataBinding`, or a `FunctionCall`. We accept the loose\n`unknown` shape so component props don't have to import the v0_9\ntypes just to pass them through.",
+      "members": [
+        {
+          "name": "condition",
+          "type": "unknown",
+          "kind": "property"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ComponentRenderProps",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Props passed to an OpenUI ReactLynx component renderer.",
+      "members": [
+        {
+          "name": "onAction",
+          "optional": true,
+          "type": "(event: ActionEvent) => void",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "CreateOpenUiLibraryOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options for creating a ReactLynx OpenUI component library.",
+      "members": [
+        {
+          "name": "componentGroups",
+          "optional": true,
+          "type": "ComponentGroup[]",
+          "summary": "Additional groups, or the complete set when defaults are disabled.",
+          "kind": "property"
+        },
+        {
+          "name": "components",
+          "optional": true,
+          "type": "DefinedComponent<any>[]",
+          "refs": [
+            "DefinedComponent"
+          ],
+          "summary": "Additional components, or the complete set when defaults are disabled.",
+          "kind": "property"
+        },
+        {
+          "name": "includeDefaultComponents",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether to include the built-in components and component groups.\nDefaults to `true`.",
+          "kind": "property"
+        },
+        {
+          "name": "root",
+          "optional": true,
+          "type": "string",
+          "summary": "Override the root component name. Defaults to `'Stack'`.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "CreateOpenUiPromptLibraryOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options for creating the headless OpenUI prompt library.",
+      "members": [
+        {
+          "name": "componentGroups",
+          "optional": true,
+          "type": "ComponentGroup[]",
+          "summary": "Replace or extend the built-in component groups.",
+          "kind": "property"
+        },
+        {
+          "name": "componentNames",
+          "optional": true,
+          "type": "readonly string[]",
+          "summary": "Limit built-ins to these names. Custom `components` are still appended.",
+          "kind": "property"
+        },
+        {
+          "name": "components",
+          "optional": true,
+          "type": "OpenUiPromptComponent[]",
+          "refs": [
+            "OpenUiPromptComponent"
+          ],
+          "summary": "Replace or extend the built-in component set.",
+          "kind": "property"
+        },
+        {
+          "name": "root",
+          "optional": true,
+          "type": "string",
+          "summary": "Override the root component name. Defaults to `'Stack'`.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ExtractCatalogOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Source and compiler inputs used when extracting catalog metadata.",
+      "members": [
+        {
+          "name": "cwd",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "sourceFiles",
+          "type": "string[]",
+          "kind": "property"
+        },
+        {
+          "name": "tsconfig",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ExtractedA2UICatalog",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Full catalog manifest consumed by A2UI agents and renderers.",
+      "members": [
+        {
+          "name": "catalogId",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "components",
+          "optional": true,
+          "type": "Record<string, ExtractedJsonSchema>",
+          "refs": [
+            "ExtractedJsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "functions",
+          "optional": true,
+          "type": "Record<string, ExtractedJsonSchema>",
+          "refs": [
+            "ExtractedJsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "theme",
+          "optional": true,
+          "type": "Record<string, ExtractedJsonSchema>",
+          "refs": [
+            "ExtractedJsonSchema"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ExtractedCatalogComponent",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Component schema discovered from an interface annotated with `@a2uiCatalog`.",
+      "members": [
+        {
+          "name": "filePath",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "interfaceName",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "schema",
+          "type": "ExtractedJsonSchema",
+          "ref": "ExtractedJsonSchema",
+          "refs": [
+            "ExtractedJsonSchema"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ExtractedJsonSchema",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "JSON Schema subset emitted for A2UI component props and function arguments.",
+      "members": [
+        {
+          "name": "$ref",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "additionalProperties",
+          "optional": true,
+          "type": "boolean | ExtractedJsonSchema",
+          "ref": "ExtractedJsonSchema",
+          "refs": [
+            "ExtractedJsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "const",
+          "optional": true,
+          "type": "unknown",
+          "kind": "property"
+        },
+        {
+          "name": "default",
+          "optional": true,
+          "type": "unknown",
+          "kind": "property"
+        },
+        {
+          "name": "deprecated",
+          "optional": true,
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "description",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "enum",
+          "optional": true,
+          "type": "(string | number | boolean)[]",
+          "kind": "property"
+        },
+        {
+          "name": "items",
+          "optional": true,
+          "type": "ExtractedJsonSchema",
+          "ref": "ExtractedJsonSchema",
+          "refs": [
+            "ExtractedJsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "oneOf",
+          "optional": true,
+          "type": "ExtractedJsonSchema[]",
+          "refs": [
+            "ExtractedJsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "properties",
+          "optional": true,
+          "type": "Record<string, ExtractedJsonSchema>",
+          "refs": [
+            "ExtractedJsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "required",
+          "optional": true,
+          "type": "string[]",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "unevaluatedProperties",
+          "optional": true,
+          "type": "boolean | ExtractedJsonSchema",
+          "ref": "ExtractedJsonSchema",
+          "refs": [
+            "ExtractedJsonSchema"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "FormValidationContextValue",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Validation state and helpers for OpenUI form fields.",
+      "members": [
+        {
+          "name": "clearFieldError",
+          "type": "(name: string) => void",
+          "kind": "property"
+        },
+        {
+          "name": "errors",
+          "type": "Record<string, string | undefined>",
+          "kind": "property"
+        },
+        {
+          "name": "getFieldError",
+          "type": "(name: string) => string | undefined",
+          "kind": "property"
+        },
+        {
+          "name": "registerField",
+          "type": "(name: string, rules: ParsedRule[], getValue: () => unknown) => void",
+          "kind": "property"
+        },
+        {
+          "name": "unregisterField",
+          "type": "(name: string) => void",
+          "kind": "property"
+        },
+        {
+          "name": "validateField",
+          "type": "(name: string, value: unknown, rules: ParsedRule[]) => boolean",
+          "kind": "property"
+        },
+        {
+          "name": "validateForm",
+          "type": "() => boolean",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "FunctionCallContext",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Runtime context passed to client-side function implementations. It mirrors\nthe small DataContext subset used by upstream A2UI basic functions while\nstaying tied to this renderer's `MessageProcessor` + `SignalStore`.",
+      "members": [
+        {
+          "name": "dataContextPath",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "processor",
+          "type": "MessageProcessor",
+          "ref": "MessageProcessor",
+          "refs": [
+            "MessageProcessor"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "surfaceId",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "resolveDynamicValue",
+          "type": "resolveDynamicValue(value: unknown): unknown",
+          "kind": "method",
+          "params": [
+            {
+              "name": "value",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "unknown"
+          }
+        },
+        {
+          "name": "resolveSignal",
+          "type": "resolveSignal(value: unknown): Signal<unknown>",
+          "kind": "method",
+          "params": [
+            {
+              "name": "value",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "Signal<unknown>"
+          }
+        },
+        {
+          "name": "set",
+          "type": "set(path: string, value: unknown): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "value",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "FunctionDefinition",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Serializable definition for a client-side function exposed to an agent.",
+      "members": [
+        {
+          "name": "description",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "parameters",
+          "type": "ExtractedJsonSchema",
+          "ref": "ExtractedJsonSchema",
+          "refs": [
+            "ExtractedJsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "returnType",
+          "type": "\"string\" | \"number\" | \"boolean\" | \"object\" | \"array\" | \"void\" | \"any\"",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "FunctionEntry",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Registered client-side function and its optional handshake definition.",
+      "members": [
+        {
+          "name": "definition",
+          "optional": true,
+          "type": "FunctionDefinition",
+          "summary": "Optional function definition announced to the agent as part of the handshake.",
+          "kind": "property"
+        },
+        {
+          "name": "impl",
+          "type": "FunctionImpl",
+          "ref": "FunctionImpl",
+          "refs": [
+            "FunctionImpl"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "GenericComponentProps",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Common runtime props passed to every catalog component by the renderer.",
+      "members": [
+        {
+          "name": "dataContextPath",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "id",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "sendAction",
+          "optional": true,
+          "type": "(action: Record<string, unknown>) => void",
+          "kind": "property"
+        },
+        {
+          "name": "setValue",
+          "optional": true,
+          "type": "(key: string, value: unknown) => void",
+          "kind": "property"
+        },
+        {
+          "name": "surface",
+          "type": "Surface",
+          "ref": "Surface",
+          "refs": [
+            "Surface"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "MessageStore",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "A pure append-only buffer of raw protocol messages produced by the\ndeveloper's IO module. The store knows nothing about the v0.9 protocol —\nit does not parse, process, or interpret messages. It only:\n\n 1. Stores them in arrival order.\n 2. Notifies subscribers when new ones land.\n 3. Hands the current snapshot back via `getSnapshot()` (referentially\n    stable between mutations — required by `useSyncExternalStore`).\n\nProtocol-aware processing — surfaces, signals, resources, action\ndispatch — is the responsibility of `<A2UI>` (the renderer component).\nDevelopers who don't want to learn the protocol should use `<A2UI>`;\ndevelopers who do can run their own `MessageProcessor` against the\nsnapshot directly.",
+      "members": [
+        {
+          "name": "getSnapshot",
+          "type": "() => readonly ServerToClientMessage[]",
+          "refs": [
+            "ServerToClientMessage"
+          ],
+          "summary": "`useSyncExternalStore` getSnapshot contract — stable between pushes.",
+          "kind": "property"
+        },
+        {
+          "name": "subscribe",
+          "type": "(cb: () => void) => () => void",
+          "summary": "`useSyncExternalStore` subscribe contract.",
+          "kind": "property"
+        },
+        {
+          "name": "clear",
+          "type": "clear(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "Reset the buffer. Notifies subscribers."
+        },
+        {
+          "name": "push",
+          "type": "push(message: ServerToClientMessage | readonly ServerToClientMessage[]): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "message",
+              "type": "ServerToClientMessage | readonly ServerToClientMessage[]",
+              "ref": "ServerToClientMessage",
+              "refs": [
+                "ServerToClientMessage"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "Append one or more raw messages to the buffer. Notifies subscribers\nonce per call (batches a single array argument into a single notify)."
+        }
+      ]
+    },
+    {
+      "name": "MessageStoreOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options used when creating a raw A2UI message buffer.",
+      "members": [
+        {
+          "name": "initialMessages",
+          "optional": true,
+          "type": "readonly ServerToClientMessage[]",
+          "refs": [
+            "ServerToClientMessage"
+          ],
+          "summary": "Optional initial buffer contents. Useful when rehydrating a previous\nagent response or replaying a fixture stream.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "OpenUIContextValue",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Runtime context shared by OpenUI renderers, hooks, actions, and form fields.",
+      "members": [
+        {
+          "name": "evaluationContext",
+          "type": "EvaluationContext",
+          "summary": "AST evaluation context used by runtime expression evaluation.",
+          "kind": "property"
+        },
+        {
+          "name": "getFieldValue",
+          "type": "(formName: string | undefined, name: string) => any",
+          "summary": "Get a field value. Top-level for $bindings, nested under formName for form fields.",
+          "kind": "property"
+        },
+        {
+          "name": "isQueryLoading",
+          "type": "boolean",
+          "summary": "Whether any Query is currently fetching data.",
+          "kind": "property"
+        },
+        {
+          "name": "isStreaming",
+          "type": "boolean",
+          "summary": "Whether the LLM is currently streaming content.",
+          "kind": "property"
+        },
+        {
+          "name": "library",
+          "type": "Library",
+          "summary": "The active component library (schema + renderers).",
+          "kind": "property"
+        },
+        {
+          "name": "renderNode",
+          "type": "(value: unknown) => ReactNode",
+          "summary": "Render any value (element, array, primitive) into React nodes.",
+          "kind": "property"
+        },
+        {
+          "name": "reportError",
+          "optional": true,
+          "type": "(error: OpenUIError) => void",
+          "summary": "Report a structured error (used internally by error boundary).",
+          "kind": "property"
+        },
+        {
+          "name": "setFieldValue",
+          "type": "(formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void",
+          "summary": "Set a form field value.",
+          "kind": "property"
+        },
+        {
+          "name": "store",
+          "type": "Store",
+          "summary": "Reactive binding store for $variables and form data.",
+          "kind": "property"
+        },
+        {
+          "name": "triggerAction",
+          "type": "(userMessage: string, formName?: string, action?: ActionPlan | { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void | Promise<void>",
+          "summary": "Trigger an action. Accepts either:\n- ActionPlan (v0.5): runs steps sequentially (Run, Set, ToAssistant, OpenUrl)\n- Legacy action config (v0.1): object with optional type and params.\n- Nothing: fires ContinueConversation with the label",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "OpenUiRendererParsedProps",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Props for rendering an already parsed OpenUI result.",
+      "members": [
+        {
+          "name": "isStreaming",
+          "optional": true,
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "library",
+          "type": "Library",
+          "ref": "Library",
+          "refs": [
+            "Library"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "onAction",
+          "optional": true,
+          "type": "(event: ActionEvent) => void",
+          "kind": "property"
+        },
+        {
+          "name": "result",
+          "type": "ParseResult | null",
+          "summary": "Pre-parsed result. Kept for v0.1/static-render compatibility.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "OpenUiRendererRuntimeProps",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Props for rendering raw OpenUI response text with parsing, runtime state,\nactions, and query execution.",
+      "members": [
+        {
+          "name": "initialQueryResults",
+          "optional": true,
+          "type": "Readonly<Record<string, unknown>>",
+          "summary": "Prefetched Query results keyed by Query assignment name (statement ID).\nResults render synchronously, then an optional toolProvider revalidates.",
+          "kind": "property"
+        },
+        {
+          "name": "initialState",
+          "optional": true,
+          "type": "Record<string, unknown>",
+          "summary": "Initial persisted state. $-prefixed keys hydrate reactive bindings.",
+          "kind": "property"
+        },
+        {
+          "name": "isStreaming",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether the LLM is still streaming; disables interactions while true.",
+          "kind": "property"
+        },
+        {
+          "name": "library",
+          "type": "Library",
+          "ref": "Library",
+          "refs": [
+            "Library"
+          ],
+          "summary": "Component library from createOpenUiLibrary().",
+          "kind": "property"
+        },
+        {
+          "name": "onAction",
+          "optional": true,
+          "type": "(event: ActionEvent) => void",
+          "summary": "Callback when a component triggers a host action.",
+          "kind": "property"
+        },
+        {
+          "name": "onError",
+          "optional": true,
+          "type": "(errors: OpenUIError[]) => void",
+          "summary": "Structured parser/runtime/query errors for correction loops.",
+          "kind": "property"
+        },
+        {
+          "name": "onParseResult",
+          "optional": true,
+          "type": "(result: ParseResult | null) => void",
+          "summary": "Called whenever the raw parse result changes.",
+          "kind": "property"
+        },
+        {
+          "name": "onStateUpdate",
+          "optional": true,
+          "type": "(state: Record<string, unknown>) => void",
+          "summary": "Called whenever $variables or form state changes.",
+          "kind": "property"
+        },
+        {
+          "name": "queryLoader",
+          "optional": true,
+          "type": "ReactNode",
+          "summary": "Custom loading node shown while Query() calls are in flight.",
+          "kind": "property"
+        },
+        {
+          "name": "response",
+          "type": "string | null",
+          "summary": "Raw openui-lang response text. This enables v0.5 runtime features.",
+          "kind": "property"
+        },
+        {
+          "name": "toolProvider",
+          "optional": true,
+          "type": "ToolProviderInput",
+          "ref": "ToolProviderInput",
+          "refs": [
+            "ToolProviderInput"
+          ],
+          "summary": "Tool provider for Query()/Mutation(): function map or MCP client.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "OpenUIState",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Derived OpenUI renderer state returned by `useOpenUIState`.",
+      "members": [
+        {
+          "name": "contextValue",
+          "type": "OpenUIContextValue",
+          "ref": "OpenUIContextValue",
+          "refs": [
+            "OpenUIContextValue"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "isQueryLoading",
+          "type": "boolean",
+          "summary": "Whether any Query is currently fetching data.",
+          "kind": "property"
+        },
+        {
+          "name": "parseResult",
+          "type": "ParseResult | null",
+          "summary": "Raw parse result (AST nodes in props). Used by onParseResult callback.",
+          "kind": "property"
+        },
+        {
+          "name": "result",
+          "type": "ParseResult | null",
+          "summary": "Evaluated result (props resolved to concrete values). Used by Renderer.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "RawResource",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Observable async resource used by the renderer to publish surface and\ncomponent updates.",
+      "members": [
+        {
+          "name": "complete",
+          "type": "(result: T) => void",
+          "kind": "property"
+        },
+        {
+          "name": "completed",
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "error",
+          "type": "unknown",
+          "kind": "property"
+        },
+        {
+          "name": "fail",
+          "type": "(err: unknown) => void",
+          "kind": "property"
+        },
+        {
+          "name": "getSnapshot",
+          "type": "() => ResourceSnapshot<T>",
+          "summary": "Synchronous read of the current snapshot, suitable for\n`useSyncExternalStore`. The returned object reference changes on every\ntransition.",
+          "kind": "property"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "onUpdate",
+          "type": "(callback: (result: T) => void) => () => void",
+          "summary": "Use `subscribe`. Behaves identically.",
+          "deprecated": "Deprecated.",
+          "kind": "property"
+        },
+        {
+          "name": "promise",
+          "type": "Promise<T>",
+          "kind": "property"
+        },
+        {
+          "name": "read",
+          "type": "() => T | undefined",
+          "summary": "Read `value` / `status` directly. Retained for backwards\ncompatibility; in the success state it returns the value, otherwise it\nreturns undefined. It does not throw.",
+          "deprecated": "Deprecated.",
+          "kind": "property"
+        },
+        {
+          "name": "status",
+          "type": "ResourceStatus",
+          "ref": "ResourceStatus",
+          "refs": [
+            "ResourceStatus"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "subscribe",
+          "type": "(callback: () => void) => () => void",
+          "summary": "Subscribe to state changes. The callback is invoked after every\n`complete()` or `fail()` (the same value may be re-published when the\nprocessor re-emits an update for the same id). Returns a disposer.",
+          "kind": "property"
+        },
+        {
+          "name": "value",
+          "type": "T | undefined",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ReadA2UICatalogDirectoryOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options for loading generated A2UI catalog artifacts from a directory.",
+      "members": [
+        {
+          "name": "catalogDir",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "catalogId",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "cwd",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "label",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "version",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ResolveFunctionOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options controlling how function calls are resolved against a catalog.",
+      "members": [
+        {
+          "name": "functions",
+          "optional": true,
+          "type": "readonly CatalogFunctionEntry[]",
+          "kind": "property"
+        },
+        {
+          "name": "registry",
+          "optional": true,
+          "type": "FunctionRegistry",
+          "ref": "FunctionRegistry",
+          "refs": [
+            "FunctionRegistry"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ResourceInfo",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Payload carried by renderer resources when a surface or component changes.",
+      "members": [
+        {
+          "name": "component",
+          "optional": true,
+          "type": "ComponentInstance",
+          "ref": "ComponentInstance",
+          "refs": [
+            "ComponentInstance"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "surface",
+          "type": "Surface",
+          "ref": "Surface",
+          "refs": [
+            "Surface"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "surfaceId",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "\"beginRendering\" | \"surfaceUpdate\" | \"deleteSurface\"",
+          "summary": "Internal event type emitted by the processor.",
+          "kind": "property"
+        }
+      ]
     },
     {
       "name": "Surface",
-      "kind": "reference",
-      "type": "unknown"
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "In-memory state for a single protocol surface.",
+      "members": [
+        {
+          "name": "catalogId",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "components",
+          "type": "Map<string, ComponentInstance>",
+          "refs": [
+            "ComponentInstance"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "resources",
+          "type": "Map<string, Resource>",
+          "refs": [
+            "Resource"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "rootComponentId",
+          "optional": true,
+          "type": "string | null",
+          "summary": "id of the root component for this surface (must be 'root').",
+          "kind": "property"
+        },
+        {
+          "name": "sendDataModel",
+          "optional": true,
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "store",
+          "type": "SignalStore",
+          "ref": "SignalStore",
+          "refs": [
+            "SignalStore"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "surfaceId",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "theme",
+          "optional": true,
+          "type": "Readonly<Record<string, unknown>>",
+          "kind": "property"
+        }
+      ]
     },
     {
-      "name": "SurfaceId",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "useAction",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "useChecks",
-      "kind": "reference",
-      "type": "unknown"
-    },
-    {
-      "name": "useDataBinding",
-      "kind": "reference",
-      "type": "unknown"
+      "name": "UseOpenUIStateOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Inputs used to parse OpenUI text and build renderer state.",
+      "members": [
+        {
+          "name": "initialQueryResults",
+          "optional": true,
+          "type": "Readonly<Record<string, unknown>>",
+          "summary": "Prefetched Query results keyed by the Query assignment name (statement ID).\nThey are available during the initial render and act as fallbacks while an\noptional tool provider revalidates them after commit.",
+          "kind": "property"
+        },
+        {
+          "name": "initialState",
+          "optional": true,
+          "type": "Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "isStreaming",
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "library",
+          "type": "Library",
+          "ref": "Library",
+          "refs": [
+            "Library"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "onAction",
+          "optional": true,
+          "type": "(event: ActionEvent) => void",
+          "kind": "property"
+        },
+        {
+          "name": "onError",
+          "optional": true,
+          "type": "(errors: OpenUIError[]) => void",
+          "summary": "Callback for structured, LLM-friendly errors. See OpenUIError type.",
+          "kind": "property"
+        },
+        {
+          "name": "onStateUpdate",
+          "optional": true,
+          "type": "(state: Record<string, unknown>) => void",
+          "kind": "property"
+        },
+        {
+          "name": "response",
+          "type": "string | null",
+          "kind": "property"
+        },
+        {
+          "name": "toolProvider",
+          "optional": true,
+          "type": "ToolProvider | null",
+          "summary": "ToolProvider for Query data fetching — MCP, REST, GraphQL, or any backend.",
+          "kind": "property"
+        }
+      ]
     },
     {
       "name": "UserActionPayload",
-      "kind": "reference",
-      "type": "unknown"
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Normalized user action forwarded from rendered catalog components to the\nhost application.",
+      "members": [
+        {
+          "name": "context",
+          "type": "Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "sourceComponentId",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "surfaceId",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "timestamp",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "A2UIClientEventMessage",
+      "kind": "typealias",
+      "type": "string | { sessionId?: string; text?: string } | { sessionId?: string; userAction: UserActionPayload }",
+      "refs": [
+        "UserActionPayload"
+      ]
+    },
+    {
+      "name": "ComponentInstance",
+      "kind": "typealias",
+      "type": "v0_9.AnyComponent & { __template?: { componentId: v0_9.ComponentId; path: string }; dataContextPath?: string }"
+    },
+    {
+      "name": "ComponentRenderer",
+      "kind": "typealias",
+      "type": "React.FC<ComponentRenderProps<P>>",
+      "refs": [
+        "ComponentRenderProps"
+      ]
+    },
+    {
+      "name": "DefinedComponent",
+      "kind": "typealias",
+      "type": "CoreDefinedComponent<T, ComponentRenderer<z.infer<T>>>",
+      "refs": [
+        "ComponentRenderer"
+      ]
+    },
+    {
+      "name": "FunctionImpl",
+      "kind": "typealias",
+      "type": "(args: Record<string, unknown>, context?: FunctionCallContext) => unknown",
+      "refs": [
+        "FunctionCallContext"
+      ],
+      "summary": "Function implementations live on the client; the agent only references\nfunctions by name. The registry is the bridge from the wire-level\n`FunctionCall.call` string to the actual code that runs locally."
+    },
+    {
+      "name": "InitialQueryResults",
+      "kind": "typealias",
+      "type": "Readonly<Record<string, unknown>>",
+      "summary": "Prefetched Query results keyed by Query assignment name (statement ID)."
+    },
+    {
+      "name": "Library",
+      "kind": "typealias",
+      "type": "CoreLibrary<ComponentRenderer<any>>",
+      "refs": [
+        "ComponentRenderer"
+      ]
+    },
+    {
+      "name": "LibraryDefinition",
+      "kind": "typealias",
+      "type": "CoreLibraryDefinition<ComponentRenderer<any>>",
+      "refs": [
+        "ComponentRenderer"
+      ]
+    },
+    {
+      "name": "OpenUiPromptComponent",
+      "kind": "typealias",
+      "type": "DefinedComponent<any, HeadlessRenderer>"
+    },
+    {
+      "name": "OpenUiPromptLibrary",
+      "kind": "typealias",
+      "type": "Library<HeadlessRenderer>"
+    },
+    {
+      "name": "OpenUiRendererProps",
+      "kind": "typealias",
+      "type": "OpenUiRendererRuntimeProps | OpenUiRendererParsedProps",
+      "refs": [
+        "OpenUiRendererRuntimeProps",
+        "OpenUiRendererParsedProps"
+      ]
+    },
+    {
+      "name": "Resource",
+      "kind": "typealias",
+      "type": "RawResource<ResourceInfo>",
+      "ref": "RawResource",
+      "refs": [
+        "RawResource",
+        "ResourceInfo"
+      ]
+    },
+    {
+      "name": "ResourceStatus",
+      "kind": "typealias",
+      "type": "\"pending\" | \"success\" | \"error\"",
+      "literalUnion": [
+        "\"pending\"",
+        "\"success\"",
+        "\"error\""
+      ]
+    },
+    {
+      "name": "ServerToClientMessage",
+      "kind": "typealias",
+      "type": "v0_9.A2uiMessage & { messageId?: string }"
+    },
+    {
+      "name": "SurfaceId",
+      "kind": "typealias",
+      "type": "string"
+    },
+    {
+      "name": "ToolProviderInput",
+      "kind": "typealias",
+      "type": "Record<string, (args: Record<string, unknown>) => unknown> | McpClientLike | null"
+    },
+    {
+      "name": "A2UI",
+      "kind": "variable",
+      "type": "MemoExoticComponent"
+    },
+    {
+      "name": "A2UI_PROTOCOL_VERSION",
+      "kind": "variable",
+      "type": "\"v0.9\"",
+      "default": "\"v0.9\""
+    },
+    {
+      "name": "BASIC_CATALOG_EXAMPLES",
+      "kind": "variable",
+      "type": "A2UIExample[]",
+      "refs": [
+        "A2UIExample"
+      ]
+    },
+    {
+      "name": "BASIC_CATALOG_ID",
+      "kind": "variable",
+      "type": "\"https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json\"",
+      "default": "\"https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json\""
+    },
+    {
+      "name": "basicFunctions",
+      "kind": "variable",
+      "type": "readonly CatalogFunctionEntry[]",
+      "summary": "The A2UI 0.9 basic-catalog function implementations packaged as\n`CatalogFunctionEntry`s, ready to spread into `<A2UI catalogs={[...]}>`.\nThe impls themselves come from `@a2ui/web_core` so we stay aligned with\nthe upstream spec for free.",
+      "examples": [
+        "```ts\n<A2UI catalogs={[Text, Button, ...basicFunctions]} ... />\n```"
+      ]
+    },
+    {
+      "name": "FormNameContext",
+      "kind": "variable",
+      "type": "Context"
+    },
+    {
+      "name": "FormValidationContext",
+      "kind": "variable",
+      "type": "Context"
+    },
+    {
+      "name": "functionRegistry",
+      "kind": "variable",
+      "type": "FunctionRegistry",
+      "ref": "FunctionRegistry",
+      "refs": [
+        "FunctionRegistry"
+      ]
+    },
+    {
+      "name": "LYNX_XML_ENGINE_VERSION",
+      "kind": "variable",
+      "type": "\"4.2\"",
+      "summary": "The default Lynx engine version used by generated XML artifacts.",
+      "default": "\"4.2\""
+    },
+    {
+      "name": "LYNX_XML_SYSTEM_PROMPT",
+      "kind": "variable",
+      "type": "string",
+      "summary": "The default Lynx XML generation system prompt."
+    },
+    {
+      "name": "NodeRenderer",
+      "kind": "variable",
+      "type": "typeof NodeRendererImpl"
+    },
+    {
+      "name": "OPENUI_SYSTEM_PROMPT",
+      "kind": "variable",
+      "type": "string"
+    },
+    {
+      "name": "openUiPromptActionPropSchema",
+      "kind": "variable",
+      "type": "z.ZodUnion<readonly [z.ZodObject<{ steps: z.ZodArray<z.ZodObject<{ type: z.ZodString }, z.core.$loose>> }, z.core.$strip>, z.ZodObject<{ context: z.ZodOptional<z.ZodString>; params: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>; type: z.ZodOptional<z.ZodString>; url: z.ZodOptional<z.ZodString> }, z.core.$strip>]>",
+      "summary": "Shared action prop schema exposed to prompt signatures as `ActionExpression`."
+    },
+    {
+      "name": "buildA2UISystemPrompt",
+      "kind": "function",
+      "type": "buildA2UISystemPrompt(opts?: BuildSystemPromptOptions): string",
+      "signatures": [
+        {
+          "text": "buildA2UISystemPrompt(opts?: BuildSystemPromptOptions): string",
+          "params": [
+            {
+              "name": "opts",
+              "type": "BuildSystemPromptOptions",
+              "ref": "BuildSystemPromptOptions",
+              "refs": [
+                "BuildSystemPromptOptions"
+              ],
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "buildA2UISystemPromptAsync",
+      "kind": "function",
+      "type": "buildA2UISystemPromptAsync(opts?: BuildSystemPromptOptions): Promise<string>",
+      "signatures": [
+        {
+          "text": "buildA2UISystemPromptAsync(opts?: BuildSystemPromptOptions): Promise<string>",
+          "params": [
+            {
+              "name": "opts",
+              "type": "BuildSystemPromptOptions",
+              "ref": "BuildSystemPromptOptions",
+              "refs": [
+                "BuildSystemPromptOptions"
+              ],
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "Promise<string>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "buildLynxXmlSystemPrompt",
+      "kind": "function",
+      "type": "buildLynxXmlSystemPrompt(options?: BuildLynxXmlSystemPromptOptions): string",
+      "signatures": [
+        {
+          "text": "buildLynxXmlSystemPrompt(options?: BuildLynxXmlSystemPromptOptions): string",
+          "params": [
+            {
+              "name": "options",
+              "type": "BuildLynxXmlSystemPromptOptions",
+              "ref": "BuildLynxXmlSystemPromptOptions",
+              "refs": [
+                "BuildLynxXmlSystemPromptOptions"
+              ],
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "string"
+          },
+          "summary": "Build a system prompt for producing complete, zero-build `.lynxml` files."
+        }
+      ],
+      "summary": "Build a system prompt for producing complete, zero-build `.lynxml` files."
+    },
+    {
+      "name": "buildOpenUiSystemPrompt",
+      "kind": "function",
+      "type": "buildOpenUiSystemPrompt(options?: BuildOpenUiSystemPromptOptions): string",
+      "signatures": [
+        {
+          "text": "buildOpenUiSystemPrompt(options?: BuildOpenUiSystemPromptOptions): string",
+          "params": [
+            {
+              "name": "options",
+              "type": "BuildOpenUiSystemPromptOptions",
+              "ref": "BuildOpenUiSystemPromptOptions",
+              "refs": [
+                "BuildOpenUiSystemPromptOptions"
+              ],
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "string"
+          },
+          "summary": "Build the full OpenUI system prompt for the supplied library and options."
+        }
+      ],
+      "summary": "Build the full OpenUI system prompt for the supplied library and options."
+    },
+    {
+      "name": "createA2UICatalog",
+      "kind": "function",
+      "type": "createA2UICatalog(options: { catalogId: string; components: ExtractedCatalogComponent[] | Record<string, ExtractedJsonSchema>; functions?: FunctionDefinition[]; theme?: Record<string, ExtractedJsonSchema> }): ExtractedA2UICatalog",
+      "signatures": [
+        {
+          "text": "createA2UICatalog(options: { catalogId: string; components: ExtractedCatalogComponent[] | Record<string, ExtractedJsonSchema>; functions?: FunctionDefinition[]; theme?: Record<string, ExtractedJsonSchema> }): ExtractedA2UICatalog",
+          "params": [
+            {
+              "name": "options",
+              "type": "{ catalogId: string; components: ExtractedCatalogComponent[] | Record<string, ExtractedJsonSchema>; functions?: FunctionDefinition[]; theme?: Record<string, ExtractedJsonSchema> }",
+              "refs": [
+                "ExtractedCatalogComponent",
+                "ExtractedJsonSchema",
+                "FunctionDefinition"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "ExtractedA2UICatalog",
+            "refs": [
+              "ExtractedA2UICatalog"
+            ]
+          },
+          "summary": "Build a full A2UI catalog manifest from component and function artifacts."
+        }
+      ],
+      "summary": "Build a full A2UI catalog manifest from component and function artifacts."
+    },
+    {
+      "name": "createA2UICatalogFromManifests",
+      "kind": "function",
+      "type": "createA2UICatalogFromManifests(options: { catalogId: string; componentManifests: Record<string, A2UIPromptJsonSchema>[]; examples?: A2UIExample[]; extraRules?: string[]; functions?: A2UIFunctionSpec[]; label?: string; version?: string }): A2UIPromptCatalog",
+      "signatures": [
+        {
+          "text": "createA2UICatalogFromManifests(options: { catalogId: string; componentManifests: Record<string, A2UIPromptJsonSchema>[]; examples?: A2UIExample[]; extraRules?: string[]; functions?: A2UIFunctionSpec[]; label?: string; version?: string }): A2UIPromptCatalog",
+          "params": [
+            {
+              "name": "options",
+              "type": "{ catalogId: string; componentManifests: Record<string, A2UIPromptJsonSchema>[]; examples?: A2UIExample[]; extraRules?: string[]; functions?: A2UIFunctionSpec[]; label?: string; version?: string }",
+              "refs": [
+                "A2UIPromptJsonSchema",
+                "A2UIExample",
+                "A2UIFunctionSpec"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "A2UIPromptCatalog",
+            "refs": [
+              "A2UIPromptCatalog"
+            ]
+          },
+          "summary": "Convert generated component manifests into a prompt-ready A2UI catalog."
+        }
+      ],
+      "summary": "Convert generated component manifests into a prompt-ready A2UI catalog."
+    },
+    {
+      "name": "createFallbackMessagesFromPlainText",
+      "kind": "function",
+      "type": "createFallbackMessagesFromPlainText(text: string): ServerToClientMessage[]",
+      "signatures": [
+        {
+          "text": "createFallbackMessagesFromPlainText(text: string): ServerToClientMessage[]",
+          "params": [
+            {
+              "name": "text",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "ServerToClientMessage[]",
+            "refs": [
+              "ServerToClientMessage"
+            ]
+          },
+          "summary": "Build a single-Text fallback message stream from a plain string. Used by\ntransports / `Session.ingest` callers that receive free-form text from\nthe agent instead of structured protocol messages."
+        }
+      ],
+      "summary": "Build a single-Text fallback message stream from a plain string. Used by\ntransports / `Session.ingest` callers that receive free-form text from\nthe agent instead of structured protocol messages."
+    },
+    {
+      "name": "createMessageStore",
+      "kind": "function",
+      "type": "createMessageStore(options?: MessageStoreOptions): MessageStore",
+      "signatures": [
+        {
+          "text": "createMessageStore(options?: MessageStoreOptions): MessageStore",
+          "params": [
+            {
+              "name": "options",
+              "type": "MessageStoreOptions",
+              "ref": "MessageStoreOptions",
+              "refs": [
+                "MessageStoreOptions"
+              ],
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "MessageStore",
+            "refs": [
+              "MessageStore"
+            ]
+          },
+          "summary": "Create an append-only raw-message buffer suitable for `useSyncExternalStore`."
+        }
+      ],
+      "summary": "Create an append-only raw-message buffer suitable for `useSyncExternalStore`."
+    },
+    {
+      "name": "createOpenUiLibrary",
+      "kind": "function",
+      "type": "createOpenUiLibrary(options?: CreateOpenUiLibraryOptions): Library",
+      "signatures": [
+        {
+          "text": "createOpenUiLibrary(options?: CreateOpenUiLibraryOptions): Library",
+          "params": [
+            {
+              "name": "options",
+              "type": "CreateOpenUiLibraryOptions",
+              "ref": "CreateOpenUiLibraryOptions",
+              "refs": [
+                "CreateOpenUiLibraryOptions"
+              ],
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "Library",
+            "refs": [
+              "Library"
+            ]
+          },
+          "summary": "Create a ReactLynx OpenUI library with caller-provided components and,\nunless disabled, the built-in components."
+        }
+      ],
+      "summary": "Create a ReactLynx OpenUI library with caller-provided components and,\nunless disabled, the built-in components."
+    },
+    {
+      "name": "createOpenUiPromptLibrary",
+      "kind": "function",
+      "type": "createOpenUiPromptLibrary(options?: CreateOpenUiPromptLibraryOptions): OpenUiPromptLibrary",
+      "signatures": [
+        {
+          "text": "createOpenUiPromptLibrary(options?: CreateOpenUiPromptLibraryOptions): OpenUiPromptLibrary",
+          "params": [
+            {
+              "name": "options",
+              "type": "CreateOpenUiPromptLibraryOptions",
+              "ref": "CreateOpenUiPromptLibraryOptions",
+              "refs": [
+                "CreateOpenUiPromptLibraryOptions"
+              ],
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "OpenUiPromptLibrary",
+            "refs": [
+              "OpenUiPromptLibrary"
+            ]
+          },
+          "summary": "Create a headless OpenUI library with the built-in component schemas.\n\nThis mirrors the ReactLynx library for prompt generation while avoiding any\nruntime dependency on ReactLynx or Lynx UI components."
+        }
+      ],
+      "summary": "Create a headless OpenUI library with the built-in component schemas.\n\nThis mirrors the ReactLynx library for prompt generation while avoiding any\nruntime dependency on ReactLynx or Lynx UI components."
+    },
+    {
+      "name": "createResource",
+      "kind": "function",
+      "type": "createResource(id: string): RawResource<T>",
+      "signatures": [
+        {
+          "text": "createResource(id: string): RawResource<T>",
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "RawResource<T>",
+            "refs": [
+              "RawResource"
+            ]
+          },
+          "summary": "Create a pending resource that can later complete, fail, and notify\nsubscribers of every state transition."
+        }
+      ],
+      "summary": "Create a pending resource that can later complete, fail, and notify\nsubscribers of every state transition."
+    },
+    {
+      "name": "createTextCardMessages",
+      "kind": "function",
+      "type": "createTextCardMessages(text: string): ServerToClientMessage[]",
+      "signatures": [
+        {
+          "text": "createTextCardMessages(text: string): ServerToClientMessage[]",
+          "params": [
+            {
+              "name": "text",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "ServerToClientMessage[]",
+            "refs": [
+              "ServerToClientMessage"
+            ]
+          },
+          "summary": "Build a Card-wrapped Text fallback message stream from a plain string.\nUsed when the agent emits text payloads with `kind: 'text'`."
+        }
+      ],
+      "summary": "Build a Card-wrapped Text fallback message stream from a plain string.\nUsed when the agent emits text payloads with `kind: 'text'`."
+    },
+    {
+      "name": "defineComponent",
+      "kind": "function",
+      "type": "defineComponent(config: { component: ComponentRenderer<output<T>>; description: string; name: string; props: T }): DefinedComponent<T>",
+      "signatures": [
+        {
+          "text": "defineComponent(config: { component: ComponentRenderer<output<T>>; description: string; name: string; props: T }): DefinedComponent<T>",
+          "params": [
+            {
+              "name": "config",
+              "type": "{ component: ComponentRenderer<output<T>>; description: string; name: string; props: T }",
+              "refs": [
+                "ComponentRenderer"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "DefinedComponent<T>",
+            "refs": [
+              "DefinedComponent"
+            ]
+          },
+          "summary": "Define a ReactLynx component renderer and its OpenUI schema metadata."
+        }
+      ],
+      "summary": "Define a ReactLynx component renderer and its OpenUI schema metadata."
+    },
+    {
+      "name": "executeFunctionCall",
+      "kind": "function",
+      "type": "executeFunctionCall(processor: MessageProcessor, fn: {}, surfaceId: string, dataContextPath?: string, options?: ResolveFunctionOptions): unknown",
+      "signatures": [
+        {
+          "text": "executeFunctionCall(processor: MessageProcessor, fn: {}, surfaceId: string, dataContextPath?: string, options?: ResolveFunctionOptions): unknown",
+          "params": [
+            {
+              "name": "processor",
+              "type": "MessageProcessor",
+              "ref": "MessageProcessor",
+              "refs": [
+                "MessageProcessor"
+              ]
+            },
+            {
+              "name": "fn",
+              "type": "{}"
+            },
+            {
+              "name": "surfaceId",
+              "type": "string"
+            },
+            {
+              "name": "dataContextPath",
+              "type": "string",
+              "optional": true
+            },
+            {
+              "name": "options",
+              "type": "ResolveFunctionOptions",
+              "ref": "ResolveFunctionOptions",
+              "refs": [
+                "ResolveFunctionOptions"
+              ],
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "unknown"
+          },
+          "summary": "Resolve arguments, look the function up in the registry, and invoke it.\nWhen no impl is registered, log once and return `undefined` so callers\n(checks, dynamic-property bindings) can degrade gracefully."
+        }
+      ],
+      "summary": "Resolve arguments, look the function up in the registry, and invoke it.\nWhen no impl is registered, log once and return `undefined` so callers\n(checks, dynamic-property bindings) can degrade gracefully."
+    },
+    {
+      "name": "extractCatalogComponents",
+      "kind": "function",
+      "type": "extractCatalogComponents(options: ExtractCatalogOptions): Promise<ExtractedCatalogComponent[]>",
+      "signatures": [
+        {
+          "text": "extractCatalogComponents(options: ExtractCatalogOptions): Promise<ExtractedCatalogComponent[]>",
+          "params": [
+            {
+              "name": "options",
+              "type": "ExtractCatalogOptions",
+              "ref": "ExtractCatalogOptions",
+              "refs": [
+                "ExtractCatalogOptions"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "Promise<ExtractedCatalogComponent[]>",
+            "refs": [
+              "ExtractedCatalogComponent"
+            ]
+          },
+          "summary": "Run TypeDoc over source files and extract A2UI component schemas."
+        }
+      ],
+      "summary": "Run TypeDoc over source files and extract A2UI component schemas."
+    },
+    {
+      "name": "extractCatalogFunctions",
+      "kind": "function",
+      "type": "extractCatalogFunctions(options: ExtractCatalogOptions): Promise<CatalogFunction[]>",
+      "signatures": [
+        {
+          "text": "extractCatalogFunctions(options: ExtractCatalogOptions): Promise<CatalogFunction[]>",
+          "params": [
+            {
+              "name": "options",
+              "type": "ExtractCatalogOptions",
+              "ref": "ExtractCatalogOptions",
+              "refs": [
+                "ExtractCatalogOptions"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "Promise<CatalogFunction[]>",
+            "refs": [
+              "CatalogFunction"
+            ]
+          },
+          "summary": "Run TypeDoc over source files and extract A2UI function definitions."
+        }
+      ],
+      "summary": "Run TypeDoc over source files and extract A2UI function definitions."
+    },
+    {
+      "name": "findCatalogSourceFiles",
+      "kind": "function",
+      "type": "findCatalogSourceFiles(inputPath: string): string[]",
+      "signatures": [
+        {
+          "text": "findCatalogSourceFiles(inputPath: string): string[]",
+          "params": [
+            {
+              "name": "inputPath",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "string[]"
+          },
+          "summary": "Find supported source files under a file or directory path."
+        }
+      ],
+      "summary": "Find supported source files under a file or directory path."
+    },
+    {
+      "name": "isDataBinding",
+      "kind": "function",
+      "type": "isDataBinding(value: unknown): value is {}",
+      "signatures": [
+        {
+          "text": "isDataBinding(value: unknown): value is {}",
+          "params": [
+            {
+              "name": "value",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "value is {}"
+          },
+          "summary": "Return whether a value matches the A2UI data-binding shape."
+        }
+      ],
+      "summary": "Return whether a value matches the A2UI data-binding shape."
+    },
+    {
+      "name": "isFunctionCall",
+      "kind": "function",
+      "type": "isFunctionCall(value: unknown): value is {}",
+      "signatures": [
+        {
+          "text": "isFunctionCall(value: unknown): value is {}",
+          "params": [
+            {
+              "name": "value",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "value is {}"
+          },
+          "summary": "Return whether a value matches the A2UI function-call shape."
+        }
+      ],
+      "summary": "Return whether a value matches the A2UI function-call shape."
+    },
+    {
+      "name": "loadBasicCatalog",
+      "kind": "function",
+      "type": "loadBasicCatalog(): Promise<A2UIPromptCatalog>",
+      "signatures": [
+        {
+          "text": "loadBasicCatalog(): Promise<A2UIPromptCatalog>",
+          "params": [],
+          "returns": {
+            "type": "Promise<A2UIPromptCatalog>",
+            "refs": [
+              "A2UIPromptCatalog"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "normalizePayloadToMessages",
+      "kind": "function",
+      "type": "normalizePayloadToMessages(payload: unknown): ServerToClientMessage[]",
+      "signatures": [
+        {
+          "text": "normalizePayloadToMessages(payload: unknown): ServerToClientMessage[]",
+          "params": [
+            {
+              "name": "payload",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "ServerToClientMessage[]",
+            "refs": [
+              "ServerToClientMessage"
+            ]
+          },
+          "summary": "Normalize an arbitrary payload (string, array, object) into a flat list of\n`ServerToClientMessage` records. Pass-through for already-structured\nmessages; falls back to wrapping plain text in a Text/Card surface."
+        }
+      ],
+      "summary": "Normalize an arbitrary payload (string, array, object) into a flat list of\n`ServerToClientMessage` records. Pass-through for already-structured\nmessages; falls back to wrapping plain text in a Text/Card surface."
+    },
+    {
+      "name": "OpenUiRenderer",
+      "kind": "function",
+      "type": "OpenUiRenderer(props: OpenUiRendererProps): Element",
+      "signatures": [
+        {
+          "text": "OpenUiRenderer(props: OpenUiRendererProps): Element",
+          "params": [
+            {
+              "name": "props",
+              "type": "OpenUiRendererProps",
+              "ref": "OpenUiRendererProps",
+              "refs": [
+                "OpenUiRendererProps"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "Element"
+          },
+          "summary": "Render OpenUI language output using a ReactLynx component library."
+        }
+      ],
+      "summary": "Render OpenUI language output using a ReactLynx component library."
+    },
+    {
+      "name": "prepareMessagesForProcessing",
+      "kind": "function",
+      "type": "prepareMessagesForProcessing(rawMessages: ServerToClientMessage[], messageId: string, activeSurfaceIds: Set<string>): { hasComponentUpdate: boolean; messages: ServerToClientMessage[] }",
+      "signatures": [
+        {
+          "text": "prepareMessagesForProcessing(rawMessages: ServerToClientMessage[], messageId: string, activeSurfaceIds: Set<string>): { hasComponentUpdate: boolean; messages: ServerToClientMessage[] }",
+          "params": [
+            {
+              "name": "rawMessages",
+              "type": "ServerToClientMessage[]",
+              "refs": [
+                "ServerToClientMessage"
+              ]
+            },
+            {
+              "name": "messageId",
+              "type": "string"
+            },
+            {
+              "name": "activeSurfaceIds",
+              "type": "Set<string>"
+            }
+          ],
+          "returns": {
+            "type": "{ hasComponentUpdate: boolean; messages: ServerToClientMessage[] }",
+            "refs": [
+              "ServerToClientMessage"
+            ]
+          },
+          "summary": "Tag messages with the given messageId and report whether any of them\ncarries a non-empty `updateComponents`. Also dedupes `createSurface`\nmessages against the set of currently-active surfaces."
+        }
+      ],
+      "summary": "Tag messages with the given messageId and report whether any of them\ncarries a non-empty `updateComponents`. Also dedupes `createSurface`\nmessages against the set of currently-active surfaces."
+    },
+    {
+      "name": "reactive",
+      "kind": "function",
+      "type": "reactive(schema: T): ZodType<StateField<output<T>>>",
+      "signatures": [
+        {
+          "text": "reactive(schema: T): ZodType<StateField<output<T>>>",
+          "params": [
+            {
+              "name": "schema",
+              "type": "T"
+            }
+          ],
+          "returns": {
+            "type": "ZodType<StateField<output<T>>>"
+          },
+          "summary": "Mark a schema prop as reactive so runtime evaluation can preserve $bindings."
+        }
+      ],
+      "summary": "Mark a schema prop as reactive so runtime evaluation can preserve $bindings."
+    },
+    {
+      "name": "readA2UICatalogFromDirectory",
+      "kind": "function",
+      "type": "readA2UICatalogFromDirectory(options: ReadA2UICatalogDirectoryOptions): A2UIPromptCatalog",
+      "signatures": [
+        {
+          "text": "readA2UICatalogFromDirectory(options: ReadA2UICatalogDirectoryOptions): A2UIPromptCatalog",
+          "params": [
+            {
+              "name": "options",
+              "type": "ReadA2UICatalogDirectoryOptions",
+              "ref": "ReadA2UICatalogDirectoryOptions",
+              "refs": [
+                "ReadA2UICatalogDirectoryOptions"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "A2UIPromptCatalog",
+            "refs": [
+              "A2UIPromptCatalog"
+            ]
+          },
+          "summary": "Read generated component and function manifests and convert them into a\nprompt-ready A2UI catalog."
+        }
+      ],
+      "summary": "Read generated component and function manifests and convert them into a\nprompt-ready A2UI catalog."
+    },
+    {
+      "name": "registerBasicFunctions",
+      "kind": "function",
+      "type": "registerBasicFunctions(): void",
+      "signatures": [
+        {
+          "text": "registerBasicFunctions(): void",
+          "params": [],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "Manual escape hatch for consumers who build their own renderer and don't\ngo through `defineCatalog`. Registers every adapted basic-catalog impl\ninto the shared `functionRegistry`. Calling more than once is harmless —\nlater registrations override earlier ones, which is the intended override\npath."
+        }
+      ],
+      "summary": "Manual escape hatch for consumers who build their own renderer and don't\ngo through `defineCatalog`. Registers every adapted basic-catalog impl\ninto the shared `functionRegistry`. Calling more than once is harmless —\nlater registrations override earlier ones, which is the intended override\npath."
+    },
+    {
+      "name": "renderCatalogReference",
+      "kind": "function",
+      "type": "renderCatalogReference(catalog: A2UIPromptCatalog): string",
+      "signatures": [
+        {
+          "text": "renderCatalogReference(catalog: A2UIPromptCatalog): string",
+          "params": [
+            {
+              "name": "catalog",
+              "type": "A2UIPromptCatalog",
+              "ref": "A2UIPromptCatalog",
+              "refs": [
+                "A2UIPromptCatalog"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "string"
+          },
+          "summary": "Render an A2UI catalog into the Markdown reference embedded in prompts."
+        }
+      ],
+      "summary": "Render an A2UI catalog into the Markdown reference embedded in prompts."
+    },
+    {
+      "name": "resolveDynamicValue",
+      "kind": "function",
+      "type": "resolveDynamicValue(processor: MessageProcessor, value: unknown, surfaceId: string, dataContextPath?: string, options?: ResolveDynamicValueOptions): unknown",
+      "signatures": [
+        {
+          "text": "resolveDynamicValue(processor: MessageProcessor, value: unknown, surfaceId: string, dataContextPath?: string, options?: ResolveDynamicValueOptions): unknown",
+          "params": [
+            {
+              "name": "processor",
+              "type": "MessageProcessor",
+              "ref": "MessageProcessor",
+              "refs": [
+                "MessageProcessor"
+              ]
+            },
+            {
+              "name": "value",
+              "type": "unknown"
+            },
+            {
+              "name": "surfaceId",
+              "type": "string"
+            },
+            {
+              "name": "dataContextPath",
+              "type": "string",
+              "optional": true
+            },
+            {
+              "name": "options",
+              "type": "ResolveDynamicValueOptions",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "unknown"
+          },
+          "summary": "Resolve literals, data bindings, and function calls into concrete runtime\nvalues for component props or action payloads."
+        }
+      ],
+      "summary": "Resolve literals, data bindings, and function calls into concrete runtime\nvalues for component props or action payloads."
+    },
+    {
+      "name": "resolveFunctionArguments",
+      "kind": "function",
+      "type": "resolveFunctionArguments(processor: MessageProcessor, args: Record<string, unknown>, surfaceId: string, dataContextPath?: string, options?: ResolveFunctionOptions): Record<string, unknown>",
+      "signatures": [
+        {
+          "text": "resolveFunctionArguments(processor: MessageProcessor, args: Record<string, unknown>, surfaceId: string, dataContextPath?: string, options?: ResolveFunctionOptions): Record<string, unknown>",
+          "params": [
+            {
+              "name": "processor",
+              "type": "MessageProcessor",
+              "ref": "MessageProcessor",
+              "refs": [
+                "MessageProcessor"
+              ]
+            },
+            {
+              "name": "args",
+              "type": "Record<string, unknown>"
+            },
+            {
+              "name": "surfaceId",
+              "type": "string"
+            },
+            {
+              "name": "dataContextPath",
+              "type": "string",
+              "optional": true
+            },
+            {
+              "name": "options",
+              "type": "ResolveFunctionOptions",
+              "ref": "ResolveFunctionOptions",
+              "refs": [
+                "ResolveFunctionOptions"
+              ],
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "Record<string, unknown>"
+          },
+          "summary": "Resolve every argument in a protocol function call before invoking the\nregistered implementation."
+        }
+      ],
+      "summary": "Resolve every argument in a protocol function call before invoking the\nregistered implementation."
+    },
+    {
+      "name": "useAction",
+      "kind": "function",
+      "type": "useAction(props: ActionProps): { sendAction: (action: {} | {}) => Promise<unknown> }",
+      "signatures": [
+        {
+          "text": "useAction(props: ActionProps): { sendAction: (action: {} | {}) => Promise<unknown> }",
+          "params": [
+            {
+              "name": "props",
+              "type": "ActionProps",
+              "ref": "ActionProps",
+              "refs": [
+                "ActionProps"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "{ sendAction: (action: {} | {}) => Promise<unknown> }"
+          },
+          "summary": "Create a `sendAction` callback that resolves dynamic action payload values\nand dispatches user events or function calls through the current processor."
+        }
+      ],
+      "summary": "Create a `sendAction` callback that resolves dynamic action payload values\nand dispatches user events or function calls through the current processor."
+    },
+    {
+      "name": "useChecks",
+      "kind": "function",
+      "type": "useChecks(options: { checks: CheckLike[] | undefined; componentId: string; dataContextPath?: string; surface: Surface | undefined }): CheckOutcome & { firstFailureMessage: string | undefined }",
+      "signatures": [
+        {
+          "text": "useChecks(options: { checks: CheckLike[] | undefined; componentId: string; dataContextPath?: string; surface: Surface | undefined }): CheckOutcome & { firstFailureMessage: string | undefined }",
+          "params": [
+            {
+              "name": "options",
+              "type": "{ checks: CheckLike[] | undefined; componentId: string; dataContextPath?: string; surface: Surface | undefined }",
+              "refs": [
+                "CheckLike",
+                "Surface"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "CheckOutcome & { firstFailureMessage: string | undefined }"
+          },
+          "summary": "Evaluate an input component's `checks` array reactively. Returns the\ncurrent outcome plus the first failure message (handy for inline error\nrendering). When an enclosing `<FormContext.Provider>` exists, the input\nis also registered with it so Buttons in the same form can react to\n`isValid`."
+        }
+      ],
+      "summary": "Evaluate an input component's `checks` array reactively. Returns the\ncurrent outcome plus the first failure message (handy for inline error\nrendering). When an enclosing `<FormContext.Provider>` exists, the input\nis also registered with it so Buttons in the same form can react to\n`isValid`."
+    },
+    {
+      "name": "useCreateFormValidation",
+      "kind": "function",
+      "type": "useCreateFormValidation(): FormValidationContextValue",
+      "signatures": [
+        {
+          "text": "useCreateFormValidation(): FormValidationContextValue",
+          "params": [],
+          "returns": {
+            "type": "FormValidationContextValue",
+            "refs": [
+              "FormValidationContextValue"
+            ]
+          },
+          "summary": "Create form validation state and callbacks for an OpenUI form boundary."
+        }
+      ],
+      "summary": "Create form validation state and callbacks for an OpenUI form boundary."
+    },
+    {
+      "name": "useDataBinding",
+      "kind": "function",
+      "type": "useDataBinding(dynamicValue: unknown, surface: Surface, dataContextPath?: string, fallbackValue?: T): [T | undefined, (newValue: T) => void, string | undefined]",
+      "signatures": [
+        {
+          "text": "useDataBinding(dynamicValue: unknown, surface: Surface, dataContextPath?: string, fallbackValue?: T): [T | undefined, (newValue: T) => void, string | undefined]",
+          "params": [
+            {
+              "name": "dynamicValue",
+              "type": "unknown"
+            },
+            {
+              "name": "surface",
+              "type": "Surface",
+              "ref": "Surface",
+              "refs": [
+                "Surface"
+              ]
+            },
+            {
+              "name": "dataContextPath",
+              "type": "string",
+              "optional": true
+            },
+            {
+              "name": "fallbackValue",
+              "type": "T",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "[T | undefined, (newValue: T) => void, string | undefined]"
+          },
+          "summary": "Subscribe to a data-model binding and return the current value at that path."
+        }
+      ],
+      "summary": "Subscribe to a data-model binding and return the current value at that path."
+    },
+    {
+      "name": "useFormValidation",
+      "kind": "function",
+      "type": "useFormValidation(): FormValidationContextValue | null",
+      "signatures": [
+        {
+          "text": "useFormValidation(): FormValidationContextValue | null",
+          "params": [],
+          "returns": {
+            "type": "FormValidationContextValue | null",
+            "refs": [
+              "FormValidationContextValue"
+            ]
+          },
+          "summary": "Read the nearest OpenUI form validation context, if one exists."
+        }
+      ],
+      "summary": "Read the nearest OpenUI form validation context, if one exists."
+    },
+    {
+      "name": "useGetFieldValue",
+      "kind": "function",
+      "type": "useGetFieldValue(): (formName: string | undefined, name: string) => any",
+      "signatures": [
+        {
+          "text": "useGetFieldValue(): (formName: string | undefined, name: string) => any",
+          "params": [],
+          "returns": {
+            "type": "(formName: string | undefined, name: string) => any"
+          },
+          "summary": "Get a form field value from the form state context.",
+          "examples": [
+            "```tsx\nconst getFieldValue = useGetFieldValue();\nconst name = getFieldValue(\"contactForm\", \"name\");\n```"
+          ]
+        }
+      ],
+      "summary": "Get a form field value from the form state context.",
+      "examples": [
+        "```tsx\nconst getFieldValue = useGetFieldValue();\nconst name = getFieldValue(\"contactForm\", \"name\");\n```"
+      ]
+    },
+    {
+      "name": "useIsQueryLoading",
+      "kind": "function",
+      "type": "useIsQueryLoading(): boolean",
+      "signatures": [
+        {
+          "text": "useIsQueryLoading(): boolean",
+          "params": [],
+          "returns": {
+            "type": "boolean"
+          },
+          "summary": "Whether any Query is currently fetching data."
+        }
+      ],
+      "summary": "Whether any Query is currently fetching data."
+    },
+    {
+      "name": "useIsStreaming",
+      "kind": "function",
+      "type": "useIsStreaming(): boolean",
+      "signatures": [
+        {
+          "text": "useIsStreaming(): boolean",
+          "params": [],
+          "returns": {
+            "type": "boolean"
+          },
+          "summary": "Whether the LLM is currently streaming content."
+        }
+      ],
+      "summary": "Whether the LLM is currently streaming content."
+    },
+    {
+      "name": "useOpenUI",
+      "kind": "function",
+      "type": "useOpenUI(): OpenUIContextValue",
+      "signatures": [
+        {
+          "text": "useOpenUI(): OpenUIContextValue",
+          "params": [],
+          "returns": {
+            "type": "OpenUIContextValue",
+            "refs": [
+              "OpenUIContextValue"
+            ]
+          },
+          "summary": "Access the full OpenUI context. Throws if used outside an\n`OpenUiRenderer` tree."
+        }
+      ],
+      "summary": "Access the full OpenUI context. Throws if used outside an\n`OpenUiRenderer` tree."
+    },
+    {
+      "name": "useOpenUIState",
+      "kind": "function",
+      "type": "useOpenUIState(__namedParameters: UseOpenUIStateOptions, renderDeep: (value: unknown) => ReactNode): OpenUIState",
+      "signatures": [
+        {
+          "text": "useOpenUIState(__namedParameters: UseOpenUIStateOptions, renderDeep: (value: unknown) => ReactNode): OpenUIState",
+          "params": [
+            {
+              "name": "__namedParameters",
+              "type": "UseOpenUIStateOptions",
+              "ref": "UseOpenUIStateOptions",
+              "refs": [
+                "UseOpenUIStateOptions"
+              ]
+            },
+            {
+              "name": "renderDeep",
+              "type": "(value: unknown) => ReactNode"
+            }
+          ],
+          "returns": {
+            "type": "OpenUIState",
+            "refs": [
+              "OpenUIState"
+            ]
+          },
+          "summary": "Core state hook — extracts all form state, action handling, parser\nmanagement, and context assembly out of the Renderer component.\n\nStore holds everything: $bindings as top-level keys, form fields nested\nunder formName as plain values."
+        }
+      ],
+      "summary": "Core state hook — extracts all form state, action handling, parser\nmanagement, and context assembly out of the Renderer component.\n\nStore holds everything: $bindings as top-level keys, form fields nested\nunder formName as plain values."
+    },
+    {
+      "name": "useRenderNode",
+      "kind": "function",
+      "type": "useRenderNode(): (value: unknown) => ReactNode",
+      "signatures": [
+        {
+          "text": "useRenderNode(): (value: unknown) => ReactNode",
+          "params": [],
+          "returns": {
+            "type": "(value: unknown) => ReactNode"
+          },
+          "summary": "Get the renderNode function for rendering nested component values."
+        }
+      ],
+      "summary": "Get the renderNode function for rendering nested component values."
     },
     {
       "name": "useResolvedProps",
-      "kind": "reference",
-      "type": "unknown"
+      "kind": "function",
+      "type": "useResolvedProps(properties: Record<string, unknown>, surface: Surface, dataContextPath?: string, processor?: MessageProcessor, functions?: readonly CatalogFunctionEntry[]): readonly [Record<string, unknown>, (key: string, value: unknown) => void]",
+      "signatures": [
+        {
+          "text": "useResolvedProps(properties: Record<string, unknown>, surface: Surface, dataContextPath?: string, processor?: MessageProcessor, functions?: readonly CatalogFunctionEntry[]): readonly [Record<string, unknown>, (key: string, value: unknown) => void]",
+          "params": [
+            {
+              "name": "properties",
+              "type": "Record<string, unknown>"
+            },
+            {
+              "name": "surface",
+              "type": "Surface",
+              "ref": "Surface",
+              "refs": [
+                "Surface"
+              ]
+            },
+            {
+              "name": "dataContextPath",
+              "type": "string",
+              "optional": true
+            },
+            {
+              "name": "processor",
+              "type": "MessageProcessor",
+              "ref": "MessageProcessor",
+              "refs": [
+                "MessageProcessor"
+              ],
+              "optional": true
+            },
+            {
+              "name": "functions",
+              "type": "readonly CatalogFunctionEntry[]",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "readonly [Record<string, unknown>, (key: string, value: unknown) => void]"
+          },
+          "summary": "Resolve a component's dynamic props and keep the result in sync with\nsignal-backed data model changes."
+        }
+      ],
+      "summary": "Resolve a component's dynamic props and keep the result in sync with\nsignal-backed data model changes."
+    },
+    {
+      "name": "useSetDefaultValue",
+      "kind": "function",
+      "type": "useSetDefaultValue(shouldTriggerSaveCallback: { componentType?: string; defaultValue: unknown; existingValue: unknown; formName?: string; name: string; shouldTriggerSaveCallback?: boolean }): void",
+      "signatures": [
+        {
+          "text": "useSetDefaultValue(shouldTriggerSaveCallback: { componentType?: string; defaultValue: unknown; existingValue: unknown; formName?: string; name: string; shouldTriggerSaveCallback?: boolean }): void",
+          "params": [
+            {
+              "name": "shouldTriggerSaveCallback",
+              "type": "{ componentType?: string; defaultValue: unknown; existingValue: unknown; formName?: string; name: string; shouldTriggerSaveCallback?: boolean }",
+              "description": "Defaults to `false` (only local state, no message persistence)."
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "Persists a component's default/initial value into form state once streaming\nfinishes — but only if the user hasn't already set a value.\n\nCall this inside any form component that has a `defaultValue` or\n`defaultChecked` prop. It is a no-op during streaming so that LLM\nprop changes don't fight with partial state."
+        }
+      ],
+      "summary": "Persists a component's default/initial value into form state once streaming\nfinishes — but only if the user hasn't already set a value.\n\nCall this inside any form component that has a `defaultValue` or\n`defaultChecked` prop. It is a no-op during streaming so that LLM\nprop changes don't fight with partial state."
+    },
+    {
+      "name": "useSetFieldValue",
+      "kind": "function",
+      "type": "useSetFieldValue(): (formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void",
+      "signatures": [
+        {
+          "text": "useSetFieldValue(): (formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void",
+          "params": [],
+          "returns": {
+            "type": "(formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void"
+          },
+          "summary": "Get the setFieldValue function for updating form field values.",
+          "examples": [
+            "```tsx\nconst setFieldValue = useSetFieldValue();\n<input onChange={(e) => setFieldValue(\"contactForm\", \"Input\", \"name\", e.target.value, false)} />\n```"
+          ]
+        }
+      ],
+      "summary": "Get the setFieldValue function for updating form field values.",
+      "examples": [
+        "```tsx\nconst setFieldValue = useSetFieldValue();\n<input onChange={(e) => setFieldValue(\"contactForm\", \"Input\", \"name\", e.target.value, false)} />\n```"
+      ]
+    },
+    {
+      "name": "useStateField",
+      "kind": "function",
+      "type": "useStateField(name: string, value?: T): StateField<InferStateFieldValue<T>>",
+      "signatures": [
+        {
+          "text": "useStateField(name: string, value?: T): StateField<InferStateFieldValue<T>>",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "value",
+              "type": "T",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "StateField<InferStateFieldValue<T>>"
+          },
+          "summary": "Resolve a named OpenUI state field against form state and reactive bindings."
+        }
+      ],
+      "summary": "Resolve a named OpenUI state field against form state and reactive bindings."
+    },
+    {
+      "name": "useTriggerAction",
+      "kind": "function",
+      "type": "useTriggerAction(): (userMessage: string, formName?: string, action?: ActionPlan | { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void | Promise<void>",
+      "signatures": [
+        {
+          "text": "useTriggerAction(): (userMessage: string, formName?: string, action?: ActionPlan | { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void | Promise<void>",
+          "params": [],
+          "returns": {
+            "type": "(userMessage: string, formName?: string, action?: ActionPlan | { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void | Promise<void>"
+          },
+          "summary": "Get the triggerAction function for firing structured action events.",
+          "examples": [
+            "```tsx\nconst triggerAction = useTriggerAction();\n<button onClick={() => triggerAction(\"Submit\", \"myForm\")}>\n```"
+          ]
+        }
+      ],
+      "summary": "Get the triggerAction function for firing structured action events.",
+      "examples": [
+        "```tsx\nconst triggerAction = useTriggerAction();\n<button onClick={() => triggerAction(\"Submit\", \"myForm\")}>\n```"
+      ]
     }
   ]
 }

@@ -25,12 +25,1451 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 
 {/* @api ApiExports package="genui" */}
 
+## Functions \{#functions\}
+
+### `buildA2UISystemPrompt()` \{#builda2uisystemprompt\}
+
+```ts
+buildA2UISystemPrompt(opts?: BuildSystemPromptOptions): string
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `opts?` | [`BuildSystemPromptOptions`](#buildsystempromptoptions) |  |
+
+**Returns:** `string`
+
+### `buildA2UISystemPromptAsync()` \{#builda2uisystempromptasync\}
+
+```ts
+buildA2UISystemPromptAsync(opts?: BuildSystemPromptOptions): Promise<string>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `opts?` | [`BuildSystemPromptOptions`](#buildsystempromptoptions) |  |
+
+**Returns:** `Promise<string>`
+
+### `buildLynxXmlSystemPrompt()` \{#buildlynxxmlsystemprompt\}
+
+```ts
+buildLynxXmlSystemPrompt(options?: BuildLynxXmlSystemPromptOptions): string
+```
+
+Build a system prompt for producing complete, zero-build `.lynxml` files.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options?` | [`BuildLynxXmlSystemPromptOptions`](#buildlynxxmlsystempromptoptions) |  |
+
+**Returns:** `string`
+
+### `buildOpenUiSystemPrompt()` \{#buildopenuisystemprompt\}
+
+```ts
+buildOpenUiSystemPrompt(options?: BuildOpenUiSystemPromptOptions): string
+```
+
+Build the full OpenUI system prompt for the supplied library and options.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options?` | [`BuildOpenUiSystemPromptOptions`](#buildopenuisystempromptoptions) |  |
+
+**Returns:** `string`
+
+### `createA2UICatalog()` \{#createa2uicatalog\}
+
+```ts
+createA2UICatalog(options: { catalogId: string; components: ExtractedCatalogComponent[] | Record<string, ExtractedJsonSchema>; functions?: FunctionDefinition[]; theme?: Record<string, ExtractedJsonSchema> }): ExtractedA2UICatalog
+```
+
+Build a full A2UI catalog manifest from component and function artifacts.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | `{ catalogId: string; components: `[`ExtractedCatalogComponent`](#extractedcatalogcomponent)`[] \| Record<string, `[`ExtractedJsonSchema`](#extractedjsonschema)`>; functions?: `[`FunctionDefinition`](#functiondefinition)`[]; theme?: Record<string, `[`ExtractedJsonSchema`](#extractedjsonschema)`> }` |  |
+
+**Returns:** [`ExtractedA2UICatalog`](#extracteda2uicatalog)
+
+### `createA2UICatalogFromManifests()` \{#createa2uicatalogfrommanifests\}
+
+```ts
+createA2UICatalogFromManifests(options: { catalogId: string; componentManifests: Record<string, A2UIPromptJsonSchema>[]; examples?: A2UIExample[]; extraRules?: string[]; functions?: A2UIFunctionSpec[]; label?: string; version?: string }): A2UIPromptCatalog
+```
+
+Convert generated component manifests into a prompt-ready A2UI catalog.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | `{ catalogId: string; componentManifests: Record<string, `[`A2UIPromptJsonSchema`](#a2uipromptjsonschema)`>[]; examples?: `[`A2UIExample`](#a2uiexample)`[]; extraRules?: string[]; functions?: `[`A2UIFunctionSpec`](#a2uifunctionspec)`[]; label?: string; version?: string }` |  |
+
+**Returns:** [`A2UIPromptCatalog`](#a2uipromptcatalog)
+
+### `createFallbackMessagesFromPlainText()` \{#createfallbackmessagesfromplaintext\}
+
+```ts
+createFallbackMessagesFromPlainText(text: string): ServerToClientMessage[]
+```
+
+Build a single-Text fallback message stream from a plain string. Used by
+transports / `Session.ingest` callers that receive free-form text from
+the agent instead of structured protocol messages.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `text` | `string` |  |
+
+**Returns:** [`ServerToClientMessage`](#servertoclientmessage)`[]`
+
+### `createMessageStore()` \{#createmessagestore\}
+
+```ts
+createMessageStore(options?: MessageStoreOptions): MessageStore
+```
+
+Create an append-only raw-message buffer suitable for `useSyncExternalStore`.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options?` | [`MessageStoreOptions`](#messagestoreoptions) |  |
+
+**Returns:** [`MessageStore`](#messagestore)
+
+### `createOpenUiLibrary()` \{#createopenuilibrary\}
+
+```ts
+createOpenUiLibrary(options?: CreateOpenUiLibraryOptions): Library
+```
+
+Create a ReactLynx OpenUI library with caller-provided components and,
+unless disabled, the built-in components.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options?` | [`CreateOpenUiLibraryOptions`](#createopenuilibraryoptions) |  |
+
+**Returns:** [`Library`](#library)
+
+### `createOpenUiPromptLibrary()` \{#createopenuipromptlibrary\}
+
+```ts
+createOpenUiPromptLibrary(options?: CreateOpenUiPromptLibraryOptions): OpenUiPromptLibrary
+```
+
+Create a headless OpenUI library with the built-in component schemas.
+
+This mirrors the ReactLynx library for prompt generation while avoiding any
+runtime dependency on ReactLynx or Lynx UI components.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options?` | [`CreateOpenUiPromptLibraryOptions`](#createopenuipromptlibraryoptions) |  |
+
+**Returns:** [`OpenUiPromptLibrary`](#openuipromptlibrary)
+
+### `createResource()` \{#createresource\}
+
+```ts
+createResource(id: string): RawResource<T>
+```
+
+Create a pending resource that can later complete, fail, and notify
+subscribers of every state transition.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `id` | `string` |  |
+
+**Returns:** [`RawResource`](#rawresource)`<T>`
+
+### `createTextCardMessages()` \{#createtextcardmessages\}
+
+```ts
+createTextCardMessages(text: string): ServerToClientMessage[]
+```
+
+Build a Card-wrapped Text fallback message stream from a plain string.
+Used when the agent emits text payloads with `kind: 'text'`.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `text` | `string` |  |
+
+**Returns:** [`ServerToClientMessage`](#servertoclientmessage)`[]`
+
+### `defineComponent()` \{#definecomponent\}
+
+```ts
+defineComponent(config: { component: ComponentRenderer<output<T>>; description: string; name: string; props: T }): DefinedComponent<T>
+```
+
+Define a ReactLynx component renderer and its OpenUI schema metadata.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `config` | `{ component: `[`ComponentRenderer`](#componentrenderer)`<output<T>>; description: string; name: string; props: T }` |  |
+
+**Returns:** [`DefinedComponent`](#definedcomponent)`<T>`
+
+### `executeFunctionCall()` \{#executefunctioncall\}
+
+```ts
+executeFunctionCall(processor: MessageProcessor, fn: {}, surfaceId: string, dataContextPath?: string, options?: ResolveFunctionOptions): unknown
+```
+
+Resolve arguments, look the function up in the registry, and invoke it.
+When no impl is registered, log once and return `undefined` so callers
+(checks, dynamic-property bindings) can degrade gracefully.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `processor` | [`MessageProcessor`](#messageprocessor) |  |
+| `fn` | `{}` |  |
+| `surfaceId` | `string` |  |
+| `dataContextPath?` | `string` |  |
+| `options?` | [`ResolveFunctionOptions`](#resolvefunctionoptions) |  |
+
+**Returns:** `unknown`
+
+### `extractCatalogComponents()` \{#extractcatalogcomponents\}
+
+```ts
+extractCatalogComponents(options: ExtractCatalogOptions): Promise<ExtractedCatalogComponent[]>
+```
+
+Run TypeDoc over source files and extract A2UI component schemas.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | [`ExtractCatalogOptions`](#extractcatalogoptions) |  |
+
+**Returns:** `Promise<`[`ExtractedCatalogComponent`](#extractedcatalogcomponent)`[]>`
+
+### `extractCatalogFunctions()` \{#extractcatalogfunctions\}
+
+```ts
+extractCatalogFunctions(options: ExtractCatalogOptions): Promise<CatalogFunction[]>
+```
+
+Run TypeDoc over source files and extract A2UI function definitions.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | [`ExtractCatalogOptions`](#extractcatalogoptions) |  |
+
+**Returns:** `Promise<`[`CatalogFunction`](#catalogfunction)`[]>`
+
+### `findCatalogSourceFiles()` \{#findcatalogsourcefiles\}
+
+```ts
+findCatalogSourceFiles(inputPath: string): string[]
+```
+
+Find supported source files under a file or directory path.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `inputPath` | `string` |  |
+
+**Returns:** `string[]`
+
+### `isDataBinding()` \{#isdatabinding\}
+
+```ts
+isDataBinding(value: unknown): value is {}
+```
+
+Return whether a value matches the A2UI data-binding shape.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `value` | `unknown` |  |
+
+**Returns:** `value is {}`
+
+### `isFunctionCall()` \{#isfunctioncall\}
+
+```ts
+isFunctionCall(value: unknown): value is {}
+```
+
+Return whether a value matches the A2UI function-call shape.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `value` | `unknown` |  |
+
+**Returns:** `value is {}`
+
+### `loadBasicCatalog()` \{#loadbasiccatalog\}
+
+```ts
+loadBasicCatalog(): Promise<A2UIPromptCatalog>
+```
+
+*No description yet.*
+
+**Returns:** `Promise<`[`A2UIPromptCatalog`](#a2uipromptcatalog)`>`
+
+### `normalizePayloadToMessages()` \{#normalizepayloadtomessages\}
+
+```ts
+normalizePayloadToMessages(payload: unknown): ServerToClientMessage[]
+```
+
+Normalize an arbitrary payload (string, array, object) into a flat list of
+`ServerToClientMessage` records. Pass-through for already-structured
+messages; falls back to wrapping plain text in a Text/Card surface.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `payload` | `unknown` |  |
+
+**Returns:** [`ServerToClientMessage`](#servertoclientmessage)`[]`
+
+### `OpenUiRenderer()` \{#openuirenderer\}
+
+```ts
+OpenUiRenderer(props: OpenUiRendererProps): Element
+```
+
+Render OpenUI language output using a ReactLynx component library.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `props` | [`OpenUiRendererProps`](#openuirendererprops) |  |
+
+**Returns:** `Element`
+
+### `prepareMessagesForProcessing()` \{#preparemessagesforprocessing\}
+
+```ts
+prepareMessagesForProcessing(rawMessages: ServerToClientMessage[], messageId: string, activeSurfaceIds: Set<string>): { hasComponentUpdate: boolean; messages: ServerToClientMessage[] }
+```
+
+Tag messages with the given messageId and report whether any of them
+carries a non-empty `updateComponents`. Also dedupes `createSurface`
+messages against the set of currently-active surfaces.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `rawMessages` | [`ServerToClientMessage`](#servertoclientmessage)`[]` |  |
+| `messageId` | `string` |  |
+| `activeSurfaceIds` | `Set<string>` |  |
+
+**Returns:** `{ hasComponentUpdate: boolean; messages: `[`ServerToClientMessage`](#servertoclientmessage)`[] }`
+
+### `reactive()` \{#reactive\}
+
+```ts
+reactive(schema: T): ZodType<StateField<output<T>>>
+```
+
+Mark a schema prop as reactive so runtime evaluation can preserve $bindings.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `schema` | `T` |  |
+
+**Returns:** `ZodType<StateField<output<T>>>`
+
+### `readA2UICatalogFromDirectory()` \{#reada2uicatalogfromdirectory\}
+
+```ts
+readA2UICatalogFromDirectory(options: ReadA2UICatalogDirectoryOptions): A2UIPromptCatalog
+```
+
+Read generated component and function manifests and convert them into a
+prompt-ready A2UI catalog.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | [`ReadA2UICatalogDirectoryOptions`](#reada2uicatalogdirectoryoptions) |  |
+
+**Returns:** [`A2UIPromptCatalog`](#a2uipromptcatalog)
+
+### `registerBasicFunctions()` \{#registerbasicfunctions\}
+
+```ts
+registerBasicFunctions(): void
+```
+
+Manual escape hatch for consumers who build their own renderer and don't
+go through `defineCatalog`. Registers every adapted basic-catalog impl
+into the shared `functionRegistry`. Calling more than once is harmless —
+later registrations override earlier ones, which is the intended override
+path.
+
+### `renderCatalogReference()` \{#rendercatalogreference\}
+
+```ts
+renderCatalogReference(catalog: A2UIPromptCatalog): string
+```
+
+Render an A2UI catalog into the Markdown reference embedded in prompts.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `catalog` | [`A2UIPromptCatalog`](#a2uipromptcatalog) |  |
+
+**Returns:** `string`
+
+### `resolveDynamicValue()` \{#resolvedynamicvalue\}
+
+```ts
+resolveDynamicValue(processor: MessageProcessor, value: unknown, surfaceId: string, dataContextPath?: string, options?: ResolveDynamicValueOptions): unknown
+```
+
+Resolve literals, data bindings, and function calls into concrete runtime
+values for component props or action payloads.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `processor` | [`MessageProcessor`](#messageprocessor) |  |
+| `value` | `unknown` |  |
+| `surfaceId` | `string` |  |
+| `dataContextPath?` | `string` |  |
+| `options?` | `ResolveDynamicValueOptions` |  |
+
+**Returns:** `unknown`
+
+### `resolveFunctionArguments()` \{#resolvefunctionarguments\}
+
+```ts
+resolveFunctionArguments(processor: MessageProcessor, args: Record<string, unknown>, surfaceId: string, dataContextPath?: string, options?: ResolveFunctionOptions): Record<string, unknown>
+```
+
+Resolve every argument in a protocol function call before invoking the
+registered implementation.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `processor` | [`MessageProcessor`](#messageprocessor) |  |
+| `args` | `Record<string, unknown>` |  |
+| `surfaceId` | `string` |  |
+| `dataContextPath?` | `string` |  |
+| `options?` | [`ResolveFunctionOptions`](#resolvefunctionoptions) |  |
+
+**Returns:** `Record<string, unknown>`
+
+### `useAction()` \{#useaction\}
+
+```ts
+useAction(props: ActionProps): { sendAction: (action: {} | {}) => Promise<unknown> }
+```
+
+Create a `sendAction` callback that resolves dynamic action payload values
+and dispatches user events or function calls through the current processor.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `props` | [`ActionProps`](#actionprops) |  |
+
+**Returns:** `{ sendAction: (action: {} | {}) => Promise<unknown> }`
+
+### `useChecks()` \{#usechecks\}
+
+```ts
+useChecks(options: { checks: CheckLike[] | undefined; componentId: string; dataContextPath?: string; surface: Surface | undefined }): CheckOutcome & { firstFailureMessage: string | undefined }
+```
+
+Evaluate an input component's `checks` array reactively. Returns the
+current outcome plus the first failure message (handy for inline error
+rendering). When an enclosing `<FormContext.Provider>` exists, the input
+is also registered with it so Buttons in the same form can react to
+`isValid`.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | `{ checks: `[`CheckLike`](#checklike)`[] \| undefined; componentId: string; dataContextPath?: string; surface: `[`Surface`](#surface)` \| undefined }` |  |
+
+**Returns:** `CheckOutcome & { firstFailureMessage: string | undefined }`
+
+### `useCreateFormValidation()` \{#usecreateformvalidation\}
+
+```ts
+useCreateFormValidation(): FormValidationContextValue
+```
+
+Create form validation state and callbacks for an OpenUI form boundary.
+
+**Returns:** [`FormValidationContextValue`](#formvalidationcontextvalue)
+
+### `useDataBinding()` \{#usedatabinding\}
+
+```ts
+useDataBinding(dynamicValue: unknown, surface: Surface, dataContextPath?: string, fallbackValue?: T): [T | undefined, (newValue: T) => void, string | undefined]
+```
+
+Subscribe to a data-model binding and return the current value at that path.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `dynamicValue` | `unknown` |  |
+| `surface` | [`Surface`](#surface) |  |
+| `dataContextPath?` | `string` |  |
+| `fallbackValue?` | `T` |  |
+
+**Returns:** `[T | undefined, (newValue: T) => void, string | undefined]`
+
+### `useFormValidation()` \{#useformvalidation\}
+
+```ts
+useFormValidation(): FormValidationContextValue | null
+```
+
+Read the nearest OpenUI form validation context, if one exists.
+
+**Returns:** [`FormValidationContextValue`](#formvalidationcontextvalue)` | null`
+
+### `useGetFieldValue()` \{#usegetfieldvalue\}
+
+```ts
+useGetFieldValue(): (formName: string | undefined, name: string) => any
+```
+
+Get a form field value from the form state context.
+
+```tsx
+const getFieldValue = useGetFieldValue();
+const name = getFieldValue("contactForm", "name");
+```
+
+**Returns:** `(formName: string | undefined, name: string) => any`
+
+### `useIsQueryLoading()` \{#useisqueryloading\}
+
+```ts
+useIsQueryLoading(): boolean
+```
+
+Whether any Query is currently fetching data.
+
+**Returns:** `boolean`
+
+### `useIsStreaming()` \{#useisstreaming\}
+
+```ts
+useIsStreaming(): boolean
+```
+
+Whether the LLM is currently streaming content.
+
+**Returns:** `boolean`
+
+### `useOpenUI()` \{#useopenui\}
+
+```ts
+useOpenUI(): OpenUIContextValue
+```
+
+Access the full OpenUI context. Throws if used outside an
+`OpenUiRenderer` tree.
+
+**Returns:** [`OpenUIContextValue`](#openuicontextvalue)
+
+### `useOpenUIState()` \{#useopenuistate\}
+
+```ts
+useOpenUIState(__namedParameters: UseOpenUIStateOptions, renderDeep: (value: unknown) => ReactNode): OpenUIState
+```
+
+Core state hook — extracts all form state, action handling, parser
+management, and context assembly out of the Renderer component.
+
+Store holds everything: $bindings as top-level keys, form fields nested
+under formName as plain values.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `__namedParameters` | [`UseOpenUIStateOptions`](#useopenuistateoptions) |  |
+| `renderDeep` | `(value: unknown) => ReactNode` |  |
+
+**Returns:** [`OpenUIState`](#openuistate)
+
+### `useRenderNode()` \{#userendernode\}
+
+```ts
+useRenderNode(): (value: unknown) => ReactNode
+```
+
+Get the renderNode function for rendering nested component values.
+
+**Returns:** `(value: unknown) => ReactNode`
+
+### `useResolvedProps()` \{#useresolvedprops\}
+
+```ts
+useResolvedProps(properties: Record<string, unknown>, surface: Surface, dataContextPath?: string, processor?: MessageProcessor, functions?: readonly CatalogFunctionEntry[]): readonly [Record<string, unknown>, (key: string, value: unknown) => void]
+```
+
+Resolve a component's dynamic props and keep the result in sync with
+signal-backed data model changes.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `properties` | `Record<string, unknown>` |  |
+| `surface` | [`Surface`](#surface) |  |
+| `dataContextPath?` | `string` |  |
+| `processor?` | [`MessageProcessor`](#messageprocessor) |  |
+| `functions?` | `readonly CatalogFunctionEntry[]` |  |
+
+**Returns:** `readonly [Record<string, unknown>, (key: string, value: unknown) => void]`
+
+### `useSetDefaultValue()` \{#usesetdefaultvalue\}
+
+```ts
+useSetDefaultValue(shouldTriggerSaveCallback: { componentType?: string; defaultValue: unknown; existingValue: unknown; formName?: string; name: string; shouldTriggerSaveCallback?: boolean }): void
+```
+
+Persists a component's default/initial value into form state once streaming
+finishes — but only if the user hasn't already set a value.
+
+Call this inside any form component that has a `defaultValue` or
+`defaultChecked` prop. It is a no-op during streaming so that LLM
+prop changes don't fight with partial state.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `shouldTriggerSaveCallback` | `{ componentType?: string; defaultValue: unknown; existingValue: unknown; formName?: string; name: string; shouldTriggerSaveCallback?: boolean }` | Defaults to `false` (only local state, no message persistence). |
+
+### `useSetFieldValue()` \{#usesetfieldvalue\}
+
+```ts
+useSetFieldValue(): (formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void
+```
+
+Get the setFieldValue function for updating form field values.
+
+```tsx
+const setFieldValue = useSetFieldValue();
+<input onChange={(e) => setFieldValue("contactForm", "Input", "name", e.target.value, false)} />
+```
+
+**Returns:** `(formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void`
+
+### `useStateField()` \{#usestatefield\}
+
+```ts
+useStateField(name: string, value?: T): StateField<InferStateFieldValue<T>>
+```
+
+Resolve a named OpenUI state field against form state and reactive bindings.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `name` | `string` |  |
+| `value?` | `T` |  |
+
+**Returns:** `StateField<InferStateFieldValue<T>>`
+
+### `useTriggerAction()` \{#usetriggeraction\}
+
+```ts
+useTriggerAction(): (userMessage: string, formName?: string, action?: ActionPlan | { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void | Promise<void>
+```
+
+Get the triggerAction function for firing structured action events.
+
+```tsx
+const triggerAction = useTriggerAction();
+<button onClick={() => triggerAction("Submit", "myForm")}>
+```
+
+**Returns:** `(userMessage: string, formName?: string, action?: ActionPlan | { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void | Promise<void>`
+
+## Classes \{#classes\}
+
+### `FunctionRegistry` \{#functionregistry\}
+
+Lookup table that routes protocol `FunctionCall.call` names to local
+JavaScript implementations.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="functionregistry-constructor"></a>`constructor` | `constructor(): FunctionRegistry` |  |
+| <a id="functionregistry-has"></a>`has` | `has(name: string): boolean` |  |
+| <a id="functionregistry-list"></a>`list` | `list(): FunctionEntry[]` |  |
+| <a id="functionregistry-register"></a>`register` | `register(entry: FunctionEntry): void` |  |
+| <a id="functionregistry-resolve"></a>`resolve` | `resolve(name: string): FunctionImpl \| undefined` |  |
+| <a id="functionregistry-unregister"></a>`unregister` | `unregister(name: string): void` |  |
+
+### `MessageProcessor` \{#messageprocessor\}
+
+Stateful A2UI protocol processor that turns raw v0.9 messages into
+renderable surfaces, resources, data-model signals, and user-action events.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="messageprocessor-constructor"></a>`constructor` | `constructor(): MessageProcessor` |  |
+| <a id="messageprocessor-surfaces"></a>`surfaces` | `Map<string, `[`Surface`](#surface)`>` |  |
+| <a id="messageprocessor-clearsurfaces"></a>`clearSurfaces` | `clearSurfaces(): void` |  |
+| <a id="messageprocessor-dispatch"></a>`dispatch` | `dispatch(message: Record<string, unknown>): Promise<unknown>` |  |
+| <a id="messageprocessor-getorcreatesurface"></a>`getOrCreateSurface` | `getOrCreateSurface(surfaceId: string): Surface` |  |
+| <a id="messageprocessor-getsurfaces"></a>`getSurfaces` | `getSurfaces(): ReadonlyMap<string, Surface>` |  |
+| <a id="messageprocessor-onevent"></a>`onEvent` | `onEvent(callback: (event: A2UIEvent) => void): () => void` |  |
+| <a id="messageprocessor-onupdate"></a>`onUpdate` | `onUpdate(callback: (data: Record<string, unknown>) => void): () => void` |  |
+| <a id="messageprocessor-processmessages"></a>`processMessages` | `processMessages(messages: ServerToClientMessage[]): void` |  |
+| <a id="messageprocessor-resolvepath"></a>`resolvePath` | `resolvePath(path: string, dataContextPath?: string): string` | Resolve a JSON Pointer taking into account the current data context. - Absolute paths (starting with '/') are returned as-is. - Relative paths are resolved against the provided dataContextPath. |
+
+### `SignalStore` \{#signalstore\}
+
+Path-keyed store of ReactLynx signals backing a surface's data model.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="signalstore-constructor"></a>`constructor` | `constructor(): SignalStore` |  |
+| <a id="signalstore-getsignal"></a>`getSignal` | `getSignal(path: string, initialValue?: unknown): Signal<unknown>` |  |
+| <a id="signalstore-update"></a>`update` | `update(path: string, value: unknown): void` |  |
+| <a id="signalstore-updatebatch"></a>`updateBatch` | `updateBatch(updates: { path: string; value: unknown }[]): void` |  |
+
 ## Constants \{#constants\}
 
 ### `A2UI` \{#a2ui\}
 
 ```ts
-const A2UI: any
+const A2UI: MemoExoticComponent
+```
+
+*No description yet.*
+
+### `A2UI_PROTOCOL_VERSION` \{#a2ui-protocol-version\}
+
+```ts
+const A2UI_PROTOCOL_VERSION: "v0.9"
+```
+
+*No description yet.*
+
+### `BASIC_CATALOG_EXAMPLES` \{#basic-catalog-examples\}
+
+```ts
+const BASIC_CATALOG_EXAMPLES: A2UIExample[]
+```
+
+*No description yet.*
+
+### `BASIC_CATALOG_ID` \{#basic-catalog-id\}
+
+```ts
+const BASIC_CATALOG_ID: "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
+```
+
+*No description yet.*
+
+### `basicFunctions` \{#basicfunctions\}
+
+```ts
+const basicFunctions: readonly CatalogFunctionEntry[]
+```
+
+The A2UI 0.9 basic-catalog function implementations packaged as
+`CatalogFunctionEntry`s, ready to spread into `<A2UI catalogs={[...]}>`.
+The impls themselves come from `@a2ui/web_core` so we stay aligned with
+the upstream spec for free.
+
+```ts
+<A2UI catalogs={[Text, Button, ...basicFunctions]} ... />
+```
+
+### `FormNameContext` \{#formnamecontext\}
+
+```ts
+const FormNameContext: Context
+```
+
+*No description yet.*
+
+### `FormValidationContext` \{#formvalidationcontext\}
+
+```ts
+const FormValidationContext: Context
+```
+
+*No description yet.*
+
+### `functionRegistry` \{#functionregistry\}
+
+```ts
+const functionRegistry: FunctionRegistry
+```
+
+*No description yet.*
+
+### `LYNX_XML_ENGINE_VERSION` \{#lynx-xml-engine-version\}
+
+```ts
+const LYNX_XML_ENGINE_VERSION: "4.2"
+```
+
+The default Lynx engine version used by generated XML artifacts.
+
+### `LYNX_XML_SYSTEM_PROMPT` \{#lynx-xml-system-prompt\}
+
+```ts
+const LYNX_XML_SYSTEM_PROMPT: string
+```
+
+The default Lynx XML generation system prompt.
+
+### `NodeRenderer` \{#noderenderer\}
+
+```ts
+const NodeRenderer: typeof NodeRendererImpl
+```
+
+*No description yet.*
+
+### `OPENUI_SYSTEM_PROMPT` \{#openui-system-prompt\}
+
+```ts
+const OPENUI_SYSTEM_PROMPT: string
+```
+
+*No description yet.*
+
+### `openUiPromptActionPropSchema` \{#openuipromptactionpropschema\}
+
+```ts
+const openUiPromptActionPropSchema: z.ZodUnion<readonly [z.ZodObject<{ steps: z.ZodArray<z.ZodObject<{ type: z.ZodString }, z.core.$loose>> }, z.core.$strip>, z.ZodObject<{ context: z.ZodOptional<z.ZodString>; params: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>; type: z.ZodOptional<z.ZodString>; url: z.ZodOptional<z.ZodString> }, z.core.$strip>]>
+```
+
+Shared action prop schema exposed to prompt signatures as `ActionExpression`.
+
+## Types \{#types\}
+
+### `A2UIComponentProp` \{#a2uicomponentprop\}
+
+Prompt-facing description of a single A2UI component prop.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="a2uicomponentprop-description"></a>`description?` | `string` |  |
+| <a id="a2uicomponentprop-enums"></a>`enums?` | `readonly string[]` |  |
+| <a id="a2uicomponentprop-name"></a>`name` | `string` |  |
+| <a id="a2uicomponentprop-required"></a>`required?` | `boolean` |  |
+| <a id="a2uicomponentprop-schema"></a>`schema?` | [`A2UIPromptJsonSchema`](#a2uipromptjsonschema) |  |
+| <a id="a2uicomponentprop-type"></a>`type` | `string` |  |
+
+### `A2UIComponentSpec` \{#a2uicomponentspec\}
+
+Prompt-facing component specification derived from a catalog manifest.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="a2uicomponentspec-containershape"></a>`containerShape?` | `"children" \| "child" \| "tabs" \| "trigger-content" \| "none"` |  |
+| <a id="a2uicomponentspec-name"></a>`name` | `string` |  |
+| <a id="a2uicomponentspec-props"></a>`props` | [`A2UIComponentProp`](#a2uicomponentprop)`[]` |  |
+| <a id="a2uicomponentspec-requiresaction"></a>`requiresAction?` | `boolean` |  |
+| <a id="a2uicomponentspec-summary"></a>`summary` | `string` |  |
+
+### `A2UIEvent` \{#a2uievent\}
+
+Event envelope emitted by `MessageProcessor.dispatch`.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="a2uievent-message"></a>`message` | `Record<string, unknown>` |  |
+| <a id="a2uievent-resolve"></a>`resolve` | `(response: unknown) => void` |  |
+
+### `A2UIExample` \{#a2uiexample\}
+
+Validated user request and message sequence included as an in-context A2UI
+example.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="a2uiexample-messages"></a>`messages` | `unknown[]` |  |
+| <a id="a2uiexample-name"></a>`name` | `string` |  |
+| <a id="a2uiexample-user"></a>`user` | `string` |  |
+
+### `A2UIFunctionSpec` \{#a2uifunctionspec\}
+
+Prompt-facing schema for a client-side function the agent may call.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="a2uifunctionspec-description"></a>`description?` | `string` |  |
+| <a id="a2uifunctionspec-name"></a>`name` | `string` |  |
+| <a id="a2uifunctionspec-parameters"></a>`parameters` | [`A2UIPromptJsonSchema`](#a2uipromptjsonschema) |  |
+| <a id="a2uifunctionspec-returntype"></a>`returnType` | `"string" \| "number" \| "boolean" \| "object" \| "array" \| "void" \| "any"` |  |
+
+### `A2UIPromptCatalog` \{#a2uipromptcatalog\}
+
+Prompt-ready A2UI catalog including components, rules, examples, and
+optional client functions.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="a2uipromptcatalog-components"></a>`components` | [`A2UIComponentSpec`](#a2uicomponentspec)`[]` |  |
+| <a id="a2uipromptcatalog-examples"></a>`examples?` | [`A2UIExample`](#a2uiexample)`[]` |  |
+| <a id="a2uipromptcatalog-extrarules"></a>`extraRules?` | `string[]` |  |
+| <a id="a2uipromptcatalog-functions"></a>`functions?` | [`A2UIFunctionSpec`](#a2uifunctionspec)`[]` |  |
+| <a id="a2uipromptcatalog-id"></a>`id` | `string` |  |
+| <a id="a2uipromptcatalog-label"></a>`label` | `string` |  |
+| <a id="a2uipromptcatalog-version"></a>`version?` | `string` |  |
+
+### `A2UIPromptJsonSchema` \{#a2uipromptjsonschema\}
+
+JSON Schema subset used in prompt-facing catalog descriptions.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="a2uipromptjsonschema-additionalproperties"></a>`additionalProperties?` | `unknown` |  |
+| <a id="a2uipromptjsonschema-const"></a>`const?` | `unknown` |  |
+| <a id="a2uipromptjsonschema-description"></a>`description?` | `string` |  |
+| <a id="a2uipromptjsonschema-enum"></a>`enum?` | `unknown` |  |
+| <a id="a2uipromptjsonschema-items"></a>`items?` | [`A2UIPromptJsonSchema`](#a2uipromptjsonschema) |  |
+| <a id="a2uipromptjsonschema-oneof"></a>`oneOf?` | [`A2UIPromptJsonSchema`](#a2uipromptjsonschema)`[]` |  |
+| <a id="a2uipromptjsonschema-properties"></a>`properties?` | `Record<string, `[`A2UIPromptJsonSchema`](#a2uipromptjsonschema)`>` |  |
+| <a id="a2uipromptjsonschema-required"></a>`required?` | `string[]` |  |
+| <a id="a2uipromptjsonschema-type"></a>`type?` | `string` |  |
+| <a id="a2uipromptjsonschema-unevaluatedproperties"></a>`unevaluatedProperties?` | `unknown` |  |
+
+### `A2UIProps` \{#a2uiprops\}
+
+Props for the all-in-one A2UI ReactLynx renderer.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="a2uiprops-catalogs"></a>`catalogs` | `readonly CatalogInput[]` | Components the renderer is allowed to instantiate. Each item is either a bare component (name read from `displayName ?? name`) or a tuple `[component, manifest]` where the manifest is the JSON the extractor emits at `dist/catalog/<Name>/catalog.json`. |
+| <a id="a2uiprops-classname"></a>`className?` | `string` | Optional class name applied to the top-level `surface-${surfaceId}` view for the active surface. Use this when theme switching is expressed as surface-level classes. |
+| <a id="a2uiprops-messagestore"></a>`messageStore` | [`MessageStore`](#messagestore) | The raw-message buffer the developer pushes protocol messages into. `<A2UI>` subscribes via `useSyncExternalStore` and processes new messages incrementally. The internal `MessageProcessor` (surfaces, signals, resources) is created once per mount and is **not reset** if `messageStore` is later replaced with a different instance. Pass a `key` prop derived from the store's identity if you want a fresh session, e.g. `<A2UI key={turnId} messageStore={turnStore} ... />`. |
+| <a id="a2uiprops-onaction"></a>`onAction?` | `(action: `[`UserActionPayload`](#useractionpayload)`) => void` | Called when a user action fires inside the rendered tree (button tap, etc.). Forward to your agent and push the response messages back into the same `messageStore` to update the UI. Fire-and-forget; the renderer never awaits this. |
+| <a id="a2uiprops-renderempty"></a>`renderEmpty?` | `() => ReactNode` | Render before the first `beginRendering` arrives from the buffer. |
+| <a id="a2uiprops-rendererror"></a>`renderError?` | `(err: unknown) => ReactNode` | Render when the active resource fails. |
+| <a id="a2uiprops-renderfallback"></a>`renderFallback?` | `() => ReactNode` | Render while the active resource is pending. |
+| <a id="a2uiprops-renderunsupported"></a>`renderUnsupported?` | `(info: UnsupportedInfo) => ReactNode` | Render when unsupported data syntax or an unsupported component is encountered. |
+| <a id="a2uiprops-wrapsurface"></a>`wrapSurface?` | `(children: ReactNode, ctx: { surfaceId: string }) => ReactNode` | Wrap each top-level surface so consumers can apply an outer theme shell, wrapper className, or additional styles. |
+
+### `ActionProps` \{#actionprops\}
+
+Identifies the component and surface that emitted an A2UI action.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="actionprops-datacontext"></a>`dataContext?` | `string` |  |
+| <a id="actionprops-id"></a>`id` | `string` |  |
+| <a id="actionprops-surfaceid"></a>`surfaceId` | `string` |  |
+
+### `BuildLynxXmlSystemPromptOptions` \{#buildlynxxmlsystempromptoptions\}
+
+Options used to customize the Lynx XML generation system prompt.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="buildlynxxmlsystempromptoptions-appendix"></a>`appendix?` | `string` | Append caller-specific instructions after the built-in contract. |
+| <a id="buildlynxxmlsystempromptoptions-enablehtmlfragment"></a>`enableHtmlFragment?` | `boolean` | Generate an intermediate document for deterministic fragment compilation. |
+| <a id="buildlynxxmlsystempromptoptions-engineversion"></a>`engineVersion?` | `string` | Override the generated artifact's Lynx engine version. |
+
+### `BuildOpenUiSystemPromptOptions` \{#buildopenuisystempromptoptions\}
+
+Options used to customize the generated OpenUI system prompt.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="buildopenuisystempromptoptions-appendix"></a>`appendix?` | `string` |  |
+| <a id="buildopenuisystempromptoptions-componentgroups"></a>`componentGroups?` | `ComponentGroup[]` | Replace or extend the built-in component groups. |
+| <a id="buildopenuisystempromptoptions-componentnames"></a>`componentNames?` | `readonly string[]` | Limit built-ins to these names. Custom `components` are still appended. |
+| <a id="buildopenuisystempromptoptions-components"></a>`components?` | [`OpenUiPromptComponent`](#openuipromptcomponent)`[]` | Replace or extend the built-in component set. |
+| <a id="buildopenuisystempromptoptions-promptoptions"></a>`promptOptions?` | `PromptOptions` |  |
+| <a id="buildopenuisystempromptoptions-root"></a>`root?` | `string` | Override the root component name. Defaults to `'Stack'`. |
+
+### `BuildSystemPromptOptions` \{#buildsystempromptoptions\}
+
+Options used to customize the generated A2UI system prompt.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="buildsystempromptoptions-appendix"></a>`appendix?` | `string` |  |
+| <a id="buildsystempromptoptions-catalog"></a>`catalog?` | [`A2UIPromptCatalog`](#a2uipromptcatalog) |  |
+
+### `CatalogFunction` \{#catalogfunction\}
+
+A function discovered in source via `@a2uiFunction`, with its origin path.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="catalogfunction-description"></a>`description?` | `string` |  |
+| <a id="catalogfunction-filepath"></a>`filePath` | `string` |  |
+| <a id="catalogfunction-name"></a>`name` | `string` |  |
+| <a id="catalogfunction-parameters"></a>`parameters` | [`ExtractedJsonSchema`](#extractedjsonschema) |  |
+| <a id="catalogfunction-returntype"></a>`returnType` | `"string" \| "number" \| "boolean" \| "object" \| "array" \| "void" \| "any"` |  |
+
+### `CheckLike` \{#checklike\}
+
+A v0.9 `CheckRule` is `{ condition, message }` where `condition` is a
+boolean, a `DataBinding`, or a `FunctionCall`. We accept the loose
+`unknown` shape so component props don't have to import the v0_9
+types just to pass them through.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="checklike-condition"></a>`condition` | `unknown` |  |
+| <a id="checklike-message"></a>`message` | `string` |  |
+
+### `ComponentRenderProps` \{#componentrenderprops\}
+
+Props passed to an OpenUI ReactLynx component renderer.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="componentrenderprops-onaction"></a>`onAction?` | `(event: ActionEvent) => void` |  |
+
+### `CreateOpenUiLibraryOptions` \{#createopenuilibraryoptions\}
+
+Options for creating a ReactLynx OpenUI component library.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="createopenuilibraryoptions-componentgroups"></a>`componentGroups?` | `ComponentGroup[]` | Additional groups, or the complete set when defaults are disabled. |
+| <a id="createopenuilibraryoptions-components"></a>`components?` | [`DefinedComponent`](#definedcomponent)`<any>[]` | Additional components, or the complete set when defaults are disabled. |
+| <a id="createopenuilibraryoptions-includedefaultcomponents"></a>`includeDefaultComponents?` | `boolean` | Whether to include the built-in components and component groups. Defaults to `true`. |
+| <a id="createopenuilibraryoptions-root"></a>`root?` | `string` | Override the root component name. Defaults to `'Stack'`. |
+
+### `CreateOpenUiPromptLibraryOptions` \{#createopenuipromptlibraryoptions\}
+
+Options for creating the headless OpenUI prompt library.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="createopenuipromptlibraryoptions-componentgroups"></a>`componentGroups?` | `ComponentGroup[]` | Replace or extend the built-in component groups. |
+| <a id="createopenuipromptlibraryoptions-componentnames"></a>`componentNames?` | `readonly string[]` | Limit built-ins to these names. Custom `components` are still appended. |
+| <a id="createopenuipromptlibraryoptions-components"></a>`components?` | [`OpenUiPromptComponent`](#openuipromptcomponent)`[]` | Replace or extend the built-in component set. |
+| <a id="createopenuipromptlibraryoptions-root"></a>`root?` | `string` | Override the root component name. Defaults to `'Stack'`. |
+
+### `ExtractCatalogOptions` \{#extractcatalogoptions\}
+
+Source and compiler inputs used when extracting catalog metadata.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="extractcatalogoptions-cwd"></a>`cwd?` | `string` |  |
+| <a id="extractcatalogoptions-sourcefiles"></a>`sourceFiles` | `string[]` |  |
+| <a id="extractcatalogoptions-tsconfig"></a>`tsconfig?` | `string` |  |
+
+### `ExtractedA2UICatalog` \{#extracteda2uicatalog\}
+
+Full catalog manifest consumed by A2UI agents and renderers.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="extracteda2uicatalog-catalogid"></a>`catalogId` | `string` |  |
+| <a id="extracteda2uicatalog-components"></a>`components?` | `Record<string, `[`ExtractedJsonSchema`](#extractedjsonschema)`>` |  |
+| <a id="extracteda2uicatalog-functions"></a>`functions?` | `Record<string, `[`ExtractedJsonSchema`](#extractedjsonschema)`>` |  |
+| <a id="extracteda2uicatalog-theme"></a>`theme?` | `Record<string, `[`ExtractedJsonSchema`](#extractedjsonschema)`>` |  |
+
+### `ExtractedCatalogComponent` \{#extractedcatalogcomponent\}
+
+Component schema discovered from an interface annotated with `@a2uiCatalog`.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="extractedcatalogcomponent-filepath"></a>`filePath` | `string` |  |
+| <a id="extractedcatalogcomponent-interfacename"></a>`interfaceName` | `string` |  |
+| <a id="extractedcatalogcomponent-name"></a>`name` | `string` |  |
+| <a id="extractedcatalogcomponent-schema"></a>`schema` | [`ExtractedJsonSchema`](#extractedjsonschema) |  |
+
+### `ExtractedJsonSchema` \{#extractedjsonschema\}
+
+JSON Schema subset emitted for A2UI component props and function arguments.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="extractedjsonschema-ref"></a>`$ref?` | `string` |  |
+| <a id="extractedjsonschema-additionalproperties"></a>`additionalProperties?` | `boolean \| `[`ExtractedJsonSchema`](#extractedjsonschema) |  |
+| <a id="extractedjsonschema-const"></a>`const?` | `unknown` |  |
+| <a id="extractedjsonschema-default"></a>`default?` | `unknown` |  |
+| <a id="extractedjsonschema-deprecated"></a>`deprecated?` | `boolean` |  |
+| <a id="extractedjsonschema-description"></a>`description?` | `string` |  |
+| <a id="extractedjsonschema-enum"></a>`enum?` | `(string \| number \| boolean)[]` |  |
+| <a id="extractedjsonschema-items"></a>`items?` | [`ExtractedJsonSchema`](#extractedjsonschema) |  |
+| <a id="extractedjsonschema-oneof"></a>`oneOf?` | [`ExtractedJsonSchema`](#extractedjsonschema)`[]` |  |
+| <a id="extractedjsonschema-properties"></a>`properties?` | `Record<string, `[`ExtractedJsonSchema`](#extractedjsonschema)`>` |  |
+| <a id="extractedjsonschema-required"></a>`required?` | `string[]` |  |
+| <a id="extractedjsonschema-type"></a>`type?` | `string` |  |
+| <a id="extractedjsonschema-unevaluatedproperties"></a>`unevaluatedProperties?` | `boolean \| `[`ExtractedJsonSchema`](#extractedjsonschema) |  |
+
+### `FormValidationContextValue` \{#formvalidationcontextvalue\}
+
+Validation state and helpers for OpenUI form fields.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="formvalidationcontextvalue-clearfielderror"></a>`clearFieldError` | `(name: string) => void` |  |
+| <a id="formvalidationcontextvalue-errors"></a>`errors` | `Record<string, string \| undefined>` |  |
+| <a id="formvalidationcontextvalue-getfielderror"></a>`getFieldError` | `(name: string) => string \| undefined` |  |
+| <a id="formvalidationcontextvalue-registerfield"></a>`registerField` | `(name: string, rules: ParsedRule[], getValue: () => unknown) => void` |  |
+| <a id="formvalidationcontextvalue-unregisterfield"></a>`unregisterField` | `(name: string) => void` |  |
+| <a id="formvalidationcontextvalue-validatefield"></a>`validateField` | `(name: string, value: unknown, rules: ParsedRule[]) => boolean` |  |
+| <a id="formvalidationcontextvalue-validateform"></a>`validateForm` | `() => boolean` |  |
+
+### `FunctionCallContext` \{#functioncallcontext\}
+
+Runtime context passed to client-side function implementations. It mirrors
+the small DataContext subset used by upstream A2UI basic functions while
+staying tied to this renderer's `MessageProcessor` + `SignalStore`.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="functioncallcontext-datacontextpath"></a>`dataContextPath?` | `string` |  |
+| <a id="functioncallcontext-processor"></a>`processor` | [`MessageProcessor`](#messageprocessor) |  |
+| <a id="functioncallcontext-surfaceid"></a>`surfaceId` | `string` |  |
+| <a id="functioncallcontext-resolvedynamicvalue"></a>`resolveDynamicValue` | `resolveDynamicValue(value: unknown): unknown` |  |
+| <a id="functioncallcontext-resolvesignal"></a>`resolveSignal` | `resolveSignal(value: unknown): Signal<unknown>` |  |
+| <a id="functioncallcontext-set"></a>`set` | `set(path: string, value: unknown): void` |  |
+
+### `FunctionDefinition` \{#functiondefinition\}
+
+Serializable definition for a client-side function exposed to an agent.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="functiondefinition-description"></a>`description?` | `string` |  |
+| <a id="functiondefinition-name"></a>`name` | `string` |  |
+| <a id="functiondefinition-parameters"></a>`parameters` | [`ExtractedJsonSchema`](#extractedjsonschema) |  |
+| <a id="functiondefinition-returntype"></a>`returnType` | `"string" \| "number" \| "boolean" \| "object" \| "array" \| "void" \| "any"` |  |
+
+### `FunctionEntry` \{#functionentry\}
+
+Registered client-side function and its optional handshake definition.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="functionentry-definition"></a>`definition?` | `FunctionDefinition` | Optional function definition announced to the agent as part of the handshake. |
+| <a id="functionentry-impl"></a>`impl` | [`FunctionImpl`](#functionimpl) |  |
+| <a id="functionentry-name"></a>`name` | `string` |  |
+
+### `GenericComponentProps` \{#genericcomponentprops\}
+
+Common runtime props passed to every catalog component by the renderer.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="genericcomponentprops-datacontextpath"></a>`dataContextPath?` | `string` |  |
+| <a id="genericcomponentprops-id"></a>`id?` | `string` |  |
+| <a id="genericcomponentprops-sendaction"></a>`sendAction?` | `(action: Record<string, unknown>) => void` |  |
+| <a id="genericcomponentprops-setvalue"></a>`setValue?` | `(key: string, value: unknown) => void` |  |
+| <a id="genericcomponentprops-surface"></a>`surface` | [`Surface`](#surface) |  |
+
+### `MessageStore` \{#messagestore\}
+
+A pure append-only buffer of raw protocol messages produced by the
+developer's IO module. The store knows nothing about the v0.9 protocol —
+it does not parse, process, or interpret messages. It only:
+
+ 1. Stores them in arrival order.
+ 2. Notifies subscribers when new ones land.
+ 3. Hands the current snapshot back via `getSnapshot()` (referentially
+    stable between mutations — required by `useSyncExternalStore`).
+
+Protocol-aware processing — surfaces, signals, resources, action
+dispatch — is the responsibility of `<A2UI>` (the renderer component).
+Developers who don't want to learn the protocol should use `<A2UI>`;
+developers who do can run their own `MessageProcessor` against the
+snapshot directly.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="messagestore-getsnapshot"></a>`getSnapshot` | `() => readonly `[`ServerToClientMessage`](#servertoclientmessage)`[]` | `useSyncExternalStore` getSnapshot contract — stable between pushes. |
+| <a id="messagestore-subscribe"></a>`subscribe` | `(cb: () => void) => () => void` | `useSyncExternalStore` subscribe contract. |
+| <a id="messagestore-clear"></a>`clear` | `clear(): void` | Reset the buffer. Notifies subscribers. |
+| <a id="messagestore-push"></a>`push` | `push(message: ServerToClientMessage \| readonly ServerToClientMessage[]): void` | Append one or more raw messages to the buffer. Notifies subscribers once per call (batches a single array argument into a single notify). |
+
+### `MessageStoreOptions` \{#messagestoreoptions\}
+
+Options used when creating a raw A2UI message buffer.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="messagestoreoptions-initialmessages"></a>`initialMessages?` | `readonly `[`ServerToClientMessage`](#servertoclientmessage)`[]` | Optional initial buffer contents. Useful when rehydrating a previous agent response or replaying a fixture stream. |
+
+### `OpenUIContextValue` \{#openuicontextvalue\}
+
+Runtime context shared by OpenUI renderers, hooks, actions, and form fields.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="openuicontextvalue-evaluationcontext"></a>`evaluationContext` | `EvaluationContext` | AST evaluation context used by runtime expression evaluation. |
+| <a id="openuicontextvalue-getfieldvalue"></a>`getFieldValue` | `(formName: string \| undefined, name: string) => any` | Get a field value. Top-level for $bindings, nested under formName for form fields. |
+| <a id="openuicontextvalue-isqueryloading"></a>`isQueryLoading` | `boolean` | Whether any Query is currently fetching data. |
+| <a id="openuicontextvalue-isstreaming"></a>`isStreaming` | `boolean` | Whether the LLM is currently streaming content. |
+| <a id="openuicontextvalue-library"></a>`library` | `Library` | The active component library (schema + renderers). |
+| <a id="openuicontextvalue-rendernode"></a>`renderNode` | `(value: unknown) => ReactNode` | Render any value (element, array, primitive) into React nodes. |
+| <a id="openuicontextvalue-reporterror"></a>`reportError?` | `(error: OpenUIError) => void` | Report a structured error (used internally by error boundary). |
+| <a id="openuicontextvalue-setfieldvalue"></a>`setFieldValue` | `(formName: string \| undefined, componentType: string \| undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void` | Set a form field value. |
+| <a id="openuicontextvalue-store"></a>`store` | `Store` | Reactive binding store for $variables and form data. |
+| <a id="openuicontextvalue-triggeraction"></a>`triggerAction` | `(userMessage: string, formName?: string, action?: ActionPlan \| { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void \| Promise<void>` | Trigger an action. Accepts either: - ActionPlan (v0.5): runs steps sequentially (Run, Set, ToAssistant, OpenUrl) - Legacy action config (v0.1): object with optional type and params. - Nothing: fires ContinueConversation with the label |
+
+### `OpenUiRendererParsedProps` \{#openuirendererparsedprops\}
+
+Props for rendering an already parsed OpenUI result.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="openuirendererparsedprops-isstreaming"></a>`isStreaming?` | `boolean` |  |
+| <a id="openuirendererparsedprops-library"></a>`library` | [`Library`](#library) |  |
+| <a id="openuirendererparsedprops-onaction"></a>`onAction?` | `(event: ActionEvent) => void` |  |
+| <a id="openuirendererparsedprops-result"></a>`result` | `ParseResult \| null` | Pre-parsed result. Kept for v0.1/static-render compatibility. |
+
+### `OpenUiRendererRuntimeProps` \{#openuirendererruntimeprops\}
+
+Props for rendering raw OpenUI response text with parsing, runtime state,
+actions, and query execution.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="openuirendererruntimeprops-initialqueryresults"></a>`initialQueryResults?` | `Readonly<Record<string, unknown>>` | Prefetched Query results keyed by Query assignment name (statement ID). Results render synchronously, then an optional toolProvider revalidates. |
+| <a id="openuirendererruntimeprops-initialstate"></a>`initialState?` | `Record<string, unknown>` | Initial persisted state. $-prefixed keys hydrate reactive bindings. |
+| <a id="openuirendererruntimeprops-isstreaming"></a>`isStreaming?` | `boolean` | Whether the LLM is still streaming; disables interactions while true. |
+| <a id="openuirendererruntimeprops-library"></a>`library` | [`Library`](#library) | Component library from createOpenUiLibrary(). |
+| <a id="openuirendererruntimeprops-onaction"></a>`onAction?` | `(event: ActionEvent) => void` | Callback when a component triggers a host action. |
+| <a id="openuirendererruntimeprops-onerror"></a>`onError?` | `(errors: OpenUIError[]) => void` | Structured parser/runtime/query errors for correction loops. |
+| <a id="openuirendererruntimeprops-onparseresult"></a>`onParseResult?` | `(result: ParseResult \| null) => void` | Called whenever the raw parse result changes. |
+| <a id="openuirendererruntimeprops-onstateupdate"></a>`onStateUpdate?` | `(state: Record<string, unknown>) => void` | Called whenever $variables or form state changes. |
+| <a id="openuirendererruntimeprops-queryloader"></a>`queryLoader?` | `ReactNode` | Custom loading node shown while Query() calls are in flight. |
+| <a id="openuirendererruntimeprops-response"></a>`response` | `string \| null` | Raw openui-lang response text. This enables v0.5 runtime features. |
+| <a id="openuirendererruntimeprops-toolprovider"></a>`toolProvider?` | [`ToolProviderInput`](#toolproviderinput) | Tool provider for Query()/Mutation(): function map or MCP client. |
+
+### `OpenUIState` \{#openuistate\}
+
+Derived OpenUI renderer state returned by `useOpenUIState`.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="openuistate-contextvalue"></a>`contextValue` | [`OpenUIContextValue`](#openuicontextvalue) |  |
+| <a id="openuistate-isqueryloading"></a>`isQueryLoading` | `boolean` | Whether any Query is currently fetching data. |
+| <a id="openuistate-parseresult"></a>`parseResult` | `ParseResult \| null` | Raw parse result (AST nodes in props). Used by onParseResult callback. |
+| <a id="openuistate-result"></a>`result` | `ParseResult \| null` | Evaluated result (props resolved to concrete values). Used by Renderer. |
+
+### `RawResource` \{#rawresource\}
+
+Observable async resource used by the renderer to publish surface and
+component updates.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="rawresource-complete"></a>`complete` | `(result: T) => void` |  |
+| <a id="rawresource-completed"></a>`completed` | `boolean` |  |
+| <a id="rawresource-error"></a>`error` | `unknown` |  |
+| <a id="rawresource-fail"></a>`fail` | `(err: unknown) => void` |  |
+| <a id="rawresource-getsnapshot"></a>`getSnapshot` | `() => ResourceSnapshot<T>` | Synchronous read of the current snapshot, suitable for `useSyncExternalStore`. The returned object reference changes on every transition. |
+| <a id="rawresource-id"></a>`id` | `string` |  |
+| <a id="rawresource-onupdate"></a>`onUpdate` <span className="api-badge api-badge-deprecated">Deprecated</span> | `(callback: (result: T) => void) => () => void` | Use `subscribe`. Behaves identically. **Deprecated.** Deprecated. |
+| <a id="rawresource-promise"></a>`promise` | `Promise<T>` |  |
+| <a id="rawresource-read"></a>`read` <span className="api-badge api-badge-deprecated">Deprecated</span> | `() => T \| undefined` | Read `value` / `status` directly. Retained for backwards compatibility; in the success state it returns the value, otherwise it returns undefined. It does not throw. **Deprecated.** Deprecated. |
+| <a id="rawresource-status"></a>`status` | [`ResourceStatus`](#resourcestatus) |  |
+| <a id="rawresource-subscribe"></a>`subscribe` | `(callback: () => void) => () => void` | Subscribe to state changes. The callback is invoked after every `complete()` or `fail()` (the same value may be re-published when the processor re-emits an update for the same id). Returns a disposer. |
+| <a id="rawresource-value"></a>`value` | `T \| undefined` |  |
+
+### `ReadA2UICatalogDirectoryOptions` \{#reada2uicatalogdirectoryoptions\}
+
+Options for loading generated A2UI catalog artifacts from a directory.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="reada2uicatalogdirectoryoptions-catalogdir"></a>`catalogDir` | `string` |  |
+| <a id="reada2uicatalogdirectoryoptions-catalogid"></a>`catalogId` | `string` |  |
+| <a id="reada2uicatalogdirectoryoptions-cwd"></a>`cwd?` | `string` |  |
+| <a id="reada2uicatalogdirectoryoptions-label"></a>`label?` | `string` |  |
+| <a id="reada2uicatalogdirectoryoptions-version"></a>`version?` | `string` |  |
+
+### `ResolveFunctionOptions` \{#resolvefunctionoptions\}
+
+Options controlling how function calls are resolved against a catalog.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="resolvefunctionoptions-functions"></a>`functions?` | `readonly CatalogFunctionEntry[]` |  |
+| <a id="resolvefunctionoptions-registry"></a>`registry?` | [`FunctionRegistry`](#functionregistry) |  |
+
+### `ResourceInfo` \{#resourceinfo\}
+
+Payload carried by renderer resources when a surface or component changes.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="resourceinfo-component"></a>`component?` | [`ComponentInstance`](#componentinstance) |  |
+| <a id="resourceinfo-surface"></a>`surface` | [`Surface`](#surface) |  |
+| <a id="resourceinfo-surfaceid"></a>`surfaceId` | `string` |  |
+| <a id="resourceinfo-type"></a>`type` | `"beginRendering" \| "surfaceUpdate" \| "deleteSurface"` | Internal event type emitted by the processor. |
+
+### `Surface` \{#surface\}
+
+In-memory state for a single protocol surface.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="surface-catalogid"></a>`catalogId?` | `string` |  |
+| <a id="surface-components"></a>`components` | `Map<string, `[`ComponentInstance`](#componentinstance)`>` |  |
+| <a id="surface-resources"></a>`resources` | `Map<string, `[`Resource`](#resource)`>` |  |
+| <a id="surface-rootcomponentid"></a>`rootComponentId?` | `string \| null` | id of the root component for this surface (must be 'root'). |
+| <a id="surface-senddatamodel"></a>`sendDataModel?` | `boolean` |  |
+| <a id="surface-store"></a>`store` | [`SignalStore`](#signalstore) |  |
+| <a id="surface-surfaceid"></a>`surfaceId` | `string` |  |
+| <a id="surface-theme"></a>`theme?` | `Readonly<Record<string, unknown>>` |  |
+
+### `UseOpenUIStateOptions` \{#useopenuistateoptions\}
+
+Inputs used to parse OpenUI text and build renderer state.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="useopenuistateoptions-initialqueryresults"></a>`initialQueryResults?` | `Readonly<Record<string, unknown>>` | Prefetched Query results keyed by the Query assignment name (statement ID). They are available during the initial render and act as fallbacks while an optional tool provider revalidates them after commit. |
+| <a id="useopenuistateoptions-initialstate"></a>`initialState?` | `Record<string, unknown>` |  |
+| <a id="useopenuistateoptions-isstreaming"></a>`isStreaming` | `boolean` |  |
+| <a id="useopenuistateoptions-library"></a>`library` | [`Library`](#library) |  |
+| <a id="useopenuistateoptions-onaction"></a>`onAction?` | `(event: ActionEvent) => void` |  |
+| <a id="useopenuistateoptions-onerror"></a>`onError?` | `(errors: OpenUIError[]) => void` | Callback for structured, LLM-friendly errors. See OpenUIError type. |
+| <a id="useopenuistateoptions-onstateupdate"></a>`onStateUpdate?` | `(state: Record<string, unknown>) => void` |  |
+| <a id="useopenuistateoptions-response"></a>`response` | `string \| null` |  |
+| <a id="useopenuistateoptions-toolprovider"></a>`toolProvider?` | `ToolProvider \| null` | ToolProvider for Query data fetching — MCP, REST, GraphQL, or any backend. |
+
+### `UserActionPayload` \{#useractionpayload\}
+
+Normalized user action forwarded from rendered catalog components to the
+host application.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="useractionpayload-context"></a>`context` | `Record<string, unknown>` |  |
+| <a id="useractionpayload-name"></a>`name` | `string` |  |
+| <a id="useractionpayload-sourcecomponentid"></a>`sourceComponentId` | `string` |  |
+| <a id="useractionpayload-surfaceid"></a>`surfaceId` | `string` |  |
+| <a id="useractionpayload-timestamp"></a>`timestamp` | `string` |  |
+
+### `A2UIClientEventMessage` \{#a2uiclienteventmessage\}
+
+```ts
+type A2UIClientEventMessage = string | { sessionId?: string; text?: string } | { sessionId?: string; userAction: UserActionPayload }
+```
+
+*No description yet.*
+
+### `ComponentInstance` \{#componentinstance\}
+
+```ts
+type ComponentInstance = v0_9.AnyComponent & { __template?: { componentId: v0_9.ComponentId; path: string }; dataContextPath?: string }
+```
+
+*No description yet.*
+
+### `ComponentRenderer` \{#componentrenderer\}
+
+```ts
+type ComponentRenderer = React.FC<ComponentRenderProps<P>>
+```
+
+*No description yet.*
+
+### `DefinedComponent` \{#definedcomponent\}
+
+```ts
+type DefinedComponent = CoreDefinedComponent<T, ComponentRenderer<z.infer<T>>>
+```
+
+*No description yet.*
+
+### `FunctionImpl` \{#functionimpl\}
+
+```ts
+type FunctionImpl = (args: Record<string, unknown>, context?: FunctionCallContext) => unknown
+```
+
+Function implementations live on the client; the agent only references
+functions by name. The registry is the bridge from the wire-level
+`FunctionCall.call` string to the actual code that runs locally.
+
+### `InitialQueryResults` \{#initialqueryresults\}
+
+```ts
+type InitialQueryResults = Readonly<Record<string, unknown>>
+```
+
+Prefetched Query results keyed by Query assignment name (statement ID).
+
+### `Library` \{#library\}
+
+```ts
+type Library = CoreLibrary<ComponentRenderer<any>>
+```
+
+*No description yet.*
+
+### `LibraryDefinition` \{#librarydefinition\}
+
+```ts
+type LibraryDefinition = CoreLibraryDefinition<ComponentRenderer<any>>
+```
+
+*No description yet.*
+
+### `OpenUiPromptComponent` \{#openuipromptcomponent\}
+
+```ts
+type OpenUiPromptComponent = DefinedComponent<any, HeadlessRenderer>
+```
+
+*No description yet.*
+
+### `OpenUiPromptLibrary` \{#openuipromptlibrary\}
+
+```ts
+type OpenUiPromptLibrary = Library<HeadlessRenderer>
+```
+
+*No description yet.*
+
+### `OpenUiRendererProps` \{#openuirendererprops\}
+
+```ts
+type OpenUiRendererProps = OpenUiRendererRuntimeProps | OpenUiRendererParsedProps
+```
+
+*No description yet.*
+
+### `Resource` \{#resource\}
+
+```ts
+type Resource = RawResource<ResourceInfo>
+```
+
+*No description yet.*
+
+### `ResourceStatus` \{#resourcestatus\}
+
+```ts
+type ResourceStatus = "pending" | "success" | "error"
+```
+
+*No description yet.*
+
+### `ServerToClientMessage` \{#servertoclientmessage\}
+
+```ts
+type ServerToClientMessage = v0_9.A2uiMessage & { messageId?: string }
+```
+
+*No description yet.*
+
+### `SurfaceId` \{#surfaceid\}
+
+```ts
+type SurfaceId = string
+```
+
+*No description yet.*
+
+### `ToolProviderInput` \{#toolproviderinput\}
+
+```ts
+type ToolProviderInput = Record<string, (args: Record<string, unknown>) => unknown> | McpClientLike | null
 ```
 
 *No description yet.*
