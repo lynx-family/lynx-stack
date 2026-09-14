@@ -16,6 +16,8 @@ Keep `transform-vw` and `transform-vh` enabled on every Web `<lynx-view>` used f
 
 ### Playback Synchronization
 
+Forward OpenUI renderer diagnostics through `NativeModules.bridge.call('OPENUI_RENDER_ERRORS', { errors }, callback)`, including an empty array to clear old errors. Keep the structured source, code, statement, component, path, tool, and hint fields for host consumers. The Web render entry must attach its preview navigation token; the receiving panel must check origin, its own iframe window and URL, and the token before displaying errors. Clear diagnostics when the source changes, and keep transient streaming errors behind the renderer's existing completion gate.
+
 When wiring playback state between the Lynx app and the web preview, prefer `NativeModules.bridge.call('A2UI_PLAYBACK_SYNC', state, callback)` on the Lynx side and `lynxView.onNativeModulesCall` on the web preview side. Keep `window.postMessage` only as a compatibility fallback for older bundles. Do not add new playback sync paths that bypass the NativeModules bridge.
 
 When automating A2UI preview benchmarks, wrap `render.html` in a parent iframe with a `previewMetricId`, listen for `A2UI_PREVIEW_METRIC` in the parent, and inject generated messages with `A2UI_LIVE_MESSAGES` after `A2UI_RENDER_READY`. Loading generated messages only through the initial query payload can capture FCP/FMP/TTI, but it does not exercise the Create page's live-delivery path that reports the repeatable Render metric.
