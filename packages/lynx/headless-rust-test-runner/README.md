@@ -6,11 +6,12 @@ software-rendering harness with DOM inspection and interaction:
 
 - After non-native resource validation succeeds, the first
   `LynxContainer::new` binds native Lynx state to a permanent process owner
-  thread and prepares the runtime and local DebugRouter on first use.
+  thread and prepares the runtime without connecting to the local DebugRouter.
 - `LynxContainer::new_page` creates a windowless `LynxPage`. The process owns
   one live page at a time and can create later pages after dropping it.
-- `LynxPage::goto`, `content`, and `locator` load and inspect compiled Lynx
-  bundles or UTF-8 `.lynxml` source documents through CDP.
+- `LynxPage::goto` loads compiled Lynx bundles or UTF-8 `.lynxml` source
+  documents through the native API. `content` and `locator` inspect them
+  through CDP, connecting to the DebugRouter on first use.
 - `ElementNode` reads attributes and computed styles and dispatches taps by
   native node id, without absolute coordinates or hit-testing.
 - `LynxPage::screenshot` captures the software renderer directly as a 32-bit
@@ -69,10 +70,13 @@ applies to both formats; `global_props_json` applies only to compiled templates.
 Passing it for LynxML returns an error because the public LynxML load API does
 not accept global properties.
 
-`goto` waits for a newly presented software frame and nothing more. The DOM
-session attaches lazily on the first `content` or `locator` call, so a
-screenshot-only caller never pays for DevTools setup and there is no separate
-screenshot-only navigation entry point.
+`goto` waits for a newly presented software frame and nothing more. DebugRouter
+discovery, global-switch setup, and DOM session attachment happen on the first
+`content` or `locator` call. Navigation and screenshots do not wait for a router
+connection. Native DevTools initialization stays enabled so later DOM queries
+can attach to the same page; there is no separate screenshot-only navigation
+entry point. Connection failures are reported by the DOM operation and can be
+retried on a later call.
 
 Each page resolves its **own** DevTools session from its native view through
 `lynx_view_get_devtool_target`, so successive pages that load the same URL do
