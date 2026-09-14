@@ -55,13 +55,13 @@ buildA2UISystemPromptAsync(opts?: BuildSystemPromptOptions): Promise<string>
 
 **返回值：** `Promise<string>`
 
-### `buildLynxXmlSystemPrompt()` <span className="api-badge api-badge-stale">待翻译</span> \{#buildlynxxmlsystemprompt\}
+### `buildLynxXmlSystemPrompt()` \{#buildlynxxmlsystemprompt\}
 
 ```ts
 buildLynxXmlSystemPrompt(options?: BuildLynxXmlSystemPromptOptions): string
 ```
 
-Build a system prompt for producing complete, zero-build `.lynxml` files.
+构建用于生成完整、免构建的 `.lynxml` 文件的系统提示词。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -69,13 +69,13 @@ Build a system prompt for producing complete, zero-build `.lynxml` files.
 
 **返回值：** `string`
 
-### `buildOpenUiSystemPrompt()` <span className="api-badge api-badge-stale">待翻译</span> \{#buildopenuisystemprompt\}
+### `buildOpenUiSystemPrompt()` \{#buildopenuisystemprompt\}
 
 ```ts
 buildOpenUiSystemPrompt(options?: BuildOpenUiSystemPromptOptions): string
 ```
 
-Build the full OpenUI system prompt for the supplied library and options.
+为给定的组件库和选项构建完整的 OpenUI 系统提示词。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -83,13 +83,13 @@ Build the full OpenUI system prompt for the supplied library and options.
 
 **返回值：** `string`
 
-### `createA2UICatalog()` <span className="api-badge api-badge-stale">待翻译</span> \{#createa2uicatalog\}
+### `createA2UICatalog()` \{#createa2uicatalog\}
 
 ```ts
 createA2UICatalog(options: { catalogId: string; components: ExtractedCatalogComponent[] | Record<string, ExtractedJsonSchema>; functions?: FunctionDefinition[]; theme?: Record<string, ExtractedJsonSchema> }): ExtractedA2UICatalog
 ```
 
-Build a full A2UI catalog manifest from component and function artifacts.
+基于组件和函数产物构建完整的 A2UI catalog manifest。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -97,13 +97,13 @@ Build a full A2UI catalog manifest from component and function artifacts.
 
 **返回值：** [`ExtractedA2UICatalog`](#extracteda2uicatalog)
 
-### `createA2UICatalogFromManifests()` <span className="api-badge api-badge-stale">待翻译</span> \{#createa2uicatalogfrommanifests\}
+### `createA2UICatalogFromManifests()` \{#createa2uicatalogfrommanifests\}
 
 ```ts
 createA2UICatalogFromManifests(options: { catalogId: string; componentManifests: Record<string, A2UIPromptJsonSchema>[]; examples?: A2UIExample[]; extraRules?: string[]; functions?: A2UIFunctionSpec[]; label?: string; version?: string }): A2UIPromptCatalog
 ```
 
-Convert generated component manifests into a prompt-ready A2UI catalog.
+将生成的组件 manifest 转换为可直接用于 prompt 的 A2UI catalog。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -111,15 +111,13 @@ Convert generated component manifests into a prompt-ready A2UI catalog.
 
 **返回值：** [`A2UIPromptCatalog`](#a2uipromptcatalog)
 
-### `createFallbackMessagesFromPlainText()` <span className="api-badge api-badge-stale">待翻译</span> \{#createfallbackmessagesfromplaintext\}
+### `createFallbackMessagesFromPlainText()` \{#createfallbackmessagesfromplaintext\}
 
 ```ts
 createFallbackMessagesFromPlainText(text: string): ServerToClientMessage[]
 ```
 
-Build a single-Text fallback message stream from a plain string. Used by
-transports / `Session.ingest` callers that receive free-form text from
-the agent instead of structured protocol messages.
+基于纯文本字符串构建只含单个 Text 的兜底消息流。供从 agent 收到自由文本而非结构化协议消息的传输层 / `Session.ingest` 调用方使用。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -127,13 +125,13 @@ the agent instead of structured protocol messages.
 
 **返回值：** [`ServerToClientMessage`](#servertoclientmessage)`[]`
 
-### `createMessageStore()` <span className="api-badge api-badge-stale">待翻译</span> \{#createmessagestore\}
+### `createMessageStore()` \{#createmessagestore\}
 
 ```ts
 createMessageStore(options?: MessageStoreOptions): MessageStore
 ```
 
-Create an append-only raw-message buffer suitable for `useSyncExternalStore`.
+创建一个适用于 `useSyncExternalStore` 的追加式原始消息缓冲区。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -141,14 +139,13 @@ Create an append-only raw-message buffer suitable for `useSyncExternalStore`.
 
 **返回值：** [`MessageStore`](#messagestore)
 
-### `createOpenUiLibrary()` <span className="api-badge api-badge-stale">待翻译</span> \{#createopenuilibrary\}
+### `createOpenUiLibrary()` \{#createopenuilibrary\}
 
 ```ts
 createOpenUiLibrary(options?: CreateOpenUiLibraryOptions): Library
 ```
 
-Create a ReactLynx OpenUI library with caller-provided components and,
-unless disabled, the built-in components.
+创建 ReactLynx OpenUI 组件库，包含调用方提供的组件，以及（除非禁用）内置组件。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -156,16 +153,15 @@ unless disabled, the built-in components.
 
 **返回值：** [`Library`](#library)
 
-### `createOpenUiPromptLibrary()` <span className="api-badge api-badge-stale">待翻译</span> \{#createopenuipromptlibrary\}
+### `createOpenUiPromptLibrary()` \{#createopenuipromptlibrary\}
 
 ```ts
 createOpenUiPromptLibrary(options?: CreateOpenUiPromptLibraryOptions): OpenUiPromptLibrary
 ```
 
-Create a headless OpenUI library with the built-in component schemas.
+使用内置组件 schema 创建 headless OpenUI 库。
 
-This mirrors the ReactLynx library for prompt generation while avoiding any
-runtime dependency on ReactLynx or Lynx UI components.
+它与 ReactLynx 组件库保持一致以用于生成 prompt，同时不会在运行时依赖 ReactLynx 或 Lynx UI 组件。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -173,14 +169,13 @@ runtime dependency on ReactLynx or Lynx UI components.
 
 **返回值：** [`OpenUiPromptLibrary`](#openuipromptlibrary)
 
-### `createResource()` <span className="api-badge api-badge-stale">待翻译</span> \{#createresource\}
+### `createResource()` \{#createresource\}
 
 ```ts
 createResource(id: string): RawResource<T>
 ```
 
-Create a pending resource that can later complete, fail, and notify
-subscribers of every state transition.
+创建一个处于 pending 状态的 resource，之后可以 complete 或 fail，并在每次状态迁移时通知订阅者。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -188,14 +183,13 @@ subscribers of every state transition.
 
 **返回值：** [`RawResource`](#rawresource)`<T>`
 
-### `createTextCardMessages()` <span className="api-badge api-badge-stale">待翻译</span> \{#createtextcardmessages\}
+### `createTextCardMessages()` \{#createtextcardmessages\}
 
 ```ts
 createTextCardMessages(text: string): ServerToClientMessage[]
 ```
 
-Build a Card-wrapped Text fallback message stream from a plain string.
-Used when the agent emits text payloads with `kind: 'text'`.
+基于纯文本字符串构建用 Card 包裹 Text 的兜底消息流。在 agent 输出 `kind: 'text'` 的文本数据时使用。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -203,13 +197,13 @@ Used when the agent emits text payloads with `kind: 'text'`.
 
 **返回值：** [`ServerToClientMessage`](#servertoclientmessage)`[]`
 
-### `defineComponent()` <span className="api-badge api-badge-stale">待翻译</span> \{#definecomponent\}
+### `defineComponent()` \{#definecomponent\}
 
 ```ts
 defineComponent(config: { component: ComponentRenderer<output<T>>; description: string; name: string; props: T }): DefinedComponent<T>
 ```
 
-Define a ReactLynx component renderer and its OpenUI schema metadata.
+定义 ReactLynx 组件渲染器及其 OpenUI schema 元数据。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -217,15 +211,13 @@ Define a ReactLynx component renderer and its OpenUI schema metadata.
 
 **返回值：** [`DefinedComponent`](#definedcomponent)`<T>`
 
-### `executeFunctionCall()` <span className="api-badge api-badge-stale">待翻译</span> \{#executefunctioncall\}
+### `executeFunctionCall()` \{#executefunctioncall\}
 
 ```ts
 executeFunctionCall(processor: MessageProcessor, fn: {}, surfaceId: string, dataContextPath?: string, options?: ResolveFunctionOptions): unknown
 ```
 
-Resolve arguments, look the function up in the registry, and invoke it.
-When no impl is registered, log once and return `undefined` so callers
-(checks, dynamic-property bindings) can degrade gracefully.
+解析参数，在 registry 中查找函数并调用。如果没有注册对应实现，则只记录一次日志并返回 `undefined`，使调用方（checks、动态属性绑定）能够平稳降级。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -237,13 +229,13 @@ When no impl is registered, log once and return `undefined` so callers
 
 **返回值：** `unknown`
 
-### `extractCatalogComponents()` <span className="api-badge api-badge-stale">待翻译</span> \{#extractcatalogcomponents\}
+### `extractCatalogComponents()` \{#extractcatalogcomponents\}
 
 ```ts
 extractCatalogComponents(options: ExtractCatalogOptions): Promise<ExtractedCatalogComponent[]>
 ```
 
-Run TypeDoc over source files and extract A2UI component schemas.
+对源文件运行 TypeDoc，提取 A2UI 组件 schema。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -251,13 +243,13 @@ Run TypeDoc over source files and extract A2UI component schemas.
 
 **返回值：** `Promise<`[`ExtractedCatalogComponent`](#extractedcatalogcomponent)`[]>`
 
-### `extractCatalogFunctions()` <span className="api-badge api-badge-stale">待翻译</span> \{#extractcatalogfunctions\}
+### `extractCatalogFunctions()` \{#extractcatalogfunctions\}
 
 ```ts
 extractCatalogFunctions(options: ExtractCatalogOptions): Promise<CatalogFunction[]>
 ```
 
-Run TypeDoc over source files and extract A2UI function definitions.
+对源文件运行 TypeDoc，提取 A2UI 函数定义。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -265,13 +257,13 @@ Run TypeDoc over source files and extract A2UI function definitions.
 
 **返回值：** `Promise<`[`CatalogFunction`](#catalogfunction)`[]>`
 
-### `findCatalogSourceFiles()` <span className="api-badge api-badge-stale">待翻译</span> \{#findcatalogsourcefiles\}
+### `findCatalogSourceFiles()` \{#findcatalogsourcefiles\}
 
 ```ts
 findCatalogSourceFiles(inputPath: string): string[]
 ```
 
-Find supported source files under a file or directory path.
+在文件或目录路径下查找受支持的源文件。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -279,13 +271,13 @@ Find supported source files under a file or directory path.
 
 **返回值：** `string[]`
 
-### `isDataBinding()` <span className="api-badge api-badge-stale">待翻译</span> \{#isdatabinding\}
+### `isDataBinding()` \{#isdatabinding\}
 
 ```ts
 isDataBinding(value: unknown): value is {}
 ```
 
-Return whether a value matches the A2UI data-binding shape.
+返回某个值是否符合 A2UI 数据绑定的结构。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -293,13 +285,13 @@ Return whether a value matches the A2UI data-binding shape.
 
 **返回值：** `value is {}`
 
-### `isFunctionCall()` <span className="api-badge api-badge-stale">待翻译</span> \{#isfunctioncall\}
+### `isFunctionCall()` \{#isfunctioncall\}
 
 ```ts
 isFunctionCall(value: unknown): value is {}
 ```
 
-Return whether a value matches the A2UI function-call shape.
+返回某个值是否符合 A2UI 函数调用的结构。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -317,15 +309,13 @@ loadBasicCatalog(): Promise<A2UIPromptCatalog>
 
 **返回值：** `Promise<`[`A2UIPromptCatalog`](#a2uipromptcatalog)`>`
 
-### `normalizePayloadToMessages()` <span className="api-badge api-badge-stale">待翻译</span> \{#normalizepayloadtomessages\}
+### `normalizePayloadToMessages()` \{#normalizepayloadtomessages\}
 
 ```ts
 normalizePayloadToMessages(payload: unknown): ServerToClientMessage[]
 ```
 
-Normalize an arbitrary payload (string, array, object) into a flat list of
-`ServerToClientMessage` records. Pass-through for already-structured
-messages; falls back to wrapping plain text in a Text/Card surface.
+将任意数据（字符串、数组、对象）规范化为扁平的 `ServerToClientMessage` 记录列表。已结构化的消息会直接透传；纯文本则回退为包裹在 Text/Card surface 中。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -333,13 +323,13 @@ messages; falls back to wrapping plain text in a Text/Card surface.
 
 **返回值：** [`ServerToClientMessage`](#servertoclientmessage)`[]`
 
-### `OpenUiRenderer()` <span className="api-badge api-badge-stale">待翻译</span> \{#openuirenderer\}
+### `OpenUiRenderer()` \{#openuirenderer\}
 
 ```ts
 OpenUiRenderer(props: OpenUiRendererProps): Element
 ```
 
-Render OpenUI language output using a ReactLynx component library.
+使用 ReactLynx 组件库渲染 OpenUI 语言输出。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -347,15 +337,13 @@ Render OpenUI language output using a ReactLynx component library.
 
 **返回值：** `Element`
 
-### `prepareMessagesForProcessing()` <span className="api-badge api-badge-stale">待翻译</span> \{#preparemessagesforprocessing\}
+### `prepareMessagesForProcessing()` \{#preparemessagesforprocessing\}
 
 ```ts
 prepareMessagesForProcessing(rawMessages: ServerToClientMessage[], messageId: string, activeSurfaceIds: Set<string>): { hasComponentUpdate: boolean; messages: ServerToClientMessage[] }
 ```
 
-Tag messages with the given messageId and report whether any of them
-carries a non-empty `updateComponents`. Also dedupes `createSurface`
-messages against the set of currently-active surfaces.
+为消息打上给定的 messageId，并报告其中是否有消息携带非空的 `updateComponents`。同时会根据当前活动 surface 的集合对 `createSurface` 消息去重。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -365,13 +353,13 @@ messages against the set of currently-active surfaces.
 
 **返回值：** `{ hasComponentUpdate: boolean; messages: `[`ServerToClientMessage`](#servertoclientmessage)`[] }`
 
-### `reactive()` <span className="api-badge api-badge-stale">待翻译</span> \{#reactive\}
+### `reactive()` \{#reactive\}
 
 ```ts
 reactive(schema: T): ZodType<StateField<output<T>>>
 ```
 
-Mark a schema prop as reactive so runtime evaluation can preserve $bindings.
+将 schema prop 标记为响应式，使运行时求值能够保留 $bindings。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -379,14 +367,13 @@ Mark a schema prop as reactive so runtime evaluation can preserve $bindings.
 
 **返回值：** `ZodType<StateField<output<T>>>`
 
-### `readA2UICatalogFromDirectory()` <span className="api-badge api-badge-stale">待翻译</span> \{#reada2uicatalogfromdirectory\}
+### `readA2UICatalogFromDirectory()` \{#reada2uicatalogfromdirectory\}
 
 ```ts
 readA2UICatalogFromDirectory(options: ReadA2UICatalogDirectoryOptions): A2UIPromptCatalog
 ```
 
-Read generated component and function manifests and convert them into a
-prompt-ready A2UI catalog.
+读取生成的组件和函数 manifest，并将其转换为可直接用于 prompt 的 A2UI catalog。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -394,25 +381,21 @@ prompt-ready A2UI catalog.
 
 **返回值：** [`A2UIPromptCatalog`](#a2uipromptcatalog)
 
-### `registerBasicFunctions()` <span className="api-badge api-badge-stale">待翻译</span> \{#registerbasicfunctions\}
+### `registerBasicFunctions()` \{#registerbasicfunctions\}
 
 ```ts
 registerBasicFunctions(): void
 ```
 
-Manual escape hatch for consumers who build their own renderer and don't
-go through `defineCatalog`. Registers every adapted basic-catalog impl
-into the shared `functionRegistry`. Calling more than once is harmless —
-later registrations override earlier ones, which is the intended override
-path.
+为自行构建渲染器、不经过 `defineCatalog` 的使用方提供的手动兜底方案。将所有适配后的 basic catalog 实现注册到共享的 `functionRegistry` 中。多次调用不会有问题——后注册的会覆盖先注册的，这正是预期的覆盖方式。
 
-### `renderCatalogReference()` <span className="api-badge api-badge-stale">待翻译</span> \{#rendercatalogreference\}
+### `renderCatalogReference()` \{#rendercatalogreference\}
 
 ```ts
 renderCatalogReference(catalog: A2UIPromptCatalog): string
 ```
 
-Render an A2UI catalog into the Markdown reference embedded in prompts.
+将 A2UI catalog 渲染为嵌入 prompt 的 Markdown 参考文档。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -420,14 +403,13 @@ Render an A2UI catalog into the Markdown reference embedded in prompts.
 
 **返回值：** `string`
 
-### `resolveDynamicValue()` <span className="api-badge api-badge-stale">待翻译</span> \{#resolvedynamicvalue\}
+### `resolveDynamicValue()` \{#resolvedynamicvalue\}
 
 ```ts
 resolveDynamicValue(processor: MessageProcessor, value: unknown, surfaceId: string, dataContextPath?: string, options?: ResolveDynamicValueOptions): unknown
 ```
 
-Resolve literals, data bindings, and function calls into concrete runtime
-values for component props or action payloads.
+将字面量、数据绑定和函数调用解析为具体的运行时值，用于组件 props 或 action 数据。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -439,14 +421,13 @@ values for component props or action payloads.
 
 **返回值：** `unknown`
 
-### `resolveFunctionArguments()` <span className="api-badge api-badge-stale">待翻译</span> \{#resolvefunctionarguments\}
+### `resolveFunctionArguments()` \{#resolvefunctionarguments\}
 
 ```ts
 resolveFunctionArguments(processor: MessageProcessor, args: Record<string, unknown>, surfaceId: string, dataContextPath?: string, options?: ResolveFunctionOptions): Record<string, unknown>
 ```
 
-Resolve every argument in a protocol function call before invoking the
-registered implementation.
+在调用已注册的实现之前，解析协议函数调用中的每个参数。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -458,14 +439,13 @@ registered implementation.
 
 **返回值：** `Record<string, unknown>`
 
-### `useAction()` <span className="api-badge api-badge-stale">待翻译</span> \{#useaction\}
+### `useAction()` \{#useaction\}
 
 ```ts
 useAction(props: ActionProps): { sendAction: (action: {} | {}) => Promise<unknown> }
 ```
 
-Create a `sendAction` callback that resolves dynamic action payload values
-and dispatches user events or function calls through the current processor.
+创建一个 `sendAction` 回调，它会解析动态的 action 数据值，并通过当前处理器分发用户事件或函数调用。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -473,17 +453,13 @@ and dispatches user events or function calls through the current processor.
 
 **返回值：** `{ sendAction: (action: {} | {}) => Promise<unknown> }`
 
-### `useChecks()` <span className="api-badge api-badge-stale">待翻译</span> \{#usechecks\}
+### `useChecks()` \{#usechecks\}
 
 ```ts
 useChecks(options: { checks: CheckLike[] | undefined; componentId: string; dataContextPath?: string; surface: Surface | undefined }): CheckOutcome & { firstFailureMessage: string | undefined }
 ```
 
-Evaluate an input component's `checks` array reactively. Returns the
-current outcome plus the first failure message (handy for inline error
-rendering). When an enclosing `<FormContext.Provider>` exists, the input
-is also registered with it so Buttons in the same form can react to
-`isValid`.
+响应式地对输入组件的 `checks` 数组求值。返回当前结果以及第一条失败信息（便于内联渲染错误）。如果外层存在 `<FormContext.Provider>`，该输入组件还会注册到其中，使同一表单中的 Button 能够响应 `isValid`。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -491,23 +467,23 @@ is also registered with it so Buttons in the same form can react to
 
 **返回值：** `CheckOutcome & { firstFailureMessage: string | undefined }`
 
-### `useCreateFormValidation()` <span className="api-badge api-badge-stale">待翻译</span> \{#usecreateformvalidation\}
+### `useCreateFormValidation()` \{#usecreateformvalidation\}
 
 ```ts
 useCreateFormValidation(): FormValidationContextValue
 ```
 
-Create form validation state and callbacks for an OpenUI form boundary.
+为 OpenUI 表单边界创建表单校验状态和回调。
 
 **返回值：** [`FormValidationContextValue`](#formvalidationcontextvalue)
 
-### `useDataBinding()` <span className="api-badge api-badge-stale">待翻译</span> \{#usedatabinding\}
+### `useDataBinding()` \{#usedatabinding\}
 
 ```ts
 useDataBinding(dynamicValue: unknown, surface: Surface, dataContextPath?: string, fallbackValue?: T): [T | undefined, (newValue: T) => void, string | undefined]
 ```
 
-Subscribe to a data-model binding and return the current value at that path.
+订阅数据模型绑定，并返回该路径上的当前值。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -518,23 +494,23 @@ Subscribe to a data-model binding and return the current value at that path.
 
 **返回值：** `[T | undefined, (newValue: T) => void, string | undefined]`
 
-### `useFormValidation()` <span className="api-badge api-badge-stale">待翻译</span> \{#useformvalidation\}
+### `useFormValidation()` \{#useformvalidation\}
 
 ```ts
 useFormValidation(): FormValidationContextValue | null
 ```
 
-Read the nearest OpenUI form validation context, if one exists.
+读取最近的 OpenUI 表单校验上下文（如果存在）。
 
 **返回值：** [`FormValidationContextValue`](#formvalidationcontextvalue)` | null`
 
-### `useGetFieldValue()` <span className="api-badge api-badge-stale">待翻译</span> \{#usegetfieldvalue\}
+### `useGetFieldValue()` \{#usegetfieldvalue\}
 
 ```ts
 useGetFieldValue(): (formName: string | undefined, name: string) => any
 ```
 
-Get a form field value from the form state context.
+从表单状态上下文中获取表单字段值。
 
 ```tsx
 const getFieldValue = useGetFieldValue();
@@ -543,48 +519,45 @@ const name = getFieldValue("contactForm", "name");
 
 **返回值：** `(formName: string | undefined, name: string) => any`
 
-### `useIsQueryLoading()` <span className="api-badge api-badge-stale">待翻译</span> \{#useisqueryloading\}
+### `useIsQueryLoading()` \{#useisqueryloading\}
 
 ```ts
 useIsQueryLoading(): boolean
 ```
 
-Whether any Query is currently fetching data.
+是否有 Query 正在获取数据。
 
 **返回值：** `boolean`
 
-### `useIsStreaming()` <span className="api-badge api-badge-stale">待翻译</span> \{#useisstreaming\}
+### `useIsStreaming()` \{#useisstreaming\}
 
 ```ts
 useIsStreaming(): boolean
 ```
 
-Whether the LLM is currently streaming content.
+LLM 当前是否正在流式输出内容。
 
 **返回值：** `boolean`
 
-### `useOpenUI()` <span className="api-badge api-badge-stale">待翻译</span> \{#useopenui\}
+### `useOpenUI()` \{#useopenui\}
 
 ```ts
 useOpenUI(): OpenUIContextValue
 ```
 
-Access the full OpenUI context. Throws if used outside an
-`OpenUiRenderer` tree.
+访问完整的 OpenUI 上下文。在 `OpenUiRenderer` 树之外使用时会抛出异常。
 
 **返回值：** [`OpenUIContextValue`](#openuicontextvalue)
 
-### `useOpenUIState()` <span className="api-badge api-badge-stale">待翻译</span> \{#useopenuistate\}
+### `useOpenUIState()` \{#useopenuistate\}
 
 ```ts
 useOpenUIState(__namedParameters: UseOpenUIStateOptions, renderDeep: (value: unknown) => ReactNode): OpenUIState
 ```
 
-Core state hook — extracts all form state, action handling, parser
-management, and context assembly out of the Renderer component.
+核心状态 hook——将所有表单状态、action 处理、解析器管理和上下文组装从 Renderer 组件中抽离出来。
 
-Store holds everything: $bindings as top-level keys, form fields nested
-under formName as plain values.
+Store 保存所有内容：$bindings 作为顶层键，表单字段则以普通值的形式嵌套在 formName 下。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -593,24 +566,23 @@ under formName as plain values.
 
 **返回值：** [`OpenUIState`](#openuistate)
 
-### `useRenderNode()` <span className="api-badge api-badge-stale">待翻译</span> \{#userendernode\}
+### `useRenderNode()` \{#userendernode\}
 
 ```ts
 useRenderNode(): (value: unknown) => ReactNode
 ```
 
-Get the renderNode function for rendering nested component values.
+获取用于渲染嵌套组件值的 renderNode 函数。
 
 **返回值：** `(value: unknown) => ReactNode`
 
-### `useResolvedProps()` <span className="api-badge api-badge-stale">待翻译</span> \{#useresolvedprops\}
+### `useResolvedProps()` \{#useresolvedprops\}
 
 ```ts
 useResolvedProps(properties: Record<string, unknown>, surface: Surface, dataContextPath?: string, processor?: MessageProcessor, functions?: readonly CatalogFunctionEntry[]): readonly [Record<string, unknown>, (key: string, value: unknown) => void]
 ```
 
-Resolve a component's dynamic props and keep the result in sync with
-signal-backed data model changes.
+解析组件的动态 props，并在基于 signal 的数据模型变化时保持结果同步。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -622,30 +594,27 @@ signal-backed data model changes.
 
 **返回值：** `readonly [Record<string, unknown>, (key: string, value: unknown) => void]`
 
-### `useSetDefaultValue()` <span className="api-badge api-badge-stale">待翻译</span> \{#usesetdefaultvalue\}
+### `useSetDefaultValue()` \{#usesetdefaultvalue\}
 
 ```ts
 useSetDefaultValue(shouldTriggerSaveCallback: { componentType?: string; defaultValue: unknown; existingValue: unknown; formName?: string; name: string; shouldTriggerSaveCallback?: boolean }): void
 ```
 
-Persists a component's default/initial value into form state once streaming
-finishes — but only if the user hasn't already set a value.
+在流式输出结束后，将组件的默认值/初始值写入表单状态——但仅当用户尚未设置值时才会写入。
 
-Call this inside any form component that has a `defaultValue` or
-`defaultChecked` prop. It is a no-op during streaming so that LLM
-prop changes don't fight with partial state.
+在任何带有 `defaultValue` 或 `defaultChecked` prop 的表单组件中调用它。它在流式输出期间不执行任何操作，以免 LLM 对 prop 的修改与不完整的状态相互冲突。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
 | `shouldTriggerSaveCallback` | `{ componentType?: string; defaultValue: unknown; existingValue: unknown; formName?: string; name: string; shouldTriggerSaveCallback?: boolean }` | Defaults to `false` (only local state, no message persistence). |
 
-### `useSetFieldValue()` <span className="api-badge api-badge-stale">待翻译</span> \{#usesetfieldvalue\}
+### `useSetFieldValue()` \{#usesetfieldvalue\}
 
 ```ts
 useSetFieldValue(): (formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void
 ```
 
-Get the setFieldValue function for updating form field values.
+获取用于更新表单字段值的 setFieldValue 函数。
 
 ```tsx
 const setFieldValue = useSetFieldValue();
@@ -654,13 +623,13 @@ const setFieldValue = useSetFieldValue();
 
 **返回值：** `(formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void`
 
-### `useStateField()` <span className="api-badge api-badge-stale">待翻译</span> \{#usestatefield\}
+### `useStateField()` \{#usestatefield\}
 
 ```ts
 useStateField(name: string, value?: T): StateField<InferStateFieldValue<T>>
 ```
 
-Resolve a named OpenUI state field against form state and reactive bindings.
+基于表单状态和响应式绑定解析具名的 OpenUI 状态字段。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -669,13 +638,13 @@ Resolve a named OpenUI state field against form state and reactive bindings.
 
 **返回值：** `StateField<InferStateFieldValue<T>>`
 
-### `useTriggerAction()` <span className="api-badge api-badge-stale">待翻译</span> \{#usetriggeraction\}
+### `useTriggerAction()` \{#usetriggeraction\}
 
 ```ts
 useTriggerAction(): (userMessage: string, formName?: string, action?: ActionPlan | { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void | Promise<void>
 ```
 
-Get the triggerAction function for firing structured action events.
+获取用于触发结构化 action 事件的 triggerAction 函数。
 
 ```tsx
 const triggerAction = useTriggerAction();
@@ -686,10 +655,9 @@ const triggerAction = useTriggerAction();
 
 ## 类 \{#\}
 
-### `FunctionRegistry` <span className="api-badge api-badge-stale">待翻译</span> \{#functionregistry\}
+### `FunctionRegistry` \{#functionregistry\}
 
-Lookup table that routes protocol `FunctionCall.call` names to local
-JavaScript implementations.
+查找表，将协议中 `FunctionCall.call` 的名称路由到本地 JavaScript 实现。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -700,10 +668,9 @@ JavaScript implementations.
 | <a id="functionregistry-resolve"></a>`resolve` | `resolve(name: string): FunctionImpl \| undefined` |  |
 | <a id="functionregistry-unregister"></a>`unregister` | `unregister(name: string): void` |  |
 
-### `MessageProcessor` <span className="api-badge api-badge-stale">待翻译</span> \{#messageprocessor\}
+### `MessageProcessor` \{#messageprocessor\}
 
-Stateful A2UI protocol processor that turns raw v0.9 messages into
-renderable surfaces, resources, data-model signals, and user-action events.
+有状态的 A2UI 协议处理器，将原始 v0.9 消息转换为可渲染的 surface、resource、数据模型 signal 以及用户操作事件。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -716,11 +683,11 @@ renderable surfaces, resources, data-model signals, and user-action events.
 | <a id="messageprocessor-onevent"></a>`onEvent` | `onEvent(callback: (event: A2UIEvent) => void): () => void` |  |
 | <a id="messageprocessor-onupdate"></a>`onUpdate` | `onUpdate(callback: (data: Record<string, unknown>) => void): () => void` |  |
 | <a id="messageprocessor-processmessages"></a>`processMessages` | `processMessages(messages: ServerToClientMessage[]): void` |  |
-| <a id="messageprocessor-resolvepath"></a>`resolvePath` | `resolvePath(path: string, dataContextPath?: string): string` | Resolve a JSON Pointer taking into account the current data context. - Absolute paths (starting with '/') are returned as-is. - Relative paths are resolved against the provided dataContextPath. |
+| <a id="messageprocessor-resolvepath"></a>`resolvePath` | `resolvePath(path: string, dataContextPath?: string): string` | 结合当前数据上下文解析 JSON Pointer。 - 绝对路径（以 '/' 开头）原样返回。 - 相对路径基于传入的 dataContextPath 解析。 |
 
-### `SignalStore` <span className="api-badge api-badge-stale">待翻译</span> \{#signalstore\}
+### `SignalStore` \{#signalstore\}
 
-Path-keyed store of ReactLynx signals backing a surface's data model.
+以路径为键的 ReactLynx signal 存储，承载 surface 的数据模型。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -763,16 +730,13 @@ const BASIC_CATALOG_ID: "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json
 
 *暂无说明。*
 
-### `basicFunctions` <span className="api-badge api-badge-stale">待翻译</span> \{#basicfunctions\}
+### `basicFunctions` \{#basicfunctions\}
 
 ```ts
 const basicFunctions: readonly CatalogFunctionEntry[]
 ```
 
-The A2UI 0.9 basic-catalog function implementations packaged as
-`CatalogFunctionEntry`s, ready to spread into `<A2UI catalogs={[...]}>`.
-The impls themselves come from `@a2ui/web_core` so we stay aligned with
-the upstream spec for free.
+打包为 `CatalogFunctionEntry` 的 A2UI 0.9 basic catalog 函数实现，可直接展开到 `<A2UI catalogs={[...]}>` 中。这些实现本身来自 `@a2ui/web_core`，因此无需额外工作即可与上游规范保持一致。
 
 ```ts
 <A2UI catalogs={[Text, Button, ...basicFunctions]} ... />
@@ -802,21 +766,21 @@ const functionRegistry: FunctionRegistry
 
 *暂无说明。*
 
-### `LYNX_XML_ENGINE_VERSION` <span className="api-badge api-badge-stale">待翻译</span> \{#lynx-xml-engine-version\}
+### `LYNX_XML_ENGINE_VERSION` \{#lynx-xml-engine-version\}
 
 ```ts
 const LYNX_XML_ENGINE_VERSION: "4.2"
 ```
 
-The default Lynx engine version used by generated XML artifacts.
+生成的 XML 产物默认使用的 Lynx 引擎版本。
 
-### `LYNX_XML_SYSTEM_PROMPT` <span className="api-badge api-badge-stale">待翻译</span> \{#lynx-xml-system-prompt\}
+### `LYNX_XML_SYSTEM_PROMPT` \{#lynx-xml-system-prompt\}
 
 ```ts
 const LYNX_XML_SYSTEM_PROMPT: string
 ```
 
-The default Lynx XML generation system prompt.
+默认的 Lynx XML 生成系统提示词。
 
 ### `NodeRenderer` \{#noderenderer\}
 
@@ -834,19 +798,19 @@ const OPENUI_SYSTEM_PROMPT: string
 
 *暂无说明。*
 
-### `openUiPromptActionPropSchema` <span className="api-badge api-badge-stale">待翻译</span> \{#openuipromptactionpropschema\}
+### `openUiPromptActionPropSchema` \{#openuipromptactionpropschema\}
 
 ```ts
 const openUiPromptActionPropSchema: z.ZodUnion<readonly [z.ZodObject<{ steps: z.ZodArray<z.ZodObject<{ type: z.ZodString }, z.core.$loose>> }, z.core.$strip>, z.ZodObject<{ context: z.ZodOptional<z.ZodString>; params: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>; type: z.ZodOptional<z.ZodString>; url: z.ZodOptional<z.ZodString> }, z.core.$strip>]>
 ```
 
-Shared action prop schema exposed to prompt signatures as `ActionExpression`.
+共享的 action prop schema，在 prompt 签名中以 `ActionExpression` 的形式暴露。
 
 ## 类型 \{#\}
 
-### `A2UIComponentProp` <span className="api-badge api-badge-stale">待翻译</span> \{#a2uicomponentprop\}
+### `A2UIComponentProp` \{#a2uicomponentprop\}
 
-Prompt-facing description of a single A2UI component prop.
+面向 prompt 的单个 A2UI 组件 prop 描述。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -857,9 +821,9 @@ Prompt-facing description of a single A2UI component prop.
 | <a id="a2uicomponentprop-schema"></a>`schema?` | [`A2UIPromptJsonSchema`](#a2uipromptjsonschema) |  |
 | <a id="a2uicomponentprop-type"></a>`type` | `string` |  |
 
-### `A2UIComponentSpec` <span className="api-badge api-badge-stale">待翻译</span> \{#a2uicomponentspec\}
+### `A2UIComponentSpec` \{#a2uicomponentspec\}
 
-Prompt-facing component specification derived from a catalog manifest.
+由 catalog manifest 派生的面向 prompt 的组件规格。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -869,19 +833,18 @@ Prompt-facing component specification derived from a catalog manifest.
 | <a id="a2uicomponentspec-requiresaction"></a>`requiresAction?` | `boolean` |  |
 | <a id="a2uicomponentspec-summary"></a>`summary` | `string` |  |
 
-### `A2UIEvent` <span className="api-badge api-badge-stale">待翻译</span> \{#a2uievent\}
+### `A2UIEvent` \{#a2uievent\}
 
-Event envelope emitted by `MessageProcessor.dispatch`.
+由 `MessageProcessor.dispatch` 发出的事件信封。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="a2uievent-message"></a>`message` | `Record<string, unknown>` |  |
 | <a id="a2uievent-resolve"></a>`resolve` | `(response: unknown) => void` |  |
 
-### `A2UIExample` <span className="api-badge api-badge-stale">待翻译</span> \{#a2uiexample\}
+### `A2UIExample` \{#a2uiexample\}
 
-Validated user request and message sequence included as an in-context A2UI
-example.
+作为上下文内 A2UI 示例提供的、经过校验的用户请求及消息序列。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -889,9 +852,9 @@ example.
 | <a id="a2uiexample-name"></a>`name` | `string` |  |
 | <a id="a2uiexample-user"></a>`user` | `string` |  |
 
-### `A2UIFunctionSpec` <span className="api-badge api-badge-stale">待翻译</span> \{#a2uifunctionspec\}
+### `A2UIFunctionSpec` \{#a2uifunctionspec\}
 
-Prompt-facing schema for a client-side function the agent may call.
+面向 prompt 的 schema，描述 agent 可以调用的客户端函数。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -900,10 +863,9 @@ Prompt-facing schema for a client-side function the agent may call.
 | <a id="a2uifunctionspec-parameters"></a>`parameters` | [`A2UIPromptJsonSchema`](#a2uipromptjsonschema) |  |
 | <a id="a2uifunctionspec-returntype"></a>`returnType` | `"string" \| "number" \| "boolean" \| "object" \| "array" \| "void" \| "any"` |  |
 
-### `A2UIPromptCatalog` <span className="api-badge api-badge-stale">待翻译</span> \{#a2uipromptcatalog\}
+### `A2UIPromptCatalog` \{#a2uipromptcatalog\}
 
-Prompt-ready A2UI catalog including components, rules, examples, and
-optional client functions.
+可直接用于 prompt 的 A2UI catalog，包含组件、规则、示例以及可选的客户端函数。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -915,9 +877,9 @@ optional client functions.
 | <a id="a2uipromptcatalog-label"></a>`label` | `string` |  |
 | <a id="a2uipromptcatalog-version"></a>`version?` | `string` |  |
 
-### `A2UIPromptJsonSchema` <span className="api-badge api-badge-stale">待翻译</span> \{#a2uipromptjsonschema\}
+### `A2UIPromptJsonSchema` \{#a2uipromptjsonschema\}
 
-JSON Schema subset used in prompt-facing catalog descriptions.
+面向 prompt 的 catalog 描述中使用的 JSON Schema 子集。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -932,25 +894,25 @@ JSON Schema subset used in prompt-facing catalog descriptions.
 | <a id="a2uipromptjsonschema-type"></a>`type?` | `string` |  |
 | <a id="a2uipromptjsonschema-unevaluatedproperties"></a>`unevaluatedProperties?` | `unknown` |  |
 
-### `A2UIProps` <span className="api-badge api-badge-stale">待翻译</span> \{#a2uiprops\}
+### `A2UIProps` \{#a2uiprops\}
 
-Props for the all-in-one A2UI ReactLynx renderer.
+一体化 A2UI ReactLynx 渲染器的 props。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="a2uiprops-catalogs"></a>`catalogs` | `readonly CatalogInput[]` | Components the renderer is allowed to instantiate. Each item is either a bare component (name read from `displayName ?? name`) or a tuple `[component, manifest]` where the manifest is the JSON the extractor emits at `dist/catalog/<Name>/catalog.json`. |
-| <a id="a2uiprops-classname"></a>`className?` | `string` | Optional class name applied to the top-level `surface-${surfaceId}` view for the active surface. Use this when theme switching is expressed as surface-level classes. |
-| <a id="a2uiprops-messagestore"></a>`messageStore` | [`MessageStore`](#messagestore) | The raw-message buffer the developer pushes protocol messages into. `<A2UI>` subscribes via `useSyncExternalStore` and processes new messages incrementally. The internal `MessageProcessor` (surfaces, signals, resources) is created once per mount and is **not reset** if `messageStore` is later replaced with a different instance. Pass a `key` prop derived from the store's identity if you want a fresh session, e.g. `<A2UI key={turnId} messageStore={turnStore} ... />`. |
-| <a id="a2uiprops-onaction"></a>`onAction?` | `(action: `[`UserActionPayload`](#useractionpayload)`) => void` | Called when a user action fires inside the rendered tree (button tap, etc.). Forward to your agent and push the response messages back into the same `messageStore` to update the UI. Fire-and-forget; the renderer never awaits this. |
-| <a id="a2uiprops-renderempty"></a>`renderEmpty?` | `() => ReactNode` | Render before the first `beginRendering` arrives from the buffer. |
-| <a id="a2uiprops-rendererror"></a>`renderError?` | `(err: unknown) => ReactNode` | Render when the active resource fails. |
-| <a id="a2uiprops-renderfallback"></a>`renderFallback?` | `() => ReactNode` | Render while the active resource is pending. |
-| <a id="a2uiprops-renderunsupported"></a>`renderUnsupported?` | `(info: UnsupportedInfo) => ReactNode` | Render when unsupported data syntax or an unsupported component is encountered. |
-| <a id="a2uiprops-wrapsurface"></a>`wrapSurface?` | `(children: ReactNode, ctx: { surfaceId: string }) => ReactNode` | Wrap each top-level surface so consumers can apply an outer theme shell, wrapper className, or additional styles. |
+| <a id="a2uiprops-catalogs"></a>`catalogs` | `readonly CatalogInput[]` | 渲染器允许实例化的组件。每一项可以是一个裸组件（名称取自 `displayName ?? name`），也可以是元组 `[component, manifest]`，其中 manifest 是提取器在 `dist/catalog/<Name>/catalog.json` 输出的 JSON。 |
+| <a id="a2uiprops-classname"></a>`className?` | `string` | 可选的 class 名，应用于当前活动 surface 的顶层 `surface-${surfaceId}` view。当主题切换通过 surface 级别的 class 表达时使用。 |
+| <a id="a2uiprops-messagestore"></a>`messageStore` | [`MessageStore`](#messagestore) | 开发者推送协议消息的原始消息缓冲区。`<A2UI>` 通过 `useSyncExternalStore` 订阅它，并增量处理新消息。 内部的 `MessageProcessor`（surface、signal、resource）在每次挂载时只创建一次，之后即使 `messageStore` 被替换为另一个实例也**不会重置**。如需开启新的会话，请传入一个由 store 标识派生的 `key` prop，例如 `<A2UI key={turnId} messageStore={turnStore} ... />`。 |
+| <a id="a2uiprops-onaction"></a>`onAction?` | `(action: `[`UserActionPayload`](#useractionpayload)`) => void` | 在渲染树内触发用户操作（如按钮点击等）时调用。将其转发给你的 agent，并把响应消息推回同一个 `messageStore` 以更新 UI。该回调为 fire-and-forget 方式，渲染器不会等待它完成。 |
+| <a id="a2uiprops-renderempty"></a>`renderEmpty?` | `() => ReactNode` | 在缓冲区中收到第一条 `beginRendering` 之前渲染。 |
+| <a id="a2uiprops-rendererror"></a>`renderError?` | `(err: unknown) => ReactNode` | 当前活动 resource 失败时渲染。 |
+| <a id="a2uiprops-renderfallback"></a>`renderFallback?` | `() => ReactNode` | 当前活动 resource 处于 pending 状态时渲染。 |
+| <a id="a2uiprops-renderunsupported"></a>`renderUnsupported?` | `(info: UnsupportedInfo) => ReactNode` | 遇到不支持的数据语法或不支持的组件时渲染。 |
+| <a id="a2uiprops-wrapsurface"></a>`wrapSurface?` | `(children: ReactNode, ctx: { surfaceId: string }) => ReactNode` | 包裹每个顶层 surface，便于使用方应用外层主题外壳、包裹 className 或额外样式。 |
 
-### `ActionProps` <span className="api-badge api-badge-stale">待翻译</span> \{#actionprops\}
+### `ActionProps` \{#actionprops\}
 
-Identifies the component and surface that emitted an A2UI action.
+标识发出 A2UI action 的组件和 surface。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -958,41 +920,41 @@ Identifies the component and surface that emitted an A2UI action.
 | <a id="actionprops-id"></a>`id` | `string` |  |
 | <a id="actionprops-surfaceid"></a>`surfaceId` | `string` |  |
 
-### `BuildLynxXmlSystemPromptOptions` <span className="api-badge api-badge-stale">待翻译</span> \{#buildlynxxmlsystempromptoptions\}
+### `BuildLynxXmlSystemPromptOptions` \{#buildlynxxmlsystempromptoptions\}
 
-Options used to customize the Lynx XML generation system prompt.
+用于自定义 Lynx XML 生成系统提示词的选项。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="buildlynxxmlsystempromptoptions-appendix"></a>`appendix?` | `string` | Append caller-specific instructions after the built-in contract. |
-| <a id="buildlynxxmlsystempromptoptions-enablehtmlfragment"></a>`enableHtmlFragment?` | `boolean` | Generate an intermediate document for deterministic fragment compilation. |
-| <a id="buildlynxxmlsystempromptoptions-engineversion"></a>`engineVersion?` | `string` | Override the generated artifact's Lynx engine version. |
+| <a id="buildlynxxmlsystempromptoptions-appendix"></a>`appendix?` | `string` | 在内置约定之后追加调用方特定的指令。 |
+| <a id="buildlynxxmlsystempromptoptions-enablehtmlfragment"></a>`enableHtmlFragment?` | `boolean` | 生成一份中间文档，用于确定性的片段编译。 |
+| <a id="buildlynxxmlsystempromptoptions-engineversion"></a>`engineVersion?` | `string` | 覆盖生成产物的 Lynx 引擎版本。 |
 
-### `BuildOpenUiSystemPromptOptions` <span className="api-badge api-badge-stale">待翻译</span> \{#buildopenuisystempromptoptions\}
+### `BuildOpenUiSystemPromptOptions` \{#buildopenuisystempromptoptions\}
 
-Options used to customize the generated OpenUI system prompt.
+用于自定义生成的 OpenUI 系统提示词的选项。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="buildopenuisystempromptoptions-appendix"></a>`appendix?` | `string` |  |
-| <a id="buildopenuisystempromptoptions-componentgroups"></a>`componentGroups?` | `ComponentGroup[]` | Replace or extend the built-in component groups. |
-| <a id="buildopenuisystempromptoptions-componentnames"></a>`componentNames?` | `readonly string[]` | Limit built-ins to these names. Custom `components` are still appended. |
-| <a id="buildopenuisystempromptoptions-components"></a>`components?` | [`OpenUiPromptComponent`](#openuipromptcomponent)`[]` | Replace or extend the built-in component set. |
+| <a id="buildopenuisystempromptoptions-componentgroups"></a>`componentGroups?` | `ComponentGroup[]` | 替换或扩展内置的组件分组。 |
+| <a id="buildopenuisystempromptoptions-componentnames"></a>`componentNames?` | `readonly string[]` | 仅保留指定名称的内置组件。自定义的 `components` 仍会被追加。 |
+| <a id="buildopenuisystempromptoptions-components"></a>`components?` | [`OpenUiPromptComponent`](#openuipromptcomponent)`[]` | 替换或扩展内置的组件集合。 |
 | <a id="buildopenuisystempromptoptions-promptoptions"></a>`promptOptions?` | `PromptOptions` |  |
-| <a id="buildopenuisystempromptoptions-root"></a>`root?` | `string` | Override the root component name. Defaults to `'Stack'`. |
+| <a id="buildopenuisystempromptoptions-root"></a>`root?` | `string` | 覆盖根组件名称。默认为 `'Stack'`。 |
 
-### `BuildSystemPromptOptions` <span className="api-badge api-badge-stale">待翻译</span> \{#buildsystempromptoptions\}
+### `BuildSystemPromptOptions` \{#buildsystempromptoptions\}
 
-Options used to customize the generated A2UI system prompt.
+用于自定义生成的 A2UI 系统提示词的选项。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="buildsystempromptoptions-appendix"></a>`appendix?` | `string` |  |
 | <a id="buildsystempromptoptions-catalog"></a>`catalog?` | [`A2UIPromptCatalog`](#a2uipromptcatalog) |  |
 
-### `CatalogFunction` <span className="api-badge api-badge-stale">待翻译</span> \{#catalogfunction\}
+### `CatalogFunction` \{#catalogfunction\}
 
-A function discovered in source via `@a2uiFunction`, with its origin path.
+通过 `@a2uiFunction` 在源码中发现的函数，附带其来源路径。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -1002,51 +964,48 @@ A function discovered in source via `@a2uiFunction`, with its origin path.
 | <a id="catalogfunction-parameters"></a>`parameters` | [`ExtractedJsonSchema`](#extractedjsonschema) |  |
 | <a id="catalogfunction-returntype"></a>`returnType` | `"string" \| "number" \| "boolean" \| "object" \| "array" \| "void" \| "any"` |  |
 
-### `CheckLike` <span className="api-badge api-badge-stale">待翻译</span> \{#checklike\}
+### `CheckLike` \{#checklike\}
 
-A v0.9 `CheckRule` is `{ condition, message }` where `condition` is a
-boolean, a `DataBinding`, or a `FunctionCall`. We accept the loose
-`unknown` shape so component props don't have to import the v0_9
-types just to pass them through.
+v0.9 的 `CheckRule` 形如 `{ condition, message }`，其中 `condition` 可以是布尔值、`DataBinding` 或 `FunctionCall`。这里接受宽松的 `unknown` 类型，这样组件 props 就不必为了透传而导入 v0_9 的类型。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="checklike-condition"></a>`condition` | `unknown` |  |
 | <a id="checklike-message"></a>`message` | `string` |  |
 
-### `ComponentRenderProps` <span className="api-badge api-badge-stale">待翻译</span> \{#componentrenderprops\}
+### `ComponentRenderProps` \{#componentrenderprops\}
 
-Props passed to an OpenUI ReactLynx component renderer.
+传给 OpenUI ReactLynx 组件渲染器的 props。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="componentrenderprops-onaction"></a>`onAction?` | `(event: ActionEvent) => void` |  |
 
-### `CreateOpenUiLibraryOptions` <span className="api-badge api-badge-stale">待翻译</span> \{#createopenuilibraryoptions\}
+### `CreateOpenUiLibraryOptions` \{#createopenuilibraryoptions\}
 
-Options for creating a ReactLynx OpenUI component library.
-
-| 成员 | 类型 | 说明 |
-| --- | --- | --- |
-| <a id="createopenuilibraryoptions-componentgroups"></a>`componentGroups?` | `ComponentGroup[]` | Additional groups, or the complete set when defaults are disabled. |
-| <a id="createopenuilibraryoptions-components"></a>`components?` | [`DefinedComponent`](#definedcomponent)`<any>[]` | Additional components, or the complete set when defaults are disabled. |
-| <a id="createopenuilibraryoptions-includedefaultcomponents"></a>`includeDefaultComponents?` | `boolean` | Whether to include the built-in components and component groups. Defaults to `true`. |
-| <a id="createopenuilibraryoptions-root"></a>`root?` | `string` | Override the root component name. Defaults to `'Stack'`. |
-
-### `CreateOpenUiPromptLibraryOptions` <span className="api-badge api-badge-stale">待翻译</span> \{#createopenuipromptlibraryoptions\}
-
-Options for creating the headless OpenUI prompt library.
+创建 ReactLynx OpenUI 组件库的选项。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="createopenuipromptlibraryoptions-componentgroups"></a>`componentGroups?` | `ComponentGroup[]` | Replace or extend the built-in component groups. |
-| <a id="createopenuipromptlibraryoptions-componentnames"></a>`componentNames?` | `readonly string[]` | Limit built-ins to these names. Custom `components` are still appended. |
-| <a id="createopenuipromptlibraryoptions-components"></a>`components?` | [`OpenUiPromptComponent`](#openuipromptcomponent)`[]` | Replace or extend the built-in component set. |
-| <a id="createopenuipromptlibraryoptions-root"></a>`root?` | `string` | Override the root component name. Defaults to `'Stack'`. |
+| <a id="createopenuilibraryoptions-componentgroups"></a>`componentGroups?` | `ComponentGroup[]` | 额外的组件分组；禁用默认组件时则为完整的分组集合。 |
+| <a id="createopenuilibraryoptions-components"></a>`components?` | [`DefinedComponent`](#definedcomponent)`<any>[]` | 额外的组件；禁用默认组件时则为完整的组件集合。 |
+| <a id="createopenuilibraryoptions-includedefaultcomponents"></a>`includeDefaultComponents?` | `boolean` | 是否包含内置组件和组件分组。默认为 `true`。 |
+| <a id="createopenuilibraryoptions-root"></a>`root?` | `string` | 覆盖根组件名称。默认为 `'Stack'`。 |
 
-### `ExtractCatalogOptions` <span className="api-badge api-badge-stale">待翻译</span> \{#extractcatalogoptions\}
+### `CreateOpenUiPromptLibraryOptions` \{#createopenuipromptlibraryoptions\}
 
-Source and compiler inputs used when extracting catalog metadata.
+创建 headless OpenUI prompt 库的选项。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="createopenuipromptlibraryoptions-componentgroups"></a>`componentGroups?` | `ComponentGroup[]` | 替换或扩展内置的组件分组。 |
+| <a id="createopenuipromptlibraryoptions-componentnames"></a>`componentNames?` | `readonly string[]` | 仅保留指定名称的内置组件。自定义的 `components` 仍会被追加。 |
+| <a id="createopenuipromptlibraryoptions-components"></a>`components?` | [`OpenUiPromptComponent`](#openuipromptcomponent)`[]` | 替换或扩展内置的组件集合。 |
+| <a id="createopenuipromptlibraryoptions-root"></a>`root?` | `string` | 覆盖根组件名称。默认为 `'Stack'`。 |
+
+### `ExtractCatalogOptions` \{#extractcatalogoptions\}
+
+提取 catalog 元数据时使用的源码和编译器输入。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -1054,9 +1013,9 @@ Source and compiler inputs used when extracting catalog metadata.
 | <a id="extractcatalogoptions-sourcefiles"></a>`sourceFiles` | `string[]` |  |
 | <a id="extractcatalogoptions-tsconfig"></a>`tsconfig?` | `string` |  |
 
-### `ExtractedA2UICatalog` <span className="api-badge api-badge-stale">待翻译</span> \{#extracteda2uicatalog\}
+### `ExtractedA2UICatalog` \{#extracteda2uicatalog\}
 
-Full catalog manifest consumed by A2UI agents and renderers.
+供 A2UI agent 和渲染器使用的完整 catalog manifest。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -1065,9 +1024,9 @@ Full catalog manifest consumed by A2UI agents and renderers.
 | <a id="extracteda2uicatalog-functions"></a>`functions?` | `Record<string, `[`ExtractedJsonSchema`](#extractedjsonschema)`>` |  |
 | <a id="extracteda2uicatalog-theme"></a>`theme?` | `Record<string, `[`ExtractedJsonSchema`](#extractedjsonschema)`>` |  |
 
-### `ExtractedCatalogComponent` <span className="api-badge api-badge-stale">待翻译</span> \{#extractedcatalogcomponent\}
+### `ExtractedCatalogComponent` \{#extractedcatalogcomponent\}
 
-Component schema discovered from an interface annotated with `@a2uiCatalog`.
+从带有 `@a2uiCatalog` 注解的接口中发现的组件 schema。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -1076,9 +1035,9 @@ Component schema discovered from an interface annotated with `@a2uiCatalog`.
 | <a id="extractedcatalogcomponent-name"></a>`name` | `string` |  |
 | <a id="extractedcatalogcomponent-schema"></a>`schema` | [`ExtractedJsonSchema`](#extractedjsonschema) |  |
 
-### `ExtractedJsonSchema` <span className="api-badge api-badge-stale">待翻译</span> \{#extractedjsonschema\}
+### `ExtractedJsonSchema` \{#extractedjsonschema\}
 
-JSON Schema subset emitted for A2UI component props and function arguments.
+为 A2UI 组件 props 和函数参数输出的 JSON Schema 子集。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -1096,9 +1055,9 @@ JSON Schema subset emitted for A2UI component props and function arguments.
 | <a id="extractedjsonschema-type"></a>`type?` | `string` |  |
 | <a id="extractedjsonschema-unevaluatedproperties"></a>`unevaluatedProperties?` | `boolean \| `[`ExtractedJsonSchema`](#extractedjsonschema) |  |
 
-### `FormValidationContextValue` <span className="api-badge api-badge-stale">待翻译</span> \{#formvalidationcontextvalue\}
+### `FormValidationContextValue` \{#formvalidationcontextvalue\}
 
-Validation state and helpers for OpenUI form fields.
+OpenUI 表单字段的校验状态和辅助函数。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -1110,11 +1069,9 @@ Validation state and helpers for OpenUI form fields.
 | <a id="formvalidationcontextvalue-validatefield"></a>`validateField` | `(name: string, value: unknown, rules: ParsedRule[]) => boolean` |  |
 | <a id="formvalidationcontextvalue-validateform"></a>`validateForm` | `() => boolean` |  |
 
-### `FunctionCallContext` <span className="api-badge api-badge-stale">待翻译</span> \{#functioncallcontext\}
+### `FunctionCallContext` \{#functioncallcontext\}
 
-Runtime context passed to client-side function implementations. It mirrors
-the small DataContext subset used by upstream A2UI basic functions while
-staying tied to this renderer's `MessageProcessor` + `SignalStore`.
+传给客户端函数实现的运行时上下文。它与上游 A2UI 基础函数所用的 DataContext 子集保持一致，同时绑定到本渲染器的 `MessageProcessor` + `SignalStore`。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -1125,9 +1082,9 @@ staying tied to this renderer's `MessageProcessor` + `SignalStore`.
 | <a id="functioncallcontext-resolvesignal"></a>`resolveSignal` | `resolveSignal(value: unknown): Signal<unknown>` |  |
 | <a id="functioncallcontext-set"></a>`set` | `set(path: string, value: unknown): void` |  |
 
-### `FunctionDefinition` <span className="api-badge api-badge-stale">待翻译</span> \{#functiondefinition\}
+### `FunctionDefinition` \{#functiondefinition\}
 
-Serializable definition for a client-side function exposed to an agent.
+暴露给 agent 的客户端函数的可序列化定义。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -1136,19 +1093,19 @@ Serializable definition for a client-side function exposed to an agent.
 | <a id="functiondefinition-parameters"></a>`parameters` | [`ExtractedJsonSchema`](#extractedjsonschema) |  |
 | <a id="functiondefinition-returntype"></a>`returnType` | `"string" \| "number" \| "boolean" \| "object" \| "array" \| "void" \| "any"` |  |
 
-### `FunctionEntry` <span className="api-badge api-badge-stale">待翻译</span> \{#functionentry\}
+### `FunctionEntry` \{#functionentry\}
 
-Registered client-side function and its optional handshake definition.
+已注册的客户端函数及其可选的握手定义。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="functionentry-definition"></a>`definition?` | `FunctionDefinition` | Optional function definition announced to the agent as part of the handshake. |
+| <a id="functionentry-definition"></a>`definition?` | `FunctionDefinition` | 可选的函数定义，会在握手时告知 agent。 |
 | <a id="functionentry-impl"></a>`impl` | [`FunctionImpl`](#functionimpl) |  |
 | <a id="functionentry-name"></a>`name` | `string` |  |
 
-### `GenericComponentProps` <span className="api-badge api-badge-stale">待翻译</span> \{#genericcomponentprops\}
+### `GenericComponentProps` \{#genericcomponentprops\}
 
-Common runtime props passed to every catalog component by the renderer.
+渲染器传给每个 catalog 组件的通用运行时 props。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -1158,100 +1115,91 @@ Common runtime props passed to every catalog component by the renderer.
 | <a id="genericcomponentprops-setvalue"></a>`setValue?` | `(key: string, value: unknown) => void` |  |
 | <a id="genericcomponentprops-surface"></a>`surface` | [`Surface`](#surface) |  |
 
-### `MessageStore` <span className="api-badge api-badge-stale">待翻译</span> \{#messagestore\}
+### `MessageStore` \{#messagestore\}
 
-A pure append-only buffer of raw protocol messages produced by the
-developer's IO module. The store knows nothing about the v0.9 protocol —
-it does not parse, process, or interpret messages. It only:
+一个纯追加式的缓冲区，存放由开发者 IO 模块产生的原始协议消息。该 store 对 v0.9 协议一无所知——它不解析、不处理，也不解释消息，只负责：
 
- 1. Stores them in arrival order.
- 2. Notifies subscribers when new ones land.
- 3. Hands the current snapshot back via `getSnapshot()` (referentially
-    stable between mutations — required by `useSyncExternalStore`).
+ 1. 按到达顺序存储消息。
+ 2. 有新消息到达时通知订阅者。
+ 3. 通过 `getSnapshot()` 返回当前快照（两次变更之间引用保持稳定——这是 `useSyncExternalStore` 所要求的）。
 
-Protocol-aware processing — surfaces, signals, resources, action
-dispatch — is the responsibility of `<A2UI>` (the renderer component).
-Developers who don't want to learn the protocol should use `<A2UI>`;
-developers who do can run their own `MessageProcessor` against the
-snapshot directly.
+感知协议的处理——surface、signal、resource、action 分发——由 `<A2UI>`（渲染器组件）负责。不想了解协议的开发者应使用 `<A2UI>`；了解协议的开发者可以直接基于快照运行自己的 `MessageProcessor`。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="messagestore-getsnapshot"></a>`getSnapshot` | `() => readonly `[`ServerToClientMessage`](#servertoclientmessage)`[]` | `useSyncExternalStore` getSnapshot contract — stable between pushes. |
-| <a id="messagestore-subscribe"></a>`subscribe` | `(cb: () => void) => () => void` | `useSyncExternalStore` subscribe contract. |
-| <a id="messagestore-clear"></a>`clear` | `clear(): void` | Reset the buffer. Notifies subscribers. |
-| <a id="messagestore-push"></a>`push` | `push(message: ServerToClientMessage \| readonly ServerToClientMessage[]): void` | Append one or more raw messages to the buffer. Notifies subscribers once per call (batches a single array argument into a single notify). |
+| <a id="messagestore-getsnapshot"></a>`getSnapshot` | `() => readonly `[`ServerToClientMessage`](#servertoclientmessage)`[]` | `useSyncExternalStore` 的 getSnapshot 约定——在两次 push 之间保持稳定。 |
+| <a id="messagestore-subscribe"></a>`subscribe` | `(cb: () => void) => () => void` | `useSyncExternalStore` 的 subscribe 约定。 |
+| <a id="messagestore-clear"></a>`clear` | `clear(): void` | 重置缓冲区，并通知订阅者。 |
+| <a id="messagestore-push"></a>`push` | `push(message: ServerToClientMessage \| readonly ServerToClientMessage[]): void` | 向缓冲区追加一条或多条原始消息。每次调用只通知订阅者一次（传入单个数组参数时会合并为一次通知）。 |
 
-### `MessageStoreOptions` <span className="api-badge api-badge-stale">待翻译</span> \{#messagestoreoptions\}
+### `MessageStoreOptions` \{#messagestoreoptions\}
 
-Options used when creating a raw A2UI message buffer.
-
-| 成员 | 类型 | 说明 |
-| --- | --- | --- |
-| <a id="messagestoreoptions-initialmessages"></a>`initialMessages?` | `readonly `[`ServerToClientMessage`](#servertoclientmessage)`[]` | Optional initial buffer contents. Useful when rehydrating a previous agent response or replaying a fixture stream. |
-
-### `OpenUIContextValue` <span className="api-badge api-badge-stale">待翻译</span> \{#openuicontextvalue\}
-
-Runtime context shared by OpenUI renderers, hooks, actions, and form fields.
+创建原始 A2UI 消息缓冲区时使用的选项。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="openuicontextvalue-evaluationcontext"></a>`evaluationContext` | `EvaluationContext` | AST evaluation context used by runtime expression evaluation. |
-| <a id="openuicontextvalue-getfieldvalue"></a>`getFieldValue` | `(formName: string \| undefined, name: string) => any` | Get a field value. Top-level for $bindings, nested under formName for form fields. |
-| <a id="openuicontextvalue-isqueryloading"></a>`isQueryLoading` | `boolean` | Whether any Query is currently fetching data. |
-| <a id="openuicontextvalue-isstreaming"></a>`isStreaming` | `boolean` | Whether the LLM is currently streaming content. |
-| <a id="openuicontextvalue-library"></a>`library` | `Library` | The active component library (schema + renderers). |
-| <a id="openuicontextvalue-rendernode"></a>`renderNode` | `(value: unknown) => ReactNode` | Render any value (element, array, primitive) into React nodes. |
-| <a id="openuicontextvalue-reporterror"></a>`reportError?` | `(error: OpenUIError) => void` | Report a structured error (used internally by error boundary). |
-| <a id="openuicontextvalue-setfieldvalue"></a>`setFieldValue` | `(formName: string \| undefined, componentType: string \| undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void` | Set a form field value. |
-| <a id="openuicontextvalue-store"></a>`store` | `Store` | Reactive binding store for $variables and form data. |
-| <a id="openuicontextvalue-triggeraction"></a>`triggerAction` | `(userMessage: string, formName?: string, action?: ActionPlan \| { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void \| Promise<void>` | Trigger an action. Accepts either: - ActionPlan (v0.5): runs steps sequentially (Run, Set, ToAssistant, OpenUrl) - Legacy action config (v0.1): object with optional type and params. - Nothing: fires ContinueConversation with the label |
+| <a id="messagestoreoptions-initialmessages"></a>`initialMessages?` | `readonly `[`ServerToClientMessage`](#servertoclientmessage)`[]` | 可选的初始缓冲区内容。适用于恢复之前的 agent 响应或回放 fixture 消息流。 |
 
-### `OpenUiRendererParsedProps` <span className="api-badge api-badge-stale">待翻译</span> \{#openuirendererparsedprops\}
+### `OpenUIContextValue` \{#openuicontextvalue\}
 
-Props for rendering an already parsed OpenUI result.
+由 OpenUI 渲染器、hooks、action 和表单字段共享的运行时上下文。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="openuicontextvalue-evaluationcontext"></a>`evaluationContext` | `EvaluationContext` | 运行时表达式求值所使用的 AST 求值上下文。 |
+| <a id="openuicontextvalue-getfieldvalue"></a>`getFieldValue` | `(formName: string \| undefined, name: string) => any` | 获取字段值。$bindings 位于顶层，表单字段则嵌套在 formName 下。 |
+| <a id="openuicontextvalue-isqueryloading"></a>`isQueryLoading` | `boolean` | 是否有 Query 正在获取数据。 |
+| <a id="openuicontextvalue-isstreaming"></a>`isStreaming` | `boolean` | LLM 当前是否正在流式输出内容。 |
+| <a id="openuicontextvalue-library"></a>`library` | `Library` | 当前使用的组件库（schema + 渲染器）。 |
+| <a id="openuicontextvalue-rendernode"></a>`renderNode` | `(value: unknown) => ReactNode` | 将任意值（元素、数组、原始值）渲染为 React 节点。 |
+| <a id="openuicontextvalue-reporterror"></a>`reportError?` | `(error: OpenUIError) => void` | 上报结构化错误（由错误边界内部使用）。 |
+| <a id="openuicontextvalue-setfieldvalue"></a>`setFieldValue` | `(formName: string \| undefined, componentType: string \| undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void` | 设置表单字段值。 |
+| <a id="openuicontextvalue-store"></a>`store` | `Store` | 用于 $variables 和表单数据的响应式绑定存储。 |
+| <a id="openuicontextvalue-triggeraction"></a>`triggerAction` | `(userMessage: string, formName?: string, action?: ActionPlan \| { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void \| Promise<void>` | 触发一个 action。接受以下任一形式： - ActionPlan（v0.5）：按顺序执行各个步骤（Run、Set、ToAssistant、OpenUrl） - 旧版 action 配置（v0.1）：带有可选 type 和 params 的对象。 - 不传：以 label 触发 ContinueConversation |
+
+### `OpenUiRendererParsedProps` \{#openuirendererparsedprops\}
+
+用于渲染已解析的 OpenUI 结果的 props。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="openuirendererparsedprops-isstreaming"></a>`isStreaming?` | `boolean` |  |
 | <a id="openuirendererparsedprops-library"></a>`library` | [`Library`](#library) |  |
 | <a id="openuirendererparsedprops-onaction"></a>`onAction?` | `(event: ActionEvent) => void` |  |
-| <a id="openuirendererparsedprops-result"></a>`result` | `ParseResult \| null` | Pre-parsed result. Kept for v0.1/static-render compatibility. |
+| <a id="openuirendererparsedprops-result"></a>`result` | `ParseResult \| null` | 预先解析好的结果。为兼容 v0.1/静态渲染而保留。 |
 
-### `OpenUiRendererRuntimeProps` <span className="api-badge api-badge-stale">待翻译</span> \{#openuirendererruntimeprops\}
+### `OpenUiRendererRuntimeProps` \{#openuirendererruntimeprops\}
 
-Props for rendering raw OpenUI response text with parsing, runtime state,
-actions, and query execution.
+用于渲染原始 OpenUI 响应文本的 props，包含解析、运行时状态、action 和 query 执行。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="openuirendererruntimeprops-initialqueryresults"></a>`initialQueryResults?` | `Readonly<Record<string, unknown>>` | Prefetched Query results keyed by Query assignment name (statement ID). Results render synchronously, then an optional toolProvider revalidates. |
-| <a id="openuirendererruntimeprops-initialstate"></a>`initialState?` | `Record<string, unknown>` | Initial persisted state. $-prefixed keys hydrate reactive bindings. |
-| <a id="openuirendererruntimeprops-isstreaming"></a>`isStreaming?` | `boolean` | Whether the LLM is still streaming; disables interactions while true. |
-| <a id="openuirendererruntimeprops-library"></a>`library` | [`Library`](#library) | Component library from createOpenUiLibrary(). |
-| <a id="openuirendererruntimeprops-onaction"></a>`onAction?` | `(event: ActionEvent) => void` | Callback when a component triggers a host action. |
-| <a id="openuirendererruntimeprops-onerror"></a>`onError?` | `(errors: OpenUIError[]) => void` | Structured parser/runtime/query errors for correction loops. |
-| <a id="openuirendererruntimeprops-onparseresult"></a>`onParseResult?` | `(result: ParseResult \| null) => void` | Called whenever the raw parse result changes. |
-| <a id="openuirendererruntimeprops-onstateupdate"></a>`onStateUpdate?` | `(state: Record<string, unknown>) => void` | Called whenever $variables or form state changes. |
-| <a id="openuirendererruntimeprops-queryloader"></a>`queryLoader?` | `ReactNode` | Custom loading node shown while Query() calls are in flight. |
-| <a id="openuirendererruntimeprops-response"></a>`response` | `string \| null` | Raw openui-lang response text. This enables v0.5 runtime features. |
-| <a id="openuirendererruntimeprops-toolprovider"></a>`toolProvider?` | [`ToolProviderInput`](#toolproviderinput) | Tool provider for Query()/Mutation(): function map or MCP client. |
+| <a id="openuirendererruntimeprops-initialqueryresults"></a>`initialQueryResults?` | `Readonly<Record<string, unknown>>` | 预取的 Query 结果，以 Query 赋值名称（statement ID）为键。结果会同步渲染，之后由可选的 toolProvider 重新校验。 |
+| <a id="openuirendererruntimeprops-initialstate"></a>`initialState?` | `Record<string, unknown>` | 初始的持久化状态。以 $ 开头的键会用于初始化响应式绑定。 |
+| <a id="openuirendererruntimeprops-isstreaming"></a>`isStreaming?` | `boolean` | LLM 是否仍在流式输出；为 true 时禁用交互。 |
+| <a id="openuirendererruntimeprops-library"></a>`library` | [`Library`](#library) | 由 createOpenUiLibrary() 创建的组件库。 |
+| <a id="openuirendererruntimeprops-onaction"></a>`onAction?` | `(event: ActionEvent) => void` | 组件触发宿主 action 时的回调。 |
+| <a id="openuirendererruntimeprops-onerror"></a>`onError?` | `(errors: OpenUIError[]) => void` | 结构化的解析器/运行时/query 错误，用于纠错循环。 |
+| <a id="openuirendererruntimeprops-onparseresult"></a>`onParseResult?` | `(result: ParseResult \| null) => void` | 原始解析结果每次变化时调用。 |
+| <a id="openuirendererruntimeprops-onstateupdate"></a>`onStateUpdate?` | `(state: Record<string, unknown>) => void` | $variables 或表单状态每次变化时调用。 |
+| <a id="openuirendererruntimeprops-queryloader"></a>`queryLoader?` | `ReactNode` | Query() 调用进行中时显示的自定义加载节点。 |
+| <a id="openuirendererruntimeprops-response"></a>`response` | `string \| null` | 原始 openui-lang 响应文本。传入后启用 v0.5 运行时特性。 |
+| <a id="openuirendererruntimeprops-toolprovider"></a>`toolProvider?` | [`ToolProviderInput`](#toolproviderinput) | 用于 Query()/Mutation() 的工具提供者：函数映射或 MCP 客户端。 |
 
-### `OpenUIState` <span className="api-badge api-badge-stale">待翻译</span> \{#openuistate\}
+### `OpenUIState` \{#openuistate\}
 
-Derived OpenUI renderer state returned by `useOpenUIState`.
+由 `useOpenUIState` 返回的派生 OpenUI 渲染器状态。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="openuistate-contextvalue"></a>`contextValue` | [`OpenUIContextValue`](#openuicontextvalue) |  |
-| <a id="openuistate-isqueryloading"></a>`isQueryLoading` | `boolean` | Whether any Query is currently fetching data. |
-| <a id="openuistate-parseresult"></a>`parseResult` | `ParseResult \| null` | Raw parse result (AST nodes in props). Used by onParseResult callback. |
-| <a id="openuistate-result"></a>`result` | `ParseResult \| null` | Evaluated result (props resolved to concrete values). Used by Renderer. |
+| <a id="openuistate-isqueryloading"></a>`isQueryLoading` | `boolean` | 是否有 Query 正在获取数据。 |
+| <a id="openuistate-parseresult"></a>`parseResult` | `ParseResult \| null` | 原始解析结果（props 中为 AST 节点）。供 onParseResult 回调使用。 |
+| <a id="openuistate-result"></a>`result` | `ParseResult \| null` | 求值后的结果（props 已解析为具体值）。供 Renderer 使用。 |
 
-### `RawResource` <span className="api-badge api-badge-stale">待翻译</span> \{#rawresource\}
+### `RawResource` \{#rawresource\}
 
-Observable async resource used by the renderer to publish surface and
-component updates.
+可观察的异步 resource，渲染器用它发布 surface 和组件的更新。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -1259,18 +1207,18 @@ component updates.
 | <a id="rawresource-completed"></a>`completed` | `boolean` |  |
 | <a id="rawresource-error"></a>`error` | `unknown` |  |
 | <a id="rawresource-fail"></a>`fail` | `(err: unknown) => void` |  |
-| <a id="rawresource-getsnapshot"></a>`getSnapshot` | `() => ResourceSnapshot<T>` | Synchronous read of the current snapshot, suitable for `useSyncExternalStore`. The returned object reference changes on every transition. |
+| <a id="rawresource-getsnapshot"></a>`getSnapshot` | `() => ResourceSnapshot<T>` | 同步读取当前快照，适用于 `useSyncExternalStore`。每次状态迁移时返回的对象引用都会变化。 |
 | <a id="rawresource-id"></a>`id` | `string` |  |
-| <a id="rawresource-onupdate"></a>`onUpdate` <span className="api-badge api-badge-deprecated">已废弃</span> | `(callback: (result: T) => void) => () => void` | Use `subscribe`. Behaves identically. **已废弃.** Deprecated. |
+| <a id="rawresource-onupdate"></a>`onUpdate` <span className="api-badge api-badge-deprecated">已废弃</span> | `(callback: (result: T) => void) => () => void` | 请使用 `subscribe`，行为完全相同。 **已废弃.** 已废弃。 |
 | <a id="rawresource-promise"></a>`promise` | `Promise<T>` |  |
-| <a id="rawresource-read"></a>`read` <span className="api-badge api-badge-deprecated">已废弃</span> | `() => T \| undefined` | Read `value` / `status` directly. Retained for backwards compatibility; in the success state it returns the value, otherwise it returns undefined. It does not throw. **已废弃.** Deprecated. |
+| <a id="rawresource-read"></a>`read` <span className="api-badge api-badge-deprecated">已废弃</span> | `() => T \| undefined` | 请直接读取 `value` / `status`。为向后兼容而保留；在成功状态下返回该值，否则返回 undefined。不会抛出异常。 **已废弃.** 已废弃。 |
 | <a id="rawresource-status"></a>`status` | [`ResourceStatus`](#resourcestatus) |  |
-| <a id="rawresource-subscribe"></a>`subscribe` | `(callback: () => void) => () => void` | Subscribe to state changes. The callback is invoked after every `complete()` or `fail()` (the same value may be re-published when the processor re-emits an update for the same id). Returns a disposer. |
+| <a id="rawresource-subscribe"></a>`subscribe` | `(callback: () => void) => () => void` | 订阅状态变化。每次 `complete()` 或 `fail()` 之后都会调用回调（当处理器针对同一 id 再次发出更新时，可能会重新发布相同的值）。返回一个取消订阅函数。 |
 | <a id="rawresource-value"></a>`value` | `T \| undefined` |  |
 
-### `ReadA2UICatalogDirectoryOptions` <span className="api-badge api-badge-stale">待翻译</span> \{#reada2uicatalogdirectoryoptions\}
+### `ReadA2UICatalogDirectoryOptions` \{#reada2uicatalogdirectoryoptions\}
 
-Options for loading generated A2UI catalog artifacts from a directory.
+从目录加载生成的 A2UI catalog 产物的选项。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -1280,61 +1228,60 @@ Options for loading generated A2UI catalog artifacts from a directory.
 | <a id="reada2uicatalogdirectoryoptions-label"></a>`label?` | `string` |  |
 | <a id="reada2uicatalogdirectoryoptions-version"></a>`version?` | `string` |  |
 
-### `ResolveFunctionOptions` <span className="api-badge api-badge-stale">待翻译</span> \{#resolvefunctionoptions\}
+### `ResolveFunctionOptions` \{#resolvefunctionoptions\}
 
-Options controlling how function calls are resolved against a catalog.
+控制如何基于 catalog 解析函数调用的选项。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="resolvefunctionoptions-functions"></a>`functions?` | `readonly CatalogFunctionEntry[]` |  |
 | <a id="resolvefunctionoptions-registry"></a>`registry?` | [`FunctionRegistry`](#functionregistry) |  |
 
-### `ResourceInfo` <span className="api-badge api-badge-stale">待翻译</span> \{#resourceinfo\}
+### `ResourceInfo` \{#resourceinfo\}
 
-Payload carried by renderer resources when a surface or component changes.
+当 surface 或组件发生变化时，渲染器 resource 携带的数据。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="resourceinfo-component"></a>`component?` | [`ComponentInstance`](#componentinstance) |  |
 | <a id="resourceinfo-surface"></a>`surface` | [`Surface`](#surface) |  |
 | <a id="resourceinfo-surfaceid"></a>`surfaceId` | `string` |  |
-| <a id="resourceinfo-type"></a>`type` | `"beginRendering" \| "surfaceUpdate" \| "deleteSurface"` | Internal event type emitted by the processor. |
+| <a id="resourceinfo-type"></a>`type` | `"beginRendering" \| "surfaceUpdate" \| "deleteSurface"` | 处理器发出的内部事件类型。 |
 
-### `Surface` <span className="api-badge api-badge-stale">待翻译</span> \{#surface\}
+### `Surface` \{#surface\}
 
-In-memory state for a single protocol surface.
+单个协议 surface 的内存状态。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="surface-catalogid"></a>`catalogId?` | `string` |  |
 | <a id="surface-components"></a>`components` | `Map<string, `[`ComponentInstance`](#componentinstance)`>` |  |
 | <a id="surface-resources"></a>`resources` | `Map<string, `[`Resource`](#resource)`>` |  |
-| <a id="surface-rootcomponentid"></a>`rootComponentId?` | `string \| null` | id of the root component for this surface (must be 'root'). |
+| <a id="surface-rootcomponentid"></a>`rootComponentId?` | `string \| null` | 该 surface 根组件的 id（必须为 'root'）。 |
 | <a id="surface-senddatamodel"></a>`sendDataModel?` | `boolean` |  |
 | <a id="surface-store"></a>`store` | [`SignalStore`](#signalstore) |  |
 | <a id="surface-surfaceid"></a>`surfaceId` | `string` |  |
 | <a id="surface-theme"></a>`theme?` | `Readonly<Record<string, unknown>>` |  |
 
-### `UseOpenUIStateOptions` <span className="api-badge api-badge-stale">待翻译</span> \{#useopenuistateoptions\}
+### `UseOpenUIStateOptions` \{#useopenuistateoptions\}
 
-Inputs used to parse OpenUI text and build renderer state.
+用于解析 OpenUI 文本并构建渲染器状态的输入。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="useopenuistateoptions-initialqueryresults"></a>`initialQueryResults?` | `Readonly<Record<string, unknown>>` | Prefetched Query results keyed by the Query assignment name (statement ID). They are available during the initial render and act as fallbacks while an optional tool provider revalidates them after commit. |
+| <a id="useopenuistateoptions-initialqueryresults"></a>`initialQueryResults?` | `Readonly<Record<string, unknown>>` | 预取的 Query 结果，以 Query 赋值名称（statement ID）为键。它们在首次渲染时即可使用，并在可选的 tool provider 于 commit 后重新校验期间作为兜底值。 |
 | <a id="useopenuistateoptions-initialstate"></a>`initialState?` | `Record<string, unknown>` |  |
 | <a id="useopenuistateoptions-isstreaming"></a>`isStreaming` | `boolean` |  |
 | <a id="useopenuistateoptions-library"></a>`library` | [`Library`](#library) |  |
 | <a id="useopenuistateoptions-onaction"></a>`onAction?` | `(event: ActionEvent) => void` |  |
-| <a id="useopenuistateoptions-onerror"></a>`onError?` | `(errors: OpenUIError[]) => void` | Callback for structured, LLM-friendly errors. See OpenUIError type. |
+| <a id="useopenuistateoptions-onerror"></a>`onError?` | `(errors: OpenUIError[]) => void` | 结构化、便于 LLM 理解的错误回调。参见 OpenUIError 类型。 |
 | <a id="useopenuistateoptions-onstateupdate"></a>`onStateUpdate?` | `(state: Record<string, unknown>) => void` |  |
 | <a id="useopenuistateoptions-response"></a>`response` | `string \| null` |  |
-| <a id="useopenuistateoptions-toolprovider"></a>`toolProvider?` | `ToolProvider \| null` | ToolProvider for Query data fetching — MCP, REST, GraphQL, or any backend. |
+| <a id="useopenuistateoptions-toolprovider"></a>`toolProvider?` | `ToolProvider \| null` | 用于 Query 数据获取的 ToolProvider——MCP、REST、GraphQL 或任意后端。 |
 
-### `UserActionPayload` <span className="api-badge api-badge-stale">待翻译</span> \{#useractionpayload\}
+### `UserActionPayload` \{#useractionpayload\}
 
-Normalized user action forwarded from rendered catalog components to the
-host application.
+从渲染的 catalog 组件转发给宿主应用的规范化用户操作。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -1376,23 +1323,21 @@ type DefinedComponent = CoreDefinedComponent<T, ComponentRenderer<z.infer<T>>>
 
 *暂无说明。*
 
-### `FunctionImpl` <span className="api-badge api-badge-stale">待翻译</span> \{#functionimpl\}
+### `FunctionImpl` \{#functionimpl\}
 
 ```ts
 type FunctionImpl = (args: Record<string, unknown>, context?: FunctionCallContext) => unknown
 ```
 
-Function implementations live on the client; the agent only references
-functions by name. The registry is the bridge from the wire-level
-`FunctionCall.call` string to the actual code that runs locally.
+函数实现位于客户端，agent 只通过名称引用函数。registry 是连接协议层 `FunctionCall.call` 字符串与本地实际运行代码的桥梁。
 
-### `InitialQueryResults` <span className="api-badge api-badge-stale">待翻译</span> \{#initialqueryresults\}
+### `InitialQueryResults` \{#initialqueryresults\}
 
 ```ts
 type InitialQueryResults = Readonly<Record<string, unknown>>
 ```
 
-Prefetched Query results keyed by Query assignment name (statement ID).
+预取的 Query 结果，以 Query 赋值名称（statement ID）为键。
 
 ### `Library` \{#library\}
 
