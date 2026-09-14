@@ -17,41 +17,26 @@ export interface ButtonProps extends GenericComponentProps {
   child: string;
   variant?: 'primary' | 'borderless';
   isValid?: boolean;
-  /** v0.9 actions should use the `event` wrapper for server-dispatched clicks. */
+  /** v1.0 actions should use the `event` wrapper for server-dispatched clicks. */
   action: {
     event: {
       name: string;
-      /** Context is a JSON object map in v0.9. */
+      /** Context is a JSON object map in v1.0. */
       context?: Record<string, unknown>;
     };
   } | {
     functionCall: {
       call: string;
+      catalogId?: string;
       args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
     };
   };
   checks?: Array<{
-    condition: boolean | { path: string } | {
+    condition: { path: string } | {
       call: string;
+      catalogId?: string;
       args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
     };
-    message?: string;
   }>;
 }
 

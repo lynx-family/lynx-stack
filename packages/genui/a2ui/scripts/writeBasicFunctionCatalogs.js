@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import fs from 'node:fs';
-import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -14,7 +13,6 @@ const catalogJsonPath = path.resolve(
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const packageDir = path.resolve(scriptDir, '..');
 const functionsModulePath = path.join(packageDir, 'dist/functions/index.js');
-const require = createRequire(import.meta.url);
 
 if (!fs.existsSync(functionsModulePath)) {
   throw new Error(
@@ -28,23 +26,23 @@ const { basicFunctions } = await import(
 const functions = basicFunctions
   .map((entry) => entry.definition)
   .filter(Boolean);
-const functionSchemas = readUpstreamBasicFunctionSchemas()
-  ?? Object.fromEntries(
-    functions.map(({ description, name, parameters, returnType }) => [
-      name,
-      {
-        type: 'object',
-        ...(description ? { description } : {}),
-        properties: {
-          call: { const: name },
-          args: stripSchemaDialect(parameters),
-          returnType: { const: returnType },
-        },
-        required: ['call', 'args'],
-        unevaluatedProperties: false,
+const functionSchemas = Object.fromEntries(
+  functions.map(({ description, name, parameters, returnType }) => [
+    name,
+    {
+      type: 'object',
+      ...(description ? { description } : {}),
+      returnType,
+      allowedCallers: 'rendererOnly',
+      properties: {
+        call: { const: name },
+        args: stripSchemaDialect(parameters),
       },
-    ]),
-  );
+      required: ['call', 'args'],
+      unevaluatedProperties: false,
+    },
+  ]),
+);
 
 const legacyCatalogJsonPath = path.join(outDir, 'catalog', 'catalog.json');
 if (
@@ -69,22 +67,4 @@ function stripSchemaDialect(schema) {
   const rest = { ...schema };
   delete rest.$schema;
   return rest;
-}
-
-function readUpstreamBasicFunctionSchemas() {
-  const v09EntryPath = require.resolve('@a2ui/web_core/v0_9', {
-    paths: [packageDir],
-  });
-  const schemaPath = path.join(
-    path.dirname(v09EntryPath),
-    'schemas/basic_catalog.json',
-  );
-  if (!fs.existsSync(schemaPath)) {
-    return null;
-  }
-  const catalog = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
-  return catalog && typeof catalog.functions === 'object'
-      && !Array.isArray(catalog.functions)
-    ? catalog.functions
-    : null;
 }

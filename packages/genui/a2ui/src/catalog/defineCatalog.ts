@@ -126,9 +126,9 @@ export interface Catalog {
 
 /** The serialized payload sent to the agent during channel handshake. */
 export interface SerializedCatalog {
-  version: '0.9';
-  components: Array<{ name: string; schema?: CatalogSchema }>;
-  functions?: CatalogFunctionDefinition[];
+  protocolVersion: '1.0';
+  components: Record<string, CatalogSchema>;
+  functions?: Record<string, Record<string, unknown>>;
 }
 
 function isFunctionEntry(input: CatalogInput): input is CatalogFunctionEntry {
@@ -288,21 +288,31 @@ export function resolveCatalog(
 /**
  * Produce the JSON manifest the client should announce to the agent during
  * channel handshake. Component entries without an attached schema serialize
- * to `{ name }` only — useful for letting the agent at least know what's
- * renderable. Function entries serialize with their parameter schema when
+ * to empty schemas keyed by component name. Function entries serialize
+ * with their parameter schema and interface metadata when
  * available.
  */
 export function serializeCatalog(catalog: Catalog): SerializedCatalog {
-  const components: Array<{ name: string; schema?: CatalogSchema }> = [];
-  for (const entry of catalog.components) {
-    const out: { name: string; schema?: CatalogSchema } = { name: entry.name };
-    if (entry.schema !== undefined) out.schema = entry.schema;
-    components.push(out);
-  }
-  const serialized: SerializedCatalog = { version: '0.9', components };
-  const functions = catalog.functions
-    .filter(fn => fn.definition !== undefined)
-    .map(fn => fn.definition!);
-  if (functions.length > 0) serialized.functions = functions;
-  return serialized;
+  const components = Object.fromEntries(
+    catalog.components.map(entry => [entry.name, entry.schema ?? {}]),
+  );
+  const functions = Object.fromEntries(
+    catalog.functions.filter(fn => fn.definition).map(fn => {
+      const { description, parameters, returnType, allowedCallers } = fn
+        .definition!;
+      return [fn.name, {
+        type: 'object',
+        ...(description ? { description } : {}),
+        returnType,
+        ...(allowedCallers ? { allowedCallers } : {}),
+        properties: { call: { const: fn.name }, args: parameters },
+        required: ['call', 'args'],
+      }];
+    }),
+  );
+  return {
+    protocolVersion: '1.0',
+    components,
+    ...(Object.keys(functions).length > 0 ? { functions } : {}),
+  };
 }

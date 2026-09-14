@@ -59,7 +59,7 @@ Bundlers tree-shake unused components: pulling in `Text` does **not** drag
 
 ## The built-in components
 
-The package ships 22 A2UI v0.9 basic-catalog renderers. Each is an
+The package ships 22 A2UI v1.0 basic-catalog renderers. Each is an
 independent, tree-shakeable export, available from the root or from
 `@lynx-js/genui/a2ui/catalog/<Name>`.
 
@@ -162,7 +162,7 @@ const catalog = defineCatalog([Text, ...basicFunctions]);
 
 `basicFunctions` is an array of ready-made entries whose implementations
 come straight from the upstream `@a2ui/web_core` basic catalog, so the wire
-contract stays aligned with the A2UI v0.9 spec for free. It covers 25
+contract stays aligned with the A2UI v1.0 spec for free. It covers 25
 functions:
 
 | Category   | Functions (protocol names)                                                  |
@@ -177,7 +177,7 @@ functions:
 
 > Note the mixed casing — comparison/text helpers use `snake_case`
 > (`not_equals`, `starts_with`) while formatters use `camelCase`
-> (`formatDate`, `openUrl`). These are the upstream A2UI v0.9 names; use
+> (`formatDate`, `openUrl`). These are the upstream A2UI v1.0 names; use
 > them verbatim in messages.
 
 Include `...basicFunctions` whenever your Agent might emit any of these. If

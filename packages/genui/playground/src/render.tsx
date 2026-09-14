@@ -30,7 +30,7 @@ import {
 } from './utils/renderUrl.js';
 
 interface InitData {
-  protocol?: '0.9' | 'a2ui' | 'openui' | 'mcp-apps';
+  protocol?: 'a2ui' | 'openui' | 'mcp-apps';
   messagesUrl?: string;
   messages?: unknown;
   actionMocksUrl?: string;
@@ -142,8 +142,7 @@ function readBoolean(value: unknown): boolean | undefined {
 }
 
 function readProtocol(value: unknown): InitData['protocol'] {
-  return value === '0.9'
-      || value === 'a2ui'
+  return value === 'a2ui'
       || value === 'openui'
       || value === 'mcp-apps'
     ? value

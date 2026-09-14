@@ -1,7 +1,7 @@
 # a2ui (packages/genui/a2ui)
 
 This package (`@lynx-js/genui/a2ui`) is a **headless** ReactLynx
-renderer for the A2UI v0.9 protocol.
+renderer for the A2UI v1.0 protocol.
 
 ## How It Works (High Level)
 
@@ -17,7 +17,7 @@ The package is split into three independently composable layers:
   `defineCatalog` API consumers use to compose their per-instance
   catalog (no global registry).
 
-In short: the developer's IO module pushes raw v0.9 messages into a
+In short: the developer's IO module pushes raw v1.0 messages into a
 `MessageStore`. `<A2UI>` subscribes, owns a `MessageProcessor` that
 turns the stream into surface state, and renders via the catalog the
 consumer provided.
@@ -38,7 +38,7 @@ Core pieces:
     `deleteSurface` into surface state.
   - Emits typed update events (`beginRendering`, `surfaceUpdate`,
     `deleteSurface`) consumed by the React layer.
-  - `dispatch({ userAction })` fans out to `onEvent` listeners.
+  - `sendMessage({ version: 'v1.0', action })` fans out to `onEvent` listeners.
 - `Resource` (`src/store/Resource.ts`)
   - `pending` / `success` / `error` state machine. Snapshot reference
     changes on every transition so `useSyncExternalStore` doesn't bail
@@ -100,13 +100,13 @@ model changes.
 
 ## Action Dispatch
 
-User interactions are reported as `userAction` events:
+User interactions are reported as versioned `action` events:
 
 - Catalog components call `sendAction(action)` (passed in through the
   internal renderer plumbing).
 - `useAction` (`src/react/useAction.ts`) resolves dynamic values
   (bindings / function calls) against `Surface.store`, builds a
-  `UserActionPayload`, and calls `processor.dispatch({ userAction })`.
+  `UserActionPayload`, and calls `processor.sendMessage({ version: 'v1.0', action })`.
 - `<A2UI>` listens to `processor.onEvent` and forwards to the
   developer's `onAction` prop. Responses (if any) come back as new
   protocol messages the developer pushes into the same `MessageStore`.

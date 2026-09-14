@@ -1112,6 +1112,9 @@ importers:
       '@lynx-js/react-signals':
         specifier: workspace:*
         version: link:../../react-signals
+      zod-to-json-schema:
+        specifier: ^3.25.2
+        version: 3.25.2(zod@4.4.3)
     devDependencies:
       '@lynx-js/genui-cli':
         specifier: workspace:*

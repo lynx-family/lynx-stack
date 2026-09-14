@@ -36,6 +36,8 @@ and exactly ONE of the following keys:
 2. "updateComponents" – send/replace the list of components on a surface.
 3. "updateDataModel" – set values inside the surface's data model.
 4. "deleteSurface"   – tear down a surface.
+5. "callRendererFunction" – invoke a catalog function allowed for the agent.
+6. "agentFunctionResponse" – return a correlated agent function result.
 
 ## Required ordering for a fresh response
 1. createSurface  (with surfaceId + catalogId)

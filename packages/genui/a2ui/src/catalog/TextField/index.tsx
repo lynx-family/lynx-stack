@@ -32,15 +32,12 @@ export interface TextFieldProps extends GenericComponentProps {
   checks?: Array<{
     /** The condition that indicates whether the check passes. */
     condition:
-      | boolean
       | { path: string }
       | {
         call: string;
+        catalogId?: string;
         args?: Record<string, string | number | boolean | { path: string }>;
-        returnType?: 'boolean';
       };
-    /** The error message to display if the check fails. */
-    message?: string;
   }>;
 }
 

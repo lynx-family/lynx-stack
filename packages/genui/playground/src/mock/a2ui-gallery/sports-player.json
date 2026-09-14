@@ -3,15 +3,15 @@
   "description": "Example of sports player",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "createSurface": {
         "surfaceId": "gallery-sports-player",
-        "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json",
+        "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateComponents": {
         "surfaceId": "gallery-sports-player",
         "components": [
@@ -150,7 +150,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateDataModel": {
         "surfaceId": "gallery-sports-player",
         "value": {

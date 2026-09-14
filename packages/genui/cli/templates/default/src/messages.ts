@@ -2,14 +2,14 @@ import type { ServerToClientMessage } from '@lynx-js/genui/a2ui';
 
 export const initialMessages: ServerToClientMessage[] = [
   {
-    version: 'v0.9',
+    version: 'v1.0',
     createSurface: {
       surfaceId: 'main',
-      catalogId: 'https://a2ui.org/specification/v0_9/basic_catalog.json',
+      catalogId: 'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
     },
   },
   {
-    version: 'v0.9',
+    version: 'v1.0',
     updateComponents: {
       surfaceId: 'main',
       components: [
@@ -40,7 +40,7 @@ export const initialMessages: ServerToClientMessage[] = [
 
 export const secondStageMessages: ServerToClientMessage[] = [
   {
-    version: 'v0.9',
+    version: 'v1.0',
     updateComponents: {
       surfaceId: 'main',
       components: [
@@ -72,7 +72,7 @@ export const secondStageMessages: ServerToClientMessage[] = [
 
 export const thirdStageMessages: ServerToClientMessage[] = [
   {
-    version: 'v0.9',
+    version: 'v1.0',
     updateComponents: {
       surfaceId: 'main',
       components: [
@@ -105,7 +105,7 @@ export const thirdStageMessages: ServerToClientMessage[] = [
 
 export const finalStageMessages: ServerToClientMessage[] = [
   {
-    version: 'v0.9',
+    version: 'v1.0',
     updateComponents: {
       surfaceId: 'main',
       components: [
@@ -143,7 +143,7 @@ export const finalStageMessages: ServerToClientMessage[] = [
 
 export const buttonClickMessages: ServerToClientMessage[] = [
   {
-    version: 'v0.9',
+    version: 'v1.0',
     updateComponents: {
       surfaceId: 'main',
       components: [

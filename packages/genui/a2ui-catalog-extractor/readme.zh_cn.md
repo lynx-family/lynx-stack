@@ -17,7 +17,7 @@ A2UI catalog 用来描述 renderer 支持哪些组件。对每个组件，catalo
 agent 哪些 props 合法、哪些 props 必填、哪些 enum 值可用，以及每个字段的
 含义。
 
-这个 extractor 生成 A2UI v0.9 catalog 中的 `components` 部分：
+这个 extractor 生成 A2UI v1.0 catalog 中的 `components` 部分：
 
 ```json
 {
@@ -31,7 +31,7 @@ agent 哪些 props 合法、哪些 props 必填、哪些 enum 值可用，以及
 ```
 
 它也可以通过 `createA2UICatalog` 把生成的 components 包装进带
-`catalogId`、`functions` 和 `theme` 的完整 catalog 对象。
+`$id`、`protocolVersion: "1.0"` 和 `functions` 映射 的完整 catalog 对象。
 
 ## 它不做什么
 
@@ -438,9 +438,6 @@ const catalog = createA2UICatalog({
   catalogId: 'https://example.com/catalogs/basic/v1/catalog.json',
   components,
   functions,
-  theme: {
-    accentColor: { type: 'string' },
-  },
 });
 ```
 
@@ -521,6 +518,6 @@ alias。
 ## 参考资料
 
 - [A2UI Catalogs](https://a2ui.org/concepts/catalogs/)
-- [A2UI v0.9 protocol](https://a2ui.org/specification/v0.9-a2ui/)
+- [A2UI v1.0 protocol](https://a2ui.org/specification/v1.0-a2ui/)
 - [TypeDoc custom tags](https://typedoc.org/documents/Tags.html)
 - [TypeDoc JSON output](https://typedoc.org/documents/Options.Output.html)

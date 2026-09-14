@@ -47,12 +47,14 @@ export function createLazyComponentDemo(
   });
   return [
     {
+      version: 'v1.0',
       createSurface: {
         surfaceId: 'default',
-        catalogId: 'demo-lazy-component',
+        catalogId: 'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
       },
     },
     {
+      version: 'v1.0',
       updateComponents: {
         surfaceId: 'default',
         components: [

@@ -3,15 +3,15 @@
   "description": "Example of flight status demonstrating date formatting.",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "createSurface": {
         "surfaceId": "gallery-flight-status",
-        "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json",
+        "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateComponents": {
         "surfaceId": "gallery-flight-status",
         "components": [
@@ -62,8 +62,7 @@
                   "path": "/date"
                 },
                 "format": "E, MMM d"
-              },
-              "returnType": "string"
+              }
             },
             "variant": "caption"
           },
@@ -127,8 +126,7 @@
                   "path": "/departureTime"
                 },
                 "format": "h:mm a"
-              },
-              "returnType": "string"
+              }
             },
             "variant": "h4"
           },
@@ -174,8 +172,7 @@
                   "path": "/arrivalTime"
                 },
                 "format": "h:mm a"
-              },
-              "returnType": "string"
+              }
             },
             "variant": "h4"
           }
@@ -183,7 +180,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateDataModel": {
         "surfaceId": "gallery-flight-status",
         "value": {

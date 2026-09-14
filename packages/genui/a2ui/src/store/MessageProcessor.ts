@@ -1,7 +1,6 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type * as v0_9 from '@a2ui/web_core/v0_9';
 
 import type { Signal } from '@lynx-js/react-signals';
 import { signal } from '@lynx-js/react-signals';
@@ -44,7 +43,7 @@ function isMeaningfulResponse(value: unknown): boolean {
 }
 
 /**
- * Stateful A2UI protocol processor that turns v0.9 and v1.0 messages into
+ * Stateful A2UI protocol processor that turns v1.0 messages into
  * renderable surfaces, resources, data-model signals, and user-action events.
  */
 export class MessageProcessor {
@@ -83,9 +82,9 @@ export class MessageProcessor {
       a2uiRendererDataModel: {
         version: 'v1.0',
         surfaces: Object.fromEntries(
-          [...this.surfaces].filter(([, surface]) =>
-            surface.sendDataModel && surface.version === 'v1.0'
-          ).map(([id, surface]) => [id, surface.store.getDataModel() ?? {}]),
+          [...this.surfaces].filter(([, surface]) => surface.sendDataModel).map(
+            ([id, surface]) => [id, surface.store.getDataModel() ?? {}],
+          ),
         ),
       },
     };
@@ -395,56 +394,20 @@ export class MessageProcessor {
     return newId;
   }
 
-  private flattenValue(
-    value: unknown,
-    basePath: string,
-    updates: { path: string; value: unknown }[],
-  ) {
-    const normalizedBase = basePath === '' ? '/' : basePath;
-
-    const push = (path: string, v: unknown) => {
-      updates.push({ path, value: v });
-    };
-
-    if (Array.isArray(value)) {
-      push(normalizedBase, value);
-      value.forEach((item, index) => {
-        const childPath = normalizedBase === '/'
-          ? `/${index}`
-          : `${normalizedBase}/${index}`;
-        if (isObject(item) || Array.isArray(item)) {
-          push(childPath, item);
-          this.flattenValue(item, childPath, updates);
-        } else {
-          updates.push({ path: childPath, value: String(item) });
-        }
-      });
-      return;
-    }
-
-    if (isObject(value)) {
-      push(normalizedBase, value);
-      for (const [key, v] of Object.entries(value)) {
-        const childPath = normalizedBase === '/'
-          ? `/${key}`
-          : `${normalizedBase}/${key}`;
-        if (isObject(v) || Array.isArray(v)) {
-          push(childPath, v);
-          this.flattenValue(v, childPath, updates);
-        } else {
-          updates.push({ path: childPath, value: String(v) });
-        }
-      }
-      return;
-    }
-
-    updates.push({ path: normalizedBase, value: String(value) });
-  }
-
   processMessages(messages: ServerToClientMessage[]): void {
     for (const message of messages) {
+      if (message.version !== 'v1.0') {
+        void this.sendMessage({
+          version: 'v1.0',
+          error: {
+            code: 'VALIDATION_FAILED',
+            message: 'Only A2UI v1.0 is supported',
+          },
+        });
+        continue;
+      }
       if (
-        message.version === 'v1.0' && 'createSurface' in message
+        'createSurface' in message
         && this.surfaces.has(message.createSurface.surfaceId)
       ) {
         void this.sendMessage({
@@ -471,26 +434,24 @@ export class MessageProcessor {
         this.completeFunctionCall(message.agentFunctionResponse);
         continue;
       }
-      if (message.version === 'v1.0') {
-        const payload = Object.values(message).find((
-          value,
-        ): value is { surfaceId: string } =>
-          value !== null && typeof value === 'object' && 'surfaceId' in value
-        );
-        if (
-          payload && !('createSurface' in message)
-          && !this.surfaces.has(payload.surfaceId)
-        ) {
-          void this.sendMessage({
-            version: 'v1.0',
-            error: {
-              code: 'VALIDATION_FAILED',
-              surfaceId: payload.surfaceId,
-              message: 'Surface must be created exactly once before updates',
-            },
-          });
-          continue;
-        }
+      const payload = Object.values(message).find((
+        value,
+      ): value is { surfaceId: string } =>
+        value !== null && typeof value === 'object' && 'surfaceId' in value
+      );
+      if (
+        payload && !('createSurface' in message)
+        && !this.surfaces.has(payload.surfaceId)
+      ) {
+        void this.sendMessage({
+          version: 'v1.0',
+          error: {
+            code: 'VALIDATION_FAILED',
+            surfaceId: payload.surfaceId,
+            message: 'Surface must be created exactly once before updates',
+          },
+        });
+        continue;
       }
       if ('createSurface' in message && message.createSurface) {
         const createSurface = (message as unknown as Record<string, unknown>)[
@@ -498,14 +459,8 @@ export class MessageProcessor {
         ] as Record<string, unknown>;
         const surfaceId = createSurface['surfaceId'] as string;
         const surface = this.getOrCreateSurface(surfaceId);
-        surface.version = message.version;
-        if (message.version === 'v1.0') surface.store.enableTypedDataModel();
         const catId = createSurface['catalogId'];
         if (catId !== undefined) surface.catalogId = catId as string;
-        const t = createSurface['theme'];
-        if (t !== undefined) {
-          surface.theme = t as Readonly<Record<string, unknown>>;
-        }
         const sData = createSurface['sendDataModel'];
         if (sData !== undefined) surface.sendDataModel = sData as boolean;
       }
@@ -563,8 +518,6 @@ export class MessageProcessor {
         if (!surface.rootComponentId) {
           if (surface.components.has('root')) {
             surface.rootComponentId = 'root';
-          } else if (message.version !== 'v1.0' && updatesMap.size > 0) {
-            surface.rootComponentId = updatesMap.keys().next().value ?? null;
           }
 
           if (surface.rootComponentId) {
@@ -576,7 +529,7 @@ export class MessageProcessor {
             }
             // Fall back to a surface-derived id so consumers that key
             // resources by `messageId` still get a non-empty key when the
-            // protocol message lacks one (the v0.9 stream does not require
+            // protocol message lacks one (the v1.0 stream does not require
             // `messageId` on every message).
             const messageId = (message as { messageId?: string }).messageId
               ?? `surface:${surfaceId}`;
@@ -596,12 +549,10 @@ export class MessageProcessor {
             surfaceId,
           });
         }
-        if (message.version === 'v1.0') {
-          this.processMessages([{
-            version: 'v1.0',
-            updateDataModel: { surfaceId, value: surface.store.getDataModel() },
-          }]);
-        }
+        this.processMessages([{
+          version: 'v1.0',
+          updateDataModel: { surfaceId, value: surface.store.getDataModel() },
+        }]);
       }
 
       if ('updateDataModel' in message && message.updateDataModel) {
@@ -612,28 +563,14 @@ export class MessageProcessor {
         };
         const surface = this.getOrCreateSurface(surfaceId);
 
-        const updates: { path: string; value: unknown }[] = [];
-
-        if (message.version === 'v1.0') {
-          surface.store.enableTypedDataModel();
-          surface.store.update(path === '' ? '/' : path ?? '/', value);
-        } else if (value !== undefined) {
-          const basePath = path && path !== '' ? path : '/';
-          this.flattenValue(value, basePath, updates);
-        } else if (path) {
-          updates.push({ path, value: '' });
-        }
-
-        if (updates.length > 0) {
-          surface.store.updateBatch(updates);
-        }
+        surface.store.update(path === '' ? '/' : path ?? '/', value);
 
         const componentUpdates: ComponentInstance[] = [];
 
         for (const component of surface.components.values()) {
           const anyComponent = component as unknown as Record<string, unknown>;
           const templateInfo = anyComponent['__template'] as
-            | { componentId: v0_9.ComponentId; path: string }
+            | { componentId: string; path: string }
             | undefined;
 
           if (!templateInfo) continue;

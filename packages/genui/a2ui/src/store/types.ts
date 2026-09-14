@@ -1,14 +1,18 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type * as v0_9 from '@a2ui/web_core/v0_9';
 
 import type { Resource as GenericResource } from './Resource.js';
 import type { SignalStore } from './SignalStore.js';
 
 export type SurfaceId = string;
 
-export type ComponentInstance = v0_9.AnyComponent & {
+export interface ComponentInstance {
+  id: string;
+  component: string;
+  catalogId?: string;
+  weight?: number;
+  [key: string]: unknown;
   /**
    * Absolute data context path for this component when created via a template.
    * Used for resolving relative bindings inside the component tree.
@@ -19,19 +23,17 @@ export type ComponentInstance = v0_9.AnyComponent & {
    * data model updates.
    */
   __template?: {
-    componentId: v0_9.ComponentId;
+    componentId: string;
     path: string;
   };
-};
+}
 
 /**
  * In-memory state for a single protocol surface.
  */
 export interface Surface {
   surfaceId: SurfaceId;
-  version?: ProtocolVersion;
   catalogId?: string;
-  theme?: Readonly<Record<string, unknown>>;
   sendDataModel?: boolean | undefined;
   /** id of the root component for this surface (must be 'root'). */
   rootComponentId?: string | null;
@@ -56,13 +58,11 @@ export interface ResourceInfo {
 export type Resource = GenericResource<ResourceInfo>;
 
 /** Supported wire protocol versions. */
-export type ProtocolVersion = 'v0.9' | 'v0.9.1' | 'v1.0';
+export type ProtocolVersion = 'v1.0';
 
 /** Catalog-qualified function invocation. */
 export interface ProtocolFunctionCall {
   call: string;
-  /** Legacy v0.9 annotation; v1.0 infers return types from the catalog. */
-  returnType?: string;
   catalogId?: string;
   args?: Record<string, unknown>;
 }
@@ -102,7 +102,7 @@ export type V1Message =
     | { agentFunctionResponse: FunctionResponse }
   );
 
-export type ServerToClientMessage = (v0_9.A2uiMessage | V1Message) & {
+export type ServerToClientMessage = V1Message & {
   /** Message id injected by the client. */
   messageId?: string;
 };
@@ -142,15 +142,21 @@ export interface UserActionPayload {
   context: Record<string, unknown>;
 }
 
+export interface DataBinding {
+  path: string;
+}
+export type Action =
+  | {
+    event: { name: string; context?: Record<string, unknown> };
+    functionCall?: never;
+  }
+  | { functionCall: ProtocolFunctionCall; event?: never };
+
 export type A2UIClientEventMessage =
   | RendererToAgentMessage
   | string
   | {
     text?: string;
-    sessionId?: string;
-  }
-  | {
-    userAction: UserActionPayload;
     sessionId?: string;
   };
 

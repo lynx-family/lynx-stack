@@ -389,7 +389,7 @@ describe('A2UI image URL validation', () => {
     const createMessages = (url: unknown, dataModel?: unknown) =>
       JSON.stringify([
         {
-          version: 'v0.9',
+          version: 'v1.0',
           createSurface: {
             surfaceId: 'main',
             catalogId: catalog.id,
@@ -398,7 +398,7 @@ describe('A2UI image URL validation', () => {
         ...(dataModel === undefined
           ? []
           : [{
-            version: 'v0.9',
+            version: 'v1.0',
             updateDataModel: {
               surfaceId: 'main',
               path: '/',
@@ -406,7 +406,7 @@ describe('A2UI image URL validation', () => {
             },
           }]),
         {
-          version: 'v0.9',
+          version: 'v1.0',
           updateComponents: {
             surfaceId: 'main',
             components: [{
@@ -503,11 +503,11 @@ describe('A2UI image URL validation', () => {
     const catalog = await loadBasicCatalog();
     const raw = JSON.stringify([
       {
-        version: 'v0.9',
+        version: 'v1.0',
         createSurface: { surfaceId: 'main', catalogId: catalog.id },
       },
       {
-        version: 'v0.9',
+        version: 'v1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [{

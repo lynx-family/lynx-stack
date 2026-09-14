@@ -41,9 +41,7 @@ interface SnapshotTemplateInfo {
 
 interface SnapshotSurfaceState {
   surfaceId: string;
-  version?: 'v0.9' | 'v0.9.1' | 'v1.0';
   catalogId?: string;
-  theme?: Readonly<Record<string, unknown>>;
   sendDataModel?: boolean;
   rootComponentId: string | null;
   components: Map<string, ComponentInstance>;
@@ -96,48 +94,6 @@ function joinDataContextPath(
   return `${base}/${segment}`;
 }
 
-function flattenValue(
-  value: unknown,
-  basePath: string,
-  updates: Array<{ path: string; value: unknown }>,
-): void {
-  const normalizedBase = basePath === '' ? '/' : normalizePath(basePath);
-
-  if (Array.isArray(value)) {
-    updates.push({ path: normalizedBase, value });
-    value.forEach((item, index) => {
-      const childPath = normalizedBase === '/'
-        ? `/${index}`
-        : `${normalizedBase}/${index}`;
-      if (isObject(item) || Array.isArray(item)) {
-        updates.push({ path: childPath, value: item });
-        flattenValue(item, childPath, updates);
-      } else {
-        updates.push({ path: childPath, value: String(item) });
-      }
-    });
-    return;
-  }
-
-  if (isObject(value)) {
-    updates.push({ path: normalizedBase, value });
-    for (const [key, item] of Object.entries(value)) {
-      const childPath = normalizedBase === '/'
-        ? `/${key}`
-        : `${normalizedBase}/${key}`;
-      if (isObject(item) || Array.isArray(item)) {
-        updates.push({ path: childPath, value: item });
-        flattenValue(item, childPath, updates);
-      } else {
-        updates.push({ path: childPath, value: String(item) });
-      }
-    }
-    return;
-  }
-
-  updates.push({ path: normalizedBase, value: String(value) });
-}
-
 function createSurfaceState(surfaceId: string): SnapshotSurfaceState {
   return {
     surfaceId,
@@ -167,14 +123,7 @@ function getTemplateInfo(
 
 function readDataValue(surface: SnapshotSurfaceState, path: string): unknown {
   const raw = surface.dataModel.get(path);
-  if (surface.version === 'v1.0') return raw;
-  if (raw === undefined || raw === null) return raw;
-  if (typeof raw !== 'string') return raw;
-  try {
-    return JSON.parse(raw) as unknown;
-  } catch {
-    return raw;
-  }
+  return raw;
 }
 
 function rewriteStringField(
@@ -254,12 +203,6 @@ function cloneComponentTree(
   }
 
   return newId;
-}
-
-function comparePaths(a: string, b: string): number {
-  const depthA = a === '/' ? 0 : a.split('/').length;
-  const depthB = b === '/' ? 0 : b.split('/').length;
-  return depthA === depthB ? a.localeCompare(b) : depthA - depthB;
 }
 
 function addKnownChildReferences(
@@ -343,28 +286,6 @@ function collectReachableComponents(
   return ordered;
 }
 
-function collectDataPaths(
-  value: unknown,
-  dataContextPath: string | undefined,
-  out: Set<string>,
-): void {
-  if (Array.isArray(value)) {
-    for (const item of value) collectDataPaths(item, dataContextPath, out);
-    return;
-  }
-
-  if (!isObject(value)) return;
-
-  if (typeof value['path'] === 'string') {
-    const path = resolveBindingPath(value['path'], dataContextPath);
-    if (path) out.add(normalizePath(path));
-  }
-
-  for (const item of Object.values(value)) {
-    collectDataPaths(item, dataContextPath, out);
-  }
-}
-
 function stripInternalComponentState(
   component: ComponentInstance,
 ): ComponentInstance {
@@ -382,14 +303,11 @@ function createSurfaceMessage(
   if (surface.catalogId !== undefined) {
     createSurface['catalogId'] = surface.catalogId;
   }
-  if (surface.theme !== undefined) {
-    createSurface['theme'] = cloneJson(surface.theme);
-  }
   if (surface.sendDataModel !== undefined) {
     createSurface['sendDataModel'] = surface.sendDataModel;
   }
   return {
-    version: surface.version ?? 'v0.9',
+    version: 'v1.0',
     createSurface,
   } as ServerToClientMessage;
 }
@@ -398,7 +316,6 @@ function createDataMessage(
   surfaceId: string,
   path: string,
   value: unknown,
-  version: ServerToClientMessage['version'] = 'v0.9',
 ): ServerToClientMessage {
   const updateDataModel: JsonRecord = {
     surfaceId,
@@ -406,7 +323,7 @@ function createDataMessage(
   };
   if (path !== '/') updateDataModel['path'] = path;
   return {
-    version,
+    version: 'v1.0',
     updateDataModel,
   } as ServerToClientMessage;
 }
@@ -414,10 +331,9 @@ function createDataMessage(
 function createComponentsMessage(
   surfaceId: string,
   components: ComponentInstance[],
-  version: ServerToClientMessage['version'] = 'v0.9',
 ): ServerToClientMessage {
   return {
-    version,
+    version: 'v1.0',
     updateComponents: {
       surfaceId,
       components: components.map(component =>
@@ -431,6 +347,9 @@ class A2UISnapshotMachine {
   private surfaces = new Map<string, SnapshotSurfaceState>();
 
   applyAll(messages: readonly ServerToClientMessage[]): void {
+    if (messages.some(message => message.version !== 'v1.0')) {
+      throw new Error('Only A2UI v1.0 is supported');
+    }
     for (const message of messages.flatMap(message => expandMessage(message))) {
       this.apply(message);
     }
@@ -460,18 +379,8 @@ class A2UISnapshotMachine {
 
     for (const surface of this.surfaces.values()) {
       const reachableComponents = collectReachableComponents(surface);
-      const retainedPaths = new Set<string>();
-      for (const component of reachableComponents) {
-        collectDataPaths(component, component.dataContextPath, retainedPaths);
-      }
-      // Preserve typed containers, collection context and sendDataModel state.
-      if (surface.version === 'v1.0') {
-        retainedPaths.clear();
-        retainedPaths.add('/');
-      }
-      const retainedExistingPaths = [...retainedPaths]
-        .filter(path => surface.dataModel.has(path))
-        .sort(comparePaths);
+      // Keep the complete typed data model, including transport metadata.
+      const retainedExistingPaths = surface.dataModel.has('/') ? ['/'] : [];
       const droppedForSurface = Math.max(
         0,
         surface.components.size - reachableComponents.length,
@@ -483,14 +392,12 @@ class A2UISnapshotMachine {
           surface.surfaceId,
           path,
           surface.dataModel.get(path),
-          surface.version,
         ));
       }
       if (reachableComponents.length > 0) {
         messages.push(createComponentsMessage(
           surface.surfaceId,
           reachableComponents,
-          surface.version,
         ));
       }
 
@@ -540,12 +447,8 @@ class A2UISnapshotMachine {
     if (typeof surfaceId !== 'string' || surfaceId.length === 0) return;
 
     const surface = this.getOrCreateSurface(surfaceId);
-    surface.version = message.version;
     if (typeof createSurface['catalogId'] === 'string') {
       surface.catalogId = createSurface['catalogId'];
-    }
-    if (isObject(createSurface['theme'])) {
-      surface.theme = cloneJson(createSurface['theme']);
     }
     if (typeof createSurface['sendDataModel'] === 'boolean') {
       surface.sendDataModel = createSurface['sendDataModel'];
@@ -561,14 +464,12 @@ class A2UISnapshotMachine {
     if (typeof surfaceId !== 'string' || !Array.isArray(components)) return;
 
     const surface = this.getOrCreateSurface(surfaceId);
-    let firstUpdatedId: string | null = null;
 
     for (const rawComponent of components) {
       if (!isObject(rawComponent) || typeof rawComponent['id'] !== 'string') {
         continue;
       }
       const id = rawComponent['id'];
-      firstUpdatedId ??= id;
 
       const existing = surface.components.get(id);
       const instance = cloneJson(rawComponent) as ComponentInstance;
@@ -590,12 +491,8 @@ class A2UISnapshotMachine {
       }
     }
 
-    if (!surface.rootComponentId) {
-      if (surface.components.has('root')) {
-        surface.rootComponentId = 'root';
-      } else {
-        surface.rootComponentId = firstUpdatedId;
-      }
+    if (!surface.rootComponentId && surface.components.has('root')) {
+      surface.rootComponentId = 'root';
     }
   }
 
@@ -609,32 +506,14 @@ class A2UISnapshotMachine {
     const surface = this.getOrCreateSurface(surfaceId);
     const path = updateDataModel['path'];
     const value = updateDataModel['value'];
-    const updates: Array<{ path: string; value: unknown }> = [];
-
-    if (message.version === 'v1.0') {
-      surface.dataModel = flattenDataModel(
-        replaceDataModel(
-          surface.dataModel.get('/'),
-          typeof path === 'string' ? path : '/',
-          value,
-        ),
-      );
-      this.expandTemplates(surface);
-      return;
-    }
-    if (value !== undefined) {
-      const basePath = typeof path === 'string' && path !== ''
-        ? normalizePath(path)
-        : '/';
-      flattenValue(value, basePath, updates);
-    } else if (typeof path === 'string' && path !== '') {
-      updates.push({ path: normalizePath(path), value: '' });
-    }
-
-    for (const update of updates) {
-      surface.dataModel.set(update.path, cloneJson(update.value));
-    }
-    if (updates.length > 0) this.expandTemplates(surface);
+    surface.dataModel = flattenDataModel(
+      replaceDataModel(
+        surface.dataModel.get('/'),
+        typeof path === 'string' ? path : '/',
+        value,
+      ),
+    );
+    this.expandTemplates(surface);
   }
 
   private applyDeleteSurface(message: ServerToClientMessage): void {

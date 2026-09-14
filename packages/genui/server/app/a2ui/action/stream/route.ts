@@ -104,6 +104,12 @@ async function postA2UIActionStream(req: Request) {
       { status: parsed.status },
     );
   }
+  if (parsed.body.version !== 'v1.0') {
+    return jsonWithCors(req, {
+      ok: false,
+      error: 'Only A2UI v1.0 is supported',
+    }, { status: 400 });
+  }
   const body = normalizeRendererEvent(parsed.body);
   const functionResponse = rejectUnknownAgentFunction(body);
   if (functionResponse?.status === 200) {

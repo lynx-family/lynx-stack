@@ -15,14 +15,12 @@ import type { Surface } from '../store/types.js';
 import { isDataBinding, isFunctionCall } from '../store/utils.js';
 
 /**
- * A v0.9 `CheckRule` is `{ condition, message }` where `condition` is a
- * boolean, a `DataBinding`, or a `FunctionCall`. We accept the loose
- * `unknown` shape so component props don't have to import the v0_9
- * types just to pass them through.
+ * A v1.0 `CheckRule` is `{ condition }` where `condition` is a
+ * `DataBinding` or a `FunctionCall`. We accept the loose
+ * `unknown` shape so component props can pass dynamic checks through.
  */
 export interface CheckLike {
   condition: unknown;
-  message?: string;
 }
 
 function evaluateCondition(
@@ -32,7 +30,6 @@ function evaluateCondition(
   dataContextPath?: string,
   functions?: readonly CatalogFunctionEntry[],
 ): unknown {
-  if (typeof condition === 'boolean') return condition;
   if (isFunctionCall(condition)) {
     const result = executeFunctionCall(
       processor,
@@ -55,11 +52,10 @@ function evaluateCondition(
       },
     );
   }
-  // Unknown shape — treat as passing rather than blocking the user.
-  return true;
+  return undefined;
 }
 
-/** Evaluate legacy boolean checks and v1.0 ValidationResult values. @internal */
+/** Evaluate structured ValidationResult values. @internal */
 export function evaluateChecks(
   processor: MessageProcessor,
   checks: CheckLike[] | undefined,
@@ -82,13 +78,15 @@ export function evaluateChecks(
     const validation = result && typeof result === 'object' && 'valid' in result
       ? result as { valid: boolean; message?: string }
       : undefined;
-    const ok = validation ? validation.valid : Boolean(result);
+    const ok = validation?.valid === true;
     if (!ok) {
       failures.push({
         call: isFunctionCall(rule.condition)
           ? rule.condition.call
           : 'condition',
-        message: validation?.message ?? rule.message ?? 'Validation failed',
+        message: typeof validation?.message === 'string'
+          ? validation.message
+          : 'Validation failed',
       });
     }
   }

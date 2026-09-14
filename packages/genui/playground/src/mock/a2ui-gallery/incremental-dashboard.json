@@ -3,14 +3,14 @@
   "description": "Demonstrates structural evolution of a UI where loading placeholders are incrementally replaced by actual components.",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "createSurface": {
         "surfaceId": "gallery-incremental-dashboard",
-        "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json"
+        "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateComponents": {
         "surfaceId": "gallery-incremental-dashboard",
         "components": [
@@ -59,7 +59,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateComponents": {
         "surfaceId": "gallery-incremental-dashboard",
         "components": [
@@ -84,7 +84,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateComponents": {
         "surfaceId": "gallery-incremental-dashboard",
         "components": [
@@ -112,7 +112,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateDataModel": {
         "surfaceId": "gallery-incremental-dashboard",
         "value": {

@@ -47,7 +47,6 @@ describe('resolveProperties', () => {
           args: {
             value: '${/tempLow}°',
           },
-          returnType: 'string',
         },
       },
       surface,

@@ -7,7 +7,7 @@ import type { ServerToClientMessage } from './types.js';
 export function expandMessage(
   message: ServerToClientMessage,
 ): ServerToClientMessage[] {
-  if (message.version !== 'v1.0' || !('createSurface' in message)) {
+  if (!('createSurface' in message)) {
     return [message];
   }
   const { components, dataModel, ...createSurface } = message.createSurface;

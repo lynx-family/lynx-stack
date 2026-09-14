@@ -47,12 +47,14 @@ export function createMcpAppDemo(options: McpAppDemoOptions): unknown[] {
 
   return [
     {
+      version: 'v1.0',
       createSurface: {
         surfaceId: 'default',
-        catalogId: 'demo-mcp-app',
+        catalogId: 'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
       },
     },
     {
+      version: 'v1.0',
       updateComponents: {
         surfaceId: 'default',
         components: [

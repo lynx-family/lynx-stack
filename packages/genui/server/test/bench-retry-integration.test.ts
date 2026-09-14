@@ -33,14 +33,14 @@ const protocols = [
   ['a2ui', createA2UIBenchAdapter, () =>
     JSON.stringify([
       {
-        version: 'v0.9',
+        version: 'v1.0',
         createSurface: {
           surfaceId: 'main',
           catalogId: `${resolveBenchCatalog('Full Catalog').id}#matched-core`,
         },
       },
       {
-        version: 'v0.9',
+        version: 'v1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [{

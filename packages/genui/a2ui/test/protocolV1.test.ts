@@ -33,6 +33,50 @@ const initial: ServerToClientMessage = {
 };
 
 describe('A2UI v1.0', () => {
+  test.each(['v0.9', 'v0.9.1', 'v1.1', 'v2.0', undefined])(
+    'rejects unsupported version %s without mutating surfaces',
+    (version) => {
+      const processor = new MessageProcessor();
+      const messages = [{
+        version,
+        createSurface: {
+          surfaceId: 'old',
+          components: [{ id: 'root', component: 'Text', text: 'old' }],
+        },
+      }] as unknown as ServerToClientMessage[];
+      const events: unknown[] = [];
+      processor.onEvent(({ message, resolve }) => {
+        events.push(message);
+        resolve([]);
+      });
+      processor.processMessages(messages);
+      expect(processor.getSurfaces().size).toBe(0);
+      expect(events).toMatchObject([{
+        version: 'v1.0',
+        error: { code: 'VALIDATION_FAILED' },
+      }]);
+      expect(() => compactA2UIMessagesToSnapshot(messages)).toThrow(
+        'Only A2UI v1.0 is supported',
+      );
+    },
+  );
+  test.each(['false', 1, undefined])(
+    'rejects malformed ValidationResult.valid %s',
+    (valid) => {
+      const processor = new MessageProcessor();
+      processor.processMessages([initial]);
+      const surface = processor.getOrCreateSurface('s');
+      surface.store.update('/validation', { valid });
+      expect(
+        evaluateChecks(
+          processor,
+          [{ condition: { path: '/validation' } }],
+          surface,
+        ).ok,
+      ).toBe(false);
+    },
+  );
+
   test('renders inline initialization, expands templates and preserves JSON scalar types', () => {
     const processor = new MessageProcessor();
     processor.processMessages([initial]);

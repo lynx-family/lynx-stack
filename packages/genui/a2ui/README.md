@@ -2,7 +2,7 @@
 
 English | [简体中文](./README_zh.md)
 
-`@lynx-js/genui/a2ui` is the ReactLynx client runtime for A2UI v1.0 and v0.9. It
+`@lynx-js/genui/a2ui` is the ReactLynx client runtime for A2UI v1.0 and v1.0. It
 consumes validated A2UI server-to-client JSON messages and renders trusted
 ReactLynx components in your app.
 
@@ -23,7 +23,9 @@ from a trusted catalog.
 
 ## Protocol versions
 
-The GenUI server emits `v1.0` by default and still accepts v0.9 streams.
+The server and client support only A2UI `v1.0`. Older or versionless protocol
+messages are rejected. Send renderer events with `version: "v1.0"`; action
+requests use the `action` envelope. Existing v0.9 streams must be regenerated.
 The client supports inline `createSurface.components` and `dataModel`, typed
 subtree replacement, `null` deletion, and structured validation results.
 Styling stays in the host app and the Lynx component catalog.
@@ -88,11 +90,11 @@ async function sendPrompt(input: string) {
   messageStore={store}
   catalogs={catalogs}
   wrapSurface={(children) => <view className='a2ui-light'>{children}</view>}
-  onAction={(action) => {
+  onMessage={(message, metadata) => {
     void fetch('/a2ui/action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(action),
+      body: JSON.stringify({ ...message, metadata }),
     })
       .then((res) => res.json())
       .then((payload) => store.push(normalizePayloadToMessages(payload)));

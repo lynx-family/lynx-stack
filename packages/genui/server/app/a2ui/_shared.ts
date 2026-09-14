@@ -157,7 +157,6 @@ export interface A2UIRendererEventBody {
 export function normalizeRendererEvent<T extends A2UIRendererEventBody>(
   body: T,
 ): T & A2UIRendererEventBody {
-  if (body.version !== 'v1.0') return body;
   const response = body.rendererFunctionResponse;
   const feedback = body.error;
   let action = body.action;

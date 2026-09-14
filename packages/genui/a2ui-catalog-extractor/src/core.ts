@@ -65,10 +65,10 @@ export interface WriteComponentCatalogOptions extends ExtractCatalogOptions {
  * Full catalog manifest consumed by A2UI agents and renderers.
  */
 export interface A2UICatalog {
-  catalogId: string;
+  $id: string;
+  protocolVersion: '1.0';
   components?: Record<string, JsonSchema>;
   functions?: Record<string, JsonSchema>;
-  theme?: Record<string, JsonSchema>;
 }
 
 /**
@@ -85,7 +85,8 @@ export interface FunctionDefinition {
     | 'array'
     | 'object'
     | 'any'
-    | 'void';
+    | 'void'
+    | 'validationResult';
 }
 
 /** A function discovered in source via `@a2uiFunction`, with its origin path. */
@@ -422,7 +423,7 @@ export async function writeCatalogArtifacts(
 
 // Function names must be valid JavaScript identifiers so they're safe to
 // (a) use as filesystem paths without escaping `..` or path separators and
-// (b) survive A2UI 0.9's wire format (`FunctionCall.call` is a bare name).
+// (b) survive A2UI's wire format (`FunctionCall.call` is a bare name).
 const FUNCTION_NAME_RE = /^[a-z_$][\w$]*$/i;
 
 /**
@@ -463,7 +464,6 @@ export function createA2UICatalog(options: {
   catalogId: string;
   components: CatalogComponent[] | Record<string, JsonSchema>;
   functions?: FunctionDefinition[];
-  theme?: Record<string, JsonSchema>;
 }): A2UICatalog {
   const catalogComponents = Array.isArray(options.components)
     ? Object.fromEntries(
@@ -472,12 +472,12 @@ export function createA2UICatalog(options: {
     : options.components;
 
   return {
-    catalogId: options.catalogId,
+    $id: options.catalogId,
+    protocolVersion: '1.0',
     components: catalogComponents,
     ...(options.functions
       ? { functions: createFunctionSchemas(options.functions) }
       : {}),
-    ...(options.theme ? { theme: options.theme } : {}),
   };
 }
 
@@ -506,10 +506,10 @@ function createFunctionSchemas(
       {
         type: 'object',
         ...(description ? { description } : {}),
+        returnType,
         properties: {
           call: { const: name } as JsonSchema,
           args: stripSchemaDialect(parameters),
-          returnType: { const: returnType } as JsonSchema,
         },
         required: ['call', 'args'],
         unevaluatedProperties: false,
@@ -648,7 +648,7 @@ function createFunctionParametersSchema(
 ): JsonSchema {
   const parameters = signature.parameters ?? [];
 
-  // A2UI 0.9 function calls carry `args: Record<string, any>`. The natural
+  // A2UI function calls carry `args: Record<string, any>`. The natural
   // TypeScript convention is `function fn(args: { name: T1, ... }): R`. When
   // we see exactly one inline-object parameter, unwrap it so the emitted
   // schema describes the args record directly rather than nesting it under
@@ -815,7 +815,7 @@ function mapTypeToReturnType(
       if (referenceName === 'Promise') {
         throw createReflectionError(
           owner,
-          `Async functions are not supported by A2UI 0.9; "${owner.name}" `
+          `Automatic schema extraction does not support async functions; "${owner.name}" `
             + `must return a synchronous value.`,
         );
       }

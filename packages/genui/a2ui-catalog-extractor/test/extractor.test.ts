@@ -100,7 +100,8 @@ describe('extractCatalogComponents', () => {
         );
     }
     expect(readFullCatalogJson(outDir)).toEqual({
-      catalogId: 'catalog.json',
+      $id: 'catalog.json',
+      protocolVersion: '1.0',
       components: {
         DemoCard: expectedCatalogs['DemoCard']!['DemoCard'],
         DemoText: expectedCatalogs['DemoText']!['DemoText'],
@@ -136,11 +137,9 @@ describe('extractCatalogComponents', () => {
           returnType: 'string',
         },
       ],
-      theme: {
-        accentColor: { type: 'string' },
-      },
     })).toEqual({
-      catalogId: 'https://example.com/catalog.json',
+      $id: 'https://example.com/catalog.json',
+      protocolVersion: '1.0',
       components: {
         DemoCard: expectedCatalogs['DemoCard']!['DemoCard'],
         DemoText: expectedCatalogs['DemoText']!['DemoText'],
@@ -150,6 +149,7 @@ describe('extractCatalogComponents', () => {
         formatDisplayValue: {
           type: 'object',
           description: 'Format a raw value for display.',
+          returnType: 'string',
           properties: {
             call: {
               const: 'formatDisplayValue',
@@ -162,16 +162,10 @@ describe('extractCatalogComponents', () => {
               required: ['value'],
               additionalProperties: false,
             },
-            returnType: {
-              const: 'string',
-            },
           },
           required: ['call', 'args'],
           unevaluatedProperties: false,
         },
-      },
-      theme: {
-        accentColor: { type: 'string' },
       },
     });
   });
@@ -207,7 +201,8 @@ describe('extractCatalogComponents', () => {
         },
       });
     expect(readFullCatalogJson(path.join(cwd, 'catalog-out'))).toEqual({
-      catalogId: 'catalog.json',
+      $id: 'catalog.json',
+      protocolVersion: '1.0',
       components: {
         CliBadge: {
           properties: {
@@ -236,7 +231,7 @@ describe('extractCatalogComponents', () => {
       'https://cdn.example.com/a2ui/catalog.json',
     ], fixtureDir)).resolves.toBe(0);
 
-    expect(readFullCatalogJson(outDir)['catalogId']).toBe(
+    expect(readFullCatalogJson(outDir)['$id']).toBe(
       'https://cdn.example.com/a2ui/catalog.json',
     );
   });

@@ -27,45 +27,23 @@ export interface RadioGroupComponentProps extends GenericComponentProps {
   /** The list of string options to display. */
   items: string[] | { path: string } | {
     call: string;
+    catalogId?: string;
     args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
   };
   /** The currently selected value. */
   value: string | { path: string } | {
     call: string;
+    catalogId?: string;
     args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
   };
   /** A hint for the visual style of the radio group. */
   usageHint?: 'default' | 'card' | 'row';
   checks?: Array<{
-    condition: boolean | { path: string } | {
+    condition: { path: string } | {
       call: string;
+      catalogId?: string;
       args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
     };
-    message: string;
   }>;
 }
 

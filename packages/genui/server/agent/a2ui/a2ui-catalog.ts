@@ -84,7 +84,8 @@ export interface JsonSchema {
 interface CatalogManifest extends Record<string, JsonSchema> {}
 
 interface ExtractedCatalogManifest {
-  catalogId?: string;
+  $id?: string;
+  protocolVersion?: string;
   components?: Record<string, JsonSchema>;
   functions?: unknown;
 }
@@ -229,23 +230,6 @@ function functionsFromGeneratedCatalog(catalog: unknown): A2UIFunctionSpec[] {
     return [];
   }
   const { functions } = catalog as { functions?: unknown };
-  if (Array.isArray(functions)) {
-    return functions.filter(
-      (fn): fn is A2UIFunctionSpec => {
-        if (!isRecord(fn)) {
-          return false;
-        }
-        const candidate = fn as {
-          name?: unknown;
-          parameters?: unknown;
-          returnType?: unknown;
-        };
-        return typeof candidate.name === 'string'
-          && isRecord(candidate.parameters)
-          && isFunctionReturnType(candidate.returnType);
-      },
-    );
-  }
   if (!isRecord(functions)) {
     return [];
   }
@@ -262,6 +246,8 @@ function functionSpecFromSchema(
     return null;
   }
   const schemaRecord = schema as {
+    returnType?: unknown;
+    allowedCallers?: unknown;
     description?: unknown;
     properties?: unknown;
   };
@@ -270,23 +256,24 @@ function functionSpecFromSchema(
   }
   const properties = schemaRecord.properties as {
     args?: unknown;
-    returnType?: unknown;
   };
   const args = properties.args;
-  const returnType = properties.returnType;
-  if (!isRecord(args) || !isRecord(returnType)) {
+  if (!isRecord(args) || !isFunctionReturnType(schemaRecord.returnType)) {
     return null;
   }
-  const returnTypeValue = (returnType as { const?: unknown }).const;
-  if (!isFunctionReturnType(returnTypeValue)) {
-    return null;
-  }
+  const returnTypeValue = schemaRecord.returnType;
+  const allowedCallers = schemaRecord.allowedCallers;
+  if (
+    allowedCallers !== undefined && allowedCallers !== 'rendererOnly'
+    && allowedCallers !== 'agentOnly' && allowedCallers !== 'rendererOrAgent'
+  ) return null;
   const description = schemaRecord.description;
   return {
     name,
     ...(typeof description === 'string' ? { description } : {}),
     parameters: args as JsonSchema,
     returnType: returnTypeValue,
+    ...(allowedCallers ? { allowedCallers } : {}),
   };
 }
 
@@ -299,7 +286,8 @@ function isFunctionReturnType(
     || value === 'array'
     || value === 'object'
     || value === 'any'
-    || value === 'void';
+    || value === 'void'
+    || value === 'validationResult';
 }
 
 function componentManifestsFromGeneratedCatalog(
@@ -392,7 +380,7 @@ async function fetchBasicCatalog(): Promise<A2UICatalog> {
   return createA2UICatalogFromExtractedManifest(
     {
       ...(generatedCatalog as unknown as ExtractedCatalogManifest),
-      catalogId: BASIC_CATALOG_ID,
+      $id: BASIC_CATALOG_ID,
     },
   );
 }
@@ -401,7 +389,7 @@ function createA2UICatalogFromExtractedManifest(
   manifest: ExtractedCatalogManifest,
 ): A2UICatalog {
   return createA2UICatalogFromManifests({
-    catalogId: manifest.catalogId ?? BASIC_CATALOG_ID,
+    catalogId: manifest.$id ?? BASIC_CATALOG_ID,
     componentManifests: componentManifestsFromGeneratedCatalog(manifest),
     functions: functionsFromGeneratedCatalog(manifest),
     label: 'Lynx A2UI basic catalog (v1.0)',
@@ -420,13 +408,13 @@ function isExtractedCatalogManifest(
 ): value is ExtractedCatalogManifest {
   if (!isRecord(value)) return false;
   const manifest = value as Partial<ExtractedCatalogManifest>;
-  const catalogId = manifest.catalogId;
+  const catalogId = manifest.$id;
   const components = manifest.components;
   const functions = manifest.functions;
-  return (catalogId === undefined || typeof catalogId === 'string')
+  return manifest.protocolVersion === '1.0'
+    && (catalogId === undefined || typeof catalogId === 'string')
     && (components === undefined || isRecord(components))
-    && (functions === undefined || Array.isArray(functions)
-      || isRecord(functions));
+    && (functions === undefined || isRecord(functions));
 }
 
 /**

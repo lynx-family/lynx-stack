@@ -1,14 +1,13 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type * as v0_9 from '@a2ui/web_core/v0_9';
 
 import { useCallback } from '@lynx-js/react';
 
 import { useA2UIContext } from './useA2UIContext.js';
 import { resolveDynamicValue } from '../store/resolveDynamic.js';
 import { executeFunctionCall } from '../store/resolveFunctionCall.js';
-import type { UserActionPayload } from '../store/types.js';
+import type { Action, UserActionPayload } from '../store/types.js';
 
 /**
  * Identifies the component and surface that emitted an A2UI action.
@@ -25,12 +24,12 @@ export interface ActionProps {
  */
 export function useAction(
   props: ActionProps,
-): { sendAction: (action: v0_9.Action) => Promise<unknown> } {
+): { sendAction: (action: Action) => Promise<unknown> } {
   const { id, surfaceId, dataContext } = props;
   const { catalog, processor } = useA2UIContext();
 
   const sendAction = useCallback(
-    (action: v0_9.Action) => {
+    (action: Action) => {
       if ('functionCall' in action && action.functionCall) {
         return Promise.resolve(executeFunctionCall(
           processor,
@@ -76,9 +75,7 @@ export function useAction(
       // Dispatch through the processor — `<A2UI>` listens via
       // `processor.onEvent` and forwards the action to its `onAction`
       // prop, which the developer wires to their agent.
-      return processor.getOrCreateSurface(surfaceId).version === 'v1.0'
-        ? processor.sendMessage({ version: 'v1.0', action: userAction })
-        : processor.dispatch({ userAction });
+      return processor.sendMessage({ version: 'v1.0', action: userAction });
     },
     [id, surfaceId, dataContext, processor, catalog.functions],
   );

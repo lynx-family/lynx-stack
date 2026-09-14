@@ -61,14 +61,18 @@ describe('defineCatalog with function entries', () => {
     ]);
 
     const serialized = serializeCatalog(catalog);
-    expect(serialized.version).toBe('0.9');
-    expect(serialized.components).toEqual([{ name: 'MockComponent' }]);
-    expect(serialized.functions).toEqual([
-      requiredManifest.required,
-    ]);
+    expect(serialized.protocolVersion).toBe('1.0');
+    expect(serialized.components).toEqual({ MockComponent: {} });
+    expect(serialized.functions?.['required']).toMatchObject({
+      returnType: requiredManifest.required.returnType,
+      properties: {
+        call: { const: 'required' },
+        args: requiredManifest.required.parameters,
+      },
+    });
   });
 
-  test('serializeCatalog omits functions array when definitions are absent', () => {
+  test('serializeCatalog omits functions map when definitions are absent', () => {
     const catalog = defineCatalog([MockComponent, defineFunction(namedImpl)]);
     const serialized = serializeCatalog(catalog);
     expect(serialized.functions).toBeUndefined();

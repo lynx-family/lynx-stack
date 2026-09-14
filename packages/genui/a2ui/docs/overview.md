@@ -9,7 +9,7 @@ responsibility — and why the package is shaped the way it is.
 ## What this package is
 
 `@lynx-js/genui/a2ui` is the ReactLynx **client runtime** for the A2UI
-v0.9 protocol. It consumes validated server-to-client JSON messages and
+v1.0 protocol. It consumes validated server-to-client JSON messages and
 renders trusted ReactLynx components inside your app.
 
 It is deliberately a renderer and nothing more. The package does **not**:
@@ -62,11 +62,11 @@ async function sendPrompt(input: string) {
 <A2UI
   messageStore={store}
   catalogs={catalogs}
-  onAction={(action) => {
+  onMessage={(message, metadata) => {
     void fetch('/a2ui/action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(action),
+      body: JSON.stringify({ ...message, metadata }),
     })
       .then((res) => res.json())
       .then((payload) => store.push(normalizePayloadToMessages(payload)));
@@ -175,7 +175,7 @@ stays transport-agnostic and the catalog stays explicit.
 | `MessageStore`            | Client                   | This package     | Stores raw A2UI messages in arrival order and notifies subscribers. It does not parse or interpret the protocol.                              |
 | `<A2UI>`                  | Client                   | This package     | Owns a `MessageProcessor` per mount, consumes new messages, renders the active surface, and forwards generated UI actions through `onAction`. |
 | Catalog API               | Client + Agent handshake | This package     | Maps protocol component/function names to local implementations and optional JSON schemas. Compose it with `defineCatalog` and friends.       |
-| Built-ins                 | Client                   | This package     | A2UI v0.9 basic-catalog component renderers, per-component JSON-Schema manifests, and client-side basic-catalog function implementations.     |
+| Built-ins                 | Client                   | This package     | A2UI v1.0 basic-catalog component renderers, per-component JSON-Schema manifests, and client-side basic-catalog function implementations.     |
 | `npx @lynx-js/genui a2ui` | Build / setup time       | GenUI CLI        | Generates custom catalog artifacts and A2UI system prompts. Not required when both Agent and renderer use the built-in basic catalog.         |
 
 A useful way to remember it: **the server decides, the client renders, and
@@ -217,7 +217,7 @@ MessageStore ──subscribe──► <A2UI> ──► MessageProcessor ──�
   applies `createSurface` / `updateComponents` / `updateDataModel` /
   `deleteSurface` into surface state, and emits typed events
   (`beginRendering`, `surfaceUpdate`, `deleteSurface`) for the React layer
-  to consume. `dispatch({ userAction })` fans actions out to listeners.
+  to consume. `sendMessage({ version: 'v1.0', action })` fans actions out to listeners.
 - **`Resource`** — a `pending → success → error` state machine, one per
   surface root and per component instance. Its snapshot reference changes
   on every transition so `useSyncExternalStore` never bails out of a
@@ -265,7 +265,7 @@ The building blocks you compose against:
   `resolveCatalog`, and `defineFunction`. There is no global component
   registry; every consumer composes the component and function entries it
   wants.
-- **Built-in components** — 20 A2UI v0.9 basic-catalog renderers (`Text`,
+- **Built-in components** — 20 A2UI v1.0 basic-catalog renderers (`Text`,
   `Image`, `Button`, `Row`, `Column`, `List`, `Loading`, `Card`, `Modal`,
   `Divider`, `Icon`, `CheckBox`, `ChoicePicker`, `DateTimeInput`,
   `LineChart`, `PieChart`, `RadioGroup`, `Slider`, `TextField`, and
@@ -273,7 +273,7 @@ The building blocks you compose against:
   does.
 - **Per-component manifests** — `catalog/<Name>/catalog.json`, the
   JSON-Schema descriptions used during Agent handshakes.
-- **`basicFunctions`** — A2UI v0.9 basic-catalog client function entries,
+- **`basicFunctions`** — A2UI v1.0 basic-catalog client function entries,
   ready to spread into your `catalogs` array.
 
 ## Exports

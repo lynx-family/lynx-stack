@@ -1,7 +1,6 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import * as v0_9 from '@a2ui/web_core/v0_9';
 
 import {
   memo,
@@ -27,11 +26,6 @@ import type {
   ResourceInfo,
   UserActionPayload,
 } from '../store/types.js';
-
-// Mark v0_9 used so the namespace import doesn't get pruned. Kept around so
-// future enhancements (typed protocol message guards) don't need a fresh
-// import diff.
-void v0_9;
 
 /**
  * Props for the all-in-one A2UI ReactLynx renderer.
@@ -228,29 +222,17 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
       // Empty resolve — there is no "response" channel from the renderer
       // back into the protocol. Responses arrive via the buffer.
       resolve([]);
-      if (message['version'] === 'v1.0') {
-        try {
-          onMessageRef.current?.(
-            message as RendererToAgentMessage,
-            proc.getDataModelMetadata(),
-          );
-        } catch (e) {
-          console.error('[a2ui] onMessage handler threw:', e);
-        }
-        if ('action' in message) {
-          onActionRef.current?.(message['action'] as UserActionPayload);
-        }
-        return;
+      try {
+        onMessageRef.current?.(
+          message as RendererToAgentMessage,
+          proc.getDataModelMetadata(),
+        );
+      } catch (e) {
+        console.error('[a2ui] onMessage handler threw:', e);
       }
-      if (
-        typeof message === 'object' && message !== null
-        && 'userAction' in message
-        && (message as { userAction: unknown }).userAction
-      ) {
-        const action =
-          (message as { userAction: UserActionPayload }).userAction;
+      if ('action' in message) {
         try {
-          onActionRef.current?.(action);
+          onActionRef.current?.(message['action'] as UserActionPayload);
         } catch (e) {
           console.error('[a2ui] onAction handler threw:', e);
         }

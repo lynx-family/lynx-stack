@@ -32,15 +32,8 @@ export interface SliderProps extends GenericComponentProps {
   /** The label for the slider. */
   label?: string | { path: string } | {
     call: string;
+    catalogId?: string;
     args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
   };
   /** The minimum value of the slider. */
   min?: number;
@@ -49,33 +42,17 @@ export interface SliderProps extends GenericComponentProps {
   /** The current value of the slider. */
   value: number | { path: string } | {
     call: string;
+    catalogId?: string;
     args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
   };
   /** A list of checks to perform. */
   checks?: Array<{
     /** The condition that indicates whether the check passes. */
-    condition: boolean | { path: string } | {
+    condition: { path: string } | {
       call: string;
+      catalogId?: string;
       args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
     };
-    /** The error message to display if the check fails. */
-    message?: string;
   }>;
 }
 

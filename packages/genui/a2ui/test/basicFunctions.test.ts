@@ -91,8 +91,8 @@ describe('basicFunctions adapter', () => {
       registerBasicFunctions();
       const required = functionRegistry.resolve('required');
       expect(required).toBeDefined();
-      expect(required!({ value: '' })).toBe(false);
-      expect(required!({ value: 'hi' })).toBe(true);
+      expect(required!({ value: '' })).toEqual({ valid: false });
+      expect(required!({ value: 'hi' })).toEqual({ valid: true });
     });
   });
 });

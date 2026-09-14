@@ -115,8 +115,8 @@ export {
   Icon,
 } from './catalog/index.js';
 
-// A2UI 0.9 basic-catalog functions — registered + announced when spread
+// A2UI basic-catalog functions — registered + announced when spread
 // into `<A2UI catalogs={[..., ...basicFunctions]}>`. Impls come from
 // `@a2ui/web_core` (the upstream basic-catalog package), so the wire
-// contract stays aligned with the spec for free.
+// protocol is owned by this renderer.
 export { basicFunctions, registerBasicFunctions } from './functions/index.js';

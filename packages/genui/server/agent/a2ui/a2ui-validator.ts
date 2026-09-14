@@ -40,7 +40,7 @@ type A2UIComponent = z.infer<typeof ComponentBase> & {
 };
 
 const CreateSurfaceMessage = z.object({
-  version: z.enum(['v0.9', 'v0.9.1', 'v1.0']),
+  version: z.literal('v1.0'),
   createSurface: z
     .object({
       surfaceId: z.string().min(1),
@@ -54,7 +54,7 @@ const CreateSurfaceMessage = z.object({
 }).strict();
 
 const UpdateComponentsMessage = z.object({
-  version: z.enum(['v0.9', 'v0.9.1', 'v1.0']),
+  version: z.literal('v1.0'),
   updateComponents: z
     .object({
       surfaceId: z.string().min(1),
@@ -64,7 +64,7 @@ const UpdateComponentsMessage = z.object({
 }).strict();
 
 const UpdateDataModelMessage = z.object({
-  version: z.enum(['v0.9', 'v0.9.1', 'v1.0']),
+  version: z.literal('v1.0'),
   updateDataModel: z
     .object({
       surfaceId: z.string().min(1),
@@ -75,7 +75,7 @@ const UpdateDataModelMessage = z.object({
 }).strict();
 
 const DeleteSurfaceMessage = z.object({
-  version: z.enum(['v0.9', 'v0.9.1', 'v1.0']),
+  version: z.literal('v1.0'),
   deleteSurface: z
     .object({
       surfaceId: z.string().min(1),
@@ -120,31 +120,16 @@ const A2UIMessage = z.union([
 ]).superRefine((message, context) => {
   if ('createSurface' in message) {
     const surface = message.createSurface;
-    if (message.version === 'v1.0' && 'theme' in surface) {
+    if ('theme' in surface) {
       context.addIssue({
         code: 'custom',
         message:
           'v1.0 styling belongs to the host; createSurface.theme is not supported',
       });
     }
-    if (message.version !== 'v1.0' && !surface.catalogId) {
-      context.addIssue({
-        code: 'custom',
-        message: 'catalogId is required for v0.9',
-      });
-    }
-    if (
-      message.version !== 'v1.0'
-      && (surface.components !== undefined || surface.dataModel !== undefined)
-    ) {
-      context.addIssue({
-        code: 'custom',
-        message: 'Inline initialization requires v1.0',
-      });
-    }
   }
   if (
-    'updateDataModel' in message && message.version === 'v1.0'
+    'updateDataModel' in message
     && message.updateDataModel.value === undefined
   ) {
     context.addIssue({
@@ -159,7 +144,7 @@ export type A2UIMessage = z.infer<typeof A2UIMessage>;
 
 /** Normalize v1.0 inline initialization for the existing validation/stream pipeline. */
 export function expandA2UIMessage(message: A2UIMessage): A2UIMessage[] {
-  if (message.version !== 'v1.0' || !('createSurface' in message)) {
+  if (!('createSurface' in message)) {
     return [message];
   }
   const { components, dataModel, ...createSurface } = message.createSurface;
@@ -439,7 +424,7 @@ export function validateA2UIOutput(
 
   for (const msg of messages.flatMap(message => expandA2UIMessage(message))) {
     if ('createSurface' in msg && msg.createSurface) {
-      if (msg.version === 'v1.0' && surfaces.has(msg.createSurface.surfaceId)) {
+      if (surfaces.has(msg.createSurface.surfaceId)) {
         errors.push(`Surface "${msg.createSurface.surfaceId}" already exists.`);
       }
       surfaces.add(msg.createSurface.surfaceId);
@@ -460,18 +445,17 @@ export function validateA2UIOutput(
       for (const rawComponent of msg.updateComponents.components) {
         const comp = rawComponent as A2UIComponent;
         if (
-          msg.version === 'v1.0'
-          && (comp.catalogId ?? catalogBySurface.get(sId)
-              ?? (options.existingSurfaceIds?.includes(sId)
-                ? catalog.id
-                : undefined)) !== catalog.id
+          (comp.catalogId ?? catalogBySurface.get(sId)
+            ?? (options.existingSurfaceIds?.includes(sId)
+              ? catalog.id
+              : undefined)) !== catalog.id
         ) {
           errors.push(
             `Component "${comp.id}" must resolve to catalog "${catalog.id}".`,
           );
         }
         for (const fn of collectFunctionCalls(comp, `component.${comp.id}`)) {
-          if (msg.version === 'v1.0' && fn.name === '@index') continue;
+          if (fn.name === '@index') continue;
           if (!knownFunctions.has(fn.name)) {
             const allowed = knownFunctions.size > 0
               ? [...knownFunctions].join(', ')
@@ -573,7 +557,6 @@ export function validateA2UIOutput(
           dataModelBySurface.get(sId),
           basePath,
           updateDataModel.value,
-          msg.version === 'v1.0',
         ),
       );
       for (
@@ -1158,10 +1141,9 @@ function setDataModelValue(
   current: unknown,
   path: string,
   value: unknown,
-  deleteNull = false,
 ): unknown {
   const segments = dataPathSegments(path);
-  if (segments.length === 0) return value;
+  if (segments.length === 0) return value === null ? undefined : value;
 
   const setAt = (container: unknown, index: number): unknown => {
     if (index === segments.length) return value;
@@ -1175,10 +1157,10 @@ function setDataModelValue(
     } else {
       nextContainer = {};
     }
-    if (deleteNull && value === null && index === segments.length - 1) {
-      if (Array.isArray(nextContainer)) {
+    if (value === null && index === segments.length - 1) {
+      if (Array.isArray(nextContainer) && /^(?:0|[1-9]\d*)$/.test(segment)) {
         nextContainer.splice(Number(segment), 1);
-      } else delete nextContainer[segment];
+      } else delete (nextContainer as Record<string, unknown>)[segment];
       return nextContainer;
     }
     const child = Object.hasOwn(nextContainer, segment)

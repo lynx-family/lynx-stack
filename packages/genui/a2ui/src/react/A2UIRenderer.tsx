@@ -248,7 +248,6 @@ function NodeRendererImpl(
     renderUnsupported,
   } = props;
   const { catalog: activeCatalog, processor } = useA2UIContext();
-  const defaultCatalog = useCatalog();
 
   const resource = surface.resources.get(initialComponent.id!);
 
@@ -267,16 +266,13 @@ function NodeRendererImpl(
     : component;
 
   const qualifiedCatalog = processor.getCatalog(
-    typeof effectiveComponent['catalogId'] === 'string'
-      ? effectiveComponent['catalogId']
+    typeof effectiveComponent.catalogId === 'string'
+      ? effectiveComponent.catalogId
       : surface.catalogId,
   );
   const catalog = useMemo(
-    () =>
-      surface.version === 'v1.0'
-        ? (qualifiedCatalog ? resolveCatalog(qualifiedCatalog) : new Map())
-        : defaultCatalog,
-    [surface.version, qualifiedCatalog, defaultCatalog],
+    () => qualifiedCatalog ? resolveCatalog(qualifiedCatalog) : new Map(),
+    [qualifiedCatalog],
   );
 
   useEffect(() => {

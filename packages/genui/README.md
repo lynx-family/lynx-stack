@@ -55,7 +55,7 @@ import { Text, Button } from '@lynx-js/genui/a2ui/catalog';
 
 ## A2UI
 
-A2UI renders agent-generated UI messages that follow the A2UI v0.9 protocol.
+A2UI renders agent-generated UI messages that follow the A2UI v1.0 protocol.
 Create a message store, push protocol messages into it from your transport, and
 render the latest surface with `<A2UI>`.
 

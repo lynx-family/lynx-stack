@@ -1,5 +1,6 @@
 {
-  "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
+  "$id": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
+  "protocolVersion": "1.0",
   "components": {
     "Button": {
       "properties": {
@@ -30,7 +31,7 @@
                     "context": {
                       "type": "object",
                       "additionalProperties": true,
-                      "description": "Context is a JSON object map in v0.9."
+                      "description": "Context is a JSON object map in v1.0."
                     }
                   },
                   "required": [
@@ -53,21 +54,12 @@
                     "call": {
                       "type": "string"
                     },
+                    "catalogId": {
+                      "type": "string"
+                    },
                     "args": {
                       "type": "object",
                       "additionalProperties": true
-                    },
-                    "returnType": {
-                      "type": "string",
-                      "enum": [
-                        "string",
-                        "number",
-                        "boolean",
-                        "object",
-                        "array",
-                        "any",
-                        "void"
-                      ]
                     }
                   },
                   "required": [
@@ -83,7 +75,7 @@
               "additionalProperties": false
             }
           ],
-          "description": "v0.9 actions should use the `event` wrapper for server-dispatched clicks."
+          "description": "v1.0 actions should use the `event` wrapper for server-dispatched clicks."
         },
         "checks": {
           "type": "array",
@@ -92,9 +84,6 @@
             "properties": {
               "condition": {
                 "oneOf": [
-                  {
-                    "type": "boolean"
-                  },
                   {
                     "type": "object",
                     "properties": {
@@ -113,21 +102,12 @@
                       "call": {
                         "type": "string"
                       },
+                      "catalogId": {
+                        "type": "string"
+                      },
                       "args": {
                         "type": "object",
                         "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
@@ -137,9 +117,6 @@
                     "additionalProperties": false
                   }
                 ]
-              },
-              "message": {
-                "type": "string"
               }
             },
             "required": [
@@ -203,21 +180,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -251,21 +219,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -284,9 +243,6 @@
               "condition": {
                 "oneOf": [
                   {
-                    "type": "boolean"
-                  },
-                  {
                     "type": "object",
                     "properties": {
                       "path": {
@@ -304,21 +260,12 @@
                       "call": {
                         "type": "string"
                       },
+                      "catalogId": {
+                        "type": "string"
+                      },
                       "args": {
                         "type": "object",
                         "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
@@ -328,9 +275,6 @@
                     "additionalProperties": false
                   }
                 ]
-              },
-              "message": {
-                "type": "string"
               }
             },
             "required": [
@@ -371,21 +315,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -433,21 +368,12 @@
                       "call": {
                         "type": "string"
                       },
+                      "catalogId": {
+                        "type": "string"
+                      },
                       "args": {
                         "type": "object",
                         "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
@@ -498,21 +424,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -544,9 +461,6 @@
               "condition": {
                 "oneOf": [
                   {
-                    "type": "boolean"
-                  },
-                  {
                     "type": "object",
                     "properties": {
                       "path": {
@@ -564,21 +478,12 @@
                       "call": {
                         "type": "string"
                       },
+                      "catalogId": {
+                        "type": "string"
+                      },
                       "args": {
                         "type": "object",
                         "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
@@ -589,10 +494,6 @@
                   }
                 ],
                 "description": "The condition that indicates whether the check passes."
-              },
-              "message": {
-                "type": "string",
-                "description": "The error message to display if the check fails."
               }
             },
             "required": [
@@ -710,21 +611,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -764,9 +656,6 @@
               "condition": {
                 "oneOf": [
                   {
-                    "type": "boolean"
-                  },
-                  {
                     "type": "object",
                     "properties": {
                       "path": {
@@ -784,21 +673,12 @@
                       "call": {
                         "type": "string"
                       },
+                      "catalogId": {
+                        "type": "string"
+                      },
                       "args": {
                         "type": "object",
                         "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
@@ -809,10 +689,6 @@
                   }
                 ],
                 "description": "The condition that indicates whether the check passes."
-              },
-              "message": {
-                "type": "string",
-                "description": "The error message to display if the check fails."
               }
             },
             "required": [
@@ -1475,21 +1351,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -1524,21 +1391,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -1567,9 +1425,6 @@
               "condition": {
                 "oneOf": [
                   {
-                    "type": "boolean"
-                  },
-                  {
                     "type": "object",
                     "properties": {
                       "path": {
@@ -1587,21 +1442,12 @@
                       "call": {
                         "type": "string"
                       },
+                      "catalogId": {
+                        "type": "string"
+                      },
                       "args": {
                         "type": "object",
                         "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
@@ -1611,14 +1457,10 @@
                     "additionalProperties": false
                   }
                 ]
-              },
-              "message": {
-                "type": "string"
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           }
@@ -1711,21 +1553,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -1768,21 +1601,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -1802,9 +1626,6 @@
               "condition": {
                 "oneOf": [
                   {
-                    "type": "boolean"
-                  },
-                  {
                     "type": "object",
                     "properties": {
                       "path": {
@@ -1822,21 +1643,12 @@
                       "call": {
                         "type": "string"
                       },
+                      "catalogId": {
+                        "type": "string"
+                      },
                       "args": {
                         "type": "object",
                         "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
@@ -1847,10 +1659,6 @@
                   }
                 ],
                 "description": "The condition that indicates whether the check passes."
-              },
-              "message": {
-                "type": "string",
-                "description": "The error message to display if the check fails."
               }
             },
             "required": [
@@ -1919,21 +1727,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -2035,9 +1834,6 @@
               "condition": {
                 "oneOf": [
                   {
-                    "type": "boolean"
-                  },
-                  {
                     "type": "object",
                     "properties": {
                       "path": {
@@ -2053,6 +1849,9 @@
                     "type": "object",
                     "properties": {
                       "call": {
+                        "type": "string"
+                      },
+                      "catalogId": {
                         "type": "string"
                       },
                       "args": {
@@ -2082,12 +1881,6 @@
                             }
                           ]
                         }
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "boolean"
-                        ]
                       }
                     },
                     "required": [
@@ -2097,10 +1890,6 @@
                   }
                 ],
                 "description": "The condition that indicates whether the check passes."
-              },
-              "message": {
-                "type": "string",
-                "description": "The error message to display if the check fails."
               }
             },
             "required": [
@@ -2118,27 +1907,29 @@
     }
   },
   "functions": {
-    "required": {
+    "add": {
       "type": "object",
-      "description": "Checks that the value is not null, undefined, or empty.",
+      "returnType": "number",
+      "allowedCallers": "rendererOnly",
       "properties": {
         "call": {
-          "const": "required"
+          "const": "add"
         },
         "args": {
           "type": "object",
           "properties": {
-            "value": {
-              "description": "The value to check."
+            "a": {
+              "type": "number"
+            },
+            "b": {
+              "type": "number"
             }
           },
           "required": [
-            "value"
+            "a",
+            "b"
           ],
           "additionalProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
         }
       },
       "required": [
@@ -2147,392 +1938,207 @@
       ],
       "unevaluatedProperties": false
     },
-    "regex": {
+    "subtract": {
       "type": "object",
-      "description": "Checks that the value matches a regular expression string.",
+      "returnType": "number",
+      "allowedCallers": "rendererOnly",
       "properties": {
         "call": {
-          "const": "regex"
+          "const": "subtract"
         },
         "args": {
           "type": "object",
           "properties": {
-            "value": {
-              "$ref": "common_types.json#/$defs/DynamicString"
+            "a": {
+              "type": "number"
             },
-            "pattern": {
-              "type": "string",
-              "description": "The regex pattern to match against."
+            "b": {
+              "type": "number"
             }
           },
           "required": [
-            "value",
-            "pattern"
-          ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
-        }
-      },
-      "required": [
-        "call",
-        "args"
-      ],
-      "unevaluatedProperties": false
-    },
-    "length": {
-      "type": "object",
-      "description": "Checks string length constraints.",
-      "properties": {
-        "call": {
-          "const": "length"
-        },
-        "args": {
-          "type": "object",
-          "properties": {
-            "value": {
-              "$ref": "common_types.json#/$defs/DynamicString"
-            },
-            "min": {
-              "type": "integer",
-              "minimum": 0,
-              "description": "The minimum allowed length."
-            },
-            "max": {
-              "type": "integer",
-              "minimum": 0,
-              "description": "The maximum allowed length."
-            }
-          },
-          "required": [
-            "value"
-          ],
-          "anyOf": [
-            {
-              "required": [
-                "min"
-              ]
-            },
-            {
-              "required": [
-                "max"
-              ]
-            }
-          ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
-        }
-      },
-      "required": [
-        "call",
-        "args"
-      ],
-      "unevaluatedProperties": false
-    },
-    "numeric": {
-      "type": "object",
-      "description": "Checks numeric range constraints.",
-      "properties": {
-        "call": {
-          "const": "numeric"
-        },
-        "args": {
-          "type": "object",
-          "properties": {
-            "value": {
-              "$ref": "common_types.json#/$defs/DynamicNumber"
-            },
-            "min": {
-              "type": "number",
-              "description": "The minimum allowed value."
-            },
-            "max": {
-              "type": "number",
-              "description": "The maximum allowed value."
-            }
-          },
-          "required": [
-            "value"
-          ],
-          "anyOf": [
-            {
-              "required": [
-                "min"
-              ]
-            },
-            {
-              "required": [
-                "max"
-              ]
-            }
-          ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
-        }
-      },
-      "required": [
-        "call",
-        "args"
-      ],
-      "unevaluatedProperties": false
-    },
-    "email": {
-      "type": "object",
-      "description": "Checks that the value is a valid email address.",
-      "properties": {
-        "call": {
-          "const": "email"
-        },
-        "args": {
-          "type": "object",
-          "properties": {
-            "value": {
-              "$ref": "common_types.json#/$defs/DynamicString"
-            }
-          },
-          "required": [
-            "value"
-          ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
-        }
-      },
-      "required": [
-        "call",
-        "args"
-      ],
-      "unevaluatedProperties": false
-    },
-    "formatString": {
-      "type": "object",
-      "description": "Performs string interpolation of data model values and other functions in the catalog functions list and returns the resulting string. The value string can contain interpolated expressions in the `${expression}` format. Supported expression types include: JSON Pointer paths to the data model (e.g., `${/absolute/path}` or `${relative/path}`), and client-side function calls (e.g., `${now()}`). Function arguments must be named (e.g., `${formatDate(value:${/currentDate}, format:'MM-dd')}`). To include a literal `${` sequence, escape it as `\\${`.",
-      "properties": {
-        "call": {
-          "const": "formatString"
-        },
-        "args": {
-          "type": "object",
-          "properties": {
-            "value": {
-              "$ref": "common_types.json#/$defs/DynamicString"
-            }
-          },
-          "required": [
-            "value"
-          ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "string"
-        }
-      },
-      "required": [
-        "call",
-        "args"
-      ],
-      "unevaluatedProperties": false
-    },
-    "formatNumber": {
-      "type": "object",
-      "description": "Formats a number with the specified grouping and decimal precision.",
-      "properties": {
-        "call": {
-          "const": "formatNumber"
-        },
-        "args": {
-          "type": "object",
-          "properties": {
-            "value": {
-              "$ref": "common_types.json#/$defs/DynamicNumber",
-              "description": "The number to format."
-            },
-            "decimals": {
-              "$ref": "common_types.json#/$defs/DynamicNumber",
-              "description": "Optional. The number of decimal places to show. Defaults to 0 or 2 depending on locale."
-            },
-            "grouping": {
-              "$ref": "common_types.json#/$defs/DynamicBoolean",
-              "description": "Optional. If true, uses locale-specific grouping separators (e.g. '1,000'). If false, returns raw digits (e.g. '1000'). Defaults to true."
-            }
-          },
-          "required": [
-            "value"
-          ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "string"
-        }
-      },
-      "required": [
-        "call",
-        "args"
-      ],
-      "unevaluatedProperties": false
-    },
-    "formatCurrency": {
-      "type": "object",
-      "description": "Formats a number as a currency string.",
-      "properties": {
-        "call": {
-          "const": "formatCurrency"
-        },
-        "args": {
-          "type": "object",
-          "properties": {
-            "value": {
-              "$ref": "common_types.json#/$defs/DynamicNumber",
-              "description": "The monetary amount."
-            },
-            "currency": {
-              "$ref": "common_types.json#/$defs/DynamicString",
-              "description": "The ISO 4217 currency code (e.g., 'USD', 'EUR')."
-            },
-            "decimals": {
-              "$ref": "common_types.json#/$defs/DynamicNumber",
-              "description": "Optional. The number of decimal places to show. Defaults to 0 or 2 depending on locale."
-            },
-            "grouping": {
-              "$ref": "common_types.json#/$defs/DynamicBoolean",
-              "description": "Optional. If true, uses locale-specific grouping separators (e.g. '1,000'). If false, returns raw digits (e.g. '1000'). Defaults to true."
-            }
-          },
-          "required": [
-            "currency",
-            "value"
-          ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "string"
-        }
-      },
-      "required": [
-        "call",
-        "args"
-      ],
-      "unevaluatedProperties": false
-    },
-    "formatDate": {
-      "type": "object",
-      "description": "Formats a timestamp into a string using a pattern.",
-      "properties": {
-        "call": {
-          "const": "formatDate"
-        },
-        "args": {
-          "type": "object",
-          "properties": {
-            "value": {
-              "$ref": "common_types.json#/$defs/DynamicValue",
-              "description": "The date to format."
-            },
-            "format": {
-              "$ref": "common_types.json#/$defs/DynamicString",
-              "description": "A Unicode TR35 date pattern string.\n\nToken Reference:\n- Year: 'yy' (26), 'yyyy' (2026)\n- Month: 'M' (1), 'MM' (01), 'MMM' (Jan), 'MMMM' (January)\n- Day: 'd' (1), 'dd' (01), 'E' (Tue), 'EEEE' (Tuesday)\n- Hour (12h): 'h' (1-12), 'hh' (01-12) - requires 'a' for AM/PM\n- Hour (24h): 'H' (0-23), 'HH' (00-23) - Military Time\n- Minute: 'mm' (00-59)\n- Second: 'ss' (00-59)\n- Period: 'a' (AM/PM)\n\nExamples:\n- 'MMM dd, yyyy' -> 'Jan 16, 2026'\n- 'HH:mm' -> '14:30' (Military)\n- 'h:mm a' -> '2:30 PM'\n- 'EEEE, d MMMM' -> 'Friday, 16 January'"
-            }
-          },
-          "required": [
-            "format",
-            "value"
-          ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "string"
-        }
-      },
-      "required": [
-        "call",
-        "args"
-      ],
-      "unevaluatedProperties": false
-    },
-    "pluralize": {
-      "type": "object",
-      "description": "Returns a localized string based on the Common Locale Data Repository (CLDR) plural category of the count (zero, one, two, few, many, other). Requires an 'other' fallback. For English, just use 'one' and 'other'.",
-      "properties": {
-        "call": {
-          "const": "pluralize"
-        },
-        "args": {
-          "type": "object",
-          "properties": {
-            "value": {
-              "$ref": "common_types.json#/$defs/DynamicNumber",
-              "description": "The numeric value used to determine the plural category."
-            },
-            "zero": {
-              "$ref": "common_types.json#/$defs/DynamicString",
-              "description": "String for the 'zero' category (e.g., 0 items)."
-            },
-            "one": {
-              "$ref": "common_types.json#/$defs/DynamicString",
-              "description": "String for the 'one' category (e.g., 1 item)."
-            },
-            "two": {
-              "$ref": "common_types.json#/$defs/DynamicString",
-              "description": "String for the 'two' category (used in Arabic, Welsh, etc.)."
-            },
-            "few": {
-              "$ref": "common_types.json#/$defs/DynamicString",
-              "description": "String for the 'few' category (e.g., small groups in Slavic languages)."
-            },
-            "many": {
-              "$ref": "common_types.json#/$defs/DynamicString",
-              "description": "String for the 'many' category (e.g., large groups in various languages)."
-            },
-            "other": {
-              "$ref": "common_types.json#/$defs/DynamicString",
-              "description": "The default/fallback string (used for general plural cases)."
-            }
-          },
-          "required": [
-            "value",
-            "other"
-          ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "string"
-        }
-      },
-      "required": [
-        "call",
-        "args"
-      ],
-      "unevaluatedProperties": false
-    },
-    "openUrl": {
-      "type": "object",
-      "description": "Opens the specified URL in a browser or handler. This function has no return value.",
-      "properties": {
-        "call": {
-          "const": "openUrl"
-        },
-        "args": {
-          "type": "object",
-          "properties": {
-            "url": {
-              "type": "string",
-              "format": "uri",
-              "description": "The URL to open."
-            }
-          },
-          "required": [
-            "url"
+            "a",
+            "b"
           ],
           "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "multiply": {
+      "type": "object",
+      "returnType": "number",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "multiply"
         },
-        "returnType": {
-          "const": "void"
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "type": "number"
+            },
+            "b": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "divide": {
+      "type": "object",
+      "returnType": "number",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "divide"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "type": "number"
+            },
+            "b": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "equals": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "equals"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {},
+            "b": {}
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "not_equals": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "not_equals"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {},
+            "b": {}
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "greater_than": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "greater_than"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "type": "number"
+            },
+            "b": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "less_than": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "less_than"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "type": "number"
+            },
+            "b": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [
@@ -2543,7 +2149,8 @@
     },
     "and": {
       "type": "object",
-      "description": "Performs a logical AND operation on a list of boolean values.",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
       "properties": {
         "call": {
           "const": "and"
@@ -2553,20 +2160,13 @@
           "properties": {
             "values": {
               "type": "array",
-              "description": "The list of boolean values to evaluate.",
-              "items": {
-                "$ref": "common_types.json#/$defs/DynamicBoolean"
-              },
               "minItems": 2
             }
           },
           "required": [
             "values"
           ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
+          "additionalProperties": false
         }
       },
       "required": [
@@ -2577,7 +2177,8 @@
     },
     "or": {
       "type": "object",
-      "description": "Performs a logical OR operation on a list of boolean values.",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
       "properties": {
         "call": {
           "const": "or"
@@ -2587,20 +2188,13 @@
           "properties": {
             "values": {
               "type": "array",
-              "description": "The list of boolean values to evaluate.",
-              "items": {
-                "$ref": "common_types.json#/$defs/DynamicBoolean"
-              },
               "minItems": 2
             }
           },
           "required": [
             "values"
           ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
+          "additionalProperties": false
         }
       },
       "required": [
@@ -2611,7 +2205,8 @@
     },
     "not": {
       "type": "object",
-      "description": "Performs a logical NOT operation on a boolean value.",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
       "properties": {
         "call": {
           "const": "not"
@@ -2619,18 +2214,447 @@
         "args": {
           "type": "object",
           "properties": {
+            "value": {}
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "contains": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "contains"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "string": {
+              "type": "string"
+            },
+            "substring": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "string",
+            "substring"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "starts_with": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "starts_with"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "string": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "string",
+            "prefix"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "ends_with": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "ends_with"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "string": {
+              "type": "string"
+            },
+            "suffix": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "string",
+            "suffix"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "required": {
+      "type": "object",
+      "returnType": "validationResult",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "required"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {}
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "regex": {
+      "type": "object",
+      "returnType": "validationResult",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "regex"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
             "value": {
-              "$ref": "common_types.json#/$defs/DynamicBoolean",
-              "description": "The boolean value to negate."
+              "type": "string"
+            },
+            "pattern": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value",
+            "pattern"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "length": {
+      "type": "object",
+      "returnType": "validationResult",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "length"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {},
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
             }
           },
           "required": [
             "value"
           ],
-          "unevaluatedProperties": false
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "numeric": {
+      "type": "object",
+      "returnType": "validationResult",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "numeric"
         },
-        "returnType": {
-          "const": "boolean"
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "email": {
+      "type": "object",
+      "returnType": "validationResult",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "email"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "formatString": {
+      "type": "object",
+      "returnType": "any",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "formatString"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "formatNumber": {
+      "type": "object",
+      "returnType": "string",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "formatNumber"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "decimals": {
+              "type": "number"
+            },
+            "grouping": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "formatCurrency": {
+      "type": "object",
+      "returnType": "string",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "formatCurrency"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "currency": {
+              "type": "string"
+            },
+            "decimals": {
+              "type": "number"
+            },
+            "grouping": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "formatDate": {
+      "type": "object",
+      "returnType": "string",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "formatDate"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {},
+            "format": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "pluralize": {
+      "type": "object",
+      "returnType": "string",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "pluralize"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "zero": {
+              "type": "string"
+            },
+            "one": {
+              "type": "string"
+            },
+            "two": {
+              "type": "string"
+            },
+            "few": {
+              "type": "string"
+            },
+            "many": {
+              "type": "string"
+            },
+            "other": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ],
+      "unevaluatedProperties": false
+    },
+    "openUrl": {
+      "type": "object",
+      "returnType": "void",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "openUrl"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [

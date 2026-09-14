@@ -44,15 +44,8 @@ export interface ChoicePickerProps extends GenericComponentProps {
   /** The label for the group of options. */
   label?: string | { path: string } | {
     call: string;
+    catalogId?: string;
     args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
   };
   /** A hint for how the choice picker should be displayed and behave. */
   variant?: 'multipleSelection' | 'mutuallyExclusive';
@@ -61,15 +54,8 @@ export interface ChoicePickerProps extends GenericComponentProps {
     /** The text to display for this option. */
     label: string | { path: string } | {
       call: string;
+      catalogId?: string;
       args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
     };
     /** The stable value associated with this option. */
     value: string;
@@ -77,15 +63,8 @@ export interface ChoicePickerProps extends GenericComponentProps {
   /** The list of currently selected values. */
   value: string[] | { path: string } | {
     call: string;
+    catalogId?: string;
     args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
   };
   /** The display style of the component. */
   displayStyle?: 'checkbox' | 'chips';
@@ -94,20 +73,11 @@ export interface ChoicePickerProps extends GenericComponentProps {
   /** A list of checks to perform. */
   checks?: Array<{
     /** The condition that indicates whether the check passes. */
-    condition: boolean | { path: string } | {
+    condition: { path: string } | {
       call: string;
+      catalogId?: string;
       args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
     };
-    /** The error message to display if the check fails. */
-    message?: string;
   }>;
 }
 

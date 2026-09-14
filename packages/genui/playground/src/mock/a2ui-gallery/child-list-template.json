@@ -3,15 +3,15 @@
   "description": "Demonstrates dynamic list generation using ChildList object templates.",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "createSurface": {
         "surfaceId": "gallery-child-list-template",
-        "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json",
+        "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateComponents": {
         "surfaceId": "gallery-child-list-template",
         "components": [
@@ -64,7 +64,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateDataModel": {
         "surfaceId": "gallery-child-list-template",
         "value": {

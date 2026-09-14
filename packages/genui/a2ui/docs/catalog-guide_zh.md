@@ -52,7 +52,7 @@ const catalog = defineCatalog([Text, Button]);
 
 ## 内置组件
 
-这个包提供 22 个 A2UI v0.9 basic-catalog renderer。每个都是独立、可 tree-shake
+这个包提供 22 个 A2UI v1.0 basic-catalog renderer。每个都是独立、可 tree-shake
 的导出，既可从根导入，也可从 `@lynx-js/genui/a2ui/catalog/<Name>` 导入。
 
 **布局与容器**
@@ -149,7 +149,7 @@ const catalog = defineCatalog([Text, ...basicFunctions]);
 ```
 
 `basicFunctions` 是一组现成 entry 的数组，它们的实现直接来自上游
-`@a2ui/web_core` basic catalog，所以 wire contract 能免费地与 A2UI v0.9 spec
+`@a2ui/web_core` basic catalog，所以 wire contract 能免费地与 A2UI v1.0 spec
 保持一致。它覆盖 25 个 function：
 
 | 类别   | Functions（协议名）                                                         |
@@ -163,7 +163,7 @@ const catalog = defineCatalog([Text, ...basicFunctions]);
 | 动作   | `openUrl`                                                                   |
 
 > 注意大小写不统一——比较/文本类用 `snake_case`（`not_equals`、`starts_with`），
-> 而格式化类用 `camelCase`（`formatDate`、`openUrl`）。这些是上游 A2UI v0.9 的
+> 而格式化类用 `camelCase`（`formatDate`、`openUrl`）。这些是上游 A2UI v1.0 的
 > 名称；在 message 里请原样使用。
 
 只要你的 Agent 可能发出其中任何一个，就加入 `...basicFunctions`。如果某条

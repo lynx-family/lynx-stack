@@ -11,6 +11,74 @@ import { normalizeRendererEvent } from '../app/a2ui/_shared.js';
 import app from '../src/app.js';
 
 describe('A2UI v1.0 server', () => {
+  test.each(['v0.9', 'v0.9.1', 'v1.1', 'v2.0', undefined])(
+    'rejects unsupported action version %s on both transports',
+    async (version) => {
+      for (const route of ['/a2ui/action', '/a2ui/action/stream']) {
+        const response = await app.request(route, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-forwarded-for': `migration-${route}-${String(version)}`,
+          },
+          body: JSON.stringify({
+            version,
+            surfaceId: 's',
+            action: { name: 'submit', surfaceId: 's' },
+          }),
+        });
+        expect(response.status).toBe(400);
+        expect(await response.json()).toMatchObject({
+          error: 'Only A2UI v1.0 is supported',
+        });
+      }
+    },
+  );
+  test('a non-index deletion does not remove the first array entry', async () => {
+    const catalog = await loadBasicCatalog();
+    const safe = 'https://images.example.com/safe.png';
+    const raw = JSON.stringify([
+      {
+        version: 'v1.0',
+        createSurface: {
+          surfaceId: 's',
+          catalogId: catalog.id,
+          dataModel: {
+            items: [{ url: safe }, {
+              url: 'https://untrusted.example/image.png',
+            }],
+          },
+        },
+      },
+      {
+        version: 'v1.0',
+        updateDataModel: { surfaceId: 's', path: '/items/label', value: null },
+      },
+      {
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 's',
+          components: [{
+            id: 'root',
+            component: 'Image',
+            url: { path: '/items/0/url' },
+          }],
+        },
+      },
+    ]);
+    expect(
+      validateA2UIOutput(raw, catalog, {
+        isImageSourceAllowed: url => url === safe,
+      }).errors,
+    ).toEqual([]);
+  });
+
+  test('loads structured validation function metadata from the v1.0 catalog', async () => {
+    const catalog = await loadBasicCatalog();
+    expect(catalog.functions?.find(fn => fn.name === 'required')?.returnType)
+      .toBe('validationResult');
+  });
+
   test('validates inline components and data with the existing catalog', async () => {
     const catalog = await loadBasicCatalog();
     const messages = [{
@@ -123,25 +191,18 @@ describe('A2UI v1.0 server', () => {
     }
   });
 
-  test('accepts legacy streams without changing their emitted versions', async () => {
-    const catalog = await loadBasicCatalog();
-    const raw = JSON.stringify([{
-      version: 'v0.9',
-      createSurface: { surfaceId: 's', catalogId: catalog.id },
-    }, {
-      version: 'v0.9',
-      updateComponents: {
-        surfaceId: 's',
-        components: [{ id: 'root', component: 'Text', text: 'legacy' }],
-      },
-    }]);
-    expect(validateA2UIOutput(raw, catalog).ok).toBe(true);
-    expect(
-      new A2UIProtocolMessageStreamParser().push(raw).every(message =>
-        message.version === 'v0.9'
-      ),
-    ).toBe(true);
-  });
+  test.each(['v0.9', 'v0.9.1', 'v1.1', 'v2.0', undefined])(
+    'rejects unsupported stream version %s',
+    async (version) => {
+      const catalog = await loadBasicCatalog();
+      const raw = JSON.stringify([{
+        version,
+        createSurface: { surfaceId: 's', catalogId: catalog.id },
+      }]);
+      expect(validateA2UIOutput(raw, catalog).ok).toBe(false);
+      expect(new A2UIProtocolMessageStreamParser().push(raw)).toEqual([]);
+    },
+  );
 
   test('maps action surface and data-model metadata into the stateless conversation', () => {
     const body = normalizeRendererEvent({
