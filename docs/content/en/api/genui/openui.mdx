@@ -105,7 +105,7 @@ Prefers structuredContent (machine-readable JSON), falls back to parsing text co
 function generatePrompt(spec: PromptSpec): string
 ```
 
-Use `generateSystemPrompt`.
+*No description yet.*
 
 | Parameters | Type | Description |
 | --- | --- | --- |
@@ -603,7 +603,7 @@ Runtime context shared by OpenUI renderers, hooks, actions, and form fields.
 | <a id="openuicontextvalue-reporterror"></a>`reportError?` | `(error: `[`OpenUIError`](#openuierror)`) => void` | Report a structured error (used internally by error boundary). |
 | <a id="openuicontextvalue-setfieldvalue"></a>`setFieldValue` | `(formName: string \| undefined, componentType: string \| undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void` | Set a form field value. |
 | <a id="openuicontextvalue-store"></a>`store` | `Store` | Reactive binding store for $variables and form data. |
-| <a id="openuicontextvalue-triggeraction"></a>`triggerAction` | `(userMessage: string, formName?: string, action?: `[`ActionPlan`](#actionplan)` \| { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void \| Promise<void>` | Trigger an action. Accepts either: - ActionPlan (v0.5): runs steps sequentially (Run, Set, ToAssistant, OpenUrl) - Legacy action config (v0.1): object with optional type and params. - Nothing: fires ContinueConversation with the label |
+| <a id="openuicontextvalue-triggeraction"></a>`triggerAction` | `(userMessage: string, formName?: string, action?: `[`ActionPlan`](#actionplan)` \| { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void \| Promise<void>` | Trigger an action. Accepts either: - ActionPlan (v0.5): runs steps sequentially (Run, Set, Reset, ToAssistant,   OpenUrl) and stops if a Run mutation fails. When the renderer is given a   pre-parsed `result`, only ToAssistant and OpenUrl run; other steps warn. - Legacy action config (v0.1): object with optional type and params. - Nothing: fires ContinueConversation with the label |
 
 ### `OpenUIError` \{#openuierror\}
 

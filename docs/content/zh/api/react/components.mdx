@@ -16,8 +16,9 @@ Provider 与 Consumer 组件，用于读取 Lynx 页面从 Native 侧接收的�
 const GlobalPropsProvider: FC<{ children?: ReactNode }>
 ```
 
-提供 `lynx.__globalProps` 的 [Provider](https://react.dev/reference/react/createContext#provider) 组件，
-必须将 JSX 包裹在其中
+提供 `lynx.__globalProps` 的 [Provider](https://react.dev/reference/react/createContext#provider) 组件。仅在 `globalPropsMode: 'event'` 下需要；在默认的 `'reactive'` 模式下，它会直接渲染其子节点，更新则来自整体重新渲染。
+
+在 `globalPropsMode: 'event'` 下：
 
 ```ts
 import { root } from "@lynx-js/react"
@@ -42,8 +43,7 @@ root.render(
 const GlobalPropsConsumer: Consumer<GlobalProps>
 ```
 
-提供 `lynx.__globalProps` 的 [Consumer](https://react.dev/reference/react/createContext#consumer) 组件。
-需与 [`GlobalPropsProvider`](#globalpropsprovider) 配合使用
+提供 `lynx.__globalProps` 的 [Consumer](https://react.dev/reference/react/createContext#consumer) 组件。仅在 `globalPropsMode: 'event'` 下需要，需与 [`GlobalPropsProvider`](#globalpropsprovider) 配合使用；在默认的 `'reactive'` 模式下，它会直接以 `lynx.__globalProps` 调用 `children`，更新则来自整体重新渲染。
 
 ### `InitDataProvider` \{#initdataprovider\}
 
@@ -51,8 +51,7 @@ const GlobalPropsConsumer: Consumer<GlobalProps>
 const InitDataProvider: FC<{ children?: ReactNode }>
 ```
 
-提供 `initData` 的 [Provider](https://react.dev/reference/react/createContext#provider) 组件，
-必须将 JSX 包裹在其中
+提供 `initData` 的 [Provider](https://react.dev/reference/react/createContext#provider) 组件，必须将 JSX 包裹在其中
 
 ```ts
 import { root } from "@lynx-js/react"
@@ -77,8 +76,7 @@ root.render(
 const InitDataConsumer: Consumer<InitData>
 ```
 
-提供 `initData` 的 [Consumer](https://react.dev/reference/react/createContext#consumer) 组件。
-需与 [`InitDataProvider`](#initdataprovider) 配合使用
+提供 `initData` 的 [Consumer](https://react.dev/reference/react/createContext#consumer) 组件。需与 [`InitDataProvider`](#initdataprovider) 配合使用
 
 {/* @api-end */}
 

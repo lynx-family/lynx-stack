@@ -92,7 +92,8 @@
           "name": "externalBundleRoot",
           "optional": true,
           "type": "string",
-          "summary": "Root directory that stores project-owned external bundles referenced by\n`bundlePath`.\n\n`pluginExternalBundle` uses this directory for both development serving\nand build-time asset emission. Prefer setting this explicitly when\nexternal bundles are built into a separate output folder, such as\n`dist-external-bundle`.",
+          "summary": "Root directory that stores project-owned external bundles referenced by\n`bundlePath`.\n\n`pluginExternalBundle` uses this directory for both development serving\nand build-time asset emission. Set it when bundles are built elsewhere.",
+          "default": "`'dist-external-bundle'`",
           "kind": "property"
         },
         {
@@ -186,7 +187,7 @@
           "name": "libraryName",
           "optional": true,
           "type": "string | string[]",
-          "summary": "The name of the library. Same as https://webpack.js.org/configuration/externals/#string.\n\nBy default, the library name is the same as the externals key. For example:\n\nThe config\n\n```js\nExternalsLoadingPlugin({\n  externals: {\n    lodash: {\n      url: '……',\n    }\n  }\n})\n```\n\nWill generate the following webpack externals config:\n\n```js\nexternals: {\n  lodash: 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].lodash',\n}\n```\n\nIf one external bundle contains multiple modules, should set the same library name to ensure it's loaded only once. For example:\n\n```js\nExternalsLoadingPlugin({\n  externals: {\n    lodash: {\n      libraryName: 'Lodash',\n      url: '……',\n    },\n    'lodash-es': {\n      libraryName: 'Lodash',\n      url: '……',\n    }\n  }\n})\n```\nWill generate the following webpack externals config:\n\n```js\nexternals: {\n  lodash: 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].Lodash',\n  'lodash-es': 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].Lodash',\n}\n```\n\nYou can pass an array to specify subpath of the external. Same as https://webpack.js.org/configuration/externals/#string-1. For example:\n\n```js\nExternalsLoadingPlugin({\n  externals: {\n    preact: {\n      libraryName: ['ReactLynx', 'Preact'],\n      url: '……',\n    },\n  }\n})\n```\n\nWill generate the following webpack externals config:\n\n```js\nexternals: {\n  preact: 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].ReactLynx.Preact',\n}\n```",
+          "summary": "The name of the library. Same as https://webpack.js.org/configuration/externals/#string.\n\nBy default, the library name is the same as the externals key. For example:\n\nThe config\n\n```js\nExternalsLoadingPlugin({\n  externals: {\n    lodash: {\n      url: '……',\n    }\n  }\n})\n```\n\nWill generate the following webpack externals config:\n\n```js\nexternals: {\n  lodash: 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].lodash',\n}\n```\n\nIf one external bundle contains multiple modules, should set the same library name to ensure it's loaded only once. For example:\n\n```js\nExternalsLoadingPlugin({\n  externals: {\n    lodash: {\n      libraryName: 'Lodash',\n      url: '……',\n    },\n    'lodash-es': {\n      libraryName: 'Lodash',\n      url: '……',\n    }\n  }\n})\n```\nWill generate the following webpack externals config:\n\n```js\nexternals: {\n  lodash: 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].Lodash',\n  'lodash-es': 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].Lodash',\n}\n```\n\nYou can pass an array to specify subpath of the external. Same as https://webpack.js.org/configuration/externals/#string-1. For example:\n\n```js\nExternalsLoadingPlugin({\n  externals: {\n    preact: {\n      libraryName: ['ReactLynx', 'Preact'],\n      url: '……',\n      async: false,\n    },\n  }\n})\n```\n\nWill generate the following webpack externals config:\n\n```js\nexternals: {\n  preact: 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].ReactLynx.Preact',\n}\n```\n\nWith the default `async: true`, a `promise` external is generated instead,\nwhich picks the subpath after the library promise resolves:\n\n```js\nexternals: {\n  preact: 'promise Promise.resolve(lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")][\"ReactLynx\"]).then(function (m) { return m[\"Preact\"]; })',\n}\n```",
           "examples": [
             "```ts\n`Lodash`\n```"
           ],
@@ -221,8 +222,8 @@
           "name": "url",
           "optional": true,
           "type": "string",
-          "summary": "Bundle URL.\n\nUse this only when the external bundle lives outside the current build\noutput and should not be emitted or served by `pluginExternalBundle`.\n\n Prefer `bundlePath`, which resolves through the runtime public\npath and lets higher-level tooling manage asset emission.",
-          "deprecated": "Deprecated.",
+          "summary": "Bundle URL.\n\nUse this only when the external bundle lives outside the current build\noutput and should not be emitted or served by `pluginExternalBundle`.",
+          "deprecated": "Prefer `bundlePath`, which resolves through the runtime public\npath and lets higher-level tooling manage asset emission.",
           "kind": "property"
         }
       ]
@@ -237,7 +238,7 @@
           "name": "async",
           "optional": true,
           "type": "boolean",
-          "summary": "Load the ReactLynx runtime bundle asynchronously, for the web target.\n\nThe web runtime (`@lynx-js/web-core`) can only fetch external bundles\nasynchronously (`fetchBundle().then`), so ReactLynx must be mounted as a\npromise that consuming modules await before reading a subpath (otherwise\n`React.memo` etc. are read off a pending promise and are `undefined`).\nEnabling this also resolves the web-encoded `@lynx-js/react-umd/{dev,prod}-web`\nbundle and defaults `bundlePath` to `react.web.bundle`.",
+          "summary": "Load the ReactLynx runtime bundle asynchronously, for the web target.\n\nThe web runtime (`@lynx-js/web-core`) can only fetch external bundles\nasynchronously (`fetchBundle().then`), so ReactLynx must be mounted as a\npromise that consuming modules await before reading a subpath (otherwise\n`React.memo` etc. are read off a pending promise and are `undefined`).\nOnly controls how the runtime is mounted; the web bundle is chosen for\nenvironments other than `lynx` / `lynx-*`.",
           "default": "`false`",
           "kind": "property"
         },
@@ -245,8 +246,8 @@
           "name": "bundlePath",
           "optional": true,
           "type": "string",
-          "summary": "Emit the ReactLynx runtime bundle into the current build output and load it\nthrough the generated runtime public path.\n\nPrefer this over `url` for normal Rspeedy projects. In addition to letting\nthe runtime resolve the final URL from `publicPath`, the plugin will also\ncopy the corresponding `@lynx-js/react-umd` bundle into the emitted assets,\nso application bundles can reference it without requiring an extra manual\ncopy step when publishing.",
-          "default": "`'react.lynx.bundle'`",
+          "summary": "Emit the ReactLynx runtime bundle into the current build output and load it\nthrough the generated runtime public path.\n\nPrefer this over `url` for bundles shipped with this project. In addition\nto letting the runtime resolve the final URL from `publicPath`, the plugin\nwill also copy the corresponding `@lynx-js/react-umd` bundle into the\nemitted assets, so application bundles can reference it without requiring\nan extra manual copy step when publishing.",
+          "default": "`'react.lynx.bundle'`, or `'react.web.bundle'` outside\n`lynx` / `lynx-*` environments",
           "kind": "property"
         },
         {
@@ -261,8 +262,8 @@
           "name": "url",
           "optional": true,
           "type": "string",
-          "summary": "Override the runtime bundle URL directly.\n\nUse this only when the ReactLynx runtime is hosted outside the current\nbuild output, for example on a CDN. Unlike `bundlePath`, this does not emit\nany extra asset into the current compilation.\n\n Prefer `bundlePath`, which resolves through the runtime public\npath and enables automatic asset emission.",
-          "deprecated": "Deprecated.",
+          "summary": "Override the runtime bundle URL directly.\n\nUse this only when the ReactLynx runtime is hosted outside the current\nbuild output, for example on a CDN. Unlike `bundlePath`, this does not emit\nany extra asset into the current compilation.",
+          "deprecated": "Prefer `bundlePath`, which resolves through the runtime public\npath and enables automatic asset emission.",
           "kind": "property"
         }
       ]
@@ -284,7 +285,7 @@
       "refs": [
         "PluginExternalValue"
       ],
-      "summary": "External bundle shorthand accepted by `pluginExternalBundle`.\n\nWhen a string is provided, it is treated as `bundlePath` and the plugin will\ninfer:\n- `libraryName`: the external request key\n- `background.sectionPath`: the external request key\n- `mainThread.sectionPath`: `${request}__main-thread`"
+      "summary": "External bundle shorthand accepted by `pluginExternalBundle`.\n\nWhen a string is provided, it is treated as `bundlePath` and the plugin will\ninfer:\n- `libraryName`: the external request key\n- `background.sectionPath`: the external request key\n- `mainThread.sectionPath`: `${request}__main-thread`\n- `async`: `true`"
     },
     {
       "name": "builtInExternalsPresetDefinitions",
@@ -338,15 +339,15 @@
           "returns": {
             "type": "RsbuildPlugin"
           },
-          "summary": "Create a rsbuild plugin for loading external bundles.\n\nThis plugin wraps the externals-loading-webpack-plugin and automatically\nretrieves layer names from the react-rsbuild-plugin via api.useExposed.",
+          "summary": "Create a rsbuild plugin for loading external bundles.\n\nThis plugin wraps the externals-loading-webpack-plugin and automatically\nretrieves layer names from any DSL plugin that exposes `LAYERS`, such as\n`pluginReactLynx` or `pluginVanillaLynx`, via api.useExposed.",
           "examples": [
-            "```ts\n// lynx.config.ts\nimport { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin'\nimport { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\n\nexport default {\n  plugins: [\n    pluginReactLynx(),\n    pluginExternalBundle({\n      externals: {\n        lodash: {\n          bundlePath: 'lodash.lynx.bundle',\n          background: { sectionPath: 'background' },\n          mainThread: { sectionPath: 'mainThread' },\n        },\n      },\n    }),\n  ],\n}\n```"
+            "```ts\n// rsbuild.config.ts\nimport { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin'\nimport { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\nimport { defineConfig } from '@rsbuild/core'\n\nexport default defineConfig({\n  environments: { lynx: {} },\n  plugins: [\n    pluginReactLynx(),\n    pluginExternalBundle({\n      externals: {\n        lodash: {\n          bundlePath: 'lodash.lynx.bundle',\n          background: { sectionPath: 'background' },\n          mainThread: { sectionPath: 'mainThread' },\n        },\n      },\n    }),\n  ],\n})\n```"
           ]
         }
       ],
-      "summary": "Create a rsbuild plugin for loading external bundles.\n\nThis plugin wraps the externals-loading-webpack-plugin and automatically\nretrieves layer names from the react-rsbuild-plugin via api.useExposed.",
+      "summary": "Create a rsbuild plugin for loading external bundles.\n\nThis plugin wraps the externals-loading-webpack-plugin and automatically\nretrieves layer names from any DSL plugin that exposes `LAYERS`, such as\n`pluginReactLynx` or `pluginVanillaLynx`, via api.useExposed.",
       "examples": [
-        "```ts\n// lynx.config.ts\nimport { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin'\nimport { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\n\nexport default {\n  plugins: [\n    pluginReactLynx(),\n    pluginExternalBundle({\n      externals: {\n        lodash: {\n          bundlePath: 'lodash.lynx.bundle',\n          background: { sectionPath: 'background' },\n          mainThread: { sectionPath: 'mainThread' },\n        },\n      },\n    }),\n  ],\n}\n```"
+        "```ts\n// rsbuild.config.ts\nimport { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin'\nimport { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\nimport { defineConfig } from '@rsbuild/core'\n\nexport default defineConfig({\n  environments: { lynx: {} },\n  plugins: [\n    pluginReactLynx(),\n    pluginExternalBundle({\n      externals: {\n        lodash: {\n          bundlePath: 'lodash.lynx.bundle',\n          background: { sectionPath: 'background' },\n          mainThread: { sectionPath: 'mainThread' },\n        },\n      },\n    }),\n  ],\n})\n```"
       ]
     }
   ]

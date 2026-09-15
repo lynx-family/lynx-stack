@@ -57,8 +57,18 @@ export default defineConfig({
 
 Override the final `.bundle` filename.
 
-When omitted under Rspeedy, `output.filename.bundle` is used.
-The default outside Rspeedy is `[name].[platform].bundle`.
+When omitted, `pluginLynx`'s `output.filename.bundle` is used (default
+`'[name].[platform].bundle'`).
+
+### `engineVersion` \{#engineversion\}
+
+- **Type:** `string`
+- **Default:** `'3.5'`
+
+The minimum Lynx Engine version required by the emitted bundle.
+
+When omitted, the `targetSdkVersion` passed to `pluginLynxConfig` is used
+first.
 
 ### `entries` \{#entries\}
 
@@ -75,18 +85,10 @@ discovered by convention.
 - **Type:** `string`
 
 :::warning Deprecated
-Deprecated.
+Use `engineVersion` instead.
 :::
 
 Alias of [`PluginVanillaLynxOptions.engineVersion`](#engineversion).
-
- Use `engineVersion` instead.
-
-### Other options \{#other-options\}
-
-| Name | Type | Default | Description |
-| --- | --- | --- | --- |
-| <a id="engineversion"></a>`engineVersion` | `string` | `'3.5'` | The minimum Lynx Engine version required by the emitted bundle. |
 
 {/* @api-end */}
 
@@ -129,44 +131,18 @@ Rspack layers used by Vanilla Lynx entries.
 
 ### `LynxTemplatePlugin` \{#lynxtemplateplugin\}
 
-*No description yet.*
+The static API of
+[`LynxTemplatePlugin`](/api/packages/template-webpack-plugin#lynxtemplateplugin)
+that `pluginLynx` exposes. Get it with
+`api.useExposed(Symbol.for('LynxTemplatePlugin')).LynxTemplatePlugin`.
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="lynxtemplateplugin-getlynxtemplatepluginhooks"></a>`getLynxTemplatePluginHooks` | `(compilation: Compilation) => `[`TemplateHooks`](#templatehooks) |  |
+| <a id="lynxtemplateplugin-getlynxtemplatepluginhooks"></a>`getLynxTemplatePluginHooks` | `(compilation: Compilation) => `[`TemplateHooks`](#templatehooks) | Returns the [`TemplateHooks`](#templatehooks) of a compilation. |
 
 ### `TemplateHooks` \{#templatehooks\}
 
-To allow other plugins to alter the Template, this plugin executes
-[tapable](https://github.com/webpack/tapable) hooks.
-
-```js
-class MyPlugin {
-  apply(compiler) {
-    compiler.hooks.compilation.tap("MyPlugin", (compilation) => {
-      console.log("The compiler is starting a new compilation...");
-
-      LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(
-        "MyPlugin", // <-- Set a meaningful name here for stacktraces
-        (data, cb) => {
-          // Manipulate the content
-          modifyTemplate(data.template)
-          // Tell webpack to move on
-          cb(null, data);
-        },
-      );
-    });
-  }
-}
-```
-
-| Members | Type | Description |
-| --- | --- | --- |
-| <a id="templatehooks-afteremit"></a>`afterEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ outputName: string }>` | Called after the template is emitted. |
-| <a id="templatehooks-asyncchunkname"></a>`asyncChunkName` <span className="api-badge api-badge-alpha">Alpha</span> | `SyncWaterfallHook<string>` | Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template. |
-| <a id="templatehooks-beforeemit"></a>`beforeEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: EncodeOptions; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>` | Called before the template is emitted. Can be used to modify the template. |
-| <a id="templatehooks-beforeencode"></a>`beforeEncode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>` | Called before the encode process. Can be used to modify the encode options. |
-| <a id="templatehooks-encode"></a>`encode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesBailHook<{ encodeOptions: EncodeOptions; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>` | Call the encode process. |
+Re-exported from [`@lynx-js/template-webpack-plugin`](/api/packages/template-webpack-plugin#templatehooks).
 
 ### `VanillaBundleFilenameContext` \{#vanillabundlefilenamecontext\}
 

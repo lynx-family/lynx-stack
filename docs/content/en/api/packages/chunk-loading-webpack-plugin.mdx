@@ -30,29 +30,16 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 
 ### `ChunkLoadingWebpackPlugin` \{#chunkloadingwebpackplugin\}
 
-The ChunkLoadingWebpackPlugin enables chunk loading for webpack/Rspack in Lynx.
-
-- Use with Rspack.
+The ChunkLoadingWebpackPlugin enables chunk loading for Rspack in Lynx.
+It only takes effect when `output.chunkLoading` is `'lynx'`.
 
 ```js
 // rspack.config.js
 import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'
 export default {
   output: {
-    chunkFormat: 'require',
-  },
-  plugins: [new ChunkLoadingWebpackPlugin()],
-}
-```
-
-- Use with Webpack.
-
-```js
-// webpack.config.js
-import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'
-export default {
-  output: {
-    chunkFormat: 'lynx',
+    chunkLoading: 'lynx',
+    chunkFormat: 'commonjs',
   },
   plugins: [new ChunkLoadingWebpackPlugin()],
 }

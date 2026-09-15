@@ -30,218 +30,73 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 
 ### `html()` \{#html\}
 
-```ts
-function html(strings: TemplateStringsArray, values: any[]): string
-```
-
-*暂无说明。*
-
-| 参数 | 类型 | 说明 |
-| --- | --- | --- |
-| `strings` | `TemplateStringsArray` |  |
-| `values` | `any[]` |  |
-
-**返回值：** `string`
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#html) 重新导出。
 
 ### `registerAttributeHandler()` \{#registerattributehandler\}
 
-```ts
-function registerAttributeHandler(key: string, args_0: boolean): (this: T, target: AttributeChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any
-```
-
-*暂无说明。*
-
-| 参数 | 类型 | 说明 |
-| --- | --- | --- |
-| `key` | `string` |  |
-| `args_0` | `boolean` |  |
-
-**返回值：** `(this: T, target: `[`AttributeChangeHandler`](#attributechangehandler)` | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any`
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#registerattributehandler) 重新导出。
 
 ### `registerEventEnableStatusChangeHandler()` \{#registereventenablestatuschangehandler\}
 
-```ts
-function registerEventEnableStatusChangeHandler(key: string): (this: T, target: EventStatusChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any
-```
-
-*暂无说明。*
-
-| 参数 | 类型 | 说明 |
-| --- | --- | --- |
-| `key` | `string` |  |
-
-**返回值：** `(this: T, target: `[`EventStatusChangeHandler`](#eventstatuschangehandler)` | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any`
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#registereventenablestatuschangehandler) 重新导出。
 
 ### `registerStyleChangeHandler()` \{#registerstylechangehandler\}
 
-```ts
-function registerStyleChangeHandler(key: string): (this: T, target: StyleChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any
-```
-
-*暂无说明。*
-
-| 参数 | 类型 | 说明 |
-| --- | --- | --- |
-| `key` | `string` |  |
-
-**返回值：** `(this: T, target: `[`StyleChangeHandler`](#stylechangehandler)` | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any`
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#registerstylechangehandler) 重新导出。
 
 ### `bindSwitchToEventListener()` \{#bindswitchtoeventlistener\}
 
-```ts
-function bindSwitchToEventListener(this: T, elementGetter: (this: T) => HTMLElement, eventName: string, eventListener: EventListener, options?: AddEventListenerOptions): (this: T, enable: boolean) => void
-```
-
-*暂无说明。*
-
-| 参数 | 类型 | 说明 |
-| --- | --- | --- |
-| `this` | `T` |  |
-| `elementGetter` | `(this: T) => HTMLElement` |  |
-| `eventName` | `string` |  |
-| `eventListener` | `EventListener` |  |
-| `options?` | `AddEventListenerOptions` |  |
-
-**返回值：** `(this: T, enable: boolean) => void`
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#bindswitchtoeventlistener) 重新导出。
 
 ### `bindToAttribute()` \{#bindtoattribute\}
 
-```ts
-function bindToAttribute(this: T, elementGetter: (this: T) => HTMLElement, attributeName: string, valProcessor?: (value: string | null) => string | null): (this: T, newVal: string | null) => void
-```
-
-*暂无说明。*
-
-| 参数 | 类型 | 说明 |
-| --- | --- | --- |
-| `this` | `T` |  |
-| `elementGetter` | `(this: T) => HTMLElement` |  |
-| `attributeName` | `string` |  |
-| `valProcessor?` | `(value: string \| null) => string \| null` |  |
-
-**返回值：** `(this: T, newVal: string | null) => void`
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#bindtoattribute) 重新导出。
 
 ### `bindToStyle()` \{#bindtostyle\}
 
-```ts
-function bindToStyle(this: T, elementGetter: (this: T) => HTMLElement, styleName: string, valProcessor?: (value: string) => string, important?: boolean): (this: T, newVal: string | null) => void
-```
-
-*暂无说明。*
-
-| 参数 | 类型 | 说明 |
-| --- | --- | --- |
-| `this` | `T` |  |
-| `elementGetter` | `(this: T) => HTMLElement` |  |
-| `styleName` | `string` |  |
-| `valProcessor?` | `(value: string) => string` |  |
-| `important?` | `boolean` |  |
-
-**返回值：** `(this: T, newVal: string | null) => void`
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#bindtostyle) 重新导出。
 
 ### `boostedQueueMicrotask()` \{#boostedqueuemicrotask\}
 
-```ts
-function boostedQueueMicrotask(foo: CallableFunction, that?: any): void
-```
-
-*暂无说明。*
-
-| 参数 | 类型 | 说明 |
-| --- | --- | --- |
-| `foo` | `CallableFunction` |  |
-| `that?` | `any` |  |
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#boostedqueuemicrotask) 重新导出。
 
 ### `Component()` \{#component\}
 
-```ts
-function Component(tag: string, attributeReactiveClassesOptional: (AttributeReactiveClass<T> | undefined)[], template?: string): (target: T, context: ClassDecoratorContext<T>) => T
-```
-
-*暂无说明。*
-
-| 参数 | 类型 | 说明 |
-| --- | --- | --- |
-| `tag` | `string` |  |
-| `attributeReactiveClassesOptional` | `(`[`AttributeReactiveClass`](#attributereactiveclass)`<T> \| undefined)[]` |  |
-| `template?` | `string` |  |
-
-**返回值：** `(target: T, context: ClassDecoratorContext<T>) => T`
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#component) 重新导出。
 
 ### `genDomGetter()` \{#gendomgetter\}
 
-```ts
-function genDomGetter(queryableElementGetter: () => ShadowRoot, selector: string): InternalDomGetter<T>
-function genDomGetter(queryableElementGetter: () => HTMLElement, selector: string): PlainDomGetter<T>
-```
-
-*暂无说明。*
-
-| 参数 | 类型 | 说明 |
-| --- | --- | --- |
-| `queryableElementGetter` | `() => ShadowRoot` |  |
-| `selector` | `string` |  |
-
-**返回值：** `InternalDomGetter<T>`
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#gendomgetter) 重新导出。
 
 ## 类 \{#classes\}
 
 ### `CommonEventsAndMethods` \{#commoneventsandmethods\}
 
-*暂无说明。*
-
-| 成员 | 类型 | 说明 |
-| --- | --- | --- |
-| <a id="commoneventsandmethods-constructor"></a>`constructor` | `constructor(currentElement: HTMLElement & { [layoutChangeTarget]?: HTMLElement }): CommonEventsAndMethods` |  |
-| <a id="commoneventsandmethods-handlescrollupperthresholdeventenabled"></a>`__handleScrollUpperThresholdEventEnabled` | `(enabled: boolean) => void` |  |
-| <a id="commoneventsandmethods-observedattributes"></a>`observedAttributes` | `never[]` |  |
-| <a id="commoneventsandmethods-dispose"></a>`dispose` | `dispose(): void` |  |
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#commoneventsandmethods) 重新导出。
 
 ## 常量 \{#constants\}
 
 ### `commonComponentEventSetting` \{#commoncomponenteventsetting\}
 
-```ts
-const commonComponentEventSetting: { bubbles: false; cancelable: true; composed: false }
-```
-
-*暂无说明。*
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#commoncomponenteventsetting) 重新导出。
 
 ### `layoutChangeTarget` \{#layoutchangetarget\}
 
-```ts
-const layoutChangeTarget: unique symbol
-```
-
-*暂无说明。*
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#layoutchangetarget) 重新导出。
 
 ### `scrollContainerDom` \{#scrollcontainerdom\}
 
-```ts
-const scrollContainerDom: unique symbol
-```
-
-*暂无说明。*
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#scrollcontainerdom) 重新导出。
 
 ### `useScrollEnd` \{#usescrollend\}
 
-```ts
-const useScrollEnd: boolean
-```
-
-*暂无说明。*
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#usescrollend) 重新导出。
 
 ## 类型 \{#types\}
 
 ### `AttributeReactiveClass` \{#attributereactiveclass\}
 
-*暂无说明。*
-
-| 成员 | 类型 | 说明 |
-| --- | --- | --- |
-| <a id="attributereactiveclass-constructor"></a>`constructor` | `constructor(dom: InstanceType<T>): any` |  |
-| <a id="attributereactiveclass-observedattributes"></a>`observedAttributes` | `readonly string[]` |  |
-| <a id="attributereactiveclass-observedcssproperties"></a>`observedCSSProperties?` | `readonly string[]` |  |
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#attributereactiveclass) 重新导出。
 
 ### `LynxViewElement` \{#lynxviewelement\}
 
@@ -252,14 +107,14 @@ HTML 示例
 注意，你需要声明 lynx-view 的尺寸
 
 ```html
-<lynx-view url="https://path/to/main-thread.js" raw-data="{}" global-props="{}" style="height:300px;width:300px">
+<lynx-view url="https://path/to/main.web.bundle" init-data="{}" global-props="{}" style="height:300px;width:300px">
 </lynx-view>
 ```
 
 React 19 示例
 
 ```jsx
-<lynx-view url={myLynxCardUrl} rawData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>
+<lynx-view url={myLynxCardUrl} initData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>
 </lynx-view>
 ```
 
@@ -267,7 +122,7 @@ React 19 示例
 | --- | --- | --- |
 | <a id="lynxviewelement-injectstylerules"></a>`injectStyleRules?` | `string[]` | [可选] 将被注入到 shadowroot 中的 CSS 规则。每一项都会通过 `insertRule` 方法插入。 |
 | <a id="lynxviewelement-napimodulesmap"></a>`napiModulesMap` | `NapiModulesMap \| undefined` | [可选] 在 lynx-core 中调用的 napiModule。key 为模块名，value 为 ESM URL。 |
-| <a id="lynxviewelement-nativemodulesmap"></a>`nativeModulesMap` | `NativeModulesMap \| undefined` | [可选] 用于自定义 NativeModules。key 为模块名，value 为 ESM URL。 若某个 `LynxConsoleModule` 的工厂函数返回类 Console 对象，它将 为此 view 的后台 bundle 提供词法作用域中的 `console`。 |
+| <a id="lynxviewelement-nativemodulesmap"></a>`nativeModulesMap` | `NativeModulesMap \| undefined` | [可选] 用于自定义 NativeModules。key 为模块名，value 为 ESM URL。若某个 `LynxConsoleModule` 的工厂函数返回类 Console 对象，它将为此 view 的后台 bundle 提供词法作用域中的 `console`。 |
 | <a id="lynxviewelement-onnapimodulescall"></a>`onNapiModulesCall` | `NapiModulesCall \| undefined` | [可选] NapiModule 的值处理函数。 |
 | <a id="lynxviewelement-browserconfig"></a>`browserConfig` | `BrowserConfig \| undefined` |  |
 | <a id="lynxviewelement-data"></a>`data` | `Cloneable` |  |
@@ -275,7 +130,7 @@ React 19 示例
 | <a id="lynxviewelement-globalprops"></a>`globalProps` | `Cloneable` | [可选]（属性："global-props"）此 Lynx 卡片的 globalProps 值 |
 | <a id="lynxviewelement-init-data"></a>`init-data` | `Cloneable` |  |
 | <a id="lynxviewelement-initdata"></a>`initData` | `Cloneable` | [可选]（属性："init-data"）此 Lynx 卡片的初始数据 |
-| <a id="lynxviewelement-initi18nresources"></a>`initI18nResources` | `InitI18nResources` | [可选]（属性："init-i18n-resources"）容器侧完整的 i18nResources 集合，可通过 _I18nResourceTranslation 同步获取 |
+| <a id="lynxviewelement-initi18nresources"></a>`initI18nResources` | `InitI18nResources` | [可选] 容器侧完整的 i18nResources 集合，可通过 _I18nResourceTranslation 同步获取 |
 | <a id="lynxviewelement-lynxgroupid"></a>`lynxGroupId` | `number \| undefined` | [可选]（属性："lynx-group-id"）后台共享上下文 id，用于在不同 Lynx 卡片之间共享 webworker |
 | <a id="lynxviewelement-onnativemodulescall"></a>`onNativeModulesCall` | `NativeModulesCall \| undefined` | [可选] NativeModules 的值处理函数。在该属性被赋值之前，调用参数会被缓存。 |
 | <a id="lynxviewelement-src"></a>`src` | `string \| undefined` |  |
@@ -296,66 +151,34 @@ React 19 示例
 
 ### `WebComponentClass` \{#webcomponentclass\}
 
-*暂无说明。*
-
-| 成员 | 类型 | 说明 |
-| --- | --- | --- |
-| <a id="webcomponentclass-constructor"></a>`constructor` | `constructor(): HTMLElement & { cssPropertyChangedHandler?: undefined; adoptedCallback?: any; attributeChangedCallback?: any; connectedCallback?: any; disconnectedCallback?: any }` |  |
-| <a id="webcomponentclass-nottofilterfalseattributes"></a>`notToFilterFalseAttributes?` | `Set<string>` | 对于 attribute="false"， 默认会执行 removeAttribute； 在此处设置可禁用该行为； |
-| <a id="webcomponentclass-observedattributes"></a>`observedAttributes?` | `string[]` |  |
-| <a id="webcomponentclass-observedcssproperties"></a>`observedCSSProperties?` | `undefined` |  |
-| <a id="webcomponentclass-registerplugin"></a>`registerPlugin?` | `(reactiveClass: `[`AttributeReactiveClass`](#attributereactiveclass)`<`[`WebComponentClass`](#webcomponentclass)`>) => void` |  |
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#webcomponentclass) 重新导出。
 
 ### `AttributeChangeHandler` \{#attributechangehandler\}
 
-```ts
-type AttributeChangeHandler = (newValue: string | null, oldValue: string | null, attributeName: string) => void
-```
-
-*暂无说明。*
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#attributechangehandler) 重新导出。
 
 ### `AttributeReactiveObject` \{#attributereactiveobject\}
 
-*暂无说明。*
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#attributereactiveobject) 重新导出。
 
 ### `BindToAttributeProxy` \{#bindtoattributeproxy\}
 
-```ts
-type BindToAttributeProxy = ReturnType<typeof bindToAttribute>
-```
-
-*暂无说明。*
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#bindtoattributeproxy) 重新导出。
 
 ### `BindToStyleProxy` \{#bindtostyleproxy\}
 
-```ts
-type BindToStyleProxy = ReturnType<typeof bindToStyle>
-```
-
-*暂无说明。*
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#bindtostyleproxy) 重新导出。
 
 ### `EventStatusChangeHandler` \{#eventstatuschangehandler\}
 
-```ts
-type EventStatusChangeHandler = (enable: boolean, eventName: string) => void
-```
-
-*暂无说明。*
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#eventstatuschangehandler) 重新导出。
 
 ### `StyleChangeHandler` \{#stylechangehandler\}
 
-```ts
-type StyleChangeHandler = (newValue: string | null, styleHyphenName: string) => void
-```
-
-*暂无说明。*
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#stylechangehandler) 重新导出。
 
 ### `UseCSSCustomPropertyHandler` \{#usecsscustompropertyhandler\}
 
-```ts
-type UseCSSCustomPropertyHandler = (newValue: string, propertyName: string) => void
-```
-
-*暂无说明。*
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#usecsscustompropertyhandler) 重新导出。
 
 {/* @api-end */}

@@ -30,29 +30,15 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 
 ### `ChunkLoadingWebpackPlugin` \{#chunkloadingwebpackplugin\}
 
-ChunkLoadingWebpackPlugin 为 Lynx 中的 webpack/Rspack 启用 chunk 加载能力。
-
-- 与 Rspack 一起使用。
+ChunkLoadingWebpackPlugin 为 Lynx 中的 Rspack 启用 chunk 加载能力。仅在 `output.chunkLoading` 为 `'lynx'` 时生效。
 
 ```js
 // rspack.config.js
 import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'
 export default {
   output: {
-    chunkFormat: 'require',
-  },
-  plugins: [new ChunkLoadingWebpackPlugin()],
-}
-```
-
-- 与 webpack 一起使用。
-
-```js
-// webpack.config.js
-import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'
-export default {
-  output: {
-    chunkFormat: 'lynx',
+    chunkLoading: 'lynx',
+    chunkFormat: 'commonjs',
   },
   plugins: [new ChunkLoadingWebpackPlugin()],
 }

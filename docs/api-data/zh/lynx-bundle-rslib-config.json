@@ -13,7 +13,7 @@
   },
   "EncodeOptions.enableJsBytecode.remarks": {
     "en": "When disabled, main thread chunks are encoded as plain JavaScript source,\nwhich keeps them readable for debugging and speeds up encoding.\n\nOnly takes effect for the `'lynx'` target. For the `'web'` target the\n`JsBytecode` tag only routes main thread chunks to the correct bundle\nslot (the chunk is never bytecode-compiled), so it is always kept.",
-    "text": "禁用后，主线程 chunk 会以普通 JavaScript 源码的形式编码，\n既便于调试时阅读，也能加快编码速度。\n\n仅对 `'lynx'` 目标生效。对于 `'web'` 目标，\n`JsBytecode` 标签仅用于将主线程 chunk 路由到正确的 bundle\n槽位（chunk 不会被编译为字节码），因此始终保留。"
+    "text": "禁用后，主线程 chunk 会以普通 JavaScript 源码的形式编码，既便于调试时阅读，也能加快编码速度。\n\n仅对 `'lynx'` 目标生效。对于 `'web'` 目标，\n`JsBytecode` 标签仅用于将主线程 chunk 路由到正确的 bundle\n槽位（chunk 不会被编译为字节码），因此始终保留。"
   },
   "EncodeOptions.enableJsBytecode.default": {
     "en": "`false` when `NODE_ENV` is `'development'`, otherwise `true`",
@@ -37,11 +37,11 @@
   },
   "ExternalObject.summary": {
     "en": "Object form of an external mapping.\n\nUse this instead of the plain global-name form when the external library is\nmounted asynchronously (as a Promise) by the consuming application, i.e. the\nmatching `pluginExternalBundle` external is configured with `async: true`.",
-    "text": "external 映射的对象形式。\n\n当外部库由使用方应用异步（以 Promise 形式）挂载时，即\n对应的 `pluginExternalBundle` external 配置了 `async: true` 时，\n使用该形式替代普通的全局名称形式。"
+    "text": "external 映射的对象形式。\n\n当外部库由使用方应用异步（以 Promise 形式）挂载时，即对应的 `pluginExternalBundle` external 配置了 `async: true` 时，使用该形式替代普通的全局名称形式。"
   },
   "ExternalObject.async.summary": {
     "en": "Whether the library is mounted as a Promise resolving to the library\nnamespace. When enabled, the external is emitted as a `promise` external\nso importing modules await the mounted value instead of reading it\nsynchronously.",
-    "text": "库是否以 Promise 的形式挂载，该 Promise resolve 为库的\n命名空间。启用后，该 external 会作为 `promise` external 产出，\n导入它的模块会 await 挂载的值，而不是同步\n读取。"
+    "text": "库是否以 Promise 的形式挂载，该 Promise resolve 为库的命名空间。启用后，该 external 会作为 `promise` external 产出，导入它的模块会 await 挂载的值，而不是同步读取。"
   },
   "ExternalObject.libraryName.summary": {
     "en": "The global name (with optional subpath) of the external library.",
@@ -69,7 +69,7 @@
   },
   "Externals.summary": {
     "en": "External module to global-name mappings used when building Lynx external\nbundles.",
-    "text": "外部模块到全局名称的映射，\n用于构建 Lynx external bundle。"
+    "text": "外部模块到全局名称的映射，用于构建 Lynx external bundle。"
   },
   "ExternalsPresetDefinitions.summary": {
     "en": "Available externals preset definitions.",
@@ -81,7 +81,7 @@
   },
   "ExternalsPresetValue.summary": {
     "en": "How an externals preset is enabled.\n\n`true` mounts the preset's libraries synchronously. The `{ async: true }`\nobject form mounts them asynchronously (as Promises), for the web target\nwhere external bundles are loaded via `fetchBundle().then` — see\n[`ExternalObject.async`](api:ExternalObject.async).",
-    "text": "externals 预设的启用方式。\n\n`true` 会同步挂载该预设的库。`{ async: true }`\n对象形式会异步（以 Promise 形式）挂载它们，适用于 web 目标，\n该目标下 external bundle 通过 `fetchBundle().then` 加载，参见\n[`ExternalObject.async`](api:ExternalObject.async)。"
+    "text": "externals 预设的启用方式。\n\n`true` 会同步挂载该预设的库。`{ async: true }`\n对象形式会异步（以 Promise 形式）挂载它们，适用于 web 目标，该目标下 external bundle 通过 `fetchBundle().then` 加载，参见\n[`ExternalObject.async`](api:ExternalObject.async)。"
   },
   "OutputConfig.summary": {
     "en": "Output config accepted by Lynx external bundle builds.",
@@ -92,8 +92,8 @@
     "text": "内置的 externals 预设定义。"
   },
   "defaultExternalBundleLibConfig.summary": {
-    "en": "The default lib config`LibConfig` for external bundle.",
-    "text": "external bundle 的默认 lib 配置 `LibConfig`。"
+    "en": "The default lib config[`LibConfig`](api:LibConfig) for external bundle.",
+    "text": "external bundle 的默认 lib 配置[`LibConfig`](api:LibConfig)。"
   },
   "LAYERS.summary": {
     "en": "The layer names an entry is split by without a DSL plugin.",
@@ -108,15 +108,15 @@
     "text": "获取用于构建 Lynx external bundle 的 Rslib 配置。"
   },
   "defineExternalBundleRslibConfig.example.0": {
-    "en": "If you want to build an external bundle which use in Lynx background thread, you can use the following code:\n\n```js\n// rslib.config.js\nimport { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'\n\nexport default defineExternalBundleRslibConfig({\n  id: 'utils-lib',\n  source: {\n    entry: {\n      utils: {\n        import: './src/utils.ts',\n        layer: 'background',\n      }\n    }\n  }\n})\n```\n\nThen you can use `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })` in background thread.",
-    "text": "如果要构建在 Lynx 后台线程中使用的 external bundle，可以使用以下代码：\n\n```js\n// rslib.config.js\nimport { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'\n\nexport default defineExternalBundleRslibConfig({\n  id: 'utils-lib',\n  source: {\n    entry: {\n      utils: {\n        import: './src/utils.ts',\n        layer: 'background',\n      }\n    }\n  }\n})\n```\n\n然后即可在后台线程中使用 `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })`。"
+    "en": "If you want to build an external bundle which use in Lynx background thread, you can use the following code:\n\n```js\n// rslib.config.js\nimport { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'\nimport { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\n\nexport default defineExternalBundleRslibConfig({\n  id: 'utils-lib',\n  source: {\n    entry: {\n      utils: {\n        import: './src/utils.ts',\n        layer: LAYERS.BACKGROUND,\n      }\n    }\n  },\n  plugins: [pluginReactLynx()],\n})\n```\n\nThen you can use `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })` in background thread.",
+    "text": "如果要构建在 Lynx 后台线程中使用的 external bundle，可以使用以下代码：\n\n```js\n// rslib.config.js\nimport { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'\nimport { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\n\nexport default defineExternalBundleRslibConfig({\n  id: 'utils-lib',\n  source: {\n    entry: {\n      utils: {\n        import: './src/utils.ts',\n        layer: LAYERS.BACKGROUND,\n      }\n    }\n  },\n  plugins: [pluginReactLynx()],\n})\n```\n\n然后即可在后台线程中使用 `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })`。"
   },
   "defineExternalBundleRslibConfig.example.1": {
-    "en": "If you want to build an external bundle which use in Lynx main thread, you can use the following code:\n\n```js\n// rslib.config.js\nimport { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'\n\nexport default defineExternalBundleRslibConfig({\n  id: 'utils-lib',\n  source: {\n    entry: {\n      utils: {\n        import: './src/utils.ts',\n        layer: 'main-thread',\n      }\n    }\n  }\n})\n```\nThen you can use `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })` in main-thread.",
-    "text": "如果要构建在 Lynx 主线程中使用的 external bundle，可以使用以下代码：\n\n```js\n// rslib.config.js\nimport { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'\n\nexport default defineExternalBundleRslibConfig({\n  id: 'utils-lib',\n  source: {\n    entry: {\n      utils: {\n        import: './src/utils.ts',\n        layer: 'main-thread',\n      }\n    }\n  }\n})\n```\n\n然后即可在主线程中使用 `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })`。"
+    "en": "If you want to build an external bundle which use in Lynx main thread, you can use the following code:\n\n```js\n// rslib.config.js\nimport { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'\nimport { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\n\nexport default defineExternalBundleRslibConfig({\n  id: 'utils-lib',\n  source: {\n    entry: {\n      utils: {\n        import: './src/utils.ts',\n        layer: LAYERS.MAIN_THREAD,\n      }\n    }\n  },\n  plugins: [pluginReactLynx()],\n})\n```\nThen you can use `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })` in main-thread.",
+    "text": "如果要构建在 Lynx 主线程中使用的 external bundle，可以使用以下代码：\n\n```js\n// rslib.config.js\nimport { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'\nimport { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\n\nexport default defineExternalBundleRslibConfig({\n  id: 'utils-lib',\n  source: {\n    entry: {\n      utils: {\n        import: './src/utils.ts',\n        layer: LAYERS.MAIN_THREAD,\n      }\n    }\n  },\n  plugins: [pluginReactLynx()],\n})\n```\n\n然后即可在主线程中使用 `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })`。"
   },
   "defineExternalBundleRslibConfig.example.2": {
-    "en": "If you want to build an external bundle which use both in Lynx main thread and background thread. You don't need to set the layer.\n\n```js\n// rslib.config.js\nimport { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'\n\nexport default defineExternalBundleRslibConfig({\n  id: 'utils-lib',\n  source: {\n    entry: {\n      utils: './src/utils.ts',\n    },\n  }\n})\n```\n\nThen you can use `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })` in background thread and `lynx.loadScript('utils__main-thread', { bundleName: 'utils-lib-bundle-url' })` in main-thread.",
-    "text": "如果要构建同时在 Lynx 主线程和后台线程中使用的 external bundle，无需设置 layer。\n\n```js\n// rslib.config.js\nimport { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'\n\nexport default defineExternalBundleRslibConfig({\n  id: 'utils-lib',\n  source: {\n    entry: {\n      utils: './src/utils.ts',\n    },\n  }\n})\n```\n\n然后即可在后台线程中使用 `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })`，在主线程中使用 `lynx.loadScript('utils__main-thread', { bundleName: 'utils-lib-bundle-url' })`。"
+    "en": "If you want to build an external bundle which use both in Lynx main thread and background thread. You don't need to set the layer.\n\n```js\n// rslib.config.js\nimport { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'\nimport { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\n\nexport default defineExternalBundleRslibConfig({\n  id: 'utils-lib',\n  source: {\n    entry: {\n      utils: './src/utils.ts',\n    },\n  },\n  plugins: [pluginReactLynx()],\n})\n```\n\nThen you can use `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })` in background thread and `lynx.loadScript('utils__main-thread', { bundleName: 'utils-lib-bundle-url' })` in main-thread.",
+    "text": "如果要构建同时在 Lynx 主线程和后台线程中使用的 external bundle，无需设置 layer。\n\n```js\n// rslib.config.js\nimport { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'\nimport { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\n\nexport default defineExternalBundleRslibConfig({\n  id: 'utils-lib',\n  source: {\n    entry: {\n      utils: './src/utils.ts',\n    },\n  },\n  plugins: [pluginReactLynx()],\n})\n```\n\n然后即可在后台线程中使用 `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })`，在主线程中使用 `lynx.loadScript('utils__main-thread', { bundleName: 'utils-lib-bundle-url' })`。"
   }
 }

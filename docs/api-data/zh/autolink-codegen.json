@@ -1,14 +1,14 @@
 {
   "generate.summary": {
-    "en": "Builds the generated JS facade and platform spec file contents for a library package.",
-    "text": "为库包构建生成的 JS facade 和平台 spec 文件内容。"
+    "en": "Builds the generated file contents for a library package: JS facades and platform specs,\nplus the shared C++ sources, registrations, CMake target, iOS wrapper and Lynxtron\nregistrations for Node-API and Lynxtron modules.",
+    "text": "为库包构建生成的文件内容：JS facade 和平台 spec，以及面向 Node-API 和 Lynxtron 模块的共享 C++ 源码、注册代码、CMake target、iOS wrapper\n和 Lynxtron 注册代码。"
   },
   "parseNativeModules.summary": {
     "en": "Parses native module declarations marked with `@lynxmodule` from a TypeScript declaration source.",
     "text": "从 TypeScript 声明源码中解析以 `@lynxmodule` 标记的原生模块声明。"
   },
   "runCodegen.summary": {
-    "en": "Writes generated files to disk and returns the generated file descriptors.",
-    "text": "将生成的文件写入磁盘，并返回生成文件的描述符。"
+    "en": "Writes generated files to disk, skipping existing files marked `overwrite: false`,\nand returns the generated file descriptors.",
+    "text": "将生成的文件写入磁盘（跳过已存在且标记为 `overwrite: false` 的文件），并返回生成文件的描述符。"
   }
 }

@@ -958,8 +958,7 @@ expect(container.firstChild).toMatchInlineSnapshot(`
 function renderHook(render: (initialProps: Props) => Result, options?: RenderHookOptions<Props>): RenderHookResult<Result, Props>
 ```
 
-允许你在测试用的 React 组件中渲染 hook，而无需
-自己创建该组件。
+允许你在测试用的 React 组件中渲染 hook，而无需自己创建该组件。
 
 ```ts
 import { renderHook } from '@lynx-js/react/testing-library'
@@ -1027,16 +1026,13 @@ function waitSchedule(): Promise<void>
 
 当你想等待下一个事件循环完成时，这会很有用。
 
- 请改用 `act`
-
 **返回值：** `Promise<void>`
 
 ## 类 \{#classes\}
 
 ### `LynxTestingEnv` \{#lynxtestingenv\}
 
-[Lynx 规范](https://lynxjs.org/guide/spec.html)的纯 JavaScript 实现，
-主要包括 [Element PAPI](https://lynxjs.org/api/engine/element-api) 和[双线程模型](https://lynxjs.org/guide/spec#dual-threaded-model)，可在 Node.js 中使用。
+[Lynx 规范](https://lynxjs.org/guide/spec.html)的纯 JavaScript 实现，主要包括 [Element PAPI](https://lynxjs.org/api/engine/element-api) 和[双线程模型](https://lynxjs.org/guide/spec#dual-threaded-model)，可在 Node.js 中使用。
 
 ```ts
 import { LynxTestingEnv } from '@lynx-js/testing-environment';
@@ -1263,11 +1259,11 @@ const within: typeof getQueriesForElement
 | <a id="byroleoptions-current"></a>`current?` | `string \| boolean` | 按元素的 `aria-current` 状态进行过滤。`true` 和 `false` 分别匹配 `aria-current="true"` 和 `aria-current="false"`（以及缺少 `aria-current` 属性的情况）。 |
 | <a id="byroleoptions-description"></a>`description?` | `string \| RegExp \| ((accessibleDescription: string, element: Element) => boolean)` | 仅考虑具有指定无障碍描述（accessible description）的元素。 |
 | <a id="byroleoptions-expanded"></a>`expanded?` | `boolean` | 若为 true，则仅包含查询集合中在无障碍树中被标记为 expanded 的元素，即 `aria-expanded="true"` |
-| <a id="byroleoptions-hidden"></a>`hidden?` | `boolean` | 若为 true，则在查询集合中包含通常会被排除在 无障碍树之外的元素。`role="none"` 或 `role="presentation"` 在任何情况下都会被包含。 |
-| <a id="byroleoptions-level"></a>`level?` | `number` | 包含具有 `"heading"` 角色且与指定层级匹配的元素， 既可以是语义化 HTML 标题元素 `<h1>-<h6>`，也可以是匹配 `aria-level` 属性的元素。 |
+| <a id="byroleoptions-hidden"></a>`hidden?` | `boolean` | 若为 true，则在查询集合中包含通常会被排除在无障碍树之外的元素。`role="none"` 或 `role="presentation"` 在任何情况下都会被包含。 |
+| <a id="byroleoptions-level"></a>`level?` | `number` | 包含具有 `"heading"` 角色且与指定层级匹配的元素，既可以是语义化 HTML 标题元素 `<h1>-<h6>`，也可以是匹配 `aria-level` 属性的元素。 |
 | <a id="byroleoptions-name"></a>`name?` | `string \| RegExp \| ((accessibleName: string, element: Element) => boolean)` | 仅考虑具有指定无障碍名称（accessible name）的元素。 |
 | <a id="byroleoptions-pressed"></a>`pressed?` | `boolean` | 若为 true，则仅包含查询集合中在无障碍树中被标记为 pressed 的元素，即 `aria-pressed="true"` |
-| <a id="byroleoptions-queryfallbacks"></a>`queryFallbacks?` | `boolean` | 包含 `role` 属性中使用的所有角色 例如 *ByRole('progressbar', \{queryFallbacks: true\})` will find <div role="meter progressbar">`。 |
+| <a id="byroleoptions-queryfallbacks"></a>`queryFallbacks?` | `boolean` | 包含 `role` 属性中使用的所有角色例如 *ByRole('progressbar', \{queryFallbacks: true\})` will find <div role="meter progressbar">`。 |
 | <a id="byroleoptions-selected"></a>`selected?` | `boolean` | 若为 true，则仅包含查询集合中在无障碍树中被标记为 selected 的元素，即 `aria-selected="true"` |
 | <a id="byroleoptions-suggest"></a>`suggest?` | `boolean` | 为特定查询禁用建议 |
 | <a id="byroleoptions-value"></a>`value?` | `{ max?: number; min?: number; now?: number; text?: `[`Matcher`](#matcher)` }` |  |
@@ -1349,7 +1345,7 @@ ConfigFn(existingConfig: Config): Partial<Config>
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="prettydomoptions-filternode"></a>`filterNode?` | `(node: Node) => boolean` | 给定一个 `Node`，如果希望在输出中忽略该节点，则返回 `false`。 默认会忽略 `<style />`、`<script />` 和注释节点。 |
+| <a id="prettydomoptions-filternode"></a>`filterNode?` | `(node: Node) => boolean` | 给定一个 `Node`，如果希望在输出中忽略该节点，则返回 `false`。默认会忽略 `<style />`、`<script />` 和注释节点。 |
 
 ### `Queries` \{#queries\}
 
@@ -1365,7 +1361,7 @@ ConfigFn(existingConfig: Config): Partial<Config>
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="renderhookoptions-initialprops"></a>`initialProps?` | `Props` | 传递给 renderHook 回调的参数。如果你计划 使用 rerender 工具函数来更改传递给 hook 的值，这会很有用。 |
+| <a id="renderhookoptions-initialprops"></a>`initialProps?` | `Props` | 传递给 renderHook 回调的参数。如果你计划使用 rerender 工具函数来更改传递给 hook 的值，这会很有用。 |
 
 #### `RenderHookOptions.wrapper?` \{#renderhookoptions-wrapper\}
 
@@ -1397,7 +1393,7 @@ const customRenderHook = (ui, options) =>
 export * from '@lynx-js/react/testing-library'
 
 // override renderHook method
-export { customRender as renderHook }
+export { customRenderHook as renderHook }
 ```
 
 ### `RenderHookResult` \{#renderhookresult\}
@@ -1839,7 +1835,7 @@ type QueryMethod = (container: HTMLElement, args: Arguments) => Return
 ### `RenderResult` \{#renderresult\}
 
 ```ts
-type RenderResult = { asFragment: () => DocumentFragment; container: LynxElement; rerender: (ui: React.ReactNode) => void; unmount: () => boolean } & { [P in keyof Q]: BoundFunction<Q[P]> }
+type RenderResult = { asFragment: () => DocumentFragment; container: LynxElement; rerender: (ui: React.ReactNode) => void; unmount: () => void } & { [P in keyof Q]: BoundFunction<Q[P]> }
 ```
 
 [`render`](#render) 的返回结果

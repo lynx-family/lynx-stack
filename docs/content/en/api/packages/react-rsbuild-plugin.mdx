@@ -70,17 +70,20 @@ When [`PluginReactLynxOptions.enableCSSInheritance`](#enablecssinheritance) is e
 
 By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.
 
-```js
-import { defineConfig } from '@lynx-js/rspeedy'
+```ts
+// rsbuild.config.ts
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
 
 export default defineConfig({
+ environments: { lynx: {} },
  plugins: [
    pluginReactLynx({
      enableCSSInheritance: true,
      customCSSInheritanceList: ['direction', 'overflow']
    }),
  ],
-}
+})
 ```
 
 ### `debugInfoOutside` \{#debuginfooutside\}
@@ -172,11 +175,8 @@ rules.
 - **Type:** `string`
 - **Default:** `'3.2'`
 
-
- `targetSdkVersion` is now an alias of [`PluginReactLynxOptions.engineVersion`](#engineversion). Use [`PluginReactLynxOptions.engineVersion`](#engineversion) instead.
-
 :::warning Deprecated
-Deprecated.
+`targetSdkVersion` is now an alias of [`PluginReactLynxOptions.engineVersion`](#engineversion). Use [`PluginReactLynxOptions.engineVersion`](#engineversion) instead.
 :::
 
 targetSdkVersion is used to specify the minimal Lynx Engine version that a App bundle can run on.
@@ -192,11 +192,11 @@ targetSdkVersion is used to specify the minimal Lynx Engine version that a App b
 | <a id="enablenewgesture"></a>`enableNewGesture` | `boolean` | `false` | enableNewGesture enables the new gesture system. |
 | <a id="enableremovecssscope"></a>`enableRemoveCSSScope` | `boolean` | `true` | enableRemoveCSSScope controls whether CSS is restrict to use in the component scope. `true`: All CSS files are treated as global CSS. `false`: All CSS files are treated as scoped CSS, and only take effect in the component that explicitly imports it. `undefined`: Only use scoped CSS for CSS Modules, and treat other CSS files as global CSS. Scoped CSS is faster than global CSS, thus you can use CSS Modules to speedy up your CSS if there are performance issues. |
 | <a id="enablessr"></a>`enableSSR` | `boolean` | `false` | `enableSSR` enable Lynx SSR feature for this build. |
-| <a id="enableuisourcemap"></a>`enableUiSourceMap` | `boolean` | `false` | Enable UI source map generation and debug-metadata asset emission. |
+| <a id="enableuisourcemap"></a>`enableUiSourceMap` | `boolean` | `false` | Generate UI source maps in the main-thread transform. |
 | <a id="engineversion"></a>`engineVersion` | `string` | `'3.2'` | `engineVersion` specifies the minimum Lynx Engine version required for an App bundle to function properly. |
 | <a id="experimental-islazybundle"></a>`experimental_isLazyBundle` <span className="api-badge api-badge-alpha">Alpha</span> | `boolean` | `false` | Generate standalone lazy bundle. |
 | <a id="experimental-useelementtemplate"></a>`experimental_useElementTemplate` <span className="api-badge api-badge-beta">Experimental</span> | `boolean` | `false` | Enable Element Template compile and runtime entries. |
-| <a id="extractstr"></a>`extractStr` | `boolean \| Partial<`[`ExtractStrConfig`](#extractstrconfig)`>` | `false` | Merge same string literals in JS and Lepus to reduce output bundle size. Set to `false` to disable. |
+| <a id="extractstr"></a>`extractStr` | `boolean \| Partial<`[`ExtractStrConfig`](#extractstrconfig)`>` | `false` | Merge same string literals in JS and Lepus to reduce output bundle size. Set to `false` to disable. Only takes effect when chunk splitting is disabled. |
 | <a id="firstscreensynctiming"></a>`firstScreenSyncTiming` | `"immediately" \| "jsReady" \| "manual"` | `"immediately"` | This flag controls when MainThread (Lepus) transfers control to Background after the first screen This flag has three options: `"immediately"`: Transfer immediately `"jsReady"`: Transfer when background (JS Runtime) is ready `"manual"`: Transfer when the business calls the `markFirstScreenSyncReady()` API exported by `@lynx-js/react`, so the handover timing is fully controlled by the user After handing over control, MainThread (Lepus) runtime can no longer respond to data updates, and data updates will be forwarded to background (JS Runtime) and processed __asynchronously__ |
 | <a id="globalpropsmode"></a>`globalPropsMode` | `"reactive" \| "event"` | `'reactive'` | Configure the update mode of `lynx.__globalProps`. This flag has two options: `'reactive'`: `UpdateGlobalProps` will trigger update automatically. `'event'`: `UpdateGlobalProps` will trigger global event and users need to trigger update in the event handler. |
 | <a id="optimizebundlesize"></a>`optimizeBundleSize` | `boolean \| { background?: boolean; mainThread?: boolean }` | `false` | Optimize bundle size by removing unused code by Minify.mainThreadOptions and Minify.backgroundOptions. When optimizeBundleSize or optimizeBundleSize.mainThread is true, main-thread code will be optimized. When optimizeBundleSize or optimizeBundleSize.background is true, background code will be optimized. |
@@ -237,17 +237,13 @@ export default {
 
 ### `LAYERS` \{#layers\}
 
-```ts
-const LAYERS: { BACKGROUND: "react:background"; MAIN_THREAD: "react:main-thread" }
-```
-
-*No description yet.*
+Re-exported from [`@lynx-js/react-webpack-plugin`](/api/packages/react-webpack-plugin#layers).
 
 ## Types \{#types\}
 
 ### `AddComponentElementConfig` \{#addcomponentelementconfig\}
 
-`CompatVisitorConfig.addComponentElement`
+[`CompatVisitorConfig.addComponentElement`](#compatvisitorconfig-addcomponentelement)
 
 #### `AddComponentElementConfig.compilerOnly` \{#addcomponentelementconfig-compileronly\}
 
@@ -274,7 +270,7 @@ export default defineConfig({
 
 ### `CompatVisitorConfig` \{#compatvisitorconfig\}
 
-`PluginReactLynxOptions.compat`
+[`PluginReactLynxOptions.compat`](#compat)
 
 | Members | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -374,7 +370,7 @@ export default defineConfig({
 - **Default:** `undefined`
 
 :::warning Deprecated
-Deprecated.
+This option has no effect.
 :::
 
 Dark mode configuration
@@ -498,14 +494,12 @@ export default defineConfig({
 - **Default:** `undefined`
 
 :::warning Deprecated
-Deprecated.
+It's recommended to use `background-only`.
+
+If your code depends on this switch, when distributing it to other projects through npm packages or other means, you'll also need to enable this switch. This will lead to the proliferation of switches, which is not conducive to code reuse between different projects.
 :::
 
 Regular expression used to remove component attributes
-
- It's recommended to use `background-only`.
-
-If your code depends on this switch, when distributing it to other projects through npm packages or other means, you'll also need to enable this switch. This will lead to the proliferation of switches, which is not conducive to code reuse between different projects.
 
 ```js
 import { defineConfig } from '@lynx-js/rspeedy'
@@ -528,12 +522,6 @@ export default defineConfig({
 - **Default:** `false`
 
 :::warning Deprecated
-Deprecated.
-:::
-
-Whether to simplify constructor calls like ReactLynx 2
-
-
 Using `simplifyCtorLikeReactLynx2` is not recommended as it introduces implicit behaviors that can:
 
 - Make code harder to understand and maintain
@@ -543,6 +531,9 @@ Using `simplifyCtorLikeReactLynx2` is not recommended as it introduces implicit 
 - Complicate debugging and testing processes
 
 Instead, use `background-only` on class methods for explicit and maintainable behavior
+:::
+
+Whether to simplify constructor calls like ReactLynx 2
 
 ```js
 import { defineConfig } from '@lynx-js/rspeedy'
@@ -561,7 +552,7 @@ export default defineConfig({
 
 ### `DefineDceVisitorConfig` \{#definedcevisitorconfig\}
 
-`PluginReactLynxOptions.defineDCE`
+[`PluginReactLynxOptions.defineDCE`](#definedce)
 
 #### `DefineDceVisitorConfig.define` \{#definedcevisitorconfig-define\}
 
@@ -610,7 +601,7 @@ function FooOrBar() {
 
 ### `ExtractStrConfig` \{#extractstrconfig\}
 
-`PluginReactLynxOptions.extractStr`
+[`PluginReactLynxOptions.extractStr`](#extractstr)
 
 #### `ExtractStrConfig.strLength` \{#extractstrconfig-strlength\}
 
@@ -636,15 +627,18 @@ export default defineConfig({
 
 ### `LynxTemplatePlugin` \{#lynxtemplateplugin\}
 
-*No description yet.*
+The static API of
+[`LynxTemplatePlugin`](/api/packages/template-webpack-plugin#lynxtemplateplugin)
+that `pluginLynx` exposes. Get it with
+`api.useExposed(Symbol.for('LynxTemplatePlugin')).LynxTemplatePlugin`.
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="lynxtemplateplugin-getlynxtemplatepluginhooks"></a>`getLynxTemplatePluginHooks` | `(compilation: Compilation) => `[`TemplateHooks`](#templatehooks) |  |
+| <a id="lynxtemplateplugin-getlynxtemplatepluginhooks"></a>`getLynxTemplatePluginHooks` | `(compilation: Compilation) => `[`TemplateHooks`](#templatehooks) | Returns the [`TemplateHooks`](#templatehooks) of a compilation. |
 
 ### `ShakeVisitorConfig` \{#shakevisitorconfig\}
 
-`PluginReactLynxOptions.shake`
+[`PluginReactLynxOptions.shake`](#shake)
 
 #### `ShakeVisitorConfig.pkgName` \{#shakevisitorconfig-pkgname\}
 
@@ -744,36 +738,7 @@ export default defineConfig({
 
 ### `TemplateHooks` \{#templatehooks\}
 
-To allow other plugins to alter the Template, this plugin executes
-[tapable](https://github.com/webpack/tapable) hooks.
-
-```js
-class MyPlugin {
-  apply(compiler) {
-    compiler.hooks.compilation.tap("MyPlugin", (compilation) => {
-      console.log("The compiler is starting a new compilation...");
-
-      LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(
-        "MyPlugin", // <-- Set a meaningful name here for stacktraces
-        (data, cb) => {
-          // Manipulate the content
-          modifyTemplate(data.template)
-          // Tell webpack to move on
-          cb(null, data);
-        },
-      );
-    });
-  }
-}
-```
-
-| Members | Type | Description |
-| --- | --- | --- |
-| <a id="templatehooks-afteremit"></a>`afterEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ outputName: string }>` | Called after the template is emitted. |
-| <a id="templatehooks-asyncchunkname"></a>`asyncChunkName` <span className="api-badge api-badge-alpha">Alpha</span> | `SyncWaterfallHook<string>` | Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template. |
-| <a id="templatehooks-beforeemit"></a>`beforeEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: EncodeOptions; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>` | Called before the template is emitted. Can be used to modify the template. |
-| <a id="templatehooks-beforeencode"></a>`beforeEncode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>` | Called before the encode process. Can be used to modify the encode options. |
-| <a id="templatehooks-encode"></a>`encode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesBailHook<{ encodeOptions: EncodeOptions; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>` | Call the encode process. |
+Re-exported from [`@lynx-js/template-webpack-plugin`](/api/packages/template-webpack-plugin#templatehooks).
 
 ### `TransformBuiltinAttributeNamesOptions` \{#transformbuiltinattributenamesoptions\}
 

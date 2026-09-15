@@ -30,11 +30,10 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 
 ### `RuntimeConfigWebpackPlugin` \{#runtimeconfigwebpackplugin\}
 
-合并位于
-`lynx.__runtime_configs__` 中的运行时配置，并对其进行浅冻结。
+将当前 bundle 的运行时配置合并到
+`lynx.__runtime_configs__` 中，然后对其进行浅冻结。
 
-各 bundle 按执行顺序合并。
-后执行的 bundle 中的值会覆盖先前相同 key 的值。
+仅将其应用于宿主 bundle。lazy bundle 和 external bundle 会使用宿主注入的配置。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -60,7 +59,6 @@ type RuntimeConfigWebpackPluginOptions = Record<string, unknown>
 
 由 bundle 提供的页面级运行时配置。
 
-该插件有意不限定配置的 key 和 value，
-交由使用它们的 DSL 决定。
+该插件有意不限定配置的 key 和 value，交由使用它们的 DSL 决定。
 
 {/* @api-end */}

@@ -60,9 +60,9 @@ The instance for handling MessagePort Remote Process Call
 | <a id="rpc-invoke"></a>`invoke` | `invoke(endpoint: T, parameters: T["_TypeParameters"]): void` | the low level api for sending a rpc message recommend to use the `createCall` |
 | <a id="rpc-postmessage"></a>`postMessage` | `postMessage(message: unknown, detail?: { transfer: Transferable[] }): void` |  |
 | <a id="rpc-registerhandler"></a>`registerHandler` | `registerHandler(endpoint: T, handler: (args: T["_TypeParameters"]) => void): void` | register a handler for an endpoint |
-| <a id="rpc-registerhandlerlazy"></a>`registerHandlerLazy` | `registerHandlerLazy(endpoint: T, target: { [key in string]: Handler \| undefined }, propertyName: PropertyName): void` | register a handler for an endpoint |
+| <a id="rpc-registerhandlerlazy"></a>`registerHandlerLazy` | `registerHandlerLazy(endpoint: T, target: { [key in string]: Handler \| undefined }, propertyName: PropertyName): void` | register a handler "lazy" for an endpoint It will add a setter for the target property name once the value is set, we will add it as a handler. |
 | <a id="rpc-registerhandlerref"></a>`registerHandlerRef` | `registerHandlerRef(endpoint: T, target: { [key in string]: Handler \| undefined }, propertyName: PropertyName): void` | register a property of an object as a handler |
-| <a id="rpc-removehandler"></a>`removeHandler` | `removeHandler(rpc: RpcEndpoint<unknown[], unknown>): void` | Remove the handler for the name |
+| <a id="rpc-removehandler"></a>`removeHandler` | `removeHandler(rpc: RpcEndpoint<unknown[], unknown>): void` | Remove the handler for the endpoint |
 | <a id="rpc-setmessageport"></a>`setMessagePort` | `setMessagePort(port: MessagePort): void` |  |
 
 #### `Rpc.constructor` \{#rpc-constructor\}
@@ -87,9 +87,9 @@ The instance for handling MessagePort Remote Process Call
 | <a id="rpcendpointasync-typeparameters"></a>`_TypeParameters` | `Parameters` |  |
 | <a id="rpcendpointasync-typereturn"></a>`_TypeReturn` | `Return` |  |
 | <a id="rpcendpointasync-buffersize"></a>`bufferSize` | `number` | The byte size for return value buffer. The return value will be encoded to json string in utf-8 So you should ensure this size is enough for your stringified return value. |
-| <a id="rpcendpointasync-hasreturn"></a>`hasReturn` | `true` | if this endpoint has return value. Only valid for sync endpoints. Always true for async endpoints. |
+| <a id="rpcendpointasync-hasreturn"></a>`hasReturn` | `true` | Whether the endpoint returns a value. Only used by async endpoints; sync endpoints return a value when `bufferSize` is set. |
 | <a id="rpcendpointasync-hasreturntransfer"></a>`hasReturnTransfer` | `false` | Make the message invoke created by hasReturn support transfer. Only valid for async and hasReturn endpoints |
-| <a id="rpcendpointasync-issync"></a>`isSync` | `false` | the call is a async call or not |
+| <a id="rpcendpointasync-issync"></a>`isSync` | `false` | Whether the call is synchronous (blocks via `Atomics.wait`). |
 | <a id="rpcendpointasync-name"></a>`name` | `string` | The name of this rpc endpoint. Rpc instance use this name to recognize which callback to call. Keep in mind: this should be unique. |
 
 ### `RpcEndpointAsyncWithTransfer` \{#rpcendpointasyncwithtransfer\}
@@ -101,9 +101,9 @@ The instance for handling MessagePort Remote Process Call
 | <a id="rpcendpointasyncwithtransfer-typeparameters"></a>`_TypeParameters` | `Parameters` |  |
 | <a id="rpcendpointasyncwithtransfer-typereturn"></a>`_TypeReturn` | `Return` |  |
 | <a id="rpcendpointasyncwithtransfer-buffersize"></a>`bufferSize` | `number` | The byte size for return value buffer. The return value will be encoded to json string in utf-8 So you should ensure this size is enough for your stringified return value. |
-| <a id="rpcendpointasyncwithtransfer-hasreturn"></a>`hasReturn` | `true` | if this endpoint has return value. Only valid for sync endpoints. Always true for async endpoints. |
+| <a id="rpcendpointasyncwithtransfer-hasreturn"></a>`hasReturn` | `true` | Whether the endpoint returns a value. Only used by async endpoints; sync endpoints return a value when `bufferSize` is set. |
 | <a id="rpcendpointasyncwithtransfer-hasreturntransfer"></a>`hasReturnTransfer` | `true` | Make the message invoke created by hasReturn support transfer. Only valid for async and hasReturn endpoints |
-| <a id="rpcendpointasyncwithtransfer-issync"></a>`isSync` | `true` | the call is a async call or not |
+| <a id="rpcendpointasyncwithtransfer-issync"></a>`isSync` | `true` | Whether the call is synchronous (blocks via `Atomics.wait`). |
 | <a id="rpcendpointasyncwithtransfer-name"></a>`name` | `string` | The name of this rpc endpoint. Rpc instance use this name to recognize which callback to call. Keep in mind: this should be unique. |
 
 ### `RpcEndpointSync` \{#rpcendpointsync\}
@@ -115,9 +115,9 @@ The instance for handling MessagePort Remote Process Call
 | <a id="rpcendpointsync-typeparameters"></a>`_TypeParameters` | `Parameters` |  |
 | <a id="rpcendpointsync-typereturn"></a>`_TypeReturn` | `Return` |  |
 | <a id="rpcendpointsync-buffersize"></a>`bufferSize` | `number` | The byte size for return value buffer. The return value will be encoded to json string in utf-8 So you should ensure this size is enough for your stringified return value. |
-| <a id="rpcendpointsync-hasreturn"></a>`hasReturn` | `true` | if this endpoint has return value. Only valid for sync endpoints. Always true for async endpoints. |
+| <a id="rpcendpointsync-hasreturn"></a>`hasReturn` | `true` | Whether the endpoint returns a value. Only used by async endpoints; sync endpoints return a value when `bufferSize` is set. |
 | <a id="rpcendpointsync-hasreturntransfer"></a>`hasReturnTransfer` | `boolean` | Make the message invoke created by hasReturn support transfer. Only valid for async and hasReturn endpoints |
-| <a id="rpcendpointsync-issync"></a>`isSync` | `true` | the call is a async call or not |
+| <a id="rpcendpointsync-issync"></a>`isSync` | `true` | Whether the call is synchronous (blocks via `Atomics.wait`). |
 | <a id="rpcendpointsync-name"></a>`name` | `string` | The name of this rpc endpoint. Rpc instance use this name to recognize which callback to call. Keep in mind: this should be unique. |
 
 ### `RpcCallType` \{#rpccalltype\}

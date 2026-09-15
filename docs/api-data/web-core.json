@@ -10,83 +10,20 @@
       "name": "CommonEventsAndMethods",
       "kind": "class",
       "type": "unknown",
-      "members": [
-        {
-          "name": "constructor",
-          "type": "constructor(currentElement: HTMLElement & { [layoutChangeTarget]?: HTMLElement }): CommonEventsAndMethods",
-          "kind": "constructor",
-          "params": [
-            {
-              "name": "currentElement",
-              "type": "HTMLElement & { [layoutChangeTarget]?: HTMLElement }"
-            }
-          ],
-          "returns": {
-            "type": "CommonEventsAndMethods",
-            "refs": [
-              "CommonEventsAndMethods"
-            ]
-          }
-        },
-        {
-          "name": "__handleScrollUpperThresholdEventEnabled",
-          "type": "(enabled: boolean) => void",
-          "kind": "property"
-        },
-        {
-          "name": "observedAttributes",
-          "type": "never[]",
-          "kind": "property"
-        },
-        {
-          "name": "dispose",
-          "type": "dispose(): void",
-          "kind": "method",
-          "params": [],
-          "returns": {
-            "type": "void"
-          }
-        }
-      ]
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "AttributeReactiveClass",
       "kind": "interface",
       "type": "unknown",
-      "members": [
-        {
-          "name": "constructor",
-          "type": "constructor(dom: InstanceType<T>): any",
-          "kind": "constructor",
-          "params": [
-            {
-              "name": "dom",
-              "type": "InstanceType<T>"
-            }
-          ],
-          "returns": {
-            "type": "any"
-          }
-        },
-        {
-          "name": "observedAttributes",
-          "type": "readonly string[]",
-          "kind": "property"
-        },
-        {
-          "name": "observedCSSProperties",
-          "optional": true,
-          "type": "readonly string[]",
-          "kind": "property"
-        }
-      ]
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "LynxViewElement",
       "kind": "interface",
       "type": "unknown",
       "examples": [
-        "HTML Example\n\nNote that you should declarae the size of lynx-view\n\n```html\n<lynx-view url=\"https://path/to/main-thread.js\" raw-data=\"{}\" global-props=\"{}\" style=\"height:300px;width:300px\">\n</lynx-view>\n```\n\nReact 19 Example\n```jsx\n<lynx-view url={myLynxCardUrl} rawData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>\n</lynx-view>\n```"
+        "HTML Example\n\nNote that you should declarae the size of lynx-view\n\n```html\n<lynx-view url=\"https://path/to/main.web.bundle\" init-data=\"{}\" global-props=\"{}\" style=\"height:300px;width:300px\">\n</lynx-view>\n```\n\nReact 19 Example\n```jsx\n<lynx-view url={myLynxCardUrl} initData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>\n</lynx-view>\n```"
       ],
       "members": [
         {
@@ -153,7 +90,7 @@
         {
           "name": "initI18nResources",
           "type": "InitI18nResources",
-          "summary": "[optional] (attribute: \"init-i18n-resources\") the complete set of i18nResources that on the container side, which can be obtained synchronously by _I18nResourceTranslation",
+          "summary": "[optional] the complete set of i18nResources that on the container side, which can be obtained synchronously by _I18nResourceTranslation",
           "kind": "accessor"
         },
         {
@@ -300,7 +237,7 @@
           "returns": {
             "type": "void"
           },
-          "summary": "\"false\" value will be omitted\n\n`HTMLElement.setAttribute`"
+          "summary": "\"false\" value will be omitted\n\n[`HTMLElement.setAttribute`](api:HTMLElement.setAttribute)"
         },
         {
           "name": "updateData",
@@ -364,402 +301,133 @@
       "name": "WebComponentClass",
       "kind": "interface",
       "type": "unknown",
-      "members": [
-        {
-          "name": "constructor",
-          "type": "constructor(): HTMLElement & { cssPropertyChangedHandler?: undefined; adoptedCallback?: any; attributeChangedCallback?: any; connectedCallback?: any; disconnectedCallback?: any }",
-          "kind": "constructor",
-          "params": [],
-          "returns": {
-            "type": "HTMLElement & { cssPropertyChangedHandler?: undefined; adoptedCallback?: any; attributeChangedCallback?: any; connectedCallback?: any; disconnectedCallback?: any }"
-          }
-        },
-        {
-          "name": "notToFilterFalseAttributes",
-          "optional": true,
-          "type": "Set<string>",
-          "summary": "for attribute=\"false\",\nwe will do removeAttribute by default;\nset here for dont do this;",
-          "kind": "property"
-        },
-        {
-          "name": "observedAttributes",
-          "optional": true,
-          "type": "string[]",
-          "kind": "property"
-        },
-        {
-          "name": "observedCSSProperties",
-          "optional": true,
-          "type": "undefined",
-          "kind": "property"
-        },
-        {
-          "name": "registerPlugin",
-          "optional": true,
-          "type": "(reactiveClass: AttributeReactiveClass<WebComponentClass>) => void",
-          "refs": [
-            "AttributeReactiveClass",
-            "WebComponentClass"
-          ],
-          "kind": "property"
-        }
-      ]
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "AttributeChangeHandler",
       "kind": "typealias",
-      "type": "(newValue: string | null, oldValue: string | null, attributeName: string) => void"
+      "type": "(newValue: string | null, oldValue: string | null, attributeName: string) => void",
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "AttributeReactiveObject",
       "kind": "typealias",
-      "type": "unknown"
+      "type": "unknown",
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "BindToAttributeProxy",
       "kind": "typealias",
-      "type": "ReturnType<typeof bindToAttribute>"
+      "type": "ReturnType<typeof bindToAttribute>",
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "BindToStyleProxy",
       "kind": "typealias",
-      "type": "ReturnType<typeof bindToStyle>"
+      "type": "ReturnType<typeof bindToStyle>",
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "EventStatusChangeHandler",
       "kind": "typealias",
-      "type": "(enable: boolean, eventName: string) => void"
+      "type": "(enable: boolean, eventName: string) => void",
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "StyleChangeHandler",
       "kind": "typealias",
-      "type": "(newValue: string | null, styleHyphenName: string) => void"
+      "type": "(newValue: string | null, styleHyphenName: string) => void",
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "UseCSSCustomPropertyHandler",
       "kind": "typealias",
-      "type": "(newValue: string, propertyName: string) => void"
+      "type": "(newValue: string, propertyName: string) => void",
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "commonComponentEventSetting",
       "kind": "variable",
-      "type": "{ bubbles: false; cancelable: true; composed: false }"
+      "type": "{ bubbles: false; cancelable: true; composed: false }",
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "html",
       "kind": "function",
       "type": "html(strings: TemplateStringsArray, values: any[]): string",
-      "signatures": [
-        {
-          "text": "html(strings: TemplateStringsArray, values: any[]): string",
-          "params": [
-            {
-              "name": "strings",
-              "type": "TemplateStringsArray"
-            },
-            {
-              "name": "values",
-              "type": "any[]"
-            }
-          ],
-          "returns": {
-            "type": "string"
-          }
-        }
-      ]
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "layoutChangeTarget",
       "kind": "variable",
-      "type": "unique symbol"
+      "type": "unique symbol",
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "registerAttributeHandler",
       "kind": "function",
       "type": "registerAttributeHandler(key: string, args_0: boolean): (this: T, target: AttributeChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any",
-      "refs": [
-        "AttributeChangeHandler"
-      ],
-      "signatures": [
-        {
-          "text": "registerAttributeHandler(key: string, args_0: boolean): (this: T, target: AttributeChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any",
-          "params": [
-            {
-              "name": "key",
-              "type": "string"
-            },
-            {
-              "name": "args_0",
-              "type": "boolean"
-            }
-          ],
-          "returns": {
-            "type": "(this: T, target: AttributeChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any",
-            "refs": [
-              "AttributeChangeHandler"
-            ]
-          }
-        }
-      ]
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "registerEventEnableStatusChangeHandler",
       "kind": "function",
       "type": "registerEventEnableStatusChangeHandler(key: string): (this: T, target: EventStatusChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any",
-      "refs": [
-        "EventStatusChangeHandler"
-      ],
-      "signatures": [
-        {
-          "text": "registerEventEnableStatusChangeHandler(key: string): (this: T, target: EventStatusChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any",
-          "params": [
-            {
-              "name": "key",
-              "type": "string"
-            }
-          ],
-          "returns": {
-            "type": "(this: T, target: EventStatusChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any",
-            "refs": [
-              "EventStatusChangeHandler"
-            ]
-          }
-        }
-      ]
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "registerStyleChangeHandler",
       "kind": "function",
       "type": "registerStyleChangeHandler(key: string): (this: T, target: StyleChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any",
-      "refs": [
-        "StyleChangeHandler"
-      ],
-      "signatures": [
-        {
-          "text": "registerStyleChangeHandler(key: string): (this: T, target: StyleChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any",
-          "params": [
-            {
-              "name": "key",
-              "type": "string"
-            }
-          ],
-          "returns": {
-            "type": "(this: T, target: StyleChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any",
-            "refs": [
-              "StyleChangeHandler"
-            ]
-          }
-        }
-      ]
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "scrollContainerDom",
       "kind": "variable",
-      "type": "unique symbol"
+      "type": "unique symbol",
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "useScrollEnd",
       "kind": "variable",
-      "type": "boolean"
+      "type": "boolean",
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "bindSwitchToEventListener",
       "kind": "function",
       "type": "bindSwitchToEventListener(this: T, elementGetter: (this: T) => HTMLElement, eventName: string, eventListener: EventListener, options?: AddEventListenerOptions): (this: T, enable: boolean) => void",
-      "signatures": [
-        {
-          "text": "bindSwitchToEventListener(this: T, elementGetter: (this: T) => HTMLElement, eventName: string, eventListener: EventListener, options?: AddEventListenerOptions): (this: T, enable: boolean) => void",
-          "params": [
-            {
-              "name": "this",
-              "type": "T"
-            },
-            {
-              "name": "elementGetter",
-              "type": "(this: T) => HTMLElement"
-            },
-            {
-              "name": "eventName",
-              "type": "string"
-            },
-            {
-              "name": "eventListener",
-              "type": "EventListener"
-            },
-            {
-              "name": "options",
-              "type": "AddEventListenerOptions",
-              "optional": true
-            }
-          ],
-          "returns": {
-            "type": "(this: T, enable: boolean) => void"
-          }
-        }
-      ]
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "bindToAttribute",
       "kind": "function",
       "type": "bindToAttribute(this: T, elementGetter: (this: T) => HTMLElement, attributeName: string, valProcessor?: (value: string | null) => string | null): (this: T, newVal: string | null) => void",
-      "signatures": [
-        {
-          "text": "bindToAttribute(this: T, elementGetter: (this: T) => HTMLElement, attributeName: string, valProcessor?: (value: string | null) => string | null): (this: T, newVal: string | null) => void",
-          "params": [
-            {
-              "name": "this",
-              "type": "T"
-            },
-            {
-              "name": "elementGetter",
-              "type": "(this: T) => HTMLElement"
-            },
-            {
-              "name": "attributeName",
-              "type": "string"
-            },
-            {
-              "name": "valProcessor",
-              "type": "(value: string | null) => string | null",
-              "optional": true
-            }
-          ],
-          "returns": {
-            "type": "(this: T, newVal: string | null) => void"
-          }
-        }
-      ]
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "bindToStyle",
       "kind": "function",
       "type": "bindToStyle(this: T, elementGetter: (this: T) => HTMLElement, styleName: string, valProcessor?: (value: string) => string, important?: boolean): (this: T, newVal: string | null) => void",
-      "signatures": [
-        {
-          "text": "bindToStyle(this: T, elementGetter: (this: T) => HTMLElement, styleName: string, valProcessor?: (value: string) => string, important?: boolean): (this: T, newVal: string | null) => void",
-          "params": [
-            {
-              "name": "this",
-              "type": "T"
-            },
-            {
-              "name": "elementGetter",
-              "type": "(this: T) => HTMLElement"
-            },
-            {
-              "name": "styleName",
-              "type": "string"
-            },
-            {
-              "name": "valProcessor",
-              "type": "(value: string) => string",
-              "optional": true
-            },
-            {
-              "name": "important",
-              "type": "boolean",
-              "optional": true
-            }
-          ],
-          "returns": {
-            "type": "(this: T, newVal: string | null) => void"
-          }
-        }
-      ]
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "boostedQueueMicrotask",
       "kind": "function",
       "type": "boostedQueueMicrotask(foo: CallableFunction, that?: any): void",
-      "signatures": [
-        {
-          "text": "boostedQueueMicrotask(foo: CallableFunction, that?: any): void",
-          "params": [
-            {
-              "name": "foo",
-              "type": "CallableFunction"
-            },
-            {
-              "name": "that",
-              "type": "any",
-              "optional": true
-            }
-          ],
-          "returns": {
-            "type": "void"
-          }
-        }
-      ]
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "Component",
       "kind": "function",
       "type": "Component(tag: string, attributeReactiveClassesOptional: (AttributeReactiveClass<T> | undefined)[], template?: string): (target: T, context: ClassDecoratorContext<T>) => T",
-      "signatures": [
-        {
-          "text": "Component(tag: string, attributeReactiveClassesOptional: (AttributeReactiveClass<T> | undefined)[], template?: string): (target: T, context: ClassDecoratorContext<T>) => T",
-          "params": [
-            {
-              "name": "tag",
-              "type": "string"
-            },
-            {
-              "name": "attributeReactiveClassesOptional",
-              "type": "(AttributeReactiveClass<T> | undefined)[]",
-              "refs": [
-                "AttributeReactiveClass"
-              ]
-            },
-            {
-              "name": "template",
-              "type": "string",
-              "optional": true
-            }
-          ],
-          "returns": {
-            "type": "(target: T, context: ClassDecoratorContext<T>) => T"
-          }
-        }
-      ]
+      "from": "@lynx-js/web-elements"
     },
     {
       "name": "genDomGetter",
       "kind": "function",
       "type": "genDomGetter(queryableElementGetter: () => ShadowRoot, selector: string): InternalDomGetter<T>",
-      "signatures": [
-        {
-          "text": "genDomGetter(queryableElementGetter: () => ShadowRoot, selector: string): InternalDomGetter<T>",
-          "params": [
-            {
-              "name": "queryableElementGetter",
-              "type": "() => ShadowRoot"
-            },
-            {
-              "name": "selector",
-              "type": "string"
-            }
-          ],
-          "returns": {
-            "type": "InternalDomGetter<T>"
-          }
-        },
-        {
-          "text": "genDomGetter(queryableElementGetter: () => HTMLElement, selector: string): PlainDomGetter<T>",
-          "params": [
-            {
-              "name": "queryableElementGetter",
-              "type": "() => HTMLElement"
-            },
-            {
-              "name": "selector",
-              "type": "string"
-            }
-          ],
-          "returns": {
-            "type": "PlainDomGetter<T>"
-          }
-        }
-      ]
+      "from": "@lynx-js/web-elements"
     }
   ]
 }

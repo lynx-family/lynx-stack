@@ -34,13 +34,12 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 function pluginLynxDebugMetadata(): RsbuildPlugin
 ```
 
-为每个 Lynx 模板构建注册 `debug-metadata.json` 的输出，
-并通过 connect 风格的开发服务器中间件提供子字段查询。
+为 Lynx 模板构建（`lynx`
+和 `lynx-*` environment；在本地生产构建中会跳过，且除非设置了 `DEBUG`，否则会从非开发环境的产物中移除）注册 `debug-metadata.json` 的输出，并通过 connect 风格的开发服务器中间件提供子字段查询。
 
-由 Rspeedy 核心自动注册。
+由 `@lynx-js/rsbuild-plugin` 中的 `pluginLynx` 注册。
 
-开发服务器中间件暴露以下端点（相对于每个
-入口的中间目录）：
+开发服务器中间件暴露以下端点（相对于每个入口的中间目录）：
 
 ```text
 GET .../debug-metadata.json
@@ -67,8 +66,7 @@ GET .../*.css.map   → transparently forwarded to ?field=source-map
 function rewriteSourceMappingURLs(compilation: Compilation, args: { chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }, options?: RewriteSourceMappingURLsOptions): void
 ```
 
-将当前模板中每个 JS 产物的 `//# sourceMappingURL=...` 指令重写为
-绝对 URL。当 `debugMetadataUrl`
+将当前模板中每个 JS 产物的 `//# sourceMappingURL=...` 指令重写为绝对 URL。当 `debugMetadataUrl`
 （`args.encodeData.sourceContent.config['debugMetadataUrl']`）未设置时不做任何处理。
 
 | 参数 | 类型 | 说明 |
@@ -95,6 +93,6 @@ const DEBUG_METADATA_ASSET_NAME: "debug-metadata.json"
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="rewritesourcemappingurlsoptions-getsourcemappingurl"></a>`getSourceMappingURL?` | `(info: { debugMetadataUrl: string; mapPath: string }) => string` | 覆盖写入每个被重写的 sourceMappingURL 的 URL。默认 为 `${debugMetadataUrl}?field=source-map&path=<encoded mapPath>`。 |
+| <a id="rewritesourcemappingurlsoptions-getsourcemappingurl"></a>`getSourceMappingURL?` | `(info: { debugMetadataUrl: string; mapPath: string }) => string` | 覆盖写入每个被重写的 sourceMappingURL 的 URL。默认为 `${debugMetadataUrl}?field=source-map&path=<encoded mapPath>`。 |
 
 {/* @api-end */}

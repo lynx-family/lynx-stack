@@ -94,6 +94,7 @@ bundle 文件的名称。
 
 - `[name]`：入口名称。
 - `[platform]`：Rsbuild environment 的名称。
+- `[contenthash]`：bundle 内容的 hash。
 
 #### `output.minify` \{#output-minify\}
 
@@ -138,9 +139,7 @@ function isPluginLynxRegistered(host: { isPluginExists: any }, environments: str
 
 Lynx 构建引擎是否已注册。
 
-该引擎是全局的。不传 environment 调用 `isPluginExists` 时只会
-报告全局插件，因此无法检测到调用方（例如 `rslib`）
-注册在某个 environment 上的引擎。
+该引擎是全局的。不传 environment 调用 `isPluginExists` 时只会报告全局插件，因此无法检测到调用方（例如 `rslib`）注册在某个 environment 上的引擎。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -182,7 +181,7 @@ const PLUGIN_LYNX_NAME: "lynx:rsbuild"
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="bundlefilenamecontext-lazybundle"></a>`lazyBundle` | `boolean` | 是否正在为 lazy bundle（异步 chunk）解析文件名， 而非为入口的主 bundle 解析。 |
+| <a id="bundlefilenamecontext-lazybundle"></a>`lazyBundle` | `boolean` | 是否正在为 lazy bundle（异步 chunk）解析文件名，而非为入口的主 bundle 解析。 |
 | <a id="bundlefilenamecontext-platform"></a>`platform` | `string` | Rsbuild environment 的名称。 |
 
 #### `BundleFilenameContext.entryName?` \{#bundlefilenamecontext-entryname\}
@@ -200,9 +199,7 @@ const PLUGIN_LYNX_NAME: "lynx:rsbuild"
 
 该数据与 [`LynxPluginOptions`](#lynxpluginoptions) 保持一致，因此插件读取
 `config.output.filename` 的方式与从
-`api.getRsbuildConfig()` 读取 `output.filename` 相同。依赖于当前构建入口的值
-由方法推导得出，这些方法随数据一起传递，从而确保
-始终由构建该配置的插件来解析这些值。
+`api.getRsbuildConfig()` 读取 `output.filename` 相同。依赖于当前构建入口的值由方法推导得出，这些方法随数据一起传递，从而确保始终由构建该配置的插件来解析这些值。
 
 ```js
 const lynx = getLynxConfig(api)
@@ -233,12 +230,11 @@ const filename = lynx.resolveBundleFilename({
 
 解析中间产物所在的目录。
 
-Lynx bundle 由各线程的 JS、CSS 和 HMR 产物编码而成。这些产物
-按入口输出到该目录中，而不是与 bundle 放在一起。
+Lynx bundle 由各线程的 JS、CSS 和 HMR 产物编码而成。这些产物按入口输出到该目录中，而不是与 bundle 放在一起。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `context?` | `{ entryName?: string }` | 要解析目录的入口。未提供入口 名称时，返回包含所有入口目录的父目录。 |
+| `context?` | `{ entryName?: string }` | 要解析目录的入口。未提供入口名称时，返回包含所有入口目录的父目录。 |
 
 #### `LynxConfig.resolveLazyBundleFilename` \{#lynxconfig-resolvelazybundlefilename\}
 
@@ -246,8 +242,7 @@ Lynx bundle 由各线程的 JS、CSS 和 HMR 产物编码而成。这些产物
 
 解析 lazy bundle 文件的名称。
 
-此时没有可用于解析 `[name]` 的入口名称，因此保留该占位符，
-由 `LynxTemplatePlugin` 按异步 chunk 填充。
+此时没有可用于解析 `[name]` 的入口名称，因此保留该占位符，由 `LynxTemplatePlugin` 按异步 chunk 填充。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |

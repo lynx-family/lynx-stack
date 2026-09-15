@@ -1,7 +1,7 @@
 {
   "CssExtractRspackPlugin.summary": {
     "en": "CssExtractRspackPlugin is the CSS extract plugin for Lynx.\nIt works just like the [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin.html) in Web.",
-    "text": "CssExtractRspackPlugin 是 Lynx 的 CSS 提取插件。\n其用法与 Web 中的 [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin.html) 相同。"
+    "text": "CssExtractRspackPlugin 是 Lynx 的 CSS 提取插件。其用法与 Web 中的 [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin.html) 相同。"
   },
   "CssExtractRspackPlugin.defaultOptions.summary": {
     "en": "`defaultOptions` is the default options that the [`CssExtractRspackPlugin`](api:CssExtractRspackPlugin) uses.",
@@ -24,12 +24,16 @@
     "text": "webpack 编译器"
   },
   "CssExtractRspackPluginOptions.summary": {
-    "en": "The options for `@lynx-js/css-extract-webpack-plugin#CssExtractRspackPlugin`",
-    "text": "`@lynx-js/css-extract-webpack-plugin#CssExtractRspackPlugin` 的选项"
+    "en": "The options for [`CssExtractRspackPlugin`](api:@lynx-js/css-extract-webpack-plugin#CssExtractRspackPlugin)",
+    "text": "[`CssExtractRspackPlugin`](api:@lynx-js/css-extract-webpack-plugin#CssExtractRspackPlugin) 的选项"
   },
   "CssExtractRspackPluginOptions.chunkFilename.summary": {
     "en": "The name of non-initial CSS chunk files",
     "text": "非初始 CSS chunk 文件的名称"
+  },
+  "CssExtractRspackPluginOptions.chunkFilename.remarks": {
+    "en": "When set, CSS chunks of lazy bundles still go to\n`.lynx/lazy-bundle/<name>/<layer>.css` (or `.lynx/lazy-bundle/<name>.css`\nwhen the chunk has no layer); this template applies to the other chunks.",
+    "text": "设置后，lazy bundle 的 CSS chunk 仍会输出到\n`.lynx/lazy-bundle/<name>/<layer>.css`（chunk 没有 layer 时为 `.lynx/lazy-bundle/<name>.css`）；该模板仅作用于其他 chunk。"
   },
   "CssExtractRspackPluginOptions.cssPlugins.summary": {
     "en": "plugins passed to parser",
@@ -45,7 +49,7 @@
   },
   "LoaderOptions.emit.summary": {
     "en": "The same as [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin/tree/master?tab=readme-ov-file#emit).\nControl whether emit the CSS to filesystem.\n\n- If `true`(default), emits a file (writes a file to the filesystem).\n\n- If `false`, the plugin will extract the CSS but will not emit the file.\n\nIt is often useful to disable this option for server-side packages.",
-    "text": "与 [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin/tree/master?tab=readme-ov-file#emit) 相同。\n控制是否将 CSS 输出到文件系统。\n\n- 若为 `true`（默认），则输出文件（将文件写入文件系统）。\n\n- 若为 `false`，插件会提取 CSS，但不会输出文件。\n\n对于服务端包，通常可以禁用该选项。"
+    "text": "与 [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin/tree/master?tab=readme-ov-file#emit) 相同。控制是否将 CSS 输出到文件系统。\n\n- 若为 `true`（默认），则输出文件（将文件写入文件系统）。\n\n- 若为 `false`，插件会提取 CSS，但不会输出文件。\n\n对于服务端包，通常可以禁用该选项。"
   },
   "LoaderOptions.layer.summary": {
     "en": "The layer of the CSS execution.",

@@ -326,10 +326,10 @@
               "GeneratedFile"
             ]
           },
-          "summary": "Builds the generated JS facade and platform spec file contents for a library package."
+          "summary": "Builds the generated file contents for a library package: JS facades and platform specs,\nplus the shared C++ sources, registrations, CMake target, iOS wrapper and Lynxtron\nregistrations for Node-API and Lynxtron modules."
         }
       ],
-      "summary": "Builds the generated JS facade and platform spec file contents for a library package."
+      "summary": "Builds the generated file contents for a library package: JS facades and platform specs,\nplus the shared C++ sources, registrations, CMake target, iOS wrapper and Lynxtron\nregistrations for Node-API and Lynxtron modules."
     },
     {
       "name": "parseNativeModules",
@@ -382,10 +382,10 @@
               "GeneratedFile"
             ]
           },
-          "summary": "Writes generated files to disk and returns the generated file descriptors."
+          "summary": "Writes generated files to disk, skipping existing files marked `overwrite: false`,\nand returns the generated file descriptors."
         }
       ],
-      "summary": "Writes generated files to disk and returns the generated file descriptors."
+      "summary": "Writes generated files to disk, skipping existing files marked `overwrite: false`,\nand returns the generated file descriptors."
     }
   ]
 }

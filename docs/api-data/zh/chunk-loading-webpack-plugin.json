@@ -1,15 +1,7 @@
 {
   "ChunkLoadingWebpackPlugin.summary": {
-    "en": "The ChunkLoadingWebpackPlugin enables chunk loading for webpack/Rspack in Lynx.",
-    "text": "ChunkLoadingWebpackPlugin 为 Lynx 中的 webpack/Rspack 启用 chunk 加载能力。"
-  },
-  "ChunkLoadingWebpackPlugin.example.0": {
-    "en": "- Use with Rspack.\n\n```js\n// rspack.config.js\nimport { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'\nexport default {\n  output: {\n    chunkFormat: 'require',\n  },\n  plugins: [new ChunkLoadingWebpackPlugin()],\n}\n```",
-    "text": "- 与 Rspack 一起使用。\n\n```js\n// rspack.config.js\nimport { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'\nexport default {\n  output: {\n    chunkFormat: 'require',\n  },\n  plugins: [new ChunkLoadingWebpackPlugin()],\n}\n```"
-  },
-  "ChunkLoadingWebpackPlugin.example.1": {
-    "en": "- Use with Webpack.\n\n```js\n// webpack.config.js\nimport { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'\nexport default {\n  output: {\n    chunkFormat: 'lynx',\n  },\n  plugins: [new ChunkLoadingWebpackPlugin()],\n}\n```",
-    "text": "- 与 webpack 一起使用。\n\n```js\n// webpack.config.js\nimport { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'\nexport default {\n  output: {\n    chunkFormat: 'lynx',\n  },\n  plugins: [new ChunkLoadingWebpackPlugin()],\n}\n```"
+    "en": "The ChunkLoadingWebpackPlugin enables chunk loading for Rspack in Lynx.\nIt only takes effect when `output.chunkLoading` is `'lynx'`.",
+    "text": "ChunkLoadingWebpackPlugin 为 Lynx 中的 Rspack 启用 chunk 加载能力。仅在 `output.chunkLoading` 为 `'lynx'` 时生效。"
   },
   "ChunkLoadingWebpackPlugin.defaultOptions.summary": {
     "en": "`defaultOptions` is the default options that the [`ChunkLoadingWebpackPlugin`](api:ChunkLoadingWebpackPlugin) uses.",

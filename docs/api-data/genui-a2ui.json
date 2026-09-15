@@ -258,7 +258,7 @@
           "refs": [
             "CatalogInput"
           ],
-          "summary": "Components the renderer is allowed to instantiate. Each item is either\na bare component (name read from `displayName ?? name`) or a tuple\n`[component, manifest]` where the manifest is the JSON the extractor\nemits at `dist/catalog/<Name>/catalog.json`.",
+          "summary": "Components and functions the renderer is allowed to use. Each item is\na bare component (name read from `displayName ?? name`), a tuple\n`[component, manifest]` where the manifest is the JSON the extractor\nemits at `dist/catalog/<Name>/catalog.json`, a resolved\n`{ name, component, schema? }` entry, or a function entry such as those\nin `basicFunctions`.",
           "kind": "property"
         },
         {
@@ -794,7 +794,7 @@
           "name": "rootComponentId",
           "optional": true,
           "type": "string | null",
-          "summary": "id of the root component for this surface (must be 'root').",
+          "summary": "id of the root component for this surface. Set on the first non-empty\n`updateComponents` batch: `'root'` if that id exists, otherwise the\nbatch's first component id.",
           "kind": "property"
         },
         {
@@ -1127,10 +1127,10 @@
               "ServerToClientMessage"
             ]
           },
-          "summary": "Build a single-Text fallback message stream from a plain string. Used by\ntransports / `Session.ingest` callers that receive free-form text from\nthe agent instead of structured protocol messages."
+          "summary": "Build a single-Text fallback message stream (surface `default`, catalog\n`inline-text`, root `root-text`) from a plain string. Used by\n`normalizePayloadToMessages` and by transports that receive free-form text\nfrom the agent instead of structured protocol messages."
         }
       ],
-      "summary": "Build a single-Text fallback message stream from a plain string. Used by\ntransports / `Session.ingest` callers that receive free-form text from\nthe agent instead of structured protocol messages."
+      "summary": "Build a single-Text fallback message stream (surface `default`, catalog\n`inline-text`, root `root-text`) from a plain string. Used by\n`normalizePayloadToMessages` and by transports that receive free-form text\nfrom the agent instead of structured protocol messages."
     },
     {
       "name": "createMessageStore",
@@ -1229,13 +1229,13 @@
           },
           "summary": "Build a catalog from a list of components, `[component, manifest]` pairs,\nand/or function entries. Duplicate names within the same kind are rejected.\nFunction entries register their impls into `functionRegistry` immediately,\nso any `executeFunctionCall` after `defineCatalog` can route to them.",
           "examples": [
-            "```ts\nimport { Text, Button } from '@lynx-js/genui/a2ui';\nimport { defineCatalog, defineFunction } from '@lynx-js/genui/a2ui';\nimport { required } from '@lynx-js/genui/a2ui/functions';\nimport textManifest from '@lynx-js/genui/a2ui/catalog/Text/catalog.json'\n  with { type: 'json' };\n\nconst catalog = defineCatalog([\n  [Text, textManifest],\n  Button,\n  defineFunction(required),\n]);\n```"
+            "```ts\nimport { Text, Button } from '@lynx-js/genui/a2ui';\nimport { basicFunctions, defineCatalog } from '@lynx-js/genui/a2ui';\nimport { MyCard } from './MyCard';\nimport myCardManifest from './dist/catalog/MyCard/catalog.json'\n  with { type: 'json' };\n\nconst catalog = defineCatalog([\n  Text,\n  Button,\n  [MyCard, myCardManifest],\n  ...basicFunctions,\n]);\n```"
           ]
         }
       ],
       "summary": "Build a catalog from a list of components, `[component, manifest]` pairs,\nand/or function entries. Duplicate names within the same kind are rejected.\nFunction entries register their impls into `functionRegistry` immediately,\nso any `executeFunctionCall` after `defineCatalog` can route to them.",
       "examples": [
-        "```ts\nimport { Text, Button } from '@lynx-js/genui/a2ui';\nimport { defineCatalog, defineFunction } from '@lynx-js/genui/a2ui';\nimport { required } from '@lynx-js/genui/a2ui/functions';\nimport textManifest from '@lynx-js/genui/a2ui/catalog/Text/catalog.json'\n  with { type: 'json' };\n\nconst catalog = defineCatalog([\n  [Text, textManifest],\n  Button,\n  defineFunction(required),\n]);\n```"
+        "```ts\nimport { Text, Button } from '@lynx-js/genui/a2ui';\nimport { basicFunctions, defineCatalog } from '@lynx-js/genui/a2ui';\nimport { MyCard } from './MyCard';\nimport myCardManifest from './dist/catalog/MyCard/catalog.json'\n  with { type: 'json' };\n\nconst catalog = defineCatalog([\n  Text,\n  Button,\n  [MyCard, myCardManifest],\n  ...basicFunctions,\n]);\n```"
       ]
     },
     {
@@ -1343,10 +1343,10 @@
           "returns": {
             "type": "unknown"
           },
-          "summary": "Resolve arguments, look the function up in the registry, and invoke it.\nWhen no impl is registered, log once and return `undefined` so callers\n(checks, dynamic-property bindings) can degrade gracefully."
+          "summary": "Resolve arguments, look the function up in `options.functions` and then in\n`options.registry` (the shared `functionRegistry` by default), and invoke\nit. When no impl is found, warn once per name and return `undefined`; when\nthe impl throws, warn on every call and return `undefined`. Callers\n(checks, dynamic-property bindings) can therefore degrade gracefully."
         }
       ],
-      "summary": "Resolve arguments, look the function up in the registry, and invoke it.\nWhen no impl is registered, log once and return `undefined` so callers\n(checks, dynamic-property bindings) can degrade gracefully."
+      "summary": "Resolve arguments, look the function up in `options.functions` and then in\n`options.registry` (the shared `functionRegistry` by default), and invoke\nit. When no impl is found, warn once per name and return `undefined`; when\nthe impl throws, warn on every call and return `undefined`. Callers\n(checks, dynamic-property bindings) can therefore degrade gracefully."
     },
     {
       "name": "Icon",
@@ -1616,10 +1616,10 @@
               "ServerToClientMessage"
             ]
           },
-          "summary": "Tag messages with the given messageId and report whether any of them\ncarries a non-empty `updateComponents`. Also dedupes `createSurface`\nmessages against the set of currently-active surfaces."
+          "summary": "Filter a message batch for processing and report whether any kept message\ncarries a non-empty `updateComponents`. Mutates its inputs: sets\n`messageId` only on messages that lack one, and updates `activeSurfaceIds`\nas `deleteSurface` / `createSurface` messages are seen. `createSurface`\nmessages for surfaces that are already active are dropped."
         }
       ],
-      "summary": "Tag messages with the given messageId and report whether any of them\ncarries a non-empty `updateComponents`. Also dedupes `createSurface`\nmessages against the set of currently-active surfaces."
+      "summary": "Filter a message batch for processing and report whether any kept message\ncarries a non-empty `updateComponents`. Mutates its inputs: sets\n`messageId` only on messages that lack one, and updates `activeSurfaceIds`\nas `deleteSurface` / `createSurface` messages are seen. `createSurface`\nmessages for surfaces that are already active are dropped."
     },
     {
       "name": "RadioGroup",
@@ -1906,10 +1906,10 @@
           "returns": {
             "type": "CheckOutcome & { firstFailureMessage: string | undefined }"
           },
-          "summary": "Evaluate an input component's `checks` array reactively. Returns the\ncurrent outcome plus the first failure message (handy for inline error\nrendering). When an enclosing `<FormContext.Provider>` exists, the input\nis also registered with it so Buttons in the same form can react to\n`isValid`."
+          "summary": "Evaluate an input component's `checks` array reactively against the\nsurface's data model and the catalog's functions, re-running when bound\ndata changes. Returns the current outcome plus the first failure message\n(handy for inline error rendering)."
         }
       ],
-      "summary": "Evaluate an input component's `checks` array reactively. Returns the\ncurrent outcome plus the first failure message (handy for inline error\nrendering). When an enclosing `<FormContext.Provider>` exists, the input\nis also registered with it so Buttons in the same form can react to\n`isValid`."
+      "summary": "Evaluate an input component's `checks` array reactively against the\nsurface's data model and the catalog's functions, re-running when bound\ndata changes. Returns the current outcome plus the first failure message\n(handy for inline error rendering)."
     },
     {
       "name": "useDataBinding",

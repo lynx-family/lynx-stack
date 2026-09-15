@@ -55,36 +55,41 @@ export default defineConfig({
 
 加载 ReactLynx 运行时 bundle，并配置其标准模块全局变量。
 
+##### `externalsPresets.reactlynx.bundlePath` \{#externalspresets-reactlynx-bundlepath\}
+
+- **类型：** `string`
+- **默认值：** `'react.lynx.bundle'`；在 `lynx` / `lynx-*` 以外的 environment 中为
+  `'react.web.bundle'`
+
+将 ReactLynx 运行时 bundle 产出到当前构建产物中，并通过生成的运行时 public path 加载。
+
+对于随本项目一同发布的 bundle，优先使用该选项而非 `url`。除了让运行时基于 `publicPath` 解析最终 URL 之外，插件还会将对应的 `@lynx-js/react-umd` bundle 复制到产出的资源中，因此应用 bundle 可以直接引用它，发布时无需额外的手动复制步骤。
+
 ##### `externalsPresets.reactlynx.url` <span className="api-badge api-badge-deprecated">已废弃</span> \{#externalspresets-reactlynx-url\}
 
 - **类型：** `string`
 
 :::warning 已废弃
-已废弃。
+建议优先使用 `bundlePath`，它通过运行时 public
+path 解析，并支持自动产出资源。
 :::
 
 直接覆盖运行时 bundle 的 URL。
 
-仅当 ReactLynx 运行时托管在当前
-构建产物之外（例如 CDN 上）时才使用该选项。与 `bundlePath` 不同，该选项不会向当前编译
-产出任何额外资源。
-
- 建议优先使用 `bundlePath`，它通过运行时 public
-path 解析，并支持自动产出资源。
+仅当 ReactLynx 运行时托管在当前构建产物之外（例如 CDN 上）时才使用该选项。与 `bundlePath` 不同，该选项不会向当前编译产出任何额外资源。
 
 ##### 其他选项 \{#externalspresets-reactlynx-other-options\}
 
 | 名称 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| <a id="externalspresets-reactlynx-async"></a>`async` | `boolean` | `false` | 针对 web 目标，异步加载 ReactLynx 运行时 bundle。 web 运行时（`@lynx-js/web-core`）只能异步获取 external bundle （`fetchBundle().then`），因此 ReactLynx 必须以 promise 的形式挂载， 使用它的模块需要先 await 该 promise 再读取子路径（否则 `React.memo` 等会从一个 pending 状态的 promise 上读取，结果为 `undefined`）。 启用后还会解析 web 编码的 `@lynx-js/react-umd/{dev,prod}-web` bundle，并将 `bundlePath` 默认设为 `react.web.bundle`。 |
-| <a id="externalspresets-reactlynx-bundlepath"></a>`bundlePath` | `string` | `'react.lynx.bundle'` | 将 ReactLynx 运行时 bundle 产出到当前构建产物中，并通过 生成的运行时 public path 加载。 对于常规 Rspeedy 项目，优先使用该选项而非 `url`。除了让 运行时基于 `publicPath` 解析最终 URL 之外，插件还会将 对应的 `@lynx-js/react-umd` bundle 复制到产出的资源中， 因此应用 bundle 可以直接引用它，发布时无需额外的手动 复制步骤。 |
+| <a id="externalspresets-reactlynx-async"></a>`async` | `boolean` | `false` | 针对 web 目标，异步加载 ReactLynx 运行时 bundle。 web 运行时（`@lynx-js/web-core`）只能异步获取 external bundle （`fetchBundle().then`），因此 ReactLynx 必须以 promise 的形式挂载，使用它的模块需要先 await 该 promise 再读取子路径（否则 `React.memo` 等会从一个 pending 状态的 promise 上读取，结果为 `undefined`）。该选项仅控制运行时的挂载方式；在 `lynx` / `lynx-*` 以外的 environment 中会选用 web bundle。 |
 | <a id="externalspresets-reactlynx-reactumdpackagename"></a>`reactUmdPackageName` | `string` | `'@lynx-js/react-umd'` | 提供 ReactLynx 运行时 bundle 的包名。 为其他发行版封装该插件时（例如 `@byted-lynx/react-umd`），可覆盖该选项。 |
 
 ### 其他选项 \{#other-options\}
 
 | 名称 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| <a id="externalbundleroot"></a>`externalBundleRoot` | `string` |  | 存放项目自有 external bundle 的根目录，这些 bundle 由 `bundlePath` 引用。 `pluginExternalBundle` 在开发环境提供服务和构建时产出资源时都会使用该目录。 当 external bundle 被构建到单独的输出目录（例如 `dist-external-bundle`）时， 建议显式设置该选项。 |
+| <a id="externalbundleroot"></a>`externalBundleRoot` | `string` | `'dist-external-bundle'` | 存放项目自有 external bundle 的根目录，这些 bundle 由 `bundlePath` 引用。 `pluginExternalBundle` 在开发环境提供服务和构建时产出资源时都会使用该目录。当 bundle 在其他位置构建时，请设置该选项。 |
 | <a id="externals"></a>`externals` | `Record<string, `[`PluginExternalConfig`](#pluginexternalconfig)`>` |  | 额外需要加载的显式 externals。 |
 | <a id="externalspresetdefinitions"></a>`externalsPresetDefinitions` | [`ExternalsPresetDefinitions`](#externalspresetdefinitions) |  | 由 `externalsPresets` 启用的自定义 externals 预设的定义。 可用于添加业务专属的预设（例如 `lynxUi`），或通过 `extends` 扩展内置预设。 |
 | <a id="globalobject"></a>`globalObject` | `"lynx" \| "globalThis"` | `'lynx'` | 该选项指定用于挂载库的全局对象。 在 Lynx 中，库默认挂载到 `lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]` 上。 如果启用了 share js context，并希望通过挂载到全局对象来复用该库，可以将该选项设置为 `'globalThis'`。 |
@@ -122,14 +127,17 @@ function pluginExternalBundle(options: PluginExternalBundleOptions): RsbuildPlug
 创建一个用于加载 external bundle 的 Rsbuild 插件。
 
 该插件封装了 externals-loading-webpack-plugin，并通过 api.useExposed
-自动从 react-rsbuild-plugin 获取 layer 名称。
+自动从任何暴露了 `LAYERS` 的 DSL 插件（例如
+`pluginReactLynx` 或 `pluginVanillaLynx`）获取 layer 名称。
 
 ```ts
-// lynx.config.ts
+// rsbuild.config.ts
 import { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin'
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
 
-export default {
+export default defineConfig({
+  environments: { lynx: {} },
   plugins: [
     pluginReactLynx(),
     pluginExternalBundle({
@@ -142,7 +150,7 @@ export default {
       },
     }),
   ],
-}
+})
 ```
 
 | 参数 | 类型 | 说明 |
@@ -177,9 +185,7 @@ const builtInExternalsPresetDefinitions: ExternalsPresetDefinitions
 
 正在解析的 Rsbuild environment（例如 `'lynx'`、`'web'`）。
 
-预设通过它选择特定于 environment 的产物，例如
-内置的 `reactlynx` 预设在 `web` environment 下解析 web 编码的 `react.web.bundle`，
-在其他 environment 下解析 `react.lynx.bundle`。
+预设通过它选择特定于 environment 的产物，例如内置的 `reactlynx` 预设在 `web` environment 下解析 web 编码的 `react.web.bundle`，在其他 environment 下解析 `react.lynx.bundle`。
 
 ### `ExternalsPresetDefinition` \{#externalspresetdefinition\}
 
@@ -207,7 +213,7 @@ external bundle 依赖的预设。
 | --- | --- | --- | --- |
 | <a id="pluginexternalvalue-async"></a>`async?` | `boolean` | `true` | 是否异步加载该资源。 |
 | <a id="pluginexternalvalue-background"></a>`background?` | `LayerOptions` | `undefined` | 后台线程 layer 的选项。 |
-| <a id="pluginexternalvalue-bundlepath"></a>`bundlePath?` | `string` |  | 基于运行时 public path 解析的 bundle 路径。 当 external bundle 需要作为当前项目的一部分被产出或提供服务时， 优先使用该选项而非 `url`。`pluginExternalBundle` 可以利用这些 信息管理本地 bundle 文件，同时运行时会使最终 URL 与当前生效的 `publicPath` 保持一致。 |
+| <a id="pluginexternalvalue-bundlepath"></a>`bundlePath?` | `string` |  | 基于运行时 public path 解析的 bundle 路径。 当 external bundle 需要作为当前项目的一部分被产出或提供服务时，优先使用该选项而非 `url`。`pluginExternalBundle` 可以利用这些信息管理本地 bundle 文件，同时运行时会使最终 URL 与当前生效的 `publicPath` 保持一致。 |
 | <a id="pluginexternalvalue-mainthread"></a>`mainThread?` | `LayerOptions` | `undefined` | 主线程 layer 的选项。 |
 | <a id="pluginexternalvalue-retries"></a>`retries?` | `number` | `0` | 加载 external bundle 超时（`response.code === -2`）时的额外重试次数。 |
 | <a id="pluginexternalvalue-timeout"></a>`timeout?` | `number` | `2000` | 等待时间，单位为毫秒。 |
@@ -275,6 +281,7 @@ ExternalsLoadingPlugin({
     preact: {
       libraryName: ['ReactLynx', 'Preact'],
       url: '……',
+      async: false,
     },
   }
 })
@@ -288,6 +295,14 @@ externals: {
 }
 ```
 
+在默认的 `async: true` 下，会改为生成一个 `promise` external，它会在库的 promise resolve 之后再取出子路径：
+
+```js
+externals: {
+  preact: 'promise Promise.resolve(lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]["ReactLynx"]).then(function (m) { return m["Preact"]; })',
+}
+```
+
 ```ts
 `Lodash`
 ```
@@ -297,16 +312,13 @@ externals: {
 - **类型：** `string`
 
 :::warning 已废弃
-已废弃。
+建议优先使用 `bundlePath`，它通过运行时 public
+path 解析，并允许上层工具管理资源产出。
 :::
 
 Bundle 的 URL。
 
-仅当 external bundle 位于当前构建产物之外、
-且不应由 `pluginExternalBundle` 产出或提供服务时才使用该选项。
-
- 建议优先使用 `bundlePath`，它通过运行时 public
-path 解析，并允许上层工具管理资源产出。
+仅当 external bundle 位于当前构建产物之外、且不应由 `pluginExternalBundle` 产出或提供服务时才使用该选项。
 
 ### `ReactLynxExternalsPresetOptions` \{#reactlynxexternalspresetoptions\}
 
@@ -314,26 +326,31 @@ path 解析，并允许上层工具管理资源产出。
 
 | 成员 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| <a id="reactlynxexternalspresetoptions-async"></a>`async?` | `boolean` | `false` | 针对 web 目标，异步加载 ReactLynx 运行时 bundle。 web 运行时（`@lynx-js/web-core`）只能异步获取 external bundle （`fetchBundle().then`），因此 ReactLynx 必须以 promise 的形式挂载， 使用它的模块需要先 await 该 promise 再读取子路径（否则 `React.memo` 等会从一个 pending 状态的 promise 上读取，结果为 `undefined`）。 启用后还会解析 web 编码的 `@lynx-js/react-umd/{dev,prod}-web` bundle，并将 `bundlePath` 默认设为 `react.web.bundle`。 |
-| <a id="reactlynxexternalspresetoptions-bundlepath"></a>`bundlePath?` | `string` | `'react.lynx.bundle'` | 将 ReactLynx 运行时 bundle 产出到当前构建产物中，并通过 生成的运行时 public path 加载。 对于常规 Rspeedy 项目，优先使用该选项而非 `url`。除了让 运行时基于 `publicPath` 解析最终 URL 之外，插件还会将 对应的 `@lynx-js/react-umd` bundle 复制到产出的资源中， 因此应用 bundle 可以直接引用它，发布时无需额外的手动 复制步骤。 |
+| <a id="reactlynxexternalspresetoptions-async"></a>`async?` | `boolean` | `false` | 针对 web 目标，异步加载 ReactLynx 运行时 bundle。 web 运行时（`@lynx-js/web-core`）只能异步获取 external bundle （`fetchBundle().then`），因此 ReactLynx 必须以 promise 的形式挂载，使用它的模块需要先 await 该 promise 再读取子路径（否则 `React.memo` 等会从一个 pending 状态的 promise 上读取，结果为 `undefined`）。该选项仅控制运行时的挂载方式；在 `lynx` / `lynx-*` 以外的 environment 中会选用 web bundle。 |
 | <a id="reactlynxexternalspresetoptions-reactumdpackagename"></a>`reactUmdPackageName?` | `string` | `'@lynx-js/react-umd'` | 提供 ReactLynx 运行时 bundle 的包名。 为其他发行版封装该插件时（例如 `@byted-lynx/react-umd`），可覆盖该选项。 |
+
+#### `ReactLynxExternalsPresetOptions.bundlePath?` \{#reactlynxexternalspresetoptions-bundlepath\}
+
+- **类型：** `string`
+- **默认值：** `'react.lynx.bundle'`；在 `lynx` / `lynx-*` 以外的 environment 中为
+  `'react.web.bundle'`
+
+将 ReactLynx 运行时 bundle 产出到当前构建产物中，并通过生成的运行时 public path 加载。
+
+对于随本项目一同发布的 bundle，优先使用该选项而非 `url`。除了让运行时基于 `publicPath` 解析最终 URL 之外，插件还会将对应的 `@lynx-js/react-umd` bundle 复制到产出的资源中，因此应用 bundle 可以直接引用它，发布时无需额外的手动复制步骤。
 
 #### `ReactLynxExternalsPresetOptions.url?` <span className="api-badge api-badge-deprecated">已废弃</span> \{#reactlynxexternalspresetoptions-url\}
 
 - **类型：** `string`
 
 :::warning 已废弃
-已废弃。
+建议优先使用 `bundlePath`，它通过运行时 public
+path 解析，并支持自动产出资源。
 :::
 
 直接覆盖运行时 bundle 的 URL。
 
-仅当 ReactLynx 运行时托管在当前
-构建产物之外（例如 CDN 上）时才使用该选项。与 `bundlePath` 不同，该选项不会向当前编译
-产出任何额外资源。
-
- 建议优先使用 `bundlePath`，它通过运行时 public
-path 解析，并支持自动产出资源。
+仅当 ReactLynx 运行时托管在当前构建产物之外（例如 CDN 上）时才使用该选项。与 `bundlePath` 不同，该选项不会向当前编译产出任何额外资源。
 
 ### `ExternalsPresetDefinitions` \{#externalspresetdefinitions\}
 
@@ -351,10 +368,10 @@ type PluginExternalConfig = PluginExternalValue | string
 
 `pluginExternalBundle` 接受的 external bundle 简写形式。
 
-传入字符串时，它会被视为 `bundlePath`，插件会
-推断：
+传入字符串时，它会被视为 `bundlePath`，插件会推断：
 - `libraryName`：external 请求的 key
 - `background.sectionPath`：external 请求的 key
 - `mainThread.sectionPath`：`${request}__main-thread`
+- `async`：`true`
 
 {/* @api-end */}

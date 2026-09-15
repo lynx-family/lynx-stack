@@ -34,10 +34,10 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="websocket-closed"></a>`CLOSED` | [`ReadyState`](#readystate) | `@lynx-js/websocket#ReadyState.CLOSED` |
-| <a id="websocket-closing"></a>`CLOSING` | [`ReadyState`](#readystate) | `@lynx-js/websocket#ReadyState.CLOSING` |
-| <a id="websocket-connecting"></a>`CONNECTING` | [`ReadyState`](#readystate) | `@lynx-js/websocket#ReadyState.CONNECTING` |
-| <a id="websocket-open"></a>`OPEN` | [`ReadyState`](#readystate) | `@lynx-js/websocket#ReadyState.OPEN` |
+| <a id="websocket-closed"></a>`CLOSED` | [`ReadyState`](#readystate) | [`ReadyState.CLOSED`](#readystate-closed) |
+| <a id="websocket-closing"></a>`CLOSING` | [`ReadyState`](#readystate) | [`ReadyState.CLOSING`](#readystate-closing) |
+| <a id="websocket-connecting"></a>`CONNECTING` | [`ReadyState`](#readystate) | [`ReadyState.CONNECTING`](#readystate-connecting) |
+| <a id="websocket-open"></a>`OPEN` | [`ReadyState`](#readystate) | [`ReadyState.OPEN`](#readystate-open) |
 | <a id="websocket-onclose"></a>`onclose` | `((event: Event<"close"> & { code: number; reason: string }) => void) \| null` | onclose 是 [`WebSocket`](#websocket) 的 Web 风格回调。 |
 | <a id="websocket-onerror"></a>`onerror` | `((event: Event<"error"> & { message: string }) => void) \| null` | onerror 是 [`WebSocket`](#websocket) 的 Web 风格回调。 |
 | <a id="websocket-onmessage"></a>`onmessage` | `((event: Event<"message"> & { data: string }) => void) \| null` | onmessage 是 [`WebSocket`](#websocket) 的 Web 风格回调。 |
@@ -67,7 +67,7 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
 | `type` | `T` | 表示要监听的事件类型的字符串，区分大小写。 |
-| `callback?` | `(event: `[`EventMap`](#eventmap)`[T]) => void` | 接收通知的函数。事件详情参见 `@lynx-js/websocket#EventMap`。 |
+| `callback?` | `(event: `[`EventMap`](#eventmap)`[T]) => void` | 接收通知的函数。事件详情参见 [`EventMap`](#eventmap)。 |
 
 #### `WebSocket.close` \{#websocket-close\}
 
@@ -136,6 +136,6 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 
 ### `EventMap` \{#eventmap\}
 
-`EventMap` 描述 `@lynx-js/websocket#WebSocket` 可能触发的事件。
+`EventMap` 描述 [`WebSocket`](#websocket) 可能触发的事件。
 
 {/* @api-end */}

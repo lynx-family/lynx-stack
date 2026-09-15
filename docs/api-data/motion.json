@@ -49,7 +49,7 @@
           "returns": {
             "type": "AnimationPlaybackControlsWithThen"
           },
-          "summary": "Animate a string"
+          "summary": "Animate the main-thread elements matched by a selector"
         },
         {
           "text": "animate(value: string | MotionValue<string>, keyframes: string | UnresolvedValueKeyframe<string>[], options?: ValueAnimationTransition<string>): AnimationPlaybackControlsWithThen",

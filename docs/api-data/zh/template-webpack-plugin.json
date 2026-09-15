@@ -16,8 +16,8 @@
     "text": "`defaultOptions` 是 [`LynxEncodePlugin`](api:LynxEncodePlugin) 使用的默认选项。"
   },
   "LynxEncodePlugin.defaultOptions.example.0": {
-    "en": "`defaultOptions` can be used to change part of the option and keep others as the default value.\n\n```js\n// webpack.config.js\nimport { LynxEncodePlugin } from '@lynx-js/template-webpack-plugin'\nexport default {\n  plugins: [\n    new LynxEncodePlugin({\n      ...LynxEncodePlugin.defaultOptions,\n      enableRemoveCSSScope: true,\n    }),\n  ],\n}\n```",
-    "text": "`defaultOptions` 可用于修改部分选项，同时让其余选项保持默认值。\n\n```js\n// webpack.config.js\nimport { LynxEncodePlugin } from '@lynx-js/template-webpack-plugin'\nexport default {\n  plugins: [\n    new LynxEncodePlugin({\n      ...LynxEncodePlugin.defaultOptions,\n      enableRemoveCSSScope: true,\n    }),\n  ],\n}\n```"
+    "en": "`defaultOptions` can be used to change part of the option and keep others as the default value.\n\n```js\n// webpack.config.js\nimport { LynxEncodePlugin } from '@lynx-js/template-webpack-plugin'\nexport default {\n  plugins: [\n    new LynxEncodePlugin({\n      ...LynxEncodePlugin.defaultOptions,\n      inlineScripts: false,\n    }),\n  ],\n}\n```",
+    "text": "`defaultOptions` 可用于修改部分选项，同时让其余选项保持默认值。\n\n```js\n// webpack.config.js\nimport { LynxEncodePlugin } from '@lynx-js/template-webpack-plugin'\nexport default {\n  plugins: [\n    new LynxEncodePlugin({\n      ...LynxEncodePlugin.defaultOptions,\n      inlineScripts: false,\n    }),\n  ],\n}\n```"
   },
   "LynxEncodePlugin.ENCODE_STAGE.summary": {
     "en": "The stage of the encode hook.",
@@ -25,7 +25,7 @@
   },
   "LynxEncodePlugin.encodePool.summary": {
     "en": "Shared TASM encode worker pool: multiple entries (and multiple\n`LynxEncodePlugin` instances in the same process) share its worker\nslots for parallel encode; watch-mode rebuilds keep the same workers\nwarm. `availableParallelism()` honors cgroup CPU limits (containers,\nCI runners), so we don't need to subtract a core ourselves.",
-    "text": "共享的 TASM 编码 worker 池：多个入口（以及同一进程中的多个 `LynxEncodePlugin` 实例）会共享其 worker 槽位\n以并行编码；\nwatch 模式下的重新构建会复用同一批已预热的 worker。\n`availableParallelism()` 会遵循 cgroup CPU 限制（容器、CI runner），\n因此无需自行减去一个核心。"
+    "text": "共享的 TASM 编码 worker 池：多个入口（以及同一进程中的多个 `LynxEncodePlugin` 实例）会共享其 worker 槽位以并行编码；\nwatch 模式下的重新构建会复用同一批已预热的 worker。\n`availableParallelism()` 会遵循 cgroup CPU 限制（容器、CI runner），因此无需自行减去一个核心。"
   },
   "LynxEncodePlugin.apply.summary": {
     "en": "The entry point of a webpack plugin.",
@@ -61,15 +61,23 @@
   },
   "LynxTemplatePlugin.convertCSSChunksToMap.remarks": {
     "en": "This helper currently forwards to `cssChunksToMap`.\n\nThe returned `cssSource` is keyed by `cssId` and uses the synthetic\nfilename format `/cssId/<id>.css`.\n\nThis helper does not remap generated `loc` fields to original source\ncoordinates.",
-    "text": "该辅助函数目前直接转发至 `cssChunksToMap`。\n\n返回的 `cssSource` 以 `cssId` 为键，\n并使用合成的文件名格式 `/cssId/<id>.css`。\n\n该辅助函数不会将生成的 `loc` 字段\n重新映射回原始源码坐标。"
+    "text": "该辅助函数目前直接转发至 `cssChunksToMap`。\n\n返回的 `cssSource` 以 `cssId` 为键，并使用合成的文件名格式 `/cssId/<id>.css`。\n\n该辅助函数不会将生成的 `loc` 字段重新映射回原始源码坐标。"
   },
   "LynxTemplatePlugin.convertCSSChunksToMap.params.cssChunks": {
     "en": "The CSS chunks content.",
     "text": "CSS chunk 的内容。"
   },
+  "LynxTemplatePlugin.convertCSSChunksToMap.params.plugins": {
+    "en": "The CSS plugins passed to the parser.",
+    "text": "传递给解析器的 CSS 插件。"
+  },
+  "LynxTemplatePlugin.convertCSSChunksToMap.params.enableCSSSelector": {
+    "en": "Whether to enable the CSS selector.",
+    "text": "是否启用 CSS 选择器。"
+  },
   "LynxTemplatePlugin.getAsyncChunkLayoutName.summary": {
     "en": "Map an async chunk id to `<lazy bundle name>/<layer>`, used to route a lazy\nbundle's intermediate js/css/hmr outputs into a single per-bundle directory.\nReturns undefined for non-lazy chunks.",
-    "text": "将异步 chunk id 映射为 `<lazy bundle name>/<layer>`，\n用于将 lazy bundle 的中间 js/css/hmr 产物归入每个 bundle 独立的目录。\n对于非 lazy chunk 返回 undefined。"
+    "text": "将异步 chunk id 映射为 `<lazy bundle name>/<layer>`，用于将 lazy bundle 的中间 js/css/hmr 产物归入每个 bundle 独立的目录。对于非 lazy chunk 返回 undefined。"
   },
   "LynxTemplatePlugin.getLynxTemplatePluginHooks.summary": {
     "en": "Returns all public hooks of the Lynx template webpack plugin for the given compilation",
@@ -85,7 +93,7 @@
   },
   "CustomSectionNaming.remarks": {
     "en": "Returning `undefined` keeps a chunk out of the custom sections. A background\nchunk left out stays in the manifest, which is where the runtime looks for\nit.",
-    "text": "返回 `undefined` 会使该 chunk 不进入自定义 section。\n未进入自定义 section 的后台线程 chunk 会保留在 manifest 中，\n运行时也正是从 manifest 中查找它。"
+    "text": "返回 `undefined` 会使该 chunk 不进入自定义 section。未进入自定义 section 的后台线程 chunk 会保留在 manifest 中，运行时也正是从 manifest 中查找它。"
   },
   "CustomSectionNaming.background.params.manifestKey": {
     "en": "The key the chunk has in the manifest. A lazy bundle\nkeys it by path (`/.rspeedy/lazy-bundle/…/background.js`), an external\nbundle by asset name.",
@@ -124,8 +132,8 @@
     "text": "传递给 parser 的插件"
   },
   "LynxTemplatePluginOptions.customCSSInheritanceList.example.0": {
-    "en": "By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n plugins: [\n   pluginReactLynx({\n     enableCSSInheritance: true,\n     customCSSInheritanceList: ['direction', 'overflow']\n   }),\n ],\n}\n```",
-    "text": "设置 `customCSSInheritanceList: ['direction', 'overflow']` 后，只有 `direction` 和 `overflow` 属性可继承。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n plugins: [\n   pluginReactLynx({\n     enableCSSInheritance: true,\n     customCSSInheritanceList: ['direction', 'overflow']\n   }),\n ],\n}\n```"
+    "en": "By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n plugins: [\n   pluginReactLynx({\n     enableCSSInheritance: true,\n     customCSSInheritanceList: ['direction', 'overflow']\n   }),\n ],\n})\n```",
+    "text": "设置 `customCSSInheritanceList: ['direction', 'overflow']` 后，只有 `direction` 和 `overflow` 属性可继承。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n plugins: [\n   pluginReactLynx({\n     enableCSSInheritance: true,\n     customCSSInheritanceList: ['direction', 'overflow']\n   }),\n ],\n})\n```"
   },
   "LynxTemplatePluginOptions.customSectionNaming.summary": {
     "en": "Assemble every chunk into a custom section, named by this strategy.",
@@ -133,7 +141,7 @@
   },
   "LynxTemplatePluginOptions.customSectionNaming.remarks": {
     "en": "A bundle assembled this way carries no `lepusCode`, and only the chunks\nleft unnamed stay in the manifest. A `FetchBundle` lazy bundle is assembled\nthis way by default, under the three section names its runtime resolves.",
-    "text": "以这种方式组装的 bundle 不包含 `lepusCode`，\n只有未被命名的 chunk 会保留在 manifest 中。\n`FetchBundle` lazy bundle 默认以这种方式组装，使用其运行时所解析的三个 section 名称。"
+    "text": "以这种方式组装的 bundle 不包含 `lepusCode`，只有未被命名的 chunk 会保留在 manifest 中。\n`FetchBundle` lazy bundle 默认以这种方式组装，使用其运行时所解析的三个 section 名称。"
   },
   "LynxTemplatePluginOptions.defaultOverflowVisible.summary": {
     "en": "When enabled, the default overflow CSS property for views and components will be `'visible'`. Otherwise, it will be `'hidden'`.",
@@ -151,13 +159,17 @@
     "en": "Whether to compile the main thread sections to `JsBytecode`.",
     "text": "是否将主线程 section 编译为 `JsBytecode`。"
   },
+  "LynxTemplatePluginOptions.enableSectionBytecode.default": {
+    "en": "Enabled outside of development and debug builds, which keeps\nthe sections readable while debugging.",
+    "text": "在开发构建和调试构建之外默认启用；这样在调试时各 section 仍保持可读。"
+  },
   "LynxTemplatePluginOptions.excludeChunks.summary": {
     "en": "List all entries which should not be injected",
     "text": "列出所有不应注入的入口"
   },
   "LynxTemplatePluginOptions.filename.summary": {
     "en": "The file to write the template to.\nSupports subdirectories eg: `assets/template.js`.\n[name] will be replaced by the entry name.\nSupports a function to generate the name.",
-    "text": "template 的输出文件。\n支持子目录，例如：`assets/template.js`。\n[name] 会被替换为入口名称。\n也支持传入函数来生成名称。"
+    "text": "template 的输出文件。支持子目录，例如：`assets/template.js`。\n[name] 会被替换为入口名称。也支持传入函数来生成名称。"
   },
   "LynxTemplatePluginOptions.intermediate.summary": {
     "en": "The directory of the intermediate files of a bundle.",
@@ -165,7 +177,7 @@
   },
   "LynxTemplatePluginOptions.lazyBundleFetcher.summary": {
     "en": "Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.\n`pluginReactLynx`) from the host engine version and any\n`REACT_LAZY_BUNDLE_FETCHER` env override.",
-    "text": "已解析的 lazy bundle fetcher 模式。\n由调用方（例如 `pluginReactLynx`）根据宿主引擎版本，\n以及 `REACT_LAZY_BUNDLE_FETCHER` 环境变量覆盖值决定。"
+    "text": "已解析的 lazy bundle fetcher 模式。由调用方（例如 `pluginReactLynx`）根据宿主引擎版本，以及 `REACT_LAZY_BUNDLE_FETCHER` 环境变量覆盖值决定。"
   },
   "LynxTemplatePluginOptions.lazyBundleFilename.summary": {
     "en": "The filename of the lazy bundle.",

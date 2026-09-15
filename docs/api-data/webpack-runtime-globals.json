@@ -2,7 +2,7 @@
   "id": "webpack-runtime-globals",
   "package": "@lynx-js/webpack-runtime-globals",
   "version": "0.0.8",
-  "description": "Use runtime wrapper which allow JavaScript to be load by Lynx.",
+  "description": "Runtime global names shared by the Lynx webpack and Rspack plugins.",
   "group": "internals",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/webpack-runtime-globals",
   "exports": [

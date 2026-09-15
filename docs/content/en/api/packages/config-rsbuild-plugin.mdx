@@ -79,11 +79,15 @@ function pluginLynxConfig(config: Config, options?: Options): RsbuildPlugin
 An rsbuild plugin for config Lynx Config defined by `@lynx-js/type-config`.
 
 ```ts
+// rsbuild.config.ts
 import { pluginLynxConfig } from '@lynx-js/config-rsbuild-plugin'
-import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
 
 export default defineConfig({
+  environments: { lynx: {} },
   plugins: [
+    pluginReactLynx(),
     pluginLynxConfig({
       alignMouseEventWithW3C: true,
     }),

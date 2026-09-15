@@ -55,12 +55,28 @@ Same as https://rspack.rs/config/externals#externalspresets but for Lynx.
 
 Load the ReactLynx runtime bundle and wire its standard module globals.
 
+##### `externalsPresets.reactlynx.bundlePath` \{#externalspresets-reactlynx-bundlepath\}
+
+- **Type:** `string`
+- **Default:** `'react.lynx.bundle'`, or `'react.web.bundle'` outside
+  `lynx` / `lynx-*` environments
+
+Emit the ReactLynx runtime bundle into the current build output and load it
+through the generated runtime public path.
+
+Prefer this over `url` for bundles shipped with this project. In addition
+to letting the runtime resolve the final URL from `publicPath`, the plugin
+will also copy the corresponding `@lynx-js/react-umd` bundle into the
+emitted assets, so application bundles can reference it without requiring
+an extra manual copy step when publishing.
+
 ##### `externalsPresets.reactlynx.url` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#externalspresets-reactlynx-url\}
 
 - **Type:** `string`
 
 :::warning Deprecated
-Deprecated.
+Prefer `bundlePath`, which resolves through the runtime public
+path and enables automatic asset emission.
 :::
 
 Override the runtime bundle URL directly.
@@ -69,22 +85,18 @@ Use this only when the ReactLynx runtime is hosted outside the current
 build output, for example on a CDN. Unlike `bundlePath`, this does not emit
 any extra asset into the current compilation.
 
- Prefer `bundlePath`, which resolves through the runtime public
-path and enables automatic asset emission.
-
 ##### Other options \{#externalspresets-reactlynx-other-options\}
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| <a id="externalspresets-reactlynx-async"></a>`async` | `boolean` | `false` | Load the ReactLynx runtime bundle asynchronously, for the web target. The web runtime (`@lynx-js/web-core`) can only fetch external bundles asynchronously (`fetchBundle().then`), so ReactLynx must be mounted as a promise that consuming modules await before reading a subpath (otherwise `React.memo` etc. are read off a pending promise and are `undefined`). Enabling this also resolves the web-encoded `@lynx-js/react-umd/{dev,prod}-web` bundle and defaults `bundlePath` to `react.web.bundle`. |
-| <a id="externalspresets-reactlynx-bundlepath"></a>`bundlePath` | `string` | `'react.lynx.bundle'` | Emit the ReactLynx runtime bundle into the current build output and load it through the generated runtime public path. Prefer this over `url` for normal Rspeedy projects. In addition to letting the runtime resolve the final URL from `publicPath`, the plugin will also copy the corresponding `@lynx-js/react-umd` bundle into the emitted assets, so application bundles can reference it without requiring an extra manual copy step when publishing. |
+| <a id="externalspresets-reactlynx-async"></a>`async` | `boolean` | `false` | Load the ReactLynx runtime bundle asynchronously, for the web target. The web runtime (`@lynx-js/web-core`) can only fetch external bundles asynchronously (`fetchBundle().then`), so ReactLynx must be mounted as a promise that consuming modules await before reading a subpath (otherwise `React.memo` etc. are read off a pending promise and are `undefined`). Only controls how the runtime is mounted; the web bundle is chosen for environments other than `lynx` / `lynx-*`. |
 | <a id="externalspresets-reactlynx-reactumdpackagename"></a>`reactUmdPackageName` | `string` | `'@lynx-js/react-umd'` | Package name that provides the ReactLynx runtime bundle. Override this when wrapping the plugin for another distribution, such as `@byted-lynx/react-umd`. |
 
 ### Other options \{#other-options\}
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| <a id="externalbundleroot"></a>`externalBundleRoot` | `string` |  | Root directory that stores project-owned external bundles referenced by `bundlePath`. `pluginExternalBundle` uses this directory for both development serving and build-time asset emission. Prefer setting this explicitly when external bundles are built into a separate output folder, such as `dist-external-bundle`. |
+| <a id="externalbundleroot"></a>`externalBundleRoot` | `string` | `'dist-external-bundle'` | Root directory that stores project-owned external bundles referenced by `bundlePath`. `pluginExternalBundle` uses this directory for both development serving and build-time asset emission. Set it when bundles are built elsewhere. |
 | <a id="externals"></a>`externals` | `Record<string, `[`PluginExternalConfig`](#pluginexternalconfig)`>` |  | Additional explicit externals to load. |
 | <a id="externalspresetdefinitions"></a>`externalsPresetDefinitions` | [`ExternalsPresetDefinitions`](#externalspresetdefinitions) |  | Definitions for custom externals presets enabled by `externalsPresets`. Use this to add business-specific presets such as `lynxUi`, or to extend a built-in preset through `extends`. |
 | <a id="globalobject"></a>`globalObject` | `"lynx" \| "globalThis"` | `'lynx'` | This option indicates what global object will be used to mount the library. In Lynx, the library will be mounted to `lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]` by default. If you have enabled share js context and want to reuse the library by mounting to the global object, you can set this option to `'globalThis'`. |
@@ -122,14 +134,17 @@ function pluginExternalBundle(options: PluginExternalBundleOptions): RsbuildPlug
 Create a rsbuild plugin for loading external bundles.
 
 This plugin wraps the externals-loading-webpack-plugin and automatically
-retrieves layer names from the react-rsbuild-plugin via api.useExposed.
+retrieves layer names from any DSL plugin that exposes `LAYERS`, such as
+`pluginReactLynx` or `pluginVanillaLynx`, via api.useExposed.
 
 ```ts
-// lynx.config.ts
+// rsbuild.config.ts
 import { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin'
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
 
-export default {
+export default defineConfig({
+  environments: { lynx: {} },
   plugins: [
     pluginReactLynx(),
     pluginExternalBundle({
@@ -142,7 +157,7 @@ export default {
       },
     }),
   ],
-}
+})
 ```
 
 | Parameters | Type | Description |
@@ -274,6 +289,7 @@ ExternalsLoadingPlugin({
     preact: {
       libraryName: ['ReactLynx', 'Preact'],
       url: '……',
+      async: false,
     },
   }
 })
@@ -287,6 +303,15 @@ externals: {
 }
 ```
 
+With the default `async: true`, a `promise` external is generated instead,
+which picks the subpath after the library promise resolves:
+
+```js
+externals: {
+  preact: 'promise Promise.resolve(lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]["ReactLynx"]).then(function (m) { return m["Preact"]; })',
+}
+```
+
 ```ts
 `Lodash`
 ```
@@ -296,7 +321,8 @@ externals: {
 - **Type:** `string`
 
 :::warning Deprecated
-Deprecated.
+Prefer `bundlePath`, which resolves through the runtime public
+path and lets higher-level tooling manage asset emission.
 :::
 
 Bundle URL.
@@ -304,25 +330,37 @@ Bundle URL.
 Use this only when the external bundle lives outside the current build
 output and should not be emitted or served by `pluginExternalBundle`.
 
- Prefer `bundlePath`, which resolves through the runtime public
-path and lets higher-level tooling manage asset emission.
-
 ### `ReactLynxExternalsPresetOptions` \{#reactlynxexternalspresetoptions\}
 
 Options for the built-in `reactlynx` externals preset.
 
 | Members | Type | Default | Description |
 | --- | --- | --- | --- |
-| <a id="reactlynxexternalspresetoptions-async"></a>`async?` | `boolean` | `false` | Load the ReactLynx runtime bundle asynchronously, for the web target. The web runtime (`@lynx-js/web-core`) can only fetch external bundles asynchronously (`fetchBundle().then`), so ReactLynx must be mounted as a promise that consuming modules await before reading a subpath (otherwise `React.memo` etc. are read off a pending promise and are `undefined`). Enabling this also resolves the web-encoded `@lynx-js/react-umd/{dev,prod}-web` bundle and defaults `bundlePath` to `react.web.bundle`. |
-| <a id="reactlynxexternalspresetoptions-bundlepath"></a>`bundlePath?` | `string` | `'react.lynx.bundle'` | Emit the ReactLynx runtime bundle into the current build output and load it through the generated runtime public path. Prefer this over `url` for normal Rspeedy projects. In addition to letting the runtime resolve the final URL from `publicPath`, the plugin will also copy the corresponding `@lynx-js/react-umd` bundle into the emitted assets, so application bundles can reference it without requiring an extra manual copy step when publishing. |
+| <a id="reactlynxexternalspresetoptions-async"></a>`async?` | `boolean` | `false` | Load the ReactLynx runtime bundle asynchronously, for the web target. The web runtime (`@lynx-js/web-core`) can only fetch external bundles asynchronously (`fetchBundle().then`), so ReactLynx must be mounted as a promise that consuming modules await before reading a subpath (otherwise `React.memo` etc. are read off a pending promise and are `undefined`). Only controls how the runtime is mounted; the web bundle is chosen for environments other than `lynx` / `lynx-*`. |
 | <a id="reactlynxexternalspresetoptions-reactumdpackagename"></a>`reactUmdPackageName?` | `string` | `'@lynx-js/react-umd'` | Package name that provides the ReactLynx runtime bundle. Override this when wrapping the plugin for another distribution, such as `@byted-lynx/react-umd`. |
+
+#### `ReactLynxExternalsPresetOptions.bundlePath?` \{#reactlynxexternalspresetoptions-bundlepath\}
+
+- **Type:** `string`
+- **Default:** `'react.lynx.bundle'`, or `'react.web.bundle'` outside
+  `lynx` / `lynx-*` environments
+
+Emit the ReactLynx runtime bundle into the current build output and load it
+through the generated runtime public path.
+
+Prefer this over `url` for bundles shipped with this project. In addition
+to letting the runtime resolve the final URL from `publicPath`, the plugin
+will also copy the corresponding `@lynx-js/react-umd` bundle into the
+emitted assets, so application bundles can reference it without requiring
+an extra manual copy step when publishing.
 
 #### `ReactLynxExternalsPresetOptions.url?` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#reactlynxexternalspresetoptions-url\}
 
 - **Type:** `string`
 
 :::warning Deprecated
-Deprecated.
+Prefer `bundlePath`, which resolves through the runtime public
+path and enables automatic asset emission.
 :::
 
 Override the runtime bundle URL directly.
@@ -330,9 +368,6 @@ Override the runtime bundle URL directly.
 Use this only when the ReactLynx runtime is hosted outside the current
 build output, for example on a CDN. Unlike `bundlePath`, this does not emit
 any extra asset into the current compilation.
-
- Prefer `bundlePath`, which resolves through the runtime public
-path and enables automatic asset emission.
 
 ### `ExternalsPresetDefinitions` \{#externalspresetdefinitions\}
 
@@ -355,5 +390,6 @@ infer:
 - `libraryName`: the external request key
 - `background.sectionPath`: the external request key
 - `mainThread.sectionPath`: `${request}__main-thread`
+- `async`: `true`
 
 {/* @api-end */}

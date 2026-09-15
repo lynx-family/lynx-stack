@@ -503,7 +503,7 @@
           "refs": [
             "ActionPlan"
           ],
-          "summary": "Trigger an action. Accepts either:\n- ActionPlan (v0.5): runs steps sequentially (Run, Set, ToAssistant, OpenUrl)\n- Legacy action config (v0.1): object with optional type and params.\n- Nothing: fires ContinueConversation with the label",
+          "summary": "Trigger an action. Accepts either:\n- ActionPlan (v0.5): runs steps sequentially (Run, Set, Reset, ToAssistant,\n  OpenUrl) and stops if a Run mutation fails. When the renderer is given a\n  pre-parsed `result`, only ToAssistant and OpenUrl run; other steps warn.\n- Legacy action config (v0.1): object with optional type and params.\n- Nothing: fires ContinueConversation with the label",
           "kind": "property"
         }
       ]
@@ -1500,11 +1500,9 @@
           ],
           "returns": {
             "type": "string"
-          },
-          "summary": "Use `generateSystemPrompt`."
+          }
         }
-      ],
-      "summary": "Use `generateSystemPrompt`."
+      ]
     },
     {
       "name": "isReactiveAssign",

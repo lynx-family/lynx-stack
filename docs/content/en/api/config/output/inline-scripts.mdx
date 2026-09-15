@@ -13,6 +13,7 @@ Lynx changes the default of this Rsbuild option; everything else works as in Rsb
 
 ## Default \{#default\}
 
-- Rspeedy defaults this to `true` and only switches it to `false` when the user explicitly enables the top-level `splitChunks` option.
+- Rspeedy defaults this to `true` and only switches it to `false` when the user explicitly enables the top-level `splitChunks` option, or sets the deprecated `performance.chunkSplit.strategy` to anything other than `'all-in-one'`.
+- On plain Rsbuild, the Rsbuild default applies.
 
 {/* @api-end */}

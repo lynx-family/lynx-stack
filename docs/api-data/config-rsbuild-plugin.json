@@ -383,13 +383,13 @@
           },
           "summary": "An rsbuild plugin for config Lynx Config defined by `@lynx-js/type-config`.",
           "examples": [
-            "```ts\nimport { pluginLynxConfig } from '@lynx-js/config-rsbuild-plugin'\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  plugins: [\n    pluginLynxConfig({\n      alignMouseEventWithW3C: true,\n    }),\n  ],\n})\n```"
+            "```ts\n// rsbuild.config.ts\nimport { pluginLynxConfig } from '@lynx-js/config-rsbuild-plugin'\nimport { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\nimport { defineConfig } from '@rsbuild/core'\n\nexport default defineConfig({\n  environments: { lynx: {} },\n  plugins: [\n    pluginReactLynx(),\n    pluginLynxConfig({\n      alignMouseEventWithW3C: true,\n    }),\n  ],\n})\n```"
           ]
         }
       ],
       "summary": "An rsbuild plugin for config Lynx Config defined by `@lynx-js/type-config`.",
       "examples": [
-        "```ts\nimport { pluginLynxConfig } from '@lynx-js/config-rsbuild-plugin'\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  plugins: [\n    pluginLynxConfig({\n      alignMouseEventWithW3C: true,\n    }),\n  ],\n})\n```"
+        "```ts\n// rsbuild.config.ts\nimport { pluginLynxConfig } from '@lynx-js/config-rsbuild-plugin'\nimport { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\nimport { defineConfig } from '@rsbuild/core'\n\nexport default defineConfig({\n  environments: { lynx: {} },\n  plugins: [\n    pluginReactLynx(),\n    pluginLynxConfig({\n      alignMouseEventWithW3C: true,\n    }),\n  ],\n})\n```"
       ]
     }
   ]

@@ -1027,8 +1027,6 @@ Wait for the next event loop.
 
 It will be useful when you want to wait for the next event loop to finish.
 
- Please use `act` instead
-
 **Returns:** `Promise<void>`
 
 ## Classes \{#classes\}
@@ -1397,7 +1395,7 @@ const customRenderHook = (ui, options) =>
 export * from '@lynx-js/react/testing-library'
 
 // override renderHook method
-export { customRender as renderHook }
+export { customRenderHook as renderHook }
 ```
 
 ### `RenderHookResult` \{#renderhookresult\}
@@ -1839,7 +1837,7 @@ query methods have a common call signature. Only the return type differs.
 ### `RenderResult` \{#renderresult\}
 
 ```ts
-type RenderResult = { asFragment: () => DocumentFragment; container: LynxElement; rerender: (ui: React.ReactNode) => void; unmount: () => boolean } & { [P in keyof Q]: BoundFunction<Q[P]> }
+type RenderResult = { asFragment: () => DocumentFragment; container: LynxElement; rerender: (ui: React.ReactNode) => void; unmount: () => void } & { [P in keyof Q]: BoundFunction<Q[P]> }
 ```
 
 The result of [`render`](#render)

@@ -44,8 +44,8 @@
     "text": "将生成的组件 manifest 转换为可直接用于 prompt 的 A2UI catalog。"
   },
   "readA2UICatalogFromDirectory.summary": {
-    "en": "Read generated component and function manifests and convert them into a\nprompt-ready A2UI catalog.",
-    "text": "读取生成的组件和函数 manifest，并将其转换为可直接用于 prompt 的 A2UI catalog。"
+    "en": "Read generated manifests and convert them into a prompt-ready A2UI catalog.\nComponents and functions come from a full `catalog.json` in `catalogDir`\nor its parent when one exists; otherwise only components are read, from\nper-component `<Name>/catalog.json` files, and the catalog has no\nfunctions.",
+    "text": "读取生成的 manifest，并将其转换为可直接用于 prompt 的 A2UI catalog。如果 `catalogDir` 或其父目录中存在完整的 `catalog.json`，则从中读取组件和函数；否则仅从各组件的 `<Name>/catalog.json` 文件中读取组件，此时 catalog 不包含函数。"
   },
   "renderCatalogReference.summary": {
     "en": "Render an A2UI catalog into the Markdown reference embedded in prompts.",

@@ -55,8 +55,7 @@ function App() {
 function useGlobalProps(): GlobalProps
 ```
 
-用于获取 `lynx.__globalProps` 的 React Hook。
-`lynx.__globalProps` 变化时会自动触发重新渲染。
+用于获取 `lynx.__globalProps` 的 React Hook。在 `globalPropsMode: 'event'` 下，`lynx.__globalProps` 变化时组件会重新渲染；在默认的 `'reactive'` 模式下，更新通过整体重新渲染生效。
 
 ```ts
 function App() {
@@ -131,10 +130,7 @@ function useMainThreadRef(): MainThreadRef<T | undefined>
 
 创建一个 `MainThreadRef`。
 
-`MainThreadRef` 是一种只能在主线程访问的 ref，
-用于在主线程函数调用之间保存状态。
-保存在 `MainThreadRef` 的 `current` 属性中的数据，
-可以在多个主线程函数中读写。
+`MainThreadRef` 是一种只能在主线程访问的 ref，用于在主线程函数调用之间保存状态。保存在 `MainThreadRef` 的 `current` 属性中的数据，可以在多个主线程函数中读写。
 
 它是一个 Hook，只应在组件的顶层调用。
 
@@ -172,8 +168,7 @@ export function App() {
 function useEffect(effect: EffectCallback, deps?: DependencyList): void
 ```
 
-接收一个包含命令式、可能带有副作用代码的函数。
-副作用会在主线程 DOM 更新后执行，且不会阻塞更新。
+接收一个包含命令式、可能带有副作用代码的函数。副作用会在主线程 DOM 更新后执行，且不会阻塞更新。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -187,7 +182,7 @@ function useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void
 ```
 
 :::warning 已废弃
-已废弃。
+后台线程中的 `useLayoutEffect` 无法提供读取布局信息并同步重新渲染的精确时机，这一点与 React 不同。
 :::
 
 `useLayoutEffect` 现在是 `useEffect` 的别名，请改用 `useEffect`。
@@ -197,7 +192,7 @@ function useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
 | `effect` | `EffectCallback` | Imperative function that can return a cleanup function |
-| `deps?` | `DependencyList` | If present, effect will only activate if the values in the list change (using ===).  `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React. |
+| `deps?` | `DependencyList` | If present, effect will only activate if the values in the list change (using ===). |
 
 {/* @api-end */}
 

@@ -74,9 +74,9 @@ Options used to customize the generated OpenUI system prompt.
 | Members | Type | Description |
 | --- | --- | --- |
 | <a id="buildopenuisystempromptoptions-appendix"></a>`appendix?` | `string` |  |
-| <a id="buildopenuisystempromptoptions-componentgroups"></a>`componentGroups?` | `ComponentGroup[]` | Replace or extend the built-in component groups. |
-| <a id="buildopenuisystempromptoptions-componentnames"></a>`componentNames?` | `readonly string[]` | Limit built-ins to these names. Custom `components` are still appended. |
-| <a id="buildopenuisystempromptoptions-components"></a>`components?` | [`OpenUiPromptComponent`](#openuipromptcomponent)`[]` | Replace or extend the built-in component set. |
+| <a id="buildopenuisystempromptoptions-componentgroups"></a>`componentGroups?` | `ComponentGroup[]` | Extra component groups, appended after the built-in groups. |
+| <a id="buildopenuisystempromptoptions-componentnames"></a>`componentNames?` | `readonly string[]` | Limit built-ins and built-in groups to these names. The root component is always kept, and custom `components` are still appended. In `buildOpenUiSystemPrompt`, setting this also switches to the restricted default rules and, unless `promptOptions` sets them, disables tool calls and omits the default examples. |
+| <a id="buildopenuisystempromptoptions-components"></a>`components?` | [`OpenUiPromptComponent`](#openuipromptcomponent)`[]` | Custom components appended after the built-ins. One with the same name as a built-in replaces that built-in. |
 | <a id="buildopenuisystempromptoptions-promptoptions"></a>`promptOptions?` | `PromptOptions` |  |
 | <a id="buildopenuisystempromptoptions-root"></a>`root?` | `string` | Override the root component name. Defaults to `'Stack'`. |
 
@@ -86,9 +86,9 @@ Options for creating the headless OpenUI prompt library.
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="createopenuipromptlibraryoptions-componentgroups"></a>`componentGroups?` | `ComponentGroup[]` | Replace or extend the built-in component groups. |
-| <a id="createopenuipromptlibraryoptions-componentnames"></a>`componentNames?` | `readonly string[]` | Limit built-ins to these names. Custom `components` are still appended. |
-| <a id="createopenuipromptlibraryoptions-components"></a>`components?` | [`OpenUiPromptComponent`](#openuipromptcomponent)`[]` | Replace or extend the built-in component set. |
+| <a id="createopenuipromptlibraryoptions-componentgroups"></a>`componentGroups?` | `ComponentGroup[]` | Extra component groups, appended after the built-in groups. |
+| <a id="createopenuipromptlibraryoptions-componentnames"></a>`componentNames?` | `readonly string[]` | Limit built-ins and built-in groups to these names. The root component is always kept, and custom `components` are still appended. In `buildOpenUiSystemPrompt`, setting this also switches to the restricted default rules and, unless `promptOptions` sets them, disables tool calls and omits the default examples. |
+| <a id="createopenuipromptlibraryoptions-components"></a>`components?` | [`OpenUiPromptComponent`](#openuipromptcomponent)`[]` | Custom components appended after the built-ins. One with the same name as a built-in replaces that built-in. |
 | <a id="createopenuipromptlibraryoptions-root"></a>`root?` | `string` | Override the root component name. Defaults to `'Stack'`. |
 
 ### `OpenUiPromptComponent` \{#openuipromptcomponent\}

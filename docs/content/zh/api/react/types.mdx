@@ -12,10 +12,7 @@ title: 类型
 
 ### `MainThreadRef` \{#mainthreadref\}
 
-`MainThreadRef` 是一种只能在主线程访问的 ref，
-用于在主线程函数调用之间保存状态。
-保存在 `MainThreadRef` 的 `current` 属性中的数据，
-可以在多个主线程函数中读写。
+`MainThreadRef` 是一种只能在主线程访问的 ref，用于在主线程函数调用之间保存状态。保存在 `MainThreadRef` 的 `current` 属性中的数据，可以在多个主线程函数中读写。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -98,8 +95,7 @@ lynx.registerDataProcessors(App); // You can pass `App` because it has the requi
 root.render(<App/>);
 ```
 
-希望 `defaultDataProcessor` 拥有完整类型的开发者，
-可以通过扩展 `InitDataRaw` 和 `InitData` 接口来实现。
+希望 `defaultDataProcessor` 拥有完整类型的开发者，可以通过扩展 `InitDataRaw` 和 `InitData` 接口来实现。
 
 ```ts
 import { root } from "@lynx-js/react"
@@ -122,11 +118,10 @@ lynx.registerDataProcessors({
 
 ```
 
-希望 `defaultDataProcessor` 拥有完整类型的开发者，
-可以通过扩展 `InitDataRaw` 和 `InitData` 接口来实现。
+希望 `defaultDataProcessor` 拥有完整类型的开发者，可以通过扩展 `InitDataRaw` 和 `InitData` 接口来实现。
 
 ```ts
-import { root, useInitData } from "@lynx-js/react"
+import { useInitData } from "@lynx-js/react"
 
 interface AnotherExistingInterface {
   someAnotherPropertyFromExistingInterface: number
@@ -138,7 +133,7 @@ declare module '@lynx-js/react' {
   }
 }
 
-root.registerDataProcessors({
+lynx.registerDataProcessors({
   defaultDataProcessor: () => {
     return {
       someCustomProperty: 'value', // will be typed
@@ -165,7 +160,7 @@ function App() {
 - **类型：** `(dataProcessorDefinition: `[`DataProcessorDefinition`](#dataprocessordefinition)`) => void`
 
 :::warning 已废弃
-已废弃。
+请改用 [`lynx.registerDataProcessors`](#lynx-registerdataprocessors)
 :::
 
 注册 DataProcessor。必须在 `root.render()` 之前调用。

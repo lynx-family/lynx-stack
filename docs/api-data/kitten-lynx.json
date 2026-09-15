@@ -278,7 +278,8 @@
             {
               "name": "options",
               "type": "{ timeout?: number }",
-              "optional": true
+              "optional": true,
+              "description": "Optional settings. `options.timeout` is how long to poll for the matching session, in milliseconds (default 30000)."
             }
           ],
           "returns": {

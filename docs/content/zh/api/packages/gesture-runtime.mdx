@@ -262,8 +262,7 @@ function useGesture(GestureConstructor: () => T): T
 ### `NativeGesture` <span className="api-badge api-badge-beta">实验性</span> \{#nativegesture\}
 
 目前处于高度实验阶段，后续可能发生变化。
-NativeGesture 是表示原生平台手势的手势。
-可用于与原生手势处理机制集成。
+NativeGesture 是表示原生平台手势的手势。可用于与原生手势处理机制集成。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -462,8 +461,7 @@ const Gesture: { Exclusive: any; Race: any; Simultaneous: any }
 
 ### `BaseGestureConfig` \{#basegestureconfig\}
 
-所有手势的基础配置接口。
-所有手势专属配置都扩展自该接口。
+所有手势的基础配置接口。所有手势专属配置都扩展自该接口。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -488,8 +486,7 @@ const Gesture: { Exclusive: any; Race: any; Simultaneous: any }
 
 ### `DefaultGestureChangeEvent` \{#defaultgesturechangeevent\}
 
-默认手势的变化事件。
-直接使用基础的 GestureChangeEvent，不包含额外属性。
+默认手势的变化事件。新增滚动偏移量（`scrollX`、`scrollY`）、增量（`deltaX`、`deltaY`）和边界标记（`isAtStart`、`isAtEnd`）。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -499,8 +496,7 @@ const Gesture: { Exclusive: any; Race: any; Simultaneous: any }
 
 ### `DefaultGestureConfig` \{#defaultgestureconfig\}
 
-DefaultGesture 的配置接口。
-默认手势是一种基础的手势处理器。
+DefaultScrollGesture 的配置接口。默认手势是一种基础的手势处理器。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -509,7 +505,7 @@ DefaultGesture 的配置接口。
 
 ### `FlingGestureChangeEvent` \{#flinggesturechangeevent\}
 
-快速滑动手势的变化事件，包含快速滑动的位置和速度信息。
+快速滑动手势的变化事件，包含滚动偏移量（`scrollX`、`scrollY`）、增量（`deltaX`、`deltaY`）和边界标记（`isAtStart`、`isAtEnd`）。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -519,8 +515,7 @@ DefaultGesture 的配置接口。
 
 ### `FlingGestureConfig` \{#flinggestureconfig\}
 
-FlingGesture 的配置接口。
-快速滑动手势用于识别快速滑动（swipe）手势。
+FlingGesture 的配置接口。快速滑动手势用于识别快速滑动（swipe）手势。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -530,8 +525,7 @@ FlingGesture 的配置接口。
 
 ### `GestureChangeEvent` \{#gesturechangeevent\}
 
-基础的手势变化事件接口。
-所有手势专属事件都扩展自该接口。
+基础的手势变化事件接口。所有手势专属事件都扩展自该接口。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -590,7 +584,7 @@ FlingGesture 的配置接口。
 
 ### `LongPressGestureChangeEvent` \{#longpressgesturechangeevent\}
 
-长按手势的变化事件，包含按压位置和持续时间信息。
+长按手势的变化事件。使用基础 `GestureChangeEvent` 的参数。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -600,8 +594,7 @@ FlingGesture 的配置接口。
 
 ### `LongPressGestureConfig` \{#longpressgestureconfig\}
 
-LongPressGesture 的配置接口。
-长按手势用于识别长按手势。
+LongPressGesture 的配置接口。长按手势用于识别长按手势。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -611,8 +604,7 @@ LongPressGesture 的配置接口。
 
 ### `NativeGestureChangeEvent` \{#nativegesturechangeevent\}
 
-原生手势的变化事件。
-直接使用基础的 GestureChangeEvent，不包含额外属性。
+原生手势的变化事件。新增滚动偏移量（`scrollX`、`scrollY`）、增量（`deltaX`、`deltaY`）和边界标记（`isAtStart`、`isAtEnd`）。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -622,8 +614,7 @@ LongPressGesture 的配置接口。
 
 ### `NativeGestureConfig` \{#nativegestureconfig\}
 
-NativeGesture 的配置接口。
-原生手势使用平台特定的手势识别器。
+NativeGesture 的配置接口。原生手势使用平台特定的手势识别器。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -631,7 +622,7 @@ NativeGesture 的配置接口。
 
 ### `PanGestureChangeEvent` \{#pangesturechangeevent\}
 
-拖动手势的变化事件，包含位移和速度信息。
+拖动手势的变化事件，包含滚动偏移量（`scrollX`、`scrollY`）和边界标记（`isAtStart`、`isAtEnd`）。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -641,8 +632,7 @@ NativeGesture 的配置接口。
 
 ### `PanGestureConfig` \{#pangestureconfig\}
 
-PanGesture 的配置接口。
-拖动手势用于识别拖动（dragging）手势。
+PanGesture 的配置接口。拖动手势用于识别拖动（dragging）手势。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -667,7 +657,7 @@ PanGesture 的配置接口。
 
 ### `TapGestureChangeEvent` \{#tapgesturechangeevent\}
 
-点击手势的变化事件，包含点击位置和次数信息。
+点击手势的变化事件。使用基础 `GestureChangeEvent` 的参数。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -677,8 +667,7 @@ PanGesture 的配置接口。
 
 ### `TapGestureConfig` \{#tapgestureconfig\}
 
-TapGesture 的配置接口。
-点击手势用于识别点击手势。
+TapGesture 的配置接口。点击手势用于识别点击手势。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |

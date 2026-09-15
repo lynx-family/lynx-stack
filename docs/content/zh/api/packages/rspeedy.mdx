@@ -186,8 +186,7 @@ export default defineConfig({
 - **类型：** `(string | undefined)[]`
 - **默认值：** `undefined`
 
-添加额外的缓存摘要，当数组中的任意值发生变化时，
-之前的构建缓存将会失效。
+添加额外的缓存摘要，当数组中的任意值发生变化时，之前的构建缓存将会失效。
 
 将 `process.env.SOME_ENV` 添加到缓存摘要中。
 
@@ -245,8 +244,8 @@ Rspeedy 的 CLI 命令。
 | 成员 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
 | <a id="createrspeedyoptions-cwd"></a>`cwd?` | `string` |  | 当前构建的根路径。 |
-| <a id="createrspeedyoptions-environment"></a>`environment?` | `string[]` | `[]` | 仅构建指定的 environment。 例如，传入 `['lynx']` 将只构建 `lynx` environment。 如果未指定或传入空数组，则会构建所有 environment。 |
-| <a id="createrspeedyoptions-loadenv"></a>`loadEnv?` | `boolean \| LoadEnvOptions` | `true` | Rspeedy 默认会通过 [Rsbuild API](https://rsbuild.rs/api/javascript-api/core#load-env-variables) 自动加载 .env 文件。 你可以在代码中通过 `import.meta.env.FOO` 或 `process.env.Foo` 访问 .env 文件中定义的环境变量。 |
+| <a id="createrspeedyoptions-environment"></a>`environment?` | `string[]` | `[]` | 仅构建指定的 environment。例如，传入 `['lynx']` 将只构建 `lynx` environment。如果未指定或传入空数组，则会构建所有 environment。 |
+| <a id="createrspeedyoptions-loadenv"></a>`loadEnv?` | `boolean \| LoadEnvOptions` | `true` | Rspeedy 默认会通过 [Rsbuild API](https://rsbuild.rs/api/javascript-api/core#load-env-variables) 自动加载 .env 文件。你可以在代码中通过 `import.meta.env.FOO` 或 `process.env.Foo` 访问 .env 文件中定义的环境变量。 |
 | <a id="createrspeedyoptions-rspeedyconfig"></a>`rspeedyConfig?` | `Config` |  | Rspeedy 的配置。 |
 
 #### `CreateRspeedyOptions.callerName?` \{#createrspeedyoptions-callername\}
@@ -254,8 +253,7 @@ Rspeedy 的 CLI 命令。
 - **类型：** `string`
 - **默认值：** `'rspeedy'`
 
-当前调用 Rsbuild 的框架或工具的名称。
-插件可以据此根据调用上下文调整自身行为。
+当前调用 Rsbuild 的框架或工具的名称。插件可以据此根据调用上下文调整自身行为。
 
 Rsbuild 插件可以通过 `api.context.callerName` 访问该值。
 
@@ -290,8 +288,8 @@ export function myPlugin() {
 
 | 成员 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| <a id="cssextract-loaderoptions"></a>`loaderOptions?` | `CssExtractRspackLoaderOptions` | `undefined` | `@lynx-js/css-extract-webpack-plugin#LoaderOptions` |
-| <a id="cssextract-pluginoptions"></a>`pluginOptions?` | `CssExtractRspackPluginOptions` | `undefined` | `@lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions` |
+| <a id="cssextract-loaderoptions"></a>`loaderOptions?` | `CssExtractRspackLoaderOptions` | `undefined` | [`LoaderOptions`](/zh/api/packages/css-extract-webpack-plugin#loaderoptions) |
+| <a id="cssextract-pluginoptions"></a>`pluginOptions?` | `CssExtractRspackPluginOptions` | `undefined` | [`CssExtractRspackPluginOptions`](/zh/api/packages/css-extract-webpack-plugin#cssextractrspackpluginoptions) |
 
 ### `CssLoader` \{#cssloader\}
 
@@ -359,7 +357,7 @@ export default defineConfig({
 
 ### `CssLoaderModules` \{#cssloadermodules\}
 
-`CssLoader.modules`
+[`CssLoader.modules`](#cssloader-modules)
 
 | 成员 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
@@ -393,10 +391,10 @@ export default defineConfig({
 ```js
 import * as styles from "./styles.css";
 
-// If using `exportLocalsConvention: "as-is"` (default value):
+// If using `exportLocalsConvention: "asIs"`:
 console.log(styles["foo-baz"], styles.bar);
 
-// If using `exportLocalsConvention: "camel-case-only"`:
+// If using `exportLocalsConvention: "camelCaseOnly"`:
 console.log(styles.fooBaz, styles.bar);
 
 // For the `default` class name
@@ -459,7 +457,7 @@ const RsbuildPlugin = {
 | --- | --- | --- |
 | <a id="exposedapi-config"></a>`config` | `Config` | 用户配置。 |
 | <a id="exposedapi-debug"></a>`debug` | `(message: string \| (() => string)) => void` | 打印调试日志。 |
-| <a id="exposedapi-entries"></a>`entries?` | `RsbuildEntry` | 用于让 qrcode 插件从自定义的 environment 中获取入口，而不是从默认的 lynx environment 中获取。 |
+| <a id="exposedapi-entries"></a>`entries?` | `RsbuildEntry` | 自定义 environment 的入口。Rspeedy 不再设置该字段。 |
 | <a id="exposedapi-exit"></a>`exit` | `(code?: number) => void \| Promise<void>` | 退出进程。 |
 | <a id="exposedapi-logger"></a>`logger` | `Logger` | 获取 Rspeedy 的 logger。 |
 | <a id="exposedapi-version"></a>`version` | `string` | Rspeedy 的版本。 |

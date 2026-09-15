@@ -43,7 +43,7 @@
           "summary": "The loader for react refresh.",
           "remarks": "Please note that the runtime of react should be ignored. See the example below:",
           "examples": [
-            "```js\n// rspack.config.js\nimport { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'\nimport { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'\n\nexport default {\n  module: {\n    rules: [\n      {\n        issueLayer: ReactWebpackPlugin.LAYERS.BACKGROUND,\n        test: /\\.[jt]sx?$/,\n        exclude: [\n          /node_modules/,\n          /@lynx-js/react/,\n          ReactRefreshRspackPlugin.loader,\n        ],\n        use: [ReactRefreshRspackPlugin.loader],\n      },\n    ],\n  },\n  plugins: [new ReactRefreshRspackPlugin()],\n}\n```"
+            "```js\n// rspack.config.js\nimport { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'\nimport { LAYERS } from '@lynx-js/react-webpack-plugin'\n\nexport default {\n  module: {\n    rules: [\n      {\n        issuerLayer: LAYERS.BACKGROUND,\n        test: /\\.[jt]sx?$/,\n        exclude: [\n          /node_modules/,\n          /@lynx-js/react/,\n          ReactRefreshRspackPlugin.loader,\n        ],\n        use: [ReactRefreshRspackPlugin.loader],\n      },\n    ],\n  },\n  plugins: [new ReactRefreshRspackPlugin()],\n}\n```"
           ],
           "kind": "property"
         },

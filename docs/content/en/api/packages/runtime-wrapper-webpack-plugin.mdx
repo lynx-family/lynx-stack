@@ -56,9 +56,9 @@ The options for RuntimeWrapperWebpackPluginOptions
 | Members | Type | Default | Description |
 | --- | --- | --- | --- |
 | <a id="runtimewrapperwebpackpluginoptions-bannertype"></a>`bannerType` | `(filename: string) => "script" \| "bundle"` | `() => 'script'` | There are two types of banners: script(for app-service) and bundle(for js-render). You can decide to use which banner by the filename. |
-| <a id="runtimewrapperwebpackpluginoptions-experimental-islazybundle"></a>`experimental_isLazyBundle?` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle` |
-| <a id="runtimewrapperwebpackpluginoptions-injectvars"></a>`injectVars?` | `((vars: string[]) => string[]) \| string[]` |  | The variables to be injected into the chunk. |
-| <a id="runtimewrapperwebpackpluginoptions-targetsdkversion"></a>`targetSdkVersion` | `string` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion` |
-| <a id="runtimewrapperwebpackpluginoptions-test"></a>`test` | `Rules \| undefined` | `/\.js$/` | Include all modules that pass test assertion. |
+| <a id="runtimewrapperwebpackpluginoptions-experimental-islazybundle"></a>`experimental_isLazyBundle?` | `boolean` |  | [`PluginReactLynxOptions.experimental_isLazyBundle`](/api/packages/react-rsbuild-plugin#experimental-islazybundle) |
+| <a id="runtimewrapperwebpackpluginoptions-injectvars"></a>`injectVars?` | `((vars: string[]) => string[]) \| string[]` |  | A function that receives the default variable list and returns the list to inject. |
+| <a id="runtimewrapperwebpackpluginoptions-targetsdkversion"></a>`targetSdkVersion` | `string` |  | [`PluginReactLynxOptions.targetSdkVersion`](/api/packages/react-rsbuild-plugin#targetsdkversion) |
+| <a id="runtimewrapperwebpackpluginoptions-test"></a>`test` | `Rules \| undefined` | `/\.js$/` | Wrap the emitted JS assets whose filenames match this condition. Assets marked as main thread are never wrapped. |
 
 {/* @api-end */}

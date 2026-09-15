@@ -73,9 +73,9 @@ const openUiPromptActionPropSchema: ZodUnion<readonly [ZodObject<{ steps: ZodArr
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="buildopenuisystempromptoptions-appendix"></a>`appendix?` | `string` |  |
-| <a id="buildopenuisystempromptoptions-componentgroups"></a>`componentGroups?` | `ComponentGroup[]` | 替换或扩展内置的组件分组。 |
-| <a id="buildopenuisystempromptoptions-componentnames"></a>`componentNames?` | `readonly string[]` | 仅保留指定名称的内置组件。自定义的 `components` 仍会被追加。 |
-| <a id="buildopenuisystempromptoptions-components"></a>`components?` | [`OpenUiPromptComponent`](#openuipromptcomponent)`[]` | 替换或扩展内置的组件集合。 |
+| <a id="buildopenuisystempromptoptions-componentgroups"></a>`componentGroups?` | `ComponentGroup[]` | 额外的组件分组，追加在内置分组之后。 |
+| <a id="buildopenuisystempromptoptions-componentnames"></a>`componentNames?` | `readonly string[]` | 仅保留指定名称的内置组件和内置分组。根组件始终会被保留，自定义的 `components` 仍会被追加。在 `buildOpenUiSystemPrompt` 中，设置该选项还会切换到受限的默认规则，并且除非 `promptOptions` 另行设置，否则会禁用工具调用并省略默认示例。 |
+| <a id="buildopenuisystempromptoptions-components"></a>`components?` | [`OpenUiPromptComponent`](#openuipromptcomponent)`[]` | 追加在内置组件之后的自定义组件。与内置组件同名的自定义组件会替换该内置组件。 |
 | <a id="buildopenuisystempromptoptions-promptoptions"></a>`promptOptions?` | `PromptOptions` |  |
 | <a id="buildopenuisystempromptoptions-root"></a>`root?` | `string` | 覆盖根组件名称。默认为 `'Stack'`。 |
 
@@ -85,9 +85,9 @@ const openUiPromptActionPropSchema: ZodUnion<readonly [ZodObject<{ steps: ZodArr
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="createopenuipromptlibraryoptions-componentgroups"></a>`componentGroups?` | `ComponentGroup[]` | 替换或扩展内置的组件分组。 |
-| <a id="createopenuipromptlibraryoptions-componentnames"></a>`componentNames?` | `readonly string[]` | 仅保留指定名称的内置组件。自定义的 `components` 仍会被追加。 |
-| <a id="createopenuipromptlibraryoptions-components"></a>`components?` | [`OpenUiPromptComponent`](#openuipromptcomponent)`[]` | 替换或扩展内置的组件集合。 |
+| <a id="createopenuipromptlibraryoptions-componentgroups"></a>`componentGroups?` | `ComponentGroup[]` | 额外的组件分组，追加在内置分组之后。 |
+| <a id="createopenuipromptlibraryoptions-componentnames"></a>`componentNames?` | `readonly string[]` | 仅保留指定名称的内置组件和内置分组。根组件始终会被保留，自定义的 `components` 仍会被追加。在 `buildOpenUiSystemPrompt` 中，设置该选项还会切换到受限的默认规则，并且除非 `promptOptions` 另行设置，否则会禁用工具调用并省略默认示例。 |
+| <a id="createopenuipromptlibraryoptions-components"></a>`components?` | [`OpenUiPromptComponent`](#openuipromptcomponent)`[]` | 追加在内置组件之后的自定义组件。与内置组件同名的自定义组件会替换该内置组件。 |
 | <a id="createopenuipromptlibraryoptions-root"></a>`root?` | `string` | 覆盖根组件名称。默认为 `'Stack'`。 |
 
 ### `OpenUiPromptComponent` \{#openuipromptcomponent\}

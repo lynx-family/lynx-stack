@@ -2,7 +2,7 @@
   "id": "cache-events-webpack-plugin",
   "package": "@lynx-js/cache-events-webpack-plugin",
   "version": "0.2.1",
-  "description": "Cache Lynx native events until the BTS chunk is fully loaded, and replay them when the BTS chunk is ready.",
+  "description": "Caches Lynx native calls that arrive before an entry finishes starting up — on the background thread, and on the main thread for entries that start up asynchronously — and replays them once startup settles.",
   "group": "internals",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/cache-events-webpack-plugin",
   "exports": [
@@ -10,7 +10,8 @@
       "name": "LynxCacheEventsPlugin",
       "kind": "class",
       "type": "unknown",
-      "summary": "A webpack plugin that cache Lynx native events until the BTS chunk is fully loaded, and replay them when the BTS chunk is ready.",
+      "summary": "A webpack plugin that caches Lynx native calls that arrive before an entry\nfinishes starting up, and replays them once startup settles.",
+      "remarks": "Only takes effect when `output.chunkLoading` is `'lynx'`.\n\n- Background chunks: always cached. Covers the `lynx.getApp()` methods\n  (`OnLifecycleEvent`, `publishEvent`, `publicComponentEvent`,\n  `callDestroyLifetimeFun`, `updateGlobalProps`, `updateCardData`,\n  `onAppReload`, `processCardConfig`), the `lynx.performance` events, and\n  `globalThis.loadDynamicComponent`.\n\n- Main-thread chunks: cached only for entries whose startup is async, such\n  as an entry that depends on an async external ReactLynx. `renderPage` is\n  cached and replayed, and `processData` is shimmed as a passthrough until\n  the real one is installed.",
       "members": [
         {
           "name": "constructor",

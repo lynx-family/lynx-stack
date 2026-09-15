@@ -290,8 +290,8 @@ export function myPlugin() {
 
 | Members | Type | Default | Description |
 | --- | --- | --- | --- |
-| <a id="cssextract-loaderoptions"></a>`loaderOptions?` | `CssExtractRspackLoaderOptions` | `undefined` | `@lynx-js/css-extract-webpack-plugin#LoaderOptions` |
-| <a id="cssextract-pluginoptions"></a>`pluginOptions?` | `CssExtractRspackPluginOptions` | `undefined` | `@lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions` |
+| <a id="cssextract-loaderoptions"></a>`loaderOptions?` | `CssExtractRspackLoaderOptions` | `undefined` | [`LoaderOptions`](/api/packages/css-extract-webpack-plugin#loaderoptions) |
+| <a id="cssextract-pluginoptions"></a>`pluginOptions?` | `CssExtractRspackPluginOptions` | `undefined` | [`CssExtractRspackPluginOptions`](/api/packages/css-extract-webpack-plugin#cssextractrspackpluginoptions) |
 
 ### `CssLoader` \{#cssloader\}
 
@@ -359,7 +359,7 @@ export default defineConfig({
 
 ### `CssLoaderModules` \{#cssloadermodules\}
 
-`CssLoader.modules`
+[`CssLoader.modules`](#cssloader-modules)
 
 | Members | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -393,10 +393,10 @@ Enables/disables ES modules named export for locals.
 ```js
 import * as styles from "./styles.css";
 
-// If using `exportLocalsConvention: "as-is"` (default value):
+// If using `exportLocalsConvention: "asIs"`:
 console.log(styles["foo-baz"], styles.bar);
 
-// If using `exportLocalsConvention: "camel-case-only"`:
+// If using `exportLocalsConvention: "camelCaseOnly"`:
 console.log(styles.fooBaz, styles.bar);
 
 // For the `default` class name
@@ -459,7 +459,7 @@ const RsbuildPlugin = {
 | --- | --- | --- |
 | <a id="exposedapi-config"></a>`config` | `Config` | The user config. |
 | <a id="exposedapi-debug"></a>`debug` | `(message: string \| (() => string)) => void` | Print debug logs. |
-| <a id="exposedapi-entries"></a>`entries?` | `RsbuildEntry` | Used for plugin qrcode get entry points from self-defined environments rather than default lynx environment. |
+| <a id="exposedapi-entries"></a>`entries?` | `RsbuildEntry` | Entry points of self-defined environments. Rspeedy no longer sets this field. |
 | <a id="exposedapi-exit"></a>`exit` | `(code?: number) => void \| Promise<void>` | Exit the process. |
 | <a id="exposedapi-logger"></a>`logger` | `Logger` | Get the Rspeedy logger. |
 | <a id="exposedapi-version"></a>`version` | `string` | The version of Rspeedy. |

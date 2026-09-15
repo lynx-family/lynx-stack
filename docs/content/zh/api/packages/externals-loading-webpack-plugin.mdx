@@ -43,8 +43,6 @@ export default {
     new ExternalsLoadingPlugin({
       mainThreadLayer: 'main-thread',
       backgroundLayer: 'background',
-      mainThreadChunks: ['index__main-thread'],
-      backgroundChunks: ['index'],
       externals: {
        'lodash': {
          url: 'http://lodash.lynx.bundle',
@@ -93,6 +91,8 @@ export default {
 module.exports = {
  plugins: [
    new ExternalsLoadingPlugin({
+     mainThreadLayer: 'main-thread',
+     backgroundLayer: 'background',
      externals: {
        lodash: {
          url: 'http://lodash.lynx.bundle',
@@ -111,6 +111,8 @@ module.exports = {
 module.exports = {
  plugins: [
    new ExternalsLoadingPlugin({
+     mainThreadLayer: 'main-thread',
+     backgroundLayer: 'background',
      externals: {
        lodash: {
          url: 'http://lodash.lynx.bundle',
@@ -130,11 +132,11 @@ externals 的值项。
 | --- | --- | --- | --- |
 | <a id="externalvalue-async"></a>`async?` | `boolean` | `true` | 是否异步加载资源。 |
 | <a id="externalvalue-background"></a>`background?` | [`LayerOptions`](#layeroptions) | `undefined` | 后台 layer 的选项。 |
-| <a id="externalvalue-bundlepath"></a>`bundlePath?` | `string` |  | 相对于运行时 public path 解析的 bundle 路径。 当 bundle 需要跟随当前生效的 `publicPath` 时，优先使用该选项而非 `url`。运行时会通过 `publicPath + bundlePath` 加载， 从而使外部 bundle 的解析与当前构建 产物保持一致，而无需在生成的运行时代码中硬编码绝对 URL。 |
+| <a id="externalvalue-bundlepath"></a>`bundlePath?` | `string` |  | 相对于运行时 public path 解析的 bundle 路径。 当 bundle 需要跟随当前生效的 `publicPath` 时，优先使用该选项而非 `url`。运行时会通过 `publicPath + bundlePath` 加载，从而使外部 bundle 的解析与当前构建产物保持一致，而无需在生成的运行时代码中硬编码绝对 URL。 |
 | <a id="externalvalue-mainthread"></a>`mainThread?` | [`LayerOptions`](#layeroptions) | `undefined` | 主线程 layer 的选项。 |
 | <a id="externalvalue-retries"></a>`retries?` | `number` | `0` | 获取外部 bundle 超时（`response.code === -2`）时的额外重试次数。 |
 | <a id="externalvalue-timeout"></a>`timeout?` | `number` | `2000` | 等待时间，单位为毫秒。 |
-| <a id="externalvalue-url"></a>`url?` | `string` |  | 运行时直接获取的最终 bundle URL。 当外部 bundle 托管在当前构建 产物之外（例如 CDN 上）时使用。如果同时提供了 `url` 和 `bundlePath`， 则优先使用 `url`，因为它已经是完全解析的地址。 |
+| <a id="externalvalue-url"></a>`url?` | `string` |  | 运行时直接获取的最终 bundle URL。 当外部 bundle 托管在当前构建产物之外（例如 CDN 上）时使用。如果同时提供了 `url` 和 `bundlePath`，则优先使用 `url`，因为它已经是完全解析的地址。 |
 
 #### `ExternalValue.libraryName?` \{#externalvalue-libraryname\}
 
@@ -199,6 +201,7 @@ ExternalsLoadingPlugin({
     preact: {
       libraryName: ['ReactLynx', 'Preact'],
       url: '……',
+      async: false,
     },
   }
 })
@@ -209,6 +212,14 @@ ExternalsLoadingPlugin({
 ```js
 externals: {
   preact: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.Preact',
+}
+```
+
+在默认的 `async: true` 下，会改为生成一个 `promise` external，在库的 promise resolve 之后再取出子路径：
+
+```js
+externals: {
+  preact: 'promise Promise.resolve(lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]["ReactLynx"]).then(function (m) { return m["Preact"]; })',
 }
 ```
 

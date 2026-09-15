@@ -28,218 +28,73 @@ The reference below covers the `@lynx-js/web-core/client` entry, which defines t
 
 ### `html()` \{#html\}
 
-```ts
-function html(strings: TemplateStringsArray, values: any[]): string
-```
-
-*No description yet.*
-
-| Parameters | Type | Description |
-| --- | --- | --- |
-| `strings` | `TemplateStringsArray` |  |
-| `values` | `any[]` |  |
-
-**Returns:** `string`
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#html).
 
 ### `registerAttributeHandler()` \{#registerattributehandler\}
 
-```ts
-function registerAttributeHandler(key: string, args_0: boolean): (this: T, target: AttributeChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any
-```
-
-*No description yet.*
-
-| Parameters | Type | Description |
-| --- | --- | --- |
-| `key` | `string` |  |
-| `args_0` | `boolean` |  |
-
-**Returns:** `(this: T, target: `[`AttributeChangeHandler`](#attributechangehandler)` | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any`
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#registerattributehandler).
 
 ### `registerEventEnableStatusChangeHandler()` \{#registereventenablestatuschangehandler\}
 
-```ts
-function registerEventEnableStatusChangeHandler(key: string): (this: T, target: EventStatusChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any
-```
-
-*No description yet.*
-
-| Parameters | Type | Description |
-| --- | --- | --- |
-| `key` | `string` |  |
-
-**Returns:** `(this: T, target: `[`EventStatusChangeHandler`](#eventstatuschangehandler)` | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any`
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#registereventenablestatuschangehandler).
 
 ### `registerStyleChangeHandler()` \{#registerstylechangehandler\}
 
-```ts
-function registerStyleChangeHandler(key: string): (this: T, target: StyleChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any
-```
-
-*No description yet.*
-
-| Parameters | Type | Description |
-| --- | --- | --- |
-| `key` | `string` |  |
-
-**Returns:** `(this: T, target: `[`StyleChangeHandler`](#stylechangehandler)` | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any`
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#registerstylechangehandler).
 
 ### `bindSwitchToEventListener()` \{#bindswitchtoeventlistener\}
 
-```ts
-function bindSwitchToEventListener(this: T, elementGetter: (this: T) => HTMLElement, eventName: string, eventListener: EventListener, options?: AddEventListenerOptions): (this: T, enable: boolean) => void
-```
-
-*No description yet.*
-
-| Parameters | Type | Description |
-| --- | --- | --- |
-| `this` | `T` |  |
-| `elementGetter` | `(this: T) => HTMLElement` |  |
-| `eventName` | `string` |  |
-| `eventListener` | `EventListener` |  |
-| `options?` | `AddEventListenerOptions` |  |
-
-**Returns:** `(this: T, enable: boolean) => void`
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#bindswitchtoeventlistener).
 
 ### `bindToAttribute()` \{#bindtoattribute\}
 
-```ts
-function bindToAttribute(this: T, elementGetter: (this: T) => HTMLElement, attributeName: string, valProcessor?: (value: string | null) => string | null): (this: T, newVal: string | null) => void
-```
-
-*No description yet.*
-
-| Parameters | Type | Description |
-| --- | --- | --- |
-| `this` | `T` |  |
-| `elementGetter` | `(this: T) => HTMLElement` |  |
-| `attributeName` | `string` |  |
-| `valProcessor?` | `(value: string \| null) => string \| null` |  |
-
-**Returns:** `(this: T, newVal: string | null) => void`
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#bindtoattribute).
 
 ### `bindToStyle()` \{#bindtostyle\}
 
-```ts
-function bindToStyle(this: T, elementGetter: (this: T) => HTMLElement, styleName: string, valProcessor?: (value: string) => string, important?: boolean): (this: T, newVal: string | null) => void
-```
-
-*No description yet.*
-
-| Parameters | Type | Description |
-| --- | --- | --- |
-| `this` | `T` |  |
-| `elementGetter` | `(this: T) => HTMLElement` |  |
-| `styleName` | `string` |  |
-| `valProcessor?` | `(value: string) => string` |  |
-| `important?` | `boolean` |  |
-
-**Returns:** `(this: T, newVal: string | null) => void`
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#bindtostyle).
 
 ### `boostedQueueMicrotask()` \{#boostedqueuemicrotask\}
 
-```ts
-function boostedQueueMicrotask(foo: CallableFunction, that?: any): void
-```
-
-*No description yet.*
-
-| Parameters | Type | Description |
-| --- | --- | --- |
-| `foo` | `CallableFunction` |  |
-| `that?` | `any` |  |
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#boostedqueuemicrotask).
 
 ### `Component()` \{#component\}
 
-```ts
-function Component(tag: string, attributeReactiveClassesOptional: (AttributeReactiveClass<T> | undefined)[], template?: string): (target: T, context: ClassDecoratorContext<T>) => T
-```
-
-*No description yet.*
-
-| Parameters | Type | Description |
-| --- | --- | --- |
-| `tag` | `string` |  |
-| `attributeReactiveClassesOptional` | `(`[`AttributeReactiveClass`](#attributereactiveclass)`<T> \| undefined)[]` |  |
-| `template?` | `string` |  |
-
-**Returns:** `(target: T, context: ClassDecoratorContext<T>) => T`
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#component).
 
 ### `genDomGetter()` \{#gendomgetter\}
 
-```ts
-function genDomGetter(queryableElementGetter: () => ShadowRoot, selector: string): InternalDomGetter<T>
-function genDomGetter(queryableElementGetter: () => HTMLElement, selector: string): PlainDomGetter<T>
-```
-
-*No description yet.*
-
-| Parameters | Type | Description |
-| --- | --- | --- |
-| `queryableElementGetter` | `() => ShadowRoot` |  |
-| `selector` | `string` |  |
-
-**Returns:** `InternalDomGetter<T>`
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#gendomgetter).
 
 ## Classes \{#classes\}
 
 ### `CommonEventsAndMethods` \{#commoneventsandmethods\}
 
-*No description yet.*
-
-| Members | Type | Description |
-| --- | --- | --- |
-| <a id="commoneventsandmethods-constructor"></a>`constructor` | `constructor(currentElement: HTMLElement & { [layoutChangeTarget]?: HTMLElement }): CommonEventsAndMethods` |  |
-| <a id="commoneventsandmethods-handlescrollupperthresholdeventenabled"></a>`__handleScrollUpperThresholdEventEnabled` | `(enabled: boolean) => void` |  |
-| <a id="commoneventsandmethods-observedattributes"></a>`observedAttributes` | `never[]` |  |
-| <a id="commoneventsandmethods-dispose"></a>`dispose` | `dispose(): void` |  |
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#commoneventsandmethods).
 
 ## Constants \{#constants\}
 
 ### `commonComponentEventSetting` \{#commoncomponenteventsetting\}
 
-```ts
-const commonComponentEventSetting: { bubbles: false; cancelable: true; composed: false }
-```
-
-*No description yet.*
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#commoncomponenteventsetting).
 
 ### `layoutChangeTarget` \{#layoutchangetarget\}
 
-```ts
-const layoutChangeTarget: unique symbol
-```
-
-*No description yet.*
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#layoutchangetarget).
 
 ### `scrollContainerDom` \{#scrollcontainerdom\}
 
-```ts
-const scrollContainerDom: unique symbol
-```
-
-*No description yet.*
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#scrollcontainerdom).
 
 ### `useScrollEnd` \{#usescrollend\}
 
-```ts
-const useScrollEnd: boolean
-```
-
-*No description yet.*
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#usescrollend).
 
 ## Types \{#types\}
 
 ### `AttributeReactiveClass` \{#attributereactiveclass\}
 
-*No description yet.*
-
-| Members | Type | Description |
-| --- | --- | --- |
-| <a id="attributereactiveclass-constructor"></a>`constructor` | `constructor(dom: InstanceType<T>): any` |  |
-| <a id="attributereactiveclass-observedattributes"></a>`observedAttributes` | `readonly string[]` |  |
-| <a id="attributereactiveclass-observedcssproperties"></a>`observedCSSProperties?` | `readonly string[]` |  |
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#attributereactiveclass).
 
 ### `LynxViewElement` \{#lynxviewelement\}
 
@@ -250,13 +105,13 @@ HTML Example
 Note that you should declarae the size of lynx-view
 
 ```html
-<lynx-view url="https://path/to/main-thread.js" raw-data="{}" global-props="{}" style="height:300px;width:300px">
+<lynx-view url="https://path/to/main.web.bundle" init-data="{}" global-props="{}" style="height:300px;width:300px">
 </lynx-view>
 ```
 
 React 19 Example
 ```jsx
-<lynx-view url={myLynxCardUrl} rawData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>
+<lynx-view url={myLynxCardUrl} initData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>
 </lynx-view>
 ```
 
@@ -272,7 +127,7 @@ React 19 Example
 | <a id="lynxviewelement-globalprops"></a>`globalProps` | `Cloneable` | [optional] (attribute: "global-props") The globalProps value of this Lynx card |
 | <a id="lynxviewelement-init-data"></a>`init-data` | `Cloneable` |  |
 | <a id="lynxviewelement-initdata"></a>`initData` | `Cloneable` | [optional] (attribute: "init-data") The initial data of this Lynx card |
-| <a id="lynxviewelement-initi18nresources"></a>`initI18nResources` | `InitI18nResources` | [optional] (attribute: "init-i18n-resources") the complete set of i18nResources that on the container side, which can be obtained synchronously by _I18nResourceTranslation |
+| <a id="lynxviewelement-initi18nresources"></a>`initI18nResources` | `InitI18nResources` | [optional] the complete set of i18nResources that on the container side, which can be obtained synchronously by _I18nResourceTranslation |
 | <a id="lynxviewelement-lynxgroupid"></a>`lynxGroupId` | `number \| undefined` | [optional] (attribute: "lynx-group-id") the background shared context id, which is used to share webworker between different lynx cards |
 | <a id="lynxviewelement-onnativemodulescall"></a>`onNativeModulesCall` | `NativeModulesCall \| undefined` | [optional] the NativeModules value handler. Arguments will be cached before this property is assigned. |
 | <a id="lynxviewelement-src"></a>`src` | `string \| undefined` |  |
@@ -293,66 +148,34 @@ React 19 Example
 
 ### `WebComponentClass` \{#webcomponentclass\}
 
-*No description yet.*
-
-| Members | Type | Description |
-| --- | --- | --- |
-| <a id="webcomponentclass-constructor"></a>`constructor` | `constructor(): HTMLElement & { cssPropertyChangedHandler?: undefined; adoptedCallback?: any; attributeChangedCallback?: any; connectedCallback?: any; disconnectedCallback?: any }` |  |
-| <a id="webcomponentclass-nottofilterfalseattributes"></a>`notToFilterFalseAttributes?` | `Set<string>` | for attribute="false", we will do removeAttribute by default; set here for dont do this; |
-| <a id="webcomponentclass-observedattributes"></a>`observedAttributes?` | `string[]` |  |
-| <a id="webcomponentclass-observedcssproperties"></a>`observedCSSProperties?` | `undefined` |  |
-| <a id="webcomponentclass-registerplugin"></a>`registerPlugin?` | `(reactiveClass: `[`AttributeReactiveClass`](#attributereactiveclass)`<`[`WebComponentClass`](#webcomponentclass)`>) => void` |  |
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#webcomponentclass).
 
 ### `AttributeChangeHandler` \{#attributechangehandler\}
 
-```ts
-type AttributeChangeHandler = (newValue: string | null, oldValue: string | null, attributeName: string) => void
-```
-
-*No description yet.*
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#attributechangehandler).
 
 ### `AttributeReactiveObject` \{#attributereactiveobject\}
 
-*No description yet.*
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#attributereactiveobject).
 
 ### `BindToAttributeProxy` \{#bindtoattributeproxy\}
 
-```ts
-type BindToAttributeProxy = ReturnType<typeof bindToAttribute>
-```
-
-*No description yet.*
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#bindtoattributeproxy).
 
 ### `BindToStyleProxy` \{#bindtostyleproxy\}
 
-```ts
-type BindToStyleProxy = ReturnType<typeof bindToStyle>
-```
-
-*No description yet.*
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#bindtostyleproxy).
 
 ### `EventStatusChangeHandler` \{#eventstatuschangehandler\}
 
-```ts
-type EventStatusChangeHandler = (enable: boolean, eventName: string) => void
-```
-
-*No description yet.*
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#eventstatuschangehandler).
 
 ### `StyleChangeHandler` \{#stylechangehandler\}
 
-```ts
-type StyleChangeHandler = (newValue: string | null, styleHyphenName: string) => void
-```
-
-*No description yet.*
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#stylechangehandler).
 
 ### `UseCSSCustomPropertyHandler` \{#usecsscustompropertyhandler\}
 
-```ts
-type UseCSSCustomPropertyHandler = (newValue: string, propertyName: string) => void
-```
-
-*No description yet.*
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#usecsscustompropertyhandler).
 
 {/* @api-end */}

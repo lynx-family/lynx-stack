@@ -56,7 +56,8 @@ function useGlobalProps(): GlobalProps
 ```
 
 A React Hooks for you to get `lynx.__globalProps`.
-If `lynx.__globalProps` is changed, a re-render will be triggered automatically.
+With `globalPropsMode: 'event'`, the component re-renders when `lynx.__globalProps` changes;
+in the default `'reactive'` mode, updates arrive through a full re-render.
 
 ```ts
 function App() {
@@ -187,7 +188,7 @@ function useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void
 ```
 
 :::warning Deprecated
-Deprecated.
+`useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React.
 :::
 
 `useLayoutEffect` is now an alias of `useEffect`. Use `useEffect` instead.
@@ -197,7 +198,7 @@ Accepts a function that contains imperative, possibly effectful code. The effect
 | Parameters | Type | Description |
 | --- | --- | --- |
 | `effect` | `EffectCallback` | Imperative function that can return a cleanup function |
-| `deps?` | `DependencyList` | If present, effect will only activate if the values in the list change (using ===).  `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React. |
+| `deps?` | `DependencyList` | If present, effect will only activate if the values in the list change (using ===). |
 
 {/* @api-end */}
 

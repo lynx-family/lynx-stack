@@ -54,7 +54,7 @@ LynxEncodePlugin
 | <a id="lynxencodeplugin-before-emit-stage"></a>`BEFORE_EMIT_STAGE` | `number` | beforeEmit 钩子的阶段。 |
 | <a id="lynxencodeplugin-before-encode-stage"></a>`BEFORE_ENCODE_STAGE` | `number` | beforeEncode 钩子的阶段。 |
 | <a id="lynxencodeplugin-encode-stage"></a>`ENCODE_STAGE` | `number` | encode 钩子的阶段。 |
-| <a id="lynxencodeplugin-encodepool"></a>`encodePool` | `Tinypool` | 共享的 TASM 编码 worker 池：多个入口（以及同一进程中的多个 `LynxEncodePlugin` 实例）会共享其 worker 槽位 以并行编码； watch 模式下的重新构建会复用同一批已预热的 worker。 `availableParallelism()` 会遵循 cgroup CPU 限制（容器、CI runner）， 因此无需自行减去一个核心。 |
+| <a id="lynxencodeplugin-encodepool"></a>`encodePool` | `Tinypool` | 共享的 TASM 编码 worker 池：多个入口（以及同一进程中的多个 `LynxEncodePlugin` 实例）会共享其 worker 槽位以并行编码； watch 模式下的重新构建会复用同一批已预热的 worker。 `availableParallelism()` 会遵循 cgroup CPU 限制（容器、CI runner），因此无需自行减去一个核心。 |
 
 #### `LynxEncodePlugin.defaultOptions` \{#lynxencodeplugin-defaultoptions\}
 
@@ -71,7 +71,7 @@ export default {
   plugins: [
     new LynxEncodePlugin({
       ...LynxEncodePlugin.defaultOptions,
-      enableRemoveCSSScope: true,
+      inlineScripts: false,
     }),
   ],
 }
@@ -94,7 +94,7 @@ LynxTemplatePlugin
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="lynxtemplateplugin-constructor"></a>`constructor` | `constructor(options?: LynxTemplatePluginOptions): LynxTemplatePlugin` |  |
-| <a id="lynxtemplateplugin-getasyncchunklayoutname"></a>`getAsyncChunkLayoutName` | `getAsyncChunkLayoutName(compilation: Compilation, chunkId: string \| number): string \| undefined` | 将异步 chunk id 映射为 `<lazy bundle name>/<layer>`， 用于将 lazy bundle 的中间 js/css/hmr 产物归入每个 bundle 独立的目录。 对于非 lazy chunk 返回 undefined。 |
+| <a id="lynxtemplateplugin-getasyncchunklayoutname"></a>`getAsyncChunkLayoutName` | `getAsyncChunkLayoutName(compilation: Compilation, chunkId: string \| number): string \| undefined` | 将异步 chunk id 映射为 `<lazy bundle name>/<layer>`，用于将 lazy bundle 的中间 js/css/hmr 产物归入每个 bundle 独立的目录。对于非 lazy chunk 返回 undefined。 |
 | <a id="lynxtemplateplugin-getlynxtemplatepluginhooks"></a>`getLynxTemplatePluginHooks` | `getLynxTemplatePluginHooks(compilation: Compilation): TemplateHooks` | 返回 Lynx template webpack 插件在给定 compilation 下的所有公开钩子 |
 
 #### `LynxTemplatePlugin.defaultOptions` \{#lynxtemplateplugin-defaultoptions\}
@@ -136,27 +136,23 @@ webpack 插件的入口。
 
 该辅助函数目前直接转发至 `cssChunksToMap`。
 
-返回的 `cssSource` 以 `cssId` 为键，
-并使用合成的文件名格式 `/cssId/<id>.css`。
+返回的 `cssSource` 以 `cssId` 为键，并使用合成的文件名格式 `/cssId/<id>.css`。
 
-该辅助函数不会将生成的 `loc` 字段
-重新映射回原始源码坐标。
+该辅助函数不会将生成的 `loc` 字段重新映射回原始源码坐标。
 
 ```
-(console.log(await convertCSSChunksToMap(
-  '.red { color: red; }',
-  {
-    targetSdkVersion: '3.2',
-    enableCSSSelector: true,
-  },
+(console.log(LynxTemplatePlugin.convertCSSChunksToMap(
+  ['.red { color: red; }'],
+  [],
+  true,
 )));
 ```
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
 | `cssChunks` | `(string \| { content: string })[]` | CSS chunk 的内容。 |
-| `plugins` | `Plugin[]` |  |
-| `enableCSSSelector` | `boolean` |  |
+| `plugins` | `Plugin[]` | 传递给解析器的 CSS 插件。 |
+| `enableCSSSelector` | `boolean` | 是否启用 CSS 选择器。 |
 
 ### `WebEncodePlugin` \{#webencodeplugin\}
 
@@ -185,40 +181,13 @@ const CSSPlugins: { parserPlugins: typeof Plugins }
 
 ### `CSS` \{#css\}
 
-*暂无说明。*
-
-| 成员 | 类型 | 说明 |
-| --- | --- | --- |
-| <a id="css-plugins"></a>`Plugins` | `unknown` |  |
-| <a id="css-severity"></a>`Severity` | `unknown` |  |
-| <a id="css-basedeclaration"></a>`BaseDeclaration` | `unknown` |  |
-| <a id="css-csssourcemap"></a>`CSSSourceMap` | `unknown` |  |
-| <a id="css-fontfacerule"></a>`FontFaceRule` | `unknown` |  |
-| <a id="css-importrule"></a>`ImportRule` | `unknown` |  |
-| <a id="css-keyframesrule"></a>`KeyframesRule` | `unknown` |  |
-| <a id="css-keyframesstyle"></a>`KeyframesStyle` | `unknown` |  |
-| <a id="css-layerrule"></a>`LayerRule` | `unknown` |  |
-| <a id="css-location"></a>`Location` | `unknown` |  |
-| <a id="css-mediarule"></a>`MediaRule` | `unknown` |  |
-| <a id="css-parsererror"></a>`ParserError` | `unknown` |  |
-| <a id="css-plugin"></a>`Plugin` | `unknown` |  |
-| <a id="css-range"></a>`Range` | `unknown` |  |
-| <a id="css-stylerule"></a>`StyleRule` | `unknown` |  |
-| <a id="css-supportsrule"></a>`SupportsRule` | `unknown` |  |
-| <a id="css-value"></a>`Value` | `unknown` |  |
-| <a id="css-variabledeclaration"></a>`VariableDeclaration` | `unknown` |  |
-| <a id="css-declaration"></a>`Declaration` | `BaseDeclaration \| VariableDeclaration` |  |
-| <a id="css-lynxstylenode"></a>`LynxStyleNode` | `StyleRule \| FontFaceRule \| ImportRule \| KeyframesRule \| MediaRule \| SupportsRule \| LayerRule` |  |
-| <a id="css-csschunkstomap"></a>`cssChunksToMap` | `unknown` |  |
-| <a id="css-parse"></a>`parse` | `unknown` |  |
+从 [`@lynx-js/css-serializer`](/zh/api/packages/css-serializer) 重新导出。
 
 ### `CustomSectionNaming` \{#customsectionnaming\}
 
 指定 chunk 输出时所用的自定义 section 名称。
 
-返回 `undefined` 会使该 chunk 不进入自定义 section。
-未进入自定义 section 的后台线程 chunk 会保留在 manifest 中，
-运行时也正是从 manifest 中查找它。
+返回 `undefined` 会使该 chunk 不进入自定义 section。未进入自定义 section 的后台线程 chunk 会保留在 manifest 中，运行时也正是从 manifest 中查找它。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
@@ -265,31 +234,31 @@ LynxTemplatePlugin 的选项
 | <a id="lynxtemplatepluginoptions-apptype"></a>`appType?` | `"card" \| "DynamicComponent"` | lazy bundle 为 `'DynamicComponent'`，其他情况为 `'card'`。 | 要编码的 bundle 类型。 |
 | <a id="lynxtemplatepluginoptions-chunks"></a>`chunks?` | `"all" \| string[]` | `'all'` | 列出所有需要注入的入口 |
 | <a id="lynxtemplatepluginoptions-cssplugins"></a>`cssPlugins` | `Plugin[]` |  | 传递给 parser 的插件 |
-| <a id="lynxtemplatepluginoptions-debuginfooutside"></a>`debugInfoOutside` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.debugInfoOutside` |
-| <a id="lynxtemplatepluginoptions-defaultdisplaylinear"></a>`defaultDisplayLinear` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.defaultDisplayLinear` |
+| <a id="lynxtemplatepluginoptions-debuginfooutside"></a>`debugInfoOutside` | `boolean` |  | [`PluginReactLynxOptions.debugInfoOutside`](/zh/api/packages/react-rsbuild-plugin#debuginfooutside) |
+| <a id="lynxtemplatepluginoptions-defaultdisplaylinear"></a>`defaultDisplayLinear` | `boolean` |  | [`PluginReactLynxOptions.defaultDisplayLinear`](/zh/api/packages/react-rsbuild-plugin#defaultdisplaylinear) |
 | <a id="lynxtemplatepluginoptions-defaultoverflowvisible"></a>`defaultOverflowVisible?` | `boolean` | `true` | 启用后，view 和组件的默认 overflow CSS 属性为 `'visible'`，否则为 `'hidden'`。 |
 | <a id="lynxtemplatepluginoptions-dsl"></a>`dsl?` | `"tt" \| "react" \| "react_nodiff"` |  | 向编码器声明当前的 DSL。 |
 | <a id="lynxtemplatepluginoptions-enablea11y"></a>`enableA11y` | `boolean` |  | 使用 Android View 层级的 API 与系统实现。 |
-| <a id="lynxtemplatepluginoptions-enableaccessibilityelement"></a>`enableAccessibilityElement` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableAccessibilityElement` |
-| <a id="lynxtemplatepluginoptions-enablecssinheritance"></a>`enableCSSInheritance` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInheritance` |
-| <a id="lynxtemplatepluginoptions-enablecssinvalidation"></a>`enableCSSInvalidation` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInvalidation` |
-| <a id="lynxtemplatepluginoptions-enablecssselector"></a>`enableCSSSelector` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSSelector` |
-| <a id="lynxtemplatepluginoptions-enablenewgesture"></a>`enableNewGesture` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableNewGesture` |
-| <a id="lynxtemplatepluginoptions-enableremovecssscope"></a>`enableRemoveCSSScope` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope` |
+| <a id="lynxtemplatepluginoptions-enableaccessibilityelement"></a>`enableAccessibilityElement` | `boolean` |  | [`PluginReactLynxOptions.enableAccessibilityElement`](/zh/api/packages/react-rsbuild-plugin#enableaccessibilityelement) |
+| <a id="lynxtemplatepluginoptions-enablecssinheritance"></a>`enableCSSInheritance` | `boolean` |  | [`PluginReactLynxOptions.enableCSSInheritance`](/zh/api/packages/react-rsbuild-plugin#enablecssinheritance) |
+| <a id="lynxtemplatepluginoptions-enablecssinvalidation"></a>`enableCSSInvalidation` | `boolean` |  | [`PluginReactLynxOptions.enableCSSInvalidation`](/zh/api/packages/react-rsbuild-plugin#enablecssinvalidation) |
+| <a id="lynxtemplatepluginoptions-enablecssselector"></a>`enableCSSSelector` | `boolean` |  | [`PluginReactLynxOptions.enableCSSSelector`](/zh/api/packages/react-rsbuild-plugin#enablecssselector) |
+| <a id="lynxtemplatepluginoptions-enablenewgesture"></a>`enableNewGesture` | `boolean` |  | [`PluginReactLynxOptions.enableNewGesture`](/zh/api/packages/react-rsbuild-plugin#enablenewgesture) |
+| <a id="lynxtemplatepluginoptions-enableremovecssscope"></a>`enableRemoveCSSScope` | `boolean` |  | [`PluginReactLynxOptions.enableRemoveCSSScope`](/zh/api/packages/react-rsbuild-plugin#enableremovecssscope) |
 | <a id="lynxtemplatepluginoptions-excludechunks"></a>`excludeChunks?` | `string[]` | `[]` | 列出所有不应注入的入口 |
-| <a id="lynxtemplatepluginoptions-experimental-islazybundle"></a>`experimental_isLazyBundle?` <span className="api-badge api-badge-alpha">Alpha</span> | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle` |
-| <a id="lynxtemplatepluginoptions-filename"></a>`filename?` | `string \| ((entryName: string) => string)` | `'[name].bundle'` | template 的输出文件。 支持子目录，例如：`assets/template.js`。 [name] 会被替换为入口名称。 也支持传入函数来生成名称。 |
+| <a id="lynxtemplatepluginoptions-experimental-islazybundle"></a>`experimental_isLazyBundle?` <span className="api-badge api-badge-alpha">Alpha</span> | `boolean` |  | [`PluginReactLynxOptions.experimental_isLazyBundle`](/zh/api/packages/react-rsbuild-plugin#experimental-islazybundle) |
+| <a id="lynxtemplatepluginoptions-filename"></a>`filename?` | `string \| ((entryName: string) => string)` | `'[name].bundle'` | template 的输出文件。支持子目录，例如：`assets/template.js`。 [name] 会被替换为入口名称。也支持传入函数来生成名称。 |
 | <a id="lynxtemplatepluginoptions-intermediate"></a>`intermediate?` | `string` | `'.lynx'` | bundle 中间文件所在的目录。 |
-| <a id="lynxtemplatepluginoptions-lazybundlefetcher"></a>`lazyBundleFetcher?` | `"FetchBundle" \| "QueryComponent"` |  | 已解析的 lazy bundle fetcher 模式。 由调用方（例如 `pluginReactLynx`）根据宿主引擎版本， 以及 `REACT_LAZY_BUNDLE_FETCHER` 环境变量覆盖值决定。 |
+| <a id="lynxtemplatepluginoptions-lazybundlefetcher"></a>`lazyBundleFetcher?` | `"FetchBundle" \| "QueryComponent"` |  | 已解析的 lazy bundle fetcher 模式。由调用方（例如 `pluginReactLynx`）根据宿主引擎版本，以及 `REACT_LAZY_BUNDLE_FETCHER` 环境变量覆盖值决定。 |
 | <a id="lynxtemplatepluginoptions-lazybundlefilename"></a>`lazyBundleFilename?` | `string` | `'lazy-bundle/[name].[fullhash].bundle'` | lazy bundle 的文件名。 |
-| <a id="lynxtemplatepluginoptions-removedescendantselectorscope"></a>`removeDescendantSelectorScope` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.removeDescendantSelectorScope` |
-| <a id="lynxtemplatepluginoptions-targetsdkversion"></a>`targetSdkVersion` | `string` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion` |
+| <a id="lynxtemplatepluginoptions-removedescendantselectorscope"></a>`removeDescendantSelectorScope` | `boolean` |  | [`PluginReactLynxOptions.removeDescendantSelectorScope`](/zh/api/packages/react-rsbuild-plugin#removedescendantselectorscope) |
+| <a id="lynxtemplatepluginoptions-targetsdkversion"></a>`targetSdkVersion` | `string` |  | [`PluginReactLynxOptions.targetSdkVersion`](/zh/api/packages/react-rsbuild-plugin#targetsdkversion) |
 
 #### `LynxTemplatePluginOptions.customCSSInheritanceList` \{#lynxtemplatepluginoptions-customcssinheritancelist\}
 
 - **类型：** `string[] | undefined`
 
-`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.customCSSInheritanceList`
+[`PluginReactLynxOptions.customCSSInheritanceList`](/zh/api/packages/react-rsbuild-plugin#customcssinheritancelist)
 
 设置 `customCSSInheritanceList: ['direction', 'overflow']` 后，只有 `direction` 和 `overflow` 属性可继承。
 
@@ -303,7 +272,7 @@ export default defineConfig({
      customCSSInheritanceList: ['direction', 'overflow']
    }),
  ],
-}
+})
 ```
 
 #### `LynxTemplatePluginOptions.customSectionNaming?` \{#lynxtemplatepluginoptions-customsectionnaming\}
@@ -312,17 +281,13 @@ export default defineConfig({
 
 将每个 chunk 组装为自定义 section，并按此策略命名。
 
-以这种方式组装的 bundle 不包含 `lepusCode`，
-只有未被命名的 chunk 会保留在 manifest 中。
+以这种方式组装的 bundle 不包含 `lepusCode`，只有未被命名的 chunk 会保留在 manifest 中。
 `FetchBundle` lazy bundle 默认以这种方式组装，使用其运行时所解析的三个 section 名称。
 
 #### `LynxTemplatePluginOptions.enableSectionBytecode?` \{#lynxtemplatepluginoptions-enablesectionbytecode\}
 
 - **类型：** `boolean`
-- **默认值：** ```ts
-Enabled outside of development and debug builds, which keeps
-the sections readable while debugging.
-```
+- **默认值：** 在开发构建和调试构建之外默认启用；这样在调试时各 section 仍保持可读。
 
 是否将主线程 section 编译为 `JsBytecode`。
 

@@ -885,7 +885,7 @@
           "type": "any",
           "summary": "Pass a React Component as the wrapper option to have it rendered around the inner element. This is most useful for creating\n reusable custom render functions for common data providers. See setup for examples.",
           "examples": [
-            "```ts\nimport { renderHook } from '@lynx-js/react/testing-library'\nimport { ThemeProvider } from 'my-ui-lib'\nimport { TranslationProvider } from 'my-i18n-lib'\nimport defaultStrings from 'i18n/en-x-default'\n\nconst AllTheProviders = ({children}) => {\n  return (\n    <ThemeProvider theme=\"light\">\n      <TranslationProvider messages={defaultStrings}>\n        {children}\n      </TranslationProvider>\n    </ThemeProvider>\n  )\n}\n\nconst customRenderHook = (ui, options) =>\n  renderHook(ui, { wrapper: AllTheProviders, ...options })\n\n// re-export everything\nexport * from '@lynx-js/react/testing-library'\n\n// override renderHook method\nexport { customRender as renderHook }\n```"
+            "```ts\nimport { renderHook } from '@lynx-js/react/testing-library'\nimport { ThemeProvider } from 'my-ui-lib'\nimport { TranslationProvider } from 'my-i18n-lib'\nimport defaultStrings from 'i18n/en-x-default'\n\nconst AllTheProviders = ({children}) => {\n  return (\n    <ThemeProvider theme=\"light\">\n      <TranslationProvider messages={defaultStrings}>\n        {children}\n      </TranslationProvider>\n    </ThemeProvider>\n  )\n}\n\nconst customRenderHook = (ui, options) =>\n  renderHook(ui, { wrapper: AllTheProviders, ...options })\n\n// re-export everything\nexport * from '@lynx-js/react/testing-library'\n\n// override renderHook method\nexport { customRenderHook as renderHook }\n```"
           ],
           "kind": "property"
         }
@@ -1486,7 +1486,7 @@
     {
       "name": "RenderResult",
       "kind": "typealias",
-      "type": "{ asFragment: () => DocumentFragment; container: LynxElement; rerender: (ui: React.ReactNode) => void; unmount: () => boolean } & { [P in keyof Q]: BoundFunction<Q[P]> }",
+      "type": "{ asFragment: () => DocumentFragment; container: LynxElement; rerender: (ui: React.ReactNode) => void; unmount: () => void } & { [P in keyof Q]: BoundFunction<Q[P]> }",
       "refs": [
         "BoundFunction"
       ],
@@ -3222,10 +3222,10 @@
           "returns": {
             "type": "Promise<void>"
           },
-          "summary": "Wait for the next event loop.\n\nIt will be useful when you want to wait for the next event loop to finish.\n\n Please use `act` instead"
+          "summary": "Wait for the next event loop.\n\nIt will be useful when you want to wait for the next event loop to finish."
         }
       ],
-      "summary": "Wait for the next event loop.\n\nIt will be useful when you want to wait for the next event loop to finish.\n\n Please use `act` instead"
+      "summary": "Wait for the next event loop.\n\nIt will be useful when you want to wait for the next event loop to finish."
     }
   ]
 }

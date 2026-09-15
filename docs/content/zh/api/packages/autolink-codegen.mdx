@@ -33,7 +33,8 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 function generate(options: CodegenOptions): GeneratedFile[]
 ```
 
-为库包构建生成的 JS facade 和平台 spec 文件内容。
+为库包构建生成的文件内容：JS facade 和平台 spec，以及面向 Node-API 和 Lynxtron 模块的共享 C++ 源码、注册代码、CMake target、iOS wrapper
+和 Lynxtron 注册代码。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -62,7 +63,7 @@ function parseNativeModules(source: string, filename: string): NativeModuleSpec[
 function runCodegen(options: CodegenOptions): GeneratedFile[]
 ```
 
-将生成的文件写入磁盘，并返回生成文件的描述符。
+将生成的文件写入磁盘（跳过已存在且标记为 `overwrite: false` 的文件），并返回生成文件的描述符。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |

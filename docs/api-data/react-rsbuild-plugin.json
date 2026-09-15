@@ -10,7 +10,7 @@
       "name": "AddComponentElementConfig",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`CompatVisitorConfig.addComponentElement`",
+      "summary": "[`CompatVisitorConfig.addComponentElement`](api:CompatVisitorConfig.addComponentElement)",
       "members": [
         {
           "name": "compilerOnly",
@@ -27,7 +27,7 @@
       "name": "CompatVisitorConfig",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`PluginReactLynxOptions.compat`",
+      "summary": "[`PluginReactLynxOptions.compat`](api:PluginReactLynxOptions.compat)",
       "members": [
         {
           "name": "addComponentElement",
@@ -73,7 +73,7 @@
           "examples": [
             "```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nimport { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\n\nexport default defineConfig({\n  plugins: [\n    pluginReactLynx({\n      compat: {\n        darkMode: true\n      },\n    })\n  ],\n})\n```"
           ],
-          "deprecated": "Deprecated.",
+          "deprecated": "This option has no effect.",
           "default": "`undefined`",
           "kind": "property"
         },
@@ -123,22 +123,22 @@
           "name": "removeComponentAttrRegex",
           "optional": true,
           "type": "string",
-          "summary": "Regular expression used to remove component attributes\n\n It's recommended to use `background-only`.\n\nIf your code depends on this switch, when distributing it to other projects through npm packages or other means, you'll also need to enable this switch. This will lead to the proliferation of switches, which is not conducive to code reuse between different projects.",
+          "summary": "Regular expression used to remove component attributes",
           "examples": [
             "```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nimport { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\n\nexport default defineConfig({\n  plugins: [\n    pluginReactLynx({\n      compat: {\n        removeComponentAttrRegex: '^data-test-'\n      },\n    })\n  ],\n})\n```"
           ],
-          "deprecated": "Deprecated.",
+          "deprecated": "It's recommended to use `background-only`.\n\nIf your code depends on this switch, when distributing it to other projects through npm packages or other means, you'll also need to enable this switch. This will lead to the proliferation of switches, which is not conducive to code reuse between different projects.",
           "default": "`undefined`",
           "kind": "property"
         },
         {
           "name": "simplifyCtorLikeReactLynx2",
           "type": "boolean",
-          "summary": "Whether to simplify constructor calls like ReactLynx 2\n\n\nUsing `simplifyCtorLikeReactLynx2` is not recommended as it introduces implicit behaviors that can:\n\n- Make code harder to understand and maintain\n\n- Create hidden dependencies between components\n\n- Complicate debugging and testing processes\n\nInstead, use `background-only` on class methods for explicit and maintainable behavior",
+          "summary": "Whether to simplify constructor calls like ReactLynx 2",
           "examples": [
             "```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nimport { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\n\nexport default defineConfig({\n  plugins: [\n    pluginReactLynx({\n      compat: {\n        simplifyCtorLikeReactLynx2: true\n      },\n    })\n  ],\n})\n```"
           ],
-          "deprecated": "Deprecated.",
+          "deprecated": "Using `simplifyCtorLikeReactLynx2` is not recommended as it introduces implicit behaviors that can:\n\n- Make code harder to understand and maintain\n\n- Create hidden dependencies between components\n\n- Complicate debugging and testing processes\n\nInstead, use `background-only` on class methods for explicit and maintainable behavior",
           "default": "`false`",
           "kind": "property"
         },
@@ -156,7 +156,7 @@
       "name": "DefineDceVisitorConfig",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`PluginReactLynxOptions.defineDCE`",
+      "summary": "[`PluginReactLynxOptions.defineDCE`](api:PluginReactLynxOptions.defineDCE)",
       "members": [
         {
           "name": "define",
@@ -174,7 +174,7 @@
       "name": "ExtractStrConfig",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`PluginReactLynxOptions.extractStr`",
+      "summary": "[`PluginReactLynxOptions.extractStr`](api:PluginReactLynxOptions.extractStr)",
       "members": [
         {
           "name": "strLength",
@@ -192,6 +192,7 @@
       "name": "LynxTemplatePlugin",
       "kind": "interface",
       "type": "unknown",
+      "summary": "The static API of\n[`LynxTemplatePlugin`](api:@lynx-js/template-webpack-plugin#LynxTemplatePlugin)\nthat `pluginLynx` exposes. Get it with\n`api.useExposed(Symbol.for('LynxTemplatePlugin')).LynxTemplatePlugin`.",
       "members": [
         {
           "name": "getLynxTemplatePluginHooks",
@@ -199,6 +200,7 @@
           "refs": [
             "TemplateHooks"
           ],
+          "summary": "Returns the [`TemplateHooks`](api:TemplateHooks) of a compilation.",
           "kind": "property"
         }
       ]
@@ -227,7 +229,7 @@
           "type": "string[]",
           "summary": "When [`PluginReactLynxOptions.enableCSSInheritance`](api:PluginReactLynxOptions.enableCSSInheritance) is enabled, `customCSSInheritanceList` can control which properties are inheritable, not just the default ones.",
           "examples": [
-            "By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n plugins: [\n   pluginReactLynx({\n     enableCSSInheritance: true,\n     customCSSInheritanceList: ['direction', 'overflow']\n   }),\n ],\n}\n```"
+            "By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.\n\n```ts\n// rsbuild.config.ts\nimport { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\nimport { defineConfig } from '@rsbuild/core'\n\nexport default defineConfig({\n environments: { lynx: {} },\n plugins: [\n   pluginReactLynx({\n     enableCSSInheritance: true,\n     customCSSInheritanceList: ['direction', 'overflow']\n   }),\n ],\n})\n```"
           ],
           "default": "`undefined`",
           "kind": "property"
@@ -325,7 +327,7 @@
           "name": "enableUiSourceMap",
           "optional": true,
           "type": "boolean",
-          "summary": "Enable UI source map generation and debug-metadata asset emission.",
+          "summary": "Generate UI source maps in the main-thread transform.",
           "default": "`false`",
           "kind": "property"
         },
@@ -376,7 +378,7 @@
           "refs": [
             "ExtractStrConfig"
           ],
-          "summary": "Merge same string literals in JS and Lepus to reduce output bundle size.\nSet to `false` to disable.",
+          "summary": "Merge same string literals in JS and Lepus to reduce output bundle size.\nSet to `false` to disable. Only takes effect when chunk splitting is disabled.",
           "default": "`false`",
           "kind": "property"
         },
@@ -428,8 +430,8 @@
           "optional": true,
           "type": "string",
           "summary": "targetSdkVersion is used to specify the minimal Lynx Engine version that a App bundle can run on.",
-          "deprecated": "Deprecated.",
-          "default": "`'3.2'`\n\n\n `targetSdkVersion` is now an alias of [`PluginReactLynxOptions.engineVersion`](api:PluginReactLynxOptions.engineVersion). Use [`PluginReactLynxOptions.engineVersion`](api:PluginReactLynxOptions.engineVersion) instead.",
+          "deprecated": "`targetSdkVersion` is now an alias of [`PluginReactLynxOptions.engineVersion`](api:PluginReactLynxOptions.engineVersion). Use [`PluginReactLynxOptions.engineVersion`](api:PluginReactLynxOptions.engineVersion) instead.",
+          "default": "`'3.2'`",
           "kind": "property"
         }
       ]
@@ -438,7 +440,7 @@
       "name": "ShakeVisitorConfig",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`PluginReactLynxOptions.shake`",
+      "summary": "[`PluginReactLynxOptions.shake`](api:PluginReactLynxOptions.shake)",
       "members": [
         {
           "name": "pkgName",
@@ -490,47 +492,7 @@
       "name": "TemplateHooks",
       "kind": "interface",
       "type": "unknown",
-      "summary": "To allow other plugins to alter the Template, this plugin executes\n[tapable](https://github.com/webpack/tapable) hooks.",
-      "examples": [
-        "```js\nclass MyPlugin {\n  apply(compiler) {\n    compiler.hooks.compilation.tap(\"MyPlugin\", (compilation) => {\n      console.log(\"The compiler is starting a new compilation...\");\n\n      LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(\n        \"MyPlugin\", // <-- Set a meaningful name here for stacktraces\n        (data, cb) => {\n          // Manipulate the content\n          modifyTemplate(data.template)\n          // Tell webpack to move on\n          cb(null, data);\n        },\n      );\n    });\n  }\n}\n```"
-      ],
-      "members": [
-        {
-          "name": "afterEmit",
-          "type": "AsyncSeriesWaterfallHook<{ outputName: string }>",
-          "summary": "Called after the template is emitted.",
-          "alpha": true,
-          "kind": "property"
-        },
-        {
-          "name": "asyncChunkName",
-          "type": "SyncWaterfallHook<string>",
-          "summary": "Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template.",
-          "alpha": true,
-          "kind": "property"
-        },
-        {
-          "name": "beforeEmit",
-          "type": "AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: EncodeOptions; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>",
-          "summary": "Called before the template is emitted. Can be used to modify the template.",
-          "alpha": true,
-          "kind": "property"
-        },
-        {
-          "name": "beforeEncode",
-          "type": "AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>",
-          "summary": "Called before the encode process. Can be used to modify the encode options.",
-          "alpha": true,
-          "kind": "property"
-        },
-        {
-          "name": "encode",
-          "type": "AsyncSeriesBailHook<{ encodeOptions: EncodeOptions; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>",
-          "summary": "Call the encode process.",
-          "alpha": true,
-          "kind": "property"
-        }
-      ]
+      "from": "@lynx-js/template-webpack-plugin"
     },
     {
       "name": "TransformBuiltinAttributeNamesOptions",
@@ -565,7 +527,8 @@
     {
       "name": "LAYERS",
       "kind": "variable",
-      "type": "{ BACKGROUND: \"react:background\"; MAIN_THREAD: \"react:main-thread\" }"
+      "type": "{ BACKGROUND: \"react:background\"; MAIN_THREAD: \"react:main-thread\" }",
+      "from": "@lynx-js/react-webpack-plugin"
     },
     {
       "name": "pluginReactLynx",

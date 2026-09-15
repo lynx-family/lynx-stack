@@ -16,8 +16,8 @@
     "text": "一体化 A2UI ReactLynx 渲染器的 props。"
   },
   "A2UIProps.catalogs.summary": {
-    "en": "Components the renderer is allowed to instantiate. Each item is either\na bare component (name read from `displayName ?? name`) or a tuple\n`[component, manifest]` where the manifest is the JSON the extractor\nemits at `dist/catalog/<Name>/catalog.json`.",
-    "text": "渲染器允许实例化的组件。每一项可以是一个裸组件（名称取自 `displayName ?? name`），也可以是元组 `[component, manifest]`，其中 manifest 是提取器在 `dist/catalog/<Name>/catalog.json` 输出的 JSON。"
+    "en": "Components and functions the renderer is allowed to use. Each item is\na bare component (name read from `displayName ?? name`), a tuple\n`[component, manifest]` where the manifest is the JSON the extractor\nemits at `dist/catalog/<Name>/catalog.json`, a resolved\n`{ name, component, schema? }` entry, or a function entry such as those\nin `basicFunctions`.",
+    "text": "渲染器允许使用的组件和函数。每一项可以是一个裸组件（名称取自 `displayName ?? name`）、元组 `[component, manifest]`（其中 manifest 是提取器在 `dist/catalog/<Name>/catalog.json` 输出的 JSON）、已解析的 `{ name, component, schema? }` 条目，或者函数条目（例如 `basicFunctions` 中的条目）。"
   },
   "A2UIProps.className.summary": {
     "en": "Optional class name applied to the top-level `surface-${surfaceId}`\nview for the active surface. Use this when theme switching is\nexpressed as surface-level classes.",
@@ -136,8 +136,8 @@
     "text": "单个协议 surface 的内存状态。"
   },
   "Surface.rootComponentId.summary": {
-    "en": "id of the root component for this surface (must be 'root').",
-    "text": "该 surface 根组件的 id（必须为 'root'）。"
+    "en": "id of the root component for this surface. Set on the first non-empty\n`updateComponents` batch: `'root'` if that id exists, otherwise the\nbatch's first component id.",
+    "text": "该 surface 根组件的 id。在第一个非空的 `updateComponents` 批次中设置：如果该批次中存在 `'root'` 这个 id 则取 `'root'`，否则取该批次中第一个组件的 id。"
   },
   "UserActionPayload.summary": {
     "en": "Normalized user action forwarded from rendered catalog components to the\nhost application.",
@@ -192,8 +192,8 @@
     "text": "按纵向顺序渲染子组件 id。"
   },
   "createFallbackMessagesFromPlainText.summary": {
-    "en": "Build a single-Text fallback message stream from a plain string. Used by\ntransports / `Session.ingest` callers that receive free-form text from\nthe agent instead of structured protocol messages.",
-    "text": "基于纯文本字符串构建只含单个 Text 的兜底消息流。供从 agent 收到自由文本而非结构化协议消息的传输层 / `Session.ingest` 调用方使用。"
+    "en": "Build a single-Text fallback message stream (surface `default`, catalog\n`inline-text`, root `root-text`) from a plain string. Used by\n`normalizePayloadToMessages` and by transports that receive free-form text\nfrom the agent instead of structured protocol messages.",
+    "text": "基于纯文本字符串构建只含单个 Text 的兜底消息流（surface 为 `default`，catalog 为 `inline-text`，root 为 `root-text`）。供 `normalizePayloadToMessages` 以及从 agent 收到自由文本而非结构化协议消息的传输层使用。"
   },
   "createMessageStore.summary": {
     "en": "Create an append-only raw-message buffer suitable for `useSyncExternalStore`.",
@@ -220,8 +220,8 @@
     "text": "渲染横向或纵向的分隔线。"
   },
   "executeFunctionCall.summary": {
-    "en": "Resolve arguments, look the function up in the registry, and invoke it.\nWhen no impl is registered, log once and return `undefined` so callers\n(checks, dynamic-property bindings) can degrade gracefully.",
-    "text": "解析参数，在 registry 中查找函数并调用。如果没有注册对应实现，则只记录一次日志并返回 `undefined`，使调用方（checks、动态属性绑定）能够平稳降级。"
+    "en": "Resolve arguments, look the function up in `options.functions` and then in\n`options.registry` (the shared `functionRegistry` by default), and invoke\nit. When no impl is found, warn once per name and return `undefined`; when\nthe impl throws, warn on every call and return `undefined`. Callers\n(checks, dynamic-property bindings) can therefore degrade gracefully.",
+    "text": "解析参数，先在 `options.functions` 中、再在 `options.registry`（默认为共享的 `functionRegistry`）中查找函数并调用。如果找不到实现，则每个名称只告警一次并返回 `undefined`；如果实现抛出异常，则每次调用都会告警并返回 `undefined`。因此调用方（checks、动态属性绑定）能够平稳降级。"
   },
   "Icon.summary": {
     "en": "Render a named icon from the catalog's supported icon set.",
@@ -264,8 +264,8 @@
     "text": "把数值切片渲染成饼图或环形图。"
   },
   "prepareMessagesForProcessing.summary": {
-    "en": "Tag messages with the given messageId and report whether any of them\ncarries a non-empty `updateComponents`. Also dedupes `createSurface`\nmessages against the set of currently-active surfaces.",
-    "text": "为消息打上给定的 messageId，并报告其中是否有消息携带非空的 `updateComponents`。同时会根据当前活动 surface 的集合对 `createSurface` 消息去重。"
+    "en": "Filter a message batch for processing and report whether any kept message\ncarries a non-empty `updateComponents`. Mutates its inputs: sets\n`messageId` only on messages that lack one, and updates `activeSurfaceIds`\nas `deleteSurface` / `createSurface` messages are seen. `createSurface`\nmessages for surfaces that are already active are dropped.",
+    "text": "过滤一批待处理的消息，并报告保留下来的消息中是否有消息携带非空的 `updateComponents`。该函数会修改传入的参数：仅为缺少 `messageId` 的消息设置 `messageId`，并在遇到 `deleteSurface` / `createSurface` 消息时更新 `activeSurfaceIds`。针对已处于活动状态的 surface 的 `createSurface` 消息会被丢弃。"
   },
   "RadioGroup.summary": {
     "en": "Render a single-choice radio group bound to the surface data model.",
@@ -312,8 +312,8 @@
     "text": "创建一个 `sendAction` 回调，它会解析动态的 action 数据值，并通过当前处理器分发用户事件或函数调用。"
   },
   "useChecks.summary": {
-    "en": "Evaluate an input component's `checks` array reactively. Returns the\ncurrent outcome plus the first failure message (handy for inline error\nrendering). When an enclosing `<FormContext.Provider>` exists, the input\nis also registered with it so Buttons in the same form can react to\n`isValid`.",
-    "text": "响应式地对输入组件的 `checks` 数组求值。返回当前结果以及第一条失败信息（便于内联渲染错误）。如果外层存在 `<FormContext.Provider>`，该输入组件还会注册到其中，使同一表单中的 Button 能够响应 `isValid`。"
+    "en": "Evaluate an input component's `checks` array reactively against the\nsurface's data model and the catalog's functions, re-running when bound\ndata changes. Returns the current outcome plus the first failure message\n(handy for inline error rendering).",
+    "text": "基于 surface 的数据模型和 catalog 中的函数，响应式地对输入组件的 `checks` 数组求值，并在绑定的数据变化时重新求值。返回当前结果以及第一条失败信息（便于内联渲染错误）。"
   },
   "useDataBinding.summary": {
     "en": "Subscribe to a data-model binding and return the current value at that path.",

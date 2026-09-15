@@ -19,8 +19,7 @@ function createPortal(vnode: ComponentChild, container: NodesRef): ReactNode
 将 children 渲染到另一个 ReactLynx 元素中，该元素由
 `NodesRef`（例如来自 `ref={setX}` 或 `lynx.createSelectorQuery()`）标识。
 
-Context 仍会跨越 portal 边界传递，portal 内的状态更新也与其他组件中的表现一致。
-但有几点行为与 `react-dom`
+Context 仍会跨越 portal 边界传递，portal 内的状态更新也与其他组件中的表现一致。但有几点行为与 `react-dom`
 不同：
 
 - 事件不会沿 React 树冒泡。ReactLynx 沿用 Preact 的做法，
@@ -35,7 +34,7 @@ Context 仍会跨越 portal 边界传递，portal 内的状态更新也与其他
 | `vnode` | `ComponentChild` | The React node to render into `container`. |
 | `container` | `NodesRef` | The `NodesRef` target to render into. |
 
-**返回值：** `ReactNode` — 需要在调用处放入 JSX 中的 `ReactNode` 占位符； 渲染结果会输出到 `container` 中。
+**返回值：** `ReactNode` — 需要在调用处放入 JSX 中的 `ReactNode` 占位符；渲染结果会输出到 `container` 中。
 
 ### `createElement()` \{#createelement\}
 
@@ -118,10 +117,7 @@ function markFirstScreenSyncReady(): void
 
 当 `firstScreenSyncTiming` 为 `'manual'` 时，将首屏标记为可同步。
 
-在调用此方法之前，主线程会一直持有 UI 控制权，
-因此向后台线程移交（用于 hydration）的时机完全由用户控制。
-它可以在两个线程中调用（后台线程的调用会被转发到主线程），
-仅在 `firstScreenSyncTiming` 为 `'manual'` 时生效，且首次调用之后再次调用不会产生任何效果。
+在调用此方法之前，主线程会一直持有 UI 控制权，因此向后台线程移交（用于 hydration）的时机完全由用户控制。它可以在两个线程中调用（后台线程的调用会被转发到主线程），仅在 `firstScreenSyncTiming` 为 `'manual'` 时生效，且首次调用之后再次调用不会产生任何效果。
 
 ```ts
 import { markFirstScreenSyncReady } from "@lynx-js/react"
@@ -137,9 +133,7 @@ function withInitDataInState(App: ComponentClass<P, S>): ComponentClass<P, S>
 
 高阶组件（HOC），将 `initData` 注入到给定类组件的 state 中。
 
-该 HOC 会检查传入的组件是否为类组件。如果是，则包装该组件，
-并将 `initData` 注入其 state。同时它会添加一个监听器，
-在数据变化时更新 state，并在组件卸载时移除该监听器。
+该 HOC 会检查传入的组件是否为类组件。如果是，则包装该组件，并将 `initData` 注入其 state。同时它会添加一个监听器，在数据变化时更新 state，并在组件卸载时移除该监听器。
 
 ```typescript
 class App extends React.Component<MyProps, MyState> {

@@ -51,9 +51,7 @@ export default {
 
 ReactLynx 的 loader。
 
-注意，该 loader 只会将 JSX/TSX 转换为合法的 JavaScript。
-对于 `.tsx` 文件，类型注解不会被移除。
-你应使用 `babel-loader` 或 `swc-loader` 来加载 TypeScript 文件。
+注意，该 loader 会将 JSX/TSX 转换为合法的 JavaScript。对于 `.ts` 和 `.tsx` 文件，还会同时移除 TypeScript 类型。
 
 ```js
 // webpack.config.js
@@ -131,15 +129,15 @@ ReactLynx 插件的选项。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="reactloaderoptions-compat"></a>`compat?` | `CompatVisitorConfig` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat` |
+| <a id="reactloaderoptions-compat"></a>`compat?` | `CompatVisitorConfig` | [`PluginReactLynxOptions.compat`](/zh/api/packages/react-rsbuild-plugin#compat) |
 | <a id="reactloaderoptions-definedce"></a>`defineDCE?` | `DefineDceVisitorConfig` | 类似于各类打包工具中的 `define`，但它发生在转换阶段，并且会执行一次 DCE。 |
-| <a id="reactloaderoptions-enableremovecssscope"></a>`enableRemoveCSSScope?` | `boolean` | `@lynx-js/template-webpack-plugin#LynxTemplatePluginOptions.enableRemoveCSSScope` |
-| <a id="reactloaderoptions-enableuisourcemap"></a>`enableUiSourceMap?` | `boolean` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableUiSourceMap` |
+| <a id="reactloaderoptions-enableremovecssscope"></a>`enableRemoveCSSScope?` | `boolean` | [`LynxTemplatePluginOptions.enableRemoveCSSScope`](/zh/api/packages/template-webpack-plugin#lynxtemplatepluginoptions-enableremovecssscope) |
+| <a id="reactloaderoptions-enableuisourcemap"></a>`enableUiSourceMap?` | `boolean` | [`PluginReactLynxOptions.enableUiSourceMap`](/zh/api/packages/react-rsbuild-plugin#enableuisourcemap) |
 | <a id="reactloaderoptions-engineversion"></a>`engineVersion?` | `string` | 引擎版本。 |
-| <a id="reactloaderoptions-experimental-transformbuiltinattributenames"></a>`experimental_transformBuiltinAttributeNames?` | `boolean \| TransformBuiltinAttributeNamesOptions` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_transformBuiltinAttributeNames` |
+| <a id="reactloaderoptions-experimental-transformbuiltinattributenames"></a>`experimental_transformBuiltinAttributeNames?` | `boolean \| TransformBuiltinAttributeNamesOptions` | [`PluginReactLynxOptions.experimental_transformBuiltinAttributeNames`](/zh/api/packages/react-rsbuild-plugin#experimental-transformbuiltinattributenames) |
 | <a id="reactloaderoptions-experimental-useelementtemplate"></a>`experimental_useElementTemplate?` <span className="api-badge api-badge-beta">实验性</span> | `boolean` | 是否启用 Element Template 编译。 |
 | <a id="reactloaderoptions-inlinesourcescontent"></a>`inlineSourcesContent?` | `boolean` | 在 source map 中生成内联的源码内容。 |
-| <a id="reactloaderoptions-jsx"></a>`jsx?` | `JsxTransformerConfig` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.jsx` |
+| <a id="reactloaderoptions-jsx"></a>`jsx?` | `JsxTransformerConfig` | [`PluginReactLynxOptions.jsx`](/zh/api/packages/react-rsbuild-plugin#pluginreactlynxoptions) |
 | <a id="reactloaderoptions-refresh"></a>`refresh?` | `boolean` | 为 ReactLynx 启用 Fast Refresh。 |
 | <a id="reactloaderoptions-shake"></a>`shake?` | `ShakeVisitorConfig` | 主线程代码的 shake 方式。 |
 
@@ -149,15 +147,15 @@ ReactWebpackPlugin 的选项
 
 | 成员 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| <a id="reactwebpackpluginoptions-disablecreateselectorqueryincompatiblewarning"></a>`disableCreateSelectorQueryIncompatibleWarning?` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat.disableCreateSelectorQueryIncompatibleWarning` |
-| <a id="reactwebpackpluginoptions-enablessr"></a>`enableSSR?` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableSSR` |
-| <a id="reactwebpackpluginoptions-entrypairs"></a>`entryPairs?` | `{ background: string; mainThread: string }[]` |  | 主线程与后台入口对，用于在其间合并主线程 定义。 |
+| <a id="reactwebpackpluginoptions-disablecreateselectorqueryincompatiblewarning"></a>`disableCreateSelectorQueryIncompatibleWarning?` | `boolean` |  | [`PluginReactLynxOptions.compat.disableCreateSelectorQueryIncompatibleWarning`](/zh/api/packages/react-rsbuild-plugin#pluginreactlynxoptions) |
+| <a id="reactwebpackpluginoptions-enablessr"></a>`enableSSR?` | `boolean` |  | [`PluginReactLynxOptions.enableSSR`](/zh/api/packages/react-rsbuild-plugin#enablessr) |
+| <a id="reactwebpackpluginoptions-entrypairs"></a>`entryPairs?` | `{ background: string; mainThread: string }[]` |  | 主线程与后台入口对，用于在其间合并主线程定义。 |
 | <a id="reactwebpackpluginoptions-experimental-islazybundle"></a>`experimental_isLazyBundle?` <span className="api-badge api-badge-alpha">Alpha</span> | `boolean` |  | 是否启用 lazy bundle。 |
-| <a id="reactwebpackpluginoptions-experimental-transformbuiltinattributenames"></a>`experimental_transformBuiltinAttributeNames?` <span className="api-badge api-badge-beta">实验性</span> | `boolean \| TransformBuiltinAttributeNamesOptions` |  | 运行时展开属性（spread attributes）所使用的 内置属性名转换配置。 |
+| <a id="reactwebpackpluginoptions-experimental-transformbuiltinattributenames"></a>`experimental_transformBuiltinAttributeNames?` <span className="api-badge api-badge-beta">实验性</span> | `boolean \| TransformBuiltinAttributeNamesOptions` |  | 运行时展开属性（spread attributes）所使用的内置属性名转换配置。 |
 | <a id="reactwebpackpluginoptions-experimental-useelementtemplate"></a>`experimental_useElementTemplate?` <span className="api-badge api-badge-beta">实验性</span> | `boolean` |  | 是否启用 Element Template 编译。 |
-| <a id="reactwebpackpluginoptions-extractstr"></a>`extractStr?` | `boolean \| Partial<`[`ExtractStrConfig`](#extractstrconfig)`>` | `false` | 合并 JS 和 Lepus 中相同的字符串字面量，以减小输出 bundle 的体积。 设置为 `false` 可禁用。 |
-| <a id="reactwebpackpluginoptions-firstscreensynctiming"></a>`firstScreenSyncTiming?` | `"immediately" \| "jsReady" \| "manual"` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.firstScreenSyncTiming` |
-| <a id="reactwebpackpluginoptions-globalpropsmode"></a>`globalPropsMode?` | `"reactive" \| "event"` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.globalPropsMode` |
+| <a id="reactwebpackpluginoptions-extractstr"></a>`extractStr?` | `boolean \| Partial<`[`ExtractStrConfig`](#extractstrconfig)`>` | `false` | 合并 JS 和 Lepus 中相同的字符串字面量，以减小输出 bundle 的体积。设置为 `false` 可禁用。 |
+| <a id="reactwebpackpluginoptions-firstscreensynctiming"></a>`firstScreenSyncTiming?` | `"immediately" \| "jsReady" \| "manual"` |  | [`PluginReactLynxOptions.firstScreenSyncTiming`](/zh/api/packages/react-rsbuild-plugin#firstscreensynctiming) |
+| <a id="reactwebpackpluginoptions-globalpropsmode"></a>`globalPropsMode?` | `"reactive" \| "event"` |  | [`PluginReactLynxOptions.globalPropsMode`](/zh/api/packages/react-rsbuild-plugin#globalpropsmode) |
 | <a id="reactwebpackpluginoptions-lazybundlefetcher"></a>`lazyBundleFetcher?` | `"FetchBundle" \| "QueryComponent"` |  | 解析后的 lazy bundle fetcher 模式。由调用方（例如 `pluginReactLynx`）根据宿主引擎版本以及 `REACT_LAZY_BUNDLE_FETCHER` 环境变量覆盖值决定。 |
 | <a id="reactwebpackpluginoptions-mainthreadchunks"></a>`mainThreadChunks?` | `string[]` |  | 被视为主线程 chunk 的 chunk 名称。 |
 | <a id="reactwebpackpluginoptions-profile"></a>`profile?` | `boolean` | 生产环境下为 `false`，开发环境下为 `true` | 是否启用 profile。 |

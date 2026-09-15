@@ -152,8 +152,8 @@
     "text": "用于 $variables 和表单数据的响应式绑定存储。"
   },
   "OpenUIContextValue.triggerAction.summary": {
-    "en": "Trigger an action. Accepts either:\n- ActionPlan (v0.5): runs steps sequentially (Run, Set, ToAssistant, OpenUrl)\n- Legacy action config (v0.1): object with optional type and params.\n- Nothing: fires ContinueConversation with the label",
-    "text": "触发一个 action。接受以下任一形式：\n- ActionPlan（v0.5）：按顺序执行各个步骤（Run、Set、ToAssistant、OpenUrl）\n- 旧版 action 配置（v0.1）：带有可选 type 和 params 的对象。\n- 不传：以 label 触发 ContinueConversation"
+    "en": "Trigger an action. Accepts either:\n- ActionPlan (v0.5): runs steps sequentially (Run, Set, Reset, ToAssistant,\n  OpenUrl) and stops if a Run mutation fails. When the renderer is given a\n  pre-parsed `result`, only ToAssistant and OpenUrl run; other steps warn.\n- Legacy action config (v0.1): object with optional type and params.\n- Nothing: fires ContinueConversation with the label",
+    "text": "触发一个 action。接受以下任一形式：\n- ActionPlan（v0.5）：按顺序执行各个步骤（Run、Set、Reset、ToAssistant、\n  OpenUrl），某个 Run 变更失败时停止执行。当渲染器接收的是预先解析好的 `result` 时，仅执行 ToAssistant 和 OpenUrl，其他步骤会告警。\n- 旧版 action 配置（v0.1）：带有可选 type 和 params 的对象。\n- 不传：以 label 触发 ContinueConversation"
   },
   "OpenUIError.summary": {
     "en": "Structured, LLM-friendly error from the openui-lang pipeline.\n\nDesigned for an automated correction loop: send these to the LLM so it can\ngenerate patches. Only includes errors that are fixable by changing the\nopenui-lang code — transient streaming errors, network failures, and tool\nexecution errors are excluded.",
@@ -402,10 +402,6 @@
   "extractToolResult.summary": {
     "en": "Extract the actual data from an MCP callTool result.\nPrefers structuredContent (machine-readable JSON), falls back to parsing text content.",
     "text": "从 MCP callTool 的结果中提取实际数据。优先使用 structuredContent（机器可读的 JSON），否则回退为解析文本内容。"
-  },
-  "generatePrompt.summary": {
-    "en": "Use `generateSystemPrompt`.",
-    "text": "请改用 `generateSystemPrompt`。"
   },
   "isReactiveSchema.summary": {
     "en": "Check if a schema was marked reactive. Used by Zod introspection for $binding<> prefix.",

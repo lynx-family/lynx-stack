@@ -60,9 +60,9 @@ function createRpcEndpoint(name: string, isSync: true, hasReturn: true, hasRetur
 | <a id="rpc-invoke"></a>`invoke` | `invoke(endpoint: T, parameters: T["_TypeParameters"]): void` | 发送 RPC 消息的底层 API 推荐使用 `createCall` |
 | <a id="rpc-postmessage"></a>`postMessage` | `postMessage(message: unknown, detail?: { transfer: Transferable[] }): void` |  |
 | <a id="rpc-registerhandler"></a>`registerHandler` | `registerHandler(endpoint: T, handler: (args: T["_TypeParameters"]) => void): void` | 为端点注册处理函数 |
-| <a id="rpc-registerhandlerlazy"></a>`registerHandlerLazy` | `registerHandlerLazy(endpoint: T, target: { [key in string]: Handler \| undefined }, propertyName: PropertyName): void` | 为端点注册处理函数 |
+| <a id="rpc-registerhandlerlazy"></a>`registerHandlerLazy` | `registerHandlerLazy(endpoint: T, target: { [key in string]: Handler \| undefined }, propertyName: PropertyName): void` | 以“惰性”方式为端点注册处理函数它会为目标属性名添加一个 setter，一旦该值被设置，就会将其添加为处理函数。 |
 | <a id="rpc-registerhandlerref"></a>`registerHandlerRef` | `registerHandlerRef(endpoint: T, target: { [key in string]: Handler \| undefined }, propertyName: PropertyName): void` | 将对象的某个属性注册为处理函数 |
-| <a id="rpc-removehandler"></a>`removeHandler` | `removeHandler(rpc: RpcEndpoint<unknown[], unknown>): void` | 移除该名称对应的处理函数 |
+| <a id="rpc-removehandler"></a>`removeHandler` | `removeHandler(rpc: RpcEndpoint<unknown[], unknown>): void` | 移除该端点对应的处理函数 |
 | <a id="rpc-setmessageport"></a>`setMessagePort` | `setMessagePort(port: MessagePort): void` |  |
 
 #### `Rpc.constructor` \{#rpc-constructor\}
@@ -86,11 +86,11 @@ function createRpcEndpoint(name: string, isSync: true, hasReturn: true, hasRetur
 | --- | --- | --- |
 | <a id="rpcendpointasync-typeparameters"></a>`_TypeParameters` | `Parameters` |  |
 | <a id="rpcendpointasync-typereturn"></a>`_TypeReturn` | `Return` |  |
-| <a id="rpcendpointasync-buffersize"></a>`bufferSize` | `number` | 返回值缓冲区的字节大小。 返回值会被编码为 UTF-8 的 JSON 字符串， 因此需确保该大小足以容纳序列化后的返回值。 |
-| <a id="rpcendpointasync-hasreturn"></a>`hasReturn` | `true` | 该端点是否有返回值。 仅对同步端点有效。 异步端点始终为 true。 |
-| <a id="rpcendpointasync-hasreturntransfer"></a>`hasReturnTransfer` | `false` | 使由 hasReturn 创建的消息调用支持 transfer。 仅对异步且设置了 hasReturn 的端点有效 |
-| <a id="rpcendpointasync-issync"></a>`isSync` | `false` | 该调用是否为异步调用 |
-| <a id="rpcendpointasync-name"></a>`name` | `string` | 该 RPC 端点的名称。 Rpc 实例通过该名称识别要调用的回调。 注意：该名称必须唯一。 |
+| <a id="rpcendpointasync-buffersize"></a>`bufferSize` | `number` | 返回值缓冲区的字节大小。返回值会被编码为 UTF-8 的 JSON 字符串，因此需确保该大小足以容纳序列化后的返回值。 |
+| <a id="rpcendpointasync-hasreturn"></a>`hasReturn` | `true` | 该端点是否有返回值。仅用于异步端点；同步端点在设置了 `bufferSize` 时会返回值。 |
+| <a id="rpcendpointasync-hasreturntransfer"></a>`hasReturnTransfer` | `false` | 使由 hasReturn 创建的消息调用支持 transfer。仅对异步且设置了 hasReturn 的端点有效 |
+| <a id="rpcendpointasync-issync"></a>`isSync` | `false` | 该调用是否为同步调用（通过 `Atomics.wait` 阻塞）。 |
+| <a id="rpcendpointasync-name"></a>`name` | `string` | 该 RPC 端点的名称。 Rpc 实例通过该名称识别要调用的回调。注意：该名称必须唯一。 |
 
 ### `RpcEndpointAsyncWithTransfer` \{#rpcendpointasyncwithtransfer\}
 
@@ -100,11 +100,11 @@ function createRpcEndpoint(name: string, isSync: true, hasReturn: true, hasRetur
 | --- | --- | --- |
 | <a id="rpcendpointasyncwithtransfer-typeparameters"></a>`_TypeParameters` | `Parameters` |  |
 | <a id="rpcendpointasyncwithtransfer-typereturn"></a>`_TypeReturn` | `Return` |  |
-| <a id="rpcendpointasyncwithtransfer-buffersize"></a>`bufferSize` | `number` | 返回值缓冲区的字节大小。 返回值会被编码为 UTF-8 的 JSON 字符串， 因此需确保该大小足以容纳序列化后的返回值。 |
-| <a id="rpcendpointasyncwithtransfer-hasreturn"></a>`hasReturn` | `true` | 该端点是否有返回值。 仅对同步端点有效。 异步端点始终为 true。 |
-| <a id="rpcendpointasyncwithtransfer-hasreturntransfer"></a>`hasReturnTransfer` | `true` | 使由 hasReturn 创建的消息调用支持 transfer。 仅对异步且设置了 hasReturn 的端点有效 |
-| <a id="rpcendpointasyncwithtransfer-issync"></a>`isSync` | `true` | 该调用是否为异步调用 |
-| <a id="rpcendpointasyncwithtransfer-name"></a>`name` | `string` | 该 RPC 端点的名称。 Rpc 实例通过该名称识别要调用的回调。 注意：该名称必须唯一。 |
+| <a id="rpcendpointasyncwithtransfer-buffersize"></a>`bufferSize` | `number` | 返回值缓冲区的字节大小。返回值会被编码为 UTF-8 的 JSON 字符串，因此需确保该大小足以容纳序列化后的返回值。 |
+| <a id="rpcendpointasyncwithtransfer-hasreturn"></a>`hasReturn` | `true` | 该端点是否有返回值。仅用于异步端点；同步端点在设置了 `bufferSize` 时会返回值。 |
+| <a id="rpcendpointasyncwithtransfer-hasreturntransfer"></a>`hasReturnTransfer` | `true` | 使由 hasReturn 创建的消息调用支持 transfer。仅对异步且设置了 hasReturn 的端点有效 |
+| <a id="rpcendpointasyncwithtransfer-issync"></a>`isSync` | `true` | 该调用是否为同步调用（通过 `Atomics.wait` 阻塞）。 |
+| <a id="rpcendpointasyncwithtransfer-name"></a>`name` | `string` | 该 RPC 端点的名称。 Rpc 实例通过该名称识别要调用的回调。注意：该名称必须唯一。 |
 
 ### `RpcEndpointSync` \{#rpcendpointsync\}
 
@@ -114,11 +114,11 @@ function createRpcEndpoint(name: string, isSync: true, hasReturn: true, hasRetur
 | --- | --- | --- |
 | <a id="rpcendpointsync-typeparameters"></a>`_TypeParameters` | `Parameters` |  |
 | <a id="rpcendpointsync-typereturn"></a>`_TypeReturn` | `Return` |  |
-| <a id="rpcendpointsync-buffersize"></a>`bufferSize` | `number` | 返回值缓冲区的字节大小。 返回值会被编码为 UTF-8 的 JSON 字符串， 因此需确保该大小足以容纳序列化后的返回值。 |
-| <a id="rpcendpointsync-hasreturn"></a>`hasReturn` | `true` | 该端点是否有返回值。 仅对同步端点有效。 异步端点始终为 true。 |
-| <a id="rpcendpointsync-hasreturntransfer"></a>`hasReturnTransfer` | `boolean` | 使由 hasReturn 创建的消息调用支持 transfer。 仅对异步且设置了 hasReturn 的端点有效 |
-| <a id="rpcendpointsync-issync"></a>`isSync` | `true` | 该调用是否为异步调用 |
-| <a id="rpcendpointsync-name"></a>`name` | `string` | 该 RPC 端点的名称。 Rpc 实例通过该名称识别要调用的回调。 注意：该名称必须唯一。 |
+| <a id="rpcendpointsync-buffersize"></a>`bufferSize` | `number` | 返回值缓冲区的字节大小。返回值会被编码为 UTF-8 的 JSON 字符串，因此需确保该大小足以容纳序列化后的返回值。 |
+| <a id="rpcendpointsync-hasreturn"></a>`hasReturn` | `true` | 该端点是否有返回值。仅用于异步端点；同步端点在设置了 `bufferSize` 时会返回值。 |
+| <a id="rpcendpointsync-hasreturntransfer"></a>`hasReturnTransfer` | `boolean` | 使由 hasReturn 创建的消息调用支持 transfer。仅对异步且设置了 hasReturn 的端点有效 |
+| <a id="rpcendpointsync-issync"></a>`isSync` | `true` | 该调用是否为同步调用（通过 `Atomics.wait` 阻塞）。 |
+| <a id="rpcendpointsync-name"></a>`name` | `string` | 该 RPC 端点的名称。 Rpc 实例通过该名称识别要调用的回调。注意：该名称必须唯一。 |
 
 ### `RpcCallType` \{#rpccalltype\}
 

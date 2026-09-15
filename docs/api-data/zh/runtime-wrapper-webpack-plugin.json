@@ -24,11 +24,11 @@
     "text": "banner 有两种类型：script（用于 app-service）和 bundle（用于 js-render）。可以根据文件名决定使用哪种 banner。"
   },
   "RuntimeWrapperWebpackPluginOptions.injectVars.summary": {
-    "en": "The variables to be injected into the chunk.",
-    "text": "要注入到 chunk 中的变量。"
+    "en": "A function that receives the default variable list and returns the list to inject.",
+    "text": "一个函数，接收默认的变量列表，并返回要注入的变量列表。"
   },
   "RuntimeWrapperWebpackPluginOptions.test.summary": {
-    "en": "Include all modules that pass test assertion.",
-    "text": "包含所有通过 test 断言的模块。"
+    "en": "Wrap the emitted JS assets whose filenames match this condition.\nAssets marked as main thread are never wrapped.",
+    "text": "包裹文件名匹配该条件的已产出 JS 资源。标记为主线程的资源永远不会被包裹。"
   }
 }

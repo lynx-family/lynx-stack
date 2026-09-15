@@ -5,7 +5,7 @@
   },
   "LynxTestingEnv.summary": {
     "en": "A pure-JavaScript implementation of the [Lynx Spec](https://lynxjs.org/guide/spec.html),\nnotably the [Element PAPI](https://lynxjs.org/api/engine/element-api) and [Dual-threaded Model](https://lynxjs.org/guide/spec#dual-threaded-model) for use with Node.js.",
-    "text": "[Lynx 规范](https://lynxjs.org/guide/spec.html) 的纯 JavaScript 实现，\n主要包括 [Element PAPI](https://lynxjs.org/api/engine/element-api) 和 [双线程模型](https://lynxjs.org/guide/spec#dual-threaded-model)，供 Node.js 环境使用。"
+    "text": "[Lynx 规范](https://lynxjs.org/guide/spec.html) 的纯 JavaScript 实现，主要包括 [Element PAPI](https://lynxjs.org/api/engine/element-api) 和 [双线程模型](https://lynxjs.org/guide/spec#dual-threaded-model)，供 Node.js 环境使用。"
   },
   "LynxTestingEnv.backgroundThread.summary": {
     "en": "The global object for the background thread.",

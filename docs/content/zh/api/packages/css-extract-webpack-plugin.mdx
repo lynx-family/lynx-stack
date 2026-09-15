@@ -30,8 +30,7 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 
 ### `CssExtractRspackPlugin` \{#cssextractrspackplugin\}
 
-CssExtractRspackPlugin 是 Lynx 的 CSS 提取插件。
-其用法与 Web 中的 [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin.html) 相同。
+CssExtractRspackPlugin 是 Lynx 的 CSS 提取插件。其用法与 Web 中的 [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin.html) 相同。
 
 ```js
 import { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'
@@ -41,7 +40,7 @@ export default {
     rules: [
       {
         test: /\.css$/,
-        uses: [CssExtractRspackPlugin.loader, 'css-loader'],
+        use: [CssExtractRspackPlugin.loader, 'css-loader'],
       },
     ],
   },
@@ -69,7 +68,7 @@ export default {
     rules: [
       {
         test: /\.css$/,
-        uses: [CssExtractRspackPlugin.loader, 'css-loader'],
+        use: [CssExtractRspackPlugin.loader, 'css-loader'],
       },
     ],
   },
@@ -90,38 +89,30 @@ webpack 插件的入口。
 
 ### `CssExtractRspackPluginOptions` \{#cssextractrspackpluginoptions\}
 
-`@lynx-js/css-extract-webpack-plugin#CssExtractRspackPlugin` 的选项
+[`CssExtractRspackPlugin`](#cssextractrspackplugin) 的选项
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="cssextractrspackpluginoptions-chunkfilename"></a>`chunkFilename?` | `string` | 非初始 CSS chunk 文件的名称 |
 | <a id="cssextractrspackpluginoptions-cssplugins"></a>`cssPlugins?` | `Plugin[]` | 传递给解析器的插件 |
 | <a id="cssextractrspackpluginoptions-filename"></a>`filename?` | `string` | 每个输出产物的名称。 |
+
+#### `CssExtractRspackPluginOptions.chunkFilename?` \{#cssextractrspackpluginoptions-chunkfilename\}
+
+- **类型：** `string`
+
+非初始 CSS chunk 文件的名称
+
+设置后，lazy bundle 的 CSS chunk 仍会输出到
+`.lynx/lazy-bundle/<name>/<layer>.css`（chunk 没有 layer 时为 `.lynx/lazy-bundle/<name>.css`）；该模板仅作用于其他 chunk。
 
 ### `LoaderOptions` \{#loaderoptions\}
 
 CSS 提取 loader 的选项。
 
-| 成员 | 类型 | 说明 |
-| --- | --- | --- |
-| <a id="loaderoptions-esmodule"></a>`esModule?` | `boolean` | `@lynx-js/rspeedy#CssExtractRspackLoaderOptions.esModule` |
-
-#### `LoaderOptions.emit?` \{#loaderoptions-emit\}
-
-- **类型：** `boolean`
-- **默认值：** ```ts
-true
-@public
-```
-
-与 [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin/tree/master?tab=readme-ov-file#emit) 相同。
-控制是否将 CSS 输出到文件系统。
-
-- 若为 `true`（默认），则输出文件（将文件写入文件系统）。
-
-- 若为 `false`，插件会提取 CSS，但不会输出文件。
-
-对于服务端包，通常可以禁用该选项。
+| 成员 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="loaderoptions-emit"></a>`emit?` | `boolean` | `true` | 与 [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin/tree/master?tab=readme-ov-file#emit) 相同。控制是否将 CSS 输出到文件系统。 - 若为 `true`（默认），则输出文件（将文件写入文件系统）。 - 若为 `false`，插件会提取 CSS，但不会输出文件。 对于服务端包，通常可以禁用该选项。 |
+| <a id="loaderoptions-esmodule"></a>`esModule?` | `boolean` |  | [`CssExtractRspackLoaderOptions.esModule`](/zh/api/packages/rspeedy) |
 
 #### `LoaderOptions.layer?` \{#loaderoptions-layer\}
 

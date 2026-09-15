@@ -50,7 +50,7 @@
           "name": "loaders",
           "type": "Record<keyof typeof LAYERS | \"TESTING\", string>",
           "summary": "The loaders for ReactLynx.",
-          "remarks": "Note that this loader will only transform JSX/TSX to valid JavaScript.\nFor `.tsx` files, the type annotations would not be eliminated.\nYou should use `babel-loader` or `swc-loader` to load TypeScript files.",
+          "remarks": "Note that this loader transforms JSX/TSX to valid JavaScript.\nFor `.ts` and `.tsx` files, the TypeScript types are stripped as well.",
           "examples": [
             "```js\n// webpack.config.js\nimport { ReactWebpackPlugin, LAYERS } from '@lynx-js/react-webpack-plugin'\nexport default {\n  module: {\n    rules: [\n      {\n        test: /\\.tsx?$/,\n        layer: LAYERS.MAIN_THREAD,\n        use: ['swc-loader', ReactWebpackPlugin.loaders.MAIN_THREAD]\n      },\n      {\n        test: /\\.tsx?$/,\n        layer: LAYERS.BACKGROUND,\n        use: ['swc-loader', ReactWebpackPlugin.loaders.BACKGROUND]\n      },\n    ],\n  },\n  plugins: [new ReactWebpackPlugin()],\n}\n```"
           ],
@@ -78,7 +78,7 @@
       "name": "ExtractStrConfig",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`PluginReactLynxOptions.extractStr`",
+      "summary": "[`PluginReactLynxOptions.extractStr`](api:PluginReactLynxOptions.extractStr)",
       "members": [
         {
           "name": "strLength",
@@ -102,7 +102,7 @@
           "name": "compat",
           "optional": true,
           "type": "CompatVisitorConfig",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat`",
+          "summary": "[`PluginReactLynxOptions.compat`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat)",
           "kind": "property"
         },
         {
@@ -116,14 +116,14 @@
           "name": "enableRemoveCSSScope",
           "optional": true,
           "type": "boolean",
-          "summary": "`@lynx-js/template-webpack-plugin#LynxTemplatePluginOptions.enableRemoveCSSScope`",
+          "summary": "[`LynxTemplatePluginOptions.enableRemoveCSSScope`](api:@lynx-js/template-webpack-plugin#LynxTemplatePluginOptions.enableRemoveCSSScope)",
           "kind": "property"
         },
         {
           "name": "enableUiSourceMap",
           "optional": true,
           "type": "boolean",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableUiSourceMap`",
+          "summary": "[`PluginReactLynxOptions.enableUiSourceMap`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableUiSourceMap)",
           "kind": "property"
         },
         {
@@ -137,7 +137,7 @@
           "name": "experimental_transformBuiltinAttributeNames",
           "optional": true,
           "type": "boolean | TransformBuiltinAttributeNamesOptions",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_transformBuiltinAttributeNames`",
+          "summary": "[`PluginReactLynxOptions.experimental_transformBuiltinAttributeNames`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_transformBuiltinAttributeNames)",
           "kind": "property"
         },
         {
@@ -159,7 +159,7 @@
           "name": "jsx",
           "optional": true,
           "type": "JsxTransformerConfig",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.jsx`",
+          "summary": "[`PluginReactLynxOptions.jsx`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.jsx)",
           "kind": "property"
         },
         {
@@ -188,14 +188,14 @@
           "name": "disableCreateSelectorQueryIncompatibleWarning",
           "optional": true,
           "type": "boolean",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat.disableCreateSelectorQueryIncompatibleWarning`",
+          "summary": "[`PluginReactLynxOptions.compat.disableCreateSelectorQueryIncompatibleWarning`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat.disableCreateSelectorQueryIncompatibleWarning)",
           "kind": "property"
         },
         {
           "name": "enableSSR",
           "optional": true,
           "type": "boolean",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableSSR`",
+          "summary": "[`PluginReactLynxOptions.enableSSR`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableSSR)",
           "kind": "property"
         },
         {
@@ -244,14 +244,14 @@
           "name": "firstScreenSyncTiming",
           "optional": true,
           "type": "\"immediately\" | \"jsReady\" | \"manual\"",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.firstScreenSyncTiming`",
+          "summary": "[`PluginReactLynxOptions.firstScreenSyncTiming`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.firstScreenSyncTiming)",
           "kind": "property"
         },
         {
           "name": "globalPropsMode",
           "optional": true,
           "type": "\"reactive\" | \"event\"",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.globalPropsMode`",
+          "summary": "[`PluginReactLynxOptions.globalPropsMode`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.globalPropsMode)",
           "kind": "property"
         },
         {

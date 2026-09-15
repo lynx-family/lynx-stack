@@ -10,9 +10,9 @@
       "name": "default",
       "kind": "class",
       "type": "unknown",
-      "summary": "LynxTransportClient is the client transport implementation for webpack-dev-server.\nIt can be used in the\n[`devServer.client.webSocketTransport`](https://webpack.js.org/configuration/dev-server/#websockettransport)\nconfiguration of webpack.\nIt should be used with `LynxTransportServer`.",
+      "summary": "LynxTransportClient is the client transport implementation for webpack-dev-server.\nIt can be used in the\n[`devServer.client.webSocketTransport`](https://webpack.js.org/configuration/dev-server/#websockettransport)\nconfiguration of webpack.",
       "examples": [
-        "```js\n// webpack.config.js\nimport { createRequire } from 'node:module'\nimport { LynxTransportServer } from '@lynx-js/webpack-dev-transport'\n\nconst require = createRequire(import.meta.url)\nexport default {\n  devServer: {\n    client: {\n      webSocketTransport: require.resolve('@lynx-js/webpack-dev-transport/client')\n    },\n    allowedHosts: 'all',\n    webSocketServer: LynxTransportServer\n  }\n}\n```"
+        "```js\n// webpack.config.js\nimport { createRequire } from 'node:module'\n\nconst require = createRequire(import.meta.url)\nexport default {\n  devServer: {\n    client: {\n      webSocketTransport: require.resolve('@lynx-js/webpack-dev-transport/client')\n    },\n  }\n}\n```"
       ],
       "members": [
         {
@@ -40,7 +40,7 @@
           "returns": {
             "type": "void"
           },
-          "summary": "`Client.onClose`"
+          "summary": "[`Client.onClose`](api:Client.onClose)"
         },
         {
           "name": "onMessage",
@@ -55,7 +55,7 @@
           "returns": {
             "type": "void"
           },
-          "summary": "`Client.onMessage`"
+          "summary": "[`Client.onMessage`](api:Client.onMessage)"
         },
         {
           "name": "onOpen",
@@ -70,7 +70,7 @@
           "returns": {
             "type": "void"
           },
-          "summary": "`Client.onOpen`"
+          "summary": "[`Client.onOpen`](api:Client.onOpen)"
         }
       ]
     },

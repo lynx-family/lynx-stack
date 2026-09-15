@@ -224,7 +224,7 @@
             "You MUST call `lynx.registerDataProcessors` before calling `root.render()`.\n\n```ts\nimport { root } from \"@lynx-js/react\"\n\n// You MUST call this before `root.render()`\nlynx.registerDataProcessors({\n  defaultDataProcessor: () => {...} // default DataProcessor\n  dataProcessors: {\n    getScreenMetricsOverride: () => {...} // named DataProcessor\n  }\n})\n\nroot.render(<App/>);\n```",
             "If you have a class component with `static defaultDataProcessor`\nor `static dataProcessors`, you can use it to register DataProcessors.\n\n```ts\nimport { root, Component } from \"@lynx-js/react\"\n\nclass App extends Component {\n  static defaultDataProcessor() {\n     ...\n  }\n\n  static dataProcessors = {\n    getScreenMetricsOverride() {\n      ...\n    }\n  }\n}\n\nlynx.registerDataProcessors(App); // You can pass `App` because it has the required shape\nroot.render(<App/>);\n```",
             "For developers who want fully typed `defaultDataProcessor`,\nthey can achieve it by extends interface `InitDataRaw` and `InitData`.\n\n```ts\nimport { root } from \"@lynx-js/react\"\n\ninterface ExistingInterface {\n  somePropertyFromExistingInterface: number\n}\n\ndeclare module '@lynx-js/react' {\n  interface InitDataRaw extends ExistingInterface {\n    someAnotherCustomProperty: string\n  }\n}\n\nlynx.registerDataProcessors({\n  defaultDataProcessor: (initDataRaw) => {\n    initDataRaw.somePropertyFromExistingInterface // will be typed\n  }\n})\n\n```",
-            "For developers who want fully typed `defaultDataProcessor`,\nthey can achieve it by extends interface `InitDataRaw` and `InitData`.\n\n```ts\nimport { root, useInitData } from \"@lynx-js/react\"\n\ninterface AnotherExistingInterface {\n  someAnotherPropertyFromExistingInterface: number\n}\n\ndeclare module '@lynx-js/react' {\n  interface InitData extends AnotherExistingInterface {\n    someCustomProperty: string\n  }\n}\n\nroot.registerDataProcessors({\n  defaultDataProcessor: () => {\n    return {\n      someCustomProperty: 'value', // will be typed\n      someAnotherPropertyFromExistingInterface: 1, // will be typed\n    }\n  }\n})\n\nfunction App() {\n  const initData = useInitData();\n\n  initData.someCustomProperty // will be typed\n  initData.someAnotherPropertyFromExistingInterface // will be typed\n}\n\n```"
+            "For developers who want fully typed `defaultDataProcessor`,\nthey can achieve it by extends interface `InitDataRaw` and `InitData`.\n\n```ts\nimport { useInitData } from \"@lynx-js/react\"\n\ninterface AnotherExistingInterface {\n  someAnotherPropertyFromExistingInterface: number\n}\n\ndeclare module '@lynx-js/react' {\n  interface InitData extends AnotherExistingInterface {\n    someCustomProperty: string\n  }\n}\n\nlynx.registerDataProcessors({\n  defaultDataProcessor: () => {\n    return {\n      someCustomProperty: 'value', // will be typed\n      someAnotherPropertyFromExistingInterface: 1, // will be typed\n    }\n  }\n})\n\nfunction App() {\n  const initData = useInitData();\n\n  initData.someCustomProperty // will be typed\n  initData.someAnotherPropertyFromExistingInterface // will be typed\n}\n\n```"
           ],
           "kind": "property"
         },
@@ -249,7 +249,7 @@
             "DataProcessorDefinition"
           ],
           "summary": "Register DataProcessors. You MUST call this before `root.render()`.",
-          "deprecated": "Deprecated.",
+          "deprecated": "use [`lynx.registerDataProcessors`](api:Lynx.registerDataProcessors) instead",
           "kind": "property"
         },
         {
@@ -375,15 +375,15 @@
       "refs": [
         "GlobalProps"
       ],
-      "summary": "The [Consumer](https://react.dev/reference/react/createContext#consumer) Component that provide `lynx.__globalProps`.\nThis should be used with [`GlobalPropsProvider`](api:GlobalPropsProvider)"
+      "summary": "The [Consumer](https://react.dev/reference/react/createContext#consumer) Component that provide `lynx.__globalProps`.\nOnly needed with `globalPropsMode: 'event'`, together with [`GlobalPropsProvider`](api:GlobalPropsProvider); in the default `'reactive'` mode\nit calls `children` with `lynx.__globalProps` directly and updates come from a full re-render."
     },
     {
       "name": "GlobalPropsProvider",
       "kind": "variable",
       "type": "FC<{ children?: ReactNode }>",
-      "summary": "The [Provider](https://react.dev/reference/react/createContext#provider) Component that provide `lynx.__globalProps`,\nyou must wrap your JSX inside it",
+      "summary": "The [Provider](https://react.dev/reference/react/createContext#provider) Component that provide `lynx.__globalProps`.\nOnly needed with `globalPropsMode: 'event'`; in the default `'reactive'` mode it renders its children directly\nand updates come from a full re-render.",
       "examples": [
-        "```ts\nimport { root } from \"@lynx-js/react\"\n\nfunction App() {\n  return (\n    <GlobalPropsConsumer children={(globalProps) => <view>...</view>}/>\n  )\n}\n\nroot.render(\n  <GlobalPropsProvider>\n     <App/>\n  </GlobalPropsProvider>\n);\n\n```"
+        "With `globalPropsMode: 'event'`:\n\n```ts\nimport { root } from \"@lynx-js/react\"\n\nfunction App() {\n  return (\n    <GlobalPropsConsumer children={(globalProps) => <view>...</view>}/>\n  )\n}\n\nroot.render(\n  <GlobalPropsProvider>\n     <App/>\n  </GlobalPropsProvider>\n);\n\n```"
       ]
     },
     {
@@ -451,7 +451,7 @@
       "refs": [
         "GlobalProps"
       ],
-      "summary": "A React Hooks for you to get `lynx.__globalProps`.\nIf `lynx.__globalProps` is changed, a re-render will be triggered automatically.",
+      "summary": "A React Hooks for you to get `lynx.__globalProps`.\nWith `globalPropsMode: 'event'`, the component re-renders when `lynx.__globalProps` changes;\nin the default `'reactive'` mode, updates arrive through a full re-render.",
       "examples": [
         "```ts\nfunction App() {\n  const globalProps = useGlobalProps();\n\n  globalProps.someProperty // use it\n}\n```"
       ],
@@ -555,7 +555,7 @@
       "kind": "function",
       "type": "useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void",
       "summary": "`useLayoutEffect` is now an alias of `useEffect`. Use `useEffect` instead.\n\nAccepts a function that contains imperative, possibly effectful code. The effects run after main thread dom update without blocking it.",
-      "deprecated": "Deprecated.",
+      "deprecated": "`useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React.",
       "signatures": [
         {
           "text": "useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void",
@@ -569,7 +569,7 @@
               "name": "deps",
               "type": "DependencyList",
               "optional": true,
-              "description": "If present, effect will only activate if the values in the list change (using ===).\n\n\n\n `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React."
+              "description": "If present, effect will only activate if the values in the list change (using ===)."
             }
           ],
           "returns": {

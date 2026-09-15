@@ -108,9 +108,10 @@ Render child component ids in vertical order.
 function createFallbackMessagesFromPlainText(text: string): ServerToClientMessage[]
 ```
 
-Build a single-Text fallback message stream from a plain string. Used by
-transports / `Session.ingest` callers that receive free-form text from
-the agent instead of structured protocol messages.
+Build a single-Text fallback message stream (surface `default`, catalog
+`inline-text`, root `root-text`) from a plain string. Used by
+`normalizePayloadToMessages` and by transports that receive free-form text
+from the agent instead of structured protocol messages.
 
 | Parameters | Type | Description |
 | --- | --- | --- |
@@ -174,15 +175,16 @@ so any `executeFunctionCall` after `defineCatalog` can route to them.
 
 ```ts
 import { Text, Button } from '@lynx-js/genui/a2ui';
-import { defineCatalog, defineFunction } from '@lynx-js/genui/a2ui';
-import { required } from '@lynx-js/genui/a2ui/functions';
-import textManifest from '@lynx-js/genui/a2ui/catalog/Text/catalog.json'
+import { basicFunctions, defineCatalog } from '@lynx-js/genui/a2ui';
+import { MyCard } from './MyCard';
+import myCardManifest from './dist/catalog/MyCard/catalog.json'
   with { type: 'json' };
 
 const catalog = defineCatalog([
-  [Text, textManifest],
+  Text,
   Button,
-  defineFunction(required),
+  [MyCard, myCardManifest],
+  ...basicFunctions,
 ]);
 ```
 
@@ -234,9 +236,11 @@ Render a horizontal or vertical visual separator.
 function executeFunctionCall(processor: MessageProcessor, fn: {}, surfaceId: string, dataContextPath?: string, options: ResolveFunctionOptions): unknown
 ```
 
-Resolve arguments, look the function up in the registry, and invoke it.
-When no impl is registered, log once and return `undefined` so callers
-(checks, dynamic-property bindings) can degrade gracefully.
+Resolve arguments, look the function up in `options.functions` and then in
+`options.registry` (the shared `functionRegistry` by default), and invoke
+it. When no impl is found, warn once per name and return `undefined`; when
+the impl throws, warn on every call and return `undefined`. Callers
+(checks, dynamic-property bindings) can therefore degrade gracefully.
 
 | Parameters | Type | Description |
 | --- | --- | --- |
@@ -411,9 +415,11 @@ Render numeric slices as a pie or donut chart.
 function prepareMessagesForProcessing(rawMessages: ServerToClientMessage[], messageId: string, activeSurfaceIds: Set<string>): { hasComponentUpdate: boolean; messages: ServerToClientMessage[] }
 ```
 
-Tag messages with the given messageId and report whether any of them
-carries a non-empty `updateComponents`. Also dedupes `createSurface`
-messages against the set of currently-active surfaces.
+Filter a message batch for processing and report whether any kept message
+carries a non-empty `updateComponents`. Mutates its inputs: sets
+`messageId` only on messages that lack one, and updates `activeSurfaceIds`
+as `deleteSurface` / `createSurface` messages are seen. `createSurface`
+messages for surfaces that are already active are dropped.
 
 | Parameters | Type | Description |
 | --- | --- | --- |
@@ -592,11 +598,10 @@ and dispatches user events or function calls through the current processor.
 function useChecks(options: { checks: CheckLike[] | undefined; componentId: string; dataContextPath?: string; surface: Surface | undefined }): CheckOutcome & { firstFailureMessage: string | undefined }
 ```
 
-Evaluate an input component's `checks` array reactively. Returns the
-current outcome plus the first failure message (handy for inline error
-rendering). When an enclosing `<FormContext.Provider>` exists, the input
-is also registered with it so Buttons in the same form can react to
-`isValid`.
+Evaluate an input component's `checks` array reactively against the
+surface's data model and the catalog's functions, re-running when bound
+data changes. Returns the current outcome plus the first failure message
+(handy for inline error rendering).
 
 | Parameters | Type | Description |
 | --- | --- | --- |
@@ -715,7 +720,7 @@ Props for the all-in-one A2UI ReactLynx renderer.
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="a2uiprops-catalogs"></a>`catalogs` | `readonly `[`CatalogInput`](#cataloginput)`[]` | Components the renderer is allowed to instantiate. Each item is either a bare component (name read from `displayName ?? name`) or a tuple `[component, manifest]` where the manifest is the JSON the extractor emits at `dist/catalog/<Name>/catalog.json`. |
+| <a id="a2uiprops-catalogs"></a>`catalogs` | `readonly `[`CatalogInput`](#cataloginput)`[]` | Components and functions the renderer is allowed to use. Each item is a bare component (name read from `displayName ?? name`), a tuple `[component, manifest]` where the manifest is the JSON the extractor emits at `dist/catalog/<Name>/catalog.json`, a resolved `{ name, component, schema? }` entry, or a function entry such as those in `basicFunctions`. |
 | <a id="a2uiprops-classname"></a>`className?` | `string` | Optional class name applied to the top-level `surface-${surfaceId}` view for the active surface. Use this when theme switching is expressed as surface-level classes. |
 | <a id="a2uiprops-messagestore"></a>`messageStore` | [`MessageStore`](#messagestore) | The raw-message buffer the developer pushes protocol messages into. `<A2UI>` subscribes via `useSyncExternalStore` and processes new messages incrementally. The internal `MessageProcessor` (surfaces, signals, resources) is created once per mount and is **not reset** if `messageStore` is later replaced with a different instance. Pass a `key` prop derived from the store's identity if you want a fresh session, e.g. `<A2UI key={turnId} messageStore={turnStore} ... />`. |
 | <a id="a2uiprops-onaction"></a>`onAction?` | `(action: `[`UserActionPayload`](#useractionpayload)`) => void` | Called when a user action fires inside the rendered tree (button tap, etc.). Forward to your agent and push the response messages back into the same `messageStore` to update the UI. Fire-and-forget; the renderer never awaits this. |
@@ -888,7 +893,7 @@ In-memory state for a single protocol surface.
 | <a id="surface-catalogid"></a>`catalogId?` | `string` |  |
 | <a id="surface-components"></a>`components` | `Map<string, `[`ComponentInstance`](#componentinstance)`>` |  |
 | <a id="surface-resources"></a>`resources` | `Map<string, `[`Resource`](#resource)`>` |  |
-| <a id="surface-rootcomponentid"></a>`rootComponentId?` | `string \| null` | id of the root component for this surface (must be 'root'). |
+| <a id="surface-rootcomponentid"></a>`rootComponentId?` | `string \| null` | id of the root component for this surface. Set on the first non-empty `updateComponents` batch: `'root'` if that id exists, otherwise the batch's first component id. |
 | <a id="surface-senddatamodel"></a>`sendDataModel?` | `boolean` |  |
 | <a id="surface-store"></a>`store` | `SignalStore` |  |
 | <a id="surface-surfaceid"></a>`surfaceId` | `string` |  |

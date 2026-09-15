@@ -10,10 +10,9 @@
       "name": "ChunkLoadingWebpackPlugin",
       "kind": "class",
       "type": "unknown",
-      "summary": "The ChunkLoadingWebpackPlugin enables chunk loading for webpack/Rspack in Lynx.",
+      "summary": "The ChunkLoadingWebpackPlugin enables chunk loading for Rspack in Lynx.\nIt only takes effect when `output.chunkLoading` is `'lynx'`.",
       "examples": [
-        "- Use with Rspack.\n\n```js\n// rspack.config.js\nimport { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'\nexport default {\n  output: {\n    chunkFormat: 'require',\n  },\n  plugins: [new ChunkLoadingWebpackPlugin()],\n}\n```",
-        "- Use with Webpack.\n\n```js\n// webpack.config.js\nimport { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'\nexport default {\n  output: {\n    chunkFormat: 'lynx',\n  },\n  plugins: [new ChunkLoadingWebpackPlugin()],\n}\n```"
+        "```js\n// rspack.config.js\nimport { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'\nexport default {\n  output: {\n    chunkLoading: 'lynx',\n    chunkFormat: 'commonjs',\n  },\n  plugins: [new ChunkLoadingWebpackPlugin()],\n}\n```"
       ],
       "members": [
         {

@@ -126,7 +126,7 @@ For developers who want fully typed `defaultDataProcessor`,
 they can achieve it by extends interface `InitDataRaw` and `InitData`.
 
 ```ts
-import { root, useInitData } from "@lynx-js/react"
+import { useInitData } from "@lynx-js/react"
 
 interface AnotherExistingInterface {
   someAnotherPropertyFromExistingInterface: number
@@ -138,7 +138,7 @@ declare module '@lynx-js/react' {
   }
 }
 
-root.registerDataProcessors({
+lynx.registerDataProcessors({
   defaultDataProcessor: () => {
     return {
       someCustomProperty: 'value', // will be typed
@@ -165,7 +165,7 @@ The default root exported by `@lynx-js/react` for you to render a JSX
 - **Type:** `(dataProcessorDefinition: `[`DataProcessorDefinition`](#dataprocessordefinition)`) => void`
 
 :::warning Deprecated
-Deprecated.
+use [`lynx.registerDataProcessors`](#lynx-registerdataprocessors) instead
 :::
 
 Register DataProcessors. You MUST call this before `root.render()`.

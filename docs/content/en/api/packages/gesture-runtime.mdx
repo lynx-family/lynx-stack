@@ -489,7 +489,7 @@ Generic continuous gesture callbacks interface.
 ### `DefaultGestureChangeEvent` \{#defaultgesturechangeevent\}
 
 Default gesture change event.
-Uses the base GestureChangeEvent without additional properties.
+Adds scroll offsets (`scrollX`, `scrollY`), deltas (`deltaX`, `deltaY`) and boundary flags (`isAtStart`, `isAtEnd`).
 
 | Members | Type | Description |
 | --- | --- | --- |
@@ -499,7 +499,7 @@ Uses the base GestureChangeEvent without additional properties.
 
 ### `DefaultGestureConfig` \{#defaultgestureconfig\}
 
-Configuration interface for DefaultGesture.
+Configuration interface for DefaultScrollGesture.
 Default gesture is a basic gesture handler.
 
 | Members | Type | Description |
@@ -509,7 +509,7 @@ Default gesture is a basic gesture handler.
 
 ### `FlingGestureChangeEvent` \{#flinggesturechangeevent\}
 
-Fling gesture change event with fling location and velocity information.
+Fling gesture change event with scroll offsets (`scrollX`, `scrollY`), deltas (`deltaX`, `deltaY`) and boundary flags (`isAtStart`, `isAtEnd`).
 
 | Members | Type | Description |
 | --- | --- | --- |
@@ -590,7 +590,7 @@ Used internally, not meant to be public
 
 ### `LongPressGestureChangeEvent` \{#longpressgesturechangeevent\}
 
-Long press gesture change event with press location and duration information.
+Long press gesture change event. Uses the base `GestureChangeEvent` params.
 
 | Members | Type | Description |
 | --- | --- | --- |
@@ -612,7 +612,7 @@ Long press gesture recognizes long press gestures.
 ### `NativeGestureChangeEvent` \{#nativegesturechangeevent\}
 
 Native gesture change event.
-Uses the base GestureChangeEvent without additional properties.
+Adds scroll offsets (`scrollX`, `scrollY`), deltas (`deltaX`, `deltaY`) and boundary flags (`isAtStart`, `isAtEnd`).
 
 | Members | Type | Description |
 | --- | --- | --- |
@@ -631,7 +631,7 @@ Native gesture uses platform-specific gesture recognizers.
 
 ### `PanGestureChangeEvent` \{#pangesturechangeevent\}
 
-Pan gesture change event with translation and velocity information.
+Pan gesture change event with scroll offsets (`scrollX`, `scrollY`) and boundary flags (`isAtStart`, `isAtEnd`).
 
 | Members | Type | Description |
 | --- | --- | --- |
@@ -667,7 +667,7 @@ Pan gesture recognizes pan (dragging) gestures.
 
 ### `TapGestureChangeEvent` \{#tapgesturechangeevent\}
 
-Tap gesture change event with tap location and count information.
+Tap gesture change event. Uses the base `GestureChangeEvent` params.
 
 | Members | Type | Description |
 | --- | --- | --- |

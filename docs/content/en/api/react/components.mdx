@@ -16,8 +16,11 @@ Provider and consumer components for the data a Lynx page receives from the nati
 const GlobalPropsProvider: FC<{ children?: ReactNode }>
 ```
 
-The [Provider](https://react.dev/reference/react/createContext#provider) Component that provide `lynx.__globalProps`,
-you must wrap your JSX inside it
+The [Provider](https://react.dev/reference/react/createContext#provider) Component that provide `lynx.__globalProps`.
+Only needed with `globalPropsMode: 'event'`; in the default `'reactive'` mode it renders its children directly
+and updates come from a full re-render.
+
+With `globalPropsMode: 'event'`:
 
 ```ts
 import { root } from "@lynx-js/react"
@@ -43,7 +46,8 @@ const GlobalPropsConsumer: Consumer<GlobalProps>
 ```
 
 The [Consumer](https://react.dev/reference/react/createContext#consumer) Component that provide `lynx.__globalProps`.
-This should be used with [`GlobalPropsProvider`](#globalpropsprovider)
+Only needed with `globalPropsMode: 'event'`, together with [`GlobalPropsProvider`](#globalpropsprovider); in the default `'reactive'` mode
+it calls `children` with `lynx.__globalProps` directly and updates come from a full re-render.
 
 ### `InitDataProvider` \{#initdataprovider\}
 

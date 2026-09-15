@@ -41,7 +41,7 @@ export default {
     rules: [
       {
         test: /\.css$/,
-        uses: [CssExtractRspackPlugin.loader, 'css-loader'],
+        use: [CssExtractRspackPlugin.loader, 'css-loader'],
       },
     ],
   },
@@ -69,7 +69,7 @@ export default {
     rules: [
       {
         test: /\.css$/,
-        uses: [CssExtractRspackPlugin.loader, 'css-loader'],
+        use: [CssExtractRspackPlugin.loader, 'css-loader'],
       },
     ],
   },
@@ -90,38 +90,31 @@ The entry point of a webpack plugin.
 
 ### `CssExtractRspackPluginOptions` \{#cssextractrspackpluginoptions\}
 
-The options for `@lynx-js/css-extract-webpack-plugin#CssExtractRspackPlugin`
+The options for [`CssExtractRspackPlugin`](#cssextractrspackplugin)
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="cssextractrspackpluginoptions-chunkfilename"></a>`chunkFilename?` | `string` | The name of non-initial CSS chunk files |
 | <a id="cssextractrspackpluginoptions-cssplugins"></a>`cssPlugins?` | `Plugin[]` | plugins passed to parser |
 | <a id="cssextractrspackpluginoptions-filename"></a>`filename?` | `string` | The name of each output bundle. |
+
+#### `CssExtractRspackPluginOptions.chunkFilename?` \{#cssextractrspackpluginoptions-chunkfilename\}
+
+- **Type:** `string`
+
+The name of non-initial CSS chunk files
+
+When set, CSS chunks of lazy bundles still go to
+`.lynx/lazy-bundle/<name>/<layer>.css` (or `.lynx/lazy-bundle/<name>.css`
+when the chunk has no layer); this template applies to the other chunks.
 
 ### `LoaderOptions` \{#loaderoptions\}
 
 The options of CSS extract loader.
 
-| Members | Type | Description |
-| --- | --- | --- |
-| <a id="loaderoptions-esmodule"></a>`esModule?` | `boolean` | `@lynx-js/rspeedy#CssExtractRspackLoaderOptions.esModule` |
-
-#### `LoaderOptions.emit?` \{#loaderoptions-emit\}
-
-- **Type:** `boolean`
-- **Default:** ```ts
-true
-@public
-```
-
-The same as [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin/tree/master?tab=readme-ov-file#emit).
-Control whether emit the CSS to filesystem.
-
-- If `true`(default), emits a file (writes a file to the filesystem).
-
-- If `false`, the plugin will extract the CSS but will not emit the file.
-
-It is often useful to disable this option for server-side packages.
+| Members | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="loaderoptions-emit"></a>`emit?` | `boolean` | `true` | The same as [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin/tree/master?tab=readme-ov-file#emit). Control whether emit the CSS to filesystem. - If `true`(default), emits a file (writes a file to the filesystem). - If `false`, the plugin will extract the CSS but will not emit the file. It is often useful to disable this option for server-side packages. |
+| <a id="loaderoptions-esmodule"></a>`esModule?` | `boolean` |  | [`CssExtractRspackLoaderOptions.esModule`](/api/packages/rspeedy) |
 
 #### `LoaderOptions.layer?` \{#loaderoptions-layer\}
 

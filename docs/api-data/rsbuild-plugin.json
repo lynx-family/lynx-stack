@@ -2,7 +2,7 @@
   "id": "rsbuild-plugin",
   "package": "@lynx-js/rsbuild-plugin",
   "version": "0.1.2",
-  "description": "An Rsbuild plugin that builds a Lynx app with the Rsbuild CLI directly, without the Rspeedy CLI.",
+  "description": "The Lynx build engine for Rsbuild; Rspeedy and DSL plugins apply it for you.",
   "group": "build",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-lynx",
   "exports": [
@@ -136,7 +136,7 @@
             "BundleFilename"
           ],
           "summary": "The name of the bundle files.",
-          "remarks": "The following placeholders are supported:\n\n- `[name]`: the name of the entry.\n- `[platform]`: the name of the Rsbuild environment.",
+          "remarks": "The following placeholders are supported:\n\n- `[name]`: the name of the entry.\n- `[platform]`: the name of the Rsbuild environment.\n- `[contenthash]`: the hash of the bundle content.",
           "default": "`'[name].[platform].bundle'`",
           "kind": "property"
         }

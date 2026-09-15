@@ -3,7 +3,7 @@
     "package": "@lynx-js/rsbuild-plugin",
     "version": "0.1.2",
     "group": "build",
-    "description": "An Rsbuild plugin that builds a Lynx app with the Rsbuild CLI directly, without the Rspeedy CLI.",
+    "description": "The Lynx build engine for Rsbuild; Rspeedy and DSL plugins apply it for you.",
     "exports": 11
   },
   "react-rsbuild-plugin": {
@@ -66,14 +66,14 @@
     "package": "@lynx-js/lynx-bundle-rslib-config",
     "version": "0.8.1",
     "group": "build",
-    "description": "The rsbuild config for building Lynx bundle",
+    "description": "Rslib config for building Lynx external bundles.",
     "exports": 17
   },
   "rspeedy": {
     "package": "@lynx-js/rspeedy",
     "version": "0.17.2",
     "group": "build",
-    "description": "A webpack/rspack-based frontend toolchain for Lynx",
+    "description": "The Rspack-based build tool for Lynx.",
     "exports": 42
   },
   "upgrade-rspeedy": {
@@ -370,7 +370,7 @@
     "package": "@lynx-js/cache-events-webpack-plugin",
     "version": "0.2.1",
     "group": "internals",
-    "description": "Cache Lynx native events until the BTS chunk is fully loaded, and replay them when the BTS chunk is ready.",
+    "description": "Caches Lynx native calls that arrive before an entry finishes starting up — on the background thread, and on the main thread for entries that start up asynchronously — and replays them once startup settles.",
     "exports": 2
   },
   "runtime-config-webpack-plugin": {
@@ -391,7 +391,7 @@
     "package": "@lynx-js/webpack-runtime-globals",
     "version": "0.0.8",
     "group": "internals",
-    "description": "Use runtime wrapper which allow JavaScript to be load by Lynx.",
+    "description": "Runtime global names shared by the Lynx webpack and Rspack plugins.",
     "exports": 1
   },
   "css-serializer": {

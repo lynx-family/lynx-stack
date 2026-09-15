@@ -10,118 +10,7 @@
       "name": "CSS",
       "kind": "namespace",
       "type": "unknown",
-      "members": [
-        {
-          "name": "Plugins",
-          "type": "unknown",
-          "kind": "namespace"
-        },
-        {
-          "name": "Severity",
-          "type": "unknown",
-          "kind": "enum"
-        },
-        {
-          "name": "BaseDeclaration",
-          "type": "unknown",
-          "kind": "interface"
-        },
-        {
-          "name": "CSSSourceMap",
-          "type": "unknown",
-          "kind": "interface"
-        },
-        {
-          "name": "FontFaceRule",
-          "type": "unknown",
-          "kind": "interface"
-        },
-        {
-          "name": "ImportRule",
-          "type": "unknown",
-          "kind": "interface"
-        },
-        {
-          "name": "KeyframesRule",
-          "type": "unknown",
-          "kind": "interface"
-        },
-        {
-          "name": "KeyframesStyle",
-          "type": "unknown",
-          "kind": "interface"
-        },
-        {
-          "name": "LayerRule",
-          "type": "unknown",
-          "kind": "interface"
-        },
-        {
-          "name": "Location",
-          "type": "unknown",
-          "kind": "interface"
-        },
-        {
-          "name": "MediaRule",
-          "type": "unknown",
-          "kind": "interface"
-        },
-        {
-          "name": "ParserError",
-          "type": "unknown",
-          "kind": "interface"
-        },
-        {
-          "name": "Plugin",
-          "type": "unknown",
-          "kind": "interface"
-        },
-        {
-          "name": "Range",
-          "type": "unknown",
-          "kind": "interface"
-        },
-        {
-          "name": "StyleRule",
-          "type": "unknown",
-          "kind": "interface"
-        },
-        {
-          "name": "SupportsRule",
-          "type": "unknown",
-          "kind": "interface"
-        },
-        {
-          "name": "Value",
-          "type": "unknown",
-          "kind": "interface"
-        },
-        {
-          "name": "VariableDeclaration",
-          "type": "unknown",
-          "kind": "interface"
-        },
-        {
-          "name": "Declaration",
-          "type": "BaseDeclaration | VariableDeclaration",
-          "kind": "typealias"
-        },
-        {
-          "name": "LynxStyleNode",
-          "type": "StyleRule | FontFaceRule | ImportRule | KeyframesRule | MediaRule | SupportsRule | LayerRule",
-          "kind": "typealias"
-        },
-        {
-          "name": "cssChunksToMap",
-          "type": "unknown",
-          "kind": "function"
-        },
-        {
-          "name": "parse",
-          "type": "unknown",
-          "kind": "function"
-        }
-      ]
+      "from": "@lynx-js/css-serializer"
     },
     {
       "name": "LynxEncodePlugin",
@@ -171,7 +60,7 @@
           ],
           "summary": "`defaultOptions` is the default options that the [`LynxEncodePlugin`](api:LynxEncodePlugin) uses.",
           "examples": [
-            "`defaultOptions` can be used to change part of the option and keep others as the default value.\n\n```js\n// webpack.config.js\nimport { LynxEncodePlugin } from '@lynx-js/template-webpack-plugin'\nexport default {\n  plugins: [\n    new LynxEncodePlugin({\n      ...LynxEncodePlugin.defaultOptions,\n      enableRemoveCSSScope: true,\n    }),\n  ],\n}\n```"
+            "`defaultOptions` can be used to change part of the option and keep others as the default value.\n\n```js\n// webpack.config.js\nimport { LynxEncodePlugin } from '@lynx-js/template-webpack-plugin'\nexport default {\n  plugins: [\n    new LynxEncodePlugin({\n      ...LynxEncodePlugin.defaultOptions,\n      inlineScripts: false,\n    }),\n  ],\n}\n```"
           ],
           "kind": "property"
         },
@@ -273,11 +162,13 @@
             },
             {
               "name": "plugins",
-              "type": "Plugin[]"
+              "type": "Plugin[]",
+              "description": "The CSS plugins passed to the parser."
             },
             {
               "name": "enableCSSSelector",
-              "type": "boolean"
+              "type": "boolean",
+              "description": "Whether to enable the CSS selector."
             }
           ],
           "returns": {
@@ -287,7 +178,7 @@
           "summary": "Convert the css chunks to css map.",
           "remarks": "This helper currently forwards to `cssChunksToMap`.\n\nThe returned `cssSource` is keyed by `cssId` and uses the synthetic\nfilename format `/cssId/<id>.css`.\n\nThis helper does not remap generated `loc` fields to original source\ncoordinates.",
           "examples": [
-            "```\n(console.log(await convertCSSChunksToMap(\n  '.red { color: red; }',\n  {\n    targetSdkVersion: '3.2',\n    enableCSSSelector: true,\n  },\n)));\n```"
+            "```\n(console.log(LynxTemplatePlugin.convertCSSChunksToMap(\n  ['.red { color: red; }'],\n  [],\n  true,\n)));\n```"
           ]
         },
         {
@@ -541,9 +432,9 @@
         {
           "name": "customCSSInheritanceList",
           "type": "string[] | undefined",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.customCSSInheritanceList`",
+          "summary": "[`PluginReactLynxOptions.customCSSInheritanceList`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.customCSSInheritanceList)",
           "examples": [
-            "By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n plugins: [\n   pluginReactLynx({\n     enableCSSInheritance: true,\n     customCSSInheritanceList: ['direction', 'overflow']\n   }),\n ],\n}\n```"
+            "By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n plugins: [\n   pluginReactLynx({\n     enableCSSInheritance: true,\n     customCSSInheritanceList: ['direction', 'overflow']\n   }),\n ],\n})\n```"
           ],
           "kind": "property"
         },
@@ -561,13 +452,13 @@
         {
           "name": "debugInfoOutside",
           "type": "boolean",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.debugInfoOutside`",
+          "summary": "[`PluginReactLynxOptions.debugInfoOutside`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.debugInfoOutside)",
           "kind": "property"
         },
         {
           "name": "defaultDisplayLinear",
           "type": "boolean",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.defaultDisplayLinear`",
+          "summary": "[`PluginReactLynxOptions.defaultDisplayLinear`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.defaultDisplayLinear)",
           "kind": "property"
         },
         {
@@ -594,37 +485,37 @@
         {
           "name": "enableAccessibilityElement",
           "type": "boolean",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableAccessibilityElement`",
+          "summary": "[`PluginReactLynxOptions.enableAccessibilityElement`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableAccessibilityElement)",
           "kind": "property"
         },
         {
           "name": "enableCSSInheritance",
           "type": "boolean",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInheritance`",
+          "summary": "[`PluginReactLynxOptions.enableCSSInheritance`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInheritance)",
           "kind": "property"
         },
         {
           "name": "enableCSSInvalidation",
           "type": "boolean",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInvalidation`",
+          "summary": "[`PluginReactLynxOptions.enableCSSInvalidation`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInvalidation)",
           "kind": "property"
         },
         {
           "name": "enableCSSSelector",
           "type": "boolean",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSSelector`",
+          "summary": "[`PluginReactLynxOptions.enableCSSSelector`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSSelector)",
           "kind": "property"
         },
         {
           "name": "enableNewGesture",
           "type": "boolean",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableNewGesture`",
+          "summary": "[`PluginReactLynxOptions.enableNewGesture`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableNewGesture)",
           "kind": "property"
         },
         {
           "name": "enableRemoveCSSScope",
           "type": "boolean",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope`",
+          "summary": "[`PluginReactLynxOptions.enableRemoveCSSScope`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope)",
           "kind": "property"
         },
         {
@@ -632,7 +523,7 @@
           "optional": true,
           "type": "boolean",
           "summary": "Whether to compile the main thread sections to `JsBytecode`.",
-          "default": "```ts\nEnabled outside of development and debug builds, which keeps\nthe sections readable while debugging.\n```",
+          "default": "Enabled outside of development and debug builds, which keeps\nthe sections readable while debugging.",
           "kind": "property"
         },
         {
@@ -647,7 +538,7 @@
           "name": "experimental_isLazyBundle",
           "optional": true,
           "type": "boolean",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle`",
+          "summary": "[`PluginReactLynxOptions.experimental_isLazyBundle`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle)",
           "alpha": true,
           "kind": "property"
         },
@@ -685,13 +576,13 @@
         {
           "name": "removeDescendantSelectorScope",
           "type": "boolean",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.removeDescendantSelectorScope`",
+          "summary": "[`PluginReactLynxOptions.removeDescendantSelectorScope`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.removeDescendantSelectorScope)",
           "kind": "property"
         },
         {
           "name": "targetSdkVersion",
           "type": "string",
-          "summary": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion`",
+          "summary": "[`PluginReactLynxOptions.targetSdkVersion`](api:@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion)",
           "kind": "property"
         }
       ]

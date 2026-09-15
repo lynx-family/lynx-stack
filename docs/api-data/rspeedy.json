@@ -2,7 +2,7 @@
   "id": "rspeedy",
   "package": "@lynx-js/rspeedy",
   "version": "0.17.2",
-  "description": "A webpack/rspack-based frontend toolchain for Lynx",
+  "description": "The Rspack-based build tool for Lynx.",
   "group": "build",
   "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/core",
   "exports": [
@@ -10,7 +10,7 @@
       "name": "BuildCache",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`Performance.buildCache`",
+      "summary": "[`Performance.buildCache`](api:Performance.buildCache)",
       "beta": true,
       "members": [
         {
@@ -79,8 +79,8 @@
       "name": "ChunkSplit",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`Performance.chunkSplit`\n\n Use the top-level [`Config.splitChunks`](api:Config.splitChunks) option instead.",
-      "deprecated": "Deprecated.",
+      "summary": "[`Performance.chunkSplit`](api:Performance.chunkSplit)",
+      "deprecated": "Use the top-level [`Config.splitChunks`](api:Config.splitChunks) option instead.",
       "members": [
         {
           "name": "override",
@@ -103,7 +103,7 @@
             "- Use `all-in-one` to put all modules in one chunk.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    chunkSplit: {\n      strategy: 'all-in-one',\n    },\n  },\n})\n```",
             "- Use `single-vendor` to put all third-party dependencies in one chunk. And source code in another chunk.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    chunkSplit: {\n      strategy: 'single-vendor',\n    },\n  },\n})\n```"
           ],
-          "default": "In Rsbuild's default chunk splitting behavior, the strategy is `'split-by-experience'`.",
+          "default": "Unset, which bundles everything into one chunk (same as `'all-in-one'`).",
           "kind": "property"
         }
       ]
@@ -112,8 +112,8 @@
       "name": "ChunkSplitBySize",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`Performance.chunkSplit`\n\n Use the top-level [`Config.splitChunks`](api:Config.splitChunks) option instead.",
-      "deprecated": "Deprecated.",
+      "summary": "[`Performance.chunkSplit`](api:Performance.chunkSplit)",
+      "deprecated": "Use the top-level [`Config.splitChunks`](api:Config.splitChunks) option instead.",
       "members": [
         {
           "name": "maxSize",
@@ -141,14 +141,14 @@
           "name": "override",
           "optional": true,
           "type": "false | OptimizationSplitChunksOptions",
-          "summary": "`ChunkSplit.override`",
+          "summary": "[`ChunkSplit.override`](api:ChunkSplit.override)",
           "default": "`undefined`",
           "kind": "property"
         },
         {
           "name": "strategy",
           "type": "\"split-by-size\"",
-          "summary": "`ChunkSplit.strategy`",
+          "summary": "[`ChunkSplit.strategy`](api:ChunkSplit.strategy)",
           "kind": "property"
         }
       ]
@@ -157,14 +157,14 @@
       "name": "ChunkSplitCustom",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`Performance.chunkSplit`\n\n Use the top-level [`Config.splitChunks`](api:Config.splitChunks) option instead.",
-      "deprecated": "Deprecated.",
+      "summary": "[`Performance.chunkSplit`](api:Performance.chunkSplit)",
+      "deprecated": "Use the top-level [`Config.splitChunks`](api:Config.splitChunks) option instead.",
       "members": [
         {
           "name": "splitChunks",
           "optional": true,
           "type": "false | OptimizationSplitChunksOptions",
-          "summary": "`ChunkSplit.override`",
+          "summary": "[`ChunkSplit.override`](api:ChunkSplit.override)",
           "examples": [
             "- Split `@lynx-js/react` and `react-router` into chunk `lib-react`.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    chunkSplit: {\n      strategy: 'custom',\n      splitChunks: {\n        cacheGroups: {\n          react: {\n            test: /node_modules[\\\\/](@lynx-js[\\\\/]react|react-router)[\\\\/]/,\n            name: 'lib-react',\n          },\n        },\n      },\n    },\n  },\n})\n```"
           ],
@@ -174,7 +174,7 @@
         {
           "name": "strategy",
           "type": "\"custom\"",
-          "summary": "`ChunkSplit.strategy`",
+          "summary": "[`ChunkSplit.strategy`](api:ChunkSplit.strategy)",
           "kind": "property"
         }
       ]
@@ -217,7 +217,7 @@
           "summary": "Specify the build mode for Rsbuild and Rspack, as each mode has different default behavior and optimizations.",
           "examples": [
             "```ts\nIf the value of `mode` is `'development'`:\n\n- Enable HMR and register the {@link https://rspack.rs/plugins/webpack/hot-module-replacement-plugin | HotModuleReplacementPlugin}.\n\n- Generate JavaScript and CSS source maps. In Lynx environments, all `.map` assets are removed before emit. See {@link Output.sourceMap} for details.\n\n- The `process.env.NODE_ENV` in the source code will be replaced with `'development'`.\n\n- The `import.meta.env.MODE` in the source code will be replaced with `'development'`.\n\n- The `import.meta.env.DEV` in the source code will be replaced with `true`.\n\n- The `import.meta.env.PROD` in the source code will be replaced with `false`.\n```",
-            "```ts\nIf the value of `mode` is `'production'`:\n\n- Enable JavaScript code minification and register the {@link https://rspack.rs/plugins/rspack/swc-js-minimizer-rspack-plugin | SwcJsMinimizerRspackPlugin}.\n\n- Generated JavaScript and CSS filenames will have hash suffixes, see {@link Output.filenameHash}.\n\n- Generated CSS Modules classnames will be shorter, see {@link CssModules.localIdentName}.\n\n- Generate JavaScript and CSS source maps. In Lynx environments, all `.map` assets are removed before emit. See {@link Output.sourceMap}.\n\n- The `process.env.NODE_ENV` in the source code will be replaced with `'production'`.\n\n- The `import.meta.env.MODE` in the source code will be replaced with `'production'`.\n\n- The `import.meta.env.DEV` in the source code will be replaced with `false`.\n\n- The `import.meta.env.PROD` in the source code will be replaced with `true`.\n```"
+            "```ts\nIf the value of `mode` is `'production'`:\n\n- Enable JavaScript code minification and register the {@link https://rspack.rs/plugins/rspack/swc-js-minimizer-rspack-plugin | SwcJsMinimizerRspackPlugin}.\n\n- Generated JavaScript filenames will have hash suffixes, see {@link Output.filenameHash}.\n\n- Generate JavaScript and CSS source maps. In Lynx environments, all `.map` assets are removed before emit. See {@link Output.sourceMap}.\n\n- The `process.env.NODE_ENV` in the source code will be replaced with `'production'`.\n\n- The `import.meta.env.MODE` in the source code will be replaced with `'production'`.\n\n- The `import.meta.env.DEV` in the source code will be replaced with `false`.\n\n- The `import.meta.env.PROD` in the source code will be replaced with `true`.\n```"
           ],
           "default": "Depends on `process.env.NODE_ENV`:\n\n- `'production'` when `NODE_ENV` is `'production'`\n- `'development'` when `NODE_ENV` is `'development'`\n- `'none'` otherwise\n\nWith Rspeedy's CLI, `rspeedy dev` and `rspeedy preview` default to `'development'`, and `rspeedy build` defaults to `'production'`.",
           "kind": "property"
@@ -296,7 +296,8 @@
           "optional": true,
           "type": "false | SplitChunksConfig",
           "summary": "Configure chunk splitting.",
-          "default": "Rspeedy defaults this to `false`; if configured, Rsbuild handles it with its top-level `splitChunks` option.\n\nSee [Rsbuild - splitChunks](https://rsbuild.rs/config/split-chunks) for details.",
+          "remarks": "See [Rsbuild - splitChunks](https://rsbuild.rs/config/split-chunks) for details.",
+          "default": "Lynx builds default this to `false`; if configured, Rsbuild handles it with its top-level `splitChunks` option.",
           "kind": "property"
         },
         {
@@ -394,7 +395,7 @@
       "name": "CssExtract",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`Tools.cssExtract`",
+      "summary": "[`Tools.cssExtract`](api:Tools.cssExtract)",
       "members": [
         {
           "name": "loaderOptions",
@@ -404,7 +405,7 @@
           "refs": [
             "CssExtractRspackLoaderOptions"
           ],
-          "summary": "`@lynx-js/css-extract-webpack-plugin#LoaderOptions`",
+          "summary": "[`LoaderOptions`](api:@lynx-js/css-extract-webpack-plugin#LoaderOptions)",
           "default": "`undefined`",
           "kind": "property"
         },
@@ -416,7 +417,7 @@
           "refs": [
             "CssExtractRspackPluginOptions"
           ],
-          "summary": "`@lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions`",
+          "summary": "[`CssExtractRspackPluginOptions`](api:@lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions)",
           "default": "`undefined`",
           "kind": "property"
         }
@@ -426,7 +427,7 @@
       "name": "CssExtractRspackLoaderOptions",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`@lynx-js/css-extract-webpack-plugin#LoaderOptions`",
+      "summary": "[`LoaderOptions`](api:@lynx-js/css-extract-webpack-plugin#LoaderOptions)",
       "members": [
         {
           "name": "esModule",
@@ -445,13 +446,13 @@
       "name": "CssExtractRspackPluginOptions",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`@lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions`",
+      "summary": "[`CssExtractRspackPluginOptions`](api:@lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions)",
       "members": [
         {
           "name": "ignoreOrder",
           "optional": true,
           "type": "boolean",
-          "summary": "`@lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions.ignoreOrder`",
+          "summary": "[`CssExtractRspackPluginOptions.ignoreOrder`](api:@lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions.ignoreOrder)",
           "default": "`undefined`",
           "kind": "property"
         },
@@ -459,7 +460,7 @@
           "name": "pathinfo",
           "optional": true,
           "type": "boolean",
-          "summary": "`@lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions.pathinfo`",
+          "summary": "[`CssExtractRspackPluginOptions.pathinfo`](api:@lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions.pathinfo)",
           "default": "`undefined`",
           "kind": "property"
         }
@@ -469,7 +470,7 @@
       "name": "CssLoader",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`Tools.cssLoader`",
+      "summary": "[`Tools.cssLoader`](api:Tools.cssLoader)",
       "members": [
         {
           "name": "importLoaders",
@@ -503,13 +504,13 @@
       "name": "CssLoaderModules",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`CssLoader.modules`",
+      "summary": "[`CssLoader.modules`](api:CssLoader.modules)",
       "members": [
         {
           "name": "auto",
           "optional": true,
           "type": "boolean | RegExp | ((filename: string) => boolean)",
-          "summary": "`CssModules.auto`",
+          "summary": "[`CssModules.auto`](api:CssModules.auto)",
           "default": "`true`",
           "kind": "property"
         },
@@ -521,7 +522,7 @@
           "refs": [
             "CssModuleLocalsConvention"
           ],
-          "summary": "`CssModules.exportLocalsConvention`",
+          "summary": "[`CssModules.exportLocalsConvention`](api:CssModules.exportLocalsConvention)",
           "default": "`'camelCase'`",
           "kind": "property"
         },
@@ -529,7 +530,7 @@
           "name": "localIdentName",
           "optional": true,
           "type": "string",
-          "summary": "`CssModules.localIdentName`",
+          "summary": "[`CssModules.localIdentName`](api:CssModules.localIdentName)",
           "default": "`'[local]-[hash:base64:6]'`",
           "kind": "property"
         },
@@ -539,7 +540,7 @@
           "type": "boolean",
           "summary": "Enables/disables ES modules named export for locals.",
           "examples": [
-            "- `style.css`\n\n```css\n.foo-baz {\n  color: red;\n}\n.bar {\n  color: blue;\n}\n.default {\n  color: green;\n}\n```\n\n- `index.js`\n\n```js\nimport * as styles from \"./styles.css\";\n\n// If using `exportLocalsConvention: \"as-is\"` (default value):\nconsole.log(styles[\"foo-baz\"], styles.bar);\n\n// If using `exportLocalsConvention: \"camel-case-only\"`:\nconsole.log(styles.fooBaz, styles.bar);\n\n// For the `default` class name\nconsole.log(styles[\"_default\"]);\n```"
+            "- `style.css`\n\n```css\n.foo-baz {\n  color: red;\n}\n.bar {\n  color: blue;\n}\n.default {\n  color: green;\n}\n```\n\n- `index.js`\n\n```js\nimport * as styles from \"./styles.css\";\n\n// If using `exportLocalsConvention: \"asIs\"`:\nconsole.log(styles[\"foo-baz\"], styles.bar);\n\n// If using `exportLocalsConvention: \"camelCaseOnly\"`:\nconsole.log(styles.fooBaz, styles.bar);\n\n// For the `default` class name\nconsole.log(styles[\"_default\"]);\n```"
           ],
           "default": "`false`",
           "kind": "property"
@@ -550,7 +551,7 @@
       "name": "CssModules",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`Output.cssModules`",
+      "summary": "[`Output.cssModules`](api:Output.cssModules)",
       "members": [
         {
           "name": "auto",
@@ -605,7 +606,7 @@
       "name": "Decorators",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`Source.decorators`",
+      "summary": "[`Source.decorators`](api:Source.decorators)",
       "members": [
         {
           "name": "version",
@@ -626,18 +627,18 @@
       "name": "Dev",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`Config.dev`",
+      "summary": "[`Config.dev`](api:Config.dev)",
       "members": [
         {
           "name": "assetPrefix",
           "optional": true,
           "type": "string | boolean",
           "summary": "The [`Dev.assetPrefix`](api:Dev.assetPrefix) is used to set the URL prefix for static assets during development.",
-          "remarks": "During `rspeedy dev`, if this option is not set to `false`, the dev plugin normalizes it to `http://<detected-host>:<port>/` and appends `server.base` when configured.\n\nThe functionality of [`Dev.assetPrefix`](api:Dev.assetPrefix) is basically the same as the [output.publicPath](https://rspack.rs/config/output#outputpublicpath)\nconfig in Rspack. With the following differences:\n\n- `dev.assetPrefix` only takes effect during development.\n\n- `dev.assetPrefix` automatically appends a trailing `/` by default.\n\n- The value of `dev.assetPrefix` is written to the `process.env.ASSET_PREFIX` environment variable.",
+          "remarks": "In development, `true` or unset becomes `http://<detected-host>:<port>/`. A string is kept, with its port changed to `server.port` when that is set and the string has no `<port>` placeholder. `server.base` is appended when configured.\n\nThe functionality of [`Dev.assetPrefix`](api:Dev.assetPrefix) is basically the same as the [output.publicPath](https://rspack.rs/config/output#outputpublicpath)\nconfig in Rspack. With the following differences:\n\n- `dev.assetPrefix` only takes effect during development.\n\n- `dev.assetPrefix` automatically appends a trailing `/` by default.\n\n- The value of `dev.assetPrefix` is written to the `process.env.ASSET_PREFIX` environment variable.",
           "examples": [
             "If `dev.assetPrefix` is set to true, the URL prefix will be `http://<host>:<port>/`:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  dev: {\n    assetPrefix: true,\n  },\n})\n```",
             "If `dev.assetPrefix` is set to a string, the value will be used as a prefix and automatically appended to the static resource URL.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  dev: {\n    assetPrefix: 'https://example.com/assets/',\n  },\n})\n```",
-            "The port number that Rspeedy server listens on may change. For example, if the port is in use, Rspeedy will automatically increment the port number until it finds an available port.\n\nTo avoid `dev.assetPrefix` becoming invalid due to port changes, you can use one of the following methods:\n\n- Enable `server.strictPort`.\n\n- Use the `<port>` placeholder to refer to the current port number. Rspeedy will replace the placeholder with the actual port number it is listening on.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  dev: {\n    assetPrefix: 'https://example.com:<port>/assets/',\n  },\n})\n```"
+            "The port number that the dev server listens on may change. For example, if the port is in use, the dev server will automatically increment the port number until it finds an available port.\n\nTo avoid `dev.assetPrefix` becoming invalid due to port changes, you can use one of the following methods:\n\n- Enable `server.strictPort`.\n\n- Use the `<port>` placeholder to refer to the current port number. Rspeedy will replace the placeholder with the actual port number it is listening on.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  dev: {\n    assetPrefix: 'https://example.com:<port>/assets/',\n  },\n})\n```"
           ],
           "default": "`undefined`",
           "kind": "property"
@@ -647,7 +648,7 @@
           "optional": true,
           "type": "boolean",
           "summary": "Whether to enable Hot Module Replacement (HMR).",
-          "remarks": "By default, Rspeedy uses HMR as the preferred method to update modules. If HMR is disabled or cannot be used in certain scenarios, it will automatically fallback to [`Dev.liveReload`](api:Dev.liveReload).\n\nTo completely disable both HMR and live reload, set both `dev.hmr` and `dev.liveReload` to `false`. Then, no WebSocket requests will be made to the dev server on the page, and the page will not automatically refresh when file changes.",
+          "remarks": "By default, the dev server uses HMR as the preferred method to update modules. If HMR is disabled or cannot be used in certain scenarios, it will automatically fallback to [`Dev.liveReload`](api:Dev.liveReload).\n\nTo completely disable both HMR and live reload, set both `dev.hmr` and `dev.liveReload` to `false`. Then, no WebSocket requests will be made to the dev server on the page, and the page will not automatically refresh when file changes.",
           "examples": [
             "Disable HMR:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    hmr: false,\n  },\n})\n```",
             "Disable both HMR and live reload:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    hmr: false,\n    liveReload: false,\n  },\n})\n```"
@@ -660,11 +661,12 @@
           "optional": true,
           "type": "boolean",
           "summary": "Whether to enable live reload functionality.",
+          "remarks": "Live reload is used as a fallback when [`Dev.hmr`](api:Dev.hmr) is disabled or cannot be used in certain scenarios. When enabled, the page will automatically refresh when source files are changed.\n\nTo completely disable both HMR and live reload, set both `dev.hmr` and `dev.liveReload` to `false`. Then, no WebSocket requests will be made to the dev server on the page, and the page will not automatically refresh when file changes.",
           "examples": [
             "Disable live reload:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    liveReload: false,\n  },\n})\n```",
             "Disable both HMR and live reload:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    hmr: false,\n    liveReload: false,\n  },\n})\n```"
           ],
-          "default": "true\n\nLive reload is used as a fallback when [`Dev.hmr`](api:Dev.hmr) is disabled or cannot be used in certain scenarios. When enabled, the page will automatically refresh when source files are changed.\n\nTo completely disable both HMR and live reload, set both `dev.hmr` and `dev.liveReload` to `false`. Then, no WebSocket requests will be made to the dev server on the page, and the page will not automatically refresh when file changes.",
+          "default": "`true`",
           "kind": "property"
         },
         {
@@ -766,7 +768,7 @@
           "name": "entries",
           "optional": true,
           "type": "RsbuildEntry",
-          "summary": "Used for plugin qrcode get entry points from self-defined environments rather than default lynx environment.",
+          "summary": "Entry points of self-defined environments. Rspeedy no longer sets this field.",
           "kind": "property"
         },
         {
@@ -793,7 +795,7 @@
       "name": "Filename",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`Output.filename`",
+      "summary": "[`Output.filename`](api:Output.filename)",
       "members": [
         {
           "name": "assets",
@@ -879,13 +881,13 @@
           "name": "template",
           "optional": true,
           "type": "string",
-          "summary": "The name of the template files.\n\n\n\nUse [`Filename.bundle`](api:Filename.bundle) instead.",
+          "summary": "The name of the template files.",
           "remarks": "The following placeholder is supported:\n\n- `[name]`: the name of the entry.\n- `[contenthash]`: the contenthash of the template.",
           "examples": [
             "- Using content hash in bundle filename:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filename: {\n      template: '[name].[contenthash].bundle',\n    },\n  },\n})\n```",
             "- Using content hash with length in bundle filename:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filename: {\n      template: '[name].[contenthash:8].bundle',\n    },\n  },\n})\n```"
           ],
-          "deprecated": "Deprecated.",
+          "deprecated": "Use [`Filename.bundle`](api:Filename.bundle) instead.",
           "default": "`'[name].[platform].bundle'`",
           "kind": "property"
         },
@@ -952,7 +954,7 @@
       "name": "Minify",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`Output.minify`",
+      "summary": "[`Output.minify`](api:Output.minify)",
       "members": [
         {
           "name": "backgroundOptions",
@@ -1016,7 +1018,7 @@
       "name": "Output",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`Config.output`",
+      "summary": "[`Config.output`](api:Config.output)",
       "members": [
         {
           "name": "assetPrefix",
@@ -1107,7 +1109,7 @@
           "refs": [
             "Filename"
           ],
-          "summary": "The [`Filename`](api:Filename) determines the name of the JavaScript bundle file to be output. These bundles will be written to the directory specified by output.path.",
+          "summary": "The [`Filename`](api:Filename) determines the name of the Lynx bundle files emitted under [`Output.distPath`](api:Output.distPath).",
           "remarks": "If a string is provided, it will be used as [`Filename.bundle`](api:Filename.bundle).",
           "examples": [
             "```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    filename: '[name]/[name].lynx.bundle',\n  },\n})\n```"
@@ -1137,7 +1139,7 @@
           "examples": [
             "Disable inlining background thread scripts.\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    inlineScripts: false,\n  },\n})\n```"
           ],
-          "default": "Rspeedy defaults this to `true` and only switches it to `false` when the user explicitly enables the top-level `splitChunks` option.",
+          "default": "Rspeedy defaults this to `true` and only switches it to `false` when the user explicitly enables the top-level `splitChunks` option, or sets the deprecated `performance.chunkSplit.strategy` to anything other than `'all-in-one'`. On plain Rsbuild, the Rsbuild default applies.",
           "kind": "property"
         },
         {
@@ -1182,7 +1184,7 @@
       "name": "Performance",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`Config.performance`",
+      "summary": "[`Config.performance`](api:Config.performance)",
       "members": [
         {
           "name": "buildCache",
@@ -1193,11 +1195,12 @@
             "BuildCache"
           ],
           "summary": "Enable or configure persistent build cache.",
+          "remarks": "This feature is experimental and may be changed in the future.",
           "examples": [
             "Enable persistent build cache.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    buildCache: true,\n  },\n})\n```",
             "Customize build cache.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    buildCache: {\n      cacheDigest: [process.env.SOME_ENV],\n      buildDependencies: ['postcss.config.js'],\n    },\n  },\n})\n```"
           ],
-          "default": "```ts\nfalse\n\n@beta This feature is experimental and may be changed in the future.\n```",
+          "default": "`false`",
           "beta": true,
           "kind": "property"
         },
@@ -1211,8 +1214,8 @@
             "ChunkSplitCustom"
           ],
           "summary": "[`Performance.chunkSplit`](api:Performance.chunkSplit) is used to configure the chunk splitting strategy.",
-          "deprecated": "Deprecated.",
-          "default": "For web builds, Rsbuild currently uses `{ strategy: 'split-by-experience' }` when this option is unset.\n\n Use the top-level [`Config.splitChunks`](api:Config.splitChunks) option instead.",
+          "deprecated": "Use the top-level [`Config.splitChunks`](api:Config.splitChunks) option instead.",
+          "default": "Unset, which bundles everything into one chunk (same as `'all-in-one'`).",
           "kind": "property"
         },
         {
@@ -1220,15 +1223,16 @@
           "optional": true,
           "type": "boolean | PrintFileSizeOptions",
           "summary": "Whether to print the file sizes after production build.",
+          "remarks": "See [Rsbuild - performance.printFileSize](https://rsbuild.rs/config/performance/print-file-size) for details.",
           "examples": [
             "If you don't want to print any information, you can disable it by setting printFileSize to false:\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    printFileSize: false\n  },\n})\n```",
             "Set total to false to disable total size output.\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    printFileSize: {\n      total: false,\n    },\n  },\n})\n```",
             "Set detail to false to disable per-asset size output.\n\nIf you don't need to view the size of each static asset, you can set detail to false. In this case, only the total size will be output:\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    printFileSize: {\n      detail: false,\n    },\n  },\n})\n```",
             "If you don't need to view the gzipped size, you can set compressed to false. This can save some gzip computation time for large projects:\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    printFileSize: {\n      compressed: false,\n    },\n  },\n})\n```",
             "To include only static assets that meet certain criteria, use a filter function with include.\n\nIf returned false, the static asset will be excluded and not included in the total size or detailed size.\n\nonly output static assets larger than 10kB:\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    printFileSize: {\n      include: (asset) => asset.size > 10 * 1000,\n    }\n  },\n})\n```",
-            "To exclude static assets that meet certain criteria, use a filter function with exclude. If both include and exclude are set, exclude will take precedence.\n\nRspeedy defaults to excluding source map, license files, and .d.ts type files, as these files do not affect page load performance.\n\nexclude .html files in addition to the default:\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    printFileSize: {\n      exclude: (asset) =>\n        /\\.(?:map|LICENSE\\.txt)$/.test(asset.name) ||\n        /\\.html$/.test(asset.name),\n    }\n  },\n})\n```"
+            "To exclude static assets that meet certain criteria, use a filter function with exclude. If both include and exclude are set, exclude will take precedence.\n\nRsbuild defaults to excluding source map, license files, and .d.ts type files, as these files do not affect page load performance.\n\nexclude .html files in addition to the default:\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    printFileSize: {\n      exclude: (asset) =>\n        /\\.(?:map|LICENSE\\.txt)$/.test(asset.name) ||\n        /\\.html$/.test(asset.name),\n    }\n  },\n})\n```"
           ],
-          "default": "true\n\n[`Performance.printFileSize`](api:Performance.printFileSize)\n\nSee [Rsbuild - performance.printFileSize](https://rsbuild.rs/config/performance/print-file-size) for details.",
+          "default": "`true`",
           "kind": "property"
         },
         {
@@ -1239,7 +1243,7 @@
           "examples": [
             "Enable profile.\n\n- Frameworks like ReactLynx will include runtime information using `console.profile`.\n- Rspeedy will emit `dist/stats.json` after build for bundle analysis compatibility.\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: { profile: true },\n})\n```"
           ],
-          "default": "Rspeedy sets this to `true` when `DEBUG` contains `rspeedy`; otherwise it leaves the option unset.",
+          "default": "Rspeedy and `pluginReactLynx` set this to `true` when `DEBUG` contains `lynx`, `rspeedy` or `*` (Rspeedy also accepts `rsbuild`); otherwise the option is left unset.",
           "kind": "property"
         },
         {
@@ -1263,7 +1267,7 @@
       "name": "Resolve",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`Config.resolve`",
+      "summary": "[`Config.resolve`](api:Config.resolve)",
       "members": [
         {
           "name": "alias",
@@ -1283,10 +1287,11 @@
           "optional": true,
           "type": "\"prefer-tsconfig\" | \"prefer-alias\"",
           "summary": "Set the strategy for path alias resolution, to control the priority relationship\nbetween the `paths` option in `tsconfig.json` and the `resolve.alias` option of Rsbuild.",
+          "remarks": "- `prefer-tsconfig` (default): The `paths` option in `tsconfig.json` will take precedence over the\n`resolve.alias` option of Rsbuild.\n- `prefer-alias`: The `resolve.alias` option of Rsbuild will take precedence over the\n`paths` option in `tsconfig.json`.",
           "examples": [
             "```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  resolve: {\n    alias: {\n      '@': './src',\n    },\n    aliasStrategy: 'prefer-alias',\n  },\n})\n```"
           ],
-          "default": "`'prefer-tsconfig'`\n\n- `prefer-tsconfig` (default): The `paths` option in `tsconfig.json` will take precedence over the\n`resolve.alias` option of Rsbuild.\n- `prefer-alias`: The `resolve.alias` option of Rsbuild will take precedence over the\n`paths` option in `tsconfig.json`.",
+          "default": "`'prefer-tsconfig'`",
           "kind": "property"
         },
         {
@@ -1306,11 +1311,11 @@
           "optional": true,
           "type": "string[]",
           "summary": "Automatically resolve file extensions when importing modules. This means you can import files without explicitly writing their extensions.",
-          "remarks": "The difference between `resolve.extensions` and `tools.rspack.resolve.extensions`:\n\n`resolve.extensions`: Completely overrides Rspeedy's default resolution.\n\n`tools.rspack.resolve.extensions`: Merges with the default configuration using [`webpack-merge`](https://github.com/survivejs/webpack-merge).",
+          "remarks": "For example, if importing './index', Rsbuild will try to resolve using the following order:\n\n- `./index.ts`\n\n- `./index.tsx`\n\n- `./index.mjs`\n\n- `./index.js`\n\n- `./index.jsx`\n\n- `./index.json`\n\n- `./index.cjs`\n\nThe difference between `resolve.extensions` and `tools.rspack.resolve.extensions`:\n\n`resolve.extensions`: Replaces the default list; `pluginLynx` still appends `.cjs`.\n\n`tools.rspack.resolve.extensions`: Merges with the default configuration using [`webpack-merge`](https://github.com/survivejs/webpack-merge).",
           "examples": [
             "```js\nexport default {\n  resolve: {\n    extensions: ['.ts', '.tsx', '.js'],\n  },\n}\n```"
           ],
-          "default": "`['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json', '.cjs']`\n\nFor example, if importing './index', Rsbuild will try to resolve using the following order:\n\n- `./index.ts`\n\n- `./index.tsx`\n\n- `./index.mjs`\n\n- `./index.js`\n\n- `./index.jsx`\n\n- `./index.json`\n\n- `./index.cjs`",
+          "default": "`['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json', '.cjs']`",
           "kind": "property"
         }
       ]
@@ -1333,7 +1338,7 @@
       "name": "Server",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`Config.server`",
+      "summary": "[`Config.server`](api:Config.server)",
       "members": [
         {
           "name": "base",
@@ -1352,12 +1357,13 @@
           "optional": true,
           "type": "boolean | CompressOptions",
           "summary": "Configure whether to enable [gzip compression](https://developer.mozilla.org/en-US/docs/Glossary/gzip_compression) for static assets served by the dev server or preview server.",
+          "remarks": "See [Rsbuild - server.compress](https://rsbuild.rs/config/server/compress) for details.",
           "examples": [
             "To disable the gzip compression, set compress to false:\n\n```js\nexport default {\n  server: {\n    compress: false,\n  },\n}\n```",
             "Compress if it starts with /foo\n\n```js\nexport default {\n  server: {\n    compress: {\n      filter: (req) => {\n        if (req.url?.includes('/foo')) {\n          return false;\n        }\n        return true;\n      },\n    },\n  },\n}\n```",
             "set level of zlib compression\n\n```js\nexport default {\n  server: {\n    compress: {\n      level: 6,\n    },\n  },\n}\n```"
           ],
-          "default": "true\n\nSee [Rsbuild - server.compress](https://rsbuild.rs/config/server/compress) for details.",
+          "default": "`true`",
           "kind": "property"
         },
         {
@@ -1365,10 +1371,11 @@
           "optional": true,
           "type": "boolean | CorsOptions",
           "summary": "Configure CORS for the dev server or preview server.",
+          "remarks": "- Set to an object to enable CORS with the specified options.\n\n- Set to `true` to enable CORS with the default options (allows all origins, not recommended).\n\n- Set to `false` to disable CORS.\n\nSee [Rsbuild - server.cors](https://rsbuild.rs/config/server/cors) for details.",
           "examples": [
             "```js\nexport default {\n  server: {\n    cors: {\n      origin: 'https://example.com',\n    },\n  },\n}\n```"
           ],
-          "default": "Uses Rsbuild's default CORS options.\n\n- Set to an object to enable CORS with the specified options.\n\n- Set to `true` to enable CORS with the default options (allows all origins, not recommended).\n\n- Set to `false` to disable CORS.\n\nSee [Rsbuild - server.cors](https://rsbuild.rs/config/server/cors) for details.",
+          "default": "Uses Rsbuild's default CORS options.",
           "kind": "property"
         },
         {
@@ -1386,8 +1393,8 @@
           "name": "host",
           "optional": true,
           "type": "string",
-          "summary": "Specify the host that the Rspeedy Server listens to.",
-          "remarks": "During `rspeedy dev`, if `server.host` is unset, the dev plugin keeps the server bound to the IPv4 wildcard address while resolving dev-server-related URLs and client host settings with a detected non-loopback IPv4 address, such as `192.168.1.50`. If no eligible IPv4 address exists, it binds to the IPv6 wildcard address and uses a detected IPv6 address for URLs. It falls back to an IPv4 loopback URL when no non-loopback IP is available. If you have multiple network interfaces, set `server.host` explicitly to choose the desired address.",
+          "summary": "Specify the host that the dev server listens to.",
+          "remarks": "In development, if `server.host` is unset, the dev server stays bound to the IPv4 wildcard address while resolving dev-server-related URLs and client host settings with a detected non-loopback IPv4 address, such as `192.168.1.50`. If no eligible IPv4 address exists, it binds to the IPv6 wildcard address and uses a detected IPv6 address for URLs. It falls back to an IPv4 loopback URL when no non-loopback IP is available. If you have multiple network interfaces, set `server.host` explicitly to choose the desired address.",
           "examples": [
             "Set the host to a custom value:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  server: {\n    host: \"192.168.1.50\",\n  },\n})\n```"
           ],
@@ -1398,7 +1405,7 @@
           "name": "port",
           "optional": true,
           "type": "number",
-          "summary": "Specify the port that the Rspeedy Server listens to.",
+          "summary": "Specify the port that the dev server listens to.",
           "remarks": "By default, the server automatically increments the port number when the configured port is occupied.",
           "examples": [
             "Set the port to a custom value:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  server: {\n    port: 3470,\n  },\n})\n```"
@@ -1421,8 +1428,9 @@
           "name": "strictPort",
           "optional": true,
           "type": "boolean",
-          "summary": "When a port is occupied, Rspeedy will automatically increment the port number until an available port is found.",
-          "default": "```ts\nfalse\n\nBy default, strict port mode is disabled. Set strictPort to true and Rspeedy will throw an exception when the port is occupied.\n```",
+          "summary": "When a port is occupied, the dev server will automatically increment the port number until an available port is found.",
+          "remarks": "By default, strict port mode is disabled. Set strictPort to true and the dev server will throw an exception when the port is occupied.",
+          "default": "`false`",
           "kind": "property"
         }
       ]
@@ -1431,14 +1439,14 @@
       "name": "Source",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`Config.source`",
+      "summary": "[`Config.source`](api:Config.source)",
       "members": [
         {
           "name": "alias",
           "optional": true,
           "type": "Record<string, string | false | string[]>",
-          "summary": "`Resolve.alias`\n\n - Use [`Resolve.alias`](api:Resolve.alias) instead.",
-          "deprecated": "Deprecated.",
+          "summary": "[`Resolve.alias`](api:Resolve.alias)",
+          "deprecated": "- Use [`Resolve.alias`](api:Resolve.alias) instead.",
           "default": "`undefined`",
           "kind": "property"
         },
@@ -1556,7 +1564,7 @@
           "optional": true,
           "type": "string",
           "summary": "Configure a custom `tsconfig.json` file path to use, can be a relative or absolute path.",
-          "remarks": "The `tsconfigPath` configuration affects the following behaviors:\n\n- The `paths` field is used to configure [`Path Aliases`](api:Source.alias).\n\n- Sets the scope and rules for the [Type Check Plugin](https://rsbuild.rs/guide/basic/typescript#type-checking).",
+          "remarks": "The `tsconfigPath` configuration affects the following behaviors:\n\n- The `paths` field is used to configure [`Path Aliases`](api:Resolve.alias).\n\n- Sets the scope and rules for the [Type Check Plugin](https://rsbuild.rs/guide/basic/typescript#type-checking).",
           "examples": [
             "Relative path will be resolved relative to the project root directory.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    tsconfigPath: './tsconfig.build.json',\n  },\n})\n```"
           ],
@@ -1569,7 +1577,7 @@
       "name": "SourceMap",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`Output.sourceMap`",
+      "summary": "[`Output.sourceMap`](api:Output.sourceMap)",
       "members": [
         {
           "name": "css",
@@ -1603,7 +1611,7 @@
       "name": "Tools",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`Config.tools`",
+      "summary": "[`Config.tools`](api:Config.tools)",
       "members": [
         {
           "name": "bundlerChain",
@@ -1685,7 +1693,7 @@
       "name": "TransformImport",
       "kind": "interface",
       "type": "unknown",
-      "summary": "`Source.transformImport`",
+      "summary": "[`Source.transformImport`](api:Source.transformImport)",
       "members": [
         {
           "name": "camelToDashComponentName",
@@ -1757,7 +1765,7 @@
       "name": "CssModuleLocalsConvention",
       "kind": "typealias",
       "type": "\"asIs\" | \"camelCase\" | \"camelCaseOnly\" | \"dashes\" | \"dashesOnly\"",
-      "summary": "`CssModules.exportLocalsConvention`",
+      "summary": "[`CssModules.exportLocalsConvention`](api:CssModules.exportLocalsConvention)",
       "literalUnion": [
         "\"asIs\"",
         "\"camelCase\"",
@@ -1773,7 +1781,7 @@
       "refs": [
         "EntryDescription"
       ],
-      "summary": "`Source.entry`",
+      "summary": "[`Source.entry`](api:Source.entry)",
       "examples": [
         "- Use a single entry:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: './src/pages/main/index.js',\n  }\n})\n```",
         "- Use a single entry with multiple entry modules:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: ['./src/prefetch.js', './src/pages/main/index.js'],\n  }\n})\n```",

@@ -12,8 +12,8 @@
     "text": "ReactLynx 的 loader。"
   },
   "ReactWebpackPlugin.loaders.remarks": {
-    "en": "Note that this loader will only transform JSX/TSX to valid JavaScript.\nFor `.tsx` files, the type annotations would not be eliminated.\nYou should use `babel-loader` or `swc-loader` to load TypeScript files.",
-    "text": "注意，该 loader 只会将 JSX/TSX 转换为合法的 JavaScript。\n对于 `.tsx` 文件，类型注解不会被移除。\n你应使用 `babel-loader` 或 `swc-loader` 来加载 TypeScript 文件。"
+    "en": "Note that this loader transforms JSX/TSX to valid JavaScript.\nFor `.ts` and `.tsx` files, the TypeScript types are stripped as well.",
+    "text": "注意，该 loader 会将 JSX/TSX 转换为合法的 JavaScript。对于 `.ts` 和 `.tsx` 文件，还会同时移除 TypeScript 类型。"
   },
   "ReactWebpackPlugin.apply.summary": {
     "en": "The entry point of a webpack plugin.",
@@ -61,7 +61,7 @@
   },
   "ReactWebpackPluginOptions.entryPairs.summary": {
     "en": "The main-thread and background entry pairs to merge the main-thread\ndefinitions across.",
-    "text": "主线程与后台入口对，用于在其间合并主线程\n定义。"
+    "text": "主线程与后台入口对，用于在其间合并主线程定义。"
   },
   "ReactWebpackPluginOptions.experimental_isLazyBundle.summary": {
     "en": "Whether to enable lazy bundle.",
@@ -69,7 +69,7 @@
   },
   "ReactWebpackPluginOptions.experimental_transformBuiltinAttributeNames.summary": {
     "en": "The builtin attribute-name transform configuration used by runtime spread\nattributes.",
-    "text": "运行时展开属性（spread attributes）所使用的\n内置属性名转换配置。"
+    "text": "运行时展开属性（spread attributes）所使用的内置属性名转换配置。"
   },
   "ReactWebpackPluginOptions.experimental_useElementTemplate.summary": {
     "en": "Whether to enable Element Template compilation.",
@@ -77,7 +77,7 @@
   },
   "ReactWebpackPluginOptions.extractStr.summary": {
     "en": "Merge same string literals in JS and Lepus to reduce output bundle size.\nSet to `false` to disable.",
-    "text": "合并 JS 和 Lepus 中相同的字符串字面量，以减小输出 bundle 的体积。\n设置为 `false` 可禁用。"
+    "text": "合并 JS 和 Lepus 中相同的字符串字面量，以减小输出 bundle 的体积。设置为 `false` 可禁用。"
   },
   "ReactWebpackPluginOptions.lazyBundleFetcher.summary": {
     "en": "Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.\n`pluginReactLynx`) from the host engine version and any\n`REACT_LAZY_BUNDLE_FETCHER` env override.",

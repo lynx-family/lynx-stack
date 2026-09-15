@@ -127,6 +127,10 @@
     "en": "The absolute URL of the Lynx bundle to navigate to (e.g., `'http://localhost:8080/dist/main.lynx.bundle'`).",
     "text": "要导航到的 Lynx bundle 的绝对 URL（例如 `'http://localhost:8080/dist/main.lynx.bundle'`）。"
   },
+  "KittenLynxView.goto.params.options": {
+    "en": "Optional settings. `options.timeout` is how long to poll for the matching session, in milliseconds (default 30000).",
+    "text": "可选设置。`options.timeout` 表示轮询匹配会话的时长，单位为毫秒（默认 30000）。"
+  },
   "KittenLynxView.locator.summary": {
     "en": "Locates the first DOM element matching the provided CSS selector in the current page.\n\n**Agent Usage:**\nThis operates identically to `document.querySelector` or Playwright's `page.locator()`.\nIt relies on the `DOM` CDP domain. Always ensure that `goto()` has completed successfully before calling this,\notherwise the DOM tree will not exist.",
     "text": "在当前页面中定位第一个匹配给定 CSS 选择器的 DOM 元素。\n\n**Agent 用法：**\n行为与 `document.querySelector` 或 Playwright 的 `page.locator()` 完全一致。它依赖 CDP 的 `DOM` 域。调用前务必确保 `goto()` 已成功完成，否则 DOM 树尚不存在。"

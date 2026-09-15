@@ -34,10 +34,10 @@ This only works in environment that has `NativeModules.LynxWebSocketModule`.
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="websocket-closed"></a>`CLOSED` | [`ReadyState`](#readystate) | `@lynx-js/websocket#ReadyState.CLOSED` |
-| <a id="websocket-closing"></a>`CLOSING` | [`ReadyState`](#readystate) | `@lynx-js/websocket#ReadyState.CLOSING` |
-| <a id="websocket-connecting"></a>`CONNECTING` | [`ReadyState`](#readystate) | `@lynx-js/websocket#ReadyState.CONNECTING` |
-| <a id="websocket-open"></a>`OPEN` | [`ReadyState`](#readystate) | `@lynx-js/websocket#ReadyState.OPEN` |
+| <a id="websocket-closed"></a>`CLOSED` | [`ReadyState`](#readystate) | [`ReadyState.CLOSED`](#readystate-closed) |
+| <a id="websocket-closing"></a>`CLOSING` | [`ReadyState`](#readystate) | [`ReadyState.CLOSING`](#readystate-closing) |
+| <a id="websocket-connecting"></a>`CONNECTING` | [`ReadyState`](#readystate) | [`ReadyState.CONNECTING`](#readystate-connecting) |
+| <a id="websocket-open"></a>`OPEN` | [`ReadyState`](#readystate) | [`ReadyState.OPEN`](#readystate-open) |
 | <a id="websocket-onclose"></a>`onclose` | `((event: Event<"close"> & { code: number; reason: string }) => void) \| null` | onclose is the Web-style callback of [`WebSocket`](#websocket). |
 | <a id="websocket-onerror"></a>`onerror` | `((event: Event<"error"> & { message: string }) => void) \| null` | onerror is the Web-style callback of [`WebSocket`](#websocket). |
 | <a id="websocket-onmessage"></a>`onmessage` | `((event: Event<"message"> & { data: string }) => void) \| null` | onmessage is the Web-style callback of [`WebSocket`](#websocket). |
@@ -67,7 +67,7 @@ The `addEventListener()` method of the `EventTarget` interface sets up a functio
 | Parameters | Type | Description |
 | --- | --- | --- |
 | `type` | `T` | A case-sensitive string representing the event type to listen for. |
-| `callback?` | `(event: `[`EventMap`](#eventmap)`[T]) => void` | The function that receives a notification. See `@lynx-js/websocket#EventMap` for details of events. |
+| `callback?` | `(event: `[`EventMap`](#eventmap)`[T]) => void` | The function that receives a notification. See [`EventMap`](#eventmap) for details of events. |
 
 #### `WebSocket.close` \{#websocket-close\}
 
@@ -136,6 +136,6 @@ An implementation of `Event` interface, that wraps a given event object.
 
 ### `EventMap` \{#eventmap\}
 
-The `EventMap` describe the events that `@lynx-js/websocket#WebSocket` may fire.
+The `EventMap` describe the events that [`WebSocket`](#websocket) may fire.
 
 {/* @api-end */}

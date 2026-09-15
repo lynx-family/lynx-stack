@@ -36,8 +36,7 @@ function cssChunksToMap(cssChunks: (string | CSSChunkAsset)[], plugins: Plugin[]
 
 将 CSS chunk 转换为 `cssMap` / `cssSource`。
 
-`loc` 字段保留 bundle CSS 中的坐标，以便后续
-通过 `main.css.map` 解析。
+`loc` 字段保留 bundle CSS 中的坐标，以便后续通过 `main.css.map` 解析。
 
 `cssSource` 有意保留历史上的 `/cssId/<id>.css` 形式。
 

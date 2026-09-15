@@ -76,8 +76,8 @@
     "text": "表示要监听的事件类型的字符串，区分大小写。"
   },
   "WebSocket.addEventListener.params.callback": {
-    "en": "The function that receives a notification. See `@lynx-js/websocket#EventMap` for details of events.",
-    "text": "接收通知的函数。事件详情参见 `@lynx-js/websocket#EventMap`。"
+    "en": "The function that receives a notification. See [`EventMap`](api:@lynx-js/websocket#EventMap) for details of events.",
+    "text": "接收通知的函数。事件详情参见 [`EventMap`](api:@lynx-js/websocket#EventMap)。"
   },
   "WebSocket.close.summary": {
     "en": "The `close()` method closes the [`WebSocket`](api:WebSocket) connection or connection attempt, if any.",
@@ -128,7 +128,7 @@
     "text": "该事件的类型。"
   },
   "EventMap.summary": {
-    "en": "The `EventMap` describe the events that `@lynx-js/websocket#WebSocket` may fire.",
-    "text": "`EventMap` 描述 `@lynx-js/websocket#WebSocket` 可能触发的事件。"
+    "en": "The `EventMap` describe the events that [`WebSocket`](api:@lynx-js/websocket#WebSocket) may fire.",
+    "text": "`EventMap` 描述 [`WebSocket`](api:@lynx-js/websocket#WebSocket) 可能触发的事件。"
   }
 }

@@ -80,7 +80,7 @@
           "refs": [
             "ReadyState"
           ],
-          "summary": "`@lynx-js/websocket#ReadyState.CLOSED`",
+          "summary": "[`ReadyState.CLOSED`](api:@lynx-js/websocket#ReadyState.CLOSED)",
           "kind": "property"
         },
         {
@@ -89,7 +89,7 @@
           "refs": [
             "ReadyState"
           ],
-          "summary": "`@lynx-js/websocket#ReadyState.CLOSING`",
+          "summary": "[`ReadyState.CLOSING`](api:@lynx-js/websocket#ReadyState.CLOSING)",
           "kind": "property"
         },
         {
@@ -98,7 +98,7 @@
           "refs": [
             "ReadyState"
           ],
-          "summary": "`@lynx-js/websocket#ReadyState.CONNECTING`",
+          "summary": "[`ReadyState.CONNECTING`](api:@lynx-js/websocket#ReadyState.CONNECTING)",
           "kind": "property"
         },
         {
@@ -107,7 +107,7 @@
           "refs": [
             "ReadyState"
           ],
-          "summary": "`@lynx-js/websocket#ReadyState.OPEN`",
+          "summary": "[`ReadyState.OPEN`](api:@lynx-js/websocket#ReadyState.OPEN)",
           "kind": "property"
         },
         {
@@ -169,7 +169,7 @@
                 "EventMap"
               ],
               "optional": true,
-              "description": "The function that receives a notification. See `@lynx-js/websocket#EventMap` for details of events."
+              "description": "The function that receives a notification. See [`EventMap`](api:@lynx-js/websocket#EventMap) for details of events."
             }
           ],
           "returns": {
@@ -271,7 +271,7 @@
       "name": "EventMap",
       "kind": "typealias",
       "type": "unknown",
-      "summary": "The `EventMap` describe the events that `@lynx-js/websocket#WebSocket` may fire."
+      "summary": "The `EventMap` describe the events that [`WebSocket`](api:@lynx-js/websocket#WebSocket) may fire."
     },
     {
       "name": "default",

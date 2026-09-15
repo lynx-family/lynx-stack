@@ -71,7 +71,7 @@ export default {
   plugins: [
     new LynxEncodePlugin({
       ...LynxEncodePlugin.defaultOptions,
-      enableRemoveCSSScope: true,
+      inlineScripts: false,
     }),
   ],
 }
@@ -143,20 +143,18 @@ This helper does not remap generated `loc` fields to original source
 coordinates.
 
 ```
-(console.log(await convertCSSChunksToMap(
-  '.red { color: red; }',
-  {
-    targetSdkVersion: '3.2',
-    enableCSSSelector: true,
-  },
+(console.log(LynxTemplatePlugin.convertCSSChunksToMap(
+  ['.red { color: red; }'],
+  [],
+  true,
 )));
 ```
 
 | Parameters | Type | Description |
 | --- | --- | --- |
 | `cssChunks` | `(string \| { content: string })[]` | The CSS chunks content. |
-| `plugins` | `Plugin[]` |  |
-| `enableCSSSelector` | `boolean` |  |
+| `plugins` | `Plugin[]` | The CSS plugins passed to the parser. |
+| `enableCSSSelector` | `boolean` | Whether to enable the CSS selector. |
 
 ### `WebEncodePlugin` \{#webencodeplugin\}
 
@@ -185,32 +183,7 @@ const CSSPlugins: { parserPlugins: typeof Plugins }
 
 ### `CSS` \{#css\}
 
-*No description yet.*
-
-| Members | Type | Description |
-| --- | --- | --- |
-| <a id="css-plugins"></a>`Plugins` | `unknown` |  |
-| <a id="css-severity"></a>`Severity` | `unknown` |  |
-| <a id="css-basedeclaration"></a>`BaseDeclaration` | `unknown` |  |
-| <a id="css-csssourcemap"></a>`CSSSourceMap` | `unknown` |  |
-| <a id="css-fontfacerule"></a>`FontFaceRule` | `unknown` |  |
-| <a id="css-importrule"></a>`ImportRule` | `unknown` |  |
-| <a id="css-keyframesrule"></a>`KeyframesRule` | `unknown` |  |
-| <a id="css-keyframesstyle"></a>`KeyframesStyle` | `unknown` |  |
-| <a id="css-layerrule"></a>`LayerRule` | `unknown` |  |
-| <a id="css-location"></a>`Location` | `unknown` |  |
-| <a id="css-mediarule"></a>`MediaRule` | `unknown` |  |
-| <a id="css-parsererror"></a>`ParserError` | `unknown` |  |
-| <a id="css-plugin"></a>`Plugin` | `unknown` |  |
-| <a id="css-range"></a>`Range` | `unknown` |  |
-| <a id="css-stylerule"></a>`StyleRule` | `unknown` |  |
-| <a id="css-supportsrule"></a>`SupportsRule` | `unknown` |  |
-| <a id="css-value"></a>`Value` | `unknown` |  |
-| <a id="css-variabledeclaration"></a>`VariableDeclaration` | `unknown` |  |
-| <a id="css-declaration"></a>`Declaration` | `BaseDeclaration \| VariableDeclaration` |  |
-| <a id="css-lynxstylenode"></a>`LynxStyleNode` | `StyleRule \| FontFaceRule \| ImportRule \| KeyframesRule \| MediaRule \| SupportsRule \| LayerRule` |  |
-| <a id="css-csschunkstomap"></a>`cssChunksToMap` | `unknown` |  |
-| <a id="css-parse"></a>`parse` | `unknown` |  |
+Re-exported from [`@lynx-js/css-serializer`](/api/packages/css-serializer).
 
 ### `CustomSectionNaming` \{#customsectionnaming\}
 
@@ -265,31 +238,31 @@ The options for LynxTemplatePlugin
 | <a id="lynxtemplatepluginoptions-apptype"></a>`appType?` | `"card" \| "DynamicComponent"` | `'DynamicComponent'` for a lazy bundle, `'card'` otherwise. | The kind of bundle to encode. |
 | <a id="lynxtemplatepluginoptions-chunks"></a>`chunks?` | `"all" \| string[]` | `'all'` | List all entries which should be injected |
 | <a id="lynxtemplatepluginoptions-cssplugins"></a>`cssPlugins` | `Plugin[]` |  | plugins passed to parser |
-| <a id="lynxtemplatepluginoptions-debuginfooutside"></a>`debugInfoOutside` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.debugInfoOutside` |
-| <a id="lynxtemplatepluginoptions-defaultdisplaylinear"></a>`defaultDisplayLinear` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.defaultDisplayLinear` |
+| <a id="lynxtemplatepluginoptions-debuginfooutside"></a>`debugInfoOutside` | `boolean` |  | [`PluginReactLynxOptions.debugInfoOutside`](/api/packages/react-rsbuild-plugin#debuginfooutside) |
+| <a id="lynxtemplatepluginoptions-defaultdisplaylinear"></a>`defaultDisplayLinear` | `boolean` |  | [`PluginReactLynxOptions.defaultDisplayLinear`](/api/packages/react-rsbuild-plugin#defaultdisplaylinear) |
 | <a id="lynxtemplatepluginoptions-defaultoverflowvisible"></a>`defaultOverflowVisible?` | `boolean` | `true` | When enabled, the default overflow CSS property for views and components will be `'visible'`. Otherwise, it will be `'hidden'`. |
 | <a id="lynxtemplatepluginoptions-dsl"></a>`dsl?` | `"tt" \| "react" \| "react_nodiff"` |  | Declare the current dsl to the encoder. |
 | <a id="lynxtemplatepluginoptions-enablea11y"></a>`enableA11y` | `boolean` |  | Use Android View level APIs and system implementations. |
-| <a id="lynxtemplatepluginoptions-enableaccessibilityelement"></a>`enableAccessibilityElement` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableAccessibilityElement` |
-| <a id="lynxtemplatepluginoptions-enablecssinheritance"></a>`enableCSSInheritance` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInheritance` |
-| <a id="lynxtemplatepluginoptions-enablecssinvalidation"></a>`enableCSSInvalidation` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInvalidation` |
-| <a id="lynxtemplatepluginoptions-enablecssselector"></a>`enableCSSSelector` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSSelector` |
-| <a id="lynxtemplatepluginoptions-enablenewgesture"></a>`enableNewGesture` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableNewGesture` |
-| <a id="lynxtemplatepluginoptions-enableremovecssscope"></a>`enableRemoveCSSScope` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope` |
+| <a id="lynxtemplatepluginoptions-enableaccessibilityelement"></a>`enableAccessibilityElement` | `boolean` |  | [`PluginReactLynxOptions.enableAccessibilityElement`](/api/packages/react-rsbuild-plugin#enableaccessibilityelement) |
+| <a id="lynxtemplatepluginoptions-enablecssinheritance"></a>`enableCSSInheritance` | `boolean` |  | [`PluginReactLynxOptions.enableCSSInheritance`](/api/packages/react-rsbuild-plugin#enablecssinheritance) |
+| <a id="lynxtemplatepluginoptions-enablecssinvalidation"></a>`enableCSSInvalidation` | `boolean` |  | [`PluginReactLynxOptions.enableCSSInvalidation`](/api/packages/react-rsbuild-plugin#enablecssinvalidation) |
+| <a id="lynxtemplatepluginoptions-enablecssselector"></a>`enableCSSSelector` | `boolean` |  | [`PluginReactLynxOptions.enableCSSSelector`](/api/packages/react-rsbuild-plugin#enablecssselector) |
+| <a id="lynxtemplatepluginoptions-enablenewgesture"></a>`enableNewGesture` | `boolean` |  | [`PluginReactLynxOptions.enableNewGesture`](/api/packages/react-rsbuild-plugin#enablenewgesture) |
+| <a id="lynxtemplatepluginoptions-enableremovecssscope"></a>`enableRemoveCSSScope` | `boolean` |  | [`PluginReactLynxOptions.enableRemoveCSSScope`](/api/packages/react-rsbuild-plugin#enableremovecssscope) |
 | <a id="lynxtemplatepluginoptions-excludechunks"></a>`excludeChunks?` | `string[]` | `[]` | List all entries which should not be injected |
-| <a id="lynxtemplatepluginoptions-experimental-islazybundle"></a>`experimental_isLazyBundle?` <span className="api-badge api-badge-alpha">Alpha</span> | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle` |
+| <a id="lynxtemplatepluginoptions-experimental-islazybundle"></a>`experimental_isLazyBundle?` <span className="api-badge api-badge-alpha">Alpha</span> | `boolean` |  | [`PluginReactLynxOptions.experimental_isLazyBundle`](/api/packages/react-rsbuild-plugin#experimental-islazybundle) |
 | <a id="lynxtemplatepluginoptions-filename"></a>`filename?` | `string \| ((entryName: string) => string)` | `'[name].bundle'` | The file to write the template to. Supports subdirectories eg: `assets/template.js`. [name] will be replaced by the entry name. Supports a function to generate the name. |
 | <a id="lynxtemplatepluginoptions-intermediate"></a>`intermediate?` | `string` | `'.lynx'` | The directory of the intermediate files of a bundle. |
 | <a id="lynxtemplatepluginoptions-lazybundlefetcher"></a>`lazyBundleFetcher?` | `"FetchBundle" \| "QueryComponent"` |  | Resolved lazy-bundle fetcher mode. Decided by the caller (e.g. `pluginReactLynx`) from the host engine version and any `REACT_LAZY_BUNDLE_FETCHER` env override. |
 | <a id="lynxtemplatepluginoptions-lazybundlefilename"></a>`lazyBundleFilename?` | `string` | `'lazy-bundle/[name].[fullhash].bundle'` | The filename of the lazy bundle. |
-| <a id="lynxtemplatepluginoptions-removedescendantselectorscope"></a>`removeDescendantSelectorScope` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.removeDescendantSelectorScope` |
-| <a id="lynxtemplatepluginoptions-targetsdkversion"></a>`targetSdkVersion` | `string` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion` |
+| <a id="lynxtemplatepluginoptions-removedescendantselectorscope"></a>`removeDescendantSelectorScope` | `boolean` |  | [`PluginReactLynxOptions.removeDescendantSelectorScope`](/api/packages/react-rsbuild-plugin#removedescendantselectorscope) |
+| <a id="lynxtemplatepluginoptions-targetsdkversion"></a>`targetSdkVersion` | `string` |  | [`PluginReactLynxOptions.targetSdkVersion`](/api/packages/react-rsbuild-plugin#targetsdkversion) |
 
 #### `LynxTemplatePluginOptions.customCSSInheritanceList` \{#lynxtemplatepluginoptions-customcssinheritancelist\}
 
 - **Type:** `string[] | undefined`
 
-`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.customCSSInheritanceList`
+[`PluginReactLynxOptions.customCSSInheritanceList`](/api/packages/react-rsbuild-plugin#customcssinheritancelist)
 
 By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.
 
@@ -303,7 +276,7 @@ export default defineConfig({
      customCSSInheritanceList: ['direction', 'overflow']
    }),
  ],
-}
+})
 ```
 
 #### `LynxTemplatePluginOptions.customSectionNaming?` \{#lynxtemplatepluginoptions-customsectionnaming\}
@@ -319,10 +292,8 @@ this way by default, under the three section names its runtime resolves.
 #### `LynxTemplatePluginOptions.enableSectionBytecode?` \{#lynxtemplatepluginoptions-enablesectionbytecode\}
 
 - **Type:** `boolean`
-- **Default:** ```ts
-Enabled outside of development and debug builds, which keeps
-the sections readable while debugging.
-```
+- **Default:** Enabled outside of development and debug builds, which keeps
+  the sections readable while debugging.
 
 Whether to compile the main thread sections to `JsBytecode`.
 

@@ -33,7 +33,9 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 function generate(options: CodegenOptions): GeneratedFile[]
 ```
 
-Builds the generated JS facade and platform spec file contents for a library package.
+Builds the generated file contents for a library package: JS facades and platform specs,
+plus the shared C++ sources, registrations, CMake target, iOS wrapper and Lynxtron
+registrations for Node-API and Lynxtron modules.
 
 | Parameters | Type | Description |
 | --- | --- | --- |
@@ -62,7 +64,8 @@ Parses native module declarations marked with `@lynxmodule` from a TypeScript de
 function runCodegen(options: CodegenOptions): GeneratedFile[]
 ```
 
-Writes generated files to disk and returns the generated file descriptors.
+Writes generated files to disk, skipping existing files marked `overwrite: false`,
+and returns the generated file descriptors.
 
 | Parameters | Type | Description |
 | --- | --- | --- |

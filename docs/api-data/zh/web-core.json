@@ -1,7 +1,7 @@
 {
   "LynxViewElement.example.0": {
-    "en": "HTML Example\n\nNote that you should declarae the size of lynx-view\n\n```html\n<lynx-view url=\"https://path/to/main-thread.js\" raw-data=\"{}\" global-props=\"{}\" style=\"height:300px;width:300px\">\n</lynx-view>\n```\n\nReact 19 Example\n```jsx\n<lynx-view url={myLynxCardUrl} rawData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>\n</lynx-view>\n```",
-    "text": "HTML 示例\n\n注意，你需要声明 lynx-view 的尺寸\n\n```html\n<lynx-view url=\"https://path/to/main-thread.js\" raw-data=\"{}\" global-props=\"{}\" style=\"height:300px;width:300px\">\n</lynx-view>\n```\n\nReact 19 示例\n\n```jsx\n<lynx-view url={myLynxCardUrl} rawData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>\n</lynx-view>\n```"
+    "en": "HTML Example\n\nNote that you should declarae the size of lynx-view\n\n```html\n<lynx-view url=\"https://path/to/main.web.bundle\" init-data=\"{}\" global-props=\"{}\" style=\"height:300px;width:300px\">\n</lynx-view>\n```\n\nReact 19 Example\n```jsx\n<lynx-view url={myLynxCardUrl} initData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>\n</lynx-view>\n```",
+    "text": "HTML 示例\n\n注意，你需要声明 lynx-view 的尺寸\n\n```html\n<lynx-view url=\"https://path/to/main.web.bundle\" init-data=\"{}\" global-props=\"{}\" style=\"height:300px;width:300px\">\n</lynx-view>\n```\n\nReact 19 示例\n\n```jsx\n<lynx-view url={myLynxCardUrl} initData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>\n</lynx-view>\n```"
   },
   "LynxViewElement.injectStyleRules.summary": {
     "en": "[optional] the css rules which will be injected into shadowroot. Each items will be inserted by `insertRule` method.",
@@ -13,7 +13,7 @@
   },
   "LynxViewElement.nativeModulesMap.summary": {
     "en": "[optional] use to customize NativeModules. key is module-name, value is esm url.\nA `LynxConsoleModule` whose factory returns a Console-like object provides\nthe lexical `console` for this view's background bundles.",
-    "text": "[可选] 用于自定义 NativeModules。key 为模块名，value 为 ESM URL。\n若某个 `LynxConsoleModule` 的工厂函数返回类 Console 对象，它将\n为此 view 的后台 bundle 提供词法作用域中的 `console`。"
+    "text": "[可选] 用于自定义 NativeModules。key 为模块名，value 为 ESM URL。若某个 `LynxConsoleModule` 的工厂函数返回类 Console 对象，它将为此 view 的后台 bundle 提供词法作用域中的 `console`。"
   },
   "LynxViewElement.onNapiModulesCall.summary": {
     "en": "[optional] the NapiModule value handler.",
@@ -28,8 +28,8 @@
     "text": "[可选]（属性：\"init-data\"）此 Lynx 卡片的初始数据"
   },
   "LynxViewElement.initI18nResources.summary": {
-    "en": "[optional] (attribute: \"init-i18n-resources\") the complete set of i18nResources that on the container side, which can be obtained synchronously by _I18nResourceTranslation",
-    "text": "[可选]（属性：\"init-i18n-resources\"）容器侧完整的 i18nResources 集合，可通过 _I18nResourceTranslation 同步获取"
+    "en": "[optional] the complete set of i18nResources that on the container side, which can be obtained synchronously by _I18nResourceTranslation",
+    "text": "[可选] 容器侧完整的 i18nResources 集合，可通过 _I18nResourceTranslation 同步获取"
   },
   "LynxViewElement.lynxGroupId.summary": {
     "en": "[optional] (attribute: \"lynx-group-id\") the background shared context id, which is used to share webworker between different lynx cards",
@@ -44,11 +44,7 @@
     "text": "[必填]（属性：\"url\"）Lynx 卡片入口的 URL"
   },
   "LynxViewElement.setAttribute.summary": {
-    "en": "\"false\" value will be omitted\n\n`HTMLElement.setAttribute`",
-    "text": "值为 \"false\" 时将被忽略\n\n`HTMLElement.setAttribute`"
-  },
-  "WebComponentClass.notToFilterFalseAttributes.summary": {
-    "en": "for attribute=\"false\",\nwe will do removeAttribute by default;\nset here for dont do this;",
-    "text": "对于 attribute=\"false\"，\n默认会执行 removeAttribute；\n在此处设置可禁用该行为；"
+    "en": "\"false\" value will be omitted\n\n[`HTMLElement.setAttribute`](api:HTMLElement.setAttribute)",
+    "text": "值为 \"false\" 时将被忽略\n\n[`HTMLElement.setAttribute`](api:HTMLElement.setAttribute)"
   }
 }

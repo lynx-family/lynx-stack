@@ -1,4 +1,12 @@
 {
+  "LynxTemplatePlugin.summary": {
+    "en": "The static API of\n[`LynxTemplatePlugin`](api:@lynx-js/template-webpack-plugin#LynxTemplatePlugin)\nthat `pluginLynx` exposes. Get it with\n`api.useExposed(Symbol.for('LynxTemplatePlugin')).LynxTemplatePlugin`.",
+    "text": "`pluginLynx` 暴露的\n[`LynxTemplatePlugin`](api:@lynx-js/template-webpack-plugin#LynxTemplatePlugin)\n静态 API。可通过\n`api.useExposed(Symbol.for('LynxTemplatePlugin')).LynxTemplatePlugin` 获取。"
+  },
+  "LynxTemplatePlugin.getLynxTemplatePluginHooks.summary": {
+    "en": "Returns the [`TemplateHooks`](api:TemplateHooks) of a compilation.",
+    "text": "返回某个 compilation 的 [`TemplateHooks`](api:TemplateHooks)。"
+  },
   "PluginVanillaLynxOptions.summary": {
     "en": "Options for [`pluginVanillaLynx`](api:pluginVanillaLynx).",
     "text": "[`pluginVanillaLynx`](api:pluginVanillaLynx) 的选项。"
@@ -8,12 +16,16 @@
     "text": "覆盖最终的 `.bundle` 文件名。"
   },
   "PluginVanillaLynxOptions.bundleFilename.remarks": {
-    "en": "When omitted under Rspeedy, `output.filename.bundle` is used.\nThe default outside Rspeedy is `[name].[platform].bundle`.",
-    "text": "在 Rspeedy 下省略时，使用 `output.filename.bundle`。\n在 Rspeedy 之外，默认值为 `[name].[platform].bundle`。"
+    "en": "When omitted, `pluginLynx`'s `output.filename.bundle` is used (default\n`'[name].[platform].bundle'`).",
+    "text": "省略时，使用 `pluginLynx` 的 `output.filename.bundle`（默认为\n`'[name].[platform].bundle'`）。"
   },
   "PluginVanillaLynxOptions.engineVersion.summary": {
     "en": "The minimum Lynx Engine version required by the emitted bundle.",
     "text": "输出的 bundle 所要求的最低 Lynx Engine 版本。"
+  },
+  "PluginVanillaLynxOptions.engineVersion.remarks": {
+    "en": "When omitted, the `targetSdkVersion` passed to `pluginLynxConfig` is used\nfirst.",
+    "text": "省略时，优先使用传给 `pluginLynxConfig` 的 `targetSdkVersion`。"
   },
   "PluginVanillaLynxOptions.entries.summary": {
     "en": "Explicit two-thread entries.",
@@ -21,39 +33,15 @@
   },
   "PluginVanillaLynxOptions.entries.remarks": {
     "en": "When omitted, every Rsbuild `source.entry` is treated as a main-thread\nentry and optional sibling `background.ts` and `style.css` files are\ndiscovered by convention.",
-    "text": "省略时，每个 Rsbuild `source.entry` 都会被视为主线程\n入口，并按约定发现同级目录下可选的 `background.ts` 和\n`style.css` 文件。"
+    "text": "省略时，每个 Rsbuild `source.entry` 都会被视为主线程入口，并按约定发现同级目录下可选的 `background.ts` 和\n`style.css` 文件。"
   },
   "PluginVanillaLynxOptions.targetSdkVersion.summary": {
-    "en": "Alias of [`PluginVanillaLynxOptions.engineVersion`](api:PluginVanillaLynxOptions.engineVersion).\n\n Use `engineVersion` instead.",
-    "text": "[`PluginVanillaLynxOptions.engineVersion`](api:PluginVanillaLynxOptions.engineVersion) 的别名。\n\n 请改用 `engineVersion`。"
+    "en": "Alias of [`PluginVanillaLynxOptions.engineVersion`](api:PluginVanillaLynxOptions.engineVersion).",
+    "text": "[`PluginVanillaLynxOptions.engineVersion`](api:PluginVanillaLynxOptions.engineVersion) 的别名。"
   },
   "PluginVanillaLynxOptions.targetSdkVersion.deprecated": {
-    "en": "Deprecated.",
-    "text": "已废弃。"
-  },
-  "TemplateHooks.summary": {
-    "en": "To allow other plugins to alter the Template, this plugin executes\n[tapable](https://github.com/webpack/tapable) hooks.",
-    "text": "为便于其他插件修改 template，该插件会执行\n[tapable](https://github.com/webpack/tapable) 钩子。"
-  },
-  "TemplateHooks.afterEmit.summary": {
-    "en": "Called after the template is emitted.",
-    "text": "在 template 输出后调用。"
-  },
-  "TemplateHooks.asyncChunkName.summary": {
-    "en": "Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template.",
-    "text": "获取异步 chunk 的真实名称。`asyncChunkName` 相同的文件会被放入同一个 template。"
-  },
-  "TemplateHooks.beforeEmit.summary": {
-    "en": "Called before the template is emitted. Can be used to modify the template.",
-    "text": "在 template 输出前调用，可用于修改 template。"
-  },
-  "TemplateHooks.beforeEncode.summary": {
-    "en": "Called before the encode process. Can be used to modify the encode options.",
-    "text": "在编码流程开始前调用，可用于修改编码选项。"
-  },
-  "TemplateHooks.encode.summary": {
-    "en": "Call the encode process.",
-    "text": "执行编码流程。"
+    "en": "Use `engineVersion` instead.",
+    "text": "请改用 `engineVersion`。"
   },
   "VanillaBundleFilenameContext.summary": {
     "en": "Context passed to a Vanilla Lynx bundle filename function.",
@@ -81,7 +69,7 @@
   },
   "VanillaLynxEntry.background.remarks": {
     "en": "When omitted, a sibling `background.ts` is used when it exists. Set this\nto `false` to explicitly create a main-thread-only bundle.",
-    "text": "省略时，如果存在同级的 `background.ts` 则使用该文件。将该选项设置\n为 `false` 可显式创建仅包含主线程的 bundle。"
+    "text": "省略时，如果存在同级的 `background.ts` 则使用该文件。将该选项设置为 `false` 可显式创建仅包含主线程的 bundle。"
   },
   "VanillaLynxEntry.css.summary": {
     "en": "CSS source encoded into the Lynx template.",
@@ -97,7 +85,7 @@
   },
   "VanillaLynxEntry.mainThread.remarks": {
     "en": "The request is resolved by Rspeedy or Rsbuild. When it names an existing\nlocal file, optional sibling `background.ts` and `style.css` files are\ndiscovered by convention.",
-    "text": "该请求由 Rspeedy 或 Rsbuild 解析。当它指向一个已存在的\n本地文件时，会按约定发现同级可选的 `background.ts` 和 `style.css`\n文件。"
+    "text": "该请求由 Rspeedy 或 Rsbuild 解析。当它指向一个已存在的本地文件时，会按约定发现同级可选的 `background.ts` 和 `style.css`\n文件。"
   },
   "VanillaBundleFilename.summary": {
     "en": "The final Vanilla Lynx bundle filename.",
@@ -109,6 +97,6 @@
   },
   "pluginVanillaLynx.summary": {
     "en": "Create the Vanilla Lynx DSL integration for Rsbuild or Rspeedy.\n\nA logical entry can explicitly declare its main-thread and background-thread\nsources. As a shorthand, an Rsbuild entry is treated as the main-thread\nsource and optional sibling `background.ts` and `style.css` files are\ndiscovered by convention.",
-    "text": "为 Rsbuild 或 Rspeedy 创建 Vanilla Lynx DSL 集成。\n\n逻辑入口可以显式声明其主线程与后台线程\n源文件。作为简写，Rsbuild 入口会被视为主线程\n源文件，并按约定发现同级可选的 `background.ts` 和 `style.css`\n文件。"
+    "text": "为 Rsbuild 或 Rspeedy 创建 Vanilla Lynx DSL 集成。\n\n逻辑入口可以显式声明其主线程与后台线程源文件。作为简写，Rsbuild 入口会被视为主线程源文件，并按约定发现同级可选的 `background.ts` 和 `style.css`\n文件。"
   }
 }

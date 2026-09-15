@@ -30,7 +30,21 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 
 ### `LynxCacheEventsPlugin` \{#lynxcacheeventsplugin\}
 
-A webpack plugin that cache Lynx native events until the BTS chunk is fully loaded, and replay them when the BTS chunk is ready.
+A webpack plugin that caches Lynx native calls that arrive before an entry
+finishes starting up, and replays them once startup settles.
+
+Only takes effect when `output.chunkLoading` is `'lynx'`.
+
+- Background chunks: always cached. Covers the `lynx.getApp()` methods
+  (`OnLifecycleEvent`, `publishEvent`, `publicComponentEvent`,
+  `callDestroyLifetimeFun`, `updateGlobalProps`, `updateCardData`,
+  `onAppReload`, `processCardConfig`), the `lynx.performance` events, and
+  `globalThis.loadDynamicComponent`.
+
+- Main-thread chunks: cached only for entries whose startup is async, such
+  as an entry that depends on an async external ReactLynx. `renderPage` is
+  cached and replayed, and `processData` is shimmed as a passthrough until
+  the real one is installed.
 
 | Members | Type | Description |
 | --- | --- | --- |

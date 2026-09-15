@@ -1,7 +1,7 @@
 {
   "LynxTestingEnv.summary": {
     "en": "A pure-JavaScript implementation of the [Lynx Spec](https://lynxjs.org/guide/spec.html),\nnotably the [Element PAPI](https://lynxjs.org/api/engine/element-api) and [Dual-threaded Model](https://lynxjs.org/guide/spec#dual-threaded-model) for use with Node.js.",
-    "text": "[Lynx 规范](https://lynxjs.org/guide/spec.html)的纯 JavaScript 实现，\n主要包括 [Element PAPI](https://lynxjs.org/api/engine/element-api) 和[双线程模型](https://lynxjs.org/guide/spec#dual-threaded-model)，可在 Node.js 中使用。"
+    "text": "[Lynx 规范](https://lynxjs.org/guide/spec.html)的纯 JavaScript 实现，主要包括 [Element PAPI](https://lynxjs.org/api/engine/element-api) 和[双线程模型](https://lynxjs.org/guide/spec#dual-threaded-model)，可在 Node.js 中使用。"
   },
   "LynxTestingEnv.backgroundThread.summary": {
     "en": "The global object for the background thread.",
@@ -33,11 +33,11 @@
   },
   "ByRoleOptions.hidden.summary": {
     "en": "If true includes elements in the query set that are usually excluded from\nthe accessibility tree. `role=\"none\"` or `role=\"presentation\"` are included\nin either case.",
-    "text": "若为 true，则在查询集合中包含通常会被排除在\n无障碍树之外的元素。`role=\"none\"` 或 `role=\"presentation\"`\n在任何情况下都会被包含。"
+    "text": "若为 true，则在查询集合中包含通常会被排除在无障碍树之外的元素。`role=\"none\"` 或 `role=\"presentation\"`\n在任何情况下都会被包含。"
   },
   "ByRoleOptions.level.summary": {
     "en": "Includes elements with the `\"heading\"` role matching the indicated level,\neither by the semantic HTML heading elements `<h1>-<h6>` or matching\nthe `aria-level` attribute.",
-    "text": "包含具有 `\"heading\"` 角色且与指定层级匹配的元素，\n既可以是语义化 HTML 标题元素 `<h1>-<h6>`，也可以是匹配\n`aria-level` 属性的元素。"
+    "text": "包含具有 `\"heading\"` 角色且与指定层级匹配的元素，既可以是语义化 HTML 标题元素 `<h1>-<h6>`，也可以是匹配\n`aria-level` 属性的元素。"
   },
   "ByRoleOptions.name.summary": {
     "en": "Only considers elements with the specified accessible name.",
@@ -49,7 +49,7 @@
   },
   "ByRoleOptions.queryFallbacks.summary": {
     "en": "Includes every role used in the `role` attribute\nFor example *ByRole('progressbar', {queryFallbacks: true})` will find <div role=\"meter progressbar\">`.",
-    "text": "包含 `role` 属性中使用的所有角色\n例如 *ByRole('progressbar', {queryFallbacks: true})` will find <div role=\"meter progressbar\">`。"
+    "text": "包含 `role` 属性中使用的所有角色例如 *ByRole('progressbar', {queryFallbacks: true})` will find <div role=\"meter progressbar\">`。"
   },
   "ByRoleOptions.selected.summary": {
     "en": "If true only includes elements in the query set that are marked as\nselected in the accessibility tree, i.e., `aria-selected=\"true\"`",
@@ -81,7 +81,7 @@
   },
   "PrettyDOMOptions.filterNode.summary": {
     "en": "Given a `Node` return `false` if you wish to ignore that node in the output.\nBy default, ignores `<style />`, `<script />` and comment nodes.",
-    "text": "给定一个 `Node`，如果希望在输出中忽略该节点，则返回 `false`。\n默认会忽略 `<style />`、`<script />` 和注释节点。"
+    "text": "给定一个 `Node`，如果希望在输出中忽略该节点，则返回 `false`。默认会忽略 `<style />`、`<script />` 和注释节点。"
   },
   "RenderHookOptions.summary": {
     "en": "The options for [`renderHook`](api:renderHook)",
@@ -89,7 +89,7 @@
   },
   "RenderHookOptions.initialProps.summary": {
     "en": "The argument passed to the renderHook callback. Can be useful if you plan\nto use the rerender utility to change the values passed to your hook.",
-    "text": "传递给 renderHook 回调的参数。如果你计划\n使用 rerender 工具函数来更改传递给 hook 的值，这会很有用。"
+    "text": "传递给 renderHook 回调的参数。如果你计划使用 rerender 工具函数来更改传递给 hook 的值，这会很有用。"
   },
   "RenderHookOptions.wrapper.summary": {
     "en": "Pass a React Component as the wrapper option to have it rendered around the inner element. This is most useful for creating\n reusable custom render functions for common data providers. See setup for examples.",
@@ -169,10 +169,10 @@
   },
   "renderHook.summary": {
     "en": "Allows you to render a hook within a test React component without having to\ncreate that component yourself.",
-    "text": "允许你在测试用的 React 组件中渲染 hook，而无需\n自己创建该组件。"
+    "text": "允许你在测试用的 React 组件中渲染 hook，而无需自己创建该组件。"
   },
   "waitSchedule.summary": {
-    "en": "Wait for the next event loop.\n\nIt will be useful when you want to wait for the next event loop to finish.\n\n Please use `act` instead",
-    "text": "等待下一个事件循环。\n\n当你想等待下一个事件循环完成时，这会很有用。\n\n 请改用 `act`"
+    "en": "Wait for the next event loop.\n\nIt will be useful when you want to wait for the next event loop to finish.",
+    "text": "等待下一个事件循环。\n\n当你想等待下一个事件循环完成时，这会很有用。"
   }
 }

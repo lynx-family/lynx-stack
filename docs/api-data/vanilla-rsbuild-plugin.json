@@ -10,6 +10,7 @@
       "name": "LynxTemplatePlugin",
       "kind": "interface",
       "type": "unknown",
+      "summary": "The static API of\n[`LynxTemplatePlugin`](api:@lynx-js/template-webpack-plugin#LynxTemplatePlugin)\nthat `pluginLynx` exposes. Get it with\n`api.useExposed(Symbol.for('LynxTemplatePlugin')).LynxTemplatePlugin`.",
       "members": [
         {
           "name": "getLynxTemplatePluginHooks",
@@ -17,6 +18,7 @@
           "refs": [
             "TemplateHooks"
           ],
+          "summary": "Returns the [`TemplateHooks`](api:TemplateHooks) of a compilation.",
           "kind": "property"
         }
       ]
@@ -36,7 +38,7 @@
             "VanillaBundleFilename"
           ],
           "summary": "Override the final `.bundle` filename.",
-          "remarks": "When omitted under Rspeedy, `output.filename.bundle` is used.\nThe default outside Rspeedy is `[name].[platform].bundle`.",
+          "remarks": "When omitted, `pluginLynx`'s `output.filename.bundle` is used (default\n`'[name].[platform].bundle'`).",
           "kind": "property"
         },
         {
@@ -44,6 +46,7 @@
           "optional": true,
           "type": "string",
           "summary": "The minimum Lynx Engine version required by the emitted bundle.",
+          "remarks": "When omitted, the `targetSdkVersion` passed to `pluginLynxConfig` is used\nfirst.",
           "default": "`'3.5'`",
           "kind": "property"
         },
@@ -62,8 +65,8 @@
           "name": "targetSdkVersion",
           "optional": true,
           "type": "string",
-          "summary": "Alias of [`PluginVanillaLynxOptions.engineVersion`](api:PluginVanillaLynxOptions.engineVersion).\n\n Use `engineVersion` instead.",
-          "deprecated": "Deprecated.",
+          "summary": "Alias of [`PluginVanillaLynxOptions.engineVersion`](api:PluginVanillaLynxOptions.engineVersion).",
+          "deprecated": "Use `engineVersion` instead.",
           "kind": "property"
         }
       ]
@@ -72,47 +75,7 @@
       "name": "TemplateHooks",
       "kind": "interface",
       "type": "unknown",
-      "summary": "To allow other plugins to alter the Template, this plugin executes\n[tapable](https://github.com/webpack/tapable) hooks.",
-      "examples": [
-        "```js\nclass MyPlugin {\n  apply(compiler) {\n    compiler.hooks.compilation.tap(\"MyPlugin\", (compilation) => {\n      console.log(\"The compiler is starting a new compilation...\");\n\n      LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(\n        \"MyPlugin\", // <-- Set a meaningful name here for stacktraces\n        (data, cb) => {\n          // Manipulate the content\n          modifyTemplate(data.template)\n          // Tell webpack to move on\n          cb(null, data);\n        },\n      );\n    });\n  }\n}\n```"
-      ],
-      "members": [
-        {
-          "name": "afterEmit",
-          "type": "AsyncSeriesWaterfallHook<{ outputName: string }>",
-          "summary": "Called after the template is emitted.",
-          "alpha": true,
-          "kind": "property"
-        },
-        {
-          "name": "asyncChunkName",
-          "type": "SyncWaterfallHook<string>",
-          "summary": "Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template.",
-          "alpha": true,
-          "kind": "property"
-        },
-        {
-          "name": "beforeEmit",
-          "type": "AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: EncodeOptions; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>",
-          "summary": "Called before the template is emitted. Can be used to modify the template.",
-          "alpha": true,
-          "kind": "property"
-        },
-        {
-          "name": "beforeEncode",
-          "type": "AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>",
-          "summary": "Called before the encode process. Can be used to modify the encode options.",
-          "alpha": true,
-          "kind": "property"
-        },
-        {
-          "name": "encode",
-          "type": "AsyncSeriesBailHook<{ encodeOptions: EncodeOptions; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>",
-          "summary": "Call the encode process.",
-          "alpha": true,
-          "kind": "property"
-        }
-      ]
+      "from": "@lynx-js/template-webpack-plugin"
     },
     {
       "name": "VanillaBundleFilenameContext",

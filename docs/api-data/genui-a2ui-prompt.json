@@ -487,10 +487,10 @@
               "A2UICatalog"
             ]
           },
-          "summary": "Read generated component and function manifests and convert them into a\nprompt-ready A2UI catalog."
+          "summary": "Read generated manifests and convert them into a prompt-ready A2UI catalog.\nComponents and functions come from a full `catalog.json` in `catalogDir`\nor its parent when one exists; otherwise only components are read, from\nper-component `<Name>/catalog.json` files, and the catalog has no\nfunctions."
         }
       ],
-      "summary": "Read generated component and function manifests and convert them into a\nprompt-ready A2UI catalog."
+      "summary": "Read generated manifests and convert them into a prompt-ready A2UI catalog.\nComponents and functions come from a full `catalog.json` in `catalogDir`\nor its parent when one exists; otherwise only components are read, from\nper-component `<Name>/catalog.json` files, and the catalog has no\nfunctions."
     },
     {
       "name": "renderCatalogReference",

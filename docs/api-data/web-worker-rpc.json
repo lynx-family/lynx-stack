@@ -148,17 +148,19 @@
             },
             {
               "name": "target",
-              "type": "{ [key in string]: Handler | undefined }"
+              "type": "{ [key in string]: Handler | undefined }",
+              "description": ""
             },
             {
               "name": "propertyName",
-              "type": "PropertyName"
+              "type": "PropertyName",
+              "description": ""
             }
           ],
           "returns": {
             "type": "void"
           },
-          "summary": "register a handler for an endpoint"
+          "summary": "register a handler \"lazy\" for an endpoint\nIt will add a setter for the target property name\nonce the value is set, we will add it as a handler."
         },
         {
           "name": "registerHandlerRef",
@@ -172,11 +174,13 @@
             },
             {
               "name": "target",
-              "type": "{ [key in string]: Handler | undefined }"
+              "type": "{ [key in string]: Handler | undefined }",
+              "description": ""
             },
             {
               "name": "propertyName",
-              "type": "PropertyName"
+              "type": "PropertyName",
+              "description": ""
             }
           ],
           "returns": {
@@ -195,13 +199,14 @@
               "ref": "RpcEndpoint",
               "refs": [
                 "RpcEndpoint"
-              ]
+              ],
+              "description": ""
             }
           ],
           "returns": {
             "type": "void"
           },
-          "summary": "Remove the handler for the name"
+          "summary": "Remove the handler for the endpoint"
         },
         {
           "name": "setMessagePort",
@@ -243,7 +248,7 @@
         {
           "name": "hasReturn",
           "type": "true",
-          "summary": "if this endpoint has return value.\nOnly valid for sync endpoints.\nAlways true for async endpoints.",
+          "summary": "Whether the endpoint returns a value.\nOnly used by async endpoints; sync endpoints return a value when `bufferSize` is set.",
           "kind": "property"
         },
         {
@@ -255,7 +260,7 @@
         {
           "name": "isSync",
           "type": "false",
-          "summary": "the call is a async call or not",
+          "summary": "Whether the call is synchronous (blocks via `Atomics.wait`).",
           "kind": "property"
         },
         {
@@ -290,7 +295,7 @@
         {
           "name": "hasReturn",
           "type": "true",
-          "summary": "if this endpoint has return value.\nOnly valid for sync endpoints.\nAlways true for async endpoints.",
+          "summary": "Whether the endpoint returns a value.\nOnly used by async endpoints; sync endpoints return a value when `bufferSize` is set.",
           "kind": "property"
         },
         {
@@ -302,7 +307,7 @@
         {
           "name": "isSync",
           "type": "true",
-          "summary": "the call is a async call or not",
+          "summary": "Whether the call is synchronous (blocks via `Atomics.wait`).",
           "kind": "property"
         },
         {
@@ -337,7 +342,7 @@
         {
           "name": "hasReturn",
           "type": "true",
-          "summary": "if this endpoint has return value.\nOnly valid for sync endpoints.\nAlways true for async endpoints.",
+          "summary": "Whether the endpoint returns a value.\nOnly used by async endpoints; sync endpoints return a value when `bufferSize` is set.",
           "kind": "property"
         },
         {
@@ -349,7 +354,7 @@
         {
           "name": "isSync",
           "type": "true",
-          "summary": "the call is a async call or not",
+          "summary": "Whether the call is synchronous (blocks via `Atomics.wait`).",
           "kind": "property"
         },
         {

@@ -30,16 +30,13 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 
 ### `default` \{#default\}
 
-LynxTransportClient 是 webpack-dev-server 的客户端传输实现。
-可用于 webpack 的
+LynxTransportClient 是 webpack-dev-server 的客户端传输实现。可用于 webpack 的
 [`devServer.client.webSocketTransport`](https://webpack.js.org/configuration/dev-server/#websockettransport)
 配置中。
-需要与 `LynxTransportServer` 配合使用。
 
 ```js
 // webpack.config.js
 import { createRequire } from 'node:module'
-import { LynxTransportServer } from '@lynx-js/webpack-dev-transport'
 
 const require = createRequire(import.meta.url)
 export default {
@@ -47,8 +44,6 @@ export default {
     client: {
       webSocketTransport: require.resolve('@lynx-js/webpack-dev-transport/client')
     },
-    allowedHosts: 'all',
-    webSocketServer: LynxTransportServer
   }
 }
 ```
@@ -56,9 +51,9 @@ export default {
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="default-constructor"></a>`constructor` | `constructor(): default` |  |
-| <a id="default-onclose"></a>`onClose` | `onClose(_callback: () => void): void` | `Client.onClose` |
-| <a id="default-onmessage"></a>`onMessage` | `onMessage(callback: (message: string) => void): void` | `Client.onMessage` |
-| <a id="default-onopen"></a>`onOpen` | `onOpen(callback: () => void): void` | `Client.onOpen` |
+| <a id="default-onclose"></a>`onClose` | `onClose(_callback: () => void): void` | [`Client.onClose`](#client-onclose) |
+| <a id="default-onmessage"></a>`onMessage` | `onMessage(callback: (message: string) => void): void` | [`Client.onMessage`](#client-onmessage) |
+| <a id="default-onopen"></a>`onOpen` | `onOpen(callback: () => void): void` | [`Client.onOpen`](#client-onopen) |
 
 ## 类型 \{#types\}
 

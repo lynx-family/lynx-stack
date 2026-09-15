@@ -101,7 +101,7 @@ function extractToolResult(result: { content: { text?: string; type: string; [ke
 function generatePrompt(spec: PromptSpec): string
 ```
 
-请改用 `generateSystemPrompt`。
+*暂无说明。*
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -576,7 +576,7 @@ MCP Client 的最小结构，与 @modelcontextprotocol/sdk 的 Client 一致，�
 | <a id="openuicontextvalue-reporterror"></a>`reportError?` | `(error: `[`OpenUIError`](#openuierror)`) => void` | 上报结构化错误（由错误边界内部使用）。 |
 | <a id="openuicontextvalue-setfieldvalue"></a>`setFieldValue` | `(formName: string \| undefined, componentType: string \| undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void` | 设置表单字段值。 |
 | <a id="openuicontextvalue-store"></a>`store` | `Store` | 用于 $variables 和表单数据的响应式绑定存储。 |
-| <a id="openuicontextvalue-triggeraction"></a>`triggerAction` | `(userMessage: string, formName?: string, action?: `[`ActionPlan`](#actionplan)` \| { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void \| Promise<void>` | 触发一个 action。接受以下任一形式： - ActionPlan（v0.5）：按顺序执行各个步骤（Run、Set、ToAssistant、OpenUrl） - 旧版 action 配置（v0.1）：带有可选 type 和 params 的对象。 - 不传：以 label 触发 ContinueConversation |
+| <a id="openuicontextvalue-triggeraction"></a>`triggerAction` | `(userMessage: string, formName?: string, action?: `[`ActionPlan`](#actionplan)` \| { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void \| Promise<void>` | 触发一个 action。接受以下任一形式： - ActionPlan（v0.5）：按顺序执行各个步骤（Run、Set、Reset、ToAssistant、   OpenUrl），某个 Run 变更失败时停止执行。当渲染器接收的是预先解析好的 `result` 时，仅执行 ToAssistant 和 OpenUrl，其他步骤会告警。 - 旧版 action 配置（v0.1）：带有可选 type 和 params 的对象。 - 不传：以 label 触发 ContinueConversation |
 
 ### `OpenUIError` \{#openuierror\}
 

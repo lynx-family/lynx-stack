@@ -12,7 +12,7 @@
       "type": "unknown",
       "summary": "CssExtractRspackPlugin is the CSS extract plugin for Lynx.\nIt works just like the [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin.html) in Web.",
       "examples": [
-        "```js\nimport { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'\nexport default {\n  plugins: [new CssExtractRspackPlugin()],\n  module: {\n    rules: [\n      {\n        test: /\\.css$/,\n        uses: [CssExtractRspackPlugin.loader, 'css-loader'],\n      },\n    ],\n  },\n}\n```"
+        "```js\nimport { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'\nexport default {\n  plugins: [new CssExtractRspackPlugin()],\n  module: {\n    rules: [\n      {\n        test: /\\.css$/,\n        use: [CssExtractRspackPlugin.loader, 'css-loader'],\n      },\n    ],\n  },\n}\n```"
       ],
       "members": [
         {
@@ -52,7 +52,7 @@
           "summary": "The loader to extract CSS.",
           "remarks": "It should be used with the ['css-loader'](https://github.com/webpack-contrib/css-loader).",
           "examples": [
-            "```js\nimport { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'\nexport default {\n  plugins: [new CssExtractRspackPlugin()],\n  module: {\n    rules: [\n      {\n        test: /\\.css$/,\n        uses: [CssExtractRspackPlugin.loader, 'css-loader'],\n      },\n    ],\n  },\n}\n```"
+            "```js\nimport { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'\nexport default {\n  plugins: [new CssExtractRspackPlugin()],\n  module: {\n    rules: [\n      {\n        test: /\\.css$/,\n        use: [CssExtractRspackPlugin.loader, 'css-loader'],\n      },\n    ],\n  },\n}\n```"
           ],
           "kind": "property"
         },
@@ -78,13 +78,14 @@
       "name": "CssExtractRspackPluginOptions",
       "kind": "interface",
       "type": "unknown",
-      "summary": "The options for `@lynx-js/css-extract-webpack-plugin#CssExtractRspackPlugin`",
+      "summary": "The options for [`CssExtractRspackPlugin`](api:@lynx-js/css-extract-webpack-plugin#CssExtractRspackPlugin)",
       "members": [
         {
           "name": "chunkFilename",
           "optional": true,
           "type": "string",
           "summary": "The name of non-initial CSS chunk files",
+          "remarks": "When set, CSS chunks of lazy bundles still go to\n`.lynx/lazy-bundle/<name>/<layer>.css` (or `.lynx/lazy-bundle/<name>.css`\nwhen the chunk has no layer); this template applies to the other chunks.",
           "kind": "property"
         },
         {
@@ -114,14 +115,14 @@
           "optional": true,
           "type": "boolean",
           "summary": "The same as [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin/tree/master?tab=readme-ov-file#emit).\nControl whether emit the CSS to filesystem.\n\n- If `true`(default), emits a file (writes a file to the filesystem).\n\n- If `false`, the plugin will extract the CSS but will not emit the file.\n\nIt is often useful to disable this option for server-side packages.",
-          "default": "```ts\ntrue\n@public\n```",
+          "default": "`true`",
           "kind": "property"
         },
         {
           "name": "esModule",
           "optional": true,
           "type": "boolean",
-          "summary": "`@lynx-js/rspeedy#CssExtractRspackLoaderOptions.esModule`",
+          "summary": "[`CssExtractRspackLoaderOptions.esModule`](api:@lynx-js/rspeedy#CssExtractRspackLoaderOptions.esModule)",
           "kind": "property"
         },
         {

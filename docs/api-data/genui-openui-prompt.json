@@ -22,14 +22,14 @@
           "name": "componentGroups",
           "optional": true,
           "type": "ComponentGroup[]",
-          "summary": "Replace or extend the built-in component groups.",
+          "summary": "Extra component groups, appended after the built-in groups.",
           "kind": "property"
         },
         {
           "name": "componentNames",
           "optional": true,
           "type": "readonly string[]",
-          "summary": "Limit built-ins to these names. Custom `components` are still appended.",
+          "summary": "Limit built-ins and built-in groups to these names. The root component is\nalways kept, and custom `components` are still appended. In\n`buildOpenUiSystemPrompt`, setting this also switches to the restricted\ndefault rules and, unless `promptOptions` sets them, disables tool calls\nand omits the default examples.",
           "kind": "property"
         },
         {
@@ -39,7 +39,7 @@
           "refs": [
             "OpenUiPromptComponent"
           ],
-          "summary": "Replace or extend the built-in component set.",
+          "summary": "Custom components appended after the built-ins. One with the same name as\na built-in replaces that built-in.",
           "kind": "property"
         },
         {
@@ -67,14 +67,14 @@
           "name": "componentGroups",
           "optional": true,
           "type": "ComponentGroup[]",
-          "summary": "Replace or extend the built-in component groups.",
+          "summary": "Extra component groups, appended after the built-in groups.",
           "kind": "property"
         },
         {
           "name": "componentNames",
           "optional": true,
           "type": "readonly string[]",
-          "summary": "Limit built-ins to these names. Custom `components` are still appended.",
+          "summary": "Limit built-ins and built-in groups to these names. The root component is\nalways kept, and custom `components` are still appended. In\n`buildOpenUiSystemPrompt`, setting this also switches to the restricted\ndefault rules and, unless `promptOptions` sets them, disables tool calls\nand omits the default examples.",
           "kind": "property"
         },
         {
@@ -84,7 +84,7 @@
           "refs": [
             "OpenUiPromptComponent"
           ],
-          "summary": "Replace or extend the built-in component set.",
+          "summary": "Custom components appended after the built-ins. One with the same name as\na built-in replaces that built-in.",
           "kind": "property"
         },
         {

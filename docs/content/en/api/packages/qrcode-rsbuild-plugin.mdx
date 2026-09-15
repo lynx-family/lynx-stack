@@ -47,12 +47,16 @@ export default defineConfig({
 
 Customize the generated schema.
 
-```js
+```ts
+// rsbuild.config.ts
 import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
-import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
 
 export default defineConfig({
+  environments: { lynx: {} },
   plugins: [
+    pluginReactLynx(),
     pluginQRCode({
       schema(url) {
         return `lynx://${url}?dev=1`
@@ -66,12 +70,16 @@ export default defineConfig({
 
 You may press `a` in the terminal to switch between schemas.
 
-```js
+```ts
+// rsbuild.config.ts
 import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
-import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
 
 export default defineConfig({
+  environments: { lynx: {} },
   plugins: [
+    pluginReactLynx(),
     pluginQRCode({
       schema(url) {
         return {
@@ -129,6 +137,6 @@ export default {
 type CustomizedSchemaFn = (url: string) => string | Record<string, string>
 ```
 
-`PluginQRCodeOptions.schema`
+[`PluginQRCodeOptions.schema`](#schema)
 
 {/* @api-end */}

@@ -43,8 +43,6 @@ export default {
     new ExternalsLoadingPlugin({
       mainThreadLayer: 'main-thread',
       backgroundLayer: 'background',
-      mainThreadChunks: ['index__main-thread'],
-      backgroundChunks: ['index'],
       externals: {
        'lodash': {
          url: 'http://lodash.lynx.bundle',
@@ -93,6 +91,8 @@ Load `lodash` library in background layer and `main-thread` layer.
 module.exports = {
  plugins: [
    new ExternalsLoadingPlugin({
+     mainThreadLayer: 'main-thread',
+     backgroundLayer: 'background',
      externals: {
        lodash: {
          url: 'http://lodash.lynx.bundle',
@@ -111,6 +111,8 @@ Load `lodash` library only in background layer.
 module.exports = {
  plugins: [
    new ExternalsLoadingPlugin({
+     mainThreadLayer: 'main-thread',
+     backgroundLayer: 'background',
      externals: {
        lodash: {
          url: 'http://lodash.lynx.bundle',
@@ -198,6 +200,7 @@ ExternalsLoadingPlugin({
     preact: {
       libraryName: ['ReactLynx', 'Preact'],
       url: '……',
+      async: false,
     },
   }
 })
@@ -208,6 +211,15 @@ Will generate the following webpack externals config:
 ```js
 externals: {
   preact: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.Preact',
+}
+```
+
+With the default `async: true`, a `promise` external is generated instead,
+which picks the subpath after the library promise resolves:
+
+```js
+externals: {
+  preact: 'promise Promise.resolve(lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]["ReactLynx"]).then(function (m) { return m["Preact"]; })',
 }
 ```
 

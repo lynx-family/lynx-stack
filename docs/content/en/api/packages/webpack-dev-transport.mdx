@@ -34,12 +34,10 @@ LynxTransportClient is the client transport implementation for webpack-dev-serve
 It can be used in the
 [`devServer.client.webSocketTransport`](https://webpack.js.org/configuration/dev-server/#websockettransport)
 configuration of webpack.
-It should be used with `LynxTransportServer`.
 
 ```js
 // webpack.config.js
 import { createRequire } from 'node:module'
-import { LynxTransportServer } from '@lynx-js/webpack-dev-transport'
 
 const require = createRequire(import.meta.url)
 export default {
@@ -47,8 +45,6 @@ export default {
     client: {
       webSocketTransport: require.resolve('@lynx-js/webpack-dev-transport/client')
     },
-    allowedHosts: 'all',
-    webSocketServer: LynxTransportServer
   }
 }
 ```
@@ -56,9 +52,9 @@ export default {
 | Members | Type | Description |
 | --- | --- | --- |
 | <a id="default-constructor"></a>`constructor` | `constructor(): default` |  |
-| <a id="default-onclose"></a>`onClose` | `onClose(_callback: () => void): void` | `Client.onClose` |
-| <a id="default-onmessage"></a>`onMessage` | `onMessage(callback: (message: string) => void): void` | `Client.onMessage` |
-| <a id="default-onopen"></a>`onOpen` | `onOpen(callback: () => void): void` | `Client.onOpen` |
+| <a id="default-onclose"></a>`onClose` | `onClose(_callback: () => void): void` | [`Client.onClose`](#client-onclose) |
+| <a id="default-onmessage"></a>`onMessage` | `onMessage(callback: (message: string) => void): void` | [`Client.onMessage`](#client-onmessage) |
+| <a id="default-onopen"></a>`onOpen` | `onOpen(callback: () => void): void` | [`Client.onOpen`](#client-onopen) |
 
 ## Types \{#types\}
 
