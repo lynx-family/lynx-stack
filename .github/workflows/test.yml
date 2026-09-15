@@ -219,7 +219,7 @@ jobs:
         fi
   test-docs:
     needs: build
-    uses: ./.github/workflows/workflow-test.yml
+    uses: $/.github/workflows/workflow-test.yml
     with:
       runs-on: lynx-ubuntu-26.04-medium
       run: |
