@@ -3,9 +3,9 @@
 Generative UI primitives for Lynx applications.
 
 `@lynx-js/genui` is the single npm package for the GenUI toolchain. It exposes
-A2UI rendering, OpenUI rendering, A2UI prompt/catalog utilities, and the CLI
-from one package while keeping implementation directories private to this
-monorepo.
+A2UI rendering, OpenUI rendering, A2UI prompt/catalog utilities, OpenUI and
+Lynx XML prompt builders, MCP Apps host primitives, and the CLI from one
+package while keeping implementation directories private to this monorepo.
 
 ## Installation
 
@@ -34,7 +34,7 @@ The root entry point exports the stable APIs most applications and tools need:
 
 - A2UI ReactLynx renderer and data-store helpers.
 - OpenUI parser, library, and renderer APIs.
-- A2UI prompt builders.
+- A2UI, OpenUI, and Lynx XML prompt builders.
 - A2UI catalog extraction utilities.
 
 Focused subpaths are also available:
@@ -43,8 +43,11 @@ Focused subpaths are also available:
 import { A2UI, Text, Button } from '@lynx-js/genui/a2ui';
 import { createMessageStore } from '@lynx-js/genui/a2ui/store';
 import { createOpenUiLibrary } from '@lynx-js/genui/openui';
+import { buildOpenUiSystemPrompt } from '@lynx-js/genui/openui/prompt';
 import { buildA2UISystemPrompt } from '@lynx-js/genui/a2ui-prompt';
 import { extractCatalogComponents } from '@lynx-js/genui/a2ui-catalog-extractor';
+import { buildLynxXmlSystemPrompt } from '@lynx-js/genui/lynx-xml';
+import { McpApps } from '@lynx-js/genui/mcp-apps';
 ```
 
 Catalog manifests are exported through a single public catalog entry:
@@ -153,14 +156,14 @@ Generate catalog artifacts:
 genui a2ui generate catalog \
   --catalog-dir src/catalog \
   --source src/functions \
-  --out-dir dist/catalog
+  --out-dir dist
 ```
 
 Generate an A2UI system prompt:
 
 ```bash
 genui a2ui generate prompt \
-  --catalog-dir dist/catalog \
+  --catalog-dir dist \
   --out dist/a2ui-system-prompt.txt
 ```
 

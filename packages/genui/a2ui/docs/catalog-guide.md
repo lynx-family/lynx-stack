@@ -123,9 +123,9 @@ both sides provides a 286 px content width to the frame.
 | --------- | ----------------------------------------------------------------------------------------------- |
 | `Loading` | A loading indicator. Also the default `renderFallback` for `<A2UI>` while a surface is pending. |
 
-To learn the exact props each one accepts, read its manifest at
-`@lynx-js/genui/a2ui/catalog/<Name>/catalog.json` — that JSON is the same
-schema the Agent sees.
+To learn the exact props each one accepts, read its manifest in the installed
+package at `node_modules/@lynx-js/genui/a2ui/dist/catalog/<Name>/catalog.json`
+— that JSON is the same schema the Agent sees.
 
 ## Adding manifests for Agent handshakes
 
@@ -134,11 +134,12 @@ If you want `serializeCatalog(...)` to emit JSON Schema for each component
 generated at `dist/catalog/<Name>/catalog.json` using the tuple form:
 
 ```ts
-import { Text, defineCatalog, serializeCatalog } from '@lynx-js/genui/a2ui';
-import textManifest from '@lynx-js/genui/a2ui/catalog/Text/catalog.json'
+import { defineCatalog, serializeCatalog } from '@lynx-js/genui/a2ui';
+import { MyCard } from './MyCard';
+import myCardManifest from './dist/catalog/MyCard/catalog.json'
   with { type: 'json' };
 
-const catalog = defineCatalog([[Text, textManifest]]);
+const catalog = defineCatalog([[MyCard, myCardManifest]]);
 agentChannel.handshake({ catalog: serializeCatalog(catalog) });
 ```
 

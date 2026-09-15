@@ -34,7 +34,9 @@ export interface Resource<T = unknown> {
   complete: (result: T) => void;
   fail: (err: unknown) => void;
   /**
-   * @deprecated Use `subscribe`. Behaves identically.
+   * @deprecated Use `subscribe` and read `value`. Unlike `subscribe`, the
+   * callback receives the current value and is skipped while `value` is
+   * `undefined`.
    */
   onUpdate: (callback: (result: T) => void) => () => void;
   /**

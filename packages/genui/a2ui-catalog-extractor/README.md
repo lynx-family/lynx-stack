@@ -4,10 +4,11 @@ English | [简体中文](./readme.zh_cn.md)
 
 `@lynx-js/genui/a2ui-catalog-extractor` is the internal TypeDoc-powered extraction
 engine behind `genui a2ui generate catalog`. It turns TypeScript component
-interfaces into A2UI component catalog JSON. You write the public component
-contract once as a TypeScript `interface`, describe it with normal TypeDoc
-comments, and run the public `genui a2ui` command to generate the JSON Schema
-that an A2UI agent can read.
+interfaces and `@a2uiFunction` functions into A2UI catalog JSON. You write the
+public component contract once as a TypeScript `interface`, describe it with
+normal TypeDoc comments, and run the public `genui a2ui` command to generate
+per-component JSON Schema files plus a full `catalog.json` with components and
+functions that an A2UI agent can read.
 
 For user-facing scripts, use `genui a2ui generate catalog`. Treat
 this package as the implementation layer for extraction behavior and tests.
@@ -18,7 +19,8 @@ A2UI catalogs describe what components a renderer supports. For each
 component, the catalog tells an agent which props are valid, which props
 are required, which enum values are allowed, and what each field means.
 
-This extractor generates the `components` part of an A2UI v0.9 catalog:
+For each component, the extractor generates its entry in the `components`
+part of an A2UI v0.9 catalog:
 
 ```json
 {
@@ -31,8 +33,9 @@ This extractor generates the `components` part of an A2UI v0.9 catalog:
 }
 ```
 
-It can also wrap those generated components with a `catalogId`,
-`functions`, and `theme` through `createA2UICatalog`.
+Functions annotated with `@a2uiFunction` become entries in the `functions`
+part. The CLI writes both into the full `catalog.json`; `createA2UICatalog`
+builds the same shape programmatically and can also add a `theme`.
 
 ## What It Does Not Do
 
