@@ -9,6 +9,11 @@ export type ConversationProtocol =
   | 'lynx-xml'
   | 'html';
 
+export interface ConversationGenerationSettings {
+  enableDesignGuidance: boolean;
+  enableHtmlFragment?: boolean;
+}
+
 export interface ConversationMeta {
   id: string;
   protocol?: ConversationProtocol;
@@ -17,6 +22,7 @@ export interface ConversationMeta {
   updatedAt: number;
   messageCount: number;
   previewText: string;
+  generationSettings?: ConversationGenerationSettings;
 }
 
 export interface PreviewPayloadUrls {

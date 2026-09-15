@@ -12,7 +12,10 @@ import type {
   LynxXmlAgent,
   LynxXmlFragmentOptions,
 } from '../../agent/lynx-xml/lynx-xml-agent.js';
-import { extractLynxXmlArtifact } from '../../agent/lynx-xml/lynx-xml-output.js';
+import {
+  extractLynxXmlArtifact,
+  normalizeLynxXmlArtifact,
+} from '../../agent/lynx-xml/lynx-xml-output.js';
 import { pickAgentCapabilityConfig } from '../common/agent-capabilities.js';
 import { createAgentStepLogger } from '../common/agent-step-logger.js';
 import {
@@ -24,13 +27,13 @@ import {
   ProviderAgentCache,
   buildOpenAIRunOptions,
   resolveModelOutputTokenBudget,
+  resolveReasoningRecoverySettings,
 } from '../common/provider.js';
 import {
   GenerationPostprocessError,
   extractGenerationResult,
-  finalizeResult,
-  toAsyncIterable,
 } from '../common/result.js';
+import { recoverTextGeneration } from '../common/text-generation-recovery.js';
 import type {
   ChatMessage,
   ChatOptions,
@@ -48,21 +51,13 @@ export interface LynxXmlGenerationMetadata extends Record<string, unknown> {
   xmlFragment?: string;
 }
 
-export const LYNX_XML_MAX_OUTPUT_TOKENS = 16_384;
+const LYNX_XML_MAX_GENERATION_ATTEMPTS = 3;
 
-export function buildLynxXmlRunOptions(
-  opts: LynxXmlChatOptions,
-  abortSignal?: AbortSignal,
-) {
-  const maxOutputTokens = resolveModelOutputTokenBudget(
-    opts,
-    LYNX_XML_MAX_OUTPUT_TOKENS,
-  );
-  const runOptions = buildOpenAIRunOptions(opts, abortSignal);
-  return {
-    ...runOptions,
-    modelSettings: { ...runOptions.modelSettings, maxOutputTokens },
-  };
+/** Initialize capability budgets once for all attempts in one request. */
+function createLynxXmlRunScope(): SearchRunScope {
+  const scope = createSearchRunScope();
+  initializeArkImageGenerationRunScope(scope);
+  return scope;
 }
 
 /** Add shared capability budgets and diagnostics to one agent invocation. */
@@ -70,29 +65,14 @@ function buildLynxXmlScopedRunOptions(
   opts: LynxXmlChatOptions,
   abortSignal: AbortSignal | undefined,
   scope: SearchRunScope,
+  maxOutputTokens?: number,
 ) {
-  initializeArkImageGenerationRunScope(scope);
   return {
-    ...buildLynxXmlRunOptions(opts, abortSignal),
+    ...buildOpenAIRunOptions(opts, abortSignal, maxOutputTokens),
     ...createAgentStepLogger(opts, 'lynx-xml', {
       enableHtmlFragment: opts.enableHtmlFragment === true,
     }),
     requestContext: scope.requestContext,
-  };
-}
-
-/** Track streamed text so final fragment compilation has a fallback value. */
-function trackTextStream(
-  source: AsyncIterable<string>,
-  onChunk: (chunk: string) => void,
-): AsyncIterable<string> {
-  return {
-    [Symbol.asyncIterator]: async function*() {
-      for await (const chunk of source) {
-        onChunk(chunk);
-        yield chunk;
-      }
-    },
   };
 }
 
@@ -143,6 +123,7 @@ export default class LynxXmlAgentService {
     opts: LynxXmlChatOptions,
     abortSignal: AbortSignal | undefined,
     scope: SearchRunScope,
+    maxOutputTokens?: number,
   ): Promise<MastraStreamResult> {
     abortSignal?.throwIfAborted();
     const agent = await this.getAgent(opts);
@@ -160,6 +141,7 @@ export default class LynxXmlAgentService {
       opts,
       abortSignal,
       scope,
+      maxOutputTokens,
     );
     opts.onPerformanceEvent?.('agent.stream.invoke.started', {
       maxOutputTokens: runOptions.modelSettings.maxOutputTokens,
@@ -184,7 +166,7 @@ export default class LynxXmlAgentService {
       messages,
       opts,
       abortSignal,
-      createSearchRunScope(),
+      createLynxXmlRunScope(),
     );
   }
 
@@ -212,30 +194,43 @@ export default class LynxXmlAgentService {
       preparedContentChars: sumContentChars(preparedMessages),
     });
 
-    const scope = createSearchRunScope();
+    const scope = createLynxXmlRunScope();
+    const maxOutputTokens = resolveModelOutputTokenBudget(opts);
+    const retrySettings = resolveReasoningRecoverySettings(
+      opts,
+      maxOutputTokens,
+    );
     const streamResult = await this.streamWithScope(
       preparedMessages,
       opts,
       abortSignal,
       scope,
     );
-    let streamedText = '';
-    return {
-      textStream: trackTextStream(
-        toAsyncIterable(streamResult.textStream),
-        (chunk) => {
-          streamedText += chunk;
-        },
-      ),
-      finalize: async () => {
-        const result = await finalizeResult(streamResult);
-        const rawText = result.text ?? streamedText;
-        return {
-          ...result,
-          ...compileGeneration({ ...result, text: rawText }, opts),
-        };
+    return recoverTextGeneration({
+      initialMessages: preparedMessages,
+      initialResult: streamResult,
+      maxAttempts: LYNX_XML_MAX_GENERATION_ATTEMPTS,
+      reasoningRecovery: retrySettings
+        ? { maxOutputTokens, retrySettings }
+        : undefined,
+      stream: (nextMessages, settings) =>
+        this.streamWithScope(
+          nextMessages,
+          settings
+            ? { ...opts, reasoningEffort: settings.reasoningEffort }
+            : opts,
+          abortSignal,
+          scope,
+          settings?.maxOutputTokens,
+        ),
+      postprocess: result => {
+        const artifact = compileGeneration(result, opts);
+        return { ...artifact, text: normalizeLynxXmlArtifact(artifact.text) };
       },
-    };
+      canContinue: text => /<lynx\b/u.test(text) && !text.includes('</lynx>'),
+      abortSignal,
+      onPerformanceEvent: opts.onPerformanceEvent,
+    });
   }
 
   public async generateRaw(
@@ -252,7 +247,7 @@ export default class LynxXmlAgentService {
     abortSignal?.throwIfAborted();
     const agent = await this.getAgent(opts);
     abortSignal?.throwIfAborted();
-    const scope = createSearchRunScope();
+    const scope = createLynxXmlRunScope();
     const result = await agent.generate(
       toModelMessages(buildConversationMessages(messages, conversation)),
       buildLynxXmlScopedRunOptions(opts, abortSignal, scope),

@@ -20,13 +20,21 @@ tree, and retain only explicitly identified nodes in the returned node map.
 The model stores that map at main-thread script scope for later handlers. Do
 not generate a separate nodeN variable for each element. Do not register a conversion
 tool, retain a placeholder registry, or request another model round on success.
-Keep failures explicit; Bench owns configured repairs.
+Keep failures explicit; Bench owns configured repairs and raw generation stays
+single-call. The ordinary Lynx XML streaming service uses bounded shared recovery
+for invalid token-limited output: one exact-boundary continuation when possible,
+then compact regeneration, with at most three generation attempts in total.
+Never trim a partial source before continuation or invent closing syntax. Preserve
+the selected model, per-call output budget, cancellation, and tool scope.
 
-Preserve the exact intermediate model response in `metadata.modelOutput` and
+Preserve the exact assembled intermediate model response in `metadata.modelOutput` and
 the successful original fragment in `metadata.xmlFragment`. Off omits the
 fragment metadata. Stream model text as source evidence, but preview and Judge
 only the compiled final document. Preserve usage and finish reason when
-postprocessing fails. Test real single-step Mastra generation and streaming,
+postprocessing fails. Buffer continuation/regeneration responses, emit the final
+validated document through `done`, and include aggregated usage and
+`metadata.generationAttempts` when recovery ran. Test real Mastra generation and streaming,
+including truncated and empty token-limited responses,
 cache separation, and fragment handlers through render, tap, update, and cleanup.
 
 Use the pinned `@lynx-js/skill-vanilla-lynx` dependency for shared document,
@@ -56,3 +64,11 @@ legible text and 44px touch targets. Use supported literal CSS values and Lynx
 accessibility attributes; do not import Web-only layout, ARIA, CSS variables,
 or `env(safe-area-inset-*)`. User design systems may override visual defaults,
 not runtime contracts.
+
+Keep the local adaptation contract explicit about JavaScript lexical scope in
+both direct and fragment modes. Render helpers receive parent nodes and other
+render-local dependencies as parameters; call/apply/bind do not make caller-local
+variables visible. State and node references shared with event, update, and
+cleanup handlers must be declared in their shared scope and initialized before
+use. Prompt checks reduce generation mistakes; they do not establish runtime
+validity or replace artifact validation.

@@ -31,6 +31,7 @@ import {
   searchedDoubaoImageURLs,
 } from '../../agent/common/doubao-search-tool.js';
 import { createAgentStepLogger } from '../common/agent-step-logger.js';
+import { buildGenerationRepairMessages } from '../common/generation-repair.js';
 import {
   buildConversationMessages,
   sumContentChars,
@@ -448,11 +449,12 @@ export default class A2UIAgentService {
     const agent = await this.getAgent({ ...opts, catalog });
     abortSignal?.throwIfAborted();
 
-    const convo = buildConversationMessages(
+    const initialMessages = buildConversationMessages(
       messages,
       conversation,
       buildDataModelSystemMessage,
     );
+    let convo = initialMessages;
     const trustedImageSource = createA2UIImageSourcePolicy(
       [
         messages,
@@ -530,10 +532,11 @@ export default class A2UIAgentService {
       lastErrors = validation.errors;
 
       if (attempt < maxAttempts) {
-        convo.push({ role: 'assistant', content: text });
-        convo.push({
-          role: 'user',
-          content: formatErrorsForModel(validation.errors),
+        convo = buildGenerationRepairMessages({
+          initialMessages,
+          messages: convo,
+          result: completed,
+          repairPrompt: formatErrorsForModel(validation.errors),
         });
       }
     }

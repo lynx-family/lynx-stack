@@ -2,13 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { KeyboardEvent, ReactNode } from 'react';
+import type { KeyboardEvent } from 'react';
 
+import { ChatAgentInteraction } from './ChatAgentInteraction.js';
 import {
   appendChatInteraction,
-  chatInteractionLabel,
   describeChatRequest,
-  serializeChatInteraction,
 } from './chatInteraction.js';
 import { ChatWorkspace } from './ChatWorkspace.js';
 import {
@@ -34,7 +33,6 @@ import {
 } from './shared.js';
 import type {
   ChatArtifact,
-  ChatInteractionLog,
   ChatMessageIcon,
   ChatMessageModel,
   ChatProtocolAdapter,
@@ -46,13 +44,7 @@ import type {
 } from './type.js';
 import { Button } from '../../components/Button.js';
 import { useCopyToast } from '../../components/CopyToast.js';
-import {
-  ChevronDown,
-  Send,
-  Sparkles,
-  TriangleAlert,
-  Zap,
-} from '../../components/Icon.js';
+import { Send, Sparkles, TriangleAlert, Zap } from '../../components/Icon.js';
 import type { MobilePaneTab } from '../../components/MobileTabBar.js';
 import type {
   PreviewMetricName,
@@ -332,107 +324,6 @@ function MessageMetrics(props: { metrics: PreviewPerformanceMetrics }) {
   );
 }
 
-function AgentInteractionDetails(props: {
-  children: ReactNode;
-  log: ChatInteractionLog;
-  onCopy: (text: string) => void;
-}) {
-  const { children, log, onCopy } = props;
-  return (
-    <details className='chatAgentInteraction'>
-      <summary className='chatMessageBody chatAgentInteractionSummary'>
-        {children}
-        <ChevronDown
-          className='chatAgentInteractionChevron'
-          size={14}
-          aria-hidden='true'
-        />
-      </summary>
-      <div className='chatAgentInteractionDetails'>
-        <div className='chatAgentInteractionHeader'>
-          <span>Agent interaction</span>
-          <button
-            type='button'
-            className='chatJsonCopyButton'
-            onClick={() => onCopy(serializeChatInteraction(log))}
-          >
-            Copy details
-          </button>
-        </div>
-        {log.omittedEntries > 0
-          ? (
-            <p className='chatAgentInteractionNotice'>
-              {log.omittedEntries} earlier events omitted.
-            </p>
-          )
-          : null}
-        <ol
-          className='chatAgentInteractionEvents'
-          aria-label='Agent interaction events'
-        >
-          {log.entries.map((entry, index) => (
-            <li className='chatAgentInteractionEvent' key={index}>
-              <div className='chatAgentInteractionEventHeader'>
-                <span>{chatInteractionLabel(entry.event)}</span>
-                {entry.count > 1 ? <span>{entry.count} chunks</span> : null}
-                <span className='chatAgentInteractionTime'>
-                  +{(entry.elapsedMs / 1000).toFixed(2)}s
-                </span>
-              </div>
-              {entry.detail ? <pre>{entry.detail}</pre> : null}
-              {entry.truncated
-                ? (
-                  <p className='chatAgentInteractionNotice'>
-                    Event details truncated.
-                  </p>
-                )
-                : null}
-            </li>
-          ))}
-        </ol>
-        {log.rawOutput
-          ? (
-            <details className='chatAgentInteractionRaw'>
-              <summary className='chatAgentInteractionRawSummary'>
-                <span>Raw output</span>
-                <span>
-                  {log.rawOutput.count}{' '}
-                  {log.rawOutput.count === 1 ? 'chunk' : 'chunks'}
-                </span>
-                <span className='chatAgentInteractionTime'>
-                  +{(log.rawOutput.elapsedMs / 1000).toFixed(2)}s
-                </span>
-                <ChevronDown
-                  className='chatAgentInteractionChevron'
-                  size={14}
-                  aria-hidden='true'
-                />
-              </summary>
-              <div className='chatAgentInteractionRawContent'>
-                <button
-                  type='button'
-                  className='chatJsonCopyButton'
-                  onClick={() => onCopy(log.rawOutput?.detail ?? '')}
-                >
-                  Copy raw output
-                </button>
-                <pre>{log.rawOutput.detail}</pre>
-                {log.rawOutput.truncated
-                  ? (
-                    <p className='chatAgentInteractionNotice'>
-                      Raw output truncated.
-                    </p>
-                  )
-                  : null}
-              </div>
-            </details>
-          )
-          : null}
-      </div>
-    </details>
-  );
-}
-
 function MessageList(props: {
   messages: readonly ChatMessageModel[];
   onCopy: (text: string) => void;
@@ -441,21 +332,6 @@ function MessageList(props: {
   return (
     <>
       {messages.map((message, index) => {
-        const roleClassName = (() => {
-          if (message.kind === 'user') return 'chatMessageUser';
-          if (message.kind === 'action') {
-            return message.payload === undefined
-              ? 'chatMessageAction'
-              : 'chatMessageAction chatMessageActionExpanded';
-          }
-          if (message.kind === 'output') return 'chatMessageJson';
-          if (message.kind === 'status') {
-            return `chatMessageStatus chatMessageStatus-${
-              message.tone ?? 'info'
-            }`;
-          }
-          return 'chatMessageAI';
-        })();
         const payloadText = message.payload === undefined
           ? ''
           : safeStringifyPayload(message.payload);
@@ -488,23 +364,8 @@ function MessageList(props: {
               )}
           </>
         );
-        return (
-          <div
-            className={`chatMessage ${roleClassName}${
-              message.side === 'right' ? ' chatMessageRight' : ''
-            }${message.interaction ? ' chatMessageWithInteraction' : ''}`}
-            key={message.id ?? index}
-          >
-            {message.interaction
-              ? (
-                <AgentInteractionDetails
-                  log={message.interaction}
-                  onCopy={onCopy}
-                >
-                  {messageBody}
-                </AgentInteractionDetails>
-              )
-              : <div className='chatMessageBody'>{messageBody}</div>}
+        const messageDetails = (
+          <>
             {message.payload === undefined
               ? null
               : (
@@ -517,6 +378,45 @@ function MessageList(props: {
             {message.metrics
               ? <MessageMetrics metrics={message.metrics} />
               : null}
+          </>
+        );
+        if (message.interaction) {
+          return (
+            <ChatAgentInteraction
+              key={message.id ?? index}
+              summary={messageBody}
+              tone={message.tone}
+              log={message.interaction}
+              onCopy={onCopy}
+            >
+              {messageDetails}
+            </ChatAgentInteraction>
+          );
+        }
+        const roleClassName = (() => {
+          if (message.kind === 'user') return 'chatMessageUser';
+          if (message.kind === 'action') {
+            return message.payload === undefined
+              ? 'chatMessageAction'
+              : 'chatMessageAction chatMessageActionExpanded';
+          }
+          if (message.kind === 'output') return 'chatMessageJson';
+          if (message.kind === 'status') {
+            return `chatMessageStatus chatMessageStatus-${
+              message.tone ?? 'info'
+            }`;
+          }
+          return 'chatMessageAI';
+        })();
+        return (
+          <div
+            className={`chatMessage ${roleClassName}${
+              message.side === 'right' ? ' chatMessageRight' : ''
+            }`}
+            key={message.id ?? index}
+          >
+            <div className='chatMessageBody'>{messageBody}</div>
+            {messageDetails}
           </div>
         );
       })}
@@ -699,6 +599,7 @@ export function ChatController<
     previewMessages: persistedPreviewMessages,
     previewPayloadUrls: persistedPreviewPayloadUrls,
     recordTurn,
+    recordGenerationSettings,
     remove,
     rename,
     switchTo,
@@ -850,7 +751,14 @@ export function ChatController<
     const controller = new AbortController();
     void loadSettings(settingsRef.current, host, controller.signal).then(
       (next) => {
-        if (!controller.signal.aborted) setSettings(next);
+        if (!controller.signal.aborted) {
+          setSettings((current) => {
+            const historySettings = adapter.settings?.conversation;
+            return historySettings
+              ? historySettings.restore(next, historySettings.snapshot(current))
+              : next;
+          });
+        }
       },
       () => {
         // Abort-driven rejections are expected when the protocol changes.
@@ -920,10 +828,20 @@ export function ChatController<
     followBottomRef.current = distanceFromBottom <= 32;
   }, []);
 
+  const savedGenerationSettings = conversations.find((item) =>
+    item.id === activeId
+  )?.generationSettings;
+
   useEffect(() => {
     if (!isReady || busy) return;
     if (hydratedActiveIdRef.current === activeId) return;
     hydratedActiveIdRef.current = activeId;
+    const historySettings = adapter.settings?.conversation;
+    if (historySettings && savedGenerationSettings) {
+      setSettings((current) =>
+        historySettings.restore(current, savedGenerationSettings)
+      );
+    }
     const hydrated = adapter.hydrate({
       history: persistedMessages,
       previewMessages: persistedPreviewMessages,
@@ -952,6 +870,7 @@ export function ChatController<
     persistedPreviewMessages,
     persistedPreviewPayloadUrls,
     resetLivePreviewDelivery,
+    savedGenerationSettings,
     setCurrentOutput,
     setCurrentPreviewOutput,
     setCurrentPreviewPayloadUrls,
@@ -1256,6 +1175,13 @@ export function ChatController<
     void (async () => {
       try {
         const requestSettings = settingsRef.current;
+        const generationSettings = adapter.settings?.conversation?.snapshot(
+          requestSettings,
+        );
+        if (generationSettings) {
+          await recordGenerationSettings(generationSettings);
+        }
+        controller.signal.throwIfAborted();
         const request = await adapter.createRequest({
           prompt,
           conversation: requestConversation,
@@ -1364,6 +1290,7 @@ export function ChatController<
     isReady,
     queueOrPostLiveOutput,
     recordTurn,
+    recordGenerationSettings,
     resetLivePreviewDelivery,
     setCurrentOutput,
     setCurrentPreviewOutput,

@@ -7,10 +7,7 @@ import { z } from 'zod';
 
 import { createLLMProvider } from './openai-provider.js';
 import { createAgentStepLogger } from '../../service/common/agent-step-logger.js';
-import {
-  buildOpenAIRunOptions,
-  resolveModelOutputTokenBudget,
-} from '../../service/common/provider.js';
+import { buildOpenAIRunOptions } from '../../service/common/provider.js';
 
 const resultSchema = z.object({
   score: z.number().int().min(0).max(5),
@@ -201,17 +198,11 @@ async function evaluateScreenshotWithAgent(
         { type: 'text', text: buildJudgePrompt(dimension, request) },
       ],
     }], {
-      ...buildOpenAIRunOptions({ model }, signal),
+      ...buildOpenAIRunOptions({ model }, signal, 2048),
       ...createAgentStepLogger<z.infer<typeof resultSchema>>({
         model,
       }, 'ui-judge'),
       maxSteps: 1,
-      modelSettings: {
-        maxOutputTokens: resolveModelOutputTokenBudget(
-          { model },
-          2048,
-        ),
-      },
       structuredOutput: { schema: resultSchema },
     });
     return resultSchema.parse(response.object);

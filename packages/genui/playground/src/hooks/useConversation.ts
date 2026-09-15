@@ -14,10 +14,12 @@ import {
   previewTextFromSharedMessages,
   renameConversation,
   saveConversationMessages,
+  saveConversationMeta,
   setActiveConversationId,
 } from '../storage/conversationRepo.js';
 import type { SharedConversationDoc } from '../storage/sharedConversation.js';
 import type {
+  ConversationGenerationSettings,
   ConversationMeta,
   ConversationProtocol,
   DataModelSnapshot,
@@ -78,6 +80,9 @@ export interface UseConversationReturn {
   remove: (id: string) => Promise<void>;
   rename: (id: string, title: string) => Promise<void>;
   recordTurn: (input: RecordTurnInput) => Promise<void>;
+  recordGenerationSettings: (
+    settings: ConversationGenerationSettings,
+  ) => Promise<void>;
   updateLastAssistantPreviewMetrics: (
     metrics: PreviewPerformanceMetrics,
   ) => Promise<void>;
@@ -583,6 +588,46 @@ export function useConversation(
     );
   }, [refreshConversations]);
 
+  const recordGenerationSettings = useCallback(
+    async (settings: ConversationGenerationSettings) => {
+      const id = activeIdRef.current;
+      const meta = conversationsRef.current.find((item) => item.id === id);
+      if (!meta) return;
+      const nextMeta: ConversationMeta = {
+        ...meta,
+        generationSettings: { ...settings },
+        updatedAt: Date.now(),
+      };
+      const nextConversations = conversationsRef.current.map((item) =>
+        item.id === id ? nextMeta : item
+      );
+      conversationsRef.current = nextConversations;
+      setConversations(nextConversations);
+      if (!persistentRef.current) return;
+      try {
+        await saveConversationMeta(nextMeta);
+      } catch (err) {
+        console.warn(
+          '[a2ui] Failed to persist generation settings; continuing in memory',
+          err,
+        );
+        persistentRef.current = false;
+        setIsPersistent(false);
+        conversationHotStateMapRef.current.set(
+          meta.id,
+          cloneHotState({
+            messages: messagesRef.current,
+            dataModel: dataModelRef.current,
+            surfaceIds: surfaceIdsRef.current,
+            previewMessages: previewMessagesRef.current,
+            previewPayloadUrls: previewPayloadUrlsRef.current,
+          }),
+        );
+      }
+    },
+    [],
+  );
+
   const recordTurn = useCallback(
     async (input: RecordTurnInput) => {
       let id = activeIdRef.current;
@@ -792,6 +837,7 @@ export function useConversation(
     remove,
     rename,
     recordTurn,
+    recordGenerationSettings,
     updateLastAssistantPreviewMetrics,
     buildConversationContext,
   };

@@ -8,6 +8,7 @@ import type {
   ModelChatMessage,
 } from '../../hooks/useConversation.js';
 import type {
+  ConversationGenerationSettings,
   PreviewPayloadUrls,
   PreviewPerformanceMetrics,
 } from '../../storage/types.js';
@@ -153,6 +154,13 @@ export interface ChatSettingsAdapter<TSettings> {
   initial: () => TSettings;
   parseStored: (raw: unknown) => TSettings;
   serialize: (value: TSettings) => unknown;
+  conversation?: {
+    snapshot: (value: TSettings) => ConversationGenerationSettings;
+    restore: (
+      value: TSettings,
+      saved: ConversationGenerationSettings,
+    ) => TSettings;
+  };
   load?: (
     value: TSettings,
     host: ChatHost,

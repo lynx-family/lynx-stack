@@ -12,6 +12,7 @@ import {
   test,
 } from '@rstest/core';
 
+import { lynxXmlTestText } from './helpers/lynx-xml.js';
 import { createA2UIAgent } from '../agent/a2ui/a2ui-agent.js';
 import type { GenerationAgentOptions } from '../agent/common/agent-capabilities.js';
 import { createLLMProvider } from '../agent/common/openai-provider.js';
@@ -91,6 +92,10 @@ const model = {
   },
   doStream: (options: ModelCallOptions) => {
     const { enabled, needsImage } = imageStep(options);
+    const text = enabled ? 'generated output' : 'generation disabled';
+    const output = JSON.stringify(options.prompt).includes('<!doctype lynx>')
+      ? lynxXmlTestText(text)
+      : text;
     return Promise.resolve({
       stream: readableStream([
         { type: 'stream-start' as const, warnings: [] },
@@ -101,7 +106,7 @@ const model = {
             {
               type: 'text-delta' as const,
               id: 'answer',
-              delta: enabled ? 'generated output' : 'generation disabled',
+              delta: output,
             },
             { type: 'text-end' as const, id: 'answer' },
           ]),
@@ -159,6 +164,68 @@ const factories: [string, (opts: GenerationAgentOptions) => unknown][] = [
 ];
 
 describe('shared image generation capability', () => {
+  test('Lynx XML continuation retains the image budget consumed by the first attempt', async () => {
+    const document = lynxXmlTestText('generated output');
+    const split = document.indexOf('generated output') + 'generated '.length;
+    const prefix = document.slice(0, split);
+    let step = 0;
+    rstest.mocked(createLLMProvider).mockReturnValue({
+      buildModel: () => ({
+        ...model,
+        doStream: (options: ModelCallOptions) => {
+          step++;
+          const requestingImages = step === 1 || step === 3;
+          if (step === 4) {
+            expect(JSON.stringify(options.prompt)).toContain(
+              'Image generation call limit reached',
+            );
+          }
+          const text = step === 2
+            ? prefix
+            : prefix.slice(-128) + document.slice(split);
+          const answerFinishReason = step === 2
+            ? 'length' as const
+            : 'stop' as const;
+          return Promise.resolve({
+            stream: readableStream([
+              { type: 'stream-start' as const, warnings: [] },
+              ...(requestingImages
+                ? Array.from({ length: step === 1 ? 4 : 1 }, (_, index) => ({
+                  ...toolCalls()[0]!,
+                  toolCallId: `recovery-image-${step}-${index}`,
+                }))
+                : [
+                  { type: 'text-start' as const, id: 'answer' },
+                  { type: 'text-delta' as const, id: 'answer', delta: text },
+                  { type: 'text-end' as const, id: 'answer' },
+                ]),
+              {
+                type: 'finish' as const,
+                finishReason: requestingImages
+                  ? 'tool-calls' as const
+                  : answerFinishReason,
+                usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
+              },
+            ]),
+          });
+        },
+      }),
+      model: 'image-recovery-test',
+      provider: {} as never,
+      api: 'chat',
+      baseURL: 'https://provider.example.com/v1',
+    });
+    const result = await new LynxXmlAgentService().streamAsAsyncIterable([
+      { role: 'user', content: 'Generate a page with four original images.' },
+    ], { enableWebSearch: false });
+    for await (const _chunk of result.textStream) { /* drain */ }
+    const final = await result.finalize();
+    expect(final.text).toBe(document);
+    expect(final.metadata.generationAttempts).toHaveLength(2);
+    expect(step).toBe(4);
+    expect(imageCalls).toHaveLength(4);
+  });
+
   test.each(factories)(
     '%s registers image generation independently of search and only with valid configuration',
     async (name, create) => {
@@ -252,16 +319,19 @@ describe('shared image generation capability', () => {
   test.each(streamingServices)(
     '%s streams the answer after consuming image results',
     async (name, create) => {
+      const output = name === 'Lynx XML'
+        ? lynxXmlTestText('generated output')
+        : 'generated output';
       const result = await create().streamAsAsyncIterable([
         { role: 'user', content: 'Generate an original image' },
       ]);
       let text = '';
       for await (const chunk of result.textStream) text += chunk;
       expect(text).toBe(
-        name === 'A2UI' ? '\ngenerated output' : 'generated output',
+        name === 'A2UI' ? '\ngenerated output' : output,
       );
       expect(await result.finalize()).toMatchObject({
-        text: 'generated output',
+        text: output,
         finishReason: 'stop',
       });
       expect(imageCalls).toHaveLength(1);

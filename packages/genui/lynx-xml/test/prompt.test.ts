@@ -135,6 +135,23 @@ describe('buildLynxXmlSystemPrompt', () => {
     expect(LYNX_XML_SYSTEM_PROMPT).toContain('lynx.getCoreContext()');
   });
 
+  test.each([false, true])(
+    'requires explicit helper dependencies in both output modes (fragment: %s)',
+    enableHtmlFragment => {
+      const prompt = buildLynxXmlSystemPrompt({ enableHtmlFragment });
+      expect(prompt).toContain(
+        'function buildHeader(parent) with buildHeader(sheet)',
+      );
+      expect(prompt).toContain('cannot read renderPage\'s local sheet');
+      expect(prompt).toContain(
+        'call(), apply(), and bind() only set this and arguments',
+      );
+      expect(prompt).toContain(
+        'Check every identifier in helpers and callbacks',
+      );
+    },
+  );
+
   test('keeps node references separate from ids when appending elements', () => {
     expect(LYNX_XML_SYSTEM_PROMPT).toContain(
       'every __AppendElement argument',

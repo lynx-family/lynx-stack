@@ -162,25 +162,55 @@ export function resolveReasoningEffort(
   return configuredRunModel(opts)?.reasoningEffort;
 }
 
+/** Shared per-call generation target, further bounded by the selected model. */
+export const DEFAULT_AGENT_MAX_OUTPUT_TOKENS = 16_384;
+
 export function resolveModelOutputTokenBudget(
   opts: ChatOptions,
-  desiredMaxOutputTokens: number,
+  desiredMaxOutputTokens = DEFAULT_AGENT_MAX_OUTPUT_TOKENS,
 ): number {
-  const config = readModelConfig();
-  if (!config.ok) return desiredMaxOutputTokens;
-  if (opts.model && !config.config.models[opts.model]) {
-    return desiredMaxOutputTokens;
+  if (
+    !Number.isSafeInteger(desiredMaxOutputTokens) || desiredMaxOutputTokens <= 0
+  ) {
+    throw new RangeError('maxOutputTokens must be a positive safe integer');
   }
-  const modelName = opts.model ?? config.config.defaultModel;
-  const configuredLimit = config.config.models[modelName]!.maxOutputTokens;
+  const configuredLimit = configuredRunModel(opts)?.maxOutputTokens;
   return configuredLimit === undefined
     ? desiredMaxOutputTokens
     : Math.min(desiredMaxOutputTokens, configuredLimit);
 }
 
+export interface ReasoningRecoverySettings {
+  maxOutputTokens: number;
+  reasoningEffort: OpenAIReasoningEffort;
+}
+
+/** Adapt one fresh attempt after reasoning consumed the entire output budget. */
+export function resolveReasoningRecoverySettings(
+  opts: ChatOptions,
+  currentMaxOutputTokens: number,
+): ReasoningRecoverySettings | undefined {
+  if (opts.inheritReasoningEffort === false) return undefined;
+  const currentEffort = resolveReasoningEffort(opts);
+  const reasoningEffort = currentEffort === 'none'
+      || currentEffort === 'minimal' || currentEffort === 'low'
+    ? currentEffort
+    : 'low';
+  const ceiling = configuredRunModel(opts)?.maxOutputTokens;
+  // Never assume a provider without a configured ceiling supports more tokens.
+  const maxOutputTokens = ceiling === undefined
+    ? currentMaxOutputTokens
+    : Math.min(currentMaxOutputTokens * 2, ceiling);
+  return reasoningEffort === currentEffort
+      && maxOutputTokens <= currentMaxOutputTokens
+    ? undefined
+    : { maxOutputTokens, reasoningEffort };
+}
+
 export function buildOpenAIRunOptions(
   opts: ChatOptions,
   abortSignal?: AbortSignal,
+  desiredMaxOutputTokens = DEFAULT_AGENT_MAX_OUTPUT_TOKENS,
 ) {
   const reasoningEffort = resolveReasoningEffort(opts);
   const baseURL = hasCustomProvider(opts)
@@ -188,26 +218,32 @@ export function buildOpenAIRunOptions(
     : configuredRunModel(opts)?.baseURL;
   const compatibleProvider = baseURL !== undefined
     && !isOfficialOpenAIBaseURL(baseURL);
-  return pickDefined({
-    resourceId: opts.resourceId,
-    abortSignal,
-    modelSettings: opts.maxRetries === undefined
-      ? undefined
-      : { maxRetries: opts.maxRetries },
-    providerOptions: reasoningEffort
-      ? {
-        openai: {
-          reasoningEffort,
-          ...(compatibleProvider
-            ? {
-              // Configured effort also applies to model aliases unknown to the SDK.
-              forceReasoning: true,
-              systemMessageMode: 'system' as const,
-              reasoningSummary: null,
-            }
-            : {}),
-        },
-      }
-      : undefined,
-  });
+  return {
+    ...pickDefined({
+      resourceId: opts.resourceId,
+      abortSignal,
+      providerOptions: reasoningEffort
+        ? {
+          openai: {
+            reasoningEffort,
+            ...(compatibleProvider
+              ? {
+                // Configured effort also applies to model aliases unknown to the SDK.
+                forceReasoning: true,
+                systemMessageMode: 'system' as const,
+                reasoningSummary: null,
+              }
+              : {}),
+          },
+        }
+        : undefined,
+    }),
+    modelSettings: {
+      ...pickDefined({ maxRetries: opts.maxRetries }),
+      maxOutputTokens: resolveModelOutputTokenBudget(
+        opts,
+        desiredMaxOutputTokens,
+      ),
+    },
+  };
 }

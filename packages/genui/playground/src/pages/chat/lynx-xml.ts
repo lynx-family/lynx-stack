@@ -351,6 +351,23 @@ export const LYNX_XML_CHAT_ADAPTER = {
       delete stored.enableHtmlFragment;
       return stored;
     },
+    conversation: {
+      snapshot(settings) {
+        return {
+          ...CHAT_PROVIDER_SETTINGS_ADAPTER.conversation.snapshot(settings),
+          enableHtmlFragment: settings.enableHtmlFragment !== false,
+        };
+      },
+      restore(settings, saved) {
+        return {
+          ...CHAT_PROVIDER_SETTINGS_ADAPTER.conversation.restore(
+            settings,
+            saved,
+          ),
+          enableHtmlFragment: saved.enableHtmlFragment ?? true,
+        };
+      },
+    },
     controls(settings: ProviderSettings) {
       return [...CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings), {
         id: 'enableHtmlFragment',

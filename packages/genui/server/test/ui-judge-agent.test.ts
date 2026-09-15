@@ -103,6 +103,11 @@ describe('GenUI screenshot evaluation', () => {
     });
     await evaluateScreenshot({ screenshotDataUrl, task: 'Build a greeting' });
     expect(agentModels[0]?.modelId).toBe('default-upstream');
+    for (const [, options] of generate.mock.calls) {
+      expect(options).toMatchObject({
+        modelSettings: { maxOutputTokens: 2048 },
+      });
+    }
   });
 
   test('uses the shared GenUI fallback instead of treating an unknown name as an upstream ID', async () => {

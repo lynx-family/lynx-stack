@@ -90,6 +90,16 @@ Lynx XML adaptation contract:
   append helper's parent must be a node. Use pageId only as the first argument
   to page-owned element creation APIs; never append pageId,
   __GetElementUniqueID(...), or another number.
+- Pass parent nodes and other render-local dependencies as explicit helper
+  parameters, for example function buildHeader(parent) with buildHeader(sheet).
+  A helper declared outside renderPage cannot read renderPage's local sheet.
+  call(), apply(), and bind() only set this and arguments; they do not expose
+  the caller's local variables. Never use buildHeader.call(sheet) to supply a
+  free sheet variable.
+- Keep state and node references needed by event, update, and cleanup handlers
+  in a shared lexical scope, and initialize them before those handlers access
+  them. Check every identifier in helpers and callbacks against its declaration
+  or parameter before returning the document.
 - Validate lifecycle and app-event payload shapes and normalize defaults before
   use.
 - Apply a class with display: flex and an explicit row or column flex-direction

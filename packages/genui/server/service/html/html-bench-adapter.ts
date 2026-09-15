@@ -16,6 +16,7 @@ import {
 } from '../common/bench/retry.js';
 import type { BenchRetrySleep } from '../common/bench/retry.js';
 import { benchAttemptTokenCounts } from '../common/bench/usage.js';
+import { buildGenerationRepairMessages } from '../common/generation-repair.js';
 import {
   GenerationPostprocessError,
   GenerationUpstreamError,
@@ -68,10 +69,11 @@ export function createHtmlBenchAdapter(
     protocol: 'html',
     async generate(input, signal) {
       signal?.throwIfAborted();
-      const messages: ChatMessage[] = [{
+      const initialMessages: ChatMessage[] = [{
         role: 'user',
         content: buildPrompt(input),
       }];
+      let messages = initialMessages;
       const attempts: ProtocolBenchAttemptResult[] = [];
       const maxAttempts = Number.isFinite(input.maxAttempts)
         ? Math.min(4, Math.max(1, Math.floor(input.maxAttempts)))
@@ -152,13 +154,11 @@ export function createHtmlBenchAdapter(
         });
         if (finalValid) break;
         if (index < maxAttempts) {
-          messages.push({
-            role: 'assistant',
-            content: generated.text,
-          });
-          messages.push({
-            role: 'user',
-            content:
+          messages = buildGenerationRepairMessages({
+            initialMessages,
+            messages,
+            result: generated,
+            repairPrompt:
               `Fix the following validation errors and return the complete HTML artifact:\n${
                 finalErrors.join('\n')
               }`,

@@ -63,8 +63,11 @@ export GENUI_MODEL_CONFIG_JSON='{
 - `api` is optional and accepts `chat` or `responses`.
 - `default: true` is optional. When omitted, the first entry is the default.
 - `maxOutputTokens` is an optional positive integer describing the provider's
-  supported output ceiling. Lynx XML requests target 16384 tokens and use the
-  lower of that target and the configured model ceiling.
+  supported output ceiling. All generation agents share a 16384-token per-call
+  target through `buildOpenAIRunOptions`, clamped to the effective model ceiling.
+  This includes raw generation, streaming, continuations, and repairs. Judge
+  requests use the same resolver with a 2048-token target. Reasoning-only
+  recovery may increase the requested budget, within that same ceiling.
 - `reasoningEffort` is optional per model.
 
 For generation latency, keep static instructions/catalogs ahead of conversation
@@ -216,13 +219,34 @@ as a missing XML tag. The final artifact must start with lowercase
 thread script, and end with `</lynx>`. Keep generated UI on Element PAPI; do
 not route it through ReactLynx, JSX, OpenUI, or A2UI.
 
+The streaming service allows at most three generation attempts to recover an
+invalid response ending in `length`. It tries one continuation with an exact
+source-boundary echo, then falls back to requesting a shorter complete artifact.
+Empty or oversized prefixes go straight to compact regeneration. Keep the model,
+abort signal, and capability scope unchanged. Ordinary artifact recovery also
+keeps the per-call token budget. Recovery
+responses are buffered; only the validated final document replaces the initial
+streamed prefix in `done`. Sum all attempt usage and expose recovery modes in
+`metadata.generationAttempts`. Raw generation remains single-call so Bench owns
+its configured repair budget. Upstream failures normally stop recovery.
+
+The shared recovery helper also supports one fresh attempt after reasoning-only
+exhaustion: no text or tool output, positive input usage, and all output tokens
+used by reasoning at the exact request budget. Require `length` or the observed
+400 `input` / `<nil>` error. Keep that original error and finish reason, lower
+reasoning effort to `low` unless already none/minimal/low, and increase output
+tokens only within a known configured ceiling, at most 2x. Never append an empty
+assistant reply or replay hidden reasoning. Count this within the same three
+attempts and aggregate usage; keep the override request-scoped and skip it when
+settings would be unchanged or `inheritReasoningEffort` is false.
+
 `enableHtmlFragment` defaults to false. When enabled, the model outputs one
 intermediate document with one root-child `<template>` plus styles and scripts in any order;
 the service compiles the template and injects an id-based `createFragment`
 helper before final validation. Conversion is deterministic postprocessing,
 not a Mastra tool. Keep shared search/image capability scopes independent of it.
 
-Return the exact model text in `metadata.modelOutput` and the successful
+Return the exact assembled model text in `metadata.modelOutput` and the successful
 original fragment in `metadata.xmlFragment`; omit fragment metadata when off.
 Stream model text for source inspection, but deliver only the compiled document
 to preview and Judge. Preserve usage and finish reason on compilation failure

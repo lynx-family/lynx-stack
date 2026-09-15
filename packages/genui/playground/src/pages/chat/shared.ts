@@ -315,6 +315,15 @@ export const CHAT_PROVIDER_SETTINGS_ADAPTER = {
   initial: createDefaultProviderSettings,
   parseStored: parseStoredProviderSettings,
   serialize: serializeProviderSettings,
+  conversation: {
+    snapshot: (settings) => ({
+      enableDesignGuidance: settings.enableDesignGuidance !== false,
+    }),
+    restore: (settings, saved) => ({
+      ...settings,
+      enableDesignGuidance: saved.enableDesignGuidance,
+    }),
+  },
   load: loadProviderSettings,
   controls(settings) {
     const customOption = {

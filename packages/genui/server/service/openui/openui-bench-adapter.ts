@@ -31,6 +31,7 @@ import {
 } from '../common/bench/retry.js';
 import type { BenchRetrySleep } from '../common/bench/retry.js';
 import { benchAttemptTokenCounts } from '../common/bench/usage.js';
+import { buildGenerationRepairMessages } from '../common/generation-repair.js';
 import { GenerationUpstreamError } from '../common/result.js';
 import type { ChatMessage } from '../common/types.js';
 
@@ -339,10 +340,11 @@ class DefaultOpenUIBenchAdapter implements OpenUIBenchAdapter {
     signal?: AbortSignal,
   ): Promise<OpenUIBenchRunArtifact> {
     const attempts: OpenUIBenchAttemptResult[] = [];
-    const messages: ChatMessage[] = [{
+    const initialMessages: ChatMessage[] = [{
       role: 'user',
       content: buildOpenUIBenchPrompt(input.scenario),
     }];
+    let messages = initialMessages;
     const maxAttempts = normalizedAttemptLimit(input.maxAttempts);
 
     for (let index = 1; index <= maxAttempts; index += 1) {
@@ -364,10 +366,11 @@ class DefaultOpenUIBenchAdapter implements OpenUIBenchAdapter {
         break;
       }
       if (index < maxAttempts) {
-        messages.push({ role: 'assistant', content: attempt.rawText });
-        messages.push({
-          role: 'user',
-          content: formatOpenUIBenchRepairPrompt(attempt.normalizedErrors),
+        messages = buildGenerationRepairMessages({
+          initialMessages,
+          messages,
+          result: { text: attempt.rawText, finishReason: attempt.finishReason },
+          repairPrompt: formatOpenUIBenchRepairPrompt(attempt.normalizedErrors),
         });
       }
     }

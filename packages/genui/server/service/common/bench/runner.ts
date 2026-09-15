@@ -56,6 +56,7 @@ import type {
 import { createHtmlBenchAdapter } from '../../html/html-bench-adapter.js';
 import { createLynxXmlBenchAdapter } from '../../lynx-xml/lynx-xml-bench-adapter.js';
 import { createOpenUIBenchAdapter } from '../../openui/openui-bench-adapter.js';
+import { buildGenerationRepairMessages } from '../generation-repair.js';
 import { defaultModelName } from '../model-config.js';
 import type { ChatMessage } from '../types.js';
 
@@ -183,7 +184,7 @@ async function generateA2UINative(
   usage: unknown[];
   warnings: string[];
 }> {
-  const conversation = [...messages];
+  let conversation = [...messages];
   const usage: unknown[] = [];
   const maxAttempts = Math.min(
     5,
@@ -239,10 +240,11 @@ async function generateA2UINative(
       };
     }
     if (attempt < maxAttempts) {
-      conversation.push({ role: 'assistant', content: generated.text });
-      conversation.push({
-        role: 'user',
-        content: formatErrorsForModel(validation.errors),
+      conversation = buildGenerationRepairMessages({
+        initialMessages: messages,
+        messages: conversation,
+        result: generated,
+        repairPrompt: formatErrorsForModel(validation.errors),
       });
     }
   }

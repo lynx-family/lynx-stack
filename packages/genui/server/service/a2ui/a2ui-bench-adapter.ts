@@ -24,6 +24,7 @@ import {
 } from '../common/bench/retry.js';
 import type { BenchRetrySleep } from '../common/bench/retry.js';
 import { benchAttemptTokenCounts } from '../common/bench/usage.js';
+import { buildGenerationRepairMessages } from '../common/generation-repair.js';
 import { GenerationUpstreamError } from '../common/result.js';
 import type { ChatMessage } from '../common/types.js';
 
@@ -129,10 +130,11 @@ export function createA2UIBenchAdapter(
       }
 
       const catalog = createMatchedCoreCatalog();
-      const messages: ChatMessage[] = [{
+      const initialMessages: ChatMessage[] = [{
         role: 'user',
         content: buildPrompt(input),
       }];
+      let messages = initialMessages;
       const attempts: ProtocolBenchAttemptResult[] = [];
       const warnings: string[] = [];
       let finalText = '';
@@ -192,10 +194,11 @@ export function createA2UIBenchAdapter(
             break;
           }
           if (index < maxAttempts) {
-            messages.push({ role: 'assistant', content: generated.text });
-            messages.push({
-              role: 'user',
-              content: formatErrorsForModel(validation.errors),
+            messages = buildGenerationRepairMessages({
+              initialMessages,
+              messages,
+              result: generated,
+              repairPrompt: formatErrorsForModel(validation.errors),
             });
           }
         } catch (error) {
