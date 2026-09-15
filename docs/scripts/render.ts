@@ -63,6 +63,7 @@ export interface Locale {
   defaultBadge: string;
   rsbuildOption: string;
   rsbuildDocsLink: string;
+  reexported: string;
   packageGroups: Record<PackageGroup, string>;
 }
 
@@ -103,6 +104,7 @@ export const EN: Locale = {
   rsbuildOption:
     'Lynx changes the default of this Rsbuild option; everything else works as in Rsbuild. See the {link}.',
   rsbuildDocsLink: 'Rsbuild documentation',
+  reexported: 'Re-exported from {link}.',
   packageGroups: {
     build: 'Build tools',
     react: 'ReactLynx',
@@ -149,6 +151,7 @@ export const ZH: Locale = {
   rsbuildOption:
     'Lynx 修改了这个 Rsbuild 配置的默认值，其他用法与 Rsbuild 相同，详见 {link}。',
   rsbuildDocsLink: 'Rsbuild 文档',
+  reexported: '从 {link} 重新导出。',
   packageGroups: {
     build: '构建工具',
     react: 'ReactLynx',
@@ -235,6 +238,7 @@ export type SiteAnchors = Map<string, { url: string; priority: number }>;
 
 interface Ctx {
   api: ApiData;
+  dataDir: string;
   l: Locale;
   anchors: Map<string, string>;
   tr?: Translations | undefined;
@@ -277,13 +281,31 @@ function resolveLinks(md: string, ctx: Ctx): string {
   return md.replace(
     /\[([^\]]*)\]\(api:([^)]+)\)/g,
     (_, text: string, target: string) => {
-      const [top, ...rest] = target.split('.');
-      const t = linkTarget(ctx, target)
-        ?? (rest.length > 0 ? linkTarget(ctx, rest.join('.')) : undefined)
-        ?? linkTarget(ctx, top!);
+      const cross = /^(@[^#]+)#(.+)$/.exec(target);
+      const t = cross
+        ? crossTarget(ctx, cross[1]!, cross[2]!)
+        : nameTarget(ctx, ctx.api.id, target);
       return t ? `[${text}](${t})` : text;
     },
   );
+}
+
+function nameTarget(ctx: Ctx, id: string, target: string): string | undefined {
+  const [top, ...rest] = target.split('.');
+  return linkTarget(ctx, target, id)
+    ?? (rest.length > 0 ? linkTarget(ctx, rest.join('.'), id) : undefined)
+    ?? linkTarget(ctx, top!, id);
+}
+
+function crossTarget(
+  ctx: Ctx,
+  pkg: string,
+  target: string,
+): string | undefined {
+  const entry = packageEntry(ctx.dataDir, pkg);
+  if (!entry) return undefined;
+  return nameTarget(ctx, entry.id, target)
+    ?? `${ctx.prefix ?? ''}${packagePageUrl(entry)}`;
 }
 
 function md(text: string | undefined, ctx: Ctx): string {
@@ -291,10 +313,14 @@ function md(text: string | undefined, ctx: Ctx): string {
   return escapeMdx(resolveLinks(text, ctx));
 }
 
-function linkTarget(ctx: Ctx, name: string): string | undefined {
-  const local = ctx.anchors.get(name);
+function linkTarget(
+  ctx: Ctx,
+  name: string,
+  id = ctx.api.id,
+): string | undefined {
+  const local = id === ctx.api.id ? ctx.anchors.get(name) : undefined;
   if (local) return `#${local}`;
-  const site = ctx.site?.get(`${ctx.api.id}|${name}`);
+  const site = ctx.site?.get(`${id}|${name}`);
   if (!site) return undefined;
   const [page, anchor] = site.url.split('#');
   if (page === ctx.page) return anchor ? `#${anchor}` : undefined;
@@ -388,14 +414,16 @@ function metaList(
   if (includeType) {
     rows.push(`- **${ctx.l.type}${ctx.l.colon}** ${typeCell(m, ctx)}`);
   }
-  if (m.default !== undefined) {
-    rows.push(
-      `- **${ctx.l.default}${ctx.l.colon}** ${
-        md(tr(ctx, `${key}.default`, m.default), ctx)
-      }`,
-    );
-  }
+  if (m.default !== undefined) rows.push(defaultRow(m, ctx, key));
   return rows.length > 0 ? rows.join('\n') + '\n\n' : '';
+}
+
+function defaultRow(m: ApiMember, ctx: Ctx, key: string): string {
+  const text = md(tr(ctx, `${key}.default`, m.default), ctx)
+    .replace(/\n(?=.)/g, '\n  ');
+  return `- **${ctx.l.default}${ctx.l.colon}**${
+    text.startsWith('```') ? `\n\n  ${text}` : ` ${text}`
+  }`;
 }
 
 function findExport(ctx: Ctx, name: string): ApiExport | undefined {
@@ -625,6 +653,7 @@ export function configPagePaths(
 ): { path: string; lynx: boolean }[] {
   const ctx: Ctx = {
     api: loadApi(dataDir, 'rspeedy'),
+    dataDir,
     l: EN,
     anchors: new Map(),
     stale: new Set(),
@@ -947,6 +976,12 @@ function renderExport(e: ApiExport, depth: number, ctx: Ctx): string {
   const h = '#'.repeat(Math.min(depth, 6));
   const title = e.kind === 'function' ? `${e.name}()` : e.name;
   const key = e.name;
+  if (e.from) {
+    const url = crossTarget(ctx, e.from, e.name);
+    return `${h} ${code(title)} \\{#${slug(e.name)}\\}\n\n${
+      ctx.l.reexported.replace('{link}', `[${code(e.from)}](${url})`)
+    }\n\n`;
+  }
   const bodyText = body(e, ctx, key);
   let s = `${h} ${code(title)}${badges(e, ctx)}${
     untranslated(ctx, `${key}.summary`)
@@ -966,9 +1001,7 @@ function renderExport(e: ApiExport, depth: number, ctx: Ctx): string {
   }
   s += bodyText;
   if (e.default !== undefined && e.kind !== 'variable') {
-    s += `- **${ctx.l.default}${ctx.l.colon}** ${
-      md(tr(ctx, `${key}.default`, e.default), ctx)
-    }\n\n`;
+    s += `${defaultRow(e, ctx, key)}\n\n`;
   }
   const sig = e.signatures?.[0];
   if (sig) {
@@ -1045,13 +1078,20 @@ export function renderExports(
 
 let packageIndex: Record<string, { package: string }> | undefined;
 
-export function packageLabel(dataDir: string, entry: PackageEntry): string {
+function packageName(dataDir: string, entry: PackageEntry): string {
   packageIndex ??= JSON.parse(
     readFileSync(join(dataDir, 'index.json'), 'utf8'),
   ) as Record<string, { package: string }>;
-  const name = entry.name ?? packageIndex[entry.id]?.package
+  return entry.name ?? packageIndex[entry.id]?.package
     ?? `@lynx-js/${entry.id}`;
-  return name.replace(/^@lynx-js\//, '');
+}
+
+export function packageLabel(dataDir: string, entry: PackageEntry): string {
+  return packageName(dataDir, entry).replace(/^@lynx-js\//, '');
+}
+
+function packageEntry(dataDir: string, pkg: string): PackageEntry | undefined {
+  return PACKAGES.find(e => packageName(dataDir, e) === pkg);
 }
 
 export const packagePageUrl = (entry: PackageEntry) =>
@@ -1112,6 +1152,7 @@ export function renderDirective(
   const api = loadApi(dataDir, d.attrs['package']!);
   const ctx: Ctx = {
     api,
+    dataDir,
     l: locale,
     anchors: new Map(),
     tr: translations,

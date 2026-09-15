@@ -12,7 +12,9 @@ export const FENCE = /(```[^\n]*\n[\s\S]*?\n```)/;
 
 export function needsTranslation(en: string): boolean {
   const prose = en.split(FENCE).filter((_, i) => i % 2 === 0).join('');
-  return /\p{L}/u.test(prose.replace(/`[^`\n]*`/g, ''));
+  return /\p{L}/u.test(
+    prose.replace(/`[^`\n]*`/g, '').replace(/\]\([^)\s]*\)/g, ']'),
+  );
 }
 
 function collectMember(owner: string, m: ApiMember, out: Entry[]): void {

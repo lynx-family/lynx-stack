@@ -77,6 +77,7 @@ export interface ApiExport extends ApiMember {
   kind: string;
   signatures?: ApiSignature[];
   literalUnion?: string[];
+  from?: string;
 }
 
 export interface ApiSignature {
@@ -100,6 +101,14 @@ export interface ApiData {
 
 const only = process.argv.slice(2);
 
+const DOCUMENTED = new Set(
+  PACKAGES.map(e =>
+    (JSON.parse(readFileSync(join(ROOT, e.dir, 'package.json'), 'utf8')) as {
+      name: string;
+    }).name
+  ),
+);
+
 function partsToMd(parts: readonly CommentDisplayPart[] | undefined): string {
   if (!parts || parts.length === 0) return '';
   return parts.map(p => {
@@ -111,6 +120,13 @@ function partsToMd(parts: readonly CommentDisplayPart[] | undefined): string {
       if (typeof target === 'string') {
         const text = p.text?.trim() || target;
         return `[${text}](${target})`;
+      }
+      const ref = /^(?:(@lynx-js\/[^#\s]+)#)?([A-Z_$a-z][\w$.]*)(?:\s*\|(.+))?$/
+        .exec(p.text.trim());
+      if (ref) {
+        return `[\`${ref[3]?.trim() ?? ref[2]}\`](api:${
+          ref[1] ? `${ref[1]}#` : ''
+        }${ref[2]})`;
       }
       return `\`${p.text}\``;
     }
@@ -148,9 +164,8 @@ function tags(comment: Comment | undefined, name: `@${string}`): string[] {
   ).filter(Boolean) ?? [];
 }
 
-function unwrapCodeFence(md: string): string {
-  const m = /^```[a-z]*\n([^\n]*)\n```$/.exec(md);
-  return m ? `\`${m[1]}\`` : md;
+function defaultText(md: string): string {
+  return /^[^\s`]+$/.test(md) ? `\`${md}\`` : md;
 }
 
 function stripUndefined(t: string): string {
@@ -265,7 +280,7 @@ function commentFields(comment: Comment | undefined): Partial<ApiMember> {
     out.deprecated = partsToMd(dep?.content) || 'Deprecated.';
   }
   const def = tag(comment, '@defaultValue') ?? tag(comment, '@default');
-  if (def !== undefined) out.default = unwrapCodeFence(def);
+  if (def !== undefined) out.default = defaultText(def);
   if (comment.modifierTags.has('@beta')) out.beta = true;
   if (comment.modifierTags.has('@alpha')) out.alpha = true;
   if (comment.modifierTags.has('@experimental')) out.experimental = true;
@@ -456,7 +471,13 @@ async function generate(entry: PackageEntry): Promise<ApiData | null> {
   const children = (project.children ?? []).filter(c =>
     !c.comment?.modifierTags.has('@internal')
   );
-  const apiExports = children.map(c => exportOf(c, project));
+  const apiExports = children.map(c => {
+    const e = exportOf(c, project);
+    const from = project.getSymbolIdFromReflection(c)?.packageName;
+    return from && from !== pkg.name && DOCUMENTED.has(from)
+      ? { name: e.name, kind: e.kind, type: e.type, from }
+      : e;
+  });
   for (const e of apiExports) {
     const callable = e.kind === 'variable' && e.ref
       ? apiExports.find(x =>
@@ -518,6 +539,7 @@ async function convert(
     excludeExternals: !includeExternals,
     excludeInternal: true,
     disableSources: true,
+    jsDocCompatibility: { defaultTag: false },
     logLevel: 'Warn',
     skipErrorChecking: true,
     blockTags: [
@@ -539,7 +561,6 @@ async function convert(
       '@alpha',
       '@internal',
       '@experimental',
-      '@deprecated',
       '@packageDocumentation',
       '@sealed',
       '@virtual',
