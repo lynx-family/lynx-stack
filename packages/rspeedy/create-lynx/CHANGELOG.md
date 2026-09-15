@@ -1,5 +1,11 @@
 # @lynx-js/create-lynx
 
+## 0.2.1
+
+### Patch Changes
+
+- Run `rslib` instead of `rslib build` in the library templates; `build` is the default command. ([#3934](https://github.com/lynx-family/lynx-stack/pull/3934))
+
 ## 0.2.0
 
 ### Minor Changes
