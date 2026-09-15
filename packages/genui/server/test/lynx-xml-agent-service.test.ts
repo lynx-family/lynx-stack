@@ -8,7 +8,7 @@ import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 import {
   LYNX_XML_MAX_OUTPUT_TOKENS,
   buildLynxXmlRunOptions,
-} from '../service/lynx-xml-agent.js';
+} from '../service/lynx-xml/lynx-xml-agent.js';
 
 const MODEL_CONFIG = {
   Short: {

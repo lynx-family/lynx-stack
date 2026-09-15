@@ -4,7 +4,7 @@ Array [
     "page",
     null,
     null,
-    "0",
+    0,
     null,
   ],
   Array [
@@ -19,7 +19,6 @@ Array [
     "__SetAttributeOfElementTemplate",
     "<page />",
     0,
-    null,
     null,
   ],
   Array [

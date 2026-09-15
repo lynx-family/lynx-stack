@@ -33,7 +33,7 @@
   ],
   "scripts": {
     "api-extractor": "node scripts/api-extractor.mjs",
-    "build": "rslib build",
+    "build": "rslib",
     "test": "rstest",
     "test:type": "tsc6 --noEmit"
   },

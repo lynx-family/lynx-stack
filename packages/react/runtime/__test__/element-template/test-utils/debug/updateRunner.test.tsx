@@ -60,7 +60,7 @@ describe('element-template update runner', () => {
         id: 1,
         template: '_et_builtin_raw_text',
         attributeSlots: ['hello'],
-        elementSlots: [],
+        childSlots: [],
       },
       {
         type: 'setAttribute',
@@ -85,7 +85,7 @@ describe('element-template update runner', () => {
         id: 8,
         elementType: 'list',
         attributes: { id: 'typed-list' },
-        elementSlots: [[1]],
+        childSlots: [[1]],
         options: { listChildren: [{ __etHandleRef: 1 }] },
       },
       {
@@ -114,7 +114,7 @@ describe('element-template update runner', () => {
       {
         type: 'removeNode',
         id: 4,
-        elementSlotIndex: 5,
+        childSlotIndex: 5,
         child: 6,
         removedSubtreeHandleIds: [6, 7],
       },

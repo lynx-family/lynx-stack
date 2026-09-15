@@ -42,6 +42,7 @@ describe('CLI - preview', () => {
     const mockedPreview = rstest.fn(() => {
       return { urls: [] }
     })
+    const mockedInitConfigs = rstest.fn()
 
     rstest.mocked(createRsbuild).mockImplementation(() =>
       // @ts-expect-error mock
@@ -49,7 +50,7 @@ describe('CLI - preview', () => {
         isPluginExists: rstest.fn(),
         addPlugins: rstest.fn(),
         build: rstest.fn(),
-        initConfigs: rstest.fn(),
+        initConfigs: mockedInitConfigs,
         context: { distPath },
         preview: mockedPreview,
         inspectConfig: rstest.fn(),
@@ -66,6 +67,7 @@ describe('CLI - preview', () => {
 
     expect(createRsbuild).toBeCalled()
     expect(mockedPreview).toBeCalled()
+    expect(mockedInitConfigs).toBeCalledWith({ action: 'preview' })
   })
 
   test('preview with loadConfig error', async () => {

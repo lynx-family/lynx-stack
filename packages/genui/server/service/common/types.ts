@@ -2,6 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { ImageGenerationCapabilityOptions } from '../../agent/common/image-generation-capability.js';
+import type { SearchCapabilityOptions } from '../../agent/common/search-capability.js';
+
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -20,13 +23,19 @@ export type OpenAIReasoningEffort =
   | 'high'
   | 'xhigh';
 
-export interface ChatOptions {
+export interface ChatOptions
+  extends SearchCapabilityOptions, ImageGenerationCapabilityOptions
+{
+  /** Include the shared product and mobile design guidance in generation prompts. */
+  enableDesignGuidance?: boolean | undefined;
   resourceId?: string | undefined;
   apiKey?: string | undefined;
   baseURL?: string | undefined;
   model?: string | undefined;
   api?: 'chat' | 'responses' | undefined;
   reasoningEffort?: OpenAIReasoningEffort | undefined;
+  /** SDK retries per model call; Bench owns retries and explicitly sets zero. */
+  maxRetries?: number | undefined;
   /** Do not retain request-scoped provider credentials in the shared cache. */
   disableAgentCache?: boolean | undefined;
   /**
@@ -41,6 +50,7 @@ export interface ChatOptions {
 }
 
 export interface MastraResult {
+  error?: unknown;
   text?: unknown;
   usage?: unknown;
   totalUsage?: unknown;

@@ -68,16 +68,22 @@ inline-truncation > lynx-wrapper > x-text {
 
 x-text > inline-image,
 x-text > x-image,
+x-text > x-svg,
 inline-truncation > inline-image,
 inline-truncation > x-image,
+inline-truncation > x-svg,
 inline-text > inline-image,
 inline-text > x-image,
+inline-text > x-svg,
 x-text > lynx-wrapper > inline-image,
 x-text > lynx-wrapper > x-image,
+x-text > lynx-wrapper > x-svg,
 inline-truncation > lynx-wrapper > inline-image,
 inline-truncation > lynx-wrapper > x-image,
+inline-truncation > lynx-wrapper > x-svg,
 inline-text > lynx-wrapper > inline-image,
-inline-text > lynx-wrapper > x-image {
+inline-text > lynx-wrapper > x-image,
+inline-text > lynx-wrapper > x-svg {
   display: contents !important;
 }
 
@@ -118,9 +124,13 @@ inline-image::part(img) {
 }
 
 x-text > x-image::part(img),
+x-text > x-svg::part(img),
 x-text > lynx-wrapper > x-image::part(img),
+x-text > lynx-wrapper > x-svg::part(img),
 inline-truncation > x-image::part(img),
-inline-truncation > lynx-wrapper > x-image::part(img) {
+inline-truncation > x-svg::part(img),
+inline-truncation > lynx-wrapper > x-image::part(img),
+inline-truncation > lynx-wrapper > x-svg::part(img) {
   display: inline-block;
   height: inherit !important;
   width: inherit !important;
@@ -159,11 +169,13 @@ x-text[text-selection] > inline-text,
 x-text[text-selection] > x-text,
 x-text[text-selection] > inline-image,
 x-text[text-selection] > x-image,
+x-text[text-selection] > x-svg,
 x-text[text-selection] > inline-truncation,
 x-text[text-selection] > lynx-wrapper > inline-text,
 x-text[text-selection] > lynx-wrapper > x-text,
 x-text[text-selection] > lynx-wrapper > inline-image,
 x-text[text-selection] > lynx-wrapper > x-image,
+x-text[text-selection] > lynx-wrapper > x-svg,
 x-text[text-selection] > lynx-wrapper > inline-truncation {
   -webkit-user-select: auto;
   user-select: auto;

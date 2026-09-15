@@ -11,9 +11,12 @@ export interface Route {
   tab: Tab;
   componentName?: string;
   demoId?: string;
+  benchReportId?: string;
 }
 
 export const DEFAULT_ROUTE_HASH = '#/a2ui';
+export const BENCH_JOB_ID =
+  /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/iu;
 
 export function isEmptyRouteHash(hash: string): boolean {
   return hash === '' || hash === '#' || hash === '#/';
@@ -68,6 +71,13 @@ export function parseRouteHash(hash: string): Route {
     return { protocol, tab: 'create' };
   }
   if (rest[0] === 'bench' && protocol.name === 'a2ui') {
+    if (rest[1] === 'reports') {
+      return {
+        protocol,
+        tab: 'bench',
+        benchReportId: rest.length === 3 ? rest[2] : '',
+      };
+    }
     return { protocol, tab: 'bench' };
   }
   // Back-compat: the standalone Playback tab is gone; route it to Examples.

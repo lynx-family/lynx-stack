@@ -3,8 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { Hono } from 'hono';
 
-import type { A2UICatalog } from '../../../agent/a2ui-catalog';
-import { getA2UIAgentService } from '../../../service/a2ui-agent';
+import type { A2UICatalog } from '../../../agent/a2ui/a2ui-catalog.js';
+import { getA2UIAgentService } from '../../../service/a2ui/a2ui-agent.js';
 import type { ChatMessage } from '../../../service/common/types';
 import {
   MAX_MESSAGE_CHARS,

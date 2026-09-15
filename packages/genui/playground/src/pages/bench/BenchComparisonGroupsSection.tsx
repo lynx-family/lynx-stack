@@ -1,36 +1,23 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { useState } from 'react';
+
 import {
-  findComparableBaseline,
-  getBenchGroupDifferences,
+  BENCH_PRESET_OPTIONS,
+  BENCH_PROTOCOL_OPTIONS,
+  MAX_BENCH_GROUPS,
+  isDocumentBenchProtocol,
   usesCatalog,
 } from './benchData.js';
-import type {
-  BenchComparisonDirection,
-  BenchGroup,
-  BenchProfile,
-  BenchProtocol,
-  BenchRole,
-} from './benchData.js';
+import type { BenchGroup, BenchPreset, BenchProtocol } from './benchData.js';
 import { BenchDropdown } from './BenchDropdown.js';
 import { Button } from '../../components/Button.js';
-import { Trash2 } from '../../components/Icon.js';
+import { MessageSquarePlus, Trash2 } from '../../components/Icon.js';
 
 export interface BenchModelOption {
   id: string;
   label: string;
-}
-
-function directionLabel(direction: BenchComparisonDirection): string {
-  switch (direction) {
-    case 'model':
-      return 'Model';
-    case 'prompt':
-      return 'Prompt';
-    case 'protocol':
-      return 'Protocol';
-  }
 }
 
 export function BenchComparisonGroupsSection(props: {
@@ -38,21 +25,22 @@ export function BenchComparisonGroupsSection(props: {
   groups: readonly BenchGroup[];
   locked: boolean;
   modelOptions: readonly BenchModelOption[];
-  onAdd: (direction: BenchComparisonDirection) => void;
+  onAdd: () => void;
+  onPresetChange?: (preset: BenchPreset) => void;
   onCatalogChange: (id: string, catalog: string) => void;
+  onFragmentChange: (id: string, enabled: boolean) => void;
+  onDesignGuidanceChange: (id: string, enabled: boolean) => void;
   onEnabledChange: (id: string, enabled: boolean) => void;
   onModelChange: (id: string, model: string) => void;
   onNameChange: (id: string, name: string) => void;
-  onProfileChange: (id: string, profile: BenchProfile) => void;
   onPromptChange: (id: string, prompt: string) => void;
   onProtocolChange: (id: string, protocol: BenchProtocol) => void;
   onRemove: (id: string) => void;
-  onRoleChange: (id: string, role: BenchRole) => void;
 }) {
-  const activeGroups = props.groups.filter((group) => group.enabled);
-  const configuredControlGroupCount =
-    props.groups.filter((group) => group.role === 'control').length;
-
+  const [selectedPreset, setSelectedPreset] = useState<BenchPreset>('protocol');
+  const hasA2UIAndOpenUI =
+    props.groups.some((group) => group.protocol === 'a2ui')
+    && props.groups.some((group) => group.protocol === 'openui');
   return (
     <section
       className='benchPlanSection benchGroupsSection'
@@ -64,35 +52,55 @@ export function BenchComparisonGroupsSection(props: {
           <div>
             <h3 className='benchSectionTitle'>Create comparison groups</h3>
             <p className='benchSectionSub'>
-              Choose a direction, then configure each group's model
-              independently.
+              Add groups and configure each one independently.
             </p>
           </div>
         </div>
+        <label className='benchField benchPresetField'>
+          <span className='benchFieldLabel'>Preset</span>
+          <span className='benchPresetSelect'>
+            <select
+              className='benchInput'
+              value={selectedPreset}
+              disabled={props.locked}
+              aria-label='Bench preset'
+              onChange={(event) => {
+                const preset = event.target.value as BenchPreset;
+                setSelectedPreset(preset);
+                props.onPresetChange?.(preset);
+              }}
+            >
+              {BENCH_PRESET_OPTIONS.map((preset) => (
+                <option key={preset.value} value={preset.value}>
+                  {preset.label}
+                </option>
+              ))}
+            </select>
+          </span>
+        </label>
         <div
           className='benchDirectionPicker'
           role='group'
-          aria-label='New comparison group direction'
+          aria-label='Add comparison group'
         >
-          {(['protocol', 'model', 'prompt'] as const).map((direction) => (
-            <button
-              type='button'
-              disabled={props.locked}
-              key={direction}
-              onClick={() => props.onAdd(direction)}
-            >
-              <strong>{directionLabel(direction)}</strong>
-              <span>+ New group</span>
-            </button>
-          ))}
+          <Button
+            variant='secondary'
+            size='sm'
+            iconBefore={MessageSquarePlus}
+            disabled={props.locked || props.groups.length >= MAX_BENCH_GROUPS}
+            title={props.groups.length >= MAX_BENCH_GROUPS
+              ? `Up to ${MAX_BENCH_GROUPS} comparison groups.`
+              : undefined}
+            onClick={props.onAdd}
+          >
+            + New group
+          </Button>
         </div>
       </div>
 
       <div className='benchGroupGrid'>
-        {props.groups.map((group) => {
+        {props.groups.map((group, index) => {
           const groupName = group.name;
-          const baseline = findComparableBaseline(group, activeGroups);
-          const differences = getBenchGroupDifferences(group, baseline);
           return (
             <article
               className='benchGroupCard'
@@ -100,36 +108,17 @@ export function BenchComparisonGroupsSection(props: {
               key={group.id}
             >
               <div className='benchGroupTop'>
-                <label className='benchSwitch'>
-                  <input
-                    type='checkbox'
-                    checked={group.enabled}
-                    aria-label={`Enable ${groupName}`}
-                    disabled={props.locked}
-                    onChange={(event) =>
-                      props.onEnabledChange(group.id, event.target.checked)}
-                  />
-                  <span />
-                </label>
-                <div className='benchRoleControl'>
-                  {(['control', 'experiment'] as const).map((role) => (
-                    <button
-                      type='button'
-                      className={group.role === role
-                        ? 'benchRoleButton active'
-                        : 'benchRoleButton'}
-                      aria-pressed={group.role === role}
-                      disabled={props.locked
-                        || (role === 'experiment'
-                          && group.role === 'control'
-                          && configuredControlGroupCount === 1)}
-                      key={role}
-                      onClick={() => props.onRoleChange(group.id, role)}
-                    >
-                      {role === 'control' ? 'Baseline' : 'Comparison'}
-                    </button>
-                  ))}
-                </div>
+                <span className='benchScenarioIndex'>
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <input
+                  className='benchInlineInput benchGroupNameInput'
+                  value={groupName}
+                  aria-label='Comparison group name'
+                  readOnly={props.locked}
+                  onChange={(event) =>
+                    props.onNameChange(group.id, event.target.value)}
+                />
                 <Button
                   variant='danger'
                   size='sm'
@@ -141,37 +130,7 @@ export function BenchComparisonGroupsSection(props: {
                   onClick={() => props.onRemove(group.id)}
                 />
               </div>
-              <input
-                className='benchGroupName'
-                value={groupName}
-                aria-label='Comparison group name'
-                readOnly={props.locked}
-                onChange={(event) =>
-                  props.onNameChange(group.id, event.target.value)}
-              />
-              <div className='benchGroupSummary'>
-                <span data-protocol={group.protocol}>
-                  {group.protocol === 'a2ui' ? 'A2UI' : 'OpenUI'}
-                </span>
-                <span>{group.profile}</span>
-                <span>{group.model || 'Model required'}</span>
-                {differences.length === 0
-                  ? <span data-baseline='true'>Baseline</span>
-                  : differences.map((difference) => (
-                    <span data-changed='true' key={difference}>
-                      {`${difference} changed`}
-                    </span>
-                  ))}
-                {group.role === 'experiment' && baseline
-                  ? (
-                    <span data-baseline='true'>
-                      {`vs. ${baseline.name}`}
-                    </span>
-                  )
-                  : null}
-              </div>
-              <details className='benchGroupDetails'>
-                <summary>Configure</summary>
+              <div className='benchGroupDetails'>
                 <div className='benchGroupFields'>
                   <div className='benchField'>
                     <span className='benchFieldLabel'>Protocol</span>
@@ -179,54 +138,12 @@ export function BenchComparisonGroupsSection(props: {
                       ariaLabel={`${groupName} Protocol`}
                       value={group.protocol}
                       disabled={props.locked}
-                      options={[
-                        {
-                          value: 'a2ui',
-                          label: 'A2UI',
-                          description: 'Structured message stream',
-                        },
-                        {
-                          value: 'openui',
-                          label: 'OpenUI',
-                          description: 'OpenUI Lang',
-                        },
-                      ]}
+                      options={BENCH_PROTOCOL_OPTIONS}
                       onChange={(protocol) =>
                         props.onProtocolChange(group.id, protocol)}
                     />
                   </div>
-                  <div className='benchField'>
-                    <span className='benchFieldLabel'>Profile</span>
-                    <BenchDropdown
-                      ariaLabel={`${groupName} Profile`}
-                      value={group.profile}
-                      disabled={props.locked || group.protocol === 'openui'}
-                      options={[
-                        {
-                          value: 'native',
-                          label: 'native',
-                          description: 'Use the full protocol capability set',
-                        },
-                        {
-                          value: 'matched-core',
-                          label: 'matched-core',
-                          description: 'Use only the shared capability subset',
-                        },
-                      ]}
-                      onChange={(profile) =>
-                        props.onProfileChange(group.id, profile)}
-                    />
-                  </div>
                 </div>
-                {group.profile === 'matched-core'
-                  ? (
-                    <p className='benchProfileHint'>
-                      <strong>matched-core</strong>{' '}
-                      uses only capabilities shared by A2UI and OpenUI, making
-                      it suitable for a like-for-like Protocol comparison.
-                    </p>
-                  )
-                  : null}
                 <div className='benchGroupFields'>
                   <div className='benchField'>
                     <span className='benchFieldLabel'>Model</span>
@@ -241,30 +158,80 @@ export function BenchComparisonGroupsSection(props: {
                       onChange={(model) => props.onModelChange(group.id, model)}
                     />
                   </div>
+                  {!isDocumentBenchProtocol(group.protocol) && (
+                    <div className='benchField'>
+                      <span className='benchFieldLabel benchFieldLabelWithHint'>
+                        Catalog
+                        <span
+                          className='benchFieldHintIcon'
+                          aria-label='Catalog restriction'
+                          data-tooltip='When A2UI and OpenUI are both present, only Core Catalog is available and cannot be changed.'
+                          role='img'
+                        >
+                          i
+                        </span>
+                      </span>
+                      <BenchDropdown
+                        ariaLabel={`${groupName} Catalog`}
+                        value={group.protocol === 'openui'
+                          ? 'Core Catalog'
+                          : (hasA2UIAndOpenUI
+                              && (group.protocol === 'a2ui'
+                                || group.protocol === 'openui')
+                            ? 'Core Catalog'
+                            : group.catalog)}
+                        disabled={props.locked || !usesCatalog(group)
+                          || hasA2UIAndOpenUI}
+                        options={props.catalogOptions.map((catalog) => ({
+                          value: catalog,
+                          label: catalog,
+                        }))}
+                        onChange={(catalog) =>
+                          props.onCatalogChange(group.id, catalog)}
+                      />
+                    </div>
+                  )}
+                </div>
+                <div className='benchGroupFields'>
                   <div className='benchField'>
-                    <span className='benchFieldLabel'>Catalog</span>
+                    <span className='benchFieldLabel'>Design skill</span>
                     <BenchDropdown
-                      ariaLabel={`${groupName} Catalog`}
-                      value={group.catalog}
-                      disabled={props.locked || !usesCatalog(group)}
-                      options={props.catalogOptions.map((catalog) => ({
-                        value: catalog,
-                        label: catalog,
-                      }))}
-                      onChange={(catalog) =>
-                        props.onCatalogChange(group.id, catalog)}
+                      ariaLabel={`${groupName} Design skill`}
+                      value={group.enableDesignGuidance === false
+                        ? 'off'
+                        : 'on'}
+                      disabled={props.locked}
+                      options={[{ value: 'on', label: 'On' }, {
+                        value: 'off',
+                        label: 'Off',
+                      }]}
+                      onChange={(value) =>
+                        props.onDesignGuidanceChange(group.id, value === 'on')}
                     />
-                    {usesCatalog(group)
-                      ? null
-                      : (
-                        <p className='benchFieldHint'>
-                          Catalog can be changed only for A2UI native. OpenUI
-                          and matched-core use the fixed shared catalog.
-                        </p>
-                      )}
                   </div>
                 </div>
-                <label className='benchField'>
+                {group.protocol === 'lynx-xml' && (
+                  <div
+                    className='benchField benchXmlFragmentField'
+                    title='Convert the initial XML fragment to Element PAPI using the agent tool.'
+                  >
+                    <span className='benchFieldLabel'>XML fragment</span>
+                    <BenchDropdown
+                      ariaLabel={`${groupName} XML fragment`}
+                      value={group.enableHtmlFragment === true
+                        ? 'on'
+                        : 'off'}
+                      disabled={props.locked}
+                      options={[{ value: 'off', label: 'Off' }, {
+                        value: 'on',
+                        label: 'On',
+                      }]}
+                      onChange={(value) =>
+                        props.onFragmentChange(group.id, value === 'on')}
+                    />
+                  </div>
+                )}
+                <label className='benchField benchAdditionalPromptField'>
                   <span className='benchFieldLabel'>
                     Additional prompt instructions
                   </span>
@@ -277,7 +244,7 @@ export function BenchComparisonGroupsSection(props: {
                       props.onPromptChange(group.id, event.target.value)}
                   />
                 </label>
-              </details>
+              </div>
             </article>
           );
         })}

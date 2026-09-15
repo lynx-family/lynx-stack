@@ -7,7 +7,7 @@ import { describe, expect, test } from '@rstest/core';
 import {
   extractLynxXmlArtifact,
   normalizeLynxXmlArtifact,
-} from '../agent/lynx-xml-output.js';
+} from '../agent/lynx-xml/lynx-xml-output.js';
 
 const VALID_ARTIFACT = [
   '<!doctype lynx>',
@@ -28,6 +28,11 @@ describe('Lynx XML model output', () => {
     expect(extractLynxXmlArtifact(
       '<!doctype lynx>\n<lynx engine-version="4.2">',
     )).toBe('<!doctype lynx>\n<lynx engine-version="4.2">');
+  });
+
+  test('repairs a missing doctype when the Lynx root is present', () => {
+    const withoutDoctype = VALID_ARTIFACT.replace(/^<!doctype lynx>\n/u, '');
+    expect(normalizeLynxXmlArtifact(withoutDoctype)).toBe(VALID_ARTIFACT);
   });
 
   test('rejects incomplete and non-canonical final artifacts', () => {

@@ -19,9 +19,9 @@ get_filename_component(
 
 if(NOT DEFINED LYNX_LIBRARY_PLATFORM)
   if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    set(LYNX_LIBRARY_PLATFORM "macos")
+    set(LYNX_LIBRARY_PLATFORM "darwin")
   elseif(WIN32)
-    set(LYNX_LIBRARY_PLATFORM "windows")
+    set(LYNX_LIBRARY_PLATFORM "win32")
   elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(LYNX_LIBRARY_PLATFORM "linux")
   else()

@@ -10,19 +10,22 @@ import {
   DEFAULT_BENCH_SCENARIOS,
   DEFAULT_BENCH_SETTINGS,
   createDefaultBenchGroups,
+  withBenchProtocol,
 } from './benchData.js';
+import {
+  migrateBenchHistoryEntries,
+  serializeBenchHistoryEntries,
+} from './benchHistory.js';
 import {
   BenchPage,
   createBenchJobCancellationRequestInit,
+  getA2UIBenchReportEndpoint,
   getBenchJobCancellationDisposition,
   getBenchRunBlockers,
   getBenchRunMessageText,
-  migrateBenchHistoryEntries,
   normalizeBenchUiJudgeServerUrl,
-  readBenchHistory,
   readBenchUiJudgeServerUrl,
   saveBenchHistoryEntry,
-  serializeBenchHistoryEntries,
   serializeBenchReport,
   shouldApplyBenchReportRequest,
   shouldCancelCreatedBenchJob,
@@ -37,6 +40,38 @@ import { BenchScenarioSection } from './BenchScenarioSection.js';
 (globalThis as typeof globalThis & { React: typeof React }).React = React;
 
 const noop = () => undefined;
+
+test('renders a Lynx XML comparison with native capability and no catalog', () => {
+  const group = withBenchProtocol(
+    createDefaultBenchGroups('test-model')[0]!,
+    'lynx-xml',
+  );
+  const markup = renderToStaticMarkup(
+    React.createElement(BenchComparisonGroupsSection, {
+      catalogOptions: ['Full Catalog', 'Core Catalog'],
+      groups: [group],
+      locked: false,
+      modelOptions: [{ id: 'test-model', label: 'Test model' }],
+      onAdd: noop,
+      onCatalogChange: noop,
+      onFragmentChange: noop,
+      onEnabledChange: noop,
+      onModelChange: noop,
+      onNameChange: noop,
+      onPromptChange: noop,
+      onProtocolChange: noop,
+      onRemove: noop,
+    }),
+  );
+  expect(markup).toContain('Lynx XML');
+  expect(markup).toMatch(
+    /aria-label="Baseline XML fragment"><span>Off<\/span>/u,
+  );
+  expect(markup).not.toContain('<p class="benchFieldHint">');
+  expect(markup).not.toContain('Baseline Profile');
+  expect(markup).not.toContain('Baseline Catalog');
+  expect(markup).not.toContain('Not applicable');
+});
 
 function createCompletedHistoryEntry(id: string, jobId: string) {
   return {
@@ -64,12 +99,58 @@ function createCompletedHistoryEntry(id: string, jobId: string) {
 }
 
 describe('BenchPage', () => {
+  test('defaults new runs to two repeats without overwriting saved settings', () => {
+    expect(DEFAULT_BENCH_SETTINGS.repeats).toBe(2);
+    const entry = createCompletedHistoryEntry(
+      'saved-repeats',
+      '059a758e-4cbf-4053-bbe4-9f8cb47f7444',
+    );
+    const restored = migrateBenchHistoryEntries([{
+      ...entry,
+      config: {
+        ...entry.config,
+        settings: { ...DEFAULT_BENCH_SETTINGS, repeats: 5 },
+      },
+    }]);
+    expect(restored[0]?.config.settings.repeats).toBe(5);
+  });
+  test('ignores legacy concurrency in restored configuration without rewriting recorded runs', () => {
+    const entry = createCompletedHistoryEntry(
+      'saved-concurrency',
+      '059a758e-4cbf-4053-bbe4-9f8cb47f7444',
+    );
+    const saved = {
+      ...entry,
+      report: { ...entry.report, settings: { parallelism: 8 } },
+      config: {
+        ...entry.config,
+        settings: { ...DEFAULT_BENCH_SETTINGS, parallelism: 8 },
+      },
+    };
+    const [draft, completed] = migrateBenchHistoryEntries([
+      { ...saved, id: 'draft-concurrency', report: null },
+      saved,
+    ]);
+    expect(draft?.config.settings).not.toHaveProperty('parallelism');
+    expect(completed?.config.settings).not.toHaveProperty('parallelism');
+    expect(completed?.report?.settings).toHaveProperty('parallelism', 8);
+    expect(saved.config.settings.parallelism).toBe(8);
+  });
+  test('blocks restored plans with more than eight groups, including disabled groups', () => {
+    expect(getBenchRunBlockers(8, 1, 1, 1, 8)).toEqual([]);
+    expect(getBenchRunBlockers(8, 1, 1, 1, 9)).toContain(
+      'Bench supports at most 8 comparison groups, including the baseline.',
+    );
+  });
   test('renders one English page with history and a new Bench workflow', () => {
     const markup = renderToStaticMarkup(
       React.createElement(BenchPage),
     );
 
     expect(markup).toContain('Bench Runner');
+    expect(markup).not.toContain('benchPublishedReports');
+    expect(markup).not.toContain('a2ui-comparisons');
+    expect(markup).not.toContain('2026-07-30-matched-core');
     expect(markup).toContain(
       'Combine Protocol, Model, Prompt, and Catalog freely',
     );
@@ -143,14 +224,13 @@ describe('BenchPage', () => {
         modelOptions: [],
         onAdd: noop,
         onCatalogChange: noop,
+        onFragmentChange: noop,
         onEnabledChange: noop,
         onModelChange: noop,
         onNameChange: noop,
-        onProfileChange: noop,
         onPromptChange: noop,
         onProtocolChange: noop,
         onRemove: noop,
-        onRoleChange: noop,
       }),
     );
     const runMarkup = renderToStaticMarkup(
@@ -194,14 +274,13 @@ describe('BenchPage', () => {
         ],
         onAdd: noop,
         onCatalogChange: noop,
+        onFragmentChange: noop,
         onEnabledChange: noop,
         onModelChange: noop,
         onNameChange: noop,
-        onProfileChange: noop,
         onPromptChange: noop,
         onProtocolChange: noop,
         onRemove: noop,
-        onRoleChange: noop,
       }),
     );
     const runMarkup = renderToStaticMarkup(
@@ -343,7 +422,7 @@ describe('BenchPage', () => {
     }
   });
 
-  test('sanitizes provider details and screenshots from copied reports', () => {
+  test('sanitizes provider details and invalid screenshots from copied reports', () => {
     const serialized = serializeBenchReport({
       env: {
         baseURL: 'https://private-provider.example/v1',
@@ -368,6 +447,27 @@ describe('BenchPage', () => {
     expect(serialized).not.toContain('screenshotDataUrl');
   });
 
+  test('preserves screenshot bytes through history serialization, migration, and reload', () => {
+    const screenshotDataUrl =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==';
+    const entry = createCompletedHistoryEntry(
+      'image-history',
+      '059a758e-4cbf-4053-bbe4-9f8cb47f7444',
+    );
+    const entries = [{
+      ...entry,
+      report: { ...entry.report, results: [{ screenshotDataUrl }] },
+    }];
+    const serialized = serializeBenchHistoryEntries(entries as never);
+    const migrated = migrateBenchHistoryEntries(JSON.parse(serialized));
+    expect(migrated[0]?.report?.results[0]?.screenshotDataUrl).toBe(
+      screenshotDataUrl,
+    );
+    expect(JSON.parse(serializeBenchHistoryEntries(migrated))).toMatchObject([
+      { report: { results: [{ screenshotDataUrl }] } },
+    ]);
+  });
+
   test('redacts the current provider key from report text', () => {
     const apiKey = 'custom/key+with?chars=42';
     const serialized = serializeBenchReport({
@@ -382,6 +482,36 @@ describe('BenchPage', () => {
     expect(serialized).not.toContain(apiKey);
     expect(serialized).not.toContain(encodeURIComponent(apiKey));
     expect(serialized).toContain('[redacted credential]');
+  });
+
+  test('keeps long public model names in cached reports and JSON while redacting credentials', () => {
+    const model = 'doubao-evolving-medium-long-public-model-name';
+    const saved = createCompletedHistoryEntry(
+      'model-history',
+      '059a758e-4cbf-4053-bbe4-9f8cb47f7444',
+    );
+    const entry = {
+      ...saved,
+      report: { ...saved.report, groups: createDefaultBenchGroups(model) },
+    };
+    const serialized = serializeBenchHistoryEntries([entry] as never);
+    expect(
+      migrateBenchHistoryEntries(JSON.parse(serialized))[0]?.report?.groups[0]
+        ?.model,
+    ).toBe(model);
+    const json = serializeBenchReport(
+      { ...entry.report, env: { model, apiKey: 'actual-api-key' } } as never,
+    );
+    expect(JSON.parse(json)).toMatchObject({
+      groups: [{ model }],
+      env: { model },
+    });
+    expect(json).not.toContain('actual-api-key');
+    expect(
+      serializeBenchReport({ env: { model: 'actual-api-key' } } as never, [
+        'actual-api-key',
+      ]),
+    ).not.toContain('actual-api-key');
   });
 
   test('migrates legacy history into a sanitized persistent shape', () => {
@@ -401,7 +531,6 @@ describe('BenchPage', () => {
           },
           settings: {
             repeats: 1,
-            parallelism: 1,
             repairEnabled: true,
             judgeEnabled: true,
             collectLiveRenderMetrics: false,
@@ -425,7 +554,6 @@ describe('BenchPage', () => {
           },
           settings: {
             repeats: 1,
-            parallelism: 1,
             repairEnabled: true,
             judgeEnabled: true,
             collectLiveRenderMetrics: false,
@@ -435,38 +563,9 @@ describe('BenchPage', () => {
         },
       },
     ];
-    const originalWindow = Object.getOwnPropertyDescriptor(
-      globalThis,
-      'window',
-    );
-    let persisted = '';
-    let serialized = '';
-    let migratedLength = 0;
-    Object.defineProperty(globalThis, 'window', {
-      configurable: true,
-      value: {
-        localStorage: {
-          getItem: () => JSON.stringify(legacyHistory),
-          setItem: (_key: string, value: string) => {
-            persisted = value;
-          },
-        },
-      },
-    });
-    try {
-      const migrated = readBenchHistory();
-      migratedLength = migrated.length;
-      serialized = serializeBenchHistoryEntries(migrated);
-    } finally {
-      if (originalWindow) {
-        Object.defineProperty(globalThis, 'window', originalWindow);
-      } else {
-        Reflect.deleteProperty(globalThis, 'window');
-      }
-    }
-
-    expect(migratedLength).toBe(1);
-    expect(persisted).toBe(serialized);
+    const migrated = migrateBenchHistoryEntries(legacyHistory);
+    const serialized = serializeBenchHistoryEntries(migrated);
+    expect(migrated).toHaveLength(1);
     expect(serialized).not.toContain('legacy-secret');
     expect(serialized).not.toContain('private-provider');
     expect(serialized).not.toContain('legacy-token');
@@ -506,8 +605,14 @@ describe('BenchPage', () => {
   });
 
   test('retains runs with distinct jobs when report ids are reused', () => {
-    const first = createCompletedHistoryEntry('history-1', 'job-1');
-    const second = createCompletedHistoryEntry('history-2', 'job-2');
+    const first = createCompletedHistoryEntry(
+      'history-1',
+      '7e11b5b1-9f92-4a99-899f-0fa6c7d8e901',
+    );
+    const second = createCompletedHistoryEntry(
+      'history-2',
+      '7e11b5b1-9f92-4a99-899f-0fa6c7d8e902',
+    );
 
     expect(
       upsertBenchHistoryEntry([first, second] as never, {
@@ -520,6 +625,74 @@ describe('BenchPage', () => {
         (entry) => entry.id,
       ),
     ).toEqual(['history-2', 'history-1']);
+  });
+
+  test('preserves the report endpoint through history persistence and migration', () => {
+    const jobId = '7e11b5b1-9f92-4a99-899f-0fa6c7d8e901';
+    const entry = createCompletedHistoryEntry('history-1', jobId);
+    const serialized = serializeBenchHistoryEntries([{
+      ...entry,
+      report: {
+        ...entry.report,
+        warnings: ['Bearer private-token', 'a'.repeat(40)],
+      },
+    }] as never);
+    const restored = migrateBenchHistoryEntries(JSON.parse(serialized));
+    const originalWindow = Object.getOwnPropertyDescriptor(
+      globalThis,
+      'window',
+    );
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { location: { origin: 'http://localhost:3000', search: '' } },
+    });
+    try {
+      expect(restored[0]?.report?.jobId).toBe(jobId);
+      const endpoint = getA2UIBenchReportEndpoint(restored[0]!.report!.jobId!);
+      expect(new URL(endpoint!).pathname).toBe(
+        `/a2ui/bench/jobs/${jobId}/report`,
+      );
+      expect(serialized).not.toContain('private-token');
+      expect(serialized).not.toContain('a'.repeat(40));
+    } finally {
+      if (originalWindow) {
+        Object.defineProperty(globalThis, 'window', originalWindow);
+      } else {
+        Reflect.deleteProperty(globalThis, 'window');
+      }
+    }
+  });
+
+  test('retains distinct redacted reports without constructing remote endpoints', () => {
+    const history = ['history-1', 'history-2'].map((id) => {
+      const entry = createCompletedHistoryEntry(id, '[redacted credential]');
+      entry.report.id = '[redacted credential]';
+      return entry;
+    });
+    const restored = migrateBenchHistoryEntries(
+      JSON.parse(serializeBenchHistoryEntries(history as never)),
+    );
+    expect(restored).toHaveLength(2);
+    for (const entry of restored) {
+      expect(entry.report).not.toBeNull();
+      expect(getA2UIBenchReportEndpoint(entry.report!.jobId!)).toBeNull();
+    }
+    expect(getBenchRunMessageText({ code: 'history-report-invalid-job-id' }))
+      .toContain('Saved report loaded');
+    expect(
+      upsertBenchHistoryEntry(restored, {
+        ...restored[0]!,
+        title: 'Updated saved report',
+      }).map((entry) => entry.id),
+    ).toEqual(['history-1', 'history-2']);
+  });
+
+  test('rejects invalid report link identifiers before resolving server URLs', () => {
+    for (
+      const jobId of ['[redacted credential]', '../report', 'not-a-job', '']
+    ) {
+      expect(getA2UIBenchReportEndpoint(jobId)).toBeNull();
+    }
   });
 
   test('saves a completed draft without replacing previous history', () => {
@@ -551,7 +724,6 @@ describe('BenchPage', () => {
         env: { apiKeyConfigured: false, model: 'test-model' },
         settings: {
           repeats: 3,
-          parallelism: 1,
           repairEnabled: true,
           judgeEnabled: true,
           collectLiveRenderMetrics: false,
@@ -568,4 +740,45 @@ describe('BenchPage', () => {
       '"report":null',
     );
   });
+});
+
+test('HTML-only Judge shows current-tab sharing guidance without requiring a sidecar', () => {
+  const markup = renderToStaticMarkup(React.createElement(BenchRunPanel, {
+    locked: false,
+    hasHtmlGroups: true,
+    needsScreenshotService: false,
+    settings: DEFAULT_BENCH_SETTINGS,
+    uiJudgeServerUrl: '',
+    onSettingsChange: noop,
+    onUiJudgeServerUrlChange: noop,
+  }));
+  expect(markup).toContain('share this tab');
+  expect(markup).not.toContain('UI_JUDGE_SERVER_URL');
+});
+
+test('UI Judge selects from the complete model list and defaults to the first model', () => {
+  const followGenerationMarkup = renderToStaticMarkup(
+    React.createElement(BenchRunPanel, {
+      locked: false,
+      modelOptions: [{ id: 'judge-model', label: 'Judge model' }],
+      settings: DEFAULT_BENCH_SETTINGS,
+      uiJudgeServerUrl: '',
+      onSettingsChange: noop,
+      onUiJudgeServerUrlChange: noop,
+    }),
+  );
+  expect(followGenerationMarkup).toContain('value="judge-model"');
+  expect(followGenerationMarkup).toContain('Judge model');
+
+  const dedicatedMarkup = renderToStaticMarkup(
+    React.createElement(BenchRunPanel, {
+      locked: false,
+      modelOptions: [{ id: 'judge-model', label: 'Judge model' }],
+      settings: { ...DEFAULT_BENCH_SETTINGS, uiJudgeModel: 'judge-model' },
+      uiJudgeServerUrl: '',
+      onSettingsChange: noop,
+      onUiJudgeServerUrlChange: noop,
+    }),
+  );
+  expect(dedicatedMarkup).toContain('value="judge-model"');
 });

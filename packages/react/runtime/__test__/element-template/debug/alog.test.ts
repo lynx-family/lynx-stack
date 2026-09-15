@@ -73,7 +73,7 @@ describe('ElementTemplate alog helpers', () => {
         templateKey: '_et_card',
         bundleUrl: 'main.js',
         attributeSlots: ['title'],
-        elementSlots: [[12]],
+        childSlots: [[12]],
       },
       {
         op: 'setAttribute',
@@ -98,7 +98,7 @@ describe('ElementTemplate alog helpers', () => {
         handleId: 13,
         type: 'list',
         attributes: { id: 'typed-list' },
-        elementSlots: [[12]],
+        childSlots: [[12]],
         options: { listChildren: [{ __etHandleRef: 12 }] },
       },
       {
@@ -127,7 +127,7 @@ describe('ElementTemplate alog helpers', () => {
       {
         op: 'insertNode',
         targetId: 11,
-        elementSlotIndex: 1,
+        childSlotIndex: 1,
         childId: 12,
         referenceId: 0,
         attachedSubtreeHandleIds: [12],
@@ -135,7 +135,7 @@ describe('ElementTemplate alog helpers', () => {
       {
         op: 'removeNode',
         targetId: 11,
-        elementSlotIndex: 1,
+        childSlotIndex: 1,
         childId: 12,
         removedSubtreeHandleIds: [12],
       },
@@ -171,13 +171,13 @@ describe('ElementTemplate alog helpers', () => {
     expect(output).toContain('root#1');
     expect(output).toContain('_et_card#2');
     expect(output).toContain('attributeSlots: ["title"]');
-    expect(output).toContain('elementSlots[2]: [3]');
-    expect(output).not.toContain('elementSlots[1]');
+    expect(output).toContain('childSlots[2]: [3]');
+    expect(output).not.toContain('childSlots[1]');
     expect(output).toContain('_et_builtin_raw_text#3');
     expect(output).toContain('attributeSlots: ["hello"]');
   });
 
-  it('skips sparse element slots when printing the background tree', () => {
+  it('skips sparse child slots when printing the background tree', () => {
     const root = new BackgroundElementTemplateInstance('root');
     const child = new BackgroundElementTemplateInstance('view');
     child.__slotIndex = 1;
@@ -186,19 +186,19 @@ describe('ElementTemplate alog helpers', () => {
     const output = printElementTemplateTreeToString(root);
 
     expect(output).toContain(`view#${child.instanceId}`);
-    expect(output).toContain(`elementSlots[1]: [${child.instanceId}]`);
-    expect(output).not.toMatch(/elementSlots\[0\]/);
+    expect(output).toContain(`childSlots[1]: [${child.instanceId}]`);
+    expect(output).not.toMatch(/childSlots\[0\]/);
   });
 
   it('keeps malformed debug tree instances printable', () => {
     const root = {
       attributeSlots: null,
-      elementSlots: null,
+      childSlots: null,
     } as unknown as {
       attributeSlots?: unknown;
       type?: string;
       instanceId?: number;
-      elementSlots?: unknown;
+      childSlots?: unknown;
     };
     root.type = undefined;
     root.instanceId = undefined;

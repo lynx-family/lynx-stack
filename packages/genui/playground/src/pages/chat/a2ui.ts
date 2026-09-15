@@ -583,6 +583,7 @@ export const A2UI_CHAT_ADAPTER = {
   },
   preview: {
     delivery: 'live-message',
+    initialOutput: (): A2UIOutput => [],
     source(output, context) {
       if (!output) return undefined;
       return {

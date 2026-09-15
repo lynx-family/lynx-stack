@@ -5,7 +5,8 @@
 import { createHash } from 'node:crypto';
 
 import { readModelConfig } from './model-config.js';
-import type { ChatOptions, OpenAIReasoningEffort } from './types';
+import type { ChatOptions, OpenAIReasoningEffort } from './types.js';
+import { isOfficialOpenAIBaseURL } from '../../agent/common/openai-utils.js';
 
 const REASONING_EFFORTS = new Set<OpenAIReasoningEffort>([
   'none',
@@ -65,6 +66,13 @@ function createProviderCacheKey(
     opts.model ?? 'default',
     hashApiKey(opts.apiKey),
     opts.api ?? 'default',
+    opts.enableWebSearch === false ? 'search-disabled' : 'search-enabled',
+    opts.enableImageGeneration === false
+      ? 'image-generation-disabled'
+      : 'image-generation-enabled',
+    opts.enableDesignGuidance === false
+      ? 'design-guidance-disabled'
+      : 'design-guidance-enabled',
   ].join(':');
   return variant === undefined ? baseKey : `${baseKey}:${variant}`;
 }
@@ -129,18 +137,29 @@ function parseReasoningEffort(
     : undefined;
 }
 
+function hasCustomProvider(opts: ChatOptions): boolean {
+  return [opts.model, opts.apiKey, opts.baseURL].every(value =>
+    typeof value === 'string' && value.trim().length > 0
+  );
+}
+
+function configuredRunModel(opts: ChatOptions) {
+  if (hasCustomProvider(opts)) return undefined;
+  const config = readModelConfig();
+  if (!config.ok) return undefined;
+  const modelName = opts.model && config.config.models[opts.model]
+    ? opts.model
+    : config.config.defaultModel;
+  return config.config.models[modelName];
+}
+
 export function resolveReasoningEffort(
   opts: ChatOptions,
 ): OpenAIReasoningEffort | undefined {
   const explicit = parseReasoningEffort(opts.reasoningEffort);
   if (explicit !== undefined) return explicit;
   if (opts.inheritReasoningEffort === false) return undefined;
-  const config = readModelConfig();
-  if (!config.ok) return undefined;
-  const modelName = opts.model && config.config.models[opts.model]
-    ? opts.model
-    : config.config.defaultModel;
-  return config.config.models[modelName]!.reasoningEffort;
+  return configuredRunModel(opts)?.reasoningEffort;
 }
 
 export function resolveModelOutputTokenBudget(
@@ -159,23 +178,36 @@ export function resolveModelOutputTokenBudget(
     : Math.min(desiredMaxOutputTokens, configuredLimit);
 }
 
-export function buildResourceRunOptions(
-  opts: ChatOptions,
-  abortSignal?: AbortSignal,
-) {
-  return pickDefined({ resourceId: opts.resourceId, abortSignal });
-}
-
 export function buildOpenAIRunOptions(
   opts: ChatOptions,
   abortSignal?: AbortSignal,
 ) {
   const reasoningEffort = resolveReasoningEffort(opts);
+  const baseURL = hasCustomProvider(opts)
+    ? opts.baseURL
+    : configuredRunModel(opts)?.baseURL;
+  const compatibleProvider = baseURL !== undefined
+    && !isOfficialOpenAIBaseURL(baseURL);
   return pickDefined({
     resourceId: opts.resourceId,
     abortSignal,
+    modelSettings: opts.maxRetries === undefined
+      ? undefined
+      : { maxRetries: opts.maxRetries },
     providerOptions: reasoningEffort
-      ? { openai: { reasoningEffort } }
+      ? {
+        openai: {
+          reasoningEffort,
+          ...(compatibleProvider
+            ? {
+              // Configured effort also applies to model aliases unknown to the SDK.
+              forceReasoning: true,
+              systemMessageMode: 'system' as const,
+              reasoningSummary: null,
+            }
+            : {}),
+        },
+      }
       : undefined,
   });
 }

@@ -39,7 +39,7 @@ function setup(): HydrationContext {
 
   const hydrationData: HydrateInstances = [];
   const onHydrate = vi.fn().mockImplementation((event: HydrateEvent) => {
-    hydrationData.push(...(event.data.page.elementSlots?.[0] ?? []));
+    hydrationData.push(...(event.data.page.childSlots?.[0] ?? []));
   });
   lynx.getCoreContext().addEventListener(ElementTemplateLifecycleConstant.hydrate, onHydrate);
 

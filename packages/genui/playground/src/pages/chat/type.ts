@@ -32,6 +32,8 @@ export interface ChatTokenUsage {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
+  cachedTokens?: number;
+  cacheWriteTokens?: number;
 }
 
 export type ChatMessageKind =
@@ -45,6 +47,20 @@ export type ChatMessageTone = 'info' | 'pending' | 'success' | 'error';
 
 export type ChatMessageIcon = 'spinner' | 'sparkles' | 'zap' | 'error';
 
+export interface ChatInteractionEntry {
+  event: string;
+  elapsedMs: number;
+  detail: string;
+  count: number;
+  truncated: boolean;
+}
+
+export interface ChatInteractionLog {
+  entries: readonly ChatInteractionEntry[];
+  omittedEntries: number;
+  rawOutput?: ChatInteractionEntry;
+}
+
 export interface ChatMessageModel {
   id?: string;
   kind: ChatMessageKind;
@@ -56,12 +72,14 @@ export interface ChatMessageModel {
   payload?: unknown;
   payloadLayout?: 'single' | 'chunks';
   metrics?: PreviewPerformanceMetrics;
+  interaction?: ChatInteractionLog;
 }
 
 export interface ChatArtifactView {
   id: string;
   label: string;
   text: string;
+  formattedText?: string;
   language: 'text' | 'json';
 }
 
@@ -101,6 +119,8 @@ export interface ChatStreamAdapter<TState, TOutput> {
 
 export interface ChatTurnPersistence {
   assistantContent: string;
+  lynxXmlFragment?: string;
+  lynxXmlModelOutput?: string;
   a2uiMessages: unknown[];
   previewMessages: unknown[];
   previewPayloadUrls?: PreviewPayloadUrls | null;
@@ -122,7 +142,7 @@ export interface ChatSettingControl {
   id: string;
   label: string;
   value: string;
-  kind: 'select' | 'text' | 'password';
+  kind: 'select' | 'text' | 'password' | 'checkbox';
   disabled?: boolean;
   placeholder?: string;
   options?: readonly ChatSettingOption[];
@@ -177,6 +197,8 @@ export interface ChatPreviewContext {
 
 export interface ChatPreviewAdapter<TOutput> {
   delivery: 'reload' | 'live-message';
+  /** Boot a live renderer while the agent is still preparing its first output. */
+  initialOutput?: () => TOutput;
   source: (
     output: TOutput | null,
     context: ChatPreviewContext,

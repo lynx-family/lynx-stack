@@ -11,7 +11,7 @@ vi.mock('../../../../src/element-template/background/hydrate.js', () => ({
 import { hydrateRootChildrenIntoContext } from '../../../../src/element-template/background/hydrate.js';
 import type { BackgroundPageRootInstance } from '../../../../src/element-template/background/instance.js';
 import { hydratePageRootIntoContext } from '../../../../src/element-template/background/page-root-hydrate.js';
-import type { SerializedElementTemplate, SerializedPageRoot } from '../../../../src/element-template/protocol/types.js';
+import type { SerializedCompiledNode, SerializedPageRoot } from '../../../../src/element-template/protocol/types.js';
 
 describe('hydratePageRootIntoContext', () => {
   const reconcileAuthoredPageAttributesOnHydration = vi.fn();
@@ -28,13 +28,13 @@ describe('hydratePageRootIntoContext', () => {
     const child = {
       templateKey: '_et_root',
       attributeSlots: [],
-      elementSlots: [],
+      childSlots: [],
       uid: -1,
-    } satisfies SerializedElementTemplate;
+    } satisfies SerializedCompiledNode;
     const page = {
       tag: 'page',
       attributes: { id: 'main-thread' },
-      elementSlots: [[child]],
+      childSlots: [[child]],
       uid: 0,
     } satisfies SerializedPageRoot;
 
@@ -54,7 +54,7 @@ describe('hydratePageRootIntoContext', () => {
     const page = {
       tag: 'page',
       attributes: { id: 'main-thread' },
-      elementSlots: [[]],
+      childSlots: [[]],
       uid: 0,
     } satisfies SerializedPageRoot;
 
@@ -65,7 +65,7 @@ describe('hydratePageRootIntoContext', () => {
   it('normalizes omitted page slots and attributes at the boundary', () => {
     const page = {
       tag: 'page',
-      uid: '0',
+      uid: 0,
     } satisfies SerializedPageRoot;
 
     expect(hydratePageRootIntoContext(page, root)).toBe(true);

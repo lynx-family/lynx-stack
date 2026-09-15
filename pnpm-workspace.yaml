@@ -103,7 +103,7 @@ peerDependencyRules:
 
 # Default catalogs
 catalog:
-  "@microsoft/api-extractor": "7.58.12"
+  "@microsoft/api-extractor": "7.59.1"
   typescript: &typescript-version "6.0.3"
 
 catalogs:
@@ -125,7 +125,7 @@ catalogs:
 
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "2.2.3"
+    "@rsbuild/core": "2.2.4"
 
   # Rslib monorepo packages
   rslib:
@@ -141,6 +141,7 @@ catalogs:
   # Rstest monorepo packages
   rstest:
     "@rstest/adapter-rsbuild": "0.11.12"
+    "@rstest/adapter-rslib": "0.11.12"
     "@rstest/coverage-istanbul": "0.11.12"
     "@rstest/core": "0.11.12"
 

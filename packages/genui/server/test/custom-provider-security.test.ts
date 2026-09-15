@@ -8,7 +8,7 @@ import {
   ALLOWED_CUSTOM_PROVIDER_BASE_URLS,
   assertAllowedCustomProviderBaseURL,
   createCustomProviderFetch,
-} from '../agent/custom-provider-security.js';
+} from '../agent/common/custom-provider-security.js';
 
 describe('custom provider allow-list', () => {
   test.each(ALLOWED_CUSTOM_PROVIDER_BASE_URLS)(

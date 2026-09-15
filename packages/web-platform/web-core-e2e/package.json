@@ -8,7 +8,7 @@
     "bench": "vitest bench --config vitest.bench.config.ts",
     "build": "pnpm dlx premove dist && pnpm run --stream \"/^build:.*/\"",
     "build:csr": "node ./scripts/generate-build-command.js",
-    "build:external-libs": "rslib build --config ./external-libs/greeting/rslib.config.ts",
+    "build:external-libs": "rslib --config ./external-libs/greeting/rslib.config.ts",
     "coverage": "nyc report --cwd=$(realpath ../)",
     "coverage:ci": "nyc report --cwd=$(realpath ../) --reporter=lcov",
     "lh": "pnpm dlx @lhci/cli autorun",

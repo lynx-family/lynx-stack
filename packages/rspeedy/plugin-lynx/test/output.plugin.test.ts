@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import type { RsbuildPlugin } from '@rsbuild/core'
 import { describe, expect, test } from '@rstest/core'
 
 import { createStubRsbuild } from './createStubRsbuild.js'
@@ -76,6 +77,55 @@ describe('pluginOutput', () => {
     const config = await rsbuild.unwrapConfig({ action: 'build' })
 
     expect(config.output?.environment?.const).toBe(true)
+  })
+
+  test('a plugin can override the CSS output defaults', async () => {
+    const rsbuild = await createStubRsbuild({
+      mode: 'production',
+      plugins: [
+        {
+          name: 'test',
+          setup(api) {
+            api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) =>
+              mergeRsbuildConfig(config, {
+                output: {
+                  distPath: { css: 'plugin-css' },
+                  filename: { css: 'plugin/[name].css' },
+                },
+              })
+            )
+          },
+        } satisfies RsbuildPlugin,
+      ],
+    })
+    const config = await rsbuild.unwrapConfig({ action: 'build' })
+
+    expect(findCssExtractFilename(config.plugins)).toBe(
+      'plugin-css/plugin/[name].css',
+    )
+  })
+
+  test('a plugin can override the CSS output defaults per environment', async () => {
+    const rsbuild = await createStubRsbuild({
+      mode: 'production',
+      plugins: [
+        {
+          name: 'test',
+          setup(api) {
+            api.modifyEnvironmentConfig((config, { mergeEnvironmentConfig }) =>
+              mergeEnvironmentConfig(config, {
+                output: { filename: { css: 'plugin/[name].css' } },
+              })
+            )
+          },
+        } satisfies RsbuildPlugin,
+      ],
+    })
+    const config = await rsbuild.unwrapConfig({ action: 'build' })
+
+    expect(findCssExtractFilename(config.plugins)).toBe(
+      '.lynx/plugin/[name].css',
+    )
   })
 
   test('honors output.filename.css set on an environment', async () => {

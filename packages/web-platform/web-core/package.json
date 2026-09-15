@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/web-core",
-  "version": "0.26.0",
+  "version": "0.26.1",
   "description": "The Web Platform of Lynx / Lynx for Web",
   "repository": {
     "type": "git",
@@ -58,7 +58,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rsbuild build && rslib build",
+    "build": "rsbuild build && rslib",
     "build:wasm": "node ./scripts/build.js",
     "test": "rstest"
   },

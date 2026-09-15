@@ -4,19 +4,19 @@
 
 import { describe, expect, test } from '@rstest/core';
 
-import { loadBasicCatalog } from '../agent/a2ui-catalog.js';
-import { createA2UIImageSourcePolicy } from '../agent/a2ui-image-source-policy.js';
+import { loadBasicCatalog } from '../agent/a2ui/a2ui-catalog.js';
+import { createA2UIImageSourcePolicy } from '../agent/a2ui/a2ui-image-source-policy.js';
 import {
   createA2UIOpenURLPolicy,
   userProvidedA2UIURLSources,
-} from '../agent/a2ui-open-url-policy.js';
-import { A2UIProtocolMessageStreamParser } from '../agent/a2ui-stream-parser.js';
-import { validateA2UIOutput } from '../agent/a2ui-validator.js';
-import { createArkImageGenerationRunScope } from '../agent/ark-image-generation-tool.js';
+} from '../agent/a2ui/a2ui-open-url-policy.js';
+import { A2UIProtocolMessageStreamParser } from '../agent/a2ui/a2ui-stream-parser.js';
+import { validateA2UIOutput } from '../agent/a2ui/a2ui-validator.js';
 import {
   SEARCH_INFINITY_ENDPOINT,
   createOptionalDoubaoImageSearchTool,
   createOptionalDoubaoSearchTool,
+  createSearchRunScope,
   initializeDoubaoSearchRunScope,
   readDoubaoSearchConfig,
   resolveDoubaoSearchConfig,
@@ -26,7 +26,7 @@ import {
   searchDoubaoImagesForRun,
   searchedDoubaoDocumentURLs,
   searchedDoubaoImageURLs,
-} from '../agent/doubao-search-tool.js';
+} from '../agent/common/doubao-search-tool.js';
 
 const CONFIG = {
   apiKey: 'search-secret',
@@ -419,7 +419,7 @@ describe('Doubao search request', () => {
   });
 
   test('shares a request-wide call budget and records trusted URLs', async () => {
-    const scope = createArkImageGenerationRunScope();
+    const scope = createSearchRunScope();
     initializeDoubaoSearchRunScope(scope, 2);
     await searchDoubaoForRun(scope, CONFIG, 'first', successfulFetch);
     await searchDoubaoImagesForRun(
@@ -439,7 +439,7 @@ describe('Doubao search request', () => {
       searchDoubaoForRun(scope, CONFIG, 'third', successfulFetch),
     ).rejects.toThrow('call limit reached (2 per request)');
 
-    const failedScope = createArkImageGenerationRunScope();
+    const failedScope = createSearchRunScope();
     initializeDoubaoSearchRunScope(failedScope, 1);
     await expect(
       searchDoubaoForRun(failedScope, CONFIG, 'first', failingFetch),
@@ -453,7 +453,7 @@ describe('Doubao search request', () => {
 describe('A2UI image-search source validation', () => {
   test('trusts searched images and their source pages but rejects invented images', async () => {
     const catalog = await loadBasicCatalog();
-    const scope = createArkImageGenerationRunScope();
+    const scope = createSearchRunScope();
     const imagePolicy = createA2UIImageSourcePolicy(
       [],
       () => searchedDoubaoImageURLs(scope),
@@ -530,7 +530,7 @@ describe('A2UI web-search source validation', () => {
 
   test('allows user and search URLs but rejects invented openUrl targets', async () => {
     const catalog = await loadBasicCatalog();
-    const scope = createArkImageGenerationRunScope();
+    const scope = createSearchRunScope();
     await searchDoubaoForRun(scope, CONFIG, 'topic', successfulFetch);
     const policy = createA2UIOpenURLPolicy(
       ['User supplied https://user.example.com/reference'],

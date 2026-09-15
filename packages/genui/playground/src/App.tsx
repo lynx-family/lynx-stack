@@ -12,6 +12,7 @@ import {
 import { Button } from './components/Button.js';
 import { Moon, Sun } from './components/Icon.js';
 import { BenchPage } from './pages/bench/BenchPage.js';
+import { PublishedReportRoute } from './pages/bench/PublishedReportRoute.js';
 import { ComponentsPage } from './pages/catalog/ComponentsPage.js';
 import { ChatPage } from './pages/chat/ChatPage.js';
 import { DemosListPage } from './pages/demos/DemosListPage.js';
@@ -49,8 +50,14 @@ const CREATE_EXAMPLES_TABS: TabDef[] = [
   { id: 'examples', label: 'Examples' },
 ];
 
-const CREATE_ONLY_TABS: TabDef[] = [
+const LYNX_XML_TABS: TabDef[] = [
+  ...CREATE_EXAMPLES_TABS,
+  { id: 'bench', label: 'Bench' },
+];
+
+const HTML_TABS: TabDef[] = [
   { id: 'create', label: 'Create' },
+  { id: 'bench', label: 'Bench' },
 ];
 
 function ensureDefaultRouteHash(): void {
@@ -122,11 +129,11 @@ export function App() {
   const protocol = route.protocol;
   let tabs = GENUI_TABS;
   if (protocol.name === 'html') {
-    tabs = CREATE_ONLY_TABS;
-  } else if (
-    protocol.name === 'mcp-apps' || protocol.name === 'lynx-xml'
-  ) {
+    tabs = HTML_TABS;
+  } else if (protocol.name === 'mcp-apps') {
     tabs = CREATE_EXAMPLES_TABS;
+  } else if (protocol.name === 'lynx-xml') {
+    tabs = LYNX_XML_TABS;
   }
 
   useLayoutEffect(() => {
@@ -276,6 +283,14 @@ export function App() {
 
     switch (route.tab) {
       case 'bench': {
+        if (route.benchReportId !== undefined) {
+          return (
+            <PublishedReportRoute
+              key={route.benchReportId}
+              reportId={route.benchReportId}
+            />
+          );
+        }
         return <BenchPage key='bench' />;
       }
       case 'examples':
@@ -311,6 +326,7 @@ export function App() {
     embedded,
     protocol,
     route.tab,
+    route.benchReportId,
     route.componentName,
     route.demoId,
     theme,

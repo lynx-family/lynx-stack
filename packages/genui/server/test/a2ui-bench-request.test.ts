@@ -4,15 +4,15 @@
 
 import { describe, expect, test } from '@rstest/core';
 
-import { normalizeBenchJobRequest } from '../service/a2ui-bench-request.js';
+import { normalizeBenchJobRequest } from '../service/common/bench/request.js';
 import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 
 function body(groups: unknown[]) {
   return {
     provider: {},
+    playground: { browserScreenshots: true },
     settings: {
       repeats: 1,
-      parallelism: 3,
       maxRepairAttempts: 1,
     },
     groups,
@@ -26,6 +26,72 @@ function body(groups: unknown[]) {
 }
 
 describe('A2UI Bench request protocol groups', () => {
+  test.each([undefined, false, true])(
+    'normalizes fragment conversion with default off: %s',
+    (enabled) => {
+      const result = normalizeBenchJobRequest(
+        body([{
+          id: 'xml',
+          protocol: 'lynx-xml',
+          enableHtmlFragment: enabled,
+        }]),
+      );
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.request.groups[0]?.enableHtmlFragment).toBe(
+          enabled === true,
+        );
+      }
+    },
+  );
+  test('rejects non-boolean fragment selection', () => {
+    expect(
+      normalizeBenchJobRequest(
+        body([{
+          id: 'xml',
+          protocol: 'lynx-xml',
+          enableHtmlFragment: 'false',
+        }]),
+      ),
+    ).toMatchObject({ ok: false, status: 400 });
+  });
+  test('accepts Lynx XML native alongside both component protocols', () => {
+    const normalized = normalizeBenchJobRequest(body(
+      ['a2ui', 'openui', 'lynx-xml', 'html'].map((protocol) => ({
+        id: protocol,
+        protocol,
+        catalog: 'Core Catalog',
+        enabled: true,
+      })),
+    ));
+    expect(normalized.ok).toBe(true);
+    if (!normalized.ok) return;
+    expect(
+      normalized.request.groups.map((group) => [group.protocol, group.profile]),
+    ).toEqual([
+      ['a2ui', 'native'],
+      ['openui', 'matched-core'],
+      ['lynx-xml', 'native'],
+      ['html', 'native'],
+    ]);
+    expect(normalized.request.groups[2]).not.toHaveProperty('catalog');
+    expect(normalized.request.groups[3]).not.toHaveProperty('catalog');
+    expect(normalized.request.settings).not.toHaveProperty('parallelism');
+    expect(normalized.warnings).toEqual([]);
+  });
+
+  test('rejects a matched-core profile for Lynx XML', () => {
+    expect(normalizeBenchJobRequest(body([{
+      id: 'xml',
+      protocol: 'lynx-xml',
+      profile: 'matched-core',
+    }]))).toMatchObject({
+      ok: false,
+      status: 400,
+      error: 'lynx-xml groups require the "native" profile',
+    });
+  });
+
   test('keeps legacy groups on the A2UI native profile', () => {
     const normalized = normalizeBenchJobRequest(
       body([{
@@ -90,10 +156,53 @@ describe('A2UI Bench request protocol groups', () => {
     expect(normalized.request.groups[1]).not.toHaveProperty('model');
     expect(normalized.request.groups[0]).not.toHaveProperty('catalog');
     expect(normalized.request.groups[1]).not.toHaveProperty('catalog');
-    expect(normalized.request.settings.parallelism).toBe(1);
-    expect(normalized.warnings).toContain(
-      'Mixed-protocol jobs run one sample at a time so benchmark arms remain paired; settings.parallelism was set to 1.',
+    expect(normalized.request.settings).not.toHaveProperty('parallelism');
+    expect(normalized.warnings).toEqual([]);
+  });
+
+  test.each([undefined, 1, 4, 99])(
+    'ignores legacy parallelism %s without persisting it',
+    (parallelism) => {
+      const input = body([
+        { id: 'a2ui', protocol: 'a2ui' },
+        { id: 'xml', protocol: 'lynx-xml' },
+        { id: 'disabled', protocol: 'openui', enabled: false },
+      ]);
+      const result = normalizeBenchJobRequest({
+        ...input,
+        settings: { ...input.settings, parallelism },
+      });
+      expect(result).toMatchObject({
+        ok: true,
+        totalRuns: 2,
+      });
+      if (result.ok) {
+        expect(result.request.settings).not.toHaveProperty('parallelism');
+      }
+    },
+  );
+
+  test('accepts eight groups and rejects a ninth without silently dropping it', () => {
+    const groups = Array.from(
+      { length: 8 },
+      (_, index) => ({ id: `group-${index}` }),
     );
+    const accepted = normalizeBenchJobRequest(body(groups));
+    expect(accepted).toMatchObject({
+      ok: true,
+      totalRuns: 8,
+    });
+    if (accepted.ok) expect(accepted.request.groups).toHaveLength(8);
+    expect(
+      normalizeBenchJobRequest(
+        body([...groups, { id: 'ninth', enabled: false }]),
+      ),
+    ).toMatchObject({
+      ok: false,
+      status: 422,
+      error:
+        'Bench supports at most 8 comparison groups, including the baseline.',
+    });
   });
 
   test('ignores custom provider settings and unconfigured group models', () => {
@@ -226,7 +335,7 @@ describe('A2UI Bench request protocol groups', () => {
     });
   });
 
-  test('normalizes a request-scoped UI Judge server URL', () => {
+  test('drops legacy screenshot URLs from server job configuration', () => {
     const normalized = normalizeBenchJobRequest(
       {
         ...body([{
@@ -236,6 +345,7 @@ describe('A2UI Bench request protocol groups', () => {
         }]),
         playground: {
           baseUrl: 'https://playground.example/',
+          browserScreenshots: true,
           uiJudgeServerUrl: 'http://judge.test/internal?token=ignored#health',
         },
       },
@@ -245,11 +355,11 @@ describe('A2UI Bench request protocol groups', () => {
     if (!normalized.ok) return;
     expect(normalized.request.playground).toEqual({
       baseUrl: 'https://playground.example/',
-      uiJudgeServerUrl: 'http://judge.test/internal/',
+      browserScreenshots: true,
     });
   });
 
-  test('rejects an invalid request-scoped UI Judge server URL', () => {
+  test('requires a browser screenshot client when Judge is enabled', () => {
     expect(normalizeBenchJobRequest(
       {
         ...body([{
@@ -257,6 +367,7 @@ describe('A2UI Bench request protocol groups', () => {
           name: 'Group',
           enabled: true,
         }]),
+        settings: { judgeEnabled: true },
         playground: {
           uiJudgeServerUrl: 'file:///tmp/ui-judge.sock',
         },
@@ -265,7 +376,32 @@ describe('A2UI Bench request protocol groups', () => {
       ok: false,
       status: 400,
       error:
-        'playground.uiJudgeServerUrl must be an HTTP(S) URL without credentials',
+        'UI Judge requires a browser screenshot client. Start this Bench from the Playground.',
     });
   });
+});
+
+test('rejects matched-core for HTML and omits XML-only options', () => {
+  expect(
+    normalizeBenchJobRequest(
+      body([{ id: 'html', protocol: 'html', profile: 'matched-core' }]),
+    ),
+  ).toMatchObject({ ok: false });
+  const result = normalizeBenchJobRequest(
+    body([{
+      id: 'html',
+      protocol: 'html',
+      enableHtmlFragment: true,
+      catalog: 'Full Catalog',
+    }]),
+  );
+  expect(result.ok).toBe(true);
+  if (result.ok) {
+    expect(result.request.groups[0]).toMatchObject({
+      protocol: 'html',
+      profile: 'native',
+    });
+    expect(result.request.groups[0]).not.toHaveProperty('catalog');
+    expect(result.request.groups[0]).not.toHaveProperty('enableHtmlFragment');
+  }
 });

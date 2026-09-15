@@ -2,8 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { A2UICatalog } from '../../agent/a2ui-catalog';
-import type { A2UIChatOptions } from '../../service/a2ui-agent';
+import type { A2UICatalog } from '../../agent/a2ui/a2ui-catalog.js';
+import type { A2UIChatOptions } from '../../service/a2ui/a2ui-agent.js';
 import type { OpenAIReasoningEffort } from '../../service/common/types';
 import { pickProviderOptions } from '../common/provider-options';
 

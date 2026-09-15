@@ -7,6 +7,8 @@ import {
   CUSTOM_PROVIDER_BASE_URL,
   CUSTOM_PROVIDER_ID,
   CUSTOM_PROVIDER_MODEL,
+  EMPTY_CHAT_TOKEN_USAGE,
+  addTokenUsage,
   assertProviderRequestTarget,
   createChatRequestInit,
   getChatEndpoint,
@@ -34,6 +36,113 @@ describe('shared chat helpers', () => {
       completionTokens: 3,
       totalTokens: 5,
     });
+  });
+
+  test.each([
+    { prompt_tokens_details: { cached_tokens: 1024, cache_write_tokens: 512 } },
+    { input_tokens_details: { cached_tokens: 1024, cache_write_tokens: 512 } },
+    { cachedInputTokens: 1024, cacheWriteTokens: 512 },
+    { inputTokenDetails: { cacheReadTokens: 1024, cacheWriteTokens: 512 } },
+    { cache_read_input_tokens: 1024, cache_creation_input_tokens: 512 },
+  ])('reads cache usage without adding it to token totals: %j', (details) => {
+    expect(parseTokenUsage({
+      inputTokens: 2048,
+      outputTokens: 128,
+      ...details,
+    })).toEqual({
+      promptTokens: 2048,
+      completionTokens: 128,
+      totalTokens: 2176,
+      cachedTokens: 1024,
+      cacheWriteTokens: 512,
+    });
+  });
+
+  test('parses nested AI SDK totals and cache reads and writes', () => {
+    expect(parseTokenUsage({
+      inputTokens: { total: 2048, cacheRead: 1024, cacheWrite: 512 },
+      outputTokens: { total: 128 },
+    })).toEqual({
+      promptTokens: 2048,
+      completionTokens: 128,
+      totalTokens: 2176,
+      cachedTokens: 1024,
+      cacheWriteTokens: 512,
+    });
+  });
+
+  test('distinguishes reported cache misses from absent or invalid usage', () => {
+    const base = { inputTokens: 2048, outputTokens: 128 };
+    expect(parseTokenUsage({
+      ...base,
+      input_tokens_details: { cached_tokens: 0, cache_write_tokens: 2048 },
+    })).toMatchObject({ cachedTokens: 0, cacheWriteTokens: 2048 });
+    for (
+      const cached_tokens of [
+        undefined,
+        null,
+        '1024',
+        -1,
+        Number.NaN,
+        Number.POSITIVE_INFINITY,
+      ]
+    ) {
+      expect(parseTokenUsage({
+        ...base,
+        input_tokens_details: { cached_tokens },
+      })).not.toHaveProperty('cachedTokens');
+    }
+  });
+
+  test('accumulates cache counts across calls using the empty usage identity', () => {
+    const first = {
+      promptTokens: 2048,
+      completionTokens: 128,
+      totalTokens: 2176,
+      cachedTokens: 1024,
+      cacheWriteTokens: 512,
+    };
+    expect(addTokenUsage(EMPTY_CHAT_TOKEN_USAGE, first)).toEqual(first);
+    expect(addTokenUsage(first, {
+      promptTokens: 4096,
+      completionTokens: 256,
+      totalTokens: 4352,
+      cachedTokens: 0,
+      cacheWriteTokens: 4096,
+    })).toEqual({
+      promptTokens: 6144,
+      completionTokens: 384,
+      totalTokens: 6528,
+      cachedTokens: 1024,
+      cacheWriteTokens: 4608,
+    });
+  });
+
+  test('keeps aggregate cache reads unknown if any call omits them', () => {
+    const reported = {
+      promptTokens: 2048,
+      completionTokens: 128,
+      totalTokens: 2176,
+      cachedTokens: 1024,
+      cacheWriteTokens: 0,
+    };
+    const missing = {
+      promptTokens: 4096,
+      completionTokens: 256,
+      totalTokens: 4352,
+      cacheWriteTokens: 4096,
+    };
+    const expected = {
+      promptTokens: 6144,
+      completionTokens: 384,
+      totalTokens: 6528,
+      cacheWriteTokens: 4096,
+    };
+    expect(addTokenUsage(reported, missing)).toEqual(expected);
+    expect(addTokenUsage(missing, reported)).toEqual(expected);
+    expect(addTokenUsage(expected, reported)).not.toHaveProperty(
+      'cachedTokens',
+    );
   });
 
   test('rejects redirects for credential-bearing chat requests', () => {

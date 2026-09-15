@@ -11,8 +11,8 @@ import {
   parseMcpAppsAgentOutputs,
   resolveMcpAppsResource,
   validateMcpAppsClientRegistry,
-} from '../../../agent/mcp-apps-registry';
-import { getMcpAppsAgentService } from '../../../service/mcp-apps-agent';
+} from '../../../agent/mcp-apps/mcp-apps-registry.js';
+import { getMcpAppsAgentService } from '../../../service/mcp-apps/mcp-apps-agent.js';
 import {
   validateConversation,
   validateMessages,

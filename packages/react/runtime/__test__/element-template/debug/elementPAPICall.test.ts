@@ -52,7 +52,7 @@ describe('ElementTemplate PAPI alog wrapper', () => {
       'page',
       null,
       null,
-      '0',
+      0,
       null,
     )).toBe(typedRef);
     (target.__SetAttributeOfElementTemplate as (...args: unknown[]) => unknown)(
@@ -68,7 +68,6 @@ describe('ElementTemplate PAPI alog wrapper', () => {
         circular,
         jsonUndefined,
       ],
-      null,
     );
     expect((target.__InsertNodeToElementTemplate as (...args: unknown[]) => unknown)(
       templateRef,
@@ -81,7 +80,7 @@ describe('ElementTemplate PAPI alog wrapper', () => {
       1,
       childRef,
     )).toBeNull();
-    (target.__FlushElementTree as (...args: unknown[]) => unknown)(typedRef, { triggerLayout: true });
+    (target.__FlushElementTree as (...args: unknown[]) => unknown)(undefined, { triggerLayout: true });
     expect((target.__SerializeElementTemplate as (...args: unknown[]) => unknown)(templateRef)).toBe(
       Symbol.for('serialized'),
     );
@@ -92,15 +91,15 @@ describe('ElementTemplate PAPI alog wrapper', () => {
     expect(logs).toContain(
       '__CreateElementTemplate("_et_card", null, ["title"], [], 17) => _et_card#17',
     );
-    expect(logs).toContain('__CreateTypedElementTemplate("page", null, null, "0", null) => page#0');
+    expect(logs).toContain('__CreateTypedElementTemplate("page", null, null, 0, null) => page#0');
     expect(logs).toContain(
-      '__SetAttributeOfElementTemplate(_et_card#17, 0, [_et_card#17, undefined, null, [Function namedHandler], [Function], Symbol(slot), [object Object], [object Object]], null)',
+      '__SetAttributeOfElementTemplate(_et_card#17, 0, [_et_card#17, undefined, null, [Function namedHandler], [Function], Symbol(slot), [object Object], [object Object]])',
     );
     expect(logs).toContain(
       '__InsertNodeToElementTemplate(_et_card#17, 1, {"id":2}, undefined) => {"id":2}',
     );
     expect(logs).toContain('__RemoveNodeFromElementTemplate(_et_card#17, 1, {"id":2})');
-    expect(logs).toContain('__FlushElementTree(page#0, {"triggerLayout":true})');
+    expect(logs).toContain('__FlushElementTree(undefined, {"triggerLayout":true})');
     expect(logs).toContain('__SerializeElementTemplate(_et_card#17) => Symbol(serialized)');
     expect(globalThis.lynx.performance.profileStart).toHaveBeenCalledTimes(7);
     expect(globalThis.lynx.performance.profileEnd).toHaveBeenCalledTimes(7);

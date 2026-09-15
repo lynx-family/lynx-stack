@@ -17,8 +17,8 @@ areas, scrolling, spacing, typography, visual hierarchy, and touch targets.
 When content can exceed one viewport, the first business node below the Page is
 required to be the definite-height vertical `scroll-view`; it is not wrapped in
 an additional business `view`. The provider-neutral design intent lives in
-`src/mobile-design.ts`; the concrete Element PAPI and `scroll-view` contract
-lives in `src/prompt.ts`. That API contract also keeps numeric component ids
+the shared GenUI server design contract; the concrete Element PAPI and
+`scroll-view` contract lives in `src/prompt.ts`. That API contract also keeps numeric component ids
 separate from Element PAPI node references: both `__AppendElement` arguments
 must be nodes, while `pageId` is used only by page-owned element creation APIs.
 
@@ -56,5 +56,20 @@ const { bindings, javascript } = generateMainThreadScriptResult(
 );
 ```
 
-The package intentionally has no model-provider, agent-runtime, or renderer
-dependencies. Consumers own those integration concerns.
+Generate an intermediate document with `LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT`
+and pass it to `compileLynxXmlFragment(source)`. It requires one `<template>` directly inside `<lynx>`, in any order alongside
+normal style and script blocks. Static nodes do not need ids; only nodes used by
+handlers, updates, or cleanup need unique ids. The model
+calls the server-provided `createFragment(page, pageId)` once during rendering
+and retains its return value for handlers, for example `nodes["root"]`.
+
+Compilation removes the template and injects a deterministic helper that
+creates and appends the tree, then returns the id-to-node map. The helper reuses one temporary element reference and a parent stack,
+retaining only nodes with explicit ids in its returned map. No per-element
+nodeN variables are generated; the model keeps the map in script-scoped `nodes`. Styles, state, lifecycle, and interactions
+remain model-authored. No generated script or bindings need a model round trip.
+The result contains the complete `text` and the original `xmlFragment`.
+
+The converter preserves nonempty text whitespace and source order, checks XML,
+rejects duplicate ids, and bounds fragment length and nesting. Compilation does
+not execute JavaScript. Final rendering remains the consumer's responsibility.

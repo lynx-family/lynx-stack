@@ -74,7 +74,6 @@ describe('Config - toRsBuildConfig', () => {
         {
           "assetPrefix": undefined,
           "hmr": true,
-          "lazyCompilation": false,
           "liveReload": true,
           "progressBar": true,
           "watchFiles": undefined,

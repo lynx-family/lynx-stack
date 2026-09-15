@@ -1,72 +1,58 @@
 ---
-applyTo: "packages/genui/lynx-xml/**,packages/genui/server/agent/{lynx-xml-agent,html-fragment-to-main-thread-script-tool}.ts,packages/genui/server/service/lynx-xml-agent.ts"
+applyTo: "packages/genui/lynx-xml/**,packages/genui/server/agent/lynx-xml/**,packages/genui/server/service/lynx-xml/**"
 ---
 
-Keep Lynx XML prompt construction in `packages/genui/lynx-xml`; the server
-agent should consume the package and contain only provider and Agent wiring.
-Use the pinned direct `@lynx-js/skill-vanilla-lynx` dependency as the source of
-shared `.lynxml` document, Element PAPI, lifecycle, event-routing, background,
-and styling guidance.
-Select and sanitize its Markdown in `src/vanilla-lynx-skill.ts`, import it with
-`?raw`, and inline it at build time. Do not duplicate that guidance in the local
-prompt or add runtime filesystem reads. In particular, select the document
-contract and assembly sections from `references/lynxml.md` instead of repeating
-the XML envelope or source-block shape in `src/prompt.ts`; keep only
-GenUI-specific parameters and adaptation overrides there. Keep the dependency
-bundled in Rslib and in Rstest's `output.bundleDependencies` so the raw-asset
-rule processes its Markdown. Adapting the skill must not introduce Rspeedy,
-external bundles, or a required `globalThis.processData` contract into the
-self-contained `.lynxml` prompt without an explicit product decision.
-Require the page root and every container that lays out Element children to
-apply a class with explicit `display: flex` and `flex-direction`; generated XML
-must not rely on Lynx's default Linear layout.
-Keep numeric component ids separate from Element PAPI node references. Both
-arguments to `__AppendElement` must be nodes, append helpers must receive the
-parent node rather than its id, and `pageId` is reserved for page-owned element
-creation APIs.
-Keep XML fragment parsing and deterministic Element PAPI generation in
-`packages/genui/lynx-xml` and export those headless utilities from its package
-entry point. Keep the server's `html_fragment_to_main_thread_script` module
-limited to Mastra tool and request-scope wiring. Parse well-formed fragments in
-source order, emit Element PAPI creation, literal property, and append calls
-that assume `page` and `pageId` already exist, and leave state, event handlers,
-updates, lifecycle registration, cleanup, and CSS to the agent-authored
-artifact.
-Bound element nesting before recursive emission, ignore whitespace-only text
-nodes, and preserve the original text of every non-empty node. Cover both
-limits with converter regression tests.
-Keep generated fragment JavaScript in a Mastra `RequestContext` registry scoped
-to one agent run. Return only an opaque placeholder plus XML-id node bindings to
-the model, require the placeholder exactly once on its own line, and expand it
-before final artifact validation and delivery. Never store generated scripts on
-the cached Agent or in a process-global registry.
-Maintain mobile-specific defaults in `src/mobile-design.ts`: start from a
-narrow portrait, single-primary-scroll layout; use responsive units and a
-consistent semantic palette; consume each safe-area edge once; reserve space
-for fixed bars; and require legible type and touch targets of at least 44px by
-44px. Safe-area values must come from explicit host or initialization data, be
-converted to Lynx-supported lengths, and be consumed once; never emit Web CSS
-`env(safe-area-inset-*)`. Keep this guidance compatible with the imported
-strict `.lynxml` style contract: resolve the palette into reusable classes with
-supported literal values instead of CSS variables, and require explicit width
-and height for bitmap media. When content can exceed one viewport, make the
-definite-height vertical scroll view the first business node directly below the
-Page and do not wrap it in another business view. Keep concrete Element PAPI,
-scroll-view, image, and accessibility attributes in `src/prompt.ts`;
-`src/mobile-design.ts` should contain only provider-neutral mobile design
-intent. Tappable controls use Lynx `accessibility-element` and applicable
-`accessibility-traits`; add an `accessibility-label` when visible text does not
-already name the control, and never use Web `aria-label`. Explicit user design
-systems may override visual defaults, but not Lynx layout, safe-area, runtime,
-or accessibility contracts.
-Web mobile-design guidance may inform provider-neutral hierarchy, contrast,
-form feedback, UI state, and purposeful-motion principles. Do not copy Web-only
-mechanisms or metrics such as semantic HTML, ARIA, media or container queries,
-`clamp()`, `srcset`, `prefers-reduced-motion`, or Core Web Vitals into
-`src/mobile-design.ts`; express the underlying intent in terms that can be
-implemented with the supported Lynx runtime and style contract.
-Keep prompt construction deterministic and cover configurable fields and core
-dependency-derived and local override invariants with package tests. Verify the
-built output has no runtime Markdown imports. Include the package config in the
-root Rstest project list and validate it with `pnpm exec rstest run -c
-rstest.config.ts --project genui/lynx-xml`.
+Keep provider-neutral prompts and deterministic fragment compilation in
+`packages/genui/lynx-xml`; keep model providers, Agent wiring, streaming, and
+request options in GenUI Server.
+
+`enableHtmlFragment` defaults to false and selects both the prompt and Agent
+cache variant. Off generates a complete Element PAPI document directly. On
+produces one intermediate document containing one `<template>` directly inside
+`<lynx>`, alongside CSS and main/background scripts. Accept source blocks in
+any order and skip raw scripts, styles, and comments when locating the template.
+Require ids only on nodes referenced by handlers, updates, or cleanup; static
+nodes do not need ids. After model generation,
+compile the fragment, remove the template, and inject `createFragment(page,
+pageId)`. This helper appends the initial tree and returns an XML-id-to-node map;
+reuse one temporary element reference and a parent stack while building the
+tree, and retain only explicitly identified nodes in the returned node map.
+The model stores that map at main-thread script scope for later handlers. Do
+not generate a separate nodeN variable for each element. Do not register a conversion
+tool, retain a placeholder registry, or request another model round on success.
+Keep failures explicit; Bench owns configured repairs.
+
+Preserve the exact intermediate model response in `metadata.modelOutput` and
+the successful original fragment in `metadata.xmlFragment`. Off omits the
+fragment metadata. Stream model text as source evidence, but preview and Judge
+only the compiled final document. Preserve usage and finish reason when
+postprocessing fails. Test real single-step Mastra generation and streaming,
+cache separation, and fragment handlers through render, tap, update, and cleanup.
+
+Use the pinned `@lynx-js/skill-vanilla-lynx` dependency for shared document,
+Element PAPI, lifecycle, event, background, and style guidance. Select and
+sanitize Markdown in `src/vanilla-lynx-skill.ts`, import with `?raw`, and inline
+it through Rslib and Rstest. Do not duplicate shared guidance or add runtime
+filesystem reads, Rspeedy, external bundles, or a required `globalThis.processData`
+contract. Keep local prompt overrides deterministic and tested.
+
+Keep fragment parsing bounded by length and nesting depth. Preserve source
+order, XML entities and nonempty text whitespace, reject duplicate ids and
+unsupported source elements, and never execute model JavaScript on the server.
+Compile explicit `raw-text` leaves with `__CreateRawText`, preserving XML entities
+and deliberate whitespace; accept text content or the `text` attribute, and
+reject nested elements or ambiguous simultaneous text sources.
+Keep `eslint-scope` external in the intermediate library build; bundle it once
+in the consuming server to avoid duplicated CommonJS module tables.
+
+Keep shared product and mobile design intent in `packages/genui/server/design/design-guidance.ts`
+and concrete Lynx APIs in `src/prompt.ts`. Require applied classes with explicit `display: flex` and
+`flex-direction` on layout containers. Both `__AppendElement` arguments must
+be nodes; reserve `pageId` for page-owned creation APIs. For long content, append
+one definite-height vertical scroll view directly to Page, without a business
+view wrapper. Keep Page visually unstyled, consume host-provided safe-area
+insets once, reserve fixed-bar space, specify image dimensions, and provide
+legible text and 44px touch targets. Use supported literal CSS values and Lynx
+accessibility attributes; do not import Web-only layout, ARIA, CSS variables,
+or `env(safe-area-inset-*)`. User design systems may override visual defaults,
+not runtime contracts.

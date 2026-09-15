@@ -8,6 +8,7 @@ import type {
   PointerEvent as ReactPointerEvent,
 } from 'react';
 
+import { getBenchProtocolLabel } from './benchData.js';
 import type { BenchGroup, BenchScenario, BenchSettings } from './benchData.js';
 import type { BenchReport, BenchResult } from './benchReportTypes.js';
 import { Button } from '../../components/Button.js';
@@ -395,7 +396,7 @@ export function BenchScreenshotsDialog(props: {
                     <div>
                       <strong>{row.group.name}</strong>
                       <span>
-                        {row.group.protocol === 'openui' ? 'OpenUI' : 'A2UI'}
+                        {getBenchProtocolLabel(row.group.protocol)}
                         {' · '}
                         {row.group.profile}
                       </span>

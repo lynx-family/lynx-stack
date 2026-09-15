@@ -4,10 +4,10 @@
 
 import { describe, expect, test } from '@rstest/core';
 
-import { loadBasicCatalog } from '../agent/a2ui-catalog.js';
-import { createA2UIImageSourcePolicy } from '../agent/a2ui-image-source-policy.js';
-import { A2UIProtocolMessageStreamParser } from '../agent/a2ui-stream-parser.js';
-import { validateA2UIOutput } from '../agent/a2ui-validator.js';
+import { loadBasicCatalog } from '../agent/a2ui/a2ui-catalog.js';
+import { createA2UIImageSourcePolicy } from '../agent/a2ui/a2ui-image-source-policy.js';
+import { A2UIProtocolMessageStreamParser } from '../agent/a2ui/a2ui-stream-parser.js';
+import { validateA2UIOutput } from '../agent/a2ui/a2ui-validator.js';
 import {
   createArkImageGenerationRunScope,
   createArkImageGenerationTool,
@@ -16,7 +16,7 @@ import {
   generatedArkImageURLs,
   resolveArkImageGenerationConfig,
   waitForPendingArkImageGeneration,
-} from '../agent/ark-image-generation-tool.js';
+} from '../agent/common/ark-image-generation-tool.js';
 
 const CONFIG = {
   apiKey: 'ark-secret',

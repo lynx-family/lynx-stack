@@ -21,7 +21,7 @@ export { ElementTree }
 export { LynxTestingEnv }
 
 // @public
-export function render<Q extends Queries>(
+export function render<Q extends Queries = typeof queries>(
 ui: ComponentChild,
 options?: RenderOptions<Q>,
 ): RenderResult<Q>;

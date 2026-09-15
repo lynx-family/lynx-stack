@@ -227,6 +227,12 @@ export async function importConversation(
     seq: index,
     role: message.role,
     content: message.content,
+    ...(message.lynxXmlFragment
+      ? { lynxXmlFragment: message.lynxXmlFragment }
+      : {}),
+    ...(message.lynxXmlModelOutput
+      ? { lynxXmlModelOutput: message.lynxXmlModelOutput }
+      : {}),
     previewPayloadUrls: message.previewPayloadUrls,
     previewMetrics: message.previewMetrics,
     createdAt: now + index,

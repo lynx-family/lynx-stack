@@ -9,8 +9,10 @@
 import {
   ArrowRight,
   ArrowUpRight,
+  ChevronDown,
   ChevronLeft,
   Copy,
+  FileText,
   History,
   Maximize2,
   MessageSquarePlus,
@@ -35,8 +37,10 @@ import type { LucideProps } from 'lucide-react';
 export {
   ArrowRight,
   ArrowUpRight,
+  ChevronDown,
   ChevronLeft,
   Copy,
+  FileText,
   History,
   Maximize2,
   MessageSquarePlus,

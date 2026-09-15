@@ -536,6 +536,33 @@ export class LynxTemplatePlugin {
 
 const SECTION_MAIN_THREAD = 'main-thread';
 const SECTION_BACKGROUND = 'background';
+
+interface AsyncChunkLayout {
+  name: string;
+  layer: string | undefined;
+}
+
+function shortLayerName(layer: string): string {
+  return layer.split(':').pop()!;
+}
+
+function getEntryFilenameOfLayer(
+  entry: Compiler['options']['entry'],
+  layer: string,
+): string | undefined {
+  if (typeof entry === 'function') {
+    return undefined;
+  }
+  for (const description of Object.values(entry)) {
+    if (
+      description.layer === layer
+      && typeof description.filename === 'string'
+    ) {
+      return description.filename.replace(/\\/g, '/');
+    }
+  }
+  return undefined;
+}
 const SECTION_CSS = 'CSS';
 
 /**
@@ -707,12 +734,31 @@ class LynxTemplatePluginImpl {
       compiler.options.output.chunkFilename = (pathData, assetInfo) => {
         const id = pathData.chunk?.id;
         if (compilation !== undefined && id !== undefined && id !== null) {
-          const layoutName = LynxTemplatePluginImpl.getAsyncChunkLayoutName(
+          const layout = LynxTemplatePluginImpl.#getAsyncChunkLayout(
             compilation,
             id,
           );
-          if (layoutName !== undefined) {
-            return `${prefix}lazy-bundle/${layoutName}.js`;
+          if (layout !== undefined) {
+            const { name, layer } = layout;
+            if (layer === undefined) {
+              return `${prefix}lazy-bundle/${name}.js`;
+            }
+            // A lazy bundle's chunk in a layer mirrors the entry of that layer:
+            // `<root>/main/background.[contenthash:8].js` becomes
+            // `<root>/lazy-bundle/<name>/background.[contenthash:8].js`, so it
+            // follows the same `output.filenameHash` and stays in the same
+            // output root as the entry (a non-Lynx entry is not intermediate).
+            const entryFilename = getEntryFilenameOfLayer(
+              compiler.options.entry,
+              layer,
+            );
+            if (entryFilename === undefined) {
+              return `${prefix}lazy-bundle/${name}/${shortLayerName(layer)}.js`;
+            }
+            const root = path.posix.dirname(path.posix.dirname(entryFilename));
+            return `${root === '.' ? '' : `${root}/`}lazy-bundle/${name}/${
+              path.posix.basename(entryFilename)
+            }`;
           }
         }
         return typeof original === 'function'
@@ -1013,9 +1059,9 @@ class LynxTemplatePluginImpl {
     return lazyBundleNames;
   }
 
-  static #asyncLayoutNames = new WeakMap<
+  static #asyncChunkLayouts = new WeakMap<
     Compilation,
-    Map<string | number, string>
+    Map<string | number, AsyncChunkLayout>
   >();
 
   /**
@@ -1027,10 +1073,25 @@ class LynxTemplatePluginImpl {
     compilation: Compilation,
     chunkId: string | number,
   ): string | undefined {
-    let layoutNames = LynxTemplatePluginImpl.#asyncLayoutNames.get(compilation);
+    const layout = LynxTemplatePluginImpl.#getAsyncChunkLayout(
+      compilation,
+      chunkId,
+    );
+    if (layout === undefined) {
+      return undefined;
+    }
+    const { name, layer } = layout;
+    return layer === undefined ? name : `${name}/${shortLayerName(layer)}`;
+  }
 
-    if (!layoutNames) {
-      layoutNames = new Map<string | number, string>();
+  static #getAsyncChunkLayout(
+    compilation: Compilation,
+    chunkId: string | number,
+  ): AsyncChunkLayout | undefined {
+    let layouts = LynxTemplatePluginImpl.#asyncChunkLayouts.get(compilation);
+
+    if (!layouts) {
+      layouts = new Map<string | number, AsyncChunkLayout>();
       const { chunkGraph } = compilation;
       for (
         const [name, chunkGroups] of Object.entries(
@@ -1054,17 +1115,17 @@ class LynxTemplatePluginImpl {
           let layer: string | undefined;
           for (const module of chunkGraph.getChunkModulesIterable(chunk)) {
             if (module.layer) {
-              layer = String(module.layer).split(':').pop();
+              layer = String(module.layer);
               break;
             }
           }
-          layoutNames.set(chunk.id, layer ? `${name}/${layer}` : name);
+          layouts.set(chunk.id, { name, layer });
         }
       }
-      LynxTemplatePluginImpl.#asyncLayoutNames.set(compilation, layoutNames);
+      LynxTemplatePluginImpl.#asyncChunkLayouts.set(compilation, layouts);
     }
 
-    return layoutNames.get(chunkId);
+    return layouts.get(chunkId);
   }
 
   #getAsyncFilenameTemplate(filename: string) {

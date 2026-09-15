@@ -3,7 +3,7 @@ Array [
     "attributeSlots": Array [
       "logo.png",
     ],
-    "elementSlots": Array [],
+    "childSlots": Array [],
     "templateKey": "_et_3fa853bd2365",
     "uid": -1,
   },

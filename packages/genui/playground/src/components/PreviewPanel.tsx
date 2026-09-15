@@ -739,6 +739,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
     if (previewSource.kind === 'a2ui') {
       const useClientPayloadStore = shouldUseClientPayloadStore();
       const hasPayload = hasShareableA2UIRenderPayload(previewSource)
+        || previewSource.liveAction === true
         || useClientPayloadStore;
       if (!hasPayload) {
         localMessagesPayloadCache.clear();

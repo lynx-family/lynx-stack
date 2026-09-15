@@ -90,7 +90,7 @@ where
   dynamic_part_visitor: &'a mut V,
   pub(super) key: Option<JSXAttrValue>,
   attr_slot_counter: i32,
-  element_slot_counter: i32,
+  child_slot_counter: i32,
   has_css_id_value: bool,
 }
 
@@ -107,7 +107,7 @@ where
       dynamic_part_visitor,
       key: None,
       attr_slot_counter: 0,
-      element_slot_counter: 0,
+      child_slot_counter: 0,
       has_css_id_value,
     }
   }
@@ -119,8 +119,8 @@ where
   }
 
   fn next_children_slot_index(&mut self) -> i32 {
-    let idx = self.element_slot_counter;
-    self.element_slot_counter += 1;
+    let idx = self.child_slot_counter;
+    self.child_slot_counter += 1;
     idx
   }
 

@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { Hono } from 'hono';
 
-import { getA2UIAgentService } from '../../../service/a2ui-agent';
+import { getA2UIAgentService } from '../../../service/a2ui/a2ui-agent.js';
 import {
   validateConversation,
   validateMessages,

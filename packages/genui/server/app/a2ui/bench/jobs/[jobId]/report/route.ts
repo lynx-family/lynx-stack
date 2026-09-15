@@ -4,7 +4,7 @@
 
 import { Hono } from 'hono';
 
-import { getBenchJobStore } from '../../../../../../service/a2ui-bench-store';
+import { getBenchJobStore } from '../../../../../../service/common/bench/store.js';
 import { jsonWithCors } from '../../../../../common/cors';
 
 function getA2UIBenchJobReport(req: Request, jobId: string) {

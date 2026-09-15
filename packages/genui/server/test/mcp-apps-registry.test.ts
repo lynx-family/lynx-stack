@@ -14,8 +14,8 @@ import {
 import {
   parseMcpAppsAgentSelection,
   validateMcpAppsClientRegistry,
-} from '../agent/mcp-apps-registry.js';
-import type { McpAppsClientRegistry } from '../agent/mcp-apps-registry.js';
+} from '../agent/mcp-apps/mcp-apps-registry.js';
+import type { McpAppsClientRegistry } from '../agent/mcp-apps/mcp-apps-registry.js';
 
 function createRegistry(
   inputSchema: Record<string, unknown>,

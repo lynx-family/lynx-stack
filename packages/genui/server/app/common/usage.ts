@@ -23,6 +23,8 @@ function findCachedTokens(value: unknown): number | undefined {
     ?? readNumberProperty(value, 'cachedTokens')
     ?? readNumberProperty(value, 'cached_input_tokens')
     ?? readNumberProperty(value, 'cachedInputTokens')
+    ?? readNumberProperty(value, 'cacheReadTokens')
+    ?? readNumberProperty(value, 'cacheRead')
     ?? readNumberProperty(value, 'cache_read_input_tokens');
   if (direct !== undefined) return direct;
 
@@ -48,11 +50,15 @@ export interface UsageMetrics {
 export function extractUsageMetrics(usage: unknown): UsageMetrics {
   if (!isRecord(usage)) return {};
 
-  const inputTokens = readNumberProperty(usage, 'inputTokens')
+  const inputTokens = (isRecord(usage.inputTokens)
+    ? readNumberProperty(usage.inputTokens, 'total')
+    : readNumberProperty(usage, 'inputTokens'))
     ?? readNumberProperty(usage, 'input_tokens')
     ?? readNumberProperty(usage, 'promptTokens')
     ?? readNumberProperty(usage, 'prompt_tokens');
-  const outputTokens = readNumberProperty(usage, 'outputTokens')
+  const outputTokens = (isRecord(usage.outputTokens)
+    ? readNumberProperty(usage.outputTokens, 'total')
+    : readNumberProperty(usage, 'outputTokens'))
     ?? readNumberProperty(usage, 'output_tokens')
     ?? readNumberProperty(usage, 'completionTokens')
     ?? readNumberProperty(usage, 'completion_tokens');

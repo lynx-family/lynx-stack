@@ -7,12 +7,6 @@ on:
     secrets:
       CODECOV_TOKEN:
         required: true
-      UI_JUDGE_API_KEY:
-        required: false
-      UI_JUDGE_BASE_URL:
-        required: false
-      UI_JUDGE_MODEL:
-        required: false
 
 # Set minimum permissions to prevent unnecessary access
 permissions: {}
@@ -73,9 +67,6 @@ jobs:
       - name: Test
         env:
           CARGO_LLVM_COV_FLAGS_NO_RUNNER: --no-sparse
-          UI_JUDGE_API_KEY: ${{ secrets.UI_JUDGE_API_KEY }}
-          UI_JUDGE_BASE_URL: ${{ secrets.UI_JUDGE_BASE_URL }}
-          UI_JUDGE_MODEL: ${{ secrets.UI_JUDGE_MODEL }}
         run: |
           cargo llvm-cov nextest --all-targets --all-features --profile ci --config-file .cargo/nextest.toml --lcov --output-path lcov.info  --release
       - name: Upload coverage reports to Codecov

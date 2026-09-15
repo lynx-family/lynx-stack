@@ -4,7 +4,7 @@
 import type { AddressInfo } from 'node:net'
 import path from 'node:path'
 
-import type { RsbuildPlugin } from '@rsbuild/core'
+import type { RsbuildConfig, RsbuildPlugin } from '@rsbuild/core'
 import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 
 import { createStubRsbuild } from './createStubRsbuild.js'
@@ -310,6 +310,69 @@ describe('pluginSourcemap', () => {
           debugIds: false,
         }),
       )
+    })
+  })
+
+  describe('output.sourceMap.css', () => {
+    test('enabled on a Lynx environment by default', async () => {
+      expect(await resolveCss([])).toBe(true)
+    })
+
+    test('left off on a non-Lynx environment', async () => {
+      expect(await resolveCss([], 'web')).toBe(false)
+    })
+
+    test('left off on an environment added by another plugin', async () => {
+      const css = await resolveCss(
+        [
+          {
+            name: 'adds-web',
+            setup(api) {
+              api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) =>
+                mergeRsbuildConfig(config, { environments: { web: {} } })
+              )
+            },
+          } satisfies RsbuildPlugin,
+        ],
+        'web',
+        { lynx: {} },
+      )
+
+      expect(css).toBe(false)
+    })
+
+    test('a plugin can override it with modifyRsbuildConfig', async () => {
+      const css = await resolveCss([
+        {
+          name: 'test',
+          setup(api) {
+            api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) =>
+              mergeRsbuildConfig(config, {
+                output: { sourceMap: { css: false } },
+              })
+            )
+          },
+        } satisfies RsbuildPlugin,
+      ])
+
+      expect(css).toBe(false)
+    })
+
+    test('a plugin can override it with modifyEnvironmentConfig', async () => {
+      const css = await resolveCss([
+        {
+          name: 'test',
+          setup(api) {
+            api.modifyEnvironmentConfig((config, { mergeEnvironmentConfig }) =>
+              mergeEnvironmentConfig(config, {
+                output: { sourceMap: { css: false } },
+              })
+            )
+          },
+        } satisfies RsbuildPlugin,
+      ])
+
+      expect(css).toBe(false)
     })
   })
 
@@ -762,3 +825,35 @@ describe('pluginSourcemap', () => {
     })
   })
 })
+
+async function resolveCss(
+  plugins: RsbuildPlugin[],
+  environment = 'lynx',
+  environments: RsbuildConfig['environments'] = { lynx: {}, web: {} },
+): Promise<unknown> {
+  let css: unknown
+  const rsbuild = await createStubRsbuild({
+    environments,
+    plugins: [
+      ...plugins,
+      {
+        name: 'probe',
+        setup(api) {
+          api.modifyEnvironmentConfig({
+            handler: (config, { name }) => {
+              const { sourceMap } = config.output
+              if (name === environment) {
+                css = typeof sourceMap === 'object' ? sourceMap.css : sourceMap
+              }
+            },
+            order: 'post',
+          })
+        },
+      } satisfies RsbuildPlugin,
+    ],
+  })
+
+  await rsbuild.initConfigs()
+
+  return css
+}

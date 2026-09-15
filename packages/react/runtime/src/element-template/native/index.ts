@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import '@lynx-js/react/hooks';
 import type { ComponentChild, ContainerNode, VNode } from 'preact';
-import { render } from 'preact';
+import { options, render } from 'preact';
 
 import { callDestroyLifetimeFun } from './callDestroyLifetimeFun.js';
 import { injectCalledByNative } from './main-thread-api.js';
@@ -14,6 +14,8 @@ import { runWithForceRootRender } from '../../core/forceRootRender.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { installMainThreadHooks } from '../../core/hooks/mainThreadImpl.js';
 import { updateCardData } from '../../core/lynx-update-data.js';
+import { setupComponentStack } from '../../shared/component-stack.js';
+import { lynxQueueMicrotask } from '../../utils.js';
 import { installElementTemplateCommitHook } from '../background/commit-hook.js';
 import { setupBackgroundElementTemplateDocument } from '../background/document.js';
 import { installElementTemplateHydrationListener } from '../background/hydration-listener.js';
@@ -63,6 +65,10 @@ function init(): void {
   }
 
   if (__BACKGROUND__) {
+    if (__DEV__) {
+      setupComponentStack();
+    }
+    options.requestAnimationFrame = lynxQueueMicrotask;
     console.log('experimental_useElementTemplate:', __USE_ELEMENT_TEMPLATE__);
     setRoot(new BackgroundPageRootInstance());
     setupBackgroundElementTemplateDocument();

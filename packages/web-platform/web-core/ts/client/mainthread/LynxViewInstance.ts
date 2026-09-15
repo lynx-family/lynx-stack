@@ -170,6 +170,7 @@ export class LynxViewInstance implements AsyncDisposable {
         this.transformVW,
         this.transformVH,
         this.transformREM,
+        config['enableCSSInheritance'] === 'true',
       ),
       createMainThreadGlobalAPIs(
         this,

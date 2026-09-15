@@ -12,13 +12,17 @@ import { checkRateLimit, rateLimitSseResponse } from './rate-limit.js';
 import { readJsonBodyWithLimit } from './request.js';
 import { encodeSSE, sseHeaders } from './sse.js';
 import { createStreamLogger } from './stream-logger.js';
+import {
+  GenerationPostprocessError,
+  GenerationUpstreamError,
+} from '../../service/common/result.js';
 import type {
   ChatMessage,
   ChatOptions,
   ConversationContext,
 } from '../../service/common/types.js';
 
-interface TextChatBody {
+interface TextChatBody extends Record<string, unknown> {
   messages?: unknown;
   conversation?: unknown;
   resourceId?: string;
@@ -40,11 +44,15 @@ interface TextStreamingService {
       text: string | undefined;
       usage: unknown;
       finishReason: unknown;
+      metadata?: Record<string, unknown>;
     }>;
   }>;
 }
 
 export interface TextStreamRouteOptions {
+  parseOptions?: (body: Record<string, unknown>) =>
+    | { ok: true; options: ChatOptions }
+    | { ok: false; error: string };
   scope: string;
   path: string;
   getService: () => TextStreamingService;
@@ -113,8 +121,15 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
     durationMs: performance.now() - validationStartedAt,
   });
 
+  const protocolOptions = config.parseOptions?.(parsed.body);
+  if (protocolOptions && !protocolOptions.ok) {
+    return jsonWithCors(req, { ok: false, error: protocolOptions.error }, {
+      status: 400,
+    });
+  }
   const opts = {
     ...pickProviderOptions(parsed.body),
+    ...(protocolOptions?.ok ? protocolOptions.options : {}),
     onPerformanceEvent: (event: string, details = {}) => {
       log(event, details);
     },
@@ -208,9 +223,16 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
             streamedTextLength: streamedText.length,
           });
 
-          const { text, usage, finishReason } = await finalize();
+          const { text, usage, finishReason, metadata } = await finalize();
           resultMetadata = { finishReason, usage };
           generationController.signal.throwIfAborted();
+          if (finishReason === 'error') {
+            throw new GenerationUpstreamError(undefined, {
+              text: text ?? streamedText,
+              usage,
+              finishReason,
+            });
+          }
           const rawFinalText = text ?? streamedText;
           log('upstream.result.finalized', {
             rawFinalTextLength: rawFinalText.length,
@@ -240,10 +262,20 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
           enqueue('done', {
             ok: true,
             text: finalText,
+            ...(metadata ? { metadata } : {}),
             usage,
             finishReason,
           });
         } catch (error: unknown) {
+          if (
+            error instanceof GenerationPostprocessError
+            || error instanceof GenerationUpstreamError
+          ) {
+            resultMetadata = {
+              usage: error.result.usage,
+              finishReason: error.result.finishReason,
+            };
+          }
           if (!closed && !generationController.signal.aborted) {
             const payload = {
               ...errorMessage(error, errorOptions),

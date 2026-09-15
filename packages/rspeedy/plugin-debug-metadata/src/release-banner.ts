@@ -22,13 +22,17 @@ export function computeReleaseKey(...parts: string[]): string {
 /**
  * The artifact release key — baked into the runtime banner and stored as each
  * source map's `key`. A 160-bit hash over the chunk's *module identifiers* plus
- * its `chunk.hash`, rather than re-hashing the bundler's truncated 64-bit
- * `chunk.hash` alone (which wouldn't make it any stronger). The module-id set
- * is the chunk's source modules: different apps bundle different files, so two
- * apps can't produce the same release even if their 64-bit `chunk.hash`
- * collides — no `uniqueName` / `bid` namespace to configure — while `chunk.hash`
- * still tracks content changes within one app. Module identifiers are fixed at
- * build time and banner-independent, so the banner (build time) and the
+ * its `chunk.hash` and every entry of its `chunk.contentHash`, rather than
+ * re-hashing the bundler's truncated 64-bit `chunk.hash` alone (which wouldn't
+ * make it any stronger). The module-id set is the chunk's source modules:
+ * different apps bundle different files, so two apps can't produce the same
+ * release even if their 64-bit `chunk.hash` collides — no `uniqueName` / `bid`
+ * namespace to configure. `chunk.hash` only covers what the JavaScript
+ * pipeline renders, so the per-source-type `chunk.contentHash` entries carry
+ * the rest: an edit confined to an extracted CSS module moves
+ * `contentHash['css/mini-extract']` alone, leaving `chunk.hash` and every
+ * module identifier untouched. All three inputs are fixed once the chunk is
+ * hashed and are banner-independent, so the banner (build time) and the
  * collector (encode time) compute the same value for the same chunk.
  */
 export function computeChunkReleaseKey(
@@ -45,9 +49,14 @@ export function computeChunkReleaseKey(
   // `getChunkModules` order is not guaranteed stable; sort so the key is
   // deterministic for a given module set.
   moduleIds.sort()
+  const contentHash: Record<string, string> = chunk.contentHash ?? {}
+  const contentHashes = Object.entries(contentHash)
+    .map(([sourceType, hash]) => `${sourceType}=${hash}`)
+    .sort()
   const key = computeReleaseKey(
     chunk.name ?? '',
     chunk.hash ?? '',
+    ...contentHashes,
     ...moduleIds,
   )
   releaseKeyCache.set(chunk, key)

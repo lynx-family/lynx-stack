@@ -14,6 +14,8 @@ const config: RslibConfig = defineConfig({
       syntax: 'es2022',
       output: {
         autoExternal: false,
+        // Bundle CommonJS dependencies only in the consuming server executable.
+        externals: ['eslint-scope'],
       },
       dts: {
         bundle: true,

@@ -57,6 +57,8 @@ export interface ProviderModel {
 }
 
 export interface ProviderSettings {
+  enableDesignGuidance?: boolean;
+  enableHtmlFragment?: boolean;
   provider: string;
   apiKey: string;
   baseURL: string;
@@ -67,12 +69,15 @@ export interface ProviderSettings {
 }
 
 export interface ProviderRequestOptions {
+  enableDesignGuidance?: boolean;
   apiKey?: string;
   baseURL?: string;
   model?: string;
 }
 
 export interface PersistedProviderSettings {
+  enableDesignGuidance?: boolean;
+  enableHtmlFragment?: boolean;
   provider: string;
 }
 
@@ -112,9 +117,18 @@ export function parseProviderSettings(value: unknown): ProviderSettings {
   ) {
     provider = record.model;
   }
+  const enableHtmlFragment = record.enableHtmlFragment
+    ?? record.enableHtmlFragmentTool;
+  const enableDesignGuidance = record.enableDesignGuidance;
   return {
     ...createDefaultProviderSettings(),
     provider,
+    ...(typeof enableHtmlFragment === 'boolean'
+      ? { enableHtmlFragment }
+      : {}),
+    ...(typeof enableDesignGuidance === 'boolean'
+      ? { enableDesignGuidance }
+      : {}),
     // Never restore custom-provider fields from browser storage. Older
     // versions wrote them here, so ignoring them also migrates those values
     // out when the settings are serialized again.
@@ -139,6 +153,12 @@ export function serializeProviderSettings(
 ): PersistedProviderSettings {
   return {
     provider: settings.provider,
+    ...(settings.enableDesignGuidance === false
+      ? { enableDesignGuidance: false }
+      : {}),
+    ...(settings.enableHtmlFragment === undefined
+      ? {}
+      : { enableHtmlFragment: settings.enableHtmlFragment }),
   };
 }
 
@@ -176,7 +196,12 @@ export function toProviderRequestOptions(
 ): ProviderRequestOptions {
   if (settings.provider !== CUSTOM_PROVIDER_ID) {
     const model = settings.provider.trim();
-    return model ? { model } : {};
+    return {
+      ...(model ? { model } : {}),
+      ...(settings.enableDesignGuidance === false
+        ? { enableDesignGuidance: false }
+        : {}),
+    };
   }
 
   const validationError = getProviderSettingsValidationError(settings);
@@ -189,6 +214,9 @@ export function toProviderRequestOptions(
     apiKey,
     baseURL,
     model,
+    ...(settings.enableDesignGuidance === false
+      ? { enableDesignGuidance: false }
+      : {}),
   };
 }
 
@@ -320,7 +348,15 @@ export const CHAT_PROVIDER_SETTINGS_ADAPTER = {
       disabled: settings.status !== 'ready',
       options: providerOptions,
     };
-    if (settings.provider !== CUSTOM_PROVIDER_ID) return [providerControl];
+    const designControl = {
+      id: 'enableDesignGuidance',
+      label: 'Extra Design Skill',
+      value: settings.enableDesignGuidance === false ? 'off' : 'on',
+      kind: 'checkbox' as const,
+    };
+    if (settings.provider !== CUSTOM_PROVIDER_ID) {
+      return [providerControl, designControl];
+    }
     return [
       providerControl,
       {
@@ -344,9 +380,13 @@ export const CHAT_PROVIDER_SETTINGS_ADAPTER = {
         kind: 'select' as const,
         options: CUSTOM_PROVIDER_BASE_URL_OPTIONS,
       },
+      designControl,
     ];
   },
   update(settings, id, next) {
+    if (id === 'enableDesignGuidance') {
+      return { ...settings, enableDesignGuidance: next !== 'off' };
+    }
     if (
       id === 'provider'
       && (settings.models.some((item) => item.id === next)
@@ -375,15 +415,42 @@ export const CHAT_PROVIDER_SETTINGS_ADAPTER = {
   badge: compactProviderLabel,
 } satisfies ChatSettingsAdapter<ProviderSettings>;
 
+function readTokenCount(value: unknown): number | undefined {
+  const candidate = value && typeof value === 'object'
+    ? (value as Record<string, unknown>).total
+    : value;
+  return typeof candidate === 'number' && Number.isFinite(candidate)
+      && candidate >= 0
+    ? candidate
+    : undefined;
+}
+
+function findCacheTokenCount(
+  value: unknown,
+  keys: readonly string[],
+): number | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return undefined;
+  }
+  const record = value as Record<string, unknown>;
+  for (const key of keys) {
+    const count = readTokenCount(record[key]);
+    if (count !== undefined) return count;
+  }
+  for (const nested of Object.values(record)) {
+    const count = findCacheTokenCount(nested, keys);
+    if (count !== undefined) return count;
+  }
+  return undefined;
+}
+
 export function parseTokenUsage(value: unknown): ChatTokenUsage | null {
-  if (!value || typeof value !== 'object') return null;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const record = value as Record<string, unknown>;
   const pickNumber = (...keys: string[]): number => {
     for (const key of keys) {
-      const candidate = record[key];
-      if (typeof candidate === 'number' && Number.isFinite(candidate)) {
-        return candidate;
-      }
+      const count = readTokenCount(record[key]);
+      if (count !== undefined) return count;
     }
     return 0;
   };
@@ -405,17 +472,52 @@ export function parseTokenUsage(value: unknown): ChatTokenUsage | null {
   if (promptTokens === 0 && completionTokens === 0 && totalTokens === 0) {
     return null;
   }
-  return { promptTokens, completionTokens, totalTokens };
+  const cachedTokens = findCacheTokenCount(record, [
+    'cached_tokens',
+    'cachedTokens',
+    'cached_input_tokens',
+    'cachedInputTokens',
+    'cacheReadTokens',
+    'cacheRead',
+    'cache_read_input_tokens',
+  ]);
+  const cacheWriteTokens = findCacheTokenCount(record, [
+    'cache_write_tokens',
+    'cacheWriteTokens',
+    'cacheWrite',
+    'cache_creation_input_tokens',
+  ]);
+  return {
+    promptTokens,
+    completionTokens,
+    totalTokens,
+    ...(cachedTokens === undefined ? {} : { cachedTokens }),
+    ...(cacheWriteTokens === undefined ? {} : { cacheWriteTokens }),
+  };
 }
 
 export function addTokenUsage(
   current: ChatTokenUsage,
   next: ChatTokenUsage,
 ): ChatTokenUsage {
+  const addCacheTokens = (
+    key: 'cachedTokens' | 'cacheWriteTokens',
+  ): number | undefined => {
+    // Missing usage from any model call must not become a reported cache miss.
+    if (
+      (current.totalTokens > 0 && current[key] === undefined)
+      || (next.totalTokens > 0 && next[key] === undefined)
+    ) return undefined;
+    return (current[key] ?? 0) + (next[key] ?? 0);
+  };
+  const cachedTokens = addCacheTokens('cachedTokens');
+  const cacheWriteTokens = addCacheTokens('cacheWriteTokens');
   return {
     promptTokens: current.promptTokens + next.promptTokens,
     completionTokens: current.completionTokens + next.completionTokens,
     totalTokens: current.totalTokens + next.totalTokens,
+    ...(cachedTokens === undefined ? {} : { cachedTokens }),
+    ...(cacheWriteTokens === undefined ? {} : { cacheWriteTokens }),
   };
 }
 

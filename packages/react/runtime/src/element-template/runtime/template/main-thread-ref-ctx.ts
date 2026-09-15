@@ -41,10 +41,10 @@ export function hydrateMTRefValue(
 
 export function attachMTRefValue(
   value: MTRefValue,
-  nativeRef: ElementRef,
+  nativeRef: ElementTemplateHandle,
 ): void {
   if (isMainThreadRef(value)) {
-    updateWorkletRef(value, nativeRef as ElementNode);
+    updateWorkletRef(value, nativeRef as unknown as ElementNode);
     return;
   }
   value._unmount = runWorkletCtx(

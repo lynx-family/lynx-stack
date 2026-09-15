@@ -3,11 +3,14 @@
 // LICENSE file in the root directory of this source tree.
 import { useMemo } from 'react';
 
-import { findComparableBaseline } from './benchData.js';
+import { findComparableBaseline, getBenchProtocolLabel } from './benchData.js';
 import type { BenchSettings } from './benchData.js';
 import type { BenchGroupSummary, BenchReport } from './benchReportTypes.js';
+import { BenchTaskTiming } from './BenchTaskTiming.js';
+import { BenchTokens } from './BenchTokens.js';
+import { groupBenchTokenUsage } from './benchTokenUsage.js';
 import { Button } from '../../components/Button.js';
-import { Copy, Maximize2, Sparkles } from '../../components/Icon.js';
+import { FileText, Maximize2, Sparkles } from '../../components/Icon.js';
 import { PageHeader } from '../../components/PageHeader.js';
 
 function formatMs(value: number): string {
@@ -76,8 +79,7 @@ function getScreenshotSummary(
 }
 
 export function BenchReportPanel(props: {
-  copyState: 'copied' | 'idle';
-  onCopy: () => Promise<void> | void;
+  onOpenReport?: () => void;
   onOpenScreenshots: () => void;
   report: BenchReport | null;
   reportIsStale: boolean;
@@ -144,15 +146,25 @@ export function BenchReportPanel(props: {
             <Button
               variant='secondary'
               size='sm'
-              iconBefore={Copy}
-              disabled={!props.report}
-              onClick={() => void props.onCopy()}
+              iconBefore={FileText}
+              disabled={!props.report || !props.onOpenReport}
+              aria-label='View report details (opens in a new tab)'
+              title='View report details in a new tab'
+              onClick={props.onOpenReport}
             >
-              {props.copyState === 'copied' ? 'Copied' : 'JSON'}
+              View details
             </Button>
           </div>
         }
       />
+
+      {props.report && (
+        <BenchTaskTiming
+          startedAt={props.report.startedAt}
+          completedAt={props.report.completedAt}
+          durationMs={props.report.durationMs}
+        />
+      )}
 
       {props.report && props.report.summaries.length > 0 && screenshotSummary
         ? (
@@ -161,9 +173,17 @@ export function BenchReportPanel(props: {
               <div className='benchInsight'>
                 <span>Lowest tokens</span>
                 <strong>{getGroupName(bestTokens)}</strong>
-                <small>
-                  {bestTokens ? formatNumber(bestTokens.avgTokens) : 'n/a'}
-                </small>
+                <div>
+                  {bestTokens
+                    ? (
+                      <BenchTokens
+                        tokens={bestTokens.avgTokens}
+                        usage={groupBenchTokenUsage(props.report, bestTokens)}
+                        average
+                      />
+                    )
+                    : 'n/a'}
+                </div>
               </div>
               <div className='benchInsight'>
                 <span>Fastest agent</span>
@@ -207,16 +227,18 @@ export function BenchReportPanel(props: {
                             <span>
                               {getGroupName(summary)}
                               <small>
-                                {summary.protocol === 'openui'
-                                  ? 'OpenUI'
-                                  : 'A2UI'}
+                                {getBenchProtocolLabel(summary.protocol)}
                                 {summary.profile ? ` · ${summary.profile}` : ''}
                               </small>
                             </span>
                           </div>
                         </td>
                         <td>
-                          <strong>{formatNumber(summary.avgTokens)}</strong>
+                          <BenchTokens
+                            tokens={summary.avgTokens}
+                            usage={groupBenchTokenUsage(props.report!, summary)}
+                            average
+                          />
                           <small>
                             {deltaText(summary.avgTokens, baseline.avgTokens)}
                           </small>

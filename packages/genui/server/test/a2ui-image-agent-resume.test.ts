@@ -4,17 +4,17 @@
 
 import { describe, expect, rstest, test } from '@rstest/core';
 
-import { createA2UIAgent } from '../agent/a2ui-agent.js';
-import type { A2UIAgent } from '../agent/a2ui-agent.js';
-import type { A2UICatalog } from '../agent/a2ui-catalog.js';
+import { createA2UIAgent } from '../agent/a2ui/a2ui-agent.js';
+import type { A2UIAgent } from '../agent/a2ui/a2ui-agent.js';
+import type { A2UICatalog } from '../agent/a2ui/a2ui-catalog.js';
 import {
   createArkImageGenerationRunScope,
   createArkImageGenerationTool,
   generatedArkImageURLs,
-} from '../agent/ark-image-generation-tool.js';
-import A2UIAgentService from '../service/a2ui-agent.js';
+} from '../agent/common/ark-image-generation-tool.js';
+import A2UIAgentService from '../service/a2ui/a2ui-agent.js';
 
-rstest.mock('../agent/a2ui-agent.js', { mock: true });
+rstest.mock('../agent/a2ui/a2ui-agent.js', { mock: true });
 
 const catalog: A2UICatalog = {
   id: 'async-image-agent-test',

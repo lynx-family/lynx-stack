@@ -9,10 +9,10 @@
     "checkJs": true,
     "isolatedDeclarations": false,
   },
-  "include": ["src", "lynx.config.ts", "test"],
+  "include": ["src", "rsbuild.config.ts", "test"],
   "references": [
     { "path": "../../packages/react/tsconfig.json" },
-    { "path": "../../packages/rspeedy/core/tsconfig.build.json" },
+    { "path": "../../packages/rspeedy/plugin-lynx/tsconfig.build.json" },
     { "path": "../../packages/rspeedy/plugin-qrcode/tsconfig.build.json" },
     { "path": "../../packages/rspeedy/plugin-react/tsconfig.build.json" },
   ],

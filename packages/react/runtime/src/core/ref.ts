@@ -5,9 +5,10 @@
 import type { NodesRef, SelectorQuery } from '@lynx-js/types';
 
 export type RefCleanup = (() => void) | void;
-export type RefCallback<T> = ((ref: T | null) => RefCleanup) & {
-  _unmount?: RefCleanup;
-};
+export type RefCallback<T> = (ref: T | null) => RefCleanup;
+export interface OrdinaryRefBinding {
+  cleanup?: RefCleanup;
+}
 export interface RefObject<T> {
   current: T | null;
 }
@@ -47,20 +48,21 @@ export function normalizeRefValue<T>(value: unknown): OrdinaryRef<T> | null | un
 export function applyOrdinaryRef<T>(
   ref: OrdinaryRef<T>,
   value: T | null,
+  binding: OrdinaryRefBinding,
 ): void {
   try {
     if (typeof ref === 'function') {
-      const cleanup = ref._unmount;
+      const cleanup = binding.cleanup;
       const hasCleanup = typeof cleanup === 'function';
+      binding.cleanup = undefined;
       if (hasCleanup) {
         cleanup();
       }
-      ref._unmount = undefined;
 
       if (!hasCleanup || value !== null) {
         const nextCleanup = ref(value);
         if (typeof nextCleanup === 'function') {
-          ref._unmount = nextCleanup;
+          binding.cleanup = nextCleanup;
         }
       }
     } else {
@@ -74,22 +76,35 @@ export function applyOrdinaryRef<T>(
 // Keeps the Snapshot/ET ordinary ref ordering shared without owning backend
 // timing: each backend decides when to queue/flush and how to build the proxy.
 export class OrdinaryRefEffectQueue<TProxy, TToken> {
-  private readonly refsToClear: OrdinaryRef<TProxy>[] = [];
-  private readonly refsToApply: Array<[ref: OrdinaryRef<TProxy>, token: TToken]> = [];
+  // A host instance survives hydration's numeric ID remapping. Each ref slot
+  // owns its cleanup independently, even when callbacks are shared.
+  private readonly bindings = new WeakMap<object, Map<number, OrdinaryRefBinding>>();
+  private readonly refsToClear: Array<[ref: OrdinaryRef<TProxy>, binding: OrdinaryRefBinding]> = [];
+  private readonly refsToApply: Array<[ref: OrdinaryRef<TProxy>, token: TToken, binding: OrdinaryRefBinding]> = [];
 
   queue(
     oldRef: OrdinaryRef<TProxy> | null | undefined,
     newRef: OrdinaryRef<TProxy> | null | undefined,
+    owner: object,
+    slot: number,
     token: TToken,
   ): void {
     if (oldRef === newRef) {
       return;
     }
+    let slots = this.bindings.get(owner);
+    if (!slots) {
+      this.bindings.set(owner, slots = new Map<number, OrdinaryRefBinding>());
+    }
+    let binding = slots.get(slot);
+    if (!binding) {
+      slots.set(slot, binding = {});
+    }
     if (oldRef) {
-      this.refsToClear.push(oldRef);
+      this.refsToClear.push([oldRef, binding]);
     }
     if (newRef) {
-      this.refsToApply.push([newRef, token]);
+      this.refsToApply.push([newRef, token, binding]);
     }
   }
 
@@ -101,11 +116,11 @@ export class OrdinaryRefEffectQueue<TProxy, TToken> {
     const refsToClearNow = this.refsToClear.splice(0);
     const refsToApplyNow = this.refsToApply.splice(0);
 
-    for (const ref of refsToClearNow) {
-      applyOrdinaryRef(ref, null);
+    for (const [ref, binding] of refsToClearNow) {
+      applyOrdinaryRef(ref, null, binding);
     }
-    for (const [ref, token] of refsToApplyNow) {
-      applyOrdinaryRef(ref, createValue(token));
+    for (const [ref, token, binding] of refsToApplyNow) {
+      applyOrdinaryRef(ref, createValue(token), binding);
     }
   }
 

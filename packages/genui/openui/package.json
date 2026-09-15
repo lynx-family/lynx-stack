@@ -149,7 +149,7 @@
     "test": "rstest"
   },
   "dependencies": {
-    "@openuidev/lang-core": "^0.2.11",
+    "@openuidev/lang-core": "^0.2.18",
     "zod": "^3.25.76 || ^4.0.0"
   },
   "devDependencies": {

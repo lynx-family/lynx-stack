@@ -15,6 +15,7 @@ import invariant from 'tiny-invariant'
 
 import { createStubRsbuild } from './createStubRsbuild.js'
 import type { LynxPluginOptions } from '../src/index.js'
+import { pluginDev } from '../src/plugins/dev.plugin.js'
 
 function createDevStubRsbuild(
   rsbuildConfig: RsbuildConfig = {},
@@ -92,6 +93,77 @@ describe('pluginDev', () => {
     return () => {
       rstest.restoreAllMocks()
     }
+  })
+
+  test.each(
+    [
+      ['dev', true],
+      ['preview', true],
+      ['build', false],
+    ] as const,
+  )('applies to %s: %s', (action, expected) => {
+    const { apply } = pluginDev()
+    invariant(typeof apply === 'function', 'apply is a filter function')
+
+    expect(apply({ mode: 'production' }, { action })).toBe(expected)
+  })
+
+  describe('lazyCompilation', () => {
+    test('disabled by default', async () => {
+      const rsbuild = await createDevStubRsbuild()
+
+      const config = await rsbuild.unwrapConfig()
+
+      expect(config.lazyCompilation).toBeFalsy()
+    })
+
+    test('kept when set by user config', async () => {
+      const rsbuild = await createDevStubRsbuild({
+        dev: { lazyCompilation: { entries: true } },
+      })
+
+      const config = await rsbuild.unwrapConfig()
+
+      expect(config.lazyCompilation).toStrictEqual({ entries: true })
+    })
+
+    test('kept when set by environment config', async () => {
+      const rsbuild = await createDevStubRsbuild({
+        environments: {
+          lynx: {},
+          web: { dev: { lazyCompilation: { imports: true } } },
+        },
+      })
+
+      const configs = await rsbuild.initConfigs()
+
+      expect(
+        configs.find(({ name }) => name === 'lynx')?.lazyCompilation,
+      ).toBeFalsy()
+      expect(configs.find(({ name }) => name === 'web')?.lazyCompilation)
+        .toStrictEqual({ imports: true })
+    })
+
+    test('kept when set by a plugin after pluginLynx', async () => {
+      const rsbuild = await createDevStubRsbuild({
+        plugins: [
+          {
+            name: 'test',
+            setup(api) {
+              api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) =>
+                mergeRsbuildConfig(config, {
+                  dev: { lazyCompilation: { imports: true } },
+                })
+              )
+            },
+          } satisfies RsbuildPlugin,
+        ],
+      })
+
+      const config = await rsbuild.unwrapConfig()
+
+      expect(config.lazyCompilation).toStrictEqual({ imports: true })
+    })
   })
 
   test('defaults', async () => {
@@ -229,6 +301,59 @@ describe('pluginDev', () => {
 
     expect(config.output?.publicPath).toBe('http://10.0.0.2:3000/')
     expect(rsbuild.getRsbuildConfig().dev!.client!.host).toBe('10.0.0.2')
+  })
+
+  test('dev.assetPrefix set by a plugin is kept', async () => {
+    const rsbuild = await createDevStubRsbuild({
+      plugins: [
+        {
+          name: 'test:asset-prefix',
+          setup(api) {
+            api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) =>
+              mergeRsbuildConfig(config, {
+                dev: { assetPrefix: 'http://my-cdn/' },
+              })
+            )
+          },
+        } satisfies RsbuildPlugin,
+      ],
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.output?.publicPath).toBe('http://my-cdn/')
+  })
+
+  test('dev.assetPrefix set by a plugin wins over the config', async () => {
+    const rsbuild = await createDevStubRsbuild({
+      dev: { assetPrefix: 'http://from-config/' },
+      plugins: [
+        {
+          name: 'test:asset-prefix',
+          setup(api) {
+            api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) =>
+              mergeRsbuildConfig(config, {
+                dev: { assetPrefix: 'http://my-cdn/' },
+              })
+            )
+          },
+        } satisfies RsbuildPlugin,
+      ],
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.output?.publicPath).toBe('http://my-cdn/')
+  })
+
+  test('server.base does not count as a plugin-set dev.assetPrefix', async () => {
+    const rsbuild = await createDevStubRsbuild({
+      server: { base: '/sub' },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(config.output!.publicPath as string).toMatch(/^http:\/\/.+\/sub\/$/)
   })
 
   test('provide HMR variables', async () => {
@@ -1207,6 +1332,58 @@ describe('pluginDev', () => {
       url: 'http://example.com:8094/main.web.bundle',
     })
   })
+
+  test.each(['lynx', 'web'])(
+    'printUrls respects --environment %s',
+    async (name) => {
+      const entry = path.resolve(__dirname, './fixtures/hello-world/index.js')
+      const rsbuild = await createStubRsbuild(
+        {
+          mode: 'development',
+          source: { entry: { main: entry } },
+          dev: { assetPrefix: 'http://example.com:<port>/' },
+          environments: {
+            web: { source: { entry: { webOnly: entry } } },
+            lynx: { source: { entry: { lynxOnly: entry } } },
+          },
+        },
+        undefined,
+        undefined,
+        [name],
+      )
+
+      await rsbuild.initConfigs()
+      expect(Object.keys(rsbuild.getNormalizedConfig().environments))
+        .toStrictEqual([name])
+      const { printUrls } = rsbuild.getNormalizedConfig().server
+      invariant(typeof printUrls === 'function')
+      const urls = printUrls({
+        urls: ['http://example.com:8098/'],
+        port: 8098,
+        routes: [],
+        protocol: 'http',
+      })
+      const label = name === 'lynx' ? 'Lynx' : 'Web'
+      expect(urls).toStrictEqual([
+        { label, url: `http://example.com:8098/main.${name}.bundle` },
+        ...(name === 'web'
+          ? [{
+            label: '∟ Preview',
+            url:
+              'http://example.com:8098/__web_preview?casename=main.web.bundle',
+          }]
+          : []),
+        { label, url: `http://example.com:8098/${name}Only.${name}.bundle` },
+        ...(name === 'web'
+          ? [{
+            label: '∟ Preview',
+            url:
+              'http://example.com:8098/__web_preview?casename=webOnly.web.bundle',
+          }]
+          : []),
+      ])
+    },
+  )
 
   test('preview prints the bundle path exactly once', async () => {
     const rsbuild = await createDevStubRsbuild({

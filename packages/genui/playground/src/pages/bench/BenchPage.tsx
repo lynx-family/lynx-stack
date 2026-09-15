@@ -15,37 +15,61 @@ import {
   BENCH_CATALOG_OPTIONS,
   DEFAULT_BENCH_SCENARIOS,
   DEFAULT_BENCH_SETTINGS,
+  MAX_BENCH_GROUPS,
+  createBenchPresetGroups,
   createCustomBenchScenario,
-  createDefaultBenchGroups,
   findComparableBaseline,
+  getBenchProtocolLabel,
   inferBenchVariable,
   usesCatalog,
+  withBenchProtocol,
 } from './benchData.js';
 import type {
-  BenchComparisonDirection,
   BenchGroup,
-  BenchProfile,
+  BenchPreset,
   BenchProtocol,
-  BenchRole,
   BenchScenario,
   BenchSettings,
-  BenchVariable,
 } from './benchData.js';
+import {
+  createBenchGroupsFromReport,
+  createBenchScenariosFromReport,
+  createBenchSettingsFromReport,
+} from './benchHistory.js';
+import type { BenchHistoryEntry } from './benchHistory.js';
 import { BenchHistoryRail } from './BenchHistoryRail.js';
+import { startBenchHtmlCapture } from './benchHtmlCapture.js';
+import { mergeBenchRunProgress } from './benchProgress.js';
 import { BenchReportPanel } from './BenchReportPanel.js';
-import type { BenchReport, BenchStatus } from './benchReportTypes.js';
+import { sanitizeBenchReportValue } from './benchReportSerialization.js';
+import type {
+  BenchReport,
+  BenchRunProgress,
+  BenchStatus,
+} from './benchReportTypes.js';
 import { BenchRunFooter } from './BenchRunFooter.js';
 import { BenchRunNotice } from './BenchRunNotice.js';
 import { BenchRunPanel } from './BenchRunPanel.js';
+import { BenchRunWorkflow } from './BenchRunWorkflow.js';
 import { BenchScenarioSection } from './BenchScenarioSection.js';
+import {
+  checkBenchScreenshotService,
+  createBenchScreenshotRelay,
+} from './benchScreenshots.js';
 import { BenchScreenshotsDialog } from './BenchScreenshotsDialog.js';
+import type { BenchLiveTiming } from './benchTiming.js';
+import { useBenchHistory } from './useBenchHistory.js';
 import { PageHeader } from '../../components/PageHeader.js';
 import { PanelResizeHandle } from '../../components/PanelResizeHandle.js';
 import {
   GENUI_SERVER_URL,
   buildGenuiServerUrl,
 } from '../../config/genuiServer.js';
-import { copyToClipboard } from '../../utils/clipboard.js';
+import {
+  selectBenchReport,
+  setBenchReportTabSelection,
+} from '../../storage/benchRepo.js';
+import { BENCH_JOB_ID } from '../../utils/appRoute.js';
 import { isDevHost } from '../../utils/publishPayload.js';
 import {
   createChatHost,
@@ -53,6 +77,8 @@ import {
   loadProviderSettings,
 } from '../chat/shared.js';
 import type { ProviderSettings } from '../chat/shared.js';
+
+export { serializeBenchReport } from './benchReportSerialization.js';
 
 type BenchRunMessage =
   | { code: 'bench-cancelled' }
@@ -64,6 +90,8 @@ type BenchRunMessage =
   | { code: 'creating-job' }
   | { code: 'defaults-confirmation-required' }
   | { code: 'history-report-loaded'; failedRuns?: number }
+  | { code: 'history-report-invalid-job-id' }
+  | { code: 'report-invalid-job-id' }
   | { code: 'job-queued'; jobId: string }
   | { code: 'loading-report'; jobId: string }
   | { code: 'raw'; text: string }
@@ -111,6 +139,10 @@ export function getBenchRunMessageText(
       return message.failedRuns
         ? `Saved report loaded · ${message.failedRuns} failed runs`
         : 'Saved report loaded';
+    case 'history-report-invalid-job-id':
+      return 'Saved report loaded · The saved job ID is invalid. Use the original report link or rerun to load the complete report.';
+    case 'report-invalid-job-id':
+      return 'This report link has an invalid job ID. Use the original report link.';
     case 'job-queued':
       return `Job ${message.jobId} queued`;
     case 'loading-report':
@@ -165,6 +197,7 @@ type BenchHealthError =
 interface BenchJobCreated {
   ok?: boolean;
   jobId?: string;
+  durationMs?: number;
   eventsUrl?: string;
   reportUrl?: string;
   error?: string;
@@ -175,6 +208,7 @@ interface BenchJobSnapshot {
   ok?: boolean;
   status?: BenchStatus;
   progress?: {
+    runs?: BenchRunProgress[];
     completedRuns?: number;
     totalRuns?: number;
     current?: {
@@ -188,28 +222,6 @@ interface BenchJobSnapshot {
   warnings?: string[];
 }
 
-interface BenchHistoryConfig {
-  env: {
-    apiKeyConfigured: boolean;
-    model: string;
-  };
-  settings: BenchSettings;
-  groups: BenchGroup[];
-  scenarios: BenchScenario[];
-}
-
-interface BenchHistoryEntry {
-  id: string;
-  title: string;
-  savedAt: string;
-  report: BenchReport | null;
-  config: BenchHistoryConfig;
-}
-
-type BenchReportSettingsPayload = Partial<BenchSettings> & {
-  renderMetricsEnabled?: boolean;
-};
-
 const DEFAULT_ENV: Readonly<BenchEnv> = createDefaultProviderSettings();
 
 const REPORT_PANE_DEFAULT_WIDTH = 440;
@@ -221,7 +233,6 @@ const RESIZE_HANDLE_WIDTH = 10;
 const REPORT_PANE_RESIZE_BREAKPOINT = 1240;
 const REPORT_PANE_WIDTH_STORAGE_KEY = 'a2ui-bench-report-width';
 const EVENT_SOURCE_CLOSED_READY_STATE = 2;
-const BENCH_HISTORY_STORAGE_KEY = 'a2ui-bench-history';
 const LOCAL_A2UI_SERVER_PORT = '3060';
 const UI_JUDGE_SERVER_URL_STORAGE_KEY = 'genui-bench-ui-judge-server-url';
 
@@ -372,7 +383,8 @@ function getA2UIBenchHealthEndpoint(): string {
   }
 }
 
-function getA2UIBenchReportEndpoint(jobId: string): string {
+export function getA2UIBenchReportEndpoint(jobId: string): string | null {
+  if (!BENCH_JOB_ID.test(jobId)) return null;
   const jobsEndpoint = getA2UIBenchJobsEndpoint();
   try {
     const url = new URL(jobsEndpoint, window.location.origin);
@@ -441,13 +453,6 @@ function getA2UIBenchJobIdFromUrl(): string | null {
   return hashParams.get('a2uiBenchJobId') ?? hashParams.get('benchJobId');
 }
 
-function getA2UIBenchRecoveryUrl(jobId: string): string {
-  const url = new URL(window.location.href);
-  url.searchParams.set('a2uiBenchJobId', jobId);
-  url.hash = '#/bench';
-  return url.toString();
-}
-
 function getA2UIPlaygroundBaseUrl(): string {
   const url = new URL(window.location.href);
   url.hash = '';
@@ -488,6 +493,12 @@ function createBenchRequestGroups(
     variable: group.variable,
     model: group.model,
     catalog: group.catalog,
+    ...(group.enableDesignGuidance === false
+      ? { enableDesignGuidance: false }
+      : {}),
+    ...(group.protocol === 'lynx-xml'
+      ? { enableHtmlFragment: group.enableHtmlFragment === true }
+      : {}),
     extraInstruction: group.extraInstruction,
     enabled: group.enabled,
   }));
@@ -524,6 +535,10 @@ function createBenchPlanSignature(
       name: group.name,
       model: group.model,
       catalog: usesCatalog(group) ? group.catalog : undefined,
+      enableDesignGuidance: group.enableDesignGuidance !== false,
+      ...(group.protocol === 'lynx-xml'
+        ? { enableHtmlFragment: group.enableHtmlFragment === true }
+        : {}),
       extraInstruction: group.extraInstruction,
       enabled: group.enabled,
     })),
@@ -539,158 +554,6 @@ function createBenchPlanSignature(
   });
 }
 
-function readFiniteNumber(value: unknown, fallback: number): number {
-  return typeof value === 'number' && Number.isFinite(value)
-    ? value
-    : fallback;
-}
-
-function readBoolean(value: unknown, fallback: boolean): boolean {
-  return typeof value === 'boolean' ? value : fallback;
-}
-
-function isBenchRole(value: unknown): value is BenchRole {
-  return value === 'control' || value === 'experiment';
-}
-
-function isBenchVariable(value: unknown): value is BenchVariable {
-  return value === 'protocol'
-    || value === 'model'
-    || value === 'prompt'
-    || value === 'catalog'
-    || value === 'custom';
-}
-
-function isBenchProtocol(value: unknown): value is BenchProtocol {
-  return value === 'a2ui' || value === 'openui';
-}
-
-function isBenchProfile(value: unknown): value is BenchProfile {
-  return value === 'native' || value === 'matched-core';
-}
-
-function createBenchSettingsFromReport(report: BenchReport): BenchSettings {
-  const reportSettings = (report.settings ?? {}) as BenchReportSettingsPayload;
-  return {
-    repeats: readFiniteNumber(
-      reportSettings.repeats,
-      DEFAULT_BENCH_SETTINGS.repeats,
-    ),
-    parallelism: readFiniteNumber(
-      reportSettings.parallelism,
-      DEFAULT_BENCH_SETTINGS.parallelism,
-    ),
-    repairEnabled: readBoolean(
-      reportSettings.repairEnabled,
-      DEFAULT_BENCH_SETTINGS.repairEnabled,
-    ),
-    judgeEnabled: readBoolean(
-      reportSettings.judgeEnabled,
-      DEFAULT_BENCH_SETTINGS.judgeEnabled,
-    ),
-    collectLiveRenderMetrics: readBoolean(
-      reportSettings.collectLiveRenderMetrics,
-      readBoolean(
-        reportSettings.renderMetricsEnabled,
-        DEFAULT_BENCH_SETTINGS.collectLiveRenderMetrics,
-      ),
-    ),
-  };
-}
-
-function createBenchGroupsFromReport(report: BenchReport): BenchGroup[] {
-  const fallbackModel = report.env?.model ?? DEFAULT_ENV.model;
-  const reportGroups = Array.isArray(report.groups) ? report.groups : [];
-  const groups = reportGroups.map((group, index) => {
-    const item = group as Partial<BenchGroup>;
-    const protocol = isBenchProtocol(item.protocol)
-      ? item.protocol
-      : 'a2ui';
-    return {
-      id: item.id ?? createId(`history-group-${index + 1}`),
-      role: isBenchRole(item.role) ? item.role : 'experiment',
-      protocol,
-      profile: isBenchProfile(item.profile)
-        ? item.profile
-        : (protocol === 'openui' ? 'matched-core' : 'native'),
-      name: item.name ?? `Group ${index + 1}`,
-      variable: isBenchVariable(item.variable) ? item.variable : 'custom',
-      model: item.model ?? fallbackModel,
-      catalog: item.catalog ?? 'Full Catalog',
-      extraInstruction: item.extraInstruction ?? '',
-      enabled: readBoolean(item.enabled, true),
-    };
-  });
-  return groups.length > 0 ? groups : createDefaultBenchGroups(fallbackModel);
-}
-
-function createBenchScenariosFromReport(report: BenchReport): BenchScenario[] {
-  const reportScenarios = Array.isArray(report.scenarios)
-    ? report.scenarios
-    : [];
-  const scenarios = reportScenarios.map((scenario, index) => {
-    const item = scenario as Partial<BenchScenario>;
-    return {
-      id: item.id ?? createId(`history-scenario-${index + 1}`),
-      name: item.name ?? `Scenario ${index + 1}`,
-      prompt: item.prompt ?? '',
-      type: item.type ?? 'Custom',
-      complexity: readFiniteNumber(item.complexity, 1),
-      action: item.action ?? '',
-    };
-  });
-  return scenarios.length > 0
-    ? scenarios
-    : cloneBenchScenarios(DEFAULT_BENCH_SCENARIOS);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function isBenchHistoryEntry(value: unknown): value is BenchHistoryEntry {
-  if (!isRecord(value)) return false;
-  if (typeof value.id !== 'string') return false;
-  if (typeof value.title !== 'string') return false;
-  if (typeof value.savedAt !== 'string') return false;
-  if (value.report !== null && !isRecord(value.report)) return false;
-  if (!isRecord(value.config)) return false;
-  const reportIsValid = value.report === null
-    || (Array.isArray(value.report.summaries)
-      && Array.isArray(value.report.results));
-  return reportIsValid
-    && isRecord(value.config.env)
-    && isRecord(value.config.settings)
-    && Array.isArray(value.config.groups)
-    && Array.isArray(value.config.scenarios);
-}
-
-export function readBenchHistory(): BenchHistoryEntry[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(BENCH_HISTORY_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
-    const entries = migrateBenchHistoryEntries(parsed);
-    persistBenchHistory(entries);
-    return entries;
-  } catch {
-    return [];
-  }
-}
-
-function persistBenchHistory(entries: BenchHistoryEntry[]): void {
-  try {
-    window.localStorage.setItem(
-      BENCH_HISTORY_STORAGE_KEY,
-      serializeBenchHistoryEntries(entries),
-    );
-  } catch {
-    // History is a convenience layer; quota/private-mode failures should not
-    // block a benchmark run.
-  }
-}
-
 function createBenchHistoryEntry(
   report: BenchReport,
   groups: BenchGroup[],
@@ -702,7 +565,7 @@ function createBenchHistoryEntry(
   const protocols = [
     ...new Set(
       createBenchGroupsFromReport(report).map((group) =>
-        group.protocol === 'openui' ? 'OpenUI' : 'A2UI'
+        getBenchProtocolLabel(group.protocol)
       ),
     ),
   ];
@@ -760,11 +623,11 @@ export function upsertBenchHistoryEntry(
   entries: BenchHistoryEntry[],
   entry: BenchHistoryEntry,
 ): BenchHistoryEntry[] {
-  const reportIdentity = entry.report?.jobId ?? entry.report?.id;
+  const jobId = entry.report?.jobId;
   const next = entries.filter((item) => {
-    const itemReportIdentity = item.report?.jobId ?? item.report?.id;
-    const sameReport = Boolean(reportIdentity)
-      && itemReportIdentity === reportIdentity;
+    // Redacted identifiers cannot establish that two saved reports are the same.
+    const sameReport = Boolean(jobId && BENCH_JOB_ID.test(jobId))
+      && item.report?.jobId === jobId;
     return item.id !== entry.id && !sameReport;
   });
   return [entry, ...next];
@@ -787,128 +650,6 @@ export function shouldApplyBenchReportRequest(
   activeController: AbortController | null,
 ): boolean {
   return !controller.signal.aborted && activeController === controller;
-}
-
-function isSensitiveBenchReportKey(key: string): boolean {
-  const normalized = key.replaceAll(/[-_]/gu, '').toLowerCase();
-  return normalized === 'apikey'
-    || normalized === 'authorization'
-    || normalized === 'accesstoken'
-    || normalized === 'token'
-    || normalized === 'secret'
-    || normalized === 'baseurl'
-    || normalized === 'screenshotdataurl';
-}
-
-function redactBenchReportString(
-  value: string,
-  secrets: readonly string[],
-): string {
-  let sanitized = value;
-  for (
-    const secret of new Set(
-      secrets.map((item) => item.trim()).filter(
-        Boolean,
-      ),
-    )
-  ) {
-    sanitized = sanitized.replaceAll(secret, '[redacted credential]');
-    const encoded = encodeURIComponent(secret);
-    if (encoded !== secret) {
-      sanitized = sanitized.replaceAll(encoded, '[redacted credential]');
-    }
-  }
-  return sanitized
-    .replace(/https?:\/\/[^\s"'<>]+/giu, '[redacted URL]')
-    .replace(/\bBearer\s+\S+/giu, 'Bearer [redacted]')
-    .replace(
-      /\b(?:OPENAI_API_KEY|API[_-]?KEY|AUTHORIZATION|ACCESS[_-]?TOKEN|SECRET)\s*[:=]\s*(?:"[^"]*"|'[^']*'|[^\s,;]+)/giu,
-      'credential=[redacted]',
-    )
-    .replace(/\b(?:sk-[\w-]{8,}|[\w+/=-]{32,})\b/gu, '[redacted credential]');
-}
-
-function sanitizeBenchReportValue(
-  value: unknown,
-  secrets: readonly string[] = [],
-): unknown {
-  if (typeof value === 'string') {
-    return redactBenchReportString(value, secrets);
-  }
-  if (Array.isArray(value)) {
-    return value.map((item) => sanitizeBenchReportValue(item, secrets));
-  }
-  if (!isRecord(value)) return value;
-
-  return Object.fromEntries(
-    Object.entries(value).flatMap(([key, item]) =>
-      isSensitiveBenchReportKey(key)
-        ? []
-        : [[key, sanitizeBenchReportValue(item, secrets)]]
-    ),
-  );
-}
-
-export function migrateBenchHistoryEntries(
-  value: unknown,
-): BenchHistoryEntry[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter((entry) => isBenchHistoryEntry(entry)).map((entry) => {
-    const safeReport = entry.report
-      ? sanitizeBenchReportValue(entry.report) as BenchReport
-      : null;
-    const configReport = {
-      ...(safeReport ?? {
-        env: entry.config.env,
-        results: [],
-        summaries: [],
-      }),
-      groups: entry.config.groups,
-      scenarios: entry.config.scenarios,
-      settings: entry.config.settings,
-    };
-    return {
-      ...entry,
-      report: safeReport,
-      config: {
-        env: {
-          apiKeyConfigured: Boolean(entry.config.env.apiKeyConfigured),
-          model: entry.config.env.model ?? DEFAULT_ENV.model,
-        },
-        groups: createBenchGroupsFromReport(configReport),
-        scenarios: createBenchScenariosFromReport(configReport),
-        settings: createBenchSettingsFromReport(configReport),
-      },
-    };
-  });
-}
-
-export function serializeBenchHistoryEntries(
-  entries: BenchHistoryEntry[],
-): string {
-  const persistableEntries = entries.map(
-    (entry) => ({
-      ...entry,
-      report: sanitizeBenchReportValue(entry.report),
-      config: {
-        groups: entry.config.groups,
-        scenarios: entry.config.scenarios,
-        settings: entry.config.settings,
-        env: {
-          apiKeyConfigured: entry.config.env.apiKeyConfigured,
-          model: entry.config.env.model,
-        },
-      },
-    }),
-  );
-  return JSON.stringify(persistableEntries);
-}
-
-export function serializeBenchReport(
-  report: BenchReport,
-  secrets: readonly string[] = [],
-): string {
-  return JSON.stringify(sanitizeBenchReportValue(report, secrets), null, 2);
 }
 
 function readEventData<T>(event: MessageEvent<unknown>): T | null {
@@ -942,8 +683,14 @@ export function getBenchRunBlockers(
   enabledControlCount: number,
   scenarioCount: number,
   repeats: number,
+  groupCount = activeGroupCount,
 ): string[] {
   const issues: string[] = [];
+  if (groupCount > MAX_BENCH_GROUPS) {
+    issues.push(
+      `Bench supports at most ${MAX_BENCH_GROUPS} comparison groups, including the baseline.`,
+    );
+  }
   if (activeGroupCount === 0) {
     issues.push(
       'Enable at least one comparison group.',
@@ -972,7 +719,7 @@ export function BenchPage() {
     readBenchUiJudgeServerUrl,
   );
   const [groups, setGroups] = useState<BenchGroup[]>(() =>
-    createDefaultBenchGroups(DEFAULT_ENV.model)
+    createBenchPresetGroups('protocol', DEFAULT_ENV.model)
   );
   const [scenarios, setScenarios] = useState<BenchScenario[]>(
     () => cloneBenchScenarios(DEFAULT_BENCH_SCENARIOS),
@@ -982,6 +729,8 @@ export function BenchPage() {
   );
   const [status, setStatus] = useState<BenchStatus>('idle');
   const [progress, setProgress] = useState(0);
+  const [runProgress, setRunProgress] = useState<BenchRunProgress[]>([]);
+  const [jobTiming, setJobTiming] = useState<BenchLiveTiming | null>(null);
   const [runMessage, setRunMessage] = useState<BenchRunMessage>({
     code: 'ready',
   });
@@ -999,15 +748,19 @@ export function BenchPage() {
   const [reportPlanSignature, setReportPlanSignature] = useState<string | null>(
     null,
   );
-  const [historyItems, setHistoryItems] = useState<BenchHistoryEntry[]>(
-    readBenchHistory,
-  );
+  const {
+    items: historyItems,
+    setItems: setHistoryItems,
+    ready: historyReady,
+    notice: historyStorageNotice,
+    save: saveHistory,
+  } = useBenchHistory();
   const [activeHistoryId, setActiveHistoryId] = useState<string | null>(null);
-  const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
-  const [historyCopyId, setHistoryCopyId] = useState<string | null>(null);
+  const [historyReportNotice, setHistoryReportNotice] = useState('');
   const benchBodyRef = useRef<HTMLDivElement | null>(null);
   // eslint-disable-next-line n/no-unsupported-features/node-builtins
   const eventSourceRef = useRef<EventSource | null>(null);
+  const screenshotAbortRef = useRef<AbortController | null>(null);
   const historyReportAbortRef = useRef<AbortController | null>(null);
   const activeJobIdRef = useRef<string | null>(null);
   const pendingCancellationJobIdsRef = useRef<Set<string>>(new Set());
@@ -1052,10 +805,6 @@ export function BenchPage() {
   }, [uiJudgeServerUrl]);
 
   useEffect(() => {
-    persistBenchHistory(historyItems);
-  }, [historyItems]);
-
-  useEffect(() => {
     if (!activeHistoryId) return;
     setHistoryItems((current) => {
       const activeEntry = current.find((entry) => entry.id === activeHistoryId);
@@ -1078,7 +827,7 @@ export function BenchPage() {
       );
       return next;
     });
-  }, [activeHistoryId, groups, scenarios, settings]);
+  }, [activeHistoryId, groups, scenarios, settings, setHistoryItems]);
 
   const activeGroups = useMemo(
     () => groups.filter((group) => group.enabled),
@@ -1109,7 +858,7 @@ export function BenchPage() {
   );
   const historyReadOnly = activeHistoryEntry?.report !== null
     && activeHistoryEntry?.report !== undefined;
-  const historyLocked = status === 'running';
+  const historyLocked = status === 'running' || !historyReady;
   const planLocked = historyLocked || historyReadOnly;
   const planSignature = useMemo(
     () => createBenchPlanSignature(runGroups, scenarios, settings),
@@ -1143,24 +892,34 @@ export function BenchPage() {
     }
     return undefined;
   }, [activeGroups, env]);
-  const uiJudgeServerUrlValidationError = useMemo(
-    () =>
-      normalizeBenchUiJudgeServerUrl(uiJudgeServerUrl) === null
-        ? 'UI_JUDGE_SERVER_URL must be an HTTP(S) URL without credentials.'
-        : undefined,
-    [uiJudgeServerUrl],
+  const hasHtmlGroups = activeGroups.some((group) => group.protocol === 'html');
+  const needsScreenshotService = activeGroups.some((group) =>
+    group.protocol !== 'html'
   );
+  const uiJudgeServerUrlValidationError = useMemo(() => {
+    if (!needsScreenshotService || !settings.judgeEnabled) return '';
+    if (normalizeBenchUiJudgeServerUrl(uiJudgeServerUrl) === null) {
+      return 'UI_JUDGE_SERVER_URL must be an HTTP(S) URL without credentials.';
+    }
+    return settings.judgeEnabled && !uiJudgeServerUrl.trim()
+      ? 'Enter the screenshot service URL to enable UI Judge.'
+      : '';
+  }, [needsScreenshotService, uiJudgeServerUrl, settings.judgeEnabled]);
   const providerConfigured = useMemo(
     () => isProviderConfigured(env),
     [env],
   );
   const benchRunBlockers = useMemo(
     () => [
+      ...(historyReady
+        ? []
+        : ['Bench history must finish loading before starting a run.']),
       ...getBenchRunBlockers(
         activeGroups.length,
         enabledControlGroupCount,
         scenarios.length,
         settings.repeats,
+        groups.length,
       ),
       ...(modelValidationError ? [modelValidationError] : []),
       ...(uiJudgeServerUrlValidationError
@@ -1170,6 +929,8 @@ export function BenchPage() {
     [
       activeGroups.length,
       enabledControlGroupCount,
+      groups.length,
+      historyReady,
       modelValidationError,
       scenarios.length,
       settings.repeats,
@@ -1178,6 +939,8 @@ export function BenchPage() {
   );
 
   const clearActiveJobConnection = useCallback(() => {
+    screenshotAbortRef.current?.abort();
+    screenshotAbortRef.current = null;
     eventSourceRef.current?.close();
     eventSourceRef.current = null;
     historyReportAbortRef.current?.abort();
@@ -1282,8 +1045,15 @@ export function BenchPage() {
   }, []);
 
   useEffect(() => {
+    if (!historyReady) return;
     const jobId = getA2UIBenchJobIdFromUrl();
     if (!jobId) return;
+    const endpoint = getA2UIBenchReportEndpoint(jobId);
+    if (!endpoint) {
+      setStatus('failed');
+      setRunMessage({ code: 'report-invalid-job-id' });
+      return;
+    }
 
     let cancelled = false;
     const controller = new AbortController();
@@ -1296,7 +1066,7 @@ export function BenchPage() {
     void (async () => {
       try {
         const response = await window.fetch(
-          getA2UIBenchReportEndpoint(jobId),
+          endpoint,
           { signal: controller.signal },
         );
         const payload = await response.json().catch(() => ({})) as
@@ -1354,6 +1124,7 @@ export function BenchPage() {
         ) {
           return;
         }
+        screenshotAbortRef.current?.abort();
         setStatus('failed');
         setRunMessage({ code: 'raw', text: getErrorMessage(error) });
       } finally {
@@ -1370,7 +1141,7 @@ export function BenchPage() {
         historyReportAbortRef.current = null;
       }
     };
-  }, []);
+  }, [historyReady, setHistoryItems]);
 
   const updateGroup = useCallback(
     (id: string, patch: Partial<BenchGroup>) => {
@@ -1379,54 +1150,34 @@ export function BenchPage() {
     [],
   );
 
-  const addComparisonGroup = useCallback((
-    direction: BenchComparisonDirection,
-  ) => {
+  const addComparisonGroup = useCallback(() => {
     setGroups((current) => {
+      if (current.length >= MAX_BENCH_GROUPS) return current;
       const baseline = current.find((group) => group.role === 'control')
         ?? current[0];
       if (!baseline) return current;
 
       const model = baseline.model || selectedModel || DEFAULT_ENV.model;
-      const nextModel = direction === 'model'
-        ? (env.models.find((item) => item.id !== model)?.id ?? model)
-        : model;
       const nextGroup: BenchGroup = {
         ...baseline,
-        id: createId(`${direction}-comparison`),
+        id: createId('group'),
         role: 'experiment',
-        protocol: direction === 'protocol' ? 'openui' : baseline.protocol,
-        profile: direction === 'protocol' ? 'matched-core' : baseline.profile,
-        name: `${direction} comparison`,
-        variable: direction,
-        model: nextModel,
-        catalog: direction === 'protocol'
-          ? 'Core Catalog'
-          : baseline.catalog,
-        extraInstruction: direction === 'prompt'
-          ? 'Use concise copy and minimize unnecessary UI structure while preserving the requested content and interaction.'
-          : baseline.extraInstruction,
+        name: `Group-${String(current.length + 1).padStart(2, '0')}`,
+        variable: 'custom',
+        model,
         enabled: true,
       };
 
-      if (direction !== 'protocol') return [...current, nextGroup];
-      return [
-        ...current.map((group) =>
-          group.id === baseline.id
-            ? {
-              ...group,
-              protocol: 'a2ui' as const,
-              profile: 'matched-core' as const,
-              catalog: 'Core Catalog',
-            }
-            : group
-        ),
-        nextGroup,
-      ];
+      return [...current, nextGroup];
     });
-    if (direction === 'protocol') {
-      setSettings((current) => ({ ...current, parallelism: 1 }));
-    }
+  }, [selectedModel]);
+
+  const applyBenchPreset = useCallback((preset: BenchPreset) => {
+    setGroups(createBenchPresetGroups(
+      preset,
+      selectedModel || DEFAULT_ENV.model,
+      env.models.map((item) => item.id),
+    ));
   }, [env.models, selectedModel]);
 
   const updateGroupProtocol = useCallback(
@@ -1434,38 +1185,7 @@ export function BenchPage() {
       setGroups((current) =>
         current.map((group) =>
           group.id === id
-            ? {
-              ...group,
-              protocol,
-              profile: protocol === 'openui'
-                ? 'matched-core'
-                : group.profile,
-              catalog: protocol === 'openui'
-                ? 'Core Catalog'
-                : group.catalog,
-            }
-            : group
-        )
-      );
-      if (protocol === 'openui') {
-        setSettings((current) => ({ ...current, parallelism: 1 }));
-      }
-    },
-    [],
-  );
-
-  const updateGroupProfile = useCallback(
-    (id: string, profile: BenchProfile) => {
-      setGroups((current) =>
-        current.map((group) =>
-          group.id === id
-            ? {
-              ...group,
-              profile,
-              catalog: profile === 'matched-core'
-                ? 'Core Catalog'
-                : group.catalog,
-            }
+            ? withBenchProtocol(group, protocol)
             : group
         )
       );
@@ -1517,7 +1237,7 @@ export function BenchPage() {
   const resetBench = useCallback(() => {
     void cancelActiveBenchJob();
     const nextGroups = reconcileBenchGroupModels(
-      createDefaultBenchGroups(DEFAULT_ENV.model),
+      createBenchPresetGroups('protocol', DEFAULT_ENV.model),
       env,
     );
     const nextScenarios = cloneBenchScenarios(DEFAULT_BENCH_SCENARIOS);
@@ -1532,6 +1252,8 @@ export function BenchPage() {
     setSettings(nextSettings);
     setStatus('idle');
     setProgress(0);
+    setJobTiming(null);
+    setRunProgress([]);
     setRunMessage({ code: 'ready' });
     setReport(null);
     setReportPlanSignature(null);
@@ -1543,7 +1265,7 @@ export function BenchPage() {
     setBenchHealthError(null);
     setBenchRunNoticeOpen(false);
     setScreenshotsOpen(false);
-  }, [cancelActiveBenchJob, env]);
+  }, [cancelActiveBenchJob, env, setHistoryItems]);
 
   const loadBenchHealth = useCallback(() => {
     setBenchHealth(null);
@@ -1591,6 +1313,8 @@ export function BenchPage() {
     const operationId = ++benchOperationIdRef.current;
     setStatus('running');
     setProgress(0);
+    setJobTiming(null);
+    setRunProgress([]);
     setRunMessage(
       activeJobIdRef.current || pendingCancellationJobIdsRef.current.size > 0
         ? { code: 'stopping-previous-job' }
@@ -1600,46 +1324,71 @@ export function BenchPage() {
     setReportPlanSignature(null);
     setScreenshotsOpen(false);
 
+    // Begin cancellation synchronously, then acquire capture from this click's
+    // user activation before awaiting anything (required by getDisplayMedia).
+    const previousCancellation = cancelActiveBenchJob({
+      invalidatePendingStart: false,
+    });
+    const screenshotController = new AbortController();
+    screenshotAbortRef.current = screenshotController;
+    const htmlCapture = settings.judgeEnabled && hasHtmlGroups
+      ? startBenchHtmlCapture(screenshotController.signal)
+      : Promise.resolve(undefined);
+    // Attach a rejection handler immediately while previous cancellation settles.
+    const captureReady = htmlCapture.then(
+      (capture) => ({ capture }),
+      (error: unknown) => ({ error }),
+    );
     void (async () => {
-      const previousJobsCancelled = await cancelActiveBenchJob({
-        invalidatePendingStart: false,
-      });
-      if (
-        !previousJobsCancelled
-        || benchOperationIdRef.current !== operationId
-      ) {
+      let connected = false;
+      try {
+        const previousJobsCancelled = await previousCancellation;
         if (
           !previousJobsCancelled
-          && benchOperationIdRef.current === operationId
+          || benchOperationIdRef.current !== operationId
         ) {
-          setStatus('failed');
+          if (
+            !previousJobsCancelled
+            && benchOperationIdRef.current === operationId
+          ) {
+            setStatus('failed');
+          }
+          return;
         }
-        return;
-      }
 
-      setRunMessage({ code: 'creating-job' });
-      try {
+        setRunMessage({ code: 'creating-job' });
+        const captureResult = await captureReady;
+        if ('error' in captureResult) throw captureResult.error;
         const jobsEndpoint = getA2UIBenchJobsEndpoint();
         const normalizedUiJudgeServerUrl = normalizeBenchUiJudgeServerUrl(
           uiJudgeServerUrl,
         );
+        const uiJudgeModel = settings.uiJudgeModel
+          ?? runGroups[0]?.model;
+        if (settings.judgeEnabled && needsScreenshotService) {
+          await checkBenchScreenshotService(
+            normalizedUiJudgeServerUrl ?? '',
+            screenshotController.signal,
+          );
+        }
+        screenshotController.signal.throwIfAborted();
         const response = await window.fetch(jobsEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             playground: {
               baseUrl: getA2UIPlaygroundBaseUrl(),
-              ...(normalizedUiJudgeServerUrl
-                ? { uiJudgeServerUrl: normalizedUiJudgeServerUrl }
-                : {}),
+              browserScreenshots: settings.judgeEnabled,
             },
             provider: {},
             settings: {
               repeats: settings.repeats,
-              parallelism: settings.parallelism,
               maxRepairAttempts: settings.repairEnabled ? 2 : 0,
               repairEnabled: settings.repairEnabled,
               judgeEnabled: settings.judgeEnabled,
+              ...(uiJudgeModel
+                ? { uiJudgeModel }
+                : {}),
               renderMetricsEnabled: settings.collectLiveRenderMetrics,
             },
             groups: createBenchRequestGroups(runGroups),
@@ -1680,24 +1429,49 @@ export function BenchPage() {
           return;
         }
 
-        activeJobIdRef.current = payload.jobId;
-        pendingCancellationJobIdsRef.current.delete(payload.jobId);
+        const jobId = payload.jobId;
+        if (
+          typeof payload.durationMs === 'number'
+          && Number.isFinite(payload.durationMs) && payload.durationMs >= 0
+        ) {
+          setJobTiming({
+            durationMs: payload.durationMs,
+            receivedAtMs: performance.now(),
+          });
+        }
+        activeJobIdRef.current = jobId;
+        pendingCancellationJobIdsRef.current.delete(jobId);
         setRunMessage(
           payload.warnings && payload.warnings.length > 0
             ? { code: 'raw', text: payload.warnings[0] }
-            : { code: 'job-queued', jobId: payload.jobId.slice(0, 8) },
+            : { code: 'job-queued', jobId: jobId.slice(0, 8) },
         );
 
         const eventsUrl = new URL(
-          payload.eventsUrl ?? `/a2ui/bench/jobs/${payload.jobId}/events`,
+          payload.eventsUrl ?? `/a2ui/bench/jobs/${jobId}/events`,
           jobsEndpoint,
         ).toString();
         // eslint-disable-next-line n/no-unsupported-features/node-builtins
         const source = new EventSource(eventsUrl);
         eventSourceRef.current = source;
+        const captureScreenshot = createBenchScreenshotRelay({
+          jobUrl: `${jobsEndpoint}/${encodeURIComponent(jobId)}`,
+          serverUrl: normalizedUiJudgeServerUrl ?? '',
+          signal: screenshotController.signal,
+          captureHtml: captureResult.capture,
+          onError: (text) => setRunMessage({ code: 'raw', text }),
+        });
+        connected = true;
+        source.addEventListener('screenshot-requested', (event) => {
+          const task = readEventData<{ captureId?: unknown }>(
+            event as MessageEvent<unknown>,
+          );
+          captureScreenshot(task?.captureId);
+        });
         const clearTerminalJob = () => {
-          pendingCancellationJobIdsRef.current.delete(payload.jobId);
-          if (activeJobIdRef.current === payload.jobId) {
+          screenshotController.abort();
+          pendingCancellationJobIdsRef.current.delete(jobId);
+          if (activeJobIdRef.current === jobId) {
             activeJobIdRef.current = null;
           }
         };
@@ -1726,7 +1500,7 @@ export function BenchPage() {
             : undefined;
           const phase = typeof record.phase === 'string'
             ? record.phase
-            : 'agent';
+            : (typeof record.status === 'string' ? record.status : 'agent');
           return {
             code: 'run-progress',
             group: runGroups.find((group) => group.id === groupId),
@@ -1741,6 +1515,9 @@ export function BenchPage() {
             event as MessageEvent<unknown>,
           );
           if (!snapshot) return;
+          setRunProgress(current =>
+            mergeBenchRunProgress(current, snapshot.progress?.runs)
+          );
           updateProgress(snapshot.progress);
           if (snapshot.status === 'failed') {
             setStatus('failed');
@@ -1765,7 +1542,10 @@ export function BenchPage() {
             event as MessageEvent<unknown>,
           );
           if (!data) return;
-          setRunMessage(describeRun(data));
+          setRunProgress(current =>
+            mergeBenchRunProgress(current, data.runProgress)
+          );
+          setRunMessage(describeRun(data.runProgress ?? data.result ?? data));
           const progressPayload = data.progress as BenchJobSnapshot['progress'];
           updateProgress(progressPayload);
         };
@@ -1819,6 +1599,7 @@ export function BenchPage() {
             setRunMessage({ code: 'reconnecting' });
             return;
           }
+          screenshotController.abort();
           setStatus('failed');
           const normalizedMessage = message?.toLowerCase();
           if (
@@ -1844,11 +1625,17 @@ export function BenchPage() {
         ) {
           return;
         }
+        screenshotAbortRef.current?.abort();
         setStatus('failed');
         setRunMessage({ code: 'raw', text: getErrorMessage(error) });
+      } finally {
+        if (!connected) screenshotController.abort();
       }
     })();
   }, [
+    hasHtmlGroups,
+    needsScreenshotService,
+    setHistoryItems,
     activeHistoryEntry,
     benchRunBlockers.length,
     cancelActiveBenchJob,
@@ -1871,32 +1658,49 @@ export function BenchPage() {
     });
   }, [cancelActiveBenchJob, status]);
 
-  const copyReport = useCallback(async () => {
-    if (!report) return;
-    const copied = await copyToClipboard(
-      serializeBenchReport(report),
-    );
-    if (!copied) return;
-    setCopyState('copied');
-    window.setTimeout(() => setCopyState('idle'), 1200);
-  }, [report]);
-
-  const copyHistoryRecoveryUrl = useCallback(
-    async (entry: BenchHistoryEntry) => {
-      const jobId = entry.report?.jobId;
-      if (!jobId) return;
-      const copied = await copyToClipboard(getA2UIBenchRecoveryUrl(jobId));
-      if (!copied) return;
-      setHistoryCopyId(entry.id);
-      window.setTimeout(() => {
-        setHistoryCopyId((current) => current === entry.id ? null : current);
-      }, 1200);
-    },
-    [],
-  );
-
+  const openHistoryReport = useCallback((entry: BenchHistoryEntry) => {
+    if (!entry.report || !historyReady) return;
+    setHistoryReportNotice('');
+    let tab: Window | null = null;
+    try {
+      // Open synchronously while the click still grants popup permission.
+      tab = window.open('about:blank', '_blank');
+      if (!tab) {
+        setHistoryReportNotice(
+          'Allow pop-ups to view report details in a new tab.',
+        );
+        return;
+      }
+      tab.opener = null;
+      setBenchReportTabSelection(tab, entry.id);
+    } catch {
+      tab?.close();
+      setHistoryReportNotice(
+        'Could not open the local report because browser storage is unavailable.',
+      );
+      return;
+    }
+    const reportTab = tab;
+    void (async () => {
+      try {
+        await saveHistory(historyItems);
+        await selectBenchReport(entry.id);
+        const url = new URL(window.location.href);
+        url.search = '';
+        url.hash = '#/bench/reports';
+        reportTab.location.replace(url.href);
+      } catch {
+        reportTab.close();
+        setHistoryReportNotice(
+          'Could not save this report. Free some browser storage and try again before leaving.',
+        );
+      }
+    })();
+  }, [historyItems, historyReady, saveHistory]);
   const restoreHistoryEntry = useCallback((entry: BenchHistoryEntry) => {
     void cancelActiveBenchJob();
+    setJobTiming(null);
+    setRunProgress([]);
     setActiveHistoryId(entry.id);
     const restoredSignature = createBenchPlanSignature(
       entry.config.groups,
@@ -1929,6 +1733,11 @@ export function BenchPage() {
     });
     const jobId = entry.report.jobId;
     if (!jobId) return;
+    const endpoint = getA2UIBenchReportEndpoint(jobId);
+    if (!endpoint) {
+      setRunMessage({ code: 'history-report-invalid-job-id' });
+      return;
+    }
 
     setRunMessage({ code: 'setup-restored-loading-report' });
     const controller = new AbortController();
@@ -1936,7 +1745,7 @@ export function BenchPage() {
     void (async () => {
       try {
         const response = await window.fetch(
-          getA2UIBenchReportEndpoint(jobId),
+          endpoint,
           { signal: controller.signal },
         );
         const payload = await response.json().catch(() => ({})) as
@@ -1956,6 +1765,17 @@ export function BenchPage() {
         setReport(payload);
         setReportPlanSignature(restoredSignature);
         setStatus(payload.status ?? 'complete');
+        // Upgrade older snapshots while the original server report still exists.
+        setHistoryItems((current) =>
+          current.map((item) =>
+            item.id === entry.id
+              ? {
+                ...item,
+                report: sanitizeBenchReportValue(payload) as BenchReport,
+              }
+              : item
+          )
+        );
         setRunMessage({ code: 'complete-report-loaded' });
       } catch {
         if (
@@ -1973,24 +1793,47 @@ export function BenchPage() {
         }
       }
     })();
-  }, [cancelActiveBenchJob, env]);
+  }, [cancelActiveBenchJob, env, setHistoryItems]);
 
   useEffect(() => {
-    if (initialHistoryRestoredRef.current) return;
+    if (!historyReady || initialHistoryRestoredRef.current) return;
     initialHistoryRestoredRef.current = true;
+    // An explicit report link owns restoration, including invalid-link feedback.
+    if (getA2UIBenchJobIdFromUrl()) return;
     const firstEntry = historyItems[0];
     if (firstEntry) restoreHistoryEntry(firstEntry);
-  }, [historyItems, restoreHistoryEntry]);
+  }, [historyItems, historyReady, restoreHistoryEntry]);
 
   const deleteHistoryEntry = useCallback((id: string) => {
     setActiveHistoryId((current) => current === id ? null : current);
     setHistoryItems((current) => current.filter((entry) => entry.id !== id));
-  }, []);
+  }, [setHistoryItems]);
+
+  const copyHistoryEntry = useCallback((entry: BenchHistoryEntry) => {
+    const draft = createBenchDraftHistoryEntry(
+      entry.config.groups,
+      entry.config.scenarios,
+      entry.config.settings,
+    );
+    const copied = { ...draft, title: `${entry.title} copy` };
+    setGroups(cloneBenchGroups(copied.config.groups));
+    setScenarios(cloneBenchScenarios(copied.config.scenarios));
+    setSettings(cloneBenchSettings(copied.config.settings));
+    setReport(null);
+    setReportPlanSignature(null);
+    setStatus('idle');
+    setProgress(0);
+    setRunProgress([]);
+    setJobTiming(null);
+    setRunMessage({ code: 'ready' });
+    setActiveHistoryId(copied.id);
+    setHistoryItems((current) => saveBenchHistoryEntry(current, copied));
+  }, [setHistoryItems]);
 
   const clearHistory = useCallback(() => {
     setActiveHistoryId(null);
     setHistoryItems([]);
-  }, []);
+  }, [setHistoryItems]);
 
   const setWidthFromPointer = useCallback((clientX: number) => {
     const body = benchBodyRef.current;
@@ -2046,12 +1889,6 @@ export function BenchPage() {
 
   return (
     <div className='benchPage'>
-      <PageHeader
-        className='benchHeader'
-        title='Bench Runner'
-        description={'Combine Protocol, Model, Prompt, and Catalog freely, then review the results in one report.'}
-      />
-
       <div
         className='benchBody'
         ref={benchBodyRef}
@@ -2059,12 +1896,14 @@ export function BenchPage() {
       >
         <BenchHistoryRail
           activeId={activeHistoryId}
-          copyId={historyCopyId}
           disabled={historyLocked}
           entries={historyItems}
           onClear={clearHistory}
-          onCopy={copyHistoryRecoveryUrl}
+          onOpenReport={openHistoryReport}
+          reportNotice={historyReportNotice}
+          storageNotice={historyStorageNotice}
           onDelete={deleteHistoryEntry}
+          onCopy={copyHistoryEntry}
           onNew={resetBench}
           onRestore={restoreHistoryEntry}
         />
@@ -2072,14 +1911,22 @@ export function BenchPage() {
           className='benchMain'
           aria-label={'Bench workspace'}
         >
+          <PageHeader
+            className='benchHeader'
+            title='Bench Runner'
+            description={'Combine Protocol, Model, Prompt, and Catalog freely, then review the results in one report.'}
+          />
           <div className='benchWorkflow'>
             <div className='benchWorkflowScroll'>
               <BenchRunPanel
                 locked={planLocked}
+                modelOptions={env.models}
                 onSettingsChange={(patch) =>
                   setSettings((current) => ({ ...current, ...patch }))}
                 onUiJudgeServerUrlChange={setUiJudgeServerUrl}
                 settings={settings}
+                hasHtmlGroups={hasHtmlGroups}
+                needsScreenshotService={needsScreenshotService}
                 uiJudgeServerUrl={uiJudgeServerUrl}
                 uiJudgeServerUrlValidationError={uiJudgeServerUrlValidationError}
               />
@@ -2099,6 +1946,14 @@ export function BenchPage() {
                 locked={planLocked}
                 modelOptions={env.models}
                 onAdd={addComparisonGroup}
+                onPresetChange={applyBenchPreset}
+                onFragmentChange={(id, enabled) =>
+                  updateGroup(
+                    id,
+                    groupPatch('enableHtmlFragment', enabled),
+                  )}
+                onDesignGuidanceChange={(id, enabled) =>
+                  updateGroup(id, groupPatch('enableDesignGuidance', enabled))}
                 onCatalogChange={(id, catalog) =>
                   updateGroup(id, groupPatch('catalog', catalog))}
                 onEnabledChange={(id, enabled) =>
@@ -2106,7 +1961,6 @@ export function BenchPage() {
                 onModelChange={(id, model) =>
                   updateGroup(id, groupPatch('model', model))}
                 onNameChange={(id, name) => updateGroup(id, { name })}
-                onProfileChange={updateGroupProfile}
                 onPromptChange={(id, extraInstruction) =>
                   updateGroup(
                     id,
@@ -2114,11 +1968,11 @@ export function BenchPage() {
                   )}
                 onProtocolChange={updateGroupProtocol}
                 onRemove={removeGroup}
-                onRoleChange={(id, role) =>
-                  updateGroup(id, groupPatch('role', role))}
               />
             </div>
             <BenchRunFooter
+              durationMs={report?.durationMs}
+              liveTiming={jobTiming}
               groupCount={activeGroups.length}
               messageText={getBenchRunMessageText(runMessage)}
               onAction={status === 'running' ? pauseBench : () => startBench()}
@@ -2129,6 +1983,17 @@ export function BenchPage() {
               runCount={runCount}
               scenarioCount={scenarios.length}
               status={status}
+              workflow={
+                <BenchRunWorkflow
+                  groups={runGroups}
+                  scenarios={scenarios}
+                  repeats={settings.repeats}
+                  runs={report ? report.runProgress ?? [] : runProgress}
+                  results={report?.results}
+                  judgeEnabled={settings.judgeEnabled}
+                  status={status}
+                />
+              }
             />
           </div>
         </main>
@@ -2145,8 +2010,9 @@ export function BenchPage() {
         />
 
         <BenchReportPanel
-          copyState={copyState}
-          onCopy={copyReport}
+          onOpenReport={activeHistoryEntry?.report
+            ? () => openHistoryReport(activeHistoryEntry)
+            : undefined}
           onOpenScreenshots={() => setScreenshotsOpen(true)}
           report={report}
           reportIsStale={reportIsStale}

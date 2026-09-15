@@ -35,7 +35,7 @@ function renderMainThread(): void {
   profileStart('ReactLynx::renderOpcodes');
   try {
     const { pageAttributes, rootRefs, rootSubtreeHandles } = renderOpcodesIntoElementTemplate(opcodes);
-    __SetAttributeOfElementTemplate(__page, TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX, pageAttributes, null);
+    __SetAttributeOfElementTemplate(__page, TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX, pageAttributes);
     for (let index = 0; index < rootRefs.length; index += 1) {
       const rootRef = rootRefs[index]!;
       insertElementTemplateSubtree(
@@ -73,7 +73,7 @@ function flushInitialListUpdates(): void {
     const result = results[index]!;
     const listRef = getElementTemplateNativeRef(result.uid);
     if (listRef) {
-      __SetAttributeOfElementTemplate(listRef, TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX, result.attributes, null);
+      __SetAttributeOfElementTemplate(listRef, TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX, result.attributes);
     }
   }
 }

@@ -827,11 +827,15 @@ function typesIndex(context: TemplateContext): string {
   const exportLines: string[] = [];
 
   if (context.features.has('native-module')) {
-    exportLines.push(`export * from './platform-native-module';`);
+    exportLines.push(
+      `export { ${context.moduleName} } from '../generated/${context.moduleName}';`,
+    );
   }
 
   if (hasNapiNativeModule(context)) {
-    exportLines.push(`export * from './napi-native-module';`);
+    exportLines.push(
+      `export { ${context.napiModuleName} } from '../generated/${context.napiModuleName}';`,
+    );
   }
 
   if (exportLines.length === 0) {
@@ -1310,12 +1314,11 @@ Run it on each OS/architecture you want to publish. The package also exposes
 \`npm pack\` and \`npm publish\` do not build native artifacts, so collect every
 supported platform/architecture under \`dist/\` before publishing.
 
-In the Lynxtron Node.js main thread:
-
-\`\`\`cjs
-const addon = require('${context.packageName}/lynxtron');
-addon.initialize();
-\`\`\`
+Install the published package as a normal application dependency. A Lynxtron
+host configured with \`pluginLynxtron()\` discovers the manifest, stages the
+matching package target, and loads \`./lynxtron\` automatically. Application
+code must not import that subpath, copy native artifacts, or add per-library
+packaging rules.
 ${nativeModuleUsage}${napiBtsUsage}
 `;
 }
@@ -1375,7 +1378,28 @@ function platformManifestEntries(context: TemplateContext): string {
 
   if (hasLynxtronTarget(context)) {
     entries.push(`    "lynxtron": {
-      "path": "dist"
+      "targets": [
+        {
+          "os": "darwin",
+          "arch": "arm64",
+          "files": ["dist/darwin/arm64/${context.addonBinaryName}.node"]
+        },
+        {
+          "os": "darwin",
+          "arch": "x64",
+          "files": ["dist/darwin/x64/${context.addonBinaryName}.node"]
+        },
+        {
+          "os": "win32",
+          "arch": "x64",
+          "files": ["dist/win32/x64/${context.addonBinaryName}.node"]
+        },
+        {
+          "os": "linux",
+          "arch": "x64",
+          "files": ["dist/linux/x64/${context.addonBinaryName}.node"]
+        }
+      ]
     }`);
     entries.push(`    "macos": {
       "sourceDir": "shared"

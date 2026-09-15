@@ -4,8 +4,78 @@
 
 import type { MastraResult, MastraStreamResult } from './types';
 
+/** Stop protocol postprocessing while retaining the failed model's usage. */
+export class GenerationUpstreamError extends Error {
+  readonly statusCode?: number;
+  readonly upstreamRequestId?: string;
+
+  constructor(
+    cause: unknown,
+    public readonly result: {
+      text: string;
+      usage: unknown;
+      finishReason: unknown;
+    },
+  ) {
+    super(
+      upstreamErrorMessage(cause),
+      { cause },
+    );
+    this.name = 'GenerationUpstreamError';
+    // Select only public diagnostics; never forward provider bodies or headers.
+    let current = cause;
+    for (let depth = 0; depth < 5 && isRecord(current); depth++) {
+      if (
+        this.statusCode === undefined
+        && typeof current.statusCode === 'number'
+        && Number.isInteger(current.statusCode)
+        && current.statusCode >= 100 && current.statusCode <= 599
+      ) this.statusCode = current.statusCode;
+      const headers = current.responseHeaders;
+      if (this.upstreamRequestId === undefined && isRecord(headers)) {
+        const requestId = Object.entries(headers).find(([name, value]) =>
+          name.toLowerCase() === 'x-request-id' && typeof value === 'string'
+        )?.[1];
+        if (typeof requestId === 'string') this.upstreamRequestId = requestId;
+      }
+      current = current.cause;
+    }
+  }
+}
+
+/** Preserve model evidence when deterministic postprocessing rejects its output. */
+export class GenerationPostprocessError extends Error {
+  constructor(
+    cause: unknown,
+    public readonly result: {
+      text: string;
+      usage: unknown;
+      finishReason: unknown;
+    },
+  ) {
+    const reason = cause instanceof Error ? cause.message : String(cause);
+    super(
+      result.finishReason === 'length'
+        ? `Model output reached its token limit before producing a valid final artifact: ${reason}`
+        : reason,
+      { cause },
+    );
+    this.name = 'GenerationPostprocessError';
+  }
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function upstreamErrorMessage(cause: unknown): string {
+  if (
+    isRecord(cause) && typeof cause.message === 'string' && cause.message.trim()
+  ) {
+    return cause.message;
+  }
+  if (typeof cause === 'string' && cause.trim()) return cause;
+  return 'Upstream model generation failed without error details';
 }
 
 function textFromContent(content: unknown): string {
@@ -71,12 +141,29 @@ export async function finalizeResult(result: MastraResult): Promise<{
   usage: unknown;
   finishReason: unknown;
 }> {
+  let completionError: unknown;
+  const onCompletionError = (error: unknown) => {
+    completionError ??= error;
+    return undefined;
+  };
   const [text, totalUsage, usage, finishReason] = await Promise.all([
-    Promise.resolve(result.text).catch(() => undefined),
+    Promise.resolve(result.text).catch(onCompletionError),
     Promise.resolve(result.totalUsage).catch(() => undefined),
     Promise.resolve(result.usage).catch(() => undefined),
-    Promise.resolve(result.finishReason).catch(() => undefined),
+    Promise.resolve(result.finishReason).catch(onCompletionError),
   ]);
+  // Mastra populates its error getter while consuming the stream, so read it
+  // after awaiting completion, not alongside the delayed result properties.
+  const upstreamError =
+    await Promise.resolve(result.error).catch((error: unknown) => error)
+      ?? completionError;
+  if (finishReason === 'error' || upstreamError != null) {
+    throw new GenerationUpstreamError(upstreamError, {
+      text: typeof text === 'string' ? text : '',
+      usage: totalUsage ?? usage,
+      finishReason: 'error',
+    });
+  }
   return {
     text: typeof text === 'string' ? text : undefined,
     usage: totalUsage ?? usage,

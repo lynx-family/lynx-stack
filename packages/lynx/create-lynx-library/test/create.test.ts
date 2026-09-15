@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,6 +17,33 @@ import {
 } from '../src/index.js';
 
 const tempDirs: string[] = [];
+
+function lynxtronManifest(binaryName: string): Record<string, unknown> {
+  return {
+    targets: [
+      {
+        os: 'darwin',
+        arch: 'arm64',
+        files: [`dist/darwin/arm64/${binaryName}.node`],
+      },
+      {
+        os: 'darwin',
+        arch: 'x64',
+        files: [`dist/darwin/x64/${binaryName}.node`],
+      },
+      {
+        os: 'win32',
+        arch: 'x64',
+        files: [`dist/win32/x64/${binaryName}.node`],
+      },
+      {
+        os: 'linux',
+        arch: 'x64',
+        files: [`dist/linux/x64/${binaryName}.node`],
+      },
+    ],
+  };
+}
 
 function execNpm(args: string[], options: { cwd: string }): string {
   const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
@@ -248,9 +276,7 @@ describe('create-lynx-library', () => {
       harmony: {
         packageDir: 'harmony',
       },
-      'lynxtron': {
-        path: 'dist',
-      },
+      'lynxtron': lynxtronManifest('lynx-button'),
       macos: {
         sourceDir: 'shared',
       },
@@ -269,9 +295,6 @@ describe('create-lynx-library', () => {
     );
     expect(read(dir, 'lynxtron/CMakeLists.txt')).toContain(
       'LYNX_LIBRARY_NODE_API_WEAK_SUFFIX',
-    );
-    expect(read(dir, 'lynxtron/index.cjs')).toContain(
-      'nativeBinding.initialize = function initialize() {};',
     );
     expect(read(dir, 'lynxtron/library_entry.cc')).toContain(
       'LynxAutolinkRegisterPlatformNativeModules();',
@@ -310,7 +333,7 @@ describe('create-lynx-library', () => {
       's.platform = :ios, \'10.0\'',
     );
     expect(read(dir, 'types/index.d.ts')).toContain(
-      'export * from \'./platform-native-module\';',
+      'export { ButtonModule } from \'../generated/ButtonModule\';',
     );
     expect(read(dir, 'types/platform-native-module.d.ts')).toContain(
       '/** @lynxmodule */',
@@ -467,7 +490,9 @@ describe('create-lynx-library', () => {
     expect(manifest.platforms.android?.nodeApiAddons).toBeUndefined();
     expect(manifest.platforms.ios?.nodeApiAddons).toBeUndefined();
     expect(manifest.platforms.harmony?.nodeApiAddons).toBeUndefined();
-    expect(manifest.platforms.lynxtron).toEqual({ path: 'dist' });
+    expect(manifest.platforms.lynxtron).toEqual(
+      lynxtronManifest('platform-library'),
+    );
   });
 
   it('uses the NAPI Native Module on every selected target', () => {
@@ -693,6 +718,50 @@ describe('create-lynx-library', () => {
       stdio: 'pipe',
     });
 
+    fs.writeFileSync(
+      path.join(dir, 'consumer.ts'),
+      `
+import { StorageModule, StorageModuleNapi } from '@example/dual-native-modules';
+declare global {
+  interface NativeModules {
+    bridge: {
+      call(name: string, params: Record<string, unknown>, cb: (...args: unknown[]) => void): void;
+      on(name: string, cb: (...args: unknown[]) => void): void;
+    };
+  }
+  var NativeModules: NativeModules;
+}
+globalThis.NativeModules.bridge.call('test', {}, () => {});
+// @ts-expect-error The shim must not weaken the host's global type.
+globalThis.NativeModules = {};
+StorageModule.setValue('key', 'value');
+const value: string | null = StorageModule.getValue('key');
+StorageModule.clear();
+StorageModuleNapi.setValue('key', 'value');
+const napiValue: string | null = StorageModuleNapi.getValue('key');
+StorageModuleNapi.clear();
+// @ts-expect-error Modules are objects, not constructors.
+new StorageModule();
+// @ts-expect-error Values must be strings.
+StorageModuleNapi.setValue('key', 123);
+`,
+    );
+    const tsc = createRequire(import.meta.url).resolve('typescript/bin/tsc');
+    execFileSync(process.execPath, [
+      tsc,
+      '--ignoreConfig',
+      '--noEmit',
+      '--strict',
+      '--skipLibCheck',
+      '--target',
+      'ES2022',
+      '--module',
+      'preserve',
+      '--moduleResolution',
+      'bundler',
+      'consumer.ts',
+    ], { cwd: dir, stdio: 'pipe' });
+
     expect(read(dir, 'generated/StorageModule.ts')).not.toContain(
       'setNativeModules(new Proxy',
     );
@@ -736,7 +805,7 @@ describe('create-lynx-library', () => {
       'android/src/main/java/com/example/storage/StorageModule.java',
     );
     expect(read(dir, 'types/index.d.ts')).toContain(
-      'export * from \'./napi-native-module\';',
+      'export { StorageModule } from \'../generated/StorageModule\';',
     );
     expect(read(dir, 'types/napi-native-module.d.ts')).toContain(
       'export declare class StorageModule',
@@ -777,13 +846,13 @@ describe('create-lynx-library', () => {
     expect(read(dir, 'shared/.npmignore')).toContain('third_party/');
     fs.mkdirSync(path.join(dir, 'shared/third_party'), { recursive: true });
     fs.writeFileSync(path.join(dir, 'shared/third_party/cache.txt'), 'cache');
-    fs.mkdirSync(path.join(dir, 'dist/macos/arm64'), { recursive: true });
-    fs.writeFileSync(path.join(dir, 'dist/macos/arm64/addon.node'), 'addon');
+    fs.mkdirSync(path.join(dir, 'dist/darwin/arm64'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'dist/darwin/arm64/addon.node'), 'addon');
     const packResult = JSON.parse(
       execNpm(['pack', '--dry-run', '--json'], { cwd: dir }),
     ) as Array<{ files: Array<{ path: string }> }>;
     const packedPaths = packResult[0]?.files.map((file) => file.path) ?? [];
-    expect(packedPaths).toContain('dist/macos/arm64/addon.node');
+    expect(packedPaths).toContain('dist/darwin/arm64/addon.node');
     expect(packedPaths).not.toContain('shared/third_party/cache.txt');
     expect(read(dir, 'android/build.gradle.kts')).toContain(
       'rootProject.findProperty("lynx.primjs.version")?.toString() ?: "4.+"',
@@ -966,9 +1035,7 @@ describe('create-lynx-library', () => {
       '"build:lynxtron": "cmake -S lynxtron -B build/lynxtron -DCMAKE_BUILD_TYPE=Release && cmake --build build/lynxtron --config Release"',
     );
     expect(readJson<Manifest>(dir, 'lynx.lib.json').platforms).toEqual({
-      'lynxtron': {
-        path: 'dist',
-      },
+      'lynxtron': lynxtronManifest('lynxtron-library'),
       macos: {
         sourceDir: 'shared',
       },
@@ -980,11 +1047,25 @@ describe('create-lynx-library', () => {
       '${LYNX_LIBRARY_PACKAGE_ROOT}/shared',
     );
     expect(read(dir, 'lynxtron/CMakeLists.txt')).toContain(
+      'set(LYNX_LIBRARY_PLATFORM "darwin")',
+    );
+    expect(read(dir, 'lynxtron/CMakeLists.txt')).toContain(
+      'set(LYNX_LIBRARY_PLATFORM "win32")',
+    );
+    expect(read(dir, 'lynxtron/CMakeLists.txt')).toContain(
       'LYNX_LIBRARY_NODE_API_WEAK_SUFFIX',
     );
     expect(read(dir, 'lynxtron/index.cjs')).toContain(
-      'nativeBinding.initialize = function initialize() {};',
+      'require(\'../lynx.lib.json\')',
     );
+    expect(read(dir, 'lynxtron/index.cjs')).toContain(
+      'manifest.platforms.lynxtron.targets.find',
+    );
+    expect(read(dir, 'lynxtron/index.cjs')).toContain(
+      'target.files.filter((file) => path.extname(file) === \'.node\')',
+    );
+    expect(read(dir, 'lynxtron/index.cjs')).toContain('process.platform');
+    expect(read(dir, 'lynxtron/index.cjs')).not.toContain('normalizePlatform');
     expect(read(dir, 'lynxtron/library_entry.cc')).toContain(
       'LynxAutolinkRegisterPlatformNativeModules',
     );
@@ -1036,6 +1117,12 @@ describe('create-lynx-library', () => {
       '`npm pack` and `npm publish` do not build native artifacts',
     );
     expect(read(dir, 'README.md')).toContain(
+      'host configured with `pluginLynxtron()` discovers the manifest',
+    );
+    expect(read(dir, 'README.md')).toContain(
+      'code must not import that subpath, copy native artifacts',
+    );
+    expect(read(dir, 'README.md')).not.toContain(
       `require('@example/lynxtron-library/lynxtron')`,
     );
     expect(read(dir, 'README.md')).toContain(
@@ -1235,9 +1322,7 @@ describe('create-lynx-library', () => {
     );
     expect(JSON.parse(read(dir, 'lynx.lib.json'))).toMatchObject({
       platforms: {
-        'lynxtron': {
-          path: 'dist',
-        },
+        'lynxtron': lynxtronManifest('view-library'),
         macos: {
           sourceDir: 'shared',
         },

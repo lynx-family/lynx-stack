@@ -1,6 +1,6 @@
 [
   {
-    "templateId": "_et_04020ede3da7",
+    "templateId": "_et_49c2d60c49a6",
     "compiledTemplate": {
       "kind": "element",
       "type": "view",
@@ -19,7 +19,7 @@
           "children": []
         },
         {
-          "kind": "elementSlot",
+          "kind": "childSlot",
           "type": "slot",
           "elementSlotIndex": 0
         }
@@ -44,14 +44,14 @@
     "sourceFile": "index.tsx"
   },
   {
-    "templateId": "_et_d7c09654e316",
+    "templateId": "_et_955a06fee137",
     "compiledTemplate": {
       "kind": "element",
       "type": "view",
       "attributesArray": [],
       "children": [
         {
-          "kind": "elementSlot",
+          "kind": "childSlot",
           "type": "slot",
           "elementSlotIndex": 0
         }

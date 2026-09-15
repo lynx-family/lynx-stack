@@ -9,4 +9,16 @@ export function boundaryKey(
   return `${layer ?? ''}|${resourcePath}`;
 }
 
-export const definesImportByBoundary: Map<string, string> = new Map();
+// Keyed by compiler: rsbuild compiles every environment in one process, and a
+// boundary recorded by one compiler must not make another compiler's loader
+// import a virtual module that only exists in the first compiler.
+const definesImportsByCompiler = new WeakMap<object, Map<string, string>>();
+
+export function definesImportByBoundary(compiler: object): Map<string, string> {
+  let imports = definesImportsByCompiler.get(compiler);
+  if (!imports) {
+    imports = new Map();
+    definesImportsByCompiler.set(compiler, imports);
+  }
+  return imports;
+}

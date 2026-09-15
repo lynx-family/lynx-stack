@@ -30,8 +30,10 @@ export async function createStubRsbuild(
   rsbuildConfig: RsbuildConfig = {},
   cwd?: string,
   lynxOptions?: LynxPluginOptions,
+  environment?: string[],
 ): Promise<RsbuildInstance & RsbuildHelper> {
   const rsbuild = await createRsbuild({
+    ...(environment ? { environment } : {}),
     cwd: cwd ?? path.dirname(fileURLToPath(import.meta.url)),
     rsbuildConfig: {
       environments: { lynx: {} },

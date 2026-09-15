@@ -3,7 +3,7 @@ Object {
     Object {
       "attachedSubtreeHandleIds": null,
       "childId": -1,
-      "elementSlotIndex": 0,
+      "childSlotIndex": 0,
       "op": "insertNode",
       "referenceId": -3,
       "targetId": -4,

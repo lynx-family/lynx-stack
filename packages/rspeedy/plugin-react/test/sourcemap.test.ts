@@ -82,7 +82,7 @@ async function buildSourcemapFixture(
                 // add .ts suffix to ignore-css-loader
                 // this workaround is needed because vitest
                 // runs on our ts files.
-                rule.get('loader') as string + '.ts',
+                rule.get('loader')! + '.ts',
               )
             })
           },

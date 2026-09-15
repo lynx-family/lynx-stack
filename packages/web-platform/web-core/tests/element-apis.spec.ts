@@ -68,6 +68,26 @@ describe('Element APIs', () => {
       true,
     );
   });
+  test.each([true, false, undefined])(
+    'creates a page with CSS inheritance config %s',
+    (enabled) => {
+      const api = createElementAPI(
+        rootDom,
+        mtsBinding,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        enabled,
+      );
+      const page = api.__CreatePage('0', 0);
+      expect(page.getAttribute('lynx-enable-css-inheritance')).toBe(
+        enabled ? 'true' : null,
+      );
+    },
+  );
   test('#commonEventHandler should filter out -1 uniqueId', () => {
     mtsBinding.wasmContext = Object.assign(mtsBinding.wasmContext || {}, {
       common_event_handler: rstest.fn(),
@@ -1672,6 +1692,28 @@ describe('Element APIs', () => {
     expect(mtsBinding.addEventListener).toBeCalledWith('tap');
     expect(mtsBinding.publishEvent).toBeCalledTimes(1);
   });
+
+  test.each(['bindevent', 'global-bindevent'])(
+    '%s on a page child publishes a page event',
+    (eventType) => {
+      const page = mtsGlobalThis.__CreatePage('0', 0);
+      const child = mtsGlobalThis.__CreateView(
+        mtsGlobalThis.__GetElementUniqueID(page),
+      );
+      mtsGlobalThis.__AppendElement(page, child);
+      mtsGlobalThis.__AddEvent(child, eventType, 'tap', 'handler');
+      mtsGlobalThis.__FlushElementTree();
+
+      child.dispatchEvent(new window.Event('click', { bubbles: true }));
+
+      const { backgroundThread } = mtsBinding.lynxViewInstance;
+      expect(backgroundThread.publishEvent).toHaveBeenCalledWith(
+        'handler',
+        expect.any(Object),
+      );
+      expect(backgroundThread.publicComponentEvent).not.toHaveBeenCalled();
+    },
+  );
 
   test('publicComponentEvent', () => {
     rstest.spyOn(mtsBinding, 'addEventListener');

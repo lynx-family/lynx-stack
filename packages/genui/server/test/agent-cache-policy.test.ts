@@ -4,23 +4,23 @@
 
 import { beforeEach, describe, expect, rstest, test } from '@rstest/core';
 
-import { createA2UIAgent } from '../agent/a2ui-agent.js';
-import type { A2UICatalog } from '../agent/a2ui-catalog.js';
-import { createHtmlAgent } from '../agent/html-agent.js';
-import { createLynxXmlAgent } from '../agent/lynx-xml-agent.js';
-import { createMcpAppsAgent } from '../agent/mcp-apps-agent.js';
-import { createOpenUIAgent } from '../agent/openui-agent.js';
-import A2UIAgentService from '../service/a2ui-agent.js';
-import HtmlAgentService from '../service/html-agent.js';
-import LynxXmlAgentService from '../service/lynx-xml-agent.js';
-import { McpAppsAgentService } from '../service/mcp-apps-agent.js';
-import OpenUIAgentService from '../service/openui-agent.js';
+import { createA2UIAgent } from '../agent/a2ui/a2ui-agent.js';
+import type { A2UICatalog } from '../agent/a2ui/a2ui-catalog.js';
+import { createHtmlAgent } from '../agent/html/html-agent.js';
+import { createLynxXmlAgent } from '../agent/lynx-xml/lynx-xml-agent.js';
+import { createMcpAppsAgent } from '../agent/mcp-apps/mcp-apps-agent.js';
+import { createOpenUIAgent } from '../agent/openui/openui-agent.js';
+import A2UIAgentService from '../service/a2ui/a2ui-agent.js';
+import HtmlAgentService from '../service/html/html-agent.js';
+import LynxXmlAgentService from '../service/lynx-xml/lynx-xml-agent.js';
+import { McpAppsAgentService } from '../service/mcp-apps/mcp-apps-agent.js';
+import OpenUIAgentService from '../service/openui/openui-agent.js';
 
-rstest.mock('../agent/a2ui-agent.js', { mock: true });
-rstest.mock('../agent/html-agent.js', { mock: true });
-rstest.mock('../agent/openui-agent.js', { mock: true });
-rstest.mock('../agent/lynx-xml-agent.js', { mock: true });
-rstest.mock('../agent/mcp-apps-agent.js', { mock: true });
+rstest.mock('../agent/a2ui/a2ui-agent.js', { mock: true });
+rstest.mock('../agent/html/html-agent.js', { mock: true });
+rstest.mock('../agent/openui/openui-agent.js', { mock: true });
+rstest.mock('../agent/lynx-xml/lynx-xml-agent.js', { mock: true });
+rstest.mock('../agent/mcp-apps/mcp-apps-agent.js', { mock: true });
 
 const catalog: A2UICatalog = {
   id: 'cache-policy-test',

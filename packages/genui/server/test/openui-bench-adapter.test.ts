@@ -6,21 +6,21 @@ import { describe, expect, test } from '@rstest/core';
 
 import type {
   ProtocolBenchAdapterInput,
-} from '../service/genui-bench/protocol-adapter.js';
-import type { ProtocolBenchScenario } from '../service/genui-bench/types.js';
-import type { OpenUIChatOptions } from '../service/openui-agent.js';
+} from '../service/common/bench/protocol-adapter.js';
+import type { ProtocolBenchScenario } from '../service/common/bench/protocol-types.js';
+import type { OpenUIChatOptions } from '../service/openui/openui-agent.js';
 import {
   OPENUI_BENCH_CAPABILITY_PROFILE,
   OPENUI_BENCH_MATCHED_COMPONENTS,
   OPENUI_BENCH_PROMPT_OPTIONS,
   createOpenUIBenchAdapter,
-} from '../service/openui-bench-adapter.js';
+} from '../service/openui/openui-bench-adapter.js';
 import type {
   OpenUIBenchGenerateRaw,
-} from '../service/openui-bench-adapter.js';
+} from '../service/openui/openui-bench-adapter.js';
 import {
   validateOpenUIBenchOutput,
-} from '../service/openui-bench-validator.js';
+} from '../service/openui/openui-bench-validator.js';
 
 const VALID_OPENUI = [
   'root = Column([title, card], "start", "stretch", "m")',
@@ -178,11 +178,14 @@ describe('OpenUI Bench adapter', () => {
       api: 'responses',
       baseURL: 'https://provider.test/v1',
       disableAgentCache: true,
-      inheritReasoningEffort: false,
+      maxRetries: 0,
+      enableWebSearch: false,
+      enableImageGeneration: false,
       model: 'test-model',
       promptRoot: 'Column',
       promptOptions: OPENUI_BENCH_PROMPT_OPTIONS,
     });
+    expect(receivedOptions?.inheritReasoningEffort).not.toBe(false);
     expect(receivedOptions?.systemAppendix).toContain(
       'Matched-core benchmark',
     );
@@ -305,7 +308,11 @@ describe('OpenUI Bench adapter', () => {
         receivedMessages.push(messages.map((message) => message.content));
         callCount += 1;
         if (callCount === 1) {
-          return Promise.reject(new Error('provider temporarily unavailable'));
+          return Promise.reject(
+            Object.assign(new Error('provider temporarily unavailable'), {
+              statusCode: 503,
+            }),
+          );
         }
         return Promise.resolve({
           text: VALID_OPENUI,
@@ -325,7 +332,7 @@ describe('OpenUI Bench adapter', () => {
     await backoffStarted;
 
     expect(callCount).toBe(1);
-    expect(sleepCalls).toEqual([10_000]);
+    expect(sleepCalls).toEqual([1_000]);
     releaseBackoff?.();
     const result = await generation;
     expect(callCount).toBe(2);
@@ -355,7 +362,11 @@ describe('OpenUI Bench adapter', () => {
     const adapter = createOpenUIBenchAdapter({
       generateRaw: () => {
         callCount += 1;
-        return Promise.reject(new Error('provider temporarily unavailable'));
+        return Promise.reject(
+          Object.assign(new Error('provider temporarily unavailable'), {
+            statusCode: 503,
+          }),
+        );
       },
       now: sequenceNow([0, 5]),
       sleep() {
@@ -385,7 +396,9 @@ describe('OpenUI Bench adapter', () => {
         receivedMessages.push(messages.map((message) => message.content));
         callCount += 1;
         return Promise.reject(
-          new Error('request failed for api-key-must-not-leak'),
+          Object.assign(new Error('request failed for api-key-must-not-leak'), {
+            statusCode: 503,
+          }),
         );
       },
       now: sequenceNow([2, 7, 7, 12]),

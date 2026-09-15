@@ -5,7 +5,7 @@ Object {
         2,
       ],
       "bundleUrl": null,
-      "elementSlots": Array [],
+      "childSlots": Array [],
       "handleId": 3,
       "op": "createTemplate",
       "templateKey": "_et_builtin_raw_text",
@@ -13,7 +13,7 @@ Object {
     Object {
       "attachedSubtreeHandleIds": null,
       "childId": 3,
-      "elementSlotIndex": 0,
+      "childSlotIndex": 0,
       "op": "insertNode",
       "referenceId": 0,
       "targetId": -2,

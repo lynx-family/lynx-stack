@@ -35,7 +35,7 @@ describe('ElementTemplate ref prop adapter', () => {
   it('attaches function refs with an ET selector proxy', () => {
     const ref = vi.fn();
 
-    queueRefAttrUpdate(null, ref, -2, 0);
+    queueRefAttrUpdate(null, ref, { instanceId: -2 }, 0);
     flushPendingRefs();
 
     expect(ref).toHaveBeenCalledTimes(1);
@@ -47,12 +47,13 @@ describe('ElementTemplate ref prop adapter', () => {
   it('detaches function refs through cleanup when the callback returned one', () => {
     const cleanup = vi.fn();
     const ref = vi.fn(() => cleanup);
+    const instance = { instanceId: -2 };
 
-    queueRefAttrUpdate(null, ref, -2, 0);
+    queueRefAttrUpdate(null, ref, instance, 0);
     flushPendingRefs();
     ref.mockClear();
 
-    queueRefAttrUpdate(ref, null, -2, 0);
+    queueRefAttrUpdate(ref, null, instance, 0);
     flushPendingRefs();
 
     expect(cleanup).toHaveBeenCalledTimes(1);
@@ -61,12 +62,13 @@ describe('ElementTemplate ref prop adapter', () => {
 
   it('detaches function refs with null when there is no cleanup', () => {
     const ref = vi.fn();
+    const instance = { instanceId: -2 };
 
-    queueRefAttrUpdate(null, ref, -2, 0);
+    queueRefAttrUpdate(null, ref, instance, 0);
     flushPendingRefs();
     ref.mockClear();
 
-    queueRefAttrUpdate(ref, null, -2, 0);
+    queueRefAttrUpdate(ref, null, instance, 0);
     flushPendingRefs();
 
     expect(ref).toHaveBeenCalledWith(null);
@@ -74,8 +76,9 @@ describe('ElementTemplate ref prop adapter', () => {
 
   it('updates object refs and skips unchanged identities', () => {
     const ref = { current: null };
+    const instance = { instanceId: -2 };
 
-    queueRefAttrUpdate(null, ref, -2, 0);
+    queueRefAttrUpdate(null, ref, instance, 0);
     flushPendingRefs();
 
     expect(ref.current).toMatchObject({
@@ -83,11 +86,11 @@ describe('ElementTemplate ref prop adapter', () => {
     });
     const proxy = ref.current;
 
-    queueRefAttrUpdate(ref, ref, -2, 0);
+    queueRefAttrUpdate(ref, ref, instance, 0);
     flushPendingRefs();
     expect(ref.current).toBe(proxy);
 
-    queueRefAttrUpdate(ref, null, -2, 0);
+    queueRefAttrUpdate(ref, null, instance, 0);
     flushPendingRefs();
     expect(ref.current).toBeNull();
   });
@@ -101,7 +104,7 @@ describe('ElementTemplate ref prop adapter', () => {
 
     try {
       const ref = vi.fn();
-      queueRefAttrUpdate(null, ref, -2, 0);
+      queueRefAttrUpdate(null, ref, { instanceId: -2 }, 0);
       flushPendingRefs();
 
       ref.mock.calls[0]![0].setNativeProps({ opacity: 1 }).exec();
@@ -135,7 +138,7 @@ describe('ElementTemplate ref prop adapter', () => {
 
     try {
       const ref = vi.fn();
-      queueRefAttrUpdate(null, ref, 1, 0);
+      queueRefAttrUpdate(null, ref, { instanceId: 1 }, 0);
       flushPendingRefs();
 
       ref.mock.calls[0]![0].setNativeProps({ opacity: 1 }).exec();

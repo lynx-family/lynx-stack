@@ -13,15 +13,15 @@ import {
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { reloadBackground } from '../../../../src/element-template/native/reload-background.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
-import type { SerializedElementTemplate } from '../../../../src/element-template/protocol/types.js';
+import type { SerializedCompiledNode } from '../../../../src/element-template/protocol/types.js';
 import { __root, setRoot } from '../../../../src/element-template/runtime/page/root-instance.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
 
-function createSerializedTemplate(handleId: number, templateKey: string): SerializedElementTemplate {
+function createSerializedTemplate(handleId: number, templateKey: string): SerializedCompiledNode {
   return {
     templateKey,
     attributeSlots: [],
-    elementSlots: [],
+    childSlots: [],
     uid: handleId,
   };
 }
@@ -65,7 +65,7 @@ describe('ElementTemplate background reload', () => {
         page: {
           tag: 'page',
           attributes: null,
-          elementSlots: [[createSerializedTemplate(-1, '_et_test')]],
+          childSlots: [[createSerializedTemplate(-1, '_et_test')]],
           uid: 0,
         },
         reloadVersion: getReloadVersion(),

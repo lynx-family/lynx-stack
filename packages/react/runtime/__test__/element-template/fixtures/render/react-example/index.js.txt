@@ -6,8 +6,8 @@ const lynxLogo = './assets/lynx-logo.png';
 const reactLynxLogo = './assets/react-logo.png';
 const _et_b89c02b1874f = `${globDynamicComponentEntry}:${"_et_b89c02b1874f"}`;
 const _et_a51110b9901e = `${globDynamicComponentEntry}:${"_et_a51110b9901e"}`;
-const _et_3a121f15a890 = `${globDynamicComponentEntry}:${"_et_3a121f15a890"}`;
-ReactLynxInternal.__etAttrPlanMap[_et_3a121f15a890] = [
+const _et_b2bb4db3b1ed = `${globDynamicComponentEntry}:${"_et_b2bb4db3b1ed"}`;
+ReactLynxInternal.__etAttrPlanMap[_et_b2bb4db3b1ed] = [
     0,
     ReactLynxInternal.adaptEventAttrSlot
 ];
@@ -20,7 +20,7 @@ export function App() {
         'background-only';
         setAlterLogo((prevAlterLogo)=>!prevAlterLogo);
     }, []);
-    return /*#__PURE__*/ _jsx(_et_3a121f15a890, {
+    return /*#__PURE__*/ _jsx(_et_b2bb4db3b1ed, {
         attributeSlots: [
             1,
             arrow

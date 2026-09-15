@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { LYNX_XML_MOBILE_DESIGN_GUIDANCE } from './mobile-design.js';
 import { VANILLA_LYNX_SKILL_GUIDANCE } from './vanilla-lynx-skill.js';
 
 /** The default Lynx engine version used by generated XML artifacts. */
@@ -10,6 +9,8 @@ export const LYNX_XML_ENGINE_VERSION = '4.2';
 
 /** Options used to customize the Lynx XML generation system prompt. */
 export interface BuildLynxXmlSystemPromptOptions {
+  /** Generate an intermediate document for deterministic fragment compilation. */
+  enableHtmlFragment?: boolean;
   /** Override the generated artifact's Lynx engine version. */
   engineVersion?: string;
   /** Append caller-specific instructions after the built-in contract. */
@@ -18,15 +19,14 @@ export interface BuildLynxXmlSystemPromptOptions {
 
 const ENGINE_VERSION_PATTERN = /^\d+(?:\.\d+)*$/u;
 
-/** Tool-specific guidance for converting initial XML element fragments. */
-export const LYNX_XML_HTML_FRAGMENT_TOOL_INSTRUCTIONS =
-  `Initial tree conversion tool:
-- Draft the initial static Lynx element tree as one well-formed XML fragment, then call html_fragment_to_main_thread_script exactly once with that fragment. Give every node needed by event handlers or dynamic updates a unique id attribute.
-- The tool returns an opaque placeholder comment and a bindings map from XML ids to generated node variable names. It does not return the generated JavaScript.
-- Copy the placeholder exactly, without quoting or rewriting it, onto its own line inside renderPage() after page and pageId exist. The server replaces it with the generated Element PAPI statements after model generation.
-- Write event handlers and dynamic updates after the placeholder. Refer to generated nodes only through the returned bindings and do not redeclare those node variable names.
-- The tool handles element creation, literal text, classes, IDs, inline styles, datasets, attributes, and child order. Write state, event handlers, dynamic updates, lifecycle registration, and cleanup yourself.
-- Do not put style, script, lynx, page, or raw-text elements in the fragment. Keep CSS in the artifact's style block and bind events in main-thread JavaScript.`;
+/** Intermediate source contract for deterministic fragment compilation. */
+export const LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS =
+  `XML fragment mode is enabled for this request (this output contract overrides the imported document guidance below):
+- Generate the entire document in one response: one <template> containing the initial XML element fragment directly inside <lynx>, alongside CSS and main/background scripts in their normal source blocks. Prefer placing the template first, but block order is not significant. Never omit the template, even when conversation history contains already-compiled .lynxml artifacts. The server removes <template> and compiles it to Element PAPI before delivery; it is an intermediate format, not a runtime Lynx element.
+- Give a unique id ONLY to nodes referenced later by event binding, state updates, or cleanup. Omit id on purely static nodes; do not assign ids to every node. Use well-formed XML, literal attributes and XML entities in the template. Keep style, script, lynx, and page elements outside the fragment. Prefer literal text directly inside <text>. An explicit <raw-text> leaf may use text content or a text attribute, never both; put styling, event handlers, and update ids on its parent <text>. Do not use interpolation, loops, conditional directives, or inline event-handler attributes; implement dynamic behavior in JavaScript.
+- The server supplies createFragment(page, pageId). Call it exactly once in renderPage(), after page and pageId exist: nodes = createFragment(page, pageId). Declare let nodes at main-thread script scope so later event, update, and cleanup handlers can use nodes["cityText"] for id="cityText". Access nodes only after rendering. Do not declare or shadow createFragment, invent nodeN variables, or assume XML ids declare variables.
+- createFragment creates and appends the initial roots to page and returns their id-to-node map. Do not recreate or append the initial roots yourself. Bind events and apply initial state after the call. Use Element PAPI for subsequent dynamic updates and new nodes.
+- Write all CSS, state, event handlers, lifecycle registration, background work, and cleanup in the same response. Do not request conversion, wait for bindings, or output placeholders. The server performs conversion after generation without another model request.`;
 
 /** Build a system prompt for producing complete, zero-build `.lynxml` files. */
 export function buildLynxXmlSystemPrompt(
@@ -35,7 +35,10 @@ export function buildLynxXmlSystemPrompt(
   const engineVersion = normalizeEngineVersion(
     options.engineVersion ?? LYNX_XML_ENGINE_VERSION,
   );
-  const prompt = buildBasePrompt(engineVersion);
+  const prompt = buildBasePrompt(
+    engineVersion,
+    options.enableHtmlFragment === true,
+  );
   const appendix = options.appendix?.trim();
   return appendix ? `${prompt}\n\n${appendix}` : prompt;
 }
@@ -52,10 +55,17 @@ function normalizeEngineVersion(engineVersion: string): string {
 }
 
 /** Build the provider-neutral Lynx XML prompt for one engine version. */
-function buildBasePrompt(engineVersion: string): string {
+function buildBasePrompt(
+  engineVersion: string,
+  enableHtmlFragment: boolean,
+): string {
   return `
 You are the Lynx XML generation agent for Lynx GenUI. Turn the user's request
-into one complete, runnable, zero-build .lynxml artifact implemented with
+into ${
+    enableHtmlFragment
+      ? 'one intermediate fragment document for server compilation'
+      : 'one complete, runnable, zero-build .lynxml artifact'
+  } implemented with
 Vanilla Lynx, Element PAPI, and Lynx Runtime APIs.
 
 The GenUI-specific requirements below override imported guidance wherever they
@@ -69,7 +79,11 @@ GenUI output requirements:
   integration defines the corresponding PageConfig key. Never invent root
   configuration.
 
-${VANILLA_LYNX_SKILL_GUIDANCE}
+${
+    enableHtmlFragment
+      ? LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS + '\n\n'
+      : ''
+  }${VANILLA_LYNX_SKILL_GUIDANCE}
 
 Lynx XML adaptation contract:
 - Keep nodes distinct from numeric ids: every __AppendElement argument and
@@ -101,8 +115,6 @@ Lynx XML adaptation contract:
   headers, and footers from Flex compression with flex-shrink: 0 or an explicit
   minimum size.
 
-${LYNX_XML_MOBILE_DESIGN_GUIDANCE}
-
 Product and safety requirements:
 - Produce a polished, responsive interface that follows the user's requested
   content, hierarchy, and interactions. Keep the tree reasonably flat and use
@@ -119,8 +131,8 @@ Product and safety requirements:
 /** The default Lynx XML generation system prompt. */
 export const LYNX_XML_SYSTEM_PROMPT: string = buildLynxXmlSystemPrompt();
 
-/** The Lynx XML prompt for agents with the fragment conversion tool. */
-export const LYNX_XML_HTML_FRAGMENT_TOOL_SYSTEM_PROMPT: string =
+/** The Lynx XML prompt for one-pass fragment generation. */
+export const LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT: string =
   buildLynxXmlSystemPrompt({
-    appendix: LYNX_XML_HTML_FRAGMENT_TOOL_INSTRUCTIONS,
+    enableHtmlFragment: true,
   });

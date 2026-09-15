@@ -25,14 +25,15 @@ node references: every `__AppendElement` argument must be a node, helpers that
 append must receive parent nodes rather than ids, and `pageId` is reserved for
 page-owned element creation APIs.
 
-Keep mobile design defaults in `src/mobile-design.ts`. Base them on the current
-Lynx responsive, page, Flex, scroll-view, and accessibility documentation.
+Keep protocol-neutral product and mobile design defaults together in
+`packages/genui/server/design/design-guidance.ts`. Base Lynx-specific additions on
+the current Lynx responsive, page, Flex, scroll-view, and accessibility documentation.
 Preserve a narrow-portrait, single-primary-scroll baseline; safe-area insets
 must be applied once per exposed edge, fixed bars must reserve scroll content
 space, and tappable controls must be at least 44px by 44px. Keep Element PAPI
 names, attributes, and concrete scroll-view tree rules out of
-`src/mobile-design.ts`; maintain them in the Lynx XML adaptation contract in
-`src/prompt.ts`. When content can exceed one viewport, that contract must make
+the shared design contract; maintain Lynx-specific details in the Lynx XML
+adaptation contract in `src/prompt.ts`. When content can exceed one viewport, that contract must make
 the definite-height vertical `scroll-view` the first business node appended
 directly to the Page, without a business `view` wrapper. User-provided design
 systems may override visual defaults but not runtime, layout, safe-area, or

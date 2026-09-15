@@ -37,6 +37,8 @@ export interface PersistedMessage {
   seq: number;
   role: 'user' | 'assistant' | 'system';
   content: string;
+  lynxXmlFragment?: string;
+  lynxXmlModelOutput?: string;
   previewPayloadUrls?: PreviewPayloadUrls;
   previewMetrics?: PreviewPerformanceMetrics;
   createdAt: number;

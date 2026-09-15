@@ -8,6 +8,7 @@ import {
   lynxDefaultDisplayLinearAttribute,
   lynxDefaultOverflowVisibleAttribute,
   lynxDisposedAttribute,
+  lynxEnableCSSInheritanceAttribute,
   lynxEntryNameAttribute,
   uniqueIdSymbol,
 } from '../../../constants.js';
@@ -85,6 +86,7 @@ export function createElementAPI(
   transform_vw: boolean,
   transform_vh: boolean,
   transform_rem: boolean,
+  config_enable_css_inheritance = false,
 ): ElementPAPIs {
   let wasmContext = new MainThreadWasmContext(
     rootDom,
@@ -298,6 +300,7 @@ export function createElementAPI(
         componentCSSID,
         componentID,
       );
+      wasmContext.set_page_element_unique_id(dom[uniqueIdSymbol]);
       if (config_default_overflow_visible) {
         dom.setAttribute(lynxDefaultOverflowVisibleAttribute, 'true');
       }
@@ -305,6 +308,9 @@ export function createElementAPI(
         dom.setAttribute(lynxDefaultDisplayLinearAttribute, 'false');
       }
       dom.setAttribute('part', 'page');
+      if (config_enable_css_inheritance) {
+        dom.setAttribute(lynxEnableCSSInheritanceAttribute, 'true');
+      }
       page = dom;
       return dom;
     },

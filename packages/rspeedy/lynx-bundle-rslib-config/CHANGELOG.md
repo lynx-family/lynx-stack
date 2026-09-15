@@ -1,5 +1,13 @@
 # @lynx-js/lynx-bundle-rslib-config
 
+## 0.8.1
+
+### Patch Changes
+
+- Wrap the main-thread assets of an external bundle by their `lynx:main-thread` mark instead of a filename pattern derived from the entry name, so an entry named like a path (`./App.js`) keeps its wrapper and no longer fails with `module is not defined`. ([#3807](https://github.com/lynx-family/lynx-stack/pull/3807))
+
+- Build an external bundle without a DSL plugin using `pluginLynx` alone. It now registers the runtime wrapper and the encoder a bundle needs to be loadable, and `defineExternalBundleRslibConfig` falls back to its own exported `LAYERS` when no DSL exposes them. ([#3814](https://github.com/lynx-family/lynx-stack/pull/3814))
+
 ## 0.8.0
 
 ### Minor Changes
