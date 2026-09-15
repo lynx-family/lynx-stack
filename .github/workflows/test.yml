@@ -224,7 +224,6 @@ jobs:
       runs-on: lynx-ubuntu-26.04-medium
       run: |
         pnpm --filter docs run generate
-        git add --intent-to-add docs
         if test "$(git status --porcelain -- docs/api-data docs/content | wc -l)" -gt 0 ; then
           echo "::error::API Docs Changes Detected"
           echo "The following generated docs have changed:"

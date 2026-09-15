@@ -64,7 +64,7 @@ Add an entry to `scripts/packages.ts` with the package directory and its type en
 
 ## Keeping the generated regions current
 
-CI runs `pnpm --filter docs check`, which regenerates everything and fails if `api-data/` or any generated region differs from what is committed. When a TSDoc comment changes, run `pnpm generate` and commit the result in the same PR.
+CI regenerates everything and fails if anything in `api-data/` or `content/` differs from what is committed. When a TSDoc comment changes, run `pnpm generate` and commit the result in the same PR.
 
 ## Sync to lynxjs.org
 

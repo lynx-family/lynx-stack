@@ -4,21 +4,6 @@
     "//"
   ],
   "tasks": {
-    "generate": {
-      "dependsOn": [
-        "//#build",
-        "^build"
-      ],
-      "inputs": [
-        "scripts/**",
-        "../packages/**/src/**",
-        "../packages/**/types/**"
-      ],
-      "outputs": [
-        "api-data/**",
-        "content/**"
-      ]
-    },
     "build": {
       "env": [
         "NODE_ENV"
@@ -38,13 +23,6 @@
       ],
       "cache": false,
       "persistent": true
-    },
-    "check": {
-      "dependsOn": [
-        "//#build",
-        "^build"
-      ],
-      "cache": false
     }
   }
 }
