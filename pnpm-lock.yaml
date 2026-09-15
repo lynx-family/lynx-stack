@@ -2428,6 +2428,9 @@ importers:
       '@lynx-js/lynx-bundle-rslib-config':
         specifier: workspace:*
         version: link:../lynx-bundle-rslib-config
+      '@lynx-js/lynx-stack-docs':
+        specifier: workspace:*
+        version: link:../../lynx-stack-docs
       '@lynx-js/motion':
         specifier: workspace:*
         version: link:../../motion
