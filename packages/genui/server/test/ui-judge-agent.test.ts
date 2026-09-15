@@ -11,7 +11,12 @@ import {
   test,
 } from '@rstest/core';
 
-import { evaluateScreenshot } from '../agent/common/ui-judge-agent.js';
+import { createJudgeScores } from './ui-judge-fixtures.js';
+import {
+  JUDGE_DIMENSIONS,
+  buildJudgePrompt,
+  evaluateScreenshot,
+} from '../agent/common/ui-judge-agent.js';
 import * as requestQueue from '../agent/common/ui-judge-request-queue.js';
 import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 
@@ -68,11 +73,11 @@ afterEach(() => {
 
 describe('GenUI screenshot evaluation', () => {
   test('uses the selected GenUI model and preserves weighted scoring', async () => {
-    for (const score of [4, 5, 4, 3, 2]) {
-      generate.mockResolvedValueOnce({
-        object: { score, reason: 'Evidence.', summary: 'Visible details.' },
-      });
-    }
+    generate.mockResolvedValueOnce({
+      object: Object.fromEntries(
+        Object.entries(createJudgeScores([4, 5, 4, 3, 2])).reverse(),
+      ),
+    });
     const result = await evaluateScreenshot({
       model: 'Selected',
       screenshotDataUrl,
@@ -82,7 +87,7 @@ describe('GenUI screenshot evaluation', () => {
     expect(result.score).toBe(4);
     expect(result.dimensions.map(({ score }) => score)).toEqual([5, 4, 3, 2]);
     expect(result.geqiScore).toBeCloseTo(65 / 85 * 100);
-    expect(generate).toHaveBeenCalledTimes(5);
+    expect(generate).toHaveBeenCalledTimes(1);
     for (const [messages, options] of generate.mock.calls) {
       expect(messages).toEqual([{
         role: 'user',
@@ -105,7 +110,7 @@ describe('GenUI screenshot evaluation', () => {
 
   test('uses the GenUI default when no model is selected', async () => {
     generate.mockResolvedValue({
-      object: { score: 3, reason: 'Evidence.', summary: 'Visible details.' },
+      object: createJudgeScores(3),
     });
     await evaluateScreenshot({ screenshotDataUrl, task: 'Build a greeting' });
     expect(agentModels[0]?.modelId).toBe('default-upstream');
@@ -115,14 +120,14 @@ describe('GenUI screenshot evaluation', () => {
     );
     for (const [, options] of generate.mock.calls) {
       expect(options).toMatchObject({
-        modelSettings: { maxOutputTokens: 2048 },
+        modelSettings: { maxOutputTokens: 4096 },
       });
     }
   });
 
   test('uses the shared GenUI fallback instead of treating an unknown name as an upstream ID', async () => {
     generate.mockResolvedValue({
-      object: { score: 3, reason: 'Evidence.', summary: 'Visible details.' },
+      object: createJudgeScores(3),
     });
     await evaluateScreenshot({
       model: 'unknown',
@@ -132,19 +137,49 @@ describe('GenUI screenshot evaluation', () => {
     expect(agentModels[0]?.modelId).toBe('default-upstream');
   });
 
-  test('rejects malformed scores and cancels the other dimensions', async () => {
-    generate.mockResolvedValue({
-      object: { score: 4.5, reason: 'Evidence.', summary: 'Visible details.' },
+  test('includes every dimension rubric in one prompt with screenshot-only evidence', () => {
+    const prompt = buildJudgePrompt({
+      screenshotDataUrl,
+      task: 'Build a greeting',
+      reference: 'Show Hello',
     });
+    expect(prompt).toContain('Reference answer or target: Show Hello');
+    expect(prompt).toContain('Do not assume hidden behavior');
+    expect(prompt).toContain('Assess each dimension separately');
+    for (const dimension of JUDGE_DIMENSIONS) {
+      expect(prompt).toContain(`Result key: ${dimension.id}`);
+      expect(prompt).toContain(dimension.focus);
+      for (const criterion of dimension.criteria) {
+        expect(prompt).toContain(criterion);
+      }
+    }
+  });
+
+  test.each(
+    [
+      ['fractional score', () => createJudgeScores([4, 4, 4, 4, 4.5])],
+      ['out-of-range score', () => createJudgeScores([4, 4, 4, 4, 6])],
+      ['missing dimension', () => {
+        const scores = createJudgeScores();
+        delete scores['architecture-writing'];
+        return scores;
+      }],
+      ['unknown dimension', () => ({ ...createJudgeScores(), unknown: {} })],
+      ['missing evidence', () => {
+        const scores = createJudgeScores();
+        scores['architecture-writing']!.reason = '';
+        return scores;
+      }],
+    ] as const,
+  )('rejects %s without retrying malformed output', async (_name, output) => {
+    generate.mockResolvedValue({ object: output() });
     await expect(
       evaluateScreenshot({ screenshotDataUrl, task: 'Build a greeting' }),
     ).rejects.toThrow();
-    expect(
-      generate.mock.calls.every(([, options]) => options.abortSignal?.aborted),
-    ).toBe(true);
+    expect(generate).toHaveBeenCalledTimes(1);
   });
 
-  test('forwards cancellation to every active model call', async () => {
+  test('forwards cancellation to the single model call', async () => {
     const controller = new AbortController();
     generate.mockImplementation((_messages, options) =>
       new Promise((_resolve, reject) => {
@@ -160,7 +195,7 @@ describe('GenUI screenshot evaluation', () => {
       task: 'Build a greeting',
       signal: controller.signal,
     });
-    await rstest.waitUntil(() => generate.mock.calls.length === 2);
+    await rstest.waitUntil(() => generate.mock.calls.length === 1);
     controller.abort();
     await expect(pending).rejects.toThrow('aborted');
     expect(
@@ -168,43 +203,37 @@ describe('GenUI screenshot evaluation', () => {
     ).toBe(true);
   });
 
-  test('waits for aborted dimensions to settle before releasing the scoring task', async () => {
+  test('waits for the cancelled model call to settle before releasing the scoring task', async () => {
+    const controller = new AbortController();
     let settle!: () => void;
     generate.mockImplementationOnce(() =>
       new Promise((resolve) => {
         settle = () =>
           resolve({
-            object: {
-              score: 4,
-              reason: 'Evidence.',
-              summary: 'Visible details.',
-            },
+            object: createJudgeScores(),
           });
       })
     );
-    generate.mockRejectedValue(new Error('Dimension failed'));
     let finished = false;
     const pending = evaluateScreenshot({
       screenshotDataUrl,
       task: 'Build a greeting',
+      signal: controller.signal,
     })
       .catch((error: unknown) => {
         finished = true;
         return error;
       });
-    await rstest.waitUntil(() =>
-      generate.mock.calls.length >= 2
-      && generate.mock.calls.every(([, options]) =>
-        options.abortSignal?.aborted
-      )
-    );
+    await rstest.waitUntil(() => generate.mock.calls.length === 1);
+    controller.abort();
+    await Promise.resolve();
     expect(finished).toBe(false);
     settle();
-    expect(await pending).toEqual(new Error('Dimension failed'));
+    expect(await pending).toMatchObject({ name: 'AbortError' });
     expect(finished).toBe(true);
   });
 
-  test('retries only a failed dimension, including SDK result errors', async () => {
+  test('retries the complete scoring request after SDK result errors', async () => {
     let now = 0;
     const waits: number[] = [];
     const onPhase = rstest.fn();
@@ -224,7 +253,7 @@ describe('GenUI screenshot evaluation', () => {
       error: { statusCode: 429, message: 'RPM limit exceeded' },
     });
     generate.mockResolvedValue({
-      object: { score: 4, reason: 'Evidence.', summary: 'Visible details.' },
+      object: createJudgeScores(),
     });
     const result = await evaluateScreenshot({
       model: 'Selected',
@@ -234,7 +263,7 @@ describe('GenUI screenshot evaluation', () => {
     });
     expect(result).toMatchObject({ score: 4, geqiScore: 80 });
     expect(result.dimensions).toHaveLength(4);
-    expect(generate).toHaveBeenCalledTimes(6);
+    expect(generate).toHaveBeenCalledTimes(2);
     expect(waits).toContain(60_000);
     expect(onPhase).toHaveBeenCalledWith('judge-retry');
     expect(onPhase).toHaveBeenLastCalledWith('judge');
@@ -247,6 +276,6 @@ describe('GenUI screenshot evaluation', () => {
       ),
     )
       .toHaveLength(2);
-    expect(new Set(prompts).size).toBe(5);
+    expect(new Set(prompts).size).toBe(1);
   });
 });

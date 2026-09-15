@@ -7,6 +7,9 @@ import { afterEach, expect, rstest, test } from '@rstest/core';
 import { createA2UIBenchAdapter } from '../service/a2ui/a2ui-bench-adapter.js';
 import { resolveBenchCatalog } from '../service/a2ui/a2ui-bench-catalog.js';
 import type { ProtocolBenchAdapterInput } from '../service/common/bench/protocol-adapter.js';
+import * as benchRetry from '../service/common/bench/retry.js';
+import { runBenchJob } from '../service/common/bench/runner.js';
+import { getBenchJobStore } from '../service/common/bench/store.js';
 import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 import { GenerationUpstreamError } from '../service/common/result.js';
 import { createHtmlBenchAdapter } from '../service/html/html-bench-adapter.js';
@@ -29,29 +32,58 @@ const input: ProtocolBenchAdapterInput = {
   maxAttempts: 4,
   provider: { model: 'Retry' },
 };
+
+function createNativeJob(maxRepairAttempts = 2) {
+  return getBenchJobStore().createJob({
+    groups: [{
+      id: 'native',
+      name: 'Native A2UI',
+      enabled: true,
+      role: 'control',
+      variable: 'custom',
+      protocol: 'a2ui',
+      profile: 'native',
+      model: 'Retry',
+    }],
+    provider: {},
+    scenarios: [input.scenario],
+    settings: {
+      judgeEnabled: false,
+      renderMetricsEnabled: false,
+      repairEnabled: true,
+      maxRepairAttempts,
+      repeats: 1,
+    },
+  }, 1);
+}
+
+function a2uiSource(matchedCore = true): string {
+  return JSON.stringify([
+    {
+      version: 'v0.9',
+      createSurface: {
+        surfaceId: 'main',
+        catalogId: resolveBenchCatalog('Full Catalog').id
+          + (matchedCore ? '#matched-core' : ''),
+      },
+    },
+    {
+      version: 'v0.9',
+      updateComponents: {
+        surfaceId: 'main',
+        components: [{
+          id: 'root',
+          component: 'Text',
+          text: 'Hello',
+          variant: 'body',
+        }],
+      },
+    },
+  ]);
+}
+
 const protocols = [
-  ['a2ui', createA2UIBenchAdapter, () =>
-    JSON.stringify([
-      {
-        version: 'v0.9',
-        createSurface: {
-          surfaceId: 'main',
-          catalogId: `${resolveBenchCatalog('Full Catalog').id}#matched-core`,
-        },
-      },
-      {
-        version: 'v0.9',
-        updateComponents: {
-          surfaceId: 'main',
-          components: [{
-            id: 'root',
-            component: 'Text',
-            text: 'Hello',
-            variant: 'body',
-          }],
-        },
-      },
-    ])],
+  ['a2ui', createA2UIBenchAdapter, a2uiSource],
   ['openui', createOpenUIBenchAdapter, () => 'root = Column([Text("Hello")])'],
   [
     'html',
@@ -195,6 +227,137 @@ function modelResponse(
 }
 
 for (const api of ['chat', 'responses'] as const) {
+  test(`native A2UI ${api} owns retries for 500 and 429 without multiplying SDK calls`, async () => {
+    configure(api);
+    const calls: string[] = [];
+    const waits: number[] = [];
+    rstest.spyOn(benchRetry, 'waitForBenchRetry').mockImplementation(delay => {
+      waits.push(delay);
+      return Promise.resolve();
+    });
+    rstest.spyOn(globalThis, 'fetch').mockImplementation((_url, init) => {
+      if (typeof init?.body !== 'string') {
+        throw new Error('Expected a JSON body');
+      }
+      calls.push(init.body);
+      const body = JSON.parse(init.body) as Record<string, unknown>;
+      expect(body.model).toBe(model);
+      expect(api === 'chat' ? body.reasoning_effort : body.reasoning).toEqual(
+        api === 'chat' ? 'low' : { effort: 'low' },
+      );
+      expect(calls.length).toBe(waits.length + 1);
+      return Promise.resolve(
+        calls.length < 3
+          ? Response.json({
+            error: { message: 'Try later', type: 'server_error' },
+          }, {
+            status: calls.length === 1 ? 500 : 429,
+            headers: calls.length === 2 ? { 'Retry-After': '3' } : {},
+          })
+          : modelResponse(api, a2uiSource(false), body.stream === true),
+      );
+    });
+    const job = createNativeJob();
+    await runBenchJob(job.id);
+    expect(calls).toHaveLength(3);
+    expect(waits).toEqual([1_000, 3_000]);
+    expect(calls.every(body => body === calls[0])).toBe(true);
+    expect(job.report?.results[0]).toMatchObject({
+      ok: true,
+      attempts: 3,
+      tokens: 12,
+      errors: [],
+    });
+  });
+
+  test.each(
+    [
+      [400, 2, 1],
+      [401, 2, 1],
+      [500, 2, 3],
+      [500, 0, 1],
+    ] as const,
+  )(
+    `native A2UI ${api} stops HTTP %s with repair budget %s after %s requests`,
+    async (status, maxRepairAttempts, expectedCalls) => {
+      configure(api);
+      const sleep = rstest.spyOn(benchRetry, 'waitForBenchRetry')
+        .mockResolvedValue(undefined);
+      const fetch = rstest.spyOn(globalThis, 'fetch').mockImplementation(() =>
+        Promise.resolve(
+          Response.json(
+            { error: { message: 'Upstream rejected the request' } },
+            {
+              status,
+              headers: { 'Retry-After': '1', 'x-secret': 'must-not-leak' },
+            },
+          ),
+        )
+      );
+      const job = createNativeJob(maxRepairAttempts);
+      await runBenchJob(job.id);
+      expect(fetch).toHaveBeenCalledTimes(expectedCalls);
+      expect(sleep).toHaveBeenCalledTimes(expectedCalls - 1);
+      expect(job.report?.results[0]).toMatchObject({
+        ok: false,
+        attempts: expectedCalls,
+        tokens: 0,
+        errors: ['Upstream rejected the request'],
+        finishReason: 'error',
+      });
+      expect(JSON.stringify(job.report)).not.toContain('must-not-leak');
+    },
+  );
+
+  test(`native A2UI ${api} preserves validation usage when a repair ends in HTTP 500`, async () => {
+    configure(api);
+    const sleep = rstest.spyOn(benchRetry, 'waitForBenchRetry')
+      .mockResolvedValue(undefined);
+    const fetch = rstest.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(modelResponse(api, 'invalid', false))
+      .mockResolvedValueOnce(
+        Response.json({ error: { message: 'Internal error' } }, {
+          status: 500,
+        }),
+      );
+    const job = createNativeJob(1);
+    await runBenchJob(job.id);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(sleep).not.toHaveBeenCalled();
+    expect(job.report?.results[0]).toMatchObject({
+      ok: false,
+      attempts: 2,
+      tokens: 12,
+      errors: ['Internal error'],
+      finishReason: 'error',
+    });
+  });
+
+  test(`native A2UI ${api} cancels during backoff without sending another request`, async () => {
+    configure(api);
+    const job = createNativeJob();
+    const realWait = benchRetry.waitForBenchRetry;
+    const wait = rstest.spyOn(benchRetry, 'waitForBenchRetry')
+      .mockImplementation(
+        (delay, signal) =>
+          realWait(delay, signal, () => {
+            getBenchJobStore().cancelJob(job.id);
+            return new Promise<void>(() => undefined);
+          }),
+      );
+    const fetch = rstest.spyOn(globalThis, 'fetch').mockImplementation(() =>
+      Promise.resolve(
+        Response.json({ error: { message: 'Try later' } }, { status: 500 }),
+      )
+    );
+    await runBenchJob(job.id);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(wait).toHaveBeenCalledTimes(1);
+    expect(job.status).toBe('cancelled');
+    expect(job.report?.status).toBe('cancelled');
+    expect(job.report?.results).toEqual([]);
+  });
+
   test.each(protocols)(
     `%s ${api} retries only at the adapter layer and honors provider backoff`,
     async (_name, create, output) => {

@@ -18,6 +18,7 @@ import type {
 } from './protocol-adapter.js';
 import type { ProtocolBenchScenario } from './protocol-types.js';
 import { sanitizeBenchPlanValue } from './redaction.js';
+import { resolveBenchRetryDelay, waitForBenchRetry } from './retry.js';
 import { getBenchJobStore } from './store.js';
 import type {
   BenchCatalogLabel,
@@ -58,6 +59,7 @@ import { createLynxXmlBenchAdapter } from '../../lynx-xml/lynx-xml-bench-adapter
 import { createOpenUIBenchAdapter } from '../../openui/openui-bench-adapter.js';
 import { buildGenerationRepairMessages } from '../generation-repair.js';
 import { defaultModelName } from '../model-config.js';
+import { GenerationUpstreamError } from '../result.js';
 import type { ChatMessage } from '../types.js';
 
 interface BenchRunItem {
@@ -190,6 +192,7 @@ async function generateA2UINative(
     5,
     Math.max(1, request.settings.maxRepairAttempts + 1),
   );
+  let attempts = 0;
   let lastText = '';
   let lastErrors: string[] = [];
   let lastFinishReason: unknown;
@@ -202,23 +205,42 @@ async function generateA2UINative(
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     signal.throwIfAborted();
-    const generated = await getA2UIAgentService().generateRaw(
-      conversation,
-      {
-        resourceId: `bench:${item.group.id}:${runId}:attempt-${attempt}`,
-        apiKey: request.provider.apiKey,
-        baseURL: request.provider.baseURL,
-        model,
-        api: request.provider.api,
-        catalog,
-        disableAgentCache: true,
-        enableWebSearch: false,
-        enableImageGeneration: false,
-      },
-      undefined,
-      signal,
-      imageGenerationScope,
-    );
+    attempts = attempt;
+    let generated: { text: string; usage: unknown; finishReason: unknown };
+    try {
+      generated = await getA2UIAgentService().generateRaw(
+        conversation,
+        {
+          resourceId: `bench:${item.group.id}:${runId}:attempt-${attempt}`,
+          apiKey: request.provider.apiKey,
+          baseURL: request.provider.baseURL,
+          model,
+          api: request.provider.api,
+          catalog,
+          disableAgentCache: true,
+          maxRetries: 0,
+          enableWebSearch: false,
+          enableImageGeneration: false,
+        },
+        undefined,
+        signal,
+        imageGenerationScope,
+      );
+    } catch (error) {
+      signal.throwIfAborted();
+      const failed = error instanceof GenerationUpstreamError
+        ? error.result
+        : undefined;
+      usage.push(failed?.usage);
+      lastFinishReason = failed?.finishReason ?? 'error';
+      lastErrors = [error instanceof Error ? error.message : String(error)];
+      const delayMs = resolveBenchRetryDelay(error, attempt);
+      if (attempt < maxAttempts && delayMs !== undefined) {
+        await waitForBenchRetry(delayMs, signal);
+        continue;
+      }
+      break;
+    }
     usage.push(generated.usage);
     lastText = generated.text;
     lastFinishReason = generated.finishReason;
@@ -250,7 +272,7 @@ async function generateA2UINative(
   }
 
   return {
-    attempts: maxAttempts,
+    attempts,
     errors: lastErrors,
     finishReason: lastFinishReason,
     messages: [],

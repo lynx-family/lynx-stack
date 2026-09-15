@@ -364,7 +364,62 @@ describe('local historical Bench reports', () => {
 });
 
 describe('fixed read-only report template', () => {
-  test('opens all plan and run details by default', () => {
+  test('groups flat screenshots in plan order while retaining older unlisted results', () => {
+    const report = reportFixture();
+    report.groups.push({
+      ...report.groups[0]!,
+      id: 'experiment',
+      name: 'Experiment',
+      role: 'experiment',
+    });
+    report.scenarios.push({ ...DEFAULT_BENCH_SCENARIOS[1]! });
+    const result = report.results[0]!;
+    report.results = [
+      { ...result, id: 'weather-2', repeatIndex: 2 },
+      {
+        ...result,
+        id: 'legacy',
+        groupId: 'legacy-group',
+        groupName: 'Archived group',
+        scenarioId: 'legacy-scenario',
+        scenarioName: 'Archived scenario',
+      },
+      {
+        ...result,
+        id: 'experiment-weather',
+        groupId: 'experiment',
+        groupName: 'Experiment',
+      },
+      {
+        ...result,
+        id: 'product',
+        scenarioId: report.scenarios[1]!.id,
+        scenarioName: report.scenarios[1]!.name,
+      },
+      result,
+      { ...result, id: 'missing', screenshotDataUrl: undefined },
+    ];
+    const originalOrder = report.results.map((item) => item.id);
+    const markup = renderToStaticMarkup(
+      React.createElement(PublishedReportPage, { report }),
+    );
+    expect(markup.match(/class="publishedReportScreenshotGroup"/gu))
+      .toHaveLength(3);
+    expect(
+      [...markup.matchAll(/<img[^>]*alt="([^"]+)"/gu)].map((match) => match[1]),
+    )
+      .toEqual([
+        'Baseline · Weather Refresh Card · #1',
+        'Baseline · Weather Refresh Card · #2',
+        'Baseline · Product Purchase Card · #1',
+        'Experiment · Weather Refresh Card · #1',
+        'Archived group · Archived scenario · #1',
+      ]);
+    expect(markup).not.toContain('benchScreenshotMatrix');
+    expect(report.results.map((item) => item.id)).toEqual(originalOrder);
+  });
+
+  test('collapses all plan and run details by default', () => {
     const report = reportFixture();
     const markup = renderToStaticMarkup(
       React.createElement(PublishedReportPage, { report }),
@@ -380,7 +435,7 @@ describe('fixed read-only report template', () => {
     expect(disclosures).toHaveLength(
       report.scenarios.length + report.groups.length + report.results.length,
     );
-    expect(disclosures.every((tag) => tag.includes('open=""'))).toBe(true);
+    expect(disclosures.every((tag) => !tag.includes('open=""'))).toBe(true);
   });
   test.each([
     'https://tracker.example.test/image.png',
@@ -413,7 +468,9 @@ describe('fixed read-only report template', () => {
       ]
     ) expect(html).toContain(text);
     expect(html).toContain(`src="${PNG}"`);
-    expect(html).toContain('View screenshots (1)');
+    expect(html).not.toContain('View screenshots');
+    expect(html).not.toContain('role="dialog"');
+    expect(html).not.toContain('benchScreenshotMatrixWrap');
     expect(html).not.toMatch(
       /<input|<textarea|Start run|New Bench|2026-07-30-matched-core|a2ui-comparisons/u,
     );

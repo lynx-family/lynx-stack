@@ -69,7 +69,8 @@ export GENUI_MODEL_CONFIG_JSON='{
   supported output ceiling. All generation agents share a 16384-token per-call
   target through `buildOpenAIRunOptions`, clamped to the effective model ceiling.
   This includes raw generation, streaming, continuations, and repairs. Judge
-  requests use the same resolver with a 2048-token target. Reasoning-only
+  requests score all five dimensions together using the same resolver with a
+  4096-token target. Reasoning-only
   recovery may increase the requested budget, within that same ceiling.
 - `reasoningEffort` is optional per model.
 - `input_price`, `cached_price`, and `output_price` optionally set prices per
@@ -376,15 +377,18 @@ expose these routes publicly without authentication.
 
 Screenshot model scoring has a separate process-local outbound queue, shared
 by resolved upstream base URL and model across Bench jobs. It allows two active
-model calls and starts at most one per second. Each of the five dimensions is
-evaluated independently. Scoring uses prompt-injected JSON instructions with
+model calls and starts at most one per second. One request contains the screenshot
+once and returns visual correctness plus all four GEQI dimension scores, each
+with its own criteria and evidence. Keep weights and aggregate calculation
+server-owned. Scoring uses prompt-injected JSON instructions with
 strict local schema validation, so the selected model need not support native
-`json_schema` response formats. Only a failed dimension is retried, for at most three
-attempts with SDK retries disabled. `Retry-After` takes precedence; without it,
+`json_schema` response formats. Require all five fixed dimension keys and reject
+missing or invalid scores. A transient failure retries the complete scoring
+request, for at most three attempts with SDK retries disabled. `Retry-After` takes precedence; without it,
 HTTP 429 pauses the shared queue for 60 seconds, while other transient errors
 use bounded exponential backoff. Waits honor the Judge abort/deadline signal.
-Completed dimensions and the captured screenshot are reused. A final scoring
-failure does not restart capture or rerun successful dimensions. This queue
+Retries reuse the captured screenshot. A final scoring failure does not restart
+capture. This queue
 does not govern generation calls or other server replicas using the same
 upstream quota.
 
