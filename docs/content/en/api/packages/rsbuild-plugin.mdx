@@ -133,7 +133,7 @@ is enabled.
 ### `isPluginLynxRegistered()` \{#ispluginlynxregistered\}
 
 ```ts
-isPluginLynxRegistered(host: { isPluginExists: any }, environments: string[]): boolean
+function isPluginLynxRegistered(host: { isPluginExists: any }, environments: string[]): boolean
 ```
 
 Whether the Lynx build engine is already registered.
@@ -152,7 +152,7 @@ one — registered on an environment instead.
 ### `pluginLynx()` \{#pluginlynx\}
 
 ```ts
-pluginLynx(options: LynxPluginOptions): RsbuildPlugin[]
+function pluginLynx(options: LynxPluginOptions): RsbuildPlugin[]
 ```
 
 *No description yet.*

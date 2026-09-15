@@ -13,7 +13,7 @@ ReactLynx 在 React 之上新增的 Hooks，以及为适配双线程模型而重
 ### `useInitData()` \{#useinitdata\}
 
 ```ts
-useInitData(): InitData
+function useInitData(): InitData
 ```
 
 用于获取 `initData` 的 React Hook。
@@ -32,7 +32,7 @@ function App() {
 ### `useInitDataChanged()` \{#useinitdatachanged\}
 
 ```ts
-useInitDataChanged(callback: (data: InitData) => void): void
+function useInitDataChanged(callback: (data: InitData) => void): void
 ```
 
 用于在 `initData` 变化时获得通知的 React Hook。
@@ -52,7 +52,7 @@ function App() {
 ### `useGlobalProps()` \{#useglobalprops\}
 
 ```ts
-useGlobalProps(): GlobalProps
+function useGlobalProps(): GlobalProps
 ```
 
 用于获取 `lynx.__globalProps` 的 React Hook。
@@ -71,7 +71,7 @@ function App() {
 ### `useGlobalPropsChanged()` \{#useglobalpropschanged\}
 
 ```ts
-useGlobalPropsChanged(callback: (data: GlobalProps) => void): void
+function useGlobalPropsChanged(callback: (data: GlobalProps) => void): void
 ```
 
 用于在 `__globalProps` 变化时获得通知的 React Hook。
@@ -92,7 +92,7 @@ function App() {
 ### `useLynxGlobalEventListener()` \{#uselynxglobaleventlistener\}
 
 ```ts
-useLynxGlobalEventListener(eventName: string, listener: T): void
+function useLynxGlobalEventListener(eventName: string, listener: T): void
 ```
 
 `useLynxGlobalEventListener` 帮助你尽早地 `addListener`。
@@ -124,9 +124,9 @@ function App() {
 ### `useMainThreadRef()` \{#usemainthreadref\}
 
 ```ts
-useMainThreadRef(initValue: T): MainThreadRef<T>
-useMainThreadRef(initValue: T | null): RefObject<T>
-useMainThreadRef(): MainThreadRef<T | undefined>
+function useMainThreadRef(initValue: T): MainThreadRef<T>
+function useMainThreadRef(initValue: T | null): RefObject<T>
+function useMainThreadRef(): MainThreadRef<T | undefined>
 ```
 
 创建一个 `MainThreadRef`。
@@ -169,7 +169,7 @@ export function App() {
 ### `useEffect()` \{#useeffect\}
 
 ```ts
-useEffect(effect: EffectCallback, deps?: DependencyList): void
+function useEffect(effect: EffectCallback, deps?: DependencyList): void
 ```
 
 接收一个包含命令式、可能带有副作用代码的函数。
@@ -183,7 +183,7 @@ useEffect(effect: EffectCallback, deps?: DependencyList): void
 ### `useLayoutEffect()` <span className="api-badge api-badge-deprecated">已废弃</span> \{#uselayouteffect\}
 
 ```ts
-useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void
+function useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void
 ```
 
 :::warning 已废弃

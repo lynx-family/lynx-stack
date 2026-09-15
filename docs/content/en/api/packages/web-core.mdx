@@ -29,7 +29,7 @@ The reference below covers the `@lynx-js/web-core/client` entry, which defines t
 ### `html()` \{#html\}
 
 ```ts
-html(strings: TemplateStringsArray, values: any[]): string
+function html(strings: TemplateStringsArray, values: any[]): string
 ```
 
 *No description yet.*
@@ -44,7 +44,7 @@ html(strings: TemplateStringsArray, values: any[]): string
 ### `registerAttributeHandler()` \{#registerattributehandler\}
 
 ```ts
-registerAttributeHandler(key: string, args_0: boolean): (this: T, target: AttributeChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any
+function registerAttributeHandler(key: string, args_0: boolean): (this: T, target: AttributeChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any
 ```
 
 *No description yet.*
@@ -59,7 +59,7 @@ registerAttributeHandler(key: string, args_0: boolean): (this: T, target: Attrib
 ### `registerEventEnableStatusChangeHandler()` \{#registereventenablestatuschangehandler\}
 
 ```ts
-registerEventEnableStatusChangeHandler(key: string): (this: T, target: EventStatusChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any
+function registerEventEnableStatusChangeHandler(key: string): (this: T, target: EventStatusChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any
 ```
 
 *No description yet.*
@@ -73,7 +73,7 @@ registerEventEnableStatusChangeHandler(key: string): (this: T, target: EventStat
 ### `registerStyleChangeHandler()` \{#registerstylechangehandler\}
 
 ```ts
-registerStyleChangeHandler(key: string): (this: T, target: StyleChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any
+function registerStyleChangeHandler(key: string): (this: T, target: StyleChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any
 ```
 
 *No description yet.*
@@ -87,7 +87,7 @@ registerStyleChangeHandler(key: string): (this: T, target: StyleChangeHandler | 
 ### `bindSwitchToEventListener()` \{#bindswitchtoeventlistener\}
 
 ```ts
-bindSwitchToEventListener(this: T, elementGetter: (this: T) => HTMLElement, eventName: string, eventListener: EventListener, options?: AddEventListenerOptions): (this: T, enable: boolean) => void
+function bindSwitchToEventListener(this: T, elementGetter: (this: T) => HTMLElement, eventName: string, eventListener: EventListener, options?: AddEventListenerOptions): (this: T, enable: boolean) => void
 ```
 
 *No description yet.*
@@ -105,7 +105,7 @@ bindSwitchToEventListener(this: T, elementGetter: (this: T) => HTMLElement, even
 ### `bindToAttribute()` \{#bindtoattribute\}
 
 ```ts
-bindToAttribute(this: T, elementGetter: (this: T) => HTMLElement, attributeName: string, valProcessor?: (value: string | null) => string | null): (this: T, newVal: string | null) => void
+function bindToAttribute(this: T, elementGetter: (this: T) => HTMLElement, attributeName: string, valProcessor?: (value: string | null) => string | null): (this: T, newVal: string | null) => void
 ```
 
 *No description yet.*
@@ -122,7 +122,7 @@ bindToAttribute(this: T, elementGetter: (this: T) => HTMLElement, attributeName:
 ### `bindToStyle()` \{#bindtostyle\}
 
 ```ts
-bindToStyle(this: T, elementGetter: (this: T) => HTMLElement, styleName: string, valProcessor?: (value: string) => string, important?: boolean): (this: T, newVal: string | null) => void
+function bindToStyle(this: T, elementGetter: (this: T) => HTMLElement, styleName: string, valProcessor?: (value: string) => string, important?: boolean): (this: T, newVal: string | null) => void
 ```
 
 *No description yet.*
@@ -140,7 +140,7 @@ bindToStyle(this: T, elementGetter: (this: T) => HTMLElement, styleName: string,
 ### `boostedQueueMicrotask()` \{#boostedqueuemicrotask\}
 
 ```ts
-boostedQueueMicrotask(foo: CallableFunction, that?: any): void
+function boostedQueueMicrotask(foo: CallableFunction, that?: any): void
 ```
 
 *No description yet.*
@@ -153,7 +153,7 @@ boostedQueueMicrotask(foo: CallableFunction, that?: any): void
 ### `Component()` \{#component\}
 
 ```ts
-Component(tag: string, attributeReactiveClassesOptional: (AttributeReactiveClass<T> | undefined)[], template?: string): (target: T, context: ClassDecoratorContext<T>) => T
+function Component(tag: string, attributeReactiveClassesOptional: (AttributeReactiveClass<T> | undefined)[], template?: string): (target: T, context: ClassDecoratorContext<T>) => T
 ```
 
 *No description yet.*
@@ -169,8 +169,8 @@ Component(tag: string, attributeReactiveClassesOptional: (AttributeReactiveClass
 ### `genDomGetter()` \{#gendomgetter\}
 
 ```ts
-genDomGetter(queryableElementGetter: () => ShadowRoot, selector: string): InternalDomGetter<T>
-genDomGetter(queryableElementGetter: () => HTMLElement, selector: string): PlainDomGetter<T>
+function genDomGetter(queryableElementGetter: () => ShadowRoot, selector: string): InternalDomGetter<T>
+function genDomGetter(queryableElementGetter: () => HTMLElement, selector: string): PlainDomGetter<T>
 ```
 
 *No description yet.*

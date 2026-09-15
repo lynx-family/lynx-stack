@@ -30,7 +30,7 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 ### `generate()` \{#generate\}
 
 ```ts
-generate(options: CodegenOptions): GeneratedFile[]
+function generate(options: CodegenOptions): GeneratedFile[]
 ```
 
 Builds the generated JS facade and platform spec file contents for a library package.
@@ -44,7 +44,7 @@ Builds the generated JS facade and platform spec file contents for a library pac
 ### `parseNativeModules()` \{#parsenativemodules\}
 
 ```ts
-parseNativeModules(source: string, filename: string): NativeModuleSpec[]
+function parseNativeModules(source: string, filename: string): NativeModuleSpec[]
 ```
 
 Parses native module declarations marked with `@lynxmodule` from a TypeScript declaration source.
@@ -59,7 +59,7 @@ Parses native module declarations marked with `@lynxmodule` from a TypeScript de
 ### `runCodegen()` \{#runcodegen\}
 
 ```ts
-runCodegen(options: CodegenOptions): GeneratedFile[]
+function runCodegen(options: CodegenOptions): GeneratedFile[]
 ```
 
 Writes generated files to disk and returns the generated file descriptors.

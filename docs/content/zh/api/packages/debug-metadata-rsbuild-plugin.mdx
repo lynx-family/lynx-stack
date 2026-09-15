@@ -31,7 +31,7 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 ### `pluginLynxDebugMetadata()` \{#pluginlynxdebugmetadata\}
 
 ```ts
-pluginLynxDebugMetadata(): RsbuildPlugin
+function pluginLynxDebugMetadata(): RsbuildPlugin
 ```
 
 为每个 Lynx 模板构建注册 `debug-metadata.json` 的输出，
@@ -64,7 +64,7 @@ GET .../*.css.map   → transparently forwarded to ?field=source-map
 ### `rewriteSourceMappingURLs()` \{#rewritesourcemappingurls\}
 
 ```ts
-rewriteSourceMappingURLs(compilation: Compilation, args: { chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }, options?: RewriteSourceMappingURLsOptions): void
+function rewriteSourceMappingURLs(compilation: Compilation, args: { chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }, options?: RewriteSourceMappingURLsOptions): void
 ```
 
 将当前模板中每个 JS 产物的 `//# sourceMappingURL=...` 指令重写为

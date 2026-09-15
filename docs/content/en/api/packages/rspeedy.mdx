@@ -27,7 +27,7 @@ await rspeedy.build()
 ### `createRspeedy()` \{#createrspeedy\}
 
 ```ts
-createRspeedy(options: CreateRspeedyOptions): Promise<RspeedyInstance>
+function createRspeedy(options: CreateRspeedyOptions): Promise<RspeedyInstance>
 ```
 
 The `createRspeedy` method can let you create a Rspeedy instance and you can customize the build or development process in Node.js Runtime.
@@ -50,10 +50,10 @@ void async function () {
 ### `defineConfig()` \{#defineconfig\}
 
 ```ts
-defineConfig(config: Config): Config
-defineConfig(config: (params: ConfigParams) => Config): (params: ConfigParams) => Config
-defineConfig(config: Promise<Config>): Promise<Config>
-defineConfig(config: (params: ConfigParams) => Promise<Config>): (params: ConfigParams) => Promise<Config>
+function defineConfig(config: Config): Config
+function defineConfig(config: (params: ConfigParams) => Config): (params: ConfigParams) => Config
+function defineConfig(config: Promise<Config>): Promise<Config>
+function defineConfig(config: (params: ConfigParams) => Promise<Config>): (params: ConfigParams) => Promise<Config>
 ```
 
 The `defineConfig` method is a helper function used to get TypeScript intellisense.
@@ -76,7 +76,7 @@ export default defineConfig({
 ### `loadConfig()` \{#loadconfig\}
 
 ```ts
-loadConfig(loadConfigOptions: LoadConfigOptions): Promise<LoadConfigResult>
+function loadConfig(loadConfigOptions: LoadConfigOptions): Promise<LoadConfigResult>
 ```
 
 Load the build config by the config path.
@@ -99,7 +99,7 @@ void async function () {
 ### `mergeRspeedyConfig()` \{#mergerspeedyconfig\}
 
 ```ts
-mergeRspeedyConfig(configs: Config[]): Config
+function mergeRspeedyConfig(configs: Config[]): Config
 ```
 
 Merge multiple Rspeedy configuration objects.

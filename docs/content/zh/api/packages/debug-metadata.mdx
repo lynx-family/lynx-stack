@@ -33,7 +33,7 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 ### `assertUiNode()` \{#assertuinode\}
 
 ```ts
-assertUiNode(value: unknown, path: string): asserts value is UiNode
+function assertUiNode(value: unknown, path: string): asserts value is UiNode
 ```
 
 断言一个解析后的值是 [`UiNode`](#uinode) 树。
@@ -56,7 +56,7 @@ assertUiNode(value: unknown, path: string): asserts value is UiNode
 ### `buildUiSourceMapLookup()` \{#builduisourcemaplookup\}
 
 ```ts
-buildUiSourceMapLookup(uiSourceMap: UiSourceMapData): Map<number, Omit<UiSourceLocation, "repo">>
+function buildUiSourceMapLookup(uiSourceMap: UiSourceMapData): Map<number, Omit<UiSourceLocation, "repo">>
 ```
 
 根据 [`UiSourceMapData`](#uisourcemapdata) 构建
@@ -73,7 +73,7 @@ buildUiSourceMapLookup(uiSourceMap: UiSourceMapData): Map<number, Omit<UiSourceL
 ### `findArtifact()` \{#findartifact\}
 
 ```ts
-findArtifact(metadata: DebugMetadataAsset, query: { filename: string }): Artifact | undefined
+function findArtifact(metadata: DebugMetadataAsset, query: { filename: string }): Artifact | undefined
 ```
 
 按 `filename`（例如 `main-thread.js`、
@@ -89,7 +89,7 @@ findArtifact(metadata: DebugMetadataAsset, query: { filename: string }): Artifac
 ### `findBytecodeDebugInfo()` \{#findbytecodedebuginfo\}
 
 ```ts
-findBytecodeDebugInfo(metadata: DebugMetadataAsset, query: { filename: string }): BytecodeDebugInfoSource | undefined
+function findBytecodeDebugInfo(metadata: DebugMetadataAsset, query: { filename: string }): BytecodeDebugInfoSource | undefined
 ```
 
 查找附加在名为
@@ -105,7 +105,7 @@ findBytecodeDebugInfo(metadata: DebugMetadataAsset, query: { filename: string })
 ### `findSourceMap()` \{#findsourcemap\}
 
 ```ts
-findSourceMap(metadata: DebugMetadataAsset, query: { filename?: string; key?: string; path?: string }): SourceMapDebugSource | undefined
+function findSourceMap(metadata: DebugMetadataAsset, query: { filename?: string; key?: string; path?: string }): SourceMapDebugSource | undefined
 ```
 
 按 `path`、`filename` 或 `key` 查找 `source-map` 类型的
@@ -123,7 +123,7 @@ findSourceMap(metadata: DebugMetadataAsset, query: { filename?: string; key?: st
 ### `isUiSourceMapData()` \{#isuisourcemapdata\}
 
 ```ts
-isUiSourceMapData(value: unknown): value is UiSourceMapData
+function isUiSourceMapData(value: unknown): value is UiSourceMapData
 ```
 
 运行时检查解析后的值是否符合
@@ -140,7 +140,7 @@ isUiSourceMapData(value: unknown): value is UiSourceMapData
 ### `knownFields()` \{#knownfields\}
 
 ```ts
-knownFields(): string[]
+function knownFields(): string[]
 ```
 
 当前已注册的所有字段名。可用于 `400 invalid_field`
@@ -151,7 +151,7 @@ knownFields(): string[]
 ### `normalizeRepo()` \{#normalizerepo\}
 
 ```ts
-normalizeRepo(remoteUrl: string | null): string | null
+function normalizeRepo(remoteUrl: string | null): string | null
 ```
 
 将 git remote URL（SSH 或 HTTP 形式）规范化为 `owner/repo`
@@ -167,7 +167,7 @@ normalizeRepo(remoteUrl: string | null): string | null
 ### `remapUiTree()` \{#remapuitree\}
 
 ```ts
-remapUiTree(root: UiNode, loadMetadata: DebugMetadataLoader): Promise<RemappedUiNode>
+function remapUiTree(root: UiNode, loadMetadata: DebugMetadataLoader): Promise<RemappedUiNode>
 ```
 
 反向解析 Lynx 引擎导出的 UI 节点树。
@@ -188,7 +188,7 @@ remapUiTree(root: UiNode, loadMetadata: DebugMetadataLoader): Promise<RemappedUi
 ### `resolveField()` \{#resolvefield\}
 
 ```ts
-resolveField(metadata: DebugMetadataAsset, field: string, params: QueryParams): ResolveResult | undefined
+function resolveField(metadata: DebugMetadataAsset, field: string, params: QueryParams): ResolveResult | undefined
 ```
 
 针对解析后的元数据解析 `?field=…` 查询。

@@ -31,7 +31,7 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 ### `cssChunksToMap()` \{#csschunkstomap\}
 
 ```ts
-cssChunksToMap(cssChunks: (string | CSSChunkAsset)[], plugins: Plugin[], enableCSSSelector: boolean): { contentMap: Map<number, string[]>; cssMap: Record<string, LynxStyleNode[]>; cssSource: Record<string, string> }
+function cssChunksToMap(cssChunks: (string | CSSChunkAsset)[], plugins: Plugin[], enableCSSSelector: boolean): { contentMap: Map<number, string[]>; cssMap: Record<string, LynxStyleNode[]>; cssSource: Record<string, string> }
 ```
 
 将 CSS chunk 转换为 `cssMap` / `cssSource`。
@@ -52,7 +52,7 @@ cssChunksToMap(cssChunks: (string | CSSChunkAsset)[], plugins: Plugin[], enableC
 ### `parse()` \{#parse\}
 
 ```ts
-parse(content: string, options: { filename?: string; plugins?: Plugin[]; projectRoot?: string }): { errors: ParserError[]; root: LynxStyleNode[] }
+function parse(content: string, options: { filename?: string; plugins?: Plugin[]; projectRoot?: string }): { errors: ParserError[]; root: LynxStyleNode[] }
 ```
 
 *暂无说明。*

@@ -30,7 +30,7 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 ### `createLynxPreset()` \{#createlynxpreset\}
 
 ```ts
-createLynxPreset(options: { debug?: boolean; lynxPlugins?: LynxPluginsOption; lynxUIPlugins?: LynxUIPluginsOption; theme?: Partial<CustomThemeConfig & {}> }): Partial<Config>
+function createLynxPreset(options: { debug?: boolean; lynxPlugins?: LynxPluginsOption; lynxUIPlugins?: LynxUIPluginsOption; theme?: Partial<CustomThemeConfig & {}> }): Partial<Config>
 ```
 
 创建为 Lynx 生态定制的 Tailwind preset。

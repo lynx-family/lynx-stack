@@ -13,7 +13,7 @@ Functions for crossing the thread boundary, creating elements outside JSX and mo
 ### `createPortal()` \{#createportal\}
 
 ```ts
-createPortal(vnode: ComponentChild, container: NodesRef): ReactNode
+function createPortal(vnode: ComponentChild, container: NodesRef): ReactNode
 ```
 
 Renders children into a different ReactLynx element identified by a
@@ -40,8 +40,8 @@ from `react-dom`:
 ### `createElement()` \{#createelement\}
 
 ```ts
-createElement(type: Type, props?: IntrinsicElements[Type] | null, children: ReactNode[]): ReactElement<IntrinsicElements[Type], Type>
-createElement(type: string | ComponentType<Props>, props?: Attributes & Props | null, children: ReactNode[]): ReactElement<Props>
+function createElement(type: Type, props?: IntrinsicElements[Type] | null, children: ReactNode[]): ReactElement<IntrinsicElements[Type], Type>
+function createElement(type: string | ComponentType<Props>, props?: Attributes & Props | null, children: ReactNode[]): ReactElement<Props>
 ```
 
 Creates a ReactLynx element using the snapshot runtime.
@@ -57,7 +57,7 @@ Creates a ReactLynx element using the snapshot runtime.
 ### `cloneElement()` \{#cloneelement\}
 
 ```ts
-cloneElement(element: ReactElement<Props>, props?: Partial<Props> & Attributes | null, children: ReactNode[]): ReactElement<Props>
+function cloneElement(element: ReactElement<Props>, props?: Partial<Props> & Attributes | null, children: ReactNode[]): ReactElement<Props>
 ```
 
 Clones a ReactLynx element using the snapshot runtime.
@@ -73,7 +73,7 @@ Clones a ReactLynx element using the snapshot runtime.
 ### `runOnMainThread()` \{#runonmainthread\}
 
 ```ts
-runOnMainThread(fn: Fn): (args: Parameters<Fn>) => Promise<R>
+function runOnMainThread(fn: Fn): (args: Parameters<Fn>) => Promise<R>
 ```
 
 `runOnMainThread` allows triggering main thread functions on the main thread asynchronously.
@@ -99,7 +99,7 @@ async function someFunction() {
 ### `runOnBackground()` \{#runonbackground\}
 
 ```ts
-runOnBackground(f: Fn): (args: Parameters<Fn>) => Promise<R>
+function runOnBackground(f: Fn): (args: Parameters<Fn>) => Promise<R>
 ```
 
 `runOnBackground` allows triggering js functions on the background thread asynchronously.
@@ -113,7 +113,7 @@ runOnBackground(f: Fn): (args: Parameters<Fn>) => Promise<R>
 ### `markFirstScreenSyncReady()` \{#markfirstscreensyncready\}
 
 ```ts
-markFirstScreenSyncReady(): void
+function markFirstScreenSyncReady(): void
 ```
 
 Mark the first screen as ready to sync when `firstScreenSyncTiming` is `'manual'`.
@@ -132,7 +132,7 @@ markFirstScreenSyncReady();
 ### `withInitDataInState()` \{#withinitdatainstate\}
 
 ```ts
-withInitDataInState(App: ComponentClass<P, S>): ComponentClass<P, S>
+function withInitDataInState(App: ComponentClass<P, S>): ComponentClass<P, S>
 ```
 
 Higher-Order Component (HOC) that injects `initData` into the state of the given class component.

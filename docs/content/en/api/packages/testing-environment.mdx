@@ -30,7 +30,7 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 ### `initElementTree()` \{#initelementtree\}
 
 ```ts
-initElementTree(): ElementTree
+function initElementTree(): ElementTree
 ```
 
 *No description yet.*
@@ -40,7 +40,7 @@ initElementTree(): ElementTree
 ### `installLynxTestingEnv()` \{#installlynxtestingenv\}
 
 ```ts
-installLynxTestingEnv(target: typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }, env: LynxEnv): void
+function installLynxTestingEnv(target: typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }, env: LynxEnv): void
 ```
 
 Installs a `LynxTestingEnv` instance and its required globals onto a target.
@@ -53,7 +53,7 @@ Installs a `LynxTestingEnv` instance and its required globals onto a target.
 ### `uninstallLynxTestingEnv()` \{#uninstalllynxtestingenv\}
 
 ```ts
-uninstallLynxTestingEnv(target: typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }): void
+function uninstallLynxTestingEnv(target: typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }): void
 ```
 
 Removes the globals installed by `installLynxTestingEnv`.

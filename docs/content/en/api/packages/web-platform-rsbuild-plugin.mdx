@@ -28,7 +28,7 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 ### `getNapiModulesPathRule()` \{#getnapimodulespathrule\}
 
 ```ts
-getNapiModulesPathRule(napiModulesPath: string): { loader: string; options: { napiModulesPath: string }; test: RegExp }
+function getNapiModulesPathRule(napiModulesPath: string): { loader: string; options: { napiModulesPath: string }; test: RegExp }
 ```
 
 *No description yet.*
@@ -42,7 +42,7 @@ getNapiModulesPathRule(napiModulesPath: string): { loader: string; options: { na
 ### `getNativeModulesPathRule()` \{#getnativemodulespathrule\}
 
 ```ts
-getNativeModulesPathRule(nativeModulesPath: string): { loader: string; options: { nativeModulesPath: string }; test: RegExp }
+function getNativeModulesPathRule(nativeModulesPath: string): { loader: string; options: { nativeModulesPath: string }; test: RegExp }
 ```
 
 *No description yet.*
@@ -56,7 +56,7 @@ getNativeModulesPathRule(nativeModulesPath: string): { loader: string; options: 
 ### `pluginWebPlatform()` \{#pluginwebplatform\}
 
 ```ts
-pluginWebPlatform(userOptions?: PluginWebPlatformOptions): RsbuildPlugin
+function pluginWebPlatform(userOptions?: PluginWebPlatformOptions): RsbuildPlugin
 ```
 
 Create a rsbuild plugin for Lynx Web Platform.

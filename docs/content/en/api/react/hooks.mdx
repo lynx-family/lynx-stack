@@ -13,7 +13,7 @@ Hooks that ReactLynx adds on top of React, plus the two React hooks it re-implem
 ### `useInitData()` \{#useinitdata\}
 
 ```ts
-useInitData(): InitData
+function useInitData(): InitData
 ```
 
 A React Hooks for you to get `initData`.
@@ -32,7 +32,7 @@ function App() {
 ### `useInitDataChanged()` \{#useinitdatachanged\}
 
 ```ts
-useInitDataChanged(callback: (data: InitData) => void): void
+function useInitDataChanged(callback: (data: InitData) => void): void
 ```
 
 A React Hooks for you to get notified when `initData` changed.
@@ -52,7 +52,7 @@ function App() {
 ### `useGlobalProps()` \{#useglobalprops\}
 
 ```ts
-useGlobalProps(): GlobalProps
+function useGlobalProps(): GlobalProps
 ```
 
 A React Hooks for you to get `lynx.__globalProps`.
@@ -71,7 +71,7 @@ function App() {
 ### `useGlobalPropsChanged()` \{#useglobalpropschanged\}
 
 ```ts
-useGlobalPropsChanged(callback: (data: GlobalProps) => void): void
+function useGlobalPropsChanged(callback: (data: GlobalProps) => void): void
 ```
 
 A React Hooks for you to get notified when `__globalProps` changed.
@@ -92,7 +92,7 @@ function App() {
 ### `useLynxGlobalEventListener()` \{#uselynxglobaleventlistener\}
 
 ```ts
-useLynxGlobalEventListener(eventName: string, listener: T): void
+function useLynxGlobalEventListener(eventName: string, listener: T): void
 ```
 
 `useLynxGlobalEventListener` helps you `addListener` as early as possible.
@@ -124,9 +124,9 @@ function App() {
 ### `useMainThreadRef()` \{#usemainthreadref\}
 
 ```ts
-useMainThreadRef(initValue: T): MainThreadRef<T>
-useMainThreadRef(initValue: T | null): RefObject<T>
-useMainThreadRef(): MainThreadRef<T | undefined>
+function useMainThreadRef(initValue: T): MainThreadRef<T>
+function useMainThreadRef(initValue: T | null): RefObject<T>
+function useMainThreadRef(): MainThreadRef<T | undefined>
 ```
 
 Create A `MainThreadRef`.
@@ -169,7 +169,7 @@ export function App() {
 ### `useEffect()` \{#useeffect\}
 
 ```ts
-useEffect(effect: EffectCallback, deps?: DependencyList): void
+function useEffect(effect: EffectCallback, deps?: DependencyList): void
 ```
 
 Accepts a function that contains imperative, possibly effectful code.
@@ -183,7 +183,7 @@ The effects run after main thread dom update without blocking it.
 ### `useLayoutEffect()` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#uselayouteffect\}
 
 ```ts
-useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void
+function useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void
 ```
 
 :::warning Deprecated

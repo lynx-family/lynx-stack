@@ -27,7 +27,7 @@ await rspeedy.build()
 ### `createRspeedy()` \{#createrspeedy\}
 
 ```ts
-createRspeedy(options: CreateRspeedyOptions): Promise<RspeedyInstance>
+function createRspeedy(options: CreateRspeedyOptions): Promise<RspeedyInstance>
 ```
 
 `createRspeedy` 方法用于创建一个 Rspeedy 实例，你可以借此在 Node.js 运行时中自定义构建或开发流程。
@@ -50,10 +50,10 @@ void async function () {
 ### `defineConfig()` \{#defineconfig\}
 
 ```ts
-defineConfig(config: Config): Config
-defineConfig(config: (params: ConfigParams) => Config): (params: ConfigParams) => Config
-defineConfig(config: Promise<Config>): Promise<Config>
-defineConfig(config: (params: ConfigParams) => Promise<Config>): (params: ConfigParams) => Promise<Config>
+function defineConfig(config: Config): Config
+function defineConfig(config: (params: ConfigParams) => Config): (params: ConfigParams) => Config
+function defineConfig(config: Promise<Config>): Promise<Config>
+function defineConfig(config: (params: ConfigParams) => Promise<Config>): (params: ConfigParams) => Promise<Config>
 ```
 
 `defineConfig` 方法是一个辅助函数，用于获取 TypeScript 智能提示。
@@ -76,7 +76,7 @@ export default defineConfig({
 ### `loadConfig()` \{#loadconfig\}
 
 ```ts
-loadConfig(loadConfigOptions: LoadConfigOptions): Promise<LoadConfigResult>
+function loadConfig(loadConfigOptions: LoadConfigOptions): Promise<LoadConfigResult>
 ```
 
 通过配置文件路径加载构建配置。
@@ -99,7 +99,7 @@ void async function () {
 ### `mergeRspeedyConfig()` \{#mergerspeedyconfig\}
 
 ```ts
-mergeRspeedyConfig(configs: Config[]): Config
+function mergeRspeedyConfig(configs: Config[]): Config
 ```
 
 合并多个 Rspeedy 配置对象。

@@ -28,7 +28,7 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 ### `useSyncExternalStore()` \{#usesyncexternalstore\}
 
 ```ts
-useSyncExternalStore(subscribe: (onStoreChange: () => void) => () => void, getSnapshot: () => Snapshot, getServerSnapshot?: () => Snapshot): Snapshot
+function useSyncExternalStore(subscribe: (onStoreChange: () => void) => () => void, getSnapshot: () => Snapshot, getServerSnapshot?: () => Snapshot): Snapshot
 ```
 
 *暂无说明。*

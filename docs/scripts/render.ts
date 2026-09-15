@@ -955,7 +955,9 @@ function renderExport(e: ApiExport, depth: number, ctx: Ctx): string {
     untranslated(ctx, `${key}.summary`)
   } \\{#${slug(e.name)}\\}\n\n`;
   if (e.signatures && e.signatures.length > 0) {
-    s += '```ts\n' + e.signatures.map(sig => sig.text).join('\n') + '\n```\n\n';
+    const keyword = e.kind === 'function' ? 'function ' : '';
+    s += '```ts\n' + e.signatures.map(sig => keyword + sig.text).join('\n')
+      + '\n```\n\n';
   } else if (e.kind === 'variable' || e.kind === 'typealias') {
     const t = e.literalUnion ? e.literalUnion.join(' | ') : e.type;
     if (t && t !== 'unknown') {

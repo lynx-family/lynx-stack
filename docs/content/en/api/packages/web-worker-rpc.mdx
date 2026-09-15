@@ -28,12 +28,12 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 ### `createRpcEndpoint()` \{#createrpcendpoint\}
 
 ```ts
-createRpcEndpoint(name: string, isSync: false, hasReturn: false): RpcEndpointAsyncVoid<Parameters>
-createRpcEndpoint(name: string, isSync: false, hasReturn: true): RpcEndpointAsync<Parameters, Return>
-createRpcEndpoint(name: string, isSync: false, hasReturn: true, hasReturnTransfer: false): RpcEndpointAsync<Parameters, Return>
-createRpcEndpoint(name: string, isSync: false, hasReturn: true, hasReturnTransfer: true): RpcEndpointAsyncWithTransfer<Parameters, Return>
-createRpcEndpoint(name: string, isSync: true, hasReturn: false): RpcEndpointSyncVoid<Parameters>
-createRpcEndpoint(name: string, isSync: true, hasReturn: true, hasReturnTransfer: false, bufferSize: number): RpcEndpointSync<Parameters, Return>
+function createRpcEndpoint(name: string, isSync: false, hasReturn: false): RpcEndpointAsyncVoid<Parameters>
+function createRpcEndpoint(name: string, isSync: false, hasReturn: true): RpcEndpointAsync<Parameters, Return>
+function createRpcEndpoint(name: string, isSync: false, hasReturn: true, hasReturnTransfer: false): RpcEndpointAsync<Parameters, Return>
+function createRpcEndpoint(name: string, isSync: false, hasReturn: true, hasReturnTransfer: true): RpcEndpointAsyncWithTransfer<Parameters, Return>
+function createRpcEndpoint(name: string, isSync: true, hasReturn: false): RpcEndpointSyncVoid<Parameters>
+function createRpcEndpoint(name: string, isSync: true, hasReturn: true, hasReturnTransfer: false, bufferSize: number): RpcEndpointSync<Parameters, Return>
 ```
 
 *No description yet.*

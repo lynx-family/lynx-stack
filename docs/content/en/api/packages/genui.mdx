@@ -30,7 +30,7 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 ### `buildA2UISystemPrompt()` \{#builda2uisystemprompt\}
 
 ```ts
-buildA2UISystemPrompt(opts?: BuildSystemPromptOptions): string
+function buildA2UISystemPrompt(opts?: BuildSystemPromptOptions): string
 ```
 
 *No description yet.*
@@ -44,7 +44,7 @@ buildA2UISystemPrompt(opts?: BuildSystemPromptOptions): string
 ### `buildA2UISystemPromptAsync()` \{#builda2uisystempromptasync\}
 
 ```ts
-buildA2UISystemPromptAsync(opts?: BuildSystemPromptOptions): Promise<string>
+function buildA2UISystemPromptAsync(opts?: BuildSystemPromptOptions): Promise<string>
 ```
 
 *No description yet.*
@@ -58,7 +58,7 @@ buildA2UISystemPromptAsync(opts?: BuildSystemPromptOptions): Promise<string>
 ### `buildLynxXmlSystemPrompt()` \{#buildlynxxmlsystemprompt\}
 
 ```ts
-buildLynxXmlSystemPrompt(options?: BuildLynxXmlSystemPromptOptions): string
+function buildLynxXmlSystemPrompt(options?: BuildLynxXmlSystemPromptOptions): string
 ```
 
 Build a system prompt for producing complete, zero-build `.lynxml` files.
@@ -72,7 +72,7 @@ Build a system prompt for producing complete, zero-build `.lynxml` files.
 ### `buildOpenUiSystemPrompt()` \{#buildopenuisystemprompt\}
 
 ```ts
-buildOpenUiSystemPrompt(options?: BuildOpenUiSystemPromptOptions): string
+function buildOpenUiSystemPrompt(options?: BuildOpenUiSystemPromptOptions): string
 ```
 
 Build the full OpenUI system prompt for the supplied library and options.
@@ -86,7 +86,7 @@ Build the full OpenUI system prompt for the supplied library and options.
 ### `createA2UICatalog()` \{#createa2uicatalog\}
 
 ```ts
-createA2UICatalog(options: { catalogId: string; components: ExtractedCatalogComponent[] | Record<string, ExtractedJsonSchema>; functions?: FunctionDefinition[]; theme?: Record<string, ExtractedJsonSchema> }): ExtractedA2UICatalog
+function createA2UICatalog(options: { catalogId: string; components: ExtractedCatalogComponent[] | Record<string, ExtractedJsonSchema>; functions?: FunctionDefinition[]; theme?: Record<string, ExtractedJsonSchema> }): ExtractedA2UICatalog
 ```
 
 Build a full A2UI catalog manifest from component and function artifacts.
@@ -100,7 +100,7 @@ Build a full A2UI catalog manifest from component and function artifacts.
 ### `createA2UICatalogFromManifests()` \{#createa2uicatalogfrommanifests\}
 
 ```ts
-createA2UICatalogFromManifests(options: { catalogId: string; componentManifests: Record<string, A2UIPromptJsonSchema>[]; examples?: A2UIExample[]; extraRules?: string[]; functions?: A2UIFunctionSpec[]; label?: string; version?: string }): A2UIPromptCatalog
+function createA2UICatalogFromManifests(options: { catalogId: string; componentManifests: Record<string, A2UIPromptJsonSchema>[]; examples?: A2UIExample[]; extraRules?: string[]; functions?: A2UIFunctionSpec[]; label?: string; version?: string }): A2UIPromptCatalog
 ```
 
 Convert generated component manifests into a prompt-ready A2UI catalog.
@@ -114,7 +114,7 @@ Convert generated component manifests into a prompt-ready A2UI catalog.
 ### `createFallbackMessagesFromPlainText()` \{#createfallbackmessagesfromplaintext\}
 
 ```ts
-createFallbackMessagesFromPlainText(text: string): ServerToClientMessage[]
+function createFallbackMessagesFromPlainText(text: string): ServerToClientMessage[]
 ```
 
 Build a single-Text fallback message stream from a plain string. Used by
@@ -130,7 +130,7 @@ the agent instead of structured protocol messages.
 ### `createMessageStore()` \{#createmessagestore\}
 
 ```ts
-createMessageStore(options?: MessageStoreOptions): MessageStore
+function createMessageStore(options?: MessageStoreOptions): MessageStore
 ```
 
 Create an append-only raw-message buffer suitable for `useSyncExternalStore`.
@@ -144,7 +144,7 @@ Create an append-only raw-message buffer suitable for `useSyncExternalStore`.
 ### `createOpenUiLibrary()` \{#createopenuilibrary\}
 
 ```ts
-createOpenUiLibrary(options?: CreateOpenUiLibraryOptions): Library
+function createOpenUiLibrary(options?: CreateOpenUiLibraryOptions): Library
 ```
 
 Create a ReactLynx OpenUI library with caller-provided components and,
@@ -159,7 +159,7 @@ unless disabled, the built-in components.
 ### `createOpenUiPromptLibrary()` \{#createopenuipromptlibrary\}
 
 ```ts
-createOpenUiPromptLibrary(options?: CreateOpenUiPromptLibraryOptions): OpenUiPromptLibrary
+function createOpenUiPromptLibrary(options?: CreateOpenUiPromptLibraryOptions): OpenUiPromptLibrary
 ```
 
 Create a headless OpenUI library with the built-in component schemas.
@@ -176,7 +176,7 @@ runtime dependency on ReactLynx or Lynx UI components.
 ### `createResource()` \{#createresource\}
 
 ```ts
-createResource(id: string): RawResource<T>
+function createResource(id: string): RawResource<T>
 ```
 
 Create a pending resource that can later complete, fail, and notify
@@ -191,7 +191,7 @@ subscribers of every state transition.
 ### `createTextCardMessages()` \{#createtextcardmessages\}
 
 ```ts
-createTextCardMessages(text: string): ServerToClientMessage[]
+function createTextCardMessages(text: string): ServerToClientMessage[]
 ```
 
 Build a Card-wrapped Text fallback message stream from a plain string.
@@ -206,7 +206,7 @@ Used when the agent emits text payloads with `kind: 'text'`.
 ### `defineComponent()` \{#definecomponent\}
 
 ```ts
-defineComponent(config: { component: ComponentRenderer<output<T>>; description: string; name: string; props: T }): DefinedComponent<T>
+function defineComponent(config: { component: ComponentRenderer<output<T>>; description: string; name: string; props: T }): DefinedComponent<T>
 ```
 
 Define a ReactLynx component renderer and its OpenUI schema metadata.
@@ -220,7 +220,7 @@ Define a ReactLynx component renderer and its OpenUI schema metadata.
 ### `executeFunctionCall()` \{#executefunctioncall\}
 
 ```ts
-executeFunctionCall(processor: MessageProcessor, fn: {}, surfaceId: string, dataContextPath?: string, options?: ResolveFunctionOptions): unknown
+function executeFunctionCall(processor: MessageProcessor, fn: {}, surfaceId: string, dataContextPath?: string, options?: ResolveFunctionOptions): unknown
 ```
 
 Resolve arguments, look the function up in the registry, and invoke it.
@@ -240,7 +240,7 @@ When no impl is registered, log once and return `undefined` so callers
 ### `extractCatalogComponents()` \{#extractcatalogcomponents\}
 
 ```ts
-extractCatalogComponents(options: ExtractCatalogOptions): Promise<ExtractedCatalogComponent[]>
+function extractCatalogComponents(options: ExtractCatalogOptions): Promise<ExtractedCatalogComponent[]>
 ```
 
 Run TypeDoc over source files and extract A2UI component schemas.
@@ -254,7 +254,7 @@ Run TypeDoc over source files and extract A2UI component schemas.
 ### `extractCatalogFunctions()` \{#extractcatalogfunctions\}
 
 ```ts
-extractCatalogFunctions(options: ExtractCatalogOptions): Promise<CatalogFunction[]>
+function extractCatalogFunctions(options: ExtractCatalogOptions): Promise<CatalogFunction[]>
 ```
 
 Run TypeDoc over source files and extract A2UI function definitions.
@@ -268,7 +268,7 @@ Run TypeDoc over source files and extract A2UI function definitions.
 ### `findCatalogSourceFiles()` \{#findcatalogsourcefiles\}
 
 ```ts
-findCatalogSourceFiles(inputPath: string): string[]
+function findCatalogSourceFiles(inputPath: string): string[]
 ```
 
 Find supported source files under a file or directory path.
@@ -282,7 +282,7 @@ Find supported source files under a file or directory path.
 ### `isDataBinding()` \{#isdatabinding\}
 
 ```ts
-isDataBinding(value: unknown): value is {}
+function isDataBinding(value: unknown): value is {}
 ```
 
 Return whether a value matches the A2UI data-binding shape.
@@ -296,7 +296,7 @@ Return whether a value matches the A2UI data-binding shape.
 ### `isFunctionCall()` \{#isfunctioncall\}
 
 ```ts
-isFunctionCall(value: unknown): value is {}
+function isFunctionCall(value: unknown): value is {}
 ```
 
 Return whether a value matches the A2UI function-call shape.
@@ -310,7 +310,7 @@ Return whether a value matches the A2UI function-call shape.
 ### `loadBasicCatalog()` \{#loadbasiccatalog\}
 
 ```ts
-loadBasicCatalog(): Promise<A2UIPromptCatalog>
+function loadBasicCatalog(): Promise<A2UIPromptCatalog>
 ```
 
 *No description yet.*
@@ -320,7 +320,7 @@ loadBasicCatalog(): Promise<A2UIPromptCatalog>
 ### `normalizePayloadToMessages()` \{#normalizepayloadtomessages\}
 
 ```ts
-normalizePayloadToMessages(payload: unknown): ServerToClientMessage[]
+function normalizePayloadToMessages(payload: unknown): ServerToClientMessage[]
 ```
 
 Normalize an arbitrary payload (string, array, object) into a flat list of
@@ -336,7 +336,7 @@ messages; falls back to wrapping plain text in a Text/Card surface.
 ### `OpenUiRenderer()` \{#openuirenderer\}
 
 ```ts
-OpenUiRenderer(props: OpenUiRendererProps): Element
+function OpenUiRenderer(props: OpenUiRendererProps): Element
 ```
 
 Render OpenUI language output using a ReactLynx component library.
@@ -350,7 +350,7 @@ Render OpenUI language output using a ReactLynx component library.
 ### `prepareMessagesForProcessing()` \{#preparemessagesforprocessing\}
 
 ```ts
-prepareMessagesForProcessing(rawMessages: ServerToClientMessage[], messageId: string, activeSurfaceIds: Set<string>): { hasComponentUpdate: boolean; messages: ServerToClientMessage[] }
+function prepareMessagesForProcessing(rawMessages: ServerToClientMessage[], messageId: string, activeSurfaceIds: Set<string>): { hasComponentUpdate: boolean; messages: ServerToClientMessage[] }
 ```
 
 Tag messages with the given messageId and report whether any of them
@@ -368,7 +368,7 @@ messages against the set of currently-active surfaces.
 ### `reactive()` \{#reactive\}
 
 ```ts
-reactive(schema: T): ZodType<StateField<output<T>>>
+function reactive(schema: T): ZodType<StateField<output<T>>>
 ```
 
 Mark a schema prop as reactive so runtime evaluation can preserve $bindings.
@@ -382,7 +382,7 @@ Mark a schema prop as reactive so runtime evaluation can preserve $bindings.
 ### `readA2UICatalogFromDirectory()` \{#reada2uicatalogfromdirectory\}
 
 ```ts
-readA2UICatalogFromDirectory(options: ReadA2UICatalogDirectoryOptions): A2UIPromptCatalog
+function readA2UICatalogFromDirectory(options: ReadA2UICatalogDirectoryOptions): A2UIPromptCatalog
 ```
 
 Read generated component and function manifests and convert them into a
@@ -397,7 +397,7 @@ prompt-ready A2UI catalog.
 ### `registerBasicFunctions()` \{#registerbasicfunctions\}
 
 ```ts
-registerBasicFunctions(): void
+function registerBasicFunctions(): void
 ```
 
 Manual escape hatch for consumers who build their own renderer and don't
@@ -409,7 +409,7 @@ path.
 ### `renderCatalogReference()` \{#rendercatalogreference\}
 
 ```ts
-renderCatalogReference(catalog: A2UIPromptCatalog): string
+function renderCatalogReference(catalog: A2UIPromptCatalog): string
 ```
 
 Render an A2UI catalog into the Markdown reference embedded in prompts.
@@ -423,7 +423,7 @@ Render an A2UI catalog into the Markdown reference embedded in prompts.
 ### `resolveDynamicValue()` \{#resolvedynamicvalue\}
 
 ```ts
-resolveDynamicValue(processor: MessageProcessor, value: unknown, surfaceId: string, dataContextPath?: string, options?: ResolveDynamicValueOptions): unknown
+function resolveDynamicValue(processor: MessageProcessor, value: unknown, surfaceId: string, dataContextPath?: string, options?: ResolveDynamicValueOptions): unknown
 ```
 
 Resolve literals, data bindings, and function calls into concrete runtime
@@ -442,7 +442,7 @@ values for component props or action payloads.
 ### `resolveFunctionArguments()` \{#resolvefunctionarguments\}
 
 ```ts
-resolveFunctionArguments(processor: MessageProcessor, args: Record<string, unknown>, surfaceId: string, dataContextPath?: string, options?: ResolveFunctionOptions): Record<string, unknown>
+function resolveFunctionArguments(processor: MessageProcessor, args: Record<string, unknown>, surfaceId: string, dataContextPath?: string, options?: ResolveFunctionOptions): Record<string, unknown>
 ```
 
 Resolve every argument in a protocol function call before invoking the
@@ -461,7 +461,7 @@ registered implementation.
 ### `useAction()` \{#useaction\}
 
 ```ts
-useAction(props: ActionProps): { sendAction: (action: {} | {}) => Promise<unknown> }
+function useAction(props: ActionProps): { sendAction: (action: {} | {}) => Promise<unknown> }
 ```
 
 Create a `sendAction` callback that resolves dynamic action payload values
@@ -476,7 +476,7 @@ and dispatches user events or function calls through the current processor.
 ### `useChecks()` \{#usechecks\}
 
 ```ts
-useChecks(options: { checks: CheckLike[] | undefined; componentId: string; dataContextPath?: string; surface: Surface | undefined }): CheckOutcome & { firstFailureMessage: string | undefined }
+function useChecks(options: { checks: CheckLike[] | undefined; componentId: string; dataContextPath?: string; surface: Surface | undefined }): CheckOutcome & { firstFailureMessage: string | undefined }
 ```
 
 Evaluate an input component's `checks` array reactively. Returns the
@@ -494,7 +494,7 @@ is also registered with it so Buttons in the same form can react to
 ### `useCreateFormValidation()` \{#usecreateformvalidation\}
 
 ```ts
-useCreateFormValidation(): FormValidationContextValue
+function useCreateFormValidation(): FormValidationContextValue
 ```
 
 Create form validation state and callbacks for an OpenUI form boundary.
@@ -504,7 +504,7 @@ Create form validation state and callbacks for an OpenUI form boundary.
 ### `useDataBinding()` \{#usedatabinding\}
 
 ```ts
-useDataBinding(dynamicValue: unknown, surface: Surface, dataContextPath?: string, fallbackValue?: T): [T | undefined, (newValue: T) => void, string | undefined]
+function useDataBinding(dynamicValue: unknown, surface: Surface, dataContextPath?: string, fallbackValue?: T): [T | undefined, (newValue: T) => void, string | undefined]
 ```
 
 Subscribe to a data-model binding and return the current value at that path.
@@ -521,7 +521,7 @@ Subscribe to a data-model binding and return the current value at that path.
 ### `useFormValidation()` \{#useformvalidation\}
 
 ```ts
-useFormValidation(): FormValidationContextValue | null
+function useFormValidation(): FormValidationContextValue | null
 ```
 
 Read the nearest OpenUI form validation context, if one exists.
@@ -531,7 +531,7 @@ Read the nearest OpenUI form validation context, if one exists.
 ### `useGetFieldValue()` \{#usegetfieldvalue\}
 
 ```ts
-useGetFieldValue(): (formName: string | undefined, name: string) => any
+function useGetFieldValue(): (formName: string | undefined, name: string) => any
 ```
 
 Get a form field value from the form state context.
@@ -546,7 +546,7 @@ const name = getFieldValue("contactForm", "name");
 ### `useIsQueryLoading()` \{#useisqueryloading\}
 
 ```ts
-useIsQueryLoading(): boolean
+function useIsQueryLoading(): boolean
 ```
 
 Whether any Query is currently fetching data.
@@ -556,7 +556,7 @@ Whether any Query is currently fetching data.
 ### `useIsStreaming()` \{#useisstreaming\}
 
 ```ts
-useIsStreaming(): boolean
+function useIsStreaming(): boolean
 ```
 
 Whether the LLM is currently streaming content.
@@ -566,7 +566,7 @@ Whether the LLM is currently streaming content.
 ### `useOpenUI()` \{#useopenui\}
 
 ```ts
-useOpenUI(): OpenUIContextValue
+function useOpenUI(): OpenUIContextValue
 ```
 
 Access the full OpenUI context. Throws if used outside an
@@ -577,7 +577,7 @@ Access the full OpenUI context. Throws if used outside an
 ### `useOpenUIState()` \{#useopenuistate\}
 
 ```ts
-useOpenUIState(__namedParameters: UseOpenUIStateOptions, renderDeep: (value: unknown) => ReactNode): OpenUIState
+function useOpenUIState(__namedParameters: UseOpenUIStateOptions, renderDeep: (value: unknown) => ReactNode): OpenUIState
 ```
 
 Core state hook — extracts all form state, action handling, parser
@@ -596,7 +596,7 @@ under formName as plain values.
 ### `useRenderNode()` \{#userendernode\}
 
 ```ts
-useRenderNode(): (value: unknown) => ReactNode
+function useRenderNode(): (value: unknown) => ReactNode
 ```
 
 Get the renderNode function for rendering nested component values.
@@ -606,7 +606,7 @@ Get the renderNode function for rendering nested component values.
 ### `useResolvedProps()` \{#useresolvedprops\}
 
 ```ts
-useResolvedProps(properties: Record<string, unknown>, surface: Surface, dataContextPath?: string, processor?: MessageProcessor, functions?: readonly CatalogFunctionEntry[]): readonly [Record<string, unknown>, (key: string, value: unknown) => void]
+function useResolvedProps(properties: Record<string, unknown>, surface: Surface, dataContextPath?: string, processor?: MessageProcessor, functions?: readonly CatalogFunctionEntry[]): readonly [Record<string, unknown>, (key: string, value: unknown) => void]
 ```
 
 Resolve a component's dynamic props and keep the result in sync with
@@ -625,7 +625,7 @@ signal-backed data model changes.
 ### `useSetDefaultValue()` \{#usesetdefaultvalue\}
 
 ```ts
-useSetDefaultValue(shouldTriggerSaveCallback: { componentType?: string; defaultValue: unknown; existingValue: unknown; formName?: string; name: string; shouldTriggerSaveCallback?: boolean }): void
+function useSetDefaultValue(shouldTriggerSaveCallback: { componentType?: string; defaultValue: unknown; existingValue: unknown; formName?: string; name: string; shouldTriggerSaveCallback?: boolean }): void
 ```
 
 Persists a component's default/initial value into form state once streaming
@@ -642,7 +642,7 @@ prop changes don't fight with partial state.
 ### `useSetFieldValue()` \{#usesetfieldvalue\}
 
 ```ts
-useSetFieldValue(): (formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void
+function useSetFieldValue(): (formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void
 ```
 
 Get the setFieldValue function for updating form field values.
@@ -657,7 +657,7 @@ const setFieldValue = useSetFieldValue();
 ### `useStateField()` \{#usestatefield\}
 
 ```ts
-useStateField(name: string, value?: T): StateField<InferStateFieldValue<T>>
+function useStateField(name: string, value?: T): StateField<InferStateFieldValue<T>>
 ```
 
 Resolve a named OpenUI state field against form state and reactive bindings.
@@ -672,7 +672,7 @@ Resolve a named OpenUI state field against form state and reactive bindings.
 ### `useTriggerAction()` \{#usetriggeraction\}
 
 ```ts
-useTriggerAction(): (userMessage: string, formName?: string, action?: ActionPlan | { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void | Promise<void>
+function useTriggerAction(): (userMessage: string, formName?: string, action?: ActionPlan | { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void | Promise<void>
 ```
 
 Get the triggerAction function for firing structured action events.

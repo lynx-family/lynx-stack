@@ -30,7 +30,7 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 ### `initElementTree()` \{#initelementtree\}
 
 ```ts
-initElementTree(): ElementTree
+function initElementTree(): ElementTree
 ```
 
 *暂无说明。*
@@ -40,7 +40,7 @@ initElementTree(): ElementTree
 ### `installLynxTestingEnv()` \{#installlynxtestingenv\}
 
 ```ts
-installLynxTestingEnv(target: typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }, env: LynxEnv): void
+function installLynxTestingEnv(target: typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }, env: LynxEnv): void
 ```
 
 将一个 `LynxTestingEnv` 实例及其所需的全局变量安装到目标对象上。
@@ -53,7 +53,7 @@ installLynxTestingEnv(target: typeof globalThis & { lynxEnv?: LynxEnv; lynxTesti
 ### `uninstallLynxTestingEnv()` \{#uninstalllynxtestingenv\}
 
 ```ts
-uninstallLynxTestingEnv(target: typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }): void
+function uninstallLynxTestingEnv(target: typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }): void
 ```
 
 移除由 `installLynxTestingEnv` 安装的全局变量。

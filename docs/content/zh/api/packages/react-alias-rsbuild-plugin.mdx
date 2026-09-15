@@ -46,7 +46,7 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 ### `createLazyResolver()` \{#createlazyresolver\}
 
 ```ts
-createLazyResolver(rspack: Rspack, directory: string, conditionNames: string[]): (request: string) => Promise<string>
+function createLazyResolver(rspack: Rspack, directory: string, conditionNames: string[]): (request: string) => Promise<string>
 ```
 
 *暂无说明。*
@@ -62,7 +62,7 @@ createLazyResolver(rspack: Rspack, directory: string, conditionNames: string[]):
 ### `pluginReactAlias()` \{#pluginreactalias\}
 
 ```ts
-pluginReactAlias(options: Options): RsbuildPlugin
+function pluginReactAlias(options: Options): RsbuildPlugin
 ```
 
 *暂无说明。*

@@ -33,7 +33,7 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 ### `assertUiNode()` \{#assertuinode\}
 
 ```ts
-assertUiNode(value: unknown, path: string): asserts value is UiNode
+function assertUiNode(value: unknown, path: string): asserts value is UiNode
 ```
 
 Assert that a parsed value is a [`UiNode`](#uinode) tree. Use it at trust
@@ -56,7 +56,7 @@ only rejected when present with the wrong type. A non-object, or a
 ### `buildUiSourceMapLookup()` \{#builduisourcemaplookup\}
 
 ```ts
-buildUiSourceMapLookup(uiSourceMap: UiSourceMapData): Map<number, Omit<UiSourceLocation, "repo">>
+function buildUiSourceMapLookup(uiSourceMap: UiSourceMapData): Map<number, Omit<UiSourceLocation, "repo">>
 ```
 
 Build a `nodeIndex -> {source, line, column}` lookup from a
@@ -73,7 +73,7 @@ is the nodeIndex, and the matching `mappings[i]` entry holds
 ### `findArtifact()` \{#findartifact\}
 
 ```ts
-findArtifact(metadata: DebugMetadataAsset, query: { filename: string }): Artifact | undefined
+function findArtifact(metadata: DebugMetadataAsset, query: { filename: string }): Artifact | undefined
 ```
 
 Find an [`Artifact`](#artifact) by `filename` (e.g. `main-thread.js`,
@@ -89,7 +89,7 @@ Find an [`Artifact`](#artifact) by `filename` (e.g. `main-thread.js`,
 ### `findBytecodeDebugInfo()` \{#findbytecodedebuginfo\}
 
 ```ts
-findBytecodeDebugInfo(metadata: DebugMetadataAsset, query: { filename: string }): BytecodeDebugInfoSource | undefined
+function findBytecodeDebugInfo(metadata: DebugMetadataAsset, query: { filename: string }): BytecodeDebugInfoSource | undefined
 ```
 
 Find a `bytecode-debug-info` source attached to the artifact named
@@ -105,7 +105,7 @@ Find a `bytecode-debug-info` source attached to the artifact named
 ### `findSourceMap()` \{#findsourcemap\}
 
 ```ts
-findSourceMap(metadata: DebugMetadataAsset, query: { filename?: string; key?: string; path?: string }): SourceMapDebugSource | undefined
+function findSourceMap(metadata: DebugMetadataAsset, query: { filename?: string; key?: string; path?: string }): SourceMapDebugSource | undefined
 ```
 
 Find a `source-map` [`SourceMapDebugSource`](#sourcemapdebugsource) by `path`,
@@ -123,7 +123,7 @@ name on [`SourceMapDebugSource`](#sourcemapdebugsource).
 ### `isUiSourceMapData()` \{#isuisourcemapdata\}
 
 ```ts
-isUiSourceMapData(value: unknown): value is UiSourceMapData
+function isUiSourceMapData(value: unknown): value is UiSourceMapData
 ```
 
 Runtime check that a parsed value matches [`UiSourceMapData`](#uisourcemapdata)'s
@@ -140,7 +140,7 @@ different (or older) format.
 ### `knownFields()` \{#knownfields\}
 
 ```ts
-knownFields(): string[]
+function knownFields(): string[]
 ```
 
 All currently-registered field names. Use for `400 invalid_field`
@@ -151,7 +151,7 @@ responses so the listing auto-updates when new fields are registered.
 ### `normalizeRepo()` \{#normalizerepo\}
 
 ```ts
-normalizeRepo(remoteUrl: string | null): string | null
+function normalizeRepo(remoteUrl: string | null): string | null
 ```
 
 Normalize a git remote URL (SSH or HTTP form) to an `owner/repo`
@@ -167,7 +167,7 @@ input and the original string when it matches no known form.
 ### `remapUiTree()` \{#remapuitree\}
 
 ```ts
-remapUiTree(root: UiNode, loadMetadata: DebugMetadataLoader): Promise<RemappedUiNode>
+function remapUiTree(root: UiNode, loadMetadata: DebugMetadataLoader): Promise<RemappedUiNode>
 ```
 
 Reverse-resolve a UI node tree dumped by the Lynx engine.
@@ -188,7 +188,7 @@ mutated; a new tree is returned.
 ### `resolveField()` \{#resolvefield\}
 
 ```ts
-resolveField(metadata: DebugMetadataAsset, field: string, params: QueryParams): ResolveResult | undefined
+function resolveField(metadata: DebugMetadataAsset, field: string, params: QueryParams): ResolveResult | undefined
 ```
 
 Resolve a `?field=…` query against parsed metadata.

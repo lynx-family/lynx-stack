@@ -46,7 +46,7 @@ You don't need to register it: [`pluginReactLynx`](/api/packages/react-rsbuild-p
 ### `createLazyResolver()` \{#createlazyresolver\}
 
 ```ts
-createLazyResolver(rspack: Rspack, directory: string, conditionNames: string[]): (request: string) => Promise<string>
+function createLazyResolver(rspack: Rspack, directory: string, conditionNames: string[]): (request: string) => Promise<string>
 ```
 
 *No description yet.*
@@ -62,7 +62,7 @@ createLazyResolver(rspack: Rspack, directory: string, conditionNames: string[]):
 ### `pluginReactAlias()` \{#pluginreactalias\}
 
 ```ts
-pluginReactAlias(options: Options): RsbuildPlugin
+function pluginReactAlias(options: Options): RsbuildPlugin
 ```
 
 *No description yet.*

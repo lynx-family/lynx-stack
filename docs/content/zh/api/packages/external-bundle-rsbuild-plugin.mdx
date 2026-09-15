@@ -113,7 +113,7 @@ path 解析，并支持自动产出资源。
 ### `normalizeBundlePath()` \{#normalizebundlepath\}
 
 ```ts
-normalizeBundlePath(bundlePath: string): string
+function normalizeBundlePath(bundlePath: string): string
 ```
 
 规范化公共 bundle 路径，移除开头的斜杠。
@@ -127,7 +127,7 @@ normalizeBundlePath(bundlePath: string): string
 ### `pluginExternalBundle()` \{#pluginexternalbundle\}
 
 ```ts
-pluginExternalBundle(options: PluginExternalBundleOptions): RsbuildPlugin
+function pluginExternalBundle(options: PluginExternalBundleOptions): RsbuildPlugin
 ```
 
 创建一个用于加载 external bundle 的 Rsbuild 插件。

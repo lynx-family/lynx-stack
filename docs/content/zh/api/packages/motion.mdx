@@ -28,13 +28,13 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 ### `animate()` \{#animate\}
 
 ```ts
-animate(sequence: AnimationSequence, options?: SequenceOptions): AnimationPlaybackControlsWithThen
-animate(value: string, keyframes: DOMKeyframesDefinition, options?: AnimationOptions): AnimationPlaybackControlsWithThen
-animate(value: string | MotionValue<string>, keyframes: string | UnresolvedValueKeyframe<string>[], options?: ValueAnimationTransition<string>): AnimationPlaybackControlsWithThen
-animate(value: number | MotionValue<number>, keyframes: number | UnresolvedValueKeyframe<number>[], options?: ValueAnimationTransition<number>): AnimationPlaybackControlsWithThen
-animate(value: V | MotionValue<V>, keyframes: V | UnresolvedValueKeyframe<V>[], options?: ValueAnimationTransition<V>): AnimationPlaybackControlsWithThen
-animate(object: O | O[], keyframes: ObjectTarget<O>, options?: AnimationOptions): AnimationPlaybackControlsWithThen
-animate(value: ElementOrElements, keyframes: DOMKeyframesDefinition, options?: AnimationOptions): AnimationPlaybackControlsWithThen
+function animate(sequence: AnimationSequence, options?: SequenceOptions): AnimationPlaybackControlsWithThen
+function animate(value: string, keyframes: DOMKeyframesDefinition, options?: AnimationOptions): AnimationPlaybackControlsWithThen
+function animate(value: string | MotionValue<string>, keyframes: string | UnresolvedValueKeyframe<string>[], options?: ValueAnimationTransition<string>): AnimationPlaybackControlsWithThen
+function animate(value: number | MotionValue<number>, keyframes: number | UnresolvedValueKeyframe<number>[], options?: ValueAnimationTransition<number>): AnimationPlaybackControlsWithThen
+function animate(value: V | MotionValue<V>, keyframes: V | UnresolvedValueKeyframe<V>[], options?: ValueAnimationTransition<V>): AnimationPlaybackControlsWithThen
+function animate(object: O | O[], keyframes: ObjectTarget<O>, options?: AnimationOptions): AnimationPlaybackControlsWithThen
+function animate(value: ElementOrElements, keyframes: DOMKeyframesDefinition, options?: AnimationOptions): AnimationPlaybackControlsWithThen
 ```
 
 对一个序列执行动画
@@ -49,7 +49,7 @@ animate(value: ElementOrElements, keyframes: DOMKeyframesDefinition, options?: A
 ### `clamp()` \{#clamp\}
 
 ```ts
-clamp(min: number, max: number, v: number): number
+function clamp(min: number, max: number, v: number): number
 ```
 
 *暂无说明。*
@@ -65,7 +65,7 @@ clamp(min: number, max: number, v: number): number
 ### `mapValue()` \{#mapvalue\}
 
 ```ts
-mapValue(inputValue: MotionValue<number>, inputRange: MapInputRange, outputRange: O[], options?: TransformOptions<O>): MotionValue<O>
+function mapValue(inputValue: MotionValue<number>, inputRange: MapInputRange, outputRange: O[], options?: TransformOptions<O>): MotionValue<O>
 ```
 
 *暂无说明。*
@@ -82,8 +82,8 @@ mapValue(inputValue: MotionValue<number>, inputRange: MapInputRange, outputRange
 ### `mix()` \{#mix\}
 
 ```ts
-mix(from: T, to: T): Mixer<T>
-mix(from: number, to: number, p: number): number
+function mix(from: T, to: T): Mixer<T>
+function mix(from: number, to: number, p: number): number
 ```
 
 *暂无说明。*
@@ -98,7 +98,7 @@ mix(from: number, to: number, p: number): number
 ### `motionValue()` \{#motionvalue\}
 
 ```ts
-motionValue(init: V, options?: MotionValueOptions): MotionValue<V>
+function motionValue(init: V, options?: MotionValueOptions): MotionValue<V>
 ```
 
 *暂无说明。*
@@ -113,7 +113,7 @@ motionValue(init: V, options?: MotionValueOptions): MotionValue<V>
 ### `progress()` \{#progress\}
 
 ```ts
-progress(from: number, to: number, value: number): number
+function progress(from: number, to: number, value: number): number
 ```
 
 *暂无说明。*
@@ -129,7 +129,7 @@ progress(from: number, to: number, value: number): number
 ### `spring()` \{#spring\}
 
 ```ts
-spring(args: [optionsOrVisualDuration?: number | ValueAnimationOptions<number>, bounce?: number]): KeyframeGenerator<number>
+function spring(args: [optionsOrVisualDuration?: number | ValueAnimationOptions<number>, bounce?: number]): KeyframeGenerator<number>
 ```
 
 *暂无说明。*
@@ -143,7 +143,7 @@ spring(args: [optionsOrVisualDuration?: number | ValueAnimationOptions<number>, 
 ### `springValue()` \{#springvalue\}
 
 ```ts
-springValue(source: T | MotionValue<T>, options?: SpringOptions): MotionValue<T>
+function springValue(source: T | MotionValue<T>, options?: SpringOptions): MotionValue<T>
 ```
 
 *暂无说明。*
@@ -158,7 +158,7 @@ springValue(source: T | MotionValue<T>, options?: SpringOptions): MotionValue<T>
 ### `stagger()` \{#stagger\}
 
 ```ts
-stagger(args: [duration?: number, StaggerOptions?]): DynamicOption<number>
+function stagger(args: [duration?: number, StaggerOptions?]): DynamicOption<number>
 ```
 
 *暂无说明。*
@@ -172,7 +172,7 @@ stagger(args: [duration?: number, StaggerOptions?]): DynamicOption<number>
 ### `styleEffect()` \{#styleeffect\}
 
 ```ts
-styleEffect(subject: string | ElementOrElements, values: Record<string, MotionValue>): () => void
+function styleEffect(subject: string | ElementOrElements, values: Record<string, MotionValue>): () => void
 ```
 
 *暂无说明。*
@@ -187,7 +187,7 @@ styleEffect(subject: string | ElementOrElements, values: Record<string, MotionVa
 ### `transformValue()` \{#transformvalue\}
 
 ```ts
-transformValue(transform: () => O): MotionValue<O>
+function transformValue(transform: () => O): MotionValue<O>
 ```
 
 *暂无说明。*
@@ -201,7 +201,7 @@ transformValue(transform: () => O): MotionValue<O>
 ### `useMotionValueRef()` \{#usemotionvalueref\}
 
 ```ts
-useMotionValueRef(value: T): MainThreadRef<MotionValue<T>>
+function useMotionValueRef(value: T): MainThreadRef<MotionValue<T>>
 ```
 
 MainThreadRef 形式的 useMotionValue，高度实验性，可能会发生变化
@@ -215,7 +215,7 @@ MainThreadRef 形式的 useMotionValue，高度实验性，可能会发生变化
 ### `useMotionValueRefEvent()` \{#usemotionvaluerefevent\}
 
 ```ts
-useMotionValueRefEvent(valueRef: MainThreadRef<Listenable<V>>, event: "change", callback: MotionValueEventCallbacks<V>[EventName]): void
+function useMotionValueRefEvent(valueRef: MainThreadRef<Listenable<V>>, event: "change", callback: MotionValueEventCallbacks<V>[EventName]): void
 ```
 
 仅接受 motionValueRef 形式的 useMotionValueEvent，高度实验性，可能会发生变化

@@ -113,7 +113,7 @@ path and enables automatic asset emission.
 ### `normalizeBundlePath()` \{#normalizebundlepath\}
 
 ```ts
-normalizeBundlePath(bundlePath: string): string
+function normalizeBundlePath(bundlePath: string): string
 ```
 
 Normalize a public bundle path by removing leading slashes.
@@ -127,7 +127,7 @@ Normalize a public bundle path by removing leading slashes.
 ### `pluginExternalBundle()` \{#pluginexternalbundle\}
 
 ```ts
-pluginExternalBundle(options: PluginExternalBundleOptions): RsbuildPlugin
+function pluginExternalBundle(options: PluginExternalBundleOptions): RsbuildPlugin
 ```
 
 Create a rsbuild plugin for loading external bundles.

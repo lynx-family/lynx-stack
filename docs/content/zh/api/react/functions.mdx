@@ -13,7 +13,7 @@ title: 函数
 ### `createPortal()` \{#createportal\}
 
 ```ts
-createPortal(vnode: ComponentChild, container: NodesRef): ReactNode
+function createPortal(vnode: ComponentChild, container: NodesRef): ReactNode
 ```
 
 将 children 渲染到另一个 ReactLynx 元素中，该元素由
@@ -40,8 +40,8 @@ Context 仍会跨越 portal 边界传递，portal 内的状态更新也与其他
 ### `createElement()` \{#createelement\}
 
 ```ts
-createElement(type: Type, props?: IntrinsicElements[Type] | null, children: ReactNode[]): ReactElement<IntrinsicElements[Type], Type>
-createElement(type: string | ComponentType<Props>, props?: Attributes & Props | null, children: ReactNode[]): ReactElement<Props>
+function createElement(type: Type, props?: IntrinsicElements[Type] | null, children: ReactNode[]): ReactElement<IntrinsicElements[Type], Type>
+function createElement(type: string | ComponentType<Props>, props?: Attributes & Props | null, children: ReactNode[]): ReactElement<Props>
 ```
 
 使用 snapshot 运行时创建 ReactLynx 元素。
@@ -57,7 +57,7 @@ createElement(type: string | ComponentType<Props>, props?: Attributes & Props | 
 ### `cloneElement()` \{#cloneelement\}
 
 ```ts
-cloneElement(element: ReactElement<Props>, props?: Partial<Props> & Attributes | null, children: ReactNode[]): ReactElement<Props>
+function cloneElement(element: ReactElement<Props>, props?: Partial<Props> & Attributes | null, children: ReactNode[]): ReactElement<Props>
 ```
 
 使用 snapshot 运行时克隆 ReactLynx 元素。
@@ -73,7 +73,7 @@ cloneElement(element: ReactElement<Props>, props?: Partial<Props> & Attributes |
 ### `runOnMainThread()` \{#runonmainthread\}
 
 ```ts
-runOnMainThread(fn: Fn): (args: Parameters<Fn>) => Promise<R>
+function runOnMainThread(fn: Fn): (args: Parameters<Fn>) => Promise<R>
 ```
 
 `runOnMainThread` 用于在主线程上异步触发主线程函数。
@@ -99,7 +99,7 @@ async function someFunction() {
 ### `runOnBackground()` \{#runonbackground\}
 
 ```ts
-runOnBackground(f: Fn): (args: Parameters<Fn>) => Promise<R>
+function runOnBackground(f: Fn): (args: Parameters<Fn>) => Promise<R>
 ```
 
 `runOnBackground` 用于在后台线程上异步触发 JS 函数。
@@ -113,7 +113,7 @@ runOnBackground(f: Fn): (args: Parameters<Fn>) => Promise<R>
 ### `markFirstScreenSyncReady()` \{#markfirstscreensyncready\}
 
 ```ts
-markFirstScreenSyncReady(): void
+function markFirstScreenSyncReady(): void
 ```
 
 当 `firstScreenSyncTiming` 为 `'manual'` 时，将首屏标记为可同步。
@@ -132,7 +132,7 @@ markFirstScreenSyncReady();
 ### `withInitDataInState()` \{#withinitdatainstate\}
 
 ```ts
-withInitDataInState(App: ComponentClass<P, S>): ComponentClass<P, S>
+function withInitDataInState(App: ComponentClass<P, S>): ComponentClass<P, S>
 ```
 
 高阶组件（HOC），将 `initData` 注入到给定类组件的 state 中。

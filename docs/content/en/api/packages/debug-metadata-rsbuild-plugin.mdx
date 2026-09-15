@@ -31,7 +31,7 @@ You don't need to register it: [`pluginLynx`](/api/packages/rsbuild-plugin) appl
 ### `pluginLynxDebugMetadata()` \{#pluginlynxdebugmetadata\}
 
 ```ts
-pluginLynxDebugMetadata(): RsbuildPlugin
+function pluginLynxDebugMetadata(): RsbuildPlugin
 ```
 
 Register `debug-metadata.json` emission for every Lynx template build
@@ -64,7 +64,7 @@ GET .../*.css.map   → transparently forwarded to ?field=source-map
 ### `rewriteSourceMappingURLs()` \{#rewritesourcemappingurls\}
 
 ```ts
-rewriteSourceMappingURLs(compilation: Compilation, args: { chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }, options?: RewriteSourceMappingURLsOptions): void
+function rewriteSourceMappingURLs(compilation: Compilation, args: { chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }, options?: RewriteSourceMappingURLsOptions): void
 ```
 
 Rewrite the `//# sourceMappingURL=...` directive of every JS asset in the

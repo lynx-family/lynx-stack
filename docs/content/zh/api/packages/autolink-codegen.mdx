@@ -30,7 +30,7 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 ### `generate()` \{#generate\}
 
 ```ts
-generate(options: CodegenOptions): GeneratedFile[]
+function generate(options: CodegenOptions): GeneratedFile[]
 ```
 
 为库包构建生成的 JS facade 和平台 spec 文件内容。
@@ -44,7 +44,7 @@ generate(options: CodegenOptions): GeneratedFile[]
 ### `parseNativeModules()` \{#parsenativemodules\}
 
 ```ts
-parseNativeModules(source: string, filename: string): NativeModuleSpec[]
+function parseNativeModules(source: string, filename: string): NativeModuleSpec[]
 ```
 
 从 TypeScript 声明源码中解析以 `@lynxmodule` 标记的原生模块声明。
@@ -59,7 +59,7 @@ parseNativeModules(source: string, filename: string): NativeModuleSpec[]
 ### `runCodegen()` \{#runcodegen\}
 
 ```ts
-runCodegen(options: CodegenOptions): GeneratedFile[]
+function runCodegen(options: CodegenOptions): GeneratedFile[]
 ```
 
 将生成的文件写入磁盘，并返回生成文件的描述符。

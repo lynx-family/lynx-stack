@@ -36,7 +36,7 @@ For setup and the dual-thread rendering options, see the [guide on lynxjs.org](h
 ### `buildQueries()` \{#buildqueries\}
 
 ```ts
-buildQueries(queryAllBy: GetAllBy<Arguments>, getMultipleError: GetErrorFunction<Arguments>, getMissingError: GetErrorFunction<Arguments>): BuiltQueryMethods<Arguments>
+function buildQueries(queryAllBy: GetAllBy<Arguments>, getMultipleError: GetErrorFunction<Arguments>, getMissingError: GetErrorFunction<Arguments>): BuiltQueryMethods<Arguments>
 ```
 
 *No description yet.*
@@ -52,7 +52,7 @@ buildQueries(queryAllBy: GetAllBy<Arguments>, getMultipleError: GetErrorFunction
 ### `cleanup()` \{#cleanup\}
 
 ```ts
-cleanup(): void
+function cleanup(): void
 ```
 
 Cleanup elements rendered to the page and Preact trees that were mounted with render.
@@ -60,7 +60,7 @@ Cleanup elements rendered to the page and Preact trees that were mounted with re
 ### `computeHeadingLevel()` \{#computeheadinglevel\}
 
 ```ts
-computeHeadingLevel(element: Element): number | undefined
+function computeHeadingLevel(element: Element): number | undefined
 ```
 
 *No description yet.*
@@ -74,7 +74,7 @@ computeHeadingLevel(element: Element): number | undefined
 ### `configure()` \{#configure\}
 
 ```ts
-configure(configDelta: ConfigFn | Partial<Config>): void
+function configure(configDelta: ConfigFn | Partial<Config>): void
 ```
 
 *No description yet.*
@@ -86,7 +86,7 @@ configure(configDelta: ConfigFn | Partial<Config>): void
 ### `findAllByAltText()` \{#findallbyalttext\}
 
 ```ts
-findAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+function findAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
 ```
 
 *No description yet.*
@@ -100,7 +100,7 @@ findAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOp
 ### `findAllByDisplayValue()` \{#findallbydisplayvalue\}
 
 ```ts
-findAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+function findAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
 ```
 
 *No description yet.*
@@ -114,7 +114,7 @@ findAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: Matc
 ### `findAllByLabelText()` \{#findallbylabeltext\}
 
 ```ts
-findAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+function findAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
 ```
 
 *No description yet.*
@@ -128,7 +128,7 @@ findAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: Selecto
 ### `findAllByPlaceholderText()` \{#findallbyplaceholdertext\}
 
 ```ts
-findAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+function findAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
 ```
 
 *No description yet.*
@@ -142,7 +142,7 @@ findAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: M
 ### `findAllByRole()` \{#findallbyrole\}
 
 ```ts
-findAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+function findAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
 ```
 
 *No description yet.*
@@ -156,7 +156,7 @@ findAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions,
 ### `findAllByTestId()` \{#findallbytestid\}
 
 ```ts
-findAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+function findAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
 ```
 
 *No description yet.*
@@ -170,7 +170,7 @@ findAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOpt
 ### `findAllByText()` \{#findallbytext\}
 
 ```ts
-findAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+function findAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
 ```
 
 *No description yet.*
@@ -184,7 +184,7 @@ findAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatc
 ### `findAllByTitle()` \{#findallbytitle\}
 
 ```ts
-findAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+function findAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
 ```
 
 *No description yet.*
@@ -198,7 +198,7 @@ findAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOpti
 ### `findByAltText()` \{#findbyalttext\}
 
 ```ts
-findByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+function findByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
 ```
 
 *No description yet.*
@@ -212,7 +212,7 @@ findByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptio
 ### `findByDisplayValue()` \{#findbydisplayvalue\}
 
 ```ts
-findByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+function findByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
 ```
 
 *No description yet.*
@@ -226,7 +226,7 @@ findByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: Matcher
 ### `findByLabelText()` \{#findbylabeltext\}
 
 ```ts
-findByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+function findByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
 ```
 
 *No description yet.*
@@ -240,7 +240,7 @@ findByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMa
 ### `findByPlaceholderText()` \{#findbyplaceholdertext\}
 
 ```ts
-findByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+function findByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
 ```
 
 *No description yet.*
@@ -254,7 +254,7 @@ findByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: Matc
 ### `findByRole()` \{#findbyrole\}
 
 ```ts
-findByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+function findByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions, waitForElementOptions?: waitForOptions]): Promise<T>
 ```
 
 *No description yet.*
@@ -268,7 +268,7 @@ findByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions, wa
 ### `findByTestId()` \{#findbytestid\}
 
 ```ts
-findByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+function findByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
 ```
 
 *No description yet.*
@@ -282,7 +282,7 @@ findByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOption
 ### `findByText()` \{#findbytext\}
 
 ```ts
-findByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+function findByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
 ```
 
 *No description yet.*
@@ -296,7 +296,7 @@ findByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcher
 ### `findByTitle()` \{#findbytitle\}
 
 ```ts
-findByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+function findByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
 ```
 
 *No description yet.*
@@ -310,7 +310,7 @@ findByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions
 ### `getAllByAltText()` \{#getallbyalttext\}
 
 ```ts
-getAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+function getAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
 ```
 
 *No description yet.*
@@ -324,7 +324,7 @@ getAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOpt
 ### `getAllByDisplayValue()` \{#getallbydisplayvalue\}
 
 ```ts
-getAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+function getAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
 ```
 
 *No description yet.*
@@ -338,7 +338,7 @@ getAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: Match
 ### `getAllByLabelText()` \{#getallbylabeltext\}
 
 ```ts
-getAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T[]
+function getAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T[]
 ```
 
 *No description yet.*
@@ -352,7 +352,7 @@ getAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: Selector
 ### `getAllByPlaceholderText()` \{#getallbyplaceholdertext\}
 
 ```ts
-getAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+function getAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
 ```
 
 *No description yet.*
@@ -366,7 +366,7 @@ getAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: Ma
 ### `getAllByRole()` \{#getallbyrole\}
 
 ```ts
-getAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]): T[]
+function getAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]): T[]
 ```
 
 *No description yet.*
@@ -380,7 +380,7 @@ getAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions])
 ### `getAllByTestId()` \{#getallbytestid\}
 
 ```ts
-getAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+function getAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
 ```
 
 *No description yet.*
@@ -394,7 +394,7 @@ getAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOpti
 ### `getAllByText()` \{#getallbytext\}
 
 ```ts
-getAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T[]
+function getAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T[]
 ```
 
 *No description yet.*
@@ -408,7 +408,7 @@ getAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatch
 ### `getAllByTitle()` \{#getallbytitle\}
 
 ```ts
-getAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+function getAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
 ```
 
 *No description yet.*
@@ -422,7 +422,7 @@ getAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptio
 ### `getByAltText()` \{#getbyalttext\}
 
 ```ts
-getByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
+function getByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
 ```
 
 *No description yet.*
@@ -436,7 +436,7 @@ getByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOption
 ### `getByDisplayValue()` \{#getbydisplayvalue\}
 
 ```ts
-getByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
+function getByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
 ```
 
 *No description yet.*
@@ -450,7 +450,7 @@ getByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherO
 ### `getByLabelText()` \{#getbylabeltext\}
 
 ```ts
-getByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T
+function getByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T
 ```
 
 *No description yet.*
@@ -464,7 +464,7 @@ getByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMat
 ### `getByPlaceholderText()` \{#getbyplaceholdertext\}
 
 ```ts
-getByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
+function getByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
 ```
 
 *No description yet.*
@@ -478,7 +478,7 @@ getByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: Match
 ### `getByRole()` \{#getbyrole\}
 
 ```ts
-getByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]): T
+function getByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]): T
 ```
 
 *No description yet.*
@@ -492,7 +492,7 @@ getByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]): T
 ### `getByTestId()` \{#getbytestid\}
 
 ```ts
-getByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
+function getByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
 ```
 
 *No description yet.*
@@ -506,7 +506,7 @@ getByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions
 ### `getByText()` \{#getbytext\}
 
 ```ts
-getByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T
+function getByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T
 ```
 
 *No description yet.*
@@ -520,7 +520,7 @@ getByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherO
 ### `getByTitle()` \{#getbytitle\}
 
 ```ts
-getByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
+function getByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
 ```
 
 *No description yet.*
@@ -534,7 +534,7 @@ getByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]
 ### `getConfig()` \{#getconfig\}
 
 ```ts
-getConfig(): Config
+function getConfig(): Config
 ```
 
 *No description yet.*
@@ -544,7 +544,7 @@ getConfig(): Config
 ### `getDefaultNormalizer()` \{#getdefaultnormalizer\}
 
 ```ts
-getDefaultNormalizer(options?: DefaultNormalizerOptions): NormalizerFn
+function getDefaultNormalizer(options?: DefaultNormalizerOptions): NormalizerFn
 ```
 
 *No description yet.*
@@ -558,7 +558,7 @@ getDefaultNormalizer(options?: DefaultNormalizerOptions): NormalizerFn
 ### `getElementError()` \{#getelementerror\}
 
 ```ts
-getElementError(message: string | null, container: HTMLElement): Error
+function getElementError(message: string | null, container: HTMLElement): Error
 ```
 
 *No description yet.*
@@ -573,7 +573,7 @@ getElementError(message: string | null, container: HTMLElement): Error
 ### `getNodeText()` \{#getnodetext\}
 
 ```ts
-getNodeText(node: HTMLElement): string
+function getNodeText(node: HTMLElement): string
 ```
 
 *No description yet.*
@@ -587,7 +587,7 @@ getNodeText(node: HTMLElement): string
 ### `getQueriesForElement()` \{#getqueriesforelement\}
 
 ```ts
-getQueriesForElement(element: HTMLElement, queriesToBind?: T): BoundFunctions<T>
+function getQueriesForElement(element: HTMLElement, queriesToBind?: T): BoundFunctions<T>
 ```
 
 *No description yet.*
@@ -602,7 +602,7 @@ getQueriesForElement(element: HTMLElement, queriesToBind?: T): BoundFunctions<T>
 ### `getRoles()` \{#getroles\}
 
 ```ts
-getRoles(container: HTMLElement): { [index: string]: HTMLElement[] }
+function getRoles(container: HTMLElement): { [index: string]: HTMLElement[] }
 ```
 
 *No description yet.*
@@ -616,7 +616,7 @@ getRoles(container: HTMLElement): { [index: string]: HTMLElement[] }
 ### `getSuggestedQuery()` \{#getsuggestedquery\}
 
 ```ts
-getSuggestedQuery(element: HTMLElement, variant?: Variant, method?: Method): Suggestion | undefined
+function getSuggestedQuery(element: HTMLElement, variant?: Variant, method?: Method): Suggestion | undefined
 ```
 
 *No description yet.*
@@ -632,7 +632,7 @@ getSuggestedQuery(element: HTMLElement, variant?: Variant, method?: Method): Sug
 ### `isInaccessible()` \{#isinaccessible\}
 
 ```ts
-isInaccessible(element: Element): boolean
+function isInaccessible(element: Element): boolean
 ```
 
 https://testing-library.com/docs/dom-testing-library/api-helpers#isinaccessible
@@ -646,7 +646,7 @@ https://testing-library.com/docs/dom-testing-library/api-helpers#isinaccessible
 ### `logDOM()` \{#logdom\}
 
 ```ts
-logDOM(dom?: Element | HTMLDocument, maxLength?: number, options?: PrettyDOMOptions): void
+function logDOM(dom?: Element | HTMLDocument, maxLength?: number, options?: PrettyDOMOptions): void
 ```
 
 *No description yet.*
@@ -660,7 +660,7 @@ logDOM(dom?: Element | HTMLDocument, maxLength?: number, options?: PrettyDOMOpti
 ### `logRoles()` \{#logroles\}
 
 ```ts
-logRoles(container: HTMLElement, options?: LogRolesOptions): string
+function logRoles(container: HTMLElement, options?: LogRolesOptions): string
 ```
 
 *No description yet.*
@@ -675,7 +675,7 @@ logRoles(container: HTMLElement, options?: LogRolesOptions): string
 ### `prettyDOM()` \{#prettydom\}
 
 ```ts
-prettyDOM(dom?: Element | HTMLDocument, maxLength?: number, options?: PrettyDOMOptions): string | false
+function prettyDOM(dom?: Element | HTMLDocument, maxLength?: number, options?: PrettyDOMOptions): string | false
 ```
 
 *No description yet.*
@@ -691,7 +691,7 @@ prettyDOM(dom?: Element | HTMLDocument, maxLength?: number, options?: PrettyDOMO
 ### `queryAllByAltText()` \{#queryallbyalttext\}
 
 ```ts
-queryAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+function queryAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
 ```
 
 *No description yet.*
@@ -705,7 +705,7 @@ queryAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherO
 ### `queryAllByDisplayValue()` \{#queryallbydisplayvalue\}
 
 ```ts
-queryAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+function queryAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
 ```
 
 *No description yet.*
@@ -719,7 +719,7 @@ queryAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: Mat
 ### `queryAllByLabelText()` \{#queryallbylabeltext\}
 
 ```ts
-queryAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T[]
+function queryAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T[]
 ```
 
 *No description yet.*
@@ -733,7 +733,7 @@ queryAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: Select
 ### `queryAllByPlaceholderText()` \{#queryallbyplaceholdertext\}
 
 ```ts
-queryAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+function queryAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
 ```
 
 *No description yet.*
@@ -747,7 +747,7 @@ queryAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: 
 ### `queryAllByRole()` \{#queryallbyrole\}
 
 ```ts
-queryAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]): T[]
+function queryAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]): T[]
 ```
 
 *No description yet.*
@@ -761,7 +761,7 @@ queryAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions
 ### `queryAllByTestId()` \{#queryallbytestid\}
 
 ```ts
-queryAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+function queryAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
 ```
 
 *No description yet.*
@@ -775,7 +775,7 @@ queryAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOp
 ### `queryAllByText()` \{#queryallbytext\}
 
 ```ts
-queryAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T[]
+function queryAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T[]
 ```
 
 *No description yet.*
@@ -789,7 +789,7 @@ queryAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMat
 ### `queryAllByTitle()` \{#queryallbytitle\}
 
 ```ts
-queryAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+function queryAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
 ```
 
 *No description yet.*
@@ -803,7 +803,7 @@ queryAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOpt
 ### `queryByAltText()` \{#querybyalttext\}
 
 ```ts
-queryByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
+function queryByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
 ```
 
 *No description yet.*
@@ -817,7 +817,7 @@ queryByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOpti
 ### `queryByDisplayValue()` \{#querybydisplayvalue\}
 
 ```ts
-queryByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
+function queryByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
 ```
 
 *No description yet.*
@@ -831,7 +831,7 @@ queryByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: Matche
 ### `queryByLabelText()` \{#querybylabeltext\}
 
 ```ts
-queryByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T | null
+function queryByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T | null
 ```
 
 *No description yet.*
@@ -845,7 +845,7 @@ queryByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorM
 ### `queryByPlaceholderText()` \{#querybyplaceholdertext\}
 
 ```ts
-queryByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
+function queryByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
 ```
 
 *No description yet.*
@@ -859,7 +859,7 @@ queryByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: Mat
 ### `queryByRole()` \{#querybyrole\}
 
 ```ts
-queryByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]): T | null
+function queryByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]): T | null
 ```
 
 *No description yet.*
@@ -873,7 +873,7 @@ queryByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]):
 ### `queryByTestId()` \{#querybytestid\}
 
 ```ts
-queryByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
+function queryByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
 ```
 
 *No description yet.*
@@ -887,7 +887,7 @@ queryByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptio
 ### `queryByText()` \{#querybytext\}
 
 ```ts
-queryByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T | null
+function queryByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T | null
 ```
 
 *No description yet.*
@@ -901,7 +901,7 @@ queryByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatche
 ### `queryByTitle()` \{#querybytitle\}
 
 ```ts
-queryByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
+function queryByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
 ```
 
 *No description yet.*
@@ -915,7 +915,7 @@ queryByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOption
 ### `render()` \{#render\}
 
 ```ts
-render(ui: ReactNode, options?: RenderOptions<Q>): RenderResult<Q>
+function render(ui: ReactNode, options?: RenderOptions<Q>): RenderResult<Q>
 ```
 
 Render into the page. It should be used with cleanup.
@@ -955,7 +955,7 @@ expect(container.firstChild).toMatchInlineSnapshot(`
 ### `renderHook()` \{#renderhook\}
 
 ```ts
-renderHook(render: (initialProps: Props) => Result, options?: RenderHookOptions<Props>): RenderHookResult<Result, Props>
+function renderHook(render: (initialProps: Props) => Result, options?: RenderHookOptions<Props>): RenderHookResult<Result, Props>
 ```
 
 Allows you to render a hook within a test React component without having to
@@ -990,7 +990,7 @@ expect(result.current).toEqual('provided');
 ### `waitFor()` \{#waitfor\}
 
 ```ts
-waitFor(callback: () => T | Promise<T>, options?: waitForOptions): Promise<T>
+function waitFor(callback: () => T | Promise<T>, options?: waitForOptions): Promise<T>
 ```
 
 *No description yet.*
@@ -1005,7 +1005,7 @@ waitFor(callback: () => T | Promise<T>, options?: waitForOptions): Promise<T>
 ### `waitForElementToBeRemoved()` \{#waitforelementtoberemoved\}
 
 ```ts
-waitForElementToBeRemoved(callback: T | (() => T), options?: waitForOptions): Promise<void>
+function waitForElementToBeRemoved(callback: T | (() => T), options?: waitForOptions): Promise<void>
 ```
 
 *No description yet.*
@@ -1020,7 +1020,7 @@ waitForElementToBeRemoved(callback: T | (() => T), options?: waitForOptions): Pr
 ### `waitSchedule()` \{#waitschedule\}
 
 ```ts
-waitSchedule(): Promise<void>
+function waitSchedule(): Promise<void>
 ```
 
 Wait for the next event loop.
