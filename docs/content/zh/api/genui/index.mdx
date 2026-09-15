@@ -1,0 +1,24 @@
+---
+title: GenUI API
+---
+
+# GenUI API
+
+{/* @api PackageHeader package="genui" */}
+
+<div className="api-pkg-header"><code>@lynx-js/genui</code> <span className="api-pkg-version">v0.4.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/genui" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/genui" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/genui/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+`@lynx-js/genui` 在 ReactLynx 中渲染 agent 生成的 UI。它同时支持 [A2UI](https://a2ui.org/) v0.9 消息和 [OpenUI Lang](https://www.openui.com/docs/openui-lang/specification-v05) v0.5 响应，并提供 agent 一侧需要的提示词构建工具和 catalog 提取工具。下表中每个入口都是独立的 import 路径；包的根入口重新导出了其中大部分入口的主要 API。完整用法见 [A2UI](https://lynxjs.org/zh/react/genui/a2ui) 和 [OpenUI](https://lynxjs.org/zh/react/genui/openui) 指南。
+
+| | |
+| --- | --- |
+| [`@lynx-js/genui/a2ui`](./a2ui) | A2UI 渲染器、消息 store 和内置 catalog：`A2UI`、`createMessageStore`、`defineCatalog` … |
+| [`@lynx-js/genui/openui`](./openui) | OpenUI Lang 渲染器和组件库：`OpenUiRenderer`、`createOpenUiLibrary`、`defineComponent` … |
+| [`@lynx-js/genui/openui/explicit`](./openui-explicit) | 不含默认 catalog 的 `createOpenUiLibrary` |
+| [`@lynx-js/genui/openui/prompt`](./openui-prompt) | OpenUI 系统提示词：`buildOpenUiSystemPrompt`、`createOpenUiPromptLibrary` |
+| [`@lynx-js/genui/a2ui-prompt`](./a2ui-prompt) | A2UI 系统提示词：`buildA2UISystemPrompt`、`loadBasicCatalog` … |
+| [`@lynx-js/genui/a2ui-catalog-extractor`](./a2ui-catalog-extractor) | 根据组件的 TypeScript 接口生成 A2UI catalog JSON |
+| [`@lynx-js/genui/lynx-xml`](./lynx-xml) | Lynx XML 系统提示词和 XML 片段编译器 |
+| [`@lynx-js/genui/mcp-apps`](./mcp-apps) | 用你注册的渲染器渲染 MCP Apps 数据的 Lynx 宿主 |

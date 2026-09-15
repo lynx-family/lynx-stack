@@ -1,0 +1,34 @@
+{
+  "RuntimeWrapperWebpackPlugin.summary": {
+    "en": "RuntimeWrapperWebpackPlugin adds runtime wrappers to JavaScript and allow to be loaded by Lynx.",
+    "text": "RuntimeWrapperWebpackPlugin 为 JavaScript 添加运行时包装，使其能够被 Lynx 加载。"
+  },
+  "RuntimeWrapperWebpackPlugin.defaultOptions.summary": {
+    "en": "`defaultOptions` is the default options that the [`RuntimeWrapperWebpackPlugin`](api:RuntimeWrapperWebpackPlugin) uses.",
+    "text": "`defaultOptions` 是 [`RuntimeWrapperWebpackPlugin`](api:RuntimeWrapperWebpackPlugin) 使用的默认选项。"
+  },
+  "RuntimeWrapperWebpackPlugin.apply.summary": {
+    "en": "The entry point of a webpack plugin.",
+    "text": "webpack 插件的入口。"
+  },
+  "RuntimeWrapperWebpackPlugin.apply.params.compiler": {
+    "en": "the webpack compiler",
+    "text": "webpack 编译器"
+  },
+  "RuntimeWrapperWebpackPluginOptions.summary": {
+    "en": "The options for RuntimeWrapperWebpackPluginOptions",
+    "text": "RuntimeWrapperWebpackPluginOptions 的选项"
+  },
+  "RuntimeWrapperWebpackPluginOptions.bannerType.summary": {
+    "en": "There are two types of banners: script(for app-service) and bundle(for js-render). You can decide to use which banner by the filename.",
+    "text": "banner 有两种类型：script（用于 app-service）和 bundle（用于 js-render）。可以根据文件名决定使用哪种 banner。"
+  },
+  "RuntimeWrapperWebpackPluginOptions.injectVars.summary": {
+    "en": "A function that receives the default variable list and returns the list to inject.",
+    "text": "一个函数，接收默认的变量列表，并返回要注入的变量列表。"
+  },
+  "RuntimeWrapperWebpackPluginOptions.test.summary": {
+    "en": "Wrap the emitted JS assets whose filenames match this condition.\nAssets marked as main thread are never wrapped.",
+    "text": "包裹文件名匹配该条件的已产出 JS 资源。标记为主线程的资源永远不会被包裹。"
+  }
+}

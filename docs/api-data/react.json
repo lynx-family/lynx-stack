@@ -1,0 +1,810 @@
+{
+  "id": "react",
+  "package": "@lynx-js/react",
+  "version": "0.126.1",
+  "description": "ReactLynx is a framework for developing Lynx applications with familiar React.",
+  "group": "react",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/react",
+  "exports": [
+    {
+      "name": "MainThreadRef",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "A `MainThreadRef` is a ref that can only be accessed on the main thread. It is used to preserve\nstates between main thread function calls.\nThe data saved in `current` property of the `MainThreadRef` can be read and written in\nmultiple main thread functions.",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(initValue: T): MainThreadRef<T>",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "initValue",
+              "type": "T"
+            }
+          ],
+          "returns": {
+            "type": "MainThreadRef<T>",
+            "refs": [
+              "MainThreadRef"
+            ]
+          }
+        },
+        {
+          "name": "current",
+          "type": "T",
+          "kind": "accessor",
+          "summary": ""
+        }
+      ]
+    },
+    {
+      "name": "CloneElement",
+      "kind": "interface",
+      "type": "CloneElement(element: ReactElement<Props>, props?: Partial<Props> & Attributes | null, children: ReactNode[]): ReactElement<Props>",
+      "summary": "The call signature of ReactLynx `cloneElement`.",
+      "signatures": [
+        {
+          "text": "CloneElement(element: ReactElement<Props>, props?: Partial<Props> & Attributes | null, children: ReactNode[]): ReactElement<Props>",
+          "params": [
+            {
+              "name": "element",
+              "type": "ReactElement<Props>"
+            },
+            {
+              "name": "props",
+              "type": "Partial<Props> & Attributes | null",
+              "optional": true
+            },
+            {
+              "name": "children",
+              "type": "ReactNode[]"
+            }
+          ],
+          "returns": {
+            "type": "ReactElement<Props>"
+          },
+          "summary": "Clones an element with optional replacement props and children."
+        }
+      ],
+      "members": []
+    },
+    {
+      "name": "CreateElement",
+      "kind": "interface",
+      "type": "CreateElement(type: Type, props?: IntrinsicElements[Type] | null, children: ReactNode[]): ReactElement<IntrinsicElements[Type], Type>",
+      "summary": "The call signature of ReactLynx `createElement`.",
+      "signatures": [
+        {
+          "text": "CreateElement(type: Type, props?: IntrinsicElements[Type] | null, children: ReactNode[]): ReactElement<IntrinsicElements[Type], Type>",
+          "params": [
+            {
+              "name": "type",
+              "type": "Type"
+            },
+            {
+              "name": "props",
+              "type": "IntrinsicElements[Type] | null",
+              "optional": true
+            },
+            {
+              "name": "children",
+              "type": "ReactNode[]"
+            }
+          ],
+          "returns": {
+            "type": "ReactElement<IntrinsicElements[Type], Type>"
+          },
+          "summary": "Creates an element for a Lynx intrinsic element."
+        },
+        {
+          "text": "CreateElement(type: string | ComponentType<Props>, props?: Attributes & Props | null, children: ReactNode[]): ReactElement<Props>",
+          "params": [
+            {
+              "name": "type",
+              "type": "string | ComponentType<Props>"
+            },
+            {
+              "name": "props",
+              "type": "Attributes & Props | null",
+              "optional": true
+            },
+            {
+              "name": "children",
+              "type": "ReactNode[]"
+            }
+          ],
+          "returns": {
+            "type": "ReactElement<Props>"
+          },
+          "summary": "Creates an element for a component."
+        }
+      ],
+      "members": []
+    },
+    {
+      "name": "DataProcessorDefinition",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Definition of DataProcessor(s)",
+      "members": [
+        {
+          "name": "dataProcessors",
+          "optional": true,
+          "type": "DataProcessors",
+          "ref": "DataProcessors",
+          "refs": [
+            "DataProcessors"
+          ],
+          "summary": "Should be used with `lynx.registerDataProcessors`. See more examples at [`Lynx.registerDataProcessors`](api:Lynx.registerDataProcessors).",
+          "kind": "property"
+        },
+        {
+          "name": "defaultDataProcessor",
+          "optional": true,
+          "type": "(rawInitData: InitDataRaw) => InitData",
+          "refs": [
+            "InitDataRaw",
+            "InitData"
+          ],
+          "summary": "You can custom input and output type of `defaultDataProcessor` by extends [`InitDataRaw`](api:InitDataRaw) and [`InitData`](api:InitData)\n\nShould be used with `lynx.registerDataProcessors`. See more examples at [`Lynx.registerDataProcessors`](api:Lynx.registerDataProcessors).",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "DataProcessors",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The data processors that registered with [`Lynx.registerDataProcessors`](api:Lynx.registerDataProcessors).",
+      "examples": [
+        "Extending `dataProcessors` interface\n\n```ts\nimport type { DataProcessors as WellKnownDataProcessors } from '@lynx-js/react';\n\ndeclare module '@lynx-js/react' {\n  interface DataProcessors extends WellKnownDataProcessors {\n    foo(bar: string): number;\n  }\n}\n```\n\nThen you can use `lynx.registerDataProcessors` with types.\n\n```js\nlynx.registerDataProcessors({\n  dataProcessors: {\n    foo(bar) {\n      return 1;\n    }\n  }\n})\n```"
+      ],
+      "members": [
+        {
+          "name": "getScreenMetricsOverride",
+          "optional": true,
+          "type": "getScreenMetricsOverride(metrics: { height: number; width: number }): { height: number; width: number }",
+          "kind": "method",
+          "params": [
+            {
+              "name": "metrics",
+              "type": "{ height: number; width: number }",
+              "description": "The physical screen dimensions in pixels"
+            }
+          ],
+          "returns": {
+            "type": "{ height: number; width: number }",
+            "description": "New screen dimensions to be used by the app"
+          },
+          "summary": "Optional processor to override screen metrics used by the app",
+          "examples": [
+            "```ts\nlynx.registerDataProcessors({\n  dataProcessors: {\n    getScreenMetricsOverride: (metrics) => {\n      // Force a specific aspect ratio\n      return {\n        width: metrics.width,\n        height: metrics.width * (16/9)\n      };\n    }\n  }\n});\n```"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "GlobalProps",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The interface you can extends so that the `useGlobalProps` returning value can be customized",
+      "members": []
+    },
+    {
+      "name": "InitData",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The interface you can extends so that the `defaultDataProcessor` returning value can be customized\n\nShould be used with `lynx.registerDataProcessors`. See more examples at [`Lynx.registerDataProcessors`](api:Lynx.registerDataProcessors).",
+      "members": []
+    },
+    {
+      "name": "InitDataRaw",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The interface you can extends so that the `defaultDataProcessor` parameter can be customized\n\nShould be used with `lynx.registerDataProcessors`. See more examples at [`Lynx.registerDataProcessors`](api:Lynx.registerDataProcessors).",
+      "members": []
+    },
+    {
+      "name": "Lynx",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "APIs under `lynx` global variable that added by ReactLynx.",
+      "examples": [
+        "```ts\nlynx.registerDataProcessors(...);\nlynx.querySelector(...);\nlynx.querySelectorAll(...);\n```"
+      ],
+      "members": [
+        {
+          "name": "registerDataProcessors",
+          "type": "(dataProcessorDefinition?: DataProcessorDefinition) => void",
+          "refs": [
+            "DataProcessorDefinition"
+          ],
+          "summary": "Register DataProcessors. You MUST call this before `root.render()`.",
+          "examples": [
+            "You MUST call `lynx.registerDataProcessors` before calling `root.render()`.\n\n```ts\nimport { root } from \"@lynx-js/react\"\n\n// You MUST call this before `root.render()`\nlynx.registerDataProcessors({\n  defaultDataProcessor: () => {...} // default DataProcessor\n  dataProcessors: {\n    getScreenMetricsOverride: () => {...} // named DataProcessor\n  }\n})\n\nroot.render(<App/>);\n```",
+            "If you have a class component with `static defaultDataProcessor`\nor `static dataProcessors`, you can use it to register DataProcessors.\n\n```ts\nimport { root, Component } from \"@lynx-js/react\"\n\nclass App extends Component {\n  static defaultDataProcessor() {\n     ...\n  }\n\n  static dataProcessors = {\n    getScreenMetricsOverride() {\n      ...\n    }\n  }\n}\n\nlynx.registerDataProcessors(App); // You can pass `App` because it has the required shape\nroot.render(<App/>);\n```",
+            "For developers who want fully typed `defaultDataProcessor`,\nthey can achieve it by extends interface `InitDataRaw` and `InitData`.\n\n```ts\nimport { root } from \"@lynx-js/react\"\n\ninterface ExistingInterface {\n  somePropertyFromExistingInterface: number\n}\n\ndeclare module '@lynx-js/react' {\n  interface InitDataRaw extends ExistingInterface {\n    someAnotherCustomProperty: string\n  }\n}\n\nlynx.registerDataProcessors({\n  defaultDataProcessor: (initDataRaw) => {\n    initDataRaw.somePropertyFromExistingInterface // will be typed\n  }\n})\n\n```",
+            "For developers who want fully typed `defaultDataProcessor`,\nthey can achieve it by extends interface `InitDataRaw` and `InitData`.\n\n```ts\nimport { useInitData } from \"@lynx-js/react\"\n\ninterface AnotherExistingInterface {\n  someAnotherPropertyFromExistingInterface: number\n}\n\ndeclare module '@lynx-js/react' {\n  interface InitData extends AnotherExistingInterface {\n    someCustomProperty: string\n  }\n}\n\nlynx.registerDataProcessors({\n  defaultDataProcessor: () => {\n    return {\n      someCustomProperty: 'value', // will be typed\n      someAnotherPropertyFromExistingInterface: 1, // will be typed\n    }\n  }\n})\n\nfunction App() {\n  const initData = useInitData();\n\n  initData.someCustomProperty // will be typed\n  initData.someAnotherPropertyFromExistingInterface // will be typed\n}\n\n```"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "triggerGlobalEventFromLepus",
+          "type": "(eventName: string, params: any) => void",
+          "summary": "An alias of `lynx.getJSModule(\"GlobalEventEmitter\").trigger(eventName, params)` only in Lepus",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "Root",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The default root exported by `@lynx-js/react` for you to render a JSX",
+      "members": [
+        {
+          "name": "registerDataProcessors",
+          "type": "(dataProcessorDefinition: DataProcessorDefinition) => void",
+          "refs": [
+            "DataProcessorDefinition"
+          ],
+          "summary": "Register DataProcessors. You MUST call this before `root.render()`.",
+          "deprecated": "use [`lynx.registerDataProcessors`](api:Lynx.registerDataProcessors) instead",
+          "kind": "property"
+        },
+        {
+          "name": "render",
+          "type": "(jsx: ReactNode) => void",
+          "summary": "Use this API to pass in your JSX to render",
+          "examples": [
+            "```ts\nimport { root } from \"@lynx-js/react\"\n\nfunction App() {\n  // Your app\n  return <view>...</view>\n}\n\nroot.render(<App/>);\n```",
+            "```tsx\nimport { root } from \"@lynx-js/react\"\n\nfunction App() {\n  // Your app\n  return <view>...</view>\n}\n\nif (__MAIN_THREAD__) {\n  root.render(\n    <DataProvider data={DEFAULT_DATA}>\n       <App/>\n    </DataProvider>\n  );\n} else if (__BACKGROUND__) {\n  fetchData().then((data) => {\n    root.render(\n      <DataProvider data={data}>\n         <App/>\n      </DataProvider>\n    ); // You can render later after your data is ready\n  })\n}\n```"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ReactLynxChildren",
+      "kind": "typealias",
+      "type": "Omit<typeof PreactChildren, \"map\" | \"forEach\" | \"toArray\"> & { forEach: any; map: any; toArray: any }",
+      "summary": "Type of ReactLynx children utilities."
+    },
+    {
+      "name": "Children",
+      "kind": "variable",
+      "type": "ReactLynxChildren",
+      "ref": "ReactLynxChildren",
+      "refs": [
+        "ReactLynxChildren"
+      ],
+      "summary": "ReactLynx children utilities.\n\nArrays returned by `map`, `forEach`, and `toArray` are frozen."
+    },
+    {
+      "name": "cloneElement",
+      "kind": "function",
+      "type": "cloneElement(element: ReactElement<Props>, props?: Partial<Props> & Attributes | null, children: ReactNode[]): ReactElement<Props>",
+      "refs": [
+        "CloneElement"
+      ],
+      "summary": "Clones a ReactLynx element using the snapshot runtime.",
+      "signatures": [
+        {
+          "text": "cloneElement(element: ReactElement<Props>, props?: Partial<Props> & Attributes | null, children: ReactNode[]): ReactElement<Props>",
+          "params": [
+            {
+              "name": "element",
+              "type": "ReactElement<Props>"
+            },
+            {
+              "name": "props",
+              "type": "Partial<Props> & Attributes | null",
+              "optional": true
+            },
+            {
+              "name": "children",
+              "type": "ReactNode[]"
+            }
+          ],
+          "returns": {
+            "type": "ReactElement<Props>"
+          },
+          "summary": "Clones an element with optional replacement props and children."
+        }
+      ]
+    },
+    {
+      "name": "createElement",
+      "kind": "function",
+      "type": "createElement(type: Type, props?: IntrinsicElements[Type] | null, children: ReactNode[]): ReactElement<IntrinsicElements[Type], Type>",
+      "refs": [
+        "CreateElement"
+      ],
+      "summary": "Creates a ReactLynx element using the snapshot runtime.",
+      "signatures": [
+        {
+          "text": "createElement(type: Type, props?: IntrinsicElements[Type] | null, children: ReactNode[]): ReactElement<IntrinsicElements[Type], Type>",
+          "params": [
+            {
+              "name": "type",
+              "type": "Type"
+            },
+            {
+              "name": "props",
+              "type": "IntrinsicElements[Type] | null",
+              "optional": true
+            },
+            {
+              "name": "children",
+              "type": "ReactNode[]"
+            }
+          ],
+          "returns": {
+            "type": "ReactElement<IntrinsicElements[Type], Type>"
+          },
+          "summary": "Creates an element for a Lynx intrinsic element."
+        },
+        {
+          "text": "createElement(type: string | ComponentType<Props>, props?: Attributes & Props | null, children: ReactNode[]): ReactElement<Props>",
+          "params": [
+            {
+              "name": "type",
+              "type": "string | ComponentType<Props>"
+            },
+            {
+              "name": "props",
+              "type": "Attributes & Props | null",
+              "optional": true
+            },
+            {
+              "name": "children",
+              "type": "ReactNode[]"
+            }
+          ],
+          "returns": {
+            "type": "ReactElement<Props>"
+          },
+          "summary": "Creates an element for a component."
+        }
+      ]
+    },
+    {
+      "name": "GlobalPropsConsumer",
+      "kind": "variable",
+      "type": "Consumer<GlobalProps>",
+      "refs": [
+        "GlobalProps"
+      ],
+      "summary": "The [Consumer](https://react.dev/reference/react/createContext#consumer) Component that provide `lynx.__globalProps`.\nOnly needed with `globalPropsMode: 'event'`, together with [`GlobalPropsProvider`](api:GlobalPropsProvider); in the default `'reactive'` mode\nit calls `children` with `lynx.__globalProps` directly and updates come from a full re-render."
+    },
+    {
+      "name": "GlobalPropsProvider",
+      "kind": "variable",
+      "type": "FC<{ children?: ReactNode }>",
+      "summary": "The [Provider](https://react.dev/reference/react/createContext#provider) Component that provide `lynx.__globalProps`.\nOnly needed with `globalPropsMode: 'event'`; in the default `'reactive'` mode it renders its children directly\nand updates come from a full re-render.",
+      "examples": [
+        "With `globalPropsMode: 'event'`:\n\n```ts\nimport { root } from \"@lynx-js/react\"\n\nfunction App() {\n  return (\n    <GlobalPropsConsumer children={(globalProps) => <view>...</view>}/>\n  )\n}\n\nroot.render(\n  <GlobalPropsProvider>\n     <App/>\n  </GlobalPropsProvider>\n);\n\n```"
+      ]
+    },
+    {
+      "name": "InitDataConsumer",
+      "kind": "variable",
+      "type": "Consumer<InitData>",
+      "refs": [
+        "InitData"
+      ],
+      "summary": "The [Consumer](https://react.dev/reference/react/createContext#consumer) Component that provide `initData`.\nThis should be used with [`InitDataProvider`](api:InitDataProvider)"
+    },
+    {
+      "name": "InitDataProvider",
+      "kind": "variable",
+      "type": "FC<{ children?: ReactNode }>",
+      "summary": "The [Provider](https://react.dev/reference/react/createContext#provider) Component that provide `initData`,\nyou must wrap your JSX inside it",
+      "examples": [
+        "```ts\nimport { root } from \"@lynx-js/react\"\n\nfunction App() {\n  return (\n    <InitDataConsumer children={(initData) => <view>...</view>}/>\n  )\n}\n\nroot.render(\n  <InitDataProvider>\n     <App/>\n  </InitDataProvider>\n);\n\n```"
+      ]
+    },
+    {
+      "name": "root",
+      "kind": "variable",
+      "type": "Root",
+      "ref": "Root",
+      "refs": [
+        "Root"
+      ],
+      "summary": "The default and only root of ReactLynx for you to render JSX",
+      "examples": [
+        "```ts\nimport { root } from \"@lynx-js/react\"\n```"
+      ]
+    },
+    {
+      "name": "useEffect",
+      "kind": "function",
+      "type": "useEffect(effect: EffectCallback, deps?: DependencyList): void",
+      "summary": "Accepts a function that contains imperative, possibly effectful code.\nThe effects run after main thread dom update without blocking it.",
+      "signatures": [
+        {
+          "text": "useEffect(effect: EffectCallback, deps?: DependencyList): void",
+          "params": [
+            {
+              "name": "effect",
+              "type": "EffectCallback",
+              "description": "Imperative function that can return a cleanup function"
+            },
+            {
+              "name": "deps",
+              "type": "DependencyList",
+              "optional": true,
+              "description": "If present, effect will only activate if the values in the list change (using ===)."
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "useGlobalProps",
+      "kind": "function",
+      "type": "useGlobalProps(): GlobalProps",
+      "refs": [
+        "GlobalProps"
+      ],
+      "summary": "A React Hooks for you to get `lynx.__globalProps`.\nWith `globalPropsMode: 'event'`, the component re-renders when `lynx.__globalProps` changes;\nin the default `'reactive'` mode, updates arrive through a full re-render.",
+      "examples": [
+        "```ts\nfunction App() {\n  const globalProps = useGlobalProps();\n\n  globalProps.someProperty // use it\n}\n```"
+      ],
+      "signatures": [
+        {
+          "text": "useGlobalProps(): GlobalProps",
+          "params": [],
+          "returns": {
+            "type": "GlobalProps",
+            "refs": [
+              "GlobalProps"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "useGlobalPropsChanged",
+      "kind": "function",
+      "type": "useGlobalPropsChanged(callback: (data: GlobalProps) => void): void",
+      "refs": [
+        "GlobalProps"
+      ],
+      "summary": "A React Hooks for you to get notified when `__globalProps` changed.",
+      "examples": [
+        "```ts\nfunction App() {\n  useGlobalPropsChanged((data) => {\n    lynx.__globalProps.someProperty // can use lynx.__globalProps\n    data.someProperty // can use data\n  })\n}\n```"
+      ],
+      "signatures": [
+        {
+          "text": "useGlobalPropsChanged(callback: (data: GlobalProps) => void): void",
+          "params": [
+            {
+              "name": "callback",
+              "type": "(data: GlobalProps) => void",
+              "refs": [
+                "GlobalProps"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "useInitData",
+      "kind": "function",
+      "type": "useInitData(): InitData",
+      "refs": [
+        "InitData"
+      ],
+      "summary": "A React Hooks for you to get `initData`.\nIf `initData` is changed, a re-render will be triggered automatically.",
+      "examples": [
+        "```ts\nfunction App() {\n  const initData = useInitData();\n\n  initData.someProperty // use it\n}\n```"
+      ],
+      "signatures": [
+        {
+          "text": "useInitData(): InitData",
+          "params": [],
+          "returns": {
+            "type": "InitData",
+            "refs": [
+              "InitData"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "useInitDataChanged",
+      "kind": "function",
+      "type": "useInitDataChanged(callback: (data: InitData) => void): void",
+      "refs": [
+        "InitData"
+      ],
+      "summary": "A React Hooks for you to get notified when `initData` changed.",
+      "examples": [
+        "```ts\nfunction App() {\n  useInitDataChanged((data) => {\n    data.someProperty // can use it\n  })\n}\n```"
+      ],
+      "signatures": [
+        {
+          "text": "useInitDataChanged(callback: (data: InitData) => void): void",
+          "params": [
+            {
+              "name": "callback",
+              "type": "(data: InitData) => void",
+              "refs": [
+                "InitData"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "useLayoutEffect",
+      "kind": "function",
+      "type": "useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void",
+      "summary": "`useLayoutEffect` is now an alias of `useEffect`. Use `useEffect` instead.\n\nAccepts a function that contains imperative, possibly effectful code. The effects run after main thread dom update without blocking it.",
+      "deprecated": "`useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React.",
+      "signatures": [
+        {
+          "text": "useLayoutEffect(effect: EffectCallback, deps?: DependencyList): void",
+          "params": [
+            {
+              "name": "effect",
+              "type": "EffectCallback",
+              "description": "Imperative function that can return a cleanup function"
+            },
+            {
+              "name": "deps",
+              "type": "DependencyList",
+              "optional": true,
+              "description": "If present, effect will only activate if the values in the list change (using ===)."
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "createPortal",
+      "kind": "function",
+      "type": "createPortal(vnode: ComponentChild, container: NodesRef): ReactNode",
+      "summary": "Renders children into a different ReactLynx element identified by a\n`NodesRef` (e.g. from `ref={setX}` or `lynx.createSelectorQuery()`).",
+      "signatures": [
+        {
+          "text": "createPortal(vnode: ComponentChild, container: NodesRef): ReactNode",
+          "params": [
+            {
+              "name": "vnode",
+              "type": "ComponentChild",
+              "description": "The React node to render into `container`."
+            },
+            {
+              "name": "container",
+              "type": "NodesRef",
+              "description": "The `NodesRef` target to render into."
+            }
+          ],
+          "returns": {
+            "type": "ReactNode",
+            "description": "A `ReactNode` placeholder to include in the JSX at the call site;\nthe rendered output goes into `container`."
+          },
+          "summary": "Renders `vnode` into `container` instead of the current component's position\nin the element tree, while keeping it in the React tree.\n\n`container` is a `NodesRef`, obtained either from a callback `ref` or from\n`lynx.createSelectorQuery().select(...)`.",
+          "remarks": "Context still flows across the portal boundary, and state updates inside the\nportal behave like they do in any other component. A few behaviors differ\nfrom `react-dom`:\n\n- Events do not bubble along the React tree. ReactLynx follows Preact's\n  approach, which has no synthetic event system, so events follow the actual\n  element structure of the page.\n- The portaled subtree renders on the background thread only, and does not\n  participate in main-thread first-screen rendering.\n- Mounting across pages or across native containers is not supported."
+        }
+      ],
+      "remarks": "Context still flows across the portal boundary, and state updates inside the\nportal behave like they do in any other component. A few behaviors differ\nfrom `react-dom`:\n\n- Events do not bubble along the React tree. ReactLynx follows Preact's\n  approach, which has no synthetic event system, so events follow the actual\n  element structure of the page.\n- The portaled subtree renders on the background thread only, and does not\n  participate in main-thread first-screen rendering.\n- Mounting across pages or across native containers is not supported."
+    },
+    {
+      "name": "markFirstScreenSyncReady",
+      "kind": "function",
+      "type": "markFirstScreenSyncReady(): void",
+      "signatures": [
+        {
+          "text": "markFirstScreenSyncReady(): void",
+          "params": [],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "Mark the first screen as ready to sync when `firstScreenSyncTiming` is `'manual'`.\n\nThe main thread holds the UI control until this is called, so the handover timing to\nthe background thread (for hydration) is fully controlled by the user. It can be called\nfrom both threads (a background-thread call is forwarded to the main thread), is a no-op\nunless `firstScreenSyncTiming` is `'manual'`, and has no further effect once called.",
+          "examples": [
+            "```ts\nimport { markFirstScreenSyncReady } from \"@lynx-js/react\"\n\nmarkFirstScreenSyncReady();\n```"
+          ]
+        }
+      ],
+      "summary": "Mark the first screen as ready to sync when `firstScreenSyncTiming` is `'manual'`.\n\nThe main thread holds the UI control until this is called, so the handover timing to\nthe background thread (for hydration) is fully controlled by the user. It can be called\nfrom both threads (a background-thread call is forwarded to the main thread), is a no-op\nunless `firstScreenSyncTiming` is `'manual'`, and has no further effect once called.",
+      "examples": [
+        "```ts\nimport { markFirstScreenSyncReady } from \"@lynx-js/react\"\n\nmarkFirstScreenSyncReady();\n```"
+      ]
+    },
+    {
+      "name": "runOnBackground",
+      "kind": "function",
+      "type": "runOnBackground(f: Fn): (args: Parameters<Fn>) => Promise<R>",
+      "signatures": [
+        {
+          "text": "runOnBackground(f: Fn): (args: Parameters<Fn>) => Promise<R>",
+          "params": [
+            {
+              "name": "f",
+              "type": "Fn",
+              "description": "The js function to be called."
+            }
+          ],
+          "returns": {
+            "type": "(args: Parameters<Fn>) => Promise<R>",
+            "description": "A function. Calling which with the arguments to be passed to the js function to trigger it on the background thread. This function returns a promise that resolves to the return value of the js function."
+          },
+          "summary": "`runOnBackground` allows triggering js functions on the background thread asynchronously."
+        }
+      ],
+      "summary": "`runOnBackground` allows triggering js functions on the background thread asynchronously."
+    },
+    {
+      "name": "runOnMainThread",
+      "kind": "function",
+      "type": "runOnMainThread(fn: Fn): (args: Parameters<Fn>) => Promise<R>",
+      "signatures": [
+        {
+          "text": "runOnMainThread(fn: Fn): (args: Parameters<Fn>) => Promise<R>",
+          "params": [
+            {
+              "name": "fn",
+              "type": "Fn",
+              "description": "The main thread functions to be called."
+            }
+          ],
+          "returns": {
+            "type": "(args: Parameters<Fn>) => Promise<R>",
+            "description": "A function. Calling which with the arguments to be passed to the main thread function to trigger it on the main thread. This function returns a promise that resolves to the return value of the main thread function."
+          },
+          "summary": "`runOnMainThread` allows triggering main thread functions on the main thread asynchronously.",
+          "examples": [
+            "```ts\nimport { runOnMainThread } from '@lynx-js/react';\n\nasync function someFunction() {\n  const fn = runOnMainThread(() => {\n    'main thread';\n    return 'hello';\n  });\n  const result = await fn();\n}\n```"
+          ]
+        }
+      ],
+      "summary": "`runOnMainThread` allows triggering main thread functions on the main thread asynchronously.",
+      "examples": [
+        "```ts\nimport { runOnMainThread } from '@lynx-js/react';\n\nasync function someFunction() {\n  const fn = runOnMainThread(() => {\n    'main thread';\n    return 'hello';\n  });\n  const result = await fn();\n}\n```"
+      ]
+    },
+    {
+      "name": "useLynxGlobalEventListener",
+      "kind": "function",
+      "type": "useLynxGlobalEventListener(eventName: string, listener: T): void",
+      "signatures": [
+        {
+          "text": "useLynxGlobalEventListener(eventName: string, listener: T): void",
+          "params": [
+            {
+              "name": "eventName",
+              "type": "string",
+              "description": "Event name to listen"
+            },
+            {
+              "name": "listener",
+              "type": "T",
+              "description": "Event handler"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "`useLynxGlobalEventListener` helps you `addListener` as early as possible.",
+          "examples": [
+            "Use this hooks to listen to event 'exposure' and event 'disexposure'\n\n```jsx\nfunction App() {\n  useLynxGlobalEventListener('exposure', (e) => {\n    console.log(\"exposure\", e)\n  })\n  useLynxGlobalEventListener('disexposure', (e) => {\n    console.log(\"disexposure\", e)\n  })\n  return (\n    <view\n      style='width: 100px; height: 100px; background-color: red;'\n      exposure-id='a'\n    />\n  )\n}\n```"
+          ]
+        }
+      ],
+      "summary": "`useLynxGlobalEventListener` helps you `addListener` as early as possible.",
+      "examples": [
+        "Use this hooks to listen to event 'exposure' and event 'disexposure'\n\n```jsx\nfunction App() {\n  useLynxGlobalEventListener('exposure', (e) => {\n    console.log(\"exposure\", e)\n  })\n  useLynxGlobalEventListener('disexposure', (e) => {\n    console.log(\"disexposure\", e)\n  })\n  return (\n    <view\n      style='width: 100px; height: 100px; background-color: red;'\n      exposure-id='a'\n    />\n  )\n}\n```"
+      ]
+    },
+    {
+      "name": "useMainThreadRef",
+      "kind": "function",
+      "type": "useMainThreadRef(initValue: T): MainThreadRef<T>",
+      "signatures": [
+        {
+          "text": "useMainThreadRef(initValue: T): MainThreadRef<T>",
+          "params": [
+            {
+              "name": "initValue",
+              "type": "T",
+              "description": "The init value of the `MainThreadRef`."
+            }
+          ],
+          "returns": {
+            "type": "MainThreadRef<T>",
+            "refs": [
+              "MainThreadRef"
+            ]
+          },
+          "summary": "Create A `MainThreadRef`.\n\nA `MainThreadRef` is a ref that can only be accessed on the main thread. It is used to preserve\nstates between main thread function calls.\nThe data saved in `current` property of the `MainThreadRef` can be read and written in\nmultiple main thread functions.\n\nIt is a hook and it should only be called at the top level of your component.",
+          "examples": [
+            "```ts\nimport { useMainThreadRef } from '@lynx-js/react'\nimport type { MainThread } from '@lynx-js/types'\n\nexport function App() {\n  const ref = useMainThreadRef<MainThread.Element>(null)\n\n  const handleTap = () => {\n    'main thread'\n    ref.current?.setStyleProperty('background-color', 'blue')\n  }\n\n  return (\n    <view\n      main-thread:ref={ref}\n      main-thread:bindtap={handleTap}\n      style={{ width: '300px', height: '300px' }}\n    />\n  )\n}\n```"
+          ]
+        },
+        {
+          "text": "useMainThreadRef(initValue: T | null): RefObject<T>",
+          "params": [
+            {
+              "name": "initValue",
+              "type": "T | null",
+              "description": "The init value of the `MainThreadRef`."
+            }
+          ],
+          "returns": {
+            "type": "RefObject<T>"
+          },
+          "summary": "Create A `MainThreadRef`.\n\nA `MainThreadRef` is a ref that can only be accessed on the main thread. It is used to preserve\nstates between main thread function calls.\nThe data saved in `current` property of the `MainThreadRef` can be read and written in\nmultiple main thread functions.\n\nIt is a hook and it should only be called at the top level of your component.",
+          "examples": [
+            "```ts\nimport { useMainThreadRef } from '@lynx-js/react'\nimport type { MainThread } from '@lynx-js/types'\n\nexport function App() {\n  const ref = useMainThreadRef<MainThread.Element>(null)\n\n  const handleTap = () => {\n    'main thread'\n    ref.current?.setStyleProperty('background-color', 'blue')\n  }\n\n  return (\n    <view\n      main-thread:ref={ref}\n      main-thread:bindtap={handleTap}\n      style={{ width: '300px', height: '300px' }}\n    />\n  )\n}\n```"
+          ]
+        },
+        {
+          "text": "useMainThreadRef(): MainThreadRef<T | undefined>",
+          "params": [],
+          "returns": {
+            "type": "MainThreadRef<T | undefined>",
+            "refs": [
+              "MainThreadRef"
+            ]
+          },
+          "summary": "Create A `MainThreadRef`.\n\nA `MainThreadRef` is a ref that can only be accessed on the main thread. It is used to preserve\nstates between main thread function calls.\nThe data saved in `current` property of the `MainThreadRef` can be read and written in\nmultiple main thread functions.\n\nIt is a hook and it should only be called at the top level of your component.",
+          "examples": [
+            "```ts\nimport { useMainThreadRef } from '@lynx-js/react'\nimport type { MainThread } from '@lynx-js/types'\n\nexport function App() {\n  const ref = useMainThreadRef<MainThread.Element>(null)\n\n  const handleTap = () => {\n    'main thread'\n    ref.current?.setStyleProperty('background-color', 'blue')\n  }\n\n  return (\n    <view\n      main-thread:ref={ref}\n      main-thread:bindtap={handleTap}\n      style={{ width: '300px', height: '300px' }}\n    />\n  )\n}\n```"
+          ]
+        }
+      ],
+      "summary": "Create A `MainThreadRef`.\n\nA `MainThreadRef` is a ref that can only be accessed on the main thread. It is used to preserve\nstates between main thread function calls.\nThe data saved in `current` property of the `MainThreadRef` can be read and written in\nmultiple main thread functions.\n\nIt is a hook and it should only be called at the top level of your component.",
+      "examples": [
+        "```ts\nimport { useMainThreadRef } from '@lynx-js/react'\nimport type { MainThread } from '@lynx-js/types'\n\nexport function App() {\n  const ref = useMainThreadRef<MainThread.Element>(null)\n\n  const handleTap = () => {\n    'main thread'\n    ref.current?.setStyleProperty('background-color', 'blue')\n  }\n\n  return (\n    <view\n      main-thread:ref={ref}\n      main-thread:bindtap={handleTap}\n      style={{ width: '300px', height: '300px' }}\n    />\n  )\n}\n```"
+      ]
+    },
+    {
+      "name": "withInitDataInState",
+      "kind": "function",
+      "type": "withInitDataInState(App: ComponentClass<P, S>): ComponentClass<P, S>",
+      "signatures": [
+        {
+          "text": "withInitDataInState(App: ComponentClass<P, S>): ComponentClass<P, S>",
+          "params": [
+            {
+              "name": "App",
+              "type": "ComponentClass<P, S>",
+              "description": "The class component to be wrapped by the HOC."
+            }
+          ],
+          "returns": {
+            "type": "ComponentClass<P, S>",
+            "description": "The original component if it is not a class component, otherwise a new class component\n         with `initData` injection and state update functionality."
+          },
+          "summary": "Higher-Order Component (HOC) that injects `initData` into the state of the given class component.\n\nThis HOC checks if the provided component is a class component. If it is, it wraps the component\nand injects the `initData` into its state. It also adds a listener\nto update the state when data changes, and removes the listener when the component unmounts.",
+          "examples": [
+            "```typescript\nclass App extends React.Component<MyProps, MyState> {\n  // component implementation\n}\n\nexport default withInitDataInState(App);\n```"
+          ]
+        }
+      ],
+      "summary": "Higher-Order Component (HOC) that injects `initData` into the state of the given class component.\n\nThis HOC checks if the provided component is a class component. If it is, it wraps the component\nand injects the `initData` into its state. It also adds a listener\nto update the state when data changes, and removes the listener when the component unmounts.",
+      "examples": [
+        "```typescript\nclass App extends React.Component<MyProps, MyState> {\n  // component implementation\n}\n\nexport default withInitDataInState(App);\n```"
+      ]
+    }
+  ]
+}

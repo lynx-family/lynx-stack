@@ -1,0 +1,45 @@
+---
+title: '@lynx-js/genui/openui/explicit'
+---
+
+# `@lynx-js/genui/openui/explicit`
+
+`@lynx-js/genui/openui/explicit` 导出的 API 与 [`@lynx-js/genui/openui`](./openui) 相同，只是 `createOpenUiLibrary` 不包含默认 catalog。需要哪个内置组件，就从 `@lynx-js/genui/openui/catalog/<Component>` 引入后传入，没用到的组件不会被打包。
+
+```ts
+import { createOpenUiLibrary } from '@lynx-js/genui/openui/explicit';
+import { Stack } from '@lynx-js/genui/openui/catalog/Stack';
+import { TextContent } from '@lynx-js/genui/openui/catalog/TextContent';
+```
+
+## API
+
+{/* @api ApiExports package="genui-openui-explicit" include="createOpenUiLibrary,CreateExplicitOpenUiLibraryOptions" */}
+
+## 函数 \{#functions\}
+
+### `createOpenUiLibrary()` \{#createopenuilibrary\}
+
+```ts
+function createOpenUiLibrary(options: CreateExplicitOpenUiLibraryOptions): Library
+```
+
+用显式选择的组件创建一个不含 catalog 的 OpenUI Library。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `options` | [`CreateExplicitOpenUiLibraryOptions`](#createexplicitopenuilibraryoptions) |  |
+
+**返回值：** `Library`
+
+## 类型 \{#types\}
+
+### `CreateExplicitOpenUiLibraryOptions` \{#createexplicitopenuilibraryoptions\}
+
+```ts
+type CreateExplicitOpenUiLibraryOptions = Omit<CreateOpenUiLibraryOptions, "includeDefaultComponents"> & { includeDefaultComponents: false }
+```
+
+只由显式选择的组件组成的 Library 的选项。
+
+{/* @api-end */}

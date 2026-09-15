@@ -1,0 +1,186 @@
+---
+title: Functions
+---
+
+# Functions
+
+Functions for crossing the thread boundary, creating elements outside JSX and mounting the root.
+
+{/* @api ApiExports package="react" include="createPortal,createElement,cloneElement,runOnMainThread,runOnBackground,markFirstScreenSyncReady,withInitDataInState,root,Children" */}
+
+## Functions \{#functions\}
+
+### `createPortal()` \{#createportal\}
+
+```ts
+function createPortal(vnode: ComponentChild, container: NodesRef): ReactNode
+```
+
+Renders children into a different ReactLynx element identified by a
+`NodesRef` (e.g. from `ref={setX}` or `lynx.createSelectorQuery()`).
+
+Context still flows across the portal boundary, and state updates inside the
+portal behave like they do in any other component. A few behaviors differ
+from `react-dom`:
+
+- Events do not bubble along the React tree. ReactLynx follows Preact's
+  approach, which has no synthetic event system, so events follow the actual
+  element structure of the page.
+- The portaled subtree renders on the background thread only, and does not
+  participate in main-thread first-screen rendering.
+- Mounting across pages or across native containers is not supported.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `vnode` | `ComponentChild` | The React node to render into `container`. |
+| `container` | `NodesRef` | The `NodesRef` target to render into. |
+
+**Returns:** `ReactNode` — A `ReactNode` placeholder to include in the JSX at the call site; the rendered output goes into `container`.
+
+### `createElement()` \{#createelement\}
+
+```ts
+function createElement(type: Type, props?: IntrinsicElements[Type] | null, children: ReactNode[]): ReactElement<IntrinsicElements[Type], Type>
+function createElement(type: string | ComponentType<Props>, props?: Attributes & Props | null, children: ReactNode[]): ReactElement<Props>
+```
+
+Creates a ReactLynx element using the snapshot runtime.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `type` | `Type` |  |
+| `props?` | `IntrinsicElements[Type] \| null` |  |
+| `children` | `ReactNode[]` |  |
+
+**Returns:** `ReactElement<IntrinsicElements[Type], Type>`
+
+### `cloneElement()` \{#cloneelement\}
+
+```ts
+function cloneElement(element: ReactElement<Props>, props?: Partial<Props> & Attributes | null, children: ReactNode[]): ReactElement<Props>
+```
+
+Clones a ReactLynx element using the snapshot runtime.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `element` | `ReactElement<Props>` |  |
+| `props?` | `Partial<Props> & Attributes \| null` |  |
+| `children` | `ReactNode[]` |  |
+
+**Returns:** `ReactElement<Props>`
+
+### `runOnMainThread()` \{#runonmainthread\}
+
+```ts
+function runOnMainThread(fn: Fn): (args: Parameters<Fn>) => Promise<R>
+```
+
+`runOnMainThread` allows triggering main thread functions on the main thread asynchronously.
+
+```ts
+import { runOnMainThread } from '@lynx-js/react';
+
+async function someFunction() {
+  const fn = runOnMainThread(() => {
+    'main thread';
+    return 'hello';
+  });
+  const result = await fn();
+}
+```
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `fn` | `Fn` | The main thread functions to be called. |
+
+**Returns:** `(args: Parameters<Fn>) => Promise<R>` — A function. Calling which with the arguments to be passed to the main thread function to trigger it on the main thread. This function returns a promise that resolves to the return value of the main thread function.
+
+### `runOnBackground()` \{#runonbackground\}
+
+```ts
+function runOnBackground(f: Fn): (args: Parameters<Fn>) => Promise<R>
+```
+
+`runOnBackground` allows triggering js functions on the background thread asynchronously.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `f` | `Fn` | The js function to be called. |
+
+**Returns:** `(args: Parameters<Fn>) => Promise<R>` — A function. Calling which with the arguments to be passed to the js function to trigger it on the background thread. This function returns a promise that resolves to the return value of the js function.
+
+### `markFirstScreenSyncReady()` \{#markfirstscreensyncready\}
+
+```ts
+function markFirstScreenSyncReady(): void
+```
+
+Mark the first screen as ready to sync when `firstScreenSyncTiming` is `'manual'`.
+
+The main thread holds the UI control until this is called, so the handover timing to
+the background thread (for hydration) is fully controlled by the user. It can be called
+from both threads (a background-thread call is forwarded to the main thread), is a no-op
+unless `firstScreenSyncTiming` is `'manual'`, and has no further effect once called.
+
+```ts
+import { markFirstScreenSyncReady } from "@lynx-js/react"
+
+markFirstScreenSyncReady();
+```
+
+### `withInitDataInState()` \{#withinitdatainstate\}
+
+```ts
+function withInitDataInState(App: ComponentClass<P, S>): ComponentClass<P, S>
+```
+
+Higher-Order Component (HOC) that injects `initData` into the state of the given class component.
+
+This HOC checks if the provided component is a class component. If it is, it wraps the component
+and injects the `initData` into its state. It also adds a listener
+to update the state when data changes, and removes the listener when the component unmounts.
+
+```typescript
+class App extends React.Component<MyProps, MyState> {
+  // component implementation
+}
+
+export default withInitDataInState(App);
+```
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `App` | `ComponentClass<P, S>` | The class component to be wrapped by the HOC. |
+
+**Returns:** `ComponentClass<P, S>` — The original component if it is not a class component, otherwise a new class component          with `initData` injection and state update functionality.
+
+## Constants \{#constants\}
+
+### `root` \{#root\}
+
+```ts
+const root: Root
+```
+
+The default and only root of ReactLynx for you to render JSX
+
+```ts
+import { root } from "@lynx-js/react"
+```
+
+### `Children` \{#children\}
+
+```ts
+const Children: ReactLynxChildren
+```
+
+ReactLynx children utilities.
+
+Arrays returned by `map`, `forEach`, and `toArray` are frozen.
+
+{/* @api-end */}
+
+## Built-in React APIs
+
+`createContext`, `forwardRef`, `lazy`, `memo`, `createRef` and `isValidElement` are re-exported from React. As in React 19, function components receive `ref` as a regular prop, so a new component doesn't need `forwardRef`. `@lynx-js/react/compat` also exports `startTransition`. See the [React reference](https://react.dev/reference/react/apis).

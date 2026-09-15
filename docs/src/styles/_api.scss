@@ -1,0 +1,208 @@
+.api-badge {
+  display: inline-block;
+  vertical-align: 2px;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--rp-font-family-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.api-badge-deprecated {
+  background: var(--rp-c-danger-soft, #fbe9e8);
+  color: var(--rp-c-danger, #b12a22);
+}
+
+.api-badge-beta,
+.api-badge-alpha {
+  background: var(--rp-c-brand-tint, #e6eefa);
+  color: var(--rp-c-brand-dark, #2560a6);
+}
+
+.api-badge-lynx,
+.api-badge-default {
+  vertical-align: 1px;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 16px;
+}
+
+.rp-sidebar-item[href*="/config/"] {
+  flex-wrap: wrap;
+  column-gap: 6px;
+}
+
+.rp-sidebar-item[href*="/config/"] .rp-badge {
+  flex-shrink: 0;
+  height: auto;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--rp-c-divider);
+  color: var(--rp-c-text-3);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.api-badge-lynx,
+.api-badge-default {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--rp-c-divider);
+  color: var(--rp-c-text-3);
+}
+
+.api-badge-stale {
+  background: var(--rp-c-warning-soft, #fbf1df);
+  color: var(--rp-c-warning, #a4660f);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.api-pkg-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 8px 0 20px;
+  font-size: 13px;
+  color: var(--rp-c-text-2);
+}
+
+.api-pkg-header code {
+  color: var(--rp-c-text-1);
+}
+
+.api-pkg-version {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--rp-c-brand-tint);
+  color: var(--rp-c-brand-dark);
+  font-family: var(--rp-font-family-mono);
+  font-size: 12px;
+}
+
+.rspress-doc table code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.rspress-doc table td:first-child code {
+  white-space: nowrap;
+}
+
+.rspress-doc h3 code,
+.rspress-doc h4 code,
+.rspress-doc h5 code {
+  font-size: 0.92em;
+  background: transparent;
+  padding: 0;
+}
+
+.rspress-doc h4 code span,
+.rspress-doc h5 code span {
+  color: var(--rp-c-text-2);
+}
+
+.api-config-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin: 16px 0 32px;
+}
+
+.api-config-overview .api-config-group {
+  display: flex;
+  overflow: hidden;
+  border: 1px solid var(--rp-c-divider-light);
+  border-radius: var(--rp-radius, 8px);
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    border-color: var(--rp-c-brand-light);
+    box-shadow: 0 4px 6px #0000000a;
+  }
+
+  .api-config-group-title {
+    flex: 0 0 25%;
+    padding: 16px 20px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--rp-c-text-1);
+    background-color: var(--rp-c-bg-soft);
+    word-break: break-all;
+  }
+
+  ul {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    row-gap: 12px;
+    margin: 0;
+    padding: 16px;
+    list-style: none;
+  }
+
+  li {
+    display: flex;
+    flex: 0 0 33.33%;
+    flex-wrap: wrap;
+    align-items: center;
+    min-width: 33.33%;
+    max-width: 33.33%;
+    margin: 0;
+    font-size: 14px;
+  }
+
+  li a {
+    padding: 4px 8px;
+    color: var(--rp-c-text-2);
+    text-decoration: none;
+  }
+
+  li a:hover {
+    color: var(--rp-c-brand);
+  }
+
+  li a::before,
+  li a::after {
+    content: none !important;
+  }
+
+  .api-package-main {
+    flex-basis: 100%;
+    padding: 0 8px;
+    color: var(--rp-c-text-3);
+    font-family: var(--rp-font-family-mono);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (width <= 1280px) {
+  .api-config-overview .api-config-group {
+    flex-direction: column;
+
+    .api-config-group-title {
+      flex: none;
+      width: 100%;
+    }
+  }
+}
+
+@media (width <= 768px) {
+  .api-config-overview .api-config-group li {
+    flex: 1 0 50%;
+    min-width: 50%;
+    max-width: 100%;
+  }
+}

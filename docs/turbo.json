@@ -1,0 +1,28 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": [
+    "//"
+  ],
+  "tasks": {
+    "build": {
+      "env": [
+        "NODE_ENV"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "../packages/**/CHANGELOG.md",
+        "../packages/genui/**/*.md"
+      ],
+      "outputs": [
+        "doc_build/**"
+      ]
+    },
+    "dev": {
+      "env": [
+        "NODE_ENV"
+      ],
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

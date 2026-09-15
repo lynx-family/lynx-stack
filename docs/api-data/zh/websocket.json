@@ -1,0 +1,134 @@
+{
+  "ReadyState.summary": {
+    "en": "The `ReadyState` describe the state of a `WebSocket` connection.",
+    "text": "`ReadyState` 描述 `WebSocket` 连接的状态。"
+  },
+  "ReadyState.CLOSED.summary": {
+    "en": "The connection is closed or couldn't be opened.",
+    "text": "连接已关闭或无法打开。"
+  },
+  "ReadyState.CLOSING.summary": {
+    "en": "The connection is in the process of closing.",
+    "text": "连接正在关闭。"
+  },
+  "ReadyState.CONNECTING.summary": {
+    "en": "Socket has been created. The connection is not yet open.",
+    "text": "Socket 已创建，连接尚未打开。"
+  },
+  "ReadyState.OPEN.summary": {
+    "en": "The connection is open and ready to communicate.",
+    "text": "连接已打开，可以进行通信。"
+  },
+  "WebSocket.summary": {
+    "en": "The implementation of [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)\nfor Lynx.",
+    "text": "[WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)\n的 Lynx 实现。"
+  },
+  "WebSocket.remarks": {
+    "en": "This only works in environment that has `NativeModules.LynxWebSocketModule`.",
+    "text": "仅在存在 `NativeModules.LynxWebSocketModule` 的环境中可用。"
+  },
+  "WebSocket.constructor.params.url": {
+    "en": "The URL to which to connect; this should be the URL to which the WebSocket server will respond.",
+    "text": "要连接的 URL，即 WebSocket 服务器将响应的 URL。"
+  },
+  "WebSocket.constructor.params.protocols": {
+    "en": "Either a single protocol string or an array of protocol strings. If it is omitted, an empty array is used by default, i.e. `[]`.",
+    "text": "单个协议字符串或协议字符串数组。省略时默认使用空数组，即 `[]`。"
+  },
+  "WebSocket.constructor.params.options": {
+    "en": "Extra options for Lynx only.",
+    "text": "仅适用于 Lynx 的额外选项。"
+  },
+  "WebSocket.onclose.summary": {
+    "en": "onclose is the Web-style callback of [`WebSocket`](api:WebSocket).",
+    "text": "onclose 是 [`WebSocket`](api:WebSocket) 的 Web 风格回调。"
+  },
+  "WebSocket.onerror.summary": {
+    "en": "onerror is the Web-style callback of [`WebSocket`](api:WebSocket).",
+    "text": "onerror 是 [`WebSocket`](api:WebSocket) 的 Web 风格回调。"
+  },
+  "WebSocket.onmessage.summary": {
+    "en": "onmessage is the Web-style callback of [`WebSocket`](api:WebSocket).",
+    "text": "onmessage 是 [`WebSocket`](api:WebSocket) 的 Web 风格回调。"
+  },
+  "WebSocket.onopen.summary": {
+    "en": "onopen is the Web-style callback of [`WebSocket`](api:WebSocket).",
+    "text": "onopen 是 [`WebSocket`](api:WebSocket) 的 Web 风格回调。"
+  },
+  "WebSocket.protocol.summary": {
+    "en": "The WebSocket.protocol read-only property returns the name of the sub-protocol the server selected.",
+    "text": "WebSocket.protocol 只读属性返回服务器所选子协议的名称。"
+  },
+  "WebSocket.readyState.summary": {
+    "en": "The `readyState` read-only property returns the current state of the [`WebSocket`](api:WebSocket) connection.",
+    "text": "`readyState` 只读属性返回 [`WebSocket`](api:WebSocket) 连接的当前状态。"
+  },
+  "WebSocket.url.summary": {
+    "en": "The `url` read-only property returns the URL of the [`WebSocket`](api:WebSocket) passed by the constructor.",
+    "text": "`url` 只读属性返回通过构造函数传入 [`WebSocket`](api:WebSocket) 的 URL。"
+  },
+  "WebSocket.addEventListener.summary": {
+    "en": "The `addEventListener()` method of the `EventTarget` interface sets up a function that will be called whenever the specified event is delivered to the target.",
+    "text": "`EventTarget` 接口的 `addEventListener()` 方法用于设置一个函数，每当指定事件派发到目标时都会调用该函数。"
+  },
+  "WebSocket.addEventListener.params.type": {
+    "en": "A case-sensitive string representing the event type to listen for.",
+    "text": "表示要监听的事件类型的字符串，区分大小写。"
+  },
+  "WebSocket.addEventListener.params.callback": {
+    "en": "The function that receives a notification. See [`EventMap`](api:@lynx-js/websocket#EventMap) for details of events.",
+    "text": "接收通知的函数。事件详情参见 [`EventMap`](api:@lynx-js/websocket#EventMap)。"
+  },
+  "WebSocket.close.summary": {
+    "en": "The `close()` method closes the [`WebSocket`](api:WebSocket) connection or connection attempt, if any.",
+    "text": "`close()` 方法关闭 [`WebSocket`](api:WebSocket) 连接或正在进行的连接尝试（如有）。"
+  },
+  "WebSocket.close.remarks": {
+    "en": "If the connection is already [`CLOSED `](api:WebSocket.CLOSED), this method does nothing.",
+    "text": "如果连接已处于 [`CLOSED `](api:WebSocket.CLOSED) 状态，该方法不执行任何操作。"
+  },
+  "WebSocket.ping.summary": {
+    "en": "The `ping` method send an empty message to the server over the [`WebSocket`](api:WebSocket) connection.",
+    "text": "`ping` 方法通过 [`WebSocket`](api:WebSocket) 连接向服务器发送一条空消息。"
+  },
+  "WebSocket.ping.remarks": {
+    "en": "It will throw an exception if you call `ping()` when the connection is in the [`CONNECTING `](api:WebSocket.CONNECTING) state. If you call `ping()` when the connection is in the [`CLOSING `](api:WebSocket.CLOSING) or [`CLOSED `](api:WebSocket.CLOSED) states, it will silently discard the data.",
+    "text": "在连接处于 [`CONNECTING `](api:WebSocket.CONNECTING) 状态时调用 `ping()` 会抛出异常。在连接处于 [`CLOSING `](api:WebSocket.CLOSING) 或 [`CLOSED `](api:WebSocket.CLOSED) 状态时调用 `ping()`，数据会被静默丢弃。"
+  },
+  "WebSocket.removeEventListener.summary": {
+    "en": "The `removeEventListener()` method of the `EventTarget` interface removes an event listener from the WebSocket.",
+    "text": "`EventTarget` 接口的 `removeEventListener()` 方法从 WebSocket 上移除一个事件监听器。"
+  },
+  "WebSocket.removeEventListener.params.type": {
+    "en": "The type of event to stop listening for.",
+    "text": "要停止监听的事件类型。"
+  },
+  "WebSocket.removeEventListener.params.callback": {
+    "en": "The function to remove as an event listener.",
+    "text": "要移除的事件监听函数。"
+  },
+  "WebSocket.send.summary": {
+    "en": "The `send` method send the specified data to be transmitted to the server over the [`WebSocket`](api:WebSocket) connection.",
+    "text": "`send` 方法通过 [`WebSocket`](api:WebSocket) 连接将指定数据发送到服务器。"
+  },
+  "WebSocket.send.remarks": {
+    "en": "It will throw an exception if you call `send()` when the connection is in the [`CONNECTING `](api:WebSocket.CONNECTING) state. If you call `send()` when the connection is in the [`CLOSING `](api:WebSocket.CLOSING) or [`CLOSED `](api:WebSocket.CLOSED) states, it will silently discard the data.",
+    "text": "在连接处于 [`CONNECTING `](api:WebSocket.CONNECTING) 状态时调用 `send()` 会抛出异常。在连接处于 [`CLOSING `](api:WebSocket.CLOSING) 或 [`CLOSED `](api:WebSocket.CLOSED) 状态时调用 `send()`，数据会被静默丢弃。"
+  },
+  "WebSocket.send.params.data": {
+    "en": "The specified data to be transmitted.",
+    "text": "要发送的数据。"
+  },
+  "Event.summary": {
+    "en": "An implementation of `Event` interface, that wraps a given event object.",
+    "text": "`Event` 接口的实现，用于包装给定的事件对象。"
+  },
+  "Event.type.summary": {
+    "en": "The type os this event.",
+    "text": "该事件的类型。"
+  },
+  "EventMap.summary": {
+    "en": "The `EventMap` describe the events that [`WebSocket`](api:@lynx-js/websocket#WebSocket) may fire.",
+    "text": "`EventMap` 描述 [`WebSocket`](api:@lynx-js/websocket#WebSocket) 可能触发的事件。"
+  }
+}

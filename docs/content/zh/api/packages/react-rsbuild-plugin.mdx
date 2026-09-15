@@ -1,0 +1,741 @@
+---
+title: '@lynx-js/react-rsbuild-plugin'
+---
+
+# @lynx-js/react-rsbuild-plugin
+
+{/* @api PackageHeader package="react-rsbuild-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/react-rsbuild-plugin</code> <span className="api-pkg-version">v0.20.2</span> · <a href="https://www.npmjs.com/package/@lynx-js/react-rsbuild-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-react" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-react/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+ReactLynx 的 DSL 插件。它将 JSX 编译为 ReactLynx 的双线程产物，接入运行时，并在开发环境下启用 Fast Refresh。构建引擎尚未注册时，它会自动注册 [`pluginLynx`](/zh/api/packages/rsbuild-plugin)。
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/react-rsbuild-plugin -D" />
+
+## 用法
+
+使用 Rsbuild 时，在 `rsbuild.config.ts` 中注册：
+
+```ts title="rsbuild.config.ts"
+import { defineConfig } from '@rsbuild/core'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  environments: {
+    lynx: {},
+  },
+  plugins: [pluginReactLynx()],
+})
+```
+
+使用 Rspeedy 时，在 `lynx.config.ts` 中设置：
+
+```ts title="lynx.config.ts"
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [pluginReactLynx()],
+})
+```
+
+## 选项
+
+{/* @api ApiOptions package="react-rsbuild-plugin" type="PluginReactLynxOptions" */}
+
+<a id="pluginreactlynxoptions"></a>
+
+### `compat` \{#compat\}
+
+- **类型：** `Partial<`[`CompatVisitorConfig`](#compatvisitorconfig)`> & { disableCreateSelectorQueryIncompatibleWarning?: boolean }`
+- **默认值：** `undefined`
+
+`compat` 选项用于控制与旧版 ReactLynx 的兼容性。
+
+这些选项仅应在从 ReactLynx2.0 迁移或面向旧版 ReactLynx3 运行时时使用。
+
+### `customCSSInheritanceList` \{#customcssinheritancelist\}
+
+- **类型：** `string[]`
+- **默认值：** `undefined`
+
+启用 [`PluginReactLynxOptions.enableCSSInheritance`](#enablecssinheritance) 后，可以通过 `customCSSInheritanceList` 控制哪些属性可继承，而不仅限于默认属性。
+
+设置 `customCSSInheritanceList: ['direction', 'overflow']` 后，只有 `direction` 和 `overflow` 属性可继承。
+
+```ts
+// rsbuild.config.ts
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
+
+export default defineConfig({
+ environments: { lynx: {} },
+ plugins: [
+   pluginReactLynx({
+     enableCSSInheritance: true,
+     customCSSInheritanceList: ['direction', 'overflow']
+   }),
+ ],
+})
+```
+
+### `debugInfoOutside` \{#debuginfooutside\}
+
+- **类型：** `boolean`
+- **默认值：** `true`
+
+debugInfoOutside 控制调试信息是否放在模板之外。
+
+推荐设置为 true 以减小模板体积。
+
+### `enableCSSInheritance` \{#enablecssinheritance\}
+
+- **类型：** `boolean`
+- **默认值：** `false`
+
+enableCSSInheritance 用于启用默认的继承属性。
+
+以下属性默认可继承：
+
+- `direction`
+
+- `color`
+
+- `font-family`
+
+- `font-size`
+
+- `font-style`
+
+- `font-weight`
+
+- `letter-spacing`
+
+- `line-height`
+
+- `line-spacing`
+
+- `text-align`
+
+- `text-decoration`
+
+- `text-shadow`
+
+推荐与 [`PluginReactLynxOptions.customCSSInheritanceList`](#customcssinheritancelist) 一起使用，以避免性能问题。
+
+### `enableCSSInvalidation` \{#enablecssinvalidation\}
+
+- **类型：** `boolean`
+- **默认值：** `true`
+
+CSS Invalidation 是指在 DOM 更新时，确定哪些元素需要重新计算样式的过程。
+
+当使用组合器（combinator）确定各元素的样式（包括后代、相邻兄弟等）时，推荐启用此功能。否则只有初始设置的 class 能匹配对应的组合器，后续更新不会重新计算相关样式。
+
+我们发现收集 invalidation 节点并进行更新是一个相对耗时的过程。如果没有此类用法，且需要更好的样式匹配性能，可以选择性地关闭此功能。
+
+```ts
+If a descendant selector `.a .b` is defined in a CSS file, then when an element's class changes to `.a`, all nodes in its subtree with the className `.b` need to have their styles recalculated.
+```
+
+### `experimental_transformBuiltinAttributeNames` <span className="api-badge api-badge-beta">实验性</span> \{#experimental-transformbuiltinattributenames\}
+
+- **类型：** `boolean | `[`TransformBuiltinAttributeNamesOptions`](#experimental-transformbuiltinattributenames)
+- **默认值：** `false`
+
+转换 Lynx 内置元素上的属性名。
+
+`false` 表示禁用转换。`true` 表示应用默认规则：
+`onClick` 变为 `bindtap`，`onCatchTap` 变为 `catchtap`，其他
+`onXXX` 名称变为 `bindxxx`，其余 camelCase 名称变为
+dash-case。传入对象时可提供可序列化的自定义规则。`rename` 中的精确条目优先于 `preserve`，其次是由 `mode` 选择的兜底行为。
+
+显式的 JSX 属性会在编译时转换。通过 JSX spread 传入的属性会在运行时按照相同的规则转换。
+
+| 名称 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="experimental-transformbuiltinattributenames-mode"></a>`mode` | `"dash-case" \| "mapping-only"` | `'dash-case'` | 未在 `rename` 或 `preserve` 中列出的属性名的兜底行为。 `'dash-case'` 还会应用默认的 React 风格事件映射。 `'mapping-only'` 会保持其余名称不变。 |
+| <a id="experimental-transformbuiltinattributenames-preserve"></a>`preserve` | `readonly string[]` |  | 应保持不变的属性名，除非同时存在精确的 `rename` 条目。 |
+| <a id="experimental-transformbuiltinattributenames-rename"></a>`rename` | `Readonly<Record<string, string>>` |  | 从源属性名到转换后属性名的精确映射。 |
+
+### `targetSdkVersion` <span className="api-badge api-badge-deprecated">已废弃</span> \{#targetsdkversion\}
+
+- **类型：** `string`
+- **默认值：** `'3.2'`
+
+:::warning 已废弃
+`targetSdkVersion` 现在是 [`PluginReactLynxOptions.engineVersion`](#engineversion) 的别名，请改用 [`PluginReactLynxOptions.engineVersion`](#engineversion)。
+:::
+
+targetSdkVersion 用于指定 App bundle 可运行的最低 Lynx Engine 版本。
+
+### 其他选项 \{#other-options\}
+
+| 名称 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="defaultdisplaylinear"></a>`defaultDisplayLinear` | `boolean` | `true` | defaultDisplayLinear 控制 CSS 中 `display` 的默认值是否为 `linear`。 如果 `defaultDisplayLinear === false`，`display` 的默认值将为 `flex` 而非 `linear`。 |
+| <a id="definedce"></a>`defineDCE` | `Partial<`[`DefineDceVisitorConfig`](#definedcevisitorconfig)`>` | `undefined` | 类似各类打包工具中的 `define`，但它在转换阶段执行，并会执行一次死代码消除（DCE）。 |
+| <a id="enableaccessibilityelement"></a>`enableAccessibilityElement` | `boolean` | `false` | enableAccessibilityElement 用于设置所有 `<view />` 元素的 `accessibility-element` 默认值。 |
+| <a id="enablecssselector"></a>`enableCSSSelector` | `boolean` | `true` | enableCSSSelector 控制是否启用新的 CSS 实现。 |
+| <a id="enablenewgesture"></a>`enableNewGesture` | `boolean` | `false` | enableNewGesture 用于启用新的手势系统。 |
+| <a id="enableremovecssscope"></a>`enableRemoveCSSScope` | `boolean` | `true` | enableRemoveCSSScope 控制是否将 CSS 限制在组件作用域内使用。 `true`：所有 CSS 文件都被视为全局 CSS。 `false`：所有 CSS 文件都被视为作用域 CSS，仅在显式导入它的组件中生效。 `undefined`：仅对 CSS Modules 使用作用域 CSS，其他 CSS 文件视为全局 CSS。作用域 CSS 比全局 CSS 更快，因此如果遇到性能问题，可以使用 CSS Modules 来加速 CSS。 |
+| <a id="enablessr"></a>`enableSSR` | `boolean` | `false` | `enableSSR` 为本次构建启用 Lynx SSR 功能。 |
+| <a id="enableuisourcemap"></a>`enableUiSourceMap` | `boolean` | `false` | 在主线程转换中生成 UI source map。 |
+| <a id="engineversion"></a>`engineVersion` | `string` | `'3.2'` | `engineVersion` 指定 App bundle 正常运行所需的最低 Lynx Engine 版本。 |
+| <a id="experimental-islazybundle"></a>`experimental_isLazyBundle` <span className="api-badge api-badge-alpha">Alpha</span> | `boolean` | `false` | 生成独立的 lazy bundle。 |
+| <a id="experimental-useelementtemplate"></a>`experimental_useElementTemplate` <span className="api-badge api-badge-beta">实验性</span> | `boolean` | `false` | 启用 Element Template 的编译与运行时入口。 |
+| <a id="extractstr"></a>`extractStr` | `boolean \| Partial<`[`ExtractStrConfig`](#extractstrconfig)`>` | `false` | 合并 JS 和 Lepus 中相同的字符串字面量，以减小产物 bundle 体积。设置为 `false` 可禁用。仅在禁用 chunk 拆分时生效。 |
+| <a id="firstscreensynctiming"></a>`firstScreenSyncTiming` | `"immediately" \| "jsReady" \| "manual"` | `"immediately"` | 此标志控制首屏之后主线程（Lepus）何时将控制权移交给后台线程 此标志有三个选项： `"immediately"`：立即移交 `"jsReady"`：在后台线程（JS Runtime）就绪时移交 `"manual"`：在业务调用 `@lynx-js/react` 导出的 `markFirstScreenSyncReady()` API 时移交，移交时机完全由用户控制 移交控制权后，主线程（Lepus）运行时将无法再响应数据更新，数据更新会被转发到后台线程（JS Runtime）并 __异步__ 处理 |
+| <a id="globalpropsmode"></a>`globalPropsMode` | `"reactive" \| "event"` | `'reactive'` | 配置 `lynx.__globalProps` 的更新模式。 此标志有两个选项： `'reactive'`：`UpdateGlobalProps` 会自动触发更新。 `'event'`：`UpdateGlobalProps` 会触发全局事件，用户需要在事件处理函数中触发更新。 |
+| <a id="optimizebundlesize"></a>`optimizeBundleSize` | `boolean \| { background?: boolean; mainThread?: boolean }` | `false` | 通过 Minify.mainThreadOptions 和 Minify.backgroundOptions 移除未使用的代码，以优化 bundle 体积。 当 optimizeBundleSize 或 optimizeBundleSize.mainThread 为 true 时，会优化主线程代码。当 optimizeBundleSize 或 optimizeBundleSize.background 为 true 时，会优化后台线程代码。 |
+| <a id="removedescendantselectorscope"></a>`removeDescendantSelectorScope` | `boolean` | `true` | removeDescendantSelectorScope 用于移除后代选择器的作用域。 |
+| <a id="shake"></a>`shake` | `Partial<`[`ShakeVisitorConfig`](#shakevisitorconfig)`>` | `undefined` | 控制如何对主线程代码进行 shake。 |
+
+{/* @api-end */}
+
+## API
+
+{/* @api ApiExports package="react-rsbuild-plugin" exclude="PluginReactLynxOptions" optionsType="PluginReactLynxOptions" */}
+
+## 函数 \{#functions\}
+
+### `pluginReactLynx()` \{#pluginreactlynx\}
+
+```ts
+function pluginReactLynx(userOptions?: PluginReactLynxOptions): RsbuildPlugin[]
+```
+
+创建用于 ReactLynx 的 Rsbuild 插件。
+
+```ts
+// rsbuild.config.ts
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+export default {
+  plugins: [pluginReactLynx()]
+}
+```
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `userOptions?` | [`PluginReactLynxOptions`](#pluginreactlynxoptions) |  |
+
+**返回值：** `RsbuildPlugin[]`
+
+## 常量 \{#constants\}
+
+### `LAYERS` \{#layers\}
+
+从 [`@lynx-js/react-webpack-plugin`](/zh/api/packages/react-webpack-plugin#layers) 重新导出。
+
+## 类型 \{#types\}
+
+### `AddComponentElementConfig` \{#addcomponentelementconfig\}
+
+[`CompatVisitorConfig.addComponentElement`](#compatvisitorconfig-addcomponentelement)
+
+#### `AddComponentElementConfig.compilerOnly` \{#addcomponentelementconfig-compileronly\}
+
+- **类型：** `boolean`
+
+是否仅在编译期添加组件元素
+
+注意，这仅对从 [`CompatVisitorConfig.oldRuntimePkg`](#compatvisitorconfig-oldruntimepkg) 导入的 `Component` 生效。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        addComponentElement: { compilerOnly: true }
+      },
+    })
+  ],
+})
+```
+
+### `CompatVisitorConfig` \{#compatvisitorconfig\}
+
+[`PluginReactLynxOptions.compat`](#compat)
+
+| 成员 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="compatvisitorconfig-transformlegacyeventattributenames"></a>`transformLegacyEventAttributeNames?` | `boolean` | `true` | 是否转换 Lynx 元素上的旧版事件属性名。 启用后，`onClick` 和 `onClickCatch` 等旧版事件属性会被转换为 `bindtap` 和 `catchtap`。当有其他转换负责事件属性名的转换时，请禁用此选项。 |
+
+#### `CompatVisitorConfig.addComponentElement` \{#compatvisitorconfig-addcomponentelement\}
+
+- **类型：** `boolean | `[`AddComponentElementConfig`](#addcomponentelementconfig)
+- **默认值：** `false`
+
+控制是否为组件添加包裹元素
+
+在运行时为所有组件添加 `<view>` 包裹元素。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        addComponentElement: true
+      },
+    })
+  ],
+})
+```
+
+仅在编译期添加组件元素。注意，这仅对从 [`CompatVisitorConfig.oldRuntimePkg`](#compatvisitorconfig-oldruntimepkg) 导入的 `Component` 生效。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        addComponentElement: { compilerOnly: true }
+      },
+    })
+  ],
+})
+```
+
+#### `CompatVisitorConfig.additionalComponentAttributes` \{#compatvisitorconfig-additionalcomponentattributes\}
+
+- **类型：** `string[]`
+- **默认值：** `[]`
+
+指定额外的组件属性列表，这些属性会传递给包裹的 `<view>`，而不是组件本身。
+
+仅在启用 [`CompatVisitorConfig.addComponentElement`](#compatvisitorconfig-addcomponentelement) 时生效。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        additionalComponentAttributes: ['custom-attr', 'data-special']
+      },
+    })
+  ],
+})
+```
+
+#### `CompatVisitorConfig.componentsPkg` \{#compatvisitorconfig-componentspkg\}
+
+- **类型：** `string[]`
+- **默认值：** `['@lynx-js/react-components']`
+
+指定需要进行兼容处理的组件包名列表
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        componentsPkg: ['@my-org/components', '@legacy/ui-kit']
+      },
+    })
+  ],
+})
+```
+
+#### `CompatVisitorConfig.darkMode?` <span className="api-badge api-badge-deprecated">已废弃</span> \{#compatvisitorconfig-darkmode\}
+
+- **类型：** `boolean | DarkModeConfig`
+- **默认值：** `undefined`
+
+深色模式配置
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        darkMode: true
+      },
+    })
+  ],
+})
+```
+
+#### `CompatVisitorConfig.disableDeprecatedWarning` \{#compatvisitorconfig-disabledeprecatedwarning\}
+
+- **类型：** `boolean`
+- **默认值：** `false`
+
+是否禁用废弃警告
+
+禁用所有 `DEPRECATED:` 警告。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        disableDeprecatedWarning: true
+      },
+    })
+  ],
+})
+```
+
+#### `CompatVisitorConfig.legacySlot?` \{#compatvisitorconfig-legacyslot\}
+
+- **类型：** `boolean`
+- **默认值：** `false`
+
+将动态子节点编译为 children + wrapper（SlotV2 之前的 slot
+代码生成：`Slot`/`Children` 动态部分通过 wrapper
+元素渲染），而不是默认的 SlotV2 代码生成（`$N` slot props）。
+
+当编译产物需要运行在不支持 `SlotV2` 的旧版
+`@lynx-js/react` 运行时（`< 0.120.0`）上时启用此选项，例如由搭载旧版运行时的宿主 App 消费的独立 lazy bundle。它只改变编译产物；运行时同时支持两种形式。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        legacySlot: true,
+      },
+    })
+  ],
+})
+```
+
+#### `CompatVisitorConfig.newRuntimePkg` \{#compatvisitorconfig-newruntimepkg\}
+
+- **类型：** `string`
+- **默认值：** `'@lynx-js/react'`
+
+指定新运行时的包名
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        newRuntimePkg: '@my-org/react'
+      },
+    })
+  ],
+})
+```
+
+#### `CompatVisitorConfig.oldRuntimePkg` \{#compatvisitorconfig-oldruntimepkg\}
+
+- **类型：** `string[]`
+- **默认值：** `['@lynx-js/react-runtime']`
+
+指定需要进行兼容处理的旧运行时包名列表
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        oldRuntimePkg: ['@my-org/runtime', '@legacy/runtime']
+      },
+    })
+  ],
+})
+```
+
+#### `CompatVisitorConfig.removeComponentAttrRegex?` <span className="api-badge api-badge-deprecated">已废弃</span> \{#compatvisitorconfig-removecomponentattrregex\}
+
+- **类型：** `string`
+- **默认值：** `undefined`
+
+:::warning 已废弃
+推荐使用 `background-only`。
+
+如果你的代码依赖此开关，那么通过 npm 包或其他方式将其分发给其他项目时，这些项目也需要开启此开关。这会导致开关泛滥，不利于在不同项目之间复用代码。
+:::
+
+用于移除组件属性的正则表达式
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        removeComponentAttrRegex: '^data-test-'
+      },
+    })
+  ],
+})
+```
+
+#### `CompatVisitorConfig.simplifyCtorLikeReactLynx2` <span className="api-badge api-badge-deprecated">已废弃</span> \{#compatvisitorconfig-simplifyctorlikereactlynx2\}
+
+- **类型：** `boolean`
+- **默认值：** `false`
+
+:::warning 已废弃
+不推荐使用 `simplifyCtorLikeReactLynx2`，因为它会引入隐式行为，可能会：
+
+- 使代码更难理解和维护
+
+- 在组件之间产生隐藏的依赖
+
+- 使调试和测试过程复杂化
+
+请改为在类方法上使用 `background-only`，以获得显式且易于维护的行为
+:::
+
+是否像 ReactLynx 2 一样简化构造函数调用
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        simplifyCtorLikeReactLynx2: true
+      },
+    })
+  ],
+})
+```
+
+### `DefineDceVisitorConfig` \{#definedcevisitorconfig\}
+
+[`PluginReactLynxOptions.defineDCE`](#definedce)
+
+#### `DefineDceVisitorConfig.define` \{#definedcevisitorconfig-define\}
+
+- **类型：** `Record<string, string>`
+
+在编译时将代码中的变量替换为其他值或表达式。
+
+注意：与 `source.define` 的区别
+
+`defineDCE` 在转换 `background-only` 指令之前执行。因此可用于从主线程代码中消除仅在后台线程使用的代码。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      defineDCE: {
+        define: {
+          __FOO__: 'false',
+          'process.env.PLATFORM': '"lynx"',
+        },
+      },
+    })
+  ],
+})
+```
+
+Then, `__FOO__` and `process.env.PLATFORM` could be used in source code.
+
+```
+if (process.env.PLATFORM === 'lynx') {
+  console.log('lynx')
+}
+
+function FooOrBar() {
+  if (__FOO__) {
+    return <text>foo</text>
+  } else {
+    return <text>bar</text>
+  }
+}
+```
+
+### `ExtractStrConfig` \{#extractstrconfig\}
+
+[`PluginReactLynxOptions.extractStr`](#extractstr)
+
+#### `ExtractStrConfig.strLength` \{#extractstrconfig-strlength\}
+
+- **类型：** `number`
+- **默认值：** `20`
+
+被提取的字符串字面量的最小长度。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      extractStr: {
+        strLength: 10,
+      },
+    })
+  ],
+})
+```
+
+### `LynxTemplatePlugin` \{#lynxtemplateplugin\}
+
+`pluginLynx` 暴露的
+[`LynxTemplatePlugin`](/zh/api/packages/template-webpack-plugin#lynxtemplateplugin)
+静态 API。可通过
+`api.useExposed(Symbol.for('LynxTemplatePlugin')).LynxTemplatePlugin` 获取。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="lynxtemplateplugin-getlynxtemplatepluginhooks"></a>`getLynxTemplatePluginHooks` | `(compilation: Compilation) => `[`TemplateHooks`](#templatehooks) | 返回某个 compilation 的 [`TemplateHooks`](#templatehooks)。 |
+
+### `ShakeVisitorConfig` \{#shakevisitorconfig\}
+
+[`PluginReactLynxOptions.shake`](#shake)
+
+#### `ShakeVisitorConfig.pkgName` \{#shakevisitorconfig-pkgname\}
+
+- **类型：** `string[]`
+- **默认值：** `['@lynx-js/react-runtime']`
+
+用于识别需要处理的运行时导入的包名
+
+传入的值会与默认值合并，而不是替换默认值。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      shake: {
+        pkgName: ['@lynx-js/react-runtime']
+      }
+    })
+  ]
+})
+```
+
+#### `ShakeVisitorConfig.removeCall` \{#shakevisitorconfig-removecall\}
+
+- **类型：** `string[]`
+- **默认值：** `['useEffect', 'useLayoutEffect', '__runInJS', 'useLynxGlobalEventListener', 'useImperativeHandle']`
+
+在转换过程中，其调用会被替换为 `undefined` 的函数名
+
+传入的值会与默认值合并，而不是替换默认值。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      shake: {
+        removeCall: ['useMyCustomEffect']
+      }
+    })
+  ]
+})
+```
+
+#### `ShakeVisitorConfig.removeCallParams` \{#shakevisitorconfig-removecallparams\}
+
+- **类型：** `string[]`
+- **默认值：** `[]`
+
+在转换过程中，需要移除其参数的函数名
+
+传入的值会与默认值合并，而不是替换默认值。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      shake: {
+        removeCallParams: ['useMyCustomEffect']
+      }
+    })
+  ]
+})
+```
+
+#### `ShakeVisitorConfig.retainProp` \{#shakevisitorconfig-retainprop\}
+
+- **类型：** `string[]`
+- **默认值：** `['constructor', 'render', 'getDerivedStateFromProps', 'state', 'defaultDataProcessor', 'dataProcessors', 'contextType', 'defaultProps']`
+
+需要在组件类中保留的属性
+
+传入的值会与默认值合并，而不是替换默认值。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      shake: {
+        retainProp: ['myCustomMethod']
+      }
+    })
+  ]
+})
+```
+
+### `TemplateHooks` \{#templatehooks\}
+
+从 [`@lynx-js/template-webpack-plugin`](/zh/api/packages/template-webpack-plugin#templatehooks) 重新导出。
+
+### `TransformBuiltinAttributeNamesOptions` \{#transformbuiltinattributenamesoptions\}
+
+用于转换内置元素属性名的可序列化规则。
+
+`rename` 中的精确条目优先于 `preserve`，其次是由
+`mode` 选择的兜底行为。
+
+| 成员 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="transformbuiltinattributenamesoptions-mode"></a>`mode?` | `"dash-case" \| "mapping-only"` | `'dash-case'` | 未在 `rename` 或 `preserve` 中列出的属性名的兜底行为。 `'dash-case'` 还会应用默认的 React 风格事件映射。 `'mapping-only'` 会保持其余名称不变。 |
+| <a id="transformbuiltinattributenamesoptions-preserve"></a>`preserve?` | `readonly string[]` |  | 应保持不变的属性名，除非同时存在精确的 `rename` 条目。 |
+| <a id="transformbuiltinattributenamesoptions-rename"></a>`rename?` | `Readonly<Record<string, string>>` |  | 从源属性名到转换后属性名的精确映射。 |
+
+{/* @api-end */}

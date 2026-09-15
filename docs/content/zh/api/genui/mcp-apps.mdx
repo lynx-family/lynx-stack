@@ -1,0 +1,175 @@
+---
+title: '@lynx-js/genui/mcp-apps'
+---
+
+# `@lynx-js/genui/mcp-apps`
+
+`@lynx-js/genui/mcp-apps` 是 MCP Apps 的 Lynx 宿主。它校验收到的 app 数据，找到你为它注册的渲染器，用 ReactLynx 渲染出来；没有已注册的渲染器匹配时，回退为流式 Markdown。用 `defineAppRenderer` 定义渲染器，用 `createAppRendererRegistry` 汇总成注册表，再把注册表传给 `McpApps`。
+
+```ts
+import {
+  McpApps,
+  createAppRendererRegistry,
+  defineAppRenderer,
+} from '@lynx-js/genui/mcp-apps';
+```
+
+## API
+
+{/* @api ApiExports package="genui-mcp-apps" */}
+
+## 函数 \{#functions\}
+
+### `createAppRendererRegistry()` \{#createapprendererregistry\}
+
+```ts
+function createAppRendererRegistry(renderers: readonly AppRenderer[]): AppRendererRegistry
+```
+
+为本地提供的渲染器创建一个不可变的查找接口。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `renderers` | `readonly `[`AppRenderer`](#apprenderer)`[]` |  |
+
+**返回值：** [`AppRendererRegistry`](#apprendererregistry)
+
+### `defineAppRenderer()` \{#defineapprenderer\}
+
+```ts
+function defineAppRenderer(definition: AppRendererDefinition<TResult>): AppRenderer
+```
+
+定义一个渲染器，并在声明处保留其结果类型。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `definition` | [`AppRendererDefinition`](#apprendererdefinition)`<TResult>` |  |
+
+**返回值：** [`AppRenderer`](#apprenderer)
+
+### `McpApps()` \{#mcpapps\}
+
+```ts
+function McpApps(props: McpAppsProps): Element
+```
+
+渲染经过校验的本地 MCP Apps 数据；没有已注册的渲染器与宿主数据匹配时，回退为流式 Markdown。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | [`McpAppsProps`](#mcpappsprops) |  |
+
+**返回值：** `Element`
+
+### `readAppMarkdown()` \{#readappmarkdown\}
+
+```ts
+function readAppMarkdown(value: unknown): string
+```
+
+从 MCP Apps 宿主数据中读取作为回退的 Markdown 内容。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `value` | `unknown` |  |
+
+**返回值：** `string`
+
+### `readAppRenderData()` \{#readapprenderdata\}
+
+```ts
+function readAppRenderData(value: unknown): AppRenderData<unknown> | null
+```
+
+解析并校验 MCP Apps 数据中与渲染器无关的部分。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `value` | `unknown` |  |
+
+**返回值：** [`AppRenderData`](#apprenderdata)`<unknown> | null`
+
+## 类型 \{#types\}
+
+### `AppApiDefinition` \{#appapidefinition\}
+
+描述一个可以为 MCP Apps 渲染器提供数据的本地 API。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="appapidefinition-description"></a>`description` | `string` |  |
+| <a id="appapidefinition-inputschema"></a>`inputSchema` | `Record<string, unknown>` |  |
+| <a id="appapidefinition-name"></a>`name` | `string` |  |
+| <a id="appapidefinition-renderer"></a>`renderer` | `string` |  |
+| <a id="appapidefinition-title"></a>`title` | `string` |  |
+
+### `AppRenderData` \{#apprenderdata\}
+
+选择并渲染一个本地注册的 MCP App 所需的数据。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="apprenderdata-input"></a>`input` | `Record<string, unknown>` |  |
+| <a id="apprenderdata-renderer"></a>`renderer` | `string` |  |
+| <a id="apprenderdata-result"></a>`result` | `TResult` |  |
+
+### `AppRenderer` \{#apprenderer\}
+
+存放在 MCP Apps 渲染器注册表中、已擦除类型的渲染器。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="apprenderer-component"></a>`component` | `ComponentType<`[`AppRendererProps`](#apprendererprops)`<unknown>>` |  |
+| <a id="apprenderer-id"></a>`id` | `string` |  |
+| <a id="apprenderer-invalidresultmessage"></a>`invalidResultMessage` | `string` |  |
+| <a id="apprenderer-parseresult"></a>`parseResult` | `(value: unknown) => unknown` |  |
+
+### `AppRendererDefinition` \{#apprendererdefinition\}
+
+[`defineAppRenderer`](#defineapprenderer) 接收的强类型定义。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="apprendererdefinition-component"></a>`component` | `ComponentType<`[`AppRendererProps`](#apprendererprops)`<TResult>>` |  |
+| <a id="apprendererdefinition-id"></a>`id` | `string` |  |
+| <a id="apprendererdefinition-invalidresultmessage"></a>`invalidResultMessage` | `string` |  |
+| <a id="apprendererdefinition-parseresult"></a>`parseResult` | `(value: unknown) => TResult \| null` |  |
+
+### `AppRendererProps` \{#apprendererprops\}
+
+MCP Apps 宿主传给已注册渲染器的 props。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="apprendererprops-input"></a>`input` | `Record<string, unknown>` |  |
+| <a id="apprendererprops-result"></a>`result` | `TResult` |  |
+
+### `AppRendererRegistry` \{#apprendererregistry\}
+
+与协议无关的 MCP Apps 宿主使用的本地渲染器查找表。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="apprendererregistry-getrenderer"></a>`getRenderer` | `(id: string) => `[`AppRenderer`](#apprenderer)` \| null` |  |
+| <a id="apprendererregistry-resolverenderdata"></a>`resolveRenderData` | `(value: unknown) => `[`ResolvedAppRenderData`](#resolvedapprenderdata)` \| null` |  |
+
+### `McpAppsProps` \{#mcpappsprops\}
+
+与协议无关的 MCP Apps Lynx 宿主的 props。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="mcpappsprops-registry"></a>`registry` | [`AppRendererRegistry`](#apprendererregistry) |  |
+
+### `ResolvedAppRenderData` \{#resolvedapprenderdata\}
+
+经过校验的渲染数据，以及与之对应的本地注册渲染器。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="resolvedapprenderdata-input"></a>`input` | `Record<string, unknown>` |  |
+| <a id="resolvedapprenderdata-renderer"></a>`renderer` | [`AppRenderer`](#apprenderer) |  |
+| <a id="resolvedapprenderdata-result"></a>`result` | `unknown` |  |
+
+{/* @api-end */}

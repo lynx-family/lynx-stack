@@ -1,0 +1,76 @@
+{
+  "id": "react-refresh-webpack-plugin",
+  "package": "@lynx-js/react-refresh-webpack-plugin",
+  "version": "0.4.2",
+  "description": "A webpack plugin to hot refresh for Lynx.",
+  "group": "internals",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/react-refresh-webpack-plugin",
+  "exports": [
+    {
+      "name": "ReactRefreshRspackPlugin",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "ReactRefreshRspackPlugin allows using fast refresh in ReactLynx.",
+      "examples": [
+        "```js\n// rspack.config.js\nimport { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'\nexport default {\n  module: {\n    rules: [\n      {\n        test: /\\.[jt]sx?$/,\n        exclude: [\n          /node_modules/,\n          /@lynx-js/,\n          /react-refresh/,\n          /compiler-nodiff-runtime3/,\n          ReactRefreshRspackPlugin.loader,\n        ],\n        use: [ReactRefreshRspackPlugin.loader],\n      },\n    ],\n  },\n  plugins: [new ReactRefreshRspackPlugin()],\n}\n```"
+      ],
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(options: ReactRefreshRspackPluginOptions): ReactRefreshRspackPlugin",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "options",
+              "type": "ReactRefreshRspackPluginOptions",
+              "ref": "ReactRefreshRspackPluginOptions",
+              "refs": [
+                "ReactRefreshRspackPluginOptions"
+              ],
+              "description": "The options for react refresh."
+            }
+          ],
+          "returns": {
+            "type": "ReactRefreshRspackPlugin",
+            "refs": [
+              "ReactRefreshRspackPlugin"
+            ]
+          }
+        },
+        {
+          "name": "loader",
+          "type": "string",
+          "summary": "The loader for react refresh.",
+          "remarks": "Please note that the runtime of react should be ignored. See the example below:",
+          "examples": [
+            "```js\n// rspack.config.js\nimport { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'\nimport { LAYERS } from '@lynx-js/react-webpack-plugin'\n\nexport default {\n  module: {\n    rules: [\n      {\n        issuerLayer: LAYERS.BACKGROUND,\n        test: /\\.[jt]sx?$/,\n        exclude: [\n          /node_modules/,\n          /@lynx-js/react/,\n          ReactRefreshRspackPlugin.loader,\n        ],\n        use: [ReactRefreshRspackPlugin.loader],\n      },\n    ],\n  },\n  plugins: [new ReactRefreshRspackPlugin()],\n}\n```"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "apply",
+          "type": "apply(compiler: Compiler): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "compiler",
+              "type": "Compiler",
+              "description": "the rspack compiler"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "The entry point of a rspack plugin."
+        }
+      ]
+    },
+    {
+      "name": "ReactRefreshRspackPluginOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The options for [`ReactRefreshRspackPlugin`](api:ReactRefreshRspackPlugin).",
+      "members": []
+    }
+  ]
+}

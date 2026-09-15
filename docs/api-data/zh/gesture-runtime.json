@@ -1,0 +1,170 @@
+{
+  "ComposedGesture.processPanDistance.summary": {
+    "en": "If pan gesture has relationship with tap or longPress, its default minDistance should be overridden",
+    "text": "如果拖动手势与点击或长按手势存在关联，则应覆盖其默认的 minDistance"
+  },
+  "ExclusiveGesture.processPanDistance.summary": {
+    "en": "If pan gesture has relationship with tap or longPress, its default minDistance should be overridden",
+    "text": "如果拖动手势与点击或长按手势存在关联，则应覆盖其默认的 minDistance"
+  },
+  "NativeGesture.summary": {
+    "en": "Currently highly experimental and subject to change.\nNativeGesture is a gesture that represents native platform gestures.\nIt can be used to integrate with native gesture handling mechanisms.",
+    "text": "目前处于高度实验阶段，后续可能发生变化。\nNativeGesture 是表示原生平台手势的手势。可用于与原生手势处理机制集成。"
+  },
+  "SimultaneousGesture.processPanDistance.summary": {
+    "en": "If pan gesture has relationship with tap or longPress, its default minDistance should be overridden",
+    "text": "如果拖动手势与点击或长按手势存在关联，则应覆盖其默认的 minDistance"
+  },
+  "BaseGestureCallbacks.summary": {
+    "en": "Generic base gesture callbacks interface.",
+    "text": "通用的基础手势回调接口。"
+  },
+  "BaseGestureConfig.summary": {
+    "en": "Base configuration interface for all gestures.\nAll gesture-specific configurations extend this interface.",
+    "text": "所有手势的基础配置接口。所有手势专属配置都扩展自该接口。"
+  },
+  "BaseGestureConfig.enabled.summary": {
+    "en": "Whether the gesture is enabled. Defaults to true.",
+    "text": "是否启用该手势。默认为 true。"
+  },
+  "ContinuousGestureCallbacks.summary": {
+    "en": "Generic continuous gesture callbacks interface.",
+    "text": "通用的连续手势回调接口。"
+  },
+  "DefaultGestureChangeEvent.summary": {
+    "en": "Default gesture change event.\nAdds scroll offsets (`scrollX`, `scrollY`), deltas (`deltaX`, `deltaY`) and boundary flags (`isAtStart`, `isAtEnd`).",
+    "text": "默认手势的变化事件。新增滚动偏移量（`scrollX`、`scrollY`）、增量（`deltaX`、`deltaY`）和边界标记（`isAtStart`、`isAtEnd`）。"
+  },
+  "DefaultGestureConfig.summary": {
+    "en": "Configuration interface for DefaultScrollGesture.\nDefault gesture is a basic gesture handler.",
+    "text": "DefaultScrollGesture 的配置接口。默认手势是一种基础的手势处理器。"
+  },
+  "DefaultGestureConfig.enabled.summary": {
+    "en": "Whether the gesture is enabled. Defaults to true.",
+    "text": "是否启用该手势。默认为 true。"
+  },
+  "DefaultGestureConfig.tapSlop.summary": {
+    "en": "Tap slop value (in points). Defaults to 3.",
+    "text": "点击容差值（单位为 point）。默认为 3。"
+  },
+  "FlingGestureChangeEvent.summary": {
+    "en": "Fling gesture change event with scroll offsets (`scrollX`, `scrollY`), deltas (`deltaX`, `deltaY`) and boundary flags (`isAtStart`, `isAtEnd`).",
+    "text": "快速滑动手势的变化事件，包含滚动偏移量（`scrollX`、`scrollY`）、增量（`deltaX`、`deltaY`）和边界标记（`isAtStart`、`isAtEnd`）。"
+  },
+  "FlingGestureConfig.summary": {
+    "en": "Configuration interface for FlingGesture.\nFling gesture recognizes fling (swipe) gestures.",
+    "text": "FlingGesture 的配置接口。快速滑动手势用于识别快速滑动（swipe）手势。"
+  },
+  "FlingGestureConfig.direction.summary": {
+    "en": "Direction of the fling gesture",
+    "text": "快速滑动手势的方向"
+  },
+  "FlingGestureConfig.enabled.summary": {
+    "en": "Whether the gesture is enabled. Defaults to true.",
+    "text": "是否启用该手势。默认为 true。"
+  },
+  "FlingGestureConfig.numberOfPointers.summary": {
+    "en": "Number of pointers (fingers) required. Defaults to 1.",
+    "text": "所需的触点（手指）数量。默认为 1。"
+  },
+  "GestureChangeEvent.summary": {
+    "en": "Base gesture change event interface.\nAll gesture-specific events extend this interface.",
+    "text": "基础的手势变化事件接口。所有手势专属事件都扩展自该接口。"
+  },
+  "InternalStateManager.summary": {
+    "en": "Used internally, not meant to be public",
+    "text": "仅供内部使用，不对外公开"
+  },
+  "LongPressGestureChangeEvent.summary": {
+    "en": "Long press gesture change event. Uses the base `GestureChangeEvent` params.",
+    "text": "长按手势的变化事件。使用基础 `GestureChangeEvent` 的参数。"
+  },
+  "LongPressGestureConfig.summary": {
+    "en": "Configuration interface for LongPressGesture.\nLong press gesture recognizes long press gestures.",
+    "text": "LongPressGesture 的配置接口。长按手势用于识别长按手势。"
+  },
+  "LongPressGestureConfig.enabled.summary": {
+    "en": "Whether the gesture is enabled. Defaults to true.",
+    "text": "是否启用该手势。默认为 true。"
+  },
+  "LongPressGestureConfig.maxDistance.summary": {
+    "en": "Maximum distance (in points) the touch can move and still be considered a long press. Defaults to 10.",
+    "text": "触点可移动且仍被视为长按的最大距离（单位为 point）。默认为 10。"
+  },
+  "LongPressGestureConfig.minDuration.summary": {
+    "en": "Minimum duration (in milliseconds) for a long press. Defaults to 500ms.",
+    "text": "长按的最短持续时间（单位为毫秒）。默认为 500ms。"
+  },
+  "NativeGestureChangeEvent.summary": {
+    "en": "Native gesture change event.\nAdds scroll offsets (`scrollX`, `scrollY`), deltas (`deltaX`, `deltaY`) and boundary flags (`isAtStart`, `isAtEnd`).",
+    "text": "原生手势的变化事件。新增滚动偏移量（`scrollX`、`scrollY`）、增量（`deltaX`、`deltaY`）和边界标记（`isAtStart`、`isAtEnd`）。"
+  },
+  "NativeGestureConfig.summary": {
+    "en": "Configuration interface for NativeGesture.\nNative gesture uses platform-specific gesture recognizers.",
+    "text": "NativeGesture 的配置接口。原生手势使用平台特定的手势识别器。"
+  },
+  "NativeGestureConfig.enabled.summary": {
+    "en": "Whether the gesture is enabled. Defaults to true.",
+    "text": "是否启用该手势。默认为 true。"
+  },
+  "PanGestureChangeEvent.summary": {
+    "en": "Pan gesture change event with scroll offsets (`scrollX`, `scrollY`) and boundary flags (`isAtStart`, `isAtEnd`).",
+    "text": "拖动手势的变化事件，包含滚动偏移量（`scrollX`、`scrollY`）和边界标记（`isAtStart`、`isAtEnd`）。"
+  },
+  "PanGestureConfig.summary": {
+    "en": "Configuration interface for PanGesture.\nPan gesture recognizes pan (dragging) gestures.",
+    "text": "PanGesture 的配置接口。拖动手势用于识别拖动（dragging）手势。"
+  },
+  "PanGestureConfig.activeOffsetX.summary": {
+    "en": "Active offset for X axis",
+    "text": "X 轴的激活偏移量"
+  },
+  "PanGestureConfig.activeOffsetY.summary": {
+    "en": "Active offset for Y axis",
+    "text": "Y 轴的激活偏移量"
+  },
+  "PanGestureConfig.enabled.summary": {
+    "en": "Whether the gesture is enabled. Defaults to true.",
+    "text": "是否启用该手势。默认为 true。"
+  },
+  "PanGestureConfig.failOffsetX.summary": {
+    "en": "Fail offset for X axis",
+    "text": "X 轴的失败偏移量"
+  },
+  "PanGestureConfig.failOffsetY.summary": {
+    "en": "Fail offset for Y axis",
+    "text": "Y 轴的失败偏移量"
+  },
+  "PanGestureConfig.minDistance.summary": {
+    "en": "Minimum distance (in points) that must be traveled before the gesture activates. Defaults to 0.",
+    "text": "手势激活前必须移动的最小距离（单位为 point）。默认为 0。"
+  },
+  "TapGestureChangeEvent.summary": {
+    "en": "Tap gesture change event. Uses the base `GestureChangeEvent` params.",
+    "text": "点击手势的变化事件。使用基础 `GestureChangeEvent` 的参数。"
+  },
+  "TapGestureConfig.summary": {
+    "en": "Configuration interface for TapGesture.\nTap gesture recognizes tap gestures.",
+    "text": "TapGesture 的配置接口。点击手势用于识别点击手势。"
+  },
+  "TapGestureConfig.enabled.summary": {
+    "en": "Whether the gesture is enabled. Defaults to true.",
+    "text": "是否启用该手势。默认为 true。"
+  },
+  "TapGestureConfig.maxDistance.summary": {
+    "en": "Maximum distance (in points) the touch can move and still be considered a tap. Defaults to 10.",
+    "text": "触点可移动且仍被视为点击的最大距离（单位为 point）。默认为 10。"
+  },
+  "TapGestureConfig.maxDuration.summary": {
+    "en": "Maximum duration (in milliseconds) for a tap. Defaults to 500ms.",
+    "text": "点击的最长持续时间（单位为毫秒）。默认为 500ms。"
+  },
+  "TapGestureConfig.numberOfTaps.summary": {
+    "en": "Number of taps required. Defaults to 1.",
+    "text": "所需的点击次数。默认为 1。"
+  },
+  "GestureCallback.summary": {
+    "en": "Generic gesture callback type that receives typed events.",
+    "text": "接收类型化事件的通用手势回调类型。"
+  }
+}

@@ -1,0 +1,372 @@
+---
+title: '@lynx-js/template-webpack-plugin'
+---
+
+# @lynx-js/template-webpack-plugin
+
+{/* @api PackageHeader package="template-webpack-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/template-webpack-plugin</code> <span className="api-pkg-version">v0.16.1</span> · <a href="https://www.npmjs.com/package/@lynx-js/template-webpack-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/template-webpack-plugin" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/template-webpack-plugin/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+:::tip Internal package
+This package is part of the Lynx build engine and is applied for you by [`pluginLynx`](/api/packages/rsbuild-plugin). Its API is documented for plugin authors; application code does not use it directly.
+:::
+
+Simplifies creation of Lynx template files to serve your webpack bundles
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/template-webpack-plugin -D" />
+
+## API
+
+{/* @api ApiExports package="template-webpack-plugin" */}
+
+## Functions \{#functions\}
+
+### `processTasmCSSDiagnostics()` \{#processtasmcssdiagnostics\}
+
+```ts
+function processTasmCSSDiagnostics(__namedParameters: ProcessTasmCSSDiagnosticsOptions): ResolvedTasmCSSDiagnostic[]
+```
+
+Parses, source-map-resolves, and deduplicates TASM CSS diagnostics.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `__namedParameters` | [`ProcessTasmCSSDiagnosticsOptions`](#processtasmcssdiagnosticsoptions) |  |
+
+**Returns:** [`ResolvedTasmCSSDiagnostic`](#resolvedtasmcssdiagnostic)`[]`
+
+## Classes \{#classes\}
+
+### `LynxEncodePlugin` \{#lynxencodeplugin\}
+
+LynxEncodePlugin
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="lynxencodeplugin-constructor"></a>`constructor` | `constructor(options?: LynxEncodePluginOptions): LynxEncodePlugin` |  |
+| <a id="lynxencodeplugin-before-emit-stage"></a>`BEFORE_EMIT_STAGE` | `number` | The stage of the beforeEmit hook. |
+| <a id="lynxencodeplugin-before-encode-stage"></a>`BEFORE_ENCODE_STAGE` | `number` | The stage of the beforeEncode hook. |
+| <a id="lynxencodeplugin-encode-stage"></a>`ENCODE_STAGE` | `number` | The stage of the encode hook. |
+| <a id="lynxencodeplugin-encodepool"></a>`encodePool` | `Tinypool` | Shared TASM encode worker pool: multiple entries (and multiple `LynxEncodePlugin` instances in the same process) share its worker slots for parallel encode; watch-mode rebuilds keep the same workers warm. `availableParallelism()` honors cgroup CPU limits (containers, CI runners), so we don't need to subtract a core ourselves. |
+
+#### `LynxEncodePlugin.defaultOptions` \{#lynxencodeplugin-defaultoptions\}
+
+- **Type:** `Readonly<Required<`[`LynxEncodePluginOptions`](#lynxencodepluginoptions)`>>`
+
+`defaultOptions` is the default options that the [`LynxEncodePlugin`](#lynxencodeplugin) uses.
+
+`defaultOptions` can be used to change part of the option and keep others as the default value.
+
+```js
+// webpack.config.js
+import { LynxEncodePlugin } from '@lynx-js/template-webpack-plugin'
+export default {
+  plugins: [
+    new LynxEncodePlugin({
+      ...LynxEncodePlugin.defaultOptions,
+      inlineScripts: false,
+    }),
+  ],
+}
+```
+
+#### `LynxEncodePlugin.apply` \{#lynxencodeplugin-apply\}
+
+- **Type:** `apply(compiler: Compiler): void`
+
+The entry point of a webpack plugin.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `compiler` | `Compiler` | the webpack compiler |
+
+### `LynxTemplatePlugin` \{#lynxtemplateplugin\}
+
+LynxTemplatePlugin
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="lynxtemplateplugin-constructor"></a>`constructor` | `constructor(options?: LynxTemplatePluginOptions): LynxTemplatePlugin` |  |
+| <a id="lynxtemplateplugin-getasyncchunklayoutname"></a>`getAsyncChunkLayoutName` | `getAsyncChunkLayoutName(compilation: Compilation, chunkId: string \| number): string \| undefined` | Map an async chunk id to `<lazy bundle name>/<layer>`, used to route a lazy bundle's intermediate js/css/hmr outputs into a single per-bundle directory. Returns undefined for non-lazy chunks. |
+| <a id="lynxtemplateplugin-getlynxtemplatepluginhooks"></a>`getLynxTemplatePluginHooks` | `getLynxTemplatePluginHooks(compilation: Compilation): TemplateHooks` | Returns all public hooks of the Lynx template webpack plugin for the given compilation |
+
+#### `LynxTemplatePlugin.defaultOptions` \{#lynxtemplateplugin-defaultoptions\}
+
+- **Type:** `Readonly<Required<`[`LynxTemplatePluginOptions`](#lynxtemplatepluginoptions)`>>`
+
+`defaultOptions` is the default options that the [`LynxTemplatePlugin`](#lynxtemplateplugin) uses.
+
+`defaultOptions` can be used to change part of the option and keep others as the default value.
+
+```js
+// webpack.config.js
+import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
+export default {
+  plugins: [
+    new LynxTemplatePlugin({
+      ...LynxTemplatePlugin.defaultOptions,
+      enableRemoveCSSScope: true,
+    }),
+  ],
+}
+```
+
+#### `LynxTemplatePlugin.apply` \{#lynxtemplateplugin-apply\}
+
+- **Type:** `apply(compiler: Compiler): void`
+
+The entry point of a webpack plugin.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `compiler` | `Compiler` | the webpack compiler |
+
+#### `LynxTemplatePlugin.convertCSSChunksToMap` \{#lynxtemplateplugin-convertcsschunkstomap\}
+
+- **Type:** `convertCSSChunksToMap(cssChunks: (string | { content: string })[], plugins: Plugin[], enableCSSSelector: boolean): { cssMap: Record<string, LynxStyleNode[]>; cssSource: Record<string, string> }`
+
+Convert the css chunks to css map.
+
+This helper currently forwards to `cssChunksToMap`.
+
+The returned `cssSource` is keyed by `cssId` and uses the synthetic
+filename format `/cssId/<id>.css`.
+
+This helper does not remap generated `loc` fields to original source
+coordinates.
+
+```
+(console.log(LynxTemplatePlugin.convertCSSChunksToMap(
+  ['.red { color: red; }'],
+  [],
+  true,
+)));
+```
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `cssChunks` | `(string \| { content: string })[]` | The CSS chunks content. |
+| `plugins` | `Plugin[]` | The CSS plugins passed to the parser. |
+| `enableCSSSelector` | `boolean` | Whether to enable the CSS selector. |
+
+### `WebEncodePlugin` \{#webencodeplugin\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="webencodeplugin-constructor"></a>`constructor` | `constructor(): WebEncodePlugin` |  |
+| <a id="webencodeplugin-before-encode-hook-stage"></a>`BEFORE_ENCODE_HOOK_STAGE` | `number` |  |
+| <a id="webencodeplugin-encode-hook-stage"></a>`ENCODE_HOOK_STAGE` | `number` |  |
+| <a id="webencodeplugin-name"></a>`name` | `string` |  |
+| <a id="webencodeplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` |  |
+| <a id="webencodeplugin-deletedebuggingassets"></a>`deleteDebuggingAssets` | `deleteDebuggingAssets(compilation: Compilation, assets: ({ name: string } \| undefined)[]): void` | The deleteDebuggingAssets delete all the assets that are inlined into the template. |
+
+## Constants \{#constants\}
+
+### `CSSPlugins` \{#cssplugins\}
+
+```ts
+const CSSPlugins: { parserPlugins: typeof Plugins }
+```
+
+*No description yet.*
+
+## Types \{#types\}
+
+### `CSS` \{#css\}
+
+Re-exported from [`@lynx-js/css-serializer`](/api/packages/css-serializer).
+
+### `CustomSectionNaming` \{#customsectionnaming\}
+
+Names the custom section a chunk is emitted as.
+
+Returning `undefined` keeps a chunk out of the custom sections. A background
+chunk left out stays in the manifest, which is where the runtime looks for
+it.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="customsectionnaming-css"></a>`css` | `css(assetName: string, index: number): string \| undefined` |  |
+| <a id="customsectionnaming-mainthread"></a>`mainThread` | `mainThread(assetName: string, index: number): string \| undefined` |  |
+
+#### `CustomSectionNaming.background` \{#customsectionnaming-background\}
+
+- **Type:** `background(manifestKey: string, index: number): string | undefined`
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `manifestKey` | `string` | The key the chunk has in the manifest. A lazy bundle keys it by path (`/.rspeedy/lazy-bundle/…/background.js`), an external bundle by asset name. |
+| `index` | `number` |  |
+
+### `EncodeOptions` \{#encodeoptions\}
+
+The options for encoding a Lynx bundle.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="encodeoptions-compileroptions"></a>`compilerOptions` | `Record<string, string \| boolean>` |  |
+| <a id="encodeoptions-customsections"></a>`customSections` | `Record<string, { content: string \| Record<string, unknown> \| undefined; encoding?: "JsBytecode" \| "CSS"; type?: "lazy" }>` |  |
+| <a id="encodeoptions-elementtemplate"></a>`elementTemplate?` | `Record<string, unknown>` | Element template data used by encoders that support element template output. |
+| <a id="encodeoptions-lepuscode"></a>`lepusCode` | `{ filename: string \| undefined; lepusChunk: Record<string, string>; root: string \| undefined } \| undefined` |  |
+| <a id="encodeoptions-manifest"></a>`manifest?` | `Record<string, string \| undefined>` |  |
+
+### `LynxEncodePluginOptions` \{#lynxencodepluginoptions\}
+
+The options for LynxEncodePluginOptions
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="lynxencodepluginoptions-inlinescripts"></a>`inlineScripts?` | `InlineChunkConfig` |  |
+
+### `LynxTemplatePluginOptions` \{#lynxtemplatepluginoptions\}
+
+The options for LynxTemplatePlugin
+
+| Members | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="lynxtemplatepluginoptions-apptype"></a>`appType?` | `"card" \| "DynamicComponent"` | `'DynamicComponent'` for a lazy bundle, `'card'` otherwise. | The kind of bundle to encode. |
+| <a id="lynxtemplatepluginoptions-chunks"></a>`chunks?` | `"all" \| string[]` | `'all'` | List all entries which should be injected |
+| <a id="lynxtemplatepluginoptions-cssplugins"></a>`cssPlugins` | `Plugin[]` |  | plugins passed to parser |
+| <a id="lynxtemplatepluginoptions-debuginfooutside"></a>`debugInfoOutside` | `boolean` |  | [`PluginReactLynxOptions.debugInfoOutside`](/api/packages/react-rsbuild-plugin#debuginfooutside) |
+| <a id="lynxtemplatepluginoptions-defaultdisplaylinear"></a>`defaultDisplayLinear` | `boolean` |  | [`PluginReactLynxOptions.defaultDisplayLinear`](/api/packages/react-rsbuild-plugin#defaultdisplaylinear) |
+| <a id="lynxtemplatepluginoptions-defaultoverflowvisible"></a>`defaultOverflowVisible?` | `boolean` | `true` | When enabled, the default overflow CSS property for views and components will be `'visible'`. Otherwise, it will be `'hidden'`. |
+| <a id="lynxtemplatepluginoptions-dsl"></a>`dsl?` | `"tt" \| "react" \| "react_nodiff"` |  | Declare the current dsl to the encoder. |
+| <a id="lynxtemplatepluginoptions-enablea11y"></a>`enableA11y` | `boolean` |  | Use Android View level APIs and system implementations. |
+| <a id="lynxtemplatepluginoptions-enableaccessibilityelement"></a>`enableAccessibilityElement` | `boolean` |  | [`PluginReactLynxOptions.enableAccessibilityElement`](/api/packages/react-rsbuild-plugin#enableaccessibilityelement) |
+| <a id="lynxtemplatepluginoptions-enablecssinheritance"></a>`enableCSSInheritance` | `boolean` |  | [`PluginReactLynxOptions.enableCSSInheritance`](/api/packages/react-rsbuild-plugin#enablecssinheritance) |
+| <a id="lynxtemplatepluginoptions-enablecssinvalidation"></a>`enableCSSInvalidation` | `boolean` |  | [`PluginReactLynxOptions.enableCSSInvalidation`](/api/packages/react-rsbuild-plugin#enablecssinvalidation) |
+| <a id="lynxtemplatepluginoptions-enablecssselector"></a>`enableCSSSelector` | `boolean` |  | [`PluginReactLynxOptions.enableCSSSelector`](/api/packages/react-rsbuild-plugin#enablecssselector) |
+| <a id="lynxtemplatepluginoptions-enablenewgesture"></a>`enableNewGesture` | `boolean` |  | [`PluginReactLynxOptions.enableNewGesture`](/api/packages/react-rsbuild-plugin#enablenewgesture) |
+| <a id="lynxtemplatepluginoptions-enableremovecssscope"></a>`enableRemoveCSSScope` | `boolean` |  | [`PluginReactLynxOptions.enableRemoveCSSScope`](/api/packages/react-rsbuild-plugin#enableremovecssscope) |
+| <a id="lynxtemplatepluginoptions-excludechunks"></a>`excludeChunks?` | `string[]` | `[]` | List all entries which should not be injected |
+| <a id="lynxtemplatepluginoptions-experimental-islazybundle"></a>`experimental_isLazyBundle?` <span className="api-badge api-badge-alpha">Alpha</span> | `boolean` |  | [`PluginReactLynxOptions.experimental_isLazyBundle`](/api/packages/react-rsbuild-plugin#experimental-islazybundle) |
+| <a id="lynxtemplatepluginoptions-filename"></a>`filename?` | `string \| ((entryName: string) => string)` | `'[name].bundle'` | The file to write the template to. Supports subdirectories eg: `assets/template.js`. [name] will be replaced by the entry name. Supports a function to generate the name. |
+| <a id="lynxtemplatepluginoptions-intermediate"></a>`intermediate?` | `string` | `'.lynx'` | The directory of the intermediate files of a bundle. |
+| <a id="lynxtemplatepluginoptions-lazybundlefetcher"></a>`lazyBundleFetcher?` | `"FetchBundle" \| "QueryComponent"` |  | Resolved lazy-bundle fetcher mode. Decided by the caller (e.g. `pluginReactLynx`) from the host engine version and any `REACT_LAZY_BUNDLE_FETCHER` env override. |
+| <a id="lynxtemplatepluginoptions-lazybundlefilename"></a>`lazyBundleFilename?` | `string` | `'lazy-bundle/[name].[fullhash].bundle'` | The filename of the lazy bundle. |
+| <a id="lynxtemplatepluginoptions-removedescendantselectorscope"></a>`removeDescendantSelectorScope` | `boolean` |  | [`PluginReactLynxOptions.removeDescendantSelectorScope`](/api/packages/react-rsbuild-plugin#removedescendantselectorscope) |
+| <a id="lynxtemplatepluginoptions-targetsdkversion"></a>`targetSdkVersion` | `string` |  | [`PluginReactLynxOptions.targetSdkVersion`](/api/packages/react-rsbuild-plugin#targetsdkversion) |
+
+#### `LynxTemplatePluginOptions.customCSSInheritanceList` \{#lynxtemplatepluginoptions-customcssinheritancelist\}
+
+- **Type:** `string[] | undefined`
+
+[`PluginReactLynxOptions.customCSSInheritanceList`](/api/packages/react-rsbuild-plugin#customcssinheritancelist)
+
+By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+ plugins: [
+   pluginReactLynx({
+     enableCSSInheritance: true,
+     customCSSInheritanceList: ['direction', 'overflow']
+   }),
+ ],
+})
+```
+
+#### `LynxTemplatePluginOptions.customSectionNaming?` \{#lynxtemplatepluginoptions-customsectionnaming\}
+
+- **Type:** `(compilation: Compilation) => `[`CustomSectionNaming`](#customsectionnaming)
+
+Assemble every chunk into a custom section, named by this strategy.
+
+A bundle assembled this way carries no `lepusCode`, and only the chunks
+left unnamed stay in the manifest. A `FetchBundle` lazy bundle is assembled
+this way by default, under the three section names its runtime resolves.
+
+#### `LynxTemplatePluginOptions.enableSectionBytecode?` \{#lynxtemplatepluginoptions-enablesectionbytecode\}
+
+- **Type:** `boolean`
+- **Default:** Enabled outside of development and debug builds, which keeps
+  the sections readable while debugging.
+
+Whether to compile the main thread sections to `JsBytecode`.
+
+### `ProcessTasmCSSDiagnosticsOptions` \{#processtasmcssdiagnosticsoptions\}
+
+Options for [`processTasmCSSDiagnostics`](#processtasmcssdiagnostics).
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="processtasmcssdiagnosticsoptions-context"></a>`context` | `string` | The webpack compiler context used to resolve relative source paths. |
+| <a id="processtasmcssdiagnosticsoptions-cssdiagnostics"></a>`cssDiagnostics` | `unknown` | The raw `css_diagnostics` value returned by TASM. |
+| <a id="processtasmcssdiagnosticsoptions-csssourcemaps"></a>`cssSourceMaps` | `string[]` | CSS source map contents from the CSS chunks for the current template. |
+| <a id="processtasmcssdiagnosticsoptions-emittedwarnings"></a>`emittedWarnings?` | `Set<string>` | A mutable set used to skip diagnostics that were already emitted. |
+| <a id="processtasmcssdiagnosticsoptions-fileexists"></a>`fileExists?` | `(path: string) => boolean` | A file existence check used before attaching a mapped source location. |
+
+### `ResolvedTasmCSSDiagnostic` \{#resolvedtasmcssdiagnostic\}
+
+A TASM CSS diagnostic with a formatted message and optional source map
+location.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="resolvedtasmcssdiagnostic-column"></a>`column` | `number` | The generated CSS column reported by TASM. |
+| <a id="resolvedtasmcssdiagnostic-line"></a>`line` | `number` | The generated CSS line reported by TASM. |
+| <a id="resolvedtasmcssdiagnostic-message"></a>`message` | `string` | The warning message suitable for webpack diagnostics. |
+| <a id="resolvedtasmcssdiagnostic-name"></a>`name?` | `string` | The unsupported CSS syntax name, when TASM reports one. |
+| <a id="resolvedtasmcssdiagnostic-sourcecolumn"></a>`sourceColumn?` | `number` | The original source column resolved from the CSS source map. |
+| <a id="resolvedtasmcssdiagnostic-sourcefile"></a>`sourceFile?` | `string` | The original source file resolved from the CSS source map. |
+| <a id="resolvedtasmcssdiagnostic-sourceline"></a>`sourceLine?` | `number` | The original source line resolved from the CSS source map. |
+| <a id="resolvedtasmcssdiagnostic-type"></a>`type?` | `string` | The diagnostic category, such as `property`. |
+
+### `TasmCSSDiagnostic` \{#tasmcssdiagnostic\}
+
+A CSS diagnostic emitted by TASM during template encode.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="tasmcssdiagnostic-column"></a>`column` | `number` | The generated CSS column reported by TASM. |
+| <a id="tasmcssdiagnostic-line"></a>`line` | `number` | The generated CSS line reported by TASM. |
+| <a id="tasmcssdiagnostic-name"></a>`name?` | `string` | The unsupported CSS syntax name, when TASM reports one. |
+| <a id="tasmcssdiagnostic-type"></a>`type?` | `string` | The diagnostic category, such as `property`. |
+
+### `TemplateHooks` \{#templatehooks\}
+
+To allow other plugins to alter the Template, this plugin executes
+[tapable](https://github.com/webpack/tapable) hooks.
+
+```js
+class MyPlugin {
+  apply(compiler) {
+    compiler.hooks.compilation.tap("MyPlugin", (compilation) => {
+      console.log("The compiler is starting a new compilation...");
+
+      LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(
+        "MyPlugin", // <-- Set a meaningful name here for stacktraces
+        (data, cb) => {
+          // Manipulate the content
+          modifyTemplate(data.template)
+          // Tell webpack to move on
+          cb(null, data);
+        },
+      );
+    });
+  }
+}
+```
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="templatehooks-afteremit"></a>`afterEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ outputName: string }>` | Called after the template is emitted. |
+| <a id="templatehooks-asyncchunkname"></a>`asyncChunkName` <span className="api-badge api-badge-alpha">Alpha</span> | `SyncWaterfallHook<string>` | Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template. |
+| <a id="templatehooks-beforeemit"></a>`beforeEmit` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; cssChunks: Asset[]; cssDiagnostics?: string; debugInfo: string; finalEncodeOptions: `[`EncodeOptions`](#encodeoptions)`; mainThreadAssets: Asset[]; outputName: string; template: Buffer }>` | Called before the template is emitted. Can be used to modify the template. |
+| <a id="templatehooks-beforeencode"></a>`beforeEncode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesWaterfallHook<{ chunkGroups: ChunkGroup[]; encodeData: EncodeRawData; filenameTemplate: string; intermediate: string; intermediateAssets: string[] }>` | Called before the encode process. Can be used to modify the encode options. |
+| <a id="templatehooks-encode"></a>`encode` <span className="api-badge api-badge-alpha">Alpha</span> | `AsyncSeriesBailHook<{ encodeOptions: `[`EncodeOptions`](#encodeoptions)`; intermediate?: string }, { buffer: Buffer; cssDiagnostics?: string; debugInfo: string }>` | Call the encode process. |
+
+{/* @api-end */}

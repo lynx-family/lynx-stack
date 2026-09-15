@@ -3,10 +3,10 @@
 [English](./README.md) | 简体中文
 
 `@lynx-js/genui/a2ui-catalog-extractor` 是
-`genui a2ui generate catalog` 背后的内部 TypeDoc extraction engine。它会把 TypeScript 组件接口转换成 A2UI
-组件 catalog JSON。你只需要用 TypeScript `interface` 写一次组件的公开契约，
+`genui a2ui generate catalog` 背后的内部 TypeDoc extraction engine。它会把 TypeScript 组件接口和
+`@a2uiFunction` 函数转换成 A2UI catalog JSON。你只需要用 TypeScript `interface` 写一次组件的公开契约，
 用普通 TypeDoc 注释描述字段，然后通过公开的 `genui a2ui` 命令生成
-A2UI agent 可以读取的 JSON Schema。
+逐组件的 JSON Schema 文件，以及包含 components 和 functions、A2UI agent 可以读取的完整 `catalog.json`。
 
 用户脚本请使用 `genui a2ui generate catalog`。这个包主要作为
 extraction 行为和测试的实现层。

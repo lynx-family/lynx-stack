@@ -1,0 +1,9 @@
+{
+  "id": "lynx-stack-docs",
+  "package": "@lynx-js/lynx-stack-docs",
+  "version": "0.0.0",
+  "description": "The Lynx Stack API reference as MDX pages: the build configuration, the Rsbuild plugins, ReactLynx and every @lynx-js package.",
+  "group": "libraries",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/lynx-stack-docs",
+  "exports": []
+}

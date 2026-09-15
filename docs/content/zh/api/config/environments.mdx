@@ -1,0 +1,18 @@
+---
+title: environments
+outline: false
+---
+
+# environments
+
+{/* @api ConfigOption package="rspeedy" path="environments" */}
+
+- **类型：** `Record<string, EnvironmentConfig>`
+
+Lynx 修改了这个 Rsbuild 配置的默认值，其他用法与 Rsbuild 相同，详见 [Rsbuild 文档](https://rsbuild.rs/zh/config/environments)。
+
+## 默认值 \{#default\}
+
+- 未设置该选项时，Rspeedy 会向 Rsbuild 传入 `{ lynx: {} }`。
+
+{/* @api-end */}

@@ -8,6 +8,7 @@ extend-exclude = [
   "**/CHANGELOG.md",
   "pnpm-lock.yaml",
   "biome.jsonc",
+  "docs/api-data/**",
   "packages/lynx/headless-rust-test-runner/fixtures/**",
   "packages/web-platform/web-explorer/preinstalled/homepage.json",
 ]
@@ -16,6 +17,9 @@ extend-exclude = [
 extend-ignore-re = [
   "(?Rm)^.*(#|//)\\s*spellchecker:disable-line$",
   "(?s)(#|//)\\s*spellchecker:off.*?\\n\\s*(#|//)\\s*spellchecker:on",
+  # Generated heading ids and link fragments, e.g. `{#createa2uicatalog}`
+  "\\\\\\{#[a-z0-9-]+\\\\\\}",
+  "#[a-z0-9-]+\\)",
 ]
 
 [default.extend-words]

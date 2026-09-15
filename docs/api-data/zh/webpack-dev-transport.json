@@ -1,0 +1,22 @@
+{
+  "default.summary": {
+    "en": "LynxTransportClient is the client transport implementation for webpack-dev-server.\nIt can be used in the\n[`devServer.client.webSocketTransport`](https://webpack.js.org/configuration/dev-server/#websockettransport)\nconfiguration of webpack.",
+    "text": "LynxTransportClient 是 webpack-dev-server 的客户端传输实现。可用于 webpack 的\n[`devServer.client.webSocketTransport`](https://webpack.js.org/configuration/dev-server/#websockettransport)\n配置中。"
+  },
+  "Client.summary": {
+    "en": "Client is the interface that [`webpack-dev-server`](https://github.com/webpack/webpack-dev-server/blob/48f56d57775dc4cf78bfcf51c3761adf852b0310/client-src/socket.js#L30) uses for a websocket client.",
+    "text": "Client 是 [`webpack-dev-server`](https://github.com/webpack/webpack-dev-server/blob/48f56d57775dc4cf78bfcf51c3761adf852b0310/client-src/socket.js#L30) 用于 WebSocket 客户端的接口。"
+  },
+  "Client.onClose.summary": {
+    "en": "Register a close callback",
+    "text": "注册关闭回调"
+  },
+  "Client.onMessage.summary": {
+    "en": "Register a message callback",
+    "text": "注册消息回调"
+  },
+  "Client.onOpen.summary": {
+    "en": "Register a open callback",
+    "text": "注册打开回调"
+  }
+}

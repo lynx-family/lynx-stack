@@ -1,0 +1,14 @@
+[
+  {
+    "type": "file",
+    "name": "alias",
+    "label": "source.alias",
+    "tag": "Lynx"
+  },
+  {
+    "type": "file",
+    "name": "entry",
+    "label": "source.entry",
+    "tag": "Default changed"
+  }
+]

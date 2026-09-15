@@ -1,0 +1,182 @@
+{
+  "id": "genui-lynx-xml",
+  "package": "@lynx-js/genui",
+  "version": "0.4.0",
+  "description": "Generative UI for Lynx.",
+  "group": "libraries",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/genui",
+  "exports": [
+    {
+      "name": "BuildLynxXmlSystemPromptOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options used to customize the Lynx XML generation system prompt.",
+      "members": [
+        {
+          "name": "appendix",
+          "optional": true,
+          "type": "string",
+          "summary": "Append caller-specific instructions after the built-in contract.",
+          "kind": "property"
+        },
+        {
+          "name": "enableHtmlFragment",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Generate an intermediate document for deterministic fragment compilation.",
+          "kind": "property"
+        },
+        {
+          "name": "engineVersion",
+          "optional": true,
+          "type": "string",
+          "summary": "Override the generated artifact's Lynx engine version.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "GeneratedMainThreadScript",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "bindings",
+          "type": "Record<string, string>",
+          "summary": "Only explicit XML ids are retained in the runtime nodeMap.",
+          "kind": "property"
+        },
+        {
+          "name": "javascript",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LYNX_XML_ENGINE_VERSION",
+      "kind": "variable",
+      "type": "\"4.2\"",
+      "summary": "The default Lynx engine version used by generated XML artifacts.",
+      "default": "'4.2'"
+    },
+    {
+      "name": "LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS",
+      "kind": "variable",
+      "type": "\"XML fragment mode is enabled for this request (this output contract overrides the imported document guidance below):\\n- Generate the entire document in one response: one <template> containing the initial XML element fragment directly inside <lynx>, alongside CSS and main/background scripts in their normal source blocks. Prefer placing the template first, but block order is not significant. Never omit the template, even when conversation history contains already-compiled .lynxml artifacts. The server removes <template> and compiles it to Element PAPI before delivery; it is an intermediate format, not a runtime Lynx element.\\n- Give a unique id ONLY to nodes referenced later by event binding, state updates, or cleanup. Omit id on purely static nodes; do not assign ids to every node. Use well-formed XML, literal attributes and XML entities in the template. Keep style, script, lynx, and page elements outside the fragment. Prefer literal text directly inside <text>. An explicit <raw-text> leaf may use text content or a text attribute, never both; put styling, event handlers, and update ids on its parent <text>. Do not use interpolation, loops, conditional directives, or inline event-handler attributes; implement dynamic behavior in JavaScript.\\n- The server supplies createFragment(page, pageId). Call it exactly once in renderPage(), after page and pageId exist: nodes = createFragment(page, pageId). Declare let nodes at main-thread script scope so later event, update, and cleanup handlers can use nodes[\\\"cityText\\\"] for id=\\\"cityText\\\". Access nodes only after rendering. Do not declare or shadow createFragment, invent nodeN variables, or assume XML ids declare variables.\\n- createFragment creates and appends the initial roots to page and returns their id-to-node map. Do not recreate or append the initial roots yourself. Bind events and apply initial state after the call. Use Element PAPI for subsequent dynamic updates and new nodes.\\n- Write all CSS, state, event handlers, lifecycle registration, background work, and cleanup in the same response. Do not request conversion, wait for bindings, or output placeholders. The server performs conversion after generation without another model request.\"",
+      "summary": "Intermediate source contract for deterministic fragment compilation.",
+      "default": "..."
+    },
+    {
+      "name": "LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT",
+      "kind": "variable",
+      "type": "string",
+      "summary": "The Lynx XML prompt for one-pass fragment generation.",
+      "default": "..."
+    },
+    {
+      "name": "LYNX_XML_SYSTEM_PROMPT",
+      "kind": "variable",
+      "type": "string",
+      "summary": "The default Lynx XML generation system prompt.",
+      "default": "..."
+    },
+    {
+      "name": "MAX_XML_FRAGMENT_LENGTH",
+      "kind": "variable",
+      "type": "100000",
+      "default": "100_000"
+    },
+    {
+      "name": "buildLynxXmlSystemPrompt",
+      "kind": "function",
+      "type": "buildLynxXmlSystemPrompt(options: BuildLynxXmlSystemPromptOptions): string",
+      "signatures": [
+        {
+          "text": "buildLynxXmlSystemPrompt(options: BuildLynxXmlSystemPromptOptions): string",
+          "params": [
+            {
+              "name": "options",
+              "type": "BuildLynxXmlSystemPromptOptions",
+              "ref": "BuildLynxXmlSystemPromptOptions",
+              "refs": [
+                "BuildLynxXmlSystemPromptOptions"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "string"
+          },
+          "summary": "Build a system prompt for producing complete, zero-build `.lynxml` files."
+        }
+      ],
+      "summary": "Build a system prompt for producing complete, zero-build `.lynxml` files."
+    },
+    {
+      "name": "compileLynxXmlFragment",
+      "kind": "function",
+      "type": "compileLynxXmlFragment(source: string): { text: string; xmlFragment: string }",
+      "signatures": [
+        {
+          "text": "compileLynxXmlFragment(source: string): { text: string; xmlFragment: string }",
+          "params": [
+            {
+              "name": "source",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "{ text: string; xmlFragment: string }"
+          },
+          "summary": "Compile the model's intermediate document without executing model code."
+        }
+      ],
+      "summary": "Compile the model's intermediate document without executing model code."
+    },
+    {
+      "name": "generateMainThreadScript",
+      "kind": "function",
+      "type": "generateMainThreadScript(xmlFragment: string): string",
+      "signatures": [
+        {
+          "text": "generateMainThreadScript(xmlFragment: string): string",
+          "params": [
+            {
+              "name": "xmlFragment",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "string"
+          },
+          "summary": "Convert an XML element fragment into Element PAPI calls for renderPage()."
+        }
+      ],
+      "summary": "Convert an XML element fragment into Element PAPI calls for renderPage()."
+    },
+    {
+      "name": "generateMainThreadScriptResult",
+      "kind": "function",
+      "type": "generateMainThreadScriptResult(xmlFragment: string): GeneratedMainThreadScript",
+      "signatures": [
+        {
+          "text": "generateMainThreadScriptResult(xmlFragment: string): GeneratedMainThreadScript",
+          "params": [
+            {
+              "name": "xmlFragment",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "GeneratedMainThreadScript",
+            "refs": [
+              "GeneratedMainThreadScript"
+            ]
+          },
+          "summary": "Generate Element PAPI calls and stable id-to-node bindings."
+        }
+      ],
+      "summary": "Generate Element PAPI calls and stable id-to-node bindings."
+    }
+  ]
+}

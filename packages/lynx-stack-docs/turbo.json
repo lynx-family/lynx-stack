@@ -1,0 +1,20 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": [
+    "//"
+  ],
+  "tasks": {
+    "build": {
+      "inputs": [
+        "scripts/**",
+        "../../docs/content/*/api/config/**",
+        "../../docs/content/*/api/react/**",
+        "../../docs/content/*/api/genui/**",
+        "../../docs/content/*/api/packages/**"
+      ],
+      "outputs": [
+        "content/**"
+      ]
+    }
+  }
+}

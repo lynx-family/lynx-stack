@@ -1,0 +1,218 @@
+{
+  "MainThreadRef.summary": {
+    "en": "A `MainThreadRef` is a ref that can only be accessed on the main thread. It is used to preserve\nstates between main thread function calls.\nThe data saved in `current` property of the `MainThreadRef` can be read and written in\nmultiple main thread functions.",
+    "text": "`MainThreadRef` 是一种只能在主线程访问的 ref，用于在主线程函数调用之间保存状态。保存在 `MainThreadRef` 的 `current` 属性中的数据，可以在多个主线程函数中读写。"
+  },
+  "CloneElement.summary": {
+    "en": "The call signature of ReactLynx `cloneElement`.",
+    "text": "ReactLynx `cloneElement` 的调用签名。"
+  },
+  "CreateElement.summary": {
+    "en": "The call signature of ReactLynx `createElement`.",
+    "text": "ReactLynx `createElement` 的调用签名。"
+  },
+  "DataProcessorDefinition.summary": {
+    "en": "Definition of DataProcessor(s)",
+    "text": "DataProcessor 的定义"
+  },
+  "DataProcessorDefinition.dataProcessors.summary": {
+    "en": "Should be used with `lynx.registerDataProcessors`. See more examples at [`Lynx.registerDataProcessors`](api:Lynx.registerDataProcessors).",
+    "text": "需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](api:Lynx.registerDataProcessors)。"
+  },
+  "DataProcessorDefinition.defaultDataProcessor.summary": {
+    "en": "You can custom input and output type of `defaultDataProcessor` by extends [`InitDataRaw`](api:InitDataRaw) and [`InitData`](api:InitData)\n\nShould be used with `lynx.registerDataProcessors`. See more examples at [`Lynx.registerDataProcessors`](api:Lynx.registerDataProcessors).",
+    "text": "可以通过扩展 [`InitDataRaw`](api:InitDataRaw) 和 [`InitData`](api:InitData) 来自定义 `defaultDataProcessor` 的输入和输出类型\n\n需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](api:Lynx.registerDataProcessors)。"
+  },
+  "DataProcessors.summary": {
+    "en": "The data processors that registered with [`Lynx.registerDataProcessors`](api:Lynx.registerDataProcessors).",
+    "text": "通过 [`Lynx.registerDataProcessors`](api:Lynx.registerDataProcessors) 注册的数据处理器。"
+  },
+  "DataProcessors.example.0": {
+    "en": "Extending `dataProcessors` interface\n\n```ts\nimport type { DataProcessors as WellKnownDataProcessors } from '@lynx-js/react';\n\ndeclare module '@lynx-js/react' {\n  interface DataProcessors extends WellKnownDataProcessors {\n    foo(bar: string): number;\n  }\n}\n```\n\nThen you can use `lynx.registerDataProcessors` with types.\n\n```js\nlynx.registerDataProcessors({\n  dataProcessors: {\n    foo(bar) {\n      return 1;\n    }\n  }\n})\n```",
+    "text": "扩展 `dataProcessors` 接口\n\n```ts\nimport type { DataProcessors as WellKnownDataProcessors } from '@lynx-js/react';\n\ndeclare module '@lynx-js/react' {\n  interface DataProcessors extends WellKnownDataProcessors {\n    foo(bar: string): number;\n  }\n}\n```\n\n之后即可带类型地使用 `lynx.registerDataProcessors`。\n\n```js\nlynx.registerDataProcessors({\n  dataProcessors: {\n    foo(bar) {\n      return 1;\n    }\n  }\n})\n```"
+  },
+  "DataProcessors.getScreenMetricsOverride.summary": {
+    "en": "Optional processor to override screen metrics used by the app",
+    "text": "可选的处理器，用于覆盖应用所使用的屏幕度量信息"
+  },
+  "DataProcessors.getScreenMetricsOverride.params.metrics": {
+    "en": "The physical screen dimensions in pixels",
+    "text": "以像素为单位的物理屏幕尺寸"
+  },
+  "GlobalProps.summary": {
+    "en": "The interface you can extends so that the `useGlobalProps` returning value can be customized",
+    "text": "可扩展此接口，以自定义 `useGlobalProps` 的返回值类型"
+  },
+  "InitData.summary": {
+    "en": "The interface you can extends so that the `defaultDataProcessor` returning value can be customized\n\nShould be used with `lynx.registerDataProcessors`. See more examples at [`Lynx.registerDataProcessors`](api:Lynx.registerDataProcessors).",
+    "text": "可扩展此接口，以自定义 `defaultDataProcessor` 的返回值类型\n\n需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](api:Lynx.registerDataProcessors)。"
+  },
+  "InitDataRaw.summary": {
+    "en": "The interface you can extends so that the `defaultDataProcessor` parameter can be customized\n\nShould be used with `lynx.registerDataProcessors`. See more examples at [`Lynx.registerDataProcessors`](api:Lynx.registerDataProcessors).",
+    "text": "可扩展此接口，以自定义 `defaultDataProcessor` 的参数类型\n\n需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](api:Lynx.registerDataProcessors)。"
+  },
+  "Lynx.summary": {
+    "en": "APIs under `lynx` global variable that added by ReactLynx.",
+    "text": "ReactLynx 在全局变量 `lynx` 上添加的 API。"
+  },
+  "Lynx.registerDataProcessors.summary": {
+    "en": "Register DataProcessors. You MUST call this before `root.render()`.",
+    "text": "注册 DataProcessor。必须在 `root.render()` 之前调用。"
+  },
+  "Lynx.registerDataProcessors.example.0": {
+    "en": "You MUST call `lynx.registerDataProcessors` before calling `root.render()`.\n\n```ts\nimport { root } from \"@lynx-js/react\"\n\n// You MUST call this before `root.render()`\nlynx.registerDataProcessors({\n  defaultDataProcessor: () => {...} // default DataProcessor\n  dataProcessors: {\n    getScreenMetricsOverride: () => {...} // named DataProcessor\n  }\n})\n\nroot.render(<App/>);\n```",
+    "text": "必须在调用 `root.render()` 之前调用 `lynx.registerDataProcessors`。\n\n```ts\nimport { root } from \"@lynx-js/react\"\n\n// You MUST call this before `root.render()`\nlynx.registerDataProcessors({\n  defaultDataProcessor: () => {...} // default DataProcessor\n  dataProcessors: {\n    getScreenMetricsOverride: () => {...} // named DataProcessor\n  }\n})\n\nroot.render(<App/>);\n```"
+  },
+  "Lynx.registerDataProcessors.example.1": {
+    "en": "If you have a class component with `static defaultDataProcessor`\nor `static dataProcessors`, you can use it to register DataProcessors.\n\n```ts\nimport { root, Component } from \"@lynx-js/react\"\n\nclass App extends Component {\n  static defaultDataProcessor() {\n     ...\n  }\n\n  static dataProcessors = {\n    getScreenMetricsOverride() {\n      ...\n    }\n  }\n}\n\nlynx.registerDataProcessors(App); // You can pass `App` because it has the required shape\nroot.render(<App/>);\n```",
+    "text": "如果你有一个带有 `static defaultDataProcessor`\n或 `static dataProcessors` 的类组件，可以用它来注册 DataProcessor。\n\n```ts\nimport { root, Component } from \"@lynx-js/react\"\n\nclass App extends Component {\n  static defaultDataProcessor() {\n     ...\n  }\n\n  static dataProcessors = {\n    getScreenMetricsOverride() {\n      ...\n    }\n  }\n}\n\nlynx.registerDataProcessors(App); // You can pass `App` because it has the required shape\nroot.render(<App/>);\n```"
+  },
+  "Lynx.registerDataProcessors.example.2": {
+    "en": "For developers who want fully typed `defaultDataProcessor`,\nthey can achieve it by extends interface `InitDataRaw` and `InitData`.\n\n```ts\nimport { root } from \"@lynx-js/react\"\n\ninterface ExistingInterface {\n  somePropertyFromExistingInterface: number\n}\n\ndeclare module '@lynx-js/react' {\n  interface InitDataRaw extends ExistingInterface {\n    someAnotherCustomProperty: string\n  }\n}\n\nlynx.registerDataProcessors({\n  defaultDataProcessor: (initDataRaw) => {\n    initDataRaw.somePropertyFromExistingInterface // will be typed\n  }\n})\n\n```",
+    "text": "希望 `defaultDataProcessor` 拥有完整类型的开发者，可以通过扩展 `InitDataRaw` 和 `InitData` 接口来实现。\n\n```ts\nimport { root } from \"@lynx-js/react\"\n\ninterface ExistingInterface {\n  somePropertyFromExistingInterface: number\n}\n\ndeclare module '@lynx-js/react' {\n  interface InitDataRaw extends ExistingInterface {\n    someAnotherCustomProperty: string\n  }\n}\n\nlynx.registerDataProcessors({\n  defaultDataProcessor: (initDataRaw) => {\n    initDataRaw.somePropertyFromExistingInterface // will be typed\n  }\n})\n\n```"
+  },
+  "Lynx.registerDataProcessors.example.3": {
+    "en": "For developers who want fully typed `defaultDataProcessor`,\nthey can achieve it by extends interface `InitDataRaw` and `InitData`.\n\n```ts\nimport { useInitData } from \"@lynx-js/react\"\n\ninterface AnotherExistingInterface {\n  someAnotherPropertyFromExistingInterface: number\n}\n\ndeclare module '@lynx-js/react' {\n  interface InitData extends AnotherExistingInterface {\n    someCustomProperty: string\n  }\n}\n\nlynx.registerDataProcessors({\n  defaultDataProcessor: () => {\n    return {\n      someCustomProperty: 'value', // will be typed\n      someAnotherPropertyFromExistingInterface: 1, // will be typed\n    }\n  }\n})\n\nfunction App() {\n  const initData = useInitData();\n\n  initData.someCustomProperty // will be typed\n  initData.someAnotherPropertyFromExistingInterface // will be typed\n}\n\n```",
+    "text": "希望 `defaultDataProcessor` 拥有完整类型的开发者，可以通过扩展 `InitDataRaw` 和 `InitData` 接口来实现。\n\n```ts\nimport { useInitData } from \"@lynx-js/react\"\n\ninterface AnotherExistingInterface {\n  someAnotherPropertyFromExistingInterface: number\n}\n\ndeclare module '@lynx-js/react' {\n  interface InitData extends AnotherExistingInterface {\n    someCustomProperty: string\n  }\n}\n\nlynx.registerDataProcessors({\n  defaultDataProcessor: () => {\n    return {\n      someCustomProperty: 'value', // will be typed\n      someAnotherPropertyFromExistingInterface: 1, // will be typed\n    }\n  }\n})\n\nfunction App() {\n  const initData = useInitData();\n\n  initData.someCustomProperty // will be typed\n  initData.someAnotherPropertyFromExistingInterface // will be typed\n}\n\n```"
+  },
+  "Lynx.triggerGlobalEventFromLepus.summary": {
+    "en": "An alias of `lynx.getJSModule(\"GlobalEventEmitter\").trigger(eventName, params)` only in Lepus",
+    "text": "仅在 Lepus 中可用，是 `lynx.getJSModule(\"GlobalEventEmitter\").trigger(eventName, params)` 的别名"
+  },
+  "Root.summary": {
+    "en": "The default root exported by `@lynx-js/react` for you to render a JSX",
+    "text": "`@lynx-js/react` 默认导出的 root，用于渲染 JSX"
+  },
+  "Root.registerDataProcessors.summary": {
+    "en": "Register DataProcessors. You MUST call this before `root.render()`.",
+    "text": "注册 DataProcessor。必须在 `root.render()` 之前调用。"
+  },
+  "Root.registerDataProcessors.deprecated": {
+    "en": "use [`lynx.registerDataProcessors`](api:Lynx.registerDataProcessors) instead",
+    "text": "请改用 [`lynx.registerDataProcessors`](api:Lynx.registerDataProcessors)"
+  },
+  "Root.render.summary": {
+    "en": "Use this API to pass in your JSX to render",
+    "text": "使用此 API 传入要渲染的 JSX"
+  },
+  "ReactLynxChildren.summary": {
+    "en": "Type of ReactLynx children utilities.",
+    "text": "ReactLynx children 工具的类型。"
+  },
+  "Children.summary": {
+    "en": "ReactLynx children utilities.\n\nArrays returned by `map`, `forEach`, and `toArray` are frozen.",
+    "text": "ReactLynx children 工具。\n\n`map`、`forEach` 和 `toArray` 返回的数组是冻结的。"
+  },
+  "cloneElement.summary": {
+    "en": "Clones a ReactLynx element using the snapshot runtime.",
+    "text": "使用 snapshot 运行时克隆 ReactLynx 元素。"
+  },
+  "createElement.summary": {
+    "en": "Creates a ReactLynx element using the snapshot runtime.",
+    "text": "使用 snapshot 运行时创建 ReactLynx 元素。"
+  },
+  "GlobalPropsConsumer.summary": {
+    "en": "The [Consumer](https://react.dev/reference/react/createContext#consumer) Component that provide `lynx.__globalProps`.\nOnly needed with `globalPropsMode: 'event'`, together with [`GlobalPropsProvider`](api:GlobalPropsProvider); in the default `'reactive'` mode\nit calls `children` with `lynx.__globalProps` directly and updates come from a full re-render.",
+    "text": "提供 `lynx.__globalProps` 的 [Consumer](https://react.dev/reference/react/createContext#consumer) 组件。仅在 `globalPropsMode: 'event'` 下需要，需与 [`GlobalPropsProvider`](api:GlobalPropsProvider) 配合使用；在默认的 `'reactive'` 模式下，它会直接以 `lynx.__globalProps` 调用 `children`，更新则来自整体重新渲染。"
+  },
+  "GlobalPropsProvider.summary": {
+    "en": "The [Provider](https://react.dev/reference/react/createContext#provider) Component that provide `lynx.__globalProps`.\nOnly needed with `globalPropsMode: 'event'`; in the default `'reactive'` mode it renders its children directly\nand updates come from a full re-render.",
+    "text": "提供 `lynx.__globalProps` 的 [Provider](https://react.dev/reference/react/createContext#provider) 组件。仅在 `globalPropsMode: 'event'` 下需要；在默认的 `'reactive'` 模式下，它会直接渲染其子节点，更新则来自整体重新渲染。"
+  },
+  "GlobalPropsProvider.example.0": {
+    "en": "With `globalPropsMode: 'event'`:\n\n```ts\nimport { root } from \"@lynx-js/react\"\n\nfunction App() {\n  return (\n    <GlobalPropsConsumer children={(globalProps) => <view>...</view>}/>\n  )\n}\n\nroot.render(\n  <GlobalPropsProvider>\n     <App/>\n  </GlobalPropsProvider>\n);\n\n```",
+    "text": "在 `globalPropsMode: 'event'` 下：\n\n```ts\nimport { root } from \"@lynx-js/react\"\n\nfunction App() {\n  return (\n    <GlobalPropsConsumer children={(globalProps) => <view>...</view>}/>\n  )\n}\n\nroot.render(\n  <GlobalPropsProvider>\n     <App/>\n  </GlobalPropsProvider>\n);\n\n```"
+  },
+  "InitDataConsumer.summary": {
+    "en": "The [Consumer](https://react.dev/reference/react/createContext#consumer) Component that provide `initData`.\nThis should be used with [`InitDataProvider`](api:InitDataProvider)",
+    "text": "提供 `initData` 的 [Consumer](https://react.dev/reference/react/createContext#consumer) 组件。需与 [`InitDataProvider`](api:InitDataProvider) 配合使用"
+  },
+  "InitDataProvider.summary": {
+    "en": "The [Provider](https://react.dev/reference/react/createContext#provider) Component that provide `initData`,\nyou must wrap your JSX inside it",
+    "text": "提供 `initData` 的 [Provider](https://react.dev/reference/react/createContext#provider) 组件，必须将 JSX 包裹在其中"
+  },
+  "root.summary": {
+    "en": "The default and only root of ReactLynx for you to render JSX",
+    "text": "ReactLynx 默认且唯一的 root，用于渲染 JSX"
+  },
+  "useEffect.summary": {
+    "en": "Accepts a function that contains imperative, possibly effectful code.\nThe effects run after main thread dom update without blocking it.",
+    "text": "接收一个包含命令式、可能带有副作用代码的函数。副作用会在主线程 DOM 更新后执行，且不会阻塞更新。"
+  },
+  "useGlobalProps.summary": {
+    "en": "A React Hooks for you to get `lynx.__globalProps`.\nWith `globalPropsMode: 'event'`, the component re-renders when `lynx.__globalProps` changes;\nin the default `'reactive'` mode, updates arrive through a full re-render.",
+    "text": "用于获取 `lynx.__globalProps` 的 React Hook。在 `globalPropsMode: 'event'` 下，`lynx.__globalProps` 变化时组件会重新渲染；在默认的 `'reactive'` 模式下，更新通过整体重新渲染生效。"
+  },
+  "useGlobalPropsChanged.summary": {
+    "en": "A React Hooks for you to get notified when `__globalProps` changed.",
+    "text": "用于在 `__globalProps` 变化时获得通知的 React Hook。"
+  },
+  "useInitData.summary": {
+    "en": "A React Hooks for you to get `initData`.\nIf `initData` is changed, a re-render will be triggered automatically.",
+    "text": "用于获取 `initData` 的 React Hook。\n`initData` 变化时会自动触发重新渲染。"
+  },
+  "useInitDataChanged.summary": {
+    "en": "A React Hooks for you to get notified when `initData` changed.",
+    "text": "用于在 `initData` 变化时获得通知的 React Hook。"
+  },
+  "useLayoutEffect.summary": {
+    "en": "`useLayoutEffect` is now an alias of `useEffect`. Use `useEffect` instead.\n\nAccepts a function that contains imperative, possibly effectful code. The effects run after main thread dom update without blocking it.",
+    "text": "`useLayoutEffect` 现在是 `useEffect` 的别名，请改用 `useEffect`。\n\n接收一个包含命令式、可能带有副作用代码的函数。副作用会在主线程 DOM 更新后执行，且不会阻塞更新。"
+  },
+  "useLayoutEffect.deprecated": {
+    "en": "`useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React.",
+    "text": "后台线程中的 `useLayoutEffect` 无法提供读取布局信息并同步重新渲染的精确时机，这一点与 React 不同。"
+  },
+  "createPortal.summary": {
+    "en": "Renders children into a different ReactLynx element identified by a\n`NodesRef` (e.g. from `ref={setX}` or `lynx.createSelectorQuery()`).",
+    "text": "将 children 渲染到另一个 ReactLynx 元素中，该元素由\n`NodesRef`（例如来自 `ref={setX}` 或 `lynx.createSelectorQuery()`）标识。"
+  },
+  "createPortal.remarks": {
+    "en": "Context still flows across the portal boundary, and state updates inside the\nportal behave like they do in any other component. A few behaviors differ\nfrom `react-dom`:\n\n- Events do not bubble along the React tree. ReactLynx follows Preact's\n  approach, which has no synthetic event system, so events follow the actual\n  element structure of the page.\n- The portaled subtree renders on the background thread only, and does not\n  participate in main-thread first-screen rendering.\n- Mounting across pages or across native containers is not supported.",
+    "text": "Context 仍会跨越 portal 边界传递，portal 内的状态更新也与其他组件中的表现一致。但有几点行为与 `react-dom`\n不同：\n\n- 事件不会沿 React 树冒泡。ReactLynx 沿用 Preact 的做法，\n  没有合成事件系统，\n  因此事件遵循页面实际的元素结构。\n- portal 中的子树仅在后台线程渲染，\n  不参与主线程首屏渲染。\n- 不支持跨页面或跨 native 容器挂载。"
+  },
+  "createPortal.returns": {
+    "en": "A `ReactNode` placeholder to include in the JSX at the call site;\nthe rendered output goes into `container`.",
+    "text": "需要在调用处放入 JSX 中的 `ReactNode` 占位符；渲染结果会输出到 `container` 中。"
+  },
+  "markFirstScreenSyncReady.summary": {
+    "en": "Mark the first screen as ready to sync when `firstScreenSyncTiming` is `'manual'`.\n\nThe main thread holds the UI control until this is called, so the handover timing to\nthe background thread (for hydration) is fully controlled by the user. It can be called\nfrom both threads (a background-thread call is forwarded to the main thread), is a no-op\nunless `firstScreenSyncTiming` is `'manual'`, and has no further effect once called.",
+    "text": "当 `firstScreenSyncTiming` 为 `'manual'` 时，将首屏标记为可同步。\n\n在调用此方法之前，主线程会一直持有 UI 控制权，因此向后台线程移交（用于 hydration）的时机完全由用户控制。它可以在两个线程中调用（后台线程的调用会被转发到主线程），仅在 `firstScreenSyncTiming` 为 `'manual'` 时生效，且首次调用之后再次调用不会产生任何效果。"
+  },
+  "runOnBackground.summary": {
+    "en": "`runOnBackground` allows triggering js functions on the background thread asynchronously.",
+    "text": "`runOnBackground` 用于在后台线程上异步触发 JS 函数。"
+  },
+  "runOnBackground.returns": {
+    "en": "A function. Calling which with the arguments to be passed to the js function to trigger it on the background thread. This function returns a promise that resolves to the return value of the js function.",
+    "text": "一个函数。以要传给该 JS 函数的参数调用它，即可在后台线程上触发该 JS 函数。该函数返回一个 Promise，其 resolve 值为该 JS 函数的返回值。"
+  },
+  "runOnMainThread.summary": {
+    "en": "`runOnMainThread` allows triggering main thread functions on the main thread asynchronously.",
+    "text": "`runOnMainThread` 用于在主线程上异步触发主线程函数。"
+  },
+  "runOnMainThread.returns": {
+    "en": "A function. Calling which with the arguments to be passed to the main thread function to trigger it on the main thread. This function returns a promise that resolves to the return value of the main thread function.",
+    "text": "一个函数。以要传给该主线程函数的参数调用它，即可在主线程上触发该主线程函数。该函数返回一个 Promise，其 resolve 值为该主线程函数的返回值。"
+  },
+  "useLynxGlobalEventListener.summary": {
+    "en": "`useLynxGlobalEventListener` helps you `addListener` as early as possible.",
+    "text": "`useLynxGlobalEventListener` 帮助你尽早地 `addListener`。"
+  },
+  "useLynxGlobalEventListener.example.0": {
+    "en": "Use this hooks to listen to event 'exposure' and event 'disexposure'\n\n```jsx\nfunction App() {\n  useLynxGlobalEventListener('exposure', (e) => {\n    console.log(\"exposure\", e)\n  })\n  useLynxGlobalEventListener('disexposure', (e) => {\n    console.log(\"disexposure\", e)\n  })\n  return (\n    <view\n      style='width: 100px; height: 100px; background-color: red;'\n      exposure-id='a'\n    />\n  )\n}\n```",
+    "text": "使用此 Hook 监听 'exposure' 事件和 'disexposure' 事件\n\n```jsx\nfunction App() {\n  useLynxGlobalEventListener('exposure', (e) => {\n    console.log(\"exposure\", e)\n  })\n  useLynxGlobalEventListener('disexposure', (e) => {\n    console.log(\"disexposure\", e)\n  })\n  return (\n    <view\n      style='width: 100px; height: 100px; background-color: red;'\n      exposure-id='a'\n    />\n  )\n}\n```"
+  },
+  "useMainThreadRef.summary": {
+    "en": "Create A `MainThreadRef`.\n\nA `MainThreadRef` is a ref that can only be accessed on the main thread. It is used to preserve\nstates between main thread function calls.\nThe data saved in `current` property of the `MainThreadRef` can be read and written in\nmultiple main thread functions.\n\nIt is a hook and it should only be called at the top level of your component.",
+    "text": "创建一个 `MainThreadRef`。\n\n`MainThreadRef` 是一种只能在主线程访问的 ref，用于在主线程函数调用之间保存状态。保存在 `MainThreadRef` 的 `current` 属性中的数据，可以在多个主线程函数中读写。\n\n它是一个 Hook，只应在组件的顶层调用。"
+  },
+  "withInitDataInState.summary": {
+    "en": "Higher-Order Component (HOC) that injects `initData` into the state of the given class component.\n\nThis HOC checks if the provided component is a class component. If it is, it wraps the component\nand injects the `initData` into its state. It also adds a listener\nto update the state when data changes, and removes the listener when the component unmounts.",
+    "text": "高阶组件（HOC），将 `initData` 注入到给定类组件的 state 中。\n\n该 HOC 会检查传入的组件是否为类组件。如果是，则包装该组件，并将 `initData` 注入其 state。同时它会添加一个监听器，在数据变化时更新 state，并在组件卸载时移除该监听器。"
+  },
+  "withInitDataInState.returns": {
+    "en": "The original component if it is not a class component, otherwise a new class component\n         with `initData` injection and state update functionality.",
+    "text": "若传入的不是类组件，则返回原组件；否则返回一个新的类组件，\n         该组件具备 `initData` 注入和 state 更新功能。"
+  }
+}

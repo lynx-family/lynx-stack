@@ -1,0 +1,9 @@
+{
+  "id": "docs-mcp-server",
+  "package": "@lynx-js/docs-mcp-server",
+  "version": "0.2.6",
+  "description": "A MCP Server providing Lynx documentation resources for LLMs, with carefully designed prompting.",
+  "group": "libraries",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/mcp-servers/docs-mcp-server",
+  "exports": []
+}

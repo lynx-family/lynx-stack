@@ -1,0 +1,47 @@
+@use "sass:color";
+
+$major-brand-color: #ff351a;
+$second-color: #00ebeb;
+
+// Base theme mixin with common properties
+@mixin theme-base($brand-color) {
+  --rp-c-brand: #{$brand-color};
+  --rp-c-brand-dark: #{$brand-color};
+  --rp-c-brand-darker: #{color.adjust($brand-color, $lightness: -10%)};
+  --rp-c-brand-light: #{color.adjust($brand-color, $lightness: 10%)};
+  --rp-c-brand-lighter: #{color.adjust($brand-color, $lightness: 20%)};
+  --rp-c-link: var(--rp-c-brand);
+  --rp-c-brand-tint: #{color.adjust($brand-color, $alpha: -0.85)};
+  --rp-c-custom-block-info-bg: rgba(128, 128, 128, 0.05);
+  --rp-c-custom-block-info-border: rgba(128, 128, 128, 0.5);
+  --rp-c-divider-secondary: #{$second-color};
+  --rp-c-divider-gradient: linear-gradient(
+    120deg,
+    var(--rp-c-brand),
+    #{$second-color}
+  );
+}
+
+@mixin theme($brand-color) {
+  @include theme-base($brand-color);
+  --rp-home-hero-name-background: linear-gradient(
+    120deg,
+    #{$brand-color},
+    #{$major-brand-color}
+  );
+  --rp-home-mask-background-image: conic-gradient(
+    from 180deg at 50% 50%,
+    var(--rp-c-brand-light) 0deg,
+    180deg,
+    #{$major-brand-color} 0deg
+  );
+  --rp-c-divider-gradient: linear-gradient(
+    120deg,
+    #{$brand-color},
+    #{$major-brand-color}
+  );
+}
+
+:root {
+  @include theme(#ff8b00);
+}

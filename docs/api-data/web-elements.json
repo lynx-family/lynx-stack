@@ -1,0 +1,506 @@
+{
+  "id": "web-elements",
+  "package": "@lynx-js/web-elements",
+  "version": "0.12.11",
+  "group": "web",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-elements",
+  "exports": [
+    {
+      "name": "CommonEventsAndMethods",
+      "kind": "class",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(currentElement: HTMLElement & { [layoutChangeTarget]?: HTMLElement }): CommonEventsAndMethods",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "currentElement",
+              "type": "HTMLElement & { [layoutChangeTarget]?: HTMLElement }"
+            }
+          ],
+          "returns": {
+            "type": "CommonEventsAndMethods",
+            "refs": [
+              "CommonEventsAndMethods"
+            ]
+          }
+        },
+        {
+          "name": "observedAttributes",
+          "type": "never[]",
+          "kind": "property"
+        },
+        {
+          "name": "__handleScrollUpperThresholdEventEnabled",
+          "type": "__handleScrollUpperThresholdEventEnabled(enabled: boolean): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "enabled",
+              "type": "boolean"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "dispose",
+          "type": "dispose(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeReactiveClass",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(dom: InstanceType<T>): any",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "dom",
+              "type": "InstanceType<T>"
+            }
+          ],
+          "returns": {
+            "type": "any"
+          }
+        },
+        {
+          "name": "observedAttributes",
+          "type": "readonly string[]",
+          "kind": "property"
+        },
+        {
+          "name": "observedCSSProperties",
+          "optional": true,
+          "type": "readonly string[]",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "WebComponentClass",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(): HTMLElement & { cssPropertyChangedHandler?: undefined; adoptedCallback?: any; attributeChangedCallback?: any; connectedCallback?: any; disconnectedCallback?: any }",
+          "kind": "constructor",
+          "params": [],
+          "returns": {
+            "type": "HTMLElement & { cssPropertyChangedHandler?: undefined; adoptedCallback?: any; attributeChangedCallback?: any; connectedCallback?: any; disconnectedCallback?: any }"
+          }
+        },
+        {
+          "name": "notToFilterFalseAttributes",
+          "optional": true,
+          "type": "Set<string>",
+          "summary": "for attribute=\"false\",\nwe will do removeAttribute by default;\nset here for dont do this;",
+          "kind": "property"
+        },
+        {
+          "name": "observedAttributes",
+          "optional": true,
+          "type": "string[]",
+          "kind": "property"
+        },
+        {
+          "name": "observedCSSProperties",
+          "optional": true,
+          "type": "undefined",
+          "kind": "property"
+        },
+        {
+          "name": "registerPlugin",
+          "optional": true,
+          "type": "(reactiveClass: AttributeReactiveClass<WebComponentClass>) => void",
+          "refs": [
+            "AttributeReactiveClass",
+            "WebComponentClass"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "AttributeChangeHandler",
+      "kind": "typealias",
+      "type": "(newValue: string | null, oldValue: string | null, attributeName: string) => void"
+    },
+    {
+      "name": "AttributeReactiveObject",
+      "kind": "typealias",
+      "type": "unknown"
+    },
+    {
+      "name": "BindToAttributeProxy",
+      "kind": "typealias",
+      "type": "ReturnType<typeof bindToAttribute>"
+    },
+    {
+      "name": "BindToStyleProxy",
+      "kind": "typealias",
+      "type": "ReturnType<typeof bindToStyle>"
+    },
+    {
+      "name": "EventStatusChangeHandler",
+      "kind": "typealias",
+      "type": "(enable: boolean, eventName: string) => void"
+    },
+    {
+      "name": "StyleChangeHandler",
+      "kind": "typealias",
+      "type": "(newValue: string | null, styleHyphenName: string) => void"
+    },
+    {
+      "name": "UseCSSCustomPropertyHandler",
+      "kind": "typealias",
+      "type": "(newValue: string, propertyName: string) => void"
+    },
+    {
+      "name": "commonComponentEventSetting",
+      "kind": "variable",
+      "type": "{ bubbles: false; cancelable: true; composed: false }",
+      "default": "..."
+    },
+    {
+      "name": "layoutChangeTarget",
+      "kind": "variable",
+      "type": "typeof layoutChangeTarget",
+      "default": "..."
+    },
+    {
+      "name": "registerAttributeHandler",
+      "kind": "function",
+      "type": "registerAttributeHandler(key: string, args: [boolean]): (this: T, target: AttributeChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any",
+      "refs": [
+        "AttributeChangeHandler"
+      ],
+      "signatures": [
+        {
+          "text": "registerAttributeHandler(key: string, args: [boolean]): (this: T, target: AttributeChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            },
+            {
+              "name": "args",
+              "type": "[boolean]"
+            }
+          ],
+          "returns": {
+            "type": "(this: T, target: AttributeChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any",
+            "refs": [
+              "AttributeChangeHandler"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "registerEventEnableStatusChangeHandler",
+      "kind": "function",
+      "type": "registerEventEnableStatusChangeHandler(key: string, args: []): (this: T, target: EventStatusChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any",
+      "refs": [
+        "EventStatusChangeHandler"
+      ],
+      "signatures": [
+        {
+          "text": "registerEventEnableStatusChangeHandler(key: string, args: []): (this: T, target: EventStatusChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            },
+            {
+              "name": "args",
+              "type": "[]"
+            }
+          ],
+          "returns": {
+            "type": "(this: T, target: EventStatusChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any",
+            "refs": [
+              "EventStatusChangeHandler"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "registerStyleChangeHandler",
+      "kind": "function",
+      "type": "registerStyleChangeHandler(key: string, args: []): (this: T, target: StyleChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any",
+      "refs": [
+        "StyleChangeHandler"
+      ],
+      "signatures": [
+        {
+          "text": "registerStyleChangeHandler(key: string, args: []): (this: T, target: StyleChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            },
+            {
+              "name": "args",
+              "type": "[]"
+            }
+          ],
+          "returns": {
+            "type": "(this: T, target: StyleChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T, unknown>) => any",
+            "refs": [
+              "StyleChangeHandler"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "scrollContainerDom",
+      "kind": "variable",
+      "type": "typeof scrollContainerDom",
+      "default": "..."
+    },
+    {
+      "name": "useScrollEnd",
+      "kind": "variable",
+      "type": "boolean",
+      "default": "..."
+    },
+    {
+      "name": "bindSwitchToEventListener",
+      "kind": "function",
+      "type": "bindSwitchToEventListener(this: T, elementGetter: (this: T) => HTMLElement, eventName: string, eventListener: EventListener, options?: AddEventListenerOptions): (this: T, enable: boolean) => void",
+      "signatures": [
+        {
+          "text": "bindSwitchToEventListener(this: T, elementGetter: (this: T) => HTMLElement, eventName: string, eventListener: EventListener, options?: AddEventListenerOptions): (this: T, enable: boolean) => void",
+          "params": [
+            {
+              "name": "this",
+              "type": "T"
+            },
+            {
+              "name": "elementGetter",
+              "type": "(this: T) => HTMLElement"
+            },
+            {
+              "name": "eventName",
+              "type": "string"
+            },
+            {
+              "name": "eventListener",
+              "type": "EventListener"
+            },
+            {
+              "name": "options",
+              "type": "AddEventListenerOptions",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "(this: T, enable: boolean) => void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bindToAttribute",
+      "kind": "function",
+      "type": "bindToAttribute(this: T, elementGetter: (this: T) => HTMLElement, attributeName: string, valProcessor?: (value: string | null) => string | null): (this: T, newVal: string | null) => void",
+      "signatures": [
+        {
+          "text": "bindToAttribute(this: T, elementGetter: (this: T) => HTMLElement, attributeName: string, valProcessor?: (value: string | null) => string | null): (this: T, newVal: string | null) => void",
+          "params": [
+            {
+              "name": "this",
+              "type": "T"
+            },
+            {
+              "name": "elementGetter",
+              "type": "(this: T) => HTMLElement"
+            },
+            {
+              "name": "attributeName",
+              "type": "string"
+            },
+            {
+              "name": "valProcessor",
+              "type": "(value: string | null) => string | null",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "(this: T, newVal: string | null) => void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bindToStyle",
+      "kind": "function",
+      "type": "bindToStyle(this: T, elementGetter: (this: T) => HTMLElement, styleName: string, valProcessor?: (value: string) => string, important?: boolean): (this: T, newVal: string | null) => void",
+      "signatures": [
+        {
+          "text": "bindToStyle(this: T, elementGetter: (this: T) => HTMLElement, styleName: string, valProcessor?: (value: string) => string, important?: boolean): (this: T, newVal: string | null) => void",
+          "params": [
+            {
+              "name": "this",
+              "type": "T"
+            },
+            {
+              "name": "elementGetter",
+              "type": "(this: T) => HTMLElement"
+            },
+            {
+              "name": "styleName",
+              "type": "string"
+            },
+            {
+              "name": "valProcessor",
+              "type": "(value: string) => string",
+              "optional": true
+            },
+            {
+              "name": "important",
+              "type": "boolean",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "(this: T, newVal: string | null) => void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "boostedQueueMicrotask",
+      "kind": "function",
+      "type": "boostedQueueMicrotask(foo: CallableFunction, that?: any): void",
+      "signatures": [
+        {
+          "text": "boostedQueueMicrotask(foo: CallableFunction, that?: any): void",
+          "params": [
+            {
+              "name": "foo",
+              "type": "CallableFunction"
+            },
+            {
+              "name": "that",
+              "type": "any",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Component",
+      "kind": "function",
+      "type": "Component(tag: string, attributeReactiveClassesOptional: (AttributeReactiveClass<T> | undefined)[], template?: string): (target: T, context: ClassDecoratorContext<T>) => T",
+      "signatures": [
+        {
+          "text": "Component(tag: string, attributeReactiveClassesOptional: (AttributeReactiveClass<T> | undefined)[], template?: string): (target: T, context: ClassDecoratorContext<T>) => T",
+          "params": [
+            {
+              "name": "tag",
+              "type": "string"
+            },
+            {
+              "name": "attributeReactiveClassesOptional",
+              "type": "(AttributeReactiveClass<T> | undefined)[]",
+              "refs": [
+                "AttributeReactiveClass"
+              ]
+            },
+            {
+              "name": "template",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "(target: T, context: ClassDecoratorContext<T>) => T"
+          }
+        }
+      ]
+    },
+    {
+      "name": "genDomGetter",
+      "kind": "function",
+      "type": "genDomGetter(queryableElementGetter: () => ShadowRoot, selector: string): InternalDomGetter<T>",
+      "signatures": [
+        {
+          "text": "genDomGetter(queryableElementGetter: () => ShadowRoot, selector: string): InternalDomGetter<T>",
+          "params": [
+            {
+              "name": "queryableElementGetter",
+              "type": "() => ShadowRoot"
+            },
+            {
+              "name": "selector",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "InternalDomGetter<T>"
+          }
+        },
+        {
+          "text": "genDomGetter(queryableElementGetter: () => HTMLElement, selector: string): PlainDomGetter<T>",
+          "params": [
+            {
+              "name": "queryableElementGetter",
+              "type": "() => HTMLElement"
+            },
+            {
+              "name": "selector",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "PlainDomGetter<T>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "html",
+      "kind": "function",
+      "type": "html(strings: TemplateStringsArray, values: any[]): string",
+      "signatures": [
+        {
+          "text": "html(strings: TemplateStringsArray, values: any[]): string",
+          "params": [
+            {
+              "name": "strings",
+              "type": "TemplateStringsArray"
+            },
+            {
+              "name": "values",
+              "type": "any[]"
+            }
+          ],
+          "returns": {
+            "type": "string"
+          }
+        }
+      ]
+    }
+  ]
+}

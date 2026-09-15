@@ -6,6 +6,7 @@ packages:
   - packages/genui/*
   - packages/i18n/*
   - packages/lynx/*
+  - packages/lynx-stack-docs
   - packages/mcp-servers/*
   - packages/repl
   - packages/react
@@ -28,6 +29,7 @@ packages:
   - packages/web-platform/*
   - packages/webpack/*
   - website
+  - docs
 
 # From `@pnpm/plugin-better-defaults`
 enablePrePostScripts: false

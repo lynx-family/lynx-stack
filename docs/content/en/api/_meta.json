@@ -1,0 +1,41 @@
+[
+  {
+    "type": "section-header",
+    "label": "Frameworks"
+  },
+  {
+    "type": "dir",
+    "name": "react",
+    "label": "@lynx-js/react"
+  },
+  {
+    "type": "dir",
+    "name": "genui",
+    "label": "@lynx-js/genui"
+  },
+  {
+    "type": "divider"
+  },
+  {
+    "type": "section-header",
+    "label": "Build & Packages"
+  },
+  {
+    "type": "dir",
+    "name": "config",
+    "label": "Configuration"
+  },
+  {
+    "type": "dir",
+    "name": "packages",
+    "label": "All @lynx-js packages"
+  },
+  {
+    "type": "divider"
+  },
+  {
+    "type": "custom-link",
+    "label": "ReactLynx guides on lynxjs.org",
+    "link": "https://lynxjs.org/react/"
+  }
+]

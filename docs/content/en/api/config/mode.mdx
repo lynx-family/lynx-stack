@@ -1,0 +1,24 @@
+---
+title: mode
+outline: false
+---
+
+# mode
+
+{/* @api ConfigOption package="rspeedy" path="mode" */}
+
+- **Type:** `"production" | "development" | "none"`
+
+Lynx changes the default of this Rsbuild option; everything else works as in Rsbuild. See the [Rsbuild documentation](https://rsbuild.rs/config/mode).
+
+## Default \{#default\}
+
+Depends on `process.env.NODE_ENV`:
+
+- `'production'` when `NODE_ENV` is `'production'`
+- `'development'` when `NODE_ENV` is `'development'`
+- `'none'` otherwise
+
+With Rspeedy's CLI, `rspeedy dev` and `rspeedy preview` default to `'development'`, and `rspeedy build` defaults to `'production'`.
+
+{/* @api-end */}

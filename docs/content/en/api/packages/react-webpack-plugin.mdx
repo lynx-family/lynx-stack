@@ -1,0 +1,165 @@
+---
+title: '@lynx-js/react-webpack-plugin'
+---
+
+# @lynx-js/react-webpack-plugin
+
+{/* @api PackageHeader package="react-webpack-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/react-webpack-plugin</code> <span className="api-pkg-version">v0.11.4</span> · <a href="https://www.npmjs.com/package/@lynx-js/react-webpack-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/react-webpack-plugin" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/react-webpack-plugin/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+:::tip Internal package
+This package is part of the Lynx build engine and is applied for you by [`pluginLynx`](/api/packages/rsbuild-plugin). Its API is documented for plugin authors; application code does not use it directly.
+:::
+
+A webpack plugin for ReactLynx
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/react-webpack-plugin -D" />
+
+## API
+
+{/* @api ApiExports package="react-webpack-plugin" */}
+
+## Classes \{#classes\}
+
+### `ReactWebpackPlugin` \{#reactwebpackplugin\}
+
+ReactWebpackPlugin allows using ReactLynx with webpack
+
+```js
+// webpack.config.js
+import { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
+export default {
+  plugins: [new ReactWebpackPlugin()],
+}
+```
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="reactwebpackplugin-constructor"></a>`constructor` | `constructor(options?: ReactWebpackPluginOptions): ReactWebpackPlugin` |  |
+| <a id="reactwebpackplugin-defaultoptions"></a>`defaultOptions` | `Readonly<Required<`[`ReactWebpackPluginOptions`](#reactwebpackpluginoptions)`>>` | `defaultOptions` is the default options that the [`ReactWebpackPlugin`](#reactwebpackplugin) uses. |
+
+#### `ReactWebpackPlugin.loaders` \{#reactwebpackplugin-loaders\}
+
+- **Type:** `Record<keyof typeof LAYERS | "TESTING", string>`
+
+The loaders for ReactLynx.
+
+Note that this loader transforms JSX/TSX to valid JavaScript.
+For `.ts` and `.tsx` files, the TypeScript types are stripped as well.
+
+```js
+// webpack.config.js
+import { ReactWebpackPlugin, LAYERS } from '@lynx-js/react-webpack-plugin'
+export default {
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/,
+        layer: LAYERS.MAIN_THREAD,
+        use: ['swc-loader', ReactWebpackPlugin.loaders.MAIN_THREAD]
+      },
+      {
+        test: /\.tsx?$/,
+        layer: LAYERS.BACKGROUND,
+        use: ['swc-loader', ReactWebpackPlugin.loaders.BACKGROUND]
+      },
+    ],
+  },
+  plugins: [new ReactWebpackPlugin()],
+}
+```
+
+#### `ReactWebpackPlugin.apply` \{#reactwebpackplugin-apply\}
+
+- **Type:** `apply(compiler: Compiler): void`
+
+The entry point of a webpack plugin.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `compiler` | `Compiler` | the webpack compiler |
+
+## Constants \{#constants\}
+
+### `LAYERS` \{#layers\}
+
+```ts
+const LAYERS: { BACKGROUND: "react:background"; MAIN_THREAD: "react:main-thread" }
+```
+
+*No description yet.*
+
+## Types \{#types\}
+
+### `ExtractStrConfig` \{#extractstrconfig\}
+
+`PluginReactLynxOptions.extractStr`
+
+#### `ExtractStrConfig.strLength` \{#extractstrconfig-strlength\}
+
+- **Type:** `number`
+- **Default:** `20`
+
+The minimum length of string literals to be extracted.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      extractStr: {
+        strLength: 10,
+      },
+    })
+  ],
+})
+```
+
+### `ReactLoaderOptions` \{#reactloaderoptions\}
+
+The options of the ReactLynx plugin.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="reactloaderoptions-compat"></a>`compat?` | `CompatVisitorConfig` | [`PluginReactLynxOptions.compat`](/api/packages/react-rsbuild-plugin#compat) |
+| <a id="reactloaderoptions-definedce"></a>`defineDCE?` | `DefineDceVisitorConfig` | Like `define` in various bundlers, but this one happens at transform time, and a DCE pass will be performed. |
+| <a id="reactloaderoptions-enableremovecssscope"></a>`enableRemoveCSSScope?` | `boolean` | [`LynxTemplatePluginOptions.enableRemoveCSSScope`](/api/packages/template-webpack-plugin#lynxtemplatepluginoptions-enableremovecssscope) |
+| <a id="reactloaderoptions-enableuisourcemap"></a>`enableUiSourceMap?` | `boolean` | [`PluginReactLynxOptions.enableUiSourceMap`](/api/packages/react-rsbuild-plugin#enableuisourcemap) |
+| <a id="reactloaderoptions-engineversion"></a>`engineVersion?` | `string` | The engine version. |
+| <a id="reactloaderoptions-experimental-transformbuiltinattributenames"></a>`experimental_transformBuiltinAttributeNames?` | `boolean \| TransformBuiltinAttributeNamesOptions` | [`PluginReactLynxOptions.experimental_transformBuiltinAttributeNames`](/api/packages/react-rsbuild-plugin#experimental-transformbuiltinattributenames) |
+| <a id="reactloaderoptions-experimental-useelementtemplate"></a>`experimental_useElementTemplate?` <span className="api-badge api-badge-beta">Experimental</span> | `boolean` | Whether to enable Element Template compilation. |
+| <a id="reactloaderoptions-inlinesourcescontent"></a>`inlineSourcesContent?` | `boolean` | Generate inline source content in source-map. |
+| <a id="reactloaderoptions-jsx"></a>`jsx?` | `JsxTransformerConfig` | [`PluginReactLynxOptions.jsx`](/api/packages/react-rsbuild-plugin#pluginreactlynxoptions) |
+| <a id="reactloaderoptions-refresh"></a>`refresh?` | `boolean` | Enable the Fast Refresh for ReactLynx. |
+| <a id="reactloaderoptions-shake"></a>`shake?` | `ShakeVisitorConfig` | How main-thread code will be shaken. |
+
+### `ReactWebpackPluginOptions` \{#reactwebpackpluginoptions\}
+
+The options for ReactWebpackPlugin
+
+| Members | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="reactwebpackpluginoptions-disablecreateselectorqueryincompatiblewarning"></a>`disableCreateSelectorQueryIncompatibleWarning?` | `boolean` |  | [`PluginReactLynxOptions.compat.disableCreateSelectorQueryIncompatibleWarning`](/api/packages/react-rsbuild-plugin#pluginreactlynxoptions) |
+| <a id="reactwebpackpluginoptions-enablessr"></a>`enableSSR?` | `boolean` |  | [`PluginReactLynxOptions.enableSSR`](/api/packages/react-rsbuild-plugin#enablessr) |
+| <a id="reactwebpackpluginoptions-entrypairs"></a>`entryPairs?` | `{ background: string; mainThread: string }[]` |  | The main-thread and background entry pairs to merge the main-thread definitions across. |
+| <a id="reactwebpackpluginoptions-experimental-islazybundle"></a>`experimental_isLazyBundle?` <span className="api-badge api-badge-alpha">Alpha</span> | `boolean` |  | Whether to enable lazy bundle. |
+| <a id="reactwebpackpluginoptions-experimental-transformbuiltinattributenames"></a>`experimental_transformBuiltinAttributeNames?` <span className="api-badge api-badge-beta">Experimental</span> | `boolean \| TransformBuiltinAttributeNamesOptions` |  | The builtin attribute-name transform configuration used by runtime spread attributes. |
+| <a id="reactwebpackpluginoptions-experimental-useelementtemplate"></a>`experimental_useElementTemplate?` <span className="api-badge api-badge-beta">Experimental</span> | `boolean` |  | Whether to enable Element Template compilation. |
+| <a id="reactwebpackpluginoptions-extractstr"></a>`extractStr?` | `boolean \| Partial<`[`ExtractStrConfig`](#extractstrconfig)`>` | `false` | Merge same string literals in JS and Lepus to reduce output bundle size. Set to `false` to disable. |
+| <a id="reactwebpackpluginoptions-firstscreensynctiming"></a>`firstScreenSyncTiming?` | `"immediately" \| "jsReady" \| "manual"` |  | [`PluginReactLynxOptions.firstScreenSyncTiming`](/api/packages/react-rsbuild-plugin#firstscreensynctiming) |
+| <a id="reactwebpackpluginoptions-globalpropsmode"></a>`globalPropsMode?` | `"reactive" \| "event"` |  | [`PluginReactLynxOptions.globalPropsMode`](/api/packages/react-rsbuild-plugin#globalpropsmode) |
+| <a id="reactwebpackpluginoptions-lazybundlefetcher"></a>`lazyBundleFetcher?` | `"FetchBundle" \| "QueryComponent"` |  | Resolved lazy-bundle fetcher mode. Decided by the caller (e.g. `pluginReactLynx`) from the host engine version and any `REACT_LAZY_BUNDLE_FETCHER` env override. |
+| <a id="reactwebpackpluginoptions-mainthreadchunks"></a>`mainThreadChunks?` | `string[]` |  | The chunk names to be considered as main thread chunks. |
+| <a id="reactwebpackpluginoptions-profile"></a>`profile?` | `boolean` | `false` when production, `true` when development | Whether to enable profile. |
+| <a id="reactwebpackpluginoptions-workletruntimepath"></a>`workletRuntimePath` | `string` |  | The file path of `@lynx-js/react/worklet-runtime`. |
+
+{/* @api-end */}

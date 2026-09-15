@@ -1,0 +1,11 @@
+[
+  "hooks",
+  "components",
+  "functions",
+  "types",
+  "directives",
+  "macros",
+  "global-events",
+  "import-attributes",
+  "testing-library"
+]

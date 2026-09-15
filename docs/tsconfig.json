@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "jsx": "react-jsx",
+    "isolatedDeclarations": false,
+    "allowImportingTsExtensions": true,
+    "lib": ["DOM", "ES2023"],
+    "types": ["node"],
+  },
+  "include": ["scripts", "src", "theme", "rspress.config.ts"],
+}

@@ -1,0 +1,30 @@
+{
+  "ReactRefreshRspackPlugin.summary": {
+    "en": "ReactRefreshRspackPlugin allows using fast refresh in ReactLynx.",
+    "text": "ReactRefreshRspackPlugin 用于在 ReactLynx 中启用 fast refresh。"
+  },
+  "ReactRefreshRspackPlugin.constructor.params.options": {
+    "en": "The options for react refresh.",
+    "text": "React Refresh 的选项。"
+  },
+  "ReactRefreshRspackPlugin.loader.summary": {
+    "en": "The loader for react refresh.",
+    "text": "React Refresh 的 loader。"
+  },
+  "ReactRefreshRspackPlugin.loader.remarks": {
+    "en": "Please note that the runtime of react should be ignored. See the example below:",
+    "text": "注意需要忽略 React 的运行时，参见下方示例："
+  },
+  "ReactRefreshRspackPlugin.apply.summary": {
+    "en": "The entry point of a rspack plugin.",
+    "text": "Rspack 插件的入口。"
+  },
+  "ReactRefreshRspackPlugin.apply.params.compiler": {
+    "en": "the rspack compiler",
+    "text": "Rspack 编译器"
+  },
+  "ReactRefreshRspackPluginOptions.summary": {
+    "en": "The options for [`ReactRefreshRspackPlugin`](api:ReactRefreshRspackPlugin).",
+    "text": "[`ReactRefreshRspackPlugin`](api:ReactRefreshRspackPlugin) 的选项。"
+  }
+}

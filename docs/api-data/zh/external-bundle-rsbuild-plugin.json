@@ -1,0 +1,162 @@
+{
+  "ExternalsPresetContext.summary": {
+    "en": "Context passed to externals preset resolvers.",
+    "text": "传递给 externals 预设解析器的上下文。"
+  },
+  "ExternalsPresetContext.environmentName.summary": {
+    "en": "The Rsbuild environment being resolved (e.g. `'lynx'`, `'web'`).",
+    "text": "正在解析的 Rsbuild environment（例如 `'lynx'`、`'web'`）。"
+  },
+  "ExternalsPresetContext.environmentName.remarks": {
+    "en": "Presets use this to pick environment-specific artifacts — for example the\nbuilt-in `reactlynx` preset resolves the web-encoded `react.web.bundle`\nfor the `web` environment and `react.lynx.bundle` otherwise.",
+    "text": "预设通过它选择特定于 environment 的产物，例如内置的 `reactlynx` 预设在 `web` environment 下解析 web 编码的 `react.web.bundle`，在其他 environment 下解析 `react.lynx.bundle`。"
+  },
+  "ExternalsPresetContext.rootPath.summary": {
+    "en": "The current Rsbuild project root path.",
+    "text": "当前 Rsbuild 项目的根路径。"
+  },
+  "ExternalsPresetDefinition.summary": {
+    "en": "Definition for a named externals preset.",
+    "text": "具名 externals 预设的定义。"
+  },
+  "ExternalsPresetDefinition.extends.summary": {
+    "en": "Other preset names to apply before the current preset.",
+    "text": "在当前预设之前应用的其他预设名称。"
+  },
+  "ExternalsPresetDefinition.resolveExternals.summary": {
+    "en": "Resolve external request mappings contributed by this preset.",
+    "text": "解析该预设提供的 external 请求映射。"
+  },
+  "ExternalsPresetDefinition.resolveManagedAssets.summary": {
+    "en": "Resolve managed bundle assets contributed by this preset.",
+    "text": "解析该预设提供的托管 bundle 资源。"
+  },
+  "ExternalsPresets.summary": {
+    "en": "Presets for external bundle dependencies.",
+    "text": "external bundle 依赖的预设。"
+  },
+  "ExternalsPresets.reactlynx.summary": {
+    "en": "Load the ReactLynx runtime bundle and wire its standard module globals.",
+    "text": "加载 ReactLynx 运行时 bundle，并配置其标准模块全局变量。"
+  },
+  "PluginExternalBundleOptions.summary": {
+    "en": "Options for the external-bundle-rsbuild-plugin.",
+    "text": "external-bundle-rsbuild-plugin 的选项。"
+  },
+  "PluginExternalBundleOptions.externalBundleRoot.summary": {
+    "en": "Root directory that stores project-owned external bundles referenced by\n`bundlePath`.\n\n`pluginExternalBundle` uses this directory for both development serving\nand build-time asset emission. Set it when bundles are built elsewhere.",
+    "text": "存放项目自有 external bundle 的根目录，这些 bundle 由\n`bundlePath` 引用。\n\n`pluginExternalBundle` 在开发环境提供服务和构建时产出资源时都会使用该目录。当 bundle 在其他位置构建时，请设置该选项。"
+  },
+  "PluginExternalBundleOptions.externals.summary": {
+    "en": "Additional explicit externals to load.",
+    "text": "额外需要加载的显式 externals。"
+  },
+  "PluginExternalBundleOptions.externalsPresetDefinitions.summary": {
+    "en": "Definitions for custom externals presets enabled by `externalsPresets`.\n\nUse this to add business-specific presets such as `lynxUi`, or to extend a\nbuilt-in preset through `extends`.",
+    "text": "由 `externalsPresets` 启用的自定义 externals 预设的定义。\n\n可用于添加业务专属的预设（例如 `lynxUi`），或通过 `extends`\n扩展内置预设。"
+  },
+  "PluginExternalBundleOptions.externalsPresets.summary": {
+    "en": "Presets for external libraries.\n\nSame as https://rspack.rs/config/externals#externalspresets but for Lynx.",
+    "text": "外部库的预设。\n\n与 https://rspack.rs/config/externals#externalspresets 相同，但适用于 Lynx。"
+  },
+  "PluginExternalBundleOptions.globalObject.summary": {
+    "en": "This option indicates what global object will be used to mount the library.\n\nIn Lynx, the library will be mounted to `lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")]` by default.\n\nIf you have enabled share js context and want to reuse the library by mounting to the global object, you can set this option to `'globalThis'`.",
+    "text": "该选项指定用于挂载库的全局对象。\n\n在 Lynx 中，库默认挂载到 `lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")]` 上。\n\n如果启用了 share js context，并希望通过挂载到全局对象来复用该库，可以将该选项设置为 `'globalThis'`。"
+  },
+  "PluginExternalBundleOptions.retries.summary": {
+    "en": "The number of additional attempts when fetching the external bundle times out (`response.code === -2`).",
+    "text": "加载 external bundle 超时（`response.code === -2`）时的额外重试次数。"
+  },
+  "PluginExternalBundleOptions.timeout.summary": {
+    "en": "The timeout in milliseconds for loading the externals.",
+    "text": "加载 externals 的超时时间，单位为毫秒。"
+  },
+  "PluginExternalValue.summary": {
+    "en": "External bundle reference accepted by `pluginExternalBundle`.",
+    "text": "`pluginExternalBundle` 接受的 external bundle 引用。"
+  },
+  "PluginExternalValue.async.summary": {
+    "en": "Whether the source should be loaded asynchronously or not.",
+    "text": "是否异步加载该资源。"
+  },
+  "PluginExternalValue.background.summary": {
+    "en": "The options of the background layer.",
+    "text": "后台线程 layer 的选项。"
+  },
+  "PluginExternalValue.bundlePath.summary": {
+    "en": "Bundle path resolved against the runtime public path.\n\nPrefer this over `url` when the external bundle should be emitted or served\nas part of the current project. `pluginExternalBundle` can use this\ninformation to manage local bundle files, while the runtime keeps the final\nURL aligned with the active `publicPath`.",
+    "text": "基于运行时 public path 解析的 bundle 路径。\n\n当 external bundle 需要作为当前项目的一部分被产出或提供服务时，优先使用该选项而非 `url`。`pluginExternalBundle` 可以利用这些信息管理本地 bundle 文件，同时运行时会使最终\nURL 与当前生效的 `publicPath` 保持一致。"
+  },
+  "PluginExternalValue.libraryName.summary": {
+    "en": "The name of the library. Same as https://webpack.js.org/configuration/externals/#string.\n\nBy default, the library name is the same as the externals key. For example:\n\nThe config\n\n```js\nExternalsLoadingPlugin({\n  externals: {\n    lodash: {\n      url: '……',\n    }\n  }\n})\n```\n\nWill generate the following webpack externals config:\n\n```js\nexternals: {\n  lodash: 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].lodash',\n}\n```\n\nIf one external bundle contains multiple modules, should set the same library name to ensure it's loaded only once. For example:\n\n```js\nExternalsLoadingPlugin({\n  externals: {\n    lodash: {\n      libraryName: 'Lodash',\n      url: '……',\n    },\n    'lodash-es': {\n      libraryName: 'Lodash',\n      url: '……',\n    }\n  }\n})\n```\nWill generate the following webpack externals config:\n\n```js\nexternals: {\n  lodash: 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].Lodash',\n  'lodash-es': 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].Lodash',\n}\n```\n\nYou can pass an array to specify subpath of the external. Same as https://webpack.js.org/configuration/externals/#string-1. For example:\n\n```js\nExternalsLoadingPlugin({\n  externals: {\n    preact: {\n      libraryName: ['ReactLynx', 'Preact'],\n      url: '……',\n      async: false,\n    },\n  }\n})\n```\n\nWill generate the following webpack externals config:\n\n```js\nexternals: {\n  preact: 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].ReactLynx.Preact',\n}\n```\n\nWith the default `async: true`, a `promise` external is generated instead,\nwhich picks the subpath after the library promise resolves:\n\n```js\nexternals: {\n  preact: 'promise Promise.resolve(lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")][\"ReactLynx\"]).then(function (m) { return m[\"Preact\"]; })',\n}\n```",
+    "text": "库的名称。与 https://webpack.js.org/configuration/externals/#string 相同。\n\n默认情况下，库名称与 externals 的 key 相同。例如：\n\n配置\n\n```js\nExternalsLoadingPlugin({\n  externals: {\n    lodash: {\n      url: '……',\n    }\n  }\n})\n```\n\n将生成以下 webpack externals 配置：\n\n```js\nexternals: {\n  lodash: 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].lodash',\n}\n```\n\n如果一个 external bundle 包含多个模块，应设置相同的库名称，以确保它只被加载一次。例如：\n\n```js\nExternalsLoadingPlugin({\n  externals: {\n    lodash: {\n      libraryName: 'Lodash',\n      url: '……',\n    },\n    'lodash-es': {\n      libraryName: 'Lodash',\n      url: '……',\n    }\n  }\n})\n```\n\n将生成以下 webpack externals 配置：\n\n```js\nexternals: {\n  lodash: 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].Lodash',\n  'lodash-es': 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].Lodash',\n}\n```\n\n可以传入数组来指定 external 的子路径。与 https://webpack.js.org/configuration/externals/#string-1 相同。例如：\n\n```js\nExternalsLoadingPlugin({\n  externals: {\n    preact: {\n      libraryName: ['ReactLynx', 'Preact'],\n      url: '……',\n      async: false,\n    },\n  }\n})\n```\n\n将生成以下 webpack externals 配置：\n\n```js\nexternals: {\n  preact: 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].ReactLynx.Preact',\n}\n```\n\n在默认的 `async: true` 下，会改为生成一个 `promise` external，它会在库的 promise resolve 之后再取出子路径：\n\n```js\nexternals: {\n  preact: 'promise Promise.resolve(lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")][\"ReactLynx\"]).then(function (m) { return m[\"Preact\"]; })',\n}\n```"
+  },
+  "PluginExternalValue.mainThread.summary": {
+    "en": "The options of the main-thread layer.",
+    "text": "主线程 layer 的选项。"
+  },
+  "PluginExternalValue.retries.summary": {
+    "en": "The number of additional attempts when fetching the external bundle times out (`response.code === -2`).",
+    "text": "加载 external bundle 超时（`response.code === -2`）时的额外重试次数。"
+  },
+  "PluginExternalValue.timeout.summary": {
+    "en": "The wait time in milliseconds.",
+    "text": "等待时间，单位为毫秒。"
+  },
+  "PluginExternalValue.url.summary": {
+    "en": "Bundle URL.\n\nUse this only when the external bundle lives outside the current build\noutput and should not be emitted or served by `pluginExternalBundle`.",
+    "text": "Bundle 的 URL。\n\n仅当 external bundle 位于当前构建产物之外、且不应由 `pluginExternalBundle` 产出或提供服务时才使用该选项。"
+  },
+  "PluginExternalValue.url.deprecated": {
+    "en": "Prefer `bundlePath`, which resolves through the runtime public\npath and lets higher-level tooling manage asset emission.",
+    "text": "建议优先使用 `bundlePath`，它通过运行时 public\npath 解析，并允许上层工具管理资源产出。"
+  },
+  "ReactLynxExternalsPresetOptions.summary": {
+    "en": "Options for the built-in `reactlynx` externals preset.",
+    "text": "内置 `reactlynx` externals 预设的选项。"
+  },
+  "ReactLynxExternalsPresetOptions.async.summary": {
+    "en": "Load the ReactLynx runtime bundle asynchronously, for the web target.\n\nThe web runtime (`@lynx-js/web-core`) can only fetch external bundles\nasynchronously (`fetchBundle().then`), so ReactLynx must be mounted as a\npromise that consuming modules await before reading a subpath (otherwise\n`React.memo` etc. are read off a pending promise and are `undefined`).\nOnly controls how the runtime is mounted; the web bundle is chosen for\nenvironments other than `lynx` / `lynx-*`.",
+    "text": "针对 web 目标，异步加载 ReactLynx 运行时 bundle。\n\nweb 运行时（`@lynx-js/web-core`）只能异步获取 external bundle\n（`fetchBundle().then`），因此 ReactLynx 必须以 promise 的形式挂载，使用它的模块需要先 await 该 promise 再读取子路径（否则\n`React.memo` 等会从一个 pending 状态的 promise 上读取，结果为 `undefined`）。该选项仅控制运行时的挂载方式；在 `lynx` / `lynx-*` 以外的 environment 中会选用 web bundle。"
+  },
+  "ReactLynxExternalsPresetOptions.bundlePath.summary": {
+    "en": "Emit the ReactLynx runtime bundle into the current build output and load it\nthrough the generated runtime public path.\n\nPrefer this over `url` for bundles shipped with this project. In addition\nto letting the runtime resolve the final URL from `publicPath`, the plugin\nwill also copy the corresponding `@lynx-js/react-umd` bundle into the\nemitted assets, so application bundles can reference it without requiring\nan extra manual copy step when publishing.",
+    "text": "将 ReactLynx 运行时 bundle 产出到当前构建产物中，并通过生成的运行时 public path 加载。\n\n对于随本项目一同发布的 bundle，优先使用该选项而非 `url`。除了让运行时基于 `publicPath` 解析最终 URL 之外，插件还会将对应的 `@lynx-js/react-umd` bundle 复制到产出的资源中，因此应用 bundle 可以直接引用它，发布时无需额外的手动复制步骤。"
+  },
+  "ReactLynxExternalsPresetOptions.bundlePath.default": {
+    "en": "`'react.lynx.bundle'`, or `'react.web.bundle'` outside\n`lynx` / `lynx-*` environments",
+    "text": "`'react.lynx.bundle'`；在 `lynx` / `lynx-*` 以外的 environment 中为\n`'react.web.bundle'`"
+  },
+  "ReactLynxExternalsPresetOptions.reactUmdPackageName.summary": {
+    "en": "Package name that provides the ReactLynx runtime bundle.\n\nOverride this when wrapping the plugin for another distribution, such as\n`@byted-lynx/react-umd`.",
+    "text": "提供 ReactLynx 运行时 bundle 的包名。\n\n为其他发行版封装该插件时（例如\n`@byted-lynx/react-umd`），可覆盖该选项。"
+  },
+  "ReactLynxExternalsPresetOptions.url.summary": {
+    "en": "Override the runtime bundle URL directly.\n\nUse this only when the ReactLynx runtime is hosted outside the current\nbuild output, for example on a CDN. Unlike `bundlePath`, this does not emit\nany extra asset into the current compilation.",
+    "text": "直接覆盖运行时 bundle 的 URL。\n\n仅当 ReactLynx 运行时托管在当前构建产物之外（例如 CDN 上）时才使用该选项。与 `bundlePath` 不同，该选项不会向当前编译产出任何额外资源。"
+  },
+  "ReactLynxExternalsPresetOptions.url.deprecated": {
+    "en": "Prefer `bundlePath`, which resolves through the runtime public\npath and enables automatic asset emission.",
+    "text": "建议优先使用 `bundlePath`，它通过运行时 public\npath 解析，并支持自动产出资源。"
+  },
+  "ExternalsPresetDefinitions.summary": {
+    "en": "Available externals preset definitions.",
+    "text": "可用的 externals 预设定义。"
+  },
+  "PluginExternalConfig.summary": {
+    "en": "External bundle shorthand accepted by `pluginExternalBundle`.\n\nWhen a string is provided, it is treated as `bundlePath` and the plugin will\ninfer:\n- `libraryName`: the external request key\n- `background.sectionPath`: the external request key\n- `mainThread.sectionPath`: `${request}__main-thread`\n- `async`: `true`",
+    "text": "`pluginExternalBundle` 接受的 external bundle 简写形式。\n\n传入字符串时，它会被视为 `bundlePath`，插件会推断：\n- `libraryName`：external 请求的 key\n- `background.sectionPath`：external 请求的 key\n- `mainThread.sectionPath`：`${request}__main-thread`\n- `async`：`true`"
+  },
+  "builtInExternalsPresetDefinitions.summary": {
+    "en": "Built-in externals preset definitions.",
+    "text": "内置的 externals 预设定义。"
+  },
+  "normalizeBundlePath.summary": {
+    "en": "Normalize a public bundle path by removing leading slashes.",
+    "text": "规范化公共 bundle 路径，移除开头的斜杠。"
+  },
+  "pluginExternalBundle.summary": {
+    "en": "Create a rsbuild plugin for loading external bundles.\n\nThis plugin wraps the externals-loading-webpack-plugin and automatically\nretrieves layer names from any DSL plugin that exposes `LAYERS`, such as\n`pluginReactLynx` or `pluginVanillaLynx`, via api.useExposed.",
+    "text": "创建一个用于加载 external bundle 的 Rsbuild 插件。\n\n该插件封装了 externals-loading-webpack-plugin，并通过 api.useExposed\n自动从任何暴露了 `LAYERS` 的 DSL 插件（例如\n`pluginReactLynx` 或 `pluginVanillaLynx`）获取 layer 名称。"
+  }
+}

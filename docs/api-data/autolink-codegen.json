@@ -1,0 +1,391 @@
+{
+  "id": "autolink-codegen",
+  "package": "@lynx-js/autolink-codegen",
+  "version": "0.6.0",
+  "description": "Lynx library code generator",
+  "group": "libraries",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/lynx/autolink-codegen",
+  "exports": [
+    {
+      "name": "CodegenOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "root",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "GeneratedFile",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "content",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "overwrite",
+          "optional": true,
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LynxtronPlatformManifest",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "targets",
+          "type": "LynxtronRuntimeTarget[]",
+          "refs": [
+            "LynxtronRuntimeTarget"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LynxtronRuntimeTarget",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "appBundles",
+          "optional": true,
+          "type": "string[]",
+          "kind": "property"
+        },
+        {
+          "name": "arch",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "files",
+          "optional": true,
+          "type": "string[]",
+          "kind": "property"
+        },
+        {
+          "name": "frameworks",
+          "optional": true,
+          "type": "string[]",
+          "kind": "property"
+        },
+        {
+          "name": "os",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "NativeModuleMethod",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "params",
+          "type": "NativeModuleParam[]",
+          "refs": [
+            "NativeModuleParam"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "returnType",
+          "type": "NativeModuleType",
+          "ref": "NativeModuleType",
+          "refs": [
+            "NativeModuleType"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "source",
+          "optional": true,
+          "type": "NativeModuleSourceLocation",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "NativeModuleObjectProperty",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "optional",
+          "optional": true,
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "NativeModuleType",
+          "ref": "NativeModuleType",
+          "refs": [
+            "NativeModuleType"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "NativeModuleObjectSpec",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "properties",
+          "type": "NativeModuleObjectProperty[]",
+          "refs": [
+            "NativeModuleObjectProperty"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "NativeModuleParam",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "optional",
+          "optional": true,
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "source",
+          "optional": true,
+          "type": "NativeModuleSourceLocation",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "NativeModuleType",
+          "ref": "NativeModuleType",
+          "refs": [
+            "NativeModuleType"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "NativeModuleSpec",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "interfaces",
+          "optional": true,
+          "type": "NativeModuleObjectSpec[]",
+          "refs": [
+            "NativeModuleObjectSpec"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "methods",
+          "type": "NativeModuleMethod[]",
+          "refs": [
+            "NativeModuleMethod"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "source",
+          "optional": true,
+          "type": "NativeModuleSourceLocation",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "NativeModuleType",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "name",
+          "type": "NativeModuleTypeName",
+          "ref": "NativeModuleTypeName",
+          "refs": [
+            "NativeModuleTypeName"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "nullable",
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "referenceName",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "NativeModuleTypeName",
+      "kind": "typealias",
+      "type": "\"void\" | \"string\" | \"number\" | \"boolean\" | \"bigint\" | \"date\" | \"symbol\" | \"array\" | \"arraybuffer\" | \"typedarray\" | \"int8array\" | \"uint8array\" | \"int16array\" | \"uint16array\" | \"int32array\" | \"uint32array\" | \"float32array\" | \"float64array\" | \"bigint64array\" | \"biguint64array\" | \"dataview\" | \"object\" | \"function\" | \"promise\" | \"buffer\" | \"named-object\" | \"value\"",
+      "literalUnion": [
+        "\"void\"",
+        "\"string\"",
+        "\"number\"",
+        "\"boolean\"",
+        "\"bigint\"",
+        "\"date\"",
+        "\"symbol\"",
+        "\"array\"",
+        "\"arraybuffer\"",
+        "\"typedarray\"",
+        "\"int8array\"",
+        "\"uint8array\"",
+        "\"int16array\"",
+        "\"uint16array\"",
+        "\"int32array\"",
+        "\"uint32array\"",
+        "\"float32array\"",
+        "\"float64array\"",
+        "\"bigint64array\"",
+        "\"biguint64array\"",
+        "\"dataview\"",
+        "\"object\"",
+        "\"function\"",
+        "\"promise\"",
+        "\"buffer\"",
+        "\"named-object\"",
+        "\"value\""
+      ]
+    },
+    {
+      "name": "generate",
+      "kind": "function",
+      "type": "generate(options: CodegenOptions): GeneratedFile[]",
+      "signatures": [
+        {
+          "text": "generate(options: CodegenOptions): GeneratedFile[]",
+          "params": [
+            {
+              "name": "options",
+              "type": "CodegenOptions",
+              "ref": "CodegenOptions",
+              "refs": [
+                "CodegenOptions"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "GeneratedFile[]",
+            "refs": [
+              "GeneratedFile"
+            ]
+          },
+          "summary": "Builds the generated file contents for a library package: JS facades and platform specs,\nplus the shared C++ sources, registrations, CMake target, iOS wrapper and Lynxtron\nregistrations for Node-API and Lynxtron modules."
+        }
+      ],
+      "summary": "Builds the generated file contents for a library package: JS facades and platform specs,\nplus the shared C++ sources, registrations, CMake target, iOS wrapper and Lynxtron\nregistrations for Node-API and Lynxtron modules."
+    },
+    {
+      "name": "parseNativeModules",
+      "kind": "function",
+      "type": "parseNativeModules(source: string, filename: string): NativeModuleSpec[]",
+      "signatures": [
+        {
+          "text": "parseNativeModules(source: string, filename: string): NativeModuleSpec[]",
+          "params": [
+            {
+              "name": "source",
+              "type": "string"
+            },
+            {
+              "name": "filename",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "NativeModuleSpec[]",
+            "refs": [
+              "NativeModuleSpec"
+            ]
+          },
+          "summary": "Parses native module declarations marked with `@lynxmodule` from a TypeScript declaration source."
+        }
+      ],
+      "summary": "Parses native module declarations marked with `@lynxmodule` from a TypeScript declaration source."
+    },
+    {
+      "name": "runCodegen",
+      "kind": "function",
+      "type": "runCodegen(options: CodegenOptions): GeneratedFile[]",
+      "signatures": [
+        {
+          "text": "runCodegen(options: CodegenOptions): GeneratedFile[]",
+          "params": [
+            {
+              "name": "options",
+              "type": "CodegenOptions",
+              "ref": "CodegenOptions",
+              "refs": [
+                "CodegenOptions"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "GeneratedFile[]",
+            "refs": [
+              "GeneratedFile"
+            ]
+          },
+          "summary": "Writes generated files to disk, skipping existing files marked `overwrite: false`,\nand returns the generated file descriptors."
+        }
+      ],
+      "summary": "Writes generated files to disk, skipping existing files marked `overwrite: false`,\nand returns the generated file descriptors."
+    }
+  ]
+}

@@ -1,0 +1,176 @@
+---
+title: '@lynx-js/genui/mcp-apps'
+---
+
+# `@lynx-js/genui/mcp-apps`
+
+`@lynx-js/genui/mcp-apps` is a Lynx host for MCP Apps. It validates the app data it receives, picks the renderer you registered for it and renders it with ReactLynx, and falls back to streaming Markdown when no registered renderer matches. Define renderers with `defineAppRenderer`, collect them with `createAppRendererRegistry` and pass the registry to `McpApps`.
+
+```ts
+import {
+  McpApps,
+  createAppRendererRegistry,
+  defineAppRenderer,
+} from '@lynx-js/genui/mcp-apps';
+```
+
+## API
+
+{/* @api ApiExports package="genui-mcp-apps" */}
+
+## Functions \{#functions\}
+
+### `createAppRendererRegistry()` \{#createapprendererregistry\}
+
+```ts
+function createAppRendererRegistry(renderers: readonly AppRenderer[]): AppRendererRegistry
+```
+
+Creates an immutable lookup facade for locally supplied renderers.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `renderers` | `readonly `[`AppRenderer`](#apprenderer)`[]` |  |
+
+**Returns:** [`AppRendererRegistry`](#apprendererregistry)
+
+### `defineAppRenderer()` \{#defineapprenderer\}
+
+```ts
+function defineAppRenderer(definition: AppRendererDefinition<TResult>): AppRenderer
+```
+
+Defines a renderer while preserving its result type at the declaration site.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `definition` | [`AppRendererDefinition`](#apprendererdefinition)`<TResult>` |  |
+
+**Returns:** [`AppRenderer`](#apprenderer)
+
+### `McpApps()` \{#mcpapps\}
+
+```ts
+function McpApps(props: McpAppsProps): Element
+```
+
+Renders validated local MCP Apps data and falls back to streaming Markdown
+when no registered renderer matches the supplied host data.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `props` | [`McpAppsProps`](#mcpappsprops) |  |
+
+**Returns:** `Element`
+
+### `readAppMarkdown()` \{#readappmarkdown\}
+
+```ts
+function readAppMarkdown(value: unknown): string
+```
+
+Reads Markdown fallback content from MCP Apps host data.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `value` | `unknown` |  |
+
+**Returns:** `string`
+
+### `readAppRenderData()` \{#readapprenderdata\}
+
+```ts
+function readAppRenderData(value: unknown): AppRenderData<unknown> | null
+```
+
+Parses and validates the renderer-independent portion of MCP Apps data.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `value` | `unknown` |  |
+
+**Returns:** [`AppRenderData`](#apprenderdata)`<unknown> | null`
+
+## Types \{#types\}
+
+### `AppApiDefinition` \{#appapidefinition\}
+
+Describes a local API that can provide data to an MCP Apps renderer.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="appapidefinition-description"></a>`description` | `string` |  |
+| <a id="appapidefinition-inputschema"></a>`inputSchema` | `Record<string, unknown>` |  |
+| <a id="appapidefinition-name"></a>`name` | `string` |  |
+| <a id="appapidefinition-renderer"></a>`renderer` | `string` |  |
+| <a id="appapidefinition-title"></a>`title` | `string` |  |
+
+### `AppRenderData` \{#apprenderdata\}
+
+Data required to select and render a locally registered MCP Apps.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="apprenderdata-input"></a>`input` | `Record<string, unknown>` |  |
+| <a id="apprenderdata-renderer"></a>`renderer` | `string` |  |
+| <a id="apprenderdata-result"></a>`result` | `TResult` |  |
+
+### `AppRenderer` \{#apprenderer\}
+
+Type-erased renderer stored in an MCP Apps renderer registry.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="apprenderer-component"></a>`component` | `ComponentType<`[`AppRendererProps`](#apprendererprops)`<unknown>>` |  |
+| <a id="apprenderer-id"></a>`id` | `string` |  |
+| <a id="apprenderer-invalidresultmessage"></a>`invalidResultMessage` | `string` |  |
+| <a id="apprenderer-parseresult"></a>`parseResult` | `(value: unknown) => unknown` |  |
+
+### `AppRendererDefinition` \{#apprendererdefinition\}
+
+Strongly typed definition accepted by [`defineAppRenderer`](#defineapprenderer).
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="apprendererdefinition-component"></a>`component` | `ComponentType<`[`AppRendererProps`](#apprendererprops)`<TResult>>` |  |
+| <a id="apprendererdefinition-id"></a>`id` | `string` |  |
+| <a id="apprendererdefinition-invalidresultmessage"></a>`invalidResultMessage` | `string` |  |
+| <a id="apprendererdefinition-parseresult"></a>`parseResult` | `(value: unknown) => TResult \| null` |  |
+
+### `AppRendererProps` \{#apprendererprops\}
+
+Props supplied by the MCP Apps host to a registered renderer.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="apprendererprops-input"></a>`input` | `Record<string, unknown>` |  |
+| <a id="apprendererprops-result"></a>`result` | `TResult` |  |
+
+### `AppRendererRegistry` \{#apprendererregistry\}
+
+A local renderer lookup used by the protocol-agnostic MCP Apps host.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="apprendererregistry-getrenderer"></a>`getRenderer` | `(id: string) => `[`AppRenderer`](#apprenderer)` \| null` |  |
+| <a id="apprendererregistry-resolverenderdata"></a>`resolveRenderData` | `(value: unknown) => `[`ResolvedAppRenderData`](#resolvedapprenderdata)` \| null` |  |
+
+### `McpAppsProps` \{#mcpappsprops\}
+
+Props for the protocol-agnostic MCP Apps Lynx host.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="mcpappsprops-registry"></a>`registry` | [`AppRendererRegistry`](#apprendererregistry) |  |
+
+### `ResolvedAppRenderData` \{#resolvedapprenderdata\}
+
+Validated render data paired with its locally registered renderer.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="resolvedapprenderdata-input"></a>`input` | `Record<string, unknown>` |  |
+| <a id="resolvedapprenderdata-renderer"></a>`renderer` | [`AppRenderer`](#apprenderer) |  |
+| <a id="resolvedapprenderdata-result"></a>`result` | `unknown` |  |
+
+{/* @api-end */}

@@ -1,0 +1,233 @@
+---
+title: '@lynx-js/genui/a2ui-prompt'
+---
+
+# `@lynx-js/genui/a2ui-prompt`
+
+`@lynx-js/genui/a2ui-prompt` 基于内置的 basic catalog 或你自己的 catalog 构建系统提示词，让模型以 A2UI 消息作答。它用在 CLI 或 agent 一侧，与应用里的 [`@lynx-js/genui/a2ui`](./a2ui) 渲染器配合使用。
+
+```ts
+import { buildA2UISystemPrompt } from '@lynx-js/genui/a2ui-prompt';
+```
+
+## API
+
+{/* @api ApiExports package="genui-a2ui-prompt" */}
+
+## 函数 \{#functions\}
+
+### `buildA2UISystemPrompt()` \{#builda2uisystemprompt\}
+
+```ts
+function buildA2UISystemPrompt(opts?: BuildSystemPromptOptions): string
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `opts?` | [`BuildSystemPromptOptions`](#buildsystempromptoptions) |  |
+
+**返回值：** `string`
+
+### `buildA2UISystemPromptAsync()` \{#builda2uisystempromptasync\}
+
+```ts
+function buildA2UISystemPromptAsync(opts: BuildSystemPromptOptions): Promise<string>
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `opts` | [`BuildSystemPromptOptions`](#buildsystempromptoptions) |  |
+
+**返回值：** `Promise<string>`
+
+### `createA2UICatalogFromManifests()` \{#createa2uicatalogfrommanifests\}
+
+```ts
+function createA2UICatalogFromManifests(options: { catalogId: string; componentManifests: Record<string, JsonSchema>[]; examples?: A2UIExample[]; extraRules?: string[]; functions?: A2UIFunctionSpec[]; label?: string; version?: string }): A2UICatalog
+```
+
+将生成的组件 manifest 转换为可直接用于 prompt 的 A2UI catalog。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `options` | `{ catalogId: string; componentManifests: Record<string, `[`JsonSchema`](#jsonschema)`>[]; examples?: `[`A2UIExample`](#a2uiexample)`[]; extraRules?: string[]; functions?: `[`A2UIFunctionSpec`](#a2uifunctionspec)`[]; label?: string; version?: string }` |  |
+
+**返回值：** [`A2UICatalog`](#a2uicatalog)
+
+### `loadBasicCatalog()` \{#loadbasiccatalog\}
+
+```ts
+function loadBasicCatalog(): Promise<A2UICatalog>
+```
+
+*暂无说明。*
+
+**返回值：** `Promise<`[`A2UICatalog`](#a2uicatalog)`>`
+
+### `readA2UICatalogFromDirectory()` \{#reada2uicatalogfromdirectory\}
+
+```ts
+function readA2UICatalogFromDirectory(options: ReadA2UICatalogDirectoryOptions): A2UICatalog
+```
+
+读取生成的 manifest，并将其转换为可直接用于 prompt 的 A2UI catalog。如果 `catalogDir` 或其父目录中存在完整的 `catalog.json`，则从中读取组件和函数；否则仅从各组件的 `<Name>/catalog.json` 文件中读取组件，此时 catalog 不包含函数。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `options` | [`ReadA2UICatalogDirectoryOptions`](#reada2uicatalogdirectoryoptions) |  |
+
+**返回值：** [`A2UICatalog`](#a2uicatalog)
+
+### `renderCatalogReference()` \{#rendercatalogreference\}
+
+```ts
+function renderCatalogReference(catalog: A2UICatalog): string
+```
+
+将 A2UI catalog 渲染为嵌入 prompt 的 Markdown 参考文档。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `catalog` | [`A2UICatalog`](#a2uicatalog) |  |
+
+**返回值：** `string`
+
+## 常量 \{#constants\}
+
+### `A2UI_PROTOCOL_VERSION` \{#a2ui-protocol-version\}
+
+```ts
+const A2UI_PROTOCOL_VERSION: "v0.9"
+```
+
+*暂无说明。*
+
+### `BASIC_CATALOG` \{#basic-catalog\}
+
+```ts
+const BASIC_CATALOG: A2UICatalog
+```
+
+*暂无说明。*
+
+### `BASIC_CATALOG_EXAMPLES` \{#basic-catalog-examples\}
+
+```ts
+const BASIC_CATALOG_EXAMPLES: A2UIExample[]
+```
+
+*暂无说明。*
+
+### `BASIC_CATALOG_ID` \{#basic-catalog-id\}
+
+```ts
+const BASIC_CATALOG_ID: "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
+```
+
+*暂无说明。*
+
+## 类型 \{#types\}
+
+### `A2UICatalog` \{#a2uicatalog\}
+
+可直接用于 prompt 的 A2UI catalog，包含组件、规则、示例以及可选的客户端函数。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="a2uicatalog-components"></a>`components` | [`A2UIComponentSpec`](#a2uicomponentspec)`[]` |  |
+| <a id="a2uicatalog-examples"></a>`examples?` | [`A2UIExample`](#a2uiexample)`[]` |  |
+| <a id="a2uicatalog-extrarules"></a>`extraRules?` | `string[]` |  |
+| <a id="a2uicatalog-functions"></a>`functions?` | [`A2UIFunctionSpec`](#a2uifunctionspec)`[]` |  |
+| <a id="a2uicatalog-id"></a>`id` | `string` |  |
+| <a id="a2uicatalog-label"></a>`label` | `string` |  |
+| <a id="a2uicatalog-version"></a>`version?` | `string` |  |
+
+### `A2UIComponentProp` \{#a2uicomponentprop\}
+
+面向 prompt 的单个 A2UI 组件 prop 描述。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="a2uicomponentprop-description"></a>`description?` | `string` |  |
+| <a id="a2uicomponentprop-enums"></a>`enums?` | `readonly string[]` |  |
+| <a id="a2uicomponentprop-name"></a>`name` | `string` |  |
+| <a id="a2uicomponentprop-required"></a>`required?` | `boolean` |  |
+| <a id="a2uicomponentprop-schema"></a>`schema?` | [`JsonSchema`](#jsonschema) |  |
+| <a id="a2uicomponentprop-type"></a>`type` | `string` |  |
+
+### `A2UIComponentSpec` \{#a2uicomponentspec\}
+
+由 catalog manifest 派生的面向 prompt 的组件规格。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="a2uicomponentspec-containershape"></a>`containerShape?` | `"children" \| "child" \| "tabs" \| "trigger-content" \| "none"` |  |
+| <a id="a2uicomponentspec-name"></a>`name` | `string` |  |
+| <a id="a2uicomponentspec-props"></a>`props` | [`A2UIComponentProp`](#a2uicomponentprop)`[]` |  |
+| <a id="a2uicomponentspec-requiresaction"></a>`requiresAction?` | `boolean` |  |
+| <a id="a2uicomponentspec-summary"></a>`summary` | `string` |  |
+
+### `A2UIExample` \{#a2uiexample\}
+
+作为上下文内 A2UI 示例提供的、经过校验的用户请求及消息序列。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="a2uiexample-messages"></a>`messages` | `unknown[]` |  |
+| <a id="a2uiexample-name"></a>`name` | `string` |  |
+| <a id="a2uiexample-user"></a>`user` | `string` |  |
+
+### `A2UIFunctionSpec` \{#a2uifunctionspec\}
+
+面向 prompt 的 schema，描述 agent 可以调用的客户端函数。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="a2uifunctionspec-description"></a>`description?` | `string` |  |
+| <a id="a2uifunctionspec-name"></a>`name` | `string` |  |
+| <a id="a2uifunctionspec-parameters"></a>`parameters` | [`JsonSchema`](#jsonschema) |  |
+| <a id="a2uifunctionspec-returntype"></a>`returnType` | `"string" \| "number" \| "boolean" \| "object" \| "array" \| "any" \| "void"` |  |
+
+### `BuildSystemPromptOptions` \{#buildsystempromptoptions\}
+
+用于自定义生成的 A2UI 系统提示词的选项。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="buildsystempromptoptions-appendix"></a>`appendix?` | `string` |  |
+| <a id="buildsystempromptoptions-catalog"></a>`catalog?` | [`A2UICatalog`](#a2uicatalog) |  |
+
+### `JsonSchema` \{#jsonschema\}
+
+面向 prompt 的 catalog 描述中使用的 JSON Schema 子集。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="jsonschema-additionalproperties"></a>`additionalProperties?` | `unknown` |  |
+| <a id="jsonschema-const"></a>`const?` | `unknown` |  |
+| <a id="jsonschema-description"></a>`description?` | `string` |  |
+| <a id="jsonschema-enum"></a>`enum?` | `unknown` |  |
+| <a id="jsonschema-items"></a>`items?` | [`JsonSchema`](#jsonschema) |  |
+| <a id="jsonschema-oneof"></a>`oneOf?` | [`JsonSchema`](#jsonschema)`[]` |  |
+| <a id="jsonschema-properties"></a>`properties?` | `Record<string, `[`JsonSchema`](#jsonschema)`>` |  |
+| <a id="jsonschema-required"></a>`required?` | `string[]` |  |
+| <a id="jsonschema-type"></a>`type?` | `string` |  |
+| <a id="jsonschema-unevaluatedproperties"></a>`unevaluatedProperties?` | `unknown` |  |
+
+### `ReadA2UICatalogDirectoryOptions` \{#reada2uicatalogdirectoryoptions\}
+
+从目录加载生成的 A2UI catalog 产物的选项。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="reada2uicatalogdirectoryoptions-catalogdir"></a>`catalogDir` | `string` |  |
+| <a id="reada2uicatalogdirectoryoptions-catalogid"></a>`catalogId` | `string` |  |
+| <a id="reada2uicatalogdirectoryoptions-cwd"></a>`cwd?` | `string` |  |
+| <a id="reada2uicatalogdirectoryoptions-label"></a>`label?` | `string` |  |
+| <a id="reada2uicatalogdirectoryoptions-version"></a>`version?` | `string` |  |
+
+{/* @api-end */}

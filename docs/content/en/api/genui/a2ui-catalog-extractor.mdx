@@ -1,0 +1,152 @@
+---
+title: '@lynx-js/genui/a2ui-catalog-extractor'
+---
+
+# `@lynx-js/genui/a2ui-catalog-extractor`
+
+`@lynx-js/genui/a2ui-catalog-extractor` turns the TypeScript interfaces of your components, and their TypeDoc comments, into the A2UI catalog JSON an agent reads. It is the engine behind `genui a2ui generate catalog`; in scripts, prefer that command and use this entry point when you need the extraction in code.
+
+```ts
+import { extractCatalogComponents } from '@lynx-js/genui/a2ui-catalog-extractor';
+```
+
+## API
+
+{/* @api ApiExports package="genui-a2ui-catalog-extractor" */}
+
+## Functions \{#functions\}
+
+### `createA2UICatalog()` \{#createa2uicatalog\}
+
+```ts
+function createA2UICatalog(options: { catalogId: string; components: CatalogComponent[] | Record<string, JsonSchema>; functions?: FunctionDefinition[]; theme?: Record<string, JsonSchema> }): A2UICatalog
+```
+
+Build a full A2UI catalog manifest from component and function artifacts.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | `{ catalogId: string; components: `[`CatalogComponent`](#catalogcomponent)`[] \| Record<string, `[`JsonSchema`](#jsonschema)`>; functions?: `[`FunctionDefinition`](#functiondefinition)`[]; theme?: Record<string, `[`JsonSchema`](#jsonschema)`> }` |  |
+
+**Returns:** [`A2UICatalog`](#a2uicatalog)
+
+### `extractCatalogComponents()` \{#extractcatalogcomponents\}
+
+```ts
+function extractCatalogComponents(options: ExtractCatalogOptions): Promise<CatalogComponent[]>
+```
+
+Run TypeDoc over source files and extract A2UI component schemas.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | [`ExtractCatalogOptions`](#extractcatalogoptions) |  |
+
+**Returns:** `Promise<`[`CatalogComponent`](#catalogcomponent)`[]>`
+
+### `extractCatalogFunctions()` \{#extractcatalogfunctions\}
+
+```ts
+function extractCatalogFunctions(options: ExtractCatalogOptions): Promise<CatalogFunction[]>
+```
+
+Run TypeDoc over source files and extract A2UI function definitions.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | [`ExtractCatalogOptions`](#extractcatalogoptions) |  |
+
+**Returns:** `Promise<`[`CatalogFunction`](#catalogfunction)`[]>`
+
+### `findCatalogSourceFiles()` \{#findcatalogsourcefiles\}
+
+```ts
+function findCatalogSourceFiles(inputPath: string): string[]
+```
+
+Find supported source files under a file or directory path.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `inputPath` | `string` |  |
+
+**Returns:** `string[]`
+
+## Types \{#types\}
+
+### `A2UICatalog` \{#a2uicatalog\}
+
+Full catalog manifest consumed by A2UI agents and renderers.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="a2uicatalog-catalogid"></a>`catalogId` | `string` |  |
+| <a id="a2uicatalog-components"></a>`components?` | `Record<string, `[`JsonSchema`](#jsonschema)`>` |  |
+| <a id="a2uicatalog-functions"></a>`functions?` | `Record<string, `[`JsonSchema`](#jsonschema)`>` |  |
+| <a id="a2uicatalog-theme"></a>`theme?` | `Record<string, `[`JsonSchema`](#jsonschema)`>` |  |
+
+### `CatalogComponent` \{#catalogcomponent\}
+
+Component schema discovered from an interface annotated with `@a2uiCatalog`.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="catalogcomponent-filepath"></a>`filePath` | `string` |  |
+| <a id="catalogcomponent-interfacename"></a>`interfaceName` | `string` |  |
+| <a id="catalogcomponent-name"></a>`name` | `string` |  |
+| <a id="catalogcomponent-schema"></a>`schema` | [`JsonSchema`](#jsonschema) |  |
+
+### `CatalogFunction` \{#catalogfunction\}
+
+A function discovered in source via `@a2uiFunction`, with its origin path.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="catalogfunction-description"></a>`description?` | `string` |  |
+| <a id="catalogfunction-filepath"></a>`filePath` | `string` |  |
+| <a id="catalogfunction-name"></a>`name` | `string` |  |
+| <a id="catalogfunction-parameters"></a>`parameters` | [`JsonSchema`](#jsonschema) |  |
+| <a id="catalogfunction-returntype"></a>`returnType` | `"string" \| "number" \| "boolean" \| "object" \| "array" \| "any" \| "void"` |  |
+
+### `ExtractCatalogOptions` \{#extractcatalogoptions\}
+
+Source and compiler inputs used when extracting catalog metadata.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="extractcatalogoptions-cwd"></a>`cwd?` | `string` |  |
+| <a id="extractcatalogoptions-sourcefiles"></a>`sourceFiles` | `string[]` |  |
+| <a id="extractcatalogoptions-tsconfig"></a>`tsconfig?` | `string` |  |
+
+### `FunctionDefinition` \{#functiondefinition\}
+
+Serializable definition for a client-side function exposed to an agent.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="functiondefinition-description"></a>`description?` | `string` |  |
+| <a id="functiondefinition-name"></a>`name` | `string` |  |
+| <a id="functiondefinition-parameters"></a>`parameters` | [`JsonSchema`](#jsonschema) |  |
+| <a id="functiondefinition-returntype"></a>`returnType` | `"string" \| "number" \| "boolean" \| "object" \| "array" \| "any" \| "void"` |  |
+
+### `JsonSchema` \{#jsonschema\}
+
+JSON Schema subset emitted for A2UI component props and function arguments.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="jsonschema-ref"></a>`$ref?` | `string` |  |
+| <a id="jsonschema-additionalproperties"></a>`additionalProperties?` | `boolean \| `[`JsonSchema`](#jsonschema) |  |
+| <a id="jsonschema-const"></a>`const?` | `unknown` |  |
+| <a id="jsonschema-default"></a>`default?` | `unknown` |  |
+| <a id="jsonschema-deprecated"></a>`deprecated?` | `boolean` |  |
+| <a id="jsonschema-description"></a>`description?` | `string` |  |
+| <a id="jsonschema-enum"></a>`enum?` | `(string \| number \| boolean)[]` |  |
+| <a id="jsonschema-items"></a>`items?` | [`JsonSchema`](#jsonschema) |  |
+| <a id="jsonschema-oneof"></a>`oneOf?` | [`JsonSchema`](#jsonschema)`[]` |  |
+| <a id="jsonschema-properties"></a>`properties?` | `Record<string, `[`JsonSchema`](#jsonschema)`>` |  |
+| <a id="jsonschema-required"></a>`required?` | `string[]` |  |
+| <a id="jsonschema-type"></a>`type?` | `string` |  |
+| <a id="jsonschema-unevaluatedproperties"></a>`unevaluatedProperties?` | `boolean \| `[`JsonSchema`](#jsonschema) |  |
+
+{/* @api-end */}

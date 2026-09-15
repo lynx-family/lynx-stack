@@ -1,0 +1,433 @@
+{
+  "id": "web-core",
+  "package": "@lynx-js/web-core",
+  "version": "0.26.1",
+  "description": "The Web Platform of Lynx / Lynx for Web",
+  "group": "web",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-core",
+  "exports": [
+    {
+      "name": "CommonEventsAndMethods",
+      "kind": "class",
+      "type": "unknown",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "AttributeReactiveClass",
+      "kind": "interface",
+      "type": "unknown",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "LynxViewElement",
+      "kind": "interface",
+      "type": "unknown",
+      "examples": [
+        "HTML Example\n\nNote that you should declarae the size of lynx-view\n\n```html\n<lynx-view url=\"https://path/to/main.web.bundle\" init-data=\"{}\" global-props=\"{}\" style=\"height:300px;width:300px\">\n</lynx-view>\n```\n\nReact 19 Example\n```jsx\n<lynx-view url={myLynxCardUrl} initData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>\n</lynx-view>\n```"
+      ],
+      "members": [
+        {
+          "name": "injectStyleRules",
+          "optional": true,
+          "type": "string[]",
+          "summary": "[optional] the css rules which will be injected into shadowroot. Each items will be inserted by `insertRule` method.",
+          "kind": "property"
+        },
+        {
+          "name": "napiModulesMap",
+          "type": "NapiModulesMap | undefined",
+          "summary": "[optional] the napiModule which is called in lynx-core. key is module-name, value is esm url.",
+          "kind": "property"
+        },
+        {
+          "name": "nativeModulesMap",
+          "type": "NativeModulesMap | undefined",
+          "summary": "[optional] use to customize NativeModules. key is module-name, value is esm url.\nA `LynxConsoleModule` whose factory returns a Console-like object provides\nthe lexical `console` for this view's background bundles.",
+          "kind": "property"
+        },
+        {
+          "name": "onNapiModulesCall",
+          "type": "NapiModulesCall | undefined",
+          "summary": "[optional] the NapiModule value handler.",
+          "kind": "property"
+        },
+        {
+          "name": "browserConfig",
+          "type": "BrowserConfig | undefined",
+          "kind": "accessor",
+          "summary": ""
+        },
+        {
+          "name": "data",
+          "type": "Cloneable",
+          "kind": "accessor",
+          "summary": ""
+        },
+        {
+          "name": "global-props",
+          "type": "Cloneable",
+          "kind": "accessor",
+          "summary": ""
+        },
+        {
+          "name": "globalProps",
+          "type": "Cloneable",
+          "summary": "[optional] (attribute: \"global-props\") The globalProps value of this Lynx card",
+          "kind": "accessor"
+        },
+        {
+          "name": "init-data",
+          "type": "Cloneable",
+          "kind": "accessor",
+          "summary": ""
+        },
+        {
+          "name": "initData",
+          "type": "Cloneable",
+          "summary": "[optional] (attribute: \"init-data\") The initial data of this Lynx card",
+          "kind": "accessor"
+        },
+        {
+          "name": "initI18nResources",
+          "type": "InitI18nResources",
+          "summary": "[optional] the complete set of i18nResources that on the container side, which can be obtained synchronously by _I18nResourceTranslation",
+          "kind": "accessor"
+        },
+        {
+          "name": "lynxGroupId",
+          "type": "number | undefined",
+          "summary": "[optional] (attribute: \"lynx-group-id\") the background shared context id, which is used to share webworker between different lynx cards",
+          "kind": "accessor"
+        },
+        {
+          "name": "onNativeModulesCall",
+          "type": "NativeModulesCall | undefined",
+          "summary": "[optional] the NativeModules value handler. Arguments will be cached before this property is assigned.",
+          "kind": "accessor"
+        },
+        {
+          "name": "src",
+          "type": "string | undefined",
+          "kind": "accessor",
+          "summary": ""
+        },
+        {
+          "name": "transformREM",
+          "type": "boolean",
+          "kind": "accessor",
+          "summary": ""
+        },
+        {
+          "name": "transformVH",
+          "type": "boolean",
+          "kind": "accessor",
+          "summary": ""
+        },
+        {
+          "name": "transformVW",
+          "type": "boolean",
+          "kind": "accessor",
+          "summary": ""
+        },
+        {
+          "name": "url",
+          "type": "string | undefined",
+          "summary": "[required] (attribute: \"url\") The url of the entry of your Lynx card",
+          "kind": "accessor"
+        },
+        {
+          "name": "attributeChangedCallback",
+          "type": "attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "oldValue",
+              "type": "string | null"
+            },
+            {
+              "name": "newValue",
+              "type": "string | null"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "connectedCallback",
+          "type": "connectedCallback(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "disconnectedCallback",
+          "type": "disconnectedCallback(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "reload",
+          "type": "reload(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "sendDevtoolEvent",
+          "type": "sendDevtoolEvent(eventName: string, data: string): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "eventName",
+              "type": "string"
+            },
+            {
+              "name": "data",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "sendGlobalEvent",
+          "type": "sendGlobalEvent(eventName: string, params: Cloneable[]): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "eventName",
+              "type": "string"
+            },
+            {
+              "name": "params",
+              "type": "Cloneable[]"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "setAttribute",
+          "type": "setAttribute(qualifiedName: string, value: string): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "qualifiedName",
+              "type": "string"
+            },
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "\"false\" value will be omitted\n\n[`HTMLElement.setAttribute`](api:HTMLElement.setAttribute)"
+        },
+        {
+          "name": "updateData",
+          "type": "updateData(data: Cloneable, processorName?: string, callback?: () => void): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "data",
+              "type": "Cloneable"
+            },
+            {
+              "name": "processorName",
+              "type": "string",
+              "optional": true
+            },
+            {
+              "name": "callback",
+              "type": "() => void",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "updateGlobalProps",
+          "type": "updateGlobalProps(data: Cloneable): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "data",
+              "type": "Cloneable"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "updateI18nResources",
+          "type": "updateI18nResources(data: InitI18nResources, options: I18nResourceTranslationOptions): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "data",
+              "type": "InitI18nResources"
+            },
+            {
+              "name": "options",
+              "type": "I18nResourceTranslationOptions"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "WebComponentClass",
+      "kind": "interface",
+      "type": "unknown",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "AttributeChangeHandler",
+      "kind": "typealias",
+      "type": "(newValue: string | null, oldValue: string | null, attributeName: string) => void",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "AttributeReactiveObject",
+      "kind": "typealias",
+      "type": "unknown",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "BindToAttributeProxy",
+      "kind": "typealias",
+      "type": "ReturnType<typeof bindToAttribute>",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "BindToStyleProxy",
+      "kind": "typealias",
+      "type": "ReturnType<typeof bindToStyle>",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "EventStatusChangeHandler",
+      "kind": "typealias",
+      "type": "(enable: boolean, eventName: string) => void",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "StyleChangeHandler",
+      "kind": "typealias",
+      "type": "(newValue: string | null, styleHyphenName: string) => void",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "UseCSSCustomPropertyHandler",
+      "kind": "typealias",
+      "type": "(newValue: string, propertyName: string) => void",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "commonComponentEventSetting",
+      "kind": "variable",
+      "type": "{ bubbles: false; cancelable: true; composed: false }",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "html",
+      "kind": "function",
+      "type": "html(strings: TemplateStringsArray, values: any[]): string",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "layoutChangeTarget",
+      "kind": "variable",
+      "type": "unique symbol",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "registerAttributeHandler",
+      "kind": "function",
+      "type": "registerAttributeHandler(key: string, args_0: boolean): (this: T, target: AttributeChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "registerEventEnableStatusChangeHandler",
+      "kind": "function",
+      "type": "registerEventEnableStatusChangeHandler(key: string): (this: T, target: EventStatusChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "registerStyleChangeHandler",
+      "kind": "function",
+      "type": "registerStyleChangeHandler(key: string): (this: T, target: StyleChangeHandler | undefined, context: ClassMemberDecoratorContext | ClassFieldDecoratorContext<T>) => any",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "scrollContainerDom",
+      "kind": "variable",
+      "type": "unique symbol",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "useScrollEnd",
+      "kind": "variable",
+      "type": "boolean",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "bindSwitchToEventListener",
+      "kind": "function",
+      "type": "bindSwitchToEventListener(this: T, elementGetter: (this: T) => HTMLElement, eventName: string, eventListener: EventListener, options?: AddEventListenerOptions): (this: T, enable: boolean) => void",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "bindToAttribute",
+      "kind": "function",
+      "type": "bindToAttribute(this: T, elementGetter: (this: T) => HTMLElement, attributeName: string, valProcessor?: (value: string | null) => string | null): (this: T, newVal: string | null) => void",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "bindToStyle",
+      "kind": "function",
+      "type": "bindToStyle(this: T, elementGetter: (this: T) => HTMLElement, styleName: string, valProcessor?: (value: string) => string, important?: boolean): (this: T, newVal: string | null) => void",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "boostedQueueMicrotask",
+      "kind": "function",
+      "type": "boostedQueueMicrotask(foo: CallableFunction, that?: any): void",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "Component",
+      "kind": "function",
+      "type": "Component(tag: string, attributeReactiveClassesOptional: (AttributeReactiveClass<T> | undefined)[], template?: string): (target: T, context: ClassDecoratorContext<T>) => T",
+      "from": "@lynx-js/web-elements"
+    },
+    {
+      "name": "genDomGetter",
+      "kind": "function",
+      "type": "genDomGetter(queryableElementGetter: () => ShadowRoot, selector: string): InternalDomGetter<T>",
+      "from": "@lynx-js/web-elements"
+    }
+  ]
+}

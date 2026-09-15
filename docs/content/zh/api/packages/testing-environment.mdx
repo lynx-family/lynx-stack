@@ -1,0 +1,214 @@
+---
+title: '@lynx-js/testing-environment'
+---
+
+# @lynx-js/testing-environment
+
+{/* @api PackageHeader package="testing-environment" */}
+
+<div className="api-pkg-header"><code>@lynx-js/testing-environment</code> <span className="api-pkg-version">v0.3.4</span> · <a href="https://www.npmjs.com/package/@lynx-js/testing-environment" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/testing-library/testing-environment" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/testing-library/testing-environment/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+
+`@lynx-js/testing-environment` 是 [Lynx 规范](https://lynxjs.org/zh/api/engine/element-api) 的纯 JavaScript 实现，主要包括 [Element PAPI](https://lynxjs.org/zh/api/engine/element-api) 和 [双线程模型](https://lynxjs.org/zh/guide/spec#dual-threaded-model)，可在 Node.js 中使用。总体而言，该项目的目标是模拟 Lynx 环境中足够大的一个子集，以满足测试需要。
+
+Element PAPI 的实现基于 jsdom，例如 `__CreateElement` 会返回一个 `LynxElement`，它继承自 jsdom 的 `HTMLElement`。你可以复用 DOM 测试中常用的测试工具，例如 [`@testing-library/dom`](https://github.com/testing-library/dom-testing-library)（用于查询 DOM）和 [`@testing-library/jest-dom`](https://github.com/testing-library/jest-dom)（面向 DOM 的自定义 jest matcher）等。
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/testing-environment" />
+
+## API
+
+{/* @api ApiExports package="testing-environment" */}
+
+## 函数 \{#functions\}
+
+### `initElementTree()` \{#initelementtree\}
+
+```ts
+function initElementTree(): ElementTree
+```
+
+*暂无说明。*
+
+**返回值：** `ElementTree`
+
+### `installLynxTestingEnv()` \{#installlynxtestingenv\}
+
+```ts
+function installLynxTestingEnv(target: typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }, env: LynxEnv): void
+```
+
+将一个 `LynxTestingEnv` 实例及其所需的全局变量安装到目标对象上。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `target` | `typeof globalThis & { lynxEnv?: `[`LynxEnv`](#lynxenv)`; lynxTestingEnv?: `[`LynxTestingEnv`](#lynxtestingenv)`; Node?: () => Node }` |  |
+| `env` | [`LynxEnv`](#lynxenv) |  |
+
+### `uninstallLynxTestingEnv()` \{#uninstalllynxtestingenv\}
+
+```ts
+function uninstallLynxTestingEnv(target: typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }): void
+```
+
+移除由 `installLynxTestingEnv` 安装的全局变量。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `target` | `typeof globalThis & { lynxEnv?: `[`LynxEnv`](#lynxenv)`; lynxTestingEnv?: `[`LynxTestingEnv`](#lynxtestingenv)`; Node?: () => Node }` |  |
+
+## 类 \{#classes\}
+
+### `GlobalEventEmitter` \{#globaleventemitter\}
+
+Lynx 的 `GlobalEventEmitter` 模块，可通过 `lynx.getJSModule('GlobalEventEmitter')` 访问。
+
+框架测试库可以用它触发和监听跨线程事件。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="globaleventemitter-constructor"></a>`constructor` | `constructor(): GlobalEventEmitter` |  |
+| <a id="globaleventemitter-listeners"></a>`listeners` | `Record<string, Function[]>` |  |
+| <a id="globaleventemitter-addlistener"></a>`addListener` | `addListener(eventName: string, listener: Function): void` |  |
+| <a id="globaleventemitter-clear"></a>`clear` | `clear(): void` |  |
+| <a id="globaleventemitter-emit"></a>`emit` | `emit(eventName: string, args: any[]): void` |  |
+| <a id="globaleventemitter-removealllisteners"></a>`removeAllListeners` | `removeAllListeners(eventName?: string): void` |  |
+| <a id="globaleventemitter-removelistener"></a>`removeListener` | `removeListener(eventName: string, listener: Function): void` |  |
+| <a id="globaleventemitter-toggle"></a>`toggle` | `toggle(eventName: string, data: unknown[]): void` |  |
+| <a id="globaleventemitter-trigger"></a>`trigger` | `trigger(eventName: string, params: string \| Record<any, any>): void` |  |
+
+### `LynxTestingEnv` \{#lynxtestingenv\}
+
+[Lynx 规范](https://lynxjs.org/guide/spec.html) 的纯 JavaScript 实现，主要包括 [Element PAPI](https://lynxjs.org/api/engine/element-api) 和 [双线程模型](https://lynxjs.org/guide/spec#dual-threaded-model)，供 Node.js 环境使用。
+
+```ts
+import { LynxTestingEnv } from '@lynx-js/testing-environment';
+import { JSDOM } from 'jsdom';
+
+const lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });
+
+lynxTestingEnv.switchToMainThread();
+// use the main thread Element PAPI
+const page = __CreatePage('0', 0);
+const view = __CreateView(0);
+__AppendElement(page, view);
+
+```
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="lynxtestingenv-constructor"></a>`constructor` | `constructor(env?: LynxEnv): LynxTestingEnv` |  |
+| <a id="lynxtestingenv-env"></a>`env` | [`LynxEnv`](#lynxenv) |  |
+| <a id="lynxtestingenv-clearglobal"></a>`clearGlobal` | `clearGlobal(): void` |  |
+| <a id="lynxtestingenv-injectglobals"></a>`injectGlobals` | `injectGlobals(): void` |  |
+| <a id="lynxtestingenv-reset"></a>`reset` | `reset(): void` |  |
+| <a id="lynxtestingenv-switchtobackgroundthread"></a>`switchToBackgroundThread` | `switchToBackgroundThread(): void` |  |
+| <a id="lynxtestingenv-switchtomainthread"></a>`switchToMainThread` | `switchToMainThread(): void` |  |
+
+#### `LynxTestingEnv.backgroundThread` \{#lynxtestingenv-backgroundthread\}
+
+- **类型：** [`LynxGlobalThis`](#lynxglobalthis)
+
+后台线程的全局对象。
+
+```ts
+import { LynxTestingEnv } from '@lynx-js/testing-environment';
+import { JSDOM } from 'jsdom';
+
+const lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });
+
+lynxTestingEnv.switchToBackgroundThread();
+// use the background thread global object
+globalThis.lynxCoreInject.tt.OnLifecycleEvent(...args);
+```
+
+#### `LynxTestingEnv.mainThread` \{#lynxtestingenv-mainthread\}
+
+- **类型：** [`LynxGlobalThis`](#lynxglobalthis)` & `[`ElementTreeGlobals`](#elementtreeglobals)
+
+主线程的全局对象。
+
+```ts
+import { LynxTestingEnv } from '@lynx-js/testing-environment';
+import { JSDOM } from 'jsdom';
+
+const lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });
+
+lynxTestingEnv.switchToMainThread();
+// use the main thread global object
+const page = globalThis.__CreatePage('0', 0);
+const view = globalThis.__CreateView(0);
+globalThis.__AppendElement(page, view);
+```
+
+## 类型 \{#types\}
+
+### `LynxElement` \{#lynxelement\}
+
+任意 Lynx 元素，例如 `view`、`text`、`image` 等。
+
+[Lynx 规范参考](https://lynxjs.org/living-spec/index.html?ts=1743416098203#element%E2%91%A0)
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="lynxelement-cssid"></a>`cssId?` | `string` | 元素的 cssId |
+| <a id="lynxelement-eventmap"></a>`eventMap?` | `{ [key: string]: any }` | 绑定到该元素的事件映射表。 |
+| <a id="lynxelement-firstchild"></a>`firstChild` | [`LynxElement`](#lynxelement) | 返回第一个子节点。 [MDN 参考](https://developer.mozilla.org/docs/Web/API/Node/firstChild) |
+| <a id="lynxelement-gesture"></a>`gesture?` | `{ [key: string]: any }` | 绑定到该元素的手势。 |
+| <a id="lynxelement-nextsibling"></a>`nextSibling` | [`LynxElement`](#lynxelement) | 返回下一个兄弟节点。 [MDN 参考](https://developer.mozilla.org/docs/Web/API/Node/nextSibling) |
+| <a id="lynxelement-parentnode"></a>`parentNode` | [`LynxElement`](#lynxelement) | 返回父节点。 [MDN 参考](https://developer.mozilla.org/docs/Web/API/Node/parentNode) |
+
+### `LynxEnv` \{#lynxenv\}
+
+用于初始化 `LynxTestingEnv` 的宿主环境。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="lynxenv-window"></a>`window` | `Window & typeof globalThis` |  |
+
+### `LynxGlobalThis` \{#lynxglobalthis\}
+
+Lynx 双线程环境的 `globalThis` 对象。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="lynxglobalthis-globalthis"></a>`globalThis` | [`LynxGlobalThis`](#lynxglobalthis) | globalThis 对象。 |
+
+### `ElementTree` \{#elementtree\}
+
+```ts
+type ElementTree = ReturnType<typeof initElementTree>
+```
+
+Lynx 元素树
+
+### `ElementTreeGlobals` \{#elementtreeglobals\}
+
+```ts
+type ElementTreeGlobals = PickUnderscoreKeys<ElementTree>
+```
+
+Element PAPI 类型
+
+### `FilterUnderscoreKeys` \{#filterunderscorekeys\}
+
+```ts
+type FilterUnderscoreKeys = { [K in keyof T]: K extends `__${string}` ? K : never }[keyof T]
+```
+
+*暂无说明。*
+
+### `PickUnderscoreKeys` \{#pickunderscorekeys\}
+
+```ts
+type PickUnderscoreKeys = Pick<T, FilterUnderscoreKeys<T>>
+```
+
+*暂无说明。*
+
+{/* @api-end */}

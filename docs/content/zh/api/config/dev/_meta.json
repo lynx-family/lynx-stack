@@ -1,0 +1,14 @@
+[
+  {
+    "type": "file",
+    "name": "progress-bar",
+    "label": "dev.progressBar",
+    "tag": "默认值不同"
+  },
+  {
+    "type": "file",
+    "name": "write-to-disk",
+    "label": "dev.writeToDisk",
+    "tag": "默认值不同"
+  }
+]

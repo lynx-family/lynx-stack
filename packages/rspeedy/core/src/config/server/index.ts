@@ -39,6 +39,8 @@ export interface Server {
    *
    * @defaultValue true
    *
+   * @remarks
+   *
    * See {@link https://rsbuild.rs/config/server/compress | Rsbuild - server.compress } for details.
    *
    * @example
@@ -93,6 +95,8 @@ export interface Server {
    *
    * @defaultValue Uses Rsbuild's default CORS options.
    *
+   * @remarks
+   *
    * - Set to an object to enable CORS with the specified options.
    *
    * - Set to `true` to enable CORS with the default options (allows all origins, not recommended).
@@ -136,12 +140,12 @@ export interface Server {
   headers?: Record<string, string | string[]> | undefined
 
   /**
-   * Specify the host that the Rspeedy Server listens to.
+   * Specify the host that the dev server listens to.
    *
    * @defaultValue "0.0.0.0"
    *
    * @remarks
-   * During `rspeedy dev`, if `server.host` is unset, the dev plugin keeps the server bound to the IPv4 wildcard address while resolving dev-server-related URLs and client host settings with a detected non-loopback IPv4 address, such as `192.168.1.50`. If no eligible IPv4 address exists, it binds to the IPv6 wildcard address and uses a detected IPv6 address for URLs. It falls back to an IPv4 loopback URL when no non-loopback IP is available. If you have multiple network interfaces, set `server.host` explicitly to choose the desired address.
+   * In development, if `server.host` is unset, the dev server stays bound to the IPv4 wildcard address while resolving dev-server-related URLs and client host settings with a detected non-loopback IPv4 address, such as `192.168.1.50`. If no eligible IPv4 address exists, it binds to the IPv6 wildcard address and uses a detected IPv6 address for URLs. It falls back to an IPv4 loopback URL when no non-loopback IP is available. If you have multiple network interfaces, set `server.host` explicitly to choose the desired address.
    *
    * @example
    *
@@ -159,7 +163,7 @@ export interface Server {
   host?: string | undefined
 
   /**
-   * Specify the port that the Rspeedy Server listens to.
+   * Specify the port that the dev server listens to.
    *
    * @defaultValue Rsbuild defaults this option to `3000`.
    *
@@ -203,11 +207,13 @@ export interface Server {
   proxy?: ProxyConfig | undefined
 
   /**
-   * When a port is occupied, Rspeedy will automatically increment the port number until an available port is found.
+   * When a port is occupied, the dev server will automatically increment the port number until an available port is found.
    *
    * @defaultValue false
    *
-   * By default, strict port mode is disabled. Set strictPort to true and Rspeedy will throw an exception when the port is occupied.
+   * @remarks
+   *
+   * By default, strict port mode is disabled. Set strictPort to true and the dev server will throw an exception when the port is occupied.
    */
   strictPort?: boolean | undefined
 }

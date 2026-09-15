@@ -1,0 +1,54 @@
+{
+  "BuildOpenUiSystemPromptOptions.summary": {
+    "en": "Options used to customize the generated OpenUI system prompt.",
+    "text": "用于自定义生成的 OpenUI 系统提示词的选项。"
+  },
+  "BuildOpenUiSystemPromptOptions.componentGroups.summary": {
+    "en": "Extra component groups, appended after the built-in groups.",
+    "text": "额外的组件分组，追加在内置分组之后。"
+  },
+  "BuildOpenUiSystemPromptOptions.componentNames.summary": {
+    "en": "Limit built-ins and built-in groups to these names. The root component is\nalways kept, and custom `components` are still appended. In\n`buildOpenUiSystemPrompt`, setting this also switches to the restricted\ndefault rules and, unless `promptOptions` sets them, disables tool calls\nand omits the default examples.",
+    "text": "仅保留指定名称的内置组件和内置分组。根组件始终会被保留，自定义的 `components` 仍会被追加。在\n`buildOpenUiSystemPrompt` 中，设置该选项还会切换到受限的默认规则，并且除非 `promptOptions` 另行设置，否则会禁用工具调用并省略默认示例。"
+  },
+  "BuildOpenUiSystemPromptOptions.components.summary": {
+    "en": "Custom components appended after the built-ins. One with the same name as\na built-in replaces that built-in.",
+    "text": "追加在内置组件之后的自定义组件。与内置组件同名的自定义组件会替换该内置组件。"
+  },
+  "BuildOpenUiSystemPromptOptions.root.summary": {
+    "en": "Override the root component name. Defaults to `'Stack'`.",
+    "text": "覆盖根组件名称。默认为 `'Stack'`。"
+  },
+  "CreateOpenUiPromptLibraryOptions.summary": {
+    "en": "Options for creating the headless OpenUI prompt library.",
+    "text": "创建 headless OpenUI prompt 库的选项。"
+  },
+  "CreateOpenUiPromptLibraryOptions.componentGroups.summary": {
+    "en": "Extra component groups, appended after the built-in groups.",
+    "text": "额外的组件分组，追加在内置分组之后。"
+  },
+  "CreateOpenUiPromptLibraryOptions.componentNames.summary": {
+    "en": "Limit built-ins and built-in groups to these names. The root component is\nalways kept, and custom `components` are still appended. In\n`buildOpenUiSystemPrompt`, setting this also switches to the restricted\ndefault rules and, unless `promptOptions` sets them, disables tool calls\nand omits the default examples.",
+    "text": "仅保留指定名称的内置组件和内置分组。根组件始终会被保留，自定义的 `components` 仍会被追加。在\n`buildOpenUiSystemPrompt` 中，设置该选项还会切换到受限的默认规则，并且除非 `promptOptions` 另行设置，否则会禁用工具调用并省略默认示例。"
+  },
+  "CreateOpenUiPromptLibraryOptions.components.summary": {
+    "en": "Custom components appended after the built-ins. One with the same name as\na built-in replaces that built-in.",
+    "text": "追加在内置组件之后的自定义组件。与内置组件同名的自定义组件会替换该内置组件。"
+  },
+  "CreateOpenUiPromptLibraryOptions.root.summary": {
+    "en": "Override the root component name. Defaults to `'Stack'`.",
+    "text": "覆盖根组件名称。默认为 `'Stack'`。"
+  },
+  "openUiPromptActionPropSchema.summary": {
+    "en": "Shared action prop schema exposed to prompt signatures as `ActionExpression`.",
+    "text": "共享的 action prop schema，在 prompt 签名中以 `ActionExpression` 的形式暴露。"
+  },
+  "buildOpenUiSystemPrompt.summary": {
+    "en": "Build the full OpenUI system prompt for the supplied library and options.",
+    "text": "为给定的组件库和选项构建完整的 OpenUI 系统提示词。"
+  },
+  "createOpenUiPromptLibrary.summary": {
+    "en": "Create a headless OpenUI library with the built-in component schemas.\n\nThis mirrors the ReactLynx library for prompt generation while avoiding any\nruntime dependency on ReactLynx or Lynx UI components.",
+    "text": "使用内置组件 schema 创建 headless OpenUI 库。\n\n它与 ReactLynx 组件库保持一致以用于生成 prompt，同时不会在运行时依赖 ReactLynx 或 Lynx UI 组件。"
+  }
+}

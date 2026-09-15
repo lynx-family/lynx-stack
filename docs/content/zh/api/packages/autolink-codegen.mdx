@@ -1,0 +1,184 @@
+---
+title: '@lynx-js/autolink-codegen'
+---
+
+# @lynx-js/autolink-codegen
+
+{/* @api PackageHeader package="autolink-codegen" */}
+
+<div className="api-pkg-header"><code>@lynx-js/autolink-codegen</code> <span className="api-pkg-version">v0.6.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/autolink-codegen" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/lynx/autolink-codegen" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/lynx/autolink-codegen/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+
+Lynx 库代码生成器。
+
+它会扫描带有 `/** @lynxmodule */` 注解的原生模块声明，读取 `lynx.lib.json`，并生成：
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/autolink-codegen" />
+
+## API
+
+{/* @api ApiExports package="autolink-codegen" */}
+
+## 函数 \{#functions\}
+
+### `generate()` \{#generate\}
+
+```ts
+function generate(options: CodegenOptions): GeneratedFile[]
+```
+
+为库包构建生成的文件内容：JS facade 和平台 spec，以及面向 Node-API 和 Lynxtron 模块的共享 C++ 源码、注册代码、CMake target、iOS wrapper
+和 Lynxtron 注册代码。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `options` | [`CodegenOptions`](#codegenoptions) |  |
+
+**返回值：** [`GeneratedFile`](#generatedfile)`[]`
+
+### `parseNativeModules()` \{#parsenativemodules\}
+
+```ts
+function parseNativeModules(source: string, filename: string): NativeModuleSpec[]
+```
+
+从 TypeScript 声明源码中解析以 `@lynxmodule` 标记的原生模块声明。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `source` | `string` |  |
+| `filename` | `string` |  |
+
+**返回值：** [`NativeModuleSpec`](#nativemodulespec)`[]`
+
+### `runCodegen()` \{#runcodegen\}
+
+```ts
+function runCodegen(options: CodegenOptions): GeneratedFile[]
+```
+
+将生成的文件写入磁盘（跳过已存在且标记为 `overwrite: false` 的文件），并返回生成文件的描述符。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `options` | [`CodegenOptions`](#codegenoptions) |  |
+
+**返回值：** [`GeneratedFile`](#generatedfile)`[]`
+
+## 类型 \{#types\}
+
+### `CodegenOptions` \{#codegenoptions\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="codegenoptions-root"></a>`root?` | `string` |  |
+
+### `GeneratedFile` \{#generatedfile\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="generatedfile-content"></a>`content` | `string` |  |
+| <a id="generatedfile-overwrite"></a>`overwrite?` | `boolean` |  |
+| <a id="generatedfile-path"></a>`path` | `string` |  |
+
+### `LynxtronPlatformManifest` \{#lynxtronplatformmanifest\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="lynxtronplatformmanifest-targets"></a>`targets` | [`LynxtronRuntimeTarget`](#lynxtronruntimetarget)`[]` |  |
+
+### `LynxtronRuntimeTarget` \{#lynxtronruntimetarget\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="lynxtronruntimetarget-appbundles"></a>`appBundles?` | `string[]` |  |
+| <a id="lynxtronruntimetarget-arch"></a>`arch` | `string` |  |
+| <a id="lynxtronruntimetarget-files"></a>`files?` | `string[]` |  |
+| <a id="lynxtronruntimetarget-frameworks"></a>`frameworks?` | `string[]` |  |
+| <a id="lynxtronruntimetarget-os"></a>`os` | `string` |  |
+
+### `NativeModuleMethod` \{#nativemodulemethod\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="nativemodulemethod-name"></a>`name` | `string` |  |
+| <a id="nativemodulemethod-params"></a>`params` | [`NativeModuleParam`](#nativemoduleparam)`[]` |  |
+| <a id="nativemodulemethod-returntype"></a>`returnType` | [`NativeModuleType`](#nativemoduletype) |  |
+| <a id="nativemodulemethod-source"></a>`source?` | `NativeModuleSourceLocation` |  |
+
+### `NativeModuleObjectProperty` \{#nativemoduleobjectproperty\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="nativemoduleobjectproperty-name"></a>`name` | `string` |  |
+| <a id="nativemoduleobjectproperty-optional"></a>`optional?` | `boolean` |  |
+| <a id="nativemoduleobjectproperty-type"></a>`type` | [`NativeModuleType`](#nativemoduletype) |  |
+
+### `NativeModuleObjectSpec` \{#nativemoduleobjectspec\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="nativemoduleobjectspec-name"></a>`name` | `string` |  |
+| <a id="nativemoduleobjectspec-properties"></a>`properties` | [`NativeModuleObjectProperty`](#nativemoduleobjectproperty)`[]` |  |
+
+### `NativeModuleParam` \{#nativemoduleparam\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="nativemoduleparam-name"></a>`name` | `string` |  |
+| <a id="nativemoduleparam-optional"></a>`optional?` | `boolean` |  |
+| <a id="nativemoduleparam-source"></a>`source?` | `NativeModuleSourceLocation` |  |
+| <a id="nativemoduleparam-type"></a>`type` | [`NativeModuleType`](#nativemoduletype) |  |
+
+### `NativeModuleSpec` \{#nativemodulespec\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="nativemodulespec-interfaces"></a>`interfaces?` | [`NativeModuleObjectSpec`](#nativemoduleobjectspec)`[]` |  |
+| <a id="nativemodulespec-methods"></a>`methods` | [`NativeModuleMethod`](#nativemodulemethod)`[]` |  |
+| <a id="nativemodulespec-name"></a>`name` | `string` |  |
+| <a id="nativemodulespec-source"></a>`source?` | `NativeModuleSourceLocation` |  |
+
+### `NativeModuleType` \{#nativemoduletype\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="nativemoduletype-name"></a>`name` | [`NativeModuleTypeName`](#nativemoduletypename) |  |
+| <a id="nativemoduletype-nullable"></a>`nullable` | `boolean` |  |
+| <a id="nativemoduletype-referencename"></a>`referenceName?` | `string` |  |
+
+### `NativeModuleTypeName` \{#nativemoduletypename\}
+
+```ts
+type NativeModuleTypeName = "void" | "string" | "number" | "boolean" | "bigint" | "date" | "symbol" | "array" | "arraybuffer" | "typedarray" | "int8array" | "uint8array" | "int16array" | "uint16array" | "int32array" | "uint32array" | "float32array" | "float64array" | "bigint64array" | "biguint64array" | "dataview" | "object" | "function" | "promise" | "buffer" | "named-object" | "value"
+```
+
+*暂无说明。*
+
+{/* @api-end */}

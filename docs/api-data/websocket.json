@@ -1,0 +1,282 @@
+{
+  "id": "websocket",
+  "package": "@lynx-js/websocket",
+  "version": "0.0.4",
+  "description": "A WebSocket implementation for Lynx",
+  "group": "libraries",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/websocket",
+  "exports": [
+    {
+      "name": "ReadyState",
+      "kind": "enum",
+      "type": "unknown",
+      "summary": "The `ReadyState` describe the state of a `WebSocket` connection.",
+      "members": [
+        {
+          "name": "CLOSED",
+          "type": "3",
+          "summary": "The connection is closed or couldn't be opened.",
+          "kind": "enummember"
+        },
+        {
+          "name": "CLOSING",
+          "type": "2",
+          "summary": "The connection is in the process of closing.",
+          "kind": "enummember"
+        },
+        {
+          "name": "CONNECTING",
+          "type": "0",
+          "summary": "Socket has been created. The connection is not yet open.",
+          "kind": "enummember"
+        },
+        {
+          "name": "OPEN",
+          "type": "1",
+          "summary": "The connection is open and ready to communicate.",
+          "kind": "enummember"
+        }
+      ]
+    },
+    {
+      "name": "WebSocket",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "The implementation of [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)\nfor Lynx.",
+      "remarks": "This only works in environment that has `NativeModules.LynxWebSocketModule`.",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(url: string, protocols?: string | string[], options: { headers?: Record<string, string> }): WebSocket",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "url",
+              "type": "string",
+              "description": "The URL to which to connect; this should be the URL to which the WebSocket server will respond."
+            },
+            {
+              "name": "protocols",
+              "type": "string | string[]",
+              "optional": true,
+              "description": "Either a single protocol string or an array of protocol strings. If it is omitted, an empty array is used by default, i.e. `[]`."
+            },
+            {
+              "name": "options",
+              "type": "{ headers?: Record<string, string> }",
+              "description": "Extra options for Lynx only."
+            }
+          ],
+          "returns": {
+            "type": "WebSocket",
+            "refs": [
+              "WebSocket"
+            ]
+          }
+        },
+        {
+          "name": "CLOSED",
+          "type": "ReadyState",
+          "refs": [
+            "ReadyState"
+          ],
+          "summary": "[`ReadyState.CLOSED`](api:@lynx-js/websocket#ReadyState.CLOSED)",
+          "kind": "property"
+        },
+        {
+          "name": "CLOSING",
+          "type": "ReadyState",
+          "refs": [
+            "ReadyState"
+          ],
+          "summary": "[`ReadyState.CLOSING`](api:@lynx-js/websocket#ReadyState.CLOSING)",
+          "kind": "property"
+        },
+        {
+          "name": "CONNECTING",
+          "type": "ReadyState",
+          "refs": [
+            "ReadyState"
+          ],
+          "summary": "[`ReadyState.CONNECTING`](api:@lynx-js/websocket#ReadyState.CONNECTING)",
+          "kind": "property"
+        },
+        {
+          "name": "OPEN",
+          "type": "ReadyState",
+          "refs": [
+            "ReadyState"
+          ],
+          "summary": "[`ReadyState.OPEN`](api:@lynx-js/websocket#ReadyState.OPEN)",
+          "kind": "property"
+        },
+        {
+          "name": "onclose",
+          "type": "((event: Event<\"close\"> & { code: number; reason: string }) => void) | null",
+          "kind": "accessor",
+          "summary": "onclose is the Web-style callback of [`WebSocket`](api:WebSocket)."
+        },
+        {
+          "name": "onerror",
+          "type": "((event: Event<\"error\"> & { message: string }) => void) | null",
+          "kind": "accessor",
+          "summary": "onerror is the Web-style callback of [`WebSocket`](api:WebSocket)."
+        },
+        {
+          "name": "onmessage",
+          "type": "((event: Event<\"message\"> & { data: string }) => void) | null",
+          "kind": "accessor",
+          "summary": "onmessage is the Web-style callback of [`WebSocket`](api:WebSocket)."
+        },
+        {
+          "name": "onopen",
+          "type": "((event: Event<\"open\">) => void) | null",
+          "kind": "accessor",
+          "summary": "onopen is the Web-style callback of [`WebSocket`](api:WebSocket)."
+        },
+        {
+          "name": "protocol",
+          "type": "string | undefined",
+          "kind": "accessor",
+          "summary": "The WebSocket.protocol read-only property returns the name of the sub-protocol the server selected."
+        },
+        {
+          "name": "readyState",
+          "type": "ReadyState",
+          "kind": "accessor",
+          "summary": "The `readyState` read-only property returns the current state of the [`WebSocket`](api:WebSocket) connection."
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "kind": "accessor",
+          "summary": "The `url` read-only property returns the URL of the [`WebSocket`](api:WebSocket) passed by the constructor."
+        },
+        {
+          "name": "addEventListener",
+          "type": "addEventListener(type: T, callback?: (event: EventMap[T]) => void): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "type",
+              "type": "T",
+              "description": "A case-sensitive string representing the event type to listen for."
+            },
+            {
+              "name": "callback",
+              "type": "(event: EventMap[T]) => void",
+              "refs": [
+                "EventMap"
+              ],
+              "optional": true,
+              "description": "The function that receives a notification. See [`EventMap`](api:@lynx-js/websocket#EventMap) for details of events."
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "The `addEventListener()` method of the `EventTarget` interface sets up a function that will be called whenever the specified event is delivered to the target."
+        },
+        {
+          "name": "close",
+          "type": "close(code?: number, reason?: string): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "code",
+              "type": "number",
+              "optional": true
+            },
+            {
+              "name": "reason",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "The `close()` method closes the [`WebSocket`](api:WebSocket) connection or connection attempt, if any.",
+          "remarks": "If the connection is already [`CLOSED `](api:WebSocket.CLOSED), this method does nothing."
+        },
+        {
+          "name": "ping",
+          "type": "ping(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "The `ping` method send an empty message to the server over the [`WebSocket`](api:WebSocket) connection.",
+          "remarks": "It will throw an exception if you call `ping()` when the connection is in the [`CONNECTING `](api:WebSocket.CONNECTING) state. If you call `ping()` when the connection is in the [`CLOSING `](api:WebSocket.CLOSING) or [`CLOSED `](api:WebSocket.CLOSED) states, it will silently discard the data."
+        },
+        {
+          "name": "removeEventListener",
+          "type": "removeEventListener(type: T, callback: (event: EventMap[T]) => void): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "type",
+              "type": "T",
+              "description": "The type of event to stop listening for."
+            },
+            {
+              "name": "callback",
+              "type": "(event: EventMap[T]) => void",
+              "refs": [
+                "EventMap"
+              ],
+              "description": "The function to remove as an event listener."
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "The `removeEventListener()` method of the `EventTarget` interface removes an event listener from the WebSocket."
+        },
+        {
+          "name": "send",
+          "type": "send(data: string): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "data",
+              "type": "string",
+              "description": "The specified data to be transmitted."
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "The `send` method send the specified data to be transmitted to the server over the [`WebSocket`](api:WebSocket) connection.",
+          "remarks": "It will throw an exception if you call `send()` when the connection is in the [`CONNECTING `](api:WebSocket.CONNECTING) state. If you call `send()` when the connection is in the [`CLOSING `](api:WebSocket.CLOSING) or [`CLOSED `](api:WebSocket.CLOSED) states, it will silently discard the data."
+        }
+      ]
+    },
+    {
+      "name": "Event",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "An implementation of `Event` interface, that wraps a given event object.",
+      "members": [
+        {
+          "name": "type",
+          "type": "T",
+          "summary": "The type os this event.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "EventMap",
+      "kind": "typealias",
+      "type": "unknown",
+      "summary": "The `EventMap` describe the events that [`WebSocket`](api:@lynx-js/websocket#WebSocket) may fire."
+    },
+    {
+      "name": "default",
+      "kind": "reference",
+      "type": "unknown"
+    }
+  ]
+}

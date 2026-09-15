@@ -14,6 +14,7 @@ import { createDebugMetadataMiddleware } from './middleware.js'
 import type { CompilerHandle } from './middleware.js'
 
 const PLUGIN_NAME = 'lynx:debug-metadata'
+const S_APPLIED = Symbol.for('lynx:debug-metadata')
 
 function isDebugMode(): boolean {
   const debug = process.env['DEBUG']
@@ -127,10 +128,12 @@ interface LynxTemplatePluginExposure {
 }
 
 /**
- * Register `debug-metadata.json` emission for every Lynx template build
- * and serve sub-field queries via a connect-style dev-server middleware.
+ * Register `debug-metadata.json` emission for Lynx template builds (`lynx`
+ * and `lynx-*` environments; skipped in local production builds and removed
+ * from non-development output unless `DEBUG` is set) and serve sub-field
+ * queries via a connect-style dev-server middleware.
  *
- * Auto-registered by Rspeedy core.
+ * Registered by `pluginLynx` from `@lynx-js/rsbuild-plugin`.
  *
  * The dev-server middleware exposes these endpoints (relative to each
  * entry's intermediate dir):
@@ -158,6 +161,9 @@ export function pluginLynxDebugMetadata(): RsbuildPlugin {
   return {
     name: PLUGIN_NAME,
     setup(api) {
+      if (api.useExposed(S_APPLIED)) return
+      api.expose(S_APPLIED, true)
+
       const compilerHandle: CompilerHandle = { compiler: null }
 
       api.onAfterCreateCompiler(({ compiler }) => {

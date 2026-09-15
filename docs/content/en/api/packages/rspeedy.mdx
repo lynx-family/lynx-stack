@@ -1,0 +1,511 @@
+---
+title: '@lynx-js/rspeedy'
+---
+
+# @lynx-js/rspeedy
+
+The programmatic API of `@lynx-js/rspeedy`: load a config, create an Rspeedy instance and drive builds from a script instead of the CLI.
+
+{/* @api PackageHeader package="rspeedy" */}
+
+<div className="api-pkg-header"><code>@lynx-js/rspeedy</code> <span className="api-pkg-version">v0.17.2</span> · <a href="https://www.npmjs.com/package/@lynx-js/rspeedy" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/core" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/core/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+```ts
+import { createRspeedy, loadConfig } from '@lynx-js/rspeedy'
+
+const { content: config } = await loadConfig({ cwd: process.cwd() })
+const rspeedy = await createRspeedy({ rspeedyConfig: config })
+await rspeedy.build()
+```
+
+{/* @api ApiExports package="rspeedy" exclude="Config,Dev,DevClient,Output,Performance,Resolve,Server,Source,Tools,Filename,BundleFilenameContext,BundleFilename,CssModules,CssModuleLocalsConvention,Minify,SourceMap,DistPath,ChunkSplit,ChunkSplitBySize,ChunkSplitCustom,ConsoleType,TransformImport,Entry,EntryDescription,CssLoaderOptions,CssExtractRspackPluginOptions,CssExtractRspackLoaderOptions,Profile" */}
+
+## Functions \{#functions\}
+
+### `createRspeedy()` \{#createrspeedy\}
+
+```ts
+function createRspeedy(options: CreateRspeedyOptions): Promise<RspeedyInstance>
+```
+
+The `createRspeedy` method can let you create a Rspeedy instance and you can customize the build or development process in Node.js Runtime.
+
+```ts
+import { createRspeedy } from '@lynx-js/rspeedy'
+
+void async function () {
+  const rspeedy = await createRspeedy({})
+  await rspeedy.build()
+}()
+```
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | [`CreateRspeedyOptions`](#createrspeedyoptions) | [`CreateRspeedyOptions`](#createrspeedyoptions) |
+
+**Returns:** `Promise<`[`RspeedyInstance`](#rspeedyinstance)`>` — - Rspeedy instance.
+
+### `defineConfig()` \{#defineconfig\}
+
+```ts
+function defineConfig(config: Config): Config
+function defineConfig(config: (params: ConfigParams) => Config): (params: ConfigParams) => Config
+function defineConfig(config: Promise<Config>): Promise<Config>
+function defineConfig(config: (params: ConfigParams) => Promise<Config>): (params: ConfigParams) => Promise<Config>
+```
+
+The `defineConfig` method is a helper function used to get TypeScript intellisense.
+
+Use `defineConfig` in `lynx.config.ts`:
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  // autocompletion works here!
+})
+```
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `config` | `Config` | The config of Rspeedy. |
+
+**Returns:** `Config` — - The identical config as the input config.
+
+### `loadConfig()` \{#loadconfig\}
+
+```ts
+function loadConfig(loadConfigOptions: LoadConfigOptions): Promise<LoadConfigResult>
+```
+
+Load the build config by the config path.
+
+```ts
+import { loadConfig } from '@lynx-js/rspeedy'
+
+void async function () {
+  const config = await loadConfig({ configPath: './lynx.config.js' })
+  console.log(config);
+}()
+```
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `loadConfigOptions` | [`LoadConfigOptions`](#loadconfigoptions) | the options of `loadConfig` method. |
+
+**Returns:** `Promise<`[`LoadConfigResult`](#loadconfigresult)`>` — Build config.
+
+### `mergeRspeedyConfig()` \{#mergerspeedyconfig\}
+
+```ts
+function mergeRspeedyConfig(configs: Config[]): Config
+```
+
+Merge multiple Rspeedy configuration objects.
+
+This is actually an alias of [mergeRsbuildConfig](https://rsbuild.rs/api/javascript-api/core#mergersbuildconfig).
+
+```ts
+import { mergeRspeedyConfig } from '@lynx-js/rspeedy';
+
+const config1 = {
+  dev: {
+    writeToDisk: false,
+  },
+};
+const config2 = {
+  dev: {
+    writeToDisk: true,
+  },
+};
+
+const mergedConfig = mergeRspeedyConfig(config1, config2);
+
+console.log(mergedConfig); // { dev: { writeToDisk: true } }
+```
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `configs` | `Config[]` | The Rspeedy configuration objects to merge. |
+
+**Returns:** `Config` — The merged Rspeedy configuration object.
+
+## Constants \{#constants\}
+
+### `rspackVersion` \{#rspackversion\}
+
+```ts
+const rspackVersion: string
+```
+
+*No description yet.*
+
+### `version` \{#version\}
+
+```ts
+const version: string
+```
+
+*No description yet.*
+
+## Types \{#types\}
+
+### `BuildCache` <span className="api-badge api-badge-beta">Beta</span> \{#buildcache\}
+
+`Performance.buildCache`
+
+| Members | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="buildcache-cachedirectory"></a>`cacheDirectory?` <span className="api-badge api-badge-beta">Beta</span> | `string` | `'node_modules/.cache'` | The output directory of the cache files. |
+
+#### `BuildCache.buildDependencies?` <span className="api-badge api-badge-beta">Beta</span> \{#buildcache-builddependencies\}
+
+- **Type:** `string[]`
+- **Default:** `['package.json', 'tsconfig.json' (or source.tsconfigPath), '.env', '.env.*', 'tailwindcss.config.*']`; when using the Rspeedy CLI with `performance.buildCache` enabled, the loaded `lynx.config.*` file is also added.
+
+An array of files containing build dependencies.
+Rspack will use the hash of each of these files to invalidate the persistent cache.
+
+Add `postcss.config.js` to the build dependencies.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    buildCache: {
+      buildDependencies: ['postcss.config.js'],
+    },
+  },
+})
+```
+
+#### `BuildCache.cacheDigest?` <span className="api-badge api-badge-beta">Beta</span> \{#buildcache-cachedigest\}
+
+- **Type:** `(string | undefined)[]`
+- **Default:** `undefined`
+
+Add additional cache digests, the previous build cache will be invalidated
+when any value in the array changes.
+
+Add `process.env.SOME_ENV` to the cache digest.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    buildCache: {
+      cacheDigest: [process.env.SOME_ENV],
+    },
+  },
+})
+```
+
+### `ConfigParams` \{#configparams\}
+
+Parameters for the function exported from `lynx.config.js`.
+
+#### `ConfigParams.command` \{#configparams-command\}
+
+- **Type:** `string & Record<never, never> | "build" | "dev" | "inspect" | "preview"`
+- **Default:** When `loadConfig` evaluates a config function, this value is `process.argv[2] ?? 'build'`
+
+The CLI command of Rspeedy.
+
+Possible values:
+
+- `'build'`
+
+- `'dev'`
+
+- `'inspect'`
+
+- `'preview'`
+
+#### `ConfigParams.env` \{#configparams-env\}
+
+- **Type:** `"production" | "development" | "test" | string & Record<never, never>`
+- **Default:** When `loadConfig` evaluates a config function, this value is `process.env.NODE_ENV ?? 'production'`
+
+The value of `process.env['NODE_ENV']`
+
+Common values include (non-exhaustive):
+- `'production'`
+
+- `'development'`
+
+- `'test'`
+
+### `CreateRspeedyOptions` \{#createrspeedyoptions\}
+
+The options of `createRspeedy` method.
+
+| Members | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="createrspeedyoptions-cwd"></a>`cwd?` | `string` |  | The root path of the current build. |
+| <a id="createrspeedyoptions-environment"></a>`environment?` | `string[]` | `[]` | Only build specified environments. For example, passing `['lynx']` will only build the `lynx` environment. If not specified or passing an empty array, all environments will be built. |
+| <a id="createrspeedyoptions-loadenv"></a>`loadEnv?` | `boolean \| LoadEnvOptions` | `true` | Rspeedy automatically loads the .env file by default, utilizing the [Rsbuild API](https://rsbuild.rs/api/javascript-api/core#load-env-variables). You can use the environment variables defined in the .env file within your code by accessing them via `import.meta.env.FOO` or `process.env.Foo`. |
+| <a id="createrspeedyoptions-rspeedyconfig"></a>`rspeedyConfig?` | `Config` |  | The config of Rspeedy. |
+
+#### `CreateRspeedyOptions.callerName?` \{#createrspeedyoptions-callername\}
+
+- **Type:** `string`
+- **Default:** `'rspeedy'`
+
+The name of the framework or tool that is currently invoking Rsbuild.
+This allows plugins to tailor their behavior based on the calling context.
+
+Rsbuild plugins can access this value via `api.context.callerName`.
+
+```js
+export function myPlugin() {
+  return {
+    name: 'my-plugin',
+    setup(api) {
+      // Log the name of the tool invoking Rsbuild
+      console.log(`Called by: ${api.context.callerName}`);
+
+      // Conditionally apply plugin logic based on caller
+      if (api.context.callerName === 'rspeedy') {
+        api.modifyRsbuildConfig((config) => {
+          // Apply rspeedy-specific config changes
+          return config;
+        });
+      } else if (api.context.callerName === 'rslib') {
+        api.modifyRsbuildConfig((config) => {
+          // Apply rslib-specific config changes
+          return config;
+        });
+      }
+    }
+  };
+}
+```
+
+### `CssExtract` \{#cssextract\}
+
+`Tools.cssExtract`
+
+| Members | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="cssextract-loaderoptions"></a>`loaderOptions?` | `CssExtractRspackLoaderOptions` | `undefined` | [`LoaderOptions`](/api/packages/css-extract-webpack-plugin#loaderoptions) |
+| <a id="cssextract-pluginoptions"></a>`pluginOptions?` | `CssExtractRspackPluginOptions` | `undefined` | [`CssExtractRspackPluginOptions`](/api/packages/css-extract-webpack-plugin#cssextractrspackpluginoptions) |
+
+### `CssLoader` \{#cssloader\}
+
+`Tools.cssLoader`
+
+#### `CssLoader.importLoaders?` \{#cssloader-importloaders\}
+
+- **Type:** `0 | 1 | 2`
+- **Default:** `1` when compiling CSS files and `2` when compiling Sass or Less files
+
+The option `importLoaders` allows you to configure how many loaders before `css-loader` should be applied to `@imported` resources and CSS modules imports.
+
+See [css-loader#import-loaders](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#importloaders) for details.
+
+#### `CssLoader.modules?` \{#cssloader-modules\}
+
+- **Type:** `boolean | "local" | "global" | "pure" | "icss" | `[`CssLoaderModules`](#cssloadermodules)
+- **Default:** Enables CSS Modules with automatic `*.module.*` detection, camelCase exports, `namedExport: false`, and `localIdentName` inherited from `output.cssModules.localIdentName`.
+
+The [`cssLoader.modules`](#cssloadermodules) option enables/disables the CSS Modules specification and setup basic behavior.
+
+Using `false` value to increase performance because we avoid parsing CSS Modules features, it will be useful for developers who use vanilla css or use other technologies.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  tools: {
+    cssLoader: {
+      modules: false,
+    },
+  },
+})
+```
+
+Using `() => true` value to enable CSS Modules for all files.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  tools: {
+    cssLoader: {
+      modules: () => true,
+    },
+  },
+})
+```
+
+Using object value to enable CSS Modules based-on [`CssLoaderModules.auto`](#cssloadermodules-auto) option and setup more configurations about CSS Modules.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  tools: {
+    cssLoader: {
+      modules: {
+        namedExport: true,
+      },
+    },
+  },
+})
+```
+
+### `CssLoaderModules` \{#cssloadermodules\}
+
+[`CssLoader.modules`](#cssloader-modules)
+
+| Members | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="cssloadermodules-auto"></a>`auto?` | `boolean \| RegExp \| ((filename: string) => boolean)` | `true` | `CssModules.auto` |
+| <a id="cssloadermodules-exportlocalsconvention"></a>`exportLocalsConvention?` | `CssModuleLocalsConvention` | `'camelCase'` | `CssModules.exportLocalsConvention` |
+| <a id="cssloadermodules-localidentname"></a>`localIdentName?` | `string` | `'[local]-[hash:base64:6]'` | `CssModules.localIdentName` |
+
+#### `CssLoaderModules.namedExport?` \{#cssloadermodules-namedexport\}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Enables/disables ES modules named export for locals.
+
+- `style.css`
+
+```css
+.foo-baz {
+  color: red;
+}
+.bar {
+  color: blue;
+}
+.default {
+  color: green;
+}
+```
+
+- `index.js`
+
+```js
+import * as styles from "./styles.css";
+
+// If using `exportLocalsConvention: "asIs"`:
+console.log(styles["foo-baz"], styles.bar);
+
+// If using `exportLocalsConvention: "camelCaseOnly"`:
+console.log(styles.fooBaz, styles.bar);
+
+// For the `default` class name
+console.log(styles["_default"]);
+```
+
+### `Decorators` \{#decorators\}
+
+`Source.decorators`
+
+#### `Decorators.version?` \{#decorators-version\}
+
+- **Type:** `"legacy" | "2022-03"`
+- **Default:** `'2022-03'`
+
+Specify the decorator syntax version to be used.
+
+If you want to know the differences between different decorators versions, you can refer to: [How does this proposal compare to other versions of decorators?](https://github.com/tc39/proposal-decorators?tab=readme-ov-file#how-does-this-proposal-compare-to-other-versions-of-decorators)
+
+`'2022-03'` corresponds to the Stage 3 decorator proposal, equivalent to the decorator syntax supported by TypeScript 5.0 by default.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  source: {
+    decorators: { version: '2022-03' },
+  },
+})
+```
+
+`'legacy'` corresponds to TypeScript's `experimentalDecorators: true`.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  source: {
+    decorators: { version: 'legacy' },
+  },
+})
+```
+
+### `ExposedAPI` \{#exposedapi\}
+
+The exposed API of Rspeedy. Can be used in Rsbuild plugin with [api.useExposed](https://rsbuild.rs/plugins/dev/core#apiuseexposed).
+
+```ts
+import type { ExposedAPI } from '@lynx-js/rspeedy'
+const RsbuildPlugin = {
+  name: 'my-rsbuild-plugin',
+  pre: ['lynx:rsbuild:plugin-api'],
+  setup(api) {
+    const rspeedyAPI = api.useExposed<ExposedAPI>(Symbol.for('rspeedy.api'))
+  },
+}
+```
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="exposedapi-config"></a>`config` | `Config` | The user config. |
+| <a id="exposedapi-debug"></a>`debug` | `(message: string \| (() => string)) => void` | Print debug logs. |
+| <a id="exposedapi-entries"></a>`entries?` | `RsbuildEntry` | Entry points of self-defined environments. Rspeedy no longer sets this field. |
+| <a id="exposedapi-exit"></a>`exit` | `(code?: number) => void \| Promise<void>` | Exit the process. |
+| <a id="exposedapi-logger"></a>`logger` | `Logger` | Get the Rspeedy logger. |
+| <a id="exposedapi-version"></a>`version` | `string` | The version of Rspeedy. |
+
+### `LoadConfigOptions` \{#loadconfigoptions\}
+
+The options of loadConfig.
+
+| Members | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="loadconfigoptions-configpath"></a>`configPath?` | `string` | Automatically resolves `lynx.config.ts`, `lynx.config.js`, `lynx.config.mts`, or `lynx.config.mjs` from `cwd` | The config file path to load. |
+| <a id="loadconfigoptions-cwd"></a>`cwd?` | `string` | `process.cwd()` | The working directory used to resolve the config path. |
+
+### `LoadConfigResult` \{#loadconfigresult\}
+
+The result of [`loadConfig`](#loadconfig).
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="loadconfigresult-configpath"></a>`configPath` | `string` | The configuration path that has been loaded. |
+
+#### `LoadConfigResult.content` \{#loadconfigresult-content\}
+
+- **Type:** `Config`
+
+The configuration object that exported from the configuration file.
+
+The returned object has already been validated.
+
+### `RsdoctorRspackPluginOptions` \{#rsdoctorrspackpluginoptions\}
+
+Simplified options type for `tools.rsdoctor`.
+
+Keep this type free of deeply nested/intersection utility types to ensure
+typia can generate validators from `Config`.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="rsdoctorrspackpluginoptions-linter"></a>`linter?` | `{ extends?: unknown[]; level?: "Ignore" \| "Warn" \| "Error"; rules?: Record<string, unknown> }` |  |
+
+### `RspeedyInstance` \{#rspeedyinstance\}
+
+```ts
+type RspeedyInstance = RsbuildInstance & { getRspeedyConfig: any }
+```
+
+The instance of Rspeedy.
+
+{/* @api-end */}

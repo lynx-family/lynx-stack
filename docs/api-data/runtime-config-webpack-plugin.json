@@ -1,0 +1,60 @@
+{
+  "id": "runtime-config-webpack-plugin",
+  "package": "@lynx-js/runtime-config-webpack-plugin",
+  "version": "0.0.1",
+  "description": "Inject runtime configuration into the page-scoped Lynx runtime.",
+  "group": "internals",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/runtime-config-webpack-plugin",
+  "exports": [
+    {
+      "name": "RuntimeConfigWebpackPlugin",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "Merges this bundle's runtime configuration into\n`lynx.__runtime_configs__`, then shallow-freezes it.\n\nApply it to the host bundle only. Lazy and external bundles consume the\nconfiguration injected by the host.",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(options: Readonly<RuntimeConfigWebpackPluginOptions>): RuntimeConfigWebpackPlugin",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "options",
+              "type": "Readonly<RuntimeConfigWebpackPluginOptions>",
+              "refs": [
+                "RuntimeConfigWebpackPluginOptions"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "RuntimeConfigWebpackPlugin",
+            "refs": [
+              "RuntimeConfigWebpackPlugin"
+            ]
+          }
+        },
+        {
+          "name": "apply",
+          "type": "apply(compiler: Compiler): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "compiler",
+              "type": "Compiler",
+              "description": "the webpack compiler"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "The entry point of a webpack plugin."
+        }
+      ]
+    },
+    {
+      "name": "RuntimeConfigWebpackPluginOptions",
+      "kind": "typealias",
+      "type": "Record<string, unknown>",
+      "summary": "Page-scoped runtime configuration contributed by a bundle.\n\nThe plugin deliberately leaves configuration keys and values to the DSL\nthat consumes them."
+    }
+  ]
+}

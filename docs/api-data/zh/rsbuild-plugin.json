@@ -1,0 +1,154 @@
+{
+  "BundleFilenameContext.summary": {
+    "en": "The context passed to the [`LynxFilename.bundle`](api:LynxFilename.bundle) function.",
+    "text": "传递给 [`LynxFilename.bundle`](api:LynxFilename.bundle) 函数的上下文。"
+  },
+  "BundleFilenameContext.entryName.summary": {
+    "en": "The name of the entry.",
+    "text": "入口名称。"
+  },
+  "BundleFilenameContext.entryName.remarks": {
+    "en": "It is `undefined` for lazy bundles, since a lazy bundle name is resolved\nper async chunk instead of per entry.",
+    "text": "对于 lazy bundle，该值为 `undefined`，因为 lazy bundle 的名称是按异步 chunk\n而非按入口解析的。"
+  },
+  "BundleFilenameContext.lazyBundle.summary": {
+    "en": "Whether the filename is being resolved for a lazy bundle (async chunk)\ninstead of the main bundle of an entry.",
+    "text": "是否正在为 lazy bundle（异步 chunk）解析文件名，而非为入口的主 bundle 解析。"
+  },
+  "BundleFilenameContext.platform.summary": {
+    "en": "The name of the Rsbuild environment.",
+    "text": "Rsbuild environment 的名称。"
+  },
+  "LynxConfig.summary": {
+    "en": "The Lynx config that `pluginLynx` exposes to other plugins.",
+    "text": "`pluginLynx` 暴露给其他插件的 Lynx 配置。"
+  },
+  "LynxConfig.remarks": {
+    "en": "The data mirrors [`LynxPluginOptions`](api:LynxPluginOptions), so a plugin reads\n`config.output.filename` the same way it reads `output.filename` from\n`api.getRsbuildConfig()`. Values that depend on the entry being built are\nderived by the methods, which travel with the data so that the plugin that\nbuilt the config is always the one that resolves it.",
+    "text": "该数据与 [`LynxPluginOptions`](api:LynxPluginOptions) 保持一致，因此插件读取\n`config.output.filename` 的方式与从\n`api.getRsbuildConfig()` 读取 `output.filename` 相同。依赖于当前构建入口的值由方法推导得出，这些方法随数据一起传递，从而确保始终由构建该配置的插件来解析这些值。"
+  },
+  "LynxConfig.output.summary": {
+    "en": "The build outputs.",
+    "text": "构建产物。"
+  },
+  "LynxConfig.performance.summary": {
+    "en": "The performance options.",
+    "text": "性能选项。"
+  },
+  "LynxConfig.resolveBundleFilename.summary": {
+    "en": "Resolve the name of the bundle file of an entry.",
+    "text": "解析入口的 bundle 文件名。"
+  },
+  "LynxConfig.resolveBundleFilename.params.context": {
+    "en": "The entry to resolve the name for.",
+    "text": "要解析文件名的入口。"
+  },
+  "LynxConfig.resolveIntermediateDir.summary": {
+    "en": "Resolve the directory of the intermediate files.",
+    "text": "解析中间产物所在的目录。"
+  },
+  "LynxConfig.resolveIntermediateDir.remarks": {
+    "en": "A Lynx bundle is encoded from per-thread JS, CSS and HMR outputs. They are\nemitted into this directory, per entry, instead of next to the bundle.",
+    "text": "Lynx bundle 由各线程的 JS、CSS 和 HMR 产物编码而成。这些产物按入口输出到该目录中，而不是与 bundle 放在一起。"
+  },
+  "LynxConfig.resolveIntermediateDir.params.context": {
+    "en": "The entry to resolve the directory for. Without an entry\nname, the directory that holds every entry's is returned.",
+    "text": "要解析目录的入口。未提供入口名称时，返回包含所有入口目录的父目录。"
+  },
+  "LynxConfig.resolveLazyBundleFilename.summary": {
+    "en": "Resolve the name of the lazy bundle files.",
+    "text": "解析 lazy bundle 文件的名称。"
+  },
+  "LynxConfig.resolveLazyBundleFilename.remarks": {
+    "en": "There is no entry name to resolve `[name]` with, so the placeholder is\nkept for `LynxTemplatePlugin` to fill in per async chunk.",
+    "text": "此时没有可用于解析 `[name]` 的入口名称，因此保留该占位符，由 `LynxTemplatePlugin` 按异步 chunk 填充。"
+  },
+  "LynxConfig.resolveLazyBundleFilename.params.context": {
+    "en": "The environment to resolve the name for.",
+    "text": "要解析文件名的 environment。"
+  },
+  "LynxFilename.summary": {
+    "en": "The names of the files emitted by the Lynx build engine.",
+    "text": "Lynx 构建引擎输出的文件名称。"
+  },
+  "LynxFilename.bundle.summary": {
+    "en": "The name of the bundle files.",
+    "text": "bundle 文件的名称。"
+  },
+  "LynxFilename.bundle.remarks": {
+    "en": "The following placeholders are supported:\n\n- `[name]`: the name of the entry.\n- `[platform]`: the name of the Rsbuild environment.\n- `[contenthash]`: the hash of the bundle content.",
+    "text": "支持以下占位符：\n\n- `[name]`：入口名称。\n- `[platform]`：Rsbuild environment 的名称。\n- `[contenthash]`：bundle 内容的 hash。"
+  },
+  "LynxMinify.summary": {
+    "en": "The minifier options of the Lynx threads.",
+    "text": "Lynx 各线程的压缩器选项。"
+  },
+  "LynxMinify.remarks": {
+    "en": "Lynx emits one bundle per thread, and each thread may need different\nminifier settings. These are merged on top of the Rsbuild\n`output.minify.jsOptions` and applied to that thread only.",
+    "text": "Lynx 为每个线程输出一个 bundle，且各线程可能需要不同的压缩器配置。这些选项会合并到 Rsbuild\n`output.minify.jsOptions` 之上，并仅应用于对应线程。"
+  },
+  "LynxMinify.backgroundOptions.summary": {
+    "en": "The minifier options of the background thread.",
+    "text": "后台线程的压缩器选项。"
+  },
+  "LynxMinify.mainThreadOptions.summary": {
+    "en": "The minifier options of the main thread.",
+    "text": "主线程的压缩器选项。"
+  },
+  "LynxOutput.summary": {
+    "en": "The build outputs of the Lynx build engine.",
+    "text": "Lynx 构建引擎的构建产物。"
+  },
+  "LynxOutput.filename.summary": {
+    "en": "The names of the emitted files.",
+    "text": "输出文件的名称。"
+  },
+  "LynxOutput.minify.summary": {
+    "en": "The per-thread minifier options.",
+    "text": "按线程配置的压缩器选项。"
+  },
+  "LynxPerformance.summary": {
+    "en": "The performance options of the Lynx build engine.",
+    "text": "Lynx 构建引擎的性能选项。"
+  },
+  "LynxPerformance.profile.summary": {
+    "en": "Whether to capture timing information in Lynx runtime integrations such as\nReactLynx.",
+    "text": "是否在 Lynx 运行时集成（如\nReactLynx）中采集耗时信息。"
+  },
+  "LynxPerformance.profile.remarks": {
+    "en": "A framework includes runtime information using `console.profile` when this\nis enabled.",
+    "text": "启用后，框架会使用 `console.profile`\n记录运行时信息。"
+  },
+  "LynxPluginOptions.summary": {
+    "en": "The options of `pluginLynx`.",
+    "text": "`pluginLynx` 的选项。"
+  },
+  "LynxPluginOptions.output.summary": {
+    "en": "The build outputs.",
+    "text": "构建产物。"
+  },
+  "LynxPluginOptions.performance.summary": {
+    "en": "The performance options.",
+    "text": "性能选项。"
+  },
+  "BundleFilename.summary": {
+    "en": "The name of the bundle files.",
+    "text": "bundle 文件的名称。"
+  },
+  "PLUGIN_LYNX_NAME.summary": {
+    "en": "The name of the plugin that marks `pluginLynx` as applied. Use it with\n`api.isPluginExists` to tell whether the Lynx build engine is already there.",
+    "text": "用于标记 `pluginLynx` 已应用的插件名称。可配合\n`api.isPluginExists` 判断 Lynx 构建引擎是否已存在。"
+  },
+  "PLUGIN_LYNX_NAME.default": {
+    "en": "'lynx:rsbuild'",
+    "text": "'lynx:rsbuild'"
+  },
+  "isPluginLynxRegistered.summary": {
+    "en": "Whether the Lynx build engine is already registered.",
+    "text": "Lynx 构建引擎是否已注册。"
+  },
+  "isPluginLynxRegistered.remarks": {
+    "en": "The engine is a global one. `isPluginExists` without an environment only\nreports the global plugins, so it misses an engine a caller — `rslib`, for\none — registered on an environment instead.",
+    "text": "该引擎是全局的。不传 environment 调用 `isPluginExists` 时只会报告全局插件，因此无法检测到调用方（例如 `rslib`）注册在某个 environment 上的引擎。"
+  }
+}

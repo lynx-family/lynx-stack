@@ -1,0 +1,752 @@
+---
+title: '@lynx-js/react-rsbuild-plugin'
+---
+
+# @lynx-js/react-rsbuild-plugin
+
+{/* @api PackageHeader package="react-rsbuild-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/react-rsbuild-plugin</code> <span className="api-pkg-version">v0.20.2</span> · <a href="https://www.npmjs.com/package/@lynx-js/react-rsbuild-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-react" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-react/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+The ReactLynx DSL plugin. It compiles JSX into the dual-thread output of ReactLynx, wires up the runtime and enables Fast Refresh in development. It registers [`pluginLynx`](/api/packages/rsbuild-plugin) automatically when the build engine is not already there.
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/react-rsbuild-plugin -D" />
+
+## Usage
+
+With Rsbuild, register it in `rsbuild.config.ts`:
+
+```ts title="rsbuild.config.ts"
+import { defineConfig } from '@rsbuild/core'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  environments: {
+    lynx: {},
+  },
+  plugins: [pluginReactLynx()],
+})
+```
+
+With Rspeedy, set it in `lynx.config.ts`:
+
+```ts title="lynx.config.ts"
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [pluginReactLynx()],
+})
+```
+
+## Options
+
+{/* @api ApiOptions package="react-rsbuild-plugin" type="PluginReactLynxOptions" */}
+
+<a id="pluginreactlynxoptions"></a>
+
+### `compat` \{#compat\}
+
+- **Type:** `Partial<`[`CompatVisitorConfig`](#compatvisitorconfig)`> & { disableCreateSelectorQueryIncompatibleWarning?: boolean }`
+- **Default:** `undefined`
+
+The `compat` option controls compatibilities with legacy ReactLynx.
+
+These options should only be used for migrating from ReactLynx2.0 or
+targeting legacy ReactLynx3 runtimes.
+
+### `customCSSInheritanceList` \{#customcssinheritancelist\}
+
+- **Type:** `string[]`
+- **Default:** `undefined`
+
+When [`PluginReactLynxOptions.enableCSSInheritance`](#enablecssinheritance) is enabled, `customCSSInheritanceList` can control which properties are inheritable, not just the default ones.
+
+By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.
+
+```ts
+// rsbuild.config.ts
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
+
+export default defineConfig({
+ environments: { lynx: {} },
+ plugins: [
+   pluginReactLynx({
+     enableCSSInheritance: true,
+     customCSSInheritanceList: ['direction', 'overflow']
+   }),
+ ],
+})
+```
+
+### `debugInfoOutside` \{#debuginfooutside\}
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+debugInfoOutside controls whether the debug info is placed outside the template.
+
+This is recommended to be set to true to reduce template size.
+
+### `enableCSSInheritance` \{#enablecssinheritance\}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+enableCSSInheritance enables the default inheritance properties.
+
+The following properties are inherited by default:
+
+- `direction`
+
+- `color`
+
+- `font-family`
+
+- `font-size`
+
+- `font-style`
+
+- `font-weight`
+
+- `letter-spacing`
+
+- `line-height`
+
+- `line-spacing`
+
+- `text-align`
+
+- `text-decoration`
+
+- `text-shadow`
+
+It is recommended to use with [`PluginReactLynxOptions.customCSSInheritanceList`](#customcssinheritancelist) to avoid performance issues.
+
+### `enableCSSInvalidation` \{#enablecssinvalidation\}
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+CSS Invalidation refers to the process of determining which elements need to have their styles recalculated when the DOM is updated.
+
+When using combinator to determine the styles of various elements (including descendants, adjacent siblings, etc.), it is recommended to enable this feature. Otherwise, only the initial class setting can match the corresponding combinator, and subsequent updates will not recalculate the related styles.
+
+We find that collecting invalidation nodes and updating them is a relatively time-consuming process.
+If there is no such usage and better style matching performance is needed, this feature can be selectively disabled.
+
+```ts
+If a descendant selector `.a .b` is defined in a CSS file, then when an element's class changes to `.a`, all nodes in its subtree with the className `.b` need to have their styles recalculated.
+```
+
+### `experimental_transformBuiltinAttributeNames` <span className="api-badge api-badge-beta">Experimental</span> \{#experimental-transformbuiltinattributenames\}
+
+- **Type:** `boolean | `[`TransformBuiltinAttributeNamesOptions`](#experimental-transformbuiltinattributenames)
+- **Default:** `false`
+
+Transform attribute names on Lynx builtin elements.
+
+`false` disables the conversion. `true` applies the default rule:
+`onClick` becomes `bindtap`, `onCatchTap` becomes `catchtap`, other
+`onXXX` names become `bindxxx`, and remaining camelCase names become
+dash-case. An object provides serializable custom rules. Exact entries in
+`rename` take precedence over `preserve`, followed by the fallback behavior
+selected by `mode`.
+
+Explicit JSX attributes are transformed at compile time. Attributes
+supplied through JSX spreads are transformed at runtime with the same
+rules.
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="experimental-transformbuiltinattributenames-mode"></a>`mode` | `"dash-case" \| "mapping-only"` | `'dash-case'` | The fallback behavior for attribute names not listed in `rename` or `preserve`. `'dash-case'` also applies the default React-style event mappings. `'mapping-only'` leaves all remaining names unchanged. |
+| <a id="experimental-transformbuiltinattributenames-preserve"></a>`preserve` | `readonly string[]` |  | Attribute names that should remain unchanged unless an exact `rename` entry is also present. |
+| <a id="experimental-transformbuiltinattributenames-rename"></a>`rename` | `Readonly<Record<string, string>>` |  | Exact mappings from source attribute names to transformed attribute names. |
+
+### `targetSdkVersion` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#targetsdkversion\}
+
+- **Type:** `string`
+- **Default:** `'3.2'`
+
+:::warning Deprecated
+`targetSdkVersion` is now an alias of [`PluginReactLynxOptions.engineVersion`](#engineversion). Use [`PluginReactLynxOptions.engineVersion`](#engineversion) instead.
+:::
+
+targetSdkVersion is used to specify the minimal Lynx Engine version that a App bundle can run on.
+
+### Other options \{#other-options\}
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="defaultdisplaylinear"></a>`defaultDisplayLinear` | `boolean` | `true` | defaultDisplayLinear controls whether the default value of `display` in CSS is `linear`. If `defaultDisplayLinear === false`, the default `display` would be `flex` instead of `linear`. |
+| <a id="definedce"></a>`defineDCE` | `Partial<`[`DefineDceVisitorConfig`](#definedcevisitorconfig)`>` | `undefined` | Like `define` in various bundlers, but this one happens at transform time, and a DCE pass will be performed. |
+| <a id="enableaccessibilityelement"></a>`enableAccessibilityElement` | `boolean` | `false` | enableAccessibilityElement set the default value of `accessibility-element` for all `<view />` elements. |
+| <a id="enablecssselector"></a>`enableCSSSelector` | `boolean` | `true` | enableCSSSelector controls whether enabling the new CSS implementation. |
+| <a id="enablenewgesture"></a>`enableNewGesture` | `boolean` | `false` | enableNewGesture enables the new gesture system. |
+| <a id="enableremovecssscope"></a>`enableRemoveCSSScope` | `boolean` | `true` | enableRemoveCSSScope controls whether CSS is restrict to use in the component scope. `true`: All CSS files are treated as global CSS. `false`: All CSS files are treated as scoped CSS, and only take effect in the component that explicitly imports it. `undefined`: Only use scoped CSS for CSS Modules, and treat other CSS files as global CSS. Scoped CSS is faster than global CSS, thus you can use CSS Modules to speedy up your CSS if there are performance issues. |
+| <a id="enablessr"></a>`enableSSR` | `boolean` | `false` | `enableSSR` enable Lynx SSR feature for this build. |
+| <a id="enableuisourcemap"></a>`enableUiSourceMap` | `boolean` | `false` | Generate UI source maps in the main-thread transform. |
+| <a id="engineversion"></a>`engineVersion` | `string` | `'3.2'` | `engineVersion` specifies the minimum Lynx Engine version required for an App bundle to function properly. |
+| <a id="experimental-islazybundle"></a>`experimental_isLazyBundle` <span className="api-badge api-badge-alpha">Alpha</span> | `boolean` | `false` | Generate standalone lazy bundle. |
+| <a id="experimental-useelementtemplate"></a>`experimental_useElementTemplate` <span className="api-badge api-badge-beta">Experimental</span> | `boolean` | `false` | Enable Element Template compile and runtime entries. |
+| <a id="extractstr"></a>`extractStr` | `boolean \| Partial<`[`ExtractStrConfig`](#extractstrconfig)`>` | `false` | Merge same string literals in JS and Lepus to reduce output bundle size. Set to `false` to disable. Only takes effect when chunk splitting is disabled. |
+| <a id="firstscreensynctiming"></a>`firstScreenSyncTiming` | `"immediately" \| "jsReady" \| "manual"` | `"immediately"` | This flag controls when MainThread (Lepus) transfers control to Background after the first screen This flag has three options: `"immediately"`: Transfer immediately `"jsReady"`: Transfer when background (JS Runtime) is ready `"manual"`: Transfer when the business calls the `markFirstScreenSyncReady()` API exported by `@lynx-js/react`, so the handover timing is fully controlled by the user After handing over control, MainThread (Lepus) runtime can no longer respond to data updates, and data updates will be forwarded to background (JS Runtime) and processed __asynchronously__ |
+| <a id="globalpropsmode"></a>`globalPropsMode` | `"reactive" \| "event"` | `'reactive'` | Configure the update mode of `lynx.__globalProps`. This flag has two options: `'reactive'`: `UpdateGlobalProps` will trigger update automatically. `'event'`: `UpdateGlobalProps` will trigger global event and users need to trigger update in the event handler. |
+| <a id="optimizebundlesize"></a>`optimizeBundleSize` | `boolean \| { background?: boolean; mainThread?: boolean }` | `false` | Optimize bundle size by removing unused code by Minify.mainThreadOptions and Minify.backgroundOptions. When optimizeBundleSize or optimizeBundleSize.mainThread is true, main-thread code will be optimized. When optimizeBundleSize or optimizeBundleSize.background is true, background code will be optimized. |
+| <a id="removedescendantselectorscope"></a>`removeDescendantSelectorScope` | `boolean` | `true` | removeDescendantSelectorScope is used to remove the scope of descendant selectors. |
+| <a id="shake"></a>`shake` | `Partial<`[`ShakeVisitorConfig`](#shakevisitorconfig)`>` | `undefined` | How main-thread code will be shaken. |
+
+{/* @api-end */}
+
+## API
+
+{/* @api ApiExports package="react-rsbuild-plugin" exclude="PluginReactLynxOptions" optionsType="PluginReactLynxOptions" */}
+
+## Functions \{#functions\}
+
+### `pluginReactLynx()` \{#pluginreactlynx\}
+
+```ts
+function pluginReactLynx(userOptions?: PluginReactLynxOptions): RsbuildPlugin[]
+```
+
+Create a rsbuild plugin for ReactLynx.
+
+```ts
+// rsbuild.config.ts
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+export default {
+  plugins: [pluginReactLynx()]
+}
+```
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `userOptions?` | [`PluginReactLynxOptions`](#pluginreactlynxoptions) |  |
+
+**Returns:** `RsbuildPlugin[]`
+
+## Constants \{#constants\}
+
+### `LAYERS` \{#layers\}
+
+Re-exported from [`@lynx-js/react-webpack-plugin`](/api/packages/react-webpack-plugin#layers).
+
+## Types \{#types\}
+
+### `AddComponentElementConfig` \{#addcomponentelementconfig\}
+
+[`CompatVisitorConfig.addComponentElement`](#compatvisitorconfig-addcomponentelement)
+
+#### `AddComponentElementConfig.compilerOnly` \{#addcomponentelementconfig-compileronly\}
+
+- **Type:** `boolean`
+
+Whether to only add component element during compilation
+
+Note that this only take effects on `Component` imported from [`CompatVisitorConfig.oldRuntimePkg`](#compatvisitorconfig-oldruntimepkg).
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        addComponentElement: { compilerOnly: true }
+      },
+    })
+  ],
+})
+```
+
+### `CompatVisitorConfig` \{#compatvisitorconfig\}
+
+[`PluginReactLynxOptions.compat`](#compat)
+
+| Members | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="compatvisitorconfig-transformlegacyeventattributenames"></a>`transformLegacyEventAttributeNames?` | `boolean` | `true` | Whether to transform legacy event attribute names on Lynx elements. When enabled, legacy event attributes such as `onClick` and `onClickCatch` are transformed to `bindtap` and `catchtap`. Disable this when another transform owns event attribute-name conversion. |
+
+#### `CompatVisitorConfig.addComponentElement` \{#compatvisitorconfig-addcomponentelement\}
+
+- **Type:** `boolean | `[`AddComponentElementConfig`](#addcomponentelementconfig)
+- **Default:** `false`
+
+Controls whether to add wrapper elements for components
+
+Add a `<view>` wrapper element for all components during runtime.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        addComponentElement: true
+      },
+    })
+  ],
+})
+```
+
+Only add component element during compilation.
+Note that this only take effects on `Component` imported from [`CompatVisitorConfig.oldRuntimePkg`](#compatvisitorconfig-oldruntimepkg).
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        addComponentElement: { compilerOnly: true }
+      },
+    })
+  ],
+})
+```
+
+#### `CompatVisitorConfig.additionalComponentAttributes` \{#compatvisitorconfig-additionalcomponentattributes\}
+
+- **Type:** `string[]`
+- **Default:** `[]`
+
+Specifies additional component attributes list, these attributes will be passed to the wrapped `<view>` instead of the component.
+
+This only takes effect when [`CompatVisitorConfig.addComponentElement`](#compatvisitorconfig-addcomponentelement) is enabled.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        additionalComponentAttributes: ['custom-attr', 'data-special']
+      },
+    })
+  ],
+})
+```
+
+#### `CompatVisitorConfig.componentsPkg` \{#compatvisitorconfig-componentspkg\}
+
+- **Type:** `string[]`
+- **Default:** `['@lynx-js/react-components']`
+
+Specifies the list of component package names that need compatibility processing
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        componentsPkg: ['@my-org/components', '@legacy/ui-kit']
+      },
+    })
+  ],
+})
+```
+
+#### `CompatVisitorConfig.darkMode?` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#compatvisitorconfig-darkmode\}
+
+- **Type:** `boolean | DarkModeConfig`
+- **Default:** `undefined`
+
+Dark mode configuration
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        darkMode: true
+      },
+    })
+  ],
+})
+```
+
+#### `CompatVisitorConfig.disableDeprecatedWarning` \{#compatvisitorconfig-disabledeprecatedwarning\}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Whether to disable deprecated warnings
+
+Disable all the `DEPRECATED:` warnings.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        disableDeprecatedWarning: true
+      },
+    })
+  ],
+})
+```
+
+#### `CompatVisitorConfig.legacySlot?` \{#compatvisitorconfig-legacyslot\}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Compile dynamic children as children + wrapper (the pre-SlotV2 slot
+codegen: `Slot`/`Children` dynamic parts rendered through wrapper
+elements) instead of the default SlotV2 codegen (`$N` slot props).
+
+Enable this when the compiled output needs to run on legacy
+`@lynx-js/react` runtimes without `SlotV2` support (`< 0.120.0`),
+e.g. a standalone lazy bundle consumed by a host App that ships an
+older runtime. It only changes the compile output; the runtime
+supports both forms.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        legacySlot: true,
+      },
+    })
+  ],
+})
+```
+
+#### `CompatVisitorConfig.newRuntimePkg` \{#compatvisitorconfig-newruntimepkg\}
+
+- **Type:** `string`
+- **Default:** `'@lynx-js/react'`
+
+Specifies the new runtime package name
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        newRuntimePkg: '@my-org/react'
+      },
+    })
+  ],
+})
+```
+
+#### `CompatVisitorConfig.oldRuntimePkg` \{#compatvisitorconfig-oldruntimepkg\}
+
+- **Type:** `string[]`
+- **Default:** `['@lynx-js/react-runtime']`
+
+Specifies the list of old runtime package names that need compatibility processing
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        oldRuntimePkg: ['@my-org/runtime', '@legacy/runtime']
+      },
+    })
+  ],
+})
+```
+
+#### `CompatVisitorConfig.removeComponentAttrRegex?` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#compatvisitorconfig-removecomponentattrregex\}
+
+- **Type:** `string`
+- **Default:** `undefined`
+
+:::warning Deprecated
+It's recommended to use `background-only`.
+
+If your code depends on this switch, when distributing it to other projects through npm packages or other means, you'll also need to enable this switch. This will lead to the proliferation of switches, which is not conducive to code reuse between different projects.
+:::
+
+Regular expression used to remove component attributes
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        removeComponentAttrRegex: '^data-test-'
+      },
+    })
+  ],
+})
+```
+
+#### `CompatVisitorConfig.simplifyCtorLikeReactLynx2` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#compatvisitorconfig-simplifyctorlikereactlynx2\}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+:::warning Deprecated
+Using `simplifyCtorLikeReactLynx2` is not recommended as it introduces implicit behaviors that can:
+
+- Make code harder to understand and maintain
+
+- Create hidden dependencies between components
+
+- Complicate debugging and testing processes
+
+Instead, use `background-only` on class methods for explicit and maintainable behavior
+:::
+
+Whether to simplify constructor calls like ReactLynx 2
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        simplifyCtorLikeReactLynx2: true
+      },
+    })
+  ],
+})
+```
+
+### `DefineDceVisitorConfig` \{#definedcevisitorconfig\}
+
+[`PluginReactLynxOptions.defineDCE`](#definedce)
+
+#### `DefineDceVisitorConfig.define` \{#definedcevisitorconfig-define\}
+
+- **Type:** `Record<string, string>`
+
+Replaces variables in your code with other values or expressions at compile time.
+
+Caveat: differences between `source.define`
+
+`defineDCE` happens before transforming `background-only` directives.
+So it's useful for eliminating code that is only used in the background from main-thread.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      defineDCE: {
+        define: {
+          __FOO__: 'false',
+          'process.env.PLATFORM': '"lynx"',
+        },
+      },
+    })
+  ],
+})
+```
+
+Then, `__FOO__` and `process.env.PLATFORM` could be used in source code.
+
+```
+if (process.env.PLATFORM === 'lynx') {
+  console.log('lynx')
+}
+
+function FooOrBar() {
+  if (__FOO__) {
+    return <text>foo</text>
+  } else {
+    return <text>bar</text>
+  }
+}
+```
+
+### `ExtractStrConfig` \{#extractstrconfig\}
+
+[`PluginReactLynxOptions.extractStr`](#extractstr)
+
+#### `ExtractStrConfig.strLength` \{#extractstrconfig-strlength\}
+
+- **Type:** `number`
+- **Default:** `20`
+
+The minimum length of string literals to be extracted.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      extractStr: {
+        strLength: 10,
+      },
+    })
+  ],
+})
+```
+
+### `LynxTemplatePlugin` \{#lynxtemplateplugin\}
+
+The static API of
+[`LynxTemplatePlugin`](/api/packages/template-webpack-plugin#lynxtemplateplugin)
+that `pluginLynx` exposes. Get it with
+`api.useExposed(Symbol.for('LynxTemplatePlugin')).LynxTemplatePlugin`.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="lynxtemplateplugin-getlynxtemplatepluginhooks"></a>`getLynxTemplatePluginHooks` | `(compilation: Compilation) => `[`TemplateHooks`](#templatehooks) | Returns the [`TemplateHooks`](#templatehooks) of a compilation. |
+
+### `ShakeVisitorConfig` \{#shakevisitorconfig\}
+
+[`PluginReactLynxOptions.shake`](#shake)
+
+#### `ShakeVisitorConfig.pkgName` \{#shakevisitorconfig-pkgname\}
+
+- **Type:** `string[]`
+- **Default:** `['@lynx-js/react-runtime']`
+
+Package names to identify runtime imports that need to be processed
+
+The provided values will be merged with the default values instead of replacing them.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      shake: {
+        pkgName: ['@lynx-js/react-runtime']
+      }
+    })
+  ]
+})
+```
+
+#### `ShakeVisitorConfig.removeCall` \{#shakevisitorconfig-removecall\}
+
+- **Type:** `string[]`
+- **Default:** `['useEffect', 'useLayoutEffect', '__runInJS', 'useLynxGlobalEventListener', 'useImperativeHandle']`
+
+Function names whose calls should be replaced with `undefined` during transformation
+
+The provided values will be merged with the default values instead of replacing them.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      shake: {
+        removeCall: ['useMyCustomEffect']
+      }
+    })
+  ]
+})
+```
+
+#### `ShakeVisitorConfig.removeCallParams` \{#shakevisitorconfig-removecallparams\}
+
+- **Type:** `string[]`
+- **Default:** `[]`
+
+Function names whose parameters should be removed during transformation
+
+The provided values will be merged with the default values instead of replacing them.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      shake: {
+        removeCallParams: ['useMyCustomEffect']
+      }
+    })
+  ]
+})
+```
+
+#### `ShakeVisitorConfig.retainProp` \{#shakevisitorconfig-retainprop\}
+
+- **Type:** `string[]`
+- **Default:** `['constructor', 'render', 'getDerivedStateFromProps', 'state', 'defaultDataProcessor', 'dataProcessors', 'contextType', 'defaultProps']`
+
+Properties that should be retained in the component class
+
+The provided values will be merged with the default values instead of replacing them.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      shake: {
+        retainProp: ['myCustomMethod']
+      }
+    })
+  ]
+})
+```
+
+### `TemplateHooks` \{#templatehooks\}
+
+Re-exported from [`@lynx-js/template-webpack-plugin`](/api/packages/template-webpack-plugin#templatehooks).
+
+### `TransformBuiltinAttributeNamesOptions` \{#transformbuiltinattributenamesoptions\}
+
+Serializable rules for transforming builtin element attribute names.
+
+Exact entries in `rename` take precedence over `preserve`, followed by the
+fallback behavior selected by `mode`.
+
+| Members | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="transformbuiltinattributenamesoptions-mode"></a>`mode?` | `"dash-case" \| "mapping-only"` | `'dash-case'` | The fallback behavior for attribute names not listed in `rename` or `preserve`. `'dash-case'` also applies the default React-style event mappings. `'mapping-only'` leaves all remaining names unchanged. |
+| <a id="transformbuiltinattributenamesoptions-preserve"></a>`preserve?` | `readonly string[]` |  | Attribute names that should remain unchanged unless an exact `rename` entry is also present. |
+| <a id="transformbuiltinattributenamesoptions-rename"></a>`rename?` | `Readonly<Record<string, string>>` |  | Exact mappings from source attribute names to transformed attribute names. |
+
+{/* @api-end */}

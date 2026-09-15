@@ -1,0 +1,475 @@
+{
+  "id": "motion",
+  "package": "@lynx-js/motion",
+  "version": "0.0.6",
+  "description": "This is a motion adapter for Lynx.js",
+  "group": "libraries",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/motion",
+  "exports": [
+    {
+      "name": "animate",
+      "kind": "function",
+      "type": "animate(sequence: AnimationSequence, options?: SequenceOptions): AnimationPlaybackControlsWithThen",
+      "signatures": [
+        {
+          "text": "animate(sequence: AnimationSequence, options?: SequenceOptions): AnimationPlaybackControlsWithThen",
+          "params": [
+            {
+              "name": "sequence",
+              "type": "AnimationSequence"
+            },
+            {
+              "name": "options",
+              "type": "SequenceOptions",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "AnimationPlaybackControlsWithThen"
+          },
+          "summary": "Animate a sequence"
+        },
+        {
+          "text": "animate(value: string, keyframes: DOMKeyframesDefinition, options?: AnimationOptions): AnimationPlaybackControlsWithThen",
+          "params": [
+            {
+              "name": "value",
+              "type": "string"
+            },
+            {
+              "name": "keyframes",
+              "type": "DOMKeyframesDefinition"
+            },
+            {
+              "name": "options",
+              "type": "AnimationOptions",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "AnimationPlaybackControlsWithThen"
+          },
+          "summary": "Animate the main-thread elements matched by a selector"
+        },
+        {
+          "text": "animate(value: string | MotionValue<string>, keyframes: string | UnresolvedValueKeyframe<string>[], options?: ValueAnimationTransition<string>): AnimationPlaybackControlsWithThen",
+          "params": [
+            {
+              "name": "value",
+              "type": "string | MotionValue<string>"
+            },
+            {
+              "name": "keyframes",
+              "type": "string | UnresolvedValueKeyframe<string>[]"
+            },
+            {
+              "name": "options",
+              "type": "ValueAnimationTransition<string>",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "AnimationPlaybackControlsWithThen"
+          },
+          "summary": "Animate a string"
+        },
+        {
+          "text": "animate(value: number | MotionValue<number>, keyframes: number | UnresolvedValueKeyframe<number>[], options?: ValueAnimationTransition<number>): AnimationPlaybackControlsWithThen",
+          "params": [
+            {
+              "name": "value",
+              "type": "number | MotionValue<number>"
+            },
+            {
+              "name": "keyframes",
+              "type": "number | UnresolvedValueKeyframe<number>[]"
+            },
+            {
+              "name": "options",
+              "type": "ValueAnimationTransition<number>",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "AnimationPlaybackControlsWithThen"
+          },
+          "summary": "Animate a number"
+        },
+        {
+          "text": "animate(value: V | MotionValue<V>, keyframes: V | UnresolvedValueKeyframe<V>[], options?: ValueAnimationTransition<V>): AnimationPlaybackControlsWithThen",
+          "params": [
+            {
+              "name": "value",
+              "type": "V | MotionValue<V>"
+            },
+            {
+              "name": "keyframes",
+              "type": "V | UnresolvedValueKeyframe<V>[]"
+            },
+            {
+              "name": "options",
+              "type": "ValueAnimationTransition<V>",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "AnimationPlaybackControlsWithThen"
+          },
+          "summary": "Animate a generic motion value"
+        },
+        {
+          "text": "animate(object: O | O[], keyframes: ObjectTarget<O>, options?: AnimationOptions): AnimationPlaybackControlsWithThen",
+          "params": [
+            {
+              "name": "object",
+              "type": "O | O[]"
+            },
+            {
+              "name": "keyframes",
+              "type": "ObjectTarget<O>"
+            },
+            {
+              "name": "options",
+              "type": "AnimationOptions",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "AnimationPlaybackControlsWithThen"
+          },
+          "summary": "Animate an object"
+        },
+        {
+          "text": "animate(value: ElementOrElements, keyframes: DOMKeyframesDefinition, options?: AnimationOptions): AnimationPlaybackControlsWithThen",
+          "params": [
+            {
+              "name": "value",
+              "type": "ElementOrElements"
+            },
+            {
+              "name": "keyframes",
+              "type": "DOMKeyframesDefinition"
+            },
+            {
+              "name": "options",
+              "type": "AnimationOptions",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "AnimationPlaybackControlsWithThen"
+          },
+          "summary": "Animate a main thread element"
+        }
+      ],
+      "summary": "Animate a sequence"
+    },
+    {
+      "name": "clamp",
+      "kind": "function",
+      "type": "clamp(min: number, max: number, v: number): number",
+      "signatures": [
+        {
+          "text": "clamp(min: number, max: number, v: number): number",
+          "params": [
+            {
+              "name": "min",
+              "type": "number"
+            },
+            {
+              "name": "max",
+              "type": "number"
+            },
+            {
+              "name": "v",
+              "type": "number"
+            }
+          ],
+          "returns": {
+            "type": "number"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mapValue",
+      "kind": "function",
+      "type": "mapValue(inputValue: MotionValue<number>, inputRange: MapInputRange, outputRange: O[], options?: TransformOptions<O>): MotionValue<O>",
+      "signatures": [
+        {
+          "text": "mapValue(inputValue: MotionValue<number>, inputRange: MapInputRange, outputRange: O[], options?: TransformOptions<O>): MotionValue<O>",
+          "params": [
+            {
+              "name": "inputValue",
+              "type": "MotionValue<number>"
+            },
+            {
+              "name": "inputRange",
+              "type": "MapInputRange"
+            },
+            {
+              "name": "outputRange",
+              "type": "O[]"
+            },
+            {
+              "name": "options",
+              "type": "TransformOptions<O>",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "MotionValue<O>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mix",
+      "kind": "function",
+      "type": "mix(from: T, to: T): Mixer<T>",
+      "signatures": [
+        {
+          "text": "mix(from: T, to: T): Mixer<T>",
+          "params": [
+            {
+              "name": "from",
+              "type": "T"
+            },
+            {
+              "name": "to",
+              "type": "T"
+            }
+          ],
+          "returns": {
+            "type": "Mixer<T>"
+          }
+        },
+        {
+          "text": "mix(from: number, to: number, p: number): number",
+          "params": [
+            {
+              "name": "from",
+              "type": "number"
+            },
+            {
+              "name": "to",
+              "type": "number"
+            },
+            {
+              "name": "p",
+              "type": "number"
+            }
+          ],
+          "returns": {
+            "type": "number"
+          }
+        }
+      ]
+    },
+    {
+      "name": "motionValue",
+      "kind": "function",
+      "type": "motionValue(init: V, options?: MotionValueOptions): MotionValue<V>",
+      "signatures": [
+        {
+          "text": "motionValue(init: V, options?: MotionValueOptions): MotionValue<V>",
+          "params": [
+            {
+              "name": "init",
+              "type": "V"
+            },
+            {
+              "name": "options",
+              "type": "MotionValueOptions",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "MotionValue<V>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "progress",
+      "kind": "function",
+      "type": "progress(from: number, to: number, value: number): number",
+      "signatures": [
+        {
+          "text": "progress(from: number, to: number, value: number): number",
+          "params": [
+            {
+              "name": "from",
+              "type": "number"
+            },
+            {
+              "name": "to",
+              "type": "number"
+            },
+            {
+              "name": "value",
+              "type": "number"
+            }
+          ],
+          "returns": {
+            "type": "number"
+          }
+        }
+      ]
+    },
+    {
+      "name": "spring",
+      "kind": "function",
+      "type": "spring(args: [optionsOrVisualDuration?: number | ValueAnimationOptions<number>, bounce?: number]): KeyframeGenerator<number>",
+      "signatures": [
+        {
+          "text": "spring(args: [optionsOrVisualDuration?: number | ValueAnimationOptions<number>, bounce?: number]): KeyframeGenerator<number>",
+          "params": [
+            {
+              "name": "args",
+              "type": "[optionsOrVisualDuration?: number | ValueAnimationOptions<number>, bounce?: number]"
+            }
+          ],
+          "returns": {
+            "type": "KeyframeGenerator<number>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "springValue",
+      "kind": "function",
+      "type": "springValue(source: T | MotionValue<T>, options?: SpringOptions): MotionValue<T>",
+      "signatures": [
+        {
+          "text": "springValue(source: T | MotionValue<T>, options?: SpringOptions): MotionValue<T>",
+          "params": [
+            {
+              "name": "source",
+              "type": "T | MotionValue<T>"
+            },
+            {
+              "name": "options",
+              "type": "SpringOptions",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "MotionValue<T>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "stagger",
+      "kind": "function",
+      "type": "stagger(args: [duration?: number, StaggerOptions?]): DynamicOption<number>",
+      "signatures": [
+        {
+          "text": "stagger(args: [duration?: number, StaggerOptions?]): DynamicOption<number>",
+          "params": [
+            {
+              "name": "args",
+              "type": "[duration?: number, StaggerOptions?]"
+            }
+          ],
+          "returns": {
+            "type": "DynamicOption<number>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "styleEffect",
+      "kind": "function",
+      "type": "styleEffect(subject: string | ElementOrElements, values: Record<string, MotionValue>): () => void",
+      "signatures": [
+        {
+          "text": "styleEffect(subject: string | ElementOrElements, values: Record<string, MotionValue>): () => void",
+          "params": [
+            {
+              "name": "subject",
+              "type": "string | ElementOrElements"
+            },
+            {
+              "name": "values",
+              "type": "Record<string, MotionValue>"
+            }
+          ],
+          "returns": {
+            "type": "() => void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "transformValue",
+      "kind": "function",
+      "type": "transformValue(transform: () => O): MotionValue<O>",
+      "signatures": [
+        {
+          "text": "transformValue(transform: () => O): MotionValue<O>",
+          "params": [
+            {
+              "name": "transform",
+              "type": "() => O"
+            }
+          ],
+          "returns": {
+            "type": "MotionValue<O>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "useMotionValueRef",
+      "kind": "function",
+      "type": "useMotionValueRef(value: T): MainThreadRef<MotionValue<T>>",
+      "signatures": [
+        {
+          "text": "useMotionValueRef(value: T): MainThreadRef<MotionValue<T>>",
+          "params": [
+            {
+              "name": "value",
+              "type": "T"
+            }
+          ],
+          "returns": {
+            "type": "MainThreadRef<MotionValue<T>>"
+          },
+          "summary": "useMotionValue, but in MainThreadRef format, highly experimental, subject to change"
+        }
+      ],
+      "summary": "useMotionValue, but in MainThreadRef format, highly experimental, subject to change"
+    },
+    {
+      "name": "useMotionValueRefEvent",
+      "kind": "function",
+      "type": "useMotionValueRefEvent(valueRef: MainThreadRef<Listenable<V>>, event: \"change\", callback: MotionValueEventCallbacks<V>[EventName]): void",
+      "signatures": [
+        {
+          "text": "useMotionValueRefEvent(valueRef: MainThreadRef<Listenable<V>>, event: \"change\", callback: MotionValueEventCallbacks<V>[EventName]): void",
+          "params": [
+            {
+              "name": "valueRef",
+              "type": "MainThreadRef<Listenable<V>>"
+            },
+            {
+              "name": "event",
+              "type": "\"change\""
+            },
+            {
+              "name": "callback",
+              "type": "MotionValueEventCallbacks<V>[EventName]"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "useMotionValueEvent, but only accepts motionValueRef format, highly experimental, subject to change"
+        }
+      ],
+      "summary": "useMotionValueEvent, but only accepts motionValueRef format, highly experimental, subject to change"
+    }
+  ]
+}

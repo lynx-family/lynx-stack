@@ -1,0 +1,64 @@
+---
+title: '@lynx-js/runtime-wrapper-webpack-plugin'
+---
+
+# @lynx-js/runtime-wrapper-webpack-plugin
+
+{/* @api PackageHeader package="runtime-wrapper-webpack-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/runtime-wrapper-webpack-plugin</code> <span className="api-pkg-version">v0.2.4</span> · <a href="https://www.npmjs.com/package/@lynx-js/runtime-wrapper-webpack-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/runtime-wrapper-webpack-plugin" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/runtime-wrapper-webpack-plugin/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+:::tip 内部包
+此包是 Lynx 构建引擎的一部分，由 [`pluginLynx`](/zh/api/packages/rsbuild-plugin) 自动应用。其 API 文档面向插件作者，应用代码不会直接使用它。
+:::
+
+使用运行时包装器，使 JavaScript 能够被 Lynx 加载。
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/runtime-wrapper-webpack-plugin -D" />
+
+## API
+
+{/* @api ApiExports package="runtime-wrapper-webpack-plugin" */}
+
+## 类 \{#classes\}
+
+### `RuntimeWrapperWebpackPlugin` \{#runtimewrapperwebpackplugin\}
+
+RuntimeWrapperWebpackPlugin 为 JavaScript 添加运行时包装，使其能够被 Lynx 加载。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="runtimewrapperwebpackplugin-constructor"></a>`constructor` | `constructor(options: Partial<RuntimeWrapperWebpackPluginOptions>): RuntimeWrapperWebpackPlugin` |  |
+| <a id="runtimewrapperwebpackplugin-defaultoptions"></a>`defaultOptions` | `Readonly<Required<`[`RuntimeWrapperWebpackPluginOptions`](#runtimewrapperwebpackpluginoptions)`>>` | `defaultOptions` 是 [`RuntimeWrapperWebpackPlugin`](#runtimewrapperwebpackplugin) 使用的默认选项。 |
+
+#### `RuntimeWrapperWebpackPlugin.apply` \{#runtimewrapperwebpackplugin-apply\}
+
+- **类型：** `apply(compiler: Compiler): void`
+
+webpack 插件的入口。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `compiler` | `Compiler` | webpack 编译器 |
+
+## 类型 \{#types\}
+
+### `RuntimeWrapperWebpackPluginOptions` \{#runtimewrapperwebpackpluginoptions\}
+
+RuntimeWrapperWebpackPluginOptions 的选项
+
+| 成员 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="runtimewrapperwebpackpluginoptions-bannertype"></a>`bannerType` | `(filename: string) => "script" \| "bundle"` | `() => 'script'` | banner 有两种类型：script（用于 app-service）和 bundle（用于 js-render）。可以根据文件名决定使用哪种 banner。 |
+| <a id="runtimewrapperwebpackpluginoptions-experimental-islazybundle"></a>`experimental_isLazyBundle?` | `boolean` |  | [`PluginReactLynxOptions.experimental_isLazyBundle`](/zh/api/packages/react-rsbuild-plugin#experimental-islazybundle) |
+| <a id="runtimewrapperwebpackpluginoptions-injectvars"></a>`injectVars?` | `((vars: string[]) => string[]) \| string[]` |  | 一个函数，接收默认的变量列表，并返回要注入的变量列表。 |
+| <a id="runtimewrapperwebpackpluginoptions-targetsdkversion"></a>`targetSdkVersion` | `string` |  | [`PluginReactLynxOptions.targetSdkVersion`](/zh/api/packages/react-rsbuild-plugin#targetsdkversion) |
+| <a id="runtimewrapperwebpackpluginoptions-test"></a>`test` | `Rules \| undefined` | `/\.js$/` | 包裹文件名匹配该条件的已产出 JS 资源。标记为主线程的资源永远不会被包裹。 |
+
+{/* @api-end */}

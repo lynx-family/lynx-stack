@@ -1,0 +1,90 @@
+{
+  "id": "react-alias-rsbuild-plugin",
+  "package": "@lynx-js/react-alias-rsbuild-plugin",
+  "version": "0.20.2",
+  "description": "A rsbuild plugin for making alias in ReactLynx",
+  "group": "build",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-react-alias",
+  "exports": [
+    {
+      "name": "Options",
+      "kind": "interface",
+      "type": "unknown",
+      "members": [
+        {
+          "name": "elementTemplate",
+          "optional": true,
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "LAYERS",
+          "type": "{ BACKGROUND: string; MAIN_THREAD: string }",
+          "kind": "property"
+        },
+        {
+          "name": "lazy",
+          "optional": true,
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "rootPath",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "createLazyResolver",
+      "kind": "function",
+      "type": "createLazyResolver(rspack: Rspack, directory: string, conditionNames: string[]): (request: string) => Promise<string>",
+      "signatures": [
+        {
+          "text": "createLazyResolver(rspack: Rspack, directory: string, conditionNames: string[]): (request: string) => Promise<string>",
+          "params": [
+            {
+              "name": "rspack",
+              "type": "Rspack"
+            },
+            {
+              "name": "directory",
+              "type": "string"
+            },
+            {
+              "name": "conditionNames",
+              "type": "string[]"
+            }
+          ],
+          "returns": {
+            "type": "(request: string) => Promise<string>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "pluginReactAlias",
+      "kind": "function",
+      "type": "pluginReactAlias(options: Options): RsbuildPlugin",
+      "signatures": [
+        {
+          "text": "pluginReactAlias(options: Options): RsbuildPlugin",
+          "params": [
+            {
+              "name": "options",
+              "type": "Options",
+              "ref": "Options",
+              "refs": [
+                "Options"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "RsbuildPlugin"
+          }
+        }
+      ]
+    }
+  ]
+}

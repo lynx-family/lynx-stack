@@ -1,0 +1,793 @@
+{
+  "id": "genui-openui-explicit",
+  "package": "@lynx-js/genui",
+  "version": "0.4.0",
+  "description": "Generative UI for Lynx.",
+  "group": "libraries",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/genui",
+  "exports": [
+    {
+      "name": "ComponentRenderProps",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Props passed to an OpenUI ReactLynx component renderer.",
+      "members": [
+        {
+          "name": "onAction",
+          "optional": true,
+          "type": "(event: ActionEvent) => void",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "FormValidationContextValue",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Validation state and helpers for OpenUI form fields.",
+      "members": [
+        {
+          "name": "clearFieldError",
+          "type": "(name: string) => void",
+          "kind": "property"
+        },
+        {
+          "name": "errors",
+          "type": "Record<string, string | undefined>",
+          "kind": "property"
+        },
+        {
+          "name": "getFieldError",
+          "type": "(name: string) => string | undefined",
+          "kind": "property"
+        },
+        {
+          "name": "registerField",
+          "type": "(name: string, rules: ParsedRule[], getValue: () => unknown) => void",
+          "kind": "property"
+        },
+        {
+          "name": "unregisterField",
+          "type": "(name: string) => void",
+          "kind": "property"
+        },
+        {
+          "name": "validateField",
+          "type": "(name: string, value: unknown, rules: ParsedRule[]) => boolean",
+          "kind": "property"
+        },
+        {
+          "name": "validateForm",
+          "type": "() => boolean",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "OpenUIContextValue",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Runtime context shared by OpenUI renderers, hooks, actions, and form fields.",
+      "members": [
+        {
+          "name": "evaluationContext",
+          "type": "EvaluationContext",
+          "summary": "AST evaluation context used by runtime expression evaluation.",
+          "kind": "property"
+        },
+        {
+          "name": "getFieldValue",
+          "type": "(formName: string | undefined, name: string) => any",
+          "summary": "Get a field value. Top-level for $bindings, nested under formName for form fields.",
+          "kind": "property"
+        },
+        {
+          "name": "isQueryLoading",
+          "type": "boolean",
+          "summary": "Whether any Query is currently fetching data.",
+          "kind": "property"
+        },
+        {
+          "name": "isStreaming",
+          "type": "boolean",
+          "summary": "Whether the LLM is currently streaming content.",
+          "kind": "property"
+        },
+        {
+          "name": "library",
+          "type": "Library",
+          "summary": "The active component library (schema + renderers).",
+          "kind": "property"
+        },
+        {
+          "name": "renderNode",
+          "type": "(value: unknown) => ReactNode",
+          "summary": "Render any value (element, array, primitive) into React nodes.",
+          "kind": "property"
+        },
+        {
+          "name": "reportError",
+          "optional": true,
+          "type": "(error: OpenUIError) => void",
+          "summary": "Report a structured error (used internally by error boundary).",
+          "kind": "property"
+        },
+        {
+          "name": "setFieldValue",
+          "type": "(formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void",
+          "summary": "Set a form field value.",
+          "kind": "property"
+        },
+        {
+          "name": "store",
+          "type": "Store",
+          "summary": "Reactive binding store for $variables and form data.",
+          "kind": "property"
+        },
+        {
+          "name": "triggerAction",
+          "type": "(userMessage: string, formName?: string, action?: ActionPlan | { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void | Promise<void>",
+          "summary": "Trigger an action. Accepts either:\n- ActionPlan (v0.5): runs steps sequentially (Run, Set, Reset, ToAssistant,\n  OpenUrl) and stops if a Run mutation fails. When the renderer is given a\n  pre-parsed `result`, only ToAssistant and OpenUrl run; other steps warn.\n- Legacy action config (v0.1): object with optional type and params.\n- Nothing: fires ContinueConversation with the label",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "OpenUiRendererParsedProps",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Props for rendering an already parsed OpenUI result.",
+      "members": [
+        {
+          "name": "isStreaming",
+          "optional": true,
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "library",
+          "type": "Library",
+          "ref": "Library",
+          "refs": [
+            "Library"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "onAction",
+          "optional": true,
+          "type": "(event: ActionEvent) => void",
+          "kind": "property"
+        },
+        {
+          "name": "result",
+          "type": "ParseResult | null",
+          "summary": "Pre-parsed result. Kept for v0.1/static-render compatibility.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "OpenUiRendererRuntimeProps",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Props for rendering raw OpenUI response text with parsing, runtime state,\nactions, and query execution.",
+      "members": [
+        {
+          "name": "initialQueryResults",
+          "optional": true,
+          "type": "Readonly<Record<string, unknown>>",
+          "summary": "Prefetched Query results keyed by Query assignment name (statement ID).\nResults render synchronously, then an optional toolProvider revalidates.",
+          "kind": "property"
+        },
+        {
+          "name": "initialState",
+          "optional": true,
+          "type": "Record<string, unknown>",
+          "summary": "Initial persisted state. $-prefixed keys hydrate reactive bindings.",
+          "kind": "property"
+        },
+        {
+          "name": "isStreaming",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether the LLM is still streaming; disables interactions while true.",
+          "kind": "property"
+        },
+        {
+          "name": "library",
+          "type": "Library",
+          "ref": "Library",
+          "refs": [
+            "Library"
+          ],
+          "summary": "Component library from createOpenUiLibrary().",
+          "kind": "property"
+        },
+        {
+          "name": "onAction",
+          "optional": true,
+          "type": "(event: ActionEvent) => void",
+          "summary": "Callback when a component triggers a host action.",
+          "kind": "property"
+        },
+        {
+          "name": "onError",
+          "optional": true,
+          "type": "(errors: OpenUIError[]) => void",
+          "summary": "Structured parser/runtime/query errors for correction loops.",
+          "kind": "property"
+        },
+        {
+          "name": "onParseResult",
+          "optional": true,
+          "type": "(result: ParseResult | null) => void",
+          "summary": "Called whenever the raw parse result changes.",
+          "kind": "property"
+        },
+        {
+          "name": "onStateUpdate",
+          "optional": true,
+          "type": "(state: Record<string, unknown>) => void",
+          "summary": "Called whenever $variables or form state changes.",
+          "kind": "property"
+        },
+        {
+          "name": "queryLoader",
+          "optional": true,
+          "type": "ReactNode",
+          "summary": "Custom loading node shown while Query() calls are in flight.",
+          "kind": "property"
+        },
+        {
+          "name": "response",
+          "type": "string | null",
+          "summary": "Raw openui-lang response text. This enables v0.5 runtime features.",
+          "kind": "property"
+        },
+        {
+          "name": "toolProvider",
+          "optional": true,
+          "type": "ToolProviderInput",
+          "ref": "ToolProviderInput",
+          "refs": [
+            "ToolProviderInput"
+          ],
+          "summary": "Tool provider for Query()/Mutation(): function map or MCP client.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "OpenUIState",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Derived OpenUI renderer state returned by `useOpenUIState`.",
+      "members": [
+        {
+          "name": "contextValue",
+          "type": "OpenUIContextValue",
+          "ref": "OpenUIContextValue",
+          "refs": [
+            "OpenUIContextValue"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "isQueryLoading",
+          "type": "boolean",
+          "summary": "Whether any Query is currently fetching data.",
+          "kind": "property"
+        },
+        {
+          "name": "parseResult",
+          "type": "ParseResult | null",
+          "summary": "Raw parse result (AST nodes in props). Used by onParseResult callback.",
+          "kind": "property"
+        },
+        {
+          "name": "result",
+          "type": "ParseResult | null",
+          "summary": "Evaluated result (props resolved to concrete values). Used by Renderer.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "UseOpenUIStateOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Inputs used to parse OpenUI text and build renderer state.",
+      "members": [
+        {
+          "name": "initialQueryResults",
+          "optional": true,
+          "type": "Readonly<Record<string, unknown>>",
+          "summary": "Prefetched Query results keyed by the Query assignment name (statement ID).\nThey are available during the initial render and act as fallbacks while an\noptional tool provider revalidates them after commit.",
+          "kind": "property"
+        },
+        {
+          "name": "initialState",
+          "optional": true,
+          "type": "Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "isStreaming",
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "library",
+          "type": "Library",
+          "ref": "Library",
+          "refs": [
+            "Library"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "onAction",
+          "optional": true,
+          "type": "(event: ActionEvent) => void",
+          "kind": "property"
+        },
+        {
+          "name": "onError",
+          "optional": true,
+          "type": "(errors: OpenUIError[]) => void",
+          "summary": "Callback for structured, LLM-friendly errors. See OpenUIError type.",
+          "kind": "property"
+        },
+        {
+          "name": "onStateUpdate",
+          "optional": true,
+          "type": "(state: Record<string, unknown>) => void",
+          "kind": "property"
+        },
+        {
+          "name": "response",
+          "type": "string | null",
+          "kind": "property"
+        },
+        {
+          "name": "toolProvider",
+          "optional": true,
+          "type": "ToolProvider | null",
+          "summary": "ToolProvider for Query data fetching — MCP, REST, GraphQL, or any backend.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ComponentRenderer",
+      "kind": "typealias",
+      "type": "React.FC<ComponentRenderProps<P>>",
+      "refs": [
+        "ComponentRenderProps"
+      ]
+    },
+    {
+      "name": "CreateExplicitOpenUiLibraryOptions",
+      "kind": "typealias",
+      "type": "Omit<CreateOpenUiLibraryOptions, \"includeDefaultComponents\"> & { includeDefaultComponents: false }",
+      "summary": "Options for a Library assembled only from explicitly selected components."
+    },
+    {
+      "name": "DefinedComponent",
+      "kind": "typealias",
+      "type": "CoreDefinedComponent<T, ComponentRenderer<z.infer<T>>>",
+      "refs": [
+        "ComponentRenderer"
+      ]
+    },
+    {
+      "name": "InitialQueryResults",
+      "kind": "typealias",
+      "type": "Readonly<Record<string, unknown>>",
+      "summary": "Prefetched Query results keyed by Query assignment name (statement ID)."
+    },
+    {
+      "name": "Library",
+      "kind": "typealias",
+      "type": "CoreLibrary<ComponentRenderer<any>>",
+      "refs": [
+        "ComponentRenderer"
+      ]
+    },
+    {
+      "name": "LibraryDefinition",
+      "kind": "typealias",
+      "type": "CoreLibraryDefinition<ComponentRenderer<any>>",
+      "refs": [
+        "ComponentRenderer"
+      ]
+    },
+    {
+      "name": "OpenUiRendererProps",
+      "kind": "typealias",
+      "type": "OpenUiRendererRuntimeProps | OpenUiRendererParsedProps",
+      "refs": [
+        "OpenUiRendererRuntimeProps",
+        "OpenUiRendererParsedProps"
+      ]
+    },
+    {
+      "name": "ToolProviderInput",
+      "kind": "typealias",
+      "type": "Record<string, (args: Record<string, unknown>) => unknown> | McpClientLike | null"
+    },
+    {
+      "name": "FormNameContext",
+      "kind": "variable",
+      "type": "Context<string | undefined>",
+      "default": "..."
+    },
+    {
+      "name": "FormValidationContext",
+      "kind": "variable",
+      "type": "Context<FormValidationContextValue | null>",
+      "refs": [
+        "FormValidationContextValue"
+      ],
+      "default": "..."
+    },
+    {
+      "name": "createOpenUiLibrary",
+      "kind": "function",
+      "type": "createOpenUiLibrary(options: CreateExplicitOpenUiLibraryOptions): Library",
+      "signatures": [
+        {
+          "text": "createOpenUiLibrary(options: CreateExplicitOpenUiLibraryOptions): Library",
+          "params": [
+            {
+              "name": "options",
+              "type": "CreateExplicitOpenUiLibraryOptions",
+              "ref": "CreateExplicitOpenUiLibraryOptions",
+              "refs": [
+                "CreateExplicitOpenUiLibraryOptions"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "Library",
+            "refs": [
+              "Library"
+            ]
+          },
+          "summary": "Create a catalog-free OpenUI Library from explicitly selected components."
+        }
+      ],
+      "summary": "Create a catalog-free OpenUI Library from explicitly selected components."
+    },
+    {
+      "name": "defineComponent",
+      "kind": "function",
+      "type": "defineComponent(config: { component: ComponentRenderer<output<T>>; description: string; name: string; props: T }): DefinedComponent<T>",
+      "signatures": [
+        {
+          "text": "defineComponent(config: { component: ComponentRenderer<output<T>>; description: string; name: string; props: T }): DefinedComponent<T>",
+          "params": [
+            {
+              "name": "config",
+              "type": "{ component: ComponentRenderer<output<T>>; description: string; name: string; props: T }",
+              "refs": [
+                "ComponentRenderer"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "DefinedComponent<T>",
+            "refs": [
+              "DefinedComponent"
+            ]
+          },
+          "summary": "Define a ReactLynx component renderer and its OpenUI schema metadata."
+        }
+      ],
+      "summary": "Define a ReactLynx component renderer and its OpenUI schema metadata."
+    },
+    {
+      "name": "OpenUiRenderer",
+      "kind": "function",
+      "type": "OpenUiRenderer(props: OpenUiRendererProps): Element",
+      "signatures": [
+        {
+          "text": "OpenUiRenderer(props: OpenUiRendererProps): Element",
+          "params": [
+            {
+              "name": "props",
+              "type": "OpenUiRendererProps",
+              "ref": "OpenUiRendererProps",
+              "refs": [
+                "OpenUiRendererProps"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "Element"
+          },
+          "summary": "Render OpenUI language output using a ReactLynx component library."
+        }
+      ],
+      "summary": "Render OpenUI language output using a ReactLynx component library."
+    },
+    {
+      "name": "reactive",
+      "kind": "function",
+      "type": "reactive(schema: T): ZodType<StateField<output<T>>>",
+      "signatures": [
+        {
+          "text": "reactive(schema: T): ZodType<StateField<output<T>>>",
+          "params": [
+            {
+              "name": "schema",
+              "type": "T"
+            }
+          ],
+          "returns": {
+            "type": "ZodType<StateField<output<T>>>"
+          },
+          "summary": "Mark a schema prop as reactive so runtime evaluation can preserve $bindings."
+        }
+      ],
+      "summary": "Mark a schema prop as reactive so runtime evaluation can preserve $bindings."
+    },
+    {
+      "name": "useCreateFormValidation",
+      "kind": "function",
+      "type": "useCreateFormValidation(): FormValidationContextValue",
+      "signatures": [
+        {
+          "text": "useCreateFormValidation(): FormValidationContextValue",
+          "params": [],
+          "returns": {
+            "type": "FormValidationContextValue",
+            "refs": [
+              "FormValidationContextValue"
+            ]
+          },
+          "summary": "Create form validation state and callbacks for an OpenUI form boundary."
+        }
+      ],
+      "summary": "Create form validation state and callbacks for an OpenUI form boundary."
+    },
+    {
+      "name": "useFormValidation",
+      "kind": "function",
+      "type": "useFormValidation(): FormValidationContextValue | null",
+      "signatures": [
+        {
+          "text": "useFormValidation(): FormValidationContextValue | null",
+          "params": [],
+          "returns": {
+            "type": "FormValidationContextValue | null",
+            "refs": [
+              "FormValidationContextValue"
+            ]
+          },
+          "summary": "Read the nearest OpenUI form validation context, if one exists."
+        }
+      ],
+      "summary": "Read the nearest OpenUI form validation context, if one exists."
+    },
+    {
+      "name": "useGetFieldValue",
+      "kind": "function",
+      "type": "useGetFieldValue(): (formName: string | undefined, name: string) => any",
+      "signatures": [
+        {
+          "text": "useGetFieldValue(): (formName: string | undefined, name: string) => any",
+          "params": [],
+          "returns": {
+            "type": "(formName: string | undefined, name: string) => any"
+          },
+          "summary": "Get a form field value from the form state context.",
+          "examples": [
+            "```tsx\nconst getFieldValue = useGetFieldValue();\nconst name = getFieldValue(\"contactForm\", \"name\");\n```"
+          ]
+        }
+      ],
+      "summary": "Get a form field value from the form state context.",
+      "examples": [
+        "```tsx\nconst getFieldValue = useGetFieldValue();\nconst name = getFieldValue(\"contactForm\", \"name\");\n```"
+      ]
+    },
+    {
+      "name": "useIsQueryLoading",
+      "kind": "function",
+      "type": "useIsQueryLoading(): boolean",
+      "signatures": [
+        {
+          "text": "useIsQueryLoading(): boolean",
+          "params": [],
+          "returns": {
+            "type": "boolean"
+          },
+          "summary": "Whether any Query is currently fetching data."
+        }
+      ],
+      "summary": "Whether any Query is currently fetching data."
+    },
+    {
+      "name": "useIsStreaming",
+      "kind": "function",
+      "type": "useIsStreaming(): boolean",
+      "signatures": [
+        {
+          "text": "useIsStreaming(): boolean",
+          "params": [],
+          "returns": {
+            "type": "boolean"
+          },
+          "summary": "Whether the LLM is currently streaming content."
+        }
+      ],
+      "summary": "Whether the LLM is currently streaming content."
+    },
+    {
+      "name": "useOpenUI",
+      "kind": "function",
+      "type": "useOpenUI(): OpenUIContextValue",
+      "signatures": [
+        {
+          "text": "useOpenUI(): OpenUIContextValue",
+          "params": [],
+          "returns": {
+            "type": "OpenUIContextValue",
+            "refs": [
+              "OpenUIContextValue"
+            ]
+          },
+          "summary": "Access the full OpenUI context. Throws if used outside an\n`OpenUiRenderer` tree."
+        }
+      ],
+      "summary": "Access the full OpenUI context. Throws if used outside an\n`OpenUiRenderer` tree."
+    },
+    {
+      "name": "useOpenUIState",
+      "kind": "function",
+      "type": "useOpenUIState(__namedParameters: UseOpenUIStateOptions, renderDeep: (value: unknown) => ReactNode): OpenUIState",
+      "signatures": [
+        {
+          "text": "useOpenUIState(__namedParameters: UseOpenUIStateOptions, renderDeep: (value: unknown) => ReactNode): OpenUIState",
+          "params": [
+            {
+              "name": "__namedParameters",
+              "type": "UseOpenUIStateOptions",
+              "ref": "UseOpenUIStateOptions",
+              "refs": [
+                "UseOpenUIStateOptions"
+              ]
+            },
+            {
+              "name": "renderDeep",
+              "type": "(value: unknown) => ReactNode"
+            }
+          ],
+          "returns": {
+            "type": "OpenUIState",
+            "refs": [
+              "OpenUIState"
+            ]
+          },
+          "summary": "Core state hook — extracts all form state, action handling, parser\nmanagement, and context assembly out of the Renderer component.\n\nStore holds everything: $bindings as top-level keys, form fields nested\nunder formName as plain values."
+        }
+      ],
+      "summary": "Core state hook — extracts all form state, action handling, parser\nmanagement, and context assembly out of the Renderer component.\n\nStore holds everything: $bindings as top-level keys, form fields nested\nunder formName as plain values."
+    },
+    {
+      "name": "useRenderNode",
+      "kind": "function",
+      "type": "useRenderNode(): (value: unknown) => ReactNode",
+      "signatures": [
+        {
+          "text": "useRenderNode(): (value: unknown) => ReactNode",
+          "params": [],
+          "returns": {
+            "type": "(value: unknown) => ReactNode"
+          },
+          "summary": "Get the renderNode function for rendering nested component values."
+        }
+      ],
+      "summary": "Get the renderNode function for rendering nested component values."
+    },
+    {
+      "name": "useSetDefaultValue",
+      "kind": "function",
+      "type": "useSetDefaultValue(shouldTriggerSaveCallback: { componentType?: string; defaultValue: unknown; existingValue: unknown; formName?: string; name: string; shouldTriggerSaveCallback?: boolean }): void",
+      "signatures": [
+        {
+          "text": "useSetDefaultValue(shouldTriggerSaveCallback: { componentType?: string; defaultValue: unknown; existingValue: unknown; formName?: string; name: string; shouldTriggerSaveCallback?: boolean }): void",
+          "params": [
+            {
+              "name": "shouldTriggerSaveCallback",
+              "type": "{ componentType?: string; defaultValue: unknown; existingValue: unknown; formName?: string; name: string; shouldTriggerSaveCallback?: boolean }",
+              "description": "Defaults to `false` (only local state, no message persistence)."
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "Persists a component's default/initial value into form state once streaming\nfinishes — but only if the user hasn't already set a value.\n\nCall this inside any form component that has a `defaultValue` or\n`defaultChecked` prop. It is a no-op during streaming so that LLM\nprop changes don't fight with partial state."
+        }
+      ],
+      "summary": "Persists a component's default/initial value into form state once streaming\nfinishes — but only if the user hasn't already set a value.\n\nCall this inside any form component that has a `defaultValue` or\n`defaultChecked` prop. It is a no-op during streaming so that LLM\nprop changes don't fight with partial state."
+    },
+    {
+      "name": "useSetFieldValue",
+      "kind": "function",
+      "type": "useSetFieldValue(): (formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void",
+      "signatures": [
+        {
+          "text": "useSetFieldValue(): (formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void",
+          "params": [],
+          "returns": {
+            "type": "(formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void"
+          },
+          "summary": "Get the setFieldValue function for updating form field values.",
+          "examples": [
+            "```tsx\nconst setFieldValue = useSetFieldValue();\n<input onChange={(e) => setFieldValue(\"contactForm\", \"Input\", \"name\", e.target.value, false)} />\n```"
+          ]
+        }
+      ],
+      "summary": "Get the setFieldValue function for updating form field values.",
+      "examples": [
+        "```tsx\nconst setFieldValue = useSetFieldValue();\n<input onChange={(e) => setFieldValue(\"contactForm\", \"Input\", \"name\", e.target.value, false)} />\n```"
+      ]
+    },
+    {
+      "name": "useStateField",
+      "kind": "function",
+      "type": "useStateField(name: string, value?: T): StateField<InferStateFieldValue<T>>",
+      "signatures": [
+        {
+          "text": "useStateField(name: string, value?: T): StateField<InferStateFieldValue<T>>",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "value",
+              "type": "T",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "StateField<InferStateFieldValue<T>>"
+          },
+          "summary": "Resolve a named OpenUI state field against form state and reactive bindings."
+        }
+      ],
+      "summary": "Resolve a named OpenUI state field against form state and reactive bindings."
+    },
+    {
+      "name": "useTriggerAction",
+      "kind": "function",
+      "type": "useTriggerAction(): (userMessage: string, formName?: string, action?: ActionPlan | { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void | Promise<void>",
+      "signatures": [
+        {
+          "text": "useTriggerAction(): (userMessage: string, formName?: string, action?: ActionPlan | { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void | Promise<void>",
+          "params": [],
+          "returns": {
+            "type": "(userMessage: string, formName?: string, action?: ActionPlan | { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void | Promise<void>"
+          },
+          "summary": "Get the triggerAction function for firing structured action events.",
+          "examples": [
+            "```tsx\nconst triggerAction = useTriggerAction();\n<button onClick={() => triggerAction(\"Submit\", \"myForm\")}>\n```"
+          ]
+        }
+      ],
+      "summary": "Get the triggerAction function for firing structured action events.",
+      "examples": [
+        "```tsx\nconst triggerAction = useTriggerAction();\n<button onClick={() => triggerAction(\"Submit\", \"myForm\")}>\n```"
+      ]
+    },
+    {
+      "name": "CreateOpenUiLibraryOptions",
+      "kind": "reference",
+      "type": "unknown"
+    }
+  ]
+}

@@ -1,0 +1,1865 @@
+---
+title: Testing Library
+---
+
+# Testing Library
+
+{/* @api PackageHeader package="react-testing-library" */}
+
+<div className="api-pkg-header"><code>@lynx-js/reactlynx-testing-library</code> <span className="api-pkg-version">v0.0.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/reactlynx-testing-library" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/react/testing-library" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/react/testing-library/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+`@lynx-js/react/testing-library` renders ReactLynx components in a simulated dual-thread environment so they can be tested with Vitest or Rstest. It follows the [Testing Library](https://testing-library.com/) conventions: render a component, query the element tree the way a user would find things, fire events and assert on the result.
+
+```tsx title="App.test.tsx"
+import { expect, test } from 'vitest'
+import { fireEvent, render } from '@lynx-js/react/testing-library'
+
+import { App } from './App.jsx'
+
+test('increments the counter', () => {
+  const { getByText } = render(<App />)
+  fireEvent.tap(getByText('Count: 0'))
+  expect(getByText('Count: 1')).toBeTruthy()
+})
+```
+
+For setup and the dual-thread rendering options, see the [guide on lynxjs.org](https://lynxjs.org/react/reactlynx-testing-library).
+
+## API
+
+{/* @api ApiExports package="react-testing-library" */}
+
+## Functions \{#functions\}
+
+### `buildQueries()` \{#buildqueries\}
+
+```ts
+function buildQueries(queryAllBy: GetAllBy<Arguments>, getMultipleError: GetErrorFunction<Arguments>, getMissingError: GetErrorFunction<Arguments>): BuiltQueryMethods<Arguments>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `queryAllBy` | [`GetAllBy`](#getallby)`<Arguments>` |  |
+| `getMultipleError` | [`GetErrorFunction`](#geterrorfunction)`<Arguments>` |  |
+| `getMissingError` | [`GetErrorFunction`](#geterrorfunction)`<Arguments>` |  |
+
+**Returns:** [`BuiltQueryMethods`](#builtquerymethods)`<Arguments>`
+
+### `cleanup()` \{#cleanup\}
+
+```ts
+function cleanup(): void
+```
+
+Cleanup elements rendered to the page and Preact trees that were mounted with render.
+
+### `computeHeadingLevel()` \{#computeheadinglevel\}
+
+```ts
+function computeHeadingLevel(element: Element): number | undefined
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `element` | `Element` |  |
+
+**Returns:** `number | undefined`
+
+### `configure()` \{#configure\}
+
+```ts
+function configure(configDelta: ConfigFn | Partial<Config>): void
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `configDelta` | [`ConfigFn`](#configfn)` \| Partial<`[`Config`](#config)`>` |  |
+
+### `findAllByAltText()` \{#findallbyalttext\}
+
+```ts
+function findAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
+
+**Returns:** `Promise<T[]>`
+
+### `findAllByDisplayValue()` \{#findallbydisplayvalue\}
+
+```ts
+function findAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
+
+**Returns:** `Promise<T[]>`
+
+### `findAllByLabelText()` \{#findallbylabeltext\}
+
+```ts
+function findAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
+
+**Returns:** `Promise<T[]>`
+
+### `findAllByPlaceholderText()` \{#findallbyplaceholdertext\}
+
+```ts
+function findAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
+
+**Returns:** `Promise<T[]>`
+
+### `findAllByRole()` \{#findallbyrole\}
+
+```ts
+function findAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, role: any, options?: `[`ByRoleOptions`](#byroleoptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
+
+**Returns:** `Promise<T[]>`
+
+### `findAllByTestId()` \{#findallbytestid\}
+
+```ts
+function findAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
+
+**Returns:** `Promise<T[]>`
+
+### `findAllByText()` \{#findallbytext\}
+
+```ts
+function findAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
+
+**Returns:** `Promise<T[]>`
+
+### `findAllByTitle()` \{#findallbytitle\}
+
+```ts
+function findAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T[]>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
+
+**Returns:** `Promise<T[]>`
+
+### `findByAltText()` \{#findbyalttext\}
+
+```ts
+function findByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
+
+**Returns:** `Promise<T>`
+
+### `findByDisplayValue()` \{#findbydisplayvalue\}
+
+```ts
+function findByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
+
+**Returns:** `Promise<T>`
+
+### `findByLabelText()` \{#findbylabeltext\}
+
+```ts
+function findByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
+
+**Returns:** `Promise<T>`
+
+### `findByPlaceholderText()` \{#findbyplaceholdertext\}
+
+```ts
+function findByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
+
+**Returns:** `Promise<T>`
+
+### `findByRole()` \{#findbyrole\}
+
+```ts
+function findByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, role: any, options?: `[`ByRoleOptions`](#byroleoptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
+
+**Returns:** `Promise<T>`
+
+### `findByTestId()` \{#findbytestid\}
+
+```ts
+function findByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
+
+**Returns:** `Promise<T>`
+
+### `findByText()` \{#findbytext\}
+
+```ts
+function findByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
+
+**Returns:** `Promise<T>`
+
+### `findByTitle()` \{#findbytitle\}
+
+```ts
+function findByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions]): Promise<T>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`, waitForElementOptions?: `[`waitForOptions`](#waitforoptions)`]` |  |
+
+**Returns:** `Promise<T>`
+
+### `getAllByAltText()` \{#getallbyalttext\}
+
+```ts
+function getAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T[]`
+
+### `getAllByDisplayValue()` \{#getallbydisplayvalue\}
+
+```ts
+function getAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T[]`
+
+### `getAllByLabelText()` \{#getallbylabeltext\}
+
+```ts
+function getAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T[]
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
+
+**Returns:** `T[]`
+
+### `getAllByPlaceholderText()` \{#getallbyplaceholdertext\}
+
+```ts
+function getAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T[]`
+
+### `getAllByRole()` \{#getallbyrole\}
+
+```ts
+function getAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]): T[]
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, role: any, options?: `[`ByRoleOptions`](#byroleoptions)`]` |  |
+
+**Returns:** `T[]`
+
+### `getAllByTestId()` \{#getallbytestid\}
+
+```ts
+function getAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T[]`
+
+### `getAllByText()` \{#getallbytext\}
+
+```ts
+function getAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T[]
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
+
+**Returns:** `T[]`
+
+### `getAllByTitle()` \{#getallbytitle\}
+
+```ts
+function getAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T[]`
+
+### `getByAltText()` \{#getbyalttext\}
+
+```ts
+function getByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T`
+
+### `getByDisplayValue()` \{#getbydisplayvalue\}
+
+```ts
+function getByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T`
+
+### `getByLabelText()` \{#getbylabeltext\}
+
+```ts
+function getByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
+
+**Returns:** `T`
+
+### `getByPlaceholderText()` \{#getbyplaceholdertext\}
+
+```ts
+function getByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T`
+
+### `getByRole()` \{#getbyrole\}
+
+```ts
+function getByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]): T
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, role: any, options?: `[`ByRoleOptions`](#byroleoptions)`]` |  |
+
+**Returns:** `T`
+
+### `getByTestId()` \{#getbytestid\}
+
+```ts
+function getByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T`
+
+### `getByText()` \{#getbytext\}
+
+```ts
+function getByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
+
+**Returns:** `T`
+
+### `getByTitle()` \{#getbytitle\}
+
+```ts
+function getByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T`
+
+### `getConfig()` \{#getconfig\}
+
+```ts
+function getConfig(): Config
+```
+
+*No description yet.*
+
+**Returns:** [`Config`](#config)
+
+### `getDefaultNormalizer()` \{#getdefaultnormalizer\}
+
+```ts
+function getDefaultNormalizer(options?: DefaultNormalizerOptions): NormalizerFn
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options?` | [`DefaultNormalizerOptions`](#defaultnormalizeroptions) |  |
+
+**Returns:** [`NormalizerFn`](#normalizerfn)
+
+### `getElementError()` \{#getelementerror\}
+
+```ts
+function getElementError(message: string | null, container: HTMLElement): Error
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `message` | `string \| null` |  |
+| `container` | `HTMLElement` |  |
+
+**Returns:** `Error`
+
+### `getNodeText()` \{#getnodetext\}
+
+```ts
+function getNodeText(node: HTMLElement): string
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `node` | `HTMLElement` |  |
+
+**Returns:** `string`
+
+### `getQueriesForElement()` \{#getqueriesforelement\}
+
+```ts
+function getQueriesForElement(element: HTMLElement, queriesToBind?: T): BoundFunctions<T>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `element` | `HTMLElement` |  |
+| `queriesToBind?` | `T` |  |
+
+**Returns:** [`BoundFunctions`](#boundfunctions)`<T>`
+
+### `getRoles()` \{#getroles\}
+
+```ts
+function getRoles(container: HTMLElement): { [index: string]: HTMLElement[] }
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `container` | `HTMLElement` |  |
+
+**Returns:** `{ [index: string]: HTMLElement[] }`
+
+### `getSuggestedQuery()` \{#getsuggestedquery\}
+
+```ts
+function getSuggestedQuery(element: HTMLElement, variant?: Variant, method?: Method): Suggestion | undefined
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `element` | `HTMLElement` |  |
+| `variant?` | [`Variant`](#variant) |  |
+| `method?` | [`Method`](#method) |  |
+
+**Returns:** [`Suggestion`](#suggestion)` | undefined`
+
+### `isInaccessible()` \{#isinaccessible\}
+
+```ts
+function isInaccessible(element: Element): boolean
+```
+
+https://testing-library.com/docs/dom-testing-library/api-helpers#isinaccessible
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `element` | `Element` |  |
+
+**Returns:** `boolean`
+
+### `logDOM()` \{#logdom\}
+
+```ts
+function logDOM(dom?: Element | HTMLDocument, maxLength?: number, options?: PrettyDOMOptions): void
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `dom?` | `Element \| HTMLDocument` |  |
+| `maxLength?` | `number` |  |
+| `options?` | [`PrettyDOMOptions`](#prettydomoptions) |  |
+
+### `logRoles()` \{#logroles\}
+
+```ts
+function logRoles(container: HTMLElement, options?: LogRolesOptions): string
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `container` | `HTMLElement` |  |
+| `options?` | [`LogRolesOptions`](#logrolesoptions) |  |
+
+**Returns:** `string`
+
+### `prettyDOM()` \{#prettydom\}
+
+```ts
+function prettyDOM(dom?: Element | HTMLDocument, maxLength?: number, options?: PrettyDOMOptions): string | false
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `dom?` | `Element \| HTMLDocument` |  |
+| `maxLength?` | `number` |  |
+| `options?` | [`PrettyDOMOptions`](#prettydomoptions) |  |
+
+**Returns:** `string | false`
+
+### `queryAllByAltText()` \{#queryallbyalttext\}
+
+```ts
+function queryAllByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T[]`
+
+### `queryAllByDisplayValue()` \{#queryallbydisplayvalue\}
+
+```ts
+function queryAllByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T[]`
+
+### `queryAllByLabelText()` \{#queryallbylabeltext\}
+
+```ts
+function queryAllByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T[]
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
+
+**Returns:** `T[]`
+
+### `queryAllByPlaceholderText()` \{#queryallbyplaceholdertext\}
+
+```ts
+function queryAllByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T[]`
+
+### `queryAllByRole()` \{#queryallbyrole\}
+
+```ts
+function queryAllByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]): T[]
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, role: any, options?: `[`ByRoleOptions`](#byroleoptions)`]` |  |
+
+**Returns:** `T[]`
+
+### `queryAllByTestId()` \{#queryallbytestid\}
+
+```ts
+function queryAllByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T[]`
+
+### `queryAllByText()` \{#queryallbytext\}
+
+```ts
+function queryAllByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T[]
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
+
+**Returns:** `T[]`
+
+### `queryAllByTitle()` \{#queryallbytitle\}
+
+```ts
+function queryAllByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T[]
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T[]`
+
+### `queryByAltText()` \{#querybyalttext\}
+
+```ts
+function queryByAltText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T | null`
+
+### `queryByDisplayValue()` \{#querybydisplayvalue\}
+
+```ts
+function queryByDisplayValue(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T | null`
+
+### `queryByLabelText()` \{#querybylabeltext\}
+
+```ts
+function queryByLabelText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T | null
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
+
+**Returns:** `T | null`
+
+### `queryByPlaceholderText()` \{#querybyplaceholdertext\}
+
+```ts
+function queryByPlaceholderText(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T | null`
+
+### `queryByRole()` \{#querybyrole\}
+
+```ts
+function queryByRole(args: [container: HTMLElement, role: any, options?: ByRoleOptions]): T | null
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, role: any, options?: `[`ByRoleOptions`](#byroleoptions)`]` |  |
+
+**Returns:** `T | null`
+
+### `queryByTestId()` \{#querybytestid\}
+
+```ts
+function queryByTestId(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T | null`
+
+### `queryByText()` \{#querybytext\}
+
+```ts
+function queryByText(args: [container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions]): T | null
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`SelectorMatcherOptions`](#selectormatcheroptions)`]` |  |
+
+**Returns:** `T | null`
+
+### `queryByTitle()` \{#querybytitle\}
+
+```ts
+function queryByTitle(args: [container: HTMLElement, id: Matcher, options?: MatcherOptions]): T | null
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `args` | `[container: HTMLElement, id: `[`Matcher`](#matcher)`, options?: `[`MatcherOptions`](#matcheroptions)`]` |  |
+
+**Returns:** `T | null`
+
+### `render()` \{#render\}
+
+```ts
+function render(ui: ReactNode, options?: RenderOptions<Q>): RenderResult<Q>
+```
+
+Render into the page. It should be used with cleanup.
+
+```ts
+import { render} from '@lynx-js/react/testing-library'
+
+const WrapperComponent = ({ children }) => (
+    <view data-testid='wrapper'>{children}</view>
+);
+const Comp = () => {
+  return <view data-testid='inner' style="background-color: yellow;" />;
+};
+const { container, getByTestId } = render(<Comp />, {
+  wrapper: WrapperComponent,
+});
+expect(getByTestId('wrapper')).toBeInTheDocument();
+expect(container.firstChild).toMatchInlineSnapshot(`
+  <view
+    data-testid="wrapper"
+  >
+    <view
+      data-testid="inner"
+      style="background-color: yellow;"
+    />
+  </view>
+`);
+```
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `ui` | `ReactNode` |  |
+| `options?` | [`RenderOptions`](#renderoptions)`<Q>` |  |
+
+**Returns:** [`RenderResult`](#renderresult)`<Q>`
+
+### `renderHook()` \{#renderhook\}
+
+```ts
+function renderHook(render: (initialProps: Props) => Result, options?: RenderHookOptions<Props>): RenderHookResult<Result, Props>
+```
+
+Allows you to render a hook within a test React component without having to
+create that component yourself.
+
+```ts
+import { renderHook } from '@lynx-js/react/testing-library'
+
+const Context = createContext('default');
+function Wrapper({ children }) {
+  return <Context.Provider value='provided'>{children}</Context.Provider>;
+}
+const { result } = renderHook(
+  () => {
+    return useContext(Context);
+  },
+  {
+    wrapper: Wrapper,
+  },
+);
+
+expect(result.current).toEqual('provided');
+```
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `render` | `(initialProps: Props) => Result` |  |
+| `options?` | [`RenderHookOptions`](#renderhookoptions)`<Props>` |  |
+
+**Returns:** [`RenderHookResult`](#renderhookresult)`<Result, Props>`
+
+### `waitFor()` \{#waitfor\}
+
+```ts
+function waitFor(callback: () => T | Promise<T>, options?: waitForOptions): Promise<T>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `callback` | `() => T \| Promise<T>` |  |
+| `options?` | [`waitForOptions`](#waitforoptions) |  |
+
+**Returns:** `Promise<T>`
+
+### `waitForElementToBeRemoved()` \{#waitforelementtoberemoved\}
+
+```ts
+function waitForElementToBeRemoved(callback: T | (() => T), options?: waitForOptions): Promise<void>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `callback` | `T \| (() => T)` |  |
+| `options?` | [`waitForOptions`](#waitforoptions) |  |
+
+**Returns:** `Promise<void>`
+
+### `waitSchedule()` \{#waitschedule\}
+
+```ts
+function waitSchedule(): Promise<void>
+```
+
+Wait for the next event loop.
+
+It will be useful when you want to wait for the next event loop to finish.
+
+**Returns:** `Promise<void>`
+
+## Classes \{#classes\}
+
+### `LynxTestingEnv` \{#lynxtestingenv\}
+
+A pure-JavaScript implementation of the [Lynx Spec](https://lynxjs.org/guide/spec.html),
+notably the [Element PAPI](https://lynxjs.org/api/engine/element-api) and [Dual-threaded Model](https://lynxjs.org/guide/spec#dual-threaded-model) for use with Node.js.
+
+```ts
+import { LynxTestingEnv } from '@lynx-js/testing-environment';
+import { JSDOM } from 'jsdom';
+
+const lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });
+
+lynxTestingEnv.switchToMainThread();
+// use the main thread Element PAPI
+const page = __CreatePage('0', 0);
+const view = __CreateView(0);
+__AppendElement(page, view);
+
+```
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="lynxtestingenv-constructor"></a>`constructor` | `constructor(env?: LynxEnv): LynxTestingEnv` |  |
+| <a id="lynxtestingenv-env"></a>`env` | `LynxEnv` |  |
+| <a id="lynxtestingenv-clearglobal"></a>`clearGlobal` | `clearGlobal(): void` |  |
+| <a id="lynxtestingenv-injectglobals"></a>`injectGlobals` | `injectGlobals(): void` |  |
+| <a id="lynxtestingenv-reset"></a>`reset` | `reset(): void` |  |
+| <a id="lynxtestingenv-switchtobackgroundthread"></a>`switchToBackgroundThread` | `switchToBackgroundThread(): void` |  |
+| <a id="lynxtestingenv-switchtomainthread"></a>`switchToMainThread` | `switchToMainThread(): void` |  |
+
+#### `LynxTestingEnv.backgroundThread` \{#lynxtestingenv-backgroundthread\}
+
+- **Type:** `LynxGlobalThis`
+
+The global object for the background thread.
+
+```ts
+import { LynxTestingEnv } from '@lynx-js/testing-environment';
+import { JSDOM } from 'jsdom';
+
+const lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });
+
+lynxTestingEnv.switchToBackgroundThread();
+// use the background thread global object
+globalThis.lynxCoreInject.tt.OnLifecycleEvent(...args);
+```
+
+#### `LynxTestingEnv.mainThread` \{#lynxtestingenv-mainthread\}
+
+- **Type:** `LynxGlobalThis & ElementTreeGlobals`
+
+The global object for the main thread.
+
+```ts
+import { LynxTestingEnv } from '@lynx-js/testing-environment';
+import { JSDOM } from 'jsdom';
+
+const lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });
+
+lynxTestingEnv.switchToMainThread();
+// use the main thread global object
+const page = globalThis.__CreatePage('0', 0);
+const view = globalThis.__CreateView(0);
+globalThis.__AppendElement(page, view);
+```
+
+## Constants \{#constants\}
+
+### `createEvent` \{#createevent\}
+
+```ts
+const createEvent: CreateObject & CreateFunction
+```
+
+*No description yet.*
+
+### `fireEvent` \{#fireevent\}
+
+```ts
+const fireEvent: FireFunction & FireObject
+```
+
+*No description yet.*
+
+### `prettyFormat` \{#prettyformat\}
+
+```ts
+const prettyFormat: any
+```
+
+*No description yet.*
+
+### `queryAllByAttribute` \{#queryallbyattribute\}
+
+```ts
+const queryAllByAttribute: AllByAttribute
+```
+
+*No description yet.*
+
+### `queryByAttribute` \{#querybyattribute\}
+
+```ts
+const queryByAttribute: QueryByAttribute
+```
+
+*No description yet.*
+
+### `screen` \{#screen\}
+
+```ts
+const screen: Screen
+```
+
+*No description yet.*
+
+### `within` \{#within\}
+
+```ts
+const within: typeof getQueriesForElement
+```
+
+*No description yet.*
+
+## Types \{#types\}
+
+### `queries` \{#queries\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="queries-allbyboundattribute"></a>`AllByBoundAttribute` | `unknown` |  |
+| <a id="queries-allbyrole"></a>`AllByRole` | `unknown` |  |
+| <a id="queries-allbytext"></a>`AllByText` | `unknown` |  |
+| <a id="queries-byroleoptions"></a>`ByRoleOptions` | `unknown` |  |
+| <a id="queries-findallbyalttext"></a>`findAllByAltText` | `unknown` |  |
+| <a id="queries-findallbyboundattribute"></a>`FindAllByBoundAttribute` | `unknown` |  |
+| <a id="queries-findallbydisplayvalue"></a>`findAllByDisplayValue` | `unknown` |  |
+| <a id="queries-findallbylabeltext"></a>`findAllByLabelText` | `unknown` |  |
+| <a id="queries-findallbyplaceholdertext"></a>`findAllByPlaceholderText` | `unknown` |  |
+| <a id="queries-findallbyrole"></a>`findAllByRole` | `unknown` |  |
+| <a id="queries-findallbyrole"></a>`FindAllByRole` | `unknown` |  |
+| <a id="queries-findallbytestid"></a>`findAllByTestId` | `unknown` |  |
+| <a id="queries-findallbytext"></a>`findAllByText` | `unknown` |  |
+| <a id="queries-findallbytext"></a>`FindAllByText` | `unknown` |  |
+| <a id="queries-findallbytitle"></a>`findAllByTitle` | `unknown` |  |
+| <a id="queries-findbyalttext"></a>`findByAltText` | `unknown` |  |
+| <a id="queries-findbyboundattribute"></a>`FindByBoundAttribute` | `unknown` |  |
+| <a id="queries-findbydisplayvalue"></a>`findByDisplayValue` | `unknown` |  |
+| <a id="queries-findbylabeltext"></a>`findByLabelText` | `unknown` |  |
+| <a id="queries-findbyplaceholdertext"></a>`findByPlaceholderText` | `unknown` |  |
+| <a id="queries-findbyrole"></a>`findByRole` | `unknown` |  |
+| <a id="queries-findbyrole"></a>`FindByRole` | `unknown` |  |
+| <a id="queries-findbytestid"></a>`findByTestId` | `unknown` |  |
+| <a id="queries-findbytext"></a>`findByText` | `unknown` |  |
+| <a id="queries-findbytext"></a>`FindByText` | `unknown` |  |
+| <a id="queries-findbytitle"></a>`findByTitle` | `unknown` |  |
+| <a id="queries-getallbyalttext"></a>`getAllByAltText` | `unknown` |  |
+| <a id="queries-getallbydisplayvalue"></a>`getAllByDisplayValue` | `unknown` |  |
+| <a id="queries-getallbylabeltext"></a>`getAllByLabelText` | `unknown` |  |
+| <a id="queries-getallbyplaceholdertext"></a>`getAllByPlaceholderText` | `unknown` |  |
+| <a id="queries-getallbyrole"></a>`getAllByRole` | `unknown` |  |
+| <a id="queries-getallbytestid"></a>`getAllByTestId` | `unknown` |  |
+| <a id="queries-getallbytext"></a>`getAllByText` | `unknown` |  |
+| <a id="queries-getallbytitle"></a>`getAllByTitle` | `unknown` |  |
+| <a id="queries-getbyalttext"></a>`getByAltText` | `unknown` |  |
+| <a id="queries-getbyboundattribute"></a>`GetByBoundAttribute` | `unknown` |  |
+| <a id="queries-getbydisplayvalue"></a>`getByDisplayValue` | `unknown` |  |
+| <a id="queries-getbylabeltext"></a>`getByLabelText` | `unknown` |  |
+| <a id="queries-getbyplaceholdertext"></a>`getByPlaceholderText` | `unknown` |  |
+| <a id="queries-getbyrole"></a>`getByRole` | `unknown` |  |
+| <a id="queries-getbyrole"></a>`GetByRole` | `unknown` |  |
+| <a id="queries-getbytestid"></a>`getByTestId` | `unknown` |  |
+| <a id="queries-getbytext"></a>`getByText` | `unknown` |  |
+| <a id="queries-getbytext"></a>`GetByText` | `unknown` |  |
+| <a id="queries-getbytitle"></a>`getByTitle` | `unknown` |  |
+| <a id="queries-queryallbyalttext"></a>`queryAllByAltText` | `unknown` |  |
+| <a id="queries-queryallbydisplayvalue"></a>`queryAllByDisplayValue` | `unknown` |  |
+| <a id="queries-queryallbylabeltext"></a>`queryAllByLabelText` | `unknown` |  |
+| <a id="queries-queryallbyplaceholdertext"></a>`queryAllByPlaceholderText` | `unknown` |  |
+| <a id="queries-queryallbyrole"></a>`queryAllByRole` | `unknown` |  |
+| <a id="queries-queryallbytestid"></a>`queryAllByTestId` | `unknown` |  |
+| <a id="queries-queryallbytext"></a>`queryAllByText` | `unknown` |  |
+| <a id="queries-queryallbytitle"></a>`queryAllByTitle` | `unknown` |  |
+| <a id="queries-querybyalttext"></a>`queryByAltText` | `unknown` |  |
+| <a id="queries-querybyboundattribute"></a>`QueryByBoundAttribute` | `unknown` |  |
+| <a id="queries-querybydisplayvalue"></a>`queryByDisplayValue` | `unknown` |  |
+| <a id="queries-querybylabeltext"></a>`queryByLabelText` | `unknown` |  |
+| <a id="queries-querybyplaceholdertext"></a>`queryByPlaceholderText` | `unknown` |  |
+| <a id="queries-querybyrole"></a>`queryByRole` | `unknown` |  |
+| <a id="queries-querybyrole"></a>`QueryByRole` | `unknown` |  |
+| <a id="queries-querybytestid"></a>`queryByTestId` | `unknown` |  |
+| <a id="queries-querybytext"></a>`queryByText` | `unknown` |  |
+| <a id="queries-querybytext"></a>`QueryByText` | `unknown` |  |
+| <a id="queries-querybytitle"></a>`queryByTitle` | `unknown` |  |
+
+### `queryHelpers` \{#queryhelpers\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="queryhelpers-allbyattribute"></a>`AllByAttribute` | `unknown` |  |
+| <a id="queryhelpers-buildqueries"></a>`buildQueries` | `unknown` |  |
+| <a id="queryhelpers-builtquerymethods"></a>`BuiltQueryMethods` | `unknown` |  |
+| <a id="queryhelpers-findallby"></a>`FindAllBy` | `unknown` |  |
+| <a id="queryhelpers-findby"></a>`FindBy` | `unknown` |  |
+| <a id="queryhelpers-getallby"></a>`GetAllBy` | `unknown` |  |
+| <a id="queryhelpers-getby"></a>`GetBy` | `unknown` |  |
+| <a id="queryhelpers-getelementerror"></a>`getElementError` | `unknown` |  |
+| <a id="queryhelpers-geterrorfunction"></a>`GetErrorFunction` | `unknown` |  |
+| <a id="queryhelpers-queryallbyattribute"></a>`queryAllByAttribute` | `unknown` |  |
+| <a id="queryhelpers-queryby"></a>`QueryBy` | `unknown` |  |
+| <a id="queryhelpers-querybyattribute"></a>`queryByAttribute` | `unknown` |  |
+| <a id="queryhelpers-querybyattribute"></a>`QueryByAttribute` | `unknown` |  |
+| <a id="queryhelpers-querymethod"></a>`QueryMethod` | `unknown` |  |
+| <a id="queryhelpers-selectormatcheroptions"></a>`SelectorMatcherOptions` | `unknown` |  |
+| <a id="queryhelpers-withsuggest"></a>`WithSuggest` | `unknown` |  |
+
+### `ByRoleOptions` \{#byroleoptions\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="byroleoptions-busy"></a>`busy?` | `boolean` | If true only includes elements in the query set that are marked as busy in the accessibility tree, i.e., `aria-busy="true"` |
+| <a id="byroleoptions-checked"></a>`checked?` | `boolean` | If true only includes elements in the query set that are marked as checked in the accessibility tree, i.e., `aria-checked="true"` |
+| <a id="byroleoptions-current"></a>`current?` | `string \| boolean` | Filters elements by their `aria-current` state. `true` and `false` match `aria-current="true"` and `aria-current="false"` (as well as a missing `aria-current` attribute) respectively. |
+| <a id="byroleoptions-description"></a>`description?` | `string \| RegExp \| ((accessibleDescription: string, element: Element) => boolean)` | Only considers elements with the specified accessible description. |
+| <a id="byroleoptions-expanded"></a>`expanded?` | `boolean` | If true only includes elements in the query set that are marked as expanded in the accessibility tree, i.e., `aria-expanded="true"` |
+| <a id="byroleoptions-hidden"></a>`hidden?` | `boolean` | If true includes elements in the query set that are usually excluded from the accessibility tree. `role="none"` or `role="presentation"` are included in either case. |
+| <a id="byroleoptions-level"></a>`level?` | `number` | Includes elements with the `"heading"` role matching the indicated level, either by the semantic HTML heading elements `<h1>-<h6>` or matching the `aria-level` attribute. |
+| <a id="byroleoptions-name"></a>`name?` | `string \| RegExp \| ((accessibleName: string, element: Element) => boolean)` | Only considers elements with the specified accessible name. |
+| <a id="byroleoptions-pressed"></a>`pressed?` | `boolean` | If true only includes elements in the query set that are marked as pressed in the accessibility tree, i.e., `aria-pressed="true"` |
+| <a id="byroleoptions-queryfallbacks"></a>`queryFallbacks?` | `boolean` | Includes every role used in the `role` attribute For example *ByRole('progressbar', \{queryFallbacks: true\})` will find <div role="meter progressbar">`. |
+| <a id="byroleoptions-selected"></a>`selected?` | `boolean` | If true only includes elements in the query set that are marked as selected in the accessibility tree, i.e., `aria-selected="true"` |
+| <a id="byroleoptions-suggest"></a>`suggest?` | `boolean` | suppress suggestions for a specific query |
+| <a id="byroleoptions-value"></a>`value?` | `{ max?: number; min?: number; now?: number; text?: `[`Matcher`](#matcher)` }` |  |
+
+### `Config` \{#config\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="config-asyncutiltimeout"></a>`asyncUtilTimeout` | `number` |  |
+| <a id="config-computedstylesupportspseudoelements"></a>`computedStyleSupportsPseudoElements` | `boolean` |  |
+| <a id="config-defaulthidden"></a>`defaultHidden` | `boolean` |  |
+| <a id="config-defaultignore"></a>`defaultIgnore` | `string` | default value for the `ignore` option in `ByText` queries |
+| <a id="config-getelementerror"></a>`getElementError` | `(message: string \| null, container: Element) => Error` |  |
+| <a id="config-showoriginalstacktrace"></a>`showOriginalStackTrace` | `boolean` |  |
+| <a id="config-testidattribute"></a>`testIdAttribute` | `string` |  |
+| <a id="config-throwsuggestions"></a>`throwSuggestions` | `boolean` |  |
+| <a id="config-asyncwrapper"></a>`asyncWrapper` | `asyncWrapper(cb: (args: any[]) => any): Promise<any>` |  |
+| <a id="config-eventwrapper"></a>`eventWrapper` | `eventWrapper(cb: (args: any[]) => any): void` |  |
+| <a id="config-unstable-advancetimerswrapper"></a>`unstable_advanceTimersWrapper` | `unstable_advanceTimersWrapper(cb: (args: unknown[]) => unknown): unknown` | WARNING: `unstable` prefix means this API may change in patch and minor releases. |
+
+### `ConfigFn` \{#configfn\}
+
+```ts
+ConfigFn(existingConfig: Config): Partial<Config>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `existingConfig` | [`Config`](#config) |  |
+
+**Returns:** `Partial<`[`Config`](#config)`>`
+
+### `DefaultNormalizerOptions` \{#defaultnormalizeroptions\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="defaultnormalizeroptions-collapsewhitespace"></a>`collapseWhitespace?` | `boolean` |  |
+| <a id="defaultnormalizeroptions-trim"></a>`trim?` | `boolean` |  |
+
+### `LogRolesOptions` \{#logrolesoptions\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="logrolesoptions-hidden"></a>`hidden?` | `boolean` |  |
+
+### `MatcherOptions` \{#matcheroptions\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="matcheroptions-collapsewhitespace"></a>`collapseWhitespace?` | `boolean` | Use normalizer with getDefaultNormalizer instead |
+| <a id="matcheroptions-exact"></a>`exact?` | `boolean` |  |
+| <a id="matcheroptions-normalizer"></a>`normalizer?` | [`NormalizerFn`](#normalizerfn) |  |
+| <a id="matcheroptions-suggest"></a>`suggest?` | `boolean` | suppress suggestions for a specific query |
+| <a id="matcheroptions-trim"></a>`trim?` | `boolean` | Use normalizer with getDefaultNormalizer instead |
+
+### `NormalizerOptions` \{#normalizeroptions\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="normalizeroptions-collapsewhitespace"></a>`collapseWhitespace?` | `boolean` |  |
+| <a id="normalizeroptions-normalizer"></a>`normalizer?` | [`NormalizerFn`](#normalizerfn) |  |
+| <a id="normalizeroptions-trim"></a>`trim?` | `boolean` |  |
+
+### `PrettyDOMOptions` \{#prettydomoptions\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="prettydomoptions-filternode"></a>`filterNode?` | `(node: Node) => boolean` | Given a `Node` return `false` if you wish to ignore that node in the output. By default, ignores `<style />`, `<script />` and comment nodes. |
+
+### `Queries` \{#queries\}
+
+*No description yet.*
+
+### `QueryOptions` \{#queryoptions\}
+
+*No description yet.*
+
+### `RenderHookOptions` \{#renderhookoptions\}
+
+The options for [`renderHook`](#renderhook)
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="renderhookoptions-initialprops"></a>`initialProps?` | `Props` | The argument passed to the renderHook callback. Can be useful if you plan to use the rerender utility to change the values passed to your hook. |
+
+#### `RenderHookOptions.wrapper?` \{#renderhookoptions-wrapper\}
+
+- **Type:** `any`
+
+Pass a React Component as the wrapper option to have it rendered around the inner element. This is most useful for creating
+ reusable custom render functions for common data providers. See setup for examples.
+
+```ts
+import { renderHook } from '@lynx-js/react/testing-library'
+import { ThemeProvider } from 'my-ui-lib'
+import { TranslationProvider } from 'my-i18n-lib'
+import defaultStrings from 'i18n/en-x-default'
+
+const AllTheProviders = ({children}) => {
+  return (
+    <ThemeProvider theme="light">
+      <TranslationProvider messages={defaultStrings}>
+        {children}
+      </TranslationProvider>
+    </ThemeProvider>
+  )
+}
+
+const customRenderHook = (ui, options) =>
+  renderHook(ui, { wrapper: AllTheProviders, ...options })
+
+// re-export everything
+export * from '@lynx-js/react/testing-library'
+
+// override renderHook method
+export { customRenderHook as renderHook }
+```
+
+### `RenderHookResult` \{#renderhookresult\}
+
+The result of [`renderHook`](#renderhook)
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="renderhookresult-rerender"></a>`rerender` | `(props?: Props) => void` | Triggers a re-render. The props will be passed to your renderHook callback. |
+| <a id="renderhookresult-result"></a>`result` | `{ current: Result }` | This is a stable reference to the latest value returned by your renderHook callback |
+| <a id="renderhookresult-unmount"></a>`unmount` | `() => void` | Unmounts the test component. This is useful for when you need to test any cleanup your useEffects have. |
+
+### `RenderOptions` \{#renderoptions\}
+
+The options for [`render`](#render).
+
+| Members | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="renderoptions-enablebackgroundthread"></a>`enableBackgroundThread?` | `boolean` | `true` | Render your component in the background thread or not. Note that all user code in the top level will be executed in the background thread by default. (eg. `__BACKGROUND__` is `true` in the top level) |
+| <a id="renderoptions-enablemainthread"></a>`enableMainThread?` | `boolean` | `false` | Render your component in the main thread or not. It is recommended to use this option only when you need to test the [IFR](https://lynxjs.org/zh/guide/interaction/ifr.html) behavior. |
+
+#### `RenderOptions.queries?` \{#renderoptions-queries\}
+
+- **Type:** `Q`
+
+Queries to bind. Overrides the default set from DOM Testing Library unless merged.
+
+```ts
+// Example, a function to traverse table contents
+import * as tableQueries from 'my-table-query-library'
+import { queries } from '@lynx-js/react/testing-library'
+
+const { getByRowColumn, getByText } = render(<MyTable />, {
+  queries: {...queries, ...tableQueries},
+})
+
+```
+
+#### `RenderOptions.wrapper?` \{#renderoptions-wrapper\}
+
+- **Type:** `any`
+
+Pass a React Component as the wrapper option to have it rendered around the inner element. This is most useful for creating
+ reusable custom render functions for common data providers. See setup for examples.
+
+```ts
+import { render } from '@lynx-js/react/testing-library'
+import { ThemeProvider } from 'my-ui-lib'
+import { TranslationProvider } from 'my-i18n-lib'
+import defaultStrings from 'i18n/en-x-default'
+
+const AllTheProviders = ({children}) => {
+  return (
+    <ThemeProvider theme="light">
+      <TranslationProvider messages={defaultStrings}>
+        {children}
+      </TranslationProvider>
+    </ThemeProvider>
+  )
+}
+
+const customRender = (ui, options) =>
+  render(ui, { wrapper: AllTheProviders, ...options })
+
+// re-export everything
+export * from '@lynx-js/react/testing-library'
+
+// override render method
+export { customRender as render }
+```
+
+### `SelectorMatcherOptions` \{#selectormatcheroptions\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="selectormatcheroptions-collapsewhitespace"></a>`collapseWhitespace?` | `boolean` | Use normalizer with getDefaultNormalizer instead |
+| <a id="selectormatcheroptions-exact"></a>`exact?` | `boolean` |  |
+| <a id="selectormatcheroptions-ignore"></a>`ignore?` | `string \| boolean` |  |
+| <a id="selectormatcheroptions-normalizer"></a>`normalizer?` | [`NormalizerFn`](#normalizerfn) |  |
+| <a id="selectormatcheroptions-selector"></a>`selector?` | `string` |  |
+| <a id="selectormatcheroptions-suggest"></a>`suggest?` | `boolean` | suppress suggestions for a specific query |
+| <a id="selectormatcheroptions-trim"></a>`trim?` | `boolean` | Use normalizer with getDefaultNormalizer instead |
+
+### `Suggestion` \{#suggestion\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="suggestion-queryargs"></a>`queryArgs` | [`QueryArgs`](#queryargs) |  |
+| <a id="suggestion-querymethod"></a>`queryMethod` | `string` |  |
+| <a id="suggestion-queryname"></a>`queryName` | `string` |  |
+| <a id="suggestion-variant"></a>`variant` | `string` |  |
+| <a id="suggestion-warning"></a>`warning?` | `string` |  |
+| <a id="suggestion-tostring"></a>`toString` | `toString(): string` |  |
+
+### `waitForOptions` \{#waitforoptions\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="waitforoptions-container"></a>`container?` | `HTMLElement` |  |
+| <a id="waitforoptions-interval"></a>`interval?` | `number` |  |
+| <a id="waitforoptions-mutationobserveroptions"></a>`mutationObserverOptions?` | `MutationObserverInit` |  |
+| <a id="waitforoptions-ontimeout"></a>`onTimeout?` | `(error: Error) => Error` |  |
+| <a id="waitforoptions-timeout"></a>`timeout?` | `number` |  |
+
+### `AllByAttribute` \{#allbyattribute\}
+
+```ts
+type AllByAttribute = (attribute: string, container: HTMLElement, id: Matcher, options?: MatcherOptions) => HTMLElement[]
+```
+
+*No description yet.*
+
+### `AllByBoundAttribute` \{#allbyboundattribute\}
+
+```ts
+type AllByBoundAttribute = (container: HTMLElement, id: Matcher, options?: MatcherOptions) => T[]
+```
+
+*No description yet.*
+
+### `AllByRole` \{#allbyrole\}
+
+```ts
+type AllByRole = (container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions) => T[]
+```
+
+*No description yet.*
+
+### `AllByText` \{#allbytext\}
+
+```ts
+type AllByText = (container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions) => T[]
+```
+
+*No description yet.*
+
+### `BoundFunction` \{#boundfunction\}
+
+```ts
+type BoundFunction = T extends (container: HTMLElement, args: infer P) => infer R ? (args: P) => R : never
+```
+
+*No description yet.*
+
+### `BoundFunctions` \{#boundfunctions\}
+
+```ts
+type BoundFunctions = Q extends typeof queries ? { findAllByAltText: any; findAllByDisplayValue: any; findAllByLabelText: any; findAllByPlaceholderText: any; findAllByRole: any; findAllByTestId: any; findAllByText: any; findAllByTitle: any; findByAltText: any; findByDisplayValue: any; findByLabelText: any; findByPlaceholderText: any; findByRole: any; findByTestId: any; findByText: any; findByTitle: any; getAllByAltText: any; getAllByDisplayValue: any; getAllByLabelText: any; getAllByPlaceholderText: any; getAllByRole: any; getAllByTestId: any; getAllByText: any; getAllByTitle: any; getByAltText: any; getByDisplayValue: any; getByLabelText: any; getByPlaceholderText: any; getByRole: any; getByTestId: any; getByText: any; getByTitle: any; queryAllByAltText: any; queryAllByDisplayValue: any; queryAllByLabelText: any; queryAllByPlaceholderText: any; queryAllByRole: any; queryAllByTestId: any; queryAllByText: any; queryAllByTitle: any; queryByAltText: any; queryByDisplayValue: any; queryByLabelText: any; queryByPlaceholderText: any; queryByRole: any; queryByTestId: any; queryByText: any; queryByTitle: any } & { [P in keyof Q]: BoundFunction<Q[P]> } : { [P in keyof Q]: BoundFunction<Q[P]> }
+```
+
+*No description yet.*
+
+### `BuiltQueryMethods` \{#builtquerymethods\}
+
+```ts
+type BuiltQueryMethods = [QueryBy<Arguments>, GetAllBy<Arguments>, GetBy<Arguments>, FindAllBy<Arguments>, FindBy<Arguments>]
+```
+
+*No description yet.*
+
+### `ByRoleMatcher` \{#byrolematcher\}
+
+```ts
+type ByRoleMatcher = prettyFormat | string & {}
+```
+
+*No description yet.*
+
+### `CreateFunction` \{#createfunction\}
+
+```ts
+type CreateFunction = (eventName: string, node: Document | Element | Window | Node, init?: {}, options?: { defaultInit?: {}; EventType?: string }) => Event
+```
+
+*No description yet.*
+
+### `CreateObject` \{#createobject\}
+
+```ts
+type CreateObject = { [K in EventType_2]: (element: Document | Element | Window | Node, options?: {}) => Event }
+```
+
+*No description yet.*
+
+### `ElementTree` \{#elementtree\}
+
+```ts
+type ElementTree = ReturnType<typeof initElementTree>
+```
+
+The lynx element tree
+
+### `EventType` \{#eventtype\}
+
+```ts
+type EventType = "focus" | "blur" | "scroll" | "wheel" | "tap" | "longtap" | "bgload" | "bgerror" | "touchstart" | "touchmove" | "touchcancel" | "touchend" | "longpress" | "transitionstart" | "transitioncancel" | "transitionend" | "animationstart" | "animationiteration" | "animationcancel" | "animationend" | "mousedown" | "mouseup" | "mousemove" | "mouseclick" | "mousedblclick" | "mouselongpress" | "keydown" | "keyup" | "layoutchange" | "scrolltoupper" | "scrolltolower" | "scrollend" | "contentsizechanged" | "scrolltoupperedge" | "scrolltoloweredge" | "scrolltonormalstate"
+```
+
+*No description yet.*
+
+### `FindAllBy` \{#findallby\}
+
+```ts
+type FindAllBy = QueryMethod<[Arguments[0], Arguments[1]?, waitForOptions?], Promise<HTMLElement[]>>
+```
+
+*No description yet.*
+
+### `FindAllByBoundAttribute` \{#findallbyboundattribute\}
+
+```ts
+type FindAllByBoundAttribute = (container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions) => Promise<T[]>
+```
+
+*No description yet.*
+
+### `FindAllByRole` \{#findallbyrole\}
+
+```ts
+type FindAllByRole = (container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions, waitForElementOptions?: waitForOptions) => Promise<T[]>
+```
+
+*No description yet.*
+
+### `FindAllByText` \{#findallbytext\}
+
+```ts
+type FindAllByText = (container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions) => Promise<T[]>
+```
+
+*No description yet.*
+
+### `FindBy` \{#findby\}
+
+```ts
+type FindBy = QueryMethod<[Arguments[0], Arguments[1]?, waitForOptions?], Promise<HTMLElement>>
+```
+
+*No description yet.*
+
+### `FindByBoundAttribute` \{#findbyboundattribute\}
+
+```ts
+type FindByBoundAttribute = (container: HTMLElement, id: Matcher, options?: MatcherOptions, waitForElementOptions?: waitForOptions) => Promise<T>
+```
+
+*No description yet.*
+
+### `FindByRole` \{#findbyrole\}
+
+```ts
+type FindByRole = (container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions, waitForElementOptions?: waitForOptions) => Promise<T>
+```
+
+*No description yet.*
+
+### `FindByText` \{#findbytext\}
+
+```ts
+type FindByText = (container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions) => Promise<T>
+```
+
+*No description yet.*
+
+### `FireFunction` \{#firefunction\}
+
+```ts
+type FireFunction = (element: Document | Element | Window | Node, event: Event) => boolean
+```
+
+*No description yet.*
+
+### `FireObject` \{#fireobject\}
+
+```ts
+type FireObject = { [K in EventType]: FireObject_2[EventType_2] }
+```
+
+*No description yet.*
+
+### `GetAllBy` \{#getallby\}
+
+```ts
+type GetAllBy = QueryMethod<Arguments, HTMLElement[]>
+```
+
+*No description yet.*
+
+### `GetBy` \{#getby\}
+
+```ts
+type GetBy = QueryMethod<Arguments, HTMLElement>
+```
+
+*No description yet.*
+
+### `GetByBoundAttribute` \{#getbyboundattribute\}
+
+```ts
+type GetByBoundAttribute = (container: HTMLElement, id: Matcher, options?: MatcherOptions) => T
+```
+
+*No description yet.*
+
+### `GetByRole` \{#getbyrole\}
+
+```ts
+type GetByRole = (container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions) => T
+```
+
+*No description yet.*
+
+### `GetByText` \{#getbytext\}
+
+```ts
+type GetByText = (container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions) => T
+```
+
+*No description yet.*
+
+### `GetErrorFunction` \{#geterrorfunction\}
+
+```ts
+type GetErrorFunction = (c: Element | null, args: Arguments) => string
+```
+
+*No description yet.*
+
+### `Match` \{#match\}
+
+```ts
+type Match = (textToMatch: string, node: HTMLElement | null, matcher: Matcher, options?: MatcherOptions) => boolean
+```
+
+*No description yet.*
+
+### `Matcher` \{#matcher\}
+
+```ts
+type Matcher = MatcherFunction | RegExp | number | string
+```
+
+*No description yet.*
+
+### `MatcherFunction` \{#matcherfunction\}
+
+```ts
+type MatcherFunction = (content: string, element: Element | null) => boolean
+```
+
+*No description yet.*
+
+### `Method` \{#method\}
+
+```ts
+type Method = "AltText" | "alttext" | "DisplayValue" | "displayvalue" | "LabelText" | "labeltext" | "PlaceholderText" | "placeholdertext" | "Role" | "role" | "TestId" | "testid" | "Text" | "text" | "Title" | "title"
+```
+
+*No description yet.*
+
+### `NormalizerFn` \{#normalizerfn\}
+
+```ts
+type NormalizerFn = (text: string) => string
+```
+
+*No description yet.*
+
+### `Query` \{#query\}
+
+```ts
+type Query = (container: HTMLElement, args: any[]) => Error | HTMLElement | HTMLElement[] | Promise<HTMLElement[]> | Promise<HTMLElement> | null
+```
+
+*No description yet.*
+
+### `QueryArgs` \{#queryargs\}
+
+```ts
+type QueryArgs = [string, QueryOptions?]
+```
+
+*No description yet.*
+
+### `QueryBy` \{#queryby\}
+
+```ts
+type QueryBy = QueryMethod<Arguments, HTMLElement | null>
+```
+
+*No description yet.*
+
+### `QueryByAttribute` \{#querybyattribute\}
+
+```ts
+type QueryByAttribute = (attribute: string, container: HTMLElement, id: Matcher, options?: MatcherOptions) => HTMLElement | null
+```
+
+*No description yet.*
+
+### `QueryByBoundAttribute` \{#querybyboundattribute\}
+
+```ts
+type QueryByBoundAttribute = (container: HTMLElement, id: Matcher, options?: MatcherOptions) => T | null
+```
+
+*No description yet.*
+
+### `QueryByRole` \{#querybyrole\}
+
+```ts
+type QueryByRole = (container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions) => T | null
+```
+
+*No description yet.*
+
+### `QueryByText` \{#querybytext\}
+
+```ts
+type QueryByText = (container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions) => T | null
+```
+
+*No description yet.*
+
+### `QueryMethod` \{#querymethod\}
+
+```ts
+type QueryMethod = (container: HTMLElement, args: Arguments) => Return
+```
+
+query methods have a common call signature. Only the return type differs.
+
+### `RenderResult` \{#renderresult\}
+
+```ts
+type RenderResult = { asFragment: () => DocumentFragment; container: LynxElement; rerender: (ui: React.ReactNode) => void; unmount: () => void } & { [P in keyof Q]: BoundFunction<Q[P]> }
+```
+
+The result of [`render`](#render)
+
+### `Screen` \{#screen\}
+
+```ts
+type Screen = BoundFunctions<Q> & { debug: (element?: (Element | HTMLDocument)[] | Element | HTMLDocument, maxLength?: number, options?: prettyFormat) => void; logTestingPlaygroundURL: (element?: Element | HTMLDocument) => string }
+```
+
+*No description yet.*
+
+### `Variant` \{#variant\}
+
+```ts
+type Variant = "find" | "findAll" | "get" | "getAll" | "query" | "queryAll"
+```
+
+*No description yet.*
+
+### `WithSuggest` \{#withsuggest\}
+
+*No description yet.*
+
+{/* @api-end */}

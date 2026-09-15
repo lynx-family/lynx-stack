@@ -1,0 +1,32 @@
+---
+title: '@lynx-js/lynx-stack-docs'
+---
+
+# @lynx-js/lynx-stack-docs
+
+{/* @api PackageHeader package="lynx-stack-docs" */}
+
+<div className="api-pkg-header"><code>@lynx-js/lynx-stack-docs</code> <span className="api-pkg-version">v0.0.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/lynx-stack-docs" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/lynx-stack-docs" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/lynx-stack-docs/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+This API reference as MDX pages, in English and Chinese, for documentation sites that show it next to their own pages. It is published with every Lynx Stack release.
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/lynx-stack-docs -D" />
+
+## Layout
+
+```
+content/
+  en/
+    config/      build configuration
+    react/api/   ReactLynx API
+    packages/    every @lynx-js package, the Rsbuild plugins included
+  zh/            the same pages in Chinese
+```
+
+Each directory carries its Rspress `_meta.json`. Copy a directory to the same path under your docs root. See the [README](https://github.com/lynx-family/lynx-stack/tree/main/packages/lynx-stack-docs) for what the pages expect.

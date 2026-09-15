@@ -1,0 +1,34 @@
+[
+  {
+    "text": "Frameworks",
+    "link": "/api/react/",
+    "activeMatch": "^/api/react/"
+  },
+  {
+    "text": "Build & Packages",
+    "link": "/api/config/",
+    "activeMatch": "^/api/(config|packages)/"
+  },
+  {
+    "text": "Changelog",
+    "link": "/changelog/lynx-js--react",
+    "activeMatch": "^/changelog/"
+  },
+  {
+    "text": "More",
+    "items": [
+      {
+        "text": "REPL",
+        "link": "/repl"
+      },
+      {
+        "text": "GenUI Playground",
+        "link": "/genui"
+      },
+      {
+        "text": "lynxjs.org",
+        "link": "https://lynxjs.org"
+      }
+    ]
+  }
+]

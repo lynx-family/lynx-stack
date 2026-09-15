@@ -1,0 +1,446 @@
+{
+  "id": "kitten-lynx",
+  "package": "@lynx-js/kitten-lynx-test-infra",
+  "version": "0.1.6",
+  "description": "A testing framework executing the Lynx explorer Android application",
+  "group": "libraries",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/testing-library/kitten-lynx",
+  "exports": [
+    {
+      "name": "CDPChannel",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "A stateless CDP (Chrome DevTools Protocol) channel for sending commands\nto a specific Lynx session.\n\nEach `send()` call is a short-lived request/response via the `Connector`.\nChannels are cached per session ID using `WeakRef` to allow reuse.",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(_connector: Connector, _clientId: string, _sessionId: number): CDPChannel",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "_connector",
+              "type": "Connector",
+              "description": "Low-level ADB transport controller."
+            },
+            {
+              "name": "_clientId",
+              "type": "string",
+              "description": "Bound devtool target identification string."
+            },
+            {
+              "name": "_sessionId",
+              "type": "number",
+              "description": "Narrowly scoped Lynx view session ID."
+            }
+          ],
+          "returns": {
+            "type": "CDPChannel",
+            "refs": [
+              "CDPChannel"
+            ]
+          },
+          "summary": "Constructs a new CDP Channel strictly bound to a single Lynx session.\n\n**Note for Agents:**\nFavor using `CDPChannel.from()` over manually newing up a channel, as `from()` handles\nWeakRef caching to minimize memory footprint."
+        },
+        {
+          "name": "send",
+          "type": "send(method: T, params: Protocol[T][\"params\"]): Promise<Protocol[T][\"return\"]>",
+          "kind": "method",
+          "params": [
+            {
+              "name": "method",
+              "type": "T",
+              "description": "The command to send to the Lynx devtool server."
+            },
+            {
+              "name": "params",
+              "type": "Protocol[T][\"params\"]",
+              "description": "A strongly-typed payload object required by the CDP method."
+            }
+          ],
+          "returns": {
+            "type": "Promise<Protocol[T][\"return\"]>",
+            "description": "A promise resolving to a strongly-typed response object matching the expected return structure of the `method`."
+          },
+          "summary": "Dispatches a strongly-typed Chrome DevTools Protocol (CDP) method command and awaits its return block.\n\n**Agent Usage:**\nThis is the beating heart of all interactions in `kitten-lynx`. Instead of maintaining a socket,\nevery `send(...)` call constructs a self-contained ADB request and awaits the isolated response.\n\n**Typings:**\nNotice that the generics strictly bind to the `Protocol` interface defined at the top of this file.\nIf you need to invoke a CDP command that TypeScript rejects, you must update the `Protocol` interface first!"
+        },
+        {
+          "name": "from",
+          "type": "from(sessionId: number, clientId: string, connector: Connector): CDPChannel",
+          "kind": "method",
+          "params": [
+            {
+              "name": "sessionId",
+              "type": "number",
+              "description": "The numeric Lynx devtool session ID assigned by the Lynx runtime."
+            },
+            {
+              "name": "clientId",
+              "type": "string",
+              "description": "The unique device-port identifier for the client app (e.g., `\"emulator-5554:40121\"`)."
+            },
+            {
+              "name": "connector",
+              "type": "Connector",
+              "description": "The active `Connector` instance powering the ADB transport."
+            }
+          ],
+          "returns": {
+            "type": "CDPChannel",
+            "refs": [
+              "CDPChannel"
+            ],
+            "description": "A `CDPChannel` reference bound to the requested session."
+          },
+          "summary": "Retrieves or instantiates a stateless `CDPChannel` for a specific Lynx session.\n\n**Design pattern (For Agents):**\nThis testing library uses a **stateless** CDP architecture to avoid hanging Websocket connections\nover unstable ADB links. Channels are cached per `sessionId` via `WeakRef` to reduce allocations."
+        }
+      ]
+    },
+    {
+      "name": "ElementNode",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "Represents a DOM element in a Lynx page.\n\nWraps a CDP `nodeId` and provides methods for inspecting attributes,\ncomputed styles, and simulating user interactions like taps.",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(nodeId: number, _lynxView: KittenLynxView): ElementNode",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "nodeId",
+              "type": "number",
+              "description": "The unique CDP numeric ID denoting this element in the Lynx renderer."
+            },
+            {
+              "name": "_lynxView",
+              "type": "KittenLynxView",
+              "ref": "KittenLynxView",
+              "refs": [
+                "KittenLynxView"
+              ],
+              "description": "The parent `KittenLynxView` instance used to dispatch subsequent CDP queries."
+            }
+          ],
+          "returns": {
+            "type": "ElementNode",
+            "refs": [
+              "ElementNode"
+            ]
+          },
+          "summary": "Initializes a new `ElementNode` instance to represent a Lynx Component or Tag.\n\n**Note for Agents:**\nSimilar to `KittenLynxView`, you should rarely call this directly.\nRely on `KittenLynxView.locator()` or `ElementNode.fromId()` for instantiations."
+        },
+        {
+          "name": "nodeId",
+          "type": "number",
+          "summary": "The unique CDP numeric ID denoting this element in the Lynx renderer.",
+          "kind": "property"
+        },
+        {
+          "name": "computedStyleMap",
+          "type": "computedStyleMap(): Promise<Map<string, string>>",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "Promise<Map<string, string>>",
+            "description": "A promise resolving to a native JS `Map`, where keys are CSS property names and values are their computed string expressions."
+          },
+          "summary": "Fetches all actively computed CSS properties for this specific element.\n\n**Agent Usage:**\nThis relies on `CSS.getComputedStyleForNode`. It returns the fully resolved style values\npost-layout calculation (e.g., resolving `100%` into absolute `px` values).\nIt is highly recommended to use this for visual assertions (e.g., verifying a box is indeed `display: none`\nor has a specific `background-color`)."
+        },
+        {
+          "name": "getAttribute",
+          "type": "getAttribute(name: string): Promise<string | null>",
+          "kind": "method",
+          "params": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": "The name of the attribute to fetch."
+            }
+          ],
+          "returns": {
+            "type": "Promise<string | null>",
+            "description": "A promise resolving to the string value of the attribute, or `null` if the attribute does not exist."
+          },
+          "summary": "Retrieves the string value of a specified attribute on this element.\n\n**Agent Quirk / Gotcha:**\nIn Lynx, standard web `id=\"foo\"` attributes are actually stored as `idSelector=\"foo\"` internally.\nThis library provides a seamless shim: if you query `getAttribute('id')`, it automatically\nqueries `idSelector` instead. No manual handling of `idSelector` is required on your part."
+        },
+        {
+          "name": "tap",
+          "type": "tap(): Promise<void>",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "Promise<void>"
+          },
+          "summary": "Simulates a native user tap (touch press followed by touch release) directly on the center of this element.\n\n**Internal Mechanics (For Agents):**\nThis is not a simulated DOM event (like `element.click()` in Web). It is a highly accurate native-layer\ngesture dispatch:\n1. Fetches the exact boundary coordinates via `DOM.getBoxModel`.\n2. Calculates the absolute center `(x, y)` of the content box.\n3. Dispatches an `Input.emulateTouchFromMouseEvent` (`'mousePressed'`) over the ADB bridge.\n4. Waits 50ms, then dispatches the corresponding `'mouseReleased'`.\n\n**Crucial:** Ensure the element is visible on the screen before calling this, or the coordinate calculation might fail or hit nothing."
+        },
+        {
+          "name": "fromId",
+          "type": "fromId(id: number, lynxView: KittenLynxView): ElementNode",
+          "kind": "method",
+          "params": [
+            {
+              "name": "id",
+              "type": "number",
+              "description": "The numeric CDP node ID to wrap."
+            },
+            {
+              "name": "lynxView",
+              "type": "KittenLynxView",
+              "ref": "KittenLynxView",
+              "refs": [
+                "KittenLynxView"
+              ],
+              "description": "The `KittenLynxView` instance this node belongs to."
+            }
+          ],
+          "returns": {
+            "type": "ElementNode",
+            "refs": [
+              "ElementNode"
+            ],
+            "description": "An `ElementNode` bound to the provided node ID and view."
+          },
+          "summary": "Retrieves or creates an `ElementNode` instance corresponding to a specific Lynx DOM node ID.\n\n**Agent Caching Strategy:**\nNodes are aggressively cached per `KittenLynxView` instance using `WeakRef`.\nThis means if an Agent queries the same DOM node twice before garbage collection,\nit returns the same `ElementNode` reference, reducing memory overhead during extensive DOM crawling."
+        }
+      ]
+    },
+    {
+      "name": "KittenLynxView",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "Represents a Lynx page instance, similar to Puppeteer's `Page`.\n\nProvides methods for navigating to Lynx bundle URLs, querying the DOM,\nand reading page content. Created via [`Lynx.newPage`](api:Lynx.newPage).",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(_connector: Connector, _clientId: string, _client?: any): KittenLynxView",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "_connector",
+              "type": "Connector",
+              "description": "The low-level `Connector` instance used to dispatch CDP messages over ADB/USB."
+            },
+            {
+              "name": "_clientId",
+              "type": "string",
+              "description": "The unique client identifier (typically `<deviceId>:<port>`)."
+            },
+            {
+              "name": "_client",
+              "type": "any",
+              "optional": true,
+              "description": "Optional client metadata object containing internal app states."
+            }
+          ],
+          "returns": {
+            "type": "KittenLynxView",
+            "refs": [
+              "KittenLynxView"
+            ]
+          },
+          "summary": "Initializes a new `KittenLynxView` instance.\n\n**Note for Agents:**\nYou generally should avoid calling this constructor directly. Instead, use `Lynx.newPage()` to properly\ninitialize a `KittenLynxView` instance bound to the active ADB connection and client."
+        },
+        {
+          "name": "_channel",
+          "type": "CDPChannel",
+          "ref": "CDPChannel",
+          "refs": [
+            "CDPChannel"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "id",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "content",
+          "type": "content(): Promise<string>",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "Promise<string>",
+            "description": "A promise resolving to a string representing the serialized DOM content of the page."
+          },
+          "summary": "Serializes the current page's entire DOM tree into an HTML-like string format.\n\n**Agent Usage:**\nThis is highly useful for debugging and logging the current state of the Lynx App DOM.\nIt forces a fresh `DOM.getDocument` snapshot from the CDP server and recursively walks the tree\nto build a string containing tags and attributes (e.g., `<view id=\"main\"><text>...</text></view>`)."
+        },
+        {
+          "name": "goto",
+          "type": "goto(url: string, options?: { timeout?: number }): Promise<void>",
+          "kind": "method",
+          "params": [
+            {
+              "name": "url",
+              "type": "string",
+              "description": "The absolute URL of the Lynx bundle to navigate to (e.g., `'http://localhost:8080/dist/main.lynx.bundle'`)."
+            },
+            {
+              "name": "options",
+              "type": "{ timeout?: number }",
+              "optional": true,
+              "description": "Optional settings. `options.timeout` is how long to poll for the matching session, in milliseconds (default 30000)."
+            }
+          ],
+          "returns": {
+            "type": "Promise<void>"
+          },
+          "summary": "Navigates the Lynx App to a specific Lynx bundle URL and attaches to the corresponding CDP session.\n\n**How it works (Crucial for Agents to understand):**\nUnlike standard web browsers, calling `Page.navigate` in Lynx creates a **new** debugging session\ninstead of reusing the current one. This method abstracts away that complexity by:\n1. Waiting for the devtool server to boot.\n2. Sending an `App.openPage` (or a fallback message) to trigger the navigation.\n3. **Polling the session list** over ADB to find a new session whose URL matches the target bundle URL.\n4. Automatically re-attaching to the matched session and fetching the initial DOM tree (`DOM.getDocument`)."
+        },
+        {
+          "name": "locator",
+          "type": "locator(selector: string): Promise<ElementNode | undefined>",
+          "kind": "method",
+          "params": [
+            {
+              "name": "selector",
+              "type": "string",
+              "description": "A valid CSS selector string targeting the desired element (e.g., `'view'`, `'#submit-btn'`, `'.container > text'`)."
+            }
+          ],
+          "returns": {
+            "type": "Promise<ElementNode | undefined>",
+            "refs": [
+              "ElementNode"
+            ],
+            "description": "A promise resolving to an `ElementNode` containing methods to interact with the element, or `undefined` if no node matched."
+          },
+          "summary": "Locates the first DOM element matching the provided CSS selector in the current page.\n\n**Agent Usage:**\nThis operates identically to `document.querySelector` or Playwright's `page.locator()`.\nIt relies on the `DOM` CDP domain. Always ensure that `goto()` has completed successfully before calling this,\notherwise the DOM tree will not exist."
+        },
+        {
+          "name": "onAttachedToTarget",
+          "type": "onAttachedToTarget(sessionId: number): Promise<void>",
+          "kind": "method",
+          "params": [
+            {
+              "name": "sessionId",
+              "type": "number",
+              "description": "The numeric Lynx devtool session ID to attach to, discovered via `sendListSessionMessage`."
+            }
+          ],
+          "returns": {
+            "type": "Promise<void>"
+          },
+          "summary": "Attaches the LynxView to a specific Lynx devtool session and initializes the CDP channel.\n\n**Internal Mechanics:**\nThis method creates a `CDPChannel` for the specific `sessionId` and immediately fires\na `DOM.getDocument` request to cache the root document node. This must succeed for the page to be interactable.\n\n**Note for Agents:**\nThis is generally marked as internal, but it is not `private`. You normally do not need to call this manually,\nas `goto()` handles session attachment automatically."
+        },
+        {
+          "name": "screenshot",
+          "type": "screenshot(options?: { format?: \"jpeg\" | \"png\" | \"webp\"; path?: string; quality?: number }): Promise<Buffer<ArrayBufferLike>>",
+          "kind": "method",
+          "params": [
+            {
+              "name": "options",
+              "type": "{ format?: \"jpeg\" | \"png\" | \"webp\"; path?: string; quality?: number }",
+              "optional": true,
+              "description": "Screenshot options, such as path, format, and quality."
+            }
+          ],
+          "returns": {
+            "type": "Promise<Buffer<ArrayBufferLike>>",
+            "description": "A Buffer with the image data."
+          },
+          "summary": "Captures a screenshot of the page."
+        },
+        {
+          "name": "url",
+          "type": "url(): string",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "string"
+          },
+          "summary": "Returns the last URL successfully loaded by [`goto`](api:KittenLynxView.goto)."
+        },
+        {
+          "name": "getKittenLynxViewById",
+          "type": "getKittenLynxViewById(id: string): KittenLynxView | undefined",
+          "kind": "method",
+          "params": [
+            {
+              "name": "id",
+              "type": "string",
+              "description": "The string representation of the LynxView's numeric ID (e.g., `'1'`, `'2'`)."
+            }
+          ],
+          "returns": {
+            "type": "KittenLynxView | undefined",
+            "refs": [
+              "KittenLynxView"
+            ],
+            "description": "The `KittenLynxView` instance if it is still alive in memory, or `undefined` if it has been garbage-collected."
+          },
+          "summary": "Retrieves a previously created `KittenLynxView` instance using its stringified numeric ID.\n\n**Why this is useful for Agents:**\nThis is primarily used for cross-referencing or finding an existing view without passing the object reference around."
+        }
+      ]
+    },
+    {
+      "name": "Lynx",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "Main entry point for the kitten-lynx testing framework.\n\nProvides Puppeteer-like APIs for connecting to a Lynx app running on an\nAndroid device (physical or emulator) via ADB and the Chrome DevTools Protocol.",
+      "examples": [
+        "```typescript\nconst lynx = await Lynx.connect({ deviceId: 'localhost:5555' });\nconst page = await lynx.newPage();\nawait page.goto('http://example.com/bundle.lynx.bundle');\nconst content = await page.content();\nawait lynx.close();\n```"
+      ],
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(): Lynx",
+          "kind": "constructor",
+          "params": [],
+          "returns": {
+            "type": "Lynx",
+            "refs": [
+              "Lynx"
+            ]
+          }
+        },
+        {
+          "name": "close",
+          "type": "close(): Promise<void>",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "Promise<void>",
+            "description": "A Promise resolving when the cleanup operation is fully processed."
+          },
+          "summary": "Closes the active ADB/CDP connection and releases associated resources.\n\n**Agent Usage:**\nEnsure this is called in your test's teardown block (e.g., in `afterAll()`) to prevent\nfloating Node.js processes or hanging ADB connections that can ruin subsequent test runs."
+        },
+        {
+          "name": "newPage",
+          "type": "newPage(): Promise<KittenLynxView>",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "Promise<KittenLynxView>",
+            "refs": [
+              "KittenLynxView"
+            ],
+            "description": "A Promise resolving to a new `KittenLynxView` instance bound to the active ADB client."
+          },
+          "summary": "Spawns a new page representation for the connected Lynx environment.\n\n**Agent Usage:**\nSimilar to Puppeteer's `browser.newPage()`. Once you have a `Lynx` connection instance safely created\nvia `Lynx.connect()`, call this method to obtain a `KittenLynxView`. You can then call `post.goto(url)`\non the view to navigate to a Lynx Bundle."
+        },
+        {
+          "name": "connect",
+          "type": "connect(options?: ConnectOptions): Promise<Lynx>",
+          "kind": "method",
+          "params": [
+            {
+              "name": "options",
+              "type": "ConnectOptions",
+              "optional": true,
+              "description": "Configure connection variables, such as `appPackage` and `deviceId` (useful if multiple devices are attached)."
+            }
+          ],
+          "returns": {
+            "type": "Promise<Lynx>",
+            "refs": [
+              "Lynx"
+            ],
+            "description": "A Promise resolving to a connected `Lynx` instance ready to spawn new pages."
+          },
+          "summary": "Main setup method. Connects to the Lynx app devtool server over ADB.\n\n**Agent Guide on the Connection Flow:**\n1. Discovers the target ADB device (physical Android or emulator).\n2. Force-stops the target app to ensure a clean state (`adb shell am force-stop`).\n3. Launches the application (usually Lynx Explorer) on the device.\n4. Queries the `Connector` for available clients and matches by device ID and package name.\n5. Enables the master devtool switch (`enable_devtool`).\n\n**When to use:**\nThis should be the first method invoked in any test script or interaction flow."
+        }
+      ]
+    }
+  ]
+}

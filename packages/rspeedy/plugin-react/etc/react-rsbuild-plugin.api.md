@@ -19,9 +19,10 @@ export interface CompatVisitorConfig {
     addComponentElement: boolean | AddComponentElementConfig
     additionalComponentAttributes: Array<string>
     componentsPkg: Array<string>
+    // Warning: (tsdoc-missing-deprecation-message) The @deprecated block must include a deprecation message, e.g. describing the recommended alternative
     // Warning: (ae-forgotten-export) The symbol "DarkModeConfig" needs to be exported by the entry point index.d.ts
     //
-    // @deprecated (undocumented)
+    // @deprecated
     darkMode?: boolean | DarkModeConfig
     disableDeprecatedWarning: boolean
     legacySlot?: boolean
@@ -52,9 +53,9 @@ export { LAYERS }
 
 // Warning: (ae-missing-release-tag) "LynxTemplatePlugin" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
-// @public (undocumented)
+// @public
 export interface LynxTemplatePlugin {
-    // (undocumented)
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: This type of declaration is not supported yet by the resolver
     getLynxTemplatePluginHooks: typeof LynxTemplatePlugin_2.getLynxTemplatePluginHooks;
 }
 

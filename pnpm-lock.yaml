@@ -400,6 +400,40 @@ importers:
         specifier: ^19.2.18
         version: 19.2.18
 
+  docs:
+    dependencies:
+      react:
+        specifier: 19.2.8
+        version: 19.2.8
+      react-dom:
+        specifier: 19.2.8
+        version: 19.2.8(react@19.2.8)
+    devDependencies:
+      '@rsbuild/plugin-sass':
+        specifier: 2.0.1
+        version: 2.0.1(@rsbuild/core@2.2.4(core-js@3.50.0))
+      '@rspress/core':
+        specifier: 2.0.21
+        version: 2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
+      '@rspress/plugin-client-redirects':
+        specifier: 2.0.21
+        version: 2.0.21(@rspress/core@2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))
+      '@shikijs/transformers':
+        specifier: 4.4.3
+        version: 4.4.3
+      '@types/react':
+        specifier: npm:@types/react@^19.2.18
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.2.4
+        version: 19.2.4(@types/react@19.2.18)
+      typedoc:
+        specifier: ^0.28.20
+        version: 0.28.20(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
   examples/gesture:
     dependencies:
       '@lynx-js/gesture-runtime':
@@ -1485,6 +1519,8 @@ importers:
         specifier: 0.2.1
         version: 0.2.1(@rsbuild/core@2.2.4(core-js@3.50.0))(i18next-cli@1.67.7(@swc/helpers@0.5.23)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(typescript@6.0.3))(rollup@4.62.2)
 
+  packages/lynx-stack-docs: {}
+
   packages/lynx/autolink-codegen:
     devDependencies:
       typescript:
@@ -2392,6 +2428,9 @@ importers:
       '@lynx-js/lynx-bundle-rslib-config':
         specifier: workspace:*
         version: link:../lynx-bundle-rslib-config
+      '@lynx-js/lynx-stack-docs':
+        specifier: workspace:*
+        version: link:../../lynx-stack-docs
       '@lynx-js/motion':
         specifier: workspace:*
         version: link:../../motion

@@ -1,0 +1,116 @@
+---
+title: '@lynx-js/react-refresh-webpack-plugin'
+---
+
+# @lynx-js/react-refresh-webpack-plugin
+
+{/* @api PackageHeader package="react-refresh-webpack-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/react-refresh-webpack-plugin</code> <span className="api-pkg-version">v0.4.2</span> · <a href="https://www.npmjs.com/package/@lynx-js/react-refresh-webpack-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/react-refresh-webpack-plugin" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/react-refresh-webpack-plugin/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+:::tip 内部包
+此包是 Lynx 构建引擎的一部分，由 [`pluginLynx`](/zh/api/packages/rsbuild-plugin) 自动应用。其 API 文档面向插件作者，应用代码不会直接使用它。
+:::
+
+为 Lynx 提供热刷新的 webpack 插件。
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/react-refresh-webpack-plugin -D" />
+
+## API
+
+{/* @api ApiExports package="react-refresh-webpack-plugin" */}
+
+## 类 \{#classes\}
+
+### `ReactRefreshRspackPlugin` \{#reactrefreshrspackplugin\}
+
+ReactRefreshRspackPlugin 用于在 ReactLynx 中启用 fast refresh。
+
+```js
+// rspack.config.js
+import { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'
+export default {
+  module: {
+    rules: [
+      {
+        test: /\.[jt]sx?$/,
+        exclude: [
+          /node_modules/,
+          /@lynx-js/,
+          /react-refresh/,
+          /compiler-nodiff-runtime3/,
+          ReactRefreshRspackPlugin.loader,
+        ],
+        use: [ReactRefreshRspackPlugin.loader],
+      },
+    ],
+  },
+  plugins: [new ReactRefreshRspackPlugin()],
+}
+```
+
+#### `ReactRefreshRspackPlugin.constructor` \{#reactrefreshrspackplugin-constructor\}
+
+- **类型：** `constructor(options: ReactRefreshRspackPluginOptions): ReactRefreshRspackPlugin`
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `options` | [`ReactRefreshRspackPluginOptions`](#reactrefreshrspackpluginoptions) | React Refresh 的选项。 |
+
+#### `ReactRefreshRspackPlugin.loader` \{#reactrefreshrspackplugin-loader\}
+
+- **类型：** `string`
+
+React Refresh 的 loader。
+
+注意需要忽略 React 的运行时，参见下方示例：
+
+```js
+// rspack.config.js
+import { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'
+import { LAYERS } from '@lynx-js/react-webpack-plugin'
+
+export default {
+  module: {
+    rules: [
+      {
+        issuerLayer: LAYERS.BACKGROUND,
+        test: /\.[jt]sx?$/,
+        exclude: [
+          /node_modules/,
+          /@lynx-js/react/,
+          ReactRefreshRspackPlugin.loader,
+        ],
+        use: [ReactRefreshRspackPlugin.loader],
+      },
+    ],
+  },
+  plugins: [new ReactRefreshRspackPlugin()],
+}
+```
+
+#### `ReactRefreshRspackPlugin.apply` \{#reactrefreshrspackplugin-apply\}
+
+- **类型：** `apply(compiler: Compiler): void`
+
+Rspack 插件的入口。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `compiler` | `Compiler` | Rspack 编译器 |
+
+## 类型 \{#types\}
+
+### `ReactRefreshRspackPluginOptions` \{#reactrefreshrspackpluginoptions\}
+
+[`ReactRefreshRspackPlugin`](#reactrefreshrspackplugin) 的选项。
+
+{/* @api-end */}

@@ -45,6 +45,7 @@ export default tseslint.config(
       'examples/*/dist-producer/**',
       'examples/*/dist-consumer/**',
       'website/doc_build/**',
+      'docs/doc_build/**',
       '.changeset/*',
       '**/CHANGELOG.md',
       '**/etc/*.md',
@@ -52,6 +53,9 @@ export default tseslint.config(
       'website/docs/zh/api/**',
       'website/docs/en/changelog/**',
       'website/docs/zh/changelog/**',
+      'packages/lynx-stack-docs/content/**',
+      'docs/api-data/**',
+      'docs/content/*/changelog/**',
 
       // Test snapshots
       '**/expected/**',
@@ -356,6 +360,7 @@ export default tseslint.config(
       'e2e/**',
       'examples/**/*.{js,mjs,cjs,jsx,ts,tsx}',
       'website/**/*.{js,mjs,cjs,jsx,ts,tsx}',
+      'docs/theme/**/*.{js,mjs,cjs,jsx,ts,tsx}',
     ],
     languageOptions: {
       globals: globals.browser,
@@ -489,6 +494,14 @@ export default tseslint.config(
     rules: {
       'n/file-extension-in-import': 'off',
       'n/no-unsupported-features/node-builtins': 'off',
+    },
+  },
+  {
+    files: [
+      'docs/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'n/file-extension-in-import': 'off',
     },
   },
 );

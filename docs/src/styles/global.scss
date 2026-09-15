@@ -1,0 +1,14 @@
+@use "./external-links";
+
+@import "./theme.scss";
+@import "./api";
+
+// This targets all <a target="_blank"> in the main doc container to add a
+// visual indicator to help users identify external links.
+.rspress-doc-container {
+  @include external-links.external-links;
+}
+
+.rp-home-hero__action.rp-button {
+  padding-inline: 28px;
+}

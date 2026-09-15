@@ -1,0 +1,73 @@
+{
+  "id": "chunk-loading-webpack-plugin",
+  "package": "@lynx-js/chunk-loading-webpack-plugin",
+  "version": "0.4.2",
+  "description": "A webpack plugin to generate chunk loading runtime for Lynx.",
+  "group": "internals",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/chunk-loading-webpack-plugin",
+  "exports": [
+    {
+      "name": "ChunkLoadingWebpackPlugin",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "The ChunkLoadingWebpackPlugin enables chunk loading for Rspack in Lynx.\nIt only takes effect when `output.chunkLoading` is `'lynx'`.",
+      "examples": [
+        "```js\n// rspack.config.js\nimport { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'\nexport default {\n  output: {\n    chunkLoading: 'lynx',\n    chunkFormat: 'commonjs',\n  },\n  plugins: [new ChunkLoadingWebpackPlugin()],\n}\n```"
+      ],
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(options: Partial<ChunkLoadingWebpackPluginOptions>): ChunkLoadingWebpackPlugin",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "options",
+              "type": "Partial<ChunkLoadingWebpackPluginOptions>",
+              "refs": [
+                "ChunkLoadingWebpackPluginOptions"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "ChunkLoadingWebpackPlugin",
+            "refs": [
+              "ChunkLoadingWebpackPlugin"
+            ]
+          }
+        },
+        {
+          "name": "defaultOptions",
+          "type": "Readonly<Required<ChunkLoadingWebpackPluginOptions>>",
+          "refs": [
+            "ChunkLoadingWebpackPluginOptions"
+          ],
+          "summary": "`defaultOptions` is the default options that the [`ChunkLoadingWebpackPlugin`](api:ChunkLoadingWebpackPlugin) uses.",
+          "kind": "property"
+        },
+        {
+          "name": "apply",
+          "type": "apply(compiler: Compiler): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "compiler",
+              "type": "Compiler",
+              "description": "the webpack compiler"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "The entry point of a webpack plugin."
+        }
+      ]
+    },
+    {
+      "name": "ChunkLoadingWebpackPluginOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The options for ChunkLoadingWebpackPlugin",
+      "members": []
+    }
+  ]
+}

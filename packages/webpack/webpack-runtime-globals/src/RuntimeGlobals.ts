@@ -9,7 +9,7 @@
  */
 export const RuntimeGlobals = {
   /**
-   * An array of all the async chunk ids.
+   * A map from async `chunk.id` to the lazy-bundle URL it loads from.
    */
   lynxAsyncChunkIds: '__webpack_require__.lynx_aci',
 

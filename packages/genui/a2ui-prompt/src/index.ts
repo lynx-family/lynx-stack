@@ -30,8 +30,11 @@ export interface ReadA2UICatalogDirectoryOptions {
 }
 
 /**
- * Read generated component and function manifests and convert them into a
- * prompt-ready A2UI catalog.
+ * Read generated manifests and convert them into a prompt-ready A2UI catalog.
+ * Components and functions come from a full `catalog.json` in `catalogDir`
+ * or its parent when one exists; otherwise only components are read, from
+ * per-component `<Name>/catalog.json` files, and the catalog has no
+ * functions.
  */
 export function readA2UICatalogFromDirectory(
   options: ReadA2UICatalogDirectoryOptions,

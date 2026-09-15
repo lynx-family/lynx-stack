@@ -1,0 +1,76 @@
+{
+  "id": "web-platform-rsbuild-plugin",
+  "package": "@lynx-js/web-platform-rsbuild-plugin",
+  "version": "0.1.2",
+  "description": "A rsbuild plugin for Web projects in Lynx Web Platform",
+  "group": "web",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-rsbuild-plugin",
+  "exports": [
+    {
+      "name": "getNapiModulesPathRule",
+      "kind": "function",
+      "type": "getNapiModulesPathRule(napiModulesPath: string): { loader: string; options: { napiModulesPath: string }; test: RegExp }",
+      "signatures": [
+        {
+          "text": "getNapiModulesPathRule(napiModulesPath: string): { loader: string; options: { napiModulesPath: string }; test: RegExp }",
+          "params": [
+            {
+              "name": "napiModulesPath",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "{ loader: string; options: { napiModulesPath: string }; test: RegExp }"
+          }
+        }
+      ]
+    },
+    {
+      "name": "getNativeModulesPathRule",
+      "kind": "function",
+      "type": "getNativeModulesPathRule(nativeModulesPath: string): { loader: string; options: { nativeModulesPath: string }; test: RegExp }",
+      "signatures": [
+        {
+          "text": "getNativeModulesPathRule(nativeModulesPath: string): { loader: string; options: { nativeModulesPath: string }; test: RegExp }",
+          "params": [
+            {
+              "name": "nativeModulesPath",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "{ loader: string; options: { nativeModulesPath: string }; test: RegExp }"
+          }
+        }
+      ]
+    },
+    {
+      "name": "pluginWebPlatform",
+      "kind": "function",
+      "type": "pluginWebPlatform(userOptions?: PluginWebPlatformOptions): RsbuildPlugin",
+      "signatures": [
+        {
+          "text": "pluginWebPlatform(userOptions?: PluginWebPlatformOptions): RsbuildPlugin",
+          "params": [
+            {
+              "name": "userOptions",
+              "type": "PluginWebPlatformOptions",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "RsbuildPlugin"
+          },
+          "summary": "Create a rsbuild plugin for Lynx Web Platform.",
+          "examples": [
+            "```ts\n// rsbuild.config.ts\nimport { pluginWebPlatform } from '@lynx-js/web-platform-rsbuild-plugin'\nimport { defineConfig } from '@rsbuild/core';\n\nexport default defineConfig({\n  plugins: [pluginWebPlatform({\n    // replace with your actual native-modules file path\n    nativeModulesPath: path.resolve(__dirname, './index.native-modules.ts'),\n  })],\n})\n```"
+          ]
+        }
+      ],
+      "summary": "Create a rsbuild plugin for Lynx Web Platform.",
+      "examples": [
+        "```ts\n// rsbuild.config.ts\nimport { pluginWebPlatform } from '@lynx-js/web-platform-rsbuild-plugin'\nimport { defineConfig } from '@rsbuild/core';\n\nexport default defineConfig({\n  plugins: [pluginWebPlatform({\n    // replace with your actual native-modules file path\n    nativeModulesPath: path.resolve(__dirname, './index.native-modules.ts'),\n  })],\n})\n```"
+      ]
+    }
+  ]
+}

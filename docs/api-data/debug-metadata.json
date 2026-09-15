@@ -1,0 +1,990 @@
+{
+  "id": "debug-metadata",
+  "package": "@lynx-js/debug-metadata",
+  "version": "0.1.0",
+  "description": "Schema types and parser for the Lynx `debug-metadata.json` format.",
+  "group": "internals",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/tools/debug-metadata",
+  "exports": [
+    {
+      "name": "Artifact",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "One artifact produced by the build that carries at least one debug\ndata source.\n\nIdentity is `(filename, tasmSection)`:\n  - `filename` is the asset basename (e.g. `main-thread.js`,\n    `background.fd311de1.js`, `main.css`).\n  - `tasmSection` is the artifact's location inside `tasm.json` and\n    disambiguates artifacts that share a filename pattern but live in\n    different sections.\n\n`tasmSection` is a path array of nested-object segments because raw\nkeys (especially under `customSections`) may themselves contain dots\nand cannot be safely collapsed into a dotted string. Examples:\n\n  - `['lepusCode', 'root']`        main-thread.js\n  - `['lepusCode', 'chunks', '0']` async main-thread chunk\n  - `['manifest', '/<asset-name>']` background JS bundle\n  - `['customSections', 'data.v2']` custom section whose key has a dot\n  - `['css']`                      a CSS artifact",
+      "members": [
+        {
+          "name": "debugSources",
+          "type": "DebugSource[]",
+          "refs": [
+            "DebugSource"
+          ],
+          "summary": "Debug sources for this artifact, ordered to match the\nreverse-symbolication decode chain. A consumer that starts with a\nruntime location and wants to recover the original source iterates\nthis list left-to-right:\n\n1. `bytecode-debug-info` (if present) maps the bytecode PC offset\n   back to the encoded JS source's `(line, column)`.\n2. `source-map` then maps that `(line, column)` back to the\n   original authored file.",
+          "kind": "property"
+        },
+        {
+          "name": "filename",
+          "type": "string",
+          "summary": "The name this artifact is addressed by: the emitted file's basename, or\nthe section name when the bundle carries it as a custom section.",
+          "kind": "property"
+        },
+        {
+          "name": "kind",
+          "type": "\"main-thread\" | \"background\" | \"css\"",
+          "summary": "Which encoder bucket this asset belongs to in `tasm.json`:\n\n- `main-thread` — JS that runs on the lepusNG main thread (compiled\n  into the `lepusCode` section).\n- `background` — JS that runs on the background JS engine (lives in\n  the `manifest` section).\n- `css` — extracted CSS chunk (lives in the `css` section).",
+          "kind": "property"
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "summary": "Bundler-relative path of the emitted asset itself (e.g.\n`.lynx/main/main-thread.js`). Distinct from\n[`SourceMapDebugSource.path`](api:SourceMapDebugSource.path), which points at the\nsibling `.map` file.",
+          "kind": "property"
+        },
+        {
+          "name": "tasmSection",
+          "optional": true,
+          "type": "string[]",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "BytecodeDebugInfoSource",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Bytecode debug info for a main-thread artifact compiled to lepusNG\n(and, in the future, other bytecode targets).",
+      "members": [
+        {
+          "name": "debugInfo",
+          "type": "LepusNGDebugInfo",
+          "ref": "LepusNGDebugInfo",
+          "refs": [
+            "LepusNGDebugInfo"
+          ],
+          "summary": "Bytecode debug payload. Today always lepusNG-shaped; if/when other\nencoders (`quickjs`, …) need to coexist, a `target` discriminator\nwill be added.",
+          "kind": "property"
+        },
+        {
+          "name": "kind",
+          "type": "\"bytecode-debug-info\"",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "DebugMetadataAsset",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Full `debug-metadata.json` payload emitted per Lynx template entry.\n\nAsymmetry note: `artifacts[]` is **per-artifact** (one entry per JS /\nCSS / bytecode bundle) while `uiSourceMap` is **per-entry** (there is\nexactly one UI sourcemap for the entry's runtime UI tree). Forcing\n`uiSourceMap` into `artifacts[]` would require inventing a synthetic\nartifact, conflating runtime concepts with build products.\n\nDifferent consumers read different fields:\n  - JS error reverse-symbolication walks `artifacts[]` for\n    `kind: 'source-map'` debug sources.\n  - Main-thread bytecode reverse-symbolication walks `artifacts[]`\n    for `kind: 'bytecode-debug-info'` + the matching `source-map`.\n  - UI element inspectors read `uiSourceMap` directly.",
+      "members": [
+        {
+          "name": "artifacts",
+          "type": "Artifact[]",
+          "refs": [
+            "Artifact"
+          ],
+          "summary": "One entry per build artifact that ships debug data. Empty when the\nemitter has not yet been wired to populate it; consumers should\ntreat an empty array as \"no source-level debug data available\"\nrather than an error.",
+          "kind": "property"
+        },
+        {
+          "name": "buildInfo",
+          "type": "{ git?: GitMetadata; rspeedy?: RspeedyMeta }",
+          "refs": [
+            "GitMetadata",
+            "RspeedyMeta"
+          ],
+          "summary": "Build-time / context info. Closed-shape today — extend by adding\nnamed fields to this interface (and bumping the schema) rather than\nby stuffing arbitrary keys at runtime.",
+          "kind": "property"
+        },
+        {
+          "name": "uiSourceMap",
+          "type": "UiSourceMapData",
+          "ref": "UiSourceMapData",
+          "refs": [
+            "UiSourceMapData"
+          ],
+          "summary": "Compact UI source map for the entry's runtime UI tree.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "FieldResolver",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Describes how to look up one queryable field and (optionally) which\nsub-field of the matched value to return to callers.\n\n`resolve` runs the lookup. `payload` is an optional unwrapper: for a\n`source-map` query, the resolver returns the full\n[`SourceMapDebugSource`](api:SourceMapDebugSource) wrapper but HTTP consumers typically want\nthe raw Source Map v3 JSON — `payload: sm => sm.map` performs the\nunwrap.",
+      "members": [
+        {
+          "name": "payload",
+          "optional": true,
+          "type": "payload(value: T): unknown",
+          "kind": "method",
+          "params": [
+            {
+              "name": "value",
+              "type": "T"
+            }
+          ],
+          "returns": {
+            "type": "unknown"
+          }
+        },
+        {
+          "name": "resolve",
+          "type": "resolve(metadata: DebugMetadataAsset, params: QueryParams): T | undefined",
+          "kind": "method",
+          "params": [
+            {
+              "name": "metadata",
+              "type": "DebugMetadataAsset",
+              "ref": "DebugMetadataAsset",
+              "refs": [
+                "DebugMetadataAsset"
+              ]
+            },
+            {
+              "name": "params",
+              "type": "QueryParams",
+              "ref": "QueryParams",
+              "refs": [
+                "QueryParams"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "T | undefined"
+          }
+        }
+      ]
+    },
+    {
+      "name": "GitMetadata",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Git metadata captured at build time.",
+      "members": [
+        {
+          "name": "commit",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "commitUrl",
+          "type": "string | null",
+          "kind": "property"
+        },
+        {
+          "name": "remoteUrl",
+          "type": "string | null",
+          "kind": "property"
+        },
+        {
+          "name": "rootDir",
+          "type": "string | null",
+          "summary": "Absolute path of the git worktree root\n(`git rev-parse --show-toplevel`). Consumers use this to resolve\nsource-relative paths inside source maps back to filesystem\nlocations during reverse symbolication.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LepusNGDebugInfo",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "lepusNG-encoded bytecode's debug payload, identical to the JSON the\nencoder writes to `debug-info.json`. The top-level `lepusNG_debug_info`\nkey is preserved so consumers (Lynx runtime, reverse-symbolication\nservices) can treat a `?field=bytecode-debug-info` response and the\nlegacy `debug-info.json` file as the same shape.",
+      "members": [
+        {
+          "name": "lepusNG_debug_info",
+          "type": "LepusNGDebugInfoBody",
+          "ref": "LepusNGDebugInfoBody",
+          "refs": [
+            "LepusNGDebugInfoBody"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LepusNGDebugInfoBody",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Inner body of [`LepusNGDebugInfo`](api:LepusNGDebugInfo). Carries the function-level\ndebug data the lepusNG encoder produces for one compilation unit.",
+      "members": [
+        {
+          "name": "end_line_num",
+          "type": "number",
+          "summary": "Last source line covered by the compilation unit.",
+          "kind": "property"
+        },
+        {
+          "name": "function_info",
+          "type": "LepusNGFunctionInfo[]",
+          "refs": [
+            "LepusNGFunctionInfo"
+          ],
+          "summary": "Per-function debug data.",
+          "kind": "property"
+        },
+        {
+          "name": "function_number",
+          "type": "number",
+          "summary": "Number of compiled functions; equals `function_info.length`.",
+          "kind": "property"
+        },
+        {
+          "name": "function_source",
+          "type": "string",
+          "summary": "Full JS source that was fed to the bytecode compiler.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LepusNGFunctionInfo",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Debug data for one lepusNG function: maps bytecode PC offsets back to\n`(line, column)` in the original source, plus optional caller info.",
+      "members": [
+        {
+          "name": "column_number",
+          "type": "number",
+          "summary": "Source column where the function definition starts (0-based).",
+          "kind": "property"
+        },
+        {
+          "name": "file_name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "function_id",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "function_name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "line_col",
+          "type": "{ column: number; line: number }[]",
+          "summary": "Decoded line/column pairs, one per source position emitted by the\ncompiler. `line_col.length` matches the number of mappings encoded\nin `pc2line_buf`.",
+          "kind": "property"
+        },
+        {
+          "name": "line_number",
+          "type": "number",
+          "summary": "Source line where the function definition starts (1-based).",
+          "kind": "property"
+        },
+        {
+          "name": "pc2caller_info",
+          "type": "Record<string, string>",
+          "summary": "Optional PC offset → caller source snippet. Keys are stringified\nPC offsets; values are the original function bodies the bytecode\nwas inlined from. Useful for de-inlining stack traces.",
+          "kind": "property"
+        },
+        {
+          "name": "pc2line_buf",
+          "type": "number[]",
+          "summary": "Variable-length encoding of the PC-to-line table. Decode rules\nare documented in the lepusNG bytecode debug-info spec.",
+          "kind": "property"
+        },
+        {
+          "name": "pc2line_len",
+          "type": "number",
+          "summary": "Length of `pc2line_buf` in bytes.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "QueryParams",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Parameters every resolver receives. Resolvers pick the keys they need.",
+      "members": [
+        {
+          "name": "filename",
+          "optional": true,
+          "type": "string",
+          "summary": "Asset basename (e.g. `main-thread.js`).",
+          "kind": "property"
+        },
+        {
+          "name": "key",
+          "optional": true,
+          "type": "string",
+          "summary": "Chunk hash / release identifier.",
+          "kind": "property"
+        },
+        {
+          "name": "path",
+          "optional": true,
+          "type": "string",
+          "summary": "Bundler-relative asset path (e.g. `.lynx/main/main-thread.js.map`).",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "RemappedUiNode",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "A [`UiNode`](api:UiNode) after reverse-resolution. Nodes whose `nodeIndex` is\nknown to their `debugMetadataUrl`'s UI source map gain the\n[`UiSourceLocation`](api:UiSourceLocation) fields; all others are returned verbatim.",
+      "members": [
+        {
+          "name": "children",
+          "optional": true,
+          "type": "RemappedUiNode[]",
+          "refs": [
+            "RemappedUiNode"
+          ],
+          "summary": "Child nodes, walked recursively.",
+          "kind": "property"
+        },
+        {
+          "name": "column",
+          "optional": true,
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "debugMetadataUrl",
+          "optional": true,
+          "type": "string",
+          "summary": "URL/path of the `debug-metadata.json` covering this node.",
+          "kind": "property"
+        },
+        {
+          "name": "line",
+          "optional": true,
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "nodeIndex",
+          "optional": true,
+          "type": "number",
+          "summary": "Compile-time node identity, looked up in the UI source map.",
+          "kind": "property"
+        },
+        {
+          "name": "repo",
+          "optional": true,
+          "type": "string | null",
+          "kind": "property"
+        },
+        {
+          "name": "source",
+          "optional": true,
+          "type": "string | null",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ResolveResult",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Result of [`resolveField`](api:resolveField).",
+      "members": [
+        {
+          "name": "found",
+          "type": "boolean",
+          "summary": "`true` when the resolver matched; `false` when the field is known\nbut no value matched (HTTP layer → 404).",
+          "kind": "property"
+        },
+        {
+          "name": "payload",
+          "optional": true,
+          "type": "unknown",
+          "summary": "Present only when `found`. The value to JSON-serialize back to the\nclient (already unwrapped via `FieldResolver.payload`).",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "RspeedyMeta",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Rspeedy-emitted build context for a single template / entry.",
+      "members": [
+        {
+          "name": "bundlePath",
+          "type": "string",
+          "summary": "The template filename pattern this metadata corresponds to (e.g.\n`main/template.js`). Lets multi-entry projects identify which page\neach metadata file belongs to without relying on storage-key\nconventions.",
+          "kind": "property"
+        },
+        {
+          "name": "entryFiles",
+          "type": "string[]",
+          "summary": "Source files of the webpack entry/entries this debug-metadata\ncorresponds to, expressed as paths relative to the git rootDir\n(falls back to the compiler context when not in a git repo).\n\nTypically a single file, but webpack allows array-form entries and\nLynx splits each user entry into multiple webpack entries\ninternally — both cases produce multiple paths here.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "SourceMap",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Source Map v3 payload, per the [Source Map Revision 3 proposal](https://sourcemaps.info/spec.html).\n\nDeclared here (instead of imported from `source-map`) to keep this\npackage zero-dependency and prevent transitive consumers from pulling\nthe ~200 kB `source-map` runtime just for a TypeScript type.",
+      "members": [
+        {
+          "name": "file",
+          "optional": true,
+          "type": "string",
+          "summary": "Generated output filename this map describes.",
+          "kind": "property"
+        },
+        {
+          "name": "mappings",
+          "type": "string",
+          "summary": "VLQ-encoded mapping data.",
+          "kind": "property"
+        },
+        {
+          "name": "names",
+          "type": "string[]",
+          "summary": "Symbol names referenced from `mappings`.",
+          "kind": "property"
+        },
+        {
+          "name": "sections",
+          "optional": true,
+          "type": "SourceMapSection[]",
+          "refs": [
+            "SourceMapSection"
+          ],
+          "summary": "Index-map sections, exclusive with the simple-map shape. Producers\neither set `sections` (index map) or the other fields, not both.",
+          "kind": "property"
+        },
+        {
+          "name": "sourceRoot",
+          "optional": true,
+          "type": "string",
+          "summary": "Optional prefix prepended to every entry in `sources`.",
+          "kind": "property"
+        },
+        {
+          "name": "sources",
+          "type": "string[]",
+          "summary": "Original source file URLs / identifiers.",
+          "kind": "property"
+        },
+        {
+          "name": "sourcesContent",
+          "optional": true,
+          "type": "(string | null)[]",
+          "summary": "Inline source contents, parallel to `sources`.",
+          "kind": "property"
+        },
+        {
+          "name": "version",
+          "type": "3",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "SourceMapDebugSource",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Source Map v3 debug data attached to a JS / CSS artifact.",
+      "members": [
+        {
+          "name": "filename",
+          "type": "string",
+          "summary": "Basename of the `.map` file, e.g. `main-thread.js.map`.",
+          "kind": "property"
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "summary": "Identifier that platform-side reverse symbolication uses to match\nthis map. Defaults to the producing chunk's hash, matching the\n`release` the `__DEBUG_METADATA_RELEASE__` banner reports at runtime.",
+          "kind": "property"
+        },
+        {
+          "name": "kind",
+          "type": "\"source-map\"",
+          "kind": "property"
+        },
+        {
+          "name": "map",
+          "type": "SourceMap",
+          "ref": "SourceMap",
+          "refs": [
+            "SourceMap"
+          ],
+          "summary": "Full Source Map v3 payload.",
+          "kind": "property"
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "summary": "Bundler-relative path of the `.map` file, e.g. `.lynx/main/main-thread.js.map`.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "SourceMapSection",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "One section of an index source map.",
+      "members": [
+        {
+          "name": "map",
+          "type": "SourceMap",
+          "ref": "SourceMap",
+          "refs": [
+            "SourceMap"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "offset",
+          "type": "{ column: number; line: number }",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "UiNode",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "One UI node of the tree the Lynx engine dumps — the input to\n[`remapUiTree`](api:remapUiTree). Three fields are read: `nodeIndex` and\n`debugMetadataUrl` drive reverse-resolution, and `children` is walked\nrecursively. All three are optional because the engine emits nodes that\ncarry no source mapping (e.g. raw-text nodes have no `nodeIndex`); such\nnodes pass through untouched. Every other field is opaque.",
+      "members": [
+        {
+          "name": "children",
+          "optional": true,
+          "type": "UiNode[]",
+          "refs": [
+            "UiNode"
+          ],
+          "summary": "Child nodes, walked recursively.",
+          "kind": "property"
+        },
+        {
+          "name": "debugMetadataUrl",
+          "optional": true,
+          "type": "string",
+          "summary": "URL/path of the `debug-metadata.json` covering this node.",
+          "kind": "property"
+        },
+        {
+          "name": "nodeIndex",
+          "optional": true,
+          "type": "number",
+          "summary": "Compile-time node identity, looked up in the UI source map.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "UiSourceLocation",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Source location recovered for a single UI node, in the shape the\nreverse-resolved tree gains alongside its original fields.",
+      "members": [
+        {
+          "name": "column",
+          "type": "number",
+          "summary": "1-based source column.",
+          "kind": "property"
+        },
+        {
+          "name": "line",
+          "type": "number",
+          "summary": "1-based source line.",
+          "kind": "property"
+        },
+        {
+          "name": "repo",
+          "type": "string | null",
+          "summary": "`owner/repo` derived from the build's git remote, or `null`.",
+          "kind": "property"
+        },
+        {
+          "name": "source",
+          "type": "string | null",
+          "summary": "Authored source path (relative to the project root), or `null`.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "UiSourceMapData",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Compact UI source map payload — the `uiSourceMap` field of\n[`DebugMetadataAsset`](api:DebugMetadataAsset).",
+      "members": [
+        {
+          "name": "mappings",
+          "type": "[number, number, number][]",
+          "kind": "property"
+        },
+        {
+          "name": "sources",
+          "type": "string[]",
+          "kind": "property"
+        },
+        {
+          "name": "uiMaps",
+          "type": "number[]",
+          "kind": "property"
+        },
+        {
+          "name": "version",
+          "type": "1",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "UiSourceMapRecord",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "One UI source map record produced by the main-thread loader.",
+      "members": [
+        {
+          "name": "columnNumber",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "filename",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "lineNumber",
+          "type": "number",
+          "kind": "property"
+        },
+        {
+          "name": "uiSourceMap",
+          "type": "number",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "DebugMetadataLoader",
+      "kind": "typealias",
+      "type": "(debugMetadataUrl: string) => Promise<DebugMetadataAsset>",
+      "refs": [
+        "DebugMetadataAsset"
+      ],
+      "summary": "Loads the [`DebugMetadataAsset`](api:DebugMetadataAsset) a node's `debugMetadataUrl` points\nat. Supplied by the caller so the core stays free of I/O (the CLI wires\nup `fetch` / `fs`); only called once per distinct URL."
+    },
+    {
+      "name": "DebugSource",
+      "kind": "typealias",
+      "type": "SourceMapDebugSource | BytecodeDebugInfoSource",
+      "refs": [
+        "SourceMapDebugSource",
+        "BytecodeDebugInfoSource"
+      ],
+      "summary": "One debug data source attached to an [`Artifact`](api:Artifact).\n\nTagged union so future debug data kinds (e.g. WASM debug info,\nR-source-map) can be added without restructuring `artifacts[]`."
+    },
+    {
+      "name": "FIELDS",
+      "kind": "variable",
+      "type": "Map<string, FieldResolver>",
+      "refs": [
+        "FieldResolver"
+      ],
+      "summary": "Field name → resolver. **HTTP layers read this directly.** Mutations\nare honoured by the next request — the export is a live `Map` so\nplugins can register their own fields at startup.\n\nAdding a new field is a one-line `FIELDS.set('your-name', { ... })`.",
+      "default": "..."
+    },
+    {
+      "name": "UI_SOURCE_MAP_RECORDS_BUILD_INFO",
+      "kind": "variable",
+      "type": "\"lynxUiSourceMapRecords\"",
+      "summary": "`module.buildInfo[UI_SOURCE_MAP_RECORDS_BUILD_INFO]` is where the\nmain-thread loader stashes the [`UiSourceMapRecord`](api:UiSourceMapRecord) array it\nextracts from a module, for `LynxDebugMetadataPlugin` to collect.\n\nLives in this zero-dependency schema package so producer\n(`@lynx-js/react-webpack-plugin`'s loader) and consumer\n(`@lynx-js/debug-metadata-rsbuild-plugin`) can both read the same\nconstant without taking a runtime dep on each other.",
+      "default": "'lynxUiSourceMapRecords'"
+    },
+    {
+      "name": "assertUiNode",
+      "kind": "function",
+      "type": "assertUiNode(value: unknown, path: string): asserts value is UiNode",
+      "signatures": [
+        {
+          "text": "assertUiNode(value: unknown, path: string): asserts value is UiNode",
+          "params": [
+            {
+              "name": "value",
+              "type": "unknown"
+            },
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "asserts value is UiNode"
+          },
+          "summary": "Assert that a parsed value is a [`UiNode`](api:UiNode) tree. Use it at trust\nboundaries — e.g. right after `JSON.parse`-ing an engine dump — so\nmalformed input fails fast with a located error (`$.children[1]`-style\npath) instead of crashing deep inside resolution.\n\n`nodeIndex`, `debugMetadataUrl` and `children` are all optional (the\nengine emits nodes with no source mapping, such as raw text); they are\nonly rejected when present with the wrong type. A non-object, or a\n`children` that is not an array, is always rejected."
+        }
+      ],
+      "summary": "Assert that a parsed value is a [`UiNode`](api:UiNode) tree. Use it at trust\nboundaries — e.g. right after `JSON.parse`-ing an engine dump — so\nmalformed input fails fast with a located error (`$.children[1]`-style\npath) instead of crashing deep inside resolution.\n\n`nodeIndex`, `debugMetadataUrl` and `children` are all optional (the\nengine emits nodes with no source mapping, such as raw text); they are\nonly rejected when present with the wrong type. A non-object, or a\n`children` that is not an array, is always rejected."
+    },
+    {
+      "name": "buildUiSourceMapLookup",
+      "kind": "function",
+      "type": "buildUiSourceMapLookup(uiSourceMap: UiSourceMapData): Map<number, Omit<UiSourceLocation, \"repo\">>",
+      "signatures": [
+        {
+          "text": "buildUiSourceMapLookup(uiSourceMap: UiSourceMapData): Map<number, Omit<UiSourceLocation, \"repo\">>",
+          "params": [
+            {
+              "name": "uiSourceMap",
+              "type": "UiSourceMapData",
+              "ref": "UiSourceMapData",
+              "refs": [
+                "UiSourceMapData"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "Map<number, Omit<UiSourceLocation, \"repo\">>",
+            "refs": [
+              "UiSourceLocation"
+            ]
+          },
+          "summary": "Build a `nodeIndex -> {source, line, column}` lookup from a\n[`UiSourceMapData`](api:UiSourceMapData). The payload is column-oriented: `uiMaps[i]`\nis the nodeIndex, and the matching `mappings[i]` entry holds\n`[sourceIndex, line, column]`, with `sourceIndex` indexing `sources`."
+        }
+      ],
+      "summary": "Build a `nodeIndex -> {source, line, column}` lookup from a\n[`UiSourceMapData`](api:UiSourceMapData). The payload is column-oriented: `uiMaps[i]`\nis the nodeIndex, and the matching `mappings[i]` entry holds\n`[sourceIndex, line, column]`, with `sourceIndex` indexing `sources`."
+    },
+    {
+      "name": "findArtifact",
+      "kind": "function",
+      "type": "findArtifact(metadata: DebugMetadataAsset, query: { filename: string }): Artifact | undefined",
+      "signatures": [
+        {
+          "text": "findArtifact(metadata: DebugMetadataAsset, query: { filename: string }): Artifact | undefined",
+          "params": [
+            {
+              "name": "metadata",
+              "type": "DebugMetadataAsset",
+              "ref": "DebugMetadataAsset",
+              "refs": [
+                "DebugMetadataAsset"
+              ]
+            },
+            {
+              "name": "query",
+              "type": "{ filename: string }"
+            }
+          ],
+          "returns": {
+            "type": "Artifact | undefined",
+            "refs": [
+              "Artifact"
+            ]
+          },
+          "summary": "Find an [`Artifact`](api:Artifact) by `filename` (e.g. `main-thread.js`,\n`background.fd311de1.js`, `main.css`)."
+        }
+      ],
+      "summary": "Find an [`Artifact`](api:Artifact) by `filename` (e.g. `main-thread.js`,\n`background.fd311de1.js`, `main.css`)."
+    },
+    {
+      "name": "findBytecodeDebugInfo",
+      "kind": "function",
+      "type": "findBytecodeDebugInfo(metadata: DebugMetadataAsset, query: { filename: string }): BytecodeDebugInfoSource | undefined",
+      "signatures": [
+        {
+          "text": "findBytecodeDebugInfo(metadata: DebugMetadataAsset, query: { filename: string }): BytecodeDebugInfoSource | undefined",
+          "params": [
+            {
+              "name": "metadata",
+              "type": "DebugMetadataAsset",
+              "ref": "DebugMetadataAsset",
+              "refs": [
+                "DebugMetadataAsset"
+              ]
+            },
+            {
+              "name": "query",
+              "type": "{ filename: string }"
+            }
+          ],
+          "returns": {
+            "type": "BytecodeDebugInfoSource | undefined",
+            "refs": [
+              "BytecodeDebugInfoSource"
+            ]
+          },
+          "summary": "Find a `bytecode-debug-info` source attached to the artifact named\n`filename`."
+        }
+      ],
+      "summary": "Find a `bytecode-debug-info` source attached to the artifact named\n`filename`."
+    },
+    {
+      "name": "findSourceMap",
+      "kind": "function",
+      "type": "findSourceMap(metadata: DebugMetadataAsset, query: { filename?: string; key?: string; path?: string }): SourceMapDebugSource | undefined",
+      "signatures": [
+        {
+          "text": "findSourceMap(metadata: DebugMetadataAsset, query: { filename?: string; key?: string; path?: string }): SourceMapDebugSource | undefined",
+          "params": [
+            {
+              "name": "metadata",
+              "type": "DebugMetadataAsset",
+              "ref": "DebugMetadataAsset",
+              "refs": [
+                "DebugMetadataAsset"
+              ]
+            },
+            {
+              "name": "query",
+              "type": "{ filename?: string; key?: string; path?: string }"
+            }
+          ],
+          "returns": {
+            "type": "SourceMapDebugSource | undefined",
+            "refs": [
+              "SourceMapDebugSource"
+            ]
+          },
+          "summary": "Find a `source-map` [`SourceMapDebugSource`](api:SourceMapDebugSource) by `path`,\n`filename`, or `key`. At least one of the three should be set;\nevery comparison is an exact equality on the field of the same\nname on [`SourceMapDebugSource`](api:SourceMapDebugSource)."
+        }
+      ],
+      "summary": "Find a `source-map` [`SourceMapDebugSource`](api:SourceMapDebugSource) by `path`,\n`filename`, or `key`. At least one of the three should be set;\nevery comparison is an exact equality on the field of the same\nname on [`SourceMapDebugSource`](api:SourceMapDebugSource)."
+    },
+    {
+      "name": "isUiSourceMapData",
+      "kind": "function",
+      "type": "isUiSourceMapData(value: unknown): value is UiSourceMapData",
+      "signatures": [
+        {
+          "text": "isUiSourceMapData(value: unknown): value is UiSourceMapData",
+          "params": [
+            {
+              "name": "value",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "value is UiSourceMapData"
+          },
+          "summary": "Runtime check that a parsed value matches [`UiSourceMapData`](api:UiSourceMapData)'s\nload-bearing shape — an object with `sources`, `mappings` and `uiMaps`\narrays. Guards against `debugMetadataUrl`s that resolve to JSON of a\ndifferent (or older) format."
+        }
+      ],
+      "summary": "Runtime check that a parsed value matches [`UiSourceMapData`](api:UiSourceMapData)'s\nload-bearing shape — an object with `sources`, `mappings` and `uiMaps`\narrays. Guards against `debugMetadataUrl`s that resolve to JSON of a\ndifferent (or older) format."
+    },
+    {
+      "name": "knownFields",
+      "kind": "function",
+      "type": "knownFields(): string[]",
+      "signatures": [
+        {
+          "text": "knownFields(): string[]",
+          "params": [],
+          "returns": {
+            "type": "string[]"
+          },
+          "summary": "All currently-registered field names. Use for `400 invalid_field`\nresponses so the listing auto-updates when new fields are registered."
+        }
+      ],
+      "summary": "All currently-registered field names. Use for `400 invalid_field`\nresponses so the listing auto-updates when new fields are registered."
+    },
+    {
+      "name": "normalizeRepo",
+      "kind": "function",
+      "type": "normalizeRepo(remoteUrl: string | null): string | null",
+      "signatures": [
+        {
+          "text": "normalizeRepo(remoteUrl: string | null): string | null",
+          "params": [
+            {
+              "name": "remoteUrl",
+              "type": "string | null"
+            }
+          ],
+          "returns": {
+            "type": "string | null"
+          },
+          "summary": "Normalize a git remote URL (SSH or HTTP form) to an `owner/repo`\nidentifier, dropping any trailing `.git`. Returns `null` for empty\ninput and the original string when it matches no known form."
+        }
+      ],
+      "summary": "Normalize a git remote URL (SSH or HTTP form) to an `owner/repo`\nidentifier, dropping any trailing `.git`. Returns `null` for empty\ninput and the original string when it matches no known form."
+    },
+    {
+      "name": "remapUiTree",
+      "kind": "function",
+      "type": "remapUiTree(root: UiNode, loadMetadata: DebugMetadataLoader): Promise<RemappedUiNode>",
+      "signatures": [
+        {
+          "text": "remapUiTree(root: UiNode, loadMetadata: DebugMetadataLoader): Promise<RemappedUiNode>",
+          "params": [
+            {
+              "name": "root",
+              "type": "UiNode",
+              "ref": "UiNode",
+              "refs": [
+                "UiNode"
+              ]
+            },
+            {
+              "name": "loadMetadata",
+              "type": "DebugMetadataLoader",
+              "ref": "DebugMetadataLoader",
+              "refs": [
+                "DebugMetadataLoader"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "Promise<RemappedUiNode>",
+            "refs": [
+              "RemappedUiNode"
+            ]
+          },
+          "summary": "Reverse-resolve a UI node tree dumped by the Lynx engine.\n\nEvery node carrying both a `nodeIndex` and a `debugMetadataUrl` whose\n`uiSourceMap` knows that index is annotated with [`UiSourceLocation`](api:UiSourceLocation)\nfields (`repo`, `source`, `line`, `column`). All other fields — and nodes\nthat cannot be resolved — pass through verbatim. The input is not\nmutated; a new tree is returned."
+        }
+      ],
+      "summary": "Reverse-resolve a UI node tree dumped by the Lynx engine.\n\nEvery node carrying both a `nodeIndex` and a `debugMetadataUrl` whose\n`uiSourceMap` knows that index is annotated with [`UiSourceLocation`](api:UiSourceLocation)\nfields (`repo`, `source`, `line`, `column`). All other fields — and nodes\nthat cannot be resolved — pass through verbatim. The input is not\nmutated; a new tree is returned."
+    },
+    {
+      "name": "resolveField",
+      "kind": "function",
+      "type": "resolveField(metadata: DebugMetadataAsset, field: string, params: QueryParams): ResolveResult | undefined",
+      "signatures": [
+        {
+          "text": "resolveField(metadata: DebugMetadataAsset, field: string, params: QueryParams): ResolveResult | undefined",
+          "params": [
+            {
+              "name": "metadata",
+              "type": "DebugMetadataAsset",
+              "ref": "DebugMetadataAsset",
+              "refs": [
+                "DebugMetadataAsset"
+              ]
+            },
+            {
+              "name": "field",
+              "type": "string"
+            },
+            {
+              "name": "params",
+              "type": "QueryParams",
+              "ref": "QueryParams",
+              "refs": [
+                "QueryParams"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "ResolveResult | undefined",
+            "refs": [
+              "ResolveResult"
+            ]
+          },
+          "summary": "Resolve a `?field=…` query against parsed metadata.\n\n- Returns `undefined` when the field is not registered — HTTP layer\n  responds `400 invalid_field` and lists `knownFields()`.\n- Returns `{found: false}` when the field is valid but no value\n  matched — HTTP layer responds `404`.\n- Returns `{found: true, payload}` when matched. `payload` is the\n  already-unwrapped value (resolver's `payload` hook applied)."
+        }
+      ],
+      "summary": "Resolve a `?field=…` query against parsed metadata.\n\n- Returns `undefined` when the field is not registered — HTTP layer\n  responds `400 invalid_field` and lists `knownFields()`.\n- Returns `{found: false}` when the field is valid but no value\n  matched — HTTP layer responds `404`.\n- Returns `{found: true, payload}` when matched. `payload` is the\n  already-unwrapped value (resolver's `payload` hook applied)."
+    }
+  ]
+}

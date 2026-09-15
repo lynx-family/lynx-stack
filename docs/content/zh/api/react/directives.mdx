@@ -1,0 +1,98 @@
+---
+title: 指令
+---
+
+# 指示符
+
+## `'background only'`
+
+`'background only'` 指示符允许你标识只会在后台线程执行的函数。
+在其他线程中，被标识的函数的函数体会被移除。
+
+想要标识一个函数只会在后台线程执行，只需要在其函数体的首行添加 `'background only'`：
+
+```ts
+function bgOnlyAction(pureCallback) {
+  'background only';
+  lynx.getJSModule('GlobalEventEmitter').addListener('eventName', pureCallback);
+}
+```
+
+在生成产物的主线程部分中，这个函数会被替换为
+
+```ts
+function bgOnlyAction(pureCallback) {}
+```
+
+通常，含有副作用的代码只应该在后台线程中执行，例如监听事件、调用 JSB 等。
+将这样的函数标记为 `'background only'` 能够显著减小包体积。
+
+`'background only'` 的一个使用方式是配合自定义的 hooks。
+例如，`useFirstRender` 是一个用户自定义的 hook，用于在首次渲染组件时执行某些逻辑。
+我们希望使用它来监听事件。事件监听逻辑不应该也不能在主线程执行。
+这时，我们可以使用 `'background only'` 指示符标注这个函数，使事件监听逻辑从主线程中移除。
+
+```ts
+import {useFirstRender} from './useFirstRender';
+
+function bgOnlyAction(pureCallback) {
+  'background only';
+  lynx.getJSModule('GlobalEventEmitter').addListener('eventName', pureCallback);
+}
+
+function Foo({ prop } ){
+  const ref = useRef(null);
+  useFirstRender(() => {
+    bgOnlyAction(() => {
+      // ...
+    });
+  });
+  return <view>;
+}
+```
+
+并不是仅有标注为 `'background only'` 的代码才会在其他线程中被移除；ReactLynx 默认会移除一些部分代码，包括 `useEffect`、`useLayoutEffect` 的参数以及部分事件处理函数等。
+对于这些部分，可以不用将对应的函数标注为 `'background only'`。详情可以参考[双运行时代码拆分](https://lynxjs.org/zh/react/thinking-in-reactlynx)。
+
+## `'main thread'`
+
+`'main thread'` 指示符允许你标识主线程函数。
+主线程函数是[主线程脚本](https://lynxjs.org/zh/react/main-thread-script)体系的一部分，只能在主线程执行，主要用于跟手动画和手势处理。
+
+将一个后台线程函数转为主线程函数只需要在它的第一行添加 `'main thread'` 指示：
+
+``` tsx {7}
+import {MainThread} from "@lynx-js/types";
+
+export default function App() {
+  const red = 'red';
+
+  function handleTap(event: MainThread.TouchEvent) {
+    'main thread';
+    event.currentTarget.setStyleProperty('background-color', red);
+  }
+
+  return (
+    <view main-thread:bindtap={handleTap}>
+      <text>Hello World!</text>
+    </view>
+  );
+}
+```
+
+主线程函数在定义时会自动捕获后台线程的外部变量，如上面示例中的 `red`。
+
+在将主线程函数用作事件处理器时，主线程函数接受一个 `event` 参数，包含事件的基本信息。
+其 `event.target` 和 `event.currentTarget` 参数和后台线程的事件处理器不同，是一个 [`MainThread.Element`](https://lynxjs.org/zh/api/lynx-api/main-thread/main-thread-element) 对象。
+通过这个对象可以方便地同步获取和设置节点的属性，例如示例中的 [`setStyleProperty()`]。
+
+一些注意事项：
+
+- 主线程函数可以且只能在主线程运行。主线程函数之间可以互相调用。
+- 捕获的变量需要使用 `JSON.stringify()` 在线程间传递，因此必须可序列化为 `JSON`。
+- 主线程函数只能在 TTI 之后执行。也就是说，首屏时主线程函数不能执行。
+- 主线程函数不支持嵌套定义。
+- 类组件的 constructor、getter、setter 不支持指定为主线程函数。
+- 不能在主线程函数内部修改捕获自外部作用域的变量。
+
+[`setStyleProperty()`]: https://lynxjs.org/zh/api/lynx-api/main-thread/main-thread-element.html#elementsetstyleproperty

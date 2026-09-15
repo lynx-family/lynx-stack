@@ -1,0 +1,36 @@
+---
+title: '@lynx-js/docs-mcp-server'
+---
+
+# @lynx-js/docs-mcp-server
+
+{/* @api PackageHeader package="docs-mcp-server" */}
+
+<div className="api-pkg-header"><code>@lynx-js/docs-mcp-server</code> <span className="api-pkg-version">v0.2.6</span> · <a href="https://www.npmjs.com/package/@lynx-js/docs-mcp-server" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/mcp-servers/docs-mcp-server" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/mcp-servers/docs-mcp-server/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+An MCP server that gives coding agents such as Claude Code, Codex, Cursor and Copilot the Lynx documentation, through [llms.txt](https://lynxjs.org/next/llms.txt).
+
+## Usage
+
+Add it to the MCP configuration of your client:
+
+```json
+{
+  "mcpServers": {
+    "lynx-docs": {
+      "command": "npx",
+      "args": ["-y", "@lynx-js/docs-mcp-server@latest"]
+    }
+  }
+}
+```
+
+With Claude Code:
+
+```bash
+claude mcp add lynx-docs npx @lynx-js/docs-mcp-server@latest
+```
+
+It needs Node.js 18.17 or later. See the [README](https://github.com/lynx-family/lynx-stack/tree/main/packages/mcp-servers/docs-mcp-server) for other clients.

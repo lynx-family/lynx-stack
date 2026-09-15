@@ -1,0 +1,102 @@
+{
+  "ReactWebpackPlugin.summary": {
+    "en": "ReactWebpackPlugin allows using ReactLynx with webpack",
+    "text": "ReactWebpackPlugin 用于在 webpack 中使用 ReactLynx"
+  },
+  "ReactWebpackPlugin.defaultOptions.summary": {
+    "en": "`defaultOptions` is the default options that the [`ReactWebpackPlugin`](api:ReactWebpackPlugin) uses.",
+    "text": "`defaultOptions` 是 [`ReactWebpackPlugin`](api:ReactWebpackPlugin) 使用的默认选项。"
+  },
+  "ReactWebpackPlugin.loaders.summary": {
+    "en": "The loaders for ReactLynx.",
+    "text": "ReactLynx 的 loader。"
+  },
+  "ReactWebpackPlugin.loaders.remarks": {
+    "en": "Note that this loader transforms JSX/TSX to valid JavaScript.\nFor `.ts` and `.tsx` files, the TypeScript types are stripped as well.",
+    "text": "注意，该 loader 会将 JSX/TSX 转换为合法的 JavaScript。对于 `.ts` 和 `.tsx` 文件，还会同时移除 TypeScript 类型。"
+  },
+  "ReactWebpackPlugin.apply.summary": {
+    "en": "The entry point of a webpack plugin.",
+    "text": "webpack 插件的入口。"
+  },
+  "ReactWebpackPlugin.apply.params.compiler": {
+    "en": "the webpack compiler",
+    "text": "webpack compiler"
+  },
+  "ExtractStrConfig.strLength.summary": {
+    "en": "The minimum length of string literals to be extracted.",
+    "text": "需要提取的字符串字面量的最小长度。"
+  },
+  "ReactLoaderOptions.summary": {
+    "en": "The options of the ReactLynx plugin.",
+    "text": "ReactLynx 插件的选项。"
+  },
+  "ReactLoaderOptions.defineDCE.summary": {
+    "en": "Like `define` in various bundlers, but this one happens at transform time, and a DCE pass will be performed.",
+    "text": "类似于各类打包工具中的 `define`，但它发生在转换阶段，并且会执行一次 DCE。"
+  },
+  "ReactLoaderOptions.engineVersion.summary": {
+    "en": "The engine version.",
+    "text": "引擎版本。"
+  },
+  "ReactLoaderOptions.experimental_useElementTemplate.summary": {
+    "en": "Whether to enable Element Template compilation.",
+    "text": "是否启用 Element Template 编译。"
+  },
+  "ReactLoaderOptions.inlineSourcesContent.summary": {
+    "en": "Generate inline source content in source-map.",
+    "text": "在 source map 中生成内联的源码内容。"
+  },
+  "ReactLoaderOptions.refresh.summary": {
+    "en": "Enable the Fast Refresh for ReactLynx.",
+    "text": "为 ReactLynx 启用 Fast Refresh。"
+  },
+  "ReactLoaderOptions.shake.summary": {
+    "en": "How main-thread code will be shaken.",
+    "text": "主线程代码的 shake 方式。"
+  },
+  "ReactWebpackPluginOptions.summary": {
+    "en": "The options for ReactWebpackPlugin",
+    "text": "ReactWebpackPlugin 的选项"
+  },
+  "ReactWebpackPluginOptions.entryPairs.summary": {
+    "en": "The main-thread and background entry pairs to merge the main-thread\ndefinitions across.",
+    "text": "主线程与后台入口对，用于在其间合并主线程定义。"
+  },
+  "ReactWebpackPluginOptions.experimental_isLazyBundle.summary": {
+    "en": "Whether to enable lazy bundle.",
+    "text": "是否启用 lazy bundle。"
+  },
+  "ReactWebpackPluginOptions.experimental_transformBuiltinAttributeNames.summary": {
+    "en": "The builtin attribute-name transform configuration used by runtime spread\nattributes.",
+    "text": "运行时展开属性（spread attributes）所使用的内置属性名转换配置。"
+  },
+  "ReactWebpackPluginOptions.experimental_useElementTemplate.summary": {
+    "en": "Whether to enable Element Template compilation.",
+    "text": "是否启用 Element Template 编译。"
+  },
+  "ReactWebpackPluginOptions.extractStr.summary": {
+    "en": "Merge same string literals in JS and Lepus to reduce output bundle size.\nSet to `false` to disable.",
+    "text": "合并 JS 和 Lepus 中相同的字符串字面量，以减小输出 bundle 的体积。设置为 `false` 可禁用。"
+  },
+  "ReactWebpackPluginOptions.lazyBundleFetcher.summary": {
+    "en": "Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.\n`pluginReactLynx`) from the host engine version and any\n`REACT_LAZY_BUNDLE_FETCHER` env override.",
+    "text": "解析后的 lazy bundle fetcher 模式。由调用方（例如\n`pluginReactLynx`）根据宿主引擎版本以及\n`REACT_LAZY_BUNDLE_FETCHER` 环境变量覆盖值决定。"
+  },
+  "ReactWebpackPluginOptions.mainThreadChunks.summary": {
+    "en": "The chunk names to be considered as main thread chunks.",
+    "text": "被视为主线程 chunk 的 chunk 名称。"
+  },
+  "ReactWebpackPluginOptions.profile.summary": {
+    "en": "Whether to enable profile.",
+    "text": "是否启用 profile。"
+  },
+  "ReactWebpackPluginOptions.profile.default": {
+    "en": "`false` when production, `true` when development",
+    "text": "生产环境下为 `false`，开发环境下为 `true`"
+  },
+  "ReactWebpackPluginOptions.workletRuntimePath.summary": {
+    "en": "The file path of `@lynx-js/react/worklet-runtime`.",
+    "text": "`@lynx-js/react/worklet-runtime` 的文件路径。"
+  }
+}

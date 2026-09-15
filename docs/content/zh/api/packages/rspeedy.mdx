@@ -1,0 +1,509 @@
+---
+title: '@lynx-js/rspeedy'
+---
+
+# @lynx-js/rspeedy
+
+`@lynx-js/rspeedy` 的编程式 API：通过脚本而非 CLI 加载配置、创建 Rspeedy 实例并执行构建。
+
+{/* @api PackageHeader package="rspeedy" */}
+
+<div className="api-pkg-header"><code>@lynx-js/rspeedy</code> <span className="api-pkg-version">v0.17.2</span> · <a href="https://www.npmjs.com/package/@lynx-js/rspeedy" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/core" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/core/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+```ts
+import { createRspeedy, loadConfig } from '@lynx-js/rspeedy'
+
+const { content: config } = await loadConfig({ cwd: process.cwd() })
+const rspeedy = await createRspeedy({ rspeedyConfig: config })
+await rspeedy.build()
+```
+
+{/* @api ApiExports package="rspeedy" exclude="Config,Dev,DevClient,Output,Performance,Resolve,Server,Source,Tools,Filename,BundleFilenameContext,BundleFilename,CssModules,CssModuleLocalsConvention,Minify,SourceMap,DistPath,ChunkSplit,ChunkSplitBySize,ChunkSplitCustom,ConsoleType,TransformImport,Entry,EntryDescription,CssLoaderOptions,CssExtractRspackPluginOptions,CssExtractRspackLoaderOptions,Profile" */}
+
+## 函数 \{#functions\}
+
+### `createRspeedy()` \{#createrspeedy\}
+
+```ts
+function createRspeedy(options: CreateRspeedyOptions): Promise<RspeedyInstance>
+```
+
+`createRspeedy` 方法用于创建一个 Rspeedy 实例，你可以借此在 Node.js 运行时中自定义构建或开发流程。
+
+```ts
+import { createRspeedy } from '@lynx-js/rspeedy'
+
+void async function () {
+  const rspeedy = await createRspeedy({})
+  await rspeedy.build()
+}()
+```
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `options` | [`CreateRspeedyOptions`](#createrspeedyoptions) | [`CreateRspeedyOptions`](#createrspeedyoptions) |
+
+**返回值：** `Promise<`[`RspeedyInstance`](#rspeedyinstance)`>` — - Rspeedy 实例。
+
+### `defineConfig()` \{#defineconfig\}
+
+```ts
+function defineConfig(config: Config): Config
+function defineConfig(config: (params: ConfigParams) => Config): (params: ConfigParams) => Config
+function defineConfig(config: Promise<Config>): Promise<Config>
+function defineConfig(config: (params: ConfigParams) => Promise<Config>): (params: ConfigParams) => Promise<Config>
+```
+
+`defineConfig` 方法是一个辅助函数，用于获取 TypeScript 智能提示。
+
+在 `lynx.config.ts` 中使用 `defineConfig`：
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  // autocompletion works here!
+})
+```
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `config` | `Config` | The config of Rspeedy. |
+
+**返回值：** `Config` — - 与输入配置完全相同的配置。
+
+### `loadConfig()` \{#loadconfig\}
+
+```ts
+function loadConfig(loadConfigOptions: LoadConfigOptions): Promise<LoadConfigResult>
+```
+
+通过配置文件路径加载构建配置。
+
+```ts
+import { loadConfig } from '@lynx-js/rspeedy'
+
+void async function () {
+  const config = await loadConfig({ configPath: './lynx.config.js' })
+  console.log(config);
+}()
+```
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `loadConfigOptions` | [`LoadConfigOptions`](#loadconfigoptions) | the options of `loadConfig` method. |
+
+**返回值：** `Promise<`[`LoadConfigResult`](#loadconfigresult)`>` — 构建配置。
+
+### `mergeRspeedyConfig()` \{#mergerspeedyconfig\}
+
+```ts
+function mergeRspeedyConfig(configs: Config[]): Config
+```
+
+合并多个 Rspeedy 配置对象。
+
+它实际上是 [mergeRsbuildConfig](https://rsbuild.rs/api/javascript-api/core#mergersbuildconfig) 的别名。
+
+```ts
+import { mergeRspeedyConfig } from '@lynx-js/rspeedy';
+
+const config1 = {
+  dev: {
+    writeToDisk: false,
+  },
+};
+const config2 = {
+  dev: {
+    writeToDisk: true,
+  },
+};
+
+const mergedConfig = mergeRspeedyConfig(config1, config2);
+
+console.log(mergedConfig); // { dev: { writeToDisk: true } }
+```
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `configs` | `Config[]` | The Rspeedy configuration objects to merge. |
+
+**返回值：** `Config` — 合并后的 Rspeedy 配置对象。
+
+## 常量 \{#constants\}
+
+### `rspackVersion` \{#rspackversion\}
+
+```ts
+const rspackVersion: string
+```
+
+*暂无说明。*
+
+### `version` \{#version\}
+
+```ts
+const version: string
+```
+
+*暂无说明。*
+
+## 类型 \{#types\}
+
+### `BuildCache` <span className="api-badge api-badge-beta">Beta</span> \{#buildcache\}
+
+`Performance.buildCache`
+
+| 成员 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="buildcache-cachedirectory"></a>`cacheDirectory?` <span className="api-badge api-badge-beta">Beta</span> | `string` | `'node_modules/.cache'` | 缓存文件的输出目录。 |
+
+#### `BuildCache.buildDependencies?` <span className="api-badge api-badge-beta">Beta</span> \{#buildcache-builddependencies\}
+
+- **类型：** `string[]`
+- **默认值：** `['package.json', 'tsconfig.json' (or source.tsconfigPath), '.env', '.env.*', 'tailwindcss.config.*']`；使用 Rspeedy CLI 且启用了 `performance.buildCache` 时，还会添加当前加载的 `lynx.config.*` 文件。
+
+包含构建依赖的文件数组。
+Rspack 会使用其中每个文件的 hash 来使持久化缓存失效。
+
+将 `postcss.config.js` 添加到构建依赖中。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    buildCache: {
+      buildDependencies: ['postcss.config.js'],
+    },
+  },
+})
+```
+
+#### `BuildCache.cacheDigest?` <span className="api-badge api-badge-beta">Beta</span> \{#buildcache-cachedigest\}
+
+- **类型：** `(string | undefined)[]`
+- **默认值：** `undefined`
+
+添加额外的缓存摘要，当数组中的任意值发生变化时，之前的构建缓存将会失效。
+
+将 `process.env.SOME_ENV` 添加到缓存摘要中。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    buildCache: {
+      cacheDigest: [process.env.SOME_ENV],
+    },
+  },
+})
+```
+
+### `ConfigParams` \{#configparams\}
+
+`lynx.config.js` 导出的函数的参数。
+
+#### `ConfigParams.command` \{#configparams-command\}
+
+- **类型：** `string & Record<never, never> | "build" | "dev" | "inspect" | "preview"`
+- **默认值：** 当 `loadConfig` 执行配置函数时，该值为 `process.argv[2] ?? 'build'`
+
+Rspeedy 的 CLI 命令。
+
+可选值：
+
+- `'build'`
+
+- `'dev'`
+
+- `'inspect'`
+
+- `'preview'`
+
+#### `ConfigParams.env` \{#configparams-env\}
+
+- **类型：** `"production" | "development" | "test" | string & Record<never, never>`
+- **默认值：** 当 `loadConfig` 执行配置函数时，该值为 `process.env.NODE_ENV ?? 'production'`
+
+`process.env['NODE_ENV']` 的值
+
+常见的值包括（不限于）：
+- `'production'`
+
+- `'development'`
+
+- `'test'`
+
+### `CreateRspeedyOptions` \{#createrspeedyoptions\}
+
+`createRspeedy` 方法的选项。
+
+| 成员 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="createrspeedyoptions-cwd"></a>`cwd?` | `string` |  | 当前构建的根路径。 |
+| <a id="createrspeedyoptions-environment"></a>`environment?` | `string[]` | `[]` | 仅构建指定的 environment。例如，传入 `['lynx']` 将只构建 `lynx` environment。如果未指定或传入空数组，则会构建所有 environment。 |
+| <a id="createrspeedyoptions-loadenv"></a>`loadEnv?` | `boolean \| LoadEnvOptions` | `true` | Rspeedy 默认会通过 [Rsbuild API](https://rsbuild.rs/api/javascript-api/core#load-env-variables) 自动加载 .env 文件。你可以在代码中通过 `import.meta.env.FOO` 或 `process.env.Foo` 访问 .env 文件中定义的环境变量。 |
+| <a id="createrspeedyoptions-rspeedyconfig"></a>`rspeedyConfig?` | `Config` |  | Rspeedy 的配置。 |
+
+#### `CreateRspeedyOptions.callerName?` \{#createrspeedyoptions-callername\}
+
+- **类型：** `string`
+- **默认值：** `'rspeedy'`
+
+当前调用 Rsbuild 的框架或工具的名称。插件可以据此根据调用上下文调整自身行为。
+
+Rsbuild 插件可以通过 `api.context.callerName` 访问该值。
+
+```js
+export function myPlugin() {
+  return {
+    name: 'my-plugin',
+    setup(api) {
+      // Log the name of the tool invoking Rsbuild
+      console.log(`Called by: ${api.context.callerName}`);
+
+      // Conditionally apply plugin logic based on caller
+      if (api.context.callerName === 'rspeedy') {
+        api.modifyRsbuildConfig((config) => {
+          // Apply rspeedy-specific config changes
+          return config;
+        });
+      } else if (api.context.callerName === 'rslib') {
+        api.modifyRsbuildConfig((config) => {
+          // Apply rslib-specific config changes
+          return config;
+        });
+      }
+    }
+  };
+}
+```
+
+### `CssExtract` \{#cssextract\}
+
+`Tools.cssExtract`
+
+| 成员 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="cssextract-loaderoptions"></a>`loaderOptions?` | `CssExtractRspackLoaderOptions` | `undefined` | [`LoaderOptions`](/zh/api/packages/css-extract-webpack-plugin#loaderoptions) |
+| <a id="cssextract-pluginoptions"></a>`pluginOptions?` | `CssExtractRspackPluginOptions` | `undefined` | [`CssExtractRspackPluginOptions`](/zh/api/packages/css-extract-webpack-plugin#cssextractrspackpluginoptions) |
+
+### `CssLoader` \{#cssloader\}
+
+`Tools.cssLoader`
+
+#### `CssLoader.importLoaders?` \{#cssloader-importloaders\}
+
+- **类型：** `0 | 1 | 2`
+- **默认值：** 编译 CSS 文件时为 `1`，编译 Sass 或 Less 文件时为 `2`
+
+`importLoaders` 选项用于配置在 `css-loader` 之前，有多少个 loader 应用于 `@imported` 资源和 CSS Modules 导入。
+
+详见 [css-loader#import-loaders](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#importloaders)。
+
+#### `CssLoader.modules?` \{#cssloader-modules\}
+
+- **类型：** `boolean | "local" | "global" | "pure" | "icss" | `[`CssLoaderModules`](#cssloadermodules)
+- **默认值：** 启用 CSS Modules，自动识别 `*.module.*` 文件，使用 camelCase 导出、`namedExport: false`，`localIdentName` 继承自 `output.cssModules.localIdentName`。
+
+[`cssLoader.modules`](#cssloadermodules) 选项用于启用/禁用 CSS Modules 规范，并设置基本行为。
+
+使用 `false` 值可以提升性能，因为这样会跳过对 CSS Modules 特性的解析，适用于使用原生 CSS 或其他技术的开发者。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  tools: {
+    cssLoader: {
+      modules: false,
+    },
+  },
+})
+```
+
+使用 `() => true` 值为所有文件启用 CSS Modules。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  tools: {
+    cssLoader: {
+      modules: () => true,
+    },
+  },
+})
+```
+
+使用对象值，基于 [`CssLoaderModules.auto`](#cssloadermodules-auto) 选项启用 CSS Modules，并对 CSS Modules 进行更多配置。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  tools: {
+    cssLoader: {
+      modules: {
+        namedExport: true,
+      },
+    },
+  },
+})
+```
+
+### `CssLoaderModules` \{#cssloadermodules\}
+
+[`CssLoader.modules`](#cssloader-modules)
+
+| 成员 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="cssloadermodules-auto"></a>`auto?` | `boolean \| RegExp \| ((filename: string) => boolean)` | `true` | `CssModules.auto` |
+| <a id="cssloadermodules-exportlocalsconvention"></a>`exportLocalsConvention?` | `CssModuleLocalsConvention` | `'camelCase'` | `CssModules.exportLocalsConvention` |
+| <a id="cssloadermodules-localidentname"></a>`localIdentName?` | `string` | `'[local]-[hash:base64:6]'` | `CssModules.localIdentName` |
+
+#### `CssLoaderModules.namedExport?` \{#cssloadermodules-namedexport\}
+
+- **类型：** `boolean`
+- **默认值：** `false`
+
+启用/禁用 locals 的 ES modules 具名导出。
+
+- `style.css`
+
+```css
+.foo-baz {
+  color: red;
+}
+.bar {
+  color: blue;
+}
+.default {
+  color: green;
+}
+```
+
+- `index.js`
+
+```js
+import * as styles from "./styles.css";
+
+// If using `exportLocalsConvention: "asIs"`:
+console.log(styles["foo-baz"], styles.bar);
+
+// If using `exportLocalsConvention: "camelCaseOnly"`:
+console.log(styles.fooBaz, styles.bar);
+
+// For the `default` class name
+console.log(styles["_default"]);
+```
+
+### `Decorators` \{#decorators\}
+
+`Source.decorators`
+
+#### `Decorators.version?` \{#decorators-version\}
+
+- **类型：** `"legacy" | "2022-03"`
+- **默认值：** `'2022-03'`
+
+指定使用的装饰器语法版本。
+
+如果你想了解不同装饰器版本之间的差异，可以参考：[How does this proposal compare to other versions of decorators?](https://github.com/tc39/proposal-decorators?tab=readme-ov-file#how-does-this-proposal-compare-to-other-versions-of-decorators)
+
+`'2022-03'` 对应 Stage 3 装饰器提案，等同于 TypeScript 5.0 默认支持的装饰器语法。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  source: {
+    decorators: { version: '2022-03' },
+  },
+})
+```
+
+`'legacy'` 对应 TypeScript 的 `experimentalDecorators: true`。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  source: {
+    decorators: { version: 'legacy' },
+  },
+})
+```
+
+### `ExposedAPI` \{#exposedapi\}
+
+Rspeedy 暴露的 API。可以在 Rsbuild 插件中通过 [api.useExposed](https://rsbuild.rs/plugins/dev/core#apiuseexposed) 使用。
+
+```ts
+import type { ExposedAPI } from '@lynx-js/rspeedy'
+const RsbuildPlugin = {
+  name: 'my-rsbuild-plugin',
+  pre: ['lynx:rsbuild:plugin-api'],
+  setup(api) {
+    const rspeedyAPI = api.useExposed<ExposedAPI>(Symbol.for('rspeedy.api'))
+  },
+}
+```
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="exposedapi-config"></a>`config` | `Config` | 用户配置。 |
+| <a id="exposedapi-debug"></a>`debug` | `(message: string \| (() => string)) => void` | 打印调试日志。 |
+| <a id="exposedapi-entries"></a>`entries?` | `RsbuildEntry` | 自定义 environment 的入口。Rspeedy 不再设置该字段。 |
+| <a id="exposedapi-exit"></a>`exit` | `(code?: number) => void \| Promise<void>` | 退出进程。 |
+| <a id="exposedapi-logger"></a>`logger` | `Logger` | 获取 Rspeedy 的 logger。 |
+| <a id="exposedapi-version"></a>`version` | `string` | Rspeedy 的版本。 |
+
+### `LoadConfigOptions` \{#loadconfigoptions\}
+
+loadConfig 的选项。
+
+| 成员 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="loadconfigoptions-configpath"></a>`configPath?` | `string` | 自动从 `cwd` 中解析 `lynx.config.ts`、`lynx.config.js`、`lynx.config.mts` 或 `lynx.config.mjs` | 要加载的配置文件路径。 |
+| <a id="loadconfigoptions-cwd"></a>`cwd?` | `string` | `process.cwd()` | 用于解析配置文件路径的工作目录。 |
+
+### `LoadConfigResult` \{#loadconfigresult\}
+
+[`loadConfig`](#loadconfig) 的返回结果。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="loadconfigresult-configpath"></a>`configPath` | `string` | 已加载的配置文件路径。 |
+
+#### `LoadConfigResult.content` \{#loadconfigresult-content\}
+
+- **类型：** `Config`
+
+从配置文件中导出的配置对象。
+
+返回的对象已经过校验。
+
+### `RsdoctorRspackPluginOptions` \{#rsdoctorrspackpluginoptions\}
+
+`tools.rsdoctor` 的简化选项类型。
+
+该类型应避免使用深层嵌套或交叉的工具类型，以确保
+typia 能够基于 `Config` 生成校验器。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="rsdoctorrspackpluginoptions-linter"></a>`linter?` | `{ extends?: unknown[]; level?: "Ignore" \| "Warn" \| "Error"; rules?: Record<string, unknown> }` |  |
+
+### `RspeedyInstance` \{#rspeedyinstance\}
+
+```ts
+type RspeedyInstance = RsbuildInstance & { getRspeedyConfig: any }
+```
+
+Rspeedy 实例。
+
+{/* @api-end */}

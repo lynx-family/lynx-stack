@@ -28,11 +28,20 @@ export type OpenUiPromptLibrary = Library<HeadlessRenderer>;
 export interface CreateOpenUiPromptLibraryOptions {
   /** Override the root component name. Defaults to `'Stack'`. */
   root?: string;
-  /** Limit built-ins to these names. Custom `components` are still appended. */
+  /**
+   * Limit built-ins and built-in groups to these names. The root component is
+   * always kept, and custom `components` are still appended. In
+   * `buildOpenUiSystemPrompt`, setting this also switches to the restricted
+   * default rules and, unless `promptOptions` sets them, disables tool calls
+   * and omits the default examples.
+   */
   componentNames?: readonly string[];
-  /** Replace or extend the built-in component set. */
+  /**
+   * Custom components appended after the built-ins. One with the same name as
+   * a built-in replaces that built-in.
+   */
   components?: OpenUiPromptComponent[];
-  /** Replace or extend the built-in component groups. */
+  /** Extra component groups, appended after the built-in groups. */
   componentGroups?: ComponentGroup[];
 }
 

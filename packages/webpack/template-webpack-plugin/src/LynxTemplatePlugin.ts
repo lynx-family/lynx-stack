@@ -230,7 +230,7 @@ export interface LynxTemplatePluginOptions {
    *      customCSSInheritanceList: ['direction', 'overflow']
    *    }),
    *  ],
-   * }
+   * })
    * ```
    */
   customCSSInheritanceList: string[] | undefined;
@@ -483,7 +483,8 @@ export class LynxTemplatePlugin {
    * Convert the css chunks to css map.
    *
    * @param cssChunks - The CSS chunks content.
-   * @param options - The encode options.
+   * @param plugins - The CSS plugins passed to the parser.
+   * @param enableCSSSelector - Whether to enable the CSS selector.
    * @returns The CSS map and css source.
    *
    * @remarks
@@ -498,12 +499,10 @@ export class LynxTemplatePlugin {
    *
    * @example
    * ```
-   * (console.log(await convertCSSChunksToMap(
-   *   '.red { color: red; }',
-   *   {
-   *     targetSdkVersion: '3.2',
-   *     enableCSSSelector: true,
-   *   },
+   * (console.log(LynxTemplatePlugin.convertCSSChunksToMap(
+   *   ['.red { color: red; }'],
+   *   [],
+   *   true,
    * )));
    * ```
    */

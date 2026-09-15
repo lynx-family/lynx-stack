@@ -1,0 +1,214 @@
+{
+  "ComponentRenderProps.summary": {
+    "en": "Props passed to an OpenUI ReactLynx component renderer.",
+    "text": "传给 OpenUI ReactLynx 组件渲染器的 props。"
+  },
+  "FormValidationContextValue.summary": {
+    "en": "Validation state and helpers for OpenUI form fields.",
+    "text": "OpenUI 表单字段的校验状态和辅助函数。"
+  },
+  "OpenUIContextValue.summary": {
+    "en": "Runtime context shared by OpenUI renderers, hooks, actions, and form fields.",
+    "text": "由 OpenUI 渲染器、hooks、action 和表单字段共享的运行时上下文。"
+  },
+  "OpenUIContextValue.evaluationContext.summary": {
+    "en": "AST evaluation context used by runtime expression evaluation.",
+    "text": "运行时表达式求值所使用的 AST 求值上下文。"
+  },
+  "OpenUIContextValue.getFieldValue.summary": {
+    "en": "Get a field value. Top-level for $bindings, nested under formName for form fields.",
+    "text": "获取字段值。$bindings 位于顶层，表单字段则嵌套在 formName 下。"
+  },
+  "OpenUIContextValue.isQueryLoading.summary": {
+    "en": "Whether any Query is currently fetching data.",
+    "text": "是否有 Query 正在获取数据。"
+  },
+  "OpenUIContextValue.isStreaming.summary": {
+    "en": "Whether the LLM is currently streaming content.",
+    "text": "LLM 当前是否正在流式输出内容。"
+  },
+  "OpenUIContextValue.library.summary": {
+    "en": "The active component library (schema + renderers).",
+    "text": "当前使用的组件库（schema + 渲染器）。"
+  },
+  "OpenUIContextValue.renderNode.summary": {
+    "en": "Render any value (element, array, primitive) into React nodes.",
+    "text": "将任意值（元素、数组、原始值）渲染为 React 节点。"
+  },
+  "OpenUIContextValue.reportError.summary": {
+    "en": "Report a structured error (used internally by error boundary).",
+    "text": "上报结构化错误（由错误边界内部使用）。"
+  },
+  "OpenUIContextValue.setFieldValue.summary": {
+    "en": "Set a form field value.",
+    "text": "设置表单字段值。"
+  },
+  "OpenUIContextValue.store.summary": {
+    "en": "Reactive binding store for $variables and form data.",
+    "text": "用于 $variables 和表单数据的响应式绑定存储。"
+  },
+  "OpenUIContextValue.triggerAction.summary": {
+    "en": "Trigger an action. Accepts either:\n- ActionPlan (v0.5): runs steps sequentially (Run, Set, Reset, ToAssistant,\n  OpenUrl) and stops if a Run mutation fails. When the renderer is given a\n  pre-parsed `result`, only ToAssistant and OpenUrl run; other steps warn.\n- Legacy action config (v0.1): object with optional type and params.\n- Nothing: fires ContinueConversation with the label",
+    "text": "触发一个 action。接受以下任一形式：\n- ActionPlan（v0.5）：按顺序执行各个步骤（Run、Set、Reset、ToAssistant、\n  OpenUrl），某个 Run 变更失败时停止执行。当渲染器接收的是预先解析好的 `result` 时，仅执行 ToAssistant 和 OpenUrl，其他步骤会告警。\n- 旧版 action 配置（v0.1）：带有可选 type 和 params 的对象。\n- 不传：以 label 触发 ContinueConversation"
+  },
+  "OpenUiRendererParsedProps.summary": {
+    "en": "Props for rendering an already parsed OpenUI result.",
+    "text": "用于渲染已解析的 OpenUI 结果的 props。"
+  },
+  "OpenUiRendererParsedProps.result.summary": {
+    "en": "Pre-parsed result. Kept for v0.1/static-render compatibility.",
+    "text": "预先解析好的结果。为兼容 v0.1/静态渲染而保留。"
+  },
+  "OpenUiRendererRuntimeProps.summary": {
+    "en": "Props for rendering raw OpenUI response text with parsing, runtime state,\nactions, and query execution.",
+    "text": "用于渲染原始 OpenUI 响应文本的 props，包含解析、运行时状态、action 和 query 执行。"
+  },
+  "OpenUiRendererRuntimeProps.initialQueryResults.summary": {
+    "en": "Prefetched Query results keyed by Query assignment name (statement ID).\nResults render synchronously, then an optional toolProvider revalidates.",
+    "text": "预取的 Query 结果，以 Query 赋值名称（statement ID）为键。结果会同步渲染，之后由可选的 toolProvider 重新校验。"
+  },
+  "OpenUiRendererRuntimeProps.initialState.summary": {
+    "en": "Initial persisted state. $-prefixed keys hydrate reactive bindings.",
+    "text": "初始的持久化状态。以 $ 开头的键会用于初始化响应式绑定。"
+  },
+  "OpenUiRendererRuntimeProps.isStreaming.summary": {
+    "en": "Whether the LLM is still streaming; disables interactions while true.",
+    "text": "LLM 是否仍在流式输出；为 true 时禁用交互。"
+  },
+  "OpenUiRendererRuntimeProps.library.summary": {
+    "en": "Component library from createOpenUiLibrary().",
+    "text": "由 createOpenUiLibrary() 创建的组件库。"
+  },
+  "OpenUiRendererRuntimeProps.onAction.summary": {
+    "en": "Callback when a component triggers a host action.",
+    "text": "组件触发宿主 action 时的回调。"
+  },
+  "OpenUiRendererRuntimeProps.onError.summary": {
+    "en": "Structured parser/runtime/query errors for correction loops.",
+    "text": "结构化的解析器/运行时/query 错误，用于纠错循环。"
+  },
+  "OpenUiRendererRuntimeProps.onParseResult.summary": {
+    "en": "Called whenever the raw parse result changes.",
+    "text": "原始解析结果每次变化时调用。"
+  },
+  "OpenUiRendererRuntimeProps.onStateUpdate.summary": {
+    "en": "Called whenever $variables or form state changes.",
+    "text": "$variables 或表单状态每次变化时调用。"
+  },
+  "OpenUiRendererRuntimeProps.queryLoader.summary": {
+    "en": "Custom loading node shown while Query() calls are in flight.",
+    "text": "Query() 调用进行中时显示的自定义加载节点。"
+  },
+  "OpenUiRendererRuntimeProps.response.summary": {
+    "en": "Raw openui-lang response text. This enables v0.5 runtime features.",
+    "text": "原始 openui-lang 响应文本。传入后启用 v0.5 运行时特性。"
+  },
+  "OpenUiRendererRuntimeProps.toolProvider.summary": {
+    "en": "Tool provider for Query()/Mutation(): function map or MCP client.",
+    "text": "用于 Query()/Mutation() 的工具提供者：函数映射或 MCP 客户端。"
+  },
+  "OpenUIState.summary": {
+    "en": "Derived OpenUI renderer state returned by `useOpenUIState`.",
+    "text": "由 `useOpenUIState` 返回的派生 OpenUI 渲染器状态。"
+  },
+  "OpenUIState.isQueryLoading.summary": {
+    "en": "Whether any Query is currently fetching data.",
+    "text": "是否有 Query 正在获取数据。"
+  },
+  "OpenUIState.parseResult.summary": {
+    "en": "Raw parse result (AST nodes in props). Used by onParseResult callback.",
+    "text": "原始解析结果（props 中为 AST 节点）。供 onParseResult 回调使用。"
+  },
+  "OpenUIState.result.summary": {
+    "en": "Evaluated result (props resolved to concrete values). Used by Renderer.",
+    "text": "求值后的结果（props 已解析为具体值）。供 Renderer 使用。"
+  },
+  "UseOpenUIStateOptions.summary": {
+    "en": "Inputs used to parse OpenUI text and build renderer state.",
+    "text": "用于解析 OpenUI 文本并构建渲染器状态的输入。"
+  },
+  "UseOpenUIStateOptions.initialQueryResults.summary": {
+    "en": "Prefetched Query results keyed by the Query assignment name (statement ID).\nThey are available during the initial render and act as fallbacks while an\noptional tool provider revalidates them after commit.",
+    "text": "预取的 Query 结果，以 Query 赋值名称（statement ID）为键。它们在首次渲染时即可使用，并在可选的 tool provider 于 commit 后重新校验期间作为兜底值。"
+  },
+  "UseOpenUIStateOptions.onError.summary": {
+    "en": "Callback for structured, LLM-friendly errors. See OpenUIError type.",
+    "text": "结构化、便于 LLM 理解的错误回调。参见 OpenUIError 类型。"
+  },
+  "UseOpenUIStateOptions.toolProvider.summary": {
+    "en": "ToolProvider for Query data fetching — MCP, REST, GraphQL, or any backend.",
+    "text": "用于 Query 数据获取的 ToolProvider——MCP、REST、GraphQL 或任意后端。"
+  },
+  "CreateExplicitOpenUiLibraryOptions.summary": {
+    "en": "Options for a Library assembled only from explicitly selected components.",
+    "text": "只由显式选择的组件组成的 Library 的选项。"
+  },
+  "InitialQueryResults.summary": {
+    "en": "Prefetched Query results keyed by Query assignment name (statement ID).",
+    "text": "预取的 Query 结果，以 Query 赋值名称（statement ID）为键。"
+  },
+  "createOpenUiLibrary.summary": {
+    "en": "Create a catalog-free OpenUI Library from explicitly selected components.",
+    "text": "用显式选择的组件创建一个不含 catalog 的 OpenUI Library。"
+  },
+  "defineComponent.summary": {
+    "en": "Define a ReactLynx component renderer and its OpenUI schema metadata.",
+    "text": "定义 ReactLynx 组件渲染器及其 OpenUI schema 元数据。"
+  },
+  "OpenUiRenderer.summary": {
+    "en": "Render OpenUI language output using a ReactLynx component library.",
+    "text": "使用 ReactLynx 组件库渲染 OpenUI 语言输出。"
+  },
+  "reactive.summary": {
+    "en": "Mark a schema prop as reactive so runtime evaluation can preserve $bindings.",
+    "text": "将 schema prop 标记为响应式，使运行时求值能够保留 $bindings。"
+  },
+  "useCreateFormValidation.summary": {
+    "en": "Create form validation state and callbacks for an OpenUI form boundary.",
+    "text": "为 OpenUI 表单边界创建表单校验状态和回调。"
+  },
+  "useFormValidation.summary": {
+    "en": "Read the nearest OpenUI form validation context, if one exists.",
+    "text": "读取最近的 OpenUI 表单校验上下文（如果存在）。"
+  },
+  "useGetFieldValue.summary": {
+    "en": "Get a form field value from the form state context.",
+    "text": "从表单状态上下文中获取表单字段值。"
+  },
+  "useIsQueryLoading.summary": {
+    "en": "Whether any Query is currently fetching data.",
+    "text": "是否有 Query 正在获取数据。"
+  },
+  "useIsStreaming.summary": {
+    "en": "Whether the LLM is currently streaming content.",
+    "text": "LLM 当前是否正在流式输出内容。"
+  },
+  "useOpenUI.summary": {
+    "en": "Access the full OpenUI context. Throws if used outside an\n`OpenUiRenderer` tree.",
+    "text": "访问完整的 OpenUI 上下文。在 `OpenUiRenderer` 树之外使用时会抛出异常。"
+  },
+  "useOpenUIState.summary": {
+    "en": "Core state hook — extracts all form state, action handling, parser\nmanagement, and context assembly out of the Renderer component.\n\nStore holds everything: $bindings as top-level keys, form fields nested\nunder formName as plain values.",
+    "text": "核心状态 hook——将所有表单状态、action 处理、解析器管理和上下文组装从 Renderer 组件中抽离出来。\n\nStore 保存所有内容：$bindings 作为顶层键，表单字段则以普通值的形式嵌套在 formName 下。"
+  },
+  "useRenderNode.summary": {
+    "en": "Get the renderNode function for rendering nested component values.",
+    "text": "获取用于渲染嵌套组件值的 renderNode 函数。"
+  },
+  "useSetDefaultValue.summary": {
+    "en": "Persists a component's default/initial value into form state once streaming\nfinishes — but only if the user hasn't already set a value.\n\nCall this inside any form component that has a `defaultValue` or\n`defaultChecked` prop. It is a no-op during streaming so that LLM\nprop changes don't fight with partial state.",
+    "text": "在流式输出结束后，将组件的默认值/初始值写入表单状态——但仅当用户尚未设置值时才会写入。\n\n在任何带有 `defaultValue` 或 `defaultChecked` prop 的表单组件中调用它。它在流式输出期间不执行任何操作，以免 LLM 对 prop 的修改与不完整的状态相互冲突。"
+  },
+  "useSetFieldValue.summary": {
+    "en": "Get the setFieldValue function for updating form field values.",
+    "text": "获取用于更新表单字段值的 setFieldValue 函数。"
+  },
+  "useStateField.summary": {
+    "en": "Resolve a named OpenUI state field against form state and reactive bindings.",
+    "text": "基于表单状态和响应式绑定解析具名的 OpenUI 状态字段。"
+  },
+  "useTriggerAction.summary": {
+    "en": "Get the triggerAction function for firing structured action events.",
+    "text": "获取用于触发结构化 action 事件的 triggerAction 函数。"
+  }
+}

@@ -1,0 +1,190 @@
+{
+  "CDPChannel.summary": {
+    "en": "A stateless CDP (Chrome DevTools Protocol) channel for sending commands\nto a specific Lynx session.\n\nEach `send()` call is a short-lived request/response via the `Connector`.\nChannels are cached per session ID using `WeakRef` to allow reuse.",
+    "text": "一个无状态的 CDP（Chrome DevTools Protocol）通道，用于向指定的 Lynx 会话发送命令。\n\n每次 `send()` 调用都是通过 `Connector` 发起的一次短暂的请求/响应。通道按会话 ID 通过 `WeakRef` 缓存，以便复用。"
+  },
+  "CDPChannel.constructor.summary": {
+    "en": "Constructs a new CDP Channel strictly bound to a single Lynx session.\n\n**Note for Agents:**\nFavor using `CDPChannel.from()` over manually newing up a channel, as `from()` handles\nWeakRef caching to minimize memory footprint.",
+    "text": "构造一个严格绑定到单个 Lynx 会话的 CDP 通道。\n\n**Agent 须知：**\n优先使用 `CDPChannel.from()`，而不是手动 new 一个通道，因为 `from()` 会处理 WeakRef 缓存，尽量减少内存占用。"
+  },
+  "CDPChannel.constructor.params._connector": {
+    "en": "Low-level ADB transport controller.",
+    "text": "底层 ADB 传输控制器。"
+  },
+  "CDPChannel.constructor.params._clientId": {
+    "en": "Bound devtool target identification string.",
+    "text": "绑定的 devtool 目标标识字符串。"
+  },
+  "CDPChannel.constructor.params._sessionId": {
+    "en": "Narrowly scoped Lynx view session ID.",
+    "text": "范围限定的 Lynx 视图会话 ID。"
+  },
+  "CDPChannel.send.summary": {
+    "en": "Dispatches a strongly-typed Chrome DevTools Protocol (CDP) method command and awaits its return block.\n\n**Agent Usage:**\nThis is the beating heart of all interactions in `kitten-lynx`. Instead of maintaining a socket,\nevery `send(...)` call constructs a self-contained ADB request and awaits the isolated response.\n\n**Typings:**\nNotice that the generics strictly bind to the `Protocol` interface defined at the top of this file.\nIf you need to invoke a CDP command that TypeScript rejects, you must update the `Protocol` interface first!",
+    "text": "发送一条强类型的 Chrome DevTools Protocol（CDP）方法命令，并等待其返回结果。\n\n**Agent 用法：**\n这是 `kitten-lynx` 中所有交互的核心。它不维护 socket 连接，每次 `send(...)` 调用都会构造一个独立的 ADB 请求，并等待对应的独立响应。\n\n**类型：**\n注意，泛型严格绑定到本文件顶部定义的 `Protocol` 接口。如果需要调用 TypeScript 拒绝的 CDP 命令，必须先更新 `Protocol` 接口！"
+  },
+  "CDPChannel.send.params.method": {
+    "en": "The command to send to the Lynx devtool server.",
+    "text": "要发送给 Lynx devtool 服务器的命令。"
+  },
+  "CDPChannel.send.params.params": {
+    "en": "A strongly-typed payload object required by the CDP method.",
+    "text": "CDP 方法所需的强类型参数对象。"
+  },
+  "CDPChannel.from.summary": {
+    "en": "Retrieves or instantiates a stateless `CDPChannel` for a specific Lynx session.\n\n**Design pattern (For Agents):**\nThis testing library uses a **stateless** CDP architecture to avoid hanging Websocket connections\nover unstable ADB links. Channels are cached per `sessionId` via `WeakRef` to reduce allocations.",
+    "text": "为指定的 Lynx 会话获取或创建一个无状态的 `CDPChannel`。\n\n**设计模式（Agent 须知）：**\n本测试库采用**无状态**的 CDP 架构，以避免在不稳定的 ADB 链路上出现挂起的 WebSocket 连接。通道按 `sessionId` 通过 `WeakRef` 缓存，以减少内存分配。"
+  },
+  "CDPChannel.from.params.sessionId": {
+    "en": "The numeric Lynx devtool session ID assigned by the Lynx runtime.",
+    "text": "Lynx 运行时分配的 Lynx devtool 数字会话 ID。"
+  },
+  "CDPChannel.from.params.clientId": {
+    "en": "The unique device-port identifier for the client app (e.g., `\"emulator-5554:40121\"`).",
+    "text": "客户端应用的唯一设备端口标识（例如 `\"emulator-5554:40121\"`）。"
+  },
+  "CDPChannel.from.params.connector": {
+    "en": "The active `Connector` instance powering the ADB transport.",
+    "text": "提供 ADB 传输的活动 `Connector` 实例。"
+  },
+  "ElementNode.summary": {
+    "en": "Represents a DOM element in a Lynx page.\n\nWraps a CDP `nodeId` and provides methods for inspecting attributes,\ncomputed styles, and simulating user interactions like taps.",
+    "text": "表示 Lynx 页面中的一个 DOM 元素。\n\n封装一个 CDP `nodeId`，并提供检查属性、计算样式以及模拟点击等用户交互的方法。"
+  },
+  "ElementNode.constructor.summary": {
+    "en": "Initializes a new `ElementNode` instance to represent a Lynx Component or Tag.\n\n**Note for Agents:**\nSimilar to `KittenLynxView`, you should rarely call this directly.\nRely on `KittenLynxView.locator()` or `ElementNode.fromId()` for instantiations.",
+    "text": "初始化一个新的 `ElementNode` 实例，用于表示一个 Lynx 组件或标签。\n\n**Agent 须知：**\n与 `KittenLynxView` 类似，很少需要直接调用它。请通过 `KittenLynxView.locator()` 或 `ElementNode.fromId()` 创建实例。"
+  },
+  "ElementNode.constructor.params.nodeId": {
+    "en": "The unique CDP numeric ID denoting this element in the Lynx renderer.",
+    "text": "在 Lynx 渲染器中标识该元素的唯一 CDP 数字 ID。"
+  },
+  "ElementNode.constructor.params._lynxView": {
+    "en": "The parent `KittenLynxView` instance used to dispatch subsequent CDP queries.",
+    "text": "所属的 `KittenLynxView` 实例，用于发送后续的 CDP 查询。"
+  },
+  "ElementNode.nodeId.summary": {
+    "en": "The unique CDP numeric ID denoting this element in the Lynx renderer.",
+    "text": "在 Lynx 渲染器中标识该元素的唯一 CDP 数字 ID。"
+  },
+  "ElementNode.computedStyleMap.summary": {
+    "en": "Fetches all actively computed CSS properties for this specific element.\n\n**Agent Usage:**\nThis relies on `CSS.getComputedStyleForNode`. It returns the fully resolved style values\npost-layout calculation (e.g., resolving `100%` into absolute `px` values).\nIt is highly recommended to use this for visual assertions (e.g., verifying a box is indeed `display: none`\nor has a specific `background-color`).",
+    "text": "获取该元素当前生效的全部计算后 CSS 属性。\n\n**Agent 用法：**\n基于 `CSS.getComputedStyleForNode`。返回布局计算后完全解析的样式值（例如将 `100%` 解析为绝对的 `px` 值）。强烈建议用它做视觉断言（例如验证某个盒子确实是 `display: none`，或具有特定的 `background-color`）。"
+  },
+  "ElementNode.getAttribute.summary": {
+    "en": "Retrieves the string value of a specified attribute on this element.\n\n**Agent Quirk / Gotcha:**\nIn Lynx, standard web `id=\"foo\"` attributes are actually stored as `idSelector=\"foo\"` internally.\nThis library provides a seamless shim: if you query `getAttribute('id')`, it automatically\nqueries `idSelector` instead. No manual handling of `idSelector` is required on your part.",
+    "text": "获取该元素上指定属性的字符串值。\n\n**Agent 注意事项 / 陷阱：**\n在 Lynx 中，Web 标准的 `id=\"foo\"` 属性在内部实际存储为 `idSelector=\"foo\"`。本库对此做了透明兼容：查询 `getAttribute('id')` 时会自动改为查询 `idSelector`，无需自行处理 `idSelector`。"
+  },
+  "ElementNode.getAttribute.params.name": {
+    "en": "The name of the attribute to fetch.",
+    "text": "要获取的属性名。"
+  },
+  "ElementNode.tap.summary": {
+    "en": "Simulates a native user tap (touch press followed by touch release) directly on the center of this element.\n\n**Internal Mechanics (For Agents):**\nThis is not a simulated DOM event (like `element.click()` in Web). It is a highly accurate native-layer\ngesture dispatch:\n1. Fetches the exact boundary coordinates via `DOM.getBoxModel`.\n2. Calculates the absolute center `(x, y)` of the content box.\n3. Dispatches an `Input.emulateTouchFromMouseEvent` (`'mousePressed'`) over the ADB bridge.\n4. Waits 50ms, then dispatches the corresponding `'mouseReleased'`.\n\n**Crucial:** Ensure the element is visible on the screen before calling this, or the coordinate calculation might fail or hit nothing.",
+    "text": "在该元素中心直接模拟一次原生用户点击（按下后抬起）。\n\n**内部机制（Agent 须知）：**\n这不是模拟的 DOM 事件（如 Web 中的 `element.click()`），而是在原生层精确派发的手势：\n1. 通过 `DOM.getBoxModel` 获取精确的边界坐标。\n2. 计算内容盒的绝对中心点 `(x, y)`。\n3. 通过 ADB 桥发送 `Input.emulateTouchFromMouseEvent`（`'mousePressed'`）。\n4. 等待 50ms，再发送对应的 `'mouseReleased'`。\n\n**重要：** 调用前请确保元素在屏幕上可见，否则坐标计算可能失败，或点击不到任何元素。"
+  },
+  "ElementNode.fromId.summary": {
+    "en": "Retrieves or creates an `ElementNode` instance corresponding to a specific Lynx DOM node ID.\n\n**Agent Caching Strategy:**\nNodes are aggressively cached per `KittenLynxView` instance using `WeakRef`.\nThis means if an Agent queries the same DOM node twice before garbage collection,\nit returns the same `ElementNode` reference, reducing memory overhead during extensive DOM crawling.",
+    "text": "获取或创建与指定 Lynx DOM 节点 ID 对应的 `ElementNode` 实例。\n\n**Agent 缓存策略：**\n节点按 `KittenLynxView` 实例通过 `WeakRef` 积极缓存。这意味着如果 agent 在垃圾回收之前两次查询同一个 DOM 节点，会得到同一个 `ElementNode` 引用，从而在大量遍历 DOM 时降低内存开销。"
+  },
+  "ElementNode.fromId.params.id": {
+    "en": "The numeric CDP node ID to wrap.",
+    "text": "要封装的 CDP 数字节点 ID。"
+  },
+  "ElementNode.fromId.params.lynxView": {
+    "en": "The `KittenLynxView` instance this node belongs to.",
+    "text": "该节点所属的 `KittenLynxView` 实例。"
+  },
+  "KittenLynxView.summary": {
+    "en": "Represents a Lynx page instance, similar to Puppeteer's `Page`.\n\nProvides methods for navigating to Lynx bundle URLs, querying the DOM,\nand reading page content. Created via [`Lynx.newPage`](api:Lynx.newPage).",
+    "text": "表示一个 Lynx 页面实例，类似于 Puppeteer 的 `Page`。\n\n提供导航到 Lynx bundle URL、查询 DOM 以及读取页面内容的方法。通过 [`Lynx.newPage`](api:Lynx.newPage) 创建。"
+  },
+  "KittenLynxView.constructor.summary": {
+    "en": "Initializes a new `KittenLynxView` instance.\n\n**Note for Agents:**\nYou generally should avoid calling this constructor directly. Instead, use `Lynx.newPage()` to properly\ninitialize a `KittenLynxView` instance bound to the active ADB connection and client.",
+    "text": "初始化一个新的 `KittenLynxView` 实例。\n\n**Agent 须知：**\n通常应避免直接调用此构造函数，而应使用 `Lynx.newPage()`，以正确初始化一个绑定到当前 ADB 连接和客户端的 `KittenLynxView` 实例。"
+  },
+  "KittenLynxView.constructor.params._connector": {
+    "en": "The low-level `Connector` instance used to dispatch CDP messages over ADB/USB.",
+    "text": "底层 `Connector` 实例，用于通过 ADB/USB 发送 CDP 消息。"
+  },
+  "KittenLynxView.constructor.params._clientId": {
+    "en": "The unique client identifier (typically `<deviceId>:<port>`).",
+    "text": "唯一的客户端标识（通常为 `<deviceId>:<port>`）。"
+  },
+  "KittenLynxView.constructor.params._client": {
+    "en": "Optional client metadata object containing internal app states.",
+    "text": "可选的客户端元数据对象，包含应用内部状态。"
+  },
+  "KittenLynxView.content.summary": {
+    "en": "Serializes the current page's entire DOM tree into an HTML-like string format.\n\n**Agent Usage:**\nThis is highly useful for debugging and logging the current state of the Lynx App DOM.\nIt forces a fresh `DOM.getDocument` snapshot from the CDP server and recursively walks the tree\nto build a string containing tags and attributes (e.g., `<view id=\"main\"><text>...</text></view>`).",
+    "text": "将当前页面的整个 DOM 树序列化为类 HTML 的字符串。\n\n**Agent 用法：**\n适合用于调试和记录 Lynx App DOM 的当前状态。它会强制从 CDP 服务器获取一份新的 `DOM.getDocument` 快照，并递归遍历该树，构建包含标签和属性的字符串（例如 `<view id=\"main\"><text>...</text></view>`）。"
+  },
+  "KittenLynxView.goto.summary": {
+    "en": "Navigates the Lynx App to a specific Lynx bundle URL and attaches to the corresponding CDP session.\n\n**How it works (Crucial for Agents to understand):**\nUnlike standard web browsers, calling `Page.navigate` in Lynx creates a **new** debugging session\ninstead of reusing the current one. This method abstracts away that complexity by:\n1. Waiting for the devtool server to boot.\n2. Sending an `App.openPage` (or a fallback message) to trigger the navigation.\n3. **Polling the session list** over ADB to find a new session whose URL matches the target bundle URL.\n4. Automatically re-attaching to the matched session and fetching the initial DOM tree (`DOM.getDocument`).",
+    "text": "将 Lynx App 导航到指定的 Lynx bundle URL，并附加到对应的 CDP 会话。\n\n**工作原理（Agent 必须了解）：**\n与标准 Web 浏览器不同，在 Lynx 中调用 `Page.navigate` 会创建一个**新的**调试会话，而不是复用当前会话。本方法通过以下步骤屏蔽这一复杂性：\n1. 等待 devtool 服务器启动。\n2. 发送 `App.openPage`（或兜底消息）以触发导航。\n3. 通过 ADB **轮询会话列表**，找到 URL 与目标 bundle URL 匹配的新会话。\n4. 自动重新附加到匹配的会话，并获取初始 DOM 树（`DOM.getDocument`）。"
+  },
+  "KittenLynxView.goto.params.url": {
+    "en": "The absolute URL of the Lynx bundle to navigate to (e.g., `'http://localhost:8080/dist/main.lynx.bundle'`).",
+    "text": "要导航到的 Lynx bundle 的绝对 URL（例如 `'http://localhost:8080/dist/main.lynx.bundle'`）。"
+  },
+  "KittenLynxView.goto.params.options": {
+    "en": "Optional settings. `options.timeout` is how long to poll for the matching session, in milliseconds (default 30000).",
+    "text": "可选设置。`options.timeout` 表示轮询匹配会话的时长，单位为毫秒（默认 30000）。"
+  },
+  "KittenLynxView.locator.summary": {
+    "en": "Locates the first DOM element matching the provided CSS selector in the current page.\n\n**Agent Usage:**\nThis operates identically to `document.querySelector` or Playwright's `page.locator()`.\nIt relies on the `DOM` CDP domain. Always ensure that `goto()` has completed successfully before calling this,\notherwise the DOM tree will not exist.",
+    "text": "在当前页面中定位第一个匹配给定 CSS 选择器的 DOM 元素。\n\n**Agent 用法：**\n行为与 `document.querySelector` 或 Playwright 的 `page.locator()` 完全一致。它依赖 CDP 的 `DOM` 域。调用前务必确保 `goto()` 已成功完成，否则 DOM 树尚不存在。"
+  },
+  "KittenLynxView.locator.params.selector": {
+    "en": "A valid CSS selector string targeting the desired element (e.g., `'view'`, `'#submit-btn'`, `'.container > text'`).",
+    "text": "指向目标元素的有效 CSS 选择器字符串（例如 `'view'`、`'#submit-btn'`、`'.container > text'`）。"
+  },
+  "KittenLynxView.onAttachedToTarget.summary": {
+    "en": "Attaches the LynxView to a specific Lynx devtool session and initializes the CDP channel.\n\n**Internal Mechanics:**\nThis method creates a `CDPChannel` for the specific `sessionId` and immediately fires\na `DOM.getDocument` request to cache the root document node. This must succeed for the page to be interactable.\n\n**Note for Agents:**\nThis is generally marked as internal, but it is not `private`. You normally do not need to call this manually,\nas `goto()` handles session attachment automatically.",
+    "text": "将 LynxView 附加到指定的 Lynx devtool 会话，并初始化 CDP 通道。\n\n**内部机制：**\n该方法为指定的 `sessionId` 创建一个 `CDPChannel`，并立即发出 `DOM.getDocument` 请求以缓存根文档节点。该请求必须成功，页面才能交互。\n\n**Agent 须知：**\n该方法通常视为内部方法，但并非 `private`。一般无需手动调用，因为 `goto()` 会自动处理会话附加。"
+  },
+  "KittenLynxView.onAttachedToTarget.params.sessionId": {
+    "en": "The numeric Lynx devtool session ID to attach to, discovered via `sendListSessionMessage`.",
+    "text": "要附加的 Lynx devtool 数字会话 ID，通过 `sendListSessionMessage` 获取。"
+  },
+  "KittenLynxView.screenshot.summary": {
+    "en": "Captures a screenshot of the page.",
+    "text": "截取页面截图。"
+  },
+  "KittenLynxView.screenshot.params.options": {
+    "en": "Screenshot options, such as path, format, and quality.",
+    "text": "截图选项，例如路径、格式和质量。"
+  },
+  "KittenLynxView.url.summary": {
+    "en": "Returns the last URL successfully loaded by [`goto`](api:KittenLynxView.goto).",
+    "text": "返回最近一次通过 [`goto`](api:KittenLynxView.goto) 成功加载的 URL。"
+  },
+  "KittenLynxView.getKittenLynxViewById.summary": {
+    "en": "Retrieves a previously created `KittenLynxView` instance using its stringified numeric ID.\n\n**Why this is useful for Agents:**\nThis is primarily used for cross-referencing or finding an existing view without passing the object reference around.",
+    "text": "通过字符串形式的数字 ID 获取之前创建的 `KittenLynxView` 实例。\n\n**对 Agent 的用处：**\n主要用于交叉引用，或在不传递对象引用的情况下查找已有的视图。"
+  },
+  "KittenLynxView.getKittenLynxViewById.params.id": {
+    "en": "The string representation of the LynxView's numeric ID (e.g., `'1'`, `'2'`).",
+    "text": "LynxView 数字 ID 的字符串形式（例如 `'1'`、`'2'`）。"
+  },
+  "Lynx.summary": {
+    "en": "Main entry point for the kitten-lynx testing framework.\n\nProvides Puppeteer-like APIs for connecting to a Lynx app running on an\nAndroid device (physical or emulator) via ADB and the Chrome DevTools Protocol.",
+    "text": "kitten-lynx 测试框架的主入口。\n\n提供类似 Puppeteer 的 API，通过 ADB 和 Chrome DevTools Protocol 连接运行在 Android 设备（真机或模拟器）上的 Lynx 应用。"
+  },
+  "Lynx.close.summary": {
+    "en": "Closes the active ADB/CDP connection and releases associated resources.\n\n**Agent Usage:**\nEnsure this is called in your test's teardown block (e.g., in `afterAll()`) to prevent\nfloating Node.js processes or hanging ADB connections that can ruin subsequent test runs.",
+    "text": "关闭当前的 ADB/CDP 连接并释放相关资源。\n\n**Agent 用法：**\n请确保在测试的清理阶段（例如 `afterAll()` 中）调用该方法，以免残留的 Node.js 进程或挂起的 ADB 连接影响后续测试运行。"
+  },
+  "Lynx.newPage.summary": {
+    "en": "Spawns a new page representation for the connected Lynx environment.\n\n**Agent Usage:**\nSimilar to Puppeteer's `browser.newPage()`. Once you have a `Lynx` connection instance safely created\nvia `Lynx.connect()`, call this method to obtain a `KittenLynxView`. You can then call `post.goto(url)`\non the view to navigate to a Lynx Bundle.",
+    "text": "为已连接的 Lynx 环境创建一个新的页面对象。\n\n**Agent 用法：**\n类似于 Puppeteer 的 `browser.newPage()`。通过 `Lynx.connect()` 成功创建 `Lynx` 连接实例后，调用该方法获取一个 `KittenLynxView`，然后即可在该视图上调用 `post.goto(url)` 导航到 Lynx bundle。"
+  },
+  "Lynx.connect.summary": {
+    "en": "Main setup method. Connects to the Lynx app devtool server over ADB.\n\n**Agent Guide on the Connection Flow:**\n1. Discovers the target ADB device (physical Android or emulator).\n2. Force-stops the target app to ensure a clean state (`adb shell am force-stop`).\n3. Launches the application (usually Lynx Explorer) on the device.\n4. Queries the `Connector` for available clients and matches by device ID and package name.\n5. Enables the master devtool switch (`enable_devtool`).\n\n**When to use:**\nThis should be the first method invoked in any test script or interaction flow.",
+    "text": "主要的初始化方法。通过 ADB 连接 Lynx 应用的 devtool 服务器。\n\n**连接流程（Agent 指南）：**\n1. 发现目标 ADB 设备（Android 真机或模拟器）。\n2. 强制停止目标应用以确保干净的状态（`adb shell am force-stop`）。\n3. 在设备上启动应用（通常为 Lynx Explorer）。\n4. 向 `Connector` 查询可用的客户端，并按设备 ID 和包名进行匹配。\n5. 打开 devtool 总开关（`enable_devtool`）。\n\n**使用时机：**\n应在任何测试脚本或交互流程中最先调用该方法。"
+  },
+  "Lynx.connect.params.options": {
+    "en": "Configure connection variables, such as `appPackage` and `deviceId` (useful if multiple devices are attached).",
+    "text": "配置连接参数，例如 `appPackage` 和 `deviceId`（连接了多台设备时很有用）。"
+  }
+}

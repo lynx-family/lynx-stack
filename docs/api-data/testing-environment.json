@@ -1,0 +1,454 @@
+{
+  "id": "testing-environment",
+  "package": "@lynx-js/testing-environment",
+  "version": "0.3.4",
+  "description": "A subset of a Lynx environment to be useful for testing",
+  "group": "libraries",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/testing-library/testing-environment",
+  "exports": [
+    {
+      "name": "GlobalEventEmitter",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "The Lynx `GlobalEventEmitter` module, accessible via `lynx.getJSModule('GlobalEventEmitter')`.\n\nFramework testing libraries can use this to trigger and listen to cross-thread events.",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(): GlobalEventEmitter",
+          "kind": "constructor",
+          "params": [],
+          "returns": {
+            "type": "GlobalEventEmitter",
+            "refs": [
+              "GlobalEventEmitter"
+            ]
+          }
+        },
+        {
+          "name": "listeners",
+          "type": "Record<string, Function[]>",
+          "kind": "property"
+        },
+        {
+          "name": "addListener",
+          "type": "addListener(eventName: string, listener: Function): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "eventName",
+              "type": "string"
+            },
+            {
+              "name": "listener",
+              "type": "Function"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "clear",
+          "type": "clear(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "emit",
+          "type": "emit(eventName: string, args: any[]): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "eventName",
+              "type": "string"
+            },
+            {
+              "name": "args",
+              "type": "any[]"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "removeAllListeners",
+          "type": "removeAllListeners(eventName?: string): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "eventName",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "removeListener",
+          "type": "removeListener(eventName: string, listener: Function): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "eventName",
+              "type": "string"
+            },
+            {
+              "name": "listener",
+              "type": "Function"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "toggle",
+          "type": "toggle(eventName: string, data: unknown[]): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "eventName",
+              "type": "string"
+            },
+            {
+              "name": "data",
+              "type": "unknown[]"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "trigger",
+          "type": "trigger(eventName: string, params: string | Record<any, any>): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "eventName",
+              "type": "string"
+            },
+            {
+              "name": "params",
+              "type": "string | Record<any, any>"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "LynxTestingEnv",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "A pure-JavaScript implementation of the [Lynx Spec](https://lynxjs.org/guide/spec.html),\nnotably the [Element PAPI](https://lynxjs.org/api/engine/element-api) and [Dual-threaded Model](https://lynxjs.org/guide/spec#dual-threaded-model) for use with Node.js.",
+      "examples": [
+        "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToMainThread();\n// use the main thread Element PAPI\nconst page = __CreatePage('0', 0);\nconst view = __CreateView(0);\n__AppendElement(page, view);\n\n```"
+      ],
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(env?: LynxEnv): LynxTestingEnv",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "env",
+              "type": "LynxEnv",
+              "ref": "LynxEnv",
+              "refs": [
+                "LynxEnv"
+              ],
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "LynxTestingEnv",
+            "refs": [
+              "LynxTestingEnv"
+            ]
+          }
+        },
+        {
+          "name": "backgroundThread",
+          "type": "LynxGlobalThis",
+          "ref": "LynxGlobalThis",
+          "refs": [
+            "LynxGlobalThis"
+          ],
+          "summary": "The global object for the background thread.",
+          "examples": [
+            "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToBackgroundThread();\n// use the background thread global object\nglobalThis.lynxCoreInject.tt.OnLifecycleEvent(...args);\n```"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "env",
+          "type": "LynxEnv",
+          "ref": "LynxEnv",
+          "refs": [
+            "LynxEnv"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "mainThread",
+          "type": "LynxGlobalThis & ElementTreeGlobals",
+          "refs": [
+            "LynxGlobalThis",
+            "ElementTreeGlobals"
+          ],
+          "summary": "The global object for the main thread.",
+          "examples": [
+            "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToMainThread();\n// use the main thread global object\nconst page = globalThis.__CreatePage('0', 0);\nconst view = globalThis.__CreateView(0);\nglobalThis.__AppendElement(page, view);\n```"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "clearGlobal",
+          "type": "clearGlobal(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "injectGlobals",
+          "type": "injectGlobals(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "reset",
+          "type": "reset(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "switchToBackgroundThread",
+          "type": "switchToBackgroundThread(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "switchToMainThread",
+          "type": "switchToMainThread(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "LynxElement",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Any Lynx Element, such as `view`, `text`, `image`, etc.\n\n[Lynx Spec Reference](https://lynxjs.org/living-spec/index.html?ts=1743416098203#element%E2%91%A0)",
+      "members": [
+        {
+          "name": "cssId",
+          "optional": true,
+          "type": "string",
+          "summary": "The cssId of the element",
+          "kind": "property"
+        },
+        {
+          "name": "eventMap",
+          "optional": true,
+          "type": "{ [key: string]: any }",
+          "summary": "The map of events bound to the element.",
+          "kind": "property"
+        },
+        {
+          "name": "firstChild",
+          "type": "LynxElement",
+          "ref": "LynxElement",
+          "refs": [
+            "LynxElement"
+          ],
+          "summary": "Returns the first child.\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/firstChild)",
+          "kind": "property"
+        },
+        {
+          "name": "gesture",
+          "optional": true,
+          "type": "{ [key: string]: any }",
+          "summary": "The gestures bound to the element.",
+          "kind": "property"
+        },
+        {
+          "name": "nextSibling",
+          "type": "LynxElement",
+          "ref": "LynxElement",
+          "refs": [
+            "LynxElement"
+          ],
+          "summary": "Returns the next sibling.\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/nextSibling)",
+          "kind": "property"
+        },
+        {
+          "name": "parentNode",
+          "type": "LynxElement",
+          "ref": "LynxElement",
+          "refs": [
+            "LynxElement"
+          ],
+          "summary": "Returns the parent.\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/parentNode)",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LynxEnv",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The host environment used to initialize `LynxTestingEnv`.",
+      "members": [
+        {
+          "name": "window",
+          "type": "Window & typeof globalThis",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LynxGlobalThis",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The `globalThis` object of Lynx dual thread environment.",
+      "members": [
+        {
+          "name": "globalThis",
+          "type": "LynxGlobalThis",
+          "ref": "LynxGlobalThis",
+          "refs": [
+            "LynxGlobalThis"
+          ],
+          "summary": "The globalThis object.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ElementTree",
+      "kind": "typealias",
+      "type": "ReturnType<typeof initElementTree>",
+      "summary": "The lynx element tree"
+    },
+    {
+      "name": "ElementTreeGlobals",
+      "kind": "typealias",
+      "type": "PickUnderscoreKeys<ElementTree>",
+      "ref": "PickUnderscoreKeys",
+      "refs": [
+        "PickUnderscoreKeys",
+        "ElementTree"
+      ],
+      "summary": "The Element PAPI Types"
+    },
+    {
+      "name": "FilterUnderscoreKeys",
+      "kind": "typealias",
+      "type": "{ [K in keyof T]: K extends `__${string}` ? K : never }[keyof T]"
+    },
+    {
+      "name": "PickUnderscoreKeys",
+      "kind": "typealias",
+      "type": "Pick<T, FilterUnderscoreKeys<T>>",
+      "refs": [
+        "FilterUnderscoreKeys"
+      ]
+    },
+    {
+      "name": "initElementTree",
+      "kind": "function",
+      "type": "initElementTree(): ElementTree",
+      "signatures": [
+        {
+          "text": "initElementTree(): ElementTree",
+          "params": [],
+          "returns": {
+            "type": "ElementTree"
+          }
+        }
+      ]
+    },
+    {
+      "name": "installLynxTestingEnv",
+      "kind": "function",
+      "type": "installLynxTestingEnv(target: typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }, env: LynxEnv): void",
+      "signatures": [
+        {
+          "text": "installLynxTestingEnv(target: typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }, env: LynxEnv): void",
+          "params": [
+            {
+              "name": "target",
+              "type": "typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }",
+              "refs": [
+                "LynxEnv",
+                "LynxTestingEnv"
+              ]
+            },
+            {
+              "name": "env",
+              "type": "LynxEnv",
+              "ref": "LynxEnv",
+              "refs": [
+                "LynxEnv"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "Installs a `LynxTestingEnv` instance and its required globals onto a target."
+        }
+      ],
+      "summary": "Installs a `LynxTestingEnv` instance and its required globals onto a target."
+    },
+    {
+      "name": "uninstallLynxTestingEnv",
+      "kind": "function",
+      "type": "uninstallLynxTestingEnv(target: typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }): void",
+      "signatures": [
+        {
+          "text": "uninstallLynxTestingEnv(target: typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }): void",
+          "params": [
+            {
+              "name": "target",
+              "type": "typeof globalThis & { lynxEnv?: LynxEnv; lynxTestingEnv?: LynxTestingEnv; Node?: () => Node }",
+              "refs": [
+                "LynxEnv",
+                "LynxTestingEnv"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "Removes the globals installed by `installLynxTestingEnv`."
+        }
+      ],
+      "summary": "Removes the globals installed by `installLynxTestingEnv`."
+    }
+  ]
+}

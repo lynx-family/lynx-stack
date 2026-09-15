@@ -1,0 +1,102 @@
+{
+  "Rpc.summary": {
+    "en": "The instance for handling MessagePort Remote Process Call",
+    "text": "用于处理 MessagePort 远程过程调用（Remote Process Call）的实例"
+  },
+  "Rpc.constructor.params.port": {
+    "en": "one size of a message channel",
+    "text": "消息通道的一端"
+  },
+  "Rpc.constructor.params.name": {
+    "en": "instance name",
+    "text": "实例名称"
+  },
+  "Rpc.createCall.summary": {
+    "en": "initialize a endpoint into a function",
+    "text": "将一个端点初始化为函数"
+  },
+  "Rpc.createCallbackify.summary": {
+    "en": "create a call with callbackify parameters",
+    "text": "创建一个参数为 callbackify 形式的调用"
+  },
+  "Rpc.invoke.summary": {
+    "en": "the low level api for sending a rpc message\nrecommend to use the `createCall`",
+    "text": "发送 RPC 消息的底层 API\n推荐使用 `createCall`"
+  },
+  "Rpc.registerHandler.summary": {
+    "en": "register a handler for an endpoint",
+    "text": "为端点注册处理函数"
+  },
+  "Rpc.registerHandlerLazy.summary": {
+    "en": "register a handler \"lazy\" for an endpoint\nIt will add a setter for the target property name\nonce the value is set, we will add it as a handler.",
+    "text": "以“惰性”方式为端点注册处理函数它会为目标属性名添加一个 setter，一旦该值被设置，就会将其添加为处理函数。"
+  },
+  "Rpc.registerHandlerRef.summary": {
+    "en": "register a property of an object as a handler",
+    "text": "将对象的某个属性注册为处理函数"
+  },
+  "Rpc.removeHandler.summary": {
+    "en": "Remove the handler for the endpoint",
+    "text": "移除该端点对应的处理函数"
+  },
+  "RpcEndpointAsync.bufferSize.summary": {
+    "en": "The byte size for return value buffer.\nThe return value will be encoded to json string in utf-8\nSo you should ensure this size is enough for your stringified return value.",
+    "text": "返回值缓冲区的字节大小。返回值会被编码为 UTF-8 的 JSON 字符串，因此需确保该大小足以容纳序列化后的返回值。"
+  },
+  "RpcEndpointAsync.hasReturn.summary": {
+    "en": "Whether the endpoint returns a value.\nOnly used by async endpoints; sync endpoints return a value when `bufferSize` is set.",
+    "text": "该端点是否有返回值。仅用于异步端点；同步端点在设置了 `bufferSize` 时会返回值。"
+  },
+  "RpcEndpointAsync.hasReturnTransfer.summary": {
+    "en": "Make the message invoke created by hasReturn support transfer.\nOnly valid for async and hasReturn endpoints",
+    "text": "使由 hasReturn 创建的消息调用支持 transfer。仅对异步且设置了 hasReturn 的端点有效"
+  },
+  "RpcEndpointAsync.isSync.summary": {
+    "en": "Whether the call is synchronous (blocks via `Atomics.wait`).",
+    "text": "该调用是否为同步调用（通过 `Atomics.wait` 阻塞）。"
+  },
+  "RpcEndpointAsync.name.summary": {
+    "en": "The name of this rpc endpoint.\nRpc instance use this name to recognize which callback to call.\nKeep in mind: this should be unique.",
+    "text": "该 RPC 端点的名称。\nRpc 实例通过该名称识别要调用的回调。注意：该名称必须唯一。"
+  },
+  "RpcEndpointAsyncWithTransfer.bufferSize.summary": {
+    "en": "The byte size for return value buffer.\nThe return value will be encoded to json string in utf-8\nSo you should ensure this size is enough for your stringified return value.",
+    "text": "返回值缓冲区的字节大小。返回值会被编码为 UTF-8 的 JSON 字符串，因此需确保该大小足以容纳序列化后的返回值。"
+  },
+  "RpcEndpointAsyncWithTransfer.hasReturn.summary": {
+    "en": "Whether the endpoint returns a value.\nOnly used by async endpoints; sync endpoints return a value when `bufferSize` is set.",
+    "text": "该端点是否有返回值。仅用于异步端点；同步端点在设置了 `bufferSize` 时会返回值。"
+  },
+  "RpcEndpointAsyncWithTransfer.hasReturnTransfer.summary": {
+    "en": "Make the message invoke created by hasReturn support transfer.\nOnly valid for async and hasReturn endpoints",
+    "text": "使由 hasReturn 创建的消息调用支持 transfer。仅对异步且设置了 hasReturn 的端点有效"
+  },
+  "RpcEndpointAsyncWithTransfer.isSync.summary": {
+    "en": "Whether the call is synchronous (blocks via `Atomics.wait`).",
+    "text": "该调用是否为同步调用（通过 `Atomics.wait` 阻塞）。"
+  },
+  "RpcEndpointAsyncWithTransfer.name.summary": {
+    "en": "The name of this rpc endpoint.\nRpc instance use this name to recognize which callback to call.\nKeep in mind: this should be unique.",
+    "text": "该 RPC 端点的名称。\nRpc 实例通过该名称识别要调用的回调。注意：该名称必须唯一。"
+  },
+  "RpcEndpointSync.bufferSize.summary": {
+    "en": "The byte size for return value buffer.\nThe return value will be encoded to json string in utf-8\nSo you should ensure this size is enough for your stringified return value.",
+    "text": "返回值缓冲区的字节大小。返回值会被编码为 UTF-8 的 JSON 字符串，因此需确保该大小足以容纳序列化后的返回值。"
+  },
+  "RpcEndpointSync.hasReturn.summary": {
+    "en": "Whether the endpoint returns a value.\nOnly used by async endpoints; sync endpoints return a value when `bufferSize` is set.",
+    "text": "该端点是否有返回值。仅用于异步端点；同步端点在设置了 `bufferSize` 时会返回值。"
+  },
+  "RpcEndpointSync.hasReturnTransfer.summary": {
+    "en": "Make the message invoke created by hasReturn support transfer.\nOnly valid for async and hasReturn endpoints",
+    "text": "使由 hasReturn 创建的消息调用支持 transfer。仅对异步且设置了 hasReturn 的端点有效"
+  },
+  "RpcEndpointSync.isSync.summary": {
+    "en": "Whether the call is synchronous (blocks via `Atomics.wait`).",
+    "text": "该调用是否为同步调用（通过 `Atomics.wait` 阻塞）。"
+  },
+  "RpcEndpointSync.name.summary": {
+    "en": "The name of this rpc endpoint.\nRpc instance use this name to recognize which callback to call.\nKeep in mind: this should be unique.",
+    "text": "该 RPC 端点的名称。\nRpc 实例通过该名称识别要调用的回调。注意：该名称必须唯一。"
+  }
+}

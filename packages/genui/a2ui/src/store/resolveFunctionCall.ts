@@ -107,9 +107,11 @@ export function resolveFunctionArguments(
 
 export type ExecuteFunctionCall = typeof executeFunctionCall;
 /**
- * Resolve arguments, look the function up in the registry, and invoke it.
- * When no impl is registered, log once and return `undefined` so callers
- * (checks, dynamic-property bindings) can degrade gracefully.
+ * Resolve arguments, look the function up in `options.functions` and then in
+ * `options.registry` (the shared `functionRegistry` by default), and invoke
+ * it. When no impl is found, warn once per name and return `undefined`; when
+ * the impl throws, warn on every call and return `undefined`. Callers
+ * (checks, dynamic-property bindings) can therefore degrade gracefully.
  */
 export function executeFunctionCall(
   processor: MessageProcessor,

@@ -1,0 +1,44 @@
+---
+title: '@lynx-js/use-sync-external-store'
+---
+
+# @lynx-js/use-sync-external-store
+
+{/* @api PackageHeader package="use-sync-external-store" */}
+
+<div className="api-pkg-header"><code>@lynx-js/use-sync-external-store</code> <span className="api-pkg-version">v1.5.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/use-sync-external-store" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/use-sync-external-store" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/use-sync-external-store/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+
+This is a pure ESM fork of the [`use-sync-external-store`](https://www.npmjs.com/package/use-sync-external-store) package specifically adapted for using with [ReactLynx](https://lynxjs.org/react).
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/use-sync-external-store" />
+
+## API
+
+{/* @api ApiExports package="use-sync-external-store" */}
+
+## Functions \{#functions\}
+
+### `useSyncExternalStore()` \{#usesyncexternalstore\}
+
+```ts
+function useSyncExternalStore(subscribe: (onStoreChange: () => void) => () => void, getSnapshot: () => Snapshot, getServerSnapshot?: () => Snapshot): Snapshot
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `subscribe` | `(onStoreChange: () => void) => () => void` |  |
+| `getSnapshot` | `() => Snapshot` |  |
+| `getServerSnapshot?` | `() => Snapshot` |  |
+
+**Returns:** `Snapshot`
+
+{/* @api-end */}

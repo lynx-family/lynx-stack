@@ -1,0 +1,6 @@
+{
+  "WebComponentClass.notToFilterFalseAttributes.summary": {
+    "en": "for attribute=\"false\",\nwe will do removeAttribute by default;\nset here for dont do this;",
+    "text": "对于 attribute=\"false\"，默认会执行 removeAttribute；在此设置以禁用该行为；"
+  }
+}

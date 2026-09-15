@@ -1,0 +1,14 @@
+{
+  "animate.summary": {
+    "en": "Animate a sequence",
+    "text": "对一个序列执行动画"
+  },
+  "useMotionValueRef.summary": {
+    "en": "useMotionValue, but in MainThreadRef format, highly experimental, subject to change",
+    "text": "MainThreadRef 形式的 useMotionValue，高度实验性，可能会发生变化"
+  },
+  "useMotionValueRefEvent.summary": {
+    "en": "useMotionValueEvent, but only accepts motionValueRef format, highly experimental, subject to change",
+    "text": "仅接受 motionValueRef 形式的 useMotionValueEvent，高度实验性，可能会发生变化"
+  }
+}

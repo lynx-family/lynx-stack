@@ -1,0 +1,339 @@
+{
+  "id": "genui-mcp-apps",
+  "package": "@lynx-js/genui",
+  "version": "0.4.0",
+  "description": "Generative UI for Lynx.",
+  "group": "libraries",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/genui",
+  "exports": [
+    {
+      "name": "AppApiDefinition",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Describes a local API that can provide data to an MCP Apps renderer.",
+      "members": [
+        {
+          "name": "description",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "inputSchema",
+          "type": "Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "renderer",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "AppRenderData",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Data required to select and render a locally registered MCP Apps.",
+      "members": [
+        {
+          "name": "input",
+          "type": "Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "renderer",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "result",
+          "type": "TResult",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "AppRenderer",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Type-erased renderer stored in an MCP Apps renderer registry.",
+      "members": [
+        {
+          "name": "component",
+          "type": "ComponentType<AppRendererProps<unknown>>",
+          "refs": [
+            "AppRendererProps"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "invalidResultMessage",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "parseResult",
+          "type": "(value: unknown) => unknown",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "AppRendererDefinition",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Strongly typed definition accepted by [`defineAppRenderer`](api:defineAppRenderer).",
+      "members": [
+        {
+          "name": "component",
+          "type": "ComponentType<AppRendererProps<TResult>>",
+          "refs": [
+            "AppRendererProps"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "invalidResultMessage",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "parseResult",
+          "type": "(value: unknown) => TResult | null",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "AppRendererProps",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Props supplied by the MCP Apps host to a registered renderer.",
+      "members": [
+        {
+          "name": "input",
+          "type": "Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "result",
+          "type": "TResult",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "AppRendererRegistry",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "A local renderer lookup used by the protocol-agnostic MCP Apps host.",
+      "members": [
+        {
+          "name": "getRenderer",
+          "type": "(id: string) => AppRenderer | null",
+          "refs": [
+            "AppRenderer"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "resolveRenderData",
+          "type": "(value: unknown) => ResolvedAppRenderData | null",
+          "refs": [
+            "ResolvedAppRenderData"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "McpAppsProps",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Props for the protocol-agnostic MCP Apps Lynx host.",
+      "members": [
+        {
+          "name": "registry",
+          "type": "AppRendererRegistry",
+          "ref": "AppRendererRegistry",
+          "refs": [
+            "AppRendererRegistry"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ResolvedAppRenderData",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Validated render data paired with its locally registered renderer.",
+      "members": [
+        {
+          "name": "input",
+          "type": "Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "renderer",
+          "type": "AppRenderer",
+          "ref": "AppRenderer",
+          "refs": [
+            "AppRenderer"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "result",
+          "type": "unknown",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "createAppRendererRegistry",
+      "kind": "function",
+      "type": "createAppRendererRegistry(renderers: readonly AppRenderer[]): AppRendererRegistry",
+      "signatures": [
+        {
+          "text": "createAppRendererRegistry(renderers: readonly AppRenderer[]): AppRendererRegistry",
+          "params": [
+            {
+              "name": "renderers",
+              "type": "readonly AppRenderer[]",
+              "refs": [
+                "AppRenderer"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "AppRendererRegistry",
+            "refs": [
+              "AppRendererRegistry"
+            ]
+          },
+          "summary": "Creates an immutable lookup facade for locally supplied renderers."
+        }
+      ],
+      "summary": "Creates an immutable lookup facade for locally supplied renderers."
+    },
+    {
+      "name": "defineAppRenderer",
+      "kind": "function",
+      "type": "defineAppRenderer(definition: AppRendererDefinition<TResult>): AppRenderer",
+      "signatures": [
+        {
+          "text": "defineAppRenderer(definition: AppRendererDefinition<TResult>): AppRenderer",
+          "params": [
+            {
+              "name": "definition",
+              "type": "AppRendererDefinition<TResult>",
+              "ref": "AppRendererDefinition",
+              "refs": [
+                "AppRendererDefinition"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "AppRenderer",
+            "refs": [
+              "AppRenderer"
+            ]
+          },
+          "summary": "Defines a renderer while preserving its result type at the declaration site."
+        }
+      ],
+      "summary": "Defines a renderer while preserving its result type at the declaration site."
+    },
+    {
+      "name": "McpApps",
+      "kind": "function",
+      "type": "McpApps(props: McpAppsProps): Element",
+      "signatures": [
+        {
+          "text": "McpApps(props: McpAppsProps): Element",
+          "params": [
+            {
+              "name": "props",
+              "type": "McpAppsProps",
+              "ref": "McpAppsProps",
+              "refs": [
+                "McpAppsProps"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "Element"
+          },
+          "summary": "Renders validated local MCP Apps data and falls back to streaming Markdown\nwhen no registered renderer matches the supplied host data."
+        }
+      ],
+      "summary": "Renders validated local MCP Apps data and falls back to streaming Markdown\nwhen no registered renderer matches the supplied host data."
+    },
+    {
+      "name": "readAppMarkdown",
+      "kind": "function",
+      "type": "readAppMarkdown(value: unknown): string",
+      "signatures": [
+        {
+          "text": "readAppMarkdown(value: unknown): string",
+          "params": [
+            {
+              "name": "value",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "string"
+          },
+          "summary": "Reads Markdown fallback content from MCP Apps host data."
+        }
+      ],
+      "summary": "Reads Markdown fallback content from MCP Apps host data."
+    },
+    {
+      "name": "readAppRenderData",
+      "kind": "function",
+      "type": "readAppRenderData(value: unknown): AppRenderData<unknown> | null",
+      "signatures": [
+        {
+          "text": "readAppRenderData(value: unknown): AppRenderData<unknown> | null",
+          "params": [
+            {
+              "name": "value",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "AppRenderData<unknown> | null",
+            "refs": [
+              "AppRenderData"
+            ]
+          },
+          "summary": "Parses and validates the renderer-independent portion of MCP Apps data."
+        }
+      ],
+      "summary": "Parses and validates the renderer-independent portion of MCP Apps data."
+    }
+  ]
+}

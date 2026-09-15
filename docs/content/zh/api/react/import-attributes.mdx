@@ -1,0 +1,40 @@
+---
+title: 导入属性
+---
+
+# 导入属性
+
+## `runtime: 'shared'`
+
+通过 **Import Attributes** 显式声明某些模块可以在主线程和后台线程之间共享。仅用于使用 **[主线程函数（Main Thread Function）](https://lynxjs.org/zh/react/main-thread-script)** 的场景。详情请参考[跨线程共享模块](https://lynxjs.org/zh/react/main-thread-script#跨线程共享模块)。
+
+`import` 语句的 `with` 从句中的 `runtime` 属性用于指定导入模块的运行时行为。当设置为 `'shared'` 时，该模块将被标记为跨线程共享。
+
+### 语法
+
+```javascript
+import { ... } from "module-name" with { runtime: 'shared' };
+import "module-name" with { runtime: 'shared' };
+```
+
+### 参数
+
+- `runtime`: `'shared'`
+
+### 示例
+
+```javascript
+import { func } from "./utils.js" with {runtime: 'shared'};
+
+function mainThreadFunction() {
+  'main thread';
+  func(); // 可以在主线程函数中调用
+}
+```
+
+### 注意事项
+
+1. **静态分析**：该特性依赖编译时的静态分析。只有直接通过 `import ... with { runtime: 'shared' }` 引入的标识符才能被识别为共享。
+2. **标识符传递**：如果将共享导入的函数赋值给另一个变量，新变量将失去共享特性，无法在主线程函数中直接调用（除非再次封装为主线程函数）。
+3. **主线程限制**：共享模块中的代码虽然能在主线程运行，但不会自动获得主线程上下文（如不能直接使用 `MainThreadRef`），除非显式标记 `'main thread'`。
+4. **状态隔离**：Shared Module 中的变量和状态在两个线程中是**完全隔离**的，各自拥有独立的实例。修改其中一个线程的状态不会影响另一个线程。

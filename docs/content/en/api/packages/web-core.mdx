@@ -1,0 +1,181 @@
+---
+title: '@lynx-js/web-core'
+---
+
+# @lynx-js/web-core
+
+{/* @api PackageHeader package="web-core" */}
+
+<div className="api-pkg-header"><code>@lynx-js/web-core</code> <span className="api-pkg-version">v0.26.1</span> · <a href="https://www.npmjs.com/package/@lynx-js/web-core" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-core" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-core/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+Lynx3 Web Platform runtime core
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/web-core" />
+
+## API
+
+The reference below covers the `@lynx-js/web-core/client` entry, which defines the `<lynx-view>` element and the helpers used to build web elements.
+
+{/* @api ApiExports package="web-core" */}
+
+## Functions \{#functions\}
+
+### `html()` \{#html\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#html).
+
+### `registerAttributeHandler()` \{#registerattributehandler\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#registerattributehandler).
+
+### `registerEventEnableStatusChangeHandler()` \{#registereventenablestatuschangehandler\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#registereventenablestatuschangehandler).
+
+### `registerStyleChangeHandler()` \{#registerstylechangehandler\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#registerstylechangehandler).
+
+### `bindSwitchToEventListener()` \{#bindswitchtoeventlistener\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#bindswitchtoeventlistener).
+
+### `bindToAttribute()` \{#bindtoattribute\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#bindtoattribute).
+
+### `bindToStyle()` \{#bindtostyle\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#bindtostyle).
+
+### `boostedQueueMicrotask()` \{#boostedqueuemicrotask\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#boostedqueuemicrotask).
+
+### `Component()` \{#component\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#component).
+
+### `genDomGetter()` \{#gendomgetter\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#gendomgetter).
+
+## Classes \{#classes\}
+
+### `CommonEventsAndMethods` \{#commoneventsandmethods\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#commoneventsandmethods).
+
+## Constants \{#constants\}
+
+### `commonComponentEventSetting` \{#commoncomponenteventsetting\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#commoncomponenteventsetting).
+
+### `layoutChangeTarget` \{#layoutchangetarget\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#layoutchangetarget).
+
+### `scrollContainerDom` \{#scrollcontainerdom\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#scrollcontainerdom).
+
+### `useScrollEnd` \{#usescrollend\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#usescrollend).
+
+## Types \{#types\}
+
+### `AttributeReactiveClass` \{#attributereactiveclass\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#attributereactiveclass).
+
+### `LynxViewElement` \{#lynxviewelement\}
+
+*No description yet.*
+
+HTML Example
+
+Note that you should declarae the size of lynx-view
+
+```html
+<lynx-view url="https://path/to/main.web.bundle" init-data="{}" global-props="{}" style="height:300px;width:300px">
+</lynx-view>
+```
+
+React 19 Example
+```jsx
+<lynx-view url={myLynxCardUrl} initData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>
+</lynx-view>
+```
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="lynxviewelement-injectstylerules"></a>`injectStyleRules?` | `string[]` | [optional] the css rules which will be injected into shadowroot. Each items will be inserted by `insertRule` method. |
+| <a id="lynxviewelement-napimodulesmap"></a>`napiModulesMap` | `NapiModulesMap \| undefined` | [optional] the napiModule which is called in lynx-core. key is module-name, value is esm url. |
+| <a id="lynxviewelement-nativemodulesmap"></a>`nativeModulesMap` | `NativeModulesMap \| undefined` | [optional] use to customize NativeModules. key is module-name, value is esm url. A `LynxConsoleModule` whose factory returns a Console-like object provides the lexical `console` for this view's background bundles. |
+| <a id="lynxviewelement-onnapimodulescall"></a>`onNapiModulesCall` | `NapiModulesCall \| undefined` | [optional] the NapiModule value handler. |
+| <a id="lynxviewelement-browserconfig"></a>`browserConfig` | `BrowserConfig \| undefined` |  |
+| <a id="lynxviewelement-data"></a>`data` | `Cloneable` |  |
+| <a id="lynxviewelement-global-props"></a>`global-props` | `Cloneable` |  |
+| <a id="lynxviewelement-globalprops"></a>`globalProps` | `Cloneable` | [optional] (attribute: "global-props") The globalProps value of this Lynx card |
+| <a id="lynxviewelement-init-data"></a>`init-data` | `Cloneable` |  |
+| <a id="lynxviewelement-initdata"></a>`initData` | `Cloneable` | [optional] (attribute: "init-data") The initial data of this Lynx card |
+| <a id="lynxviewelement-initi18nresources"></a>`initI18nResources` | `InitI18nResources` | [optional] the complete set of i18nResources that on the container side, which can be obtained synchronously by _I18nResourceTranslation |
+| <a id="lynxviewelement-lynxgroupid"></a>`lynxGroupId` | `number \| undefined` | [optional] (attribute: "lynx-group-id") the background shared context id, which is used to share webworker between different lynx cards |
+| <a id="lynxviewelement-onnativemodulescall"></a>`onNativeModulesCall` | `NativeModulesCall \| undefined` | [optional] the NativeModules value handler. Arguments will be cached before this property is assigned. |
+| <a id="lynxviewelement-src"></a>`src` | `string \| undefined` |  |
+| <a id="lynxviewelement-transformrem"></a>`transformREM` | `boolean` |  |
+| <a id="lynxviewelement-transformvh"></a>`transformVH` | `boolean` |  |
+| <a id="lynxviewelement-transformvw"></a>`transformVW` | `boolean` |  |
+| <a id="lynxviewelement-url"></a>`url` | `string \| undefined` | [required] (attribute: "url") The url of the entry of your Lynx card |
+| <a id="lynxviewelement-attributechangedcallback"></a>`attributeChangedCallback` | `attributeChangedCallback(name: string, oldValue: string \| null, newValue: string \| null): void` |  |
+| <a id="lynxviewelement-connectedcallback"></a>`connectedCallback` | `connectedCallback(): void` |  |
+| <a id="lynxviewelement-disconnectedcallback"></a>`disconnectedCallback` | `disconnectedCallback(): void` |  |
+| <a id="lynxviewelement-reload"></a>`reload` | `reload(): void` |  |
+| <a id="lynxviewelement-senddevtoolevent"></a>`sendDevtoolEvent` | `sendDevtoolEvent(eventName: string, data: string): void` |  |
+| <a id="lynxviewelement-sendglobalevent"></a>`sendGlobalEvent` | `sendGlobalEvent(eventName: string, params: Cloneable[]): void` |  |
+| <a id="lynxviewelement-setattribute"></a>`setAttribute` | `setAttribute(qualifiedName: string, value: string): void` | "false" value will be omitted `HTMLElement.setAttribute` |
+| <a id="lynxviewelement-updatedata"></a>`updateData` | `updateData(data: Cloneable, processorName?: string, callback?: () => void): void` |  |
+| <a id="lynxviewelement-updateglobalprops"></a>`updateGlobalProps` | `updateGlobalProps(data: Cloneable): void` |  |
+| <a id="lynxviewelement-updatei18nresources"></a>`updateI18nResources` | `updateI18nResources(data: InitI18nResources, options: I18nResourceTranslationOptions): void` |  |
+
+### `WebComponentClass` \{#webcomponentclass\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#webcomponentclass).
+
+### `AttributeChangeHandler` \{#attributechangehandler\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#attributechangehandler).
+
+### `AttributeReactiveObject` \{#attributereactiveobject\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#attributereactiveobject).
+
+### `BindToAttributeProxy` \{#bindtoattributeproxy\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#bindtoattributeproxy).
+
+### `BindToStyleProxy` \{#bindtostyleproxy\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#bindtostyleproxy).
+
+### `EventStatusChangeHandler` \{#eventstatuschangehandler\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#eventstatuschangehandler).
+
+### `StyleChangeHandler` \{#stylechangehandler\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#stylechangehandler).
+
+### `UseCSSCustomPropertyHandler` \{#usecsscustompropertyhandler\}
+
+Re-exported from [`@lynx-js/web-elements`](/api/packages/web-elements#usecsscustompropertyhandler).
+
+{/* @api-end */}

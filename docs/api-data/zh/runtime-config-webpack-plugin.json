@@ -1,0 +1,18 @@
+{
+  "RuntimeConfigWebpackPlugin.summary": {
+    "en": "Merges this bundle's runtime configuration into\n`lynx.__runtime_configs__`, then shallow-freezes it.\n\nApply it to the host bundle only. Lazy and external bundles consume the\nconfiguration injected by the host.",
+    "text": "将当前 bundle 的运行时配置合并到\n`lynx.__runtime_configs__` 中，然后对其进行浅冻结。\n\n仅将其应用于宿主 bundle。lazy bundle 和 external bundle 会使用宿主注入的配置。"
+  },
+  "RuntimeConfigWebpackPlugin.apply.summary": {
+    "en": "The entry point of a webpack plugin.",
+    "text": "webpack 插件的入口。"
+  },
+  "RuntimeConfigWebpackPlugin.apply.params.compiler": {
+    "en": "the webpack compiler",
+    "text": "webpack compiler"
+  },
+  "RuntimeConfigWebpackPluginOptions.summary": {
+    "en": "Page-scoped runtime configuration contributed by a bundle.\n\nThe plugin deliberately leaves configuration keys and values to the DSL\nthat consumes them.",
+    "text": "由 bundle 提供的页面级运行时配置。\n\n该插件有意不限定配置的 key 和 value，交由使用它们的 DSL 决定。"
+  }
+}

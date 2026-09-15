@@ -25,7 +25,16 @@ export type {
   TransformBuiltinAttributeNamesOptions,
 } from '@lynx-js/react-transform'
 
+/**
+ * The static API of
+ * {@link @lynx-js/template-webpack-plugin#LynxTemplatePlugin | LynxTemplatePlugin}
+ * that `pluginLynx` exposes. Get it with
+ * `api.useExposed(Symbol.for('LynxTemplatePlugin')).LynxTemplatePlugin`.
+ */
 interface LynxTemplatePlugin {
+  /**
+   * Returns the {@link TemplateHooks} of a compilation.
+   */
   getLynxTemplatePluginHooks:
     typeof InnerLynxTemplatePlugin.getLynxTemplatePluginHooks
 }

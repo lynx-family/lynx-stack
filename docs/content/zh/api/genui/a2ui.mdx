@@ -1,0 +1,955 @@
+---
+title: '@lynx-js/genui/a2ui'
+---
+
+# `@lynx-js/genui/a2ui`
+
+`@lynx-js/genui/a2ui` 是 [A2UI](https://a2ui.org/) v0.9 的 ReactLynx 客户端运行时。它接收应用收到的 A2UI 服务端到客户端消息，存入消息 store，并用受信任的 ReactLynx 组件渲染最新的 surface。它不调用模型，也不负责传输层：消息由应用推送进来。完整用法见 [A2UI 指南](https://lynxjs.org/zh/react/genui/a2ui)。
+
+```ts
+import { A2UI, createMessageStore } from '@lynx-js/genui/a2ui';
+```
+
+store、React 绑定、内置 catalog 和基础函数也可以分别从 `@lynx-js/genui/a2ui/store`、`/react`、`/catalog` 和 `/functions` 单独引入。
+
+## API
+
+{/* @api ApiExports package="genui-a2ui" */}
+
+## 函数 \{#functions\}
+
+### `NodeRenderer()` \{#noderenderer\}
+
+```ts
+function NodeRenderer(props: { component: ComponentInstance; renderUnsupported?: (info: UnsupportedInfo) => ReactNode; suppressActionDispatch?: boolean; surface: Surface }): ReactNode
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `{ component: `[`ComponentInstance`](#componentinstance)`; renderUnsupported?: (info: UnsupportedInfo) => ReactNode; suppressActionDispatch?: boolean; surface: `[`Surface`](#surface)` }` |  |
+
+**返回值：** `ReactNode`
+
+### `Button()` \{#button\}
+
+```ts
+function Button(props: ButtonProps): ReactNode
+```
+
+渲染一个可交互的按钮，点击时派发 A2UI 事件或函数调用。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `ButtonProps` |  |
+
+**返回值：** `ReactNode`
+
+### `Card()` \{#card\}
+
+```ts
+function Card(props: CardProps): ReactNode
+```
+
+渲染只包含一个子节点的卡片容器。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `CardProps` |  |
+
+**返回值：** `ReactNode`
+
+### `CheckBox()` \{#checkbox\}
+
+```ts
+function CheckBox(props: CheckBoxProps): ReactNode
+```
+
+渲染一个绑定到 surface 数据模型的布尔复选框。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `CheckBoxProps` |  |
+
+**返回值：** `ReactNode`
+
+### `ChoicePicker()` \{#choicepicker\}
+
+```ts
+function ChoicePicker(props: ChoicePickerProps): ReactNode
+```
+
+渲染单选或多选的选项选择器。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `ChoicePickerProps` |  |
+
+**返回值：** `ReactNode`
+
+### `Column()` \{#column\}
+
+```ts
+function Column(props: ColumnProps): ReactNode
+```
+
+按纵向顺序渲染子组件 id。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `ColumnProps` |  |
+
+**返回值：** `ReactNode`
+
+### `createFallbackMessagesFromPlainText()` \{#createfallbackmessagesfromplaintext\}
+
+```ts
+function createFallbackMessagesFromPlainText(text: string): ServerToClientMessage[]
+```
+
+基于纯文本字符串构建只含单个 Text 的兜底消息流（surface 为 `default`，catalog 为 `inline-text`，root 为 `root-text`）。供 `normalizePayloadToMessages` 以及从 agent 收到自由文本而非结构化协议消息的传输层使用。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `text` | `string` |  |
+
+**返回值：** [`ServerToClientMessage`](#servertoclientmessage)`[]`
+
+### `createMessageStore()` \{#createmessagestore\}
+
+```ts
+function createMessageStore(options: MessageStoreOptions): MessageStore
+```
+
+创建一个适用于 `useSyncExternalStore` 的追加式原始消息缓冲区。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `options` | [`MessageStoreOptions`](#messagestoreoptions) |  |
+
+**返回值：** [`MessageStore`](#messagestore)
+
+### `createTextCardMessages()` \{#createtextcardmessages\}
+
+```ts
+function createTextCardMessages(text: string): ServerToClientMessage[]
+```
+
+基于纯文本字符串构建用 Card 包裹 Text 的兜底消息流。在 agent 输出 `kind: 'text'` 的文本数据时使用。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `text` | `string` |  |
+
+**返回值：** [`ServerToClientMessage`](#servertoclientmessage)`[]`
+
+### `DateTimeInput()` \{#datetimeinput\}
+
+```ts
+function DateTimeInput(props: DateTimeInputProps): ReactNode
+```
+
+渲染一个由 surface 数据模型驱动的本地日期和/或时间选择器。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `DateTimeInputProps` |  |
+
+**返回值：** `ReactNode`
+
+### `defineCatalog()` \{#definecatalog\}
+
+```ts
+function defineCatalog(inputs: readonly CatalogInput[]): Catalog
+```
+
+用组件、`[component, manifest]` 对和/或函数条目构建 catalog。同一类别中重复的名称会被拒绝。函数条目会立即把实现注册到 `functionRegistry`，因此 `defineCatalog` 之后的任何 `executeFunctionCall` 都能路由到它们。
+
+```ts
+import { Text, Button } from '@lynx-js/genui/a2ui';
+import { basicFunctions, defineCatalog } from '@lynx-js/genui/a2ui';
+import { MyCard } from './MyCard';
+import myCardManifest from './dist/catalog/MyCard/catalog.json'
+  with { type: 'json' };
+
+const catalog = defineCatalog([
+  Text,
+  Button,
+  [MyCard, myCardManifest],
+  ...basicFunctions,
+]);
+```
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `inputs` | `readonly `[`CatalogInput`](#cataloginput)`[]` |  |
+
+**返回值：** [`Catalog`](#catalog)
+
+### `defineFunction()` \{#definefunction\}
+
+```ts
+function defineFunction(impl: FunctionImpl, manifest?: FunctionManifest): CatalogFunctionEntry
+```
+
+为 `defineCatalog` 构建函数条目。可以把实现与提取出的 manifest 配对，也可以只传实现（注册表仍会路由调用，只是 agent 看不到参数 schema）。
+
+```ts
+const requiredEntry = defineFunction(required, requiredManifest);
+const catalog = defineCatalog([Text, Button, requiredEntry]);
+```
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `impl` | [`FunctionImpl`](#functionimpl) |  |
+| `manifest?` | [`FunctionManifest`](#functionmanifest) |  |
+
+**返回值：** [`CatalogFunctionEntry`](#catalogfunctionentry)
+
+### `Divider()` \{#divider\}
+
+```ts
+function Divider(props: DividerProps): ReactNode
+```
+
+渲染横向或纵向的分隔线。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `DividerProps` |  |
+
+**返回值：** `ReactNode`
+
+### `executeFunctionCall()` \{#executefunctioncall\}
+
+```ts
+function executeFunctionCall(processor: MessageProcessor, fn: {}, surfaceId: string, dataContextPath?: string, options: ResolveFunctionOptions): unknown
+```
+
+解析参数，先在 `options.functions` 中、再在 `options.registry`（默认为共享的 `functionRegistry`）中查找函数并调用。如果找不到实现，则每个名称只告警一次并返回 `undefined`；如果实现抛出异常，则每次调用都会告警并返回 `undefined`。因此调用方（checks、动态属性绑定）能够平稳降级。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `processor` | [`MessageProcessor`](#messageprocessor) |  |
+| `fn` | `{}` |  |
+| `surfaceId` | `string` |  |
+| `dataContextPath?` | `string` |  |
+| `options` | [`ResolveFunctionOptions`](#resolvefunctionoptions) |  |
+
+**返回值：** `unknown`
+
+### `Icon()` \{#icon\}
+
+```ts
+function Icon(props: IconProps): ReactNode
+```
+
+渲染 catalog 支持的图标集中的具名图标。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `IconProps` |  |
+
+**返回值：** `ReactNode`
+
+### `Image()` \{#image\}
+
+```ts
+function Image(props: ImageProps): ReactNode
+```
+
+按 catalog 定义的尺寸和填充方式渲染图片 URL。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `ImageProps` |  |
+
+**返回值：** `ReactNode`
+
+### `LazyComponent()` \{#lazycomponent\}
+
+```ts
+function LazyComponent(props: LazyComponentProps): ReactNode
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `LazyComponentProps` |  |
+
+**返回值：** `ReactNode`
+
+### `LineChart()` \{#linechart\}
+
+```ts
+function LineChart(props: LineChartProps): ReactNode
+```
+
+在共享的标签上渲染一条或多条数值折线。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `LineChartProps` |  |
+
+**返回值：** `ReactNode`
+
+### `List()` \{#list\}
+
+```ts
+function List(props: ListProps): ReactNode
+```
+
+在可滚动的列表容器中渲染子组件 id。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `ListProps` |  |
+
+**返回值：** `ReactNode`
+
+### `Loading()` \{#loading\}
+
+```ts
+function Loading(props: LoadingProps): ReactNode
+```
+
+渲染一个轻量的加载指示器。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `LoadingProps` |  |
+
+**返回值：** `ReactNode`
+
+### `McpApp()` \{#mcpapp\}
+
+```ts
+function McpApp(props: McpAppProps): ReactNode
+```
+
+在嵌套的 Lynx frame 中渲染受信任的 MCP App Lynx bundle。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `McpAppProps` |  |
+
+**返回值：** `ReactNode`
+
+### `mergeCatalogs()` \{#mergecatalogs\}
+
+```ts
+function mergeCatalogs(catalogs: Catalog[]): Catalog
+```
+
+合并多个 catalog。名称重复时后写入的覆盖先写入的，适合页面级 catalog 覆盖品牌级 catalog、品牌级再覆盖内置 catalog 的场景。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `catalogs` | [`Catalog`](#catalog)`[]` |  |
+
+**返回值：** [`Catalog`](#catalog)
+
+### `Modal()` \{#modal\}
+
+```ts
+function Modal(props: ModalProps): ReactNode
+```
+
+渲染一个触发组件，以及在本地打开的弹窗内容组件。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `ModalProps` |  |
+
+**返回值：** `ReactNode`
+
+### `normalizePayloadToMessages()` \{#normalizepayloadtomessages\}
+
+```ts
+function normalizePayloadToMessages(payload: unknown): ServerToClientMessage[]
+```
+
+将任意数据（字符串、数组、对象）规范化为扁平的 `ServerToClientMessage` 记录列表。已结构化的消息会直接透传；纯文本则回退为包裹在 Text/Card surface 中。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `payload` | `unknown` |  |
+
+**返回值：** [`ServerToClientMessage`](#servertoclientmessage)`[]`
+
+### `PieChart()` \{#piechart\}
+
+```ts
+function PieChart(props: PieChartProps): ReactNode
+```
+
+把数值切片渲染成饼图或环形图。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `PieChartProps` |  |
+
+**返回值：** `ReactNode`
+
+### `prepareMessagesForProcessing()` \{#preparemessagesforprocessing\}
+
+```ts
+function prepareMessagesForProcessing(rawMessages: ServerToClientMessage[], messageId: string, activeSurfaceIds: Set<string>): { hasComponentUpdate: boolean; messages: ServerToClientMessage[] }
+```
+
+过滤一批待处理的消息，并报告保留下来的消息中是否有消息携带非空的 `updateComponents`。该函数会修改传入的参数：仅为缺少 `messageId` 的消息设置 `messageId`，并在遇到 `deleteSurface` / `createSurface` 消息时更新 `activeSurfaceIds`。针对已处于活动状态的 surface 的 `createSurface` 消息会被丢弃。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `rawMessages` | [`ServerToClientMessage`](#servertoclientmessage)`[]` |  |
+| `messageId` | `string` |  |
+| `activeSurfaceIds` | `Set<string>` |  |
+
+**返回值：** `{ hasComponentUpdate: boolean; messages: `[`ServerToClientMessage`](#servertoclientmessage)`[] }`
+
+### `RadioGroup()` \{#radiogroup\}
+
+```ts
+function RadioGroup(props: RadioGroupComponentProps): ReactNode
+```
+
+渲染一个绑定到 surface 数据模型的单选按钮组。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `RadioGroupComponentProps` |  |
+
+**返回值：** `ReactNode`
+
+### `registerBasicFunctions()` \{#registerbasicfunctions\}
+
+```ts
+function registerBasicFunctions(): void
+```
+
+为自行构建渲染器、不经过 `defineCatalog` 的使用方提供的手动兜底方案。将所有适配后的 basic catalog 实现注册到共享的 `functionRegistry` 中。多次调用不会有问题——后注册的会覆盖先注册的，这正是预期的覆盖方式。
+
+### `resolveCatalog()` \{#resolvecatalog\}
+
+```ts
+function resolveCatalog(catalog: Catalog): ReadonlyMap<string, CatalogComponent>
+```
+
+根据 catalog 构建“名称 → 组件”的查找表。渲染器用它解析协议流中的 `{ component: 'Text', ... }`。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `catalog` | [`Catalog`](#catalog) |  |
+
+**返回值：** `ReadonlyMap<string, `[`CatalogComponent`](#catalogcomponent)`>`
+
+### `resolveDynamicValue()` \{#resolvedynamicvalue\}
+
+```ts
+function resolveDynamicValue(processor: MessageProcessor, value: unknown, surfaceId: string, dataContextPath?: string, options: ResolveDynamicValueOptions): unknown
+```
+
+将字面量、数据绑定和函数调用解析为具体的运行时值，用于组件 props 或 action 数据。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `processor` | [`MessageProcessor`](#messageprocessor) |  |
+| `value` | `unknown` |  |
+| `surfaceId` | `string` |  |
+| `dataContextPath?` | `string` |  |
+| `options` | `ResolveDynamicValueOptions` |  |
+
+**返回值：** `unknown`
+
+### `Row()` \{#row\}
+
+```ts
+function Row(props: RowProps): ReactNode
+```
+
+按横向顺序渲染子组件 id。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `RowProps` |  |
+
+**返回值：** `ReactNode`
+
+### `serializeCatalog()` \{#serializecatalog\}
+
+```ts
+function serializeCatalog(catalog: Catalog): SerializedCatalog
+```
+
+生成客户端在通道握手时向 agent 声明的 JSON manifest。没有附带 schema 的组件条目只序列化为 `{ name }`，这样至少能让 agent 知道哪些组件可以渲染。函数条目在有参数 schema 时会一并序列化。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `catalog` | [`Catalog`](#catalog) |  |
+
+**返回值：** [`SerializedCatalog`](#serializedcatalog)
+
+### `Slider()` \{#slider\}
+
+```ts
+function Slider(props: SliderProps): ReactNode
+```
+
+渲染一个绑定到 surface 数据模型的数值滑块。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `SliderProps` |  |
+
+**返回值：** `ReactNode`
+
+### `Tabs()` \{#tabs\}
+
+```ts
+function Tabs(props: TabsProps): ReactNode
+```
+
+渲染一个标签页容器，各标签页引用子组件 id。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `TabsProps` |  |
+
+**返回值：** `ReactNode`
+
+### `Text()` \{#text\}
+
+```ts
+function Text(props: TextProps): ReactNode
+```
+
+根据字面量、数据绑定或函数调用渲染带样式的文本。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `TextProps` |  |
+
+**返回值：** `ReactNode`
+
+### `TextField()` \{#textfield\}
+
+```ts
+function TextField(props: TextFieldProps): ReactNode
+```
+
+渲染一个绑定到数据模型的单行或多行文本输入框。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | `TextFieldProps` |  |
+
+**返回值：** `ReactNode`
+
+### `useAction()` \{#useaction\}
+
+```ts
+function useAction(props: ActionProps): { sendAction: (action: {} | {}) => Promise<unknown> }
+```
+
+创建一个 `sendAction` 回调，它会解析动态的 action 数据值，并通过当前处理器分发用户事件或函数调用。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | [`ActionProps`](#actionprops) |  |
+
+**返回值：** `{ sendAction: (action: {} | {}) => Promise<unknown> }`
+
+### `useChecks()` \{#usechecks\}
+
+```ts
+function useChecks(options: { checks: CheckLike[] | undefined; componentId: string; dataContextPath?: string; surface: Surface | undefined }): CheckOutcome & { firstFailureMessage: string | undefined }
+```
+
+基于 surface 的数据模型和 catalog 中的函数，响应式地对输入组件的 `checks` 数组求值，并在绑定的数据变化时重新求值。返回当前结果以及第一条失败信息（便于内联渲染错误）。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `options` | `{ checks: `[`CheckLike`](#checklike)`[] \| undefined; componentId: string; dataContextPath?: string; surface: `[`Surface`](#surface)` \| undefined }` |  |
+
+**返回值：** `CheckOutcome & { firstFailureMessage: string | undefined }`
+
+### `useDataBinding()` \{#usedatabinding\}
+
+```ts
+function useDataBinding(dynamicValue: unknown, surface: Surface, dataContextPath?: string, fallbackValue?: T): [T | undefined, (newValue: T) => void, string | undefined]
+```
+
+订阅数据模型绑定，并返回该路径上的当前值。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `dynamicValue` | `unknown` |  |
+| `surface` | [`Surface`](#surface) |  |
+| `dataContextPath?` | `string` |  |
+| `fallbackValue?` | `T` |  |
+
+**返回值：** `[T | undefined, (newValue: T) => void, string | undefined]`
+
+### `useResolvedProps()` \{#useresolvedprops\}
+
+```ts
+function useResolvedProps(properties: Record<string, unknown>, surface: Surface, dataContextPath?: string, processor?: MessageProcessor, functions?: readonly CatalogFunctionEntry[]): readonly [Record<string, unknown>, (key: string, value: unknown) => void]
+```
+
+解析组件的动态 props，并在基于 signal 的数据模型变化时保持结果同步。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `properties` | `Record<string, unknown>` |  |
+| `surface` | [`Surface`](#surface) |  |
+| `dataContextPath?` | `string` |  |
+| `processor?` | [`MessageProcessor`](#messageprocessor) |  |
+| `functions?` | `readonly `[`CatalogFunctionEntry`](#catalogfunctionentry)`[]` |  |
+
+**返回值：** `readonly [Record<string, unknown>, (key: string, value: unknown) => void]`
+
+## 类 \{#classes\}
+
+### `FunctionRegistry` \{#functionregistry\}
+
+查找表，将协议中 `FunctionCall.call` 的名称路由到本地 JavaScript 实现。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="functionregistry-constructor"></a>`constructor` | `constructor(): FunctionRegistry` |  |
+| <a id="functionregistry-has"></a>`has` | `has(name: string): boolean` |  |
+| <a id="functionregistry-list"></a>`list` | `list(): FunctionEntry[]` |  |
+| <a id="functionregistry-register"></a>`register` | `register(entry: FunctionEntry): void` |  |
+| <a id="functionregistry-resolve"></a>`resolve` | `resolve(name: string): FunctionImpl \| undefined` |  |
+| <a id="functionregistry-unregister"></a>`unregister` | `unregister(name: string): void` |  |
+
+### `MessageProcessor` \{#messageprocessor\}
+
+有状态的 A2UI 协议处理器，将原始 v0.9 消息转换为可渲染的 surface、resource、数据模型 signal 以及用户操作事件。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="messageprocessor-constructor"></a>`constructor` | `constructor(): MessageProcessor` |  |
+| <a id="messageprocessor-surfaces"></a>`surfaces` | `Map<string, `[`Surface`](#surface)`>` |  |
+| <a id="messageprocessor-clearsurfaces"></a>`clearSurfaces` | `clearSurfaces(): void` |  |
+| <a id="messageprocessor-dispatch"></a>`dispatch` | `dispatch(message: Record<string, unknown>): Promise<unknown>` |  |
+| <a id="messageprocessor-getorcreatesurface"></a>`getOrCreateSurface` | `getOrCreateSurface(surfaceId: string): Surface` |  |
+| <a id="messageprocessor-getsurfaces"></a>`getSurfaces` | `getSurfaces(): ReadonlyMap<string, Surface>` |  |
+| <a id="messageprocessor-onevent"></a>`onEvent` | `onEvent(callback: (event: A2UIEvent) => void): () => void` |  |
+| <a id="messageprocessor-onupdate"></a>`onUpdate` | `onUpdate(callback: (data: Record<string, unknown>) => void): () => void` |  |
+| <a id="messageprocessor-processmessages"></a>`processMessages` | `processMessages(messages: ServerToClientMessage[]): void` |  |
+| <a id="messageprocessor-resolvepath"></a>`resolvePath` | `resolvePath(path: string, dataContextPath?: string): string` | 结合当前数据上下文解析 JSON Pointer。 - 绝对路径（以 '/' 开头）原样返回。 - 相对路径基于传入的 dataContextPath 解析。 |
+
+## 常量 \{#constants\}
+
+### `A2UI` \{#a2ui\}
+
+```ts
+const A2UI: MemoExoticComponent<(props: A2UIProps) => ReactNode>
+```
+
+*暂无说明。*
+
+### `basicFunctions` \{#basicfunctions\}
+
+```ts
+const basicFunctions: readonly CatalogFunctionEntry[]
+```
+
+打包为 `CatalogFunctionEntry` 的 A2UI 0.9 basic catalog 函数实现，可直接展开到 `<A2UI catalogs={[...]}>` 中。这些实现本身来自 `@a2ui/web_core`，因此无需额外工作即可与上游规范保持一致。
+
+```ts
+<A2UI catalogs={[Text, Button, ...basicFunctions]} ... />
+```
+
+### `functionRegistry` \{#functionregistry\}
+
+```ts
+const functionRegistry: FunctionRegistry
+```
+
+*暂无说明。*
+
+## 类型 \{#types\}
+
+### `A2UIProps` \{#a2uiprops\}
+
+一体化 A2UI ReactLynx 渲染器的 props。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="a2uiprops-catalogs"></a>`catalogs` | `readonly `[`CatalogInput`](#cataloginput)`[]` | 渲染器允许使用的组件和函数。每一项可以是一个裸组件（名称取自 `displayName ?? name`）、元组 `[component, manifest]`（其中 manifest 是提取器在 `dist/catalog/<Name>/catalog.json` 输出的 JSON）、已解析的 `{ name, component, schema? }` 条目，或者函数条目（例如 `basicFunctions` 中的条目）。 |
+| <a id="a2uiprops-classname"></a>`className?` | `string` | 可选的 class 名，应用于当前活动 surface 的顶层 `surface-${surfaceId}` view。当主题切换通过 surface 级别的 class 表达时使用。 |
+| <a id="a2uiprops-messagestore"></a>`messageStore` | [`MessageStore`](#messagestore) | 开发者推送协议消息的原始消息缓冲区。`<A2UI>` 通过 `useSyncExternalStore` 订阅它，并增量处理新消息。 内部的 `MessageProcessor`（surface、signal、resource）在每次挂载时只创建一次，之后即使 `messageStore` 被替换为另一个实例也**不会重置**。如需开启新的会话，请传入一个由 store 标识派生的 `key` prop，例如 `<A2UI key={turnId} messageStore={turnStore} ... />`。 |
+| <a id="a2uiprops-onaction"></a>`onAction?` | `(action: `[`UserActionPayload`](#useractionpayload)`) => void` | 在渲染树内触发用户操作（如按钮点击等）时调用。将其转发给你的 agent，并把响应消息推回同一个 `messageStore` 以更新 UI。该回调为 fire-and-forget 方式，渲染器不会等待它完成。 |
+| <a id="a2uiprops-renderempty"></a>`renderEmpty?` | `() => ReactNode` | 在缓冲区中收到第一条 `beginRendering` 之前渲染。 |
+| <a id="a2uiprops-rendererror"></a>`renderError?` | `(err: unknown) => ReactNode` | 当前活动 resource 失败时渲染。 |
+| <a id="a2uiprops-renderfallback"></a>`renderFallback?` | `() => ReactNode` | 当前活动 resource 处于 pending 状态时渲染。 |
+| <a id="a2uiprops-renderunsupported"></a>`renderUnsupported?` | `(info: UnsupportedInfo) => ReactNode` | 遇到不支持的数据语法或不支持的组件时渲染。 |
+| <a id="a2uiprops-wrapsurface"></a>`wrapSurface?` | `(children: ReactNode, ctx: { surfaceId: string }) => ReactNode` | 包裹每个顶层 surface，便于使用方应用外层主题外壳、包裹 className 或额外样式。 |
+
+### `ActionProps` \{#actionprops\}
+
+标识发出 A2UI action 的组件和 surface。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="actionprops-datacontext"></a>`dataContext?` | `string` |  |
+| <a id="actionprops-id"></a>`id` | `string` |  |
+| <a id="actionprops-surfaceid"></a>`surfaceId` | `string` |  |
+
+### `Catalog` \{#catalog\}
+
+渲染器使用的运行时 catalog，也会在握手时序列化后发给 agent。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="catalog-components"></a>`components` | `readonly `[`ResolvedCatalogEntry`](#resolvedcatalogentry)`[]` |  |
+| <a id="catalog-functions"></a>`functions` | `readonly `[`CatalogFunctionEntry`](#catalogfunctionentry)`[]` |  |
+
+### `CatalogFunctionEntry` \{#catalogfunctionentry\}
+
+函数条目：把实现和名称配对，可以附带 manifest，以便握手时向 agent 声明参数 schema。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="catalogfunctionentry-definition"></a>`definition?` | `FunctionDefinition` |  |
+| <a id="catalogfunctionentry-impl"></a>`impl` | [`FunctionImpl`](#functionimpl) |  |
+| <a id="catalogfunctionentry-kind"></a>`kind` | `"function"` |  |
+| <a id="catalogfunctionentry-name"></a>`name` | `string` |  |
+
+### `CheckLike` \{#checklike\}
+
+v0.9 的 `CheckRule` 形如 `{ condition, message }`，其中 `condition` 可以是布尔值、`DataBinding` 或 `FunctionCall`。这里接受宽松的 `unknown` 类型，这样组件 props 就不必为了透传而导入 v0_9 的类型。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="checklike-condition"></a>`condition` | `unknown` |  |
+| <a id="checklike-message"></a>`message` | `string` |  |
+
+### `FunctionCallContext` \{#functioncallcontext\}
+
+传给客户端函数实现的运行时上下文。它与上游 A2UI 基础函数所用的 DataContext 子集保持一致，同时绑定到本渲染器的 `MessageProcessor` + `SignalStore`。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="functioncallcontext-datacontextpath"></a>`dataContextPath?` | `string` |  |
+| <a id="functioncallcontext-processor"></a>`processor` | [`MessageProcessor`](#messageprocessor) |  |
+| <a id="functioncallcontext-surfaceid"></a>`surfaceId` | `string` |  |
+| <a id="functioncallcontext-resolvedynamicvalue"></a>`resolveDynamicValue` | `resolveDynamicValue(value: unknown): unknown` |  |
+| <a id="functioncallcontext-resolvesignal"></a>`resolveSignal` | `resolveSignal(value: unknown): Signal<unknown>` |  |
+| <a id="functioncallcontext-set"></a>`set` | `set(path: string, value: unknown): void` |  |
+
+### `FunctionEntry` \{#functionentry\}
+
+已注册的客户端函数及其可选的握手定义。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="functionentry-definition"></a>`definition?` | `FunctionDefinition` | 可选的函数定义，会在握手时告知 agent。 |
+| <a id="functionentry-impl"></a>`impl` | [`FunctionImpl`](#functionimpl) |  |
+| <a id="functionentry-name"></a>`name` | `string` |  |
+
+### `GenericComponentProps` \{#genericcomponentprops\}
+
+渲染器传给每个 catalog 组件的通用运行时 props。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="genericcomponentprops-datacontextpath"></a>`dataContextPath?` | `string` |  |
+| <a id="genericcomponentprops-id"></a>`id?` | `string` |  |
+| <a id="genericcomponentprops-sendaction"></a>`sendAction?` | `(action: Record<string, unknown>) => void` |  |
+| <a id="genericcomponentprops-setvalue"></a>`setValue?` | `(key: string, value: unknown) => void` |  |
+| <a id="genericcomponentprops-surface"></a>`surface` | [`Surface`](#surface) |  |
+
+### `MessageStore` \{#messagestore\}
+
+一个纯追加式的缓冲区，存放由开发者 IO 模块产生的原始协议消息。该 store 对 v0.9 协议一无所知——它不解析、不处理，也不解释消息，只负责：
+
+ 1. 按到达顺序存储消息。
+ 2. 有新消息到达时通知订阅者。
+ 3. 通过 `getSnapshot()` 返回当前快照（两次变更之间引用保持稳定——这是 `useSyncExternalStore` 所要求的）。
+
+感知协议的处理——surface、signal、resource、action 分发——由 `<A2UI>`（渲染器组件）负责。不想了解协议的开发者应使用 `<A2UI>`；了解协议的开发者可以直接基于快照运行自己的 `MessageProcessor`。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="messagestore-getsnapshot"></a>`getSnapshot` | `() => readonly `[`ServerToClientMessage`](#servertoclientmessage)`[]` | `useSyncExternalStore` 的 getSnapshot 约定——在两次 push 之间保持稳定。 |
+| <a id="messagestore-subscribe"></a>`subscribe` | `(cb: () => void) => () => void` | `useSyncExternalStore` 的 subscribe 约定。 |
+| <a id="messagestore-clear"></a>`clear` | `clear(): void` | 重置缓冲区，并通知订阅者。 |
+| <a id="messagestore-push"></a>`push` | `push(message: ServerToClientMessage \| readonly ServerToClientMessage[]): void` | 向缓冲区追加一条或多条原始消息。每次调用只通知订阅者一次（传入单个数组参数时会合并为一次通知）。 |
+
+### `MessageStoreOptions` \{#messagestoreoptions\}
+
+创建原始 A2UI 消息缓冲区时使用的选项。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="messagestoreoptions-initialmessages"></a>`initialMessages?` | `readonly `[`ServerToClientMessage`](#servertoclientmessage)`[]` | 可选的初始缓冲区内容。适用于恢复之前的 agent 响应或回放 fixture 消息流。 |
+
+### `ResolvedCatalogEntry` \{#resolvedcatalogentry\}
+
+解析后的 catalog 条目。这是内部表示，使用者通常不直接构造它，而是把 `CatalogInput` 传给 `defineCatalog`。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="resolvedcatalogentry-component"></a>`component` | [`CatalogComponent`](#catalogcomponent) |  |
+| <a id="resolvedcatalogentry-name"></a>`name` | `string` |  |
+| <a id="resolvedcatalogentry-schema"></a>`schema?` | [`CatalogSchema`](#catalogschema) |  |
+
+### `ResolveFunctionOptions` \{#resolvefunctionoptions\}
+
+控制如何基于 catalog 解析函数调用的选项。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="resolvefunctionoptions-functions"></a>`functions?` | `readonly `[`CatalogFunctionEntry`](#catalogfunctionentry)`[]` |  |
+| <a id="resolvefunctionoptions-registry"></a>`registry?` | [`FunctionRegistry`](#functionregistry) |  |
+
+### `ResourceInfo` \{#resourceinfo\}
+
+当 surface 或组件发生变化时，渲染器 resource 携带的数据。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="resourceinfo-component"></a>`component?` | [`ComponentInstance`](#componentinstance) |  |
+| <a id="resourceinfo-surface"></a>`surface` | [`Surface`](#surface) |  |
+| <a id="resourceinfo-surfaceid"></a>`surfaceId` | `string` |  |
+| <a id="resourceinfo-type"></a>`type` | `"beginRendering" \| "surfaceUpdate" \| "deleteSurface"` | 处理器发出的内部事件类型。 |
+
+### `SerializedCatalog` \{#serializedcatalog\}
+
+通道握手时发送给 agent 的序列化数据。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="serializedcatalog-components"></a>`components` | `{ name: string; schema?: `[`CatalogSchema`](#catalogschema)` }[]` |  |
+| <a id="serializedcatalog-functions"></a>`functions?` | `FunctionDefinition[]` |  |
+| <a id="serializedcatalog-version"></a>`version` | `"0.9"` |  |
+
+### `Surface` \{#surface\}
+
+单个协议 surface 的内存状态。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="surface-catalogid"></a>`catalogId?` | `string` |  |
+| <a id="surface-components"></a>`components` | `Map<string, `[`ComponentInstance`](#componentinstance)`>` |  |
+| <a id="surface-resources"></a>`resources` | `Map<string, `[`Resource`](#resource)`>` |  |
+| <a id="surface-rootcomponentid"></a>`rootComponentId?` | `string \| null` | 该 surface 根组件的 id。在第一个非空的 `updateComponents` 批次中设置：如果该批次中存在 `'root'` 这个 id 则取 `'root'`，否则取该批次中第一个组件的 id。 |
+| <a id="surface-senddatamodel"></a>`sendDataModel?` | `boolean` |  |
+| <a id="surface-store"></a>`store` | `SignalStore` |  |
+| <a id="surface-surfaceid"></a>`surfaceId` | `string` |  |
+| <a id="surface-theme"></a>`theme?` | `Readonly<Record<string, unknown>>` |  |
+
+### `UserActionPayload` \{#useractionpayload\}
+
+从渲染的 catalog 组件转发给宿主应用的规范化用户操作。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="useractionpayload-context"></a>`context` | `Record<string, unknown>` |  |
+| <a id="useractionpayload-name"></a>`name` | `string` |  |
+| <a id="useractionpayload-sourcecomponentid"></a>`sourceComponentId` | `string` |  |
+| <a id="useractionpayload-surfaceid"></a>`surfaceId` | `string` |  |
+| <a id="useractionpayload-timestamp"></a>`timestamp` | `string` |  |
+
+### `A2UIClientEventMessage` \{#a2uiclienteventmessage\}
+
+```ts
+type A2UIClientEventMessage = string | { sessionId?: string; text?: string } | { sessionId?: string; userAction: UserActionPayload }
+```
+
+*暂无说明。*
+
+### `CatalogComponent` \{#catalogcomponent\}
+
+```ts
+type CatalogComponent = ComponentType<GenericComponentProps>
+```
+
+宽松的组件类型：条目从协议流中接收运行时形态的 props，因此这里不对各组件的 props 做类型约束。
+
+### `CatalogFunctionDefinition` \{#catalogfunctiondefinition\}
+
+```ts
+type CatalogFunctionDefinition = FunctionDefinition
+```
+
+结构化的函数定义，由提取器（或上游 basic catalog 的 manifest）产出，进入 catalog，并在握手时发给 agent。它是 store 中 `FunctionDefinition` 的别名，因此 `functionRegistry.register({ definition })` 可以直接接收 catalog 条目，无需转换。
+
+### `CatalogInput` \{#cataloginput\}
+
+```ts
+type CatalogInput = CatalogComponent | readonly [CatalogComponent, CatalogManifest] | ResolvedCatalogEntry | CatalogFunctionEntry
+```
+
+传给 `defineCatalog` 的内容，组件条目和函数条目可以混在一起。
+
+### `CatalogManifest` \{#catalogmanifest\}
+
+```ts
+type CatalogManifest = Record<string, CatalogSchema>
+```
+
+提取器生成的 `dist/catalog/<Name>/catalog.json` 的结构。唯一的顶层 key 是组件的协议名称，值是它的 schema。引入这个 JSON，一次就能同时拿到两者。
+
+### `CatalogSchema` \{#catalogschema\}
+
+```ts
+type CatalogSchema = Record<string, unknown>
+```
+
+描述组件 props 的 JSON Schema 片段，由 `@lynx-js/genui/a2ui-catalog-extractor` 在构建时根据标注了 `@a2uiCatalog <Name>` 的组件 TypeScript 接口生成。运行时可以没有：不带 schema 的条目序列化后只有 `{ name }`。
+
+### `ComponentInstance` \{#componentinstance\}
+
+```ts
+type ComponentInstance = v0_9.AnyComponent & { __template?: { componentId: v0_9.ComponentId; path: string }; dataContextPath?: string }
+```
+
+*暂无说明。*
+
+### `FunctionImpl` \{#functionimpl\}
+
+```ts
+type FunctionImpl = (args: Record<string, unknown>, context?: FunctionCallContext) => unknown
+```
+
+函数实现位于客户端，agent 只通过名称引用函数。registry 是连接协议层 `FunctionCall.call` 字符串与本地实际运行代码的桥梁。
+
+### `FunctionManifest` \{#functionmanifest\}
+
+```ts
+type FunctionManifest = Record<string, CatalogFunctionDefinition>
+```
+
+*暂无说明。*
+
+### `Resource` \{#resource\}
+
+```ts
+type Resource = GenericResource<ResourceInfo>
+```
+
+*暂无说明。*
+
+### `ServerToClientMessage` \{#servertoclientmessage\}
+
+```ts
+type ServerToClientMessage = v0_9.A2uiMessage & { messageId?: string }
+```
+
+*暂无说明。*
+
+### `SurfaceId` \{#surfaceid\}
+
+```ts
+type SurfaceId = string
+```
+
+*暂无说明。*
+
+{/* @api-end */}

@@ -1,0 +1,17 @@
+{
+  "id": "webpack-runtime-globals",
+  "package": "@lynx-js/webpack-runtime-globals",
+  "version": "0.0.8",
+  "description": "Runtime global names shared by the Lynx webpack and Rspack plugins.",
+  "group": "internals",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/webpack-runtime-globals",
+  "exports": [
+    {
+      "name": "RuntimeGlobals",
+      "kind": "variable",
+      "type": "{ lynxAsyncChunkIds: \"__webpack_require__.lynx_aci\"; lynxAsyncChunkMode: \"__webpack_require__.lynx_acm\"; lynxCacheEvents: \"__webpack_require__.lynx_ce\"; lynxCacheEventsSetupList: \"__webpack_require__.lynx_ce.setupList\"; lynxChunkEntries: \"lynx.__chunk_entries__\"; lynxProcessEvalResult: \"globalThis.processEvalResult\"; lynxProcessEvalResultByHost: \"globalThis.processEvalResultByHost\"; lynxRuntimeConfig: \"lynx.__runtime_configs__\" }",
+      "summary": "All the runtime requirements that Lynx uses.",
+      "default": "..."
+    }
+  ]
+}

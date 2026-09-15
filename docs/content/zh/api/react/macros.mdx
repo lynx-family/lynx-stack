@@ -1,0 +1,284 @@
+---
+title: 内置宏
+---
+
+# 内置宏
+
+`@lynx-js/react` 编译插件会处理 `__BACKGROUND__` 和 `__MAIN_THREAD__` 等内置宏定义。在编译过程中，条件为 `false` 的代码块会被自动移除。
+
+## `__BACKGROUND__`
+
+- 类型：`boolean`
+- 作用：控制后台运行时环境下的代码执行。用于确定编译后需要保留在后台代码中的代码段。
+
+### 使用示例
+
+#### 在函数式组件中使用
+
+以下是 `App` 组件的示例：
+
+```tsx
+import { noop } from 'lodash-es';
+import { useEffect } from '@lynx-js/react';
+
+function App() {
+  const showToast = __BACKGROUND__
+    ? () => {
+        bridge.call('showToast', {
+          message: t('toast'),
+          icon: 'success',
+        });
+      }
+    : noop;
+
+  useEffect(showToast, []);
+  return <view />;
+}
+```
+
+编译后，代码将转换为：
+
+- 后台线程代码（编译中间产物目录的 `background.js`）：
+
+```tsx
+function App() {
+  const showToast = () => {
+    bridge.call('showToast', {
+      message: t('toast'),
+      icon: 'success',
+    });
+  };
+  useEffect(showToast, []);
+  return createSnapshotInstance(__snapshot_5ab440, null, []);
+}
+```
+
+- 主线程代码（编译中间产物目录的 `main-thread.js`）：
+
+```tsx
+function App() {
+  const showToast = noop_default;
+
+  useEffect();
+  return createSnapshotInstance(__snapshot_5ab440, null, []);
+}
+```
+
+#### 在类组件中使用
+
+以下是 `Conversations` 组件的示例：
+
+```tsx
+import { AppLoggerFactory } from '../utils/appLoggerFactory';
+
+class Conversations extends Component<Props, State> {
+  appLogger: AppLogger;
+
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      showConversationItemAction: false,
+      loading: true,
+    };
+    if (__BACKGROUND__) {
+      this.appLogger = AppLoggerFactory();
+    }
+  }
+}
+```
+
+编译后，代码将转换为：
+
+- 后台线程代码（编译中间产物目录的 `background.js`）：
+
+```tsx
+class Conversations extends Component<Props, State> {
+  appLogger: AppLogger;
+
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      showConversationItemAction: false,
+      loading: true,
+    };
+    this.appLogger = AppLoggerFactory();
+  }
+}
+```
+
+- 主线程代码（编译中间产物目录的 `main-thread.js`）：
+
+```tsx
+class Conversations extends Component<Props, State> {
+  appLogger: AppLogger;
+
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      showConversationItemAction: false,
+      loading: true,
+    };
+  }
+}
+```
+
+## `__MAIN_THREAD__`
+
+- 类型：`boolean`
+- 作用：控制主线程运行时环境下的代码执行。用于确定编译后需要保留在主线程代码中的代码段。
+
+### 使用示例
+
+#### 在函数式组件中使用
+
+以下是 `App` 组件的示例：
+
+```tsx
+import { noop } from 'lodash-es';
+import { useEffect } from '@lynx-js/react';
+
+function App() {
+  const showToast = !__MAIN_THREAD__
+    ? () => {
+        bridge.call('showToast', {
+          message: t('toast'),
+          icon: 'success',
+        });
+      }
+    : noop;
+
+  useEffect(showToast, []);
+  return <view />;
+}
+```
+
+编译后，代码将转换为：
+
+- 后台线程代码（编译中间产物目录的 `background.js`）：
+
+```tsx
+function App() {
+  const showToast = () => {
+    bridge.call('showToast', {
+      message: t('toast'),
+      icon: 'success',
+    });
+  };
+  useEffect(showToast, []);
+  return createSnapshotInstance(__snapshot_5ab440, null, []);
+}
+```
+
+- 主线程代码（编译中间产物目录的 `main-thread.js`）：
+
+```tsx
+function App() {
+  const showToast = noop_default;
+
+  useEffect();
+  return createSnapshotInstance(__snapshot_5ab440, null, []);
+}
+```
+
+#### 在类组件中使用
+
+以下是 `Conversations` 组件的示例：
+
+```tsx
+import { AppLoggerFactory } from '../utils/appLoggerFactory';
+
+class Conversations extends Component<Props, State> {
+  appLogger: AppLogger;
+
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      showConversationItemAction: false,
+      loading: true,
+    };
+    if (!__MAIN_THREAD__) {
+      this.appLogger = AppLoggerFactory();
+    }
+  }
+}
+```
+
+编译后，代码将转换为：
+
+- 后台线程代码（编译中间产物目录的 `background.js`）：
+
+```tsx
+class Conversations extends Component<Props, State> {
+  appLogger: AppLogger;
+
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      showConversationItemAction: false,
+      loading: true,
+    };
+    this.appLogger = AppLoggerFactory();
+  }
+}
+```
+
+- 主线程代码（编译中间产物目录的 `main-thread.js`）：
+
+```tsx
+class Conversations extends Component<Props, State> {
+  appLogger: AppLogger;
+
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      showConversationItemAction: false,
+      loading: true,
+    };
+  }
+}
+```
+
+## `__JS__`
+
+- 类型：`boolean`
+- 作用：[`__BACKGROUND__`](#__background__) 的别名。
+
+:::warning 已废弃
+请改用 `__BACKGROUND__`。
+:::
+
+## `__LEPUS__`
+
+- 类型：`boolean`
+- 作用：[`__MAIN_THREAD__`](#__main_thread__) 的别名。
+
+:::warning 已废弃
+请改用 `__MAIN_THREAD__`。
+:::
+
+## `__DEV__`
+
+- 类型：`boolean`
+- 作用：开发构建中为 `true`，生产构建中为 `false`。用它包裹只在开发期需要的代码——prop 校验、不变量断言、更友好的报错信息——这些代码不会进入生产产物。
+
+```tsx
+if (__DEV__) {
+  // 这段代码会在生产构建中被移除。
+  console.log('debug only');
+}
+```
+
+## `__PROFILE__`
+
+- 类型：`boolean`
+- 作用：产物中带有性能埋点时为 `true`。开发构建默认开启，生产构建默认关闭。埋点会产出哪些 trace 见[性能分析](https://lynxjs.org/zh/react/performance/profiling)，如何为生产构建打开见[运行时性能分析](https://lynxjs.org/zh/rspeedy/runtime-profiling)。
+
+## `__REACT_DEVTOOL__`
+
+- 类型：`boolean | undefined`
+- 作用：[Preact DevTools](https://lynxjs.org/zh/guide/devtool/panels/preact-devtools-panel) 所依赖的运行时钩子被编译进产物时为 `true`。开发构建默认开启；生产构建可以用环境变量 `REACT_DEVTOOL=true` 打开。
+
+## `__LAZY_BUNDLE_FETCHER__`
+
+- 类型：`'FetchBundle' | 'QueryComponent'`
+- 作用：当前产物接入的是哪一种 lazy bundle 拉取方式。`'FetchBundle'` 走基于 `lynx.fetchBundle` 的路径（以及 `import(..., { with: { mode } })` 的 mode 提示），`'QueryComponent'` 是旧的 `lynx.QueryComponent` 路径。取值如何选定、`REACT_LAZY_BUNDLE_FETCHER` 覆盖方式以及版本范围，见[懒加载 bundle 的加载器](https://lynxjs.org/zh/react/code-splitting#懒加载-bundle-的加载器)。

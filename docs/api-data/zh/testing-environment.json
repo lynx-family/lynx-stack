@@ -1,0 +1,74 @@
+{
+  "GlobalEventEmitter.summary": {
+    "en": "The Lynx `GlobalEventEmitter` module, accessible via `lynx.getJSModule('GlobalEventEmitter')`.\n\nFramework testing libraries can use this to trigger and listen to cross-thread events.",
+    "text": "Lynx 的 `GlobalEventEmitter` 模块，可通过 `lynx.getJSModule('GlobalEventEmitter')` 访问。\n\n框架测试库可以用它触发和监听跨线程事件。"
+  },
+  "LynxTestingEnv.summary": {
+    "en": "A pure-JavaScript implementation of the [Lynx Spec](https://lynxjs.org/guide/spec.html),\nnotably the [Element PAPI](https://lynxjs.org/api/engine/element-api) and [Dual-threaded Model](https://lynxjs.org/guide/spec#dual-threaded-model) for use with Node.js.",
+    "text": "[Lynx 规范](https://lynxjs.org/guide/spec.html) 的纯 JavaScript 实现，主要包括 [Element PAPI](https://lynxjs.org/api/engine/element-api) 和 [双线程模型](https://lynxjs.org/guide/spec#dual-threaded-model)，供 Node.js 环境使用。"
+  },
+  "LynxTestingEnv.backgroundThread.summary": {
+    "en": "The global object for the background thread.",
+    "text": "后台线程的全局对象。"
+  },
+  "LynxTestingEnv.mainThread.summary": {
+    "en": "The global object for the main thread.",
+    "text": "主线程的全局对象。"
+  },
+  "LynxElement.summary": {
+    "en": "Any Lynx Element, such as `view`, `text`, `image`, etc.\n\n[Lynx Spec Reference](https://lynxjs.org/living-spec/index.html?ts=1743416098203#element%E2%91%A0)",
+    "text": "任意 Lynx 元素，例如 `view`、`text`、`image` 等。\n\n[Lynx 规范参考](https://lynxjs.org/living-spec/index.html?ts=1743416098203#element%E2%91%A0)"
+  },
+  "LynxElement.cssId.summary": {
+    "en": "The cssId of the element",
+    "text": "元素的 cssId"
+  },
+  "LynxElement.eventMap.summary": {
+    "en": "The map of events bound to the element.",
+    "text": "绑定到该元素的事件映射表。"
+  },
+  "LynxElement.firstChild.summary": {
+    "en": "Returns the first child.\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/firstChild)",
+    "text": "返回第一个子节点。\n\n[MDN 参考](https://developer.mozilla.org/docs/Web/API/Node/firstChild)"
+  },
+  "LynxElement.gesture.summary": {
+    "en": "The gestures bound to the element.",
+    "text": "绑定到该元素的手势。"
+  },
+  "LynxElement.nextSibling.summary": {
+    "en": "Returns the next sibling.\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/nextSibling)",
+    "text": "返回下一个兄弟节点。\n\n[MDN 参考](https://developer.mozilla.org/docs/Web/API/Node/nextSibling)"
+  },
+  "LynxElement.parentNode.summary": {
+    "en": "Returns the parent.\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/parentNode)",
+    "text": "返回父节点。\n\n[MDN 参考](https://developer.mozilla.org/docs/Web/API/Node/parentNode)"
+  },
+  "LynxEnv.summary": {
+    "en": "The host environment used to initialize `LynxTestingEnv`.",
+    "text": "用于初始化 `LynxTestingEnv` 的宿主环境。"
+  },
+  "LynxGlobalThis.summary": {
+    "en": "The `globalThis` object of Lynx dual thread environment.",
+    "text": "Lynx 双线程环境的 `globalThis` 对象。"
+  },
+  "LynxGlobalThis.globalThis.summary": {
+    "en": "The globalThis object.",
+    "text": "globalThis 对象。"
+  },
+  "ElementTree.summary": {
+    "en": "The lynx element tree",
+    "text": "Lynx 元素树"
+  },
+  "ElementTreeGlobals.summary": {
+    "en": "The Element PAPI Types",
+    "text": "Element PAPI 类型"
+  },
+  "installLynxTestingEnv.summary": {
+    "en": "Installs a `LynxTestingEnv` instance and its required globals onto a target.",
+    "text": "将一个 `LynxTestingEnv` 实例及其所需的全局变量安装到目标对象上。"
+  },
+  "uninstallLynxTestingEnv.summary": {
+    "en": "Removes the globals installed by `installLynxTestingEnv`.",
+    "text": "移除由 `installLynxTestingEnv` 安装的全局变量。"
+  }
+}

@@ -51,6 +51,7 @@
     "@lynx-js/i18next-translation-dedupe": "workspace:*",
     "@lynx-js/kitten-lynx-test-infra": "workspace:*",
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
+    "@lynx-js/lynx-stack-docs": "workspace:*",
     "@lynx-js/motion": "workspace:*",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react": "workspace:*",

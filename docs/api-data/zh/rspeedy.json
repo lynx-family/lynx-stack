@@ -1,0 +1,1378 @@
+{
+  "BuildCache.buildDependencies.summary": {
+    "en": "An array of files containing build dependencies.\nRspack will use the hash of each of these files to invalidate the persistent cache.",
+    "text": "包含构建依赖的文件数组。\nRspack 会使用其中每个文件的 hash 来使持久化缓存失效。"
+  },
+  "BuildCache.buildDependencies.default": {
+    "en": "`['package.json', 'tsconfig.json' (or source.tsconfigPath), '.env', '.env.*', 'tailwindcss.config.*']`; when using the Rspeedy CLI with `performance.buildCache` enabled, the loaded `lynx.config.*` file is also added.",
+    "text": "`['package.json', 'tsconfig.json' (or source.tsconfigPath), '.env', '.env.*', 'tailwindcss.config.*']`；使用 Rspeedy CLI 且启用了 `performance.buildCache` 时，还会添加当前加载的 `lynx.config.*` 文件。"
+  },
+  "BuildCache.buildDependencies.example.0": {
+    "en": "Add `postcss.config.js` to the build dependencies.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    buildCache: {\n      buildDependencies: ['postcss.config.js'],\n    },\n  },\n})\n```",
+    "text": "将 `postcss.config.js` 添加到构建依赖中。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    buildCache: {\n      buildDependencies: ['postcss.config.js'],\n    },\n  },\n})\n```"
+  },
+  "BuildCache.cacheDigest.summary": {
+    "en": "Add additional cache digests, the previous build cache will be invalidated\nwhen any value in the array changes.",
+    "text": "添加额外的缓存摘要，当数组中的任意值发生变化时，之前的构建缓存将会失效。"
+  },
+  "BuildCache.cacheDigest.example.0": {
+    "en": "Add `process.env.SOME_ENV` to the cache digest.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    buildCache: {\n      cacheDigest: [process.env.SOME_ENV],\n    },\n  },\n})\n```",
+    "text": "将 `process.env.SOME_ENV` 添加到缓存摘要中。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    buildCache: {\n      cacheDigest: [process.env.SOME_ENV],\n    },\n  },\n})\n```"
+  },
+  "BuildCache.cacheDirectory.summary": {
+    "en": "The output directory of the cache files.",
+    "text": "缓存文件的输出目录。"
+  },
+  "BundleFilenameContext.summary": {
+    "en": "The context passed to the [`Filename.bundle`](api:Filename.bundle) function.",
+    "text": "传递给 [`Filename.bundle`](api:Filename.bundle) 函数的上下文。"
+  },
+  "BundleFilenameContext.entryName.summary": {
+    "en": "The name of the entry.\n\nIt is `undefined` for lazy bundles, since a lazy bundle name is resolved\nper async chunk (use the `[name]` placeholder in the returned string\ninstead).",
+    "text": "入口的名称。\n\n对于 lazy bundle，该值为 `undefined`，因为 lazy bundle 的名称是按每个异步 chunk 解析的（请改为在返回的字符串中使用\n`[name]` 占位符）。"
+  },
+  "BundleFilenameContext.lazyBundle.summary": {
+    "en": "Whether the filename is being resolved for a lazy bundle (async chunk)\ninstead of the main bundle of an entry.\n\nThis allows you to control the main bundle and the lazy bundles with a\nsingle function, without needing a dedicated `lazyBundle` field.",
+    "text": "当前解析的文件名是否属于 lazy bundle（异步 chunk），而非某个入口的主 bundle。\n\n这样你可以用单个函数同时控制主 bundle 和 lazy bundle，而无需专门的 `lazyBundle` 字段。"
+  },
+  "BundleFilenameContext.platform.summary": {
+    "en": "The environment (platform) name, e.g. `'lynx'` or `'web'`.",
+    "text": "environment（平台）名称，例如 `'lynx'` 或 `'web'`。"
+  },
+  "ChunkSplit.deprecated": {
+    "en": "Use the top-level [`Config.splitChunks`](api:Config.splitChunks) option instead.",
+    "text": "请使用顶层的 [`Config.splitChunks`](api:Config.splitChunks) 选项代替。"
+  },
+  "ChunkSplit.override.summary": {
+    "en": "Custom Rspack chunk splitting config can be specified.",
+    "text": "可以指定自定义的 Rspack chunk 拆分配置。"
+  },
+  "ChunkSplit.override.example.0": {
+    "en": "- Split `@lynx-js/react` and `react-router` into chunk `lib-react`.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    chunkSplit: {\n      strategy: 'split-by-experience',\n      override: {\n        cacheGroups: {\n          react: {\n            test: /node_modules[\\\\/](@lynx-js[\\\\/]react|react-router)[\\\\/]/,\n            name: 'lib-react',\n          },\n        },\n      },\n    },\n  },\n})\n```",
+    "text": "- 将 `@lynx-js/react` 和 `react-router` 拆分到 `lib-react` chunk 中。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    chunkSplit: {\n      strategy: 'split-by-experience',\n      override: {\n        cacheGroups: {\n          react: {\n            test: /node_modules[\\\\/](@lynx-js[\\\\/]react|react-router)[\\\\/]/,\n            name: 'lib-react',\n          },\n        },\n      },\n    },\n  },\n})\n```"
+  },
+  "ChunkSplit.strategy.summary": {
+    "en": "The ChunkSplitting strategy.",
+    "text": "chunk 拆分策略。"
+  },
+  "ChunkSplit.strategy.remarks": {
+    "en": "- `split-by-experience`(Rsbuild default): an empirical splitting strategy, automatically splits some commonly used npm packages into chunks of moderate size.\n\n- `split-by-module`: split by NPM package granularity, each NPM package corresponds to a chunk.\n\n- `split-by-size`: automatically split according to module size.\n\n- `all-in-one`: bundle all codes into one chunk.\n\n- `single-vendor`: bundle all NPM packages into a single chunk.\n\n- `custom`: custom chunk splitting strategy.",
+    "text": "- `split-by-experience`（Rsbuild 默认）：根据经验制定的拆分策略，自动将一些常用的 npm 包拆分为体积适中的 chunk。\n\n- `split-by-module`：按 NPM 包的粒度拆分，每个 NPM 包对应一个 chunk。\n\n- `split-by-size`：根据模块大小自动拆分。\n\n- `all-in-one`：将所有代码打包到一个 chunk 中。\n\n- `single-vendor`：将所有 NPM 包打包到单个 chunk 中。\n\n- `custom`：自定义 chunk 拆分策略。"
+  },
+  "ChunkSplit.strategy.default": {
+    "en": "Unset, which bundles everything into one chunk (same as `'all-in-one'`).",
+    "text": "未设置，此时会将所有内容打包到一个 chunk 中（与 `'all-in-one'` 相同）。"
+  },
+  "ChunkSplit.strategy.example.0": {
+    "en": "- Use `all-in-one` to put all modules in one chunk.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    chunkSplit: {\n      strategy: 'all-in-one',\n    },\n  },\n})\n```",
+    "text": "- 使用 `all-in-one` 将所有模块放到一个 chunk 中。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    chunkSplit: {\n      strategy: 'all-in-one',\n    },\n  },\n})\n```"
+  },
+  "ChunkSplit.strategy.example.1": {
+    "en": "- Use `single-vendor` to put all third-party dependencies in one chunk. And source code in another chunk.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    chunkSplit: {\n      strategy: 'single-vendor',\n    },\n  },\n})\n```",
+    "text": "- 使用 `single-vendor` 将所有第三方依赖放到一个 chunk 中，源代码放到另一个 chunk 中。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    chunkSplit: {\n      strategy: 'single-vendor',\n    },\n  },\n})\n```"
+  },
+  "ChunkSplitBySize.deprecated": {
+    "en": "Use the top-level [`Config.splitChunks`](api:Config.splitChunks) option instead.",
+    "text": "请使用顶层的 [`Config.splitChunks`](api:Config.splitChunks) 选项代替。"
+  },
+  "ChunkSplitBySize.maxSize.summary": {
+    "en": "The maximum size of a chunk, unit in bytes.",
+    "text": "chunk 的最大体积，单位为字节。"
+  },
+  "ChunkSplitBySize.minSize.summary": {
+    "en": "The minimum size of a chunk, unit in bytes.",
+    "text": "chunk 的最小体积，单位为字节。"
+  },
+  "ChunkSplitCustom.deprecated": {
+    "en": "Use the top-level [`Config.splitChunks`](api:Config.splitChunks) option instead.",
+    "text": "请使用顶层的 [`Config.splitChunks`](api:Config.splitChunks) 选项代替。"
+  },
+  "ChunkSplitCustom.splitChunks.example.0": {
+    "en": "- Split `@lynx-js/react` and `react-router` into chunk `lib-react`.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    chunkSplit: {\n      strategy: 'custom',\n      splitChunks: {\n        cacheGroups: {\n          react: {\n            test: /node_modules[\\\\/](@lynx-js[\\\\/]react|react-router)[\\\\/]/,\n            name: 'lib-react',\n          },\n        },\n      },\n    },\n  },\n})\n```",
+    "text": "- 将 `@lynx-js/react` 和 `react-router` 拆分到 `lib-react` chunk 中。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    chunkSplit: {\n      strategy: 'custom',\n      splitChunks: {\n        cacheGroups: {\n          react: {\n            test: /node_modules[\\\\/](@lynx-js[\\\\/]react|react-router)[\\\\/]/,\n            name: 'lib-react',\n          },\n        },\n      },\n    },\n  },\n})\n```"
+  },
+  "Config.summary": {
+    "en": "The `Config` is the configuration that `rspeedy` uses.",
+    "text": "`Config` 是 `rspeedy` 使用的配置。"
+  },
+  "Config.dev.summary": {
+    "en": "The [`Dev`](api:Dev) option is used to control the behavior related with development. Including: HMR, DevServer, etc.",
+    "text": "[`Dev`](api:Dev) 选项用于控制与开发相关的行为，包括 HMR、DevServer 等。"
+  },
+  "Config.environments.summary": {
+    "en": "The [`Config.environments`](api:Config.environments) option is used to set the output environment.",
+    "text": "[`Config.environments`](api:Config.environments) 选项用于设置输出的 environment。"
+  },
+  "Config.environments.remarks": {
+    "en": "Normally you don't need this if you are not using Lynx for Web.",
+    "text": "如果你没有使用 Lynx for Web，通常不需要此选项。"
+  },
+  "Config.environments.default": {
+    "en": "When this option is unset, Rspeedy passes `{ lynx: {} }` to Rsbuild.",
+    "text": "未设置该选项时，Rspeedy 会向 Rsbuild 传入 `{ lynx: {} }`。"
+  },
+  "Config.environments.example.0": {
+    "en": "- Using different entries for Lynx and Web.\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  environments: {\n    lynx: {},\n    web: {\n      source: { entry: { web: './src/index.web.jsx' } },\n    },\n  },\n  source: {\n    entry: './src/index.jsx',\n  },\n})\n```",
+    "text": "- 为 Lynx 和 Web 使用不同的入口。\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  environments: {\n    lynx: {},\n    web: {\n      source: { entry: { web: './src/index.web.jsx' } },\n    },\n  },\n  source: {\n    entry: './src/index.jsx',\n  },\n})\n```"
+  },
+  "Config.environments.example.1": {
+    "en": "- Building Web-only outputs.\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  environments: {\n    web: {\n      source: { entry: { web: './src/index.web.jsx' } },\n    },\n  },\n})\n```",
+    "text": "- 仅构建 Web 产物。\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  environments: {\n    web: {\n      source: { entry: { web: './src/index.web.jsx' } },\n    },\n  },\n})\n```"
+  },
+  "Config.mode.summary": {
+    "en": "Specify the build mode for Rsbuild and Rspack, as each mode has different default behavior and optimizations.",
+    "text": "指定 Rsbuild 和 Rspack 的构建模式，不同模式有不同的默认行为和优化。"
+  },
+  "Config.mode.default": {
+    "en": "Depends on `process.env.NODE_ENV`:\n\n- `'production'` when `NODE_ENV` is `'production'`\n- `'development'` when `NODE_ENV` is `'development'`\n- `'none'` otherwise\n\nWith Rspeedy's CLI, `rspeedy dev` and `rspeedy preview` default to `'development'`, and `rspeedy build` defaults to `'production'`.",
+    "text": "取决于 `process.env.NODE_ENV`：\n\n- `NODE_ENV` 为 `'production'` 时为 `'production'`\n- `NODE_ENV` 为 `'development'` 时为 `'development'`\n- 其他情况为 `'none'`\n\n使用 Rspeedy CLI 时，`rspeedy dev` 和 `rspeedy preview` 默认为 `'development'`，`rspeedy build` 默认为 `'production'`。"
+  },
+  "Config.output.summary": {
+    "en": "The [`Output`](api:Output) option is used to set how and where should the bundles and assets output.",
+    "text": "[`Output`](api:Output) 选项用于设置 bundle 和静态资源的输出方式与输出位置。"
+  },
+  "Config.performance.summary": {
+    "en": "The [`Performance`](api:Performance) option is used to optimize the build-time and runtime performance.",
+    "text": "[`Performance`](api:Performance) 选项用于优化构建时和运行时的性能。"
+  },
+  "Config.plugins.summary": {
+    "en": "The `plugins` option is used to customize the build process in a variety of ways.",
+    "text": "`plugins` 选项用于以多种方式自定义构建流程。"
+  },
+  "Config.plugins.remarks": {
+    "en": "Rspeedy uses the plugin APIs from [Rsbuild](https://rsbuild.rs/plugins/dev/index). See the corresponding document for developing a plugin.",
+    "text": "Rspeedy 使用 [Rsbuild](https://rsbuild.rs/plugins/dev/index) 的插件 API。开发插件请参阅相应文档。"
+  },
+  "Config.resolve.summary": {
+    "en": "The [`Resolve`](api:Resolve) option is used to control the resolution behavior of Rspack.",
+    "text": "[`Resolve`](api:Resolve) 选项用于控制 Rspack 的模块解析行为。"
+  },
+  "Config.server.summary": {
+    "en": "The [`Server`](api:Server) option changes the behavior of dev-server.",
+    "text": "[`Server`](api:Server) 选项用于修改开发服务器的行为。"
+  },
+  "Config.source.summary": {
+    "en": "The [`Source`](api:Source) option changes the behavior of source files.",
+    "text": "[`Source`](api:Source) 选项用于修改源文件相关的行为。"
+  },
+  "Config.splitChunks.summary": {
+    "en": "Configure chunk splitting.",
+    "text": "配置 chunk 拆分。"
+  },
+  "Config.splitChunks.remarks": {
+    "en": "See [Rsbuild - splitChunks](https://rsbuild.rs/config/split-chunks) for details.",
+    "text": "详见 [Rsbuild - splitChunks](https://rsbuild.rs/config/split-chunks)。"
+  },
+  "Config.splitChunks.default": {
+    "en": "Lynx builds default this to `false`; if configured, Rsbuild handles it with its top-level `splitChunks` option.",
+    "text": "Lynx 构建默认将其设置为 `false`；如果进行了配置，则由 Rsbuild 的顶层 `splitChunks` 选项处理。"
+  },
+  "Config.tools.summary": {
+    "en": "The [`Tools`](api:Tools) options changes the behavior of various building tools.",
+    "text": "[`Tools`](api:Tools) 选项用于修改各类构建工具的行为。"
+  },
+  "ConfigParams.summary": {
+    "en": "Parameters for the function exported from `lynx.config.js`.",
+    "text": "`lynx.config.js` 导出的函数的参数。"
+  },
+  "ConfigParams.command.summary": {
+    "en": "The CLI command of Rspeedy.",
+    "text": "Rspeedy 的 CLI 命令。"
+  },
+  "ConfigParams.command.remarks": {
+    "en": "Possible values:\n\n- `'build'`\n\n- `'dev'`\n\n- `'inspect'`\n\n- `'preview'`",
+    "text": "可选值：\n\n- `'build'`\n\n- `'dev'`\n\n- `'inspect'`\n\n- `'preview'`"
+  },
+  "ConfigParams.command.default": {
+    "en": "When `loadConfig` evaluates a config function, this value is `process.argv[2] ?? 'build'`",
+    "text": "当 `loadConfig` 执行配置函数时，该值为 `process.argv[2] ?? 'build'`"
+  },
+  "ConfigParams.env.summary": {
+    "en": "The value of `process.env['NODE_ENV']`",
+    "text": "`process.env['NODE_ENV']` 的值"
+  },
+  "ConfigParams.env.remarks": {
+    "en": "Common values include (non-exhaustive):\n- `'production'`\n\n- `'development'`\n\n- `'test'`",
+    "text": "常见的值包括（不限于）：\n- `'production'`\n\n- `'development'`\n\n- `'test'`"
+  },
+  "ConfigParams.env.default": {
+    "en": "When `loadConfig` evaluates a config function, this value is `process.env.NODE_ENV ?? 'production'`",
+    "text": "当 `loadConfig` 执行配置函数时，该值为 `process.env.NODE_ENV ?? 'production'`"
+  },
+  "CreateRspeedyOptions.summary": {
+    "en": "The options of `createRspeedy` method.",
+    "text": "`createRspeedy` 方法的选项。"
+  },
+  "CreateRspeedyOptions.callerName.summary": {
+    "en": "The name of the framework or tool that is currently invoking Rsbuild.\nThis allows plugins to tailor their behavior based on the calling context.",
+    "text": "当前调用 Rsbuild 的框架或工具的名称。插件可以据此根据调用上下文调整自身行为。"
+  },
+  "CreateRspeedyOptions.callerName.example.0": {
+    "en": "Rsbuild plugins can access this value via `api.context.callerName`.\n\n```js\nexport function myPlugin() {\n  return {\n    name: 'my-plugin',\n    setup(api) {\n      // Log the name of the tool invoking Rsbuild\n      console.log(`Called by: ${api.context.callerName}`);\n\n      // Conditionally apply plugin logic based on caller\n      if (api.context.callerName === 'rspeedy') {\n        api.modifyRsbuildConfig((config) => {\n          // Apply rspeedy-specific config changes\n          return config;\n        });\n      } else if (api.context.callerName === 'rslib') {\n        api.modifyRsbuildConfig((config) => {\n          // Apply rslib-specific config changes\n          return config;\n        });\n      }\n    }\n  };\n}\n```",
+    "text": "Rsbuild 插件可以通过 `api.context.callerName` 访问该值。\n\n```js\nexport function myPlugin() {\n  return {\n    name: 'my-plugin',\n    setup(api) {\n      // Log the name of the tool invoking Rsbuild\n      console.log(`Called by: ${api.context.callerName}`);\n\n      // Conditionally apply plugin logic based on caller\n      if (api.context.callerName === 'rspeedy') {\n        api.modifyRsbuildConfig((config) => {\n          // Apply rspeedy-specific config changes\n          return config;\n        });\n      } else if (api.context.callerName === 'rslib') {\n        api.modifyRsbuildConfig((config) => {\n          // Apply rslib-specific config changes\n          return config;\n        });\n      }\n    }\n  };\n}\n```"
+  },
+  "CreateRspeedyOptions.cwd.summary": {
+    "en": "The root path of the current build.",
+    "text": "当前构建的根路径。"
+  },
+  "CreateRspeedyOptions.environment.summary": {
+    "en": "Only build specified environments.\nFor example, passing `['lynx']` will only build the `lynx` environment.\nIf not specified or passing an empty array, all environments will be built.",
+    "text": "仅构建指定的 environment。例如，传入 `['lynx']` 将只构建 `lynx` environment。如果未指定或传入空数组，则会构建所有 environment。"
+  },
+  "CreateRspeedyOptions.loadEnv.summary": {
+    "en": "Rspeedy automatically loads the .env file by default, utilizing the [Rsbuild API](https://rsbuild.rs/api/javascript-api/core#load-env-variables).\nYou can use the environment variables defined in the .env file within your code by accessing them via `import.meta.env.FOO` or `process.env.Foo`.",
+    "text": "Rspeedy 默认会通过 [Rsbuild API](https://rsbuild.rs/api/javascript-api/core#load-env-variables) 自动加载 .env 文件。你可以在代码中通过 `import.meta.env.FOO` 或 `process.env.Foo` 访问 .env 文件中定义的环境变量。"
+  },
+  "CreateRspeedyOptions.rspeedyConfig.summary": {
+    "en": "The config of Rspeedy.",
+    "text": "Rspeedy 的配置。"
+  },
+  "CssExtractRspackLoaderOptions.esModule.summary": {
+    "en": "The same as [https://github.com/webpack-contrib/mini-css-extract-plugin#esModule](https://github.com/webpack-contrib/mini-css-extract-plugin#esModule).\nBy default, `@lynx-js/css-extract-webpack-plugin` generates JS modules that use the ES modules syntax.\nThere are some cases in which using ES modules is beneficial,\nlike in the case of module concatenation and tree shaking.",
+    "text": "与 [https://github.com/webpack-contrib/mini-css-extract-plugin#esModule](https://github.com/webpack-contrib/mini-css-extract-plugin#esModule) 相同。默认情况下，`@lynx-js/css-extract-webpack-plugin` 会生成使用 ES modules 语法的 JS 模块。在某些情况下使用 ES modules 会更有优势，例如模块合并（module concatenation）和 tree shaking。"
+  },
+  "CssExtractRspackLoaderOptions.esModule.example.0": {
+    "en": "You can enable a CommonJS syntax using:\n\n```js\nimport {CssExtractRspackPlugin} from \"@lynx-js/css-extract-webpack-plugin\";\nexport default {\n  plugins: [new CssExtractRspackPlugin()],\n  module: {\n    rules: [\n      {\n        test: /\\.css$/i,\n        use: [\n          {\n            loader: CssExtractRspackPlugin.loader,\n            options: {\n              esModule: false,\n            },\n          },\n          \"css-loader\",\n        ],\n      },\n    ],\n  },\n};\n```",
+    "text": "你可以通过以下方式启用 CommonJS 语法：\n\n```js\nimport {CssExtractRspackPlugin} from \"@lynx-js/css-extract-webpack-plugin\";\nexport default {\n  plugins: [new CssExtractRspackPlugin()],\n  module: {\n    rules: [\n      {\n        test: /\\.css$/i,\n        use: [\n          {\n            loader: CssExtractRspackPlugin.loader,\n            options: {\n              esModule: false,\n            },\n          },\n          \"css-loader\",\n        ],\n      },\n    ],\n  },\n};\n```"
+  },
+  "CssLoader.importLoaders.summary": {
+    "en": "The option `importLoaders` allows you to configure how many loaders before `css-loader` should be applied to `@imported` resources and CSS modules imports.",
+    "text": "`importLoaders` 选项用于配置在 `css-loader` 之前，有多少个 loader 应用于 `@imported` 资源和 CSS Modules 导入。"
+  },
+  "CssLoader.importLoaders.remarks": {
+    "en": "See [css-loader#import-loaders](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#importloaders) for details.",
+    "text": "详见 [css-loader#import-loaders](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#importloaders)。"
+  },
+  "CssLoader.importLoaders.default": {
+    "en": "`1` when compiling CSS files and `2` when compiling Sass or Less files",
+    "text": "编译 CSS 文件时为 `1`，编译 Sass 或 Less 文件时为 `2`"
+  },
+  "CssLoader.modules.summary": {
+    "en": "The [`cssLoader.modules`](api:CssLoaderModules) option enables/disables the CSS Modules specification and setup basic behavior.",
+    "text": "[`cssLoader.modules`](api:CssLoaderModules) 选项用于启用/禁用 CSS Modules 规范，并设置基本行为。"
+  },
+  "CssLoader.modules.default": {
+    "en": "Enables CSS Modules with automatic `*.module.*` detection, camelCase exports, `namedExport: false`, and `localIdentName` inherited from `output.cssModules.localIdentName`.",
+    "text": "启用 CSS Modules，自动识别 `*.module.*` 文件，使用 camelCase 导出、`namedExport: false`，`localIdentName` 继承自 `output.cssModules.localIdentName`。"
+  },
+  "CssLoader.modules.example.0": {
+    "en": "Using `false` value to increase performance because we avoid parsing CSS Modules features, it will be useful for developers who use vanilla css or use other technologies.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    cssLoader: {\n      modules: false,\n    },\n  },\n})\n```",
+    "text": "使用 `false` 值可以提升性能，因为这样会跳过对 CSS Modules 特性的解析，适用于使用原生 CSS 或其他技术的开发者。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    cssLoader: {\n      modules: false,\n    },\n  },\n})\n```"
+  },
+  "CssLoader.modules.example.1": {
+    "en": "Using `() => true` value to enable CSS Modules for all files.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    cssLoader: {\n      modules: () => true,\n    },\n  },\n})\n```",
+    "text": "使用 `() => true` 值为所有文件启用 CSS Modules。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    cssLoader: {\n      modules: () => true,\n    },\n  },\n})\n```"
+  },
+  "CssLoader.modules.example.2": {
+    "en": "Using object value to enable CSS Modules based-on [`CssLoaderModules.auto`](api:CssLoaderModules.auto) option and setup more configurations about CSS Modules.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    cssLoader: {\n      modules: {\n        namedExport: true,\n      },\n    },\n  },\n})\n```",
+    "text": "使用对象值，基于 [`CssLoaderModules.auto`](api:CssLoaderModules.auto) 选项启用 CSS Modules，并对 CSS Modules 进行更多配置。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    cssLoader: {\n      modules: {\n        namedExport: true,\n      },\n    },\n  },\n})\n```"
+  },
+  "CssLoaderModules.namedExport.summary": {
+    "en": "Enables/disables ES modules named export for locals.",
+    "text": "启用/禁用 locals 的 ES modules 具名导出。"
+  },
+  "CssModules.auto.summary": {
+    "en": "The `auto` option allows CSS modules to be automatically enabled based on their filenames.",
+    "text": "`auto` 选项允许根据文件名自动启用 CSS Modules。"
+  },
+  "CssModules.auto.remarks": {
+    "en": "Given the various `auto` values, the behavior is described as follows:\n\n- `true`: enable CSS modules for all files matching `/\\.module\\.\\w+$/i.test(filename)` RegExp.\n\n- `false`: disable CSS modules.\n\n- `RegExp`: enable CSS modules for all files matching the `auto.test(filename)` RegExp.\n\n- `function`: enable CSS modules based on the filter function.\n\nSee [css-loader#auto](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#auto) for details.",
+    "text": "不同的 `auto` 值对应的行为如下：\n\n- `true`：为所有匹配 `/\\.module\\.\\w+$/i.test(filename)` 正则的文件启用 CSS Modules。\n\n- `false`：禁用 CSS Modules。\n\n- `RegExp`：为所有匹配 `auto.test(filename)` 正则的文件启用 CSS Modules。\n\n- `function`：根据过滤函数启用 CSS Modules。\n\n详见 [css-loader#auto](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#auto)。"
+  },
+  "CssModules.auto.example.0": {
+    "en": "Enable CSS module for `*.module.css` and `shared/*.css`:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    cssModules: {\n      auto: (filename) => {\n        return filename.includes('.module.') || filename.includes('shared/')\n      },\n    },\n  },\n})\n```",
+    "text": "为 `*.module.css` 和 `shared/*.css` 启用 CSS Modules：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    cssModules: {\n      auto: (filename) => {\n        return filename.includes('.module.') || filename.includes('shared/')\n      },\n    },\n  },\n})\n```"
+  },
+  "CssModules.exportGlobals.summary": {
+    "en": "Allows exporting names from global class names, so you can use them via import.",
+    "text": "允许从全局类名中导出名称，以便通过 import 使用。"
+  },
+  "CssModules.exportGlobals.remarks": {
+    "en": "See [css-loader#exportGlobals](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#exportglobals) for details.",
+    "text": "详见 [css-loader#exportGlobals](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#exportglobals)。"
+  },
+  "CssModules.exportLocalsConvention.summary": {
+    "en": "The style of exported class names.",
+    "text": "导出类名的风格。"
+  },
+  "CssModules.exportLocalsConvention.remarks": {
+    "en": "Given the various `exportLocalsConvention` values, the behavior is described as follows:\n\n- `'asIs'`:\tClass names will be exported as is.\n\n- `'camelCase'`: Class names will be camelized, the original class name will not to be removed from the locals\n\n- `'camelCaseOnly'`: Class names will be camelized, the original class name will be removed from the locals\n\n- `'dashes'`: Only dashes in class names will be camelized\n\n- `'dashesOnly'`: Dashes in class names will be camelized, the original class name will be removed from the locals\n\nSee [css-loader#exportLocalsConvention](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#exportlocalsconvention) for details.",
+    "text": "不同的 `exportLocalsConvention` 值对应的行为如下：\n\n- `'asIs'`：类名将按原样导出。\n\n- `'camelCase'`：类名将转换为驼峰形式，原始类名不会从 locals 中移除\n\n- `'camelCaseOnly'`：类名将转换为驼峰形式，原始类名将从 locals 中移除\n\n- `'dashes'`：仅将类名中的短横线转换为驼峰形式\n\n- `'dashesOnly'`：将类名中的短横线转换为驼峰形式，原始类名将从 locals 中移除\n\n详见 [css-loader#exportLocalsConvention](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#exportlocalsconvention)。"
+  },
+  "CssModules.localIdentName.summary": {
+    "en": "Sets the format of the className generated by CSS Modules after compilation.",
+    "text": "设置 CSS Modules 编译后生成的 className 格式。"
+  },
+  "CssModules.localIdentName.remarks": {
+    "en": "Available placeholders:\n\n- `[local]`: Original class name\n\n- `[hash]`: Hash of the class name\n\n- `[path]`: File path\n\n- `[name]`: File name\n\n- `[ext]`: File extension\n\nSee [css-loader#localIdentName](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#localIdentName) for details.",
+    "text": "可用的占位符：\n\n- `[local]`：原始类名\n\n- `[hash]`：类名的 hash\n\n- `[path]`：文件路径\n\n- `[name]`：文件名\n\n- `[ext]`：文件扩展名\n\n详见 [css-loader#localIdentName](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#localIdentName)。"
+  },
+  "CssModules.localIdentName.example.0": {
+    "en": "Use only hash for shorter class names:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    cssModules: {\n      localIdentName: '[hash:base64:8]',\n    },\n  },\n})\n```",
+    "text": "仅使用 hash，以缩短类名：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    cssModules: {\n      localIdentName: '[hash:base64:8]',\n    },\n  },\n})\n```"
+  },
+  "CssModules.localIdentName.example.1": {
+    "en": "Include file name for debugging:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    cssModules: {\n      localIdentName: '[name]__[local]--[hash:base64:5]',\n    },\n  },\n})\n```",
+    "text": "包含文件名，便于调试：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    cssModules: {\n      localIdentName: '[name]__[local]--[hash:base64:5]',\n    },\n  },\n})\n```"
+  },
+  "Decorators.version.summary": {
+    "en": "Specify the decorator syntax version to be used.",
+    "text": "指定使用的装饰器语法版本。"
+  },
+  "Decorators.version.remarks": {
+    "en": "If you want to know the differences between different decorators versions, you can refer to: [How does this proposal compare to other versions of decorators?](https://github.com/tc39/proposal-decorators?tab=readme-ov-file#how-does-this-proposal-compare-to-other-versions-of-decorators)",
+    "text": "如果你想了解不同装饰器版本之间的差异，可以参考：[How does this proposal compare to other versions of decorators?](https://github.com/tc39/proposal-decorators?tab=readme-ov-file#how-does-this-proposal-compare-to-other-versions-of-decorators)"
+  },
+  "Decorators.version.example.0": {
+    "en": "`'2022-03'` corresponds to the Stage 3 decorator proposal, equivalent to the decorator syntax supported by TypeScript 5.0 by default.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  source: {\n    decorators: { version: '2022-03' },\n  },\n})\n```",
+    "text": "`'2022-03'` 对应 Stage 3 装饰器提案，等同于 TypeScript 5.0 默认支持的装饰器语法。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  source: {\n    decorators: { version: '2022-03' },\n  },\n})\n```"
+  },
+  "Decorators.version.example.1": {
+    "en": "`'legacy'` corresponds to TypeScript's `experimentalDecorators: true`.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  source: {\n    decorators: { version: 'legacy' },\n  },\n})\n```",
+    "text": "`'legacy'` 对应 TypeScript 的 `experimentalDecorators: true`。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  source: {\n    decorators: { version: 'legacy' },\n  },\n})\n```"
+  },
+  "Dev.assetPrefix.summary": {
+    "en": "The [`Dev.assetPrefix`](api:Dev.assetPrefix) is used to set the URL prefix for static assets during development.",
+    "text": "[`Dev.assetPrefix`](api:Dev.assetPrefix) 用于设置开发环境下静态资源的 URL 前缀。"
+  },
+  "Dev.assetPrefix.remarks": {
+    "en": "In development, `true` or unset becomes `http://<detected-host>:<port>/`. A string is kept, with its port changed to `server.port` when that is set and the string has no `<port>` placeholder. `server.base` is appended when configured.\n\nThe functionality of [`Dev.assetPrefix`](api:Dev.assetPrefix) is basically the same as the [output.publicPath](https://rspack.rs/config/output#outputpublicpath)\nconfig in Rspack. With the following differences:\n\n- `dev.assetPrefix` only takes effect during development.\n\n- `dev.assetPrefix` automatically appends a trailing `/` by default.\n\n- The value of `dev.assetPrefix` is written to the `process.env.ASSET_PREFIX` environment variable.",
+    "text": "在开发环境下，`true` 或未设置时会变为 `http://<detected-host>:<port>/`。字符串值会被保留；当设置了 `server.port` 且该字符串中没有 `<port>` 占位符时，其端口会被改为 `server.port`。配置了 `server.base` 时会将其追加到末尾。\n\n[`Dev.assetPrefix`](api:Dev.assetPrefix) 的功能与 Rspack 中的 [output.publicPath](https://rspack.rs/config/output#outputpublicpath)\n配置基本相同，区别如下：\n\n- `dev.assetPrefix` 仅在开发环境下生效。\n\n- `dev.assetPrefix` 默认会自动在末尾添加 `/`。\n\n- `dev.assetPrefix` 的值会写入 `process.env.ASSET_PREFIX` 环境变量。"
+  },
+  "Dev.assetPrefix.example.0": {
+    "en": "If `dev.assetPrefix` is set to true, the URL prefix will be `http://<host>:<port>/`:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  dev: {\n    assetPrefix: true,\n  },\n})\n```",
+    "text": "如果 `dev.assetPrefix` 设置为 true，URL 前缀将为 `http://<host>:<port>/`：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  dev: {\n    assetPrefix: true,\n  },\n})\n```"
+  },
+  "Dev.assetPrefix.example.1": {
+    "en": "If `dev.assetPrefix` is set to a string, the value will be used as a prefix and automatically appended to the static resource URL.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  dev: {\n    assetPrefix: 'https://example.com/assets/',\n  },\n})\n```",
+    "text": "如果 `dev.assetPrefix` 设置为字符串，该值会作为前缀自动添加到静态资源 URL 上。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  dev: {\n    assetPrefix: 'https://example.com/assets/',\n  },\n})\n```"
+  },
+  "Dev.assetPrefix.example.2": {
+    "en": "The port number that the dev server listens on may change. For example, if the port is in use, the dev server will automatically increment the port number until it finds an available port.\n\nTo avoid `dev.assetPrefix` becoming invalid due to port changes, you can use one of the following methods:\n\n- Enable `server.strictPort`.\n\n- Use the `<port>` placeholder to refer to the current port number. Rspeedy will replace the placeholder with the actual port number it is listening on.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  dev: {\n    assetPrefix: 'https://example.com:<port>/assets/',\n  },\n})\n```",
+    "text": "开发服务器监听的端口号可能会发生变化。例如，当端口被占用时，开发服务器会自动递增端口号，直到找到可用端口。\n\n为了避免 `dev.assetPrefix` 因端口变化而失效，可以使用以下方法之一：\n\n- 启用 `server.strictPort`。\n\n- 使用 `<port>` 占位符来引用当前端口号，Rspeedy 会将该占位符替换为实际监听的端口号。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  dev: {\n    assetPrefix: 'https://example.com:<port>/assets/',\n  },\n})\n```"
+  },
+  "Dev.hmr.summary": {
+    "en": "Whether to enable Hot Module Replacement (HMR).",
+    "text": "是否启用模块热替换（HMR）。"
+  },
+  "Dev.hmr.remarks": {
+    "en": "By default, the dev server uses HMR as the preferred method to update modules. If HMR is disabled or cannot be used in certain scenarios, it will automatically fallback to [`Dev.liveReload`](api:Dev.liveReload).\n\nTo completely disable both HMR and live reload, set both `dev.hmr` and `dev.liveReload` to `false`. Then, no WebSocket requests will be made to the dev server on the page, and the page will not automatically refresh when file changes.",
+    "text": "默认情况下，开发服务器优先使用 HMR 来更新模块。如果 HMR 被禁用或在某些场景下无法使用，将自动回退到 [`Dev.liveReload`](api:Dev.liveReload)。\n\n如需完全禁用 HMR 和 live reload，请将 `dev.hmr` 和 `dev.liveReload` 都设置为 `false`。此时页面不会向开发服务器发起 WebSocket 请求，文件变化时页面也不会自动刷新。"
+  },
+  "Dev.hmr.example.0": {
+    "en": "Disable HMR:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    hmr: false,\n  },\n})\n```",
+    "text": "禁用 HMR：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    hmr: false,\n  },\n})\n```"
+  },
+  "Dev.hmr.example.1": {
+    "en": "Disable both HMR and live reload:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    hmr: false,\n    liveReload: false,\n  },\n})\n```",
+    "text": "同时禁用 HMR 和 live reload：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    hmr: false,\n    liveReload: false,\n  },\n})\n```"
+  },
+  "Dev.liveReload.summary": {
+    "en": "Whether to enable live reload functionality.",
+    "text": "是否启用 live reload 功能。"
+  },
+  "Dev.liveReload.remarks": {
+    "en": "Live reload is used as a fallback when [`Dev.hmr`](api:Dev.hmr) is disabled or cannot be used in certain scenarios. When enabled, the page will automatically refresh when source files are changed.\n\nTo completely disable both HMR and live reload, set both `dev.hmr` and `dev.liveReload` to `false`. Then, no WebSocket requests will be made to the dev server on the page, and the page will not automatically refresh when file changes.",
+    "text": "当 [`Dev.hmr`](api:Dev.hmr) 被禁用或在某些场景下无法使用时，live reload 会作为回退方案。启用后，源文件发生变化时页面会自动刷新。\n\n如需完全禁用 HMR 和 live reload，请将 `dev.hmr` 和 `dev.liveReload` 都设置为 `false`。此时页面不会向开发服务器发起 WebSocket 请求，文件变化时页面也不会自动刷新。"
+  },
+  "Dev.liveReload.example.0": {
+    "en": "Disable live reload:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    liveReload: false,\n  },\n})\n```",
+    "text": "禁用 live reload：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    liveReload: false,\n  },\n})\n```"
+  },
+  "Dev.liveReload.example.1": {
+    "en": "Disable both HMR and live reload:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    hmr: false,\n    liveReload: false,\n  },\n})\n```",
+    "text": "同时禁用 HMR 和 live reload：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    hmr: false,\n    liveReload: false,\n  },\n})\n```"
+  },
+  "Dev.progressBar.summary": {
+    "en": "Whether to display progress bar during compilation.",
+    "text": "是否在编译过程中显示进度条。"
+  },
+  "Dev.progressBar.example.0": {
+    "en": "Disable the progress bar.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    progressBar: false,\n  },\n})\n```",
+    "text": "禁用进度条。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    progressBar: false,\n  },\n})\n```"
+  },
+  "Dev.progressBar.example.1": {
+    "en": "Modify the progress bar `id`\n\nTo modify the text displayed on the left side of the progress bar, set the `id` option:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    progressBar: {\n      id: 'Some Text'\n    },\n  },\n})\n```",
+    "text": "修改进度条的 `id`\n\n如需修改进度条左侧显示的文本，请设置 `id` 选项：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    progressBar: {\n      id: 'Some Text'\n    },\n  },\n})\n```"
+  },
+  "Dev.watchFiles.summary": {
+    "en": "Watch specified files and directories for changes. When a file change is detected, it can trigger a page reload or restart the dev server.",
+    "text": "监听指定文件和目录的变化。当检测到文件变化时，可以触发页面重新加载或重启开发服务器。"
+  },
+  "Dev.watchFiles.example.0": {
+    "en": "- Specify the files and directories watched for changes.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    watchFiles: {\n      paths: ['src/**', 'public/**'],\n    },\n  },\n})\n```",
+    "text": "- 指定需要监听变更的文件和目录。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    watchFiles: {\n      paths: ['src/**', 'public/**'],\n    },\n  },\n})\n```"
+  },
+  "Dev.watchFiles.example.1": {
+    "en": "- Use [chokidar](https://github.com/paulmillr/chokidar#api) options for watching.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    watchFiles: {\n      paths: ['src/**', 'public/**'],\n      options: { usePolling: false },\n    },\n  },\n})\n```",
+    "text": "- 使用 [chokidar](https://github.com/paulmillr/chokidar#api) 的选项进行监听。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  dev: {\n    watchFiles: {\n      paths: ['src/**', 'public/**'],\n      options: { usePolling: false },\n    },\n  },\n})\n```"
+  },
+  "Dev.writeToDisk.summary": {
+    "en": "Used to control whether the build artifacts of the development environment are written to the disk.",
+    "text": "用于控制是否将开发环境的构建产物写入磁盘。"
+  },
+  "Dev.writeToDisk.remarks": {
+    "en": "This is bypassed to [`webpack-dev-middleware`](https://github.com/webpack/webpack-dev-middleware?tab=readme-ov-file#writetodisk).\n\nSetting `writeToDisk: true` won't change the behavior of the `webpack-dev-middleware`, and bundle files accessed through the browser will still be served from memory.\n\nThis option also accepts a `Function` value, which can be used to filter which files are written to disk.\n\nThe function follows the same premise as `Array#filter` in which a return value of `false` will not write the file, and a return value of `true` will write the file to disk.",
+    "text": "该选项会透传给 [`webpack-dev-middleware`](https://github.com/webpack/webpack-dev-middleware?tab=readme-ov-file#writetodisk)。\n\n设置 `writeToDisk: true` 不会改变 `webpack-dev-middleware` 的行为，通过浏览器访问的 bundle 文件仍然由内存提供。\n\n该选项也接受 `Function` 类型的值，可用于过滤需要写入磁盘的文件。\n\n该函数的逻辑与 `Array#filter` 相同：返回 `false` 时不写入该文件，返回 `true` 时将该文件写入磁盘。"
+  },
+  "EntryDescription.summary": {
+    "en": "The `EntryDescription` describes a entry. It is useful when the project has multiple entries with different configuration.",
+    "text": "`EntryDescription` 用于描述一个入口。当项目中存在多个配置不同的入口时非常有用。"
+  },
+  "EntryDescription.remarks": {
+    "en": "It is similar with the [Entry Description Object](https://rspack.rs/config/entry#entry-description-object) of Rspack.\nBut only a few properties that Lynx supports is allowed.",
+    "text": "它与 Rspack 的 [Entry Description Object](https://rspack.rs/config/entry#entry-description-object) 类似。但只允许使用 Lynx 支持的少数属性。"
+  },
+  "EntryDescription.dependOn.summary": {
+    "en": "The entry points that the current entry depends on. They must be loaded before this entry is loaded.",
+    "text": "当前入口所依赖的入口，它们必须在当前入口加载之前加载。"
+  },
+  "EntryDescription.import.summary": {
+    "en": "The path to the entry module(s).",
+    "text": "入口模块的路径。"
+  },
+  "EntryDescription.publicPath.summary": {
+    "en": "This is an important option when using on-demand-loading or loading external resources like images, files, etc. If an incorrect value is specified you'll receive 404 errors while loading these resources.",
+    "text": "在使用按需加载或加载图片、文件等外部资源时，这是一个重要的选项。如果指定了错误的值，加载这些资源时会出现 404 错误。"
+  },
+  "ExposedAPI.summary": {
+    "en": "The exposed API of Rspeedy. Can be used in Rsbuild plugin with [api.useExposed](https://rsbuild.rs/plugins/dev/core#apiuseexposed).",
+    "text": "Rspeedy 暴露的 API。可以在 Rsbuild 插件中通过 [api.useExposed](https://rsbuild.rs/plugins/dev/core#apiuseexposed) 使用。"
+  },
+  "ExposedAPI.config.summary": {
+    "en": "The user config.",
+    "text": "用户配置。"
+  },
+  "ExposedAPI.debug.summary": {
+    "en": "Print debug logs.",
+    "text": "打印调试日志。"
+  },
+  "ExposedAPI.entries.summary": {
+    "en": "Entry points of self-defined environments. Rspeedy no longer sets this field.",
+    "text": "自定义 environment 的入口。Rspeedy 不再设置该字段。"
+  },
+  "ExposedAPI.exit.summary": {
+    "en": "Exit the process.",
+    "text": "退出进程。"
+  },
+  "ExposedAPI.logger.summary": {
+    "en": "Get the Rspeedy logger.",
+    "text": "获取 Rspeedy 的 logger。"
+  },
+  "ExposedAPI.version.summary": {
+    "en": "The version of Rspeedy.",
+    "text": "Rspeedy 的版本。"
+  },
+  "Filename.assets.summary": {
+    "en": "The name of other assets, except for above (image, svg, font, html, wasm...)",
+    "text": "其他静态资源的名称，不包括上述类型（image、svg、font、html、wasm...）"
+  },
+  "Filename.bundle.summary": {
+    "en": "The name of the bundle files.",
+    "text": "bundle 文件的名称。"
+  },
+  "Filename.bundle.remarks": {
+    "en": "The following placeholder is supported:\n\n- `[name]`: the name of the entry.\n- `[contenthash]`: the contenthash of the bundle.\n- `[platform]`: the environment name of the bundle.",
+    "text": "支持以下占位符：\n\n- `[name]`：入口名称。\n- `[contenthash]`：bundle 的 contenthash。\n- `[platform]`：bundle 的 environment 名称。"
+  },
+  "Filename.bundle.example.0": {
+    "en": "- Using content hash in bundle filename:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filename: {\n      bundle: '[name].[contenthash].bundle',\n    },\n  },\n})\n```",
+    "text": "- 在 bundle 文件名中使用 content hash：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filename: {\n      bundle: '[name].[contenthash].bundle',\n    },\n  },\n})\n```"
+  },
+  "Filename.bundle.example.1": {
+    "en": "- Using content hash with length in bundle filename:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filename: {\n      bundle: '[name].[contenthash:8].bundle',\n    },\n  },\n})\n```",
+    "text": "- 在 bundle 文件名中使用指定长度的 content hash：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filename: {\n      bundle: '[name].[contenthash:8].bundle',\n    },\n  },\n})\n```"
+  },
+  "Filename.bundle.example.2": {
+    "en": "- Using a function to control the main bundle and the lazy bundles\n  separately (e.g. emit lazy bundles into another directory with a git\n  commit hash appended):\n\n```js\nimport { execSync } from 'node:child_process'\n\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nconst gitHash = execSync('git rev-parse --short HEAD').toString().trim()\n\nexport default defineConfig({\n  output: {\n    filename: {\n      bundle: ({ lazyBundle, platform }) =>\n        lazyBundle\n          ? `my-lazy-bundles/[name].[fullhash]-${gitHash}.bundle`\n          : `[name].${platform}.bundle`,\n    },\n  },\n})\n```",
+    "text": "- 使用函数分别控制主 bundle 和 lazy bundle\n  （例如将 lazy bundle 输出到另一个目录，并附加 git\n  commit hash）：\n\n```js\nimport { execSync } from 'node:child_process'\n\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nconst gitHash = execSync('git rev-parse --short HEAD').toString().trim()\n\nexport default defineConfig({\n  output: {\n    filename: {\n      bundle: ({ lazyBundle, platform }) =>\n        lazyBundle\n          ? `my-lazy-bundles/[name].[fullhash]-${gitHash}.bundle`\n          : `[name].${platform}.bundle`,\n    },\n  },\n})\n```"
+  },
+  "Filename.css.summary": {
+    "en": "The name of the CSS files.",
+    "text": "CSS 文件的名称。"
+  },
+  "Filename.css.example.0": {
+    "en": "- Using a function to dynamically set the filename based on the file information:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filename: {\n      css: (pathData, assetInfo) => {\n        console.log(pathData); // You can check the contents of pathData here\n\n        if (pathData.chunk?.name === 'index') {\n          return isProd ? '[name].[contenthash:8].css' : '[name].css';\n        }\n        return '/some-path/[name].css';\n      },\n    },\n  },\n})\n```",
+    "text": "- 使用函数根据文件信息动态设置文件名：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filename: {\n      css: (pathData, assetInfo) => {\n        console.log(pathData); // You can check the contents of pathData here\n\n        if (pathData.chunk?.name === 'index') {\n          return isProd ? '[name].[contenthash:8].css' : '[name].css';\n        }\n        return '/some-path/[name].css';\n      },\n    },\n  },\n})\n```"
+  },
+  "Filename.font.summary": {
+    "en": "The name of the font files.",
+    "text": "字体文件的名称。"
+  },
+  "Filename.image.summary": {
+    "en": "The name of non-SVG images.",
+    "text": "非 SVG 图片的名称。"
+  },
+  "Filename.js.summary": {
+    "en": "The name of the JavaScript files.",
+    "text": "JavaScript 文件的名称。"
+  },
+  "Filename.js.default": {
+    "en": "`'[name].js'` in development, `'[name].[contenthash:8].js'` in production web builds, and `'[name].js'` in production node builds",
+    "text": "开发环境下为 `'[name].js'`，生产环境 web 构建为 `'[name].[contenthash:8].js'`，生产环境 node 构建为 `'[name].js'`"
+  },
+  "Filename.js.example.0": {
+    "en": "- Using a function to dynamically set the filename based on the file information:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filename: {\n      js: (pathData, assetInfo) => {\n        console.log(pathData); // You can check the contents of pathData here\n\n        if (pathData.chunk?.name === 'index') {\n          return isProd ? '[name].[contenthash:8].js' : '[name].js';\n        }\n        return '/some-path/[name].js';\n      },\n    },\n  },\n})\n```",
+    "text": "- 使用函数根据文件信息动态设置文件名：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filename: {\n      js: (pathData, assetInfo) => {\n        console.log(pathData); // You can check the contents of pathData here\n\n        if (pathData.chunk?.name === 'index') {\n          return isProd ? '[name].[contenthash:8].js' : '[name].js';\n        }\n        return '/some-path/[name].js';\n      },\n    },\n  },\n})\n```"
+  },
+  "Filename.media.summary": {
+    "en": "The name of media assets, such as video.",
+    "text": "媒体资源（如视频）的名称。"
+  },
+  "Filename.svg.summary": {
+    "en": "The name of the SVG images.",
+    "text": "SVG 图片的名称。"
+  },
+  "Filename.template.summary": {
+    "en": "The name of the template files.",
+    "text": "模板文件的名称。"
+  },
+  "Filename.template.remarks": {
+    "en": "The following placeholder is supported:\n\n- `[name]`: the name of the entry.\n- `[contenthash]`: the contenthash of the template.",
+    "text": "支持以下占位符：\n\n- `[name]`：入口名称。\n- `[contenthash]`：模板的 contenthash。"
+  },
+  "Filename.template.deprecated": {
+    "en": "Use [`Filename.bundle`](api:Filename.bundle) instead.",
+    "text": "请使用 [`Filename.bundle`](api:Filename.bundle) 代替。"
+  },
+  "Filename.template.example.0": {
+    "en": "- Using content hash in bundle filename:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filename: {\n      template: '[name].[contenthash].bundle',\n    },\n  },\n})\n```",
+    "text": "- 在 bundle 文件名中使用 content hash：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filename: {\n      template: '[name].[contenthash].bundle',\n    },\n  },\n})\n```"
+  },
+  "Filename.template.example.1": {
+    "en": "- Using content hash with length in bundle filename:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filename: {\n      template: '[name].[contenthash:8].bundle',\n    },\n  },\n})\n```",
+    "text": "- 在 bundle 文件名中使用指定长度的 content hash：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filename: {\n      template: '[name].[contenthash:8].bundle',\n    },\n  },\n})\n```"
+  },
+  "Filename.wasm.summary": {
+    "en": "The name of WebAssembly files.",
+    "text": "WebAssembly 文件的名称。"
+  },
+  "LoadConfigOptions.summary": {
+    "en": "The options of loadConfig.",
+    "text": "loadConfig 的选项。"
+  },
+  "LoadConfigOptions.configPath.summary": {
+    "en": "The config file path to load.",
+    "text": "要加载的配置文件路径。"
+  },
+  "LoadConfigOptions.configPath.default": {
+    "en": "Automatically resolves `lynx.config.ts`, `lynx.config.js`, `lynx.config.mts`, or `lynx.config.mjs` from `cwd`",
+    "text": "自动从 `cwd` 中解析 `lynx.config.ts`、`lynx.config.js`、`lynx.config.mts` 或 `lynx.config.mjs`"
+  },
+  "LoadConfigOptions.cwd.summary": {
+    "en": "The working directory used to resolve the config path.",
+    "text": "用于解析配置文件路径的工作目录。"
+  },
+  "LoadConfigResult.summary": {
+    "en": "The result of [`loadConfig`](api:loadConfig).",
+    "text": "[`loadConfig`](api:loadConfig) 的返回结果。"
+  },
+  "LoadConfigResult.configPath.summary": {
+    "en": "The configuration path that has been loaded.",
+    "text": "已加载的配置文件路径。"
+  },
+  "LoadConfigResult.content.summary": {
+    "en": "The configuration object that exported from the configuration file.",
+    "text": "从配置文件中导出的配置对象。"
+  },
+  "LoadConfigResult.content.remarks": {
+    "en": "The returned object has already been validated.",
+    "text": "返回的对象已经过校验。"
+  },
+  "Minify.backgroundOptions.summary": {
+    "en": "[`Minify.backgroundOptions`](api:Minify.backgroundOptions) is used to override\n[`Minify.jsOptions`](api:Minify.jsOptions) for background-thread bundles.",
+    "text": "[`Minify.backgroundOptions`](api:Minify.backgroundOptions) 用于为后台线程 bundle 覆盖\n[`Minify.jsOptions`](api:Minify.jsOptions)。"
+  },
+  "Minify.backgroundOptions.remarks": {
+    "en": "This option is deep-merged into [`Minify.jsOptions`](api:Minify.jsOptions).\nIt is mainly used together with ReactLynx dual-thread outputs so that\nmain-thread and background-thread bundles can use different compress rules.",
+    "text": "该选项会被深度合并到 [`Minify.jsOptions`](api:Minify.jsOptions) 中。它主要与 ReactLynx 的双线程产物配合使用，使主线程和后台线程的 bundle 可以使用不同的压缩规则。"
+  },
+  "Minify.css.summary": {
+    "en": "Whether enable the CSS minification.",
+    "text": "是否启用 CSS 压缩。"
+  },
+  "Minify.css.remarks": {
+    "en": "When building for production, [@rsbuild/plugin-css-minimizer](https://github.com/rspack-contrib/rsbuild-plugin-css-minimizer) is used to minify CSS assets for better transmission efficiency.",
+    "text": "在生产环境构建时，会使用 [@rsbuild/plugin-css-minimizer](https://github.com/rspack-contrib/rsbuild-plugin-css-minimizer) 压缩 CSS 资源，以提升传输效率。"
+  },
+  "Minify.css.default": {
+    "en": "When `output.minify` is enabled and `css` is unset, this defaults to `true`.",
+    "text": "当启用 `output.minify` 且未设置 `css` 时，默认为 `true`。"
+  },
+  "Minify.css.example.0": {
+    "en": "- Disable the CSS minification.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    minify: {\n      css: false,\n    },\n  },\n})\n```",
+    "text": "- 禁用 CSS 压缩。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    minify: {\n      css: false,\n    },\n  },\n})\n```"
+  },
+  "Minify.js.summary": {
+    "en": "Whether enable the JavaScript minification.",
+    "text": "是否启用 JavaScript 压缩。"
+  },
+  "Minify.js.default": {
+    "en": "When `output.minify` is enabled and `js` is unset, this defaults to `true`.",
+    "text": "当启用 `output.minify` 且未设置 `js` 时，默认为 `true`。"
+  },
+  "Minify.js.example.0": {
+    "en": "- Disable the JavaScript minification.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    minify: {\n      js: false,\n    },\n  },\n})\n```",
+    "text": "- 禁用 JavaScript 压缩。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    minify: {\n      js: false,\n    },\n  },\n})\n```"
+  },
+  "Minify.jsOptions.summary": {
+    "en": "[`Minify.jsOptions`](api:Minify.jsOptions) is used to configure SWC minification options.",
+    "text": "[`Minify.jsOptions`](api:Minify.jsOptions) 用于配置 SWC 的压缩选项。"
+  },
+  "Minify.jsOptions.remarks": {
+    "en": "For detailed configurations, please refer to [SwcJsMinimizerRspackPlugin](https://rspack.rs/plugins/rspack/swc-js-minimizer-rspack-plugin).",
+    "text": "详细配置请参考 [SwcJsMinimizerRspackPlugin](https://rspack.rs/plugins/rspack/swc-js-minimizer-rspack-plugin)。"
+  },
+  "Minify.jsOptions.default": {
+    "en": "When JavaScript minification is enabled and `jsOptions` is unset, this defaults to `{}`.",
+    "text": "当启用 JavaScript 压缩且未设置 `jsOptions` 时，默认为 `{}`。"
+  },
+  "Minify.jsOptions.example.0": {
+    "en": "- Disable the mangle feature.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    minify: {\n      jsOptions: {\n        minimizerOptions: {\n          mangle: false,\n        },\n      },\n    },\n  },\n})\n```",
+    "text": "- 禁用 mangle 功能。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    minify: {\n      jsOptions: {\n        minimizerOptions: {\n          mangle: false,\n        },\n      },\n    },\n  },\n})\n```"
+  },
+  "Minify.mainThreadOptions.summary": {
+    "en": "[`Minify.mainThreadOptions`](api:Minify.mainThreadOptions) is used to override\n[`Minify.jsOptions`](api:Minify.jsOptions) for main-thread bundles.",
+    "text": "[`Minify.mainThreadOptions`](api:Minify.mainThreadOptions) 用于为主线程 bundle 覆盖\n[`Minify.jsOptions`](api:Minify.jsOptions)。"
+  },
+  "Minify.mainThreadOptions.remarks": {
+    "en": "This option is deep-merged into [`Minify.jsOptions`](api:Minify.jsOptions).\nIt is mainly used together with ReactLynx dual-thread outputs so that\nmain-thread and background-thread bundles can use different compress rules.",
+    "text": "该选项会被深度合并到 [`Minify.jsOptions`](api:Minify.jsOptions) 中。它主要与 ReactLynx 的双线程产物配合使用，使主线程和后台线程的 bundle 可以使用不同的压缩规则。"
+  },
+  "Output.assetPrefix.summary": {
+    "en": "The [`Output.assetPrefix`](api:Output.assetPrefix) is used to set the URL prefix for static assets.",
+    "text": "[`Output.assetPrefix`](api:Output.assetPrefix) 用于设置静态资源的 URL 前缀。"
+  },
+  "Output.assetPrefix.remarks": {
+    "en": "The functionality of [`Output.assetPrefix`](api:Output.assetPrefix) is basically the same as the [output.publicPath](https://rspack.rs/config/output#outputpublicpath)\nconfig in Rspack. With the following differences:\n\n- `output.assetPrefix` only takes effect in the production build.\n\n- `output.assetPrefix` automatically appends a trailing `/` by default.\n\n- The value of `output.assetPrefix` is written to the `process.env.ASSET_PREFIX` environment variable.",
+    "text": "[`Output.assetPrefix`](api:Output.assetPrefix) 的功能与 Rspack 的 [output.publicPath](https://rspack.rs/config/output#outputpublicpath)\n配置基本相同，区别如下：\n\n- `output.assetPrefix` 仅在生产环境构建时生效。\n\n- `output.assetPrefix` 默认会自动在末尾添加 `/`。\n\n- `output.assetPrefix` 的值会写入 `process.env.ASSET_PREFIX` 环境变量。"
+  },
+  "Output.cleanDistPath.summary": {
+    "en": "The [`Output.cleanDistPath`](api:Output.cleanDistPath) option determines whether all files in the output directory (default: `dist`) are removed before the build starts.",
+    "text": "[`Output.cleanDistPath`](api:Output.cleanDistPath) 选项用于决定是否在构建开始前清空产物目录（默认为 `dist`）中的所有文件。"
+  },
+  "Output.cleanDistPath.remarks": {
+    "en": "By default, if the output directory is a subdirectory of the project root path, Rspeedy will automatically clean all files in the build directory.\n\nWhen [output.distPath.root](https://rsbuild.rs/config/output/dist-path#root-directory) is an external directory or the same as the project root directory, `cleanDistPath` is not enabled by default to prevent accidental deletion of files from other directories.",
+    "text": "默认情况下，如果产物目录是项目根路径的子目录，Rspeedy 会自动清空构建目录中的所有文件。\n\n当 [output.distPath.root](https://rsbuild.rs/config/output/dist-path#root-directory) 为外部目录或与项目根目录相同时，默认不会启用 `cleanDistPath`，以避免误删其他目录中的文件。"
+  },
+  "Output.cleanDistPath.default": {
+    "en": "Automatically enabled when `output.distPath.root` is a subdirectory of the project root; otherwise disabled.",
+    "text": "当 `output.distPath.root` 为项目根目录的子目录时自动启用，否则禁用。"
+  },
+  "Output.cleanDistPath.example.0": {
+    "en": "- Disable cleaning files:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    cleanDistPath: false,\n  },\n})\n```",
+    "text": "- 禁用文件清理：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    cleanDistPath: false,\n  },\n})\n```"
+  },
+  "Output.cleanDistPath.example.1": {
+    "en": "- Only clean files before the production build:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    cleanDistPath: process.env.NODE_ENV === 'production',\n  },\n})\n```",
+    "text": "- 仅在生产环境构建前清理文件：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    cleanDistPath: process.env.NODE_ENV === 'production',\n  },\n})\n```"
+  },
+  "Output.copy.summary": {
+    "en": "The [`Output.copy`](api:Output.copy) option is used for copying files to the dist directory.",
+    "text": "[`Output.copy`](api:Output.copy) 选项用于将文件复制到产物目录。"
+  },
+  "Output.copy.remarks": {
+    "en": "For more options, see [Rspack.CopyRspackPlugin](https://rspack.rs/plugins/rspack/copy-rspack-plugin).",
+    "text": "更多选项请参考 [Rspack.CopyRspackPlugin](https://rspack.rs/plugins/rspack/copy-rspack-plugin)。"
+  },
+  "Output.copy.example.0": {
+    "en": "- Copy files from `./src/assets` to the `./dist` directory:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    copy: [\n      // `./src/assets/image.png` -> `./dist/image.png`\n      { from: './src/assets' },\n    ],\n  },\n})\n```",
+    "text": "- 将 `./src/assets` 中的文件复制到 `./dist` 目录：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    copy: [\n      // `./src/assets/image.png` -> `./dist/image.png`\n      { from: './src/assets' },\n    ],\n  },\n})\n```"
+  },
+  "Output.copy.example.1": {
+    "en": "- Copy files from ./src/assets to the ./dist/assets directory:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    copy: [\n      // `./src/assets/image.png` -> `./dist/assets/image.png`\n      { from: './src/assets', to: 'assets' },\n    ],\n  },\n})\n```",
+    "text": "- 将 ./src/assets 中的文件复制到 ./dist/assets 目录：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    copy: [\n      // `./src/assets/image.png` -> `./dist/assets/image.png`\n      { from: './src/assets', to: 'assets' },\n    ],\n  },\n})\n```"
+  },
+  "Output.cssModules.summary": {
+    "en": "The [`CssModules`](api:CssModules) option is used for the customization of CSS Modules configurations.",
+    "text": "[`CssModules`](api:CssModules) 选项用于自定义 CSS Modules 配置。"
+  },
+  "Output.cssModules.remarks": {
+    "en": "The CSS module is enabled for `*.module.css`, `*.module.scss` and `*.module.less`.\nUse [`CssModules.auto`](api:CssModules.auto) to customize the filtering behavior.",
+    "text": "默认会为 `*.module.css`、`*.module.scss` 和 `*.module.less` 启用 CSS Modules。使用 [`CssModules.auto`](api:CssModules.auto) 自定义过滤行为。"
+  },
+  "Output.cssModules.example.0": {
+    "en": "Disable CSS modules:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    cssModules: {\n      auto: false,\n    },\n  },\n})\n```",
+    "text": "禁用 CSS Modules：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    cssModules: {\n      auto: false,\n    },\n  },\n})\n```"
+  },
+  "Output.cssModules.example.1": {
+    "en": "Enable CSS modules for all CSS files:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    cssModules: {\n      auto: () => true,\n    },\n  },\n})\n```",
+    "text": "为所有 CSS 文件启用 CSS Modules：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    cssModules: {\n      auto: () => true,\n    },\n  },\n})\n```"
+  },
+  "Output.dataUriLimit.summary": {
+    "en": "The [`Output.dataUriLimit`](api:Output.dataUriLimit) option is used to set the size threshold to inline static assets such as images and fonts.",
+    "text": "[`Output.dataUriLimit`](api:Output.dataUriLimit) 选项用于设置图片、字体等静态资源内联的体积阈值。"
+  },
+  "Output.dataUriLimit.example.0": {
+    "en": "Inline all static assets less than 4kB:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    dataUriLimit: 4 * 1024,\n  },\n})\n```",
+    "text": "内联所有小于 4kB 的静态资源：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    dataUriLimit: 4 * 1024,\n  },\n})\n```"
+  },
+  "Output.dataUriLimit.example.1": {
+    "en": "Disable inlining of static assets:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    dataUriLimit: 0,\n  },\n})\n```",
+    "text": "禁用静态资源内联：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    dataUriLimit: 0,\n  },\n})\n```"
+  },
+  "Output.dataUriLimit.example.2": {
+    "en": "Inline all static assets:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    dataUriLimit: Number.MAX_SAFE_INTEGER,\n  },\n})\n```",
+    "text": "内联所有静态资源：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    dataUriLimit: Number.MAX_SAFE_INTEGER,\n  },\n})\n```"
+  },
+  "Output.dataUriLimit.example.3": {
+    "en": "Disable inlining of all media but not images.\n\n```ts title=\"lynx.config.ts\"\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    dataUriLimit: {\n      image: 5000,\n      media: 0,\n    },\n  },\n})\n```",
+    "text": "禁用所有媒体资源的内联，但不包括图片。\n\n```ts title=\"lynx.config.ts\"\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    dataUriLimit: {\n      image: 5000,\n      media: 0,\n    },\n  },\n})\n```"
+  },
+  "Output.distPath.summary": {
+    "en": "Set the directory of the dist files.",
+    "text": "设置产物文件的目录。"
+  },
+  "Output.distPath.remarks": {
+    "en": "More options can be found at [Rsbuild - distPath](https://rsbuild.rs/config/output/dist-path).",
+    "text": "更多选项请参考 [Rsbuild - distPath](https://rsbuild.rs/config/output/dist-path)。"
+  },
+  "Output.distPath.default": {
+    "en": "Uses Rsbuild's default distPath configuration with `root: 'dist'`.",
+    "text": "使用 Rsbuild 默认的 distPath 配置，并设置 `root: 'dist'`。"
+  },
+  "Output.distPath.example.0": {
+    "en": "Use `output` instead of `dist`(the default value):\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    distPath: {\n      root: './output',\n    },\n  },\n})\n```",
+    "text": "使用 `output` 代替 `dist`（默认值）：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    distPath: {\n      root: './output',\n    },\n  },\n})\n```"
+  },
+  "Output.filename.summary": {
+    "en": "The [`Filename`](api:Filename) determines the name of the Lynx bundle files emitted under [`Output.distPath`](api:Output.distPath).",
+    "text": "[`Filename`](api:Filename) 决定输出到 [`Output.distPath`](api:Output.distPath) 下的 Lynx bundle 文件的名称。"
+  },
+  "Output.filename.remarks": {
+    "en": "If a string is provided, it will be used as [`Filename.bundle`](api:Filename.bundle).",
+    "text": "如果传入字符串，它将被用作 [`Filename.bundle`](api:Filename.bundle)。"
+  },
+  "Output.filenameHash.summary": {
+    "en": "The [`Output.filenameHash`](api:Output.filenameHash) option controls whether to add a hash value to the filename after the production build.",
+    "text": "[`Output.filenameHash`](api:Output.filenameHash) 选项用于控制生产环境构建后是否在文件名中添加 hash 值。"
+  },
+  "Output.filenameHash.remarks": {
+    "en": "[`Output.filename`](api:Output.filename) has a higher priority than [`Output.filenameHash`](api:Output.filenameHash).",
+    "text": "[`Output.filename`](api:Output.filename) 的优先级高于 [`Output.filenameHash`](api:Output.filenameHash)。"
+  },
+  "Output.filenameHash.default": {
+    "en": "In production web builds, Rsbuild defaults this option to `true`; development builds and non-web outputs omit hashes by default.",
+    "text": "在生产环境 web 构建中，Rsbuild 默认将该选项设置为 `true`；开发环境构建和非 web 产物默认不添加 hash。"
+  },
+  "Output.filenameHash.example.0": {
+    "en": "- Disable hash\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filenameHash: false,\n  },\n})\n```",
+    "text": "- 禁用 hash\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filenameHash: false,\n  },\n})\n```"
+  },
+  "Output.filenameHash.example.1": {
+    "en": "- Change hash format\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filenameHash: 'fullhash:16',\n  },\n})\n```\n\nThe available hash formats are:\n\n- `fullhash`: The hash value of the entire compilation. If any file changes, the hash values of all output files in the entire project will change.\n\n- `chunkhash`: The hash value of the chunk. The hash value will only change when the content of the chunk (and its included modules) changes.\n\n- `contenthash`: The hash value of the file content. The hash value will only change when the content of the file itself changes.",
+    "text": "- 修改 hash 格式\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    filenameHash: 'fullhash:16',\n  },\n})\n```\n\n可用的 hash 格式有：\n\n- `fullhash`：整个编译的 hash 值。如果任意文件发生变化，整个项目所有产物文件的 hash 值都会改变。\n\n- `chunkhash`：chunk 的 hash 值。仅当 chunk（及其包含的模块）的内容发生变化时，hash 值才会改变。\n\n- `contenthash`：文件内容的 hash 值。仅当文件本身的内容发生变化时，hash 值才会改变。"
+  },
+  "Output.inlineScripts.summary": {
+    "en": "The [`Output.inlineScripts`](api:Output.inlineScripts) option controls whether to inline scripts into Lynx bundle (`.lynx.bundle`).",
+    "text": "[`Output.inlineScripts`](api:Output.inlineScripts) 选项用于控制是否将脚本内联到 Lynx bundle（`.lynx.bundle`）中。"
+  },
+  "Output.inlineScripts.remarks": {
+    "en": "This is different with [output.inlineScripts](https://rsbuild.rs/config/output/inline-scripts) since we normally want to inline scripts in Lynx bundle (`.lynx.bundle`).\n\nThere are two points that need to be especially noted:\n\n1. Only background thread scripts can remain non-inlined, whereas the main thread script is always inlined.\n\n2. Currently, when `experimental_isLazyBundle` is enabled, `inlineScripts` will always be `true`.",
+    "text": "这与 [output.inlineScripts](https://rsbuild.rs/config/output/inline-scripts) 不同，因为我们通常希望将脚本内联到 Lynx bundle（`.lynx.bundle`）中。\n\n有两点需要特别注意：\n\n1. 只有后台线程脚本可以不内联，主线程脚本始终会被内联。\n\n2. 目前，当启用 `experimental_isLazyBundle` 时，`inlineScripts` 始终为 `true`。"
+  },
+  "Output.inlineScripts.default": {
+    "en": "Rspeedy defaults this to `true` and only switches it to `false` when the user explicitly enables the top-level `splitChunks` option, or sets the deprecated `performance.chunkSplit.strategy` to anything other than `'all-in-one'`. On plain Rsbuild, the Rsbuild default applies.",
+    "text": "Rspeedy 默认将其设置为 `true`，仅当用户显式启用顶层的 `splitChunks` 选项，或将已废弃的 `performance.chunkSplit.strategy` 设置为 `'all-in-one'` 以外的值时，才会切换为 `false`。在纯 Rsbuild 中，则使用 Rsbuild 的默认值。"
+  },
+  "Output.inlineScripts.example.0": {
+    "en": "Disable inlining background thread scripts.\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    inlineScripts: false,\n  },\n})\n```",
+    "text": "禁用后台线程脚本的内联。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    inlineScripts: false,\n  },\n})\n```"
+  },
+  "Output.legalComments.summary": {
+    "en": "The [`Output.legalComments`](api:Output.legalComments) controls how to handle the legal comment.",
+    "text": "[`Output.legalComments`](api:Output.legalComments) 用于控制如何处理法律注释（legal comment）。"
+  },
+  "Output.legalComments.remarks": {
+    "en": "This is different with Rsbuild since we normally do not want a `.LEGAL.txt` file in Lynx outputs.\n\nThis behavior can be configured by using one of the following options:\n\n- `linked`: Extract all legal comments to a `.LEGAL.txt` file and link to them with a comment.\n\n- `inline`: Preserve all legal comments in original position.\n\n- `none`: Remove all legal comments.",
+    "text": "这与 Rsbuild 不同，因为我们通常不希望 Lynx 产物中出现 `.LEGAL.txt` 文件。\n\n可以通过以下选项之一配置该行为：\n\n- `linked`：将所有法律注释提取到 `.LEGAL.txt` 文件中，并通过注释链接到该文件。\n\n- `inline`：将所有法律注释保留在原位置。\n\n- `none`：移除所有法律注释。"
+  },
+  "Output.minify.summary": {
+    "en": "The [`Minify`](api:Minify) configures whether to enable code minification in the production build, or to configure minimizer options.",
+    "text": "[`Minify`](api:Minify) 用于配置是否在生产环境构建中启用代码压缩，或配置压缩器选项。"
+  },
+  "Output.minify.default": {
+    "en": "`true` in production builds and `false` otherwise",
+    "text": "生产环境构建中为 `true`，其他情况为 `false`"
+  },
+  "Output.minify.example.0": {
+    "en": "Disable minification.\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    minify: false,\n  },\n})\n```",
+    "text": "禁用压缩。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  output: {\n    minify: false,\n  },\n})\n```"
+  },
+  "Output.sourceMap.summary": {
+    "en": "The [`SourceMap`](api:SourceMap) configures whether and how to generate source-map for outputs.",
+    "text": "[`SourceMap`](api:SourceMap) 用于配置是否为产物生成 source map，以及如何生成。"
+  },
+  "Output.sourceMap.default": {
+    "en": "When this option is unset in Lynx builds, JavaScript source maps use `'cheap-module-source-map'` in development and `'source-map'` in production; CSS source maps are also generated. All `.map` assets are removed before emit.",
+    "text": "在 Lynx 构建中未设置该选项时，JavaScript source map 在开发环境使用 `'cheap-module-source-map'`，在生产环境使用 `'source-map'`；同时也会生成 CSS source map。所有 `.map` 资源都会在输出前被移除。"
+  },
+  "Performance.buildCache.summary": {
+    "en": "Enable or configure persistent build cache.",
+    "text": "启用或配置持久化构建缓存。"
+  },
+  "Performance.buildCache.remarks": {
+    "en": "This feature is experimental and may be changed in the future.",
+    "text": "该功能目前为实验性功能，未来可能会发生变化。"
+  },
+  "Performance.buildCache.example.0": {
+    "en": "Enable persistent build cache.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    buildCache: true,\n  },\n})\n```",
+    "text": "启用持久化构建缓存。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    buildCache: true,\n  },\n})\n```"
+  },
+  "Performance.buildCache.example.1": {
+    "en": "Customize build cache.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    buildCache: {\n      cacheDigest: [process.env.SOME_ENV],\n      buildDependencies: ['postcss.config.js'],\n    },\n  },\n})\n```",
+    "text": "自定义构建缓存。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    buildCache: {\n      cacheDigest: [process.env.SOME_ENV],\n      buildDependencies: ['postcss.config.js'],\n    },\n  },\n})\n```"
+  },
+  "Performance.chunkSplit.summary": {
+    "en": "[`Performance.chunkSplit`](api:Performance.chunkSplit) is used to configure the chunk splitting strategy.",
+    "text": "[`Performance.chunkSplit`](api:Performance.chunkSplit) 用于配置 chunk 拆分策略。"
+  },
+  "Performance.chunkSplit.default": {
+    "en": "Unset, which bundles everything into one chunk (same as `'all-in-one'`).",
+    "text": "未设置，此时会将所有内容打包到一个 chunk 中（与 `'all-in-one'` 相同）。"
+  },
+  "Performance.chunkSplit.deprecated": {
+    "en": "Use the top-level [`Config.splitChunks`](api:Config.splitChunks) option instead.",
+    "text": "请使用顶层的 [`Config.splitChunks`](api:Config.splitChunks) 选项代替。"
+  },
+  "Performance.printFileSize.summary": {
+    "en": "Whether to print the file sizes after production build.",
+    "text": "是否在生产环境构建后打印文件大小。"
+  },
+  "Performance.printFileSize.remarks": {
+    "en": "See [Rsbuild - performance.printFileSize](https://rsbuild.rs/config/performance/print-file-size) for details.",
+    "text": "详见 [Rsbuild - performance.printFileSize](https://rsbuild.rs/config/performance/print-file-size)。"
+  },
+  "Performance.printFileSize.example.0": {
+    "en": "If you don't want to print any information, you can disable it by setting printFileSize to false:\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    printFileSize: false\n  },\n})\n```",
+    "text": "如果不想打印任何信息，可以将 printFileSize 设置为 false 来禁用：\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    printFileSize: false\n  },\n})\n```"
+  },
+  "Performance.printFileSize.example.1": {
+    "en": "Set total to false to disable total size output.\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    printFileSize: {\n      total: false,\n    },\n  },\n})\n```",
+    "text": "将 total 设置为 false 以禁用总大小的输出。\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    printFileSize: {\n      total: false,\n    },\n  },\n})\n```"
+  },
+  "Performance.printFileSize.example.2": {
+    "en": "Set detail to false to disable per-asset size output.\n\nIf you don't need to view the size of each static asset, you can set detail to false. In this case, only the total size will be output:\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    printFileSize: {\n      detail: false,\n    },\n  },\n})\n```",
+    "text": "将 detail 设置为 false 以禁用每个资源大小的输出。\n\n如果不需要查看每个静态资源的大小，可以将 detail 设置为 false，此时只会输出总大小：\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    printFileSize: {\n      detail: false,\n    },\n  },\n})\n```"
+  },
+  "Performance.printFileSize.example.3": {
+    "en": "If you don't need to view the gzipped size, you can set compressed to false. This can save some gzip computation time for large projects:\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    printFileSize: {\n      compressed: false,\n    },\n  },\n})\n```",
+    "text": "如果不需要查看 gzip 压缩后的大小，可以将 compressed 设置为 false，这可以为大型项目节省一些 gzip 计算时间：\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    printFileSize: {\n      compressed: false,\n    },\n  },\n})\n```"
+  },
+  "Performance.printFileSize.example.4": {
+    "en": "To include only static assets that meet certain criteria, use a filter function with include.\n\nIf returned false, the static asset will be excluded and not included in the total size or detailed size.\n\nonly output static assets larger than 10kB:\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    printFileSize: {\n      include: (asset) => asset.size > 10 * 1000,\n    }\n  },\n})\n```",
+    "text": "如果只需包含满足特定条件的静态资源，可以通过 include 传入过滤函数。\n\n如果返回 false，该静态资源将被排除，不会计入总大小或详细大小。\n\n仅输出大于 10kB 的静态资源：\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    printFileSize: {\n      include: (asset) => asset.size > 10 * 1000,\n    }\n  },\n})\n```"
+  },
+  "Performance.printFileSize.example.5": {
+    "en": "To exclude static assets that meet certain criteria, use a filter function with exclude. If both include and exclude are set, exclude will take precedence.\n\nRsbuild defaults to excluding source map, license files, and .d.ts type files, as these files do not affect page load performance.\n\nexclude .html files in addition to the default:\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    printFileSize: {\n      exclude: (asset) =>\n        /\\.(?:map|LICENSE\\.txt)$/.test(asset.name) ||\n        /\\.html$/.test(asset.name),\n    }\n  },\n})\n```",
+    "text": "如果需要排除满足特定条件的静态资源，可以通过 exclude 传入过滤函数。如果同时设置了 include 和 exclude，exclude 的优先级更高。\n\nRsbuild 默认排除 source map、license 文件和 .d.ts 类型文件，因为这些文件不会影响页面加载性能。\n\n在默认规则之外额外排除 .html 文件：\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    printFileSize: {\n      exclude: (asset) =>\n        /\\.(?:map|LICENSE\\.txt)$/.test(asset.name) ||\n        /\\.html$/.test(asset.name),\n    }\n  },\n})\n```"
+  },
+  "Performance.profile.summary": {
+    "en": "Whether capture timing information in Lynx runtime integrations such as ReactLynx.",
+    "text": "是否在 ReactLynx 等 Lynx 运行时集成中采集耗时信息。"
+  },
+  "Performance.profile.default": {
+    "en": "Rspeedy and `pluginReactLynx` set this to `true` when `DEBUG` contains `lynx`, `rspeedy` or `*` (Rspeedy also accepts `rsbuild`); otherwise the option is left unset.",
+    "text": "当 `DEBUG` 包含 `lynx`、`rspeedy` 或 `*` 时（Rspeedy 还接受 `rsbuild`），Rspeedy 和 `pluginReactLynx` 会将其设置为 `true`；否则不设置该选项。"
+  },
+  "Performance.profile.example.0": {
+    "en": "Enable profile.\n\n- Frameworks like ReactLynx will include runtime information using `console.profile`.\n- Rspeedy will emit `dist/stats.json` after build for bundle analysis compatibility.\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: { profile: true },\n})\n```",
+    "text": "启用 profile。\n\n- ReactLynx 等框架会通过 `console.profile` 输出运行时信息。\n- Rspeedy 会在构建后输出 `dist/stats.json`，以兼容 bundle 分析工具。\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: { profile: true },\n})\n```"
+  },
+  "Performance.removeConsole.summary": {
+    "en": "Whether to remove `console.[methodName]` in production build.",
+    "text": "是否在生产环境构建中移除 `console.[methodName]`。"
+  },
+  "Performance.removeConsole.example.0": {
+    "en": "- Remove all `console` methods\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    removeConsole: true,\n  },\n})\n```",
+    "text": "- 移除所有 `console` 方法\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    removeConsole: true,\n  },\n})\n```"
+  },
+  "Performance.removeConsole.example.1": {
+    "en": "- Remove specific `console` methods\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    removeConsole: ['log', 'warn']\n  },\n})\n```",
+    "text": "- 移除指定的 `console` 方法\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  performance: {\n    removeConsole: ['log', 'warn']\n  },\n})\n```"
+  },
+  "Resolve.alias.summary": {
+    "en": "Create aliases to `import` or `require` certain modules more easily.",
+    "text": "创建别名，以便更方便地 `import` 或 `require` 某些模块。"
+  },
+  "Resolve.alias.example.0": {
+    "en": "A trailing `$` can also be added to the given object's keys to signify an exact match:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  resolve: {\n    alias: {\n      xyz$: 'path/to/file.js',\n    },\n  },\n})\n```\n\nwhich would yield these results:\n\n```js\nimport Test1 from 'xyz'; // Exact match, so path/to/file.js is resolved and imported\nimport Test2 from 'xyz/file.js'; // Not an exact match, normal resolution takes place\n```",
+    "text": "也可以在对象的 key 末尾添加 `$` 来表示精确匹配：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  resolve: {\n    alias: {\n      xyz$: 'path/to/file.js',\n    },\n  },\n})\n```\n\n会得到以下结果：\n\n```js\nimport Test1 from 'xyz'; // Exact match, so path/to/file.js is resolved and imported\nimport Test2 from 'xyz/file.js'; // Not an exact match, normal resolution takes place\n```"
+  },
+  "Resolve.alias.example.1": {
+    "en": "`resolve.alias` is useful to control how a npm package is resolved.\n\n- Change `react` to `@lynx-js/react`:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nimport { createRequire } from 'module'\nconst require = createRequire(import.meta.url)\nexport default defineConfig({\n  resolve: {\n    alias: {\n      react: require.resolve('@lynx-js/react'),\n    },\n  },\n})\n```\n\nThis allows you to use some third-party libraries that directly uses `react` as dependencies in ReactLynx.\n\n- Force using the same version of `dayjs`:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nimport { createRequire } from 'module'\nconst require = createRequire(import.meta.url)\nexport default defineConfig({\n  resolve: {\n    alias: {\n      dayjs: require.resolve('dayjs'),\n    },\n  },\n})\n```\n\nPlease note that this is dangerous, since all the `dayjs`(including the dependencies of a dependencies) is resolved to the version in the project.\nIt may cause both compile-time and runtime errors due to version mismatch.",
+    "text": "`resolve.alias` 可用于控制 npm 包的解析方式。\n\n- 将 `react` 替换为 `@lynx-js/react`：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nimport { createRequire } from 'module'\nconst require = createRequire(import.meta.url)\nexport default defineConfig({\n  resolve: {\n    alias: {\n      react: require.resolve('@lynx-js/react'),\n    },\n  },\n})\n```\n\n这样就可以在 ReactLynx 中使用一些直接依赖 `react` 的第三方库。\n\n- 强制使用同一版本的 `dayjs`：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nimport { createRequire } from 'module'\nconst require = createRequire(import.meta.url)\nexport default defineConfig({\n  resolve: {\n    alias: {\n      dayjs: require.resolve('dayjs'),\n    },\n  },\n})\n```\n\n请注意这种做法存在风险，因为所有的 `dayjs`（包括依赖的依赖）都会被解析到项目中的版本。版本不匹配可能导致编译时和运行时错误。"
+  },
+  "Resolve.alias.example.2": {
+    "en": "Setting `resolve.alias` to `false` will ignore a module.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  resolve: {\n    alias: {\n      'ignored-module': false,\n      './ignored-module': false,\n    },\n  },\n})\n```",
+    "text": "将 `resolve.alias` 设置为 `false` 会忽略某个模块。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  resolve: {\n    alias: {\n      'ignored-module': false,\n      './ignored-module': false,\n    },\n  },\n})\n```"
+  },
+  "Resolve.aliasStrategy.summary": {
+    "en": "Set the strategy for path alias resolution, to control the priority relationship\nbetween the `paths` option in `tsconfig.json` and the `resolve.alias` option of Rsbuild.",
+    "text": "设置路径别名解析的策略，用于控制 `tsconfig.json` 中的 `paths` 选项与 Rsbuild 的 `resolve.alias` 选项之间的优先级关系。"
+  },
+  "Resolve.aliasStrategy.remarks": {
+    "en": "- `prefer-tsconfig` (default): The `paths` option in `tsconfig.json` will take precedence over the\n`resolve.alias` option of Rsbuild.\n- `prefer-alias`: The `resolve.alias` option of Rsbuild will take precedence over the\n`paths` option in `tsconfig.json`.",
+    "text": "- `prefer-tsconfig`（默认）：`tsconfig.json` 中的 `paths` 选项优先于 Rsbuild 的\n`resolve.alias` 选项。\n- `prefer-alias`：Rsbuild 的 `resolve.alias` 选项优先于\n`tsconfig.json` 中的 `paths` 选项。"
+  },
+  "Resolve.dedupe.summary": {
+    "en": "Force to resolve the specified packages from project root, which is useful for deduplicating packages and reducing the bundle size.",
+    "text": "强制从项目根目录解析指定的包，可用于对包进行去重并减小 bundle 体积。"
+  },
+  "Resolve.dedupe.remarks": {
+    "en": "[`Resolve.dedupe`](api:Resolve.dedupe) is implemented based on [`Resolve.alias`](api:Resolve.alias), it will get the path of the specified package through `require.resolve` in the project root directory and set it to the alias.\n\nThe alias generated by [`Resolve.dedupe`](api:Resolve.dedupe) will be merged with the configured [`Resolve.alias`](api:Resolve.alias) in the project, and the [`Resolve.alias`](api:Resolve.alias) config will take precedence when the keys are the same.",
+    "text": "[`Resolve.dedupe`](api:Resolve.dedupe) 基于 [`Resolve.alias`](api:Resolve.alias) 实现，它会在项目根目录下通过 `require.resolve` 获取指定包的路径，并将其设置为别名。\n\n[`Resolve.dedupe`](api:Resolve.dedupe) 生成的别名会与项目中配置的 [`Resolve.alias`](api:Resolve.alias) 合并，当 key 相同时，[`Resolve.alias`](api:Resolve.alias) 配置的优先级更高。"
+  },
+  "Resolve.dedupe.example.0": {
+    "en": "Use `tslib` from the project root directory.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  resolve: {\n    dedupe: ['tslib'],\n  },\n})\n```",
+    "text": "使用项目根目录下的 `tslib`。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  resolve: {\n    dedupe: ['tslib'],\n  },\n})\n```"
+  },
+  "Resolve.extensions.summary": {
+    "en": "Automatically resolve file extensions when importing modules. This means you can import files without explicitly writing their extensions.",
+    "text": "导入模块时自动解析文件扩展名。这意味着你可以在导入文件时省略扩展名。"
+  },
+  "Resolve.extensions.remarks": {
+    "en": "For example, if importing './index', Rsbuild will try to resolve using the following order:\n\n- `./index.ts`\n\n- `./index.tsx`\n\n- `./index.mjs`\n\n- `./index.js`\n\n- `./index.jsx`\n\n- `./index.json`\n\n- `./index.cjs`\n\nThe difference between `resolve.extensions` and `tools.rspack.resolve.extensions`:\n\n`resolve.extensions`: Replaces the default list; `pluginLynx` still appends `.cjs`.\n\n`tools.rspack.resolve.extensions`: Merges with the default configuration using [`webpack-merge`](https://github.com/survivejs/webpack-merge).",
+    "text": "例如，导入 './index' 时，Rsbuild 会按以下顺序尝试解析：\n\n- `./index.ts`\n\n- `./index.tsx`\n\n- `./index.mjs`\n\n- `./index.js`\n\n- `./index.jsx`\n\n- `./index.json`\n\n- `./index.cjs`\n\n`resolve.extensions` 与 `tools.rspack.resolve.extensions` 的区别：\n\n`resolve.extensions`：替换默认列表；`pluginLynx` 仍会追加 `.cjs`。\n\n`tools.rspack.resolve.extensions`：通过 [`webpack-merge`](https://github.com/survivejs/webpack-merge) 与默认配置合并。"
+  },
+  "RsdoctorRspackPluginOptions.summary": {
+    "en": "Simplified options type for `tools.rsdoctor`.\n\nKeep this type free of deeply nested/intersection utility types to ensure\ntypia can generate validators from `Config`.",
+    "text": "`tools.rsdoctor` 的简化选项类型。\n\n该类型应避免使用深层嵌套或交叉的工具类型，以确保\ntypia 能够基于 `Config` 生成校验器。"
+  },
+  "Server.base.summary": {
+    "en": "Configure the base path of the server.",
+    "text": "配置服务器的基础路径。"
+  },
+  "Server.base.remarks": {
+    "en": "Users can access lynx bundle through `http://<host>:<port>/main.lynx.bundle` by default.\n\nIf you want to access lynx bundle through `http://<host>:<port>/foo/main.lynx.bundle`, you can change `server.base` to `/foo`\n\nyou can refer to [server.base](https://rsbuild.rs/config/server/base) for more information.",
+    "text": "默认情况下，用户可以通过 `http://<host>:<port>/main.lynx.bundle` 访问 lynx bundle。\n\n如果希望通过 `http://<host>:<port>/foo/main.lynx.bundle` 访问 lynx bundle，可以将 `server.base` 修改为 `/foo`。\n\n更多信息可参考 [server.base](https://rsbuild.rs/config/server/base)。"
+  },
+  "Server.compress.summary": {
+    "en": "Configure whether to enable [gzip compression](https://developer.mozilla.org/en-US/docs/Glossary/gzip_compression) for static assets served by the dev server or preview server.",
+    "text": "配置是否对开发服务器或预览服务器提供的静态资源启用 [gzip 压缩](https://developer.mozilla.org/en-US/docs/Glossary/gzip_compression)。"
+  },
+  "Server.compress.remarks": {
+    "en": "See [Rsbuild - server.compress](https://rsbuild.rs/config/server/compress) for details.",
+    "text": "详见 [Rsbuild - server.compress](https://rsbuild.rs/config/server/compress)。"
+  },
+  "Server.compress.example.0": {
+    "en": "To disable the gzip compression, set compress to false:\n\n```js\nexport default {\n  server: {\n    compress: false,\n  },\n}\n```",
+    "text": "如需禁用 gzip 压缩，可将 compress 设置为 false：\n\n```js\nexport default {\n  server: {\n    compress: false,\n  },\n}\n```"
+  },
+  "Server.compress.example.1": {
+    "en": "Compress if it starts with /foo\n\n```js\nexport default {\n  server: {\n    compress: {\n      filter: (req) => {\n        if (req.url?.includes('/foo')) {\n          return false;\n        }\n        return true;\n      },\n    },\n  },\n}\n```",
+    "text": "以 /foo 开头时进行压缩\n\n```js\nexport default {\n  server: {\n    compress: {\n      filter: (req) => {\n        if (req.url?.includes('/foo')) {\n          return false;\n        }\n        return true;\n      },\n    },\n  },\n}\n```"
+  },
+  "Server.compress.example.2": {
+    "en": "set level of zlib compression\n\n```js\nexport default {\n  server: {\n    compress: {\n      level: 6,\n    },\n  },\n}\n```",
+    "text": "设置 zlib 压缩级别\n\n```js\nexport default {\n  server: {\n    compress: {\n      level: 6,\n    },\n  },\n}\n```"
+  },
+  "Server.cors.summary": {
+    "en": "Configure CORS for the dev server or preview server.",
+    "text": "为开发服务器或预览服务器配置 CORS。"
+  },
+  "Server.cors.remarks": {
+    "en": "- Set to an object to enable CORS with the specified options.\n\n- Set to `true` to enable CORS with the default options (allows all origins, not recommended).\n\n- Set to `false` to disable CORS.\n\nSee [Rsbuild - server.cors](https://rsbuild.rs/config/server/cors) for details.",
+    "text": "- 设置为对象时，使用指定的选项启用 CORS。\n\n- 设置为 `true` 时，使用默认选项启用 CORS（允许所有来源，不推荐）。\n\n- 设置为 `false` 时，禁用 CORS。\n\n详见 [Rsbuild - server.cors](https://rsbuild.rs/config/server/cors)。"
+  },
+  "Server.cors.default": {
+    "en": "Uses Rsbuild's default CORS options.",
+    "text": "使用 Rsbuild 默认的 CORS 选项。"
+  },
+  "Server.headers.summary": {
+    "en": "Adds headers to all responses.",
+    "text": "为所有响应添加响应头。"
+  },
+  "Server.host.summary": {
+    "en": "Specify the host that the dev server listens to.",
+    "text": "指定开发服务器监听的 host。"
+  },
+  "Server.host.remarks": {
+    "en": "In development, if `server.host` is unset, the dev server stays bound to the IPv4 wildcard address while resolving dev-server-related URLs and client host settings with a detected non-loopback IPv4 address, such as `192.168.1.50`. If no eligible IPv4 address exists, it binds to the IPv6 wildcard address and uses a detected IPv6 address for URLs. It falls back to an IPv4 loopback URL when no non-loopback IP is available. If you have multiple network interfaces, set `server.host` explicitly to choose the desired address.",
+    "text": "在开发环境下，如果未设置 `server.host`，开发服务器会保持绑定在 IPv4 通配地址上，同时使用检测到的非回环 IPv4 地址（如 `192.168.1.50`）来解析开发服务器相关的 URL 和客户端 host 设置。如果不存在符合条件的 IPv4 地址，则绑定到 IPv6 通配地址，并使用检测到的 IPv6 地址生成 URL。当没有可用的非回环 IP 时，会回退为 IPv4 回环地址的 URL。如果你有多个网络接口，请显式设置 `server.host` 以选择所需的地址。"
+  },
+  "Server.host.example.0": {
+    "en": "Set the host to a custom value:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  server: {\n    host: \"192.168.1.50\",\n  },\n})\n```",
+    "text": "将 host 设置为自定义值：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  server: {\n    host: \"192.168.1.50\",\n  },\n})\n```"
+  },
+  "Server.port.summary": {
+    "en": "Specify the port that the dev server listens to.",
+    "text": "指定开发服务器监听的端口。"
+  },
+  "Server.port.remarks": {
+    "en": "By default, the server automatically increments the port number when the configured port is occupied.",
+    "text": "默认情况下，当配置的端口被占用时，服务器会自动递增端口号。"
+  },
+  "Server.port.default": {
+    "en": "Rsbuild defaults this option to `3000`.",
+    "text": "Rsbuild 默认将该选项设置为 `3000`。"
+  },
+  "Server.port.example.0": {
+    "en": "Set the port to a custom value:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  server: {\n    port: 3470,\n  },\n})\n```",
+    "text": "将端口设置为自定义值：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  server: {\n    port: 3470,\n  },\n})\n```"
+  },
+  "Server.proxy.summary": {
+    "en": "Configure proxy rules for the dev server or preview server to proxy requests to the specified service.",
+    "text": "为开发服务器或预览服务器配置代理规则，将请求代理到指定的服务。"
+  },
+  "Server.strictPort.summary": {
+    "en": "When a port is occupied, the dev server will automatically increment the port number until an available port is found.",
+    "text": "当端口被占用时，开发服务器会自动递增端口号，直到找到可用的端口。"
+  },
+  "Server.strictPort.remarks": {
+    "en": "By default, strict port mode is disabled. Set strictPort to true and the dev server will throw an exception when the port is occupied.",
+    "text": "默认情况下，严格端口模式处于禁用状态。将 strictPort 设置为 true 后，端口被占用时开发服务器会抛出异常。"
+  },
+  "Source.alias.deprecated": {
+    "en": "- Use [`Resolve.alias`](api:Resolve.alias) instead.",
+    "text": "- 请使用 [`Resolve.alias`](api:Resolve.alias) 代替。"
+  },
+  "Source.assetsInclude.summary": {
+    "en": "Include additional files that should be treated as static assets.",
+    "text": "指定额外需要被视为静态资源的文件。"
+  },
+  "Source.assetsInclude.remarks": {
+    "en": "By default, Rsbuild treats common image, font, audio, and video files as static assets.\nThrough the source.assetsInclude config, you can specify additional file types that should be treated as static assets.\nThese added static assets are processed using the same rules as the built-in supported static assets。\n\nThe usage of `source.assetsInclude` is consistent with [Condition](https://rspack.rs/config/module#condition)\nin Rspack, which supports passing in strings, regular expressions, arrays of conditions, or logical conditions\nto match the module path or assets.",
+    "text": "默认情况下，Rsbuild 会将常见的图片、字体、音频和视频文件视为静态资源。通过 source.assetsInclude 配置，你可以指定额外需要被视为静态资源的文件类型。这些新增的静态资源会按照与内置支持的静态资源相同的规则进行处理。\n\n`source.assetsInclude` 的用法与 Rspack 中的 [Condition](https://rspack.rs/config/module#condition) 一致，支持传入字符串、正则表达式、条件数组或逻辑条件，用于匹配模块路径或资源。"
+  },
+  "Source.decorators.summary": {
+    "en": "Used to configure the decorators syntax.",
+    "text": "用于配置装饰器语法。"
+  },
+  "Source.decorators.remarks": {
+    "en": "See [`Decorators.version`](api:Decorators.version) for more information.",
+    "text": "更多信息请参见 [`Decorators.version`](api:Decorators.version)。"
+  },
+  "Source.define.summary": {
+    "en": "The `define` options is used to define some values or expressions at compile time.",
+    "text": "`define` 选项用于在编译时定义一些值或表达式。"
+  },
+  "Source.define.remarks": {
+    "en": "- If the value provided is a string, it will be utilized as a code fragment.\n\n- If the value provided is an object, all its keys will be defined in the same manner.\n\n- If the value isn't a string, it will be stringified, with functions included.\n\n- Notably, if a `typeof` prefix is attached to the key, it will be exclusively defined for `typeof` calls.\"",
+    "text": "- 如果提供的值是字符串，它将被用作代码片段。\n\n- 如果提供的值是对象，它的所有 key 都会以相同的方式定义。\n\n- 如果提供的值不是字符串，它会被字符串化（包括函数）。\n\n- 需要注意的是，如果 key 带有 `typeof` 前缀，它将只针对 `typeof` 调用进行定义。"
+  },
+  "Source.define.example.0": {
+    "en": "Using `define` for environment variables.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    define: {\n      BUILD_VERSION: JSON.stringify(process.env.BUILD_VERSION ?? 'unknown_version'),\n      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),\n    },\n  },\n})\n```\n\nExpressions will be replaced with the corresponding code fragments:\n\n```js\nconst version = BUILD_VERSION;\nif (process.env.NODE_ENV === 'development') {}\n\n// ⬇️ Turn into being...\nconst version = \"unknown_version\";\nif (\"development\" === 'development') {}\n```",
+    "text": "使用 `define` 定义环境变量。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    define: {\n      BUILD_VERSION: JSON.stringify(process.env.BUILD_VERSION ?? 'unknown_version'),\n      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),\n    },\n  },\n})\n```\n\n表达式会被替换为对应的代码片段：\n\n```js\nconst version = BUILD_VERSION;\nif (process.env.NODE_ENV === 'development') {}\n\n// ⬇️ Turn into being...\nconst version = \"unknown_version\";\nif (\"development\" === 'development') {}\n```"
+  },
+  "Source.define.example.1": {
+    "en": "Using `define` for `typeof`.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    define: {\n      'typeof window': JSON.stringify(\"undefined\"),\n    },\n  },\n})\n```\n\nThe `typeof` expressions will be replaced with the corresponding code fragments:\n\n```js\nif (typeof window !== 'undefined') {}\n\n// ⬇️ Turn into being...\nif (\"undefined\" !== 'undefined') {}\n```",
+    "text": "对 `typeof` 使用 `define`。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    define: {\n      'typeof window': JSON.stringify(\"undefined\"),\n    },\n  },\n})\n```\n\n`typeof` 表达式会被替换为对应的代码片段：\n\n```js\nif (typeof window !== 'undefined') {}\n\n// ⬇️ Turn into being...\nif (\"undefined\" !== 'undefined') {}\n```"
+  },
+  "Source.define.example.2": {
+    "en": "Using `define` with objects.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    define: {\n      'import.meta': {\n        foo: JSON.stringify('foo'),\n        bar: { baz: 0 },\n      },\n    },\n  },\n})\n```\n\nExpressions will be replaced with the corresponding code fragments:\n\n```js\nconsole.log(import.meta)\n\n// ⬇️ Turn into being...\nconsole.log({ foo: \"foo\", bar: { baz: 0 } })\n```",
+    "text": "使用 `define` 定义对象。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    define: {\n      'import.meta': {\n        foo: JSON.stringify('foo'),\n        bar: { baz: 0 },\n      },\n    },\n  },\n})\n```\n\n表达式会被替换为对应的代码片段：\n\n```js\nconsole.log(import.meta)\n\n// ⬇️ Turn into being...\nconsole.log({ foo: \"foo\", bar: { baz: 0 } })\n```"
+  },
+  "Source.entry.summary": {
+    "en": "The [`Entry`](api:Entry) option is used to set the entry module.",
+    "text": "[`Entry`](api:Entry) 选项用于设置入口模块。"
+  },
+  "Source.entry.example.0": {
+    "en": "- Use a single entry:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: './src/pages/main/index.js',\n  },\n})\n```",
+    "text": "- 使用单个入口：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: './src/pages/main/index.js',\n  },\n})\n```"
+  },
+  "Source.entry.example.1": {
+    "en": "- Use a single entry with multiple entry modules:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: ['./src/prefetch.js', './src/pages/main/index.js'],\n  },\n})\n```",
+    "text": "- 使用包含多个入口模块的单个入口：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: ['./src/prefetch.js', './src/pages/main/index.js'],\n  },\n})\n```"
+  },
+  "Source.entry.example.2": {
+    "en": "- Use multiple entries(with multiple entry modules):\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: {\n      foo: './src/pages/foo/index.js',\n      bar: ['./src/pages/bar/index.js', './src/post.js'], // multiple entry modules is allowed\n    },\n  },\n})\n```",
+    "text": "- 使用多个入口（每个入口包含多个入口模块）：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: {\n      foo: './src/pages/foo/index.js',\n      bar: ['./src/pages/bar/index.js', './src/post.js'], // multiple entry modules is allowed\n    },\n  },\n})\n```"
+  },
+  "Source.entry.example.3": {
+    "en": "- Use multiple entries with [`EntryDescription`](api:EntryDescription):\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: {\n      foo: './src/pages/foo/index.js',\n      bar: {\n        import: ['./src/prefetch.js', './src/pages/bar'],\n      },\n    },\n  },\n})\n```",
+    "text": "- 使用 [`EntryDescription`](api:EntryDescription) 配置多个入口：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: {\n      foo: './src/pages/foo/index.js',\n      bar: {\n        import: ['./src/prefetch.js', './src/pages/bar'],\n      },\n    },\n  },\n})\n```"
+  },
+  "Source.exclude.summary": {
+    "en": "The `source.exclude` is used to specify JavaScript files that should be excluded from compilation.",
+    "text": "`source.exclude` 用于指定需要从编译中排除的 JavaScript 文件。"
+  },
+  "Source.exclude.remarks": {
+    "en": "By default, Rsbuild compiles JavaScript files in the current directory and TypeScript/JSX files\nin all directories. Through the `source.exclude` config, you can specify files or directories\nthat should be excluded from compilation.\nThe usage of `source.exclude` is consistent with [Rule.exclude](https://rspack.rs/config/module#ruleexclude)\nin Rspack, which supports passing in strings or regular expressions to match module paths.",
+    "text": "默认情况下，Rsbuild 会编译当前目录下的 JavaScript 文件，以及所有目录下的 TypeScript/JSX 文件。通过 `source.exclude` 配置，你可以指定需要从编译中排除的文件或目录。\n`source.exclude` 的用法与 Rspack 中的 [Rule.exclude](https://rspack.rs/config/module#ruleexclude) 一致，支持传入字符串或正则表达式来匹配模块路径。"
+  },
+  "Source.exclude.example.0": {
+    "en": "- Exclude specific files or directories\n\nYou can exclude specific files or directories from compilation to improve build performance\nor avoid processing certain files:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  source: {\n    exclude: [\n      // Exclude all files in the test directory\n      /[\\\\/]test[\\\\/]/,\n      // Exclude specific file\n      './src/legacy-file.js',\n      // Exclude files matching a pattern\n      /\\.stories\\.(js|ts)x?$/,\n    ],\n  },\n})\n```",
+    "text": "- 排除特定的文件或目录\n\n你可以将特定的文件或目录排除在编译之外，以提升构建性能或避免处理某些文件：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  source: {\n    exclude: [\n      // Exclude all files in the test directory\n      /[\\\\/]test[\\\\/]/,\n      // Exclude specific file\n      './src/legacy-file.js',\n      // Exclude files matching a pattern\n      /\\.stories\\.(js|ts)x?$/,\n    ],\n  },\n})\n```"
+  },
+  "Source.exclude.example.1": {
+    "en": "- Exclude third-party dependencies\n\nYou can exclude specific third-party dependencies that don't need compilation:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nimport path from 'node:path'\nimport { createRequire } from 'node:module'\n\nconst require = createRequire(import.meta.url)\n\nexport default defineConfig({\n  source: {\n    exclude: [\n      // Exclude specific package\n      path.dirname(require.resolve('lodash')),\n      // Exclude using regex pattern\n      /node_modules[\\\\/]lodash-es[\\\\/]/,\n    ],\n  },\n})\n```",
+    "text": "- 排除第三方依赖\n\n你可以排除不需要编译的特定第三方依赖：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nimport path from 'node:path'\nimport { createRequire } from 'node:module'\n\nconst require = createRequire(import.meta.url)\n\nexport default defineConfig({\n  source: {\n    exclude: [\n      // Exclude specific package\n      path.dirname(require.resolve('lodash')),\n      // Exclude using regex pattern\n      /node_modules[\\\\/]lodash-es[\\\\/]/,\n    ],\n  },\n})\n```"
+  },
+  "Source.include.summary": {
+    "en": "The `source.include` is used to specify additional JavaScript files that need to be compiled.",
+    "text": "`source.include` 用于指定额外需要编译的 JavaScript 文件。"
+  },
+  "Source.include.remarks": {
+    "en": "To avoid redundant compilation, by default, Rsbuild only compiles JavaScript\nfiles in the current directory and TypeScript and JSX files in all directories.\nIt does not compile JavaScript files under `node_modules`.\n\nThrough the `source.include` config, you can specify directories or modules\nthat need to be compiled by Rsbuild.\nThe usage of `source.include` is consistent with [Rule.include](https://rspack.rs/config/module#ruleinclude)\nin Rspack, which supports passing in strings or regular expressions to match the module path.",
+    "text": "为了避免重复编译，默认情况下，Rsbuild 只会编译当前目录下的 JavaScript\n文件以及所有目录下的 TypeScript 和 JSX 文件。它不会编译 `node_modules` 下的 JavaScript 文件。\n\n通过 `source.include` 配置，你可以指定需要被 Rsbuild 编译的目录或模块。\n`source.include` 的用法与 Rspack 中的 [Rule.include](https://rspack.rs/config/module#ruleinclude) 一致，支持传入字符串或正则表达式来匹配模块路径。"
+  },
+  "Source.include.default": {
+    "en": "When unset, Rsbuild compiles JavaScript files in the current directory and TypeScript or JSX files in all directories, while excluding JavaScript files under `node_modules`.",
+    "text": "未设置时，Rsbuild 会编译当前目录下的 JavaScript 文件以及所有目录下的 TypeScript 或 JSX 文件，同时排除 `node_modules` 下的 JavaScript 文件。"
+  },
+  "Source.include.example.0": {
+    "en": "- Compile Npm Packages\n\nA typical usage scenario is to compile npm packages under `node_modules`,\nbecause some third-party dependencies have ESNext syntax, which may not be supported in Lynx.\nYou can solve the problem by using this config to specify the dependencies\nthat need to be compiled.\n\n```js\nimport { createRequire } from 'node:module'\nimport path from 'node:path'\n\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nconst require = createRequire(import.meta.url)\n\nexport default defineConfig({\n  source: {\n    include: [\n      // Method 1:\n      // First get the path of the module by `require.resolve`\n      // Then pass path.dirname to point to the corresponding directory\n      path.dirname(require.resolve('query-string')),\n      // Method 2:\n      // Match by regular expression\n      // All paths containing `node_modules/query-string/` will be matched\n      /node_modules[\\\\/]query-string[\\\\/]/,\n    ],\n  },\n})\n```",
+    "text": "- 编译 npm 包\n\n一个典型的使用场景是编译 `node_modules` 下的 npm 包，因为部分第三方依赖包含 ESNext 语法，而 Lynx 可能不支持这些语法。你可以通过该配置指定需要编译的依赖，从而解决这个问题。\n\n```js\nimport { createRequire } from 'node:module'\nimport path from 'node:path'\n\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nconst require = createRequire(import.meta.url)\n\nexport default defineConfig({\n  source: {\n    include: [\n      // Method 1:\n      // First get the path of the module by `require.resolve`\n      // Then pass path.dirname to point to the corresponding directory\n      path.dirname(require.resolve('query-string')),\n      // Method 2:\n      // Match by regular expression\n      // All paths containing `node_modules/query-string/` will be matched\n      /node_modules[\\\\/]query-string[\\\\/]/,\n    ],\n  },\n})\n```"
+  },
+  "Source.include.example.1": {
+    "en": "- Compile Libraries in Monorepo\n\n```js\nimport path from 'node:path'\nimport { fileURLToPath } from 'node:url'\n\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nconst __dirname = path.dirname(fileURLToPath(import.meta.url))\n\nconst packagesDir = path.resolve(__dirname, '../../packages')\n\nexport default defineConfig({\n  source: {\n    include: [\n      // Compile all files in Monorepo's package directory\n      // It is recommended to exclude the node_modules\n      {\n        and: [packagesDir, { not: /[\\\\/]node_modules[\\\\/]/ }],\n      },\n    ],\n  },\n})\n```",
+    "text": "- 编译 Monorepo 中的库\n\n```js\nimport path from 'node:path'\nimport { fileURLToPath } from 'node:url'\n\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nconst __dirname = path.dirname(fileURLToPath(import.meta.url))\n\nconst packagesDir = path.resolve(__dirname, '../../packages')\n\nexport default defineConfig({\n  source: {\n    include: [\n      // Compile all files in Monorepo's package directory\n      // It is recommended to exclude the node_modules\n      {\n        and: [packagesDir, { not: /[\\\\/]node_modules[\\\\/]/ }],\n      },\n    ],\n  },\n})\n```"
+  },
+  "Source.preEntry.summary": {
+    "en": "Add a script before the entry file of each page. This script will be executed before the page code.\nIt can be used to execute global logics, such as injecting polyfills, setting global styles, etc.",
+    "text": "在每个页面的入口文件之前添加一段脚本。该脚本会在页面代码之前执行。它可以用于执行全局逻辑，如注入 polyfill、设置全局样式等。"
+  },
+  "Source.preEntry.remarks": {
+    "en": "See [source.preEntry](https://rsbuild.rs/config/source/pre-entry) for more details.",
+    "text": "更多详情请参见 [source.preEntry](https://rsbuild.rs/config/source/pre-entry)。"
+  },
+  "Source.preEntry.example.0": {
+    "en": "Relative path will be resolved relative to the project root directory.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    preEntry: './src/polyfill.ts',\n  },\n})\n```",
+    "text": "相对路径会基于项目根目录进行解析。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    preEntry: './src/polyfill.ts',\n  },\n})\n```"
+  },
+  "Source.transformImport.summary": {
+    "en": "The [`TransformImport`](api:TransformImport) option transforms the import paths to enable modular imports from subpaths of third-party packages, similar to the functionality provided by [babel-plugin-import](https://npmjs.com/package/babel-plugin-import).",
+    "text": "[`TransformImport`](api:TransformImport) 选项用于转换导入路径，以便从第三方包的子路径中按需导入模块，功能类似于 [babel-plugin-import](https://npmjs.com/package/babel-plugin-import)。"
+  },
+  "Source.transformImport.example.0": {
+    "en": "When using the TUX component library, you can import components on demand with the following config:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  source: {\n    transformImport: [\n      {\n        libraryName: 'foo',\n        customName: 'foo/src/components/{{ member }}/{{ member }}',\n      },\n    ],\n  },\n})\n```\n\nThis will transform the following source code:\n\n```js\nimport { Button } from 'foo'\n```\n\nto:\n\n```js\nimport { Button } from 'foo/src/components/Button/Button'\n```",
+    "text": "使用 TUX 组件库时，可以通过以下配置按需引入组件：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  source: {\n    transformImport: [\n      {\n        libraryName: 'foo',\n        customName: 'foo/src/components/{{ member }}/{{ member }}',\n      },\n    ],\n  },\n})\n```\n\n这会将以下源代码：\n\n```js\nimport { Button } from 'foo'\n```\n\n转换为：\n\n```js\nimport { Button } from 'foo/src/components/Button/Button'\n```"
+  },
+  "Source.tsconfigPath.summary": {
+    "en": "Configure a custom `tsconfig.json` file path to use, can be a relative or absolute path.",
+    "text": "配置自定义的 `tsconfig.json` 文件路径，可以是相对路径或绝对路径。"
+  },
+  "Source.tsconfigPath.remarks": {
+    "en": "The `tsconfigPath` configuration affects the following behaviors:\n\n- The `paths` field is used to configure [`Path Aliases`](api:Resolve.alias).\n\n- Sets the scope and rules for the [Type Check Plugin](https://rsbuild.rs/guide/basic/typescript#type-checking).",
+    "text": "`tsconfigPath` 配置会影响以下行为：\n\n- `paths` 字段用于配置 [`Path Aliases`](api:Resolve.alias)。\n\n- 设置[类型检查插件](https://rsbuild.rs/guide/basic/typescript#type-checking)的作用范围和规则。"
+  },
+  "Source.tsconfigPath.example.0": {
+    "en": "Relative path will be resolved relative to the project root directory.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    tsconfigPath: './tsconfig.build.json',\n  },\n})\n```",
+    "text": "相对路径会基于项目根目录进行解析。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    tsconfigPath: './tsconfig.build.json',\n  },\n})\n```"
+  },
+  "SourceMap.css.summary": {
+    "en": "Whether to generate CSS source maps.",
+    "text": "是否生成 CSS source map。"
+  },
+  "SourceMap.css.remarks": {
+    "en": "Lynx environments enable CSS source maps so that CSS diagnostics can be\nmapped back to the source; all `.map` assets are removed before emit.",
+    "text": "Lynx environment 中会启用 CSS source map，以便将 CSS 诊断信息映射回源码；所有 `.map` 资源都会在输出前被移除。"
+  },
+  "SourceMap.css.default": {
+    "en": "`true` in Lynx environments, `false` otherwise.",
+    "text": "在 Lynx environment 中为 `true`，其他情况下为 `false`。"
+  },
+  "SourceMap.css.example.0": {
+    "en": "Disable CSS sourcemap.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    sourceMap: {\n      css: false,\n    },\n  },\n})\n```",
+    "text": "禁用 CSS source map。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    sourceMap: {\n      css: false,\n    },\n  },\n})\n```"
+  },
+  "SourceMap.js.summary": {
+    "en": "How the source map should be generated. Setting it to `false` will disable the source map.",
+    "text": "source map 的生成方式。设置为 `false` 将禁用 source map。"
+  },
+  "SourceMap.js.remarks": {
+    "en": "See [Rspack - Devtool](https://rspack.rs/config/devtool) for details.",
+    "text": "详见 [Rspack - Devtool](https://rspack.rs/config/devtool)。"
+  },
+  "SourceMap.js.default": {
+    "en": "When `output.sourceMap` is an object and `js` is unset, it defaults to `'cheap-module-source-map'` in development. In production, it defaults to `'source-map'` for Lynx environments and `false` otherwise.",
+    "text": "当 `output.sourceMap` 为对象且未设置 `js` 时，开发环境下默认为 `'cheap-module-source-map'`。生产环境下，Lynx environment 默认为 `'source-map'`，其他情况下默认为 `false`。"
+  },
+  "SourceMap.js.example.0": {
+    "en": "- Enable high-quality source-maps for production:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    sourceMap: {\n      js: process.env['NODE_ENV'] === 'production'\n        ? 'source-map'\n        : 'cheap-module-source-map',\n    },\n  },\n})\n```",
+    "text": "- 在生产环境中启用高质量的 source map：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    sourceMap: {\n      js: process.env['NODE_ENV'] === 'production'\n        ? 'source-map'\n        : 'cheap-module-source-map',\n    },\n  },\n})\n```"
+  },
+  "SourceMap.js.example.1": {
+    "en": "- Disable source-map generation:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    sourceMap: {\n      js: false,\n    },\n  },\n})\n```",
+    "text": "- 禁用 source map 生成：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    sourceMap: {\n      js: false,\n    },\n  },\n})\n```"
+  },
+  "SourceMap.js.example.2": {
+    "en": "- Use high-quality source-maps for all environments:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    sourceMap: {\n      js: 'source-map',\n    },\n  },\n})\n```",
+    "text": "- 在所有环境中使用高质量的 source map：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  output: {\n    sourceMap: {\n      js: 'source-map',\n    },\n  },\n})\n```"
+  },
+  "Tools.bundlerChain.summary": {
+    "en": "The [`Tools.bundlerChain`](api:Tools.bundlerChain) changes the options of [Rspack](https://rspack.rs) using [rspack-chain](https://github.com/rspack-contrib/rspack-chain).",
+    "text": "[`Tools.bundlerChain`](api:Tools.bundlerChain) 通过 [rspack-chain](https://github.com/rspack-contrib/rspack-chain) 修改 [Rspack](https://rspack.rs) 的选项。"
+  },
+  "Tools.bundlerChain.example.0": {
+    "en": "```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    bundlerChain(chain) {\n      chain.resolve.fullySpecified(true)\n    },\n  },\n})\n```\n\nSee [rspack-chain](https://github.com/rspack-contrib/rspack-chain) for details.",
+    "text": "```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    bundlerChain(chain) {\n      chain.resolve.fullySpecified(true)\n    },\n  },\n})\n```\n\n详见 [rspack-chain](https://github.com/rspack-contrib/rspack-chain)。"
+  },
+  "Tools.cssExtract.summary": {
+    "en": "The [`CssExtract`](api:CssExtract) controls the options of [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin)",
+    "text": "[`CssExtract`](api:CssExtract) 用于控制 [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin) 的选项。"
+  },
+  "Tools.cssLoader.summary": {
+    "en": "The [`CssLoader`](api:CssLoader) controls the options of [css-loader](https://github.com/webpack-contrib/css-loader).",
+    "text": "[`CssLoader`](api:CssLoader) 用于控制 [css-loader](https://github.com/webpack-contrib/css-loader) 的选项。"
+  },
+  "Tools.cssLoader.remarks": {
+    "en": "The default option is as follow:\n\n```js\nconst defaultOptions = {\n  modules: {\n    auto: true,\n    namedExport: false,\n    exportLocalsConvention: 'camelCase',\n    localIdentName: output.cssModules.localIdentName,\n  },\n  sourceMap: output.sourceMap,\n  // importLoaders is `1` when compiling css files, and is `2` when compiling sass/less files\n  importLoaders: 1 || 2,\n};\n```",
+    "text": "默认选项如下：\n\n```js\nconst defaultOptions = {\n  modules: {\n    auto: true,\n    namedExport: false,\n    exportLocalsConvention: 'camelCase',\n    localIdentName: output.cssModules.localIdentName,\n  },\n  sourceMap: output.sourceMap,\n  // importLoaders is `1` when compiling css files, and is `2` when compiling sass/less files\n  importLoaders: 1 || 2,\n};\n```"
+  },
+  "Tools.cssLoader.default": {
+    "en": "Uses defaults derived from `output.cssModules` and `output.sourceMap`, with `importLoaders` set to `1` for CSS files and `2` for Sass/Less files.",
+    "text": "使用基于 `output.cssModules` 和 `output.sourceMap` 推导出的默认值，其中 CSS 文件的 `importLoaders` 设置为 `1`，Sass/Less 文件设置为 `2`。"
+  },
+  "Tools.rsdoctor.summary": {
+    "en": "The [`Tools.rsdoctor`](api:Tools.rsdoctor) controls the options of [Rsdoctor](https://rsdoctor.dev/).",
+    "text": "[`Tools.rsdoctor`](api:Tools.rsdoctor) 用于控制 [Rsdoctor](https://rsdoctor.dev/) 的选项。"
+  },
+  "Tools.rsdoctor.remarks": {
+    "en": "Setting `RSDOCTOR=true` enables Rsdoctor. When it is enabled, Rspeedy merges additional plugin defaults during config normalization.",
+    "text": "设置 `RSDOCTOR=true` 可启用 Rsdoctor。启用后，Rspeedy 会在配置规范化阶段合并额外的插件默认配置。"
+  },
+  "Tools.rsdoctor.example.0": {
+    "en": "- Use the built-in Rsdoctor.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    rsdoctor: {\n      disableClientServer: true,\n    },\n  },\n})\n```\n\nSee [Rsdoctor - Configuration](https://rsdoctor.dev/config/options/options) for details.",
+    "text": "- 使用内置的 Rsdoctor。\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    rsdoctor: {\n      disableClientServer: true,\n    },\n  },\n})\n```\n\n详见 [Rsdoctor - Configuration](https://rsdoctor.dev/config/options/options)。"
+  },
+  "Tools.rspack.summary": {
+    "en": "The [`Tools.rspack`](api:Tools.rspack) controls the options of [Rspack](https://rspack.rs/).",
+    "text": "[`Tools.rspack`](api:Tools.rspack) 用于控制 [Rspack](https://rspack.rs/) 的选项。"
+  },
+  "Tools.rspack.example.0": {
+    "en": "- Use object config\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    rspack: {\n      resolve: {\n        fullySpecified: true,\n      },\n    },\n  },\n})\n```\n\nSee [Rspack - Configuration](https://rspack.rs/config/index) for details.",
+    "text": "- 使用对象配置\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    rspack: {\n      resolve: {\n        fullySpecified: true,\n      },\n    },\n  },\n})\n```\n\n详见 [Rspack - Configuration](https://rspack.rs/config/index)。"
+  },
+  "Tools.rspack.example.1": {
+    "en": "- Use function with `env` utils\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    rspack(config, { env }) {\n      if (env === 'development') {\n        config.devtool = 'cheap-source-map'\n      }\n      return config\n    },\n  },\n})\n```\n\nSee [Rsbuild - tools.rspack](https://rsbuild.rs/config/tools/rspack#env) for details.",
+    "text": "- 使用函数形式并借助 `env` 工具函数\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    rspack(config, { env }) {\n      if (env === 'development') {\n        config.devtool = 'cheap-source-map'\n      }\n      return config\n    },\n  },\n})\n```\n\n详见 [Rsbuild - tools.rspack](https://rsbuild.rs/config/tools/rspack#env)。"
+  },
+  "Tools.rspack.example.2": {
+    "en": "- Use function with `mergeConfig` utils\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    rspack(config, { mergeConfig }) {\n      return mergeConfig(config, {\n        resolve: {\n          fullySpecified: true,\n        },\n      })\n    },\n  },\n})\n```\n\nSee [Rsbuild - tools.rspack](https://rsbuild.rs/config/tools/rspack#mergeconfig) for details.",
+    "text": "- 使用函数形式并借助 `mergeConfig` 工具函数\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    rspack(config, { mergeConfig }) {\n      return mergeConfig(config, {\n        resolve: {\n          fullySpecified: true,\n        },\n      })\n    },\n  },\n})\n```\n\n详见 [Rsbuild - tools.rspack](https://rsbuild.rs/config/tools/rspack#mergeconfig)。"
+  },
+  "Tools.rspack.example.3": {
+    "en": "- Use function with `appendPlugins` utils\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    rspack(config, { appendPlugins, rspack }) {\n      appendPlugins(new rspack.BannerPlugin({ banner: 'Hello, World!' }))\n      return config\n    },\n  },\n})\n```\n\nSee [Rsbuild - tools.rspack](https://rsbuild.rs/config/tools/rspack#appendplugins) for details.",
+    "text": "- 使用函数形式并借助 `appendPlugins` 工具函数\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  tools: {\n    rspack(config, { appendPlugins, rspack }) {\n      appendPlugins(new rspack.BannerPlugin({ banner: 'Hello, World!' }))\n      return config\n    },\n  },\n})\n```\n\n详见 [Rsbuild - tools.rspack](https://rsbuild.rs/config/tools/rspack#appendplugins)。"
+  },
+  "Tools.swc.summary": {
+    "en": "The [`Tools.swc`](api:Tools.swc) controls the options of [builtin:swc-loader](https://rspack.rs/guide/features/builtin-swc-loader).",
+    "text": "[`Tools.swc`](api:Tools.swc) 用于控制 [builtin:swc-loader](https://rspack.rs/guide/features/builtin-swc-loader) 的选项。"
+  },
+  "TransformImport.camelToDashComponentName.summary": {
+    "en": "Whether to convert camelCase imports to kebab-case.",
+    "text": "是否将驼峰命名（camelCase）的导入转换为短横线命名（kebab-case）。"
+  },
+  "TransformImport.camelToDashComponentName.default": {
+    "en": "Rsbuild defaults this option to `true`.",
+    "text": "Rsbuild 默认将该选项设置为 `true`。"
+  },
+  "TransformImport.camelToDashComponentName.example.0": {
+    "en": "- Input:\n\n```js\nimport { ButtonGroup } from 'foo'\n```\n\n- Output:\n\nWhen set to `true`:\n```js\nimport ButtonGroup from 'foo/button-group'\n```\n\nWhen set to `false`:\n```js\nimport ButtonGroup from 'foo/ButtonGroup'\n```",
+    "text": "- 输入：\n\n```js\nimport { ButtonGroup } from 'foo'\n```\n\n- 输出：\n\n设置为 `true` 时：\n\n```js\nimport ButtonGroup from 'foo/button-group'\n```\n\n设置为 `false` 时：\n\n```js\nimport ButtonGroup from 'foo/ButtonGroup'\n```"
+  },
+  "TransformImport.customName.summary": {
+    "en": "Customize the transformed path.",
+    "text": "自定义转换后的路径。"
+  },
+  "TransformImport.customName.remarks": {
+    "en": "You you can specify the format of the transformed path.\nFor example, by setting it to `my-lib/{{ camelCase member }}`, you can convert the member into camelCase.\n\nThe following formats are supported:\n\n- `kebabCase`: lowercase letters, words joined by hyphens. For example: `my-variable-name`.\n\n- `snakeCase`: lowercase letters, words joined by underscores. For example: `my_variable_name`.\n\n- `camelCase`: first letter lowercase, the first letter of each following word uppercase. For example: `myVariableName`.\n\n- `upperCase`: uppercase letters, other characters unchanged. For example: `MY-VARIABLE-NAME`.\n\n- `lowerCase`: lowercase letters, other characters unchanged. For example: `my-variable-name`.",
+    "text": "你可以指定转换后路径的格式。例如，将其设置为 `my-lib/{{ camelCase member }}`，即可将 member 转换为驼峰格式。\n\n支持以下格式：\n\n- `kebabCase`：字母小写，单词之间使用连字符连接。例如：`my-variable-name`。\n\n- `snakeCase`：字母小写，单词之间使用下划线连接。例如：`my_variable_name`。\n\n- `camelCase`：首字母小写，其后每个单词的首字母大写。例如：`myVariableName`。\n\n- `upperCase`：字母大写，其他字符不变。例如：`MY-VARIABLE-NAME`。\n\n- `lowerCase`：字母小写，其他字符不变。例如：`my-variable-name`。"
+  },
+  "TransformImport.libraryDirectory.summary": {
+    "en": "Used to splice the transformed path, the splicing rule is `${libraryName}/${libraryDirectory}/${member}`, where member is the imported member.",
+    "text": "用于拼接转换后的路径，拼接规则为 `${libraryName}/${libraryDirectory}/${member}`，其中 member 为导入的成员。"
+  },
+  "TransformImport.libraryDirectory.example.0": {
+    "en": "- Input:\n\n```js\nimport { Button } from 'foo'\n```\n\n- Output:\n\n```js\nimport Button from 'foo/lib/button'\n```",
+    "text": "- 输入：\n\n```js\nimport { Button } from 'foo'\n```\n\n- 输出：\n\n```js\nimport Button from 'foo/lib/button'\n```"
+  },
+  "TransformImport.libraryName.summary": {
+    "en": "The original import path that needs to be transformed.",
+    "text": "需要转换的原始导入路径。"
+  },
+  "TransformImport.libraryName.remarks": {
+    "en": "This option is required.",
+    "text": "该选项为必填项。"
+  },
+  "TransformImport.transformToDefaultImport.summary": {
+    "en": "Whether to convert import statements to default imports.",
+    "text": "是否将导入语句转换为默认导入。"
+  },
+  "TransformImport.transformToDefaultImport.default": {
+    "en": "Rsbuild defaults this option to `true`.",
+    "text": "Rsbuild 默认将该选项设置为 `true`。"
+  },
+  "TransformImport.transformToDefaultImport.example.0": {
+    "en": "- Input:\n\n```js\nimport { Button } from 'foo'\n```\n\n- Output:\n\nWhen set to `true`:\n```js\nimport Button from 'foo/button'\n```\n\nWhen set to `false`:\n```js\nimport { Button } from 'foo/button'\n```",
+    "text": "- 输入：\n\n```js\nimport { Button } from 'foo'\n```\n\n- 输出：\n\n设置为 `true` 时：\n\n```js\nimport Button from 'foo/button'\n```\n\n设置为 `false` 时：\n\n```js\nimport { Button } from 'foo/button'\n```"
+  },
+  "BundleFilename.summary": {
+    "en": "The name of the bundle files.\n\nIt can be a string with placeholders (`[name]`, `[contenthash]`,\n`[platform]`), or a function that returns a string based on the\n[`BundleFilenameContext`](api:BundleFilenameContext).",
+    "text": "bundle 文件的名称。\n\n可以是包含占位符（`[name]`、`[contenthash]`、\n`[platform]`）的字符串，也可以是一个根据\n[`BundleFilenameContext`](api:BundleFilenameContext) 返回字符串的函数。"
+  },
+  "ConsoleType.summary": {
+    "en": "The type of the console method.",
+    "text": "console 方法的类型。"
+  },
+  "Entry.example.0": {
+    "en": "- Use a single entry:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: './src/pages/main/index.js',\n  }\n})\n```",
+    "text": "- 使用单个入口：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: './src/pages/main/index.js',\n  }\n})\n```"
+  },
+  "Entry.example.1": {
+    "en": "- Use a single entry with multiple entry modules:\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: ['./src/prefetch.js', './src/pages/main/index.js'],\n  }\n})\n```",
+    "text": "- 使用包含多个入口模块的单个入口：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: ['./src/prefetch.js', './src/pages/main/index.js'],\n  }\n})\n```"
+  },
+  "Entry.example.2": {
+    "en": "- Use multiple entries(with multiple entry modules):\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: {\n      foo: './src/pages/foo/index.js',\n      bar: ['./src/pages/bar/index.js', './src/post.js'], // multiple entry modules is allowed\n    }\n  }\n})\n```",
+    "text": "- 使用多个入口（每个入口包含多个入口模块）：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: {\n      foo: './src/pages/foo/index.js',\n      bar: ['./src/pages/bar/index.js', './src/post.js'], // multiple entry modules is allowed\n    }\n  }\n})\n```"
+  },
+  "Entry.example.3": {
+    "en": "- Use multiple entries with [`EntryDescription`](api:EntryDescription):\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: {\n      foo: './src/pages/foo/index.js',\n      bar: {\n        import: ['./src/prefetch.js', './src/pages/bar'],\n      }\n    }\n  }\n})\n```",
+    "text": "- 使用 [`EntryDescription`](api:EntryDescription) 配置多个入口：\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  source: {\n    entry: {\n      foo: './src/pages/foo/index.js',\n      bar: {\n        import: ['./src/prefetch.js', './src/pages/bar'],\n      }\n    }\n  }\n})\n```"
+  },
+  "RspeedyInstance.summary": {
+    "en": "The instance of Rspeedy.",
+    "text": "Rspeedy 实例。"
+  },
+  "rspackVersion.default": {
+    "en": "rspack.rspackVersion",
+    "text": "rspack.rspackVersion"
+  },
+  "version.default": {
+    "en": "pkg.version",
+    "text": "pkg.version"
+  },
+  "createRspeedy.summary": {
+    "en": "The `createRspeedy` method can let you create a Rspeedy instance and you can customize the build or development process in Node.js Runtime.",
+    "text": "`createRspeedy` 方法用于创建一个 Rspeedy 实例，你可以借此在 Node.js 运行时中自定义构建或开发流程。"
+  },
+  "createRspeedy.returns": {
+    "en": "- Rspeedy instance.",
+    "text": "- Rspeedy 实例。"
+  },
+  "defineConfig.summary": {
+    "en": "The `defineConfig` method is a helper function used to get TypeScript intellisense.",
+    "text": "`defineConfig` 方法是一个辅助函数，用于获取 TypeScript 智能提示。"
+  },
+  "defineConfig.example.0": {
+    "en": "Use `defineConfig` in `lynx.config.ts`:\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  // autocompletion works here!\n})\n```",
+    "text": "在 `lynx.config.ts` 中使用 `defineConfig`：\n\n```ts\nimport { defineConfig } from '@lynx-js/rspeedy'\nexport default defineConfig({\n  // autocompletion works here!\n})\n```"
+  },
+  "defineConfig.returns": {
+    "en": "- The identical config as the input config.",
+    "text": "- 与输入配置完全相同的配置。"
+  },
+  "loadConfig.summary": {
+    "en": "Load the build config by the config path.",
+    "text": "通过配置文件路径加载构建配置。"
+  },
+  "loadConfig.returns": {
+    "en": "Build config.",
+    "text": "构建配置。"
+  },
+  "mergeRspeedyConfig.summary": {
+    "en": "Merge multiple Rspeedy configuration objects.",
+    "text": "合并多个 Rspeedy 配置对象。"
+  },
+  "mergeRspeedyConfig.remarks": {
+    "en": "This is actually an alias of [mergeRsbuildConfig](https://rsbuild.rs/api/javascript-api/core#mergersbuildconfig).",
+    "text": "它实际上是 [mergeRsbuildConfig](https://rsbuild.rs/api/javascript-api/core#mergersbuildconfig) 的别名。"
+  },
+  "mergeRspeedyConfig.returns": {
+    "en": "The merged Rspeedy configuration object.",
+    "text": "合并后的 Rspeedy 配置对象。"
+  }
+}

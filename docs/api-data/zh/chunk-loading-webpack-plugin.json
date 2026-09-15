@@ -1,0 +1,22 @@
+{
+  "ChunkLoadingWebpackPlugin.summary": {
+    "en": "The ChunkLoadingWebpackPlugin enables chunk loading for Rspack in Lynx.\nIt only takes effect when `output.chunkLoading` is `'lynx'`.",
+    "text": "ChunkLoadingWebpackPlugin 为 Lynx 中的 Rspack 启用 chunk 加载能力。仅在 `output.chunkLoading` 为 `'lynx'` 时生效。"
+  },
+  "ChunkLoadingWebpackPlugin.defaultOptions.summary": {
+    "en": "`defaultOptions` is the default options that the [`ChunkLoadingWebpackPlugin`](api:ChunkLoadingWebpackPlugin) uses.",
+    "text": "`defaultOptions` 是 [`ChunkLoadingWebpackPlugin`](api:ChunkLoadingWebpackPlugin) 使用的默认选项。"
+  },
+  "ChunkLoadingWebpackPlugin.apply.summary": {
+    "en": "The entry point of a webpack plugin.",
+    "text": "webpack 插件的入口。"
+  },
+  "ChunkLoadingWebpackPlugin.apply.params.compiler": {
+    "en": "the webpack compiler",
+    "text": "webpack compiler"
+  },
+  "ChunkLoadingWebpackPluginOptions.summary": {
+    "en": "The options for ChunkLoadingWebpackPlugin",
+    "text": "ChunkLoadingWebpackPlugin 的选项"
+  }
+}

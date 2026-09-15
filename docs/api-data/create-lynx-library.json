@@ -1,0 +1,9 @@
+{
+  "id": "create-lynx-library",
+  "package": "create-lynx-library",
+  "version": "0.6.1",
+  "description": "Create native Lynx libraries",
+  "group": "libraries",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/lynx/create-lynx-library",
+  "exports": []
+}

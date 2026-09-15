@@ -32,7 +32,11 @@ export interface Surface {
   catalogId?: string;
   theme?: Readonly<Record<string, unknown>>;
   sendDataModel?: boolean | undefined;
-  /** id of the root component for this surface (must be 'root'). */
+  /**
+   * id of the root component for this surface. Set on the first non-empty
+   * `updateComponents` batch: `'root'` if that id exists, otherwise the
+   * batch's first component id.
+   */
   rootComponentId?: string | null;
   components: Map<string, ComponentInstance>;
   resources: Map<string, Resource>;

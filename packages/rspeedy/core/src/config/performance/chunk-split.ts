@@ -14,7 +14,7 @@ export interface ChunkSplit {
   /**
    * The ChunkSplitting strategy.
    *
-   * @defaultValue In Rsbuild's default chunk splitting behavior, the strategy is `'split-by-experience'`.
+   * @defaultValue Unset, which bundles everything into one chunk (same as `'all-in-one'`).
    *
    * @remarks
    *

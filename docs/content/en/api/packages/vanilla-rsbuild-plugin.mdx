@@ -1,0 +1,197 @@
+---
+title: '@lynx-js/vanilla-rsbuild-plugin'
+---
+
+# @lynx-js/vanilla-rsbuild-plugin
+
+{/* @api PackageHeader package="vanilla-rsbuild-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/vanilla-rsbuild-plugin</code> <span className="api-pkg-version">v0.1.1</span> · <a href="https://www.npmjs.com/package/@lynx-js/vanilla-rsbuild-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-vanilla" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-vanilla/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+The Vanilla DSL plugin. It builds a Lynx bundle from plain JavaScript that talks to the Element PAPI directly, without a UI framework.
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/vanilla-rsbuild-plugin -D" />
+
+## Usage
+
+With Rsbuild, register it in `rsbuild.config.ts`:
+
+```ts title="rsbuild.config.ts"
+import { defineConfig } from '@rsbuild/core'
+import { pluginVanillaLynx } from '@lynx-js/vanilla-rsbuild-plugin'
+
+export default defineConfig({
+  environments: {
+    lynx: {},
+  },
+  plugins: [pluginVanillaLynx()],
+})
+```
+
+With Rspeedy, set it in `lynx.config.ts`:
+
+```ts title="lynx.config.ts"
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginVanillaLynx } from '@lynx-js/vanilla-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [pluginVanillaLynx()],
+})
+```
+
+## Options
+
+{/* @api ApiOptions package="vanilla-rsbuild-plugin" type="PluginVanillaLynxOptions" */}
+
+<a id="pluginvanillalynxoptions"></a>
+
+### `bundleFilename` \{#bundlefilename\}
+
+- **Type:** [`VanillaBundleFilename`](#vanillabundlefilename)
+
+Override the final `.bundle` filename.
+
+When omitted, `pluginLynx`'s `output.filename.bundle` is used (default
+`'[name].[platform].bundle'`).
+
+### `engineVersion` \{#engineversion\}
+
+- **Type:** `string`
+- **Default:** `'3.5'`
+
+The minimum Lynx Engine version required by the emitted bundle.
+
+When omitted, the `targetSdkVersion` passed to `pluginLynxConfig` is used
+first.
+
+### `entries` \{#entries\}
+
+- **Type:** `Record<string, `[`VanillaLynxEntry`](#vanillalynxentry)`>`
+
+Explicit two-thread entries.
+
+When omitted, every Rsbuild `source.entry` is treated as a main-thread
+entry and optional sibling `background.ts` and `style.css` files are
+discovered by convention.
+
+### `targetSdkVersion` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#targetsdkversion\}
+
+- **Type:** `string`
+
+:::warning Deprecated
+Use `engineVersion` instead.
+:::
+
+Alias of [`PluginVanillaLynxOptions.engineVersion`](#engineversion).
+
+{/* @api-end */}
+
+## API
+
+{/* @api ApiExports package="vanilla-rsbuild-plugin" exclude="PluginVanillaLynxOptions" optionsType="PluginVanillaLynxOptions" */}
+
+## Functions \{#functions\}
+
+### `pluginVanillaLynx()` \{#pluginvanillalynx\}
+
+```ts
+function pluginVanillaLynx(options: PluginVanillaLynxOptions): RsbuildPlugin
+```
+
+Create the Vanilla Lynx DSL integration for Rsbuild or Rspeedy.
+
+A logical entry can explicitly declare its main-thread and background-thread
+sources. As a shorthand, an Rsbuild entry is treated as the main-thread
+source and optional sibling `background.ts` and `style.css` files are
+discovered by convention.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | [`PluginVanillaLynxOptions`](#pluginvanillalynxoptions) |  |
+
+**Returns:** `RsbuildPlugin`
+
+## Constants \{#constants\}
+
+### `LAYERS` \{#layers\}
+
+```ts
+const LAYERS: Readonly<{ BACKGROUND: "vanilla:background"; MAIN_THREAD: "vanilla:main-thread" }>
+```
+
+Rspack layers used by Vanilla Lynx entries.
+
+## Types \{#types\}
+
+### `LynxTemplatePlugin` \{#lynxtemplateplugin\}
+
+The static API of
+[`LynxTemplatePlugin`](/api/packages/template-webpack-plugin#lynxtemplateplugin)
+that `pluginLynx` exposes. Get it with
+`api.useExposed(Symbol.for('LynxTemplatePlugin')).LynxTemplatePlugin`.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="lynxtemplateplugin-getlynxtemplatepluginhooks"></a>`getLynxTemplatePluginHooks` | `(compilation: Compilation) => `[`TemplateHooks`](#templatehooks) | Returns the [`TemplateHooks`](#templatehooks) of a compilation. |
+
+### `TemplateHooks` \{#templatehooks\}
+
+Re-exported from [`@lynx-js/template-webpack-plugin`](/api/packages/template-webpack-plugin#templatehooks).
+
+### `VanillaBundleFilenameContext` \{#vanillabundlefilenamecontext\}
+
+Context passed to a Vanilla Lynx bundle filename function.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="vanillabundlefilenamecontext-entryname"></a>`entryName` | `string` | The logical Rsbuild entry name. |
+| <a id="vanillabundlefilenamecontext-lazybundle"></a>`lazyBundle` | `false` | Vanilla Lynx currently emits only the main card bundle. |
+| <a id="vanillabundlefilenamecontext-platform"></a>`platform` | `string` | The Rsbuild environment name. |
+
+### `VanillaLynxEntry` \{#vanillalynxentry\}
+
+The two thread source files of a logical Vanilla Lynx entry.
+
+#### `VanillaLynxEntry.background?` \{#vanillalynxentry-background\}
+
+- **Type:** `string | false`
+
+Source executed in the background JavaScript thread.
+
+When omitted, a sibling `background.ts` is used when it exists. Set this
+to `false` to explicitly create a main-thread-only bundle.
+
+#### `VanillaLynxEntry.css?` \{#vanillalynxentry-css\}
+
+- **Type:** `string | false`
+
+CSS source encoded into the Lynx template.
+
+When omitted, a sibling `style.css` is used when it exists. Set this to
+`false` to disable the convention.
+
+#### `VanillaLynxEntry.mainThread` \{#vanillalynxentry-mainthread\}
+
+- **Type:** `string`
+
+Module request executed on the Lynx main thread with Element PAPI globals.
+
+The request is resolved by Rspeedy or Rsbuild. When it names an existing
+local file, optional sibling `background.ts` and `style.css` files are
+discovered by convention.
+
+### `VanillaBundleFilename` \{#vanillabundlefilename\}
+
+```ts
+type VanillaBundleFilename = string | ((context: VanillaBundleFilenameContext) => string)
+```
+
+The final Vanilla Lynx bundle filename.
+
+{/* @api-end */}

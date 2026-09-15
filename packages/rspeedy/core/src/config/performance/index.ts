@@ -37,7 +37,11 @@ export interface Performance {
    *
    * @defaultValue false
    *
-   * @beta This feature is experimental and may be changed in the future.
+   * @remarks
+   *
+   * This feature is experimental and may be changed in the future.
+   *
+   * @beta
    *
    * @example
    *
@@ -75,7 +79,7 @@ export interface Performance {
   /**
    * {@link Performance.chunkSplit} is used to configure the chunk splitting strategy.
    *
-   * @defaultValue For web builds, Rsbuild currently uses `{ strategy: 'split-by-experience' }` when this option is unset.
+   * @defaultValue Unset, which bundles everything into one chunk (same as `'all-in-one'`).
    *
    * @deprecated Use the top-level {@link Config.splitChunks} option instead.
    */
@@ -85,7 +89,7 @@ export interface Performance {
   /**
    * Whether capture timing information in Lynx runtime integrations such as ReactLynx.
    *
-   * @defaultValue Rspeedy sets this to `true` when `DEBUG` contains `rspeedy`; otherwise it leaves the option unset.
+   * @defaultValue Rspeedy and `pluginReactLynx` set this to `true` when `DEBUG` contains `lynx`, `rspeedy` or `*` (Rspeedy also accepts `rsbuild`); otherwise the option is left unset.
    *
    * @example
    *
@@ -144,7 +148,7 @@ export interface Performance {
    *
    * @defaultValue true
    *
-   * {@link Performance.printFileSize}
+   * @remarks
    *
    * See {@link https://rsbuild.rs/config/performance/print-file-size | Rsbuild - performance.printFileSize} for details.
    *
@@ -236,7 +240,7 @@ export interface Performance {
    *
    * To exclude static assets that meet certain criteria, use a filter function with exclude. If both include and exclude are set, exclude will take precedence.
    *
-   * Rspeedy defaults to excluding source map, license files, and .d.ts type files, as these files do not affect page load performance.
+   * Rsbuild defaults to excluding source map, license files, and .d.ts type files, as these files do not affect page load performance.
    *
    * exclude .html files in addition to the default:
    *

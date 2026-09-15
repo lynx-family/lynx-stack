@@ -200,15 +200,16 @@ function resolveComponentInput(input: CatalogInput): ResolvedCatalogEntry {
  *
  * @example
  * import { Text, Button } from '@lynx-js/genui/a2ui';
- * import { defineCatalog, defineFunction } from '@lynx-js/genui/a2ui';
- * import { required } from '@lynx-js/genui/a2ui/functions';
- * import textManifest from '@lynx-js/genui/a2ui/catalog/Text/catalog.json'
+ * import { basicFunctions, defineCatalog } from '@lynx-js/genui/a2ui';
+ * import { MyCard } from './MyCard';
+ * import myCardManifest from './dist/catalog/MyCard/catalog.json'
  *   with { type: 'json' };
  *
  * const catalog = defineCatalog([
- *   [Text, textManifest],
+ *   Text,
  *   Button,
- *   defineFunction(required),
+ *   [MyCard, myCardManifest],
+ *   ...basicFunctions,
  * ]);
  */
 export function defineCatalog(inputs: readonly CatalogInput[]): Catalog {

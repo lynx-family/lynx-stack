@@ -1,0 +1,35 @@
+{
+  "name": "docs",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The documentation site for lynx-stack",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "rspress build",
+    "dev": "rspress dev",
+    "generate": "node scripts/generate-api-data.ts && node scripts/expand-api-docs.ts",
+    "i18n:apply": "node scripts/i18n-segments.ts apply",
+    "i18n:check": "node scripts/i18n-extract.ts zh --check",
+    "i18n:dump": "node scripts/i18n-segments.ts dump",
+    "i18n:extract": "node scripts/i18n-extract.ts zh",
+    "preview": "rspress preview"
+  },
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@rsbuild/plugin-sass": "2.0.1",
+    "@rspress/core": "2.0.21",
+    "@rspress/plugin-client-redirects": "2.0.21",
+    "@shikijs/transformers": "4.4.3",
+    "@types/react": "npm:@types/react@^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "typedoc": "^0.28.20",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": "^22 || ^24"
+  }
+}

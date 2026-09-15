@@ -264,7 +264,7 @@ export interface Output {
   distPath?: DistPathConfig | undefined
 
   /**
-   * The {@link Filename} determines the name of the JavaScript bundle file to be output. These bundles will be written to the directory specified by output.path.
+   * The {@link Filename} determines the name of the Lynx bundle files emitted under {@link Output.distPath}.
    *
    * @defaultValue `{ bundle: '[name].[platform].bundle', template: '[name].[platform].bundle' }`
    *
@@ -335,7 +335,7 @@ export interface Output {
   /**
    * The {@link Output.inlineScripts} option controls whether to inline scripts into Lynx bundle (`.lynx.bundle`).
    *
-   * @defaultValue Rspeedy defaults this to `true` and only switches it to `false` when the user explicitly enables the top-level `splitChunks` option.
+   * @defaultValue Rspeedy defaults this to `true` and only switches it to `false` when the user explicitly enables the top-level `splitChunks` option, or sets the deprecated `performance.chunkSplit.strategy` to anything other than `'all-in-one'`. On plain Rsbuild, the Rsbuild default applies.
    *
    * @remarks
    *

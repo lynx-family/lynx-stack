@@ -5,7 +5,7 @@
 /**
  * @packageDocumentation
  *
- * An Rsbuild plugin that integrates Vanilla Lynx applications with Rspeedy.
+ * An Rsbuild plugin that builds Vanilla Lynx applications on top of `pluginLynx`.
  */
 
 import type {
@@ -21,7 +21,16 @@ export type {
   VanillaLynxEntry,
 } from './pluginVanillaLynx.js'
 
+/**
+ * The static API of
+ * {@link @lynx-js/template-webpack-plugin#LynxTemplatePlugin | LynxTemplatePlugin}
+ * that `pluginLynx` exposes. Get it with
+ * `api.useExposed(Symbol.for('LynxTemplatePlugin')).LynxTemplatePlugin`.
+ */
 interface LynxTemplatePlugin {
+  /**
+   * Returns the {@link TemplateHooks} of a compilation.
+   */
   getLynxTemplatePluginHooks:
     typeof InnerLynxTemplatePlugin.getLynxTemplatePluginHooks
 }

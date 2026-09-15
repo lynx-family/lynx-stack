@@ -1,0 +1,34 @@
+[
+  {
+    "text": "框架",
+    "link": "/zh/api/react/",
+    "activeMatch": "^/zh/api/react/"
+  },
+  {
+    "text": "构建与 npm 包",
+    "link": "/zh/api/config/",
+    "activeMatch": "^/zh/api/(config|packages)/"
+  },
+  {
+    "text": "更新日志",
+    "link": "/zh/changelog/lynx-js--react",
+    "activeMatch": "^/zh/changelog/"
+  },
+  {
+    "text": "更多",
+    "items": [
+      {
+        "text": "REPL",
+        "link": "/repl"
+      },
+      {
+        "text": "GenUI Playground",
+        "link": "/zh/genui"
+      },
+      {
+        "text": "lynxjs.org",
+        "link": "https://lynxjs.org/zh/"
+      }
+    ]
+  }
+]

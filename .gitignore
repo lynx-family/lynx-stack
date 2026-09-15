@@ -72,3 +72,6 @@ target/
 .vercel
 
 .gradle
+
+# Claude Code superpowers plugin writes specs here; the directory is the docs site.
+docs/superpowers/

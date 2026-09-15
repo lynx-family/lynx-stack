@@ -1,0 +1,191 @@
+---
+title: '@lynx-js/vanilla-rsbuild-plugin'
+---
+
+# @lynx-js/vanilla-rsbuild-plugin
+
+{/* @api PackageHeader package="vanilla-rsbuild-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/vanilla-rsbuild-plugin</code> <span className="api-pkg-version">v0.1.1</span> · <a href="https://www.npmjs.com/package/@lynx-js/vanilla-rsbuild-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-vanilla" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-vanilla/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+Vanilla DSL 插件。它从直接调用 Element PAPI 的纯 JavaScript 构建 Lynx bundle，不依赖 UI 框架。
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/vanilla-rsbuild-plugin -D" />
+
+## 用法
+
+使用 Rsbuild 时，在 `rsbuild.config.ts` 中注册：
+
+```ts title="rsbuild.config.ts"
+import { defineConfig } from '@rsbuild/core'
+import { pluginVanillaLynx } from '@lynx-js/vanilla-rsbuild-plugin'
+
+export default defineConfig({
+  environments: {
+    lynx: {},
+  },
+  plugins: [pluginVanillaLynx()],
+})
+```
+
+使用 Rspeedy 时，在 `lynx.config.ts` 中设置：
+
+```ts title="lynx.config.ts"
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginVanillaLynx } from '@lynx-js/vanilla-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [pluginVanillaLynx()],
+})
+```
+
+## 选项
+
+{/* @api ApiOptions package="vanilla-rsbuild-plugin" type="PluginVanillaLynxOptions" */}
+
+<a id="pluginvanillalynxoptions"></a>
+
+### `bundleFilename` \{#bundlefilename\}
+
+- **类型：** [`VanillaBundleFilename`](#vanillabundlefilename)
+
+覆盖最终的 `.bundle` 文件名。
+
+省略时，使用 `pluginLynx` 的 `output.filename.bundle`（默认为
+`'[name].[platform].bundle'`）。
+
+### `engineVersion` \{#engineversion\}
+
+- **类型：** `string`
+- **默认值：** `'3.5'`
+
+输出的 bundle 所要求的最低 Lynx Engine 版本。
+
+省略时，优先使用传给 `pluginLynxConfig` 的 `targetSdkVersion`。
+
+### `entries` \{#entries\}
+
+- **类型：** `Record<string, `[`VanillaLynxEntry`](#vanillalynxentry)`>`
+
+显式声明的双线程入口。
+
+省略时，每个 Rsbuild `source.entry` 都会被视为主线程入口，并按约定发现同级目录下可选的 `background.ts` 和
+`style.css` 文件。
+
+### `targetSdkVersion` <span className="api-badge api-badge-deprecated">已废弃</span> \{#targetsdkversion\}
+
+- **类型：** `string`
+
+:::warning 已废弃
+请改用 `engineVersion`。
+:::
+
+[`PluginVanillaLynxOptions.engineVersion`](#engineversion) 的别名。
+
+{/* @api-end */}
+
+## API
+
+{/* @api ApiExports package="vanilla-rsbuild-plugin" exclude="PluginVanillaLynxOptions" optionsType="PluginVanillaLynxOptions" */}
+
+## 函数 \{#functions\}
+
+### `pluginVanillaLynx()` \{#pluginvanillalynx\}
+
+```ts
+function pluginVanillaLynx(options: PluginVanillaLynxOptions): RsbuildPlugin
+```
+
+为 Rsbuild 或 Rspeedy 创建 Vanilla Lynx DSL 集成。
+
+逻辑入口可以显式声明其主线程与后台线程源文件。作为简写，Rsbuild 入口会被视为主线程源文件，并按约定发现同级可选的 `background.ts` 和 `style.css`
+文件。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `options` | [`PluginVanillaLynxOptions`](#pluginvanillalynxoptions) |  |
+
+**返回值：** `RsbuildPlugin`
+
+## 常量 \{#constants\}
+
+### `LAYERS` \{#layers\}
+
+```ts
+const LAYERS: Readonly<{ BACKGROUND: "vanilla:background"; MAIN_THREAD: "vanilla:main-thread" }>
+```
+
+Vanilla Lynx 入口使用的 Rspack layer。
+
+## 类型 \{#types\}
+
+### `LynxTemplatePlugin` \{#lynxtemplateplugin\}
+
+`pluginLynx` 暴露的
+[`LynxTemplatePlugin`](/zh/api/packages/template-webpack-plugin#lynxtemplateplugin)
+静态 API。可通过
+`api.useExposed(Symbol.for('LynxTemplatePlugin')).LynxTemplatePlugin` 获取。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="lynxtemplateplugin-getlynxtemplatepluginhooks"></a>`getLynxTemplatePluginHooks` | `(compilation: Compilation) => `[`TemplateHooks`](#templatehooks) | 返回某个 compilation 的 [`TemplateHooks`](#templatehooks)。 |
+
+### `TemplateHooks` \{#templatehooks\}
+
+从 [`@lynx-js/template-webpack-plugin`](/zh/api/packages/template-webpack-plugin#templatehooks) 重新导出。
+
+### `VanillaBundleFilenameContext` \{#vanillabundlefilenamecontext\}
+
+传递给 Vanilla Lynx bundle 文件名函数的上下文。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="vanillabundlefilenamecontext-entryname"></a>`entryName` | `string` | Rsbuild 逻辑入口名称。 |
+| <a id="vanillabundlefilenamecontext-lazybundle"></a>`lazyBundle` | `false` | Vanilla Lynx 目前仅输出主卡片 bundle。 |
+| <a id="vanillabundlefilenamecontext-platform"></a>`platform` | `string` | Rsbuild environment 名称。 |
+
+### `VanillaLynxEntry` \{#vanillalynxentry\}
+
+Vanilla Lynx 逻辑入口的双线程源文件。
+
+#### `VanillaLynxEntry.background?` \{#vanillalynxentry-background\}
+
+- **类型：** `string | false`
+
+在后台 JavaScript 线程中执行的源文件。
+
+省略时，如果存在同级的 `background.ts` 则使用该文件。将该选项设置为 `false` 可显式创建仅包含主线程的 bundle。
+
+#### `VanillaLynxEntry.css?` \{#vanillalynxentry-css\}
+
+- **类型：** `string | false`
+
+编码进 Lynx template 的 CSS 源文件。
+
+省略时，如果存在同级的 `style.css` 则使用该文件。设置为
+`false` 可禁用该约定。
+
+#### `VanillaLynxEntry.mainThread` \{#vanillalynxentry-mainthread\}
+
+- **类型：** `string`
+
+在 Lynx 主线程上执行的模块请求，可使用 Element PAPI 全局变量。
+
+该请求由 Rspeedy 或 Rsbuild 解析。当它指向一个已存在的本地文件时，会按约定发现同级可选的 `background.ts` 和 `style.css`
+文件。
+
+### `VanillaBundleFilename` \{#vanillabundlefilename\}
+
+```ts
+type VanillaBundleFilename = string | ((context: VanillaBundleFilenameContext) => string)
+```
+
+最终的 Vanilla Lynx bundle 文件名。
+
+{/* @api-end */}

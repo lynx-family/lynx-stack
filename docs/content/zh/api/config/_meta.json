@@ -1,0 +1,55 @@
+[
+  {
+    "type": "file",
+    "name": "environments",
+    "label": "environments",
+    "tag": "默认值不同"
+  },
+  {
+    "type": "file",
+    "name": "mode",
+    "label": "mode",
+    "tag": "默认值不同"
+  },
+  {
+    "type": "file",
+    "name": "split-chunks",
+    "label": "splitChunks",
+    "tag": "默认值不同"
+  },
+  {
+    "type": "dir-section-header",
+    "name": "source",
+    "label": "source"
+  },
+  {
+    "type": "dir-section-header",
+    "name": "output",
+    "label": "output"
+  },
+  {
+    "type": "dir-section-header",
+    "name": "dev",
+    "label": "dev"
+  },
+  {
+    "type": "dir-section-header",
+    "name": "server",
+    "label": "server"
+  },
+  {
+    "type": "dir-section-header",
+    "name": "resolve",
+    "label": "resolve"
+  },
+  {
+    "type": "dir-section-header",
+    "name": "performance",
+    "label": "performance"
+  },
+  {
+    "type": "dir-section-header",
+    "name": "tools",
+    "label": "tools"
+  }
+]

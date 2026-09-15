@@ -1,0 +1,184 @@
+---
+title: '@lynx-js/web-core'
+---
+
+# @lynx-js/web-core
+
+{/* @api PackageHeader package="web-core" */}
+
+<div className="api-pkg-header"><code>@lynx-js/web-core</code> <span className="api-pkg-version">v0.26.1</span> · <a href="https://www.npmjs.com/package/@lynx-js/web-core" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-core" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/web-platform/web-core/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+
+
+Lynx3 Web 平台运行时核心
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/web-core" />
+
+## API
+
+以下为 `@lynx-js/web-core/client` 入口的参考，它定义了 `<lynx-view>` 元素以及构建 Web 元素所用的工具函数。
+
+{/* @api ApiExports package="web-core" */}
+
+## 函数 \{#functions\}
+
+### `html()` \{#html\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#html) 重新导出。
+
+### `registerAttributeHandler()` \{#registerattributehandler\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#registerattributehandler) 重新导出。
+
+### `registerEventEnableStatusChangeHandler()` \{#registereventenablestatuschangehandler\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#registereventenablestatuschangehandler) 重新导出。
+
+### `registerStyleChangeHandler()` \{#registerstylechangehandler\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#registerstylechangehandler) 重新导出。
+
+### `bindSwitchToEventListener()` \{#bindswitchtoeventlistener\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#bindswitchtoeventlistener) 重新导出。
+
+### `bindToAttribute()` \{#bindtoattribute\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#bindtoattribute) 重新导出。
+
+### `bindToStyle()` \{#bindtostyle\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#bindtostyle) 重新导出。
+
+### `boostedQueueMicrotask()` \{#boostedqueuemicrotask\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#boostedqueuemicrotask) 重新导出。
+
+### `Component()` \{#component\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#component) 重新导出。
+
+### `genDomGetter()` \{#gendomgetter\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#gendomgetter) 重新导出。
+
+## 类 \{#classes\}
+
+### `CommonEventsAndMethods` \{#commoneventsandmethods\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#commoneventsandmethods) 重新导出。
+
+## 常量 \{#constants\}
+
+### `commonComponentEventSetting` \{#commoncomponenteventsetting\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#commoncomponenteventsetting) 重新导出。
+
+### `layoutChangeTarget` \{#layoutchangetarget\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#layoutchangetarget) 重新导出。
+
+### `scrollContainerDom` \{#scrollcontainerdom\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#scrollcontainerdom) 重新导出。
+
+### `useScrollEnd` \{#usescrollend\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#usescrollend) 重新导出。
+
+## 类型 \{#types\}
+
+### `AttributeReactiveClass` \{#attributereactiveclass\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#attributereactiveclass) 重新导出。
+
+### `LynxViewElement` \{#lynxviewelement\}
+
+*暂无说明。*
+
+HTML 示例
+
+注意，你需要声明 lynx-view 的尺寸
+
+```html
+<lynx-view url="https://path/to/main.web.bundle" init-data="{}" global-props="{}" style="height:300px;width:300px">
+</lynx-view>
+```
+
+React 19 示例
+
+```jsx
+<lynx-view url={myLynxCardUrl} initData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>
+</lynx-view>
+```
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="lynxviewelement-injectstylerules"></a>`injectStyleRules?` | `string[]` | [可选] 将被注入到 shadowroot 中的 CSS 规则。每一项都会通过 `insertRule` 方法插入。 |
+| <a id="lynxviewelement-napimodulesmap"></a>`napiModulesMap` | `NapiModulesMap \| undefined` | [可选] 在 lynx-core 中调用的 napiModule。key 为模块名，value 为 ESM URL。 |
+| <a id="lynxviewelement-nativemodulesmap"></a>`nativeModulesMap` | `NativeModulesMap \| undefined` | [可选] 用于自定义 NativeModules。key 为模块名，value 为 ESM URL。若某个 `LynxConsoleModule` 的工厂函数返回类 Console 对象，它将为此 view 的后台 bundle 提供词法作用域中的 `console`。 |
+| <a id="lynxviewelement-onnapimodulescall"></a>`onNapiModulesCall` | `NapiModulesCall \| undefined` | [可选] NapiModule 的值处理函数。 |
+| <a id="lynxviewelement-browserconfig"></a>`browserConfig` | `BrowserConfig \| undefined` |  |
+| <a id="lynxviewelement-data"></a>`data` | `Cloneable` |  |
+| <a id="lynxviewelement-global-props"></a>`global-props` | `Cloneable` |  |
+| <a id="lynxviewelement-globalprops"></a>`globalProps` | `Cloneable` | [可选]（属性："global-props"）此 Lynx 卡片的 globalProps 值 |
+| <a id="lynxviewelement-init-data"></a>`init-data` | `Cloneable` |  |
+| <a id="lynxviewelement-initdata"></a>`initData` | `Cloneable` | [可选]（属性："init-data"）此 Lynx 卡片的初始数据 |
+| <a id="lynxviewelement-initi18nresources"></a>`initI18nResources` | `InitI18nResources` | [可选] 容器侧完整的 i18nResources 集合，可通过 _I18nResourceTranslation 同步获取 |
+| <a id="lynxviewelement-lynxgroupid"></a>`lynxGroupId` | `number \| undefined` | [可选]（属性："lynx-group-id"）后台共享上下文 id，用于在不同 Lynx 卡片之间共享 webworker |
+| <a id="lynxviewelement-onnativemodulescall"></a>`onNativeModulesCall` | `NativeModulesCall \| undefined` | [可选] NativeModules 的值处理函数。在该属性被赋值之前，调用参数会被缓存。 |
+| <a id="lynxviewelement-src"></a>`src` | `string \| undefined` |  |
+| <a id="lynxviewelement-transformrem"></a>`transformREM` | `boolean` |  |
+| <a id="lynxviewelement-transformvh"></a>`transformVH` | `boolean` |  |
+| <a id="lynxviewelement-transformvw"></a>`transformVW` | `boolean` |  |
+| <a id="lynxviewelement-url"></a>`url` | `string \| undefined` | [必填]（属性："url"）Lynx 卡片入口的 URL |
+| <a id="lynxviewelement-attributechangedcallback"></a>`attributeChangedCallback` | `attributeChangedCallback(name: string, oldValue: string \| null, newValue: string \| null): void` |  |
+| <a id="lynxviewelement-connectedcallback"></a>`connectedCallback` | `connectedCallback(): void` |  |
+| <a id="lynxviewelement-disconnectedcallback"></a>`disconnectedCallback` | `disconnectedCallback(): void` |  |
+| <a id="lynxviewelement-reload"></a>`reload` | `reload(): void` |  |
+| <a id="lynxviewelement-senddevtoolevent"></a>`sendDevtoolEvent` | `sendDevtoolEvent(eventName: string, data: string): void` |  |
+| <a id="lynxviewelement-sendglobalevent"></a>`sendGlobalEvent` | `sendGlobalEvent(eventName: string, params: Cloneable[]): void` |  |
+| <a id="lynxviewelement-setattribute"></a>`setAttribute` | `setAttribute(qualifiedName: string, value: string): void` | 值为 "false" 时将被忽略 `HTMLElement.setAttribute` |
+| <a id="lynxviewelement-updatedata"></a>`updateData` | `updateData(data: Cloneable, processorName?: string, callback?: () => void): void` |  |
+| <a id="lynxviewelement-updateglobalprops"></a>`updateGlobalProps` | `updateGlobalProps(data: Cloneable): void` |  |
+| <a id="lynxviewelement-updatei18nresources"></a>`updateI18nResources` | `updateI18nResources(data: InitI18nResources, options: I18nResourceTranslationOptions): void` |  |
+
+### `WebComponentClass` \{#webcomponentclass\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#webcomponentclass) 重新导出。
+
+### `AttributeChangeHandler` \{#attributechangehandler\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#attributechangehandler) 重新导出。
+
+### `AttributeReactiveObject` \{#attributereactiveobject\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#attributereactiveobject) 重新导出。
+
+### `BindToAttributeProxy` \{#bindtoattributeproxy\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#bindtoattributeproxy) 重新导出。
+
+### `BindToStyleProxy` \{#bindtostyleproxy\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#bindtostyleproxy) 重新导出。
+
+### `EventStatusChangeHandler` \{#eventstatuschangehandler\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#eventstatuschangehandler) 重新导出。
+
+### `StyleChangeHandler` \{#stylechangehandler\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#stylechangehandler) 重新导出。
+
+### `UseCSSCustomPropertyHandler` \{#usecsscustompropertyhandler\}
+
+从 [`@lynx-js/web-elements`](/zh/api/packages/web-elements#usecsscustompropertyhandler) 重新导出。
+
+{/* @api-end */}

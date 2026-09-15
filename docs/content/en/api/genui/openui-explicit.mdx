@@ -1,0 +1,45 @@
+---
+title: '@lynx-js/genui/openui/explicit'
+---
+
+# `@lynx-js/genui/openui/explicit`
+
+`@lynx-js/genui/openui/explicit` exports the same API as [`@lynx-js/genui/openui`](./openui), except that `createOpenUiLibrary` does not include the default catalog. Import each built-in component you need from `@lynx-js/genui/openui/catalog/<Component>` and pass it in, so the components you leave out are not bundled.
+
+```ts
+import { createOpenUiLibrary } from '@lynx-js/genui/openui/explicit';
+import { Stack } from '@lynx-js/genui/openui/catalog/Stack';
+import { TextContent } from '@lynx-js/genui/openui/catalog/TextContent';
+```
+
+## API
+
+{/* @api ApiExports package="genui-openui-explicit" include="createOpenUiLibrary,CreateExplicitOpenUiLibraryOptions" */}
+
+## Functions \{#functions\}
+
+### `createOpenUiLibrary()` \{#createopenuilibrary\}
+
+```ts
+function createOpenUiLibrary(options: CreateExplicitOpenUiLibraryOptions): Library
+```
+
+Create a catalog-free OpenUI Library from explicitly selected components.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | [`CreateExplicitOpenUiLibraryOptions`](#createexplicitopenuilibraryoptions) |  |
+
+**Returns:** `Library`
+
+## Types \{#types\}
+
+### `CreateExplicitOpenUiLibraryOptions` \{#createexplicitopenuilibraryoptions\}
+
+```ts
+type CreateExplicitOpenUiLibraryOptions = Omit<CreateOpenUiLibraryOptions, "includeDefaultComponents"> & { includeDefaultComponents: false }
+```
+
+Options for a Library assembled only from explicitly selected components.
+
+{/* @api-end */}

@@ -1,0 +1,208 @@
+{
+  "id": "externals-loading-webpack-plugin",
+  "package": "@lynx-js/externals-loading-webpack-plugin",
+  "version": "0.2.1",
+  "description": "A webpack plugin to load lynx external bundles.",
+  "group": "internals",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/externals-loading-webpack-plugin",
+  "exports": [
+    {
+      "name": "ExternalsLoadingPlugin",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "The webpack plugin to load lynx external bundles.",
+      "examples": [
+        "```js\n// webpack.config.js\nimport { ExternalsLoadingPlugin } from '@lynx-js/externals-loading-webpack-plugin';\n\nexport default {\n  plugins: [\n    new ExternalsLoadingPlugin({\n      mainThreadLayer: 'main-thread',\n      backgroundLayer: 'background',\n      externals: {\n       'lodash': {\n         url: 'http://lodash.lynx.bundle',\n         async: true,\n         background: {\n           sectionPath: 'background',\n         },\n         mainThread: {\n           sectionPath: 'mainThread',\n         },\n       },\n      }\n    })\n  ]\n}\n```"
+      ],
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(options: ExternalsLoadingPluginOptions): ExternalsLoadingPlugin",
+          "kind": "constructor",
+          "params": [
+            {
+              "name": "options",
+              "type": "ExternalsLoadingPluginOptions",
+              "ref": "ExternalsLoadingPluginOptions",
+              "refs": [
+                "ExternalsLoadingPluginOptions"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "ExternalsLoadingPlugin",
+            "refs": [
+              "ExternalsLoadingPlugin"
+            ]
+          }
+        },
+        {
+          "name": "apply",
+          "type": "apply(compiler: Compiler): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "compiler",
+              "type": "Compiler"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ExternalsLoadingPluginOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The options of the `ExternalsLoadingPlugin`.",
+      "members": [
+        {
+          "name": "backgroundLayer",
+          "type": "string",
+          "summary": "The name of the background layer.",
+          "kind": "property"
+        },
+        {
+          "name": "externals",
+          "type": "Record<string, ExternalValue>",
+          "refs": [
+            "ExternalValue"
+          ],
+          "summary": "Specify the externals to be loaded. The externals should be Lynx Bundles.",
+          "examples": [
+            "Load `lodash` library in background layer and `main-thread` layer.\n\n```js\nmodule.exports = {\n plugins: [\n   new ExternalsLoadingPlugin({\n     mainThreadLayer: 'main-thread',\n     backgroundLayer: 'background',\n     externals: {\n       lodash: {\n         url: 'http://lodash.lynx.bundle',\n         background: { sectionPath: 'background' },\n         mainThread: { sectionPath: 'mainThread' },\n       },\n     },\n   }),\n ],\n};\n```",
+            "Load `lodash` library only in background layer.\n\n```js\nmodule.exports = {\n plugins: [\n   new ExternalsLoadingPlugin({\n     mainThreadLayer: 'main-thread',\n     backgroundLayer: 'background',\n     externals: {\n       lodash: {\n         url: 'http://lodash.lynx.bundle',\n         background: { sectionPath: 'background' }\n       },\n     },\n   }),\n ],\n};\n```"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "globalObject",
+          "optional": true,
+          "type": "\"lynx\" | \"globalThis\"",
+          "summary": "This option indicates what global object will be used to mount the library.\n\nIn Lynx, the library will be mounted to `lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")]` by default.\n\nIf you have enabled share js context and want to reuse the library by mounting to the global object, you can set this option to `'globalThis'`.",
+          "default": "`'lynx'`",
+          "kind": "property"
+        },
+        {
+          "name": "mainThreadLayer",
+          "type": "string",
+          "summary": "The name of the main thread layer.",
+          "kind": "property"
+        },
+        {
+          "name": "retries",
+          "optional": true,
+          "type": "number",
+          "summary": "The number of additional attempts when fetching the external bundle times out (`response.code === -2`).",
+          "default": "`0`",
+          "kind": "property"
+        },
+        {
+          "name": "timeout",
+          "optional": true,
+          "type": "number",
+          "summary": "The timeout in milliseconds for loading the externals.",
+          "default": "`2000`",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ExternalValue",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The value item of the externals.",
+      "members": [
+        {
+          "name": "async",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether the source should be loaded asynchronously or not.",
+          "default": "`true`",
+          "kind": "property"
+        },
+        {
+          "name": "background",
+          "optional": true,
+          "type": "LayerOptions",
+          "ref": "LayerOptions",
+          "refs": [
+            "LayerOptions"
+          ],
+          "summary": "The options of the background layer.",
+          "default": "`undefined`",
+          "kind": "property"
+        },
+        {
+          "name": "bundlePath",
+          "optional": true,
+          "type": "string",
+          "summary": "The bundle path resolved against the runtime public path.\n\nPrefer this over `url` when the bundle should follow the active\n`publicPath`. The runtime will load it with `publicPath + bundlePath`,\nwhich keeps external bundle resolution aligned with the current build\noutput without hard-coding an absolute URL into the generated runtime code.",
+          "kind": "property"
+        },
+        {
+          "name": "libraryName",
+          "optional": true,
+          "type": "string | string[]",
+          "summary": "The name of the library. Same as https://webpack.js.org/configuration/externals/#string.\n\nBy default, the library name is the same as the externals key. For example:\n\nThe config\n\n```js\nExternalsLoadingPlugin({\n  externals: {\n    lodash: {\n      url: '……',\n    }\n  }\n})\n```\n\nWill generate the following webpack externals config:\n\n```js\nexternals: {\n  lodash: 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].lodash',\n}\n```\n\nIf one external bundle contains multiple modules, should set the same library name to ensure it's loaded only once. For example:\n\n```js\nExternalsLoadingPlugin({\n  externals: {\n    lodash: {\n      libraryName: 'Lodash',\n      url: '……',\n    },\n    'lodash-es': {\n      libraryName: 'Lodash',\n      url: '……',\n    }\n  }\n})\n```\nWill generate the following webpack externals config:\n\n```js\nexternals: {\n  lodash: 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].Lodash',\n  'lodash-es': 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].Lodash',\n}\n```\n\nYou can pass an array to specify subpath of the external. Same as https://webpack.js.org/configuration/externals/#string-1. For example:\n\n```js\nExternalsLoadingPlugin({\n  externals: {\n    preact: {\n      libraryName: ['ReactLynx', 'Preact'],\n      url: '……',\n      async: false,\n    },\n  }\n})\n```\n\nWill generate the following webpack externals config:\n\n```js\nexternals: {\n  preact: 'lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")].ReactLynx.Preact',\n}\n```\n\nWith the default `async: true`, a `promise` external is generated instead,\nwhich picks the subpath after the library promise resolves:\n\n```js\nexternals: {\n  preact: 'promise Promise.resolve(lynx[Symbol.for(\"__LYNX_EXTERNAL_GLOBAL__\")][\"ReactLynx\"]).then(function (m) { return m[\"Preact\"]; })',\n}\n```",
+          "examples": [
+            "```ts\n`Lodash`\n```"
+          ],
+          "default": "`undefined`",
+          "kind": "property"
+        },
+        {
+          "name": "mainThread",
+          "optional": true,
+          "type": "LayerOptions",
+          "ref": "LayerOptions",
+          "refs": [
+            "LayerOptions"
+          ],
+          "summary": "The options of the main-thread layer.",
+          "default": "`undefined`",
+          "kind": "property"
+        },
+        {
+          "name": "retries",
+          "optional": true,
+          "type": "number",
+          "summary": "The number of additional attempts when fetching the external bundle times out (`response.code === -2`).",
+          "default": "`0`",
+          "kind": "property"
+        },
+        {
+          "name": "timeout",
+          "optional": true,
+          "type": "number",
+          "summary": "The wait time in milliseconds.",
+          "default": "`2000`",
+          "kind": "property"
+        },
+        {
+          "name": "url",
+          "optional": true,
+          "type": "string",
+          "summary": "The final bundle URL to fetch directly at runtime.\n\nUse this when the external bundle is hosted outside the current build\noutput, such as on a CDN. If both `url` and `bundlePath` are provided,\n`url` takes precedence because it is already the fully resolved address.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LayerOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The options of the background or main-thread layer.",
+      "members": [
+        {
+          "name": "sectionPath",
+          "type": "string",
+          "summary": "The path in `customSections`.",
+          "kind": "property"
+        }
+      ]
+    }
+  ]
+}

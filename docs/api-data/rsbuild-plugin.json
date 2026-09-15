@@ -1,0 +1,313 @@
+{
+  "id": "rsbuild-plugin",
+  "package": "@lynx-js/rsbuild-plugin",
+  "version": "0.1.2",
+  "description": "The Lynx build engine for Rsbuild; Rspeedy and DSL plugins apply it for you.",
+  "group": "build",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-lynx",
+  "exports": [
+    {
+      "name": "BundleFilenameContext",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The context passed to the [`LynxFilename.bundle`](api:LynxFilename.bundle) function.",
+      "members": [
+        {
+          "name": "entryName",
+          "optional": true,
+          "type": "string",
+          "summary": "The name of the entry.",
+          "remarks": "It is `undefined` for lazy bundles, since a lazy bundle name is resolved\nper async chunk instead of per entry.",
+          "kind": "property"
+        },
+        {
+          "name": "lazyBundle",
+          "type": "boolean",
+          "summary": "Whether the filename is being resolved for a lazy bundle (async chunk)\ninstead of the main bundle of an entry.",
+          "kind": "property"
+        },
+        {
+          "name": "platform",
+          "type": "string",
+          "summary": "The name of the Rsbuild environment.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LynxConfig",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The Lynx config that `pluginLynx` exposes to other plugins.",
+      "remarks": "The data mirrors [`LynxPluginOptions`](api:LynxPluginOptions), so a plugin reads\n`config.output.filename` the same way it reads `output.filename` from\n`api.getRsbuildConfig()`. Values that depend on the entry being built are\nderived by the methods, which travel with the data so that the plugin that\nbuilt the config is always the one that resolves it.",
+      "examples": [
+        "```js\nconst lynx = getLynxConfig(api)\nconst filename = lynx.resolveBundleFilename({\n  entryName: 'main',\n  platform: environment.name,\n})\n```"
+      ],
+      "beta": true,
+      "members": [
+        {
+          "name": "output",
+          "type": "LynxOutput",
+          "ref": "LynxOutput",
+          "refs": [
+            "LynxOutput"
+          ],
+          "summary": "The build outputs.",
+          "beta": true,
+          "kind": "property"
+        },
+        {
+          "name": "performance",
+          "type": "LynxPerformance",
+          "ref": "LynxPerformance",
+          "refs": [
+            "LynxPerformance"
+          ],
+          "summary": "The performance options.",
+          "beta": true,
+          "kind": "property"
+        },
+        {
+          "name": "resolveBundleFilename",
+          "type": "resolveBundleFilename(context: { entryName: string; platform: string }): string",
+          "kind": "method",
+          "params": [
+            {
+              "name": "context",
+              "type": "{ entryName: string; platform: string }",
+              "description": "The entry to resolve the name for."
+            }
+          ],
+          "returns": {
+            "type": "string"
+          },
+          "summary": "Resolve the name of the bundle file of an entry."
+        },
+        {
+          "name": "resolveIntermediateDir",
+          "type": "resolveIntermediateDir(context?: { entryName?: string }): string",
+          "kind": "method",
+          "params": [
+            {
+              "name": "context",
+              "type": "{ entryName?: string }",
+              "optional": true,
+              "description": "The entry to resolve the directory for. Without an entry\nname, the directory that holds every entry's is returned."
+            }
+          ],
+          "returns": {
+            "type": "string"
+          },
+          "summary": "Resolve the directory of the intermediate files.",
+          "remarks": "A Lynx bundle is encoded from per-thread JS, CSS and HMR outputs. They are\nemitted into this directory, per entry, instead of next to the bundle."
+        },
+        {
+          "name": "resolveLazyBundleFilename",
+          "type": "resolveLazyBundleFilename(context: { platform: string }): string | undefined",
+          "kind": "method",
+          "params": [
+            {
+              "name": "context",
+              "type": "{ platform: string }",
+              "description": "The environment to resolve the name for."
+            }
+          ],
+          "returns": {
+            "type": "string | undefined",
+            "description": "The resolved name, or `undefined` when [`LynxFilename.bundle`](api:LynxFilename.bundle)\nis not a function. A lazy bundle name can only be customized by a function,\nsince it is resolved per async chunk, so `undefined` means the caller\nleaves the name to `LynxTemplatePlugin`."
+          },
+          "summary": "Resolve the name of the lazy bundle files.",
+          "remarks": "There is no entry name to resolve `[name]` with, so the placeholder is\nkept for `LynxTemplatePlugin` to fill in per async chunk."
+        }
+      ]
+    },
+    {
+      "name": "LynxFilename",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The names of the files emitted by the Lynx build engine.",
+      "members": [
+        {
+          "name": "bundle",
+          "optional": true,
+          "type": "BundleFilename",
+          "ref": "BundleFilename",
+          "refs": [
+            "BundleFilename"
+          ],
+          "summary": "The name of the bundle files.",
+          "remarks": "The following placeholders are supported:\n\n- `[name]`: the name of the entry.\n- `[platform]`: the name of the Rsbuild environment.\n- `[contenthash]`: the hash of the bundle content.",
+          "default": "`'[name].[platform].bundle'`",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LynxMinify",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The minifier options of the Lynx threads.",
+      "remarks": "Lynx emits one bundle per thread, and each thread may need different\nminifier settings. These are merged on top of the Rsbuild\n`output.minify.jsOptions` and applied to that thread only.",
+      "members": [
+        {
+          "name": "backgroundOptions",
+          "optional": true,
+          "type": "SwcJsMinimizerRspackPluginOptions",
+          "summary": "The minifier options of the background thread.",
+          "kind": "property"
+        },
+        {
+          "name": "mainThreadOptions",
+          "optional": true,
+          "type": "SwcJsMinimizerRspackPluginOptions",
+          "summary": "The minifier options of the main thread.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LynxOutput",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The build outputs of the Lynx build engine.",
+      "members": [
+        {
+          "name": "filename",
+          "optional": true,
+          "type": "LynxFilename",
+          "ref": "LynxFilename",
+          "refs": [
+            "LynxFilename"
+          ],
+          "summary": "The names of the emitted files.",
+          "kind": "property"
+        },
+        {
+          "name": "minify",
+          "optional": true,
+          "type": "LynxMinify",
+          "ref": "LynxMinify",
+          "refs": [
+            "LynxMinify"
+          ],
+          "summary": "The per-thread minifier options.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LynxPerformance",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The performance options of the Lynx build engine.",
+      "members": [
+        {
+          "name": "profile",
+          "optional": true,
+          "type": "boolean",
+          "summary": "Whether to capture timing information in Lynx runtime integrations such as\nReactLynx.",
+          "remarks": "A framework includes runtime information using `console.profile` when this\nis enabled.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "LynxPluginOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The options of `pluginLynx`.",
+      "members": [
+        {
+          "name": "output",
+          "optional": true,
+          "type": "LynxOutput",
+          "ref": "LynxOutput",
+          "refs": [
+            "LynxOutput"
+          ],
+          "summary": "The build outputs.",
+          "kind": "property"
+        },
+        {
+          "name": "performance",
+          "optional": true,
+          "type": "LynxPerformance",
+          "ref": "LynxPerformance",
+          "refs": [
+            "LynxPerformance"
+          ],
+          "summary": "The performance options.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "BundleFilename",
+      "kind": "typealias",
+      "type": "string | ((context: BundleFilenameContext) => string)",
+      "refs": [
+        "BundleFilenameContext"
+      ],
+      "summary": "The name of the bundle files."
+    },
+    {
+      "name": "PLUGIN_LYNX_NAME",
+      "kind": "variable",
+      "type": "\"lynx:rsbuild\"",
+      "summary": "The name of the plugin that marks `pluginLynx` as applied. Use it with\n`api.isPluginExists` to tell whether the Lynx build engine is already there.",
+      "default": "'lynx:rsbuild'"
+    },
+    {
+      "name": "isPluginLynxRegistered",
+      "kind": "function",
+      "type": "isPluginLynxRegistered(host: { isPluginExists: any }, environments: string[]): boolean",
+      "signatures": [
+        {
+          "text": "isPluginLynxRegistered(host: { isPluginExists: any }, environments: string[]): boolean",
+          "params": [
+            {
+              "name": "host",
+              "type": "{ isPluginExists: any }",
+              "description": "The Rsbuild instance or plugin API to look it up on."
+            },
+            {
+              "name": "environments",
+              "type": "string[]",
+              "description": "The names of the configured environments."
+            }
+          ],
+          "returns": {
+            "type": "boolean"
+          },
+          "summary": "Whether the Lynx build engine is already registered.",
+          "remarks": "The engine is a global one. `isPluginExists` without an environment only\nreports the global plugins, so it misses an engine a caller — `rslib`, for\none — registered on an environment instead."
+        }
+      ],
+      "summary": "Whether the Lynx build engine is already registered.",
+      "remarks": "The engine is a global one. `isPluginExists` without an environment only\nreports the global plugins, so it misses an engine a caller — `rslib`, for\none — registered on an environment instead."
+    },
+    {
+      "name": "pluginLynx",
+      "kind": "function",
+      "type": "pluginLynx(options: LynxPluginOptions): RsbuildPlugin[]",
+      "signatures": [
+        {
+          "text": "pluginLynx(options: LynxPluginOptions): RsbuildPlugin[]",
+          "params": [
+            {
+              "name": "options",
+              "type": "LynxPluginOptions",
+              "ref": "LynxPluginOptions",
+              "refs": [
+                "LynxPluginOptions"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "RsbuildPlugin[]"
+          }
+        }
+      ]
+    }
+  ]
+}

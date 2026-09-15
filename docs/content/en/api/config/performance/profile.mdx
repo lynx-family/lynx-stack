@@ -1,0 +1,49 @@
+---
+title: performance.profile
+---
+
+# performance.profile
+
+{/* @api ConfigOption package="rspeedy" path="performance.profile" */}
+
+- **Type:** `boolean`
+
+Whether capture timing information in Lynx runtime integrations such as ReactLynx.
+
+Enable profile.
+
+- Frameworks like ReactLynx will include runtime information using `console.profile`.
+- Rspeedy will emit `dist/stats.json` after build for bundle analysis compatibility.
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: { profile: true },
+})
+```
+
+## Default \{#default\}
+
+- Rspeedy and `pluginReactLynx` set this to `true` when `DEBUG` contains `lynx`, `rspeedy` or `*` (Rspeedy also accepts `rsbuild`); otherwise the option is left unset.
+
+## Usage \{#usage\}
+
+With Rsbuild, pass it to [`pluginLynx`](/api/packages/rsbuild-plugin#performance-profile):
+
+```ts title="rsbuild.config.ts"
+import { defineConfig } from '@rsbuild/core'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginLynx({
+      performance: {
+        profile: true,
+      },
+    }),
+  ],
+})
+```
+
+{/* @api-end */}

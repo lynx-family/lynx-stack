@@ -1,0 +1,37 @@
+---
+title: '@lynx-js/react-umd'
+---
+
+# @lynx-js/react-umd
+
+{/* @api PackageHeader package="react-umd" */}
+
+<div className="api-pkg-header"><code>@lynx-js/react-umd</code> <span className="api-pkg-version">v0.126.1</span> · <a href="https://www.npmjs.com/package/@lynx-js/react-umd" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/react-umd" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/react-umd/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+Prebuilt ReactLynx runtime bundles for external bundles, exposed as `@lynx-js/react-umd/dev` and `@lynx-js/react-umd/prod`.
+
+## Usage
+
+You don't need to reference it yourself: the `reactlynx` preset of [`pluginExternalBundle`](/api/packages/external-bundle-rsbuild-plugin) resolves one of the two entry points from `NODE_ENV`. When you build a component external bundle that depends on ReactLynx, turn on the same preset in [`defineExternalBundleRslibConfig`](/api/packages/lynx-bundle-rslib-config):
+
+```ts title="rslib.config.ts"
+import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineExternalBundleRslibConfig({
+  id: 'comp',
+  source: {
+    entry: {
+      './components': './src/components/index.js',
+    },
+  },
+  plugins: [pluginReactLynx()],
+  output: {
+    externalsPresets: {
+      reactlynx: true,
+    },
+  },
+})
+```
