@@ -1456,6 +1456,28 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
+  packages/genui/server-bundle-rsbuild-plugin:
+    dependencies:
+      fflate:
+        specifier: 0.8.2
+        version: 0.8.2
+    devDependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../react
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../rspeedy/plugin-react
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../rspeedy/core
+      '@microsoft/api-extractor':
+        specifier: 'catalog:'
+        version: 7.58.12(@types/node@24.13.3)
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.2.3(core-js@3.50.0)
+
   packages/genui/skill-lynx-openui: {}
 
   packages/i18n/i18next-translation-dedupe:
