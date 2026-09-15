@@ -100,7 +100,17 @@ describe('extractCatalogComponents', () => {
         );
     }
     expect(readFullCatalogJson(outDir)).toEqual({
+      $id: 'catalog.json',
       catalogId: 'catalog.json',
+      $defs: {
+        anyComponent: {
+          oneOf: [{ $ref: '#/components/DemoCard' }, {
+            $ref: '#/components/DemoText',
+          }, { $ref: '#/components/QuickStartCard' }],
+        },
+        anyFunction: { not: {} },
+      },
+      protocolVersion: '1.0',
       components: {
         DemoCard: expectedCatalogs['DemoCard']!['DemoCard'],
         DemoText: expectedCatalogs['DemoText']!['DemoText'],
@@ -136,11 +146,18 @@ describe('extractCatalogComponents', () => {
           returnType: 'string',
         },
       ],
-      theme: {
-        accentColor: { type: 'string' },
-      },
     })).toEqual({
+      $id: 'https://example.com/catalog.json',
       catalogId: 'https://example.com/catalog.json',
+      $defs: {
+        anyComponent: {
+          oneOf: [{ $ref: '#/components/DemoCard' }, {
+            $ref: '#/components/DemoText',
+          }, { $ref: '#/components/QuickStartCard' }],
+        },
+        anyFunction: { oneOf: [{ $ref: '#/functions/formatDisplayValue' }] },
+      },
+      protocolVersion: '1.0',
       components: {
         DemoCard: expectedCatalogs['DemoCard']!['DemoCard'],
         DemoText: expectedCatalogs['DemoText']!['DemoText'],
@@ -150,6 +167,7 @@ describe('extractCatalogComponents', () => {
         formatDisplayValue: {
           type: 'object',
           description: 'Format a raw value for display.',
+          returnType: 'string',
           properties: {
             call: {
               const: 'formatDisplayValue',
@@ -162,16 +180,9 @@ describe('extractCatalogComponents', () => {
               required: ['value'],
               additionalProperties: false,
             },
-            returnType: {
-              const: 'string',
-            },
           },
           required: ['call', 'args'],
-          unevaluatedProperties: false,
         },
-      },
-      theme: {
-        accentColor: { type: 'string' },
       },
     });
   });
@@ -196,27 +207,37 @@ describe('extractCatalogComponents', () => {
     )
       .toEqual({
         CliBadge: {
+          type: 'object',
           properties: {
+            component: { const: 'CliBadge' },
             label: {
               type: 'string',
               description: 'Badge label.',
             },
           },
-          required: ['label'],
+          required: ['component', 'label'],
           description: 'CLI badge fixture.',
         },
       });
     expect(readFullCatalogJson(path.join(cwd, 'catalog-out'))).toEqual({
+      $id: 'catalog.json',
       catalogId: 'catalog.json',
+      $defs: {
+        anyComponent: { oneOf: [{ $ref: '#/components/CliBadge' }] },
+        anyFunction: { not: {} },
+      },
+      protocolVersion: '1.0',
       components: {
         CliBadge: {
+          type: 'object',
           properties: {
+            component: { const: 'CliBadge' },
             label: {
               type: 'string',
               description: 'Badge label.',
             },
           },
-          required: ['label'],
+          required: ['component', 'label'],
           description: 'CLI badge fixture.',
         },
       },
@@ -236,7 +257,7 @@ describe('extractCatalogComponents', () => {
       'https://cdn.example.com/a2ui/catalog.json',
     ], fixtureDir)).resolves.toBe(0);
 
-    expect(readFullCatalogJson(outDir)['catalogId']).toBe(
+    expect(readFullCatalogJson(outDir)['$id']).toBe(
       'https://cdn.example.com/a2ui/catalog.json',
     );
   });

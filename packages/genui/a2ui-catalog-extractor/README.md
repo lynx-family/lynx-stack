@@ -18,7 +18,7 @@ A2UI catalogs describe what components a renderer supports. For each
 component, the catalog tells an agent which props are valid, which props
 are required, which enum values are allowed, and what each field means.
 
-This extractor generates the `components` part of an A2UI v0.9 catalog:
+This extractor generates the `components` part of an A2UI v1.0 catalog:
 
 ```json
 {
@@ -31,8 +31,8 @@ This extractor generates the `components` part of an A2UI v0.9 catalog:
 }
 ```
 
-It can also wrap those generated components with a `catalogId`,
-`functions`, and `theme` through `createA2UICatalog`.
+It can also wrap those generated components with `$id`, `protocolVersion: "1.0"`,
+and a `functions` map through `createA2UICatalog`.
 
 ## What It Does Not Do
 
@@ -451,9 +451,6 @@ const catalog = createA2UICatalog({
   catalogId: 'https://example.com/catalogs/basic/v1/catalog.json',
   components,
   functions,
-  theme: {
-    accentColor: { type: 'string' },
-  },
 });
 ```
 
@@ -537,6 +534,8 @@ test commands.
 ## References
 
 - [A2UI Catalogs](https://a2ui.org/concepts/catalogs/)
-- [A2UI v0.9 protocol](https://a2ui.org/specification/v0.9-a2ui/)
+- [A2UI v1.0 protocol](https://a2ui.org/specification/v1.0-a2ui/)
 - [TypeDoc custom tags](https://typedoc.org/documents/Tags.html)
 - [TypeDoc JSON output](https://typedoc.org/documents/Options.Output.html)
+
+Child component references must use the standard ComponentId schema. Mark string ID props with `@a2uiComponentId` so TypeDoc preserves this meaning even when it expands a TypeScript string alias. Static-or-template child collections can use a `ChildList` type alias. Generated catalogs include `catalogId`, `$id`, union definitions, and a required `component` discriminator.

@@ -36,7 +36,7 @@ When `packages/genui/a2ui` generates its catalog, ensure `packages/genui/a2ui-ca
 
 Keep `packages/genui/a2ui-catalog-extractor/src/index.ts` as a narrow public facade. Put CLI-only artifact writers, TypeDoc JSON helpers, and other extractor internals in non-exported source modules, and have `src/cli.ts` import those internals directly instead of importing from `src/index.ts`.
 
-When implementing A2UI v0.9 functions in `packages/genui/a2ui`, keep function resolution scoped to the active catalog first, with the global `FunctionRegistry` only as an escape hatch. Dynamic component props, checks, and function-call actions should all go through the same `resolveDynamicValue` / `executeFunctionCall` path so data bindings, nested function calls, zod argument coercion from `@a2ui/web_core`, and `formatString` data-context interpolation stay consistent.
+When implementing A2UI v1.0 functions in `packages/genui/a2ui`, keep function resolution scoped to the registered catalog identified by the component, function call, or surface. Dynamic component props, checks, and function-call actions should all go through the same `resolveDynamicValue` / `executeFunctionCall` path so data bindings, nested function calls, zod argument coercion from `@a2ui/web_core`, and `formatString` data-context interpolation stay consistent.
 
 When maintaining the A2UI `LazyComponent` catalog component, load ReactLynx standalone lazy bundle URLs with dynamic import attributes such as `import(url, { with: { type: 'component' } })` and avoid importing `loadLazyBundle` from `@lynx-js/react/internal`.
 

@@ -9,7 +9,7 @@ responsibility — and why the package is shaped the way it is.
 ## What this package is
 
 `@lynx-js/genui/a2ui` is the ReactLynx **client runtime** for the A2UI
-v0.9 protocol. It consumes validated server-to-client JSON messages and
+v1.0 protocol. It consumes validated server-to-client JSON messages and
 renders trusted ReactLynx components inside your app.
 
 It is deliberately a renderer and nothing more. The package does **not**:
@@ -26,7 +26,9 @@ that returns A2UI messages.
 
 Install the package in a ReactLynx app, then render a `MessageStore` with
 `<A2UI>`. Your transport writes the Agent's messages into the store; the
-renderer turns them into UI and hands user actions back through `onAction`.
+renderer turns them into UI. `onMessage` forwards versioned wire messages and
+transport metadata to your Agent. `onAction` is an optional callback that receives
+only the action payload for local application logic.
 
 ```sh
 pnpm add @lynx-js/genui @lynx-js/react
@@ -58,15 +60,15 @@ async function sendPrompt(input: string) {
   store.push(normalizePayloadToMessages(await res.json()));
 }
 
-// 4. Render. onAction round-trips user taps back to the Agent.
+// 4. Render. onMessage forwards protocol events and metadata to the Agent.
 <A2UI
   messageStore={store}
   catalogs={catalogs}
-  onAction={(action) => {
-    void fetch('/a2ui/action', {
+  onMessage={(message, metadata) => {
+    return fetch('/a2ui/action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(action),
+      body: JSON.stringify({ ...message, metadata }),
     })
       .then((res) => res.json())
       .then((payload) => store.push(normalizePayloadToMessages(payload)));
@@ -175,7 +177,7 @@ stays transport-agnostic and the catalog stays explicit.
 | `MessageStore`            | Client                   | This package     | Stores raw A2UI messages in arrival order and notifies subscribers. It does not parse or interpret the protocol.                              |
 | `<A2UI>`                  | Client                   | This package     | Owns a `MessageProcessor` per mount, consumes new messages, renders the active surface, and forwards generated UI actions through `onAction`. |
 | Catalog API               | Client + Agent handshake | This package     | Maps protocol component/function names to local implementations and optional JSON schemas. Compose it with `defineCatalog` and friends.       |
-| Built-ins                 | Client                   | This package     | A2UI v0.9 basic-catalog component renderers, per-component JSON-Schema manifests, and client-side basic-catalog function implementations.     |
+| Built-ins                 | Client                   | This package     | A2UI v1.0 basic-catalog component renderers, per-component JSON-Schema manifests, and client-side basic-catalog function implementations.     |
 | `npx @lynx-js/genui a2ui` | Build / setup time       | GenUI CLI        | Generates custom catalog artifacts and A2UI system prompts. Not required when both Agent and renderer use the built-in basic catalog.         |
 
 A useful way to remember it: **the server decides, the client renders, and
@@ -217,7 +219,7 @@ MessageStore ──subscribe──► <A2UI> ──► MessageProcessor ──�
   applies `createSurface` / `updateComponents` / `updateDataModel` /
   `deleteSurface` into surface state, and emits typed events
   (`beginRendering`, `surfaceUpdate`, `deleteSurface`) for the React layer
-  to consume. `dispatch({ userAction })` fans actions out to listeners.
+  to consume. `sendMessage({ version: 'v1.0', action })` fans actions out to listeners.
 - **`Resource`** — a `pending → success → error` state machine, one per
   surface root and per component instance. Its snapshot reference changes
   on every transition so `useSyncExternalStore` never bails out of a
@@ -265,7 +267,7 @@ The building blocks you compose against:
   `resolveCatalog`, and `defineFunction`. There is no global component
   registry; every consumer composes the component and function entries it
   wants.
-- **Built-in components** — 20 A2UI v0.9 basic-catalog renderers (`Text`,
+- **Built-in components** — 20 A2UI v1.0 basic-catalog renderers (`Text`,
   `Image`, `Button`, `Row`, `Column`, `List`, `Loading`, `Card`, `Modal`,
   `Divider`, `Icon`, `CheckBox`, `ChoicePicker`, `DateTimeInput`,
   `LineChart`, `PieChart`, `RadioGroup`, `Slider`, `TextField`, and
@@ -273,7 +275,7 @@ The building blocks you compose against:
   does.
 - **Per-component manifests** — `catalog/<Name>/catalog.json`, the
   JSON-Schema descriptions used during Agent handshakes.
-- **`basicFunctions`** — A2UI v0.9 basic-catalog client function entries,
+- **`basicFunctions`** — A2UI v1.0 basic-catalog client function entries,
   ready to spread into your `catalogs` array.
 
 ## Exports
@@ -298,17 +300,18 @@ Most apps only ever import from `@lynx-js/genui/a2ui`. Reach for `/store` and
 
 `<A2UI>` takes two required props and a set of optional render hooks.
 
-| Prop                | Type                                     | Required | Purpose                                                                                                 |
-| ------------------- | ---------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------- |
-| `messageStore`      | `MessageStore`                           | yes      | The raw-message buffer your transport pushes into. `<A2UI>` subscribes and processes new tail messages. |
-| `catalogs`          | `readonly CatalogInput[]`                | yes      | The components and function entries the renderer is allowed to instantiate.                             |
-| `onAction`          | `(action: UserActionPayload) => void`    | no       | Fired when a user action occurs in the tree. Forward to your Agent; push responses back into the store. |
-| `className`         | `string`                                 | no       | Applied to the surface root view (`surface-${surfaceId}`). Handy for surface-level theme classes.       |
-| `wrapSurface`       | `(children, { surfaceId }) => ReactNode` | no       | Wraps each surface so you can apply an outer theme shell or wrapper styles.                             |
-| `renderEmpty`       | `() => ReactNode`                        | no       | Rendered before the first `beginRendering` arrives. Defaults to nothing.                                |
-| `renderFallback`    | `() => ReactNode`                        | no       | Rendered while the active resource is pending. Defaults to the built-in `<Loading>`.                    |
-| `renderError`       | `(err: unknown) => ReactNode`            | no       | Rendered when the active resource fails.                                                                |
-| `renderUnsupported` | `(info) => ReactNode`                    | no       | Rendered for an unsupported component or data syntax.                                                   |
+| Prop                | Type                                           | Required | Purpose                                                                                                 |
+| ------------------- | ---------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| `messageStore`      | `MessageStore`                                 | yes      | The raw-message buffer your transport pushes into. `<A2UI>` subscribes and processes new tail messages. |
+| `catalogs`          | `readonly CatalogInput[]`                      | yes      | The components and function entries the renderer is allowed to instantiate.                             |
+| `onMessage`         | `(message, metadata) => void \| Promise<void>` | no       | Forward v1.0 wire messages and data-model metadata to your Agent; push replies into the store.          |
+| `onAction`          | `(action: UserActionPayload) => void`          | no       | Receives only the action payload, without its version envelope or transport metadata.                   |
+| `className`         | `string`                                       | no       | Applied to the surface root view (`surface-${surfaceId}`). Handy for surface-level theme classes.       |
+| `wrapSurface`       | `(children, { surfaceId }) => ReactNode`       | no       | Wraps each surface so you can apply an outer theme shell or wrapper styles.                             |
+| `renderEmpty`       | `() => ReactNode`                              | no       | Rendered before the first `beginRendering` arrives. Defaults to nothing.                                |
+| `renderFallback`    | `() => ReactNode`                              | no       | Rendered while the active resource is pending. Defaults to the built-in `<Loading>`.                    |
+| `renderError`       | `(err: unknown) => ReactNode`                  | no       | Rendered when the active resource fails.                                                                |
+| `renderUnsupported` | `(info) => ReactNode`                          | no       | Rendered for an unsupported component or data syntax.                                                   |
 
 Lifecycle notes that save debugging time:
 

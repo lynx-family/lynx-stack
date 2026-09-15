@@ -3,15 +3,15 @@
   "description": "Example of podcast episode demonstrating AudioPlayer and date formatting.",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "createSurface": {
         "surfaceId": "gallery-podcast-episode",
-        "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json",
+        "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateComponents": {
         "surfaceId": "gallery-podcast-episode",
         "components": [
@@ -78,8 +78,7 @@
                   "path": "/date"
                 },
                 "format": "MMM d, yyyy"
-              },
-              "returnType": "string"
+              }
             },
             "variant": "caption"
           },
@@ -105,7 +104,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateDataModel": {
         "surfaceId": "gallery-podcast-episode",
         "value": {

@@ -52,7 +52,7 @@ const catalog = defineCatalog([Text, Button]);
 
 ## 内置组件
 
-这个包提供 22 个 A2UI v0.9 basic-catalog renderer。每个都是独立、可 tree-shake
+这个包提供 22 个 A2UI v1.0 basic-catalog renderer。每个都是独立、可 tree-shake
 的导出，既可从根导入，也可从 `@lynx-js/genui/a2ui/catalog/<Name>` 导入。
 
 **布局与容器**
@@ -133,8 +133,8 @@ agentChannel.handshake({ catalog: serializeCatalog(catalog) });
 ```
 
 协议名作为顶层 key 存在 JSON 里，所以运行时从不重复它。没有 manifest 就注册的
-组件照样能渲染——它们只是序列化成 `{ name }`，告诉 Agent 该组件存在，但不描述
-它的 props。
+组件仍可在本地渲染，但 `serializeCatalog` 会拒绝它们，因为无法校验其 props。
+向 Agent 宣告前，需要给每个组件配对 manifest。
 
 ## basic-catalog functions
 
@@ -149,7 +149,7 @@ const catalog = defineCatalog([Text, ...basicFunctions]);
 ```
 
 `basicFunctions` 是一组现成 entry 的数组，它们的实现直接来自上游
-`@a2ui/web_core` basic catalog，所以 wire contract 能免费地与 A2UI v0.9 spec
+`@a2ui/web_core` basic catalog，所以 wire contract 能免费地与 A2UI v1.0 spec
 保持一致。它覆盖 25 个 function：
 
 | 类别   | Functions（协议名）                                                         |
@@ -163,7 +163,7 @@ const catalog = defineCatalog([Text, ...basicFunctions]);
 | 动作   | `openUrl`                                                                   |
 
 > 注意大小写不统一——比较/文本类用 `snake_case`（`not_equals`、`starts_with`），
-> 而格式化类用 `camelCase`（`formatDate`、`openUrl`）。这些是上游 A2UI v0.9 的
+> 而格式化类用 `camelCase`（`formatDate`、`openUrl`）。这些是上游 A2UI v1.0 的
 > 名称；在 message 里请原样使用。
 
 只要你的 Agent 可能发出其中任何一个，就加入 `...basicFunctions`。如果某条
@@ -379,9 +379,9 @@ MyChart.displayName = 'MyChart';
   的任何 `executeFunctionCall` 都能路由到它们。
 - **`mergeCatalogs(...catalogs)`**——合并多个 catalog，重名时**后写覆盖前写**。
   适合分层：page catalog 覆盖 brand catalog，brand catalog 覆盖内置。
-- **`serializeCatalog(catalog)`**——为 Agent handshake 输出 JSON manifest。没有
-  附带 schema 的组件序列化成 `{ name }`；function 在有 schema 时带上其参数
-  schema 一起序列化。
+- **`serializeCatalog(catalog, catalogId?)`**——输出 v1.0 Catalog，包含同值的
+  `catalogId` 和 `$id`、组件判别属性，以及组件和函数的联合定义。默认使用内置
+  Lynx Catalog ID。每个组件必须附带 schema；函数在有定义时才会对外宣告。
 - **`resolveCatalog(catalog)`**——返回一个 `name → component` 的 map。renderer
   内部用它来解析 `{ component: 'Text' }`；供高级场景暴露。
 - **`defineFunction(impl, manifest?)`**——把一个 function 实现包装成 catalog

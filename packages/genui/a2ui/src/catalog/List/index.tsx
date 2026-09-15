@@ -1,11 +1,14 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type * as v0_9 from '@a2ui/web_core/v0_9';
 
 import { NodeRenderer } from '../../react/A2UIRenderer.jsx';
 import { useDataBinding } from '../../react/useDataBinding.js';
-import type { GenericComponentProps } from '../../store/types.js';
+import type {
+  ChildList,
+  ComponentInstance,
+  GenericComponentProps,
+} from '../../store/types.js';
 
 import '../../../styles/catalog/List.css';
 
@@ -16,7 +19,7 @@ import '../../../styles/catalog/List.css';
  */
 export interface ListProps extends GenericComponentProps {
   /** Static child IDs array or template object. */
-  children: string[] | { componentId: string; path: string };
+  children: ChildList;
   direction?: 'horizontal' | 'vertical';
   align?: 'start' | 'center' | 'end' | 'stretch';
 }
@@ -37,7 +40,7 @@ export function List(
 
   interface ListItem {
     key: string;
-    component: v0_9.AnyComponent & { dataContextPath?: string };
+    component: ComponentInstance & { dataContextPath?: string };
   }
 
   const isDynamic = children && !Array.isArray(children)

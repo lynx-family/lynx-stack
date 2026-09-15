@@ -17,16 +17,18 @@ export function createFallbackMessagesFromPlainText(
   text: string,
 ): ServerToClientMessage[] {
   const surfaceId = 'default';
-  const rootId = 'root-text';
+  const rootId = 'root';
 
   return [
     {
+      version: 'v1.0',
       createSurface: {
         surfaceId,
-        catalogId: 'inline-text',
+        catalogId: 'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
       },
     },
     {
+      version: 'v1.0',
       updateComponents: {
         surfaceId,
         components: [
@@ -54,12 +56,14 @@ export function createTextCardMessages(
 
   return [
     {
+      version: 'v1.0',
       createSurface: {
         surfaceId,
-        catalogId: 'inline-text',
+        catalogId: 'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
       },
     },
     {
+      version: 'v1.0',
       updateComponents: {
         surfaceId,
         components: [
@@ -129,7 +133,8 @@ export function normalizePayloadToMessages(
 
       if (
         v['createSurface'] || v['updateComponents'] || v['updateDataModel']
-        || v['deleteSurface']
+        || v['deleteSurface'] || v['callRendererFunction']
+        || v['agentFunctionResponse']
       ) {
         add(v);
         return;
@@ -173,8 +178,7 @@ export function normalizePayloadToMessages(
 
 /**
  * Tag messages with the given messageId and report whether any of them
- * carries a non-empty `updateComponents`. Also dedupes `createSurface`
- * messages against the set of currently-active surfaces.
+ * carries components. Track active surfaces without discarding protocol messages.
  */
 export function prepareMessagesForProcessing(
   rawMessages: ServerToClientMessage[],
@@ -192,12 +196,14 @@ export function prepareMessagesForProcessing(
     const createdSurfaceId = (msg as { createSurface?: { surfaceId?: string } })
       .createSurface?.surfaceId;
     if (typeof createdSurfaceId === 'string') {
-      if (activeSurfaceIds.has(createdSurfaceId)) {
-        return false;
-      }
       activeSurfaceIds.add(createdSurfaceId);
     }
 
+    if (
+      'createSurface' in msg && (msg.createSurface?.components?.length ?? 0) > 0
+    ) {
+      hasComponentUpdate = true;
+    }
     if (
       ((msg as { updateComponents?: { components?: unknown[] } })
         .updateComponents

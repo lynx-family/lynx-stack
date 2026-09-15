@@ -1,6 +1,9 @@
 {
   "DemoText": {
     "properties": {
+      "component": {
+        "const": "DemoText"
+      },
       "text": {
         "oneOf": [
           {
@@ -31,8 +34,10 @@
       }
     },
     "required": [
+      "component",
       "text"
     ],
-    "description": "Demo text fixture."
+    "description": "Demo text fixture.",
+    "type": "object"
   }
 }

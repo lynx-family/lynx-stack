@@ -13,15 +13,8 @@ export interface TextProps extends GenericComponentProps {
   /** Literal text, path binding, or function call. */
   text: string | { path: string } | {
     call: string;
+    catalogId?: string;
     args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
   };
   variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'caption' | 'body' | 'markdown';
   emphasis?: 'medium' | 'strong';

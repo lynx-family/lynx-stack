@@ -1,10 +1,168 @@
 {
+  "$id": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
   "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
+  "$defs": {
+    "anyComponent": {
+      "oneOf": [
+        {
+          "$ref": "#/components/Button"
+        },
+        {
+          "$ref": "#/components/Card"
+        },
+        {
+          "$ref": "#/components/CheckBox"
+        },
+        {
+          "$ref": "#/components/ChoicePicker"
+        },
+        {
+          "$ref": "#/components/Column"
+        },
+        {
+          "$ref": "#/components/DateTimeInput"
+        },
+        {
+          "$ref": "#/components/Divider"
+        },
+        {
+          "$ref": "#/components/Icon"
+        },
+        {
+          "$ref": "#/components/Image"
+        },
+        {
+          "$ref": "#/components/LazyComponent"
+        },
+        {
+          "$ref": "#/components/LineChart"
+        },
+        {
+          "$ref": "#/components/List"
+        },
+        {
+          "$ref": "#/components/Loading"
+        },
+        {
+          "$ref": "#/components/McpApp"
+        },
+        {
+          "$ref": "#/components/Modal"
+        },
+        {
+          "$ref": "#/components/PieChart"
+        },
+        {
+          "$ref": "#/components/RadioGroup"
+        },
+        {
+          "$ref": "#/components/Row"
+        },
+        {
+          "$ref": "#/components/Slider"
+        },
+        {
+          "$ref": "#/components/Tabs"
+        },
+        {
+          "$ref": "#/components/Text"
+        },
+        {
+          "$ref": "#/components/TextField"
+        }
+      ]
+    },
+    "anyFunction": {
+      "oneOf": [
+        {
+          "$ref": "#/functions/add"
+        },
+        {
+          "$ref": "#/functions/subtract"
+        },
+        {
+          "$ref": "#/functions/multiply"
+        },
+        {
+          "$ref": "#/functions/divide"
+        },
+        {
+          "$ref": "#/functions/equals"
+        },
+        {
+          "$ref": "#/functions/not_equals"
+        },
+        {
+          "$ref": "#/functions/greater_than"
+        },
+        {
+          "$ref": "#/functions/less_than"
+        },
+        {
+          "$ref": "#/functions/and"
+        },
+        {
+          "$ref": "#/functions/or"
+        },
+        {
+          "$ref": "#/functions/not"
+        },
+        {
+          "$ref": "#/functions/contains"
+        },
+        {
+          "$ref": "#/functions/starts_with"
+        },
+        {
+          "$ref": "#/functions/ends_with"
+        },
+        {
+          "$ref": "#/functions/required"
+        },
+        {
+          "$ref": "#/functions/regex"
+        },
+        {
+          "$ref": "#/functions/length"
+        },
+        {
+          "$ref": "#/functions/numeric"
+        },
+        {
+          "$ref": "#/functions/email"
+        },
+        {
+          "$ref": "#/functions/formatString"
+        },
+        {
+          "$ref": "#/functions/formatNumber"
+        },
+        {
+          "$ref": "#/functions/formatCurrency"
+        },
+        {
+          "$ref": "#/functions/formatDate"
+        },
+        {
+          "$ref": "#/functions/pluralize"
+        },
+        {
+          "$ref": "#/functions/openUrl"
+        }
+      ]
+    }
+  },
+  "protocolVersion": "1.0",
   "components": {
     "Button": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Button"
+        },
         "child": {
-          "type": "string"
+          "type": "string",
+          "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ComponentId"
         },
         "variant": {
           "type": "string",
@@ -27,10 +185,48 @@
                     "name": {
                       "type": "string"
                     },
+                    "userMessage": {
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "path": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "path"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "call": {
+                              "type": "string"
+                            },
+                            "catalogId": {
+                              "type": "string"
+                            },
+                            "args": {
+                              "type": "object",
+                              "additionalProperties": true
+                            }
+                          },
+                          "required": [
+                            "call"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
                     "context": {
                       "type": "object",
                       "additionalProperties": true,
-                      "description": "Context is a JSON object map in v0.9."
+                      "description": "Context is a JSON object map in v1.0."
                     }
                   },
                   "required": [
@@ -53,21 +249,12 @@
                     "call": {
                       "type": "string"
                     },
+                    "catalogId": {
+                      "type": "string"
+                    },
                     "args": {
                       "type": "object",
                       "additionalProperties": true
-                    },
-                    "returnType": {
-                      "type": "string",
-                      "enum": [
-                        "string",
-                        "number",
-                        "boolean",
-                        "object",
-                        "array",
-                        "any",
-                        "void"
-                      ]
                     }
                   },
                   "required": [
@@ -83,7 +270,7 @@
               "additionalProperties": false
             }
           ],
-          "description": "v0.9 actions should use the `event` wrapper for server-dispatched clicks."
+          "description": "v1.0 actions should use the `event` wrapper for server-dispatched clicks."
         },
         "checks": {
           "type": "array",
@@ -92,9 +279,6 @@
             "properties": {
               "condition": {
                 "oneOf": [
-                  {
-                    "type": "boolean"
-                  },
                   {
                     "type": "object",
                     "properties": {
@@ -113,21 +297,12 @@
                       "call": {
                         "type": "string"
                       },
+                      "catalogId": {
+                        "type": "string"
+                      },
                       "args": {
                         "type": "object",
                         "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
@@ -139,27 +314,33 @@
                 ]
               },
               "message": {
-                "type": "string"
+                "type": "string",
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           }
         }
       },
       "required": [
+        "component",
         "child",
         "action"
       ],
       "description": "Props for the built-in Button catalog component."
     },
     "Card": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Card"
+        },
         "child": {
-          "type": "string"
+          "type": "string",
+          "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ComponentId"
         },
         "variant": {
           "type": "string",
@@ -175,12 +356,17 @@
         }
       },
       "required": [
+        "component",
         "child"
       ],
       "description": "Props for the built-in Card catalog component."
     },
     "CheckBox": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "CheckBox"
+        },
         "label": {
           "oneOf": [
             {
@@ -204,21 +390,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -252,21 +429,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -285,9 +453,6 @@
               "condition": {
                 "oneOf": [
                   {
-                    "type": "boolean"
-                  },
-                  {
                     "type": "object",
                     "properties": {
                       "path": {
@@ -305,21 +470,12 @@
                       "call": {
                         "type": "string"
                       },
+                      "catalogId": {
+                        "type": "string"
+                      },
                       "args": {
                         "type": "object",
                         "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
@@ -331,25 +487,30 @@
                 ]
               },
               "message": {
-                "type": "string"
+                "type": "string",
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           }
         }
       },
       "required": [
+        "component",
         "label",
         "value"
       ],
       "description": "Props for the built-in CheckBox catalog component."
     },
     "ChoicePicker": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "ChoicePicker"
+        },
         "label": {
           "oneOf": [
             {
@@ -373,21 +534,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -435,21 +587,12 @@
                       "call": {
                         "type": "string"
                       },
+                      "catalogId": {
+                        "type": "string"
+                      },
                       "args": {
                         "type": "object",
                         "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
@@ -500,21 +643,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -546,9 +680,6 @@
               "condition": {
                 "oneOf": [
                   {
-                    "type": "boolean"
-                  },
-                  {
                     "type": "object",
                     "properties": {
                       "path": {
@@ -566,21 +697,12 @@
                       "call": {
                         "type": "string"
                       },
+                      "catalogId": {
+                        "type": "string"
+                      },
                       "args": {
                         "type": "object",
                         "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
@@ -594,12 +716,11 @@
               },
               "message": {
                 "type": "string",
-                "description": "The error message to display if the check fails."
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           },
@@ -607,38 +728,20 @@
         }
       },
       "required": [
+        "component",
         "options",
         "value"
       ],
       "description": "Props for the built-in ChoicePicker catalog component."
     },
     "Column": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Column"
+        },
         "children": {
-          "oneOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "object",
-              "properties": {
-                "componentId": {
-                  "type": "string"
-                },
-                "path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "componentId",
-                "path"
-              ],
-              "additionalProperties": false
-            }
-          ],
+          "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ChildList",
           "description": "Static child IDs array or template object."
         },
         "align": {
@@ -664,12 +767,17 @@
         }
       },
       "required": [
+        "component",
         "children"
       ],
       "description": "Props for the built-in Column catalog component."
     },
     "DateTimeInput": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "DateTimeInput"
+        },
         "value": {
           "oneOf": [
             {
@@ -713,21 +821,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -767,9 +866,6 @@
               "condition": {
                 "oneOf": [
                   {
-                    "type": "boolean"
-                  },
-                  {
                     "type": "object",
                     "properties": {
                       "path": {
@@ -787,21 +883,12 @@
                       "call": {
                         "type": "string"
                       },
+                      "catalogId": {
+                        "type": "string"
+                      },
                       "args": {
                         "type": "object",
                         "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
@@ -815,12 +902,11 @@
               },
               "message": {
                 "type": "string",
-                "description": "The error message to display if the check fails."
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           },
@@ -828,12 +914,17 @@
         }
       },
       "required": [
+        "component",
         "value"
       ],
       "description": "Props for the built-in DateTimeInput catalog component."
     },
     "Divider": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Divider"
+        },
         "axis": {
           "type": "string",
           "enum": [
@@ -842,11 +933,17 @@
           ]
         }
       },
-      "required": [],
+      "required": [
+        "component"
+      ],
       "description": "Props for the built-in Divider catalog component."
     },
     "Icon": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Icon"
+        },
         "name": {
           "oneOf": [
             {
@@ -1056,12 +1153,17 @@
         }
       },
       "required": [
+        "component",
         "name"
       ],
       "description": "Props for the built-in Icon catalog component."
     },
     "Image": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Image"
+        },
         "url": {
           "type": "string",
           "description": "Image URL or path binding."
@@ -1101,12 +1203,17 @@
         }
       },
       "required": [
+        "component",
         "url"
       ],
       "description": "Props for the built-in Image catalog component."
     },
     "LazyComponent": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "LazyComponent"
+        },
         "url": {
           "type": "string",
           "description": "URL of a ReactLynx standalone lazy bundle. The bundle must default-export a React component. Used by native Lynx rendering."
@@ -1137,11 +1244,16 @@
         }
       },
       "required": [
+        "component",
         "url"
       ]
     },
     "LineChart": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "LineChart"
+        },
         "labels": {
           "oneOf": [
             {
@@ -1232,38 +1344,20 @@
         }
       },
       "required": [
+        "component",
         "labels",
         "series"
       ],
       "description": "Props for the built-in LineChart catalog component."
     },
     "List": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "List"
+        },
         "children": {
-          "oneOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "object",
-              "properties": {
-                "componentId": {
-                  "type": "string"
-                },
-                "path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "componentId",
-                "path"
-              ],
-              "additionalProperties": false
-            }
-          ],
+          "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ChildList",
           "description": "Static child IDs array or template object."
         },
         "direction": {
@@ -1284,12 +1378,17 @@
         }
       },
       "required": [
+        "component",
         "children"
       ],
       "description": "Props for the built-in List catalog component."
     },
     "Loading": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Loading"
+        },
         "variant": {
           "type": "string",
           "enum": [
@@ -1299,11 +1398,17 @@
           "description": "Visual density for the skeleton placeholder."
         }
       },
-      "required": [],
+      "required": [
+        "component"
+      ],
       "description": "Props for the built-in Loading catalog component."
     },
     "McpApp": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "McpApp"
+        },
         "url": {
           "type": "string",
           "description": "URL of the trusted native Lynx bundle that renders the MCP App."
@@ -1343,30 +1448,42 @@
         }
       },
       "required": [
+        "component",
         "url",
         "mcpAppData"
       ],
       "description": "Props for the built-in MCP App frame host. Bundle URLs and render data must come from a host-registered, trusted MCP Apps resource. They must not be invented by an agent or accepted as arbitrary executable content."
     },
     "Modal": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Modal"
+        },
         "trigger": {
           "type": "string",
+          "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ComponentId",
           "description": "The ID of the component that opens the modal when interacted with."
         },
         "content": {
           "type": "string",
+          "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ComponentId",
           "description": "The ID of the component to display inside the modal."
         }
       },
       "required": [
+        "component",
         "trigger",
         "content"
       ],
       "description": "Props for the built-in Modal catalog component."
     },
     "PieChart": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "PieChart"
+        },
         "data": {
           "oneOf": [
             {
@@ -1447,12 +1564,17 @@
         }
       },
       "required": [
+        "component",
         "data"
       ],
       "description": "Props for the built-in PieChart catalog component."
     },
     "RadioGroup": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "RadioGroup"
+        },
         "items": {
           "oneOf": [
             {
@@ -1479,21 +1601,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -1528,21 +1641,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -1571,9 +1675,6 @@
               "condition": {
                 "oneOf": [
                   {
-                    "type": "boolean"
-                  },
-                  {
                     "type": "object",
                     "properties": {
                       "path": {
@@ -1591,21 +1692,12 @@
                       "call": {
                         "type": "string"
                       },
+                      "catalogId": {
+                        "type": "string"
+                      },
                       "args": {
                         "type": "object",
                         "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
@@ -1617,50 +1709,32 @@
                 ]
               },
               "message": {
-                "type": "string"
+                "type": "string",
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           }
         }
       },
       "required": [
+        "component",
         "items",
         "value"
       ],
       "description": "Props for the built-in RadioGroup catalog component."
     },
     "Row": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Row"
+        },
         "children": {
-          "oneOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "object",
-              "properties": {
-                "componentId": {
-                  "type": "string"
-                },
-                "path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "componentId",
-                "path"
-              ],
-              "additionalProperties": false
-            }
-          ],
+          "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ChildList",
           "description": "Static child IDs array or template object."
         },
         "justify": {
@@ -1686,12 +1760,17 @@
         }
       },
       "required": [
+        "component",
         "children"
       ],
       "description": "Props for the built-in Row catalog component."
     },
     "Slider": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Slider"
+        },
         "label": {
           "oneOf": [
             {
@@ -1715,21 +1794,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -1772,21 +1842,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -1806,9 +1867,6 @@
               "condition": {
                 "oneOf": [
                   {
-                    "type": "boolean"
-                  },
-                  {
                     "type": "object",
                     "properties": {
                       "path": {
@@ -1826,21 +1884,12 @@
                       "call": {
                         "type": "string"
                       },
+                      "catalogId": {
+                        "type": "string"
+                      },
                       "args": {
                         "type": "object",
                         "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
@@ -1854,12 +1903,11 @@
               },
               "message": {
                 "type": "string",
-                "description": "The error message to display if the check fails."
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           },
@@ -1867,13 +1915,18 @@
         }
       },
       "required": [
+        "component",
         "max",
         "value"
       ],
       "description": "Props for the built-in Slider catalog component."
     },
     "Tabs": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Tabs"
+        },
         "tabs": {
           "type": "array",
           "items": {
@@ -1883,7 +1936,8 @@
                 "type": "string"
               },
               "child": {
-                "type": "string"
+                "type": "string",
+                "$ref": "https://a2ui.org/specification/v1_0/common_types.json#/$defs/ComponentId"
               }
             },
             "required": [
@@ -1895,12 +1949,17 @@
         }
       },
       "required": [
+        "component",
         "tabs"
       ],
       "description": "Props for the built-in Tabs catalog component."
     },
     "Text": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Text"
+        },
         "text": {
           "oneOf": [
             {
@@ -1924,21 +1983,12 @@
                 "call": {
                   "type": "string"
                 },
+                "catalogId": {
+                  "type": "string"
+                },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
@@ -1972,12 +2022,17 @@
         }
       },
       "required": [
+        "component",
         "text"
       ],
       "description": "Props for the built-in Text catalog component."
     },
     "TextField": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "TextField"
+        },
         "label": {
           "oneOf": [
             {
@@ -2040,9 +2095,6 @@
               "condition": {
                 "oneOf": [
                   {
-                    "type": "boolean"
-                  },
-                  {
                     "type": "object",
                     "properties": {
                       "path": {
@@ -2058,6 +2110,9 @@
                     "type": "object",
                     "properties": {
                       "call": {
+                        "type": "string"
+                      },
+                      "catalogId": {
                         "type": "string"
                       },
                       "args": {
@@ -2087,12 +2142,6 @@
                             }
                           ]
                         }
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "boolean"
-                        ]
                       }
                     },
                     "required": [
@@ -2105,12 +2154,11 @@
               },
               "message": {
                 "type": "string",
-                "description": "The error message to display if the check fails."
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           },
@@ -2118,438 +2166,249 @@
         }
       },
       "required": [
+        "component",
         "label"
       ],
       "description": "Props for the built-in TextField catalog component."
     }
   },
   "functions": {
-    "required": {
+    "add": {
       "type": "object",
-      "description": "Checks that the value is not null, undefined, or empty.",
+      "returnType": "number",
+      "allowedCallers": "rendererOnly",
       "properties": {
         "call": {
-          "const": "required"
+          "const": "add"
         },
         "args": {
           "type": "object",
           "properties": {
-            "value": {
-              "description": "The value to check."
+            "a": {
+              "type": "number"
+            },
+            "b": {
+              "type": "number"
             }
           },
           "required": [
-            "value"
+            "a",
+            "b"
           ],
           "additionalProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
         }
       },
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
-    "regex": {
+    "subtract": {
       "type": "object",
-      "description": "Checks that the value matches a regular expression string.",
+      "returnType": "number",
+      "allowedCallers": "rendererOnly",
       "properties": {
         "call": {
-          "const": "regex"
+          "const": "subtract"
         },
         "args": {
           "type": "object",
           "properties": {
-            "value": {
-              "$ref": "common_types.json#/$defs/DynamicString"
+            "a": {
+              "type": "number"
             },
-            "pattern": {
-              "type": "string",
-              "description": "The regex pattern to match against."
+            "b": {
+              "type": "number"
             }
           },
           "required": [
-            "value",
-            "pattern"
-          ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
-        }
-      },
-      "required": [
-        "call",
-        "args"
-      ],
-      "unevaluatedProperties": false
-    },
-    "length": {
-      "type": "object",
-      "description": "Checks string length constraints.",
-      "properties": {
-        "call": {
-          "const": "length"
-        },
-        "args": {
-          "type": "object",
-          "properties": {
-            "value": {
-              "$ref": "common_types.json#/$defs/DynamicString"
-            },
-            "min": {
-              "type": "integer",
-              "minimum": 0,
-              "description": "The minimum allowed length."
-            },
-            "max": {
-              "type": "integer",
-              "minimum": 0,
-              "description": "The maximum allowed length."
-            }
-          },
-          "required": [
-            "value"
-          ],
-          "anyOf": [
-            {
-              "required": [
-                "min"
-              ]
-            },
-            {
-              "required": [
-                "max"
-              ]
-            }
-          ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
-        }
-      },
-      "required": [
-        "call",
-        "args"
-      ],
-      "unevaluatedProperties": false
-    },
-    "numeric": {
-      "type": "object",
-      "description": "Checks numeric range constraints.",
-      "properties": {
-        "call": {
-          "const": "numeric"
-        },
-        "args": {
-          "type": "object",
-          "properties": {
-            "value": {
-              "$ref": "common_types.json#/$defs/DynamicNumber"
-            },
-            "min": {
-              "type": "number",
-              "description": "The minimum allowed value."
-            },
-            "max": {
-              "type": "number",
-              "description": "The maximum allowed value."
-            }
-          },
-          "required": [
-            "value"
-          ],
-          "anyOf": [
-            {
-              "required": [
-                "min"
-              ]
-            },
-            {
-              "required": [
-                "max"
-              ]
-            }
-          ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
-        }
-      },
-      "required": [
-        "call",
-        "args"
-      ],
-      "unevaluatedProperties": false
-    },
-    "email": {
-      "type": "object",
-      "description": "Checks that the value is a valid email address.",
-      "properties": {
-        "call": {
-          "const": "email"
-        },
-        "args": {
-          "type": "object",
-          "properties": {
-            "value": {
-              "$ref": "common_types.json#/$defs/DynamicString"
-            }
-          },
-          "required": [
-            "value"
-          ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
-        }
-      },
-      "required": [
-        "call",
-        "args"
-      ],
-      "unevaluatedProperties": false
-    },
-    "formatString": {
-      "type": "object",
-      "description": "Performs string interpolation of data model values and other functions in the catalog functions list and returns the resulting string. The value string can contain interpolated expressions in the `${expression}` format. Supported expression types include: JSON Pointer paths to the data model (e.g., `${/absolute/path}` or `${relative/path}`), and client-side function calls (e.g., `${now()}`). Function arguments must be named (e.g., `${formatDate(value:${/currentDate}, format:'MM-dd')}`). To include a literal `${` sequence, escape it as `\\${`.",
-      "properties": {
-        "call": {
-          "const": "formatString"
-        },
-        "args": {
-          "type": "object",
-          "properties": {
-            "value": {
-              "$ref": "common_types.json#/$defs/DynamicString"
-            }
-          },
-          "required": [
-            "value"
-          ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "string"
-        }
-      },
-      "required": [
-        "call",
-        "args"
-      ],
-      "unevaluatedProperties": false
-    },
-    "formatNumber": {
-      "type": "object",
-      "description": "Formats a number with the specified grouping and decimal precision.",
-      "properties": {
-        "call": {
-          "const": "formatNumber"
-        },
-        "args": {
-          "type": "object",
-          "properties": {
-            "value": {
-              "$ref": "common_types.json#/$defs/DynamicNumber",
-              "description": "The number to format."
-            },
-            "decimals": {
-              "$ref": "common_types.json#/$defs/DynamicNumber",
-              "description": "Optional. The number of decimal places to show. Defaults to 0 or 2 depending on locale."
-            },
-            "grouping": {
-              "$ref": "common_types.json#/$defs/DynamicBoolean",
-              "description": "Optional. If true, uses locale-specific grouping separators (e.g. '1,000'). If false, returns raw digits (e.g. '1000'). Defaults to true."
-            }
-          },
-          "required": [
-            "value"
-          ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "string"
-        }
-      },
-      "required": [
-        "call",
-        "args"
-      ],
-      "unevaluatedProperties": false
-    },
-    "formatCurrency": {
-      "type": "object",
-      "description": "Formats a number as a currency string.",
-      "properties": {
-        "call": {
-          "const": "formatCurrency"
-        },
-        "args": {
-          "type": "object",
-          "properties": {
-            "value": {
-              "$ref": "common_types.json#/$defs/DynamicNumber",
-              "description": "The monetary amount."
-            },
-            "currency": {
-              "$ref": "common_types.json#/$defs/DynamicString",
-              "description": "The ISO 4217 currency code (e.g., 'USD', 'EUR')."
-            },
-            "decimals": {
-              "$ref": "common_types.json#/$defs/DynamicNumber",
-              "description": "Optional. The number of decimal places to show. Defaults to 0 or 2 depending on locale."
-            },
-            "grouping": {
-              "$ref": "common_types.json#/$defs/DynamicBoolean",
-              "description": "Optional. If true, uses locale-specific grouping separators (e.g. '1,000'). If false, returns raw digits (e.g. '1000'). Defaults to true."
-            }
-          },
-          "required": [
-            "currency",
-            "value"
-          ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "string"
-        }
-      },
-      "required": [
-        "call",
-        "args"
-      ],
-      "unevaluatedProperties": false
-    },
-    "formatDate": {
-      "type": "object",
-      "description": "Formats a timestamp into a string using a pattern.",
-      "properties": {
-        "call": {
-          "const": "formatDate"
-        },
-        "args": {
-          "type": "object",
-          "properties": {
-            "value": {
-              "$ref": "common_types.json#/$defs/DynamicValue",
-              "description": "The date to format."
-            },
-            "format": {
-              "$ref": "common_types.json#/$defs/DynamicString",
-              "description": "A Unicode TR35 date pattern string.\n\nToken Reference:\n- Year: 'yy' (26), 'yyyy' (2026)\n- Month: 'M' (1), 'MM' (01), 'MMM' (Jan), 'MMMM' (January)\n- Day: 'd' (1), 'dd' (01), 'E' (Tue), 'EEEE' (Tuesday)\n- Hour (12h): 'h' (1-12), 'hh' (01-12) - requires 'a' for AM/PM\n- Hour (24h): 'H' (0-23), 'HH' (00-23) - Military Time\n- Minute: 'mm' (00-59)\n- Second: 'ss' (00-59)\n- Period: 'a' (AM/PM)\n\nExamples:\n- 'MMM dd, yyyy' -> 'Jan 16, 2026'\n- 'HH:mm' -> '14:30' (Military)\n- 'h:mm a' -> '2:30 PM'\n- 'EEEE, d MMMM' -> 'Friday, 16 January'"
-            }
-          },
-          "required": [
-            "format",
-            "value"
-          ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "string"
-        }
-      },
-      "required": [
-        "call",
-        "args"
-      ],
-      "unevaluatedProperties": false
-    },
-    "pluralize": {
-      "type": "object",
-      "description": "Returns a localized string based on the Common Locale Data Repository (CLDR) plural category of the count (zero, one, two, few, many, other). Requires an 'other' fallback. For English, just use 'one' and 'other'.",
-      "properties": {
-        "call": {
-          "const": "pluralize"
-        },
-        "args": {
-          "type": "object",
-          "properties": {
-            "value": {
-              "$ref": "common_types.json#/$defs/DynamicNumber",
-              "description": "The numeric value used to determine the plural category."
-            },
-            "zero": {
-              "$ref": "common_types.json#/$defs/DynamicString",
-              "description": "String for the 'zero' category (e.g., 0 items)."
-            },
-            "one": {
-              "$ref": "common_types.json#/$defs/DynamicString",
-              "description": "String for the 'one' category (e.g., 1 item)."
-            },
-            "two": {
-              "$ref": "common_types.json#/$defs/DynamicString",
-              "description": "String for the 'two' category (used in Arabic, Welsh, etc.)."
-            },
-            "few": {
-              "$ref": "common_types.json#/$defs/DynamicString",
-              "description": "String for the 'few' category (e.g., small groups in Slavic languages)."
-            },
-            "many": {
-              "$ref": "common_types.json#/$defs/DynamicString",
-              "description": "String for the 'many' category (e.g., large groups in various languages)."
-            },
-            "other": {
-              "$ref": "common_types.json#/$defs/DynamicString",
-              "description": "The default/fallback string (used for general plural cases)."
-            }
-          },
-          "required": [
-            "value",
-            "other"
-          ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "string"
-        }
-      },
-      "required": [
-        "call",
-        "args"
-      ],
-      "unevaluatedProperties": false
-    },
-    "openUrl": {
-      "type": "object",
-      "description": "Opens the specified URL in a browser or handler. This function has no return value.",
-      "properties": {
-        "call": {
-          "const": "openUrl"
-        },
-        "args": {
-          "type": "object",
-          "properties": {
-            "url": {
-              "type": "string",
-              "format": "uri",
-              "description": "The URL to open."
-            }
-          },
-          "required": [
-            "url"
+            "a",
+            "b"
           ],
           "additionalProperties": false
-        },
-        "returnType": {
-          "const": "void"
         }
       },
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
+    },
+    "multiply": {
+      "type": "object",
+      "returnType": "number",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "multiply"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "type": "number"
+            },
+            "b": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
+    },
+    "divide": {
+      "type": "object",
+      "returnType": "number",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "divide"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "type": "number"
+            },
+            "b": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
+    },
+    "equals": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "equals"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {},
+            "b": {}
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
+    },
+    "not_equals": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "not_equals"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {},
+            "b": {}
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
+    },
+    "greater_than": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "greater_than"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "type": "number"
+            },
+            "b": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
+    },
+    "less_than": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "less_than"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "type": "number"
+            },
+            "b": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
     },
     "and": {
       "type": "object",
-      "description": "Performs a logical AND operation on a list of boolean values.",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
       "properties": {
         "call": {
           "const": "and"
@@ -2559,31 +2418,24 @@
           "properties": {
             "values": {
               "type": "array",
-              "description": "The list of boolean values to evaluate.",
-              "items": {
-                "$ref": "common_types.json#/$defs/DynamicBoolean"
-              },
               "minItems": 2
             }
           },
           "required": [
             "values"
           ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
+          "additionalProperties": false
         }
       },
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "or": {
       "type": "object",
-      "description": "Performs a logical OR operation on a list of boolean values.",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
       "properties": {
         "call": {
           "const": "or"
@@ -2593,31 +2445,24 @@
           "properties": {
             "values": {
               "type": "array",
-              "description": "The list of boolean values to evaluate.",
-              "items": {
-                "$ref": "common_types.json#/$defs/DynamicBoolean"
-              },
               "minItems": 2
             }
           },
           "required": [
             "values"
           ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
+          "additionalProperties": false
         }
       },
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "not": {
       "type": "object",
-      "description": "Performs a logical NOT operation on a boolean value.",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
       "properties": {
         "call": {
           "const": "not"
@@ -2625,25 +2470,442 @@
         "args": {
           "type": "object",
           "properties": {
-            "value": {
-              "$ref": "common_types.json#/$defs/DynamicBoolean",
-              "description": "The boolean value to negate."
-            }
+            "value": {}
           },
           "required": [
             "value"
           ],
-          "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
+          "additionalProperties": false
         }
       },
       "required": [
         "call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
+    },
+    "contains": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "contains"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "string": {
+              "type": "string"
+            },
+            "substring": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "string",
+            "substring"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
+    },
+    "starts_with": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "starts_with"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "string": {
+              "type": "string"
+            },
+            "prefix": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "string",
+            "prefix"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
+    },
+    "ends_with": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "ends_with"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "string": {
+              "type": "string"
+            },
+            "suffix": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "string",
+            "suffix"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
+    },
+    "required": {
+      "type": "object",
+      "returnType": "validationResult",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "required"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {}
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
+    },
+    "regex": {
+      "type": "object",
+      "returnType": "validationResult",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "regex"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            },
+            "pattern": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value",
+            "pattern"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
+    },
+    "length": {
+      "type": "object",
+      "returnType": "validationResult",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "length"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {},
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
+    },
+    "numeric": {
+      "type": "object",
+      "returnType": "validationResult",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "numeric"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
+    },
+    "email": {
+      "type": "object",
+      "returnType": "validationResult",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "email"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
+    },
+    "formatString": {
+      "type": "object",
+      "returnType": "any",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "formatString"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "value"
+          ]
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
+    },
+    "formatNumber": {
+      "type": "object",
+      "returnType": "string",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "formatNumber"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "decimals": {
+              "type": "number"
+            },
+            "grouping": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
+    },
+    "formatCurrency": {
+      "type": "object",
+      "returnType": "string",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "formatCurrency"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "currency": {
+              "type": "string"
+            },
+            "decimals": {
+              "type": "number"
+            },
+            "grouping": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
+    },
+    "formatDate": {
+      "type": "object",
+      "returnType": "string",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "formatDate"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {},
+            "format": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
+    },
+    "pluralize": {
+      "type": "object",
+      "returnType": "string",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "pluralize"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "zero": {
+              "type": "string"
+            },
+            "one": {
+              "type": "string"
+            },
+            "two": {
+              "type": "string"
+            },
+            "few": {
+              "type": "string"
+            },
+            "many": {
+              "type": "string"
+            },
+            "other": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
+    },
+    "openUrl": {
+      "type": "object",
+      "returnType": "void",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "call": {
+          "const": "openUrl"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "call",
+        "args"
+      ]
     }
   }
 }

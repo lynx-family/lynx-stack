@@ -4,7 +4,7 @@
 import { A2UIRenderer } from '../../react/A2UIRenderer.jsx';
 import { useChecks } from '../../react/useChecks.js';
 import type { CheckLike } from '../../react/useChecks.js';
-import type { GenericComponentProps } from '../../store/types.js';
+import type { ComponentId, GenericComponentProps } from '../../store/types.js';
 
 import '../../../styles/catalog/Button.css';
 
@@ -14,44 +14,37 @@ import '../../../styles/catalog/Button.css';
  * @a2uiCatalog Button
  */
 export interface ButtonProps extends GenericComponentProps {
-  child: string;
+  /** @a2uiComponentId */
+  child: ComponentId;
   variant?: 'primary' | 'borderless';
   isValid?: boolean;
-  /** v0.9 actions should use the `event` wrapper for server-dispatched clicks. */
+  /** v1.0 actions should use the `event` wrapper for server-dispatched clicks. */
   action: {
     event: {
       name: string;
-      /** Context is a JSON object map in v0.9. */
+      userMessage?: string | { path: string } | {
+        call: string;
+        catalogId?: string;
+        args?: Record<string, unknown>;
+      };
+      /** Context is a JSON object map in v1.0. */
       context?: Record<string, unknown>;
     };
   } | {
     functionCall: {
       call: string;
+      catalogId?: string;
       args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
     };
   };
   checks?: Array<{
-    condition: boolean | { path: string } | {
+    condition: { path: string } | {
       call: string;
+      catalogId?: string;
       args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
     };
-    message: string;
+    /** Fallback when the validation result does not include a message. */
+    message?: string;
   }>;
 }
 

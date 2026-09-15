@@ -56,6 +56,7 @@ describe('A2UI action route', () => {
           'x-forwarded-for': '203.0.113.46',
         },
         body: JSON.stringify({
+          version: 'v1.0',
           action: { name: 'refresh' },
           conversation: { history: [], dataModel },
           surfaceId: 'surface-1',
@@ -96,6 +97,7 @@ describe('A2UI action route', () => {
           'x-forwarded-for': '203.0.113.47',
         },
         body: JSON.stringify({
+          version: 'v1.0',
           action: { name: 'refresh' },
           surfaceId: 'surface-1',
           model: 'gpt-custom',

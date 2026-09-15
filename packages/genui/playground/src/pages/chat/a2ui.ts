@@ -646,6 +646,7 @@ export const A2UI_CHAT_ADAPTER = {
           Accept: 'text/event-stream',
         },
         body: {
+          version: 'v1.0',
           surfaceId: action.surfaceId,
           action: action.action,
           conversation,

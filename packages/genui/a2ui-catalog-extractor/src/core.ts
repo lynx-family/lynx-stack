@@ -12,6 +12,7 @@ import type { ProjectReflection, TypeDocOptions } from 'typedoc';
  */
 export interface JsonSchema {
   $ref?: string;
+  not?: JsonSchema;
   additionalProperties?: boolean | JsonSchema;
   const?: unknown;
   default?: unknown;
@@ -65,10 +66,12 @@ export interface WriteComponentCatalogOptions extends ExtractCatalogOptions {
  * Full catalog manifest consumed by A2UI agents and renderers.
  */
 export interface A2UICatalog {
+  $id: string;
   catalogId: string;
+  $defs: { anyComponent: JsonSchema; anyFunction: JsonSchema };
+  protocolVersion: '1.0';
   components?: Record<string, JsonSchema>;
   functions?: Record<string, JsonSchema>;
-  theme?: Record<string, JsonSchema>;
 }
 
 /**
@@ -85,7 +88,8 @@ export interface FunctionDefinition {
     | 'array'
     | 'object'
     | 'any'
-    | 'void';
+    | 'void'
+    | 'validationResult';
 }
 
 /** A function discovered in source via `@a2uiFunction`, with its origin path. */
@@ -94,6 +98,7 @@ export interface CatalogFunction extends FunctionDefinition {
 }
 
 interface ParsedDoc {
+  componentId?: boolean;
   a2uiCatalogName?: string;
   a2uiFunctionName?: string;
   defaultValue?: unknown;
@@ -422,7 +427,7 @@ export async function writeCatalogArtifacts(
 
 // Function names must be valid JavaScript identifiers so they're safe to
 // (a) use as filesystem paths without escaping `..` or path separators and
-// (b) survive A2UI 0.9's wire format (`FunctionCall.call` is a bare name).
+// (b) survive A2UI's wire format (`FunctionCall.call` is a bare name).
 const FUNCTION_NAME_RE = /^[a-z_$][\w$]*$/i;
 
 /**
@@ -463,7 +468,6 @@ export function createA2UICatalog(options: {
   catalogId: string;
   components: CatalogComponent[] | Record<string, JsonSchema>;
   functions?: FunctionDefinition[];
-  theme?: Record<string, JsonSchema>;
 }): A2UICatalog {
   const catalogComponents = Array.isArray(options.components)
     ? Object.fromEntries(
@@ -471,14 +475,28 @@ export function createA2UICatalog(options: {
     )
     : options.components;
 
+  const functions = createFunctionSchemas(options.functions ?? []);
   return {
+    $id: options.catalogId,
     catalogId: options.catalogId,
+    $defs: {
+      anyComponent: createUnionReferences('components', catalogComponents),
+      anyFunction: createUnionReferences('functions', functions),
+    },
+    protocolVersion: '1.0',
     components: catalogComponents,
-    ...(options.functions
-      ? { functions: createFunctionSchemas(options.functions) }
-      : {}),
-    ...(options.theme ? { theme: options.theme } : {}),
+    functions,
   };
+}
+
+function createUnionReferences(
+  section: string,
+  schemas: Record<string, JsonSchema>,
+): JsonSchema {
+  const names = Object.keys(schemas);
+  return names.length > 0
+    ? { oneOf: names.map(name => ({ $ref: `#/${section}/${name}` })) }
+    : { not: {} };
 }
 
 function createFunctionSchemas(
@@ -506,13 +524,12 @@ function createFunctionSchemas(
       {
         type: 'object',
         ...(description ? { description } : {}),
+        returnType,
         properties: {
           call: { const: name } as JsonSchema,
           args: stripSchemaDialect(parameters),
-          returnType: { const: returnType } as JsonSchema,
         },
         required: ['call', 'args'],
-        unevaluatedProperties: false,
       } as JsonSchema,
     ]),
   );
@@ -566,6 +583,7 @@ async function createTypeDocProject(
       ...OptionDefaults.blockTags,
       '@a2uiCatalog',
       '@a2uiFunction',
+      '@a2uiComponentId',
     ],
     entryPoints: sourceFiles,
     excludePrivate: false,
@@ -648,7 +666,7 @@ function createFunctionParametersSchema(
 ): JsonSchema {
   const parameters = signature.parameters ?? [];
 
-  // A2UI 0.9 function calls carry `args: Record<string, any>`. The natural
+  // A2UI function calls carry `args: Record<string, any>`. The natural
   // TypeScript convention is `function fn(args: { name: T1, ... }): R`. When
   // we see exactly one inline-object parameter, unwrap it so the emitted
   // schema describes the args record directly rather than nesting it under
@@ -815,7 +833,7 @@ function mapTypeToReturnType(
       if (referenceName === 'Promise') {
         throw createReflectionError(
           owner,
-          `Async functions are not supported by A2UI 0.9; "${owner.name}" `
+          `Automatic schema extraction does not support async functions; "${owner.name}" `
             + `must return a synchronous value.`,
         );
       }
@@ -875,7 +893,15 @@ function createComponentSchema(
     );
   }
 
-  const schema: JsonSchema = { properties: {}, required: [] };
+  const name = parsedDoc.a2uiCatalogName !== undefined
+      && parsedDoc.a2uiCatalogName.length > 0
+    ? parsedDoc.a2uiCatalogName
+    : inferCatalogName(reflection.name);
+  const schema: JsonSchema = {
+    type: 'object',
+    properties: { component: { const: name } },
+    required: ['component'],
+  };
   applyDocToSchema(schema, parsedDoc);
 
   for (const child of reflection.children) {
@@ -1110,6 +1136,12 @@ function parseReferenceType(
 ): JsonSchema {
   const typeName = String(type.name ?? type.qualifiedName ?? '');
   const typeArguments = type.typeArguments ?? [];
+  if (typeName === 'ComponentId' || typeName === 'ChildList') {
+    return {
+      $ref:
+        `https://a2ui.org/specification/v1_0/common_types.json#/$defs/${typeName}`,
+    };
+  }
 
   if (
     (typeName === 'Array' || typeName === 'ReadonlyArray')
@@ -1169,6 +1201,9 @@ function parseComment(comment: TypeDocComment | undefined): ParsedDoc {
       case '@a2uiCatalog':
         parsedDoc.a2uiCatalogName = content;
         break;
+      case '@a2uiComponentId':
+        parsedDoc.componentId = true;
+        break;
       case '@a2uiFunction':
         parsedDoc.a2uiFunctionName = content;
         break;
@@ -1197,6 +1232,10 @@ function parseComment(comment: TypeDocComment | undefined): ParsedDoc {
 }
 
 function applyDocToSchema(schema: JsonSchema, parsedDoc: ParsedDoc): void {
+  if (parsedDoc.componentId) {
+    schema.$ref =
+      'https://a2ui.org/specification/v1_0/common_types.json#/$defs/ComponentId';
+  }
   if (parsedDoc.description) {
     schema.description = parsedDoc.description;
   }

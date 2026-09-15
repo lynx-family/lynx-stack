@@ -308,7 +308,7 @@ describe('runBenchUiJudge', () => {
     const result = await runBenchUiJudge(
       {
         messages: [{
-          version: 'v0.9',
+          version: 'v1.0',
           createSurface: {
             catalogId: 'catalog',
             surfaceId: 'surface',
@@ -349,7 +349,7 @@ describe('runBenchUiJudge', () => {
         benchMode: true,
         instant: true,
         messages: [{
-          version: 'v0.9',
+          version: 'v1.0',
           createSurface: {
             catalogId: 'catalog',
             surfaceId: 'surface',
@@ -537,7 +537,7 @@ describe('runBenchUiJudge', () => {
     const result = await runBenchUiJudge(
       {
         messages: [{
-          version: 'v0.9',
+          version: 'v1.0',
           updateComponents: {
             components: [
               {
@@ -646,14 +646,13 @@ describe('runBenchUiJudge', () => {
     const result = await runBenchUiJudge(
       {
         messages: [{
-          version: 'v0.9',
+          version: 'v1.0',
           updateDataModel: {
             surfaceId: 'surface',
             value: {
               nested: {
                 args: { url: 'http://127.0.0.1/private' },
                 call: 'openUrl',
-                returnType: 'void',
               },
             },
           },

@@ -3,15 +3,15 @@
   "description": "Demonstrates complex layout weighting and alignment using Rows and Columns with templates.",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "createSurface": {
         "surfaceId": "gallery-financial-grid",
-        "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json",
+        "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateComponents": {
         "surfaceId": "gallery-financial-grid",
         "components": [
@@ -108,8 +108,7 @@
             "component": "Text",
             "text": {
               "call": "formatCurrency",
-              "args": { "value": { "path": "price" }, "currency": "USD" },
-              "returnType": "string"
+              "args": { "value": { "path": "price" }, "currency": "USD" }
             },
             "weight": 1
           },
@@ -118,8 +117,7 @@
             "component": "Text",
             "text": {
               "call": "formatString",
-              "args": { "value": "${change}%" },
-              "returnType": "string"
+              "args": { "value": "${change}%" }
             },
             "weight": 1
           },
@@ -128,8 +126,7 @@
             "component": "Text",
             "text": {
               "call": "formatCurrency",
-              "args": { "value": { "path": "marketCap" }, "currency": "USD" },
-              "returnType": "string"
+              "args": { "value": { "path": "marketCap" }, "currency": "USD" }
             },
             "weight": 1.5
           }
@@ -137,7 +134,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateDataModel": {
         "surfaceId": "gallery-financial-grid",
         "value": {

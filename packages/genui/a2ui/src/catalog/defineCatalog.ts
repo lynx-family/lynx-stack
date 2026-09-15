@@ -14,7 +14,7 @@ import type { GenericComponentProps } from '../store/types.js';
  * JSON Schema fragment describing a component's props. Produced at build time
  * by `@lynx-js/genui/a2ui-catalog-extractor` from the component's TypeScript
  * interface marked with `@a2uiCatalog <Name>`. Optional at runtime — entries
- * that ship without a schema serialize to just `{ name }`.
+ * that ship without a schema can render locally but cannot be serialized.
  */
 export type CatalogSchema = Record<string, unknown>;
 
@@ -126,9 +126,12 @@ export interface Catalog {
 
 /** The serialized payload sent to the agent during channel handshake. */
 export interface SerializedCatalog {
-  version: '0.9';
-  components: Array<{ name: string; schema?: CatalogSchema }>;
-  functions?: CatalogFunctionDefinition[];
+  $id: string;
+  catalogId: string;
+  $defs: Record<string, CatalogSchema>;
+  protocolVersion: '1.0';
+  components: Record<string, CatalogSchema>;
+  functions?: Record<string, Record<string, unknown>>;
 }
 
 function isFunctionEntry(input: CatalogInput): input is CatalogFunctionEntry {
@@ -287,22 +290,70 @@ export function resolveCatalog(
 
 /**
  * Produce the JSON manifest the client should announce to the agent during
- * channel handshake. Component entries without an attached schema serialize
- * to `{ name }` only — useful for letting the agent at least know what's
- * renderable. Function entries serialize with their parameter schema when
+ * channel handshake. Component entries require an attached schema so the
+ * advertised catalog can validate their props. Function entries serialize
+ * with their parameter schema and interface metadata when
  * available.
  */
-export function serializeCatalog(catalog: Catalog): SerializedCatalog {
-  const components: Array<{ name: string; schema?: CatalogSchema }> = [];
-  for (const entry of catalog.components) {
-    const out: { name: string; schema?: CatalogSchema } = { name: entry.name };
-    if (entry.schema !== undefined) out.schema = entry.schema;
-    components.push(out);
-  }
-  const serialized: SerializedCatalog = { version: '0.9', components };
-  const functions = catalog.functions
-    .filter(fn => fn.definition !== undefined)
-    .map(fn => fn.definition!);
-  if (functions.length > 0) serialized.functions = functions;
-  return serialized;
+export function serializeCatalog(
+  catalog: Catalog,
+  catalogId = 'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
+): SerializedCatalog {
+  const components = Object.fromEntries(
+    catalog.components.map(entry => {
+      if (!entry.schema) {
+        throw new Error(
+          `Cannot serialize component "${entry.name}" without a schema`,
+        );
+      }
+      const properties = entry.schema['properties'] as
+        | Record<string, unknown>
+        | undefined;
+      const required = entry.schema['required'] as string[] | undefined;
+      return [entry.name, {
+        ...entry.schema,
+        type: 'object',
+        properties: { ...properties, component: { const: entry.name } },
+        required: [...new Set(['component', ...required ?? []])],
+      }];
+    }),
+  );
+  const functions = Object.fromEntries(
+    catalog.functions.filter(fn => fn.definition).map(fn => {
+      const { description, parameters, returnType, allowedCallers } = fn
+        .definition!;
+      const args = { ...parameters };
+      delete args['$schema'];
+      return [fn.name, {
+        type: 'object',
+        ...(description ? { description } : {}),
+        returnType,
+        ...(allowedCallers ? { allowedCallers } : {}),
+        properties: { call: { const: fn.name }, args },
+        required: ['call', 'args'],
+      }];
+    }),
+  );
+  const references = (
+    section: string,
+    schemas: Record<string, unknown>,
+  ): CatalogSchema =>
+    Object.keys(schemas).length > 0
+      ? {
+        oneOf: Object.keys(schemas).map(name => ({
+          $ref: `#/${section}/${name}`,
+        })),
+      }
+      : { not: {} };
+  return {
+    $id: catalogId,
+    catalogId,
+    $defs: {
+      anyComponent: references('components', components),
+      anyFunction: references('functions', functions),
+    },
+    protocolVersion: '1.0',
+    components,
+    ...(Object.keys(functions).length > 0 ? { functions } : {}),
+  };
 }

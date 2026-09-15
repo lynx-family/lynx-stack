@@ -3,15 +3,15 @@
   "description": "Example of user profile demonstrating number formatting.",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "createSurface": {
         "surfaceId": "gallery-user-profile",
-        "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json",
+        "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateComponents": {
         "surfaceId": "gallery-user-profile",
         "components": [
@@ -86,8 +86,7 @@
                 "value": {
                   "path": "/followers"
                 }
-              },
-              "returnType": "string"
+              }
             },
             "variant": "h3"
           },
@@ -112,8 +111,7 @@
                 "value": {
                   "path": "/following"
                 }
-              },
-              "returnType": "string"
+              }
             },
             "variant": "h3"
           },
@@ -138,8 +136,7 @@
                 "value": {
                   "path": "/posts"
                 }
-              },
-              "returnType": "string"
+              }
             },
             "variant": "h3"
           },
@@ -171,7 +168,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateDataModel": {
         "surfaceId": "gallery-user-profile",
         "value": {

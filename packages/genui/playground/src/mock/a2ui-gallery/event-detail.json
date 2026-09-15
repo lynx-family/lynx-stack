@@ -3,15 +3,15 @@
   "description": "Example of event detail demonstrating date and string formatting.",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "createSurface": {
         "surfaceId": "gallery-event-detail",
-        "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json",
+        "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateComponents": {
         "surfaceId": "gallery-event-detail",
         "components": [
@@ -51,8 +51,7 @@
               "call": "formatString",
               "args": {
                 "value": "${formatDate(value: ${/start}, format: 'E, MMM d')} • ${formatDate(value: ${/start}, format: 'h:mm a')} - ${formatDate(value: ${/end}, format: 'h:mm a')}"
-              },
-              "returnType": "string"
+              }
             },
             "variant": "body"
           },
@@ -128,7 +127,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateDataModel": {
         "surfaceId": "gallery-event-detail",
         "value": {

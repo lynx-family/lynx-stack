@@ -29,6 +29,11 @@ describe('resolveDynamic', () => {
 
   void beforeEach(() => {
     processor = new MessageProcessor();
+    processor.registerCatalog('test', { components: [], functions });
+    processor.processMessages([{
+      version: 'v1.0',
+      createSurface: { surfaceId, catalogId: 'test' },
+    }]);
   });
 
   test('resolves binding paths relative to the current data context', () => {
@@ -52,7 +57,7 @@ describe('resolveDynamic', () => {
         surfaceId,
         '/weather',
       ),
-    ).toBe(12);
+    ).toBe('12');
   });
 
   test('evaluates nested function calls when functions are provided', () => {
@@ -62,7 +67,6 @@ describe('resolveDynamic', () => {
         {
           call: 'add',
           args: { a: 1, b: { call: 'identity', args: { value: 2 } } },
-          returnType: 'number',
         },
         surfaceId,
         undefined,
@@ -81,14 +85,12 @@ describe('resolveDynamic', () => {
         {
           call: 'add',
           args: { a: 1, b: { call: 'identity', args: { value: 2 } } },
-          returnType: 'number',
         },
         surfaceId,
       ),
     ).toEqual({
       call: 'add',
       args: { a: 1, b: { call: 'identity', args: { value: 2 } } },
-      returnType: 'number',
     });
   });
 });

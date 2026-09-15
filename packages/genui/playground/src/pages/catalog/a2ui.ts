@@ -20,22 +20,36 @@ function formatJson(value: unknown): string {
   return JSON.stringify(value ?? {}, null, 2);
 }
 
-function createComponentPreviewMessages(
-  component: ComponentDoc,
+export function createComponentPreviewMessages(
   usage: unknown,
   context?: A2UIUsageContext,
 ): unknown[] {
-  const components = Array.isArray(usage) ? usage : [usage];
+  const components = Array.isArray(usage) ? [...usage as unknown[]] : [usage];
+  const first = components[0] as { id?: unknown } | undefined;
+  if (
+    first && typeof first.id === 'string'
+    && !components.some(item =>
+      (item as { id?: unknown } | null)?.id === 'root'
+    )
+  ) {
+    components.unshift({
+      id: 'root',
+      component: 'Column',
+      children: [first.id],
+    });
+  }
   const messages: unknown[] = [
     {
+      version: 'v1.0',
       createSurface: {
         surfaceId: 'default',
-        catalogId: `component-${component.name.toLowerCase()}`,
+        catalogId: 'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
       },
     },
   ];
   if (context?.data !== undefined) {
     messages.push({
+      version: 'v1.0',
       updateDataModel: {
         surfaceId: 'default',
         path: context.dataPath ?? '/',
@@ -44,6 +58,7 @@ function createComponentPreviewMessages(
     });
   }
   messages.push({
+    version: 'v1.0',
     updateComponents: {
       surfaceId: 'default',
       components,
@@ -86,7 +101,6 @@ export const A2UI_COMPONENT_CATALOG_SOURCE = {
     },
     buildPreview({
       baseUrl,
-      component,
       example,
       protocol,
       theme,
@@ -111,7 +125,6 @@ export const A2UI_COMPONENT_CATALOG_SOURCE = {
             protocol,
             demoUrl: DEFAULT_A2UI_DEMO_URL,
             messages: createComponentPreviewMessages(
-              component,
               parsedUsage,
               example?.context,
             ),

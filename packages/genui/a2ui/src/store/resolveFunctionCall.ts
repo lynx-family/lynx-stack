@@ -1,38 +1,23 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type * as v0_9 from '@a2ui/web_core/v0_9';
 
-import { functionRegistry } from './FunctionRegistry.js';
-import type {
-  FunctionCallContext,
-  FunctionImpl,
-  FunctionRegistry,
-} from './FunctionRegistry.js';
+import type { FunctionCallContext } from './FunctionRegistry.js';
 import type { MessageProcessor } from './MessageProcessor.js';
 import { resolveDynamicValue } from './resolveDynamic.js';
 import { createResolvedSignal } from './signalResolution.js';
 import { setInStore } from './SignalStore.js';
+import type { ProtocolFunctionCall } from './types.js';
 import type { CatalogFunctionEntry } from '../catalog/defineCatalog.js';
 
 /**
  * Options controlling how function calls are resolved against a catalog.
  */
 export interface ResolveFunctionOptions {
+  /** Await a fresh RPC for explicit actions; dynamic bindings reuse a reactive result. */
+  awaitResult?: boolean;
   functions?: readonly CatalogFunctionEntry[] | undefined;
-  registry?: FunctionRegistry | undefined;
 }
-
-function resolveFunctionImpl(
-  name: string,
-  options: ResolveFunctionOptions,
-): FunctionImpl | undefined {
-  const scoped = options.functions?.find(entry => entry.name === name)?.impl;
-  if (scoped) return scoped;
-  return (options.registry ?? functionRegistry).resolve(name);
-}
-
-const warnedUnknownFunctions = new Set<string>();
 
 function createFunctionContext(
   processor: MessageProcessor,
@@ -53,7 +38,6 @@ function createFunctionContext(
         {
           ...options,
           resolveFunctionCall: executeFunctionCall,
-          registry: options.registry ?? functionRegistry,
         },
       );
     },
@@ -66,7 +50,6 @@ function createFunctionContext(
         {
           ...options,
           resolveFunctionCall: executeFunctionCall,
-          registry: options.registry ?? functionRegistry,
         },
       );
     },
@@ -98,7 +81,6 @@ export function resolveFunctionArguments(
       {
         ...options,
         resolveFunctionCall: executeFunctionCall,
-        registry: options.registry ?? functionRegistry,
       },
     );
   }
@@ -107,18 +89,58 @@ export function resolveFunctionArguments(
 
 export type ExecuteFunctionCall = typeof executeFunctionCall;
 /**
- * Resolve arguments, look the function up in the registry, and invoke it.
- * When no impl is registered, log once and return `undefined` so callers
- * (checks, dynamic-property bindings) can degrade gracefully.
+ * Resolve a catalog-qualified function, invoke it locally, or request its
+ * value from the agent when no renderer implementation exists.
  */
 export function executeFunctionCall(
   processor: MessageProcessor,
-  fn: v0_9.FunctionCall,
+  fn: ProtocolFunctionCall,
   surfaceId: string,
   dataContextPath?: string,
   options: ResolveFunctionOptions = {},
 ): unknown {
-  const impl = resolveFunctionImpl(fn.call, options);
+  const surface = processor.getOrCreateSurface(surfaceId);
+  if (fn.call === '@index') {
+    if (!dataContextPath) return undefined;
+    const parentPath =
+      dataContextPath.slice(0, dataContextPath.lastIndexOf('/')) || '/';
+    const key = dataContextPath.slice(dataContextPath.lastIndexOf('/') + 1);
+    const collection = surface.store.getSignal(parentPath).value;
+    const index = collection && typeof collection === 'object'
+      ? Object.keys(collection).indexOf(key)
+      : -1;
+    const offset = resolveDynamicValue(
+      processor,
+      fn.args?.['offset'] ?? 0,
+      surfaceId,
+      dataContextPath,
+      { ...options, resolveFunctionCall: executeFunctionCall },
+    );
+    return index < 0 || typeof offset !== 'number' ? undefined : index + offset;
+  }
+  const catalogId = fn.catalogId ?? surface.catalogId;
+  const catalog = processor.getCatalog(catalogId);
+  if (!catalog) return undefined;
+  options = { ...options, functions: catalog.functions };
+  const entry = catalog.functions.find(entry => entry.name === fn.call);
+  if (entry?.definition?.allowedCallers === 'agentOnly') return undefined;
+  if (!entry) {
+    const request = {
+      ...fn,
+      ...(catalogId ? { catalogId } : {}),
+      args: resolveFunctionArguments(
+        processor,
+        fn.args,
+        surfaceId,
+        dataContextPath,
+        options,
+      ),
+    };
+    return options.awaitResult
+      ? processor.callAgentFunction(surfaceId, request)
+      : processor.resolveAgentFunction(surfaceId, request);
+  }
+  const impl = entry.impl;
   const resolvedArgs = resolveFunctionArguments(
     processor,
     fn.args,
@@ -126,16 +148,6 @@ export function executeFunctionCall(
     dataContextPath,
     options,
   );
-  if (!impl) {
-    if (!warnedUnknownFunctions.has(fn.call)) {
-      warnedUnknownFunctions.add(fn.call);
-      console.warn(
-        `[a2ui] No client implementation registered for function `
-          + `"${fn.call}". Returning undefined.`,
-      );
-    }
-    return undefined;
-  }
   try {
     return impl(
       resolvedArgs,

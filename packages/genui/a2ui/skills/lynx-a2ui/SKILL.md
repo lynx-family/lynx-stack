@@ -1,12 +1,12 @@
 ---
 name: lynx-a2ui
-description: Convert natural-language UI requests into A2UI v0.9 JSON protocol messages that an A2UI renderer can consume.
+description: Convert natural-language UI requests into A2UI v1.0 JSON protocol messages that an A2UI renderer can consume.
 ---
 
 # A2UI Generator
 
 Use this skill when an agent must turn a natural-language request into A2UI
-protocol data for rendering. The output is data only: a JSON array of A2UI v0.9
+protocol data for rendering. The output is data only: a JSON array of A2UI v1.0
 messages.
 
 ## Generation Workflow
@@ -59,7 +59,7 @@ Envelope semantics:
 Return only a **pretty**-printed JSON array. Do not return Markdown, prose, XML,
 HTML, JavaScript, CSS, code fences, comments, or trailing commas.
 
-Each array item must be a top-level object with `"version": "v0.9"` and exactly
+Each array item must be a top-level object with `"version": "v1.0"` and exactly
 one of these message keys:
 
 - `"createSurface"`: create a new render surface.
@@ -137,7 +137,7 @@ way:
 
 1. Output must be a JSON array of A2UI messages. No prose, Markdown, XML, code
    fences, comments, or trailing commas.
-2. Each element must include `"version": "v0.9"`.
+2. Each element must include `"version": "v1.0"`.
 3. Output pretty-printed JSON with 2-space indentation. Do not emit minified
    single-line JSON.
 4. For a fresh non-action response, the first message must be `createSurface`.
@@ -257,14 +257,14 @@ User: `Generate a login card with email, password, and a submit button.`
 ```json
 [
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "createSurface": {
       "surfaceId": "main",
       "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "updateDataModel": {
       "surfaceId": "main",
       "value": {
@@ -276,7 +276,7 @@ User: `Generate a login card with email, password, and a submit button.`
     }
   },
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "updateComponents": {
       "surfaceId": "main",
       "components": [
@@ -355,14 +355,14 @@ User: `Show three trip ideas as a compact vertical group.`
 ```json
 [
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "createSurface": {
       "surfaceId": "main",
       "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "updateDataModel": {
       "surfaceId": "main",
       "path": "/items",
@@ -383,7 +383,7 @@ User: `Show three trip ideas as a compact vertical group.`
     }
   },
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "updateComponents": {
       "surfaceId": "main",
       "components": [
@@ -460,14 +460,14 @@ User: `Show weekly active users as a line chart.`
 ```json
 [
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "createSurface": {
       "surfaceId": "main",
       "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "updateDataModel": {
       "surfaceId": "main",
       "value": {
@@ -496,7 +496,7 @@ User: `Show weekly active users as a line chart.`
     }
   },
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "updateComponents": {
       "surfaceId": "main",
       "components": [
@@ -547,7 +547,7 @@ User:
 ```json
 [
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "updateDataModel": {
       "surfaceId": "main",
       "path": "/status",
@@ -558,7 +558,7 @@ User:
     }
   },
   {
-    "version": "v0.9",
+    "version": "v1.0",
     "updateComponents": {
       "surfaceId": "main",
       "components": [
@@ -599,7 +599,7 @@ User:
 Before final output, verify:
 
 - The first character is `[` and the last character is `]`.
-- Every message includes `"version": "v0.9"`.
+- Every message includes `"version": "v1.0"`.
 - A fresh response starts with `createSurface`.
 - The first fresh `updateComponents` message contains `root`.
 - Every child id reference exists in the same response.

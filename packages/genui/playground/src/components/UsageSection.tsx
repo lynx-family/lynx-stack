@@ -4,91 +4,47 @@
 export function UsageSection() {
   return (
     <section className='usageSection'>
-      <h2 className='sectionTitle'>How to Use the ReactLynx A2UI Renderer</h2>
+      <h2 className='sectionTitle'>Use the A2UI v1.0 renderer</h2>
       <div className='usageGrid' style={{ gridTemplateColumns: '1fr 1fr' }}>
         <div className='usageCard'>
-          <h3 className='usageTitle'>Basic: Conversation Component</h3>
+          <h3 className='usageTitle'>Render protocol messages</h3>
           <p className='usageDesc'>
-            An out-of-the-box chat UI that handles history, input, and A2UI
-            rendering.
+            Choose a catalog and push v1.0 messages into a message store.
           </p>
-          <pre className='codeBlock'>
-            <code>{`// Import the v0.9 protocol
-import { Conversation } from '@lynx-js/genui/a2ui/0.9';
+          <pre className='codeBlock'><code>{`import { A2UI, Text, createMessageStore } from '@lynx-js/genui/a2ui';
 
-export default function App() {
-  return (
-    <Conversation url="https://your-api-endpoint.com/v09/chat" />
-  );
-}`}</code>
-          </pre>
+const store = createMessageStore();
+store.push({
+  version: 'v1.0',
+  createSurface: {
+    surfaceId: 'hello',
+    catalogId: 'example',
+    components: [{ id: 'root', component: 'Text', text: 'Hello' }],
+  },
+});
+
+export function App() {
+  return <A2UI messageStore={store} catalogs={[Text]} catalogId="example" />;
+}`}</code></pre>
         </div>
-
         <div className='usageCard'>
-          <h3 className='usageTitle'>Advanced: A2UIRender and useLynxClient</h3>
+          <h3 className='usageTitle'>Connect your agent</h3>
           <p className='usageDesc'>
-            Build a custom chat UI with full control over layout and state.
+            Forward versioned events and data-model metadata with onMessage.
           </p>
-          <pre className='codeBlock'>
-            <code>{`import { A2UIRender, useLynxClient } from '@lynx-js/genui/a2ui/0.9';
-
-export function CustomChat() {
-  const { messages, sendMessage } = useLynxClient("https://api.com/chat");
-
-  return (
-    <view>
-      <scroll-view>
-        {messages.map(msg => (
-          <view key={msg.id} className={msg.role}>
-            {msg.role === 'user' ? (
-              <text>{msg.content}</text>
-            ) : (
-              <A2UIRender
-                resource={msg.resource}
-                renderFallback={() => <text>Thinking...</text>}
-              />
-            )}
-          </view>
-        ))}
-      </scroll-view>
-      <text bindtap={() => sendMessage("Hello")}>Send</text>
-    </view>
-  );
-}`}</code>
-          </pre>
-        </div>
-
-        <div className='usageCard' style={{ gridColumn: '1 / -1' }}>
-          <h3 className='usageTitle'>Single-Request Mode (No History)</h3>
-          <p className='usageDesc'>
-            Set{' '}
-            <code>
-              keepHistory: false
-            </code>{' '}
-            to fetch and render resources without persisting message history.
-          </p>
-          <pre className='codeBlock'>
-            <code>{`import { useState } from 'react';
-import { A2UIRender, useLynxClient } from '@lynx-js/genui/a2ui/0.9';
-
-export function SingleRequest() {
-  const { sendMessage } = useLynxClient("https://api.com/chat", { keepHistory: false });
-  const [currentResource, setCurrentResource] = useState(null);
-
-  const handlePress = async () => {
-    // sendMessage returns a resource immediately
-    const { resource } = await sendMessage("Show me a button");
-    setCurrentResource(resource);
-  };
-
-  return (
-    <view>
-      <text bindtap={handlePress}>Request UI</text>
-      {currentResource && <A2UIRender resource={currentResource} />}
-    </view>
-  );
-}`}</code>
-          </pre>
+          <pre className='codeBlock'><code>{`<A2UI
+  messageStore={store}
+  catalogs={catalogs}
+  onMessage={(message, metadata) => {
+    void fetch('/a2ui/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...message, metadata }),
+    })
+      .then(response => response.json())
+      .then(payload => store.push(normalizePayloadToMessages(payload)));
+  }}
+/>`}</code></pre>
         </div>
       </div>
     </section>

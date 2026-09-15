@@ -150,6 +150,7 @@ describe('agent stream cancellation', () => {
       await cancelResponse(
         '/a2ui/action/stream',
         {
+          version: 'v1.0',
           action: { name: 'refresh' },
           surfaceId: 'surface-1',
         },

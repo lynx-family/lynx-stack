@@ -76,15 +76,8 @@ export interface DateTimeInputProps extends GenericComponentProps {
   /** The text label for the input field. */
   label?: string | { path: string } | {
     call: string;
+    catalogId?: string;
     args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
   };
   /** Whether to show the date picker. */
   enableDate?: boolean;
@@ -99,20 +92,13 @@ export interface DateTimeInputProps extends GenericComponentProps {
   /** A list of checks to perform. */
   checks?: Array<{
     /** The condition that indicates whether the check passes. */
-    condition: boolean | { path: string } | {
+    condition: { path: string } | {
       call: string;
+      catalogId?: string;
       args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
     };
-    /** The error message to display if the check fails. */
-    message: string;
+    /** Fallback when the validation result does not include a message. */
+    message?: string;
   }>;
 }
 

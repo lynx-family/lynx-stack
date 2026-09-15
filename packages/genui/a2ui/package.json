@@ -162,7 +162,8 @@
   },
   "dependencies": {
     "@a2ui/web_core": "0.10.6",
-    "@lynx-js/react-signals": "workspace:*"
+    "@lynx-js/react-signals": "workspace:*",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
     "@lynx-js/genui-cli": "workspace:*",
@@ -170,7 +171,8 @@
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "4.1.0",
     "@rstest/core": "catalog:rstest",
-    "@types/react": "^19.2.18"
+    "@types/react": "^19.2.18",
+    "ajv": "^8.20.0"
   },
   "peerDependencies": {
     "@lynx-js/lynx-ui": ">=3.133.0",

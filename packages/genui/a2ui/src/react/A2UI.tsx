@@ -1,7 +1,6 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import * as v0_9 from '@a2ui/web_core/v0_9';
 
 import {
   memo,
@@ -22,15 +21,11 @@ import { MessageProcessor } from '../store/MessageProcessor.js';
 import type { MessageStore } from '../store/MessageStore.js';
 import { createResource } from '../store/Resource.js';
 import type {
+  RendererToAgentMessage,
   Resource,
   ResourceInfo,
   UserActionPayload,
 } from '../store/types.js';
-
-// Mark v0_9 used so the namespace import doesn't get pruned. Kept around so
-// future enhancements (typed protocol message guards) don't need a fresh
-// import diff.
-void v0_9;
 
 /**
  * Props for the all-in-one A2UI ReactLynx renderer.
@@ -62,6 +57,13 @@ export interface A2UIProps {
    * the renderer never awaits this.
    */
   onAction?: (action: UserActionPayload) => void;
+  /** Exact protocol catalog id; defaults to the built-in Lynx catalog id. */
+  catalogId?: string;
+  /** Forward v1.0 wire events and metadata; push responses into messageStore. */
+  onMessage?: (
+    message: RendererToAgentMessage,
+    metadata: Record<string, unknown>,
+  ) => void | Promise<void>;
   /**
    * Optional class name applied to the top-level `surface-${surfaceId}`
    * view for the active surface. Use this when theme switching is
@@ -119,6 +121,8 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
     messageStore,
     catalogs,
     onAction,
+    onMessage,
+    catalogId = 'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
     wrapSurface,
     renderEmpty,
     renderFallback,
@@ -129,6 +133,8 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
 
   // Keep the latest onAction in a ref so the once-mounted processor.onEvent
   // listener always calls the up-to-date prop without re-binding.
+  const onMessageRef = useRef(onMessage);
+  onMessageRef.current = onMessage;
   const onActionRef = useRef<typeof onAction>(onAction);
 
   useEffect(() => {
@@ -144,6 +150,8 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
     processedCount: 0,
   };
   const session = sessionRef.current;
+  const catalog = useMemo<Catalog>(() => defineCatalog(catalogs), [catalogs]);
+  session.processor.registerCatalog(catalogId, catalog);
 
   // Counter used to force a re-render whenever the processor emits an
   // update (new beginRendering, surfaceUpdate that mutated the active
@@ -214,15 +222,20 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
       // Empty resolve — there is no "response" channel from the renderer
       // back into the protocol. Responses arrive via the buffer.
       resolve([]);
-      if (
-        typeof message === 'object' && message !== null
-        && 'userAction' in message
-        && (message as { userAction: unknown }).userAction
-      ) {
-        const action =
-          (message as { userAction: UserActionPayload }).userAction;
+      try {
+        const pending = onMessageRef.current?.(
+          message as RendererToAgentMessage,
+          proc.getDataModelMetadata(),
+        );
+        void pending?.catch((error: unknown) => {
+          console.error('[a2ui] onMessage handler rejected:', error);
+        });
+      } catch (e) {
+        console.error('[a2ui] onMessage handler threw:', e);
+      }
+      if ('action' in message) {
         try {
-          onActionRef.current?.(action);
+          onActionRef.current?.(message['action'] as UserActionPayload);
         } catch (e) {
           console.error('[a2ui] onAction handler threw:', e);
         }
@@ -247,11 +260,6 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
       session.processor.processMessages(slice);
     }
   }, [messages, session]);
-
-  const catalog = useMemo<Catalog>(
-    () => defineCatalog(catalogs),
-    [catalogs],
-  );
 
   const activeResource = session.activeMessageId
     ? (session.resources.get(session.activeMessageId) ?? null)

@@ -23,7 +23,7 @@
       "types": "./a2ui/dist/index.d.ts",
       "default": "./a2ui/dist/index.js"
     },
-    "./a2ui/0.9": {
+    "./a2ui/1.0": {
       "types": "./a2ui/dist/index.d.ts",
       "default": "./a2ui/dist/index.js"
     },

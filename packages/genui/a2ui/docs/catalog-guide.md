@@ -59,7 +59,7 @@ Bundlers tree-shake unused components: pulling in `Text` does **not** drag
 
 ## The built-in components
 
-The package ships 22 A2UI v0.9 basic-catalog renderers. Each is an
+The package ships 22 A2UI v1.0 basic-catalog renderers. Each is an
 independent, tree-shakeable export, available from the root or from
 `@lynx-js/genui/a2ui/catalog/<Name>`.
 
@@ -144,8 +144,8 @@ agentChannel.handshake({ catalog: serializeCatalog(catalog) });
 
 The protocol name lives in the JSON as the top-level key, so the runtime
 never duplicates it. Components you register without a manifest still
-render fine — they just serialize to `{ name }` only, which tells the Agent
-the component exists without describing its props.
+render locally, but `serializeCatalog` rejects them because their props cannot
+be validated. Pair each component with a manifest before announcing it.
 
 ## Basic-catalog functions
 
@@ -162,7 +162,7 @@ const catalog = defineCatalog([Text, ...basicFunctions]);
 
 `basicFunctions` is an array of ready-made entries whose implementations
 come straight from the upstream `@a2ui/web_core` basic catalog, so the wire
-contract stays aligned with the A2UI v0.9 spec for free. It covers 25
+contract stays aligned with the A2UI v1.0 spec for free. It covers 25
 functions:
 
 | Category   | Functions (protocol names)                                                  |
@@ -177,7 +177,7 @@ functions:
 
 > Note the mixed casing — comparison/text helpers use `snake_case`
 > (`not_equals`, `starts_with`) while formatters use `camelCase`
-> (`formatDate`, `openUrl`). These are the upstream A2UI v0.9 names; use
+> (`formatDate`, `openUrl`). These are the upstream A2UI v1.0 names; use
 > them verbatim in messages.
 
 Include `...basicFunctions` whenever your Agent might emit any of these. If
@@ -405,9 +405,10 @@ All of these are exported from `@lynx-js/genui/a2ui` (and from the
 - **`mergeCatalogs(...catalogs)`** — merges catalogs with **last-write-wins**
   on duplicate names. Useful for layering: a page catalog overrides a brand
   catalog which overrides the built-ins.
-- **`serializeCatalog(catalog)`** — emits the JSON manifest for the Agent
-  handshake. Components without an attached schema serialize to `{ name }`
-  only; functions serialize with their parameter schema when available.
+- **`serializeCatalog(catalog, catalogId?)`** — emits a v1.0 catalog with matching
+  `catalogId` and `$id`, component discriminators, and component/function union
+  definitions. The ID defaults to the built-in Lynx catalog ID. Every component
+  needs a schema; functions are announced when their definitions are available.
 - **`resolveCatalog(catalog)`** — returns a `name → component` map. The
   renderer uses it internally to resolve `{ component: 'Text' }`; exposed for
   advanced cases.

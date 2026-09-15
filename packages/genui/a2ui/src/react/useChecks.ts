@@ -15,14 +15,14 @@ import type { Surface } from '../store/types.js';
 import { isDataBinding, isFunctionCall } from '../store/utils.js';
 
 /**
- * A v0.9 `CheckRule` is `{ condition, message }` where `condition` is a
- * boolean, a `DataBinding`, or a `FunctionCall`. We accept the loose
- * `unknown` shape so component props don't have to import the v0_9
- * types just to pass them through.
+ * A v1.0 `CheckRule` is `{ condition, message? }` where `condition` is a
+ * `DataBinding` or a `FunctionCall`. We accept the loose
+ * `unknown` shape so component props can pass dynamic checks through.
  */
 export interface CheckLike {
   condition: unknown;
-  message: string;
+  /** Fallback when the validation result does not include a message. */
+  message?: string;
 }
 
 function evaluateCondition(
@@ -31,8 +31,7 @@ function evaluateCondition(
   surfaceId: string,
   dataContextPath?: string,
   functions?: readonly CatalogFunctionEntry[],
-): boolean {
-  if (typeof condition === 'boolean') return condition;
+): unknown {
   if (isFunctionCall(condition)) {
     const result = executeFunctionCall(
       processor,
@@ -41,27 +40,25 @@ function evaluateCondition(
       dataContextPath,
       { functions },
     );
-    return Boolean(result);
+    return result;
   }
   if (isDataBinding(condition)) {
-    return Boolean(
-      resolveDynamicValue(
-        processor,
-        condition,
-        surfaceId,
-        dataContextPath,
-        {
-          functions,
-          resolveFunctionCall: executeFunctionCall,
-        },
-      ),
+    return resolveDynamicValue(
+      processor,
+      condition,
+      surfaceId,
+      dataContextPath,
+      {
+        functions,
+        resolveFunctionCall: executeFunctionCall,
+      },
     );
   }
-  // Unknown shape — treat as passing rather than blocking the user.
-  return true;
+  return undefined;
 }
 
-function evaluateChecks(
+/** Evaluate ValidationResult objects or boolean results from logical functions. @internal */
+export function evaluateChecks(
   processor: MessageProcessor,
   checks: CheckLike[] | undefined,
   surface: Surface | undefined,
@@ -73,19 +70,27 @@ function evaluateChecks(
   }
   const failures: CheckFailure[] = [];
   for (const rule of checks) {
-    const ok = evaluateCondition(
+    const result = evaluateCondition(
       processor,
       rule.condition,
       surface.surfaceId,
       dataContextPath,
       functions,
     );
+    const validation = result && typeof result === 'object' && 'valid' in result
+      ? result as { valid: boolean; message?: string }
+      : undefined;
+    const ok = result === true || validation?.valid === true;
     if (!ok) {
       failures.push({
         call: isFunctionCall(rule.condition)
           ? rule.condition.call
           : 'condition',
-        message: rule.message,
+        message: typeof validation?.message === 'string'
+          ? validation.message
+          : (typeof rule.message === 'string'
+            ? rule.message
+            : 'Validation failed'),
       });
     }
   }

@@ -11,6 +11,7 @@ import { useState } from '@lynx-js/react';
 
 import { NodeRenderer } from '../../react/A2UIRenderer.jsx';
 import type {
+  ComponentId,
   ComponentInstance,
   GenericComponentProps,
 } from '../../store/types.js';
@@ -23,10 +24,14 @@ import '../../../styles/catalog/Modal.css';
  * @a2uiCatalog Modal
  */
 export interface ModalProps extends GenericComponentProps {
-  /** The ID of the component that opens the modal when interacted with. */
-  trigger: string;
-  /** The ID of the component to display inside the modal. */
-  content: string;
+  /** The ID of the component that opens the modal when interacted with.
+   * @a2uiComponentId
+   */
+  trigger: ComponentId;
+  /** The ID of the component to display inside the modal.
+   * @a2uiComponentId
+   */
+  content: ComponentId;
 }
 
 function childWithContext(

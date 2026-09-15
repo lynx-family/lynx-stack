@@ -3,15 +3,15 @@
   "description": "Example of track list demonstrating templating, relative paths, and number formatting.",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "createSurface": {
         "surfaceId": "gallery-track-list",
-        "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json",
+        "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateComponents": {
         "surfaceId": "gallery-track-list",
         "components": [
@@ -71,8 +71,7 @@
                 "value": {
                   "path": "number"
                 }
-              },
-              "returnType": "string"
+              }
             },
             "variant": "caption"
           },
@@ -117,7 +116,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateDataModel": {
         "surfaceId": "gallery-track-list",
         "value": {

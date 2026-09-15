@@ -1,15 +1,12 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import {
-  Catalog as A2UICoreCatalog,
-  MessageProcessor as A2UICoreMessageProcessor,
-  getValue,
-  isSignal,
-} from '@a2ui/web_core/v0_9';
+import { getValue, isSignal } from '@a2ui/web_core/v0_9';
 import type { DataContext, FunctionImplementation } from '@a2ui/web_core/v0_9';
 import { BASIC_FUNCTIONS } from '@a2ui/web_core/v0_9/basic_catalog';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 
+import { formatString } from './formatString.js';
 import { defineFunction } from '../catalog/defineCatalog.js';
 import type {
   CatalogFunctionDefinition,
@@ -22,8 +19,13 @@ import type {
   FunctionImpl,
 } from '../store/FunctionRegistry.js';
 
-const BASIC_CATALOG_ID =
-  'https://a2ui.org/specification/v0_9/basic_catalog.json';
+const validationFunctions = new Set([
+  'required',
+  'regex',
+  'length',
+  'numeric',
+  'email',
+]);
 
 function createUpstreamContext(
   context: FunctionCallContext | undefined,
@@ -42,6 +44,12 @@ function createUpstreamContext(
   } as unknown as DataContext;
 }
 
+function validity(value: unknown): unknown {
+  return value !== null && typeof value === 'object' && 'valid' in value
+    ? value.valid === true
+    : value;
+}
+
 /**
  * Adapt an upstream `FunctionImplementation` (zod-typed args, returns a
  * raw value OR a Preact Signal, takes a `DataContext`) into the simpler
@@ -49,13 +57,32 @@ function createUpstreamContext(
  */
 function adaptUpstreamImpl(impl: FunctionImplementation): FunctionImpl {
   return (args, context) => {
+    // Upstream string coercion accepts undefined, but v1.0 requires value.
+    if (impl.name === 'formatString' && args['value'] === undefined) {
+      throw new Error('formatString requires a value argument');
+    }
+    if (impl.name === 'and' || impl.name === 'or') {
+      args = {
+        ...args,
+        values: Array.isArray(args['values'])
+          ? args['values'].map(value => validity(value))
+          : args['values'],
+      };
+    } else if (impl.name === 'not') {
+      args = { ...args, value: validity(args['value']) };
+    }
     const safeArgs = impl.schema.parse(args) as Record<string, unknown>;
+    if (impl.name === 'formatString') {
+      return formatString(safeArgs['value'] as string, context);
+    }
     const result: unknown = impl.execute(
       safeArgs,
       createUpstreamContext(context),
     );
-    if (isSignal(result)) return getValue(result) as unknown;
-    return result;
+    const value = isSignal(result) ? getValue(result) as unknown : result;
+    return validationFunctions.has(impl.name)
+      ? { valid: value === true }
+      : value;
   };
 }
 
@@ -68,32 +95,32 @@ const adaptedBasicFunctionImpls: readonly {
 }));
 
 function createBasicFunctionManifests(): Map<string, FunctionManifest> {
-  const upstreamCatalog = new A2UICoreCatalog(
-    BASIC_CATALOG_ID,
-    [],
-    BASIC_FUNCTIONS,
-  );
-  const processor = new A2UICoreMessageProcessor([upstreamCatalog]);
-  const inlineCatalog = processor.getClientCapabilities({
-    includeInlineCatalogs: true,
-  })['v0.9']?.inlineCatalogs?.[0];
-  const definitions = inlineCatalog?.functions ?? [];
-  return new Map(definitions.map(definition => {
-    const typedDefinition = definition as CatalogFunctionDefinition;
-    return [
-      typedDefinition.name,
-      { [typedDefinition.name]: typedDefinition },
-    ];
+  return new Map(BASIC_FUNCTIONS.map(fn => {
+    const parameters = (zodToJsonSchema as unknown as (
+      schema: unknown,
+      options: { $refStrategy: 'none' },
+    ) => Record<string, unknown>)(fn.schema, { $refStrategy: 'none' });
+    if (fn.name === 'formatString') parameters['required'] = ['value'];
+    const definition: CatalogFunctionDefinition = {
+      name: fn.name,
+      parameters,
+      returnType: validationFunctions.has(fn.name)
+        ? 'validationResult'
+        : fn.returnType,
+      ...(fn.schema.description ? { description: fn.schema.description } : {}),
+    };
+    return [fn.name, { [fn.name]: definition }];
   }));
 }
 
 const basicFunctionManifests = createBasicFunctionManifests();
 
 /**
- * The A2UI 0.9 basic-catalog function implementations packaged as
+ * The basic-catalog function implementations packaged as
  * `CatalogFunctionEntry`s, ready to spread into `<A2UI catalogs={[...]}>`.
  * The impls themselves come from `@a2ui/web_core` so we stay aligned with
- * the upstream spec for free.
+ * the upstream function behavior. The adapter does not instantiate an upstream
+ * protocol processor or accept its wire messages.
  *
  * @example
  *   <A2UI catalogs={[Text, Button, ...basicFunctions]} ... />

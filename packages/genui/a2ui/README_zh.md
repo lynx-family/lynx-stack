@@ -2,11 +2,20 @@
 
 [English](./README.md) | 简体中文
 
-`@lynx-js/genui/a2ui` 是面向 A2UI v0.9 的 ReactLynx 客户端运行时。它消费经过校验的
+`@lynx-js/genui/a2ui` 是仅支持 A2UI v1.0 的 ReactLynx 客户端运行时。它消费经过校验的
 A2UI server-to-client JSON messages，并在你的应用中渲染可信的 ReactLynx 组件。
 
 当你已经有、或准备构建一个返回 A2UI messages 的 Agent 服务时，使用这个包。它不托管 Agent，不调用
 LLM，不拥有后端路由，也不提供 chat shell。你的应用负责传输层，并把消息写入 renderer。
+
+server 和 client 只支持 `v1.0`，拒绝旧版本或缺少版本的协议消息。
+事件请求需要携带 `version: "v1.0"`，操作使用 `action` 信封。旧 v0.9 数据需要重新生成。客户端支持 `createSurface` 内嵌
+`components` 和 `dataModel`、保留 JSON 类型的数据子树替换、`null` 删除和结构化校验结果。
+通过 `onMessage(message, metadata)` 转发 v1.0 协议事件，再把响应写入 `messageStore`。
+现有 `onAction` 回调继续可用；发送 action 时只使用其中一个回调，避免重复请求。
+自定义 catalog 通过 `catalogId` 指定。只有显式声明 `allowedCallers` 为 `agentOnly`
+或 `rendererOrAgent` 的 renderer 函数可以被 agent 调用。Server 尚未注册 agent 端的
+catalog 函数，对这类调用返回带原始请求 ID 的 `UNKNOWN_FUNCTION`。
 
 如果你第一次接触 A2UI，可以先这样理解：
 
@@ -61,11 +70,11 @@ async function sendPrompt(input: string) {
   messageStore={store}
   catalogs={catalogs}
   wrapSurface={(children) => <view className='a2ui-light'>{children}</view>}
-  onAction={(action) => {
+  onMessage={(message, metadata) => {
     void fetch('/a2ui/action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(action),
+      body: JSON.stringify({ ...message, metadata }),
     })
       .then((res) => res.json())
       .then((payload) => store.push(normalizePayloadToMessages(payload)));

@@ -3,15 +3,15 @@
   "description": "Example of countdown timer demonstrating date formatting.",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "createSurface": {
         "surfaceId": "gallery-countdown-timer",
-        "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json",
+        "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateComponents": {
         "surfaceId": "gallery-countdown-timer",
         "components": [
@@ -110,8 +110,7 @@
                   "path": "/targetDate"
                 },
                 "format": "MMMM d, yyyy"
-              },
-              "returnType": "string"
+              }
             },
             "variant": "body"
           }
@@ -119,7 +118,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "v1.0",
       "updateDataModel": {
         "surfaceId": "gallery-countdown-timer",
         "value": {

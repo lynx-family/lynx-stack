@@ -7,9 +7,11 @@ import { createMessageStore } from '../src/store/MessageStore.js';
 import type { ServerToClientMessage } from '../src/store/types.js';
 
 const A: ServerToClientMessage = {
+  version: 'v1.0',
   createSurface: { surfaceId: 's1' },
 } as ServerToClientMessage;
 const B: ServerToClientMessage = {
+  version: 'v1.0',
   updateComponents: {
     surfaceId: 's1',
     components: [{ id: 'root', component: 'Text', text: 'hi' }],

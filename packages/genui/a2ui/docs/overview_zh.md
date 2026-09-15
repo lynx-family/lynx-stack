@@ -7,7 +7,7 @@ server message 如何在 client 上变成渲染出来的 UI。它以一个可运
 
 ## 这个包是什么
 
-`@lynx-js/genui/a2ui` 是面向 A2UI v0.9 协议的 ReactLynx **客户端运行时**。
+`@lynx-js/genui/a2ui` 是面向 A2UI v1.0 协议的 ReactLynx **客户端运行时**。
 它消费经过校验的 server-to-client JSON messages，并在你的应用中渲染可信的
 ReactLynx 组件。
 
@@ -24,7 +24,8 @@ ReactLynx 组件。
 
 在 ReactLynx 应用里安装这个包，然后用 `<A2UI>` 渲染一个 `MessageStore`。你的
 传输层把 Agent 的 messages 写入 store；renderer 把它们变成 UI，并通过
-`onAction` 把用户 action 交还给你。
+`onMessage` 把带版本的协议消息及传输元数据交给 Agent。可选的 `onAction`
+回调只接收 action payload，供应用处理本地逻辑。
 
 ```sh
 pnpm add @lynx-js/genui @lynx-js/react
@@ -56,15 +57,15 @@ async function sendPrompt(input: string) {
   store.push(normalizePayloadToMessages(await res.json()));
 }
 
-// 4. 渲染。onAction 把用户点击回传给 Agent。
+// 4. 渲染。onMessage 把协议事件及元数据回传给 Agent。
 <A2UI
   messageStore={store}
   catalogs={catalogs}
-  onAction={(action) => {
-    void fetch('/a2ui/action', {
+  onMessage={(message, metadata) => {
+    return fetch('/a2ui/action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(action),
+      body: JSON.stringify({ ...message, metadata }),
     })
       .then((res) => res.json())
       .then((payload) => store.push(normalizePayloadToMessages(payload)));
@@ -147,7 +148,7 @@ SSE、WebSocket，或一个 in-process mock。renderer 不关心 messages 是怎
 | `MessageStore`            | Client                   | 这个包    | 按到达顺序保存原始 A2UI messages 并通知订阅者。它不解析也不解释协议语义。                                                  |
 | `<A2UI>`                  | Client                   | 这个包    | 每次 mount 拥有一个 `MessageProcessor`，消费新 messages，渲染 active surface，并通过 `onAction` 转发 generated UI action。 |
 | Catalog API               | Client + Agent handshake | 这个包    | 把协议中的 component/function 名称映射到本地实现和可选 JSON schema。用 `defineCatalog` 等组合它。                          |
-| 内置能力                  | Client                   | 这个包    | A2UI v0.9 basic-catalog 的组件 renderer、逐组件 JSON-Schema manifest，以及客户端 basic-catalog function 实现。             |
+| 内置能力                  | Client                   | 这个包    | A2UI v1.0 basic-catalog 的组件 renderer、逐组件 JSON-Schema manifest，以及客户端 basic-catalog function 实现。             |
 | `npx @lynx-js/genui a2ui` | 构建 / 接入阶段          | GenUI CLI | 生成自定义 catalog artifacts 和 A2UI system prompt。当 Agent 和 renderer 都用内置 basic catalog 时不需要它。               |
 
 一个好记的方式：**server 决策，client 渲染，catalog 是两边达成一致的
@@ -184,7 +185,7 @@ MessageStore ──subscribe──► <A2UI> ──► MessageProcessor ──�
 - **`MessageProcessor`**——协议大脑。它拥有每一个 `Surface`，把
   `createSurface` / `updateComponents` / `updateDataModel` / `deleteSurface`
   应用进 surface 状态，并发出带类型的事件（`beginRendering`、`surfaceUpdate`、
-  `deleteSurface`）供 React layer 消费。`dispatch({ userAction })` 把 action
+  `deleteSurface`）供 React layer 消费。`sendMessage({ version: 'v1.0', action })` 把 action
   分发给监听者。
 - **`Resource`**——一个 `pending → success → error` 状态机，每个 surface root
   和每个 component 实例各一个。它的 snapshot 引用在每次状态转换时都会改变，
@@ -225,14 +226,14 @@ MessageStore ──subscribe──► <A2UI> ──► MessageProcessor ──�
 - **Catalog API**——`defineCatalog`、`mergeCatalogs`、`serializeCatalog`、
   `resolveCatalog` 和 `defineFunction`。这里没有全局 component registry；每个
   消费者都显式组合自己想开放的 component 和 function entries。
-- **内置组件**——20 个 A2UI v0.9 basic-catalog renderer（`Text`、`Image`、
+- **内置组件**——20 个 A2UI v1.0 basic-catalog renderer（`Text`、`Image`、
   `Button`、`Row`、`Column`、`List`、`Loading`、`Card`、`Modal`、`Divider`、
   `Icon`、`CheckBox`、`ChoicePicker`、`DateTimeInput`、`LineChart`、
   `PieChart`、`RadioGroup`、`Slider`、`TextField` 和 `Tabs`）。每个的用途见
   [catalog 指南](./catalog-guide_zh.md)。
 - **逐组件 manifest**——`catalog/<Name>/catalog.json`，用于 Agent handshake 的
   JSON-Schema 描述。
-- **`basicFunctions`**——A2UI v0.9 basic-catalog 的客户端 function entries，
+- **`basicFunctions`**——A2UI v1.0 basic-catalog 的客户端 function entries，
   可以直接展开进你的 `catalogs` 数组。
 
 ## Exports
@@ -257,17 +258,18 @@ MessageStore ──subscribe──► <A2UI> ──► MessageProcessor ──�
 
 `<A2UI>` 接收两个必填 prop 和一组可选的 render hooks。
 
-| Prop                | 类型                                     | 必填 | 用途                                                                              |
-| ------------------- | ---------------------------------------- | ---- | --------------------------------------------------------------------------------- |
-| `messageStore`      | `MessageStore`                           | 是   | 你的传输层写入的 raw-message buffer。`<A2UI>` 订阅它并处理新的 tail messages。    |
-| `catalogs`          | `readonly CatalogInput[]`                | 是   | renderer 被允许实例化的 component 和 function entries。                           |
-| `onAction`          | `(action: UserActionPayload) => void`    | 否   | 树中发生用户 action 时触发。转发给你的 Agent；把响应推回 store。                  |
-| `className`         | `string`                                 | 否   | 加在 surface root view（`surface-${surfaceId}`）上。适合做 surface 级主题 class。 |
-| `wrapSurface`       | `(children, { surfaceId }) => ReactNode` | 否   | 包裹每个 surface，便于套一层外部主题壳或 wrapper 样式。                           |
-| `renderEmpty`       | `() => ReactNode`                        | 否   | 在第一条 `beginRendering` 到达前渲染。默认什么都不渲染。                          |
-| `renderFallback`    | `() => ReactNode`                        | 否   | 在 active resource 处于 pending 时渲染。默认是内置的 `<Loading>`。                |
-| `renderError`       | `(err: unknown) => ReactNode`            | 否   | 在 active resource 失败时渲染。                                                   |
-| `renderUnsupported` | `(info) => ReactNode`                    | 否   | 在遇到不支持的 component 或数据语法时渲染。                                       |
+| Prop                | 类型                                           | 必填 | 用途                                                                              |
+| ------------------- | ---------------------------------------------- | ---- | --------------------------------------------------------------------------------- |
+| `messageStore`      | `MessageStore`                                 | 是   | 你的传输层写入的 raw-message buffer。`<A2UI>` 订阅它并处理新的 tail messages。    |
+| `catalogs`          | `readonly CatalogInput[]`                      | 是   | renderer 被允许实例化的 component 和 function entries。                           |
+| `onMessage`         | `(message, metadata) => void \| Promise<void>` | 否   | 向 Agent 转发 v1.0 协议消息和数据模型元数据；把响应推回 store。                   |
+| `onAction`          | `(action: UserActionPayload) => void`          | 否   | 只接收 action payload，不包含版本封装或传输元数据。                               |
+| `className`         | `string`                                       | 否   | 加在 surface root view（`surface-${surfaceId}`）上。适合做 surface 级主题 class。 |
+| `wrapSurface`       | `(children, { surfaceId }) => ReactNode`       | 否   | 包裹每个 surface，便于套一层外部主题壳或 wrapper 样式。                           |
+| `renderEmpty`       | `() => ReactNode`                              | 否   | 在第一条 `beginRendering` 到达前渲染。默认什么都不渲染。                          |
+| `renderFallback`    | `() => ReactNode`                              | 否   | 在 active resource 处于 pending 时渲染。默认是内置的 `<Loading>`。                |
+| `renderError`       | `(err: unknown) => ReactNode`                  | 否   | 在 active resource 失败时渲染。                                                   |
+| `renderUnsupported` | `(info) => ReactNode`                          | 否   | 在遇到不支持的 component 或数据语法时渲染。                                       |
 
 能省下调试时间的生命周期说明：
 

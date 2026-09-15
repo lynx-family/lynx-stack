@@ -97,7 +97,9 @@ describe('extractCatalogFunctions', () => {
       cwd: fixtureDir,
       sourceFiles: ['invalid/AsyncFunction.ts'],
       tsconfig: fixtureTsconfig,
-    })).rejects.toThrow(/Async functions are not supported/);
+    })).rejects.toThrow(
+      /Automatic schema extraction does not support async functions/,
+    );
   });
 });
 
@@ -130,12 +132,11 @@ function createFunctionSchema(
     ...(definition['description']
       ? { description: definition['description'] }
       : {}),
+    returnType: definition['returnType'],
     properties: {
       call: { const: name },
       args: definition['parameters'],
-      returnType: { const: definition['returnType'] },
     },
     required: ['call', 'args'],
-    unevaluatedProperties: false,
   };
 }

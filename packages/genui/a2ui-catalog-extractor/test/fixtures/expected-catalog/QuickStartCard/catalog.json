@@ -1,6 +1,9 @@
 {
   "QuickStartCard": {
     "properties": {
+      "component": {
+        "const": "QuickStartCard"
+      },
       "title": {
         "oneOf": [
           {
@@ -75,9 +78,11 @@
       }
     },
     "required": [
+      "component",
       "title",
       "author"
     ],
-    "description": "Quick start card.\n\nUse this contract as a compact card example."
+    "description": "Quick start card.\n\nUse this contract as a compact card example.",
+    "type": "object"
   }
 }

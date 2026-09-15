@@ -14,9 +14,15 @@ import { jsonWithCors } from '../../common/cors';
 import { errorMessage } from '../../common/errors';
 import { checkRateLimit, rateLimitJsonResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
-import { pickA2UIChatOptions, validateAction } from '../_shared';
+import {
+  normalizeRendererEvent,
+  pickA2UIChatOptions,
+  rejectUnknownAgentFunction,
+  validateAction,
+} from '../_shared';
+import type { A2UIRendererEventBody } from '../_shared';
 
-interface A2UIActionBody {
+interface A2UIActionBody extends A2UIRendererEventBody {
   conversation?: unknown;
   surfaceId?: string;
   action?: unknown;
@@ -42,7 +48,19 @@ async function postA2UIAction(req: Request) {
       { status: parsed.status },
     );
   }
-  const body = parsed.body;
+  if (parsed.body.version !== 'v1.0') {
+    return jsonWithCors(req, {
+      ok: false,
+      error: 'Only A2UI v1.0 is supported',
+    }, { status: 400 });
+  }
+  const body = normalizeRendererEvent(parsed.body);
+  const functionResponse = rejectUnknownAgentFunction(body);
+  if (functionResponse) {
+    return jsonWithCors(req, functionResponse.body, {
+      status: functionResponse.status,
+    });
+  }
 
   const validatedAction = validateAction(body.action);
   if (!validatedAction.ok) {

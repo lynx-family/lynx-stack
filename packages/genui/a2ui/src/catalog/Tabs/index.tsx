@@ -4,7 +4,11 @@
 import { useState } from '@lynx-js/react';
 
 import { NodeRenderer } from '../../react/A2UIRenderer.jsx';
-import type { GenericComponentProps, Surface } from '../../store/types.js';
+import type {
+  ComponentId,
+  GenericComponentProps,
+  Surface,
+} from '../../store/types.js';
 
 import '../../../styles/catalog/Tabs.css';
 
@@ -16,7 +20,8 @@ import '../../../styles/catalog/Tabs.css';
 export interface TabsProps extends GenericComponentProps {
   tabs: Array<{
     title: string;
-    child: string;
+    /** @a2uiComponentId */
+    child: ComponentId;
   }>;
 }
 
@@ -25,7 +30,8 @@ function TabsHeader(props: {
   onSelect: () => void;
   tab: {
     title: string;
-    child: string;
+    /** @a2uiComponentId */
+    child: ComponentId;
   };
 }): import('@lynx-js/react').ReactNode {
   return (
@@ -42,7 +48,8 @@ function TabsContent(props: {
   activeTab:
     | {
       title: string;
-      child: string;
+      /** @a2uiComponentId */
+      child: ComponentId;
     }
     | undefined;
   surface: Surface;

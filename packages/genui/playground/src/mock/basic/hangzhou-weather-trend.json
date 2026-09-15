@@ -1,11 +1,13 @@
 [
   {
+    "version": "v1.0",
     "createSurface": {
       "surfaceId": "default",
-      "catalogId": "demo-hangzhou-weather-trend"
+      "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
+    "version": "v1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -37,6 +39,7 @@
     }
   },
   {
+    "version": "v1.0",
     "updateDataModel": {
       "surfaceId": "default",
       "value": {
@@ -49,6 +52,7 @@
     }
   },
   {
+    "version": "v1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [

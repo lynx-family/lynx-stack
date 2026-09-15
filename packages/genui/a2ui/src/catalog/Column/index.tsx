@@ -4,6 +4,7 @@
 import { NodeRenderer } from '../../react/A2UIRenderer.jsx';
 import { useDataBinding } from '../../react/useDataBinding.js';
 import type {
+  ChildList,
   ComponentInstance,
   GenericComponentProps,
   Surface,
@@ -42,7 +43,7 @@ const buildChild = (
  */
 export interface ColumnProps extends GenericComponentProps {
   /** Static child IDs array or template object. */
-  children: string[] | { componentId: string; path: string };
+  children: ChildList;
   align?: 'start' | 'center' | 'end' | 'stretch';
   justify?:
     | 'start'
