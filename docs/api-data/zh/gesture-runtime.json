@@ -1,174 +1,174 @@
 {
   "ComposedGesture.processPanDistance.summary": {
-    "hash": "b23179b7",
+    "en": "If pan gesture has relationship with tap or longPress, its default minDistance should be overridden",
     "text": "如果拖动手势与点击或长按手势存在关联，则应覆盖其默认的 minDistance"
   },
   "ExclusiveGesture.processPanDistance.summary": {
-    "hash": "b23179b7",
+    "en": "If pan gesture has relationship with tap or longPress, its default minDistance should be overridden",
     "text": "如果拖动手势与点击或长按手势存在关联，则应覆盖其默认的 minDistance"
   },
   "NativeGesture.summary": {
-    "hash": "bafe7202",
+    "en": "Currently highly experimental and subject to change.\nNativeGesture is a gesture that represents native platform gestures.\nIt can be used to integrate with native gesture handling mechanisms.",
     "text": "目前处于高度实验阶段，后续可能发生变化。\nNativeGesture 是表示原生平台手势的手势。\n可用于与原生手势处理机制集成。"
   },
   "SimultaneousGesture.processPanDistance.summary": {
-    "hash": "b23179b7",
+    "en": "If pan gesture has relationship with tap or longPress, its default minDistance should be overridden",
     "text": "如果拖动手势与点击或长按手势存在关联，则应覆盖其默认的 minDistance"
   },
   "BaseGestureCallbacks.summary": {
-    "hash": "17e648db",
+    "en": "Generic base gesture callbacks interface.",
     "text": "通用的基础手势回调接口。"
   },
   "BaseGestureConfig.summary": {
-    "hash": "fa658a28",
+    "en": "Base configuration interface for all gestures.\nAll gesture-specific configurations extend this interface.",
     "text": "所有手势的基础配置接口。\n所有手势专属配置都扩展自该接口。"
   },
   "BaseGestureConfig.enabled.summary": {
-    "hash": "1d92eada",
+    "en": "Whether the gesture is enabled. Defaults to true.",
     "text": "是否启用该手势。默认为 true。"
   },
   "ContinuousGestureCallbacks.summary": {
-    "hash": "e4d10fb7",
+    "en": "Generic continuous gesture callbacks interface.",
     "text": "通用的连续手势回调接口。"
   },
   "DefaultGestureChangeEvent.summary": {
-    "hash": "89f018f4",
+    "en": "Default gesture change event.\nUses the base GestureChangeEvent without additional properties.",
     "text": "默认手势的变化事件。\n直接使用基础的 GestureChangeEvent，不包含额外属性。"
   },
   "DefaultGestureConfig.summary": {
-    "hash": "c6bc009f",
+    "en": "Configuration interface for DefaultGesture.\nDefault gesture is a basic gesture handler.",
     "text": "DefaultGesture 的配置接口。\n默认手势是一种基础的手势处理器。"
   },
   "DefaultGestureConfig.enabled.summary": {
-    "hash": "1d92eada",
+    "en": "Whether the gesture is enabled. Defaults to true.",
     "text": "是否启用该手势。默认为 true。"
   },
   "DefaultGestureConfig.tapSlop.summary": {
-    "hash": "2ad83ed4",
+    "en": "Tap slop value (in points). Defaults to 3.",
     "text": "点击容差值（单位为 point）。默认为 3。"
   },
   "FlingGestureChangeEvent.summary": {
-    "hash": "adc6d997",
+    "en": "Fling gesture change event with fling location and velocity information.",
     "text": "快速滑动手势的变化事件，包含快速滑动的位置和速度信息。"
   },
   "FlingGestureConfig.summary": {
-    "hash": "944748ad",
+    "en": "Configuration interface for FlingGesture.\nFling gesture recognizes fling (swipe) gestures.",
     "text": "FlingGesture 的配置接口。\n快速滑动手势用于识别快速滑动（swipe）手势。"
   },
   "FlingGestureConfig.direction.summary": {
-    "hash": "00c80c8b",
+    "en": "Direction of the fling gesture",
     "text": "快速滑动手势的方向"
   },
   "FlingGestureConfig.enabled.summary": {
-    "hash": "1d92eada",
+    "en": "Whether the gesture is enabled. Defaults to true.",
     "text": "是否启用该手势。默认为 true。"
   },
   "FlingGestureConfig.numberOfPointers.summary": {
-    "hash": "f9d9d8bf",
+    "en": "Number of pointers (fingers) required. Defaults to 1.",
     "text": "所需的触点（手指）数量。默认为 1。"
   },
   "GestureChangeEvent.summary": {
-    "hash": "0d688c2f",
+    "en": "Base gesture change event interface.\nAll gesture-specific events extend this interface.",
     "text": "基础的手势变化事件接口。\n所有手势专属事件都扩展自该接口。"
   },
   "InternalStateManager.summary": {
-    "hash": "10033493",
+    "en": "Used internally, not meant to be public",
     "text": "仅供内部使用，不对外公开"
   },
   "LongPressGestureChangeEvent.summary": {
-    "hash": "2c3cda58",
+    "en": "Long press gesture change event with press location and duration information.",
     "text": "长按手势的变化事件，包含按压位置和持续时间信息。"
   },
   "LongPressGestureConfig.summary": {
-    "hash": "affa0f3b",
+    "en": "Configuration interface for LongPressGesture.\nLong press gesture recognizes long press gestures.",
     "text": "LongPressGesture 的配置接口。\n长按手势用于识别长按手势。"
   },
   "LongPressGestureConfig.enabled.summary": {
-    "hash": "1d92eada",
+    "en": "Whether the gesture is enabled. Defaults to true.",
     "text": "是否启用该手势。默认为 true。"
   },
   "LongPressGestureConfig.maxDistance.summary": {
-    "hash": "b01099f8",
+    "en": "Maximum distance (in points) the touch can move and still be considered a long press. Defaults to 10.",
     "text": "触点可移动且仍被视为长按的最大距离（单位为 point）。默认为 10。"
   },
   "LongPressGestureConfig.minDuration.summary": {
-    "hash": "d2a00ee6",
+    "en": "Minimum duration (in milliseconds) for a long press. Defaults to 500ms.",
     "text": "长按的最短持续时间（单位为毫秒）。默认为 500ms。"
   },
   "NativeGestureChangeEvent.summary": {
-    "hash": "ddb722f6",
+    "en": "Native gesture change event.\nUses the base GestureChangeEvent without additional properties.",
     "text": "原生手势的变化事件。\n直接使用基础的 GestureChangeEvent，不包含额外属性。"
   },
   "NativeGestureConfig.summary": {
-    "hash": "50a0f449",
+    "en": "Configuration interface for NativeGesture.\nNative gesture uses platform-specific gesture recognizers.",
     "text": "NativeGesture 的配置接口。\n原生手势使用平台特定的手势识别器。"
   },
   "NativeGestureConfig.enabled.summary": {
-    "hash": "1d92eada",
+    "en": "Whether the gesture is enabled. Defaults to true.",
     "text": "是否启用该手势。默认为 true。"
   },
   "PanGestureChangeEvent.summary": {
-    "hash": "b8cf00ec",
+    "en": "Pan gesture change event with translation and velocity information.",
     "text": "拖动手势的变化事件，包含位移和速度信息。"
   },
   "PanGestureConfig.summary": {
-    "hash": "a580f3d5",
+    "en": "Configuration interface for PanGesture.\nPan gesture recognizes pan (dragging) gestures.",
     "text": "PanGesture 的配置接口。\n拖动手势用于识别拖动（dragging）手势。"
   },
   "PanGestureConfig.activeOffsetX.summary": {
-    "hash": "4b83bbfc",
+    "en": "Active offset for X axis",
     "text": "X 轴的激活偏移量"
   },
   "PanGestureConfig.activeOffsetY.summary": {
-    "hash": "4dd8e49d",
+    "en": "Active offset for Y axis",
     "text": "Y 轴的激活偏移量"
   },
   "PanGestureConfig.enabled.summary": {
-    "hash": "1d92eada",
+    "en": "Whether the gesture is enabled. Defaults to true.",
     "text": "是否启用该手势。默认为 true。"
   },
   "PanGestureConfig.failOffsetX.summary": {
-    "hash": "9de796dc",
+    "en": "Fail offset for X axis",
     "text": "X 轴的失败偏移量"
   },
   "PanGestureConfig.failOffsetY.summary": {
-    "hash": "a03cbf7d",
+    "en": "Fail offset for Y axis",
     "text": "Y 轴的失败偏移量"
   },
   "PanGestureConfig.minDistance.summary": {
-    "hash": "4f4eaf07",
+    "en": "Minimum distance (in points) that must be traveled before the gesture activates. Defaults to 0.",
     "text": "手势激活前必须移动的最小距离（单位为 point）。默认为 0。"
   },
   "TapGestureChangeEvent.summary": {
-    "hash": "5098ee7b",
+    "en": "Tap gesture change event with tap location and count information.",
     "text": "点击手势的变化事件，包含点击位置和次数信息。"
   },
   "TapGestureConfig.summary": {
-    "hash": "fe39f1b3",
+    "en": "Configuration interface for TapGesture.\nTap gesture recognizes tap gestures.",
     "text": "TapGesture 的配置接口。\n点击手势用于识别点击手势。"
   },
   "TapGestureConfig.enabled.summary": {
-    "hash": "1d92eada",
+    "en": "Whether the gesture is enabled. Defaults to true.",
     "text": "是否启用该手势。默认为 true。"
   },
   "TapGestureConfig.maxDistance.summary": {
-    "hash": "c1ebb660",
+    "en": "Maximum distance (in points) the touch can move and still be considered a tap. Defaults to 10.",
     "text": "触点可移动且仍被视为点击的最大距离（单位为 point）。默认为 10。"
   },
   "TapGestureConfig.maxDuration.summary": {
-    "hash": "ef6975d0",
+    "en": "Maximum duration (in milliseconds) for a tap. Defaults to 500ms.",
     "text": "点击的最长持续时间（单位为毫秒）。默认为 500ms。"
   },
   "TapGestureConfig.numberOfTaps.summary": {
-    "hash": "1ad4d8e4",
+    "en": "Number of taps required. Defaults to 1.",
     "text": "所需的点击次数。默认为 1。"
   },
   "GestureCallback.summary": {
-    "hash": "fd06b580",
+    "en": "Generic gesture callback type that receives typed events.",
     "text": "接收类型化事件的通用手势回调类型。"
   },
   "Gesture.default": {
-    "hash": "0b877caf",
+    "en": "...",
     "text": "..."
   }
 }

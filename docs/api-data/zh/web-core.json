@@ -1,54 +1,54 @@
 {
   "LynxViewElement.example.0": {
-    "hash": "60dd40aa",
+    "en": "HTML Example\n\nNote that you should declarae the size of lynx-view\n\n```html\n<lynx-view url=\"https://path/to/main-thread.js\" raw-data=\"{}\" global-props=\"{}\" style=\"height:300px;width:300px\">\n</lynx-view>\n```\n\nReact 19 Example\n```jsx\n<lynx-view url={myLynxCardUrl} rawData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>\n</lynx-view>\n```",
     "text": "HTML 示例\n\n注意，你需要声明 lynx-view 的尺寸\n\n```html\n<lynx-view url=\"https://path/to/main-thread.js\" raw-data=\"{}\" global-props=\"{}\" style=\"height:300px;width:300px\">\n</lynx-view>\n```\n\nReact 19 示例\n\n```jsx\n<lynx-view url={myLynxCardUrl} rawData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>\n</lynx-view>\n```"
   },
   "LynxViewElement.injectStyleRules.summary": {
-    "hash": "8d5e3ac9",
+    "en": "[optional] the css rules which will be injected into shadowroot. Each items will be inserted by `insertRule` method.",
     "text": "[可选] 将被注入到 shadowroot 中的 CSS 规则。每一项都会通过 `insertRule` 方法插入。"
   },
   "LynxViewElement.napiModulesMap.summary": {
-    "hash": "65646cd0",
+    "en": "[optional] the napiModule which is called in lynx-core. key is module-name, value is esm url.",
     "text": "[可选] 在 lynx-core 中调用的 napiModule。key 为模块名，value 为 ESM URL。"
   },
   "LynxViewElement.nativeModulesMap.summary": {
-    "hash": "6bba6240",
+    "en": "[optional] use to customize NativeModules. key is module-name, value is esm url.\nA `LynxConsoleModule` whose factory returns a Console-like object provides\nthe lexical `console` for this view's background bundles.",
     "text": "[可选] 用于自定义 NativeModules。key 为模块名，value 为 ESM URL。\n若某个 `LynxConsoleModule` 的工厂函数返回类 Console 对象，它将\n为此 view 的后台 bundle 提供词法作用域中的 `console`。"
   },
   "LynxViewElement.onNapiModulesCall.summary": {
-    "hash": "e01b84fb",
+    "en": "[optional] the NapiModule value handler.",
     "text": "[可选] NapiModule 的值处理函数。"
   },
   "LynxViewElement.globalProps.summary": {
-    "hash": "3f6e296d",
+    "en": "[optional] (attribute: \"global-props\") The globalProps value of this Lynx card",
     "text": "[可选]（属性：\"global-props\"）此 Lynx 卡片的 globalProps 值"
   },
   "LynxViewElement.initData.summary": {
-    "hash": "432c1f78",
+    "en": "[optional] (attribute: \"init-data\") The initial data of this Lynx card",
     "text": "[可选]（属性：\"init-data\"）此 Lynx 卡片的初始数据"
   },
   "LynxViewElement.initI18nResources.summary": {
-    "hash": "1211b67b",
+    "en": "[optional] (attribute: \"init-i18n-resources\") the complete set of i18nResources that on the container side, which can be obtained synchronously by _I18nResourceTranslation",
     "text": "[可选]（属性：\"init-i18n-resources\"）容器侧完整的 i18nResources 集合，可通过 _I18nResourceTranslation 同步获取"
   },
   "LynxViewElement.lynxGroupId.summary": {
-    "hash": "a153d0a2",
+    "en": "[optional] (attribute: \"lynx-group-id\") the background shared context id, which is used to share webworker between different lynx cards",
     "text": "[可选]（属性：\"lynx-group-id\"）后台共享上下文 id，用于在不同 Lynx 卡片之间共享 webworker"
   },
   "LynxViewElement.onNativeModulesCall.summary": {
-    "hash": "d1f6f9e2",
+    "en": "[optional] the NativeModules value handler. Arguments will be cached before this property is assigned.",
     "text": "[可选] NativeModules 的值处理函数。在该属性被赋值之前，调用参数会被缓存。"
   },
   "LynxViewElement.url.summary": {
-    "hash": "1df1e119",
+    "en": "[required] (attribute: \"url\") The url of the entry of your Lynx card",
     "text": "[必填]（属性：\"url\"）Lynx 卡片入口的 URL"
   },
   "LynxViewElement.setAttribute.summary": {
-    "hash": "cf4b3f87",
+    "en": "\"false\" value will be omitted\n\n`HTMLElement.setAttribute`",
     "text": "值为 \"false\" 时将被忽略\n\n`HTMLElement.setAttribute`"
   },
   "WebComponentClass.notToFilterFalseAttributes.summary": {
-    "hash": "40b8b2c2",
+    "en": "for attribute=\"false\",\nwe will do removeAttribute by default;\nset here for dont do this;",
     "text": "对于 attribute=\"false\"，\n默认会执行 removeAttribute；\n在此处设置可禁用该行为；"
   }
 }

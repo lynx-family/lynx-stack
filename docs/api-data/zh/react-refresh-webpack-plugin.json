@@ -1,38 +1,38 @@
 {
   "ReactRefreshRspackPlugin.summary": {
-    "hash": "1069e00a",
+    "en": "ReactRefreshRspackPlugin allows using fast refresh in ReactLynx.",
     "text": "ReactRefreshRspackPlugin 用于在 ReactLynx 中启用 fast refresh。"
   },
   "ReactRefreshRspackPlugin.example.0": {
-    "hash": "9acb3a01",
+    "en": "```js\n// rspack.config.js\nimport { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'\nexport default {\n  module: {\n    rules: [\n      {\n        test: /\\.[jt]sx?$/,\n        exclude: [\n          /node_modules/,\n          /@lynx-js/,\n          /react-refresh/,\n          /compiler-nodiff-runtime3/,\n          ReactRefreshRspackPlugin.loader,\n        ],\n        use: [ReactRefreshRspackPlugin.loader],\n      },\n    ],\n  },\n  plugins: [new ReactRefreshRspackPlugin()],\n}\n```",
     "text": "```js\n// rspack.config.js\nimport { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'\nexport default {\n  module: {\n    rules: [\n      {\n        test: /\\.[jt]sx?$/,\n        exclude: [\n          /node_modules/,\n          /@lynx-js/,\n          /react-refresh/,\n          /compiler-nodiff-runtime3/,\n          ReactRefreshRspackPlugin.loader,\n        ],\n        use: [ReactRefreshRspackPlugin.loader],\n      },\n    ],\n  },\n  plugins: [new ReactRefreshRspackPlugin()],\n}\n```"
   },
   "ReactRefreshRspackPlugin.constructor.params.options": {
-    "hash": "978709a5",
+    "en": "The options for react refresh.",
     "text": "React Refresh 的选项。"
   },
   "ReactRefreshRspackPlugin.loader.summary": {
-    "hash": "92c7e350",
+    "en": "The loader for react refresh.",
     "text": "React Refresh 的 loader。"
   },
   "ReactRefreshRspackPlugin.loader.remarks": {
-    "hash": "ae095d18",
+    "en": "Please note that the runtime of react should be ignored. See the example below:",
     "text": "注意需要忽略 React 的运行时，参见下方示例："
   },
   "ReactRefreshRspackPlugin.loader.example.0": {
-    "hash": "2cf314a4",
+    "en": "```js\n// rspack.config.js\nimport { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'\nimport { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'\n\nexport default {\n  module: {\n    rules: [\n      {\n        issueLayer: ReactWebpackPlugin.LAYERS.BACKGROUND,\n        test: /\\.[jt]sx?$/,\n        exclude: [\n          /node_modules/,\n          /@lynx-js/react/,\n          ReactRefreshRspackPlugin.loader,\n        ],\n        use: [ReactRefreshRspackPlugin.loader],\n      },\n    ],\n  },\n  plugins: [new ReactRefreshRspackPlugin()],\n}\n```",
     "text": "```js\n// rspack.config.js\nimport { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'\nimport { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'\n\nexport default {\n  module: {\n    rules: [\n      {\n        issueLayer: ReactWebpackPlugin.LAYERS.BACKGROUND,\n        test: /\\.[jt]sx?$/,\n        exclude: [\n          /node_modules/,\n          /@lynx-js/react/,\n          ReactRefreshRspackPlugin.loader,\n        ],\n        use: [ReactRefreshRspackPlugin.loader],\n      },\n    ],\n  },\n  plugins: [new ReactRefreshRspackPlugin()],\n}\n```"
   },
   "ReactRefreshRspackPlugin.apply.summary": {
-    "hash": "a1a11e19",
+    "en": "The entry point of a rspack plugin.",
     "text": "Rspack 插件的入口。"
   },
   "ReactRefreshRspackPlugin.apply.params.compiler": {
-    "hash": "b6c54125",
+    "en": "the rspack compiler",
     "text": "Rspack 编译器"
   },
   "ReactRefreshRspackPluginOptions.summary": {
-    "hash": "c67b34e6",
+    "en": "The options for [`ReactRefreshRspackPlugin`](api:ReactRefreshRspackPlugin).",
     "text": "[`ReactRefreshRspackPlugin`](api:ReactRefreshRspackPlugin) 的选项。"
   }
 }

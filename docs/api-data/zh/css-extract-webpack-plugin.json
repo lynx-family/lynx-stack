@@ -1,74 +1,74 @@
 {
   "CssExtractRspackPlugin.summary": {
-    "hash": "6b21010e",
+    "en": "CssExtractRspackPlugin is the CSS extract plugin for Lynx.\nIt works just like the [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin.html) in Web.",
     "text": "CssExtractRspackPlugin 是 Lynx 的 CSS 提取插件。\n其用法与 Web 中的 [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin.html) 相同。"
   },
   "CssExtractRspackPlugin.example.0": {
-    "hash": "55646809",
+    "en": "```js\nimport { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'\nexport default {\n  plugins: [new CssExtractRspackPlugin()],\n  module: {\n    rules: [\n      {\n        test: /\\.css$/,\n        uses: [CssExtractRspackPlugin.loader, 'css-loader'],\n      },\n    ],\n  },\n}\n```",
     "text": "```js\nimport { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'\nexport default {\n  plugins: [new CssExtractRspackPlugin()],\n  module: {\n    rules: [\n      {\n        test: /\\.css$/,\n        uses: [CssExtractRspackPlugin.loader, 'css-loader'],\n      },\n    ],\n  },\n}\n```"
   },
   "CssExtractRspackPlugin.defaultOptions.summary": {
-    "hash": "c6a85cef",
+    "en": "`defaultOptions` is the default options that the [`CssExtractRspackPlugin`](api:CssExtractRspackPlugin) uses.",
     "text": "`defaultOptions` 是 [`CssExtractRspackPlugin`](api:CssExtractRspackPlugin) 使用的默认选项。"
   },
   "CssExtractRspackPlugin.loader.summary": {
-    "hash": "a5b512d2",
+    "en": "The loader to extract CSS.",
     "text": "用于提取 CSS 的 loader。"
   },
   "CssExtractRspackPlugin.loader.remarks": {
-    "hash": "fcf65559",
+    "en": "It should be used with the ['css-loader'](https://github.com/webpack-contrib/css-loader).",
     "text": "应与 ['css-loader'](https://github.com/webpack-contrib/css-loader) 配合使用。"
   },
   "CssExtractRspackPlugin.loader.example.0": {
-    "hash": "55646809",
+    "en": "```js\nimport { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'\nexport default {\n  plugins: [new CssExtractRspackPlugin()],\n  module: {\n    rules: [\n      {\n        test: /\\.css$/,\n        uses: [CssExtractRspackPlugin.loader, 'css-loader'],\n      },\n    ],\n  },\n}\n```",
     "text": "```js\nimport { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'\nexport default {\n  plugins: [new CssExtractRspackPlugin()],\n  module: {\n    rules: [\n      {\n        test: /\\.css$/,\n        uses: [CssExtractRspackPlugin.loader, 'css-loader'],\n      },\n    ],\n  },\n}\n```"
   },
   "CssExtractRspackPlugin.apply.summary": {
-    "hash": "90722b12",
+    "en": "The entry point of a webpack plugin.",
     "text": "webpack 插件的入口。"
   },
   "CssExtractRspackPlugin.apply.params.compiler": {
-    "hash": "edb43efe",
+    "en": "the webpack compiler",
     "text": "webpack 编译器"
   },
   "CssExtractRspackPluginOptions.summary": {
-    "hash": "c800eaae",
+    "en": "The options for `@lynx-js/css-extract-webpack-plugin#CssExtractRspackPlugin`",
     "text": "`@lynx-js/css-extract-webpack-plugin#CssExtractRspackPlugin` 的选项"
   },
   "CssExtractRspackPluginOptions.chunkFilename.summary": {
-    "hash": "293e1a93",
+    "en": "The name of non-initial CSS chunk files",
     "text": "非初始 CSS chunk 文件的名称"
   },
   "CssExtractRspackPluginOptions.cssPlugins.summary": {
-    "hash": "af16dcf7",
+    "en": "plugins passed to parser",
     "text": "传递给解析器的插件"
   },
   "CssExtractRspackPluginOptions.filename.summary": {
-    "hash": "345e6986",
+    "en": "The name of each output bundle.",
     "text": "每个输出产物的名称。"
   },
   "LoaderOptions.summary": {
-    "hash": "b9ae6170",
+    "en": "The options of CSS extract loader.",
     "text": "CSS 提取 loader 的选项。"
   },
   "LoaderOptions.emit.summary": {
-    "hash": "91da925a",
+    "en": "The same as [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin/tree/master?tab=readme-ov-file#emit).\nControl whether emit the CSS to filesystem.\n\n- If `true`(default), emits a file (writes a file to the filesystem).\n\n- If `false`, the plugin will extract the CSS but will not emit the file.\n\nIt is often useful to disable this option for server-side packages.",
     "text": "与 [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin/tree/master?tab=readme-ov-file#emit) 相同。\n控制是否将 CSS 输出到文件系统。\n\n- 若为 `true`（默认），则输出文件（将文件写入文件系统）。\n\n- 若为 `false`，插件会提取 CSS，但不会输出文件。\n\n对于服务端包，通常可以禁用该选项。"
   },
   "LoaderOptions.emit.default": {
-    "hash": "e24c5ce9",
+    "en": "```ts\ntrue\n@public\n```",
     "text": "```ts\ntrue\n@public\n```"
   },
   "LoaderOptions.esModule.summary": {
-    "hash": "4ddadd3f",
+    "en": "`@lynx-js/rspeedy#CssExtractRspackLoaderOptions.esModule`",
     "text": "`@lynx-js/rspeedy#CssExtractRspackLoaderOptions.esModule`"
   },
   "LoaderOptions.layer.summary": {
-    "hash": "19963524",
+    "en": "The layer of the CSS execution.",
     "text": "CSS 执行所在的 layer。"
   },
   "LoaderOptions.layer.remarks": {
-    "hash": "4f43b9b0",
+    "en": "This should be combined with `experiments.layers`.",
     "text": "需要与 `experiments.layers` 配合使用。"
   }
 }

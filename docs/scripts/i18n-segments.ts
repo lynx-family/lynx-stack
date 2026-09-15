@@ -5,12 +5,20 @@ import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { hashText } from './render.ts';
+import type { ApiData } from './generate-api-data.ts';
+import { sourceStrings } from './i18n-strings.ts';
 import type { Translations } from './render.ts';
 
-const ZH = join(dirname(fileURLToPath(import.meta.url)), '../api-data/zh');
+const DATA = join(dirname(fileURLToPath(import.meta.url)), '../api-data');
+const ZH = join(DATA, 'zh');
 const FENCE = /(```[^\n]*\n[\s\S]*?\n```)/;
 const NEWLINE = ' ⏎ ';
+
+function source(pkg: string): Map<string, string> {
+  return sourceStrings(
+    JSON.parse(readFileSync(join(DATA, `${pkg}.json`), 'utf8')) as ApiData,
+  );
+}
 
 function load(pkg: string): Translations {
   return JSON.parse(
@@ -28,10 +36,12 @@ function save(pkg: string, translations: Translations): void {
 function dump(dir: string, pkgs: string[]): void {
   mkdirSync(dir, { recursive: true });
   for (const pkg of pkgs) {
+    const translations = load(pkg);
     const lines: string[] = [];
-    for (const [key, t] of Object.entries(load(pkg))) {
-      if (t.en === undefined) continue;
-      t.en.split(FENCE).forEach((segment, i) => {
+    for (const [key, en] of source(pkg)) {
+      const t = translations[key];
+      if (t?.text && t.en === en) continue;
+      en.split(FENCE).forEach((segment, i) => {
         if (i % 2 === 0 && segment.trim()) {
           lines.push(
             `${key}\t${i}\t${segment.trim().replaceAll('\n', NEWLINE)}`,
@@ -70,21 +80,19 @@ function apply(dir: string): void {
     }
   }
   for (const [pkg, segments] of byPackage) {
+    const strings = source(pkg);
     const translations = load(pkg);
     let applied = 0;
     for (const [key, byIndex] of segments) {
-      const t = translations[key];
-      if (t?.en === undefined) continue;
-      const parts = t.en.split(FENCE);
+      const en = strings.get(key);
+      if (en === undefined) continue;
+      const parts = en.split(FENCE);
       for (const [i, text] of byIndex) {
         if (i >= parts.length) continue;
         parts[i] = (i > 0 ? '\n\n' : '') + text
           + (i < parts.length - 1 ? '\n\n' : '');
       }
-      translations[key] = {
-        hash: hashText(t.en),
-        text: parts.join('').trim(),
-      };
+      translations[key] = { en, text: parts.join('').trim() };
       applied++;
     }
     save(pkg, translations);

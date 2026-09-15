@@ -41,13 +41,13 @@ Directives:
 
 Handwritten pages have a Chinese copy under `content/zh/` with the same path; edit both when you change one.
 
-Generated text is translated through sidecar files, one per package: `api-data/zh/<package>.json` maps each string (`Output.filename.summary`, `Output.filename.example.0`, …) to its translation and a hash of the English it was translated from. `expand-api-docs.ts` uses the translation only while the hash still matches; when the English changes, the page falls back to the English text and shows a 待翻译 badge until someone updates the translation. A stale translation is never shown silently.
+Generated text is translated through sidecar files, one per package: `api-data/zh/<package>.json` maps each string (`Output.filename.summary`, `Output.filename.example.0`, …) to `en`, the English it was translated from, and `text`, its translation. `expand-api-docs.ts` uses `text` only while `en` still equals the current English; when the English changes, the page falls back to the English text and shows a 待翻译 badge until someone updates the translation. A stale translation is never shown silently.
 
-`i18n:extract` marks each new or changed string by adding `en`, the current English, next to it. The page keeps showing the English with the badge while `en` is there: update `text`, then delete `en`. `i18n:apply` does both for you.
+`i18n:extract` adds new strings with an empty `text` and drops strings that no longer exist. It leaves a stale entry as it is, so its `en` still shows the English it was translated from. To update an entry by hand, set `en` to the current English and `text` to its translation; `i18n:dump` and `i18n:apply` do this for you.
 
 ```sh
-pnpm --filter docs i18n:extract          # add new/changed strings to api-data/zh/*.json
-pnpm --filter docs i18n:dump <dir> <package>   # write the prose of strings marked with `en` to <dir>/seg-<package>.tsv
+pnpm --filter docs i18n:extract          # add new strings to api-data/zh/*.json, drop removed ones
+pnpm --filter docs i18n:dump <dir> <package>   # write the prose of untranslated and stale strings to <dir>/seg-<package>.tsv
 pnpm --filter docs i18n:apply <dir>             # read <dir>/seg-*.zh.tsv back into the sidecars
 pnpm --filter docs generate              # re-render the pages
 ```

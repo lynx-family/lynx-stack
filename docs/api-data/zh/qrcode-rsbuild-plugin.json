@@ -1,38 +1,38 @@
 {
   "PluginQRCodeOptions.summary": {
-    "hash": "6abdbd1e",
+    "en": "The options for [`pluginQRCode`](api:pluginQRCode).",
     "text": "[`pluginQRCode`](api:pluginQRCode) 的选项。"
   },
   "PluginQRCodeOptions.fullscreen.summary": {
-    "hash": "2170fd0c",
+    "en": "Opt in to the fullscreen variant of the Lynx bundle URL (appends\n`?fullscreen=true`, opening the bundle in LynxExplorer with the in-app\nnavigation chrome stripped).\n\nWhen enabled, the plugin:\n- Appends a `fullscreen` entry to the schema rotation — the QR keeps\n  opening on your default schema; press `a` in the dev console to switch\n  to the `fullscreen` variant.\n- Appends an `∟ Fullscreen` URL line under each Lynx bundle URL printed\n  by the dev server.",
     "text": "启用 Lynx bundle URL 的全屏变体（追加\n`?fullscreen=true`，在 LynxExplorer 中打开 bundle 时会隐藏应用内\n导航栏）。\n\n启用后，插件会：\n- 在 schema 轮换列表中追加一个 `fullscreen` 项：二维码仍然\n  打开默认 schema，在开发控制台中按 `a` 可切换\n  到 `fullscreen` 变体。\n- 在开发服务器打印的每个 Lynx bundle URL\n  下方追加一行 `∟ Fullscreen` URL。"
   },
   "PluginQRCodeOptions.fullscreen.default": {
-    "hash": "d69d0e50",
+    "en": "`false`",
     "text": "`false`"
   },
   "PluginQRCodeOptions.schema.summary": {
-    "hash": "0924d2f7",
+    "en": "Customize the generated schema.",
     "text": "自定义生成的 schema。"
   },
   "PluginQRCodeOptions.schema.example.0": {
-    "hash": "ee8acec6",
+    "en": "```js\nimport { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  plugins: [\n    pluginQRCode({\n      schema(url) {\n        return `lynx://${url}?dev=1`\n      },\n    }),\n  ],\n})\n```",
     "text": "```js\nimport { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  plugins: [\n    pluginQRCode({\n      schema(url) {\n        return `lynx://${url}?dev=1`\n      },\n    }),\n  ],\n})\n```"
   },
   "PluginQRCodeOptions.schema.example.1": {
-    "hash": "49e0a33b",
+    "en": "- Use multiple schemas:\n\nYou may press `a` in the terminal to switch between schemas.\n\n```js\nimport { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  plugins: [\n    pluginQRCode({\n      schema(url) {\n        return {\n          http: url,\n          foo: `foo://lynx?url=${encodeURIComponent(url)}&dev=1`,\n          bar: `bar://lynx?url=${encodeURIComponent(url)}`,\n        }\n      },\n    }),\n  ],\n})\n```",
     "text": "- 使用多个 schema：\n\n可以在终端中按 `a` 切换 schema。\n\n```js\nimport { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n  plugins: [\n    pluginQRCode({\n      schema(url) {\n        return {\n          http: url,\n          foo: `foo://lynx?url=${encodeURIComponent(url)}&dev=1`,\n          bar: `bar://lynx?url=${encodeURIComponent(url)}`,\n        }\n      },\n    }),\n  ],\n})\n```"
   },
   "CustomizedSchemaFn.summary": {
-    "hash": "a7d17e7d",
+    "en": "`PluginQRCodeOptions.schema`",
     "text": "`PluginQRCodeOptions.schema`"
   },
   "pluginQRCode.summary": {
-    "hash": "e47672bc",
+    "en": "Create a rsbuild plugin for printing QRCode.",
     "text": "创建一个用于打印二维码的 Rsbuild 插件。"
   },
   "pluginQRCode.example.0": {
-    "hash": "b471bd33",
+    "en": "```ts\n// rsbuild.config.ts\nimport { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'\nexport default {\n  plugins: [pluginQRCode()],\n}\n```",
     "text": "```ts\n// rsbuild.config.ts\nimport { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'\nexport default {\n  plugins: [pluginQRCode()],\n}\n```"
   }
 }

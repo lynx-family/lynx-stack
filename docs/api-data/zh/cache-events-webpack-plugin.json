@@ -1,34 +1,34 @@
 {
   "LynxCacheEventsPlugin.summary": {
-    "hash": "311e132c",
+    "en": "A webpack plugin that cache Lynx native events until the BTS chunk is fully loaded, and replay them when the BTS chunk is ready.",
     "text": "一个 webpack 插件，用于在 BTS chunk 完全加载之前缓存 Lynx 原生事件，并在 BTS chunk 就绪后重放这些事件。"
   },
   "LynxCacheEventsPlugin.defaultOptions.summary": {
-    "hash": "e51eec47",
+    "en": "`defaultOptions` is the default options that the [`LynxCacheEventsPlugin`](api:LynxCacheEventsPlugin) uses.",
     "text": "`defaultOptions` 是 [`LynxCacheEventsPlugin`](api:LynxCacheEventsPlugin) 使用的默认选项。"
   },
   "LynxCacheEventsPlugin.defaultOptions.example.0": {
-    "hash": "0cbf3627",
+    "en": "`defaultOptions` can be used to change part of the option and keep others as the default value.\n\n```js\n// webpack.config.js\nimport { LynxCacheEventsPlugin } from '@lynx-js/cache-events-webpack-plugin'\nexport default {\n  plugins: [\n    new LynxCacheEventsPlugin({\n      ...LynxCacheEventsPlugin.defaultOptions,\n      setupListTransformer: (setupList) => setupList,\n    }),\n  ],\n}\n```",
     "text": "`defaultOptions` 可用于修改部分选项，同时让其余选项保持默认值。\n\n```js\n// webpack.config.js\nimport { LynxCacheEventsPlugin } from '@lynx-js/cache-events-webpack-plugin'\nexport default {\n  plugins: [\n    new LynxCacheEventsPlugin({\n      ...LynxCacheEventsPlugin.defaultOptions,\n      setupListTransformer: (setupList) => setupList,\n    }),\n  ],\n}\n```"
   },
   "LynxCacheEventsPlugin.apply.summary": {
-    "hash": "90722b12",
+    "en": "The entry point of a webpack plugin.",
     "text": "webpack 插件的入口。"
   },
   "LynxCacheEventsPlugin.apply.params.compiler": {
-    "hash": "edb43efe",
+    "en": "the webpack compiler",
     "text": "webpack 编译器"
   },
   "LynxCacheEventsPluginOptions.summary": {
-    "hash": "fe10629c",
+    "en": "The options for [`LynxCacheEventsPlugin`](api:LynxCacheEventsPlugin)",
     "text": "[`LynxCacheEventsPlugin`](api:LynxCacheEventsPlugin) 的选项"
   },
   "LynxCacheEventsPluginOptions.setupListTransformer.summary": {
-    "hash": "9a937cf0",
+    "en": "The transformer function to modify the setup list.\n\nIt runs once per caching chunk — separately for the background thread and\nfor an async-external main thread — so `context.isMainThread` tells you\nwhich thread's list you are transforming. Use it to add a cache function to\nonly one thread.",
     "text": "用于修改 setup 列表的转换函数。\n\n它会针对每个缓存 chunk 各运行一次（后台线程和\nasync-external 主线程分别运行），因此可以通过 `context.isMainThread` 判断\n当前转换的是哪个线程的列表。可借此只为\n其中一个线程添加缓存函数。"
   },
   "LynxCacheEventsPluginOptions.setupListTransformer.example.0": {
-    "hash": "dfa1e246",
+    "en": "```js\n// webpack.config.js\nimport { LynxCacheEventsPlugin } from '@lynx-js/cache-events-webpack-plugin'\n\nconst config = {\n  plugins: [\n    new LynxCacheEventsPlugin({\n      setupListTransformer: (setupList, { isMainThread }) => {\n        // only cache this event on the background thread\n        if (!isMainThread) {\n          setupList.push(\n            `{\n              name: 'customCacheEvent',\n              setup: () => {\n                console.log('customCacheEvent setup');\n                return () => {\n                  console.log('customCacheEvent teardown');\n                }\n              }\n            }`\n          )\n        }\n        return setupList;\n      },\n    }),\n  ],\n}\n```",
     "text": "```js\n// webpack.config.js\nimport { LynxCacheEventsPlugin } from '@lynx-js/cache-events-webpack-plugin'\n\nconst config = {\n  plugins: [\n    new LynxCacheEventsPlugin({\n      setupListTransformer: (setupList, { isMainThread }) => {\n        // only cache this event on the background thread\n        if (!isMainThread) {\n          setupList.push(\n            `{\n              name: 'customCacheEvent',\n              setup: () => {\n                console.log('customCacheEvent setup');\n                return () => {\n                  console.log('customCacheEvent teardown');\n                }\n              }\n            }`\n          )\n        }\n        return setupList;\n      },\n    }),\n  ],\n}\n```"
   }
 }

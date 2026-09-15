@@ -1,14 +1,14 @@
 {
   "generate.summary": {
-    "hash": "5b56d431",
+    "en": "Builds the generated JS facade and platform spec file contents for a library package.",
     "text": "为库包构建生成的 JS facade 和平台 spec 文件内容。"
   },
   "parseNativeModules.summary": {
-    "hash": "460840eb",
+    "en": "Parses native module declarations marked with `@lynxmodule` from a TypeScript declaration source.",
     "text": "从 TypeScript 声明源码中解析以 `@lynxmodule` 标记的原生模块声明。"
   },
   "runCodegen.summary": {
-    "hash": "6844da49",
+    "en": "Writes generated files to disk and returns the generated file descriptors.",
     "text": "将生成的文件写入磁盘，并返回生成文件的描述符。"
   }
 }

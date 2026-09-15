@@ -1,86 +1,86 @@
 {
   "GlobalEventEmitter.summary": {
-    "hash": "a7db9c36",
+    "en": "The Lynx `GlobalEventEmitter` module, accessible via `lynx.getJSModule('GlobalEventEmitter')`.\n\nFramework testing libraries can use this to trigger and listen to cross-thread events.",
     "text": "Lynx 的 `GlobalEventEmitter` 模块，可通过 `lynx.getJSModule('GlobalEventEmitter')` 访问。\n\n框架测试库可以用它触发和监听跨线程事件。"
   },
   "LynxTestingEnv.summary": {
-    "hash": "1fab592d",
+    "en": "A pure-JavaScript implementation of the [Lynx Spec](https://lynxjs.org/guide/spec.html),\nnotably the [Element PAPI](https://lynxjs.org/api/engine/element-api) and [Dual-threaded Model](https://lynxjs.org/guide/spec#dual-threaded-model) for use with Node.js.",
     "text": "[Lynx 规范](https://lynxjs.org/guide/spec.html) 的纯 JavaScript 实现，\n主要包括 [Element PAPI](https://lynxjs.org/api/engine/element-api) 和 [双线程模型](https://lynxjs.org/guide/spec#dual-threaded-model)，供 Node.js 环境使用。"
   },
   "LynxTestingEnv.example.0": {
-    "hash": "b70e9e23",
+    "en": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToMainThread();\n// use the main thread Element PAPI\nconst page = __CreatePage('0', 0);\nconst view = __CreateView(0);\n__AppendElement(page, view);\n\n```",
     "text": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToMainThread();\n// use the main thread Element PAPI\nconst page = __CreatePage('0', 0);\nconst view = __CreateView(0);\n__AppendElement(page, view);\n\n```"
   },
   "LynxTestingEnv.backgroundThread.summary": {
-    "hash": "881e919c",
+    "en": "The global object for the background thread.",
     "text": "后台线程的全局对象。"
   },
   "LynxTestingEnv.backgroundThread.example.0": {
-    "hash": "fe604a1f",
+    "en": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToBackgroundThread();\n// use the background thread global object\nglobalThis.lynxCoreInject.tt.OnLifecycleEvent(...args);\n```",
     "text": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToBackgroundThread();\n// use the background thread global object\nglobalThis.lynxCoreInject.tt.OnLifecycleEvent(...args);\n```"
   },
   "LynxTestingEnv.mainThread.summary": {
-    "hash": "eb691dc1",
+    "en": "The global object for the main thread.",
     "text": "主线程的全局对象。"
   },
   "LynxTestingEnv.mainThread.example.0": {
-    "hash": "dc064f92",
+    "en": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToMainThread();\n// use the main thread global object\nconst page = globalThis.__CreatePage('0', 0);\nconst view = globalThis.__CreateView(0);\nglobalThis.__AppendElement(page, view);\n```",
     "text": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToMainThread();\n// use the main thread global object\nconst page = globalThis.__CreatePage('0', 0);\nconst view = globalThis.__CreateView(0);\nglobalThis.__AppendElement(page, view);\n```"
   },
   "LynxElement.summary": {
-    "hash": "564370bc",
+    "en": "Any Lynx Element, such as `view`, `text`, `image`, etc.\n\n[Lynx Spec Reference](https://lynxjs.org/living-spec/index.html?ts=1743416098203#element%E2%91%A0)",
     "text": "任意 Lynx 元素，例如 `view`、`text`、`image` 等。\n\n[Lynx 规范参考](https://lynxjs.org/living-spec/index.html?ts=1743416098203#element%E2%91%A0)"
   },
   "LynxElement.cssId.summary": {
-    "hash": "bd1622fc",
+    "en": "The cssId of the element",
     "text": "元素的 cssId"
   },
   "LynxElement.eventMap.summary": {
-    "hash": "5b2e8a02",
+    "en": "The map of events bound to the element.",
     "text": "绑定到该元素的事件映射表。"
   },
   "LynxElement.firstChild.summary": {
-    "hash": "c93cb749",
+    "en": "Returns the first child.\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/firstChild)",
     "text": "返回第一个子节点。\n\n[MDN 参考](https://developer.mozilla.org/docs/Web/API/Node/firstChild)"
   },
   "LynxElement.gesture.summary": {
-    "hash": "0ff879ec",
+    "en": "The gestures bound to the element.",
     "text": "绑定到该元素的手势。"
   },
   "LynxElement.nextSibling.summary": {
-    "hash": "caa4ddbf",
+    "en": "Returns the next sibling.\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/nextSibling)",
     "text": "返回下一个兄弟节点。\n\n[MDN 参考](https://developer.mozilla.org/docs/Web/API/Node/nextSibling)"
   },
   "LynxElement.parentNode.summary": {
-    "hash": "49c55feb",
+    "en": "Returns the parent.\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/parentNode)",
     "text": "返回父节点。\n\n[MDN 参考](https://developer.mozilla.org/docs/Web/API/Node/parentNode)"
   },
   "LynxEnv.summary": {
-    "hash": "4202951f",
+    "en": "The host environment used to initialize `LynxTestingEnv`.",
     "text": "用于初始化 `LynxTestingEnv` 的宿主环境。"
   },
   "LynxGlobalThis.summary": {
-    "hash": "76f80727",
+    "en": "The `globalThis` object of Lynx dual thread environment.",
     "text": "Lynx 双线程环境的 `globalThis` 对象。"
   },
   "LynxGlobalThis.globalThis.summary": {
-    "hash": "0d12ee94",
+    "en": "The globalThis object.",
     "text": "globalThis 对象。"
   },
   "ElementTree.summary": {
-    "hash": "2331b92b",
+    "en": "The lynx element tree",
     "text": "Lynx 元素树"
   },
   "ElementTreeGlobals.summary": {
-    "hash": "3e9d8dcf",
+    "en": "The Element PAPI Types",
     "text": "Element PAPI 类型"
   },
   "installLynxTestingEnv.summary": {
-    "hash": "d7c606f5",
+    "en": "Installs a `LynxTestingEnv` instance and its required globals onto a target.",
     "text": "将一个 `LynxTestingEnv` 实例及其所需的全局变量安装到目标对象上。"
   },
   "uninstallLynxTestingEnv.summary": {
-    "hash": "9ab3a2bd",
+    "en": "Removes the globals installed by `installLynxTestingEnv`.",
     "text": "移除由 `installLynxTestingEnv` 安装的全局变量。"
   }
 }

@@ -1,14 +1,14 @@
 {
   "animate.summary": {
-    "hash": "810d1f9e",
+    "en": "Animate a sequence",
     "text": "对一个序列执行动画"
   },
   "useMotionValueRef.summary": {
-    "hash": "356379da",
+    "en": "useMotionValue, but in MainThreadRef format, highly experimental, subject to change",
     "text": "MainThreadRef 形式的 useMotionValue，高度实验性，可能会发生变化"
   },
   "useMotionValueRefEvent.summary": {
-    "hash": "b5a1f820",
+    "en": "useMotionValueEvent, but only accepts motionValueRef format, highly experimental, subject to change",
     "text": "仅接受 motionValueRef 形式的 useMotionValueEvent，高度实验性，可能会发生变化"
   }
 }

@@ -1,658 +1,658 @@
 {
   "FunctionRegistry.summary": {
-    "hash": "81def102",
+    "en": "Lookup table that routes protocol `FunctionCall.call` names to local\nJavaScript implementations.",
     "text": "查找表，将协议中 `FunctionCall.call` 的名称路由到本地 JavaScript 实现。"
   },
   "MessageProcessor.summary": {
-    "hash": "96b43a48",
+    "en": "Stateful A2UI protocol processor that turns raw v0.9 messages into\nrenderable surfaces, resources, data-model signals, and user-action events.",
     "text": "有状态的 A2UI 协议处理器，将原始 v0.9 消息转换为可渲染的 surface、resource、数据模型 signal 以及用户操作事件。"
   },
   "MessageProcessor.resolvePath.summary": {
-    "hash": "a60b1847",
+    "en": "Resolve a JSON Pointer taking into account the current data context.\n\n- Absolute paths (starting with '/') are returned as-is.\n- Relative paths are resolved against the provided dataContextPath.",
     "text": "结合当前数据上下文解析 JSON Pointer。\n\n- 绝对路径（以 '/' 开头）原样返回。\n- 相对路径基于传入的 dataContextPath 解析。"
   },
   "SignalStore.summary": {
-    "hash": "1cd5f9ea",
+    "en": "Path-keyed store of ReactLynx signals backing a surface's data model.",
     "text": "以路径为键的 ReactLynx signal 存储，承载 surface 的数据模型。"
   },
   "A2UIComponentProp.summary": {
-    "hash": "3505502b",
+    "en": "Prompt-facing description of a single A2UI component prop.",
     "text": "面向 prompt 的单个 A2UI 组件 prop 描述。"
   },
   "A2UIComponentSpec.summary": {
-    "hash": "d6217948",
+    "en": "Prompt-facing component specification derived from a catalog manifest.",
     "text": "由 catalog manifest 派生的面向 prompt 的组件规格。"
   },
   "A2UIEvent.summary": {
-    "hash": "340ed1fd",
+    "en": "Event envelope emitted by `MessageProcessor.dispatch`.",
     "text": "由 `MessageProcessor.dispatch` 发出的事件信封。"
   },
   "A2UIExample.summary": {
-    "hash": "7fb31015",
+    "en": "Validated user request and message sequence included as an in-context A2UI\nexample.",
     "text": "作为上下文内 A2UI 示例提供的、经过校验的用户请求及消息序列。"
   },
   "A2UIFunctionSpec.summary": {
-    "hash": "3b0a23ed",
+    "en": "Prompt-facing schema for a client-side function the agent may call.",
     "text": "面向 prompt 的 schema，描述 agent 可以调用的客户端函数。"
   },
   "A2UIPromptCatalog.summary": {
-    "hash": "84d41b6f",
+    "en": "Prompt-ready A2UI catalog including components, rules, examples, and\noptional client functions.",
     "text": "可直接用于 prompt 的 A2UI catalog，包含组件、规则、示例以及可选的客户端函数。"
   },
   "A2UIPromptJsonSchema.summary": {
-    "hash": "5e373525",
+    "en": "JSON Schema subset used in prompt-facing catalog descriptions.",
     "text": "面向 prompt 的 catalog 描述中使用的 JSON Schema 子集。"
   },
   "A2UIProps.summary": {
-    "hash": "011c5c3d",
+    "en": "Props for the all-in-one A2UI ReactLynx renderer.",
     "text": "一体化 A2UI ReactLynx 渲染器的 props。"
   },
   "A2UIProps.catalogs.summary": {
-    "hash": "b3ccbb7d",
+    "en": "Components the renderer is allowed to instantiate. Each item is either\na bare component (name read from `displayName ?? name`) or a tuple\n`[component, manifest]` where the manifest is the JSON the extractor\nemits at `dist/catalog/<Name>/catalog.json`.",
     "text": "渲染器允许实例化的组件。每一项可以是一个裸组件（名称取自 `displayName ?? name`），也可以是元组 `[component, manifest]`，其中 manifest 是提取器在 `dist/catalog/<Name>/catalog.json` 输出的 JSON。"
   },
   "A2UIProps.className.summary": {
-    "hash": "b8e90056",
+    "en": "Optional class name applied to the top-level `surface-${surfaceId}`\nview for the active surface. Use this when theme switching is\nexpressed as surface-level classes.",
     "text": "可选的 class 名，应用于当前活动 surface 的顶层 `surface-${surfaceId}` view。当主题切换通过 surface 级别的 class 表达时使用。"
   },
   "A2UIProps.messageStore.summary": {
-    "hash": "99710ceb",
+    "en": "The raw-message buffer the developer pushes protocol messages into.\n`<A2UI>` subscribes via `useSyncExternalStore` and processes new\nmessages incrementally.\n\nThe internal `MessageProcessor` (surfaces, signals, resources) is\ncreated once per mount and is **not reset** if `messageStore` is\nlater replaced with a different instance. Pass a `key` prop derived\nfrom the store's identity if you want a fresh session, e.g.\n`<A2UI key={turnId} messageStore={turnStore} ... />`.",
     "text": "开发者推送协议消息的原始消息缓冲区。`<A2UI>` 通过 `useSyncExternalStore` 订阅它，并增量处理新消息。\n\n内部的 `MessageProcessor`（surface、signal、resource）在每次挂载时只创建一次，之后即使 `messageStore` 被替换为另一个实例也**不会重置**。如需开启新的会话，请传入一个由 store 标识派生的 `key` prop，例如 `<A2UI key={turnId} messageStore={turnStore} ... />`。"
   },
   "A2UIProps.onAction.summary": {
-    "hash": "452985e1",
+    "en": "Called when a user action fires inside the rendered tree (button\ntap, etc.). Forward to your agent and push the response messages\nback into the same `messageStore` to update the UI. Fire-and-forget;\nthe renderer never awaits this.",
     "text": "在渲染树内触发用户操作（如按钮点击等）时调用。将其转发给你的 agent，并把响应消息推回同一个 `messageStore` 以更新 UI。该回调为 fire-and-forget 方式，渲染器不会等待它完成。"
   },
   "A2UIProps.renderEmpty.summary": {
-    "hash": "0f3e49fd",
+    "en": "Render before the first `beginRendering` arrives from the buffer.",
     "text": "在缓冲区中收到第一条 `beginRendering` 之前渲染。"
   },
   "A2UIProps.renderError.summary": {
-    "hash": "f71f4a99",
+    "en": "Render when the active resource fails.",
     "text": "当前活动 resource 失败时渲染。"
   },
   "A2UIProps.renderFallback.summary": {
-    "hash": "638f89d2",
+    "en": "Render while the active resource is pending.",
     "text": "当前活动 resource 处于 pending 状态时渲染。"
   },
   "A2UIProps.renderUnsupported.summary": {
-    "hash": "3630ed53",
+    "en": "Render when unsupported data syntax or an unsupported component is encountered.",
     "text": "遇到不支持的数据语法或不支持的组件时渲染。"
   },
   "A2UIProps.wrapSurface.summary": {
-    "hash": "35f02659",
+    "en": "Wrap each top-level surface so consumers can apply an outer theme\nshell, wrapper className, or additional styles.",
     "text": "包裹每个顶层 surface，便于使用方应用外层主题外壳、包裹 className 或额外样式。"
   },
   "ActionProps.summary": {
-    "hash": "174edf82",
+    "en": "Identifies the component and surface that emitted an A2UI action.",
     "text": "标识发出 A2UI action 的组件和 surface。"
   },
   "BuildLynxXmlSystemPromptOptions.summary": {
-    "hash": "d03b91e6",
+    "en": "Options used to customize the Lynx XML generation system prompt.",
     "text": "用于自定义 Lynx XML 生成系统提示词的选项。"
   },
   "BuildLynxXmlSystemPromptOptions.appendix.summary": {
-    "hash": "1a825a5b",
+    "en": "Append caller-specific instructions after the built-in contract.",
     "text": "在内置约定之后追加调用方特定的指令。"
   },
   "BuildLynxXmlSystemPromptOptions.enableHtmlFragment.summary": {
-    "hash": "8a93f5b5",
+    "en": "Generate an intermediate document for deterministic fragment compilation.",
     "text": "生成一份中间文档，用于确定性的片段编译。"
   },
   "BuildLynxXmlSystemPromptOptions.engineVersion.summary": {
-    "hash": "fbaa41b2",
+    "en": "Override the generated artifact's Lynx engine version.",
     "text": "覆盖生成产物的 Lynx 引擎版本。"
   },
   "BuildOpenUiSystemPromptOptions.summary": {
-    "hash": "95d136bd",
+    "en": "Options used to customize the generated OpenUI system prompt.",
     "text": "用于自定义生成的 OpenUI 系统提示词的选项。"
   },
   "BuildOpenUiSystemPromptOptions.componentGroups.summary": {
-    "hash": "3564a5b0",
+    "en": "Replace or extend the built-in component groups.",
     "text": "替换或扩展内置的组件分组。"
   },
   "BuildOpenUiSystemPromptOptions.componentNames.summary": {
-    "hash": "4dc99e69",
+    "en": "Limit built-ins to these names. Custom `components` are still appended.",
     "text": "仅保留指定名称的内置组件。自定义的 `components` 仍会被追加。"
   },
   "BuildOpenUiSystemPromptOptions.components.summary": {
-    "hash": "13ae283c",
+    "en": "Replace or extend the built-in component set.",
     "text": "替换或扩展内置的组件集合。"
   },
   "BuildOpenUiSystemPromptOptions.root.summary": {
-    "hash": "bf983db9",
+    "en": "Override the root component name. Defaults to `'Stack'`.",
     "text": "覆盖根组件名称。默认为 `'Stack'`。"
   },
   "BuildSystemPromptOptions.summary": {
-    "hash": "2e640f9e",
+    "en": "Options used to customize the generated A2UI system prompt.",
     "text": "用于自定义生成的 A2UI 系统提示词的选项。"
   },
   "CatalogFunction.summary": {
-    "hash": "5aee6c0e",
+    "en": "A function discovered in source via `@a2uiFunction`, with its origin path.",
     "text": "通过 `@a2uiFunction` 在源码中发现的函数，附带其来源路径。"
   },
   "CheckLike.summary": {
-    "hash": "2791025a",
+    "en": "A v0.9 `CheckRule` is `{ condition, message }` where `condition` is a\nboolean, a `DataBinding`, or a `FunctionCall`. We accept the loose\n`unknown` shape so component props don't have to import the v0_9\ntypes just to pass them through.",
     "text": "v0.9 的 `CheckRule` 形如 `{ condition, message }`，其中 `condition` 可以是布尔值、`DataBinding` 或 `FunctionCall`。这里接受宽松的 `unknown` 类型，这样组件 props 就不必为了透传而导入 v0_9 的类型。"
   },
   "ComponentRenderProps.summary": {
-    "hash": "5556488d",
+    "en": "Props passed to an OpenUI ReactLynx component renderer.",
     "text": "传给 OpenUI ReactLynx 组件渲染器的 props。"
   },
   "CreateOpenUiLibraryOptions.summary": {
-    "hash": "8f9fd946",
+    "en": "Options for creating a ReactLynx OpenUI component library.",
     "text": "创建 ReactLynx OpenUI 组件库的选项。"
   },
   "CreateOpenUiLibraryOptions.componentGroups.summary": {
-    "hash": "b95b4619",
+    "en": "Additional groups, or the complete set when defaults are disabled.",
     "text": "额外的组件分组；禁用默认组件时则为完整的分组集合。"
   },
   "CreateOpenUiLibraryOptions.components.summary": {
-    "hash": "6c18073f",
+    "en": "Additional components, or the complete set when defaults are disabled.",
     "text": "额外的组件；禁用默认组件时则为完整的组件集合。"
   },
   "CreateOpenUiLibraryOptions.includeDefaultComponents.summary": {
-    "hash": "3e180395",
+    "en": "Whether to include the built-in components and component groups.\nDefaults to `true`.",
     "text": "是否包含内置组件和组件分组。默认为 `true`。"
   },
   "CreateOpenUiLibraryOptions.root.summary": {
-    "hash": "bf983db9",
+    "en": "Override the root component name. Defaults to `'Stack'`.",
     "text": "覆盖根组件名称。默认为 `'Stack'`。"
   },
   "CreateOpenUiPromptLibraryOptions.summary": {
-    "hash": "54f44964",
+    "en": "Options for creating the headless OpenUI prompt library.",
     "text": "创建 headless OpenUI prompt 库的选项。"
   },
   "CreateOpenUiPromptLibraryOptions.componentGroups.summary": {
-    "hash": "3564a5b0",
+    "en": "Replace or extend the built-in component groups.",
     "text": "替换或扩展内置的组件分组。"
   },
   "CreateOpenUiPromptLibraryOptions.componentNames.summary": {
-    "hash": "4dc99e69",
+    "en": "Limit built-ins to these names. Custom `components` are still appended.",
     "text": "仅保留指定名称的内置组件。自定义的 `components` 仍会被追加。"
   },
   "CreateOpenUiPromptLibraryOptions.components.summary": {
-    "hash": "13ae283c",
+    "en": "Replace or extend the built-in component set.",
     "text": "替换或扩展内置的组件集合。"
   },
   "CreateOpenUiPromptLibraryOptions.root.summary": {
-    "hash": "bf983db9",
+    "en": "Override the root component name. Defaults to `'Stack'`.",
     "text": "覆盖根组件名称。默认为 `'Stack'`。"
   },
   "ExtractCatalogOptions.summary": {
-    "hash": "a956566d",
+    "en": "Source and compiler inputs used when extracting catalog metadata.",
     "text": "提取 catalog 元数据时使用的源码和编译器输入。"
   },
   "ExtractedA2UICatalog.summary": {
-    "hash": "8f780501",
+    "en": "Full catalog manifest consumed by A2UI agents and renderers.",
     "text": "供 A2UI agent 和渲染器使用的完整 catalog manifest。"
   },
   "ExtractedCatalogComponent.summary": {
-    "hash": "87f85899",
+    "en": "Component schema discovered from an interface annotated with `@a2uiCatalog`.",
     "text": "从带有 `@a2uiCatalog` 注解的接口中发现的组件 schema。"
   },
   "ExtractedJsonSchema.summary": {
-    "hash": "7036d34e",
+    "en": "JSON Schema subset emitted for A2UI component props and function arguments.",
     "text": "为 A2UI 组件 props 和函数参数输出的 JSON Schema 子集。"
   },
   "FormValidationContextValue.summary": {
-    "hash": "f431b0c7",
+    "en": "Validation state and helpers for OpenUI form fields.",
     "text": "OpenUI 表单字段的校验状态和辅助函数。"
   },
   "FunctionCallContext.summary": {
-    "hash": "08df81b9",
+    "en": "Runtime context passed to client-side function implementations. It mirrors\nthe small DataContext subset used by upstream A2UI basic functions while\nstaying tied to this renderer's `MessageProcessor` + `SignalStore`.",
     "text": "传给客户端函数实现的运行时上下文。它与上游 A2UI 基础函数所用的 DataContext 子集保持一致，同时绑定到本渲染器的 `MessageProcessor` + `SignalStore`。"
   },
   "FunctionDefinition.summary": {
-    "hash": "271f560b",
+    "en": "Serializable definition for a client-side function exposed to an agent.",
     "text": "暴露给 agent 的客户端函数的可序列化定义。"
   },
   "FunctionEntry.summary": {
-    "hash": "3bb89d31",
+    "en": "Registered client-side function and its optional handshake definition.",
     "text": "已注册的客户端函数及其可选的握手定义。"
   },
   "FunctionEntry.definition.summary": {
-    "hash": "6bff185e",
+    "en": "Optional function definition announced to the agent as part of the handshake.",
     "text": "可选的函数定义，会在握手时告知 agent。"
   },
   "GenericComponentProps.summary": {
-    "hash": "b4181183",
+    "en": "Common runtime props passed to every catalog component by the renderer.",
     "text": "渲染器传给每个 catalog 组件的通用运行时 props。"
   },
   "MessageStore.summary": {
-    "hash": "5ead3b54",
+    "en": "A pure append-only buffer of raw protocol messages produced by the\ndeveloper's IO module. The store knows nothing about the v0.9 protocol —\nit does not parse, process, or interpret messages. It only:\n\n 1. Stores them in arrival order.\n 2. Notifies subscribers when new ones land.\n 3. Hands the current snapshot back via `getSnapshot()` (referentially\n    stable between mutations — required by `useSyncExternalStore`).\n\nProtocol-aware processing — surfaces, signals, resources, action\ndispatch — is the responsibility of `<A2UI>` (the renderer component).\nDevelopers who don't want to learn the protocol should use `<A2UI>`;\ndevelopers who do can run their own `MessageProcessor` against the\nsnapshot directly.",
     "text": "一个纯追加式的缓冲区，存放由开发者 IO 模块产生的原始协议消息。该 store 对 v0.9 协议一无所知——它不解析、不处理，也不解释消息，只负责：\n\n 1. 按到达顺序存储消息。\n 2. 有新消息到达时通知订阅者。\n 3. 通过 `getSnapshot()` 返回当前快照（两次变更之间引用保持稳定——这是 `useSyncExternalStore` 所要求的）。\n\n感知协议的处理——surface、signal、resource、action 分发——由 `<A2UI>`（渲染器组件）负责。不想了解协议的开发者应使用 `<A2UI>`；了解协议的开发者可以直接基于快照运行自己的 `MessageProcessor`。"
   },
   "MessageStore.getSnapshot.summary": {
-    "hash": "6e3a034c",
+    "en": "`useSyncExternalStore` getSnapshot contract — stable between pushes.",
     "text": "`useSyncExternalStore` 的 getSnapshot 约定——在两次 push 之间保持稳定。"
   },
   "MessageStore.subscribe.summary": {
-    "hash": "b420fded",
+    "en": "`useSyncExternalStore` subscribe contract.",
     "text": "`useSyncExternalStore` 的 subscribe 约定。"
   },
   "MessageStore.clear.summary": {
-    "hash": "82baa467",
+    "en": "Reset the buffer. Notifies subscribers.",
     "text": "重置缓冲区，并通知订阅者。"
   },
   "MessageStore.push.summary": {
-    "hash": "8354448f",
+    "en": "Append one or more raw messages to the buffer. Notifies subscribers\nonce per call (batches a single array argument into a single notify).",
     "text": "向缓冲区追加一条或多条原始消息。每次调用只通知订阅者一次（传入单个数组参数时会合并为一次通知）。"
   },
   "MessageStoreOptions.summary": {
-    "hash": "2a57446a",
+    "en": "Options used when creating a raw A2UI message buffer.",
     "text": "创建原始 A2UI 消息缓冲区时使用的选项。"
   },
   "MessageStoreOptions.initialMessages.summary": {
-    "hash": "fbd21286",
+    "en": "Optional initial buffer contents. Useful when rehydrating a previous\nagent response or replaying a fixture stream.",
     "text": "可选的初始缓冲区内容。适用于恢复之前的 agent 响应或回放 fixture 消息流。"
   },
   "OpenUIContextValue.summary": {
-    "hash": "ac40bcbf",
+    "en": "Runtime context shared by OpenUI renderers, hooks, actions, and form fields.",
     "text": "由 OpenUI 渲染器、hooks、action 和表单字段共享的运行时上下文。"
   },
   "OpenUIContextValue.evaluationContext.summary": {
-    "hash": "ca506730",
+    "en": "AST evaluation context used by runtime expression evaluation.",
     "text": "运行时表达式求值所使用的 AST 求值上下文。"
   },
   "OpenUIContextValue.getFieldValue.summary": {
-    "hash": "15979ee8",
+    "en": "Get a field value. Top-level for $bindings, nested under formName for form fields.",
     "text": "获取字段值。$bindings 位于顶层，表单字段则嵌套在 formName 下。"
   },
   "OpenUIContextValue.isQueryLoading.summary": {
-    "hash": "0b52e26e",
+    "en": "Whether any Query is currently fetching data.",
     "text": "是否有 Query 正在获取数据。"
   },
   "OpenUIContextValue.isStreaming.summary": {
-    "hash": "39d218f9",
+    "en": "Whether the LLM is currently streaming content.",
     "text": "LLM 当前是否正在流式输出内容。"
   },
   "OpenUIContextValue.library.summary": {
-    "hash": "89efc38f",
+    "en": "The active component library (schema + renderers).",
     "text": "当前使用的组件库（schema + 渲染器）。"
   },
   "OpenUIContextValue.renderNode.summary": {
-    "hash": "3cd696c5",
+    "en": "Render any value (element, array, primitive) into React nodes.",
     "text": "将任意值（元素、数组、原始值）渲染为 React 节点。"
   },
   "OpenUIContextValue.reportError.summary": {
-    "hash": "a61ba9dc",
+    "en": "Report a structured error (used internally by error boundary).",
     "text": "上报结构化错误（由错误边界内部使用）。"
   },
   "OpenUIContextValue.setFieldValue.summary": {
-    "hash": "fadc8b15",
+    "en": "Set a form field value.",
     "text": "设置表单字段值。"
   },
   "OpenUIContextValue.store.summary": {
-    "hash": "128fa6b3",
+    "en": "Reactive binding store for $variables and form data.",
     "text": "用于 $variables 和表单数据的响应式绑定存储。"
   },
   "OpenUIContextValue.triggerAction.summary": {
-    "hash": "bba9a4e3",
+    "en": "Trigger an action. Accepts either:\n- ActionPlan (v0.5): runs steps sequentially (Run, Set, ToAssistant, OpenUrl)\n- Legacy action config (v0.1): object with optional type and params.\n- Nothing: fires ContinueConversation with the label",
     "text": "触发一个 action。接受以下任一形式：\n- ActionPlan（v0.5）：按顺序执行各个步骤（Run、Set、ToAssistant、OpenUrl）\n- 旧版 action 配置（v0.1）：带有可选 type 和 params 的对象。\n- 不传：以 label 触发 ContinueConversation"
   },
   "OpenUiRendererParsedProps.summary": {
-    "hash": "45633b6b",
+    "en": "Props for rendering an already parsed OpenUI result.",
     "text": "用于渲染已解析的 OpenUI 结果的 props。"
   },
   "OpenUiRendererParsedProps.result.summary": {
-    "hash": "e9c660b1",
+    "en": "Pre-parsed result. Kept for v0.1/static-render compatibility.",
     "text": "预先解析好的结果。为兼容 v0.1/静态渲染而保留。"
   },
   "OpenUiRendererRuntimeProps.summary": {
-    "hash": "e2e8944b",
+    "en": "Props for rendering raw OpenUI response text with parsing, runtime state,\nactions, and query execution.",
     "text": "用于渲染原始 OpenUI 响应文本的 props，包含解析、运行时状态、action 和 query 执行。"
   },
   "OpenUiRendererRuntimeProps.initialQueryResults.summary": {
-    "hash": "ce76392c",
+    "en": "Prefetched Query results keyed by Query assignment name (statement ID).\nResults render synchronously, then an optional toolProvider revalidates.",
     "text": "预取的 Query 结果，以 Query 赋值名称（statement ID）为键。结果会同步渲染，之后由可选的 toolProvider 重新校验。"
   },
   "OpenUiRendererRuntimeProps.initialState.summary": {
-    "hash": "3cc27f35",
+    "en": "Initial persisted state. $-prefixed keys hydrate reactive bindings.",
     "text": "初始的持久化状态。以 $ 开头的键会用于初始化响应式绑定。"
   },
   "OpenUiRendererRuntimeProps.isStreaming.summary": {
-    "hash": "b901204c",
+    "en": "Whether the LLM is still streaming; disables interactions while true.",
     "text": "LLM 是否仍在流式输出；为 true 时禁用交互。"
   },
   "OpenUiRendererRuntimeProps.library.summary": {
-    "hash": "4302e459",
+    "en": "Component library from createOpenUiLibrary().",
     "text": "由 createOpenUiLibrary() 创建的组件库。"
   },
   "OpenUiRendererRuntimeProps.onAction.summary": {
-    "hash": "3e327d4a",
+    "en": "Callback when a component triggers a host action.",
     "text": "组件触发宿主 action 时的回调。"
   },
   "OpenUiRendererRuntimeProps.onError.summary": {
-    "hash": "f4c5c3b6",
+    "en": "Structured parser/runtime/query errors for correction loops.",
     "text": "结构化的解析器/运行时/query 错误，用于纠错循环。"
   },
   "OpenUiRendererRuntimeProps.onParseResult.summary": {
-    "hash": "a23feb9a",
+    "en": "Called whenever the raw parse result changes.",
     "text": "原始解析结果每次变化时调用。"
   },
   "OpenUiRendererRuntimeProps.onStateUpdate.summary": {
-    "hash": "98aeb088",
+    "en": "Called whenever $variables or form state changes.",
     "text": "$variables 或表单状态每次变化时调用。"
   },
   "OpenUiRendererRuntimeProps.queryLoader.summary": {
-    "hash": "5ba449fd",
+    "en": "Custom loading node shown while Query() calls are in flight.",
     "text": "Query() 调用进行中时显示的自定义加载节点。"
   },
   "OpenUiRendererRuntimeProps.response.summary": {
-    "hash": "0fa5e39c",
+    "en": "Raw openui-lang response text. This enables v0.5 runtime features.",
     "text": "原始 openui-lang 响应文本。传入后启用 v0.5 运行时特性。"
   },
   "OpenUiRendererRuntimeProps.toolProvider.summary": {
-    "hash": "27e31fb9",
+    "en": "Tool provider for Query()/Mutation(): function map or MCP client.",
     "text": "用于 Query()/Mutation() 的工具提供者：函数映射或 MCP 客户端。"
   },
   "OpenUIState.summary": {
-    "hash": "61c3b5a0",
+    "en": "Derived OpenUI renderer state returned by `useOpenUIState`.",
     "text": "由 `useOpenUIState` 返回的派生 OpenUI 渲染器状态。"
   },
   "OpenUIState.isQueryLoading.summary": {
-    "hash": "0b52e26e",
+    "en": "Whether any Query is currently fetching data.",
     "text": "是否有 Query 正在获取数据。"
   },
   "OpenUIState.parseResult.summary": {
-    "hash": "035d9852",
+    "en": "Raw parse result (AST nodes in props). Used by onParseResult callback.",
     "text": "原始解析结果（props 中为 AST 节点）。供 onParseResult 回调使用。"
   },
   "OpenUIState.result.summary": {
-    "hash": "113e142d",
+    "en": "Evaluated result (props resolved to concrete values). Used by Renderer.",
     "text": "求值后的结果（props 已解析为具体值）。供 Renderer 使用。"
   },
   "RawResource.summary": {
-    "hash": "30efbc6b",
+    "en": "Observable async resource used by the renderer to publish surface and\ncomponent updates.",
     "text": "可观察的异步 resource，渲染器用它发布 surface 和组件的更新。"
   },
   "RawResource.getSnapshot.summary": {
-    "hash": "da4cb9c7",
+    "en": "Synchronous read of the current snapshot, suitable for\n`useSyncExternalStore`. The returned object reference changes on every\ntransition.",
     "text": "同步读取当前快照，适用于 `useSyncExternalStore`。每次状态迁移时返回的对象引用都会变化。"
   },
   "RawResource.onUpdate.summary": {
-    "hash": "235a4ee0",
+    "en": "Use `subscribe`. Behaves identically.",
     "text": "请使用 `subscribe`，行为完全相同。"
   },
   "RawResource.onUpdate.deprecated": {
-    "hash": "68bcb9c4",
+    "en": "Deprecated.",
     "text": "已废弃。"
   },
   "RawResource.read.summary": {
-    "hash": "36c0853e",
+    "en": "Read `value` / `status` directly. Retained for backwards\ncompatibility; in the success state it returns the value, otherwise it\nreturns undefined. It does not throw.",
     "text": "请直接读取 `value` / `status`。为向后兼容而保留；在成功状态下返回该值，否则返回 undefined。不会抛出异常。"
   },
   "RawResource.read.deprecated": {
-    "hash": "68bcb9c4",
+    "en": "Deprecated.",
     "text": "已废弃。"
   },
   "RawResource.subscribe.summary": {
-    "hash": "da99d0fb",
+    "en": "Subscribe to state changes. The callback is invoked after every\n`complete()` or `fail()` (the same value may be re-published when the\nprocessor re-emits an update for the same id). Returns a disposer.",
     "text": "订阅状态变化。每次 `complete()` 或 `fail()` 之后都会调用回调（当处理器针对同一 id 再次发出更新时，可能会重新发布相同的值）。返回一个取消订阅函数。"
   },
   "ReadA2UICatalogDirectoryOptions.summary": {
-    "hash": "c5e8c80a",
+    "en": "Options for loading generated A2UI catalog artifacts from a directory.",
     "text": "从目录加载生成的 A2UI catalog 产物的选项。"
   },
   "ResolveFunctionOptions.summary": {
-    "hash": "6e932dec",
+    "en": "Options controlling how function calls are resolved against a catalog.",
     "text": "控制如何基于 catalog 解析函数调用的选项。"
   },
   "ResourceInfo.summary": {
-    "hash": "89998f4d",
+    "en": "Payload carried by renderer resources when a surface or component changes.",
     "text": "当 surface 或组件发生变化时，渲染器 resource 携带的数据。"
   },
   "ResourceInfo.type.summary": {
-    "hash": "ce4e6b9c",
+    "en": "Internal event type emitted by the processor.",
     "text": "处理器发出的内部事件类型。"
   },
   "Surface.summary": {
-    "hash": "41b23856",
+    "en": "In-memory state for a single protocol surface.",
     "text": "单个协议 surface 的内存状态。"
   },
   "Surface.rootComponentId.summary": {
-    "hash": "033dc988",
+    "en": "id of the root component for this surface (must be 'root').",
     "text": "该 surface 根组件的 id（必须为 'root'）。"
   },
   "UseOpenUIStateOptions.summary": {
-    "hash": "d6980775",
+    "en": "Inputs used to parse OpenUI text and build renderer state.",
     "text": "用于解析 OpenUI 文本并构建渲染器状态的输入。"
   },
   "UseOpenUIStateOptions.initialQueryResults.summary": {
-    "hash": "12d1fd25",
+    "en": "Prefetched Query results keyed by the Query assignment name (statement ID).\nThey are available during the initial render and act as fallbacks while an\noptional tool provider revalidates them after commit.",
     "text": "预取的 Query 结果，以 Query 赋值名称（statement ID）为键。它们在首次渲染时即可使用，并在可选的 tool provider 于 commit 后重新校验期间作为兜底值。"
   },
   "UseOpenUIStateOptions.onError.summary": {
-    "hash": "2318505b",
+    "en": "Callback for structured, LLM-friendly errors. See OpenUIError type.",
     "text": "结构化、便于 LLM 理解的错误回调。参见 OpenUIError 类型。"
   },
   "UseOpenUIStateOptions.toolProvider.summary": {
-    "hash": "5e419ab1",
+    "en": "ToolProvider for Query data fetching — MCP, REST, GraphQL, or any backend.",
     "text": "用于 Query 数据获取的 ToolProvider——MCP、REST、GraphQL 或任意后端。"
   },
   "UserActionPayload.summary": {
-    "hash": "264b0821",
+    "en": "Normalized user action forwarded from rendered catalog components to the\nhost application.",
     "text": "从渲染的 catalog 组件转发给宿主应用的规范化用户操作。"
   },
   "FunctionImpl.summary": {
-    "hash": "3eb7067f",
+    "en": "Function implementations live on the client; the agent only references\nfunctions by name. The registry is the bridge from the wire-level\n`FunctionCall.call` string to the actual code that runs locally.",
     "text": "函数实现位于客户端，agent 只通过名称引用函数。registry 是连接协议层 `FunctionCall.call` 字符串与本地实际运行代码的桥梁。"
   },
   "InitialQueryResults.summary": {
-    "hash": "dd4fb4e5",
+    "en": "Prefetched Query results keyed by Query assignment name (statement ID).",
     "text": "预取的 Query 结果，以 Query 赋值名称（statement ID）为键。"
   },
   "A2UI_PROTOCOL_VERSION.default": {
-    "hash": "5fa0d2f6",
+    "en": "\"v0.9\"",
     "text": "\"v0.9\""
   },
   "BASIC_CATALOG_ID.default": {
-    "hash": "5f248686",
+    "en": "\"https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json\"",
     "text": "\"https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json\""
   },
   "basicFunctions.summary": {
-    "hash": "6442b9e1",
+    "en": "The A2UI 0.9 basic-catalog function implementations packaged as\n`CatalogFunctionEntry`s, ready to spread into `<A2UI catalogs={[...]}>`.\nThe impls themselves come from `@a2ui/web_core` so we stay aligned with\nthe upstream spec for free.",
     "text": "打包为 `CatalogFunctionEntry` 的 A2UI 0.9 basic catalog 函数实现，可直接展开到 `<A2UI catalogs={[...]}>` 中。这些实现本身来自 `@a2ui/web_core`，因此无需额外工作即可与上游规范保持一致。"
   },
   "basicFunctions.example.0": {
-    "hash": "20991abd",
+    "en": "```ts\n<A2UI catalogs={[Text, Button, ...basicFunctions]} ... />\n```",
     "text": "```ts\n<A2UI catalogs={[Text, Button, ...basicFunctions]} ... />\n```"
   },
   "LYNX_XML_ENGINE_VERSION.summary": {
-    "hash": "4a9898ad",
+    "en": "The default Lynx engine version used by generated XML artifacts.",
     "text": "生成的 XML 产物默认使用的 Lynx 引擎版本。"
   },
   "LYNX_XML_ENGINE_VERSION.default": {
-    "hash": "0a838f3d",
+    "en": "\"4.2\"",
     "text": "\"4.2\""
   },
   "LYNX_XML_SYSTEM_PROMPT.summary": {
-    "hash": "d2544fe8",
+    "en": "The default Lynx XML generation system prompt.",
     "text": "默认的 Lynx XML 生成系统提示词。"
   },
   "openUiPromptActionPropSchema.summary": {
-    "hash": "d8b933fe",
+    "en": "Shared action prop schema exposed to prompt signatures as `ActionExpression`.",
     "text": "共享的 action prop schema，在 prompt 签名中以 `ActionExpression` 的形式暴露。"
   },
   "buildLynxXmlSystemPrompt.summary": {
-    "hash": "e972c284",
+    "en": "Build a system prompt for producing complete, zero-build `.lynxml` files.",
     "text": "构建用于生成完整、免构建的 `.lynxml` 文件的系统提示词。"
   },
   "buildOpenUiSystemPrompt.summary": {
-    "hash": "3b1ac3d0",
+    "en": "Build the full OpenUI system prompt for the supplied library and options.",
     "text": "为给定的组件库和选项构建完整的 OpenUI 系统提示词。"
   },
   "createA2UICatalog.summary": {
-    "hash": "57613cfb",
+    "en": "Build a full A2UI catalog manifest from component and function artifacts.",
     "text": "基于组件和函数产物构建完整的 A2UI catalog manifest。"
   },
   "createA2UICatalogFromManifests.summary": {
-    "hash": "f72bdd4b",
+    "en": "Convert generated component manifests into a prompt-ready A2UI catalog.",
     "text": "将生成的组件 manifest 转换为可直接用于 prompt 的 A2UI catalog。"
   },
   "createFallbackMessagesFromPlainText.summary": {
-    "hash": "5b464594",
+    "en": "Build a single-Text fallback message stream from a plain string. Used by\ntransports / `Session.ingest` callers that receive free-form text from\nthe agent instead of structured protocol messages.",
     "text": "基于纯文本字符串构建只含单个 Text 的兜底消息流。供从 agent 收到自由文本而非结构化协议消息的传输层 / `Session.ingest` 调用方使用。"
   },
   "createMessageStore.summary": {
-    "hash": "a122136d",
+    "en": "Create an append-only raw-message buffer suitable for `useSyncExternalStore`.",
     "text": "创建一个适用于 `useSyncExternalStore` 的追加式原始消息缓冲区。"
   },
   "createOpenUiLibrary.summary": {
-    "hash": "e47e6d38",
+    "en": "Create a ReactLynx OpenUI library with caller-provided components and,\nunless disabled, the built-in components.",
     "text": "创建 ReactLynx OpenUI 组件库，包含调用方提供的组件，以及（除非禁用）内置组件。"
   },
   "createOpenUiPromptLibrary.summary": {
-    "hash": "d8c98381",
+    "en": "Create a headless OpenUI library with the built-in component schemas.\n\nThis mirrors the ReactLynx library for prompt generation while avoiding any\nruntime dependency on ReactLynx or Lynx UI components.",
     "text": "使用内置组件 schema 创建 headless OpenUI 库。\n\n它与 ReactLynx 组件库保持一致以用于生成 prompt，同时不会在运行时依赖 ReactLynx 或 Lynx UI 组件。"
   },
   "createResource.summary": {
-    "hash": "708633c6",
+    "en": "Create a pending resource that can later complete, fail, and notify\nsubscribers of every state transition.",
     "text": "创建一个处于 pending 状态的 resource，之后可以 complete 或 fail，并在每次状态迁移时通知订阅者。"
   },
   "createTextCardMessages.summary": {
-    "hash": "f6d31822",
+    "en": "Build a Card-wrapped Text fallback message stream from a plain string.\nUsed when the agent emits text payloads with `kind: 'text'`.",
     "text": "基于纯文本字符串构建用 Card 包裹 Text 的兜底消息流。在 agent 输出 `kind: 'text'` 的文本数据时使用。"
   },
   "defineComponent.summary": {
-    "hash": "fa31cbe8",
+    "en": "Define a ReactLynx component renderer and its OpenUI schema metadata.",
     "text": "定义 ReactLynx 组件渲染器及其 OpenUI schema 元数据。"
   },
   "executeFunctionCall.summary": {
-    "hash": "8fa8377b",
+    "en": "Resolve arguments, look the function up in the registry, and invoke it.\nWhen no impl is registered, log once and return `undefined` so callers\n(checks, dynamic-property bindings) can degrade gracefully.",
     "text": "解析参数，在 registry 中查找函数并调用。如果没有注册对应实现，则只记录一次日志并返回 `undefined`，使调用方（checks、动态属性绑定）能够平稳降级。"
   },
   "extractCatalogComponents.summary": {
-    "hash": "25cc0676",
+    "en": "Run TypeDoc over source files and extract A2UI component schemas.",
     "text": "对源文件运行 TypeDoc，提取 A2UI 组件 schema。"
   },
   "extractCatalogFunctions.summary": {
-    "hash": "aecfaae1",
+    "en": "Run TypeDoc over source files and extract A2UI function definitions.",
     "text": "对源文件运行 TypeDoc，提取 A2UI 函数定义。"
   },
   "findCatalogSourceFiles.summary": {
-    "hash": "511d3220",
+    "en": "Find supported source files under a file or directory path.",
     "text": "在文件或目录路径下查找受支持的源文件。"
   },
   "isDataBinding.summary": {
-    "hash": "ca55d1b2",
+    "en": "Return whether a value matches the A2UI data-binding shape.",
     "text": "返回某个值是否符合 A2UI 数据绑定的结构。"
   },
   "isFunctionCall.summary": {
-    "hash": "02c8a27f",
+    "en": "Return whether a value matches the A2UI function-call shape.",
     "text": "返回某个值是否符合 A2UI 函数调用的结构。"
   },
   "normalizePayloadToMessages.summary": {
-    "hash": "011d3c41",
+    "en": "Normalize an arbitrary payload (string, array, object) into a flat list of\n`ServerToClientMessage` records. Pass-through for already-structured\nmessages; falls back to wrapping plain text in a Text/Card surface.",
     "text": "将任意数据（字符串、数组、对象）规范化为扁平的 `ServerToClientMessage` 记录列表。已结构化的消息会直接透传；纯文本则回退为包裹在 Text/Card surface 中。"
   },
   "OpenUiRenderer.summary": {
-    "hash": "e1c4c441",
+    "en": "Render OpenUI language output using a ReactLynx component library.",
     "text": "使用 ReactLynx 组件库渲染 OpenUI 语言输出。"
   },
   "prepareMessagesForProcessing.summary": {
-    "hash": "225e56e0",
+    "en": "Tag messages with the given messageId and report whether any of them\ncarries a non-empty `updateComponents`. Also dedupes `createSurface`\nmessages against the set of currently-active surfaces.",
     "text": "为消息打上给定的 messageId，并报告其中是否有消息携带非空的 `updateComponents`。同时会根据当前活动 surface 的集合对 `createSurface` 消息去重。"
   },
   "reactive.summary": {
-    "hash": "d41a30a6",
+    "en": "Mark a schema prop as reactive so runtime evaluation can preserve $bindings.",
     "text": "将 schema prop 标记为响应式，使运行时求值能够保留 $bindings。"
   },
   "readA2UICatalogFromDirectory.summary": {
-    "hash": "2d4bef2b",
+    "en": "Read generated component and function manifests and convert them into a\nprompt-ready A2UI catalog.",
     "text": "读取生成的组件和函数 manifest，并将其转换为可直接用于 prompt 的 A2UI catalog。"
   },
   "registerBasicFunctions.summary": {
-    "hash": "83dea907",
+    "en": "Manual escape hatch for consumers who build their own renderer and don't\ngo through `defineCatalog`. Registers every adapted basic-catalog impl\ninto the shared `functionRegistry`. Calling more than once is harmless —\nlater registrations override earlier ones, which is the intended override\npath.",
     "text": "为自行构建渲染器、不经过 `defineCatalog` 的使用方提供的手动兜底方案。将所有适配后的 basic catalog 实现注册到共享的 `functionRegistry` 中。多次调用不会有问题——后注册的会覆盖先注册的，这正是预期的覆盖方式。"
   },
   "renderCatalogReference.summary": {
-    "hash": "defb43f1",
+    "en": "Render an A2UI catalog into the Markdown reference embedded in prompts.",
     "text": "将 A2UI catalog 渲染为嵌入 prompt 的 Markdown 参考文档。"
   },
   "resolveDynamicValue.summary": {
-    "hash": "8735a530",
+    "en": "Resolve literals, data bindings, and function calls into concrete runtime\nvalues for component props or action payloads.",
     "text": "将字面量、数据绑定和函数调用解析为具体的运行时值，用于组件 props 或 action 数据。"
   },
   "resolveFunctionArguments.summary": {
-    "hash": "76252284",
+    "en": "Resolve every argument in a protocol function call before invoking the\nregistered implementation.",
     "text": "在调用已注册的实现之前，解析协议函数调用中的每个参数。"
   },
   "useAction.summary": {
-    "hash": "0b2a9612",
+    "en": "Create a `sendAction` callback that resolves dynamic action payload values\nand dispatches user events or function calls through the current processor.",
     "text": "创建一个 `sendAction` 回调，它会解析动态的 action 数据值，并通过当前处理器分发用户事件或函数调用。"
   },
   "useChecks.summary": {
-    "hash": "5de2c5f3",
+    "en": "Evaluate an input component's `checks` array reactively. Returns the\ncurrent outcome plus the first failure message (handy for inline error\nrendering). When an enclosing `<FormContext.Provider>` exists, the input\nis also registered with it so Buttons in the same form can react to\n`isValid`.",
     "text": "响应式地对输入组件的 `checks` 数组求值。返回当前结果以及第一条失败信息（便于内联渲染错误）。如果外层存在 `<FormContext.Provider>`，该输入组件还会注册到其中，使同一表单中的 Button 能够响应 `isValid`。"
   },
   "useCreateFormValidation.summary": {
-    "hash": "302edd18",
+    "en": "Create form validation state and callbacks for an OpenUI form boundary.",
     "text": "为 OpenUI 表单边界创建表单校验状态和回调。"
   },
   "useDataBinding.summary": {
-    "hash": "5d8d1413",
+    "en": "Subscribe to a data-model binding and return the current value at that path.",
     "text": "订阅数据模型绑定，并返回该路径上的当前值。"
   },
   "useFormValidation.summary": {
-    "hash": "51817c93",
+    "en": "Read the nearest OpenUI form validation context, if one exists.",
     "text": "读取最近的 OpenUI 表单校验上下文（如果存在）。"
   },
   "useGetFieldValue.summary": {
-    "hash": "673a25b8",
+    "en": "Get a form field value from the form state context.",
     "text": "从表单状态上下文中获取表单字段值。"
   },
   "useGetFieldValue.example.0": {
-    "hash": "05b05388",
+    "en": "```tsx\nconst getFieldValue = useGetFieldValue();\nconst name = getFieldValue(\"contactForm\", \"name\");\n```",
     "text": "```tsx\nconst getFieldValue = useGetFieldValue();\nconst name = getFieldValue(\"contactForm\", \"name\");\n```"
   },
   "useIsQueryLoading.summary": {
-    "hash": "0b52e26e",
+    "en": "Whether any Query is currently fetching data.",
     "text": "是否有 Query 正在获取数据。"
   },
   "useIsStreaming.summary": {
-    "hash": "39d218f9",
+    "en": "Whether the LLM is currently streaming content.",
     "text": "LLM 当前是否正在流式输出内容。"
   },
   "useOpenUI.summary": {
-    "hash": "000b1b30",
+    "en": "Access the full OpenUI context. Throws if used outside an\n`OpenUiRenderer` tree.",
     "text": "访问完整的 OpenUI 上下文。在 `OpenUiRenderer` 树之外使用时会抛出异常。"
   },
   "useOpenUIState.summary": {
-    "hash": "1aee4eda",
+    "en": "Core state hook — extracts all form state, action handling, parser\nmanagement, and context assembly out of the Renderer component.\n\nStore holds everything: $bindings as top-level keys, form fields nested\nunder formName as plain values.",
     "text": "核心状态 hook——将所有表单状态、action 处理、解析器管理和上下文组装从 Renderer 组件中抽离出来。\n\nStore 保存所有内容：$bindings 作为顶层键，表单字段则以普通值的形式嵌套在 formName 下。"
   },
   "useRenderNode.summary": {
-    "hash": "bbc4258b",
+    "en": "Get the renderNode function for rendering nested component values.",
     "text": "获取用于渲染嵌套组件值的 renderNode 函数。"
   },
   "useResolvedProps.summary": {
-    "hash": "0e05fff5",
+    "en": "Resolve a component's dynamic props and keep the result in sync with\nsignal-backed data model changes.",
     "text": "解析组件的动态 props，并在基于 signal 的数据模型变化时保持结果同步。"
   },
   "useSetDefaultValue.summary": {
-    "hash": "96f3175c",
+    "en": "Persists a component's default/initial value into form state once streaming\nfinishes — but only if the user hasn't already set a value.\n\nCall this inside any form component that has a `defaultValue` or\n`defaultChecked` prop. It is a no-op during streaming so that LLM\nprop changes don't fight with partial state.",
     "text": "在流式输出结束后，将组件的默认值/初始值写入表单状态——但仅当用户尚未设置值时才会写入。\n\n在任何带有 `defaultValue` 或 `defaultChecked` prop 的表单组件中调用它。它在流式输出期间不执行任何操作，以免 LLM 对 prop 的修改与不完整的状态相互冲突。"
   },
   "useSetFieldValue.summary": {
-    "hash": "7ca472d2",
+    "en": "Get the setFieldValue function for updating form field values.",
     "text": "获取用于更新表单字段值的 setFieldValue 函数。"
   },
   "useSetFieldValue.example.0": {
-    "hash": "d3eb0cd6",
+    "en": "```tsx\nconst setFieldValue = useSetFieldValue();\n<input onChange={(e) => setFieldValue(\"contactForm\", \"Input\", \"name\", e.target.value, false)} />\n```",
     "text": "```tsx\nconst setFieldValue = useSetFieldValue();\n<input onChange={(e) => setFieldValue(\"contactForm\", \"Input\", \"name\", e.target.value, false)} />\n```"
   },
   "useStateField.summary": {
-    "hash": "5e6f127e",
+    "en": "Resolve a named OpenUI state field against form state and reactive bindings.",
     "text": "基于表单状态和响应式绑定解析具名的 OpenUI 状态字段。"
   },
   "useTriggerAction.summary": {
-    "hash": "d7b5e45a",
+    "en": "Get the triggerAction function for firing structured action events.",
     "text": "获取用于触发结构化 action 事件的 triggerAction 函数。"
   },
   "useTriggerAction.example.0": {
-    "hash": "5bf48002",
+    "en": "```tsx\nconst triggerAction = useTriggerAction();\n<button onClick={() => triggerAction(\"Submit\", \"myForm\")}>\n```",
     "text": "```tsx\nconst triggerAction = useTriggerAction();\n<button onClick={() => triggerAction(\"Submit\", \"myForm\")}>\n```"
   }
 }

@@ -1,330 +1,330 @@
 {
   "Artifact.summary": {
-    "hash": "3d2ac07a",
+    "en": "One artifact produced by the build that carries at least one debug\ndata source.\n\nIdentity is `(filename, tasmSection)`:\n  - `filename` is the asset basename (e.g. `main-thread.js`,\n    `background.fd311de1.js`, `main.css`).\n  - `tasmSection` is the artifact's location inside `tasm.json` and\n    disambiguates artifacts that share a filename pattern but live in\n    different sections.\n\n`tasmSection` is a path array of nested-object segments because raw\nkeys (especially under `customSections`) may themselves contain dots\nand cannot be safely collapsed into a dotted string. Examples:\n\n  - `['lepusCode', 'root']`        main-thread.js\n  - `['lepusCode', 'chunks', '0']` async main-thread chunk\n  - `['manifest', '/<asset-name>']` background JS bundle\n  - `['customSections', 'data.v2']` custom section whose key has a dot\n  - `['css']`                      a CSS artifact",
     "text": "构建产生的产物，至少携带一个\n调试数据源。\n\n标识为 `(filename, tasmSection)`：\n  - `filename` 是资源文件名（basename，例如 `main-thread.js`、\n    `background.fd311de1.js`、`main.css`）。\n  - `tasmSection` 是该产物在\n    `tasm.json` 中的位置，用于区分文件名模式相同、\n    但位于不同 section 的产物。\n\n`tasmSection` 是由嵌套对象各级 key 组成的路径数组，因为原始\nkey（尤其是 `customSections` 下的 key）本身可能包含点号，\n无法安全地合并为以点号分隔的字符串。示例：\n\n  - `['lepusCode', 'root']`        main-thread.js\n  - `['lepusCode', 'chunks', '0']` 异步主线程 chunk\n  - `['manifest', '/<asset-name>']` 后台 JS bundle\n  - `['customSections', 'data.v2']` key 中含点号的自定义 section\n  - `['css']`                      CSS 产物"
   },
   "Artifact.debugSources.summary": {
-    "hash": "95b767b3",
+    "en": "Debug sources for this artifact, ordered to match the\nreverse-symbolication decode chain. A consumer that starts with a\nruntime location and wants to recover the original source iterates\nthis list left-to-right:\n\n1. `bytecode-debug-info` (if present) maps the bytecode PC offset\n   back to the encoded JS source's `(line, column)`.\n2. `source-map` then maps that `(line, column)` back to the\n   original authored file.",
     "text": "该产物的调试数据源，顺序与\n反向符号化（reverse symbolication）的解码链一致。\n使用方从运行时位置出发、希望还原原始源码时，\n按从左到右的顺序遍历此列表：\n\n1. `bytecode-debug-info`（如果存在）将字节码 PC 偏移\n   映射回编码后 JS 源码的 `(line, column)`。\n2. 随后 `source-map` 将该 `(line, column)` 映射回\n   原始编写的文件。"
   },
   "Artifact.filename.summary": {
-    "hash": "2d092304",
+    "en": "The name this artifact is addressed by: the emitted file's basename, or\nthe section name when the bundle carries it as a custom section.",
     "text": "该产物的寻址名称：产出文件的文件名（basename），\n或当 bundle 将其作为自定义 section 携带时的 section 名称。"
   },
   "Artifact.kind.summary": {
-    "hash": "8148ed35",
+    "en": "Which encoder bucket this asset belongs to in `tasm.json`:\n\n- `main-thread` — JS that runs on the lepusNG main thread (compiled\n  into the `lepusCode` section).\n- `background` — JS that runs on the background JS engine (lives in\n  the `manifest` section).\n- `css` — extracted CSS chunk (lives in the `css` section).",
     "text": "该资源在 `tasm.json` 中所属的 encoder 分类：\n\n- `main-thread` — 运行在 lepusNG 主线程上的 JS\n  （编译进 `lepusCode` section）。\n- `background` — 运行在后台 JS 引擎上的 JS\n  （位于 `manifest` section）。\n- `css` — 抽取出的 CSS chunk（位于 `css` section）。"
   },
   "Artifact.path.summary": {
-    "hash": "54600d51",
+    "en": "Bundler-relative path of the emitted asset itself (e.g.\n`.lynx/main/main-thread.js`). Distinct from\n[`SourceMapDebugSource.path`](api:SourceMapDebugSource.path), which points at the\nsibling `.map` file.",
     "text": "产出资源本身相对于 bundler 的路径（例如\n`.lynx/main/main-thread.js`）。区别于\n[`SourceMapDebugSource.path`](api:SourceMapDebugSource.path)，后者指向\n同级的 `.map` 文件。"
   },
   "BytecodeDebugInfoSource.summary": {
-    "hash": "ea7b6347",
+    "en": "Bytecode debug info for a main-thread artifact compiled to lepusNG\n(and, in the future, other bytecode targets).",
     "text": "编译为 lepusNG\n（以及未来其他字节码目标）的主线程产物的字节码调试信息。"
   },
   "BytecodeDebugInfoSource.debugInfo.summary": {
-    "hash": "4d78c4ff",
+    "en": "Bytecode debug payload. Today always lepusNG-shaped; if/when other\nencoders (`quickjs`, …) need to coexist, a `target` discriminator\nwill be added.",
     "text": "字节码调试数据。目前始终为 lepusNG 格式；\n如果将来需要支持其他 encoder（`quickjs` 等）并存，\n会新增一个 `target` 判别字段。"
   },
   "DebugMetadataAsset.summary": {
-    "hash": "0f0bd096",
+    "en": "Full `debug-metadata.json` payload emitted per Lynx template entry.\n\nAsymmetry note: `artifacts[]` is **per-artifact** (one entry per JS /\nCSS / bytecode bundle) while `uiSourceMap` is **per-entry** (there is\nexactly one UI sourcemap for the entry's runtime UI tree). Forcing\n`uiSourceMap` into `artifacts[]` would require inventing a synthetic\nartifact, conflating runtime concepts with build products.\n\nDifferent consumers read different fields:\n  - JS error reverse-symbolication walks `artifacts[]` for\n    `kind: 'source-map'` debug sources.\n  - Main-thread bytecode reverse-symbolication walks `artifacts[]`\n    for `kind: 'bytecode-debug-info'` + the matching `source-map`.\n  - UI element inspectors read `uiSourceMap` directly.",
     "text": "每个 Lynx template 入口产出的完整 `debug-metadata.json` 数据。\n\n不对称说明：`artifacts[]` 是**按产物**组织的（每个 JS /\nCSS / 字节码 bundle 一项），而 `uiSourceMap` 是**按入口**组织的\n（每个入口的运行时 UI 树恰好对应一份 UI source map）。强行将\n`uiSourceMap` 放入 `artifacts[]` 需要虚构一个合成产物，\n混淆运行时概念与构建产物。\n\n不同的使用方读取不同的字段：\n  - JS 错误反向符号化遍历 `artifacts[]`，查找\n    `kind: 'source-map'` 的调试数据源。\n  - 主线程字节码反向符号化遍历 `artifacts[]`，\n    查找 `kind: 'bytecode-debug-info'` 以及对应的 `source-map`。\n  - UI 元素检查器直接读取 `uiSourceMap`。"
   },
   "DebugMetadataAsset.artifacts.summary": {
-    "hash": "cfe6d7a8",
+    "en": "One entry per build artifact that ships debug data. Empty when the\nemitter has not yet been wired to populate it; consumers should\ntreat an empty array as \"no source-level debug data available\"\nrather than an error.",
     "text": "每个携带调试数据的构建产物对应一项。\n当产出方尚未接入填充逻辑时为空；\n使用方应将空数组视为“没有可用的源码级调试数据”，\n而非错误。"
   },
   "DebugMetadataAsset.buildInfo.summary": {
-    "hash": "a19224ff",
+    "en": "Build-time / context info. Closed-shape today — extend by adding\nnamed fields to this interface (and bumping the schema) rather than\nby stuffing arbitrary keys at runtime.",
     "text": "构建时 / 上下文信息。目前为封闭结构——\n如需扩展，请在该接口中添加具名字段（并升级 schema），\n而不是在运行时塞入任意 key。"
   },
   "DebugMetadataAsset.uiSourceMap.summary": {
-    "hash": "520b624d",
+    "en": "Compact UI source map for the entry's runtime UI tree.",
     "text": "入口运行时 UI 树的紧凑 UI source map。"
   },
   "FieldResolver.summary": {
-    "hash": "59348f25",
+    "en": "Describes how to look up one queryable field and (optionally) which\nsub-field of the matched value to return to callers.\n\n`resolve` runs the lookup. `payload` is an optional unwrapper: for a\n`source-map` query, the resolver returns the full\n[`SourceMapDebugSource`](api:SourceMapDebugSource) wrapper but HTTP consumers typically want\nthe raw Source Map v3 JSON — `payload: sm => sm.map` performs the\nunwrap.",
     "text": "描述如何查找一个可查询字段，以及（可选地）\n将匹配值的哪个子字段返回给调用方。\n\n`resolve` 执行查找。`payload` 是可选的解包函数：对于\n`source-map` 查询，resolver 返回完整的\n[`SourceMapDebugSource`](api:SourceMapDebugSource) 包装对象，而 HTTP 使用方通常需要\n原始的 Source Map v3 JSON——`payload: sm => sm.map`\n负责完成解包。"
   },
   "GitMetadata.summary": {
-    "hash": "1934fe44",
+    "en": "Git metadata captured at build time.",
     "text": "构建时采集的 Git 元数据。"
   },
   "GitMetadata.rootDir.summary": {
-    "hash": "12cd321f",
+    "en": "Absolute path of the git worktree root\n(`git rev-parse --show-toplevel`). Consumers use this to resolve\nsource-relative paths inside source maps back to filesystem\nlocations during reverse symbolication.",
     "text": "git 工作树根目录的绝对路径\n（`git rev-parse --show-toplevel`）。使用方在反向符号化时借此将\nsource map 中相对于源码的路径\n解析回文件系统位置。"
   },
   "LepusNGDebugInfo.summary": {
-    "hash": "85ee89d0",
+    "en": "lepusNG-encoded bytecode's debug payload, identical to the JSON the\nencoder writes to `debug-info.json`. The top-level `lepusNG_debug_info`\nkey is preserved so consumers (Lynx runtime, reverse-symbolication\nservices) can treat a `?field=bytecode-debug-info` response and the\nlegacy `debug-info.json` file as the same shape.",
     "text": "lepusNG 编码字节码的调试数据，与\nencoder 写入 `debug-info.json` 的 JSON 完全一致。保留顶层的 `lepusNG_debug_info`\nkey，以便使用方（Lynx 运行时、反向符号化服务）\n将 `?field=bytecode-debug-info` 响应与旧版\n`debug-info.json` 文件视为同一结构。"
   },
   "LepusNGDebugInfoBody.summary": {
-    "hash": "b2e35fab",
+    "en": "Inner body of [`LepusNGDebugInfo`](api:LepusNGDebugInfo). Carries the function-level\ndebug data the lepusNG encoder produces for one compilation unit.",
     "text": "[`LepusNGDebugInfo`](api:LepusNGDebugInfo) 的内部主体。携带 lepusNG encoder\n为一个编译单元生成的函数级调试数据。"
   },
   "LepusNGDebugInfoBody.end_line_num.summary": {
-    "hash": "0fd9d303",
+    "en": "Last source line covered by the compilation unit.",
     "text": "编译单元覆盖的最后一行源码。"
   },
   "LepusNGDebugInfoBody.function_info.summary": {
-    "hash": "8bccd3ee",
+    "en": "Per-function debug data.",
     "text": "每个函数的调试数据。"
   },
   "LepusNGDebugInfoBody.function_number.summary": {
-    "hash": "ea5909be",
+    "en": "Number of compiled functions; equals `function_info.length`.",
     "text": "编译后的函数数量；等于 `function_info.length`。"
   },
   "LepusNGDebugInfoBody.function_source.summary": {
-    "hash": "6e6864ed",
+    "en": "Full JS source that was fed to the bytecode compiler.",
     "text": "输入给字节码编译器的完整 JS 源码。"
   },
   "LepusNGFunctionInfo.summary": {
-    "hash": "c28823cc",
+    "en": "Debug data for one lepusNG function: maps bytecode PC offsets back to\n`(line, column)` in the original source, plus optional caller info.",
     "text": "单个 lepusNG 函数的调试数据：将字节码 PC 偏移映射回\n原始源码中的 `(line, column)`，并可附带调用方信息。"
   },
   "LepusNGFunctionInfo.column_number.summary": {
-    "hash": "13f1138b",
+    "en": "Source column where the function definition starts (0-based).",
     "text": "函数定义起始处的源码列号（从 0 开始）。"
   },
   "LepusNGFunctionInfo.line_col.summary": {
-    "hash": "66ada249",
+    "en": "Decoded line/column pairs, one per source position emitted by the\ncompiler. `line_col.length` matches the number of mappings encoded\nin `pc2line_buf`.",
     "text": "解码后的行/列对，编译器每产出一个源码位置对应一项。\n`line_col.length` 与\n`pc2line_buf` 中编码的映射数量一致。"
   },
   "LepusNGFunctionInfo.line_number.summary": {
-    "hash": "aa4b31e6",
+    "en": "Source line where the function definition starts (1-based).",
     "text": "函数定义起始处的源码行号（从 1 开始）。"
   },
   "LepusNGFunctionInfo.pc2caller_info.summary": {
-    "hash": "1518bedd",
+    "en": "Optional PC offset → caller source snippet. Keys are stringified\nPC offsets; values are the original function bodies the bytecode\nwas inlined from. Useful for de-inlining stack traces.",
     "text": "可选的 PC 偏移 → 调用方源码片段映射。key 为字符串化的\nPC 偏移；value 为该字节码内联来源的原始函数体。\n可用于对调用栈进行反内联。"
   },
   "LepusNGFunctionInfo.pc2line_buf.summary": {
-    "hash": "b7b8a31c",
+    "en": "Variable-length encoding of the PC-to-line table. Decode rules\nare documented in the lepusNG bytecode debug-info spec.",
     "text": "PC 到行号映射表的变长编码。\n解码规则见 lepusNG 字节码 debug-info 规范。"
   },
   "LepusNGFunctionInfo.pc2line_len.summary": {
-    "hash": "6363d7d1",
+    "en": "Length of `pc2line_buf` in bytes.",
     "text": "`pc2line_buf` 的字节长度。"
   },
   "QueryParams.summary": {
-    "hash": "3fbd9fc7",
+    "en": "Parameters every resolver receives. Resolvers pick the keys they need.",
     "text": "每个 resolver 都会接收的参数。resolver 按需选取所需的 key。"
   },
   "QueryParams.filename.summary": {
-    "hash": "c560a1fd",
+    "en": "Asset basename (e.g. `main-thread.js`).",
     "text": "资源文件名（basename，例如 `main-thread.js`）。"
   },
   "QueryParams.key.summary": {
-    "hash": "38251ea3",
+    "en": "Chunk hash / release identifier.",
     "text": "chunk hash / release 标识符。"
   },
   "QueryParams.path.summary": {
-    "hash": "a648e4eb",
+    "en": "Bundler-relative asset path (e.g. `.lynx/main/main-thread.js.map`).",
     "text": "相对于 bundler 的资源路径（例如 `.lynx/main/main-thread.js.map`）。"
   },
   "RemappedUiNode.summary": {
-    "hash": "8a8754f9",
+    "en": "A [`UiNode`](api:UiNode) after reverse-resolution. Nodes whose `nodeIndex` is\nknown to their `debugMetadataUrl`'s UI source map gain the\n[`UiSourceLocation`](api:UiSourceLocation) fields; all others are returned verbatim.",
     "text": "经过反向解析后的 [`UiNode`](api:UiNode)。若节点的 `nodeIndex` 能在其\n`debugMetadataUrl` 对应的 UI source map 中找到，则会获得\n[`UiSourceLocation`](api:UiSourceLocation) 字段；其余节点原样返回。"
   },
   "RemappedUiNode.children.summary": {
-    "hash": "03556c51",
+    "en": "Child nodes, walked recursively.",
     "text": "子节点，会被递归遍历。"
   },
   "RemappedUiNode.debugMetadataUrl.summary": {
-    "hash": "acc20530",
+    "en": "URL/path of the `debug-metadata.json` covering this node.",
     "text": "覆盖该节点的 `debug-metadata.json` 的 URL/路径。"
   },
   "RemappedUiNode.nodeIndex.summary": {
-    "hash": "98cca67c",
+    "en": "Compile-time node identity, looked up in the UI source map.",
     "text": "编译期的节点标识，用于在 UI source map 中查找。"
   },
   "ResolveResult.summary": {
-    "hash": "7828110c",
+    "en": "Result of [`resolveField`](api:resolveField).",
     "text": "[`resolveField`](api:resolveField) 的返回结果。"
   },
   "ResolveResult.found.summary": {
-    "hash": "96350dd1",
+    "en": "`true` when the resolver matched; `false` when the field is known\nbut no value matched (HTTP layer → 404).",
     "text": "resolver 匹配成功时为 `true`；字段已知但没有匹配的值时为 `false`\n（HTTP 层 → 404）。"
   },
   "ResolveResult.payload.summary": {
-    "hash": "8bf5ab97",
+    "en": "Present only when `found`. The value to JSON-serialize back to the\nclient (already unwrapped via `FieldResolver.payload`).",
     "text": "仅在 `found` 时存在。要 JSON 序列化后返回给\n客户端的值（已通过 `FieldResolver.payload` 解包）。"
   },
   "RspeedyMeta.summary": {
-    "hash": "3b401b04",
+    "en": "Rspeedy-emitted build context for a single template / entry.",
     "text": "Rspeedy 为单个 template / 入口产出的构建上下文。"
   },
   "RspeedyMeta.bundlePath.summary": {
-    "hash": "a091bce0",
+    "en": "The template filename pattern this metadata corresponds to (e.g.\n`main/template.js`). Lets multi-entry projects identify which page\neach metadata file belongs to without relying on storage-key\nconventions.",
     "text": "该元数据对应的 template 文件名模式（例如\n`main/template.js`）。使多入口项目能够识别每个元数据文件所属的页面，\n而无需依赖存储 key 的\n约定。"
   },
   "RspeedyMeta.entryFiles.summary": {
-    "hash": "75e59546",
+    "en": "Source files of the webpack entry/entries this debug-metadata\ncorresponds to, expressed as paths relative to the git rootDir\n(falls back to the compiler context when not in a git repo).\n\nTypically a single file, but webpack allows array-form entries and\nLynx splits each user entry into multiple webpack entries\ninternally — both cases produce multiple paths here.",
     "text": "该调试元数据对应的 webpack 入口源文件，\n以相对于 git rootDir 的路径表示\n（不在 git 仓库中时回退为相对于 compiler context）。\n\n通常只有一个文件，但 webpack 允许数组形式的入口，且\nLynx 内部会将每个用户入口拆分为多个 webpack 入口\n——这两种情况都会在此产生多个路径。"
   },
   "SourceMap.summary": {
-    "hash": "5e366552",
+    "en": "Source Map v3 payload, per the [Source Map Revision 3 proposal](https://sourcemaps.info/spec.html).\n\nDeclared here (instead of imported from `source-map`) to keep this\npackage zero-dependency and prevent transitive consumers from pulling\nthe ~200 kB `source-map` runtime just for a TypeScript type.",
     "text": "Source Map v3 数据，遵循 [Source Map Revision 3 提案](https://sourcemaps.info/spec.html)。\n\n在此处声明（而非从 `source-map` 导入），是为了保持该包零依赖，\n避免传递依赖方仅为了一个 TypeScript 类型\n而引入约 200 kB 的 `source-map` 运行时。"
   },
   "SourceMap.file.summary": {
-    "hash": "a5a8999e",
+    "en": "Generated output filename this map describes.",
     "text": "该 map 所描述的生成产物文件名。"
   },
   "SourceMap.mappings.summary": {
-    "hash": "3eec708b",
+    "en": "VLQ-encoded mapping data.",
     "text": "VLQ 编码的映射数据。"
   },
   "SourceMap.names.summary": {
-    "hash": "265c12c3",
+    "en": "Symbol names referenced from `mappings`.",
     "text": "`mappings` 中引用的符号名称。"
   },
   "SourceMap.sections.summary": {
-    "hash": "583a21b5",
+    "en": "Index-map sections, exclusive with the simple-map shape. Producers\neither set `sections` (index map) or the other fields, not both.",
     "text": "index map 的 section 列表，与简单 map 结构互斥。\n生产方要么设置 `sections`（index map），要么设置其他字段，不能同时设置。"
   },
   "SourceMap.sourceRoot.summary": {
-    "hash": "032ca799",
+    "en": "Optional prefix prepended to every entry in `sources`.",
     "text": "添加到 `sources` 中每一项前面的可选前缀。"
   },
   "SourceMap.sources.summary": {
-    "hash": "b561ce24",
+    "en": "Original source file URLs / identifiers.",
     "text": "原始源文件的 URL / 标识符。"
   },
   "SourceMap.sourcesContent.summary": {
-    "hash": "6030e5b1",
+    "en": "Inline source contents, parallel to `sources`.",
     "text": "内联的源码内容，与 `sources` 一一对应。"
   },
   "SourceMapDebugSource.summary": {
-    "hash": "643a2ef1",
+    "en": "Source Map v3 debug data attached to a JS / CSS artifact.",
     "text": "附加到 JS / CSS 产物上的 Source Map v3 调试数据。"
   },
   "SourceMapDebugSource.filename.summary": {
-    "hash": "ecc91246",
+    "en": "Basename of the `.map` file, e.g. `main-thread.js.map`.",
     "text": "`.map` 文件的文件名，例如 `main-thread.js.map`。"
   },
   "SourceMapDebugSource.key.summary": {
-    "hash": "9b2ac698",
+    "en": "Identifier that platform-side reverse symbolication uses to match\nthis map. Defaults to the producing chunk's hash, matching the\n`release` the `__DEBUG_METADATA_RELEASE__` banner reports at runtime.",
     "text": "平台侧反向符号化用于匹配该 map 的标识符。\n默认为产出该 map 的 chunk 的 hash，与运行时\n`__DEBUG_METADATA_RELEASE__` banner 上报的 `release` 一致。"
   },
   "SourceMapDebugSource.map.summary": {
-    "hash": "f5325108",
+    "en": "Full Source Map v3 payload.",
     "text": "完整的 Source Map v3 数据。"
   },
   "SourceMapDebugSource.path.summary": {
-    "hash": "0f982e28",
+    "en": "Bundler-relative path of the `.map` file, e.g. `.lynx/main/main-thread.js.map`.",
     "text": "`.map` 文件相对于 bundler 的路径，例如 `.lynx/main/main-thread.js.map`。"
   },
   "SourceMapSection.summary": {
-    "hash": "ee399a95",
+    "en": "One section of an index source map.",
     "text": "index source map 中的一个 section。"
   },
   "UiNode.summary": {
-    "hash": "a3706b42",
+    "en": "One UI node of the tree the Lynx engine dumps — the input to\n[`remapUiTree`](api:remapUiTree). Three fields are read: `nodeIndex` and\n`debugMetadataUrl` drive reverse-resolution, and `children` is walked\nrecursively. All three are optional because the engine emits nodes that\ncarry no source mapping (e.g. raw-text nodes have no `nodeIndex`); such\nnodes pass through untouched. Every other field is opaque.",
     "text": "Lynx 引擎导出的 UI 树中的一个节点——即\n[`remapUiTree`](api:remapUiTree) 的输入。会读取三个字段：`nodeIndex` 和\n`debugMetadataUrl` 驱动反向解析，`children` 会被递归遍历。\n这三个字段均为可选，因为引擎会产出不携带源码映射的节点\n（例如 raw-text 节点没有 `nodeIndex`）；\n这类节点会原样透传。其他字段均视为不透明数据。"
   },
   "UiNode.children.summary": {
-    "hash": "03556c51",
+    "en": "Child nodes, walked recursively.",
     "text": "子节点，会被递归遍历。"
   },
   "UiNode.debugMetadataUrl.summary": {
-    "hash": "acc20530",
+    "en": "URL/path of the `debug-metadata.json` covering this node.",
     "text": "覆盖该节点的 `debug-metadata.json` 的 URL/路径。"
   },
   "UiNode.nodeIndex.summary": {
-    "hash": "98cca67c",
+    "en": "Compile-time node identity, looked up in the UI source map.",
     "text": "编译期的节点标识，用于在 UI source map 中查找。"
   },
   "UiSourceLocation.summary": {
-    "hash": "fbbb33eb",
+    "en": "Source location recovered for a single UI node, in the shape the\nreverse-resolved tree gains alongside its original fields.",
     "text": "为单个 UI 节点还原出的源码位置，\n即反向解析后的树在原有字段之外新增的字段。"
   },
   "UiSourceLocation.column.summary": {
-    "hash": "643df44f",
+    "en": "1-based source column.",
     "text": "源码列号（从 1 开始）。"
   },
   "UiSourceLocation.line.summary": {
-    "hash": "283565a9",
+    "en": "1-based source line.",
     "text": "源码行号（从 1 开始）。"
   },
   "UiSourceLocation.repo.summary": {
-    "hash": "1501c83d",
+    "en": "`owner/repo` derived from the build's git remote, or `null`.",
     "text": "从构建时的 git remote 推导出的 `owner/repo`，或 `null`。"
   },
   "UiSourceLocation.source.summary": {
-    "hash": "5195e641",
+    "en": "Authored source path (relative to the project root), or `null`.",
     "text": "编写时的源码路径（相对于项目根目录），或 `null`。"
   },
   "UiSourceMapData.summary": {
-    "hash": "096e38e3",
+    "en": "Compact UI source map payload — the `uiSourceMap` field of\n[`DebugMetadataAsset`](api:DebugMetadataAsset).",
     "text": "紧凑的 UI source map 数据——即\n[`DebugMetadataAsset`](api:DebugMetadataAsset) 的 `uiSourceMap` 字段。"
   },
   "UiSourceMapRecord.summary": {
-    "hash": "c82330f4",
+    "en": "One UI source map record produced by the main-thread loader.",
     "text": "由主线程 loader 生成的一条 UI source map 记录。"
   },
   "DebugMetadataLoader.summary": {
-    "hash": "ad02f2a5",
+    "en": "Loads the [`DebugMetadataAsset`](api:DebugMetadataAsset) a node's `debugMetadataUrl` points\nat. Supplied by the caller so the core stays free of I/O (the CLI wires\nup `fetch` / `fs`); only called once per distinct URL.",
     "text": "加载节点 `debugMetadataUrl` 所指向的 [`DebugMetadataAsset`](api:DebugMetadataAsset)。\n由调用方提供，使核心逻辑不涉及 I/O（CLI 会接入\n`fetch` / `fs`）；每个不同的 URL 只会调用一次。"
   },
   "DebugSource.summary": {
-    "hash": "cb34820c",
+    "en": "One debug data source attached to an [`Artifact`](api:Artifact).\n\nTagged union so future debug data kinds (e.g. WASM debug info,\nR-source-map) can be added without restructuring `artifacts[]`.",
     "text": "附加到 [`Artifact`](api:Artifact) 上的一个调试数据源。\n\n采用带标签的联合类型（tagged union），以便将来新增调试数据类型（例如 WASM debug info、\nR-source-map）时无需调整 `artifacts[]` 的结构。"
   },
   "FIELDS.summary": {
-    "hash": "a982e6cf",
+    "en": "Field name → resolver. **HTTP layers read this directly.** Mutations\nare honoured by the next request — the export is a live `Map` so\nplugins can register their own fields at startup.\n\nAdding a new field is a one-line `FIELDS.set('your-name', { ... })`.",
     "text": "字段名 → resolver 的映射。**HTTP 层直接读取该对象。**\n修改会在下一次请求时生效——该导出是一个实时的 `Map`，\n插件可以在启动时注册自己的字段。\n\n新增字段只需一行 `FIELDS.set('your-name', { ... })`。"
   },
   "FIELDS.default": {
-    "hash": "0b877caf",
+    "en": "...",
     "text": "..."
   },
   "UI_SOURCE_MAP_RECORDS_BUILD_INFO.summary": {
-    "hash": "b5246b01",
+    "en": "`module.buildInfo[UI_SOURCE_MAP_RECORDS_BUILD_INFO]` is where the\nmain-thread loader stashes the [`UiSourceMapRecord`](api:UiSourceMapRecord) array it\nextracts from a module, for `LynxDebugMetadataPlugin` to collect.\n\nLives in this zero-dependency schema package so producer\n(`@lynx-js/react-webpack-plugin`'s loader) and consumer\n(`@lynx-js/debug-metadata-rsbuild-plugin`) can both read the same\nconstant without taking a runtime dep on each other.",
     "text": "主线程 loader 会将从模块中提取出的\n[`UiSourceMapRecord`](api:UiSourceMapRecord) 数组暂存在 `module.buildInfo[UI_SOURCE_MAP_RECORDS_BUILD_INFO]` 中，\n供 `LynxDebugMetadataPlugin` 收集。\n\n该常量位于这个零依赖的 schema 包中，使生产方\n（`@lynx-js/react-webpack-plugin` 的 loader）和使用方\n（`@lynx-js/debug-metadata-rsbuild-plugin`）都能读取同一个常量，\n而无需在运行时互相依赖。"
   },
   "UI_SOURCE_MAP_RECORDS_BUILD_INFO.default": {
-    "hash": "f2511a3d",
+    "en": "'lynxUiSourceMapRecords'",
     "text": "'lynxUiSourceMapRecords'"
   },
   "assertUiNode.summary": {
-    "hash": "6cf33d31",
+    "en": "Assert that a parsed value is a [`UiNode`](api:UiNode) tree. Use it at trust\nboundaries — e.g. right after `JSON.parse`-ing an engine dump — so\nmalformed input fails fast with a located error (`$.children[1]`-style\npath) instead of crashing deep inside resolution.\n\n`nodeIndex`, `debugMetadataUrl` and `children` are all optional (the\nengine emits nodes with no source mapping, such as raw text); they are\nonly rejected when present with the wrong type. A non-object, or a\n`children` that is not an array, is always rejected.",
     "text": "断言一个解析后的值是 [`UiNode`](api:UiNode) 树。\n请在信任边界处使用——例如刚对引擎导出的数据执行 `JSON.parse` 之后——\n使格式错误的输入尽早失败并给出带位置的错误（`$.children[1]` 形式的路径），\n而不是在反向解析的深层逻辑中崩溃。\n\n`nodeIndex`、`debugMetadataUrl` 和 `children` 均为可选\n（引擎会产出不带源码映射的节点，例如原始文本）；\n仅当它们存在且类型错误时才会被拒绝。非对象值，或\n`children` 不是数组时，总会被拒绝。"
   },
   "buildUiSourceMapLookup.summary": {
-    "hash": "73336c1c",
+    "en": "Build a `nodeIndex -> {source, line, column}` lookup from a\n[`UiSourceMapData`](api:UiSourceMapData). The payload is column-oriented: `uiMaps[i]`\nis the nodeIndex, and the matching `mappings[i]` entry holds\n`[sourceIndex, line, column]`, with `sourceIndex` indexing `sources`.",
     "text": "根据 [`UiSourceMapData`](api:UiSourceMapData) 构建\n`nodeIndex -> {source, line, column}` 查找表。该数据按列组织：\n`uiMaps[i]` 是 nodeIndex，对应的 `mappings[i]` 项为\n`[sourceIndex, line, column]`，其中 `sourceIndex` 是 `sources` 的索引。"
   },
   "findArtifact.summary": {
-    "hash": "889b18d6",
+    "en": "Find an [`Artifact`](api:Artifact) by `filename` (e.g. `main-thread.js`,\n`background.fd311de1.js`, `main.css`).",
     "text": "按 `filename`（例如 `main-thread.js`、\n`background.fd311de1.js`、`main.css`）查找 [`Artifact`](api:Artifact)。"
   },
   "findBytecodeDebugInfo.summary": {
-    "hash": "e6f06742",
+    "en": "Find a `bytecode-debug-info` source attached to the artifact named\n`filename`.",
     "text": "查找附加在名为\n`filename` 的产物上的 `bytecode-debug-info` 数据源。"
   },
   "findSourceMap.summary": {
-    "hash": "86e73109",
+    "en": "Find a `source-map` [`SourceMapDebugSource`](api:SourceMapDebugSource) by `path`,\n`filename`, or `key`. At least one of the three should be set;\nevery comparison is an exact equality on the field of the same\nname on [`SourceMapDebugSource`](api:SourceMapDebugSource).",
     "text": "按 `path`、`filename` 或 `key` 查找 `source-map` 类型的\n[`SourceMapDebugSource`](api:SourceMapDebugSource)。三者至少应设置一个；\n每次比较都是与\n[`SourceMapDebugSource`](api:SourceMapDebugSource) 上同名字段进行严格相等比较。"
   },
   "isUiSourceMapData.summary": {
-    "hash": "1058760f",
+    "en": "Runtime check that a parsed value matches [`UiSourceMapData`](api:UiSourceMapData)'s\nload-bearing shape — an object with `sources`, `mappings` and `uiMaps`\narrays. Guards against `debugMetadataUrl`s that resolve to JSON of a\ndifferent (or older) format.",
     "text": "运行时检查解析后的值是否符合\n[`UiSourceMapData`](api:UiSourceMapData) 的关键结构——即包含 `sources`、`mappings` 和 `uiMaps` 数组的对象。\n用于防范 `debugMetadataUrl`\n解析到其他（或旧版）格式的 JSON。"
   },
   "knownFields.summary": {
-    "hash": "f5170c05",
+    "en": "All currently-registered field names. Use for `400 invalid_field`\nresponses so the listing auto-updates when new fields are registered.",
     "text": "当前已注册的所有字段名。可用于 `400 invalid_field`\n响应，使列表在注册新字段时自动更新。"
   },
   "normalizeRepo.summary": {
-    "hash": "3bc89c6c",
+    "en": "Normalize a git remote URL (SSH or HTTP form) to an `owner/repo`\nidentifier, dropping any trailing `.git`. Returns `null` for empty\ninput and the original string when it matches no known form.",
     "text": "将 git remote URL（SSH 或 HTTP 形式）规范化为 `owner/repo`\n标识符，并去掉末尾的 `.git`。输入为空时返回 `null`，\n无法匹配任何已知形式时返回原始字符串。"
   },
   "remapUiTree.summary": {
-    "hash": "5405f5fc",
+    "en": "Reverse-resolve a UI node tree dumped by the Lynx engine.\n\nEvery node carrying both a `nodeIndex` and a `debugMetadataUrl` whose\n`uiSourceMap` knows that index is annotated with [`UiSourceLocation`](api:UiSourceLocation)\nfields (`repo`, `source`, `line`, `column`). All other fields — and nodes\nthat cannot be resolved — pass through verbatim. The input is not\nmutated; a new tree is returned.",
     "text": "反向解析 Lynx 引擎导出的 UI 节点树。\n\n对于同时携带 `nodeIndex` 和 `debugMetadataUrl` 的节点，若对应的\n`uiSourceMap` 中包含该索引，则会为其添加 [`UiSourceLocation`](api:UiSourceLocation)\n字段（`repo`、`source`、`line`、`column`）。其他所有字段——\n以及无法解析的节点——均原样透传。\n不会修改输入，而是返回一棵新树。"
   },
   "resolveField.summary": {
-    "hash": "d02ddf47",
+    "en": "Resolve a `?field=…` query against parsed metadata.\n\n- Returns `undefined` when the field is not registered — HTTP layer\n  responds `400 invalid_field` and lists `knownFields()`.\n- Returns `{found: false}` when the field is valid but no value\n  matched — HTTP layer responds `404`.\n- Returns `{found: true, payload}` when matched. `payload` is the\n  already-unwrapped value (resolver's `payload` hook applied).",
     "text": "针对解析后的元数据解析 `?field=…` 查询。\n\n- 字段未注册时返回 `undefined`——HTTP 层\n  响应 `400 invalid_field` 并列出 `knownFields()`。\n- 字段有效但没有匹配的值时返回 `{found: false}`\n  ——HTTP 层响应 `404`。\n- 匹配成功时返回 `{found: true, payload}`。\n  `payload` 是已解包的值（已应用 resolver 的 `payload` 钩子）。"
   }
 }

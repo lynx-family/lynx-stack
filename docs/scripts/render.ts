@@ -228,9 +228,8 @@ const code = (s: string) => {
 };
 
 export interface Translation {
-  hash: string;
+  en: string;
   text: string;
-  en?: string;
 }
 export type Translations = Record<string, Translation>;
 
@@ -261,18 +260,10 @@ function loadRsbuild(path: string): RsbuildOptions {
   return d;
 }
 
-export function hashText(text: string): string {
-  let h = 5381;
-  for (let i = 0; i < text.length; i++) {
-    h = ((h << 5) + h + text.charCodeAt(i)) | 0;
-  }
-  return (h >>> 0).toString(16).padStart(8, '0');
-}
-
 function tr(ctx: Ctx, key: string, en: string | undefined): string | undefined {
   if (!en || !ctx.tr) return en;
   const t = ctx.tr[key];
-  if (t?.text && t.en === undefined && t.hash === hashText(en)) return t.text;
+  if (t?.text && t.en === en) return t.text;
   ctx.stale.add(key);
   return en;
 }

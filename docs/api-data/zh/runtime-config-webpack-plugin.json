@@ -1,18 +1,18 @@
 {
   "RuntimeConfigWebpackPlugin.summary": {
-    "hash": "ce7a5b65",
+    "en": "Merges and shallow-freezes runtime configuration in\n`lynx.__runtime_configs__`.\n\nBundles are merged in execution order. Later bundle values overwrite\nearlier values with the same key.",
     "text": "合并位于\n`lynx.__runtime_configs__` 中的运行时配置，并对其进行浅冻结。\n\n各 bundle 按执行顺序合并。\n后执行的 bundle 中的值会覆盖先前相同 key 的值。"
   },
   "RuntimeConfigWebpackPlugin.apply.summary": {
-    "hash": "90722b12",
+    "en": "The entry point of a webpack plugin.",
     "text": "webpack 插件的入口。"
   },
   "RuntimeConfigWebpackPlugin.apply.params.compiler": {
-    "hash": "edb43efe",
+    "en": "the webpack compiler",
     "text": "webpack compiler"
   },
   "RuntimeConfigWebpackPluginOptions.summary": {
-    "hash": "c13b0f8c",
+    "en": "Page-scoped runtime configuration contributed by a bundle.\n\nThe plugin deliberately leaves configuration keys and values to the DSL\nthat consumes them.",
     "text": "由 bundle 提供的页面级运行时配置。\n\n该插件有意不限定配置的 key 和 value，\n交由使用它们的 DSL 决定。"
   }
 }
