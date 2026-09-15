@@ -9,7 +9,7 @@ a condensed version of the documentation site optimized for reading large models
 
 ## Requirements
 
-- [Node.js](https://nodejs.org/) v18.17 or a newer [latest maintenance LTS](https://github.com/nodejs/Release#release-schedule) version.
+- [Node.js](https://nodejs.org/) v22.19 or a newer [latest maintenance LTS](https://github.com/nodejs/Release#release-schedule) version.
 
 ## Getting started
 

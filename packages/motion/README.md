@@ -1,6 +1,6 @@
 # @lynx-js/motion
 
-A powerful animation library for Lynx, ported from [Motion for React (framer-motion)](https://motion.dev/). It brings declarative animations and gesture handling to the Lynx ecosystem.
+A powerful animation library for Lynx, ported from [Motion for React (framer-motion)](https://motion.dev/). It brings imperative animations (`animate`, `stagger`), motion values and two hooks (`useMotionValueRef`, `useMotionValueRefEvent`) to the Lynx ecosystem.
 
 ## Installation
 
@@ -68,12 +68,10 @@ import { animate, createMotionValue } from '@lynx-js/motion/mini';
 | :-------------------- | :------------------------------------------------ | :------------------------ |
 | **Animation Targets** | Numbers, Strings (colors, units), Objects, Arrays | **Numbers only** (mostly) |
 | **Keyframes**         | Full support                                      | Limited support           |
-| **Layout Animations** | Supported                                         | Not supported             |
-| **Gesture Handlers**  | Full suite (drag, pan, hover, etc.)               | Not included              |
 
 > **Note**: `MotionValue` in Mini primarily works with numbers.
 
-### CLI Reference for Mini
+### API Reference for Mini
 
 #### `createMotionValue<T>(initial: T)`
 
@@ -86,7 +84,7 @@ mv.set(100);
 
 #### `animate(value, target, options)`
 
-Animates a `MotionValue` or number.
+Animates a `MotionValue`, a starting number, or a setter callback `(v: number) => void` to a numeric `target`.
 
 ```typescript
 animate(mv, 100, {
