@@ -1,0 +1,110 @@
+---
+title: '@lynx-js/genui/openui/prompt'
+---
+
+# `@lynx-js/genui/openui/prompt`
+
+`@lynx-js/genui/openui/prompt` builds the system prompt that teaches a model to answer in OpenUI Lang with the components of your library. Use it on the agent side, next to the [`@lynx-js/genui/openui`](./openui) renderer in the app.
+
+```ts
+import { buildOpenUiSystemPrompt } from '@lynx-js/genui/openui/prompt';
+```
+
+## API
+
+{/* @api ApiExports package="genui-openui-prompt" */}
+
+## Functions \{#functions\}
+
+### `buildOpenUiSystemPrompt()` \{#buildopenuisystemprompt\}
+
+```ts
+function buildOpenUiSystemPrompt(options: BuildOpenUiSystemPromptOptions): string
+```
+
+Build the full OpenUI system prompt for the supplied library and options.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | [`BuildOpenUiSystemPromptOptions`](#buildopenuisystempromptoptions) |  |
+
+**Returns:** `string`
+
+### `createOpenUiPromptLibrary()` \{#createopenuipromptlibrary\}
+
+```ts
+function createOpenUiPromptLibrary(options: CreateOpenUiPromptLibraryOptions): OpenUiPromptLibrary
+```
+
+Create a headless OpenUI library with the built-in component schemas.
+
+This mirrors the ReactLynx library for prompt generation while avoiding any
+runtime dependency on ReactLynx or Lynx UI components.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | [`CreateOpenUiPromptLibraryOptions`](#createopenuipromptlibraryoptions) |  |
+
+**Returns:** [`OpenUiPromptLibrary`](#openuipromptlibrary)
+
+## Constants \{#constants\}
+
+### `OPENUI_SYSTEM_PROMPT` \{#openui-system-prompt\}
+
+```ts
+const OPENUI_SYSTEM_PROMPT: string
+```
+
+*No description yet.*
+
+### `openUiPromptActionPropSchema` \{#openuipromptactionpropschema\}
+
+```ts
+const openUiPromptActionPropSchema: ZodUnion<readonly [ZodObject<{ steps: ZodArray<ZodObject<{ type: ZodString }, $loose>> }, $strip>, ZodObject<{ context: ZodOptional<ZodString>; params: ZodOptional<ZodRecord<ZodString, ZodAny>>; type: ZodOptional<ZodString>; url: ZodOptional<ZodString> }, $strip>]>
+```
+
+Shared action prop schema exposed to prompt signatures as `ActionExpression`.
+
+## Types \{#types\}
+
+### `BuildOpenUiSystemPromptOptions` \{#buildopenuisystempromptoptions\}
+
+Options used to customize the generated OpenUI system prompt.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="buildopenuisystempromptoptions-appendix"></a>`appendix?` | `string` |  |
+| <a id="buildopenuisystempromptoptions-componentgroups"></a>`componentGroups?` | `ComponentGroup[]` | Replace or extend the built-in component groups. |
+| <a id="buildopenuisystempromptoptions-componentnames"></a>`componentNames?` | `readonly string[]` | Limit built-ins to these names. Custom `components` are still appended. |
+| <a id="buildopenuisystempromptoptions-components"></a>`components?` | [`OpenUiPromptComponent`](#openuipromptcomponent)`[]` | Replace or extend the built-in component set. |
+| <a id="buildopenuisystempromptoptions-promptoptions"></a>`promptOptions?` | `PromptOptions` |  |
+| <a id="buildopenuisystempromptoptions-root"></a>`root?` | `string` | Override the root component name. Defaults to `'Stack'`. |
+
+### `CreateOpenUiPromptLibraryOptions` \{#createopenuipromptlibraryoptions\}
+
+Options for creating the headless OpenUI prompt library.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="createopenuipromptlibraryoptions-componentgroups"></a>`componentGroups?` | `ComponentGroup[]` | Replace or extend the built-in component groups. |
+| <a id="createopenuipromptlibraryoptions-componentnames"></a>`componentNames?` | `readonly string[]` | Limit built-ins to these names. Custom `components` are still appended. |
+| <a id="createopenuipromptlibraryoptions-components"></a>`components?` | [`OpenUiPromptComponent`](#openuipromptcomponent)`[]` | Replace or extend the built-in component set. |
+| <a id="createopenuipromptlibraryoptions-root"></a>`root?` | `string` | Override the root component name. Defaults to `'Stack'`. |
+
+### `OpenUiPromptComponent` \{#openuipromptcomponent\}
+
+```ts
+type OpenUiPromptComponent = DefinedComponent<any, HeadlessRenderer>
+```
+
+*No description yet.*
+
+### `OpenUiPromptLibrary` \{#openuipromptlibrary\}
+
+```ts
+type OpenUiPromptLibrary = Library<HeadlessRenderer>
+```
+
+*No description yet.*
+
+{/* @api-end */}

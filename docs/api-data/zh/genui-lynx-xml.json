@@ -1,0 +1,54 @@
+{
+  "BuildLynxXmlSystemPromptOptions.summary": {
+    "en": "Options used to customize the Lynx XML generation system prompt.",
+    "text": "用于自定义 Lynx XML 生成系统提示词的选项。"
+  },
+  "BuildLynxXmlSystemPromptOptions.appendix.summary": {
+    "en": "Append caller-specific instructions after the built-in contract.",
+    "text": "在内置约定之后追加调用方特定的指令。"
+  },
+  "BuildLynxXmlSystemPromptOptions.enableHtmlFragment.summary": {
+    "en": "Generate an intermediate document for deterministic fragment compilation.",
+    "text": "生成一份中间文档，用于确定性的片段编译。"
+  },
+  "BuildLynxXmlSystemPromptOptions.engineVersion.summary": {
+    "en": "Override the generated artifact's Lynx engine version.",
+    "text": "覆盖生成产物的 Lynx 引擎版本。"
+  },
+  "GeneratedMainThreadScript.bindings.summary": {
+    "en": "Only explicit XML ids are retained in the runtime nodeMap.",
+    "text": "运行时的 nodeMap 只保留显式声明的 XML id。"
+  },
+  "LYNX_XML_ENGINE_VERSION.summary": {
+    "en": "The default Lynx engine version used by generated XML artifacts.",
+    "text": "生成的 XML 产物默认使用的 Lynx 引擎版本。"
+  },
+  "LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS.summary": {
+    "en": "Intermediate source contract for deterministic fragment compilation.",
+    "text": "用于确定性片段编译的中间源码约定。"
+  },
+  "LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT.summary": {
+    "en": "The Lynx XML prompt for one-pass fragment generation.",
+    "text": "一次性生成片段所用的 Lynx XML 提示词。"
+  },
+  "LYNX_XML_SYSTEM_PROMPT.summary": {
+    "en": "The default Lynx XML generation system prompt.",
+    "text": "默认的 Lynx XML 生成系统提示词。"
+  },
+  "buildLynxXmlSystemPrompt.summary": {
+    "en": "Build a system prompt for producing complete, zero-build `.lynxml` files.",
+    "text": "构建用于生成完整、免构建的 `.lynxml` 文件的系统提示词。"
+  },
+  "compileLynxXmlFragment.summary": {
+    "en": "Compile the model's intermediate document without executing model code.",
+    "text": "编译模型输出的中间文档，不执行模型代码。"
+  },
+  "generateMainThreadScript.summary": {
+    "en": "Convert an XML element fragment into Element PAPI calls for renderPage().",
+    "text": "把 XML 元素片段转换为供 renderPage() 使用的 Element PAPI 调用。"
+  },
+  "generateMainThreadScriptResult.summary": {
+    "en": "Generate Element PAPI calls and stable id-to-node bindings.",
+    "text": "生成 Element PAPI 调用，以及稳定的 id 到节点的绑定。"
+  }
+}

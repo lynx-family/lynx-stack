@@ -1,0 +1,54 @@
+{
+  "AppApiDefinition.summary": {
+    "en": "Describes a local API that can provide data to an MCP Apps renderer.",
+    "text": "描述一个可以为 MCP Apps 渲染器提供数据的本地 API。"
+  },
+  "AppRenderData.summary": {
+    "en": "Data required to select and render a locally registered MCP Apps.",
+    "text": "选择并渲染一个本地注册的 MCP App 所需的数据。"
+  },
+  "AppRenderer.summary": {
+    "en": "Type-erased renderer stored in an MCP Apps renderer registry.",
+    "text": "存放在 MCP Apps 渲染器注册表中、已擦除类型的渲染器。"
+  },
+  "AppRendererDefinition.summary": {
+    "en": "Strongly typed definition accepted by [`defineAppRenderer`](api:defineAppRenderer).",
+    "text": "[`defineAppRenderer`](api:defineAppRenderer) 接收的强类型定义。"
+  },
+  "AppRendererProps.summary": {
+    "en": "Props supplied by the MCP Apps host to a registered renderer.",
+    "text": "MCP Apps 宿主传给已注册渲染器的 props。"
+  },
+  "AppRendererRegistry.summary": {
+    "en": "A local renderer lookup used by the protocol-agnostic MCP Apps host.",
+    "text": "与协议无关的 MCP Apps 宿主使用的本地渲染器查找表。"
+  },
+  "McpAppsProps.summary": {
+    "en": "Props for the protocol-agnostic MCP Apps Lynx host.",
+    "text": "与协议无关的 MCP Apps Lynx 宿主的 props。"
+  },
+  "ResolvedAppRenderData.summary": {
+    "en": "Validated render data paired with its locally registered renderer.",
+    "text": "经过校验的渲染数据，以及与之对应的本地注册渲染器。"
+  },
+  "createAppRendererRegistry.summary": {
+    "en": "Creates an immutable lookup facade for locally supplied renderers.",
+    "text": "为本地提供的渲染器创建一个不可变的查找接口。"
+  },
+  "defineAppRenderer.summary": {
+    "en": "Defines a renderer while preserving its result type at the declaration site.",
+    "text": "定义一个渲染器，并在声明处保留其结果类型。"
+  },
+  "McpApps.summary": {
+    "en": "Renders validated local MCP Apps data and falls back to streaming Markdown\nwhen no registered renderer matches the supplied host data.",
+    "text": "渲染经过校验的本地 MCP Apps 数据；没有已注册的渲染器与宿主数据匹配时，回退为流式 Markdown。"
+  },
+  "readAppMarkdown.summary": {
+    "en": "Reads Markdown fallback content from MCP Apps host data.",
+    "text": "从 MCP Apps 宿主数据中读取作为回退的 Markdown 内容。"
+  },
+  "readAppRenderData.summary": {
+    "en": "Parses and validates the renderer-independent portion of MCP Apps data.",
+    "text": "解析并校验 MCP Apps 数据中与渲染器无关的部分。"
+  }
+}

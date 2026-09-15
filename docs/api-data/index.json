@@ -203,7 +203,63 @@
     "version": "0.4.0",
     "group": "libraries",
     "description": "Generative UI for Lynx.",
-    "exports": 116
+    "exports": 0
+  },
+  "genui-a2ui": {
+    "package": "@lynx-js/genui",
+    "version": "0.4.0",
+    "group": "libraries",
+    "description": "Generative UI for Lynx.",
+    "exports": 73
+  },
+  "genui-openui": {
+    "package": "@lynx-js/genui",
+    "version": "0.4.0",
+    "group": "libraries",
+    "description": "Generative UI for Lynx.",
+    "exports": 70
+  },
+  "genui-openui-explicit": {
+    "package": "@lynx-js/genui",
+    "version": "0.4.0",
+    "group": "libraries",
+    "description": "Generative UI for Lynx.",
+    "exports": 34
+  },
+  "genui-openui-prompt": {
+    "package": "@lynx-js/genui",
+    "version": "0.4.0",
+    "group": "libraries",
+    "description": "Generative UI for Lynx.",
+    "exports": 8
+  },
+  "genui-a2ui-prompt": {
+    "package": "@lynx-js/genui",
+    "version": "0.4.0",
+    "group": "libraries",
+    "description": "Generative UI for Lynx.",
+    "exports": 18
+  },
+  "genui-a2ui-catalog-extractor": {
+    "package": "@lynx-js/genui",
+    "version": "0.4.0",
+    "group": "libraries",
+    "description": "Generative UI for Lynx.",
+    "exports": 10
+  },
+  "genui-lynx-xml": {
+    "package": "@lynx-js/genui",
+    "version": "0.4.0",
+    "group": "libraries",
+    "description": "Generative UI for Lynx.",
+    "exports": 11
+  },
+  "genui-mcp-apps": {
+    "package": "@lynx-js/genui",
+    "version": "0.4.0",
+    "group": "libraries",
+    "description": "Generative UI for Lynx.",
+    "exports": 13
   },
   "skill-lynx-openui": {
     "package": "@lynx-js/skill-lynx-openui",

@@ -1,0 +1,854 @@
+---
+title: '@lynx-js/genui/openui'
+---
+
+# `@lynx-js/genui/openui`
+
+`@lynx-js/genui/openui` 是 [OpenUI Lang](https://www.openui.com/docs/openui-lang/specification-v05) v0.5 的 ReactLynx 客户端运行时。它解析 agent 生成的 OpenUI 文本，计算其中的状态和数据操作，并用你传入的组件库渲染结果。agent 只输出数据：它只能实例化这个组件库里的组件。完整用法见 [OpenUI 指南](https://lynxjs.org/zh/react/genui/openui)。
+
+```ts
+import { OpenUiRenderer, createOpenUiLibrary } from '@lynx-js/genui/openui';
+```
+
+如果不想打包用不到的内置组件，改从 [`@lynx-js/genui/openui/explicit`](./openui-explicit) 创建组件库。
+
+## API
+
+{/* @api ApiExports package="genui-openui" */}
+
+## 函数 \{#functions\}
+
+### `createOpenUiLibrary()` \{#createopenuilibrary\}
+
+```ts
+function createOpenUiLibrary(options?: CreateOpenUiLibraryOptions): Library
+```
+
+创建 ReactLynx OpenUI 组件库，包含调用方提供的组件，以及（除非禁用）内置组件。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `options?` | [`CreateOpenUiLibraryOptions`](#createopenuilibraryoptions) |  |
+
+**返回值：** [`Library`](#library)
+
+### `createParser()` \{#createparser\}
+
+```ts
+function createParser(schema: LibraryJSONSchema, rootName?: string): Parser
+```
+
+根据组件库的 JSON Schema 文档创建解析器。传入 `library.toJSONSchema()` 获取 schema。
+
+```ts
+const parser = createParser(library.toJSONSchema());
+const result = parser.parse(openuiLangString);
+```
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `schema` | [`LibraryJSONSchema`](#libraryjsonschema) |  |
+| `rootName?` | `string` |  |
+
+**返回值：** `Parser`
+
+### `createStreamingParser()` \{#createstreamingparser\}
+
+```ts
+function createStreamingParser(schema: LibraryJSONSchema, rootName?: string): StreamParser
+```
+
+根据组件库的 JSON Schema 文档创建流式解析器。传入 `library.toJSONSchema()` 获取 schema。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `schema` | [`LibraryJSONSchema`](#libraryjsonschema) |  |
+| `rootName?` | `string` |  |
+
+**返回值：** [`StreamParser`](#streamparser)
+
+### `defineComponent()` \{#definecomponent\}
+
+```ts
+function defineComponent(config: { component: ComponentRenderer<output<T>>; description: string; name: string; props: T }): DefinedComponent<T>
+```
+
+定义 ReactLynx 组件渲染器及其 OpenUI schema 元数据。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `config` | `{ component: `[`ComponentRenderer`](#componentrenderer)`<output<T>>; description: string; name: string; props: T }` |  |
+
+**返回值：** [`DefinedComponent`](#definedcomponent)`<T>`
+
+### `extractToolResult()` \{#extracttoolresult\}
+
+```ts
+function extractToolResult(result: { content: { text?: string; type: string; [key: string]: unknown }[]; isError?: boolean; structuredContent?: unknown }): unknown
+```
+
+从 MCP callTool 的结果中提取实际数据。优先使用 structuredContent（机器可读的 JSON），否则回退为解析文本内容。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `result` | `{ content: { text?: string; type: string; [key: string]: unknown }[]; isError?: boolean; structuredContent?: unknown }` |  |
+
+**返回值：** `unknown`
+
+### `generatePrompt()` \{#generateprompt\}
+
+```ts
+function generatePrompt(spec: PromptSpec): string
+```
+
+请改用 `generateSystemPrompt`。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `spec` | [`PromptSpec`](#promptspec) |  |
+
+**返回值：** `string`
+
+### `isReactiveAssign()` \{#isreactiveassign\}
+
+```ts
+function isReactiveAssign(value: unknown): value is ReactiveAssign
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `value` | `unknown` |  |
+
+**返回值：** `value is ReactiveAssign`
+
+### `isReactiveSchema()` \{#isreactiveschema\}
+
+```ts
+function isReactiveSchema(schema: unknown): boolean
+```
+
+检查一个 schema 是否被标记为响应式。Zod 自省在处理 $binding\<> 前缀时使用。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `schema` | `unknown` |  |
+
+**返回值：** `boolean`
+
+### `mergeStatements()` \{#mergestatements\}
+
+```ts
+function mergeStatements(existing: string, patch: string, rootId?: string): string
+```
+
+把已有程序与补丁合并（部分更新）。补丁中的语句按名称覆盖已有语句，不再可达的语句会被自动回收。以字符串形式返回合并后的程序。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `existing` | `string` |  |
+| `patch` | `string` |  |
+| `rootId?` | `string` |  |
+
+**返回值：** `string`
+
+### `OpenUiRenderer()` \{#openuirenderer\}
+
+```ts
+function OpenUiRenderer(props: OpenUiRendererProps): Element
+```
+
+使用 ReactLynx 组件库渲染 OpenUI 语言输出。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `props` | [`OpenUiRendererProps`](#openuirendererprops) |  |
+
+**返回值：** `Element`
+
+### `parseRules()` \{#parserules\}
+
+```ts
+function parseRules(rules: unknown): ParsedRule[]
+```
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `rules` | `unknown` |  |
+
+**返回值：** [`ParsedRule`](#parsedrule)`[]`
+
+### `parseStructuredRules()` \{#parsestructuredrules\}
+
+```ts
+function parseStructuredRules(rules: unknown): ParsedRule[]
+```
+
+把结构化的规则对象解析为 ParsedRule[]。接受 \{ required: true, minLength: 5, email: true, max: 100 \} 这样的对象，值为 false/undefined 的 key 会被跳过。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `rules` | `unknown` |  |
+
+**返回值：** [`ParsedRule`](#parsedrule)`[]`
+
+### `reactive()` \{#reactive\}
+
+```ts
+function reactive(schema: T): ZodType<StateField<output<T>>>
+```
+
+将 schema prop 标记为响应式，使运行时求值能够保留 $bindings。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `schema` | `T` |  |
+
+**返回值：** `ZodType<`[`StateField`](#statefield)`<output<T>>>`
+
+### `tagSchemaId()` \{#tagschemaid\}
+
+```ts
+function tagSchemaId(schema: object, id: string): void
+```
+
+为 schema 标记一个 ID，用于提示词中的签名。适用于需要友好类型名的非组件 schema（例如 ActionExpression）。只影响提示词输出，不影响 JSON Schema 的 $defs。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `schema` | `object` |  |
+| `id` | `string` |  |
+
+### `useCreateFormValidation()` \{#usecreateformvalidation\}
+
+```ts
+function useCreateFormValidation(): FormValidationContextValue
+```
+
+为 OpenUI 表单边界创建表单校验状态和回调。
+
+**返回值：** [`FormValidationContextValue`](#formvalidationcontextvalue)
+
+### `useFormValidation()` \{#useformvalidation\}
+
+```ts
+function useFormValidation(): FormValidationContextValue | null
+```
+
+读取最近的 OpenUI 表单校验上下文（如果存在）。
+
+**返回值：** [`FormValidationContextValue`](#formvalidationcontextvalue)` | null`
+
+### `useGetFieldValue()` \{#usegetfieldvalue\}
+
+```ts
+function useGetFieldValue(): (formName: string | undefined, name: string) => any
+```
+
+从表单状态上下文中获取表单字段值。
+
+```tsx
+const getFieldValue = useGetFieldValue();
+const name = getFieldValue("contactForm", "name");
+```
+
+**返回值：** `(formName: string | undefined, name: string) => any`
+
+### `useIsQueryLoading()` \{#useisqueryloading\}
+
+```ts
+function useIsQueryLoading(): boolean
+```
+
+是否有 Query 正在获取数据。
+
+**返回值：** `boolean`
+
+### `useIsStreaming()` \{#useisstreaming\}
+
+```ts
+function useIsStreaming(): boolean
+```
+
+LLM 当前是否正在流式输出内容。
+
+**返回值：** `boolean`
+
+### `useOpenUI()` \{#useopenui\}
+
+```ts
+function useOpenUI(): OpenUIContextValue
+```
+
+访问完整的 OpenUI 上下文。在 `OpenUiRenderer` 树之外使用时会抛出异常。
+
+**返回值：** [`OpenUIContextValue`](#openuicontextvalue)
+
+### `useOpenUIState()` \{#useopenuistate\}
+
+```ts
+function useOpenUIState(__namedParameters: UseOpenUIStateOptions, renderDeep: (value: unknown) => ReactNode): OpenUIState
+```
+
+核心状态 hook——将所有表单状态、action 处理、解析器管理和上下文组装从 Renderer 组件中抽离出来。
+
+Store 保存所有内容：$bindings 作为顶层键，表单字段则以普通值的形式嵌套在 formName 下。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `__namedParameters` | [`UseOpenUIStateOptions`](#useopenuistateoptions) |  |
+| `renderDeep` | `(value: unknown) => ReactNode` |  |
+
+**返回值：** [`OpenUIState`](#openuistate)
+
+### `useRenderNode()` \{#userendernode\}
+
+```ts
+function useRenderNode(): (value: unknown) => ReactNode
+```
+
+获取用于渲染嵌套组件值的 renderNode 函数。
+
+**返回值：** `(value: unknown) => ReactNode`
+
+### `useSetDefaultValue()` \{#usesetdefaultvalue\}
+
+```ts
+function useSetDefaultValue(shouldTriggerSaveCallback: { componentType?: string; defaultValue: unknown; existingValue: unknown; formName?: string; name: string; shouldTriggerSaveCallback?: boolean }): void
+```
+
+在流式输出结束后，将组件的默认值/初始值写入表单状态——但仅当用户尚未设置值时才会写入。
+
+在任何带有 `defaultValue` 或 `defaultChecked` prop 的表单组件中调用它。它在流式输出期间不执行任何操作，以免 LLM 对 prop 的修改与不完整的状态相互冲突。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `shouldTriggerSaveCallback` | `{ componentType?: string; defaultValue: unknown; existingValue: unknown; formName?: string; name: string; shouldTriggerSaveCallback?: boolean }` | Defaults to `false` (only local state, no message persistence). |
+
+### `useSetFieldValue()` \{#usesetfieldvalue\}
+
+```ts
+function useSetFieldValue(): (formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void
+```
+
+获取用于更新表单字段值的 setFieldValue 函数。
+
+```tsx
+const setFieldValue = useSetFieldValue();
+<input onChange={(e) => setFieldValue("contactForm", "Input", "name", e.target.value, false)} />
+```
+
+**返回值：** `(formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void`
+
+### `useStateField()` \{#usestatefield\}
+
+```ts
+function useStateField(name: string, value?: T): StateField<InferStateFieldValue<T>>
+```
+
+基于表单状态和响应式绑定解析具名的 OpenUI 状态字段。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `name` | `string` |  |
+| `value?` | `T` |  |
+
+**返回值：** [`StateField`](#statefield)`<InferStateFieldValue<T>>`
+
+### `useTriggerAction()` \{#usetriggeraction\}
+
+```ts
+function useTriggerAction(): (userMessage: string, formName?: string, action?: ActionPlan | { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void | Promise<void>
+```
+
+获取用于触发结构化 action 事件的 triggerAction 函数。
+
+```tsx
+const triggerAction = useTriggerAction();
+<button onClick={() => triggerAction("Submit", "myForm")}>
+```
+
+**返回值：** `(userMessage: string, formName?: string, action?: `[`ActionPlan`](#actionplan)` | { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void | Promise<void>`
+
+### `validate()` \{#validate\}
+
+```ts
+function validate(value: unknown, rules: ParsedRule[], customValidators?: Record<string, ValidatorFn>): string | undefined
+```
+
+对一个值运行所有规则，遇到第一个错误即停止。先检查自定义校验器，再检查内置校验器。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `value` | `unknown` |  |
+| `rules` | [`ParsedRule`](#parsedrule)`[]` |  |
+| `customValidators?` | `Record<string, `[`ValidatorFn`](#validatorfn)`>` |  |
+
+**返回值：** `string | undefined`
+
+## 类 \{#classes\}
+
+### `ToolNotFoundError` \{#toolnotfounderror\}
+
+在函数映射形式的 ToolProvider 中找不到工具名称时抛出的标准错误。Renderer 在内联规范化时用它给出清晰的错误信息。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="toolnotfounderror-constructor"></a>`constructor` | `constructor(toolName: string, availableTools?: string[]): ToolNotFoundError` |  |
+| <a id="toolnotfounderror-availabletools"></a>`availableTools` | `string[]` |  |
+| <a id="toolnotfounderror-toolname"></a>`toolName` | `string` |  |
+
+## 常量 \{#constants\}
+
+### `ACTION_STEPS` \{#action-steps\}
+
+```ts
+const ACTION_STEPS: { OpenUrl: "open_url"; Reset: "reset"; Run: "run"; Set: "set"; ToAssistant: "continue_conversation" }
+```
+
+把解析器层面的 action 步骤名映射为运行时的步骤类型值，是唯一的数据源。
+
+### `builtInValidators` \{#builtinvalidators\}
+
+```ts
+const builtInValidators: Record<string, ValidatorFn>
+```
+
+*暂无说明。*
+
+### `FormNameContext` \{#formnamecontext\}
+
+```ts
+const FormNameContext: Context<string | undefined>
+```
+
+*暂无说明。*
+
+### `FormValidationContext` \{#formvalidationcontext\}
+
+```ts
+const FormValidationContext: Context<FormValidationContextValue | null>
+```
+
+*暂无说明。*
+
+## 类型 \{#types\}
+
+### `BuiltinActionType` \{#builtinactiontype\}
+
+宿主应用事件的内置 action 类型。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="builtinactiontype-continueconversation"></a>`ContinueConversation` | `"continue_conversation"` |  |
+| <a id="builtinactiontype-openurl"></a>`OpenUrl` | `"open_url"` |  |
+
+### `ActionEvent` \{#actionevent\}
+
+交互组件触发的结构化 action 事件。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="actionevent-formname"></a>`formName?` | `string` | 触发这个 action 的表单名称（如果有）。 |
+| <a id="actionevent-formstate"></a>`formState?` | `Record<string, unknown>` | action 发生时的原始表单状态，即所有字段的值。 |
+| <a id="actionevent-humanfriendlymessage"></a>`humanFriendlyMessage` | `string` | 这个 action 的可读标签（在对话中显示为用户消息）。 |
+| <a id="actionevent-params"></a>`params` | `Record<string, unknown>` | 与具体 action 相关的参数（例如 OpenUrl 的 \{ url \}，Custom 的自定义参数）。 |
+| <a id="actionevent-type"></a>`type` | [`BuiltinActionType`](#builtinactiontype)` \| string & {}` | action 类型。内置类型见 `BuiltinActionType`。 |
+
+### `ActionPlan` \{#actionplan\}
+
+点击按钮时依次执行的步骤序列，由运行时对 Action() 表达式求值得到。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="actionplan-steps"></a>`steps` | [`ActionStep`](#actionstep)`[]` |  |
+
+### `ComponentGroup` \{#componentgroup\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="componentgroup-components"></a>`components` | `string[]` |  |
+| <a id="componentgroup-name"></a>`name` | `string` |  |
+| <a id="componentgroup-notes"></a>`notes?` | `string[]` |  |
+
+### `ComponentPromptSpec` \{#componentpromptspec\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="componentpromptspec-description"></a>`description?` | `string` |  |
+| <a id="componentpromptspec-signature"></a>`signature` | `string` |  |
+
+### `ComponentRenderProps` \{#componentrenderprops\}
+
+传给 OpenUI ReactLynx 组件渲染器的 props。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="componentrenderprops-onaction"></a>`onAction?` | `(event: `[`ActionEvent`](#actionevent)`) => void` |  |
+| <a id="componentrenderprops-props"></a>`props` | `P` |  |
+| <a id="componentrenderprops-rendernode"></a>`renderNode` | `(value: unknown) => ReactNode` |  |
+| <a id="componentrenderprops-statementid"></a>`statementId?` | `string` | 解析后程序中的语句 ID（例如 "header"、"prose1"）。内联组件为 undefined。 |
+
+### `CreateOpenUiLibraryOptions` \{#createopenuilibraryoptions\}
+
+创建 ReactLynx OpenUI 组件库的选项。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="createopenuilibraryoptions-componentgroups"></a>`componentGroups?` | [`ComponentGroup`](#componentgroup)`[]` | 额外的组件分组；禁用默认组件时则为完整的分组集合。 |
+| <a id="createopenuilibraryoptions-components"></a>`components?` | [`DefinedComponent`](#definedcomponent)`<any>[]` | 额外的组件；禁用默认组件时则为完整的组件集合。 |
+| <a id="createopenuilibraryoptions-includedefaultcomponents"></a>`includeDefaultComponents?` | `boolean` | 是否包含内置组件和组件分组。默认为 `true`。 |
+| <a id="createopenuilibraryoptions-root"></a>`root?` | `string` | 覆盖根组件名称。默认为 `'Stack'`。 |
+
+### `ElementNode` \{#elementnode\}
+
+解析器产出的、已完全解析的组件节点。解析器把 openui-lang 文本转换成由这些节点组成的树。每个节点代表一次组件调用，其位置参数按组件库的 Zod key 顺序映射为具名的 `props`。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="elementnode-hasdynamicprops"></a>`hasDynamicProps?` | `boolean` | 所有 props 都是静态字面量时为 false，可以跳过求值。为了向后兼容，undefined 视为 true（动态）。 |
+| <a id="elementnode-partial"></a>`partial` | `boolean` | 解析器还没有收到这个节点的全部 token 时为 true（仍在流式传输中）。 |
+| <a id="elementnode-props"></a>`props` | `Record<string, unknown>` | 解析器把位置参数映射为具名参数后得到的 props。 |
+| <a id="elementnode-statementid"></a>`statementId?` | `string` | 源变量名（例如 `header = TextContent(...)` 中的 "header"）。内联组件为 undefined。 |
+| <a id="elementnode-type"></a>`type` | `"element"` |  |
+| <a id="elementnode-typename"></a>`typeName` | `string` | 组件在组件库中定义的名称（例如 "Table"、"BarChart"）。 |
+
+### `EvaluationContext` \{#evaluationcontext\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="evaluationcontext-extrascope"></a>`extraScope?` | `Record<string, unknown>` | 响应式 prop 求值时用于注入 $value 的额外作用域 |
+| <a id="evaluationcontext-getstate"></a>`getState` | `getState(name: string): unknown` | 从 store 中读取 $variable |
+| <a id="evaluationcontext-resolveref"></a>`resolveRef` | `resolveRef(name: string): unknown` | 解析对另一个声明求值结果的引用 |
+
+### `FormValidationContextValue` \{#formvalidationcontextvalue\}
+
+OpenUI 表单字段的校验状态和辅助函数。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="formvalidationcontextvalue-clearfielderror"></a>`clearFieldError` | `(name: string) => void` |  |
+| <a id="formvalidationcontextvalue-errors"></a>`errors` | `Record<string, string \| undefined>` |  |
+| <a id="formvalidationcontextvalue-getfielderror"></a>`getFieldError` | `(name: string) => string \| undefined` |  |
+| <a id="formvalidationcontextvalue-registerfield"></a>`registerField` | `(name: string, rules: `[`ParsedRule`](#parsedrule)`[], getValue: () => unknown) => void` |  |
+| <a id="formvalidationcontextvalue-unregisterfield"></a>`unregisterField` | `(name: string) => void` |  |
+| <a id="formvalidationcontextvalue-validatefield"></a>`validateField` | `(name: string, value: unknown, rules: `[`ParsedRule`](#parsedrule)`[]) => boolean` |  |
+| <a id="formvalidationcontextvalue-validateform"></a>`validateForm` | `() => boolean` |  |
+
+### `LibraryJSONSchema` \{#libraryjsonschema\}
+
+`library.toJSONSchema()` 生成的 JSON Schema 文档。所有组件的 schema 都放在 `$defs` 中，以组件名为 key。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="libraryjsonschema-defs"></a>`$defs?` | `Record<string, JSONSchemaDef>` |  |
+
+### `McpClientLike` \{#mcpclientlike\}
+
+MCP Client 的最小结构，与 @modelcontextprotocol/sdk 的 Client 一致，但不需要强制引入它。任何实现了这些方法的对象都可以传入。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="mcpclientlike-calltool"></a>`callTool` | `callTool(params: { arguments?: Record<string, unknown>; name: string }, options?: unknown): Promise<{ content: { text?: string; type: string; [key: string]: unknown }[]; isError?: boolean; structuredContent?: unknown }>` |  |
+| <a id="mcpclientlike-close"></a>`close?` | `close(): Promise<void>` |  |
+
+### `OpenUIContextValue` \{#openuicontextvalue\}
+
+由 OpenUI 渲染器、hooks、action 和表单字段共享的运行时上下文。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="openuicontextvalue-evaluationcontext"></a>`evaluationContext` | [`EvaluationContext`](#evaluationcontext) | 运行时表达式求值所使用的 AST 求值上下文。 |
+| <a id="openuicontextvalue-getfieldvalue"></a>`getFieldValue` | `(formName: string \| undefined, name: string) => any` | 获取字段值。$bindings 位于顶层，表单字段则嵌套在 formName 下。 |
+| <a id="openuicontextvalue-isqueryloading"></a>`isQueryLoading` | `boolean` | 是否有 Query 正在获取数据。 |
+| <a id="openuicontextvalue-isstreaming"></a>`isStreaming` | `boolean` | LLM 当前是否正在流式输出内容。 |
+| <a id="openuicontextvalue-library"></a>`library` | `Library` | 当前使用的组件库（schema + 渲染器）。 |
+| <a id="openuicontextvalue-rendernode"></a>`renderNode` | `(value: unknown) => ReactNode` | 将任意值（元素、数组、原始值）渲染为 React 节点。 |
+| <a id="openuicontextvalue-reporterror"></a>`reportError?` | `(error: `[`OpenUIError`](#openuierror)`) => void` | 上报结构化错误（由错误边界内部使用）。 |
+| <a id="openuicontextvalue-setfieldvalue"></a>`setFieldValue` | `(formName: string \| undefined, componentType: string \| undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void` | 设置表单字段值。 |
+| <a id="openuicontextvalue-store"></a>`store` | `Store` | 用于 $variables 和表单数据的响应式绑定存储。 |
+| <a id="openuicontextvalue-triggeraction"></a>`triggerAction` | `(userMessage: string, formName?: string, action?: `[`ActionPlan`](#actionplan)` \| { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void \| Promise<void>` | 触发一个 action。接受以下任一形式： - ActionPlan（v0.5）：按顺序执行各个步骤（Run、Set、ToAssistant、OpenUrl） - 旧版 action 配置（v0.1）：带有可选 type 和 params 的对象。 - 不传：以 label 触发 ContinueConversation |
+
+### `OpenUIError` \{#openuierror\}
+
+openui-lang 流水线产出的结构化、便于 LLM 理解的错误。它为自动修正循环而设计：把这些错误发给 LLM，让它生成补丁。只包含通过修改 openui-lang 代码就能修复的错误，不包括流式传输中的临时错误、网络故障和工具执行错误。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="openuierror-code"></a>`code` | `OpenUIErrorCode` | 机器可读的错误码。 |
+| <a id="openuierror-component"></a>`component?` | `string` | 组件类型名称（例如 "BarChart"、"Query"）。 |
+| <a id="openuierror-hint"></a>`hint?` | `string` | 给 LLM 的可操作修复信息（例如可用的组件、正确的签名）。 |
+| <a id="openuierror-message"></a>`message` | `string` | 人或 LLM 可读的错误描述。 |
+| <a id="openuierror-path"></a>`path?` | `string` | prop 路径（例如 "/title"）。 |
+| <a id="openuierror-source"></a>`source` | `OpenUIErrorSource` | 错误的来源。 |
+| <a id="openuierror-statementid"></a>`statementId?` | `string` | 语句名称（例如 "header"、"metrics"），告诉 LLM 需要修补哪条语句。 |
+| <a id="openuierror-toolname"></a>`toolName?` | `string` | query/mutation 错误对应的工具名称（例如 "get_users"、"create_item"）。 |
+
+### `OpenUiRendererParsedProps` \{#openuirendererparsedprops\}
+
+用于渲染已解析的 OpenUI 结果的 props。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="openuirendererparsedprops-isstreaming"></a>`isStreaming?` | `boolean` |  |
+| <a id="openuirendererparsedprops-library"></a>`library` | [`Library`](#library) |  |
+| <a id="openuirendererparsedprops-onaction"></a>`onAction?` | `(event: `[`ActionEvent`](#actionevent)`) => void` |  |
+| <a id="openuirendererparsedprops-result"></a>`result` | [`ParseResult`](#parseresult)` \| null` | 预先解析好的结果。为兼容 v0.1/静态渲染而保留。 |
+
+### `OpenUiRendererRuntimeProps` \{#openuirendererruntimeprops\}
+
+用于渲染原始 OpenUI 响应文本的 props，包含解析、运行时状态、action 和 query 执行。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="openuirendererruntimeprops-initialqueryresults"></a>`initialQueryResults?` | `Readonly<Record<string, unknown>>` | 预取的 Query 结果，以 Query 赋值名称（statement ID）为键。结果会同步渲染，之后由可选的 toolProvider 重新校验。 |
+| <a id="openuirendererruntimeprops-initialstate"></a>`initialState?` | `Record<string, unknown>` | 初始的持久化状态。以 $ 开头的键会用于初始化响应式绑定。 |
+| <a id="openuirendererruntimeprops-isstreaming"></a>`isStreaming?` | `boolean` | LLM 是否仍在流式输出；为 true 时禁用交互。 |
+| <a id="openuirendererruntimeprops-library"></a>`library` | [`Library`](#library) | 由 createOpenUiLibrary() 创建的组件库。 |
+| <a id="openuirendererruntimeprops-onaction"></a>`onAction?` | `(event: `[`ActionEvent`](#actionevent)`) => void` | 组件触发宿主 action 时的回调。 |
+| <a id="openuirendererruntimeprops-onerror"></a>`onError?` | `(errors: `[`OpenUIError`](#openuierror)`[]) => void` | 结构化的解析器/运行时/query 错误，用于纠错循环。 |
+| <a id="openuirendererruntimeprops-onparseresult"></a>`onParseResult?` | `(result: `[`ParseResult`](#parseresult)` \| null) => void` | 原始解析结果每次变化时调用。 |
+| <a id="openuirendererruntimeprops-onstateupdate"></a>`onStateUpdate?` | `(state: Record<string, unknown>) => void` | $variables 或表单状态每次变化时调用。 |
+| <a id="openuirendererruntimeprops-queryloader"></a>`queryLoader?` | `ReactNode` | Query() 调用进行中时显示的自定义加载节点。 |
+| <a id="openuirendererruntimeprops-response"></a>`response` | `string \| null` | 原始 openui-lang 响应文本。传入后启用 v0.5 运行时特性。 |
+| <a id="openuirendererruntimeprops-toolprovider"></a>`toolProvider?` | [`ToolProviderInput`](#toolproviderinput) | 用于 Query()/Mutation() 的工具提供者：函数映射或 MCP 客户端。 |
+
+### `OpenUIState` \{#openuistate\}
+
+由 `useOpenUIState` 返回的派生 OpenUI 渲染器状态。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="openuistate-contextvalue"></a>`contextValue` | [`OpenUIContextValue`](#openuicontextvalue) |  |
+| <a id="openuistate-isqueryloading"></a>`isQueryLoading` | `boolean` | 是否有 Query 正在获取数据。 |
+| <a id="openuistate-parseresult"></a>`parseResult` | [`ParseResult`](#parseresult)` \| null` | 原始解析结果（props 中为 AST 节点）。供 onParseResult 回调使用。 |
+| <a id="openuistate-result"></a>`result` | [`ParseResult`](#parseresult)` \| null` | 求值后的结果（props 已解析为具体值）。供 Renderer 使用。 |
+
+### `ParsedRule` \{#parsedrule\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="parsedrule-arg"></a>`arg?` | `string \| number` |  |
+| <a id="parsedrule-type"></a>`type` | `string` |  |
+
+### `ParseResult` \{#parseresult\}
+
+单次调用 `parser.parse(text)` 的输出。流式传输时，每个分片都会重新解析累积的文本，产生新的 ParseResult；`root` 会从 null 逐步变为部分树，最终变为完整树。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="parseresult-meta"></a>`meta` | `{ errors: ValidationError[]; incomplete: boolean; orphaned: string[]; statementCount: number; unresolved: string[] }` |  |
+| <a id="parseresult-mutationstatements"></a>`mutationStatements` | `MutationStatementInfo[]` | 提取出的 Mutation() 调用，其位置参数为 AST 节点。 |
+| <a id="parseresult-querystatements"></a>`queryStatements` | `QueryStatementInfo[]` | 提取出的 Query() 调用，其位置参数为 AST 节点。 |
+| <a id="parseresult-root"></a>`root` | [`ElementNode`](#elementnode)` \| null` | 根 ElementNode（通常是 Root 组件）；解析还没有产出时为 null。 |
+| <a id="parseresult-statedeclarations"></a>`stateDeclarations` | `Record<string, unknown>` | $variable 声明，把 "$varName" 映射到它实际生成的默认值。 |
+
+### `PromptOptions` \{#promptoptions\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="promptoptions-additionalrules"></a>`additionalRules?` | `string[]` |  |
+| <a id="promptoptions-bindings"></a>`bindings?` | `boolean` | 启用 $variables、@Set、@Reset 和交互式筛选。默认：启用 toolCalls 时为 true。 |
+| <a id="promptoptions-editmode"></a>`editMode?` | `boolean` | 在提示词中加入编辑模式的说明。 |
+| <a id="promptoptions-examples"></a>`examples?` | `string[]` | 没有工具时展示的示例（静态 / 布局类模式）。 |
+| <a id="promptoptions-inlinemode"></a>`inlineMode?` | `boolean` | 启用内联模式：LLM 可以用文本作答，并可附带 openui-lang 代码块。 |
+| <a id="promptoptions-preamble"></a>`preamble?` | `string` |  |
+| <a id="promptoptions-toolcalls"></a>`toolCalls?` | `boolean` | 启用 Query()、Mutation()、@Run 和工具工作流。默认：提供了工具时为 true。 |
+| <a id="promptoptions-toolexamples"></a>`toolExamples?` | `string[]` | 有工具时展示的示例（Query/Mutation 模式），优先于 `examples`。 |
+| <a id="promptoptions-tools"></a>`tools?` | [`ToolDescriptor`](#tooldescriptor)`[]` | Query() 可用的工具，可以是字符串名称或丰富的 ToolSpec 描述，会注入到提示词中。 |
+
+### `PromptSpec` \{#promptspec\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="promptspec-additionalrules"></a>`additionalRules?` | `string[]` |  |
+| <a id="promptspec-bindings"></a>`bindings?` | `boolean` | 启用 $variables、@Set、@Reset 和交互式筛选。默认：启用 toolCalls 时为 true。 |
+| <a id="promptspec-componentgroups"></a>`componentGroups?` | `ComponentGroup$1[]` |  |
+| <a id="promptspec-components"></a>`components` | `Record<string, `[`ComponentPromptSpec`](#componentpromptspec)`>` |  |
+| <a id="promptspec-editmode"></a>`editMode?` | `boolean` |  |
+| <a id="promptspec-examples"></a>`examples?` | `string[]` | 通用示例（静态 / 布局类模式）。`examples` 和 `toolExamples` 同时存在时都会包含。 |
+| <a id="promptspec-id"></a>`id?` | `string` |  |
+| <a id="promptspec-inlinemode"></a>`inlineMode?` | `boolean` |  |
+| <a id="promptspec-preamble"></a>`preamble?` | `string` |  |
+| <a id="promptspec-root"></a>`root?` | `string` |  |
+| <a id="promptspec-toolcalls"></a>`toolCalls?` | `boolean` | 启用 Query()、Mutation()、@Run 和工具工作流。默认：提供了工具时为 true。 |
+| <a id="promptspec-toolexamples"></a>`toolExamples?` | `string[]` | 与工具相关的示例（Query/Mutation 模式）。`examples` 和 `toolExamples` 同时存在时都会包含。 |
+| <a id="promptspec-tools"></a>`tools?` | `(string \| `[`ToolSpec`](#toolspec)`)[]` |  |
+
+### `ReactiveAssign` \{#reactiveassign\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="reactiveassign-reactive"></a>`__reactive` | `"assign"` |  |
+| <a id="reactiveassign-expr"></a>`expr` | `ASTNode` |  |
+| <a id="reactiveassign-target"></a>`target` | `string` |  |
+
+### `StateField` \{#statefield\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="statefield-isreactive"></a>`isReactive` | `boolean` |  |
+| <a id="statefield-name"></a>`name` | `string` |  |
+| <a id="statefield-setvalue"></a>`setValue` | `(newValue: T) => void` |  |
+| <a id="statefield-value"></a>`value` | `T` |  |
+
+### `StreamParser` \{#streamparser\}
+
+*暂无说明。*
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="streamparser-getresult"></a>`getResult` | `getResult(): ParseResult` | 获取最新的 ParseResult，不消费新数据。 |
+| <a id="streamparser-push"></a>`push` | `push(chunk: string): ParseResult` | 传入下一个 SSE/流分片，并获取最新的 ParseResult。 |
+| <a id="streamparser-set"></a>`set` | `set(fullText: string): ParseResult` | 设置完整文本：与内部缓冲区做 diff，只推送增量。如果文本被替换（而不是追加），会自动重置。 |
+
+### `ToolProvider` \{#toolprovider\}
+
+用于 Query() 和 Mutation() 工具调用的 ToolProvider 接口。与框架无关，可用于 MCP、REST、GraphQL 或任何后端。
+
+```ts
+// Function map (Renderer normalizes this automatically)
+<Renderer toolProvider={{
+  get_users: (args) => fetch(`/api/users`).then(r => r.json()),
+}} />
+
+// MCP client (Renderer wraps extractToolResult automatically)
+<Renderer toolProvider={mcpClient} />
+```
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="toolprovider-calltool"></a>`callTool` | `callTool(toolName: string, args: Record<string, unknown>): Promise<unknown>` |  |
+
+### `ToolSpec` \{#toolspec\}
+
+用于生成提示词的工具 schema，描述 LLM 可以通过 Query()/Mutation() 使用的工具。结构参考了 MCP 的工具 schema（name、description、inputSchema、annotations）。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="toolspec-annotations"></a>`annotations?` | `{ destructiveHint?: boolean; readOnlyHint?: boolean }` |  |
+| <a id="toolspec-description"></a>`description?` | `string` |  |
+| <a id="toolspec-inputschema"></a>`inputSchema` | `Record<string, unknown>` |  |
+| <a id="toolspec-name"></a>`name` | `string` |  |
+| <a id="toolspec-outputschema"></a>`outputSchema` | `Record<string, unknown>` |  |
+
+### `UseOpenUIStateOptions` \{#useopenuistateoptions\}
+
+用于解析 OpenUI 文本并构建渲染器状态的输入。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="useopenuistateoptions-initialqueryresults"></a>`initialQueryResults?` | `Readonly<Record<string, unknown>>` | 预取的 Query 结果，以 Query 赋值名称（statement ID）为键。它们在首次渲染时即可使用，并在可选的 tool provider 于 commit 后重新校验期间作为兜底值。 |
+| <a id="useopenuistateoptions-initialstate"></a>`initialState?` | `Record<string, unknown>` |  |
+| <a id="useopenuistateoptions-isstreaming"></a>`isStreaming` | `boolean` |  |
+| <a id="useopenuistateoptions-library"></a>`library` | [`Library`](#library) |  |
+| <a id="useopenuistateoptions-onaction"></a>`onAction?` | `(event: `[`ActionEvent`](#actionevent)`) => void` |  |
+| <a id="useopenuistateoptions-onerror"></a>`onError?` | `(errors: `[`OpenUIError`](#openuierror)`[]) => void` | 结构化、便于 LLM 理解的错误回调。参见 OpenUIError 类型。 |
+| <a id="useopenuistateoptions-onstateupdate"></a>`onStateUpdate?` | `(state: Record<string, unknown>) => void` |  |
+| <a id="useopenuistateoptions-response"></a>`response` | `string \| null` |  |
+| <a id="useopenuistateoptions-toolprovider"></a>`toolProvider?` | [`ToolProvider`](#toolprovider)` \| null` | 用于 Query 数据获取的 ToolProvider——MCP、REST、GraphQL 或任意后端。 |
+
+### `ActionStep` \{#actionstep\}
+
+```ts
+type ActionStep = { refType: "query" | "mutation"; statementId: string; type: "run" } | { context?: string; message: string; type: "continue_conversation" } | { type: "open_url"; url: string } | { target: string; type: "set"; valueAST: ASTNode } | { targets: string[]; type: "reset" }
+```
+
+ActionPlan 中的单个步骤。步骤类型的值与 builtins.ts 中的 ACTION_STEPS 一致（唯一的数据源）。
+
+### `ComponentRenderer` \{#componentrenderer\}
+
+```ts
+type ComponentRenderer = React.FC<ComponentRenderProps<P>>
+```
+
+*暂无说明。*
+
+### `DefinedComponent` \{#definedcomponent\}
+
+```ts
+type DefinedComponent = CoreDefinedComponent<T, ComponentRenderer<z.infer<T>>>
+```
+
+*暂无说明。*
+
+### `InitialQueryResults` \{#initialqueryresults\}
+
+```ts
+type InitialQueryResults = Readonly<Record<string, unknown>>
+```
+
+预取的 Query 结果，以 Query 赋值名称（statement ID）为键。
+
+### `Library` \{#library\}
+
+```ts
+type Library = CoreLibrary<ComponentRenderer<any>>
+```
+
+*暂无说明。*
+
+### `LibraryDefinition` \{#librarydefinition\}
+
+```ts
+type LibraryDefinition = CoreLibraryDefinition<ComponentRenderer<any>>
+```
+
+*暂无说明。*
+
+### `OpenUiRendererProps` \{#openuirendererprops\}
+
+```ts
+type OpenUiRendererProps = OpenUiRendererRuntimeProps | OpenUiRendererParsedProps
+```
+
+*暂无说明。*
+
+### `SubComponentOf` \{#subcomponentof\}
+
+父渲染器看到的、已解析子组件元素的运行时结构。
+
+### `ToolDescriptor` \{#tooldescriptor\}
+
+```ts
+type ToolDescriptor = string | ToolSpec
+```
+
+用于生成提示词的工具描述，可以是简单字符串或丰富的 ToolSpec。
+
+### `ToolProviderInput` \{#toolproviderinput\}
+
+```ts
+type ToolProviderInput = Record<string, (args: Record<string, unknown>) => unknown> | McpClientLike | null
+```
+
+*暂无说明。*
+
+### `ValidatorFn` \{#validatorfn\}
+
+```ts
+type ValidatorFn = (value: unknown, arg?: number | string) => string | undefined
+```
+
+*暂无说明。*
+
+{/* @api-end */}

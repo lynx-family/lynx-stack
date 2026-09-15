@@ -1,0 +1,24 @@
+---
+title: GenUI API
+---
+
+# GenUI API
+
+{/* @api PackageHeader package="genui" */}
+
+<div className="api-pkg-header"><code>@lynx-js/genui</code> <span className="api-pkg-version">v0.4.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/genui" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/genui" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/genui/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+`@lynx-js/genui` renders agent-generated UI in ReactLynx. It handles both [A2UI](https://a2ui.org/) v0.9 messages and [OpenUI Lang](https://www.openui.com/docs/openui-lang/specification-v05) v0.5 responses, and ships the prompt builders and the catalog extractor the agent side needs. Each entry point below is its own import path; the package root re-exports the main APIs of most of them. For walkthroughs, see the [A2UI](https://lynxjs.org/react/genui/a2ui) and [OpenUI](https://lynxjs.org/react/genui/openui) guides.
+
+| | |
+| --- | --- |
+| [`@lynx-js/genui/a2ui`](./a2ui) | The A2UI renderer, its message store and the built-in catalog: `A2UI`, `createMessageStore`, `defineCatalog` … |
+| [`@lynx-js/genui/openui`](./openui) | The OpenUI Lang renderer and component library: `OpenUiRenderer`, `createOpenUiLibrary`, `defineComponent` … |
+| [`@lynx-js/genui/openui/explicit`](./openui-explicit) | `createOpenUiLibrary` without the default catalog |
+| [`@lynx-js/genui/openui/prompt`](./openui-prompt) | The OpenUI system prompt: `buildOpenUiSystemPrompt`, `createOpenUiPromptLibrary` |
+| [`@lynx-js/genui/a2ui-prompt`](./a2ui-prompt) | The A2UI system prompt: `buildA2UISystemPrompt`, `loadBasicCatalog` … |
+| [`@lynx-js/genui/a2ui-catalog-extractor`](./a2ui-catalog-extractor) | A2UI catalog JSON from TypeScript component interfaces |
+| [`@lynx-js/genui/lynx-xml`](./lynx-xml) | The Lynx XML system prompt and the XML fragment compiler |
+| [`@lynx-js/genui/mcp-apps`](./mcp-apps) | A Lynx host that renders MCP Apps data with your registered renderers |

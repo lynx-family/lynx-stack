@@ -386,6 +386,8 @@ function exportOf(
       .filter(c =>
         !c.flags.isPrivate && !c.flags.isProtected
         && !c.comment?.modifierTags.has('@internal')
+        && !(c.inheritedFrom && !c.inheritedFrom.reflection
+          && (c.inheritedFrom.qualifiedName.split('.')[0] ?? '') in globalThis)
       )
       .map(c => member(c, project));
   }
@@ -404,7 +406,7 @@ function exportOf(
       }
     }
   }
-  if (r.kindOf(ReflectionKind.Variable) && r.defaultValue && !e.default) {
+  if (e.kind === 'variable' && r.defaultValue && !e.default) {
     e.default = r.defaultValue;
   }
   return e;
@@ -469,6 +471,7 @@ async function generate(entry: PackageEntry): Promise<ApiData | null> {
     }));
     e.type = e.signatures[0]!.text;
     delete e.ref;
+    delete e.default;
     if (!e.summary && callable.summary) e.summary = callable.summary;
   }
   return {

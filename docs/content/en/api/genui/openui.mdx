@@ -1,0 +1,894 @@
+---
+title: '@lynx-js/genui/openui'
+---
+
+# `@lynx-js/genui/openui`
+
+`@lynx-js/genui/openui` is the ReactLynx client runtime for [OpenUI Lang](https://www.openui.com/docs/openui-lang/specification-v05) v0.5. It parses the OpenUI text an agent produces, evaluates its state and data operations, and renders the result with the component library you pass in. The agent only emits data: it can instantiate the components in that library and nothing else. See the [OpenUI guide](https://lynxjs.org/react/genui/openui) for a walkthrough.
+
+```ts
+import { OpenUiRenderer, createOpenUiLibrary } from '@lynx-js/genui/openui';
+```
+
+To leave out the built-in components you do not use, create the library from [`@lynx-js/genui/openui/explicit`](./openui-explicit) instead.
+
+## API
+
+{/* @api ApiExports package="genui-openui" */}
+
+## Functions \{#functions\}
+
+### `createOpenUiLibrary()` \{#createopenuilibrary\}
+
+```ts
+function createOpenUiLibrary(options?: CreateOpenUiLibraryOptions): Library
+```
+
+Create a ReactLynx OpenUI library with caller-provided components and,
+unless disabled, the built-in components.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options?` | [`CreateOpenUiLibraryOptions`](#createopenuilibraryoptions) |  |
+
+**Returns:** [`Library`](#library)
+
+### `createParser()` \{#createparser\}
+
+```ts
+function createParser(schema: LibraryJSONSchema, rootName?: string): Parser
+```
+
+Create a parser from a library JSON Schema document.
+Pass `library.toJSONSchema()` to get the schema.
+
+```ts
+const parser = createParser(library.toJSONSchema());
+const result = parser.parse(openuiLangString);
+```
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `schema` | [`LibraryJSONSchema`](#libraryjsonschema) |  |
+| `rootName?` | `string` |  |
+
+**Returns:** `Parser`
+
+### `createStreamingParser()` \{#createstreamingparser\}
+
+```ts
+function createStreamingParser(schema: LibraryJSONSchema, rootName?: string): StreamParser
+```
+
+Create a streaming parser from a library JSON Schema document.
+Pass `library.toJSONSchema()` to get the schema.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `schema` | [`LibraryJSONSchema`](#libraryjsonschema) |  |
+| `rootName?` | `string` |  |
+
+**Returns:** [`StreamParser`](#streamparser)
+
+### `defineComponent()` \{#definecomponent\}
+
+```ts
+function defineComponent(config: { component: ComponentRenderer<output<T>>; description: string; name: string; props: T }): DefinedComponent<T>
+```
+
+Define a ReactLynx component renderer and its OpenUI schema metadata.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `config` | `{ component: `[`ComponentRenderer`](#componentrenderer)`<output<T>>; description: string; name: string; props: T }` |  |
+
+**Returns:** [`DefinedComponent`](#definedcomponent)`<T>`
+
+### `extractToolResult()` \{#extracttoolresult\}
+
+```ts
+function extractToolResult(result: { content: { text?: string; type: string; [key: string]: unknown }[]; isError?: boolean; structuredContent?: unknown }): unknown
+```
+
+Extract the actual data from an MCP callTool result.
+Prefers structuredContent (machine-readable JSON), falls back to parsing text content.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `result` | `{ content: { text?: string; type: string; [key: string]: unknown }[]; isError?: boolean; structuredContent?: unknown }` |  |
+
+**Returns:** `unknown`
+
+### `generatePrompt()` \{#generateprompt\}
+
+```ts
+function generatePrompt(spec: PromptSpec): string
+```
+
+Use `generateSystemPrompt`.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `spec` | [`PromptSpec`](#promptspec) |  |
+
+**Returns:** `string`
+
+### `isReactiveAssign()` \{#isreactiveassign\}
+
+```ts
+function isReactiveAssign(value: unknown): value is ReactiveAssign
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `value` | `unknown` |  |
+
+**Returns:** `value is ReactiveAssign`
+
+### `isReactiveSchema()` \{#isreactiveschema\}
+
+```ts
+function isReactiveSchema(schema: unknown): boolean
+```
+
+Check if a schema was marked reactive. Used by Zod introspection for $binding\<> prefix.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `schema` | `unknown` |  |
+
+**Returns:** `boolean`
+
+### `mergeStatements()` \{#mergestatements\}
+
+```ts
+function mergeStatements(existing: string, patch: string, rootId?: string): string
+```
+
+Merge an existing program with a patch (partial update).
+Patch statements override existing ones by name.
+Unreachable statements are automatically garbage-collected.
+Returns the merged program as a string.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `existing` | `string` |  |
+| `patch` | `string` |  |
+| `rootId?` | `string` |  |
+
+**Returns:** `string`
+
+### `OpenUiRenderer()` \{#openuirenderer\}
+
+```ts
+function OpenUiRenderer(props: OpenUiRendererProps): Element
+```
+
+Render OpenUI language output using a ReactLynx component library.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `props` | [`OpenUiRendererProps`](#openuirendererprops) |  |
+
+**Returns:** `Element`
+
+### `parseRules()` \{#parserules\}
+
+```ts
+function parseRules(rules: unknown): ParsedRule[]
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `rules` | `unknown` |  |
+
+**Returns:** [`ParsedRule`](#parsedrule)`[]`
+
+### `parseStructuredRules()` \{#parsestructuredrules\}
+
+```ts
+function parseStructuredRules(rules: unknown): ParsedRule[]
+```
+
+Parse a structured rules object into ParsedRule[].
+Accepts: \{ required: true, minLength: 5, email: true, max: 100 \}
+Skips keys with false/undefined values.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `rules` | `unknown` |  |
+
+**Returns:** [`ParsedRule`](#parsedrule)`[]`
+
+### `reactive()` \{#reactive\}
+
+```ts
+function reactive(schema: T): ZodType<StateField<output<T>>>
+```
+
+Mark a schema prop as reactive so runtime evaluation can preserve $bindings.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `schema` | `T` |  |
+
+**Returns:** `ZodType<`[`StateField`](#statefield)`<output<T>>>`
+
+### `tagSchemaId()` \{#tagschemaid\}
+
+```ts
+function tagSchemaId(schema: object, id: string): void
+```
+
+Tag a schema with an ID for prompt signatures.
+Use for non-component schemas that need friendly type names (e.g. ActionExpression).
+This affects prompt output only, not JSON Schema $defs.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `schema` | `object` |  |
+| `id` | `string` |  |
+
+### `useCreateFormValidation()` \{#usecreateformvalidation\}
+
+```ts
+function useCreateFormValidation(): FormValidationContextValue
+```
+
+Create form validation state and callbacks for an OpenUI form boundary.
+
+**Returns:** [`FormValidationContextValue`](#formvalidationcontextvalue)
+
+### `useFormValidation()` \{#useformvalidation\}
+
+```ts
+function useFormValidation(): FormValidationContextValue | null
+```
+
+Read the nearest OpenUI form validation context, if one exists.
+
+**Returns:** [`FormValidationContextValue`](#formvalidationcontextvalue)` | null`
+
+### `useGetFieldValue()` \{#usegetfieldvalue\}
+
+```ts
+function useGetFieldValue(): (formName: string | undefined, name: string) => any
+```
+
+Get a form field value from the form state context.
+
+```tsx
+const getFieldValue = useGetFieldValue();
+const name = getFieldValue("contactForm", "name");
+```
+
+**Returns:** `(formName: string | undefined, name: string) => any`
+
+### `useIsQueryLoading()` \{#useisqueryloading\}
+
+```ts
+function useIsQueryLoading(): boolean
+```
+
+Whether any Query is currently fetching data.
+
+**Returns:** `boolean`
+
+### `useIsStreaming()` \{#useisstreaming\}
+
+```ts
+function useIsStreaming(): boolean
+```
+
+Whether the LLM is currently streaming content.
+
+**Returns:** `boolean`
+
+### `useOpenUI()` \{#useopenui\}
+
+```ts
+function useOpenUI(): OpenUIContextValue
+```
+
+Access the full OpenUI context. Throws if used outside an
+`OpenUiRenderer` tree.
+
+**Returns:** [`OpenUIContextValue`](#openuicontextvalue)
+
+### `useOpenUIState()` \{#useopenuistate\}
+
+```ts
+function useOpenUIState(__namedParameters: UseOpenUIStateOptions, renderDeep: (value: unknown) => ReactNode): OpenUIState
+```
+
+Core state hook — extracts all form state, action handling, parser
+management, and context assembly out of the Renderer component.
+
+Store holds everything: $bindings as top-level keys, form fields nested
+under formName as plain values.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `__namedParameters` | [`UseOpenUIStateOptions`](#useopenuistateoptions) |  |
+| `renderDeep` | `(value: unknown) => ReactNode` |  |
+
+**Returns:** [`OpenUIState`](#openuistate)
+
+### `useRenderNode()` \{#userendernode\}
+
+```ts
+function useRenderNode(): (value: unknown) => ReactNode
+```
+
+Get the renderNode function for rendering nested component values.
+
+**Returns:** `(value: unknown) => ReactNode`
+
+### `useSetDefaultValue()` \{#usesetdefaultvalue\}
+
+```ts
+function useSetDefaultValue(shouldTriggerSaveCallback: { componentType?: string; defaultValue: unknown; existingValue: unknown; formName?: string; name: string; shouldTriggerSaveCallback?: boolean }): void
+```
+
+Persists a component's default/initial value into form state once streaming
+finishes — but only if the user hasn't already set a value.
+
+Call this inside any form component that has a `defaultValue` or
+`defaultChecked` prop. It is a no-op during streaming so that LLM
+prop changes don't fight with partial state.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `shouldTriggerSaveCallback` | `{ componentType?: string; defaultValue: unknown; existingValue: unknown; formName?: string; name: string; shouldTriggerSaveCallback?: boolean }` | Defaults to `false` (only local state, no message persistence). |
+
+### `useSetFieldValue()` \{#usesetfieldvalue\}
+
+```ts
+function useSetFieldValue(): (formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void
+```
+
+Get the setFieldValue function for updating form field values.
+
+```tsx
+const setFieldValue = useSetFieldValue();
+<input onChange={(e) => setFieldValue("contactForm", "Input", "name", e.target.value, false)} />
+```
+
+**Returns:** `(formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void`
+
+### `useStateField()` \{#usestatefield\}
+
+```ts
+function useStateField(name: string, value?: T): StateField<InferStateFieldValue<T>>
+```
+
+Resolve a named OpenUI state field against form state and reactive bindings.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `name` | `string` |  |
+| `value?` | `T` |  |
+
+**Returns:** [`StateField`](#statefield)`<InferStateFieldValue<T>>`
+
+### `useTriggerAction()` \{#usetriggeraction\}
+
+```ts
+function useTriggerAction(): (userMessage: string, formName?: string, action?: ActionPlan | { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void | Promise<void>
+```
+
+Get the triggerAction function for firing structured action events.
+
+```tsx
+const triggerAction = useTriggerAction();
+<button onClick={() => triggerAction("Submit", "myForm")}>
+```
+
+**Returns:** `(userMessage: string, formName?: string, action?: `[`ActionPlan`](#actionplan)` | { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void | Promise<void>`
+
+### `validate()` \{#validate\}
+
+```ts
+function validate(value: unknown, rules: ParsedRule[], customValidators?: Record<string, ValidatorFn>): string | undefined
+```
+
+Run all rules against a value. Stop on first error.
+Custom validators are checked first, then built-in ones.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `value` | `unknown` |  |
+| `rules` | [`ParsedRule`](#parsedrule)`[]` |  |
+| `customValidators?` | `Record<string, `[`ValidatorFn`](#validatorfn)`>` |  |
+
+**Returns:** `string | undefined`
+
+## Classes \{#classes\}
+
+### `ToolNotFoundError` \{#toolnotfounderror\}
+
+Standard error thrown when a tool name is not found in a function-map ToolProvider.
+Used by Renderer's inline normalization to give clear error messages.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="toolnotfounderror-constructor"></a>`constructor` | `constructor(toolName: string, availableTools?: string[]): ToolNotFoundError` |  |
+| <a id="toolnotfounderror-availabletools"></a>`availableTools` | `string[]` |  |
+| <a id="toolnotfounderror-toolname"></a>`toolName` | `string` |  |
+
+## Constants \{#constants\}
+
+### `ACTION_STEPS` \{#action-steps\}
+
+```ts
+const ACTION_STEPS: { OpenUrl: "open_url"; Reset: "reset"; Run: "run"; Set: "set"; ToAssistant: "continue_conversation" }
+```
+
+Maps parser-level action step names → runtime step type values. Single source of truth.
+
+### `builtInValidators` \{#builtinvalidators\}
+
+```ts
+const builtInValidators: Record<string, ValidatorFn>
+```
+
+*No description yet.*
+
+### `FormNameContext` \{#formnamecontext\}
+
+```ts
+const FormNameContext: Context<string | undefined>
+```
+
+*No description yet.*
+
+### `FormValidationContext` \{#formvalidationcontext\}
+
+```ts
+const FormValidationContext: Context<FormValidationContextValue | null>
+```
+
+*No description yet.*
+
+## Types \{#types\}
+
+### `BuiltinActionType` \{#builtinactiontype\}
+
+Built-in action types for host app events.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="builtinactiontype-continueconversation"></a>`ContinueConversation` | `"continue_conversation"` |  |
+| <a id="builtinactiontype-openurl"></a>`OpenUrl` | `"open_url"` |  |
+
+### `ActionEvent` \{#actionevent\}
+
+Structured action event fired by interactive components.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="actionevent-formname"></a>`formName?` | `string` | The form name that triggered this action, if any. |
+| <a id="actionevent-formstate"></a>`formState?` | `Record<string, unknown>` | Raw form state at the time of the action — all field values. |
+| <a id="actionevent-humanfriendlymessage"></a>`humanFriendlyMessage` | `string` | Human-readable label for the action (displayed as user message in chat). |
+| <a id="actionevent-params"></a>`params` | `Record<string, unknown>` | Action-specific params (e.g. \{ url \} for OpenUrl, custom params for Custom). |
+| <a id="actionevent-type"></a>`type` | [`BuiltinActionType`](#builtinactiontype)` \| string & {}` | Action type. See `BuiltinActionType` for built-in types. |
+
+### `ActionPlan` \{#actionplan\}
+
+An ordered sequence of steps to execute when a button is clicked.
+Produced by evaluating an Action() expression at runtime.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="actionplan-steps"></a>`steps` | [`ActionStep`](#actionstep)`[]` |  |
+
+### `ComponentGroup` \{#componentgroup\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="componentgroup-components"></a>`components` | `string[]` |  |
+| <a id="componentgroup-name"></a>`name` | `string` |  |
+| <a id="componentgroup-notes"></a>`notes?` | `string[]` |  |
+
+### `ComponentPromptSpec` \{#componentpromptspec\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="componentpromptspec-description"></a>`description?` | `string` |  |
+| <a id="componentpromptspec-signature"></a>`signature` | `string` |  |
+
+### `ComponentRenderProps` \{#componentrenderprops\}
+
+Props passed to an OpenUI ReactLynx component renderer.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="componentrenderprops-onaction"></a>`onAction?` | `(event: `[`ActionEvent`](#actionevent)`) => void` |  |
+| <a id="componentrenderprops-props"></a>`props` | `P` |  |
+| <a id="componentrenderprops-rendernode"></a>`renderNode` | `(value: unknown) => ReactNode` |  |
+| <a id="componentrenderprops-statementid"></a>`statementId?` | `string` | The statement ID from the parsed program (e.g., "header", "prose1"). Undefined for inline components. |
+
+### `CreateOpenUiLibraryOptions` \{#createopenuilibraryoptions\}
+
+Options for creating a ReactLynx OpenUI component library.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="createopenuilibraryoptions-componentgroups"></a>`componentGroups?` | [`ComponentGroup`](#componentgroup)`[]` | Additional groups, or the complete set when defaults are disabled. |
+| <a id="createopenuilibraryoptions-components"></a>`components?` | [`DefinedComponent`](#definedcomponent)`<any>[]` | Additional components, or the complete set when defaults are disabled. |
+| <a id="createopenuilibraryoptions-includedefaultcomponents"></a>`includeDefaultComponents?` | `boolean` | Whether to include the built-in components and component groups. Defaults to `true`. |
+| <a id="createopenuilibraryoptions-root"></a>`root?` | `string` | Override the root component name. Defaults to `'Stack'`. |
+
+### `ElementNode` \{#elementnode\}
+
+A fully resolved component node from the parser.
+
+The parser converts openui-lang text into a tree of these nodes.
+Each node represents one component invocation with its positional
+arguments mapped into named `props` via the library's Zod key order.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="elementnode-hasdynamicprops"></a>`hasDynamicProps?` | `boolean` | False when all props are static literals — evaluation can be skipped. Undefined is treated as true (dynamic) for backward compatibility. |
+| <a id="elementnode-partial"></a>`partial` | `boolean` | True when the parser hasn't received all tokens for this node yet (streaming in progress). |
+| <a id="elementnode-props"></a>`props` | `Record<string, unknown>` | Named props produced by positional-to-named mapping in the parser. |
+| <a id="elementnode-statementid"></a>`statementId?` | `string` | Source variable name (e.g. "header" from `header = TextContent(...)`). Undefined for inline components. |
+| <a id="elementnode-type"></a>`type` | `"element"` |  |
+| <a id="elementnode-typename"></a>`typeName` | `string` | Component name as defined in the library (e.g. "Table", "BarChart"). |
+
+### `EvaluationContext` \{#evaluationcontext\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="evaluationcontext-extrascope"></a>`extraScope?` | `Record<string, unknown>` | Extra scope for $value injection during reactive prop evaluation |
+| <a id="evaluationcontext-getstate"></a>`getState` | `getState(name: string): unknown` | Read $variable from the store |
+| <a id="evaluationcontext-resolveref"></a>`resolveRef` | `resolveRef(name: string): unknown` | Resolve a reference to another declaration's evaluated value |
+
+### `FormValidationContextValue` \{#formvalidationcontextvalue\}
+
+Validation state and helpers for OpenUI form fields.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="formvalidationcontextvalue-clearfielderror"></a>`clearFieldError` | `(name: string) => void` |  |
+| <a id="formvalidationcontextvalue-errors"></a>`errors` | `Record<string, string \| undefined>` |  |
+| <a id="formvalidationcontextvalue-getfielderror"></a>`getFieldError` | `(name: string) => string \| undefined` |  |
+| <a id="formvalidationcontextvalue-registerfield"></a>`registerField` | `(name: string, rules: `[`ParsedRule`](#parsedrule)`[], getValue: () => unknown) => void` |  |
+| <a id="formvalidationcontextvalue-unregisterfield"></a>`unregisterField` | `(name: string) => void` |  |
+| <a id="formvalidationcontextvalue-validatefield"></a>`validateField` | `(name: string, value: unknown, rules: `[`ParsedRule`](#parsedrule)`[]) => boolean` |  |
+| <a id="formvalidationcontextvalue-validateform"></a>`validateForm` | `() => boolean` |  |
+
+### `LibraryJSONSchema` \{#libraryjsonschema\}
+
+The JSON Schema document produced by `library.toJSONSchema()`.
+All component schemas live in `$defs`, keyed by component name.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="libraryjsonschema-defs"></a>`$defs?` | `Record<string, JSONSchemaDef>` |  |
+
+### `McpClientLike` \{#mcpclientlike\}
+
+Minimal shape of an MCP Client — matches @modelcontextprotocol/sdk Client
+without requiring it as a hard import. Users can pass any object that
+implements these methods.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="mcpclientlike-calltool"></a>`callTool` | `callTool(params: { arguments?: Record<string, unknown>; name: string }, options?: unknown): Promise<{ content: { text?: string; type: string; [key: string]: unknown }[]; isError?: boolean; structuredContent?: unknown }>` |  |
+| <a id="mcpclientlike-close"></a>`close?` | `close(): Promise<void>` |  |
+
+### `OpenUIContextValue` \{#openuicontextvalue\}
+
+Runtime context shared by OpenUI renderers, hooks, actions, and form fields.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="openuicontextvalue-evaluationcontext"></a>`evaluationContext` | [`EvaluationContext`](#evaluationcontext) | AST evaluation context used by runtime expression evaluation. |
+| <a id="openuicontextvalue-getfieldvalue"></a>`getFieldValue` | `(formName: string \| undefined, name: string) => any` | Get a field value. Top-level for $bindings, nested under formName for form fields. |
+| <a id="openuicontextvalue-isqueryloading"></a>`isQueryLoading` | `boolean` | Whether any Query is currently fetching data. |
+| <a id="openuicontextvalue-isstreaming"></a>`isStreaming` | `boolean` | Whether the LLM is currently streaming content. |
+| <a id="openuicontextvalue-library"></a>`library` | `Library` | The active component library (schema + renderers). |
+| <a id="openuicontextvalue-rendernode"></a>`renderNode` | `(value: unknown) => ReactNode` | Render any value (element, array, primitive) into React nodes. |
+| <a id="openuicontextvalue-reporterror"></a>`reportError?` | `(error: `[`OpenUIError`](#openuierror)`) => void` | Report a structured error (used internally by error boundary). |
+| <a id="openuicontextvalue-setfieldvalue"></a>`setFieldValue` | `(formName: string \| undefined, componentType: string \| undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void` | Set a form field value. |
+| <a id="openuicontextvalue-store"></a>`store` | `Store` | Reactive binding store for $variables and form data. |
+| <a id="openuicontextvalue-triggeraction"></a>`triggerAction` | `(userMessage: string, formName?: string, action?: `[`ActionPlan`](#actionplan)` \| { context?: string; params?: Record<string, any>; type?: string; url?: string }) => void \| Promise<void>` | Trigger an action. Accepts either: - ActionPlan (v0.5): runs steps sequentially (Run, Set, ToAssistant, OpenUrl) - Legacy action config (v0.1): object with optional type and params. - Nothing: fires ContinueConversation with the label |
+
+### `OpenUIError` \{#openuierror\}
+
+Structured, LLM-friendly error from the openui-lang pipeline.
+
+Designed for an automated correction loop: send these to the LLM so it can
+generate patches. Only includes errors that are fixable by changing the
+openui-lang code — transient streaming errors, network failures, and tool
+execution errors are excluded.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="openuierror-code"></a>`code` | `OpenUIErrorCode` | Machine-readable error code. |
+| <a id="openuierror-component"></a>`component?` | `string` | Component type name (e.g. "BarChart", "Query"). |
+| <a id="openuierror-hint"></a>`hint?` | `string` | Actionable fix context for the LLM (e.g. available components, correct signature). |
+| <a id="openuierror-message"></a>`message` | `string` | Human/LLM-readable description of what went wrong. |
+| <a id="openuierror-path"></a>`path?` | `string` | Prop path (e.g. "/title"). |
+| <a id="openuierror-source"></a>`source` | `OpenUIErrorSource` | Where the error originated. |
+| <a id="openuierror-statementid"></a>`statementId?` | `string` | Statement name (e.g. "header", "metrics") — tells the LLM which statement to patch. |
+| <a id="openuierror-toolname"></a>`toolName?` | `string` | Tool name for query/mutation errors (e.g. "get_users", "create_item"). |
+
+### `OpenUiRendererParsedProps` \{#openuirendererparsedprops\}
+
+Props for rendering an already parsed OpenUI result.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="openuirendererparsedprops-isstreaming"></a>`isStreaming?` | `boolean` |  |
+| <a id="openuirendererparsedprops-library"></a>`library` | [`Library`](#library) |  |
+| <a id="openuirendererparsedprops-onaction"></a>`onAction?` | `(event: `[`ActionEvent`](#actionevent)`) => void` |  |
+| <a id="openuirendererparsedprops-result"></a>`result` | [`ParseResult`](#parseresult)` \| null` | Pre-parsed result. Kept for v0.1/static-render compatibility. |
+
+### `OpenUiRendererRuntimeProps` \{#openuirendererruntimeprops\}
+
+Props for rendering raw OpenUI response text with parsing, runtime state,
+actions, and query execution.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="openuirendererruntimeprops-initialqueryresults"></a>`initialQueryResults?` | `Readonly<Record<string, unknown>>` | Prefetched Query results keyed by Query assignment name (statement ID). Results render synchronously, then an optional toolProvider revalidates. |
+| <a id="openuirendererruntimeprops-initialstate"></a>`initialState?` | `Record<string, unknown>` | Initial persisted state. $-prefixed keys hydrate reactive bindings. |
+| <a id="openuirendererruntimeprops-isstreaming"></a>`isStreaming?` | `boolean` | Whether the LLM is still streaming; disables interactions while true. |
+| <a id="openuirendererruntimeprops-library"></a>`library` | [`Library`](#library) | Component library from createOpenUiLibrary(). |
+| <a id="openuirendererruntimeprops-onaction"></a>`onAction?` | `(event: `[`ActionEvent`](#actionevent)`) => void` | Callback when a component triggers a host action. |
+| <a id="openuirendererruntimeprops-onerror"></a>`onError?` | `(errors: `[`OpenUIError`](#openuierror)`[]) => void` | Structured parser/runtime/query errors for correction loops. |
+| <a id="openuirendererruntimeprops-onparseresult"></a>`onParseResult?` | `(result: `[`ParseResult`](#parseresult)` \| null) => void` | Called whenever the raw parse result changes. |
+| <a id="openuirendererruntimeprops-onstateupdate"></a>`onStateUpdate?` | `(state: Record<string, unknown>) => void` | Called whenever $variables or form state changes. |
+| <a id="openuirendererruntimeprops-queryloader"></a>`queryLoader?` | `ReactNode` | Custom loading node shown while Query() calls are in flight. |
+| <a id="openuirendererruntimeprops-response"></a>`response` | `string \| null` | Raw openui-lang response text. This enables v0.5 runtime features. |
+| <a id="openuirendererruntimeprops-toolprovider"></a>`toolProvider?` | [`ToolProviderInput`](#toolproviderinput) | Tool provider for Query()/Mutation(): function map or MCP client. |
+
+### `OpenUIState` \{#openuistate\}
+
+Derived OpenUI renderer state returned by `useOpenUIState`.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="openuistate-contextvalue"></a>`contextValue` | [`OpenUIContextValue`](#openuicontextvalue) |  |
+| <a id="openuistate-isqueryloading"></a>`isQueryLoading` | `boolean` | Whether any Query is currently fetching data. |
+| <a id="openuistate-parseresult"></a>`parseResult` | [`ParseResult`](#parseresult)` \| null` | Raw parse result (AST nodes in props). Used by onParseResult callback. |
+| <a id="openuistate-result"></a>`result` | [`ParseResult`](#parseresult)` \| null` | Evaluated result (props resolved to concrete values). Used by Renderer. |
+
+### `ParsedRule` \{#parsedrule\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="parsedrule-arg"></a>`arg?` | `string \| number` |  |
+| <a id="parsedrule-type"></a>`type` | `string` |  |
+
+### `ParseResult` \{#parseresult\}
+
+The output of a single `parser.parse(text)` call.
+
+During streaming, each chunk produces a new ParseResult as the
+accumulated text is re-parsed. The `root` progressively resolves
+from null → partial tree → complete tree.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="parseresult-meta"></a>`meta` | `{ errors: ValidationError[]; incomplete: boolean; orphaned: string[]; statementCount: number; unresolved: string[] }` |  |
+| <a id="parseresult-mutationstatements"></a>`mutationStatements` | `MutationStatementInfo[]` | Extracted Mutation() calls with their positional args as AST nodes. |
+| <a id="parseresult-querystatements"></a>`queryStatements` | `QueryStatementInfo[]` | Extracted Query() calls with their positional args as AST nodes. |
+| <a id="parseresult-root"></a>`root` | [`ElementNode`](#elementnode)` \| null` | The root ElementNode (typically a Root component), or null if parsing hasn't produced one yet. |
+| <a id="parseresult-statedeclarations"></a>`stateDeclarations` | `Record<string, unknown>` | $variable declarations — maps "$varName" to its materialized default value. |
+
+### `PromptOptions` \{#promptoptions\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="promptoptions-additionalrules"></a>`additionalRules?` | `string[]` |  |
+| <a id="promptoptions-bindings"></a>`bindings?` | `boolean` | Enable $variables, @Set, @Reset, interactive filters. Default: true if toolCalls. |
+| <a id="promptoptions-editmode"></a>`editMode?` | `boolean` | Enable edit-mode instructions in the prompt. |
+| <a id="promptoptions-examples"></a>`examples?` | `string[]` | Examples shown when no tools are present (static/layout patterns). |
+| <a id="promptoptions-inlinemode"></a>`inlineMode?` | `boolean` | Enable inline mode — LLM can respond with text + optional openui-lang fenced code. |
+| <a id="promptoptions-preamble"></a>`preamble?` | `string` |  |
+| <a id="promptoptions-toolcalls"></a>`toolCalls?` | `boolean` | Enable Query(), Mutation(), @Run, tool workflow. Default: true if tools provided. |
+| <a id="promptoptions-toolexamples"></a>`toolExamples?` | `string[]` | Examples shown when tools ARE present (Query/Mutation patterns). Takes priority over `examples`. |
+| <a id="promptoptions-tools"></a>`tools?` | [`ToolDescriptor`](#tooldescriptor)`[]` | Available tools for Query() — string names or rich ToolSpec descriptors injected into the prompt. |
+
+### `PromptSpec` \{#promptspec\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="promptspec-additionalrules"></a>`additionalRules?` | `string[]` |  |
+| <a id="promptspec-bindings"></a>`bindings?` | `boolean` | Enable $variables, @Set, @Reset, interactive filters. Default: true if toolCalls. |
+| <a id="promptspec-componentgroups"></a>`componentGroups?` | `ComponentGroup$1[]` |  |
+| <a id="promptspec-components"></a>`components` | `Record<string, `[`ComponentPromptSpec`](#componentpromptspec)`>` |  |
+| <a id="promptspec-editmode"></a>`editMode?` | `boolean` |  |
+| <a id="promptspec-examples"></a>`examples?` | `string[]` | General examples (static/layout patterns). Both `examples` and `toolExamples` are included when present. |
+| <a id="promptspec-id"></a>`id?` | `string` |  |
+| <a id="promptspec-inlinemode"></a>`inlineMode?` | `boolean` |  |
+| <a id="promptspec-preamble"></a>`preamble?` | `string` |  |
+| <a id="promptspec-root"></a>`root?` | `string` |  |
+| <a id="promptspec-toolcalls"></a>`toolCalls?` | `boolean` | Enable Query(), Mutation(), @Run, tool workflow. Default: true if tools provided. |
+| <a id="promptspec-toolexamples"></a>`toolExamples?` | `string[]` | Tool-specific examples (Query/Mutation patterns). Both `examples` and `toolExamples` are included when present. |
+| <a id="promptspec-tools"></a>`tools?` | `(string \| `[`ToolSpec`](#toolspec)`)[]` |  |
+
+### `ReactiveAssign` \{#reactiveassign\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="reactiveassign-reactive"></a>`__reactive` | `"assign"` |  |
+| <a id="reactiveassign-expr"></a>`expr` | `ASTNode` |  |
+| <a id="reactiveassign-target"></a>`target` | `string` |  |
+
+### `StateField` \{#statefield\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="statefield-isreactive"></a>`isReactive` | `boolean` |  |
+| <a id="statefield-name"></a>`name` | `string` |  |
+| <a id="statefield-setvalue"></a>`setValue` | `(newValue: T) => void` |  |
+| <a id="statefield-value"></a>`value` | `T` |  |
+
+### `StreamParser` \{#streamparser\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="streamparser-getresult"></a>`getResult` | `getResult(): ParseResult` | Get the latest ParseResult without consuming new data. |
+| <a id="streamparser-push"></a>`push` | `push(chunk: string): ParseResult` | Feed the next SSE/stream chunk and get the latest ParseResult. |
+| <a id="streamparser-set"></a>`set` | `set(fullText: string): ParseResult` | Set the full text — diffs against internal buffer, pushes only the delta.  Resets automatically if the text was replaced (not appended). |
+
+### `ToolProvider` \{#toolprovider\}
+
+ToolProvider interface for Query() and Mutation() tool calls.
+Framework-agnostic — works with MCP, REST, GraphQL, or any backend.
+
+```ts
+// Function map (Renderer normalizes this automatically)
+<Renderer toolProvider={{
+  get_users: (args) => fetch(`/api/users`).then(r => r.json()),
+}} />
+
+// MCP client (Renderer wraps extractToolResult automatically)
+<Renderer toolProvider={mcpClient} />
+```
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="toolprovider-calltool"></a>`callTool` | `callTool(toolName: string, args: Record<string, unknown>): Promise<unknown>` |  |
+
+### `ToolSpec` \{#toolspec\}
+
+Tool schema for prompt generation — describes a tool the LLM can use via Query()/Mutation().
+Shape inspired by MCP's tool schema (name, description, inputSchema, annotations).
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="toolspec-annotations"></a>`annotations?` | `{ destructiveHint?: boolean; readOnlyHint?: boolean }` |  |
+| <a id="toolspec-description"></a>`description?` | `string` |  |
+| <a id="toolspec-inputschema"></a>`inputSchema` | `Record<string, unknown>` |  |
+| <a id="toolspec-name"></a>`name` | `string` |  |
+| <a id="toolspec-outputschema"></a>`outputSchema` | `Record<string, unknown>` |  |
+
+### `UseOpenUIStateOptions` \{#useopenuistateoptions\}
+
+Inputs used to parse OpenUI text and build renderer state.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="useopenuistateoptions-initialqueryresults"></a>`initialQueryResults?` | `Readonly<Record<string, unknown>>` | Prefetched Query results keyed by the Query assignment name (statement ID). They are available during the initial render and act as fallbacks while an optional tool provider revalidates them after commit. |
+| <a id="useopenuistateoptions-initialstate"></a>`initialState?` | `Record<string, unknown>` |  |
+| <a id="useopenuistateoptions-isstreaming"></a>`isStreaming` | `boolean` |  |
+| <a id="useopenuistateoptions-library"></a>`library` | [`Library`](#library) |  |
+| <a id="useopenuistateoptions-onaction"></a>`onAction?` | `(event: `[`ActionEvent`](#actionevent)`) => void` |  |
+| <a id="useopenuistateoptions-onerror"></a>`onError?` | `(errors: `[`OpenUIError`](#openuierror)`[]) => void` | Callback for structured, LLM-friendly errors. See OpenUIError type. |
+| <a id="useopenuistateoptions-onstateupdate"></a>`onStateUpdate?` | `(state: Record<string, unknown>) => void` |  |
+| <a id="useopenuistateoptions-response"></a>`response` | `string \| null` |  |
+| <a id="useopenuistateoptions-toolprovider"></a>`toolProvider?` | [`ToolProvider`](#toolprovider)` \| null` | ToolProvider for Query data fetching — MCP, REST, GraphQL, or any backend. |
+
+### `ActionStep` \{#actionstep\}
+
+```ts
+type ActionStep = { refType: "query" | "mutation"; statementId: string; type: "run" } | { context?: string; message: string; type: "continue_conversation" } | { type: "open_url"; url: string } | { target: string; type: "set"; valueAST: ASTNode } | { targets: string[]; type: "reset" }
+```
+
+A single step in an ActionPlan.
+Step type values match ACTION_STEPS in builtins.ts (single source of truth).
+
+### `ComponentRenderer` \{#componentrenderer\}
+
+```ts
+type ComponentRenderer = React.FC<ComponentRenderProps<P>>
+```
+
+*No description yet.*
+
+### `DefinedComponent` \{#definedcomponent\}
+
+```ts
+type DefinedComponent = CoreDefinedComponent<T, ComponentRenderer<z.infer<T>>>
+```
+
+*No description yet.*
+
+### `InitialQueryResults` \{#initialqueryresults\}
+
+```ts
+type InitialQueryResults = Readonly<Record<string, unknown>>
+```
+
+Prefetched Query results keyed by Query assignment name (statement ID).
+
+### `Library` \{#library\}
+
+```ts
+type Library = CoreLibrary<ComponentRenderer<any>>
+```
+
+*No description yet.*
+
+### `LibraryDefinition` \{#librarydefinition\}
+
+```ts
+type LibraryDefinition = CoreLibraryDefinition<ComponentRenderer<any>>
+```
+
+*No description yet.*
+
+### `OpenUiRendererProps` \{#openuirendererprops\}
+
+```ts
+type OpenUiRendererProps = OpenUiRendererRuntimeProps | OpenUiRendererParsedProps
+```
+
+*No description yet.*
+
+### `SubComponentOf` \{#subcomponentof\}
+
+Runtime shape of a parsed sub-component element as seen by parent renderers.
+
+### `ToolDescriptor` \{#tooldescriptor\}
+
+```ts
+type ToolDescriptor = string | ToolSpec
+```
+
+Tool descriptor for prompt generation — simple string or rich ToolSpec.
+
+### `ToolProviderInput` \{#toolproviderinput\}
+
+```ts
+type ToolProviderInput = Record<string, (args: Record<string, unknown>) => unknown> | McpClientLike | null
+```
+
+*No description yet.*
+
+### `ValidatorFn` \{#validatorfn\}
+
+```ts
+type ValidatorFn = (value: unknown, arg?: number | string) => string | undefined
+```
+
+*No description yet.*
+
+{/* @api-end */}

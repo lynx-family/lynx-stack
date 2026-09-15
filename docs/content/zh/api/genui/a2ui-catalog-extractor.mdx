@@ -1,0 +1,152 @@
+---
+title: '@lynx-js/genui/a2ui-catalog-extractor'
+---
+
+# `@lynx-js/genui/a2ui-catalog-extractor`
+
+`@lynx-js/genui/a2ui-catalog-extractor` 把组件的 TypeScript 接口及其 TypeDoc 注释转换成 agent 读取的 A2UI catalog JSON。它是 `genui a2ui generate catalog` 背后的实现；脚本中优先使用这条命令，需要在代码里做提取时再使用这个入口。
+
+```ts
+import { extractCatalogComponents } from '@lynx-js/genui/a2ui-catalog-extractor';
+```
+
+## API
+
+{/* @api ApiExports package="genui-a2ui-catalog-extractor" */}
+
+## 函数 \{#functions\}
+
+### `createA2UICatalog()` \{#createa2uicatalog\}
+
+```ts
+function createA2UICatalog(options: { catalogId: string; components: CatalogComponent[] | Record<string, JsonSchema>; functions?: FunctionDefinition[]; theme?: Record<string, JsonSchema> }): A2UICatalog
+```
+
+基于组件和函数产物构建完整的 A2UI catalog manifest。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `options` | `{ catalogId: string; components: `[`CatalogComponent`](#catalogcomponent)`[] \| Record<string, `[`JsonSchema`](#jsonschema)`>; functions?: `[`FunctionDefinition`](#functiondefinition)`[]; theme?: Record<string, `[`JsonSchema`](#jsonschema)`> }` |  |
+
+**返回值：** [`A2UICatalog`](#a2uicatalog)
+
+### `extractCatalogComponents()` \{#extractcatalogcomponents\}
+
+```ts
+function extractCatalogComponents(options: ExtractCatalogOptions): Promise<CatalogComponent[]>
+```
+
+对源文件运行 TypeDoc，提取 A2UI 组件 schema。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `options` | [`ExtractCatalogOptions`](#extractcatalogoptions) |  |
+
+**返回值：** `Promise<`[`CatalogComponent`](#catalogcomponent)`[]>`
+
+### `extractCatalogFunctions()` \{#extractcatalogfunctions\}
+
+```ts
+function extractCatalogFunctions(options: ExtractCatalogOptions): Promise<CatalogFunction[]>
+```
+
+对源文件运行 TypeDoc，提取 A2UI 函数定义。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `options` | [`ExtractCatalogOptions`](#extractcatalogoptions) |  |
+
+**返回值：** `Promise<`[`CatalogFunction`](#catalogfunction)`[]>`
+
+### `findCatalogSourceFiles()` \{#findcatalogsourcefiles\}
+
+```ts
+function findCatalogSourceFiles(inputPath: string): string[]
+```
+
+在文件或目录路径下查找受支持的源文件。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `inputPath` | `string` |  |
+
+**返回值：** `string[]`
+
+## 类型 \{#types\}
+
+### `A2UICatalog` \{#a2uicatalog\}
+
+供 A2UI agent 和渲染器使用的完整 catalog manifest。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="a2uicatalog-catalogid"></a>`catalogId` | `string` |  |
+| <a id="a2uicatalog-components"></a>`components?` | `Record<string, `[`JsonSchema`](#jsonschema)`>` |  |
+| <a id="a2uicatalog-functions"></a>`functions?` | `Record<string, `[`JsonSchema`](#jsonschema)`>` |  |
+| <a id="a2uicatalog-theme"></a>`theme?` | `Record<string, `[`JsonSchema`](#jsonschema)`>` |  |
+
+### `CatalogComponent` \{#catalogcomponent\}
+
+从带有 `@a2uiCatalog` 注解的接口中发现的组件 schema。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="catalogcomponent-filepath"></a>`filePath` | `string` |  |
+| <a id="catalogcomponent-interfacename"></a>`interfaceName` | `string` |  |
+| <a id="catalogcomponent-name"></a>`name` | `string` |  |
+| <a id="catalogcomponent-schema"></a>`schema` | [`JsonSchema`](#jsonschema) |  |
+
+### `CatalogFunction` \{#catalogfunction\}
+
+通过 `@a2uiFunction` 在源码中发现的函数，附带其来源路径。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="catalogfunction-description"></a>`description?` | `string` |  |
+| <a id="catalogfunction-filepath"></a>`filePath` | `string` |  |
+| <a id="catalogfunction-name"></a>`name` | `string` |  |
+| <a id="catalogfunction-parameters"></a>`parameters` | [`JsonSchema`](#jsonschema) |  |
+| <a id="catalogfunction-returntype"></a>`returnType` | `"string" \| "number" \| "boolean" \| "object" \| "array" \| "any" \| "void"` |  |
+
+### `ExtractCatalogOptions` \{#extractcatalogoptions\}
+
+提取 catalog 元数据时使用的源码和编译器输入。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="extractcatalogoptions-cwd"></a>`cwd?` | `string` |  |
+| <a id="extractcatalogoptions-sourcefiles"></a>`sourceFiles` | `string[]` |  |
+| <a id="extractcatalogoptions-tsconfig"></a>`tsconfig?` | `string` |  |
+
+### `FunctionDefinition` \{#functiondefinition\}
+
+暴露给 agent 的客户端函数的可序列化定义。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="functiondefinition-description"></a>`description?` | `string` |  |
+| <a id="functiondefinition-name"></a>`name` | `string` |  |
+| <a id="functiondefinition-parameters"></a>`parameters` | [`JsonSchema`](#jsonschema) |  |
+| <a id="functiondefinition-returntype"></a>`returnType` | `"string" \| "number" \| "boolean" \| "object" \| "array" \| "any" \| "void"` |  |
+
+### `JsonSchema` \{#jsonschema\}
+
+为 A2UI 组件 props 和函数参数输出的 JSON Schema 子集。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="jsonschema-ref"></a>`$ref?` | `string` |  |
+| <a id="jsonschema-additionalproperties"></a>`additionalProperties?` | `boolean \| `[`JsonSchema`](#jsonschema) |  |
+| <a id="jsonschema-const"></a>`const?` | `unknown` |  |
+| <a id="jsonschema-default"></a>`default?` | `unknown` |  |
+| <a id="jsonschema-deprecated"></a>`deprecated?` | `boolean` |  |
+| <a id="jsonschema-description"></a>`description?` | `string` |  |
+| <a id="jsonschema-enum"></a>`enum?` | `(string \| number \| boolean)[]` |  |
+| <a id="jsonschema-items"></a>`items?` | [`JsonSchema`](#jsonschema) |  |
+| <a id="jsonschema-oneof"></a>`oneOf?` | [`JsonSchema`](#jsonschema)`[]` |  |
+| <a id="jsonschema-properties"></a>`properties?` | `Record<string, `[`JsonSchema`](#jsonschema)`>` |  |
+| <a id="jsonschema-required"></a>`required?` | `string[]` |  |
+| <a id="jsonschema-type"></a>`type?` | `string` |  |
+| <a id="jsonschema-unevaluatedproperties"></a>`unevaluatedProperties?` | `boolean \| `[`JsonSchema`](#jsonschema) |  |
+
+{/* @api-end */}

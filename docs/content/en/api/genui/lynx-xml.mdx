@@ -1,0 +1,138 @@
+---
+title: '@lynx-js/genui/lynx-xml'
+---
+
+# `@lynx-js/genui/lynx-xml`
+
+`@lynx-js/genui/lynx-xml` holds the system prompt that teaches a model to write complete, zero-build `.lynxml` files with Vanilla Lynx and Element PAPI, and the utilities that compile well-formed XML fragments into deterministic Element PAPI JavaScript.
+
+```ts
+import { buildLynxXmlSystemPrompt } from '@lynx-js/genui/lynx-xml';
+```
+
+## API
+
+{/* @api ApiExports package="genui-lynx-xml" */}
+
+## Functions \{#functions\}
+
+### `buildLynxXmlSystemPrompt()` \{#buildlynxxmlsystemprompt\}
+
+```ts
+function buildLynxXmlSystemPrompt(options: BuildLynxXmlSystemPromptOptions): string
+```
+
+Build a system prompt for producing complete, zero-build `.lynxml` files.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | [`BuildLynxXmlSystemPromptOptions`](#buildlynxxmlsystempromptoptions) |  |
+
+**Returns:** `string`
+
+### `compileLynxXmlFragment()` \{#compilelynxxmlfragment\}
+
+```ts
+function compileLynxXmlFragment(source: string): { text: string; xmlFragment: string }
+```
+
+Compile the model's intermediate document without executing model code.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `source` | `string` |  |
+
+**Returns:** `{ text: string; xmlFragment: string }`
+
+### `generateMainThreadScript()` \{#generatemainthreadscript\}
+
+```ts
+function generateMainThreadScript(xmlFragment: string): string
+```
+
+Convert an XML element fragment into Element PAPI calls for renderPage().
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `xmlFragment` | `string` |  |
+
+**Returns:** `string`
+
+### `generateMainThreadScriptResult()` \{#generatemainthreadscriptresult\}
+
+```ts
+function generateMainThreadScriptResult(xmlFragment: string): GeneratedMainThreadScript
+```
+
+Generate Element PAPI calls and stable id-to-node bindings.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `xmlFragment` | `string` |  |
+
+**Returns:** [`GeneratedMainThreadScript`](#generatedmainthreadscript)
+
+## Constants \{#constants\}
+
+### `LYNX_XML_ENGINE_VERSION` \{#lynx-xml-engine-version\}
+
+```ts
+const LYNX_XML_ENGINE_VERSION: "4.2"
+```
+
+The default Lynx engine version used by generated XML artifacts.
+
+### `LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS` \{#lynx-xml-html-fragment-instructions\}
+
+```ts
+const LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS: "XML fragment mode is enabled for this request (this output contract overrides the imported document guidance below):\n- Generate the entire document in one response: one <template> containing the initial XML element fragment directly inside <lynx>, alongside CSS and main/background scripts in their normal source blocks. Prefer placing the template first, but block order is not significant. Never omit the template, even when conversation history contains already-compiled .lynxml artifacts. The server removes <template> and compiles it to Element PAPI before delivery; it is an intermediate format, not a runtime Lynx element.\n- Give a unique id ONLY to nodes referenced later by event binding, state updates, or cleanup. Omit id on purely static nodes; do not assign ids to every node. Use well-formed XML, literal attributes and XML entities in the template. Keep style, script, lynx, and page elements outside the fragment. Prefer literal text directly inside <text>. An explicit <raw-text> leaf may use text content or a text attribute, never both; put styling, event handlers, and update ids on its parent <text>. Do not use interpolation, loops, conditional directives, or inline event-handler attributes; implement dynamic behavior in JavaScript.\n- The server supplies createFragment(page, pageId). Call it exactly once in renderPage(), after page and pageId exist: nodes = createFragment(page, pageId). Declare let nodes at main-thread script scope so later event, update, and cleanup handlers can use nodes[\"cityText\"] for id=\"cityText\". Access nodes only after rendering. Do not declare or shadow createFragment, invent nodeN variables, or assume XML ids declare variables.\n- createFragment creates and appends the initial roots to page and returns their id-to-node map. Do not recreate or append the initial roots yourself. Bind events and apply initial state after the call. Use Element PAPI for subsequent dynamic updates and new nodes.\n- Write all CSS, state, event handlers, lifecycle registration, background work, and cleanup in the same response. Do not request conversion, wait for bindings, or output placeholders. The server performs conversion after generation without another model request."
+```
+
+Intermediate source contract for deterministic fragment compilation.
+
+### `LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT` \{#lynx-xml-html-fragment-system-prompt\}
+
+```ts
+const LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT: string
+```
+
+The Lynx XML prompt for one-pass fragment generation.
+
+### `LYNX_XML_SYSTEM_PROMPT` \{#lynx-xml-system-prompt\}
+
+```ts
+const LYNX_XML_SYSTEM_PROMPT: string
+```
+
+The default Lynx XML generation system prompt.
+
+### `MAX_XML_FRAGMENT_LENGTH` \{#max-xml-fragment-length\}
+
+```ts
+const MAX_XML_FRAGMENT_LENGTH: 100000
+```
+
+*No description yet.*
+
+## Types \{#types\}
+
+### `BuildLynxXmlSystemPromptOptions` \{#buildlynxxmlsystempromptoptions\}
+
+Options used to customize the Lynx XML generation system prompt.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="buildlynxxmlsystempromptoptions-appendix"></a>`appendix?` | `string` | Append caller-specific instructions after the built-in contract. |
+| <a id="buildlynxxmlsystempromptoptions-enablehtmlfragment"></a>`enableHtmlFragment?` | `boolean` | Generate an intermediate document for deterministic fragment compilation. |
+| <a id="buildlynxxmlsystempromptoptions-engineversion"></a>`engineVersion?` | `string` | Override the generated artifact's Lynx engine version. |
+
+### `GeneratedMainThreadScript` \{#generatedmainthreadscript\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="generatedmainthreadscript-bindings"></a>`bindings` | `Record<string, string>` | Only explicit XML ids are retained in the runtime nodeMap. |
+| <a id="generatedmainthreadscript-javascript"></a>`javascript` | `string` |  |
+
+{/* @api-end */}

@@ -1,0 +1,176 @@
+{
+  "id": "genui-openui-prompt",
+  "package": "@lynx-js/genui",
+  "version": "0.4.0",
+  "description": "Generative UI for Lynx.",
+  "group": "libraries",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/genui",
+  "exports": [
+    {
+      "name": "BuildOpenUiSystemPromptOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options used to customize the generated OpenUI system prompt.",
+      "members": [
+        {
+          "name": "appendix",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "componentGroups",
+          "optional": true,
+          "type": "ComponentGroup[]",
+          "summary": "Replace or extend the built-in component groups.",
+          "kind": "property"
+        },
+        {
+          "name": "componentNames",
+          "optional": true,
+          "type": "readonly string[]",
+          "summary": "Limit built-ins to these names. Custom `components` are still appended.",
+          "kind": "property"
+        },
+        {
+          "name": "components",
+          "optional": true,
+          "type": "OpenUiPromptComponent[]",
+          "refs": [
+            "OpenUiPromptComponent"
+          ],
+          "summary": "Replace or extend the built-in component set.",
+          "kind": "property"
+        },
+        {
+          "name": "promptOptions",
+          "optional": true,
+          "type": "PromptOptions",
+          "kind": "property"
+        },
+        {
+          "name": "root",
+          "optional": true,
+          "type": "string",
+          "summary": "Override the root component name. Defaults to `'Stack'`.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "CreateOpenUiPromptLibraryOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options for creating the headless OpenUI prompt library.",
+      "members": [
+        {
+          "name": "componentGroups",
+          "optional": true,
+          "type": "ComponentGroup[]",
+          "summary": "Replace or extend the built-in component groups.",
+          "kind": "property"
+        },
+        {
+          "name": "componentNames",
+          "optional": true,
+          "type": "readonly string[]",
+          "summary": "Limit built-ins to these names. Custom `components` are still appended.",
+          "kind": "property"
+        },
+        {
+          "name": "components",
+          "optional": true,
+          "type": "OpenUiPromptComponent[]",
+          "refs": [
+            "OpenUiPromptComponent"
+          ],
+          "summary": "Replace or extend the built-in component set.",
+          "kind": "property"
+        },
+        {
+          "name": "root",
+          "optional": true,
+          "type": "string",
+          "summary": "Override the root component name. Defaults to `'Stack'`.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "OpenUiPromptComponent",
+      "kind": "typealias",
+      "type": "DefinedComponent<any, HeadlessRenderer>"
+    },
+    {
+      "name": "OpenUiPromptLibrary",
+      "kind": "typealias",
+      "type": "Library<HeadlessRenderer>"
+    },
+    {
+      "name": "OPENUI_SYSTEM_PROMPT",
+      "kind": "variable",
+      "type": "string",
+      "default": "..."
+    },
+    {
+      "name": "openUiPromptActionPropSchema",
+      "kind": "variable",
+      "type": "ZodUnion<readonly [ZodObject<{ steps: ZodArray<ZodObject<{ type: ZodString }, $loose>> }, $strip>, ZodObject<{ context: ZodOptional<ZodString>; params: ZodOptional<ZodRecord<ZodString, ZodAny>>; type: ZodOptional<ZodString>; url: ZodOptional<ZodString> }, $strip>]>",
+      "summary": "Shared action prop schema exposed to prompt signatures as `ActionExpression`.",
+      "default": "..."
+    },
+    {
+      "name": "buildOpenUiSystemPrompt",
+      "kind": "function",
+      "type": "buildOpenUiSystemPrompt(options: BuildOpenUiSystemPromptOptions): string",
+      "signatures": [
+        {
+          "text": "buildOpenUiSystemPrompt(options: BuildOpenUiSystemPromptOptions): string",
+          "params": [
+            {
+              "name": "options",
+              "type": "BuildOpenUiSystemPromptOptions",
+              "ref": "BuildOpenUiSystemPromptOptions",
+              "refs": [
+                "BuildOpenUiSystemPromptOptions"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "string"
+          },
+          "summary": "Build the full OpenUI system prompt for the supplied library and options."
+        }
+      ],
+      "summary": "Build the full OpenUI system prompt for the supplied library and options."
+    },
+    {
+      "name": "createOpenUiPromptLibrary",
+      "kind": "function",
+      "type": "createOpenUiPromptLibrary(options: CreateOpenUiPromptLibraryOptions): OpenUiPromptLibrary",
+      "signatures": [
+        {
+          "text": "createOpenUiPromptLibrary(options: CreateOpenUiPromptLibraryOptions): OpenUiPromptLibrary",
+          "params": [
+            {
+              "name": "options",
+              "type": "CreateOpenUiPromptLibraryOptions",
+              "ref": "CreateOpenUiPromptLibraryOptions",
+              "refs": [
+                "CreateOpenUiPromptLibraryOptions"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "OpenUiPromptLibrary",
+            "refs": [
+              "OpenUiPromptLibrary"
+            ]
+          },
+          "summary": "Create a headless OpenUI library with the built-in component schemas.\n\nThis mirrors the ReactLynx library for prompt generation while avoiding any\nruntime dependency on ReactLynx or Lynx UI components."
+        }
+      ],
+      "summary": "Create a headless OpenUI library with the built-in component schemas.\n\nThis mirrors the ReactLynx library for prompt generation while avoiding any\nruntime dependency on ReactLynx or Lynx UI components."
+    }
+  ]
+}

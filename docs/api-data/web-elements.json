@@ -208,8 +208,7 @@
             ]
           }
         }
-      ],
-      "default": "..."
+      ]
     },
     {
       "name": "registerEventEnableStatusChangeHandler",
@@ -238,8 +237,7 @@
             ]
           }
         }
-      ],
-      "default": "..."
+      ]
     },
     {
       "name": "registerStyleChangeHandler",
@@ -268,8 +266,7 @@
             ]
           }
         }
-      ],
-      "default": "..."
+      ]
     },
     {
       "name": "scrollContainerDom",

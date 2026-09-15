@@ -152,11 +152,6 @@
   },
   {
     "type": "file",
-    "name": "genui",
-    "label": "genui"
-  },
-  {
-    "type": "file",
     "name": "skill-lynx-openui",
     "label": "skill-lynx-openui"
   },

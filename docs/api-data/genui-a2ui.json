@@ -1,0 +1,2005 @@
+{
+  "id": "genui-a2ui",
+  "package": "@lynx-js/genui",
+  "version": "0.4.0",
+  "description": "Generative UI for Lynx.",
+  "group": "libraries",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/genui",
+  "exports": [
+    {
+      "name": "FunctionRegistry",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "Lookup table that routes protocol `FunctionCall.call` names to local\nJavaScript implementations.",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(): FunctionRegistry",
+          "kind": "constructor",
+          "params": [],
+          "returns": {
+            "type": "FunctionRegistry",
+            "refs": [
+              "FunctionRegistry"
+            ]
+          }
+        },
+        {
+          "name": "has",
+          "type": "has(name: string): boolean",
+          "kind": "method",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "list",
+          "type": "list(): FunctionEntry[]",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "FunctionEntry[]",
+            "refs": [
+              "FunctionEntry"
+            ]
+          }
+        },
+        {
+          "name": "register",
+          "type": "register(entry: FunctionEntry): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "entry",
+              "type": "FunctionEntry",
+              "ref": "FunctionEntry",
+              "refs": [
+                "FunctionEntry"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "resolve",
+          "type": "resolve(name: string): FunctionImpl | undefined",
+          "kind": "method",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "FunctionImpl | undefined",
+            "refs": [
+              "FunctionImpl"
+            ]
+          }
+        },
+        {
+          "name": "unregister",
+          "type": "unregister(name: string): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MessageProcessor",
+      "kind": "class",
+      "type": "unknown",
+      "summary": "Stateful A2UI protocol processor that turns raw v0.9 messages into\nrenderable surfaces, resources, data-model signals, and user-action events.",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "constructor(): MessageProcessor",
+          "kind": "constructor",
+          "params": [],
+          "returns": {
+            "type": "MessageProcessor",
+            "refs": [
+              "MessageProcessor"
+            ]
+          }
+        },
+        {
+          "name": "surfaces",
+          "type": "Map<string, Surface>",
+          "refs": [
+            "Surface"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "clearSurfaces",
+          "type": "clearSurfaces(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "dispatch",
+          "type": "dispatch(message: Record<string, unknown>): Promise<unknown>",
+          "kind": "method",
+          "params": [
+            {
+              "name": "message",
+              "type": "Record<string, unknown>"
+            }
+          ],
+          "returns": {
+            "type": "Promise<unknown>"
+          }
+        },
+        {
+          "name": "getOrCreateSurface",
+          "type": "getOrCreateSurface(surfaceId: string): Surface",
+          "kind": "method",
+          "params": [
+            {
+              "name": "surfaceId",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "Surface",
+            "refs": [
+              "Surface"
+            ]
+          }
+        },
+        {
+          "name": "getSurfaces",
+          "type": "getSurfaces(): ReadonlyMap<string, Surface>",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "ReadonlyMap<string, Surface>",
+            "refs": [
+              "Surface"
+            ]
+          }
+        },
+        {
+          "name": "onEvent",
+          "type": "onEvent(callback: (event: A2UIEvent) => void): () => void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "callback",
+              "type": "(event: A2UIEvent) => void"
+            }
+          ],
+          "returns": {
+            "type": "() => void"
+          }
+        },
+        {
+          "name": "onUpdate",
+          "type": "onUpdate(callback: (data: Record<string, unknown>) => void): () => void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "callback",
+              "type": "(data: Record<string, unknown>) => void"
+            }
+          ],
+          "returns": {
+            "type": "() => void"
+          }
+        },
+        {
+          "name": "processMessages",
+          "type": "processMessages(messages: ServerToClientMessage[]): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "messages",
+              "type": "ServerToClientMessage[]",
+              "refs": [
+                "ServerToClientMessage"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "resolvePath",
+          "type": "resolvePath(path: string, dataContextPath?: string): string",
+          "kind": "method",
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "dataContextPath",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "string"
+          },
+          "summary": "Resolve a JSON Pointer taking into account the current data context.\n\n- Absolute paths (starting with '/') are returned as-is.\n- Relative paths are resolved against the provided dataContextPath."
+        }
+      ]
+    },
+    {
+      "name": "A2UIProps",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Props for the all-in-one A2UI ReactLynx renderer.",
+      "members": [
+        {
+          "name": "catalogs",
+          "type": "readonly CatalogInput[]",
+          "refs": [
+            "CatalogInput"
+          ],
+          "summary": "Components the renderer is allowed to instantiate. Each item is either\na bare component (name read from `displayName ?? name`) or a tuple\n`[component, manifest]` where the manifest is the JSON the extractor\nemits at `dist/catalog/<Name>/catalog.json`.",
+          "kind": "property"
+        },
+        {
+          "name": "className",
+          "optional": true,
+          "type": "string",
+          "summary": "Optional class name applied to the top-level `surface-${surfaceId}`\nview for the active surface. Use this when theme switching is\nexpressed as surface-level classes.",
+          "kind": "property"
+        },
+        {
+          "name": "messageStore",
+          "type": "MessageStore",
+          "ref": "MessageStore",
+          "refs": [
+            "MessageStore"
+          ],
+          "summary": "The raw-message buffer the developer pushes protocol messages into.\n`<A2UI>` subscribes via `useSyncExternalStore` and processes new\nmessages incrementally.\n\nThe internal `MessageProcessor` (surfaces, signals, resources) is\ncreated once per mount and is **not reset** if `messageStore` is\nlater replaced with a different instance. Pass a `key` prop derived\nfrom the store's identity if you want a fresh session, e.g.\n`<A2UI key={turnId} messageStore={turnStore} ... />`.",
+          "kind": "property"
+        },
+        {
+          "name": "onAction",
+          "optional": true,
+          "type": "(action: UserActionPayload) => void",
+          "refs": [
+            "UserActionPayload"
+          ],
+          "summary": "Called when a user action fires inside the rendered tree (button\ntap, etc.). Forward to your agent and push the response messages\nback into the same `messageStore` to update the UI. Fire-and-forget;\nthe renderer never awaits this.",
+          "kind": "property"
+        },
+        {
+          "name": "renderEmpty",
+          "optional": true,
+          "type": "() => ReactNode",
+          "summary": "Render before the first `beginRendering` arrives from the buffer.",
+          "kind": "property"
+        },
+        {
+          "name": "renderError",
+          "optional": true,
+          "type": "(err: unknown) => ReactNode",
+          "summary": "Render when the active resource fails.",
+          "kind": "property"
+        },
+        {
+          "name": "renderFallback",
+          "optional": true,
+          "type": "() => ReactNode",
+          "summary": "Render while the active resource is pending.",
+          "kind": "property"
+        },
+        {
+          "name": "renderUnsupported",
+          "optional": true,
+          "type": "(info: UnsupportedInfo) => ReactNode",
+          "summary": "Render when unsupported data syntax or an unsupported component is encountered.",
+          "kind": "property"
+        },
+        {
+          "name": "wrapSurface",
+          "optional": true,
+          "type": "(children: ReactNode, ctx: { surfaceId: string }) => ReactNode",
+          "summary": "Wrap each top-level surface so consumers can apply an outer theme\nshell, wrapper className, or additional styles.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ActionProps",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Identifies the component and surface that emitted an A2UI action.",
+      "members": [
+        {
+          "name": "dataContext",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "surfaceId",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "Catalog",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Runtime catalog consumed by the renderer and serialized for the agent\nhandshake.",
+      "members": [
+        {
+          "name": "components",
+          "type": "readonly ResolvedCatalogEntry[]",
+          "refs": [
+            "ResolvedCatalogEntry"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "functions",
+          "type": "readonly CatalogFunctionEntry[]",
+          "refs": [
+            "CatalogFunctionEntry"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "CatalogFunctionEntry",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "A function entry — pair an impl with its name, plus an optional manifest\nso the handshake can announce the schema to the agent.",
+      "members": [
+        {
+          "name": "definition",
+          "optional": true,
+          "type": "FunctionDefinition",
+          "kind": "property"
+        },
+        {
+          "name": "impl",
+          "type": "FunctionImpl",
+          "ref": "FunctionImpl",
+          "refs": [
+            "FunctionImpl"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "kind",
+          "type": "\"function\"",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "CheckLike",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "A v0.9 `CheckRule` is `{ condition, message }` where `condition` is a\nboolean, a `DataBinding`, or a `FunctionCall`. We accept the loose\n`unknown` shape so component props don't have to import the v0_9\ntypes just to pass them through.",
+      "members": [
+        {
+          "name": "condition",
+          "type": "unknown",
+          "kind": "property"
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "FunctionCallContext",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Runtime context passed to client-side function implementations. It mirrors\nthe small DataContext subset used by upstream A2UI basic functions while\nstaying tied to this renderer's `MessageProcessor` + `SignalStore`.",
+      "members": [
+        {
+          "name": "dataContextPath",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "processor",
+          "type": "MessageProcessor",
+          "ref": "MessageProcessor",
+          "refs": [
+            "MessageProcessor"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "surfaceId",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "resolveDynamicValue",
+          "type": "resolveDynamicValue(value: unknown): unknown",
+          "kind": "method",
+          "params": [
+            {
+              "name": "value",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "unknown"
+          }
+        },
+        {
+          "name": "resolveSignal",
+          "type": "resolveSignal(value: unknown): Signal<unknown>",
+          "kind": "method",
+          "params": [
+            {
+              "name": "value",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "Signal<unknown>"
+          }
+        },
+        {
+          "name": "set",
+          "type": "set(path: string, value: unknown): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "value",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "void"
+          }
+        }
+      ]
+    },
+    {
+      "name": "FunctionEntry",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Registered client-side function and its optional handshake definition.",
+      "members": [
+        {
+          "name": "definition",
+          "optional": true,
+          "type": "FunctionDefinition",
+          "summary": "Optional function definition announced to the agent as part of the handshake.",
+          "kind": "property"
+        },
+        {
+          "name": "impl",
+          "type": "FunctionImpl",
+          "ref": "FunctionImpl",
+          "refs": [
+            "FunctionImpl"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "GenericComponentProps",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Common runtime props passed to every catalog component by the renderer.",
+      "members": [
+        {
+          "name": "dataContextPath",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "id",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "sendAction",
+          "optional": true,
+          "type": "(action: Record<string, unknown>) => void",
+          "kind": "property"
+        },
+        {
+          "name": "setValue",
+          "optional": true,
+          "type": "(key: string, value: unknown) => void",
+          "kind": "property"
+        },
+        {
+          "name": "surface",
+          "type": "Surface",
+          "ref": "Surface",
+          "refs": [
+            "Surface"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "MessageStore",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "A pure append-only buffer of raw protocol messages produced by the\ndeveloper's IO module. The store knows nothing about the v0.9 protocol —\nit does not parse, process, or interpret messages. It only:\n\n 1. Stores them in arrival order.\n 2. Notifies subscribers when new ones land.\n 3. Hands the current snapshot back via `getSnapshot()` (referentially\n    stable between mutations — required by `useSyncExternalStore`).\n\nProtocol-aware processing — surfaces, signals, resources, action\ndispatch — is the responsibility of `<A2UI>` (the renderer component).\nDevelopers who don't want to learn the protocol should use `<A2UI>`;\ndevelopers who do can run their own `MessageProcessor` against the\nsnapshot directly.",
+      "members": [
+        {
+          "name": "getSnapshot",
+          "type": "() => readonly ServerToClientMessage[]",
+          "refs": [
+            "ServerToClientMessage"
+          ],
+          "summary": "`useSyncExternalStore` getSnapshot contract — stable between pushes.",
+          "kind": "property"
+        },
+        {
+          "name": "subscribe",
+          "type": "(cb: () => void) => () => void",
+          "summary": "`useSyncExternalStore` subscribe contract.",
+          "kind": "property"
+        },
+        {
+          "name": "clear",
+          "type": "clear(): void",
+          "kind": "method",
+          "params": [],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "Reset the buffer. Notifies subscribers."
+        },
+        {
+          "name": "push",
+          "type": "push(message: ServerToClientMessage | readonly ServerToClientMessage[]): void",
+          "kind": "method",
+          "params": [
+            {
+              "name": "message",
+              "type": "ServerToClientMessage | readonly ServerToClientMessage[]",
+              "ref": "ServerToClientMessage",
+              "refs": [
+                "ServerToClientMessage"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "Append one or more raw messages to the buffer. Notifies subscribers\nonce per call (batches a single array argument into a single notify)."
+        }
+      ]
+    },
+    {
+      "name": "MessageStoreOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options used when creating a raw A2UI message buffer.",
+      "members": [
+        {
+          "name": "initialMessages",
+          "optional": true,
+          "type": "readonly ServerToClientMessage[]",
+          "refs": [
+            "ServerToClientMessage"
+          ],
+          "summary": "Optional initial buffer contents. Useful when rehydrating a previous\nagent response or replaying a fixture stream.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ResolvedCatalogEntry",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "A resolved catalog entry. Internal representation; consumers don't usually\nconstruct these directly — they pass `CatalogInput`s to `defineCatalog`.",
+      "members": [
+        {
+          "name": "component",
+          "type": "CatalogComponent",
+          "ref": "CatalogComponent",
+          "refs": [
+            "CatalogComponent"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "schema",
+          "optional": true,
+          "type": "CatalogSchema",
+          "ref": "CatalogSchema",
+          "refs": [
+            "CatalogSchema"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ResolveFunctionOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options controlling how function calls are resolved against a catalog.",
+      "members": [
+        {
+          "name": "functions",
+          "optional": true,
+          "type": "readonly CatalogFunctionEntry[]",
+          "refs": [
+            "CatalogFunctionEntry"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "registry",
+          "optional": true,
+          "type": "FunctionRegistry",
+          "ref": "FunctionRegistry",
+          "refs": [
+            "FunctionRegistry"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ResourceInfo",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Payload carried by renderer resources when a surface or component changes.",
+      "members": [
+        {
+          "name": "component",
+          "optional": true,
+          "type": "ComponentInstance",
+          "ref": "ComponentInstance",
+          "refs": [
+            "ComponentInstance"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "surface",
+          "type": "Surface",
+          "ref": "Surface",
+          "refs": [
+            "Surface"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "surfaceId",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "\"beginRendering\" | \"surfaceUpdate\" | \"deleteSurface\"",
+          "summary": "Internal event type emitted by the processor.",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "SerializedCatalog",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "The serialized payload sent to the agent during channel handshake.",
+      "members": [
+        {
+          "name": "components",
+          "type": "{ name: string; schema?: CatalogSchema }[]",
+          "refs": [
+            "CatalogSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "functions",
+          "optional": true,
+          "type": "FunctionDefinition[]",
+          "kind": "property"
+        },
+        {
+          "name": "version",
+          "type": "\"0.9\"",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "Surface",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "In-memory state for a single protocol surface.",
+      "members": [
+        {
+          "name": "catalogId",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "components",
+          "type": "Map<string, ComponentInstance>",
+          "refs": [
+            "ComponentInstance"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "resources",
+          "type": "Map<string, Resource>",
+          "refs": [
+            "Resource"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "rootComponentId",
+          "optional": true,
+          "type": "string | null",
+          "summary": "id of the root component for this surface (must be 'root').",
+          "kind": "property"
+        },
+        {
+          "name": "sendDataModel",
+          "optional": true,
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "store",
+          "type": "SignalStore",
+          "kind": "property"
+        },
+        {
+          "name": "surfaceId",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "theme",
+          "optional": true,
+          "type": "Readonly<Record<string, unknown>>",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "UserActionPayload",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Normalized user action forwarded from rendered catalog components to the\nhost application.",
+      "members": [
+        {
+          "name": "context",
+          "type": "Record<string, unknown>",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "sourceComponentId",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "surfaceId",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "timestamp",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "A2UIClientEventMessage",
+      "kind": "typealias",
+      "type": "string | { sessionId?: string; text?: string } | { sessionId?: string; userAction: UserActionPayload }",
+      "refs": [
+        "UserActionPayload"
+      ]
+    },
+    {
+      "name": "CatalogComponent",
+      "kind": "typealias",
+      "type": "ComponentType<GenericComponentProps>",
+      "refs": [
+        "GenericComponentProps"
+      ],
+      "summary": "Loose component type — entries receive runtime-shaped props from the\nprotocol stream, so we don't enforce per-component prop typing here."
+    },
+    {
+      "name": "CatalogFunctionDefinition",
+      "kind": "typealias",
+      "type": "FunctionDefinition",
+      "summary": "The structured function definition that flows from the extractor (or the\nupstream basic-catalog manifests) into the catalog and out to the agent\nduring the handshake. Aliased onto the store's `FunctionDefinition` so\n`functionRegistry.register({ definition })` accepts catalog entries\ndirectly without re-shaping."
+    },
+    {
+      "name": "CatalogInput",
+      "kind": "typealias",
+      "type": "CatalogComponent | readonly [CatalogComponent, CatalogManifest] | ResolvedCatalogEntry | CatalogFunctionEntry",
+      "refs": [
+        "CatalogComponent",
+        "CatalogManifest",
+        "ResolvedCatalogEntry",
+        "CatalogFunctionEntry"
+      ],
+      "summary": "What the developer passes into `defineCatalog`. Components and function\nentries can be intermixed."
+    },
+    {
+      "name": "CatalogManifest",
+      "kind": "typealias",
+      "type": "Record<string, CatalogSchema>",
+      "refs": [
+        "CatalogSchema"
+      ],
+      "summary": "The shape produced by the extractor as `dist/catalog/<Name>/catalog.json`.\nThe single top-level key is the component's protocol name; the value is\nits schema. Importing the JSON gives you both, in one declaration."
+    },
+    {
+      "name": "CatalogSchema",
+      "kind": "typealias",
+      "type": "Record<string, unknown>",
+      "summary": "JSON Schema fragment describing a component's props. Produced at build time\nby `@lynx-js/genui/a2ui-catalog-extractor` from the component's TypeScript\ninterface marked with `@a2uiCatalog <Name>`. Optional at runtime — entries\nthat ship without a schema serialize to just `{ name }`."
+    },
+    {
+      "name": "ComponentInstance",
+      "kind": "typealias",
+      "type": "v0_9.AnyComponent & { __template?: { componentId: v0_9.ComponentId; path: string }; dataContextPath?: string }"
+    },
+    {
+      "name": "FunctionImpl",
+      "kind": "typealias",
+      "type": "(args: Record<string, unknown>, context?: FunctionCallContext) => unknown",
+      "refs": [
+        "FunctionCallContext"
+      ],
+      "summary": "Function implementations live on the client; the agent only references\nfunctions by name. The registry is the bridge from the wire-level\n`FunctionCall.call` string to the actual code that runs locally."
+    },
+    {
+      "name": "FunctionManifest",
+      "kind": "typealias",
+      "type": "Record<string, CatalogFunctionDefinition>",
+      "refs": [
+        "CatalogFunctionDefinition"
+      ]
+    },
+    {
+      "name": "Resource",
+      "kind": "typealias",
+      "type": "GenericResource<ResourceInfo>",
+      "refs": [
+        "ResourceInfo"
+      ]
+    },
+    {
+      "name": "ServerToClientMessage",
+      "kind": "typealias",
+      "type": "v0_9.A2uiMessage & { messageId?: string }"
+    },
+    {
+      "name": "SurfaceId",
+      "kind": "typealias",
+      "type": "string"
+    },
+    {
+      "name": "A2UI",
+      "kind": "variable",
+      "type": "MemoExoticComponent<(props: A2UIProps) => ReactNode>",
+      "refs": [
+        "A2UIProps"
+      ],
+      "default": "..."
+    },
+    {
+      "name": "basicFunctions",
+      "kind": "variable",
+      "type": "readonly CatalogFunctionEntry[]",
+      "refs": [
+        "CatalogFunctionEntry"
+      ],
+      "summary": "The A2UI 0.9 basic-catalog function implementations packaged as\n`CatalogFunctionEntry`s, ready to spread into `<A2UI catalogs={[...]}>`.\nThe impls themselves come from `@a2ui/web_core` so we stay aligned with\nthe upstream spec for free.",
+      "examples": [
+        "```ts\n<A2UI catalogs={[Text, Button, ...basicFunctions]} ... />\n```"
+      ],
+      "default": "..."
+    },
+    {
+      "name": "functionRegistry",
+      "kind": "variable",
+      "type": "FunctionRegistry",
+      "ref": "FunctionRegistry",
+      "refs": [
+        "FunctionRegistry"
+      ],
+      "default": "..."
+    },
+    {
+      "name": "NodeRenderer",
+      "kind": "function",
+      "type": "NodeRenderer(props: { component: ComponentInstance; renderUnsupported?: (info: UnsupportedInfo) => ReactNode; suppressActionDispatch?: boolean; surface: Surface }): ReactNode",
+      "refs": [
+        "ComponentInstance",
+        "Surface"
+      ],
+      "signatures": [
+        {
+          "text": "NodeRenderer(props: { component: ComponentInstance; renderUnsupported?: (info: UnsupportedInfo) => ReactNode; suppressActionDispatch?: boolean; surface: Surface }): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "{ component: ComponentInstance; renderUnsupported?: (info: UnsupportedInfo) => ReactNode; suppressActionDispatch?: boolean; surface: Surface }",
+              "refs": [
+                "ComponentInstance",
+                "Surface"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Button",
+      "kind": "function",
+      "type": "Button(props: ButtonProps): ReactNode",
+      "signatures": [
+        {
+          "text": "Button(props: ButtonProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "ButtonProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render an interactive button that dispatches an A2UI event or function call."
+        }
+      ],
+      "summary": "Render an interactive button that dispatches an A2UI event or function call."
+    },
+    {
+      "name": "Card",
+      "kind": "function",
+      "type": "Card(props: CardProps): ReactNode",
+      "signatures": [
+        {
+          "text": "Card(props: CardProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "CardProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render a single-child card container."
+        }
+      ],
+      "summary": "Render a single-child card container."
+    },
+    {
+      "name": "CheckBox",
+      "kind": "function",
+      "type": "CheckBox(props: CheckBoxProps): ReactNode",
+      "signatures": [
+        {
+          "text": "CheckBox(props: CheckBoxProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "CheckBoxProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render a boolean checkbox bound to the surface data model."
+        }
+      ],
+      "summary": "Render a boolean checkbox bound to the surface data model."
+    },
+    {
+      "name": "ChoicePicker",
+      "kind": "function",
+      "type": "ChoicePicker(props: ChoicePickerProps): ReactNode",
+      "signatures": [
+        {
+          "text": "ChoicePicker(props: ChoicePickerProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "ChoicePickerProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render a single- or multi-select choice picker."
+        }
+      ],
+      "summary": "Render a single- or multi-select choice picker."
+    },
+    {
+      "name": "Column",
+      "kind": "function",
+      "type": "Column(props: ColumnProps): ReactNode",
+      "signatures": [
+        {
+          "text": "Column(props: ColumnProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "ColumnProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render child component ids in vertical order."
+        }
+      ],
+      "summary": "Render child component ids in vertical order."
+    },
+    {
+      "name": "createFallbackMessagesFromPlainText",
+      "kind": "function",
+      "type": "createFallbackMessagesFromPlainText(text: string): ServerToClientMessage[]",
+      "signatures": [
+        {
+          "text": "createFallbackMessagesFromPlainText(text: string): ServerToClientMessage[]",
+          "params": [
+            {
+              "name": "text",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "ServerToClientMessage[]",
+            "refs": [
+              "ServerToClientMessage"
+            ]
+          },
+          "summary": "Build a single-Text fallback message stream from a plain string. Used by\ntransports / `Session.ingest` callers that receive free-form text from\nthe agent instead of structured protocol messages."
+        }
+      ],
+      "summary": "Build a single-Text fallback message stream from a plain string. Used by\ntransports / `Session.ingest` callers that receive free-form text from\nthe agent instead of structured protocol messages."
+    },
+    {
+      "name": "createMessageStore",
+      "kind": "function",
+      "type": "createMessageStore(options: MessageStoreOptions): MessageStore",
+      "signatures": [
+        {
+          "text": "createMessageStore(options: MessageStoreOptions): MessageStore",
+          "params": [
+            {
+              "name": "options",
+              "type": "MessageStoreOptions",
+              "ref": "MessageStoreOptions",
+              "refs": [
+                "MessageStoreOptions"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "MessageStore",
+            "refs": [
+              "MessageStore"
+            ]
+          },
+          "summary": "Create an append-only raw-message buffer suitable for `useSyncExternalStore`."
+        }
+      ],
+      "summary": "Create an append-only raw-message buffer suitable for `useSyncExternalStore`."
+    },
+    {
+      "name": "createTextCardMessages",
+      "kind": "function",
+      "type": "createTextCardMessages(text: string): ServerToClientMessage[]",
+      "signatures": [
+        {
+          "text": "createTextCardMessages(text: string): ServerToClientMessage[]",
+          "params": [
+            {
+              "name": "text",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "ServerToClientMessage[]",
+            "refs": [
+              "ServerToClientMessage"
+            ]
+          },
+          "summary": "Build a Card-wrapped Text fallback message stream from a plain string.\nUsed when the agent emits text payloads with `kind: 'text'`."
+        }
+      ],
+      "summary": "Build a Card-wrapped Text fallback message stream from a plain string.\nUsed when the agent emits text payloads with `kind: 'text'`."
+    },
+    {
+      "name": "DateTimeInput",
+      "kind": "function",
+      "type": "DateTimeInput(props: DateTimeInputProps): ReactNode",
+      "signatures": [
+        {
+          "text": "DateTimeInput(props: DateTimeInputProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "DateTimeInputProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render a local date and/or time picker backed by the surface data model."
+        }
+      ],
+      "summary": "Render a local date and/or time picker backed by the surface data model."
+    },
+    {
+      "name": "defineCatalog",
+      "kind": "function",
+      "type": "defineCatalog(inputs: readonly CatalogInput[]): Catalog",
+      "signatures": [
+        {
+          "text": "defineCatalog(inputs: readonly CatalogInput[]): Catalog",
+          "params": [
+            {
+              "name": "inputs",
+              "type": "readonly CatalogInput[]",
+              "refs": [
+                "CatalogInput"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "Catalog",
+            "refs": [
+              "Catalog"
+            ]
+          },
+          "summary": "Build a catalog from a list of components, `[component, manifest]` pairs,\nand/or function entries. Duplicate names within the same kind are rejected.\nFunction entries register their impls into `functionRegistry` immediately,\nso any `executeFunctionCall` after `defineCatalog` can route to them.",
+          "examples": [
+            "```ts\nimport { Text, Button } from '@lynx-js/genui/a2ui';\nimport { defineCatalog, defineFunction } from '@lynx-js/genui/a2ui';\nimport { required } from '@lynx-js/genui/a2ui/functions';\nimport textManifest from '@lynx-js/genui/a2ui/catalog/Text/catalog.json'\n  with { type: 'json' };\n\nconst catalog = defineCatalog([\n  [Text, textManifest],\n  Button,\n  defineFunction(required),\n]);\n```"
+          ]
+        }
+      ],
+      "summary": "Build a catalog from a list of components, `[component, manifest]` pairs,\nand/or function entries. Duplicate names within the same kind are rejected.\nFunction entries register their impls into `functionRegistry` immediately,\nso any `executeFunctionCall` after `defineCatalog` can route to them.",
+      "examples": [
+        "```ts\nimport { Text, Button } from '@lynx-js/genui/a2ui';\nimport { defineCatalog, defineFunction } from '@lynx-js/genui/a2ui';\nimport { required } from '@lynx-js/genui/a2ui/functions';\nimport textManifest from '@lynx-js/genui/a2ui/catalog/Text/catalog.json'\n  with { type: 'json' };\n\nconst catalog = defineCatalog([\n  [Text, textManifest],\n  Button,\n  defineFunction(required),\n]);\n```"
+      ]
+    },
+    {
+      "name": "defineFunction",
+      "kind": "function",
+      "type": "defineFunction(impl: FunctionImpl, manifest?: FunctionManifest): CatalogFunctionEntry",
+      "signatures": [
+        {
+          "text": "defineFunction(impl: FunctionImpl, manifest?: FunctionManifest): CatalogFunctionEntry",
+          "params": [
+            {
+              "name": "impl",
+              "type": "FunctionImpl",
+              "ref": "FunctionImpl",
+              "refs": [
+                "FunctionImpl"
+              ]
+            },
+            {
+              "name": "manifest",
+              "type": "FunctionManifest",
+              "ref": "FunctionManifest",
+              "refs": [
+                "FunctionManifest"
+              ],
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "CatalogFunctionEntry",
+            "refs": [
+              "CatalogFunctionEntry"
+            ]
+          },
+          "summary": "Build a function entry for `defineCatalog`. Either pair the impl with the\nextracted manifest, or pass just the impl (the registry still routes\ncalls; the agent just won't see the parameter schema).",
+          "examples": [
+            "```ts\nconst requiredEntry = defineFunction(required, requiredManifest);\nconst catalog = defineCatalog([Text, Button, requiredEntry]);\n```"
+          ]
+        }
+      ],
+      "summary": "Build a function entry for `defineCatalog`. Either pair the impl with the\nextracted manifest, or pass just the impl (the registry still routes\ncalls; the agent just won't see the parameter schema).",
+      "examples": [
+        "```ts\nconst requiredEntry = defineFunction(required, requiredManifest);\nconst catalog = defineCatalog([Text, Button, requiredEntry]);\n```"
+      ]
+    },
+    {
+      "name": "Divider",
+      "kind": "function",
+      "type": "Divider(props: DividerProps): ReactNode",
+      "signatures": [
+        {
+          "text": "Divider(props: DividerProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "DividerProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render a horizontal or vertical visual separator."
+        }
+      ],
+      "summary": "Render a horizontal or vertical visual separator."
+    },
+    {
+      "name": "executeFunctionCall",
+      "kind": "function",
+      "type": "executeFunctionCall(processor: MessageProcessor, fn: {}, surfaceId: string, dataContextPath?: string, options: ResolveFunctionOptions): unknown",
+      "signatures": [
+        {
+          "text": "executeFunctionCall(processor: MessageProcessor, fn: {}, surfaceId: string, dataContextPath?: string, options: ResolveFunctionOptions): unknown",
+          "params": [
+            {
+              "name": "processor",
+              "type": "MessageProcessor",
+              "ref": "MessageProcessor",
+              "refs": [
+                "MessageProcessor"
+              ]
+            },
+            {
+              "name": "fn",
+              "type": "{}"
+            },
+            {
+              "name": "surfaceId",
+              "type": "string"
+            },
+            {
+              "name": "dataContextPath",
+              "type": "string",
+              "optional": true
+            },
+            {
+              "name": "options",
+              "type": "ResolveFunctionOptions",
+              "ref": "ResolveFunctionOptions",
+              "refs": [
+                "ResolveFunctionOptions"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "unknown"
+          },
+          "summary": "Resolve arguments, look the function up in the registry, and invoke it.\nWhen no impl is registered, log once and return `undefined` so callers\n(checks, dynamic-property bindings) can degrade gracefully."
+        }
+      ],
+      "summary": "Resolve arguments, look the function up in the registry, and invoke it.\nWhen no impl is registered, log once and return `undefined` so callers\n(checks, dynamic-property bindings) can degrade gracefully."
+    },
+    {
+      "name": "Icon",
+      "kind": "function",
+      "type": "Icon(props: IconProps): ReactNode",
+      "signatures": [
+        {
+          "text": "Icon(props: IconProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "IconProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render a named icon from the catalog's supported icon set."
+        }
+      ],
+      "summary": "Render a named icon from the catalog's supported icon set."
+    },
+    {
+      "name": "Image",
+      "kind": "function",
+      "type": "Image(props: ImageProps): ReactNode",
+      "signatures": [
+        {
+          "text": "Image(props: ImageProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "ImageProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render an image URL with catalog-defined sizing and fit variants."
+        }
+      ],
+      "summary": "Render an image URL with catalog-defined sizing and fit variants."
+    },
+    {
+      "name": "LazyComponent",
+      "kind": "function",
+      "type": "LazyComponent(props: LazyComponentProps): ReactNode",
+      "signatures": [
+        {
+          "text": "LazyComponent(props: LazyComponentProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "LazyComponentProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          }
+        }
+      ]
+    },
+    {
+      "name": "LineChart",
+      "kind": "function",
+      "type": "LineChart(props: LineChartProps): ReactNode",
+      "signatures": [
+        {
+          "text": "LineChart(props: LineChartProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "LineChartProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render one or more numeric line series over shared labels."
+        }
+      ],
+      "summary": "Render one or more numeric line series over shared labels."
+    },
+    {
+      "name": "List",
+      "kind": "function",
+      "type": "List(props: ListProps): ReactNode",
+      "signatures": [
+        {
+          "text": "List(props: ListProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "ListProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render child component ids inside a scrollable list container."
+        }
+      ],
+      "summary": "Render child component ids inside a scrollable list container."
+    },
+    {
+      "name": "Loading",
+      "kind": "function",
+      "type": "Loading(props: LoadingProps): ReactNode",
+      "signatures": [
+        {
+          "text": "Loading(props: LoadingProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "LoadingProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render a lightweight loading indicator."
+        }
+      ],
+      "summary": "Render a lightweight loading indicator."
+    },
+    {
+      "name": "McpApp",
+      "kind": "function",
+      "type": "McpApp(props: McpAppProps): ReactNode",
+      "signatures": [
+        {
+          "text": "McpApp(props: McpAppProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "McpAppProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render a trusted MCP App Lynx bundle inside a nested Lynx frame."
+        }
+      ],
+      "summary": "Render a trusted MCP App Lynx bundle inside a nested Lynx frame."
+    },
+    {
+      "name": "mergeCatalogs",
+      "kind": "function",
+      "type": "mergeCatalogs(catalogs: Catalog[]): Catalog",
+      "signatures": [
+        {
+          "text": "mergeCatalogs(catalogs: Catalog[]): Catalog",
+          "params": [
+            {
+              "name": "catalogs",
+              "type": "Catalog[]",
+              "refs": [
+                "Catalog"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "Catalog",
+            "refs": [
+              "Catalog"
+            ]
+          },
+          "summary": "Merge multiple catalogs. Last write wins on duplicate names — useful when\na page-level catalog overrides a brand-level one which overrides built-ins."
+        }
+      ],
+      "summary": "Merge multiple catalogs. Last write wins on duplicate names — useful when\na page-level catalog overrides a brand-level one which overrides built-ins."
+    },
+    {
+      "name": "Modal",
+      "kind": "function",
+      "type": "Modal(props: ModalProps): ReactNode",
+      "signatures": [
+        {
+          "text": "Modal(props: ModalProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "ModalProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render a trigger component and a locally opened modal content component."
+        }
+      ],
+      "summary": "Render a trigger component and a locally opened modal content component."
+    },
+    {
+      "name": "normalizePayloadToMessages",
+      "kind": "function",
+      "type": "normalizePayloadToMessages(payload: unknown): ServerToClientMessage[]",
+      "signatures": [
+        {
+          "text": "normalizePayloadToMessages(payload: unknown): ServerToClientMessage[]",
+          "params": [
+            {
+              "name": "payload",
+              "type": "unknown"
+            }
+          ],
+          "returns": {
+            "type": "ServerToClientMessage[]",
+            "refs": [
+              "ServerToClientMessage"
+            ]
+          },
+          "summary": "Normalize an arbitrary payload (string, array, object) into a flat list of\n`ServerToClientMessage` records. Pass-through for already-structured\nmessages; falls back to wrapping plain text in a Text/Card surface."
+        }
+      ],
+      "summary": "Normalize an arbitrary payload (string, array, object) into a flat list of\n`ServerToClientMessage` records. Pass-through for already-structured\nmessages; falls back to wrapping plain text in a Text/Card surface."
+    },
+    {
+      "name": "PieChart",
+      "kind": "function",
+      "type": "PieChart(props: PieChartProps): ReactNode",
+      "signatures": [
+        {
+          "text": "PieChart(props: PieChartProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "PieChartProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render numeric slices as a pie or donut chart."
+        }
+      ],
+      "summary": "Render numeric slices as a pie or donut chart."
+    },
+    {
+      "name": "prepareMessagesForProcessing",
+      "kind": "function",
+      "type": "prepareMessagesForProcessing(rawMessages: ServerToClientMessage[], messageId: string, activeSurfaceIds: Set<string>): { hasComponentUpdate: boolean; messages: ServerToClientMessage[] }",
+      "signatures": [
+        {
+          "text": "prepareMessagesForProcessing(rawMessages: ServerToClientMessage[], messageId: string, activeSurfaceIds: Set<string>): { hasComponentUpdate: boolean; messages: ServerToClientMessage[] }",
+          "params": [
+            {
+              "name": "rawMessages",
+              "type": "ServerToClientMessage[]",
+              "refs": [
+                "ServerToClientMessage"
+              ]
+            },
+            {
+              "name": "messageId",
+              "type": "string"
+            },
+            {
+              "name": "activeSurfaceIds",
+              "type": "Set<string>"
+            }
+          ],
+          "returns": {
+            "type": "{ hasComponentUpdate: boolean; messages: ServerToClientMessage[] }",
+            "refs": [
+              "ServerToClientMessage"
+            ]
+          },
+          "summary": "Tag messages with the given messageId and report whether any of them\ncarries a non-empty `updateComponents`. Also dedupes `createSurface`\nmessages against the set of currently-active surfaces."
+        }
+      ],
+      "summary": "Tag messages with the given messageId and report whether any of them\ncarries a non-empty `updateComponents`. Also dedupes `createSurface`\nmessages against the set of currently-active surfaces."
+    },
+    {
+      "name": "RadioGroup",
+      "kind": "function",
+      "type": "RadioGroup(props: RadioGroupComponentProps): ReactNode",
+      "signatures": [
+        {
+          "text": "RadioGroup(props: RadioGroupComponentProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "RadioGroupComponentProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render a single-choice radio group bound to the surface data model."
+        }
+      ],
+      "summary": "Render a single-choice radio group bound to the surface data model."
+    },
+    {
+      "name": "registerBasicFunctions",
+      "kind": "function",
+      "type": "registerBasicFunctions(): void",
+      "signatures": [
+        {
+          "text": "registerBasicFunctions(): void",
+          "params": [],
+          "returns": {
+            "type": "void"
+          },
+          "summary": "Manual escape hatch for consumers who build their own renderer and don't\ngo through `defineCatalog`. Registers every adapted basic-catalog impl\ninto the shared `functionRegistry`. Calling more than once is harmless —\nlater registrations override earlier ones, which is the intended override\npath."
+        }
+      ],
+      "summary": "Manual escape hatch for consumers who build their own renderer and don't\ngo through `defineCatalog`. Registers every adapted basic-catalog impl\ninto the shared `functionRegistry`. Calling more than once is harmless —\nlater registrations override earlier ones, which is the intended override\npath."
+    },
+    {
+      "name": "resolveCatalog",
+      "kind": "function",
+      "type": "resolveCatalog(catalog: Catalog): ReadonlyMap<string, CatalogComponent>",
+      "signatures": [
+        {
+          "text": "resolveCatalog(catalog: Catalog): ReadonlyMap<string, CatalogComponent>",
+          "params": [
+            {
+              "name": "catalog",
+              "type": "Catalog",
+              "ref": "Catalog",
+              "refs": [
+                "Catalog"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "ReadonlyMap<string, CatalogComponent>",
+            "refs": [
+              "CatalogComponent"
+            ]
+          },
+          "summary": "Build a name → component lookup map from a catalog. The renderer uses\nthis to resolve `{ component: 'Text', ... }` from the protocol stream."
+        }
+      ],
+      "summary": "Build a name → component lookup map from a catalog. The renderer uses\nthis to resolve `{ component: 'Text', ... }` from the protocol stream."
+    },
+    {
+      "name": "resolveDynamicValue",
+      "kind": "function",
+      "type": "resolveDynamicValue(processor: MessageProcessor, value: unknown, surfaceId: string, dataContextPath?: string, options: ResolveDynamicValueOptions): unknown",
+      "signatures": [
+        {
+          "text": "resolveDynamicValue(processor: MessageProcessor, value: unknown, surfaceId: string, dataContextPath?: string, options: ResolveDynamicValueOptions): unknown",
+          "params": [
+            {
+              "name": "processor",
+              "type": "MessageProcessor",
+              "ref": "MessageProcessor",
+              "refs": [
+                "MessageProcessor"
+              ]
+            },
+            {
+              "name": "value",
+              "type": "unknown"
+            },
+            {
+              "name": "surfaceId",
+              "type": "string"
+            },
+            {
+              "name": "dataContextPath",
+              "type": "string",
+              "optional": true
+            },
+            {
+              "name": "options",
+              "type": "ResolveDynamicValueOptions"
+            }
+          ],
+          "returns": {
+            "type": "unknown"
+          },
+          "summary": "Resolve literals, data bindings, and function calls into concrete runtime\nvalues for component props or action payloads."
+        }
+      ],
+      "summary": "Resolve literals, data bindings, and function calls into concrete runtime\nvalues for component props or action payloads."
+    },
+    {
+      "name": "Row",
+      "kind": "function",
+      "type": "Row(props: RowProps): ReactNode",
+      "signatures": [
+        {
+          "text": "Row(props: RowProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "RowProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render child component ids in horizontal order."
+        }
+      ],
+      "summary": "Render child component ids in horizontal order."
+    },
+    {
+      "name": "serializeCatalog",
+      "kind": "function",
+      "type": "serializeCatalog(catalog: Catalog): SerializedCatalog",
+      "signatures": [
+        {
+          "text": "serializeCatalog(catalog: Catalog): SerializedCatalog",
+          "params": [
+            {
+              "name": "catalog",
+              "type": "Catalog",
+              "ref": "Catalog",
+              "refs": [
+                "Catalog"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "SerializedCatalog",
+            "refs": [
+              "SerializedCatalog"
+            ]
+          },
+          "summary": "Produce the JSON manifest the client should announce to the agent during\nchannel handshake. Component entries without an attached schema serialize\nto `{ name }` only — useful for letting the agent at least know what's\nrenderable. Function entries serialize with their parameter schema when\navailable."
+        }
+      ],
+      "summary": "Produce the JSON manifest the client should announce to the agent during\nchannel handshake. Component entries without an attached schema serialize\nto `{ name }` only — useful for letting the agent at least know what's\nrenderable. Function entries serialize with their parameter schema when\navailable."
+    },
+    {
+      "name": "Slider",
+      "kind": "function",
+      "type": "Slider(props: SliderProps): ReactNode",
+      "signatures": [
+        {
+          "text": "Slider(props: SliderProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "SliderProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render a numeric slider bound to the surface data model."
+        }
+      ],
+      "summary": "Render a numeric slider bound to the surface data model."
+    },
+    {
+      "name": "Tabs",
+      "kind": "function",
+      "type": "Tabs(props: TabsProps): ReactNode",
+      "signatures": [
+        {
+          "text": "Tabs(props: TabsProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "TabsProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render a tabbed container whose tabs reference child component ids."
+        }
+      ],
+      "summary": "Render a tabbed container whose tabs reference child component ids."
+    },
+    {
+      "name": "Text",
+      "kind": "function",
+      "type": "Text(props: TextProps): ReactNode",
+      "signatures": [
+        {
+          "text": "Text(props: TextProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "TextProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render styled text from a literal value, data binding, or function call."
+        }
+      ],
+      "summary": "Render styled text from a literal value, data binding, or function call."
+    },
+    {
+      "name": "TextField",
+      "kind": "function",
+      "type": "TextField(props: TextFieldProps): ReactNode",
+      "signatures": [
+        {
+          "text": "TextField(props: TextFieldProps): ReactNode",
+          "params": [
+            {
+              "name": "props",
+              "type": "TextFieldProps"
+            }
+          ],
+          "returns": {
+            "type": "ReactNode"
+          },
+          "summary": "Render a single-line or multi-line text input bound to the data model."
+        }
+      ],
+      "summary": "Render a single-line or multi-line text input bound to the data model."
+    },
+    {
+      "name": "useAction",
+      "kind": "function",
+      "type": "useAction(props: ActionProps): { sendAction: (action: {} | {}) => Promise<unknown> }",
+      "signatures": [
+        {
+          "text": "useAction(props: ActionProps): { sendAction: (action: {} | {}) => Promise<unknown> }",
+          "params": [
+            {
+              "name": "props",
+              "type": "ActionProps",
+              "ref": "ActionProps",
+              "refs": [
+                "ActionProps"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "{ sendAction: (action: {} | {}) => Promise<unknown> }"
+          },
+          "summary": "Create a `sendAction` callback that resolves dynamic action payload values\nand dispatches user events or function calls through the current processor."
+        }
+      ],
+      "summary": "Create a `sendAction` callback that resolves dynamic action payload values\nand dispatches user events or function calls through the current processor."
+    },
+    {
+      "name": "useChecks",
+      "kind": "function",
+      "type": "useChecks(options: { checks: CheckLike[] | undefined; componentId: string; dataContextPath?: string; surface: Surface | undefined }): CheckOutcome & { firstFailureMessage: string | undefined }",
+      "signatures": [
+        {
+          "text": "useChecks(options: { checks: CheckLike[] | undefined; componentId: string; dataContextPath?: string; surface: Surface | undefined }): CheckOutcome & { firstFailureMessage: string | undefined }",
+          "params": [
+            {
+              "name": "options",
+              "type": "{ checks: CheckLike[] | undefined; componentId: string; dataContextPath?: string; surface: Surface | undefined }",
+              "refs": [
+                "CheckLike",
+                "Surface"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "CheckOutcome & { firstFailureMessage: string | undefined }"
+          },
+          "summary": "Evaluate an input component's `checks` array reactively. Returns the\ncurrent outcome plus the first failure message (handy for inline error\nrendering). When an enclosing `<FormContext.Provider>` exists, the input\nis also registered with it so Buttons in the same form can react to\n`isValid`."
+        }
+      ],
+      "summary": "Evaluate an input component's `checks` array reactively. Returns the\ncurrent outcome plus the first failure message (handy for inline error\nrendering). When an enclosing `<FormContext.Provider>` exists, the input\nis also registered with it so Buttons in the same form can react to\n`isValid`."
+    },
+    {
+      "name": "useDataBinding",
+      "kind": "function",
+      "type": "useDataBinding(dynamicValue: unknown, surface: Surface, dataContextPath?: string, fallbackValue?: T): [T | undefined, (newValue: T) => void, string | undefined]",
+      "signatures": [
+        {
+          "text": "useDataBinding(dynamicValue: unknown, surface: Surface, dataContextPath?: string, fallbackValue?: T): [T | undefined, (newValue: T) => void, string | undefined]",
+          "params": [
+            {
+              "name": "dynamicValue",
+              "type": "unknown"
+            },
+            {
+              "name": "surface",
+              "type": "Surface",
+              "ref": "Surface",
+              "refs": [
+                "Surface"
+              ]
+            },
+            {
+              "name": "dataContextPath",
+              "type": "string",
+              "optional": true
+            },
+            {
+              "name": "fallbackValue",
+              "type": "T",
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "[T | undefined, (newValue: T) => void, string | undefined]"
+          },
+          "summary": "Subscribe to a data-model binding and return the current value at that path."
+        }
+      ],
+      "summary": "Subscribe to a data-model binding and return the current value at that path."
+    },
+    {
+      "name": "useResolvedProps",
+      "kind": "function",
+      "type": "useResolvedProps(properties: Record<string, unknown>, surface: Surface, dataContextPath?: string, processor?: MessageProcessor, functions?: readonly CatalogFunctionEntry[]): readonly [Record<string, unknown>, (key: string, value: unknown) => void]",
+      "signatures": [
+        {
+          "text": "useResolvedProps(properties: Record<string, unknown>, surface: Surface, dataContextPath?: string, processor?: MessageProcessor, functions?: readonly CatalogFunctionEntry[]): readonly [Record<string, unknown>, (key: string, value: unknown) => void]",
+          "params": [
+            {
+              "name": "properties",
+              "type": "Record<string, unknown>"
+            },
+            {
+              "name": "surface",
+              "type": "Surface",
+              "ref": "Surface",
+              "refs": [
+                "Surface"
+              ]
+            },
+            {
+              "name": "dataContextPath",
+              "type": "string",
+              "optional": true
+            },
+            {
+              "name": "processor",
+              "type": "MessageProcessor",
+              "ref": "MessageProcessor",
+              "refs": [
+                "MessageProcessor"
+              ],
+              "optional": true
+            },
+            {
+              "name": "functions",
+              "type": "readonly CatalogFunctionEntry[]",
+              "refs": [
+                "CatalogFunctionEntry"
+              ],
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "readonly [Record<string, unknown>, (key: string, value: unknown) => void]"
+          },
+          "summary": "Resolve a component's dynamic props and keep the result in sync with\nsignal-backed data model changes."
+        }
+      ],
+      "summary": "Resolve a component's dynamic props and keep the result in sync with\nsignal-backed data model changes."
+    }
+  ]
+}

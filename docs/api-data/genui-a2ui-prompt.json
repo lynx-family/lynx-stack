@@ -1,0 +1,521 @@
+{
+  "id": "genui-a2ui-prompt",
+  "package": "@lynx-js/genui",
+  "version": "0.4.0",
+  "description": "Generative UI for Lynx.",
+  "group": "libraries",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/genui",
+  "exports": [
+    {
+      "name": "A2UICatalog",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Prompt-ready A2UI catalog including components, rules, examples, and\noptional client functions.",
+      "members": [
+        {
+          "name": "components",
+          "type": "A2UIComponentSpec[]",
+          "refs": [
+            "A2UIComponentSpec"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "examples",
+          "optional": true,
+          "type": "A2UIExample[]",
+          "refs": [
+            "A2UIExample"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "extraRules",
+          "optional": true,
+          "type": "string[]",
+          "kind": "property"
+        },
+        {
+          "name": "functions",
+          "optional": true,
+          "type": "A2UIFunctionSpec[]",
+          "refs": [
+            "A2UIFunctionSpec"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "version",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "A2UIComponentProp",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Prompt-facing description of a single A2UI component prop.",
+      "members": [
+        {
+          "name": "description",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "enums",
+          "optional": true,
+          "type": "readonly string[]",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "required",
+          "optional": true,
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "schema",
+          "optional": true,
+          "type": "JsonSchema",
+          "ref": "JsonSchema",
+          "refs": [
+            "JsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "A2UIComponentSpec",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Prompt-facing component specification derived from a catalog manifest.",
+      "members": [
+        {
+          "name": "containerShape",
+          "optional": true,
+          "type": "\"children\" | \"child\" | \"tabs\" | \"trigger-content\" | \"none\"",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "props",
+          "type": "A2UIComponentProp[]",
+          "refs": [
+            "A2UIComponentProp"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "requiresAction",
+          "optional": true,
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "summary",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "A2UIExample",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Validated user request and message sequence included as an in-context A2UI\nexample.",
+      "members": [
+        {
+          "name": "messages",
+          "type": "unknown[]",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "user",
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "A2UIFunctionSpec",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Prompt-facing schema for a client-side function the agent may call.",
+      "members": [
+        {
+          "name": "description",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "parameters",
+          "type": "JsonSchema",
+          "ref": "JsonSchema",
+          "refs": [
+            "JsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "returnType",
+          "type": "\"string\" | \"number\" | \"boolean\" | \"object\" | \"array\" | \"any\" | \"void\"",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "BuildSystemPromptOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options used to customize the generated A2UI system prompt.",
+      "members": [
+        {
+          "name": "appendix",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "catalog",
+          "optional": true,
+          "type": "A2UICatalog",
+          "ref": "A2UICatalog",
+          "refs": [
+            "A2UICatalog"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "JsonSchema",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "JSON Schema subset used in prompt-facing catalog descriptions.",
+      "members": [
+        {
+          "name": "additionalProperties",
+          "optional": true,
+          "type": "unknown",
+          "kind": "property"
+        },
+        {
+          "name": "const",
+          "optional": true,
+          "type": "unknown",
+          "kind": "property"
+        },
+        {
+          "name": "description",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "enum",
+          "optional": true,
+          "type": "unknown",
+          "kind": "property"
+        },
+        {
+          "name": "items",
+          "optional": true,
+          "type": "JsonSchema",
+          "ref": "JsonSchema",
+          "refs": [
+            "JsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "oneOf",
+          "optional": true,
+          "type": "JsonSchema[]",
+          "refs": [
+            "JsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "properties",
+          "optional": true,
+          "type": "Record<string, JsonSchema>",
+          "refs": [
+            "JsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "required",
+          "optional": true,
+          "type": "string[]",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "unevaluatedProperties",
+          "optional": true,
+          "type": "unknown",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ReadA2UICatalogDirectoryOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Options for loading generated A2UI catalog artifacts from a directory.",
+      "members": [
+        {
+          "name": "catalogDir",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "catalogId",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "cwd",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "label",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "version",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "A2UI_PROTOCOL_VERSION",
+      "kind": "variable",
+      "type": "\"v0.9\"",
+      "default": "'v0.9'"
+    },
+    {
+      "name": "BASIC_CATALOG",
+      "kind": "variable",
+      "type": "A2UICatalog",
+      "ref": "A2UICatalog",
+      "refs": [
+        "A2UICatalog"
+      ],
+      "default": "..."
+    },
+    {
+      "name": "BASIC_CATALOG_EXAMPLES",
+      "kind": "variable",
+      "type": "A2UIExample[]",
+      "refs": [
+        "A2UIExample"
+      ],
+      "default": "..."
+    },
+    {
+      "name": "BASIC_CATALOG_ID",
+      "kind": "variable",
+      "type": "\"https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json\"",
+      "default": "'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json'"
+    },
+    {
+      "name": "buildA2UISystemPrompt",
+      "kind": "function",
+      "type": "buildA2UISystemPrompt(opts?: BuildSystemPromptOptions): string",
+      "signatures": [
+        {
+          "text": "buildA2UISystemPrompt(opts?: BuildSystemPromptOptions): string",
+          "params": [
+            {
+              "name": "opts",
+              "type": "BuildSystemPromptOptions",
+              "ref": "BuildSystemPromptOptions",
+              "refs": [
+                "BuildSystemPromptOptions"
+              ],
+              "optional": true
+            }
+          ],
+          "returns": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "buildA2UISystemPromptAsync",
+      "kind": "function",
+      "type": "buildA2UISystemPromptAsync(opts: BuildSystemPromptOptions): Promise<string>",
+      "signatures": [
+        {
+          "text": "buildA2UISystemPromptAsync(opts: BuildSystemPromptOptions): Promise<string>",
+          "params": [
+            {
+              "name": "opts",
+              "type": "BuildSystemPromptOptions",
+              "ref": "BuildSystemPromptOptions",
+              "refs": [
+                "BuildSystemPromptOptions"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "Promise<string>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "createA2UICatalogFromManifests",
+      "kind": "function",
+      "type": "createA2UICatalogFromManifests(options: { catalogId: string; componentManifests: Record<string, JsonSchema>[]; examples?: A2UIExample[]; extraRules?: string[]; functions?: A2UIFunctionSpec[]; label?: string; version?: string }): A2UICatalog",
+      "signatures": [
+        {
+          "text": "createA2UICatalogFromManifests(options: { catalogId: string; componentManifests: Record<string, JsonSchema>[]; examples?: A2UIExample[]; extraRules?: string[]; functions?: A2UIFunctionSpec[]; label?: string; version?: string }): A2UICatalog",
+          "params": [
+            {
+              "name": "options",
+              "type": "{ catalogId: string; componentManifests: Record<string, JsonSchema>[]; examples?: A2UIExample[]; extraRules?: string[]; functions?: A2UIFunctionSpec[]; label?: string; version?: string }",
+              "refs": [
+                "JsonSchema",
+                "A2UIExample",
+                "A2UIFunctionSpec"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "A2UICatalog",
+            "refs": [
+              "A2UICatalog"
+            ]
+          },
+          "summary": "Convert generated component manifests into a prompt-ready A2UI catalog."
+        }
+      ],
+      "summary": "Convert generated component manifests into a prompt-ready A2UI catalog."
+    },
+    {
+      "name": "loadBasicCatalog",
+      "kind": "function",
+      "type": "loadBasicCatalog(): Promise<A2UICatalog>",
+      "signatures": [
+        {
+          "text": "loadBasicCatalog(): Promise<A2UICatalog>",
+          "params": [],
+          "returns": {
+            "type": "Promise<A2UICatalog>",
+            "refs": [
+              "A2UICatalog"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "readA2UICatalogFromDirectory",
+      "kind": "function",
+      "type": "readA2UICatalogFromDirectory(options: ReadA2UICatalogDirectoryOptions): A2UICatalog",
+      "signatures": [
+        {
+          "text": "readA2UICatalogFromDirectory(options: ReadA2UICatalogDirectoryOptions): A2UICatalog",
+          "params": [
+            {
+              "name": "options",
+              "type": "ReadA2UICatalogDirectoryOptions",
+              "ref": "ReadA2UICatalogDirectoryOptions",
+              "refs": [
+                "ReadA2UICatalogDirectoryOptions"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "A2UICatalog",
+            "refs": [
+              "A2UICatalog"
+            ]
+          },
+          "summary": "Read generated component and function manifests and convert them into a\nprompt-ready A2UI catalog."
+        }
+      ],
+      "summary": "Read generated component and function manifests and convert them into a\nprompt-ready A2UI catalog."
+    },
+    {
+      "name": "renderCatalogReference",
+      "kind": "function",
+      "type": "renderCatalogReference(catalog: A2UICatalog): string",
+      "signatures": [
+        {
+          "text": "renderCatalogReference(catalog: A2UICatalog): string",
+          "params": [
+            {
+              "name": "catalog",
+              "type": "A2UICatalog",
+              "ref": "A2UICatalog",
+              "refs": [
+                "A2UICatalog"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "string"
+          },
+          "summary": "Render an A2UI catalog into the Markdown reference embedded in prompts."
+        }
+      ],
+      "summary": "Render an A2UI catalog into the Markdown reference embedded in prompts."
+    }
+  ]
+}

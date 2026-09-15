@@ -9,6 +9,11 @@
     "label": "@lynx-js/react"
   },
   {
+    "type": "dir",
+    "name": "genui",
+    "label": "@lynx-js/genui"
+  },
+  {
     "type": "divider"
   },
   {

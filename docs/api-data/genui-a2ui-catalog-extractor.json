@@ -1,0 +1,388 @@
+{
+  "id": "genui-a2ui-catalog-extractor",
+  "package": "@lynx-js/genui",
+  "version": "0.4.0",
+  "description": "Generative UI for Lynx.",
+  "group": "libraries",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/genui",
+  "exports": [
+    {
+      "name": "A2UICatalog",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Full catalog manifest consumed by A2UI agents and renderers.",
+      "members": [
+        {
+          "name": "catalogId",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "components",
+          "optional": true,
+          "type": "Record<string, JsonSchema>",
+          "refs": [
+            "JsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "functions",
+          "optional": true,
+          "type": "Record<string, JsonSchema>",
+          "refs": [
+            "JsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "theme",
+          "optional": true,
+          "type": "Record<string, JsonSchema>",
+          "refs": [
+            "JsonSchema"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "CatalogComponent",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Component schema discovered from an interface annotated with `@a2uiCatalog`.",
+      "members": [
+        {
+          "name": "filePath",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "interfaceName",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "schema",
+          "type": "JsonSchema",
+          "ref": "JsonSchema",
+          "refs": [
+            "JsonSchema"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "CatalogFunction",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "A function discovered in source via `@a2uiFunction`, with its origin path.",
+      "members": [
+        {
+          "name": "description",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "filePath",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "parameters",
+          "type": "JsonSchema",
+          "ref": "JsonSchema",
+          "refs": [
+            "JsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "returnType",
+          "type": "\"string\" | \"number\" | \"boolean\" | \"object\" | \"array\" | \"any\" | \"void\"",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "ExtractCatalogOptions",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Source and compiler inputs used when extracting catalog metadata.",
+      "members": [
+        {
+          "name": "cwd",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "sourceFiles",
+          "type": "string[]",
+          "kind": "property"
+        },
+        {
+          "name": "tsconfig",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "FunctionDefinition",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "Serializable definition for a client-side function exposed to an agent.",
+      "members": [
+        {
+          "name": "description",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "parameters",
+          "type": "JsonSchema",
+          "ref": "JsonSchema",
+          "refs": [
+            "JsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "returnType",
+          "type": "\"string\" | \"number\" | \"boolean\" | \"object\" | \"array\" | \"any\" | \"void\"",
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "JsonSchema",
+      "kind": "interface",
+      "type": "unknown",
+      "summary": "JSON Schema subset emitted for A2UI component props and function arguments.",
+      "members": [
+        {
+          "name": "$ref",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "additionalProperties",
+          "optional": true,
+          "type": "boolean | JsonSchema",
+          "ref": "JsonSchema",
+          "refs": [
+            "JsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "const",
+          "optional": true,
+          "type": "unknown",
+          "kind": "property"
+        },
+        {
+          "name": "default",
+          "optional": true,
+          "type": "unknown",
+          "kind": "property"
+        },
+        {
+          "name": "deprecated",
+          "optional": true,
+          "type": "boolean",
+          "kind": "property"
+        },
+        {
+          "name": "description",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "enum",
+          "optional": true,
+          "type": "(string | number | boolean)[]",
+          "kind": "property"
+        },
+        {
+          "name": "items",
+          "optional": true,
+          "type": "JsonSchema",
+          "ref": "JsonSchema",
+          "refs": [
+            "JsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "oneOf",
+          "optional": true,
+          "type": "JsonSchema[]",
+          "refs": [
+            "JsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "properties",
+          "optional": true,
+          "type": "Record<string, JsonSchema>",
+          "refs": [
+            "JsonSchema"
+          ],
+          "kind": "property"
+        },
+        {
+          "name": "required",
+          "optional": true,
+          "type": "string[]",
+          "kind": "property"
+        },
+        {
+          "name": "type",
+          "optional": true,
+          "type": "string",
+          "kind": "property"
+        },
+        {
+          "name": "unevaluatedProperties",
+          "optional": true,
+          "type": "boolean | JsonSchema",
+          "ref": "JsonSchema",
+          "refs": [
+            "JsonSchema"
+          ],
+          "kind": "property"
+        }
+      ]
+    },
+    {
+      "name": "createA2UICatalog",
+      "kind": "function",
+      "type": "createA2UICatalog(options: { catalogId: string; components: CatalogComponent[] | Record<string, JsonSchema>; functions?: FunctionDefinition[]; theme?: Record<string, JsonSchema> }): A2UICatalog",
+      "signatures": [
+        {
+          "text": "createA2UICatalog(options: { catalogId: string; components: CatalogComponent[] | Record<string, JsonSchema>; functions?: FunctionDefinition[]; theme?: Record<string, JsonSchema> }): A2UICatalog",
+          "params": [
+            {
+              "name": "options",
+              "type": "{ catalogId: string; components: CatalogComponent[] | Record<string, JsonSchema>; functions?: FunctionDefinition[]; theme?: Record<string, JsonSchema> }",
+              "refs": [
+                "CatalogComponent",
+                "JsonSchema",
+                "FunctionDefinition"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "A2UICatalog",
+            "refs": [
+              "A2UICatalog"
+            ]
+          },
+          "summary": "Build a full A2UI catalog manifest from component and function artifacts."
+        }
+      ],
+      "summary": "Build a full A2UI catalog manifest from component and function artifacts."
+    },
+    {
+      "name": "extractCatalogComponents",
+      "kind": "function",
+      "type": "extractCatalogComponents(options: ExtractCatalogOptions): Promise<CatalogComponent[]>",
+      "signatures": [
+        {
+          "text": "extractCatalogComponents(options: ExtractCatalogOptions): Promise<CatalogComponent[]>",
+          "params": [
+            {
+              "name": "options",
+              "type": "ExtractCatalogOptions",
+              "ref": "ExtractCatalogOptions",
+              "refs": [
+                "ExtractCatalogOptions"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "Promise<CatalogComponent[]>",
+            "refs": [
+              "CatalogComponent"
+            ]
+          },
+          "summary": "Run TypeDoc over source files and extract A2UI component schemas."
+        }
+      ],
+      "summary": "Run TypeDoc over source files and extract A2UI component schemas."
+    },
+    {
+      "name": "extractCatalogFunctions",
+      "kind": "function",
+      "type": "extractCatalogFunctions(options: ExtractCatalogOptions): Promise<CatalogFunction[]>",
+      "signatures": [
+        {
+          "text": "extractCatalogFunctions(options: ExtractCatalogOptions): Promise<CatalogFunction[]>",
+          "params": [
+            {
+              "name": "options",
+              "type": "ExtractCatalogOptions",
+              "ref": "ExtractCatalogOptions",
+              "refs": [
+                "ExtractCatalogOptions"
+              ]
+            }
+          ],
+          "returns": {
+            "type": "Promise<CatalogFunction[]>",
+            "refs": [
+              "CatalogFunction"
+            ]
+          },
+          "summary": "Run TypeDoc over source files and extract A2UI function definitions."
+        }
+      ],
+      "summary": "Run TypeDoc over source files and extract A2UI function definitions."
+    },
+    {
+      "name": "findCatalogSourceFiles",
+      "kind": "function",
+      "type": "findCatalogSourceFiles(inputPath: string): string[]",
+      "signatures": [
+        {
+          "text": "findCatalogSourceFiles(inputPath: string): string[]",
+          "params": [
+            {
+              "name": "inputPath",
+              "type": "string"
+            }
+          ],
+          "returns": {
+            "type": "string[]"
+          },
+          "summary": "Find supported source files under a file or directory path."
+        }
+      ],
+      "summary": "Find supported source files under a file or directory path."
+    }
+  ]
+}

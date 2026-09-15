@@ -1,0 +1,14 @@
+[
+  { "type": "file", "name": "a2ui", "label": "a2ui" },
+  { "type": "file", "name": "openui", "label": "openui" },
+  { "type": "file", "name": "openui-explicit", "label": "openui/explicit" },
+  { "type": "file", "name": "openui-prompt", "label": "openui/prompt" },
+  { "type": "file", "name": "a2ui-prompt", "label": "a2ui-prompt" },
+  {
+    "type": "file",
+    "name": "a2ui-catalog-extractor",
+    "label": "a2ui-catalog-extractor"
+  },
+  { "type": "file", "name": "lynx-xml", "label": "lynx-xml" },
+  { "type": "file", "name": "mcp-apps", "label": "mcp-apps" }
+]

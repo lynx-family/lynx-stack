@@ -1026,22 +1026,21 @@ export function renderExports(
       ctx.anchors.set(`${e.name}.${m.name}`, slug(`${e.name}.${m.name}`));
     }
   }
-  const groups: [string, (e: ApiExport) => boolean][] = [
-    [ctx.l.functions, e => e.kind === 'function'],
-    [ctx.l.classes, e => e.kind === 'class'],
-    [ctx.l.constants, e => e.kind === 'variable'],
+  const groups: [string, string, (e: ApiExport) => boolean][] = [
+    ['functions', ctx.l.functions, e => e.kind === 'function'],
+    ['classes', ctx.l.classes, e => e.kind === 'class'],
+    ['constants', ctx.l.constants, e => e.kind === 'variable'],
     [
+      'types',
       ctx.l.types,
       e => ['interface', 'typealias', 'enum', 'namespace'].includes(e.kind),
     ],
   ];
   let s = '';
-  for (const [title, pred] of groups) {
+  for (const [id, title, pred] of groups) {
     const items = list.filter(e => pred(e));
     if (items.length === 0) continue;
-    s += `${'#'.repeat(Math.max(depth - 1, 2))} ${title} \\{#${
-      slug(title)
-    }\\}\n\n`;
+    s += `${'#'.repeat(Math.max(depth - 1, 2))} ${title} \\{#${id}\\}\n\n`;
     for (const e of items) s += renderExport(e, depth, ctx);
   }
   return s;

@@ -1,0 +1,236 @@
+---
+title: '@lynx-js/genui/a2ui-prompt'
+---
+
+# `@lynx-js/genui/a2ui-prompt`
+
+`@lynx-js/genui/a2ui-prompt` builds the system prompt that teaches a model to answer with A2UI messages, from the built-in basic catalog or from your own catalog. Use it in a CLI or on the agent side, next to the [`@lynx-js/genui/a2ui`](./a2ui) renderer in the app.
+
+```ts
+import { buildA2UISystemPrompt } from '@lynx-js/genui/a2ui-prompt';
+```
+
+## API
+
+{/* @api ApiExports package="genui-a2ui-prompt" */}
+
+## Functions \{#functions\}
+
+### `buildA2UISystemPrompt()` \{#builda2uisystemprompt\}
+
+```ts
+function buildA2UISystemPrompt(opts?: BuildSystemPromptOptions): string
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `opts?` | [`BuildSystemPromptOptions`](#buildsystempromptoptions) |  |
+
+**Returns:** `string`
+
+### `buildA2UISystemPromptAsync()` \{#builda2uisystempromptasync\}
+
+```ts
+function buildA2UISystemPromptAsync(opts: BuildSystemPromptOptions): Promise<string>
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `opts` | [`BuildSystemPromptOptions`](#buildsystempromptoptions) |  |
+
+**Returns:** `Promise<string>`
+
+### `createA2UICatalogFromManifests()` \{#createa2uicatalogfrommanifests\}
+
+```ts
+function createA2UICatalogFromManifests(options: { catalogId: string; componentManifests: Record<string, JsonSchema>[]; examples?: A2UIExample[]; extraRules?: string[]; functions?: A2UIFunctionSpec[]; label?: string; version?: string }): A2UICatalog
+```
+
+Convert generated component manifests into a prompt-ready A2UI catalog.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | `{ catalogId: string; componentManifests: Record<string, `[`JsonSchema`](#jsonschema)`>[]; examples?: `[`A2UIExample`](#a2uiexample)`[]; extraRules?: string[]; functions?: `[`A2UIFunctionSpec`](#a2uifunctionspec)`[]; label?: string; version?: string }` |  |
+
+**Returns:** [`A2UICatalog`](#a2uicatalog)
+
+### `loadBasicCatalog()` \{#loadbasiccatalog\}
+
+```ts
+function loadBasicCatalog(): Promise<A2UICatalog>
+```
+
+*No description yet.*
+
+**Returns:** `Promise<`[`A2UICatalog`](#a2uicatalog)`>`
+
+### `readA2UICatalogFromDirectory()` \{#reada2uicatalogfromdirectory\}
+
+```ts
+function readA2UICatalogFromDirectory(options: ReadA2UICatalogDirectoryOptions): A2UICatalog
+```
+
+Read generated component and function manifests and convert them into a
+prompt-ready A2UI catalog.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | [`ReadA2UICatalogDirectoryOptions`](#reada2uicatalogdirectoryoptions) |  |
+
+**Returns:** [`A2UICatalog`](#a2uicatalog)
+
+### `renderCatalogReference()` \{#rendercatalogreference\}
+
+```ts
+function renderCatalogReference(catalog: A2UICatalog): string
+```
+
+Render an A2UI catalog into the Markdown reference embedded in prompts.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `catalog` | [`A2UICatalog`](#a2uicatalog) |  |
+
+**Returns:** `string`
+
+## Constants \{#constants\}
+
+### `A2UI_PROTOCOL_VERSION` \{#a2ui-protocol-version\}
+
+```ts
+const A2UI_PROTOCOL_VERSION: "v0.9"
+```
+
+*No description yet.*
+
+### `BASIC_CATALOG` \{#basic-catalog\}
+
+```ts
+const BASIC_CATALOG: A2UICatalog
+```
+
+*No description yet.*
+
+### `BASIC_CATALOG_EXAMPLES` \{#basic-catalog-examples\}
+
+```ts
+const BASIC_CATALOG_EXAMPLES: A2UIExample[]
+```
+
+*No description yet.*
+
+### `BASIC_CATALOG_ID` \{#basic-catalog-id\}
+
+```ts
+const BASIC_CATALOG_ID: "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
+```
+
+*No description yet.*
+
+## Types \{#types\}
+
+### `A2UICatalog` \{#a2uicatalog\}
+
+Prompt-ready A2UI catalog including components, rules, examples, and
+optional client functions.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="a2uicatalog-components"></a>`components` | [`A2UIComponentSpec`](#a2uicomponentspec)`[]` |  |
+| <a id="a2uicatalog-examples"></a>`examples?` | [`A2UIExample`](#a2uiexample)`[]` |  |
+| <a id="a2uicatalog-extrarules"></a>`extraRules?` | `string[]` |  |
+| <a id="a2uicatalog-functions"></a>`functions?` | [`A2UIFunctionSpec`](#a2uifunctionspec)`[]` |  |
+| <a id="a2uicatalog-id"></a>`id` | `string` |  |
+| <a id="a2uicatalog-label"></a>`label` | `string` |  |
+| <a id="a2uicatalog-version"></a>`version?` | `string` |  |
+
+### `A2UIComponentProp` \{#a2uicomponentprop\}
+
+Prompt-facing description of a single A2UI component prop.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="a2uicomponentprop-description"></a>`description?` | `string` |  |
+| <a id="a2uicomponentprop-enums"></a>`enums?` | `readonly string[]` |  |
+| <a id="a2uicomponentprop-name"></a>`name` | `string` |  |
+| <a id="a2uicomponentprop-required"></a>`required?` | `boolean` |  |
+| <a id="a2uicomponentprop-schema"></a>`schema?` | [`JsonSchema`](#jsonschema) |  |
+| <a id="a2uicomponentprop-type"></a>`type` | `string` |  |
+
+### `A2UIComponentSpec` \{#a2uicomponentspec\}
+
+Prompt-facing component specification derived from a catalog manifest.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="a2uicomponentspec-containershape"></a>`containerShape?` | `"children" \| "child" \| "tabs" \| "trigger-content" \| "none"` |  |
+| <a id="a2uicomponentspec-name"></a>`name` | `string` |  |
+| <a id="a2uicomponentspec-props"></a>`props` | [`A2UIComponentProp`](#a2uicomponentprop)`[]` |  |
+| <a id="a2uicomponentspec-requiresaction"></a>`requiresAction?` | `boolean` |  |
+| <a id="a2uicomponentspec-summary"></a>`summary` | `string` |  |
+
+### `A2UIExample` \{#a2uiexample\}
+
+Validated user request and message sequence included as an in-context A2UI
+example.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="a2uiexample-messages"></a>`messages` | `unknown[]` |  |
+| <a id="a2uiexample-name"></a>`name` | `string` |  |
+| <a id="a2uiexample-user"></a>`user` | `string` |  |
+
+### `A2UIFunctionSpec` \{#a2uifunctionspec\}
+
+Prompt-facing schema for a client-side function the agent may call.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="a2uifunctionspec-description"></a>`description?` | `string` |  |
+| <a id="a2uifunctionspec-name"></a>`name` | `string` |  |
+| <a id="a2uifunctionspec-parameters"></a>`parameters` | [`JsonSchema`](#jsonschema) |  |
+| <a id="a2uifunctionspec-returntype"></a>`returnType` | `"string" \| "number" \| "boolean" \| "object" \| "array" \| "any" \| "void"` |  |
+
+### `BuildSystemPromptOptions` \{#buildsystempromptoptions\}
+
+Options used to customize the generated A2UI system prompt.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="buildsystempromptoptions-appendix"></a>`appendix?` | `string` |  |
+| <a id="buildsystempromptoptions-catalog"></a>`catalog?` | [`A2UICatalog`](#a2uicatalog) |  |
+
+### `JsonSchema` \{#jsonschema\}
+
+JSON Schema subset used in prompt-facing catalog descriptions.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="jsonschema-additionalproperties"></a>`additionalProperties?` | `unknown` |  |
+| <a id="jsonschema-const"></a>`const?` | `unknown` |  |
+| <a id="jsonschema-description"></a>`description?` | `string` |  |
+| <a id="jsonschema-enum"></a>`enum?` | `unknown` |  |
+| <a id="jsonschema-items"></a>`items?` | [`JsonSchema`](#jsonschema) |  |
+| <a id="jsonschema-oneof"></a>`oneOf?` | [`JsonSchema`](#jsonschema)`[]` |  |
+| <a id="jsonschema-properties"></a>`properties?` | `Record<string, `[`JsonSchema`](#jsonschema)`>` |  |
+| <a id="jsonschema-required"></a>`required?` | `string[]` |  |
+| <a id="jsonschema-type"></a>`type?` | `string` |  |
+| <a id="jsonschema-unevaluatedproperties"></a>`unevaluatedProperties?` | `unknown` |  |
+
+### `ReadA2UICatalogDirectoryOptions` \{#reada2uicatalogdirectoryoptions\}
+
+Options for loading generated A2UI catalog artifacts from a directory.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="reada2uicatalogdirectoryoptions-catalogdir"></a>`catalogDir` | `string` |  |
+| <a id="reada2uicatalogdirectoryoptions-catalogid"></a>`catalogId` | `string` |  |
+| <a id="reada2uicatalogdirectoryoptions-cwd"></a>`cwd?` | `string` |  |
+| <a id="reada2uicatalogdirectoryoptions-label"></a>`label?` | `string` |  |
+| <a id="reada2uicatalogdirectoryoptions-version"></a>`version?` | `string` |  |
+
+{/* @api-end */}

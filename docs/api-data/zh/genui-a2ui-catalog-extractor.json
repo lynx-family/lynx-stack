@@ -1,0 +1,42 @@
+{
+  "A2UICatalog.summary": {
+    "en": "Full catalog manifest consumed by A2UI agents and renderers.",
+    "text": "供 A2UI agent 和渲染器使用的完整 catalog manifest。"
+  },
+  "CatalogComponent.summary": {
+    "en": "Component schema discovered from an interface annotated with `@a2uiCatalog`.",
+    "text": "从带有 `@a2uiCatalog` 注解的接口中发现的组件 schema。"
+  },
+  "CatalogFunction.summary": {
+    "en": "A function discovered in source via `@a2uiFunction`, with its origin path.",
+    "text": "通过 `@a2uiFunction` 在源码中发现的函数，附带其来源路径。"
+  },
+  "ExtractCatalogOptions.summary": {
+    "en": "Source and compiler inputs used when extracting catalog metadata.",
+    "text": "提取 catalog 元数据时使用的源码和编译器输入。"
+  },
+  "FunctionDefinition.summary": {
+    "en": "Serializable definition for a client-side function exposed to an agent.",
+    "text": "暴露给 agent 的客户端函数的可序列化定义。"
+  },
+  "JsonSchema.summary": {
+    "en": "JSON Schema subset emitted for A2UI component props and function arguments.",
+    "text": "为 A2UI 组件 props 和函数参数输出的 JSON Schema 子集。"
+  },
+  "createA2UICatalog.summary": {
+    "en": "Build a full A2UI catalog manifest from component and function artifacts.",
+    "text": "基于组件和函数产物构建完整的 A2UI catalog manifest。"
+  },
+  "extractCatalogComponents.summary": {
+    "en": "Run TypeDoc over source files and extract A2UI component schemas.",
+    "text": "对源文件运行 TypeDoc，提取 A2UI 组件 schema。"
+  },
+  "extractCatalogFunctions.summary": {
+    "en": "Run TypeDoc over source files and extract A2UI function definitions.",
+    "text": "对源文件运行 TypeDoc，提取 A2UI 函数定义。"
+  },
+  "findCatalogSourceFiles.summary": {
+    "en": "Find supported source files under a file or directory path.",
+    "text": "在文件或目录路径下查找受支持的源文件。"
+  }
+}
