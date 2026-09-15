@@ -19,7 +19,7 @@ interface MockMcpAppsService {
     options: unknown,
     conversation: unknown,
     abortSignal?: AbortSignal,
-  ): Promise<never>;
+  ): Promise<unknown>;
 }
 
 type GlobalWithMcpAppsService = typeof globalThis & {
@@ -55,6 +55,54 @@ function requestBody() {
 }
 
 describe('MCP Apps stream', () => {
+  test.each([
+    { type: 'message', text: 'Hello' },
+    { type: 'tool_call', name: 'weather.current', arguments: {} },
+  ])('returns priced token dimensions for %j', async selection => {
+    const global = globalThis as GlobalWithMcpAppsService;
+    const previousService = global.__MCP_APPS_AGENT_SERVICE__;
+    const usage = {
+      prompt_tokens: 100,
+      completion_tokens: 20,
+      prompt_tokens_details: { cached_tokens: 60 },
+    };
+    global.__MCP_APPS_AGENT_SERVICE__ = {
+      generateRaw: () =>
+        Promise.resolve({
+          text: JSON.stringify(selection),
+          usage,
+          finishReason: 'stop',
+        }),
+    };
+    try {
+      const response = await app.request('/mcp-apps/stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '203.0.113.183',
+        },
+        body: JSON.stringify(requestBody()),
+      });
+      const body = await response.text();
+      const frame = body.split('\n\n').find(frame =>
+        frame.startsWith('event: done\n')
+      );
+      expect(frame).toBeDefined();
+      expect(JSON.parse(frame!.slice('event: done\ndata: '.length)))
+        .toMatchObject({
+          usage,
+          tokenUsage: {
+            inputTokens: 100,
+            cachedTokens: 60,
+            outputTokens: 20,
+            totalTokens: 120,
+          },
+        });
+    } finally {
+      global.__MCP_APPS_AGENT_SERVICE__ = previousService;
+    }
+  });
+
   test('aborts model generation when the response reader disconnects', async () => {
     const global = globalThis as GlobalWithMcpAppsService;
     const previousService = global.__MCP_APPS_AGENT_SERVICE__;

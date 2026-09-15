@@ -13,6 +13,7 @@ const usage = {
   inputTokens: 1,
   outputTokens: 1,
   totalTokens: 2,
+  cachedInputTokens: 1,
 };
 
 function readableStream<T>(chunks: T[]): ReadableStream<T> {
@@ -128,6 +129,12 @@ describe('A2UI Mastra runtime', () => {
 
     expect(await resumed.finishReason).toBe('stop');
     expect(await resumed.text).toBe('continued after resume');
+    expect(await resumed.totalUsage).toMatchObject({
+      inputTokens: 2,
+      outputTokens: 2,
+      totalTokens: 4,
+      cachedInputTokens: 2,
+    });
     expect(modelCall).toBe(2);
   });
 });

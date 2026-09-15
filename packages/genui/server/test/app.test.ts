@@ -53,6 +53,9 @@ describe('Hono application', () => {
         api: 'chat',
         default: true,
         maxOutputTokens: 16384,
+        input_price: 1.5,
+        cached_price: 0.25,
+        output_price: 6,
       },
       'Doubao Pro': {
         apiKey: 'pro-secret',
@@ -78,8 +81,20 @@ describe('Hono application', () => {
       expect(payload).toEqual({
         defaultModel: 'Doubao Seed',
         models: [
-          { id: 'Doubao Seed', label: 'Doubao Seed' },
-          { id: 'Doubao Pro', label: 'Doubao Pro' },
+          {
+            id: 'Doubao Seed',
+            label: 'Doubao Seed',
+            input_price: 1.5,
+            cached_price: 0.25,
+            output_price: 6,
+          },
+          {
+            id: 'Doubao Pro',
+            label: 'Doubao Pro',
+            input_price: 0,
+            cached_price: 0,
+            output_price: 0,
+          },
         ],
       });
       const serializedPayload = JSON.stringify(payload);

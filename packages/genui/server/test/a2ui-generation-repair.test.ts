@@ -69,7 +69,7 @@ describe('validated A2UI generation repairs', () => {
         calls.push([...messages]);
         return Promise.resolve({
           ...output,
-          usage: { inputTokens: 10, outputTokens: 20 },
+          usage: { inputTokens: 10, outputTokens: 20, cachedTokens: 4 },
         });
       },
     } as unknown as A2UIAgent;
@@ -88,6 +88,12 @@ describe('validated A2UI generation repairs', () => {
       scope,
     );
 
+    expect(result.usage).toEqual({
+      inputTokens: 40,
+      outputTokens: 80,
+      totalTokens: 120,
+      cachedTokens: 16,
+    });
     expect(calls).toHaveLength(4);
     const original = calls[0]!;
     expect(original.slice(0, 2)).toEqual(conversation.history);

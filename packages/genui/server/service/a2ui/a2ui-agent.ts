@@ -31,6 +31,7 @@ import {
   searchedDoubaoImageURLs,
 } from '../../agent/common/doubao-search-tool.js';
 import { createAgentStepLogger } from '../common/agent-step-logger.js';
+import { readBenchTokenUsage } from '../common/bench/usage.js';
 import { buildGenerationRepairMessages } from '../common/generation-repair.js';
 import {
   buildConversationMessages,
@@ -492,7 +493,11 @@ export default class A2UIAgentService {
 
     let lastText = '';
     let lastErrors: string[] = [];
-    let lastUsage: unknown;
+    const attemptUsages: unknown[] = [];
+    const totalUsage = () =>
+      attemptUsages.length === 1
+        ? attemptUsages[0]
+        : readBenchTokenUsage(attemptUsages);
     let lastFinishReason: unknown;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -507,7 +512,7 @@ export default class A2UIAgentService {
 
       const { text } = completed;
       lastText = text;
-      lastUsage = completed.usage;
+      attemptUsages.push(completed.usage);
       lastFinishReason = completed.finishReason;
       abortSignal?.throwIfAborted();
 
@@ -525,7 +530,7 @@ export default class A2UIAgentService {
           errors: [],
           warnings: validation.warnings,
           attempts: attempt,
-          usage: lastUsage,
+          usage: totalUsage(),
           finishReason: lastFinishReason,
         };
       }
@@ -548,7 +553,7 @@ export default class A2UIAgentService {
       errors: lastErrors,
       warnings: [],
       attempts: maxAttempts,
-      usage: lastUsage,
+      usage: totalUsage(),
       finishReason: lastFinishReason,
     };
   }

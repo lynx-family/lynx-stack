@@ -52,7 +52,10 @@ export GENUI_MODEL_CONFIG_JSON='{
     "baseURL": "https://api.openai.com/v1",
     "api": "responses",
     "default": true,
-    "maxOutputTokens": 16384
+    "maxOutputTokens": 16384,
+    "input_price": 2,
+    "cached_price": 0.5,
+    "output_price": 8
   }
 }'
 ```
@@ -69,6 +72,12 @@ export GENUI_MODEL_CONFIG_JSON='{
   requests use the same resolver with a 2048-token target. Reasoning-only
   recovery may increase the requested budget, within that same ceiling.
 - `reasoningEffort` is optional per model.
+- `input_price`, `cached_price`, and `output_price` optionally set prices per
+  **one million tokens**, using a common currency chosen by the deployment.
+  These example prices are illustrative. Each price must be a finite,
+  non-negative number and defaults to `0` when omitted. `input_price` applies
+  to input tokens that did not hit the cache; `cached_price` applies to cache
+  hits; `output_price` includes reasoning tokens.
 
 For generation latency, keep static instructions/catalogs ahead of conversation
 history and the latest request. Prompt Cache behavior follows the upstream
@@ -90,8 +99,45 @@ OpenAI-compatible provider URLs in `ALLOWED_CUSTOM_PROVIDER_BASE_URLS` (an
 optional trailing slash is normalized). Server-owned model configuration
 remains the trusted path for private, HTTP, or deployment-specific endpoints.
 
-`GET /models` exposes only the top-level names and default selection. It must
-never expose `model`, `apiKey`, or `baseURL` to the playground.
+`GET /models` returns `defaultModel` and `models: [{ id, label, input_price, cached_price, output_price }]`.
+Every entry includes all three prices, including zeros when unconfigured. It
+must never expose `model`, `apiKey`, or `baseURL` to the playground.
+
+Generation JSON responses and SSE `done` events include `tokenUsage` alongside
+the existing `usage` field. This applies to A2UI chat and actions, OpenUI,
+Lynx XML, HTML, and both MCP Apps message and tool-selection responses:
+
+```json
+{
+  "tokenUsage": {
+    "inputTokens": 100,
+    "cachedTokens": 60,
+    "outputTokens": 20,
+    "totalTokens": 120
+  }
+}
+```
+
+`inputTokens` includes `cachedTokens`. The client computes the amount using:
+
+```text
+((inputTokens - cachedTokens) * input_price
+ + cachedTokens * cached_price
+ + outputTokens * output_price) / 1_000_000
+```
+
+The server does not calculate or return a monetary total. A custom provider
+has no server-configured prices.
+
+The three price dimensions are always present in `tokenUsage`; `null` means
+that the provider did not report a usable count. Keep unknown usage distinct
+from an explicit zero, and do not present a complete price when a required
+count is unknown. `totalTokens`, `cacheWriteTokens`, and `reasoningTokens` are
+also returned when available. Cache-write tokens use the ordinary input price;
+reasoning tokens are already included in output and must not be billed twice.
+When repairs make additional model calls, return their accumulated usage,
+including failed validation attempts. A dimension missing from any attempt
+remains unknown in the aggregate.
 
 All five generation agents optionally generate image assets through a shared
 server-side Volcengine Ark tool. To enable it, configure all three values:

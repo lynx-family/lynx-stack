@@ -25,6 +25,7 @@ import {
   searchedDoubaoImageURLs,
 } from '../../../../agent/common/doubao-search-tool.js';
 import { getA2UIAgentService } from '../../../../service/a2ui/a2ui-agent.js';
+import { readBenchTokenUsage } from '../../../../service/common/bench/usage.js';
 import {
   configuredApiStyle,
   defaultModelName,
@@ -46,7 +47,7 @@ import {
 import { readJsonBodyWithLimit } from '../../../common/request';
 import { encodeSSE, sseHeaders } from '../../../common/sse';
 import { createStreamLogger } from '../../../common/stream-logger';
-import { extractUsageMetrics } from '../../../common/usage';
+import { extractTokenUsage, extractUsageMetrics } from '../../../common/usage';
 import { pickA2UIChatOptions, validateAction } from '../../_shared';
 import { publishA2UIPayload } from '../../payload-publisher';
 
@@ -407,11 +408,11 @@ async function postA2UIActionStream(req: Request) {
                 textLength: repaired.text.length,
                 messageCount: repaired.messages.length,
               });
+              usage = readBenchTokenUsage([usage, repaired.usage]);
+              usageMetrics = extractUsageMetrics(usage);
+              cachedTokens = usageMetrics.cachedTokens;
               if (repaired.ok) {
                 finalText = repaired.text;
-                usage = repaired.usage;
-                usageMetrics = extractUsageMetrics(usage);
-                cachedTokens = usageMetrics.cachedTokens;
                 finishReason = repaired.finishReason;
                 validatedMessages = repaired.messages;
                 validation = {
@@ -472,6 +473,7 @@ async function postA2UIActionStream(req: Request) {
           enqueue('done', {
             text: finalText,
             usage,
+            tokenUsage: extractTokenUsage(usage),
             cachedTokens,
             finishReason,
             validation,

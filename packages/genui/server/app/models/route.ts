@@ -22,6 +22,9 @@ function getModels(req: Request) {
     models: Object.keys(result.config.models).map((name) => ({
       id: name,
       label: name,
+      input_price: result.config.models[name]!.input_price,
+      cached_price: result.config.models[name]!.cached_price,
+      output_price: result.config.models[name]!.output_price,
     })),
   });
 }

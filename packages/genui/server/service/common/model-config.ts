@@ -22,7 +22,17 @@ const REASONING_EFFORTS = new Set<OpenAIReasoningEffort>([
   'xhigh',
 ]);
 
-export interface ConfiguredModel {
+/** Prices per million tokens, in the deployment's common currency. */
+export interface ModelPrices {
+  /** Input tokens that did not hit the prompt cache. */
+  input_price: number;
+  /** Input tokens read from the prompt cache. */
+  cached_price: number;
+  /** All output tokens, including reasoning tokens. */
+  output_price: number;
+}
+
+export interface ConfiguredModel extends ModelPrices {
   apiKey: string;
   baseURL: string;
   model: string;
@@ -72,6 +82,23 @@ function parseConfiguredModel(
   const apiKey = requiredString(value, 'apiKey');
   const baseURL = requiredString(value, 'baseURL');
   const model = requiredString(value, 'model');
+  const prices: ModelPrices = {
+    input_price: 0,
+    cached_price: 0,
+    output_price: 0,
+  };
+  for (const key of ['input_price', 'cached_price', 'output_price'] as const) {
+    const price = value[key];
+    if (price === undefined) continue;
+    if (typeof price !== 'number' || !Number.isFinite(price) || price < 0) {
+      throw new Error(
+        `model ${
+          JSON.stringify(name)
+        } ${key} must be a finite non-negative number`,
+      );
+    }
+    prices[key] = price;
+  }
   let parsedBaseURL: URL;
   try {
     parsedBaseURL = new URL(baseURL);
@@ -127,6 +154,7 @@ function parseConfiguredModel(
     apiKey,
     baseURL,
     model,
+    ...prices,
     ...(api === undefined ? {} : { api }),
     ...(isDefault === true ? { default: true as const } : {}),
     ...(maxOutputTokens === undefined ? {} : { maxOutputTokens }),
