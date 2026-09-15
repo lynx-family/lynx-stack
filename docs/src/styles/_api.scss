@@ -37,10 +37,14 @@
   line-height: 16px;
 }
 
+.rp-sidebar-item[href*="/config/"] {
+  flex-wrap: wrap;
+  column-gap: 6px;
+}
+
 .rp-sidebar-item[href*="/config/"] .rp-badge {
   flex-shrink: 0;
   height: auto;
-  margin-left: 6px;
   padding: 1px 7px;
   border-radius: 999px;
   background: transparent;
