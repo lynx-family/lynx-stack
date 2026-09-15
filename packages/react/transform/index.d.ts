@@ -344,7 +344,7 @@ export interface CompatVisitorConfig {
    * Dark mode configuration
    *
    * @public
-   * @deprecated This option has no effect.
+   * @deprecated
    *
    * @defaultValue `undefined`
    *

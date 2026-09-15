@@ -36,8 +36,8 @@
     "text": "深色模式配置"
   },
   "CompatVisitorConfig.darkMode.deprecated": {
-    "en": "This option has no effect.",
-    "text": "该选项不起作用。"
+    "en": "Deprecated.",
+    "text": "已废弃。"
   },
   "CompatVisitorConfig.disableDeprecatedWarning.summary": {
     "en": "Whether to disable deprecated warnings",
