@@ -27,10 +27,6 @@
     "en": "The data mirrors [`LynxPluginOptions`](api:LynxPluginOptions), so a plugin reads\n`config.output.filename` the same way it reads `output.filename` from\n`api.getRsbuildConfig()`. Values that depend on the entry being built are\nderived by the methods, which travel with the data so that the plugin that\nbuilt the config is always the one that resolves it.",
     "text": "该数据与 [`LynxPluginOptions`](api:LynxPluginOptions) 保持一致，因此插件读取\n`config.output.filename` 的方式与从\n`api.getRsbuildConfig()` 读取 `output.filename` 相同。依赖于当前构建入口的值\n由方法推导得出，这些方法随数据一起传递，从而确保\n始终由构建该配置的插件来解析这些值。"
   },
-  "LynxConfig.example.0": {
-    "en": "```js\nconst lynx = getLynxConfig(api)\nconst filename = lynx.resolveBundleFilename({\n  entryName: 'main',\n  platform: environment.name,\n})\n```",
-    "text": "```js\nconst lynx = getLynxConfig(api)\nconst filename = lynx.resolveBundleFilename({\n  entryName: 'main',\n  platform: environment.name,\n})\n```"
-  },
   "LynxConfig.output.summary": {
     "en": "The build outputs.",
     "text": "构建产物。"
@@ -82,10 +78,6 @@
   "LynxFilename.bundle.remarks": {
     "en": "The following placeholders are supported:\n\n- `[name]`: the name of the entry.\n- `[platform]`: the name of the Rsbuild environment.",
     "text": "支持以下占位符：\n\n- `[name]`：入口名称。\n- `[platform]`：Rsbuild environment 的名称。"
-  },
-  "LynxFilename.bundle.default": {
-    "en": "`'[name].[platform].bundle'`",
-    "text": "`'[name].[platform].bundle'`"
   },
   "LynxMinify.summary": {
     "en": "The minifier options of the Lynx threads.",

@@ -10,6 +10,7 @@ import type {
   ApiMember,
   ApiParam,
 } from './generate-api-data.ts';
+import { needsTranslation } from './i18n-strings.ts';
 import { PACKAGES, PACKAGE_GROUPS } from './packages.ts';
 import type { PackageEntry, PackageGroup } from './packages.ts';
 import type { RsbuildOption } from './rsbuild-config.ts';
@@ -261,7 +262,7 @@ function loadRsbuild(path: string): RsbuildOptions {
 }
 
 function tr(ctx: Ctx, key: string, en: string | undefined): string | undefined {
-  if (!en || !ctx.tr) return en;
+  if (!en || !ctx.tr || !needsTranslation(en)) return en;
   const t = ctx.tr[key];
   if (t?.text && t.en === en) return t.text;
   ctx.stale.add(key);

@@ -275,10 +275,6 @@
     "en": "Field name → resolver. **HTTP layers read this directly.** Mutations\nare honoured by the next request — the export is a live `Map` so\nplugins can register their own fields at startup.\n\nAdding a new field is a one-line `FIELDS.set('your-name', { ... })`.",
     "text": "字段名 → resolver 的映射。**HTTP 层直接读取该对象。**\n修改会在下一次请求时生效——该导出是一个实时的 `Map`，\n插件可以在启动时注册自己的字段。\n\n新增字段只需一行 `FIELDS.set('your-name', { ... })`。"
   },
-  "FIELDS.default": {
-    "en": "...",
-    "text": "..."
-  },
   "UI_SOURCE_MAP_RECORDS_BUILD_INFO.summary": {
     "en": "`module.buildInfo[UI_SOURCE_MAP_RECORDS_BUILD_INFO]` is where the\nmain-thread loader stashes the [`UiSourceMapRecord`](api:UiSourceMapRecord) array it\nextracts from a module, for `LynxDebugMetadataPlugin` to collect.\n\nLives in this zero-dependency schema package so producer\n(`@lynx-js/react-webpack-plugin`'s loader) and consumer\n(`@lynx-js/debug-metadata-rsbuild-plugin`) can both read the same\nconstant without taking a runtime dep on each other.",
     "text": "主线程 loader 会将从模块中提取出的\n[`UiSourceMapRecord`](api:UiSourceMapRecord) 数组暂存在 `module.buildInfo[UI_SOURCE_MAP_RECORDS_BUILD_INFO]` 中，\n供 `LynxDebugMetadataPlugin` 收集。\n\n该常量位于这个零依赖的 schema 包中，使生产方\n（`@lynx-js/react-webpack-plugin` 的 loader）和使用方\n（`@lynx-js/debug-metadata-rsbuild-plugin`）都能读取同一个常量，\n而无需在运行时互相依赖。"

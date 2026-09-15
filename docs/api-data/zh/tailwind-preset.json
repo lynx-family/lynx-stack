@@ -1,8 +1,4 @@
 {
-  "default.default": {
-    "en": "...",
-    "text": "..."
-  },
   "createLynxPreset.summary": {
     "en": "Creates a Tailwind preset tailored for the Lynx ecosystem.",
     "text": "创建为 Lynx 生态定制的 Tailwind preset。"
@@ -10,14 +6,6 @@
   "createLynxPreset.remarks": {
     "en": "- Requires **Tailwind v3+** (JIT enabled by default).\n- Configure the `content` option in your Tailwind config;\n  otherwise the generated CSS bundle may include unused utilities.\n- The `defaults` plugin is always enabled regardless of configuration.\n- Debug mode will log enabled plugins to the console.",
     "text": "- 需要 **Tailwind v3+**（默认启用 JIT）。\n- 请在 Tailwind 配置中设置 `content` 选项；\n  否则生成的 CSS bundle 可能包含未使用的工具类。\n- 无论如何配置，`defaults` 插件始终启用。\n- Debug 模式会在控制台输出已启用的插件。"
-  },
-  "createLynxPreset.example.0": {
-    "en": "```ts\nconst preset = createLynxPreset();\n```",
-    "text": "```ts\nconst preset = createLynxPreset();\n```"
-  },
-  "createLynxPreset.example.1": {
-    "en": "```ts\n// turn off all UI plugins\ncreateLynxPreset({ lynxUIPlugins: false });\n\n// turn off a single UI plugin\ncreateLynxPreset({ lynxUIPlugins: { uiVariants: false } });\n\n// enable debug mode\ncreateLynxPreset({ debug: true });\n\n```",
-    "text": "```ts\n// turn off all UI plugins\ncreateLynxPreset({ lynxUIPlugins: false });\n\n// turn off a single UI plugin\ncreateLynxPreset({ lynxUIPlugins: { uiVariants: false } });\n\n// enable debug mode\ncreateLynxPreset({ debug: true });\n\n```"
   },
   "createLynxPreset.returns": {
     "en": "A partial Tailwind configuration object",

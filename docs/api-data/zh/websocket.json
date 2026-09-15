@@ -39,22 +39,6 @@
     "en": "Extra options for Lynx only.",
     "text": "仅适用于 Lynx 的额外选项。"
   },
-  "WebSocket.CLOSED.summary": {
-    "en": "`@lynx-js/websocket#ReadyState.CLOSED`",
-    "text": "`@lynx-js/websocket#ReadyState.CLOSED`"
-  },
-  "WebSocket.CLOSING.summary": {
-    "en": "`@lynx-js/websocket#ReadyState.CLOSING`",
-    "text": "`@lynx-js/websocket#ReadyState.CLOSING`"
-  },
-  "WebSocket.CONNECTING.summary": {
-    "en": "`@lynx-js/websocket#ReadyState.CONNECTING`",
-    "text": "`@lynx-js/websocket#ReadyState.CONNECTING`"
-  },
-  "WebSocket.OPEN.summary": {
-    "en": "`@lynx-js/websocket#ReadyState.OPEN`",
-    "text": "`@lynx-js/websocket#ReadyState.OPEN`"
-  },
   "WebSocket.onclose.summary": {
     "en": "onclose is the Web-style callback of [`WebSocket`](api:WebSocket).",
     "text": "onclose 是 [`WebSocket`](api:WebSocket) 的 Web 风格回调。"

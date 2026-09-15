@@ -8,6 +8,13 @@ interface Entry {
   en: string;
 }
 
+export const FENCE = /(```[^\n]*\n[\s\S]*?\n```)/;
+
+export function needsTranslation(en: string): boolean {
+  const prose = en.split(FENCE).filter((_, i) => i % 2 === 0).join('');
+  return /\p{L}/u.test(prose.replace(/`[^`\n]*`/g, ''));
+}
+
 function collectMember(owner: string, m: ApiMember, out: Entry[]): void {
   const key = `${owner}.${m.name}`;
   if (m.summary) out.push({ key: `${key}.summary`, en: m.summary });
@@ -40,5 +47,9 @@ function collectExport(e: ApiExport, out: Entry[]): void {
 export function sourceStrings(api: ApiData): Map<string, string> {
   const entries: Entry[] = [];
   for (const e of api.exports) collectExport(e, entries);
-  return new Map(entries.map(x => [x.key.replace(/^\./, ''), x.en]));
+  return new Map(
+    entries
+      .filter(x => needsTranslation(x.en))
+      .map(x => [x.key.replace(/^\./, ''), x.en]),
+  );
 }

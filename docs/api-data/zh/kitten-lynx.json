@@ -167,10 +167,6 @@
     "en": "Main entry point for the kitten-lynx testing framework.\n\nProvides Puppeteer-like APIs for connecting to a Lynx app running on an\nAndroid device (physical or emulator) via ADB and the Chrome DevTools Protocol.",
     "text": "kitten-lynx 测试框架的主入口。\n\n提供类似 Puppeteer 的 API，通过 ADB 和 Chrome DevTools Protocol 连接运行在 Android 设备（真机或模拟器）上的 Lynx 应用。"
   },
-  "Lynx.example.0": {
-    "en": "```typescript\nconst lynx = await Lynx.connect({ deviceId: 'localhost:5555' });\nconst page = await lynx.newPage();\nawait page.goto('http://example.com/bundle.lynx.bundle');\nconst content = await page.content();\nawait lynx.close();\n```",
-    "text": "```typescript\nconst lynx = await Lynx.connect({ deviceId: 'localhost:5555' });\nconst page = await lynx.newPage();\nawait page.goto('http://example.com/bundle.lynx.bundle');\nconst content = await page.content();\nawait lynx.close();\n```"
-  },
   "Lynx.close.summary": {
     "en": "Closes the active ADB/CDP connection and releases associated resources.\n\n**Agent Usage:**\nEnsure this is called in your test's teardown block (e.g., in `afterAll()`) to prevent\nfloating Node.js processes or hanging ADB connections that can ruin subsequent test runs.",
     "text": "关闭当前的 ADB/CDP 连接并释放相关资源。\n\n**Agent 用法：**\n请确保在测试的清理阶段（例如 `afterAll()` 中）调用该方法，以免残留的 Node.js 进程或挂起的 ADB 连接影响后续测试运行。"

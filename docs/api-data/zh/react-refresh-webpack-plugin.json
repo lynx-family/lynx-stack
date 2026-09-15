@@ -3,10 +3,6 @@
     "en": "ReactRefreshRspackPlugin allows using fast refresh in ReactLynx.",
     "text": "ReactRefreshRspackPlugin 用于在 ReactLynx 中启用 fast refresh。"
   },
-  "ReactRefreshRspackPlugin.example.0": {
-    "en": "```js\n// rspack.config.js\nimport { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'\nexport default {\n  module: {\n    rules: [\n      {\n        test: /\\.[jt]sx?$/,\n        exclude: [\n          /node_modules/,\n          /@lynx-js/,\n          /react-refresh/,\n          /compiler-nodiff-runtime3/,\n          ReactRefreshRspackPlugin.loader,\n        ],\n        use: [ReactRefreshRspackPlugin.loader],\n      },\n    ],\n  },\n  plugins: [new ReactRefreshRspackPlugin()],\n}\n```",
-    "text": "```js\n// rspack.config.js\nimport { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'\nexport default {\n  module: {\n    rules: [\n      {\n        test: /\\.[jt]sx?$/,\n        exclude: [\n          /node_modules/,\n          /@lynx-js/,\n          /react-refresh/,\n          /compiler-nodiff-runtime3/,\n          ReactRefreshRspackPlugin.loader,\n        ],\n        use: [ReactRefreshRspackPlugin.loader],\n      },\n    ],\n  },\n  plugins: [new ReactRefreshRspackPlugin()],\n}\n```"
-  },
   "ReactRefreshRspackPlugin.constructor.params.options": {
     "en": "The options for react refresh.",
     "text": "React Refresh 的选项。"
@@ -18,10 +14,6 @@
   "ReactRefreshRspackPlugin.loader.remarks": {
     "en": "Please note that the runtime of react should be ignored. See the example below:",
     "text": "注意需要忽略 React 的运行时，参见下方示例："
-  },
-  "ReactRefreshRspackPlugin.loader.example.0": {
-    "en": "```js\n// rspack.config.js\nimport { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'\nimport { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'\n\nexport default {\n  module: {\n    rules: [\n      {\n        issueLayer: ReactWebpackPlugin.LAYERS.BACKGROUND,\n        test: /\\.[jt]sx?$/,\n        exclude: [\n          /node_modules/,\n          /@lynx-js/react/,\n          ReactRefreshRspackPlugin.loader,\n        ],\n        use: [ReactRefreshRspackPlugin.loader],\n      },\n    ],\n  },\n  plugins: [new ReactRefreshRspackPlugin()],\n}\n```",
-    "text": "```js\n// rspack.config.js\nimport { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'\nimport { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'\n\nexport default {\n  module: {\n    rules: [\n      {\n        issueLayer: ReactWebpackPlugin.LAYERS.BACKGROUND,\n        test: /\\.[jt]sx?$/,\n        exclude: [\n          /node_modules/,\n          /@lynx-js/react/,\n          ReactRefreshRspackPlugin.loader,\n        ],\n        use: [ReactRefreshRspackPlugin.loader],\n      },\n    ],\n  },\n  plugins: [new ReactRefreshRspackPlugin()],\n}\n```"
   },
   "ReactRefreshRspackPlugin.apply.summary": {
     "en": "The entry point of a rspack plugin.",

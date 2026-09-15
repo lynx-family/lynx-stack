@@ -52,7 +52,7 @@ pnpm --filter docs i18n:apply <dir>             # read <dir>/seg-*.zh.tsv back i
 pnpm --filter docs generate              # re-render the pages
 ```
 
-Code blocks are never sent for translation; only the prose around them is.
+Code blocks are never sent for translation; only the prose around them is. A string with no prose outside code, such as an example that is only a code block or a default like `` `false` ``, has no sidecar entry, and the page always shows it as is.
 
 ## Configuration pages
 

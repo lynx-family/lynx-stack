@@ -6,12 +6,11 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { ApiData } from './generate-api-data.ts';
-import { sourceStrings } from './i18n-strings.ts';
+import { FENCE, sourceStrings } from './i18n-strings.ts';
 import type { Translations } from './render.ts';
 
 const DATA = join(dirname(fileURLToPath(import.meta.url)), '../api-data');
 const ZH = join(DATA, 'zh');
-const FENCE = /(```[^\n]*\n[\s\S]*?\n```)/;
 const NEWLINE = ' ⏎ ';
 
 function source(pkg: string): Map<string, string> {

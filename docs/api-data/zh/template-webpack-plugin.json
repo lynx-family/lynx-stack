@@ -63,10 +63,6 @@
     "en": "This helper currently forwards to `cssChunksToMap`.\n\nThe returned `cssSource` is keyed by `cssId` and uses the synthetic\nfilename format `/cssId/<id>.css`.\n\nThis helper does not remap generated `loc` fields to original source\ncoordinates.",
     "text": "该辅助函数目前直接转发至 `cssChunksToMap`。\n\n返回的 `cssSource` 以 `cssId` 为键，\n并使用合成的文件名格式 `/cssId/<id>.css`。\n\n该辅助函数不会将生成的 `loc` 字段\n重新映射回原始源码坐标。"
   },
-  "LynxTemplatePlugin.convertCSSChunksToMap.example.0": {
-    "en": "```\n(console.log(await convertCSSChunksToMap(\n  '.red { color: red; }',\n  {\n    targetSdkVersion: '3.2',\n    enableCSSSelector: true,\n  },\n)));\n```",
-    "text": "```\n(console.log(await convertCSSChunksToMap(\n  '.red { color: red; }',\n  {\n    targetSdkVersion: '3.2',\n    enableCSSSelector: true,\n  },\n)));\n```"
-  },
   "LynxTemplatePlugin.convertCSSChunksToMap.params.cssChunks": {
     "en": "The CSS chunks content.",
     "text": "CSS chunk 的内容。"
@@ -123,17 +119,9 @@
     "en": "List all entries which should be injected",
     "text": "列出所有需要注入的入口"
   },
-  "LynxTemplatePluginOptions.chunks.default": {
-    "en": "`'all'`",
-    "text": "`'all'`"
-  },
   "LynxTemplatePluginOptions.cssPlugins.summary": {
     "en": "plugins passed to parser",
     "text": "传递给 parser 的插件"
-  },
-  "LynxTemplatePluginOptions.customCSSInheritanceList.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.customCSSInheritanceList`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.customCSSInheritanceList`"
   },
   "LynxTemplatePluginOptions.customCSSInheritanceList.example.0": {
     "en": "By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.\n\n```js\nimport { defineConfig } from '@lynx-js/rspeedy'\n\nexport default defineConfig({\n plugins: [\n   pluginReactLynx({\n     enableCSSInheritance: true,\n     customCSSInheritanceList: ['direction', 'overflow']\n   }),\n ],\n}\n```",
@@ -147,21 +135,9 @@
     "en": "A bundle assembled this way carries no `lepusCode`, and only the chunks\nleft unnamed stay in the manifest. A `FetchBundle` lazy bundle is assembled\nthis way by default, under the three section names its runtime resolves.",
     "text": "以这种方式组装的 bundle 不包含 `lepusCode`，\n只有未被命名的 chunk 会保留在 manifest 中。\n`FetchBundle` lazy bundle 默认以这种方式组装，使用其运行时所解析的三个 section 名称。"
   },
-  "LynxTemplatePluginOptions.debugInfoOutside.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.debugInfoOutside`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.debugInfoOutside`"
-  },
-  "LynxTemplatePluginOptions.defaultDisplayLinear.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.defaultDisplayLinear`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.defaultDisplayLinear`"
-  },
   "LynxTemplatePluginOptions.defaultOverflowVisible.summary": {
     "en": "When enabled, the default overflow CSS property for views and components will be `'visible'`. Otherwise, it will be `'hidden'`.",
     "text": "启用后，view 和组件的默认 overflow CSS 属性为 `'visible'`，否则为 `'hidden'`。"
-  },
-  "LynxTemplatePluginOptions.defaultOverflowVisible.default": {
-    "en": "`true`",
-    "text": "`true`"
   },
   "LynxTemplatePluginOptions.dsl.summary": {
     "en": "Declare the current dsl to the encoder.",
@@ -171,65 +147,21 @@
     "en": "Use Android View level APIs and system implementations.",
     "text": "使用 Android View 层级的 API 与系统实现。"
   },
-  "LynxTemplatePluginOptions.enableAccessibilityElement.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableAccessibilityElement`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableAccessibilityElement`"
-  },
-  "LynxTemplatePluginOptions.enableCSSInheritance.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInheritance`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInheritance`"
-  },
-  "LynxTemplatePluginOptions.enableCSSInvalidation.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInvalidation`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInvalidation`"
-  },
-  "LynxTemplatePluginOptions.enableCSSSelector.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSSelector`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSSelector`"
-  },
-  "LynxTemplatePluginOptions.enableNewGesture.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableNewGesture`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableNewGesture`"
-  },
-  "LynxTemplatePluginOptions.enableRemoveCSSScope.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope`"
-  },
   "LynxTemplatePluginOptions.enableSectionBytecode.summary": {
     "en": "Whether to compile the main thread sections to `JsBytecode`.",
     "text": "是否将主线程 section 编译为 `JsBytecode`。"
-  },
-  "LynxTemplatePluginOptions.enableSectionBytecode.default": {
-    "en": "```ts\nEnabled outside of development and debug builds, which keeps\nthe sections readable while debugging.\n```",
-    "text": "```ts\nEnabled outside of development and debug builds, which keeps\nthe sections readable while debugging.\n```"
   },
   "LynxTemplatePluginOptions.excludeChunks.summary": {
     "en": "List all entries which should not be injected",
     "text": "列出所有不应注入的入口"
   },
-  "LynxTemplatePluginOptions.excludeChunks.default": {
-    "en": "`[]`",
-    "text": "`[]`"
-  },
-  "LynxTemplatePluginOptions.experimental_isLazyBundle.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle`"
-  },
   "LynxTemplatePluginOptions.filename.summary": {
     "en": "The file to write the template to.\nSupports subdirectories eg: `assets/template.js`.\n[name] will be replaced by the entry name.\nSupports a function to generate the name.",
     "text": "template 的输出文件。\n支持子目录，例如：`assets/template.js`。\n[name] 会被替换为入口名称。\n也支持传入函数来生成名称。"
   },
-  "LynxTemplatePluginOptions.filename.default": {
-    "en": "`'[name].bundle'`",
-    "text": "`'[name].bundle'`"
-  },
   "LynxTemplatePluginOptions.intermediate.summary": {
     "en": "The directory of the intermediate files of a bundle.",
     "text": "bundle 中间文件所在的目录。"
-  },
-  "LynxTemplatePluginOptions.intermediate.default": {
-    "en": "`'.lynx'`",
-    "text": "`'.lynx'`"
   },
   "LynxTemplatePluginOptions.lazyBundleFetcher.summary": {
     "en": "Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.\n`pluginReactLynx`) from the host engine version and any\n`REACT_LAZY_BUNDLE_FETCHER` env override.",
@@ -238,18 +170,6 @@
   "LynxTemplatePluginOptions.lazyBundleFilename.summary": {
     "en": "The filename of the lazy bundle.",
     "text": "lazy bundle 的文件名。"
-  },
-  "LynxTemplatePluginOptions.lazyBundleFilename.default": {
-    "en": "`'lazy-bundle/[name].[fullhash].bundle'`",
-    "text": "`'lazy-bundle/[name].[fullhash].bundle'`"
-  },
-  "LynxTemplatePluginOptions.removeDescendantSelectorScope.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.removeDescendantSelectorScope`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.removeDescendantSelectorScope`"
-  },
-  "LynxTemplatePluginOptions.targetSdkVersion.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion`"
   },
   "ProcessTasmCSSDiagnosticsOptions.summary": {
     "en": "Options for [`processTasmCSSDiagnostics`](api:processTasmCSSDiagnostics).",
@@ -335,10 +255,6 @@
     "en": "To allow other plugins to alter the Template, this plugin executes\n[tapable](https://github.com/webpack/tapable) hooks.",
     "text": "为了让其他插件能够修改 template，此插件会执行\n[tapable](https://github.com/webpack/tapable) 钩子。"
   },
-  "TemplateHooks.example.0": {
-    "en": "```js\nclass MyPlugin {\n  apply(compiler) {\n    compiler.hooks.compilation.tap(\"MyPlugin\", (compilation) => {\n      console.log(\"The compiler is starting a new compilation...\");\n\n      LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(\n        \"MyPlugin\", // <-- Set a meaningful name here for stacktraces\n        (data, cb) => {\n          // Manipulate the content\n          modifyTemplate(data.template)\n          // Tell webpack to move on\n          cb(null, data);\n        },\n      );\n    });\n  }\n}\n```",
-    "text": "```js\nclass MyPlugin {\n  apply(compiler) {\n    compiler.hooks.compilation.tap(\"MyPlugin\", (compilation) => {\n      console.log(\"The compiler is starting a new compilation...\");\n\n      LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(\n        \"MyPlugin\", // <-- Set a meaningful name here for stacktraces\n        (data, cb) => {\n          // Manipulate the content\n          modifyTemplate(data.template)\n          // Tell webpack to move on\n          cb(null, data);\n        },\n      );\n    });\n  }\n}\n```"
-  },
   "TemplateHooks.afterEmit.summary": {
     "en": "Called after the template is emitted.",
     "text": "在 template 输出后调用。"
@@ -358,10 +274,6 @@
   "TemplateHooks.encode.summary": {
     "en": "Call the encode process.",
     "text": "调用编码流程。"
-  },
-  "CSSPlugins.default": {
-    "en": "...",
-    "text": "..."
   },
   "processTasmCSSDiagnostics.summary": {
     "en": "Parses, source-map-resolves, and deduplicates TASM CSS diagnostics.",

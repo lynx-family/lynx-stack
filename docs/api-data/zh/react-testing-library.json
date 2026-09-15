@@ -3,25 +3,13 @@
     "en": "A pure-JavaScript implementation of the [Lynx Spec](https://lynxjs.org/guide/spec.html),\nnotably the [Element PAPI](https://lynxjs.org/api/engine/element-api) and [Dual-threaded Model](https://lynxjs.org/guide/spec#dual-threaded-model) for use with Node.js.",
     "text": "[Lynx 规范](https://lynxjs.org/guide/spec.html)的纯 JavaScript 实现，\n主要包括 [Element PAPI](https://lynxjs.org/api/engine/element-api) 和[双线程模型](https://lynxjs.org/guide/spec#dual-threaded-model)，可在 Node.js 中使用。"
   },
-  "LynxTestingEnv.example.0": {
-    "en": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToMainThread();\n// use the main thread Element PAPI\nconst page = __CreatePage('0', 0);\nconst view = __CreateView(0);\n__AppendElement(page, view);\n\n```",
-    "text": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToMainThread();\n// use the main thread Element PAPI\nconst page = __CreatePage('0', 0);\nconst view = __CreateView(0);\n__AppendElement(page, view);\n\n```"
-  },
   "LynxTestingEnv.backgroundThread.summary": {
     "en": "The global object for the background thread.",
     "text": "后台线程的全局对象。"
   },
-  "LynxTestingEnv.backgroundThread.example.0": {
-    "en": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToBackgroundThread();\n// use the background thread global object\nglobalThis.lynxCoreInject.tt.OnLifecycleEvent(...args);\n```",
-    "text": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToBackgroundThread();\n// use the background thread global object\nglobalThis.lynxCoreInject.tt.OnLifecycleEvent(...args);\n```"
-  },
   "LynxTestingEnv.mainThread.summary": {
     "en": "The global object for the main thread.",
     "text": "主线程的全局对象。"
-  },
-  "LynxTestingEnv.mainThread.example.0": {
-    "en": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToMainThread();\n// use the main thread global object\nconst page = globalThis.__CreatePage('0', 0);\nconst view = globalThis.__CreateView(0);\nglobalThis.__AppendElement(page, view);\n```",
-    "text": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToMainThread();\n// use the main thread global object\nconst page = globalThis.__CreatePage('0', 0);\nconst view = globalThis.__CreateView(0);\nglobalThis.__AppendElement(page, view);\n```"
   },
   "ByRoleOptions.busy.summary": {
     "en": "If true only includes elements in the query set that are marked as\nbusy in the accessibility tree, i.e., `aria-busy=\"true\"`",
@@ -107,10 +95,6 @@
     "en": "Pass a React Component as the wrapper option to have it rendered around the inner element. This is most useful for creating\n reusable custom render functions for common data providers. See setup for examples.",
     "text": "传入一个 React 组件作为 wrapper 选项，使其渲染在内部元素的外层。这在为常见的数据提供者创建\n 可复用的自定义渲染函数时最为有用。示例参见 setup。"
   },
-  "RenderHookOptions.wrapper.example.0": {
-    "en": "```ts\nimport { renderHook } from '@lynx-js/react/testing-library'\nimport { ThemeProvider } from 'my-ui-lib'\nimport { TranslationProvider } from 'my-i18n-lib'\nimport defaultStrings from 'i18n/en-x-default'\n\nconst AllTheProviders = ({children}) => {\n  return (\n    <ThemeProvider theme=\"light\">\n      <TranslationProvider messages={defaultStrings}>\n        {children}\n      </TranslationProvider>\n    </ThemeProvider>\n  )\n}\n\nconst customRenderHook = (ui, options) =>\n  renderHook(ui, { wrapper: AllTheProviders, ...options })\n\n// re-export everything\nexport * from '@lynx-js/react/testing-library'\n\n// override renderHook method\nexport { customRender as renderHook }\n```",
-    "text": "```ts\nimport { renderHook } from '@lynx-js/react/testing-library'\nimport { ThemeProvider } from 'my-ui-lib'\nimport { TranslationProvider } from 'my-i18n-lib'\nimport defaultStrings from 'i18n/en-x-default'\n\nconst AllTheProviders = ({children}) => {\n  return (\n    <ThemeProvider theme=\"light\">\n      <TranslationProvider messages={defaultStrings}>\n        {children}\n      </TranslationProvider>\n    </ThemeProvider>\n  )\n}\n\nconst customRenderHook = (ui, options) =>\n  renderHook(ui, { wrapper: AllTheProviders, ...options })\n\n// re-export everything\nexport * from '@lynx-js/react/testing-library'\n\n// override renderHook method\nexport { customRender as renderHook }\n```"
-  },
   "RenderHookResult.summary": {
     "en": "The result of [`renderHook`](api:renderHook)",
     "text": "[`renderHook`](api:renderHook) 的返回结果"
@@ -135,33 +119,17 @@
     "en": "Render your component in the background thread or not.\n\nNote that all user code in the top level will be executed in the background thread by default. (eg. `__BACKGROUND__` is `true` in the top level)",
     "text": "是否在后台线程中渲染组件。\n\n注意，默认情况下所有顶层用户代码都会在后台线程中执行（例如，顶层的 `__BACKGROUND__` 为 `true`）。"
   },
-  "RenderOptions.enableBackgroundThread.default": {
-    "en": "`true`",
-    "text": "`true`"
-  },
   "RenderOptions.enableMainThread.summary": {
     "en": "Render your component in the main thread or not.\n\nIt is recommended to use this option only when you need to test the [IFR](https://lynxjs.org/zh/guide/interaction/ifr.html) behavior.",
     "text": "是否在主线程中渲染组件。\n\n建议仅在需要测试 [IFR](https://lynxjs.org/zh/guide/interaction/ifr.html) 行为时使用此选项。"
-  },
-  "RenderOptions.enableMainThread.default": {
-    "en": "`false`",
-    "text": "`false`"
   },
   "RenderOptions.queries.summary": {
     "en": "Queries to bind. Overrides the default set from DOM Testing Library unless merged.",
     "text": "要绑定的查询。除非进行合并，否则会覆盖 DOM Testing Library 提供的默认查询集合。"
   },
-  "RenderOptions.queries.example.0": {
-    "en": "```ts\n// Example, a function to traverse table contents\nimport * as tableQueries from 'my-table-query-library'\nimport { queries } from '@lynx-js/react/testing-library'\n\nconst { getByRowColumn, getByText } = render(<MyTable />, {\n  queries: {...queries, ...tableQueries},\n})\n\n```",
-    "text": "```ts\n// Example, a function to traverse table contents\nimport * as tableQueries from 'my-table-query-library'\nimport { queries } from '@lynx-js/react/testing-library'\n\nconst { getByRowColumn, getByText } = render(<MyTable />, {\n  queries: {...queries, ...tableQueries},\n})\n\n```"
-  },
   "RenderOptions.wrapper.summary": {
     "en": "Pass a React Component as the wrapper option to have it rendered around the inner element. This is most useful for creating\n reusable custom render functions for common data providers. See setup for examples.",
     "text": "传入一个 React 组件作为 wrapper 选项，使其渲染在内部元素的外层。这在为常见的数据提供者创建\n 可复用的自定义渲染函数时最为有用。示例参见 setup。"
-  },
-  "RenderOptions.wrapper.example.0": {
-    "en": "```ts\nimport { render } from '@lynx-js/react/testing-library'\nimport { ThemeProvider } from 'my-ui-lib'\nimport { TranslationProvider } from 'my-i18n-lib'\nimport defaultStrings from 'i18n/en-x-default'\n\nconst AllTheProviders = ({children}) => {\n  return (\n    <ThemeProvider theme=\"light\">\n      <TranslationProvider messages={defaultStrings}>\n        {children}\n      </TranslationProvider>\n    </ThemeProvider>\n  )\n}\n\nconst customRender = (ui, options) =>\n  render(ui, { wrapper: AllTheProviders, ...options })\n\n// re-export everything\nexport * from '@lynx-js/react/testing-library'\n\n// override render method\nexport { customRender as render }\n```",
-    "text": "```ts\nimport { render } from '@lynx-js/react/testing-library'\nimport { ThemeProvider } from 'my-ui-lib'\nimport { TranslationProvider } from 'my-i18n-lib'\nimport defaultStrings from 'i18n/en-x-default'\n\nconst AllTheProviders = ({children}) => {\n  return (\n    <ThemeProvider theme=\"light\">\n      <TranslationProvider messages={defaultStrings}>\n        {children}\n      </TranslationProvider>\n    </ThemeProvider>\n  )\n}\n\nconst customRender = (ui, options) =>\n  render(ui, { wrapper: AllTheProviders, ...options })\n\n// re-export everything\nexport * from '@lynx-js/react/testing-library'\n\n// override render method\nexport { customRender as render }\n```"
   },
   "SelectorMatcherOptions.collapseWhitespace.summary": {
     "en": "Use normalizer with getDefaultNormalizer instead",
@@ -199,17 +167,9 @@
     "en": "Render into the page. It should be used with cleanup.",
     "text": "渲染到页面中。应与 cleanup 配合使用。"
   },
-  "render.example.0": {
-    "en": "```ts\nimport { render} from '@lynx-js/react/testing-library'\n\nconst WrapperComponent = ({ children }) => (\n    <view data-testid='wrapper'>{children}</view>\n);\nconst Comp = () => {\n  return <view data-testid='inner' style=\"background-color: yellow;\" />;\n};\nconst { container, getByTestId } = render(<Comp />, {\n  wrapper: WrapperComponent,\n});\nexpect(getByTestId('wrapper')).toBeInTheDocument();\nexpect(container.firstChild).toMatchInlineSnapshot(`\n  <view\n    data-testid=\"wrapper\"\n  >\n    <view\n      data-testid=\"inner\"\n      style=\"background-color: yellow;\"\n    />\n  </view>\n`);\n```",
-    "text": "```ts\nimport { render} from '@lynx-js/react/testing-library'\n\nconst WrapperComponent = ({ children }) => (\n    <view data-testid='wrapper'>{children}</view>\n);\nconst Comp = () => {\n  return <view data-testid='inner' style=\"background-color: yellow;\" />;\n};\nconst { container, getByTestId } = render(<Comp />, {\n  wrapper: WrapperComponent,\n});\nexpect(getByTestId('wrapper')).toBeInTheDocument();\nexpect(container.firstChild).toMatchInlineSnapshot(`\n  <view\n    data-testid=\"wrapper\"\n  >\n    <view\n      data-testid=\"inner\"\n      style=\"background-color: yellow;\"\n    />\n  </view>\n`);\n```"
-  },
   "renderHook.summary": {
     "en": "Allows you to render a hook within a test React component without having to\ncreate that component yourself.",
     "text": "允许你在测试用的 React 组件中渲染 hook，而无需\n自己创建该组件。"
-  },
-  "renderHook.example.0": {
-    "en": "```ts\nimport { renderHook } from '@lynx-js/react/testing-library'\n\nconst Context = createContext('default');\nfunction Wrapper({ children }) {\n  return <Context.Provider value='provided'>{children}</Context.Provider>;\n}\nconst { result } = renderHook(\n  () => {\n    return useContext(Context);\n  },\n  {\n    wrapper: Wrapper,\n  },\n);\n\nexpect(result.current).toEqual('provided');\n```",
-    "text": "```ts\nimport { renderHook } from '@lynx-js/react/testing-library'\n\nconst Context = createContext('default');\nfunction Wrapper({ children }) {\n  return <Context.Provider value='provided'>{children}</Context.Provider>;\n}\nconst { result } = renderHook(\n  () => {\n    return useContext(Context);\n  },\n  {\n    wrapper: Wrapper,\n  },\n);\n\nexpect(result.current).toEqual('provided');\n```"
   },
   "waitSchedule.summary": {
     "en": "Wait for the next event loop.\n\nIt will be useful when you want to wait for the next event loop to finish.\n\n Please use `act` instead",

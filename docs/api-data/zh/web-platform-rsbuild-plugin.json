@@ -2,9 +2,5 @@
   "pluginWebPlatform.summary": {
     "en": "Create a rsbuild plugin for Lynx Web Platform.",
     "text": "创建用于 Lynx Web Platform 的 Rsbuild 插件。"
-  },
-  "pluginWebPlatform.example.0": {
-    "en": "```ts\n// rsbuild.config.ts\nimport { pluginWebPlatform } from '@lynx-js/web-platform-rsbuild-plugin'\nimport { defineConfig } from '@rsbuild/core';\n\nexport default defineConfig({\n  plugins: [pluginWebPlatform({\n    // replace with your actual native-modules file path\n    nativeModulesPath: path.resolve(__dirname, './index.native-modules.ts'),\n  })],\n})\n```",
-    "text": "```ts\n// rsbuild.config.ts\nimport { pluginWebPlatform } from '@lynx-js/web-platform-rsbuild-plugin'\nimport { defineConfig } from '@rsbuild/core';\n\nexport default defineConfig({\n  plugins: [pluginWebPlatform({\n    // replace with your actual native-modules file path\n    nativeModulesPath: path.resolve(__dirname, './index.native-modules.ts'),\n  })],\n})\n```"
   }
 }

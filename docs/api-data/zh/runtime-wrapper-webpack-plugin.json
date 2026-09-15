@@ -23,28 +23,12 @@
     "en": "There are two types of banners: script(for app-service) and bundle(for js-render). You can decide to use which banner by the filename.",
     "text": "banner 有两种类型：script（用于 app-service）和 bundle（用于 js-render）。可以根据文件名决定使用哪种 banner。"
   },
-  "RuntimeWrapperWebpackPluginOptions.bannerType.default": {
-    "en": "`() => 'script'`",
-    "text": "`() => 'script'`"
-  },
-  "RuntimeWrapperWebpackPluginOptions.experimental_isLazyBundle.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle`"
-  },
   "RuntimeWrapperWebpackPluginOptions.injectVars.summary": {
     "en": "The variables to be injected into the chunk.",
     "text": "要注入到 chunk 中的变量。"
   },
-  "RuntimeWrapperWebpackPluginOptions.targetSdkVersion.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion`"
-  },
   "RuntimeWrapperWebpackPluginOptions.test.summary": {
     "en": "Include all modules that pass test assertion.",
     "text": "包含所有通过 test 断言的模块。"
-  },
-  "RuntimeWrapperWebpackPluginOptions.test.default": {
-    "en": "`/\\.js$/`",
-    "text": "`/\\.js$/`"
   }
 }

@@ -15,10 +15,6 @@
     "en": "The minimum Lynx Engine version required by the emitted bundle.",
     "text": "输出的 bundle 所要求的最低 Lynx Engine 版本。"
   },
-  "PluginVanillaLynxOptions.engineVersion.default": {
-    "en": "`'3.5'`",
-    "text": "`'3.5'`"
-  },
   "PluginVanillaLynxOptions.entries.summary": {
     "en": "Explicit two-thread entries.",
     "text": "显式声明的双线程入口。"
@@ -38,10 +34,6 @@
   "TemplateHooks.summary": {
     "en": "To allow other plugins to alter the Template, this plugin executes\n[tapable](https://github.com/webpack/tapable) hooks.",
     "text": "为便于其他插件修改 template，该插件会执行\n[tapable](https://github.com/webpack/tapable) 钩子。"
-  },
-  "TemplateHooks.example.0": {
-    "en": "```js\nclass MyPlugin {\n  apply(compiler) {\n    compiler.hooks.compilation.tap(\"MyPlugin\", (compilation) => {\n      console.log(\"The compiler is starting a new compilation...\");\n\n      LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(\n        \"MyPlugin\", // <-- Set a meaningful name here for stacktraces\n        (data, cb) => {\n          // Manipulate the content\n          modifyTemplate(data.template)\n          // Tell webpack to move on\n          cb(null, data);\n        },\n      );\n    });\n  }\n}\n```",
-    "text": "```js\nclass MyPlugin {\n  apply(compiler) {\n    compiler.hooks.compilation.tap(\"MyPlugin\", (compilation) => {\n      console.log(\"The compiler is starting a new compilation...\");\n\n      LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(\n        \"MyPlugin\", // <-- Set a meaningful name here for stacktraces\n        (data, cb) => {\n          // Manipulate the content\n          modifyTemplate(data.template)\n          // Tell webpack to move on\n          cb(null, data);\n        },\n      );\n    });\n  }\n}\n```"
   },
   "TemplateHooks.afterEmit.summary": {
     "en": "Called after the template is emitted.",
@@ -114,10 +106,6 @@
   "LAYERS.summary": {
     "en": "Rspack layers used by Vanilla Lynx entries.",
     "text": "Vanilla Lynx 入口使用的 Rspack layer。"
-  },
-  "LAYERS.default": {
-    "en": "...",
-    "text": "..."
   },
   "pluginVanillaLynx.summary": {
     "en": "Create the Vanilla Lynx DSL integration for Rsbuild or Rspeedy.\n\nA logical entry can explicitly declare its main-thread and background-thread\nsources. As a shorthand, an Rsbuild entry is treated as the main-thread\nsource and optional sibling `background.ts` and `style.css` files are\ndiscovered by convention.",

@@ -35,10 +35,6 @@
     "en": "Optional processor to override screen metrics used by the app",
     "text": "可选的处理器，用于覆盖应用所使用的屏幕度量信息"
   },
-  "DataProcessors.getScreenMetricsOverride.example.0": {
-    "en": "```ts\nlynx.registerDataProcessors({\n  dataProcessors: {\n    getScreenMetricsOverride: (metrics) => {\n      // Force a specific aspect ratio\n      return {\n        width: metrics.width,\n        height: metrics.width * (16/9)\n      };\n    }\n  }\n});\n```",
-    "text": "```ts\nlynx.registerDataProcessors({\n  dataProcessors: {\n    getScreenMetricsOverride: (metrics) => {\n      // Force a specific aspect ratio\n      return {\n        width: metrics.width,\n        height: metrics.width * (16/9)\n      };\n    }\n  }\n});\n```"
-  },
   "DataProcessors.getScreenMetricsOverride.params.metrics": {
     "en": "The physical screen dimensions in pixels",
     "text": "以像素为单位的物理屏幕尺寸"
@@ -58,10 +54,6 @@
   "Lynx.summary": {
     "en": "APIs under `lynx` global variable that added by ReactLynx.",
     "text": "ReactLynx 在全局变量 `lynx` 上添加的 API。"
-  },
-  "Lynx.example.0": {
-    "en": "```ts\nlynx.registerDataProcessors(...);\nlynx.querySelector(...);\nlynx.querySelectorAll(...);\n```",
-    "text": "```ts\nlynx.registerDataProcessors(...);\nlynx.querySelector(...);\nlynx.querySelectorAll(...);\n```"
   },
   "Lynx.registerDataProcessors.summary": {
     "en": "Register DataProcessors. You MUST call this before `root.render()`.",
@@ -103,14 +95,6 @@
     "en": "Use this API to pass in your JSX to render",
     "text": "使用此 API 传入要渲染的 JSX"
   },
-  "Root.render.example.0": {
-    "en": "```ts\nimport { root } from \"@lynx-js/react\"\n\nfunction App() {\n  // Your app\n  return <view>...</view>\n}\n\nroot.render(<App/>);\n```",
-    "text": "```ts\nimport { root } from \"@lynx-js/react\"\n\nfunction App() {\n  // Your app\n  return <view>...</view>\n}\n\nroot.render(<App/>);\n```"
-  },
-  "Root.render.example.1": {
-    "en": "```tsx\nimport { root } from \"@lynx-js/react\"\n\nfunction App() {\n  // Your app\n  return <view>...</view>\n}\n\nif (__MAIN_THREAD__) {\n  root.render(\n    <DataProvider data={DEFAULT_DATA}>\n       <App/>\n    </DataProvider>\n  );\n} else if (__BACKGROUND__) {\n  fetchData().then((data) => {\n    root.render(\n      <DataProvider data={data}>\n         <App/>\n      </DataProvider>\n    ); // You can render later after your data is ready\n  })\n}\n```",
-    "text": "```tsx\nimport { root } from \"@lynx-js/react\"\n\nfunction App() {\n  // Your app\n  return <view>...</view>\n}\n\nif (__MAIN_THREAD__) {\n  root.render(\n    <DataProvider data={DEFAULT_DATA}>\n       <App/>\n    </DataProvider>\n  );\n} else if (__BACKGROUND__) {\n  fetchData().then((data) => {\n    root.render(\n      <DataProvider data={data}>\n         <App/>\n      </DataProvider>\n    ); // You can render later after your data is ready\n  })\n}\n```"
-  },
   "ReactLynxChildren.summary": {
     "en": "Type of ReactLynx children utilities.",
     "text": "ReactLynx children 工具的类型。"
@@ -135,10 +119,6 @@
     "en": "The [Provider](https://react.dev/reference/react/createContext#provider) Component that provide `lynx.__globalProps`,\nyou must wrap your JSX inside it",
     "text": "提供 `lynx.__globalProps` 的 [Provider](https://react.dev/reference/react/createContext#provider) 组件，\n必须将 JSX 包裹在其中"
   },
-  "GlobalPropsProvider.example.0": {
-    "en": "```ts\nimport { root } from \"@lynx-js/react\"\n\nfunction App() {\n  return (\n    <GlobalPropsConsumer children={(globalProps) => <view>...</view>}/>\n  )\n}\n\nroot.render(\n  <GlobalPropsProvider>\n     <App/>\n  </GlobalPropsProvider>\n);\n\n```",
-    "text": "```ts\nimport { root } from \"@lynx-js/react\"\n\nfunction App() {\n  return (\n    <GlobalPropsConsumer children={(globalProps) => <view>...</view>}/>\n  )\n}\n\nroot.render(\n  <GlobalPropsProvider>\n     <App/>\n  </GlobalPropsProvider>\n);\n\n```"
-  },
   "InitDataConsumer.summary": {
     "en": "The [Consumer](https://react.dev/reference/react/createContext#consumer) Component that provide `initData`.\nThis should be used with [`InitDataProvider`](api:InitDataProvider)",
     "text": "提供 `initData` 的 [Consumer](https://react.dev/reference/react/createContext#consumer) 组件。\n需与 [`InitDataProvider`](api:InitDataProvider) 配合使用"
@@ -147,17 +127,9 @@
     "en": "The [Provider](https://react.dev/reference/react/createContext#provider) Component that provide `initData`,\nyou must wrap your JSX inside it",
     "text": "提供 `initData` 的 [Provider](https://react.dev/reference/react/createContext#provider) 组件，\n必须将 JSX 包裹在其中"
   },
-  "InitDataProvider.example.0": {
-    "en": "```ts\nimport { root } from \"@lynx-js/react\"\n\nfunction App() {\n  return (\n    <InitDataConsumer children={(initData) => <view>...</view>}/>\n  )\n}\n\nroot.render(\n  <InitDataProvider>\n     <App/>\n  </InitDataProvider>\n);\n\n```",
-    "text": "```ts\nimport { root } from \"@lynx-js/react\"\n\nfunction App() {\n  return (\n    <InitDataConsumer children={(initData) => <view>...</view>}/>\n  )\n}\n\nroot.render(\n  <InitDataProvider>\n     <App/>\n  </InitDataProvider>\n);\n\n```"
-  },
   "root.summary": {
     "en": "The default and only root of ReactLynx for you to render JSX",
     "text": "ReactLynx 默认且唯一的 root，用于渲染 JSX"
-  },
-  "root.example.0": {
-    "en": "```ts\nimport { root } from \"@lynx-js/react\"\n```",
-    "text": "```ts\nimport { root } from \"@lynx-js/react\"\n```"
   },
   "useEffect.summary": {
     "en": "Accepts a function that contains imperative, possibly effectful code.\nThe effects run after main thread dom update without blocking it.",
@@ -167,33 +139,17 @@
     "en": "A React Hooks for you to get `lynx.__globalProps`.\nIf `lynx.__globalProps` is changed, a re-render will be triggered automatically.",
     "text": "用于获取 `lynx.__globalProps` 的 React Hook。\n`lynx.__globalProps` 变化时会自动触发重新渲染。"
   },
-  "useGlobalProps.example.0": {
-    "en": "```ts\nfunction App() {\n  const globalProps = useGlobalProps();\n\n  globalProps.someProperty // use it\n}\n```",
-    "text": "```ts\nfunction App() {\n  const globalProps = useGlobalProps();\n\n  globalProps.someProperty // use it\n}\n```"
-  },
   "useGlobalPropsChanged.summary": {
     "en": "A React Hooks for you to get notified when `__globalProps` changed.",
     "text": "用于在 `__globalProps` 变化时获得通知的 React Hook。"
-  },
-  "useGlobalPropsChanged.example.0": {
-    "en": "```ts\nfunction App() {\n  useGlobalPropsChanged((data) => {\n    lynx.__globalProps.someProperty // can use lynx.__globalProps\n    data.someProperty // can use data\n  })\n}\n```",
-    "text": "```ts\nfunction App() {\n  useGlobalPropsChanged((data) => {\n    lynx.__globalProps.someProperty // can use lynx.__globalProps\n    data.someProperty // can use data\n  })\n}\n```"
   },
   "useInitData.summary": {
     "en": "A React Hooks for you to get `initData`.\nIf `initData` is changed, a re-render will be triggered automatically.",
     "text": "用于获取 `initData` 的 React Hook。\n`initData` 变化时会自动触发重新渲染。"
   },
-  "useInitData.example.0": {
-    "en": "```ts\nfunction App() {\n  const initData = useInitData();\n\n  initData.someProperty // use it\n}\n```",
-    "text": "```ts\nfunction App() {\n  const initData = useInitData();\n\n  initData.someProperty // use it\n}\n```"
-  },
   "useInitDataChanged.summary": {
     "en": "A React Hooks for you to get notified when `initData` changed.",
     "text": "用于在 `initData` 变化时获得通知的 React Hook。"
-  },
-  "useInitDataChanged.example.0": {
-    "en": "```ts\nfunction App() {\n  useInitDataChanged((data) => {\n    data.someProperty // can use it\n  })\n}\n```",
-    "text": "```ts\nfunction App() {\n  useInitDataChanged((data) => {\n    data.someProperty // can use it\n  })\n}\n```"
   },
   "useLayoutEffect.summary": {
     "en": "`useLayoutEffect` is now an alias of `useEffect`. Use `useEffect` instead.\n\nAccepts a function that contains imperative, possibly effectful code. The effects run after main thread dom update without blocking it.",
@@ -219,10 +175,6 @@
     "en": "Mark the first screen as ready to sync when `firstScreenSyncTiming` is `'manual'`.\n\nThe main thread holds the UI control until this is called, so the handover timing to\nthe background thread (for hydration) is fully controlled by the user. It can be called\nfrom both threads (a background-thread call is forwarded to the main thread), is a no-op\nunless `firstScreenSyncTiming` is `'manual'`, and has no further effect once called.",
     "text": "当 `firstScreenSyncTiming` 为 `'manual'` 时，将首屏标记为可同步。\n\n在调用此方法之前，主线程会一直持有 UI 控制权，\n因此向后台线程移交（用于 hydration）的时机完全由用户控制。\n它可以在两个线程中调用（后台线程的调用会被转发到主线程），\n仅在 `firstScreenSyncTiming` 为 `'manual'` 时生效，且首次调用之后再次调用不会产生任何效果。"
   },
-  "markFirstScreenSyncReady.example.0": {
-    "en": "```ts\nimport { markFirstScreenSyncReady } from \"@lynx-js/react\"\n\nmarkFirstScreenSyncReady();\n```",
-    "text": "```ts\nimport { markFirstScreenSyncReady } from \"@lynx-js/react\"\n\nmarkFirstScreenSyncReady();\n```"
-  },
   "runOnBackground.summary": {
     "en": "`runOnBackground` allows triggering js functions on the background thread asynchronously.",
     "text": "`runOnBackground` 用于在后台线程上异步触发 JS 函数。"
@@ -234,10 +186,6 @@
   "runOnMainThread.summary": {
     "en": "`runOnMainThread` allows triggering main thread functions on the main thread asynchronously.",
     "text": "`runOnMainThread` 用于在主线程上异步触发主线程函数。"
-  },
-  "runOnMainThread.example.0": {
-    "en": "```ts\nimport { runOnMainThread } from '@lynx-js/react';\n\nasync function someFunction() {\n  const fn = runOnMainThread(() => {\n    'main thread';\n    return 'hello';\n  });\n  const result = await fn();\n}\n```",
-    "text": "```ts\nimport { runOnMainThread } from '@lynx-js/react';\n\nasync function someFunction() {\n  const fn = runOnMainThread(() => {\n    'main thread';\n    return 'hello';\n  });\n  const result = await fn();\n}\n```"
   },
   "runOnMainThread.returns": {
     "en": "A function. Calling which with the arguments to be passed to the main thread function to trigger it on the main thread. This function returns a promise that resolves to the return value of the main thread function.",
@@ -255,17 +203,9 @@
     "en": "Create A `MainThreadRef`.\n\nA `MainThreadRef` is a ref that can only be accessed on the main thread. It is used to preserve\nstates between main thread function calls.\nThe data saved in `current` property of the `MainThreadRef` can be read and written in\nmultiple main thread functions.\n\nIt is a hook and it should only be called at the top level of your component.",
     "text": "创建一个 `MainThreadRef`。\n\n`MainThreadRef` 是一种只能在主线程访问的 ref，\n用于在主线程函数调用之间保存状态。\n保存在 `MainThreadRef` 的 `current` 属性中的数据，\n可以在多个主线程函数中读写。\n\n它是一个 Hook，只应在组件的顶层调用。"
   },
-  "useMainThreadRef.example.0": {
-    "en": "```ts\nimport { useMainThreadRef } from '@lynx-js/react'\nimport type { MainThread } from '@lynx-js/types'\n\nexport function App() {\n  const ref = useMainThreadRef<MainThread.Element>(null)\n\n  const handleTap = () => {\n    'main thread'\n    ref.current?.setStyleProperty('background-color', 'blue')\n  }\n\n  return (\n    <view\n      main-thread:ref={ref}\n      main-thread:bindtap={handleTap}\n      style={{ width: '300px', height: '300px' }}\n    />\n  )\n}\n```",
-    "text": "```ts\nimport { useMainThreadRef } from '@lynx-js/react'\nimport type { MainThread } from '@lynx-js/types'\n\nexport function App() {\n  const ref = useMainThreadRef<MainThread.Element>(null)\n\n  const handleTap = () => {\n    'main thread'\n    ref.current?.setStyleProperty('background-color', 'blue')\n  }\n\n  return (\n    <view\n      main-thread:ref={ref}\n      main-thread:bindtap={handleTap}\n      style={{ width: '300px', height: '300px' }}\n    />\n  )\n}\n```"
-  },
   "withInitDataInState.summary": {
     "en": "Higher-Order Component (HOC) that injects `initData` into the state of the given class component.\n\nThis HOC checks if the provided component is a class component. If it is, it wraps the component\nand injects the `initData` into its state. It also adds a listener\nto update the state when data changes, and removes the listener when the component unmounts.",
     "text": "高阶组件（HOC），将 `initData` 注入到给定类组件的 state 中。\n\n该 HOC 会检查传入的组件是否为类组件。如果是，则包装该组件，\n并将 `initData` 注入其 state。同时它会添加一个监听器，\n在数据变化时更新 state，并在组件卸载时移除该监听器。"
-  },
-  "withInitDataInState.example.0": {
-    "en": "```typescript\nclass App extends React.Component<MyProps, MyState> {\n  // component implementation\n}\n\nexport default withInitDataInState(App);\n```",
-    "text": "```typescript\nclass App extends React.Component<MyProps, MyState> {\n  // component implementation\n}\n\nexport default withInitDataInState(App);\n```"
   },
   "withInitDataInState.returns": {
     "en": "The original component if it is not a class component, otherwise a new class component\n         with `initData` injection and state update functionality.",

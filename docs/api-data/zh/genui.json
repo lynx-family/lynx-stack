@@ -455,17 +455,9 @@
     "en": "The A2UI 0.9 basic-catalog function implementations packaged as\n`CatalogFunctionEntry`s, ready to spread into `<A2UI catalogs={[...]}>`.\nThe impls themselves come from `@a2ui/web_core` so we stay aligned with\nthe upstream spec for free.",
     "text": "打包为 `CatalogFunctionEntry` 的 A2UI 0.9 basic catalog 函数实现，可直接展开到 `<A2UI catalogs={[...]}>` 中。这些实现本身来自 `@a2ui/web_core`，因此无需额外工作即可与上游规范保持一致。"
   },
-  "basicFunctions.example.0": {
-    "en": "```ts\n<A2UI catalogs={[Text, Button, ...basicFunctions]} ... />\n```",
-    "text": "```ts\n<A2UI catalogs={[Text, Button, ...basicFunctions]} ... />\n```"
-  },
   "LYNX_XML_ENGINE_VERSION.summary": {
     "en": "The default Lynx engine version used by generated XML artifacts.",
     "text": "生成的 XML 产物默认使用的 Lynx 引擎版本。"
-  },
-  "LYNX_XML_ENGINE_VERSION.default": {
-    "en": "\"4.2\"",
-    "text": "\"4.2\""
   },
   "LYNX_XML_SYSTEM_PROMPT.summary": {
     "en": "The default Lynx XML generation system prompt.",
@@ -603,10 +595,6 @@
     "en": "Get a form field value from the form state context.",
     "text": "从表单状态上下文中获取表单字段值。"
   },
-  "useGetFieldValue.example.0": {
-    "en": "```tsx\nconst getFieldValue = useGetFieldValue();\nconst name = getFieldValue(\"contactForm\", \"name\");\n```",
-    "text": "```tsx\nconst getFieldValue = useGetFieldValue();\nconst name = getFieldValue(\"contactForm\", \"name\");\n```"
-  },
   "useIsQueryLoading.summary": {
     "en": "Whether any Query is currently fetching data.",
     "text": "是否有 Query 正在获取数据。"
@@ -639,10 +627,6 @@
     "en": "Get the setFieldValue function for updating form field values.",
     "text": "获取用于更新表单字段值的 setFieldValue 函数。"
   },
-  "useSetFieldValue.example.0": {
-    "en": "```tsx\nconst setFieldValue = useSetFieldValue();\n<input onChange={(e) => setFieldValue(\"contactForm\", \"Input\", \"name\", e.target.value, false)} />\n```",
-    "text": "```tsx\nconst setFieldValue = useSetFieldValue();\n<input onChange={(e) => setFieldValue(\"contactForm\", \"Input\", \"name\", e.target.value, false)} />\n```"
-  },
   "useStateField.summary": {
     "en": "Resolve a named OpenUI state field against form state and reactive bindings.",
     "text": "基于表单状态和响应式绑定解析具名的 OpenUI 状态字段。"
@@ -650,9 +634,5 @@
   "useTriggerAction.summary": {
     "en": "Get the triggerAction function for firing structured action events.",
     "text": "获取用于触发结构化 action 事件的 triggerAction 函数。"
-  },
-  "useTriggerAction.example.0": {
-    "en": "```tsx\nconst triggerAction = useTriggerAction();\n<button onClick={() => triggerAction(\"Submit\", \"myForm\")}>\n```",
-    "text": "```tsx\nconst triggerAction = useTriggerAction();\n<button onClick={() => triggerAction(\"Submit\", \"myForm\")}>\n```"
   }
 }

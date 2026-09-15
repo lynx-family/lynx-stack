@@ -3,10 +3,6 @@
     "en": "CssExtractRspackPlugin is the CSS extract plugin for Lynx.\nIt works just like the [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin.html) in Web.",
     "text": "CssExtractRspackPlugin 是 Lynx 的 CSS 提取插件。\n其用法与 Web 中的 [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin.html) 相同。"
   },
-  "CssExtractRspackPlugin.example.0": {
-    "en": "```js\nimport { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'\nexport default {\n  plugins: [new CssExtractRspackPlugin()],\n  module: {\n    rules: [\n      {\n        test: /\\.css$/,\n        uses: [CssExtractRspackPlugin.loader, 'css-loader'],\n      },\n    ],\n  },\n}\n```",
-    "text": "```js\nimport { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'\nexport default {\n  plugins: [new CssExtractRspackPlugin()],\n  module: {\n    rules: [\n      {\n        test: /\\.css$/,\n        uses: [CssExtractRspackPlugin.loader, 'css-loader'],\n      },\n    ],\n  },\n}\n```"
-  },
   "CssExtractRspackPlugin.defaultOptions.summary": {
     "en": "`defaultOptions` is the default options that the [`CssExtractRspackPlugin`](api:CssExtractRspackPlugin) uses.",
     "text": "`defaultOptions` 是 [`CssExtractRspackPlugin`](api:CssExtractRspackPlugin) 使用的默认选项。"
@@ -18,10 +14,6 @@
   "CssExtractRspackPlugin.loader.remarks": {
     "en": "It should be used with the ['css-loader'](https://github.com/webpack-contrib/css-loader).",
     "text": "应与 ['css-loader'](https://github.com/webpack-contrib/css-loader) 配合使用。"
-  },
-  "CssExtractRspackPlugin.loader.example.0": {
-    "en": "```js\nimport { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'\nexport default {\n  plugins: [new CssExtractRspackPlugin()],\n  module: {\n    rules: [\n      {\n        test: /\\.css$/,\n        uses: [CssExtractRspackPlugin.loader, 'css-loader'],\n      },\n    ],\n  },\n}\n```",
-    "text": "```js\nimport { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'\nexport default {\n  plugins: [new CssExtractRspackPlugin()],\n  module: {\n    rules: [\n      {\n        test: /\\.css$/,\n        uses: [CssExtractRspackPlugin.loader, 'css-loader'],\n      },\n    ],\n  },\n}\n```"
   },
   "CssExtractRspackPlugin.apply.summary": {
     "en": "The entry point of a webpack plugin.",
@@ -54,14 +46,6 @@
   "LoaderOptions.emit.summary": {
     "en": "The same as [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin/tree/master?tab=readme-ov-file#emit).\nControl whether emit the CSS to filesystem.\n\n- If `true`(default), emits a file (writes a file to the filesystem).\n\n- If `false`, the plugin will extract the CSS but will not emit the file.\n\nIt is often useful to disable this option for server-side packages.",
     "text": "与 [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin/tree/master?tab=readme-ov-file#emit) 相同。\n控制是否将 CSS 输出到文件系统。\n\n- 若为 `true`（默认），则输出文件（将文件写入文件系统）。\n\n- 若为 `false`，插件会提取 CSS，但不会输出文件。\n\n对于服务端包，通常可以禁用该选项。"
-  },
-  "LoaderOptions.emit.default": {
-    "en": "```ts\ntrue\n@public\n```",
-    "text": "```ts\ntrue\n@public\n```"
-  },
-  "LoaderOptions.esModule.summary": {
-    "en": "`@lynx-js/rspeedy#CssExtractRspackLoaderOptions.esModule`",
-    "text": "`@lynx-js/rspeedy#CssExtractRspackLoaderOptions.esModule`"
   },
   "LoaderOptions.layer.summary": {
     "en": "The layer of the CSS execution.",

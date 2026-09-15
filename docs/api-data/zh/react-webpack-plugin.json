@@ -3,10 +3,6 @@
     "en": "ReactWebpackPlugin allows using ReactLynx with webpack",
     "text": "ReactWebpackPlugin 用于在 webpack 中使用 ReactLynx"
   },
-  "ReactWebpackPlugin.example.0": {
-    "en": "```js\n// webpack.config.js\nimport { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'\nexport default {\n  plugins: [new ReactWebpackPlugin()],\n}\n```",
-    "text": "```js\n// webpack.config.js\nimport { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'\nexport default {\n  plugins: [new ReactWebpackPlugin()],\n}\n```"
-  },
   "ReactWebpackPlugin.defaultOptions.summary": {
     "en": "`defaultOptions` is the default options that the [`ReactWebpackPlugin`](api:ReactWebpackPlugin) uses.",
     "text": "`defaultOptions` 是 [`ReactWebpackPlugin`](api:ReactWebpackPlugin) 使用的默认选项。"
@@ -19,10 +15,6 @@
     "en": "Note that this loader will only transform JSX/TSX to valid JavaScript.\nFor `.tsx` files, the type annotations would not be eliminated.\nYou should use `babel-loader` or `swc-loader` to load TypeScript files.",
     "text": "注意，该 loader 只会将 JSX/TSX 转换为合法的 JavaScript。\n对于 `.tsx` 文件，类型注解不会被移除。\n你应使用 `babel-loader` 或 `swc-loader` 来加载 TypeScript 文件。"
   },
-  "ReactWebpackPlugin.loaders.example.0": {
-    "en": "```js\n// webpack.config.js\nimport { ReactWebpackPlugin, LAYERS } from '@lynx-js/react-webpack-plugin'\nexport default {\n  module: {\n    rules: [\n      {\n        test: /\\.tsx?$/,\n        layer: LAYERS.MAIN_THREAD,\n        use: ['swc-loader', ReactWebpackPlugin.loaders.MAIN_THREAD]\n      },\n      {\n        test: /\\.tsx?$/,\n        layer: LAYERS.BACKGROUND,\n        use: ['swc-loader', ReactWebpackPlugin.loaders.BACKGROUND]\n      },\n    ],\n  },\n  plugins: [new ReactWebpackPlugin()],\n}\n```",
-    "text": "```js\n// webpack.config.js\nimport { ReactWebpackPlugin, LAYERS } from '@lynx-js/react-webpack-plugin'\nexport default {\n  module: {\n    rules: [\n      {\n        test: /\\.tsx?$/,\n        layer: LAYERS.MAIN_THREAD,\n        use: ['swc-loader', ReactWebpackPlugin.loaders.MAIN_THREAD]\n      },\n      {\n        test: /\\.tsx?$/,\n        layer: LAYERS.BACKGROUND,\n        use: ['swc-loader', ReactWebpackPlugin.loaders.BACKGROUND]\n      },\n    ],\n  },\n  plugins: [new ReactWebpackPlugin()],\n}\n```"
-  },
   "ReactWebpackPlugin.apply.summary": {
     "en": "The entry point of a webpack plugin.",
     "text": "webpack 插件的入口。"
@@ -31,49 +23,21 @@
     "en": "the webpack compiler",
     "text": "webpack compiler"
   },
-  "ExtractStrConfig.summary": {
-    "en": "`PluginReactLynxOptions.extractStr`",
-    "text": "`PluginReactLynxOptions.extractStr`"
-  },
   "ExtractStrConfig.strLength.summary": {
     "en": "The minimum length of string literals to be extracted.",
     "text": "需要提取的字符串字面量的最小长度。"
-  },
-  "ExtractStrConfig.strLength.default": {
-    "en": "`20`",
-    "text": "`20`"
-  },
-  "ExtractStrConfig.strLength.example.0": {
-    "en": "```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nimport { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\n\nexport default defineConfig({\n  plugins: [\n    pluginReactLynx({\n      extractStr: {\n        strLength: 10,\n      },\n    })\n  ],\n})\n```",
-    "text": "```js\nimport { defineConfig } from '@lynx-js/rspeedy'\nimport { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'\n\nexport default defineConfig({\n  plugins: [\n    pluginReactLynx({\n      extractStr: {\n        strLength: 10,\n      },\n    })\n  ],\n})\n```"
   },
   "ReactLoaderOptions.summary": {
     "en": "The options of the ReactLynx plugin.",
     "text": "ReactLynx 插件的选项。"
   },
-  "ReactLoaderOptions.compat.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat`"
-  },
   "ReactLoaderOptions.defineDCE.summary": {
     "en": "Like `define` in various bundlers, but this one happens at transform time, and a DCE pass will be performed.",
     "text": "类似于各类打包工具中的 `define`，但它发生在转换阶段，并且会执行一次 DCE。"
   },
-  "ReactLoaderOptions.enableRemoveCSSScope.summary": {
-    "en": "`@lynx-js/template-webpack-plugin#LynxTemplatePluginOptions.enableRemoveCSSScope`",
-    "text": "`@lynx-js/template-webpack-plugin#LynxTemplatePluginOptions.enableRemoveCSSScope`"
-  },
-  "ReactLoaderOptions.enableUiSourceMap.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableUiSourceMap`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableUiSourceMap`"
-  },
   "ReactLoaderOptions.engineVersion.summary": {
     "en": "The engine version.",
     "text": "引擎版本。"
-  },
-  "ReactLoaderOptions.experimental_transformBuiltinAttributeNames.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_transformBuiltinAttributeNames`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_transformBuiltinAttributeNames`"
   },
   "ReactLoaderOptions.experimental_useElementTemplate.summary": {
     "en": "Whether to enable Element Template compilation.",
@@ -82,10 +46,6 @@
   "ReactLoaderOptions.inlineSourcesContent.summary": {
     "en": "Generate inline source content in source-map.",
     "text": "在 source map 中生成内联的源码内容。"
-  },
-  "ReactLoaderOptions.jsx.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.jsx`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.jsx`"
   },
   "ReactLoaderOptions.refresh.summary": {
     "en": "Enable the Fast Refresh for ReactLynx.",
@@ -98,14 +58,6 @@
   "ReactWebpackPluginOptions.summary": {
     "en": "The options for ReactWebpackPlugin",
     "text": "ReactWebpackPlugin 的选项"
-  },
-  "ReactWebpackPluginOptions.disableCreateSelectorQueryIncompatibleWarning.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat.disableCreateSelectorQueryIncompatibleWarning`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat.disableCreateSelectorQueryIncompatibleWarning`"
-  },
-  "ReactWebpackPluginOptions.enableSSR.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableSSR`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableSSR`"
   },
   "ReactWebpackPluginOptions.entryPairs.summary": {
     "en": "The main-thread and background entry pairs to merge the main-thread\ndefinitions across.",
@@ -127,18 +79,6 @@
     "en": "Merge same string literals in JS and Lepus to reduce output bundle size.\nSet to `false` to disable.",
     "text": "合并 JS 和 Lepus 中相同的字符串字面量，以减小输出 bundle 的体积。\n设置为 `false` 可禁用。"
   },
-  "ReactWebpackPluginOptions.extractStr.default": {
-    "en": "`false`",
-    "text": "`false`"
-  },
-  "ReactWebpackPluginOptions.firstScreenSyncTiming.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.firstScreenSyncTiming`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.firstScreenSyncTiming`"
-  },
-  "ReactWebpackPluginOptions.globalPropsMode.summary": {
-    "en": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.globalPropsMode`",
-    "text": "`@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.globalPropsMode`"
-  },
   "ReactWebpackPluginOptions.lazyBundleFetcher.summary": {
     "en": "Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.\n`pluginReactLynx`) from the host engine version and any\n`REACT_LAZY_BUNDLE_FETCHER` env override.",
     "text": "解析后的 lazy bundle fetcher 模式。由调用方（例如\n`pluginReactLynx`）根据宿主引擎版本以及\n`REACT_LAZY_BUNDLE_FETCHER` 环境变量覆盖值决定。"
@@ -158,9 +98,5 @@
   "ReactWebpackPluginOptions.workletRuntimePath.summary": {
     "en": "The file path of `@lynx-js/react/worklet-runtime`.",
     "text": "`@lynx-js/react/worklet-runtime` 的文件路径。"
-  },
-  "LAYERS.default": {
-    "en": "...",
-    "text": "..."
   }
 }

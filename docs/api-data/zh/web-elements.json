@@ -2,33 +2,5 @@
   "WebComponentClass.notToFilterFalseAttributes.summary": {
     "en": "for attribute=\"false\",\nwe will do removeAttribute by default;\nset here for dont do this;",
     "text": "对于 attribute=\"false\"，\n默认会执行 removeAttribute；\n在此设置以禁用该行为；"
-  },
-  "commonComponentEventSetting.default": {
-    "en": "...",
-    "text": "..."
-  },
-  "layoutChangeTarget.default": {
-    "en": "...",
-    "text": "..."
-  },
-  "registerAttributeHandler.default": {
-    "en": "...",
-    "text": "..."
-  },
-  "registerEventEnableStatusChangeHandler.default": {
-    "en": "...",
-    "text": "..."
-  },
-  "registerStyleChangeHandler.default": {
-    "en": "...",
-    "text": "..."
-  },
-  "scrollContainerDom.default": {
-    "en": "...",
-    "text": "..."
-  },
-  "useScrollEnd.default": {
-    "en": "...",
-    "text": "..."
   }
 }

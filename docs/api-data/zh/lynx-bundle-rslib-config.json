@@ -23,17 +23,9 @@
     "en": "The engine version of the external bundle.",
     "text": "external bundle 的引擎版本。"
   },
-  "EncodeOptions.engineVersion.default": {
-    "en": "`'3.5'`",
-    "text": "`'3.5'`"
-  },
   "EncodeOptions.target.summary": {
     "en": "The output format of the encoded bundle.\n\n- `'lynx'`: the native bundle a Lynx engine loads, via `@lynx-js/tasm`.\n- `'web'`: a web binary bundle via `@lynx-js/web-core/encode`, decodable by\n  the web platform. Sections are emitted as raw JS (the web runtime wraps\n  them at `lynx.loadScript` time), and CSS is folded into the StyleInfo\n  section.",
     "text": "编码后 bundle 的输出格式。\n\n- `'lynx'`：Lynx 引擎加载的原生 bundle，通过 `@lynx-js/tasm` 生成。\n- `'web'`：通过 `@lynx-js/web-core/encode` 生成的 web 二进制 bundle，可被\n  web 平台解码。各 section 以原始 JS 形式产出（web 运行时会在\n  `lynx.loadScript` 时对其进行包装），CSS 会被合并到 StyleInfo\n  section 中。"
-  },
-  "EncodeOptions.target.default": {
-    "en": "`'lynx'`",
-    "text": "`'lynx'`"
   },
   "ExposedLayers.summary": {
     "en": "The layer names an external bundle is split by.",
@@ -50,10 +42,6 @@
   "ExternalObject.async.summary": {
     "en": "Whether the library is mounted as a Promise resolving to the library\nnamespace. When enabled, the external is emitted as a `promise` external\nso importing modules await the mounted value instead of reading it\nsynchronously.",
     "text": "库是否以 Promise 的形式挂载，该 Promise resolve 为库的\n命名空间。启用后，该 external 会作为 `promise` external 产出，\n导入它的模块会 await 挂载的值，而不是同步\n读取。"
-  },
-  "ExternalObject.async.default": {
-    "en": "`false`",
-    "text": "`false`"
   },
   "ExternalObject.libraryName.summary": {
     "en": "The global name (with optional subpath) of the external library.",
@@ -79,10 +67,6 @@
     "en": "Include the assets marked `lynx:main-thread` that pass test assertion.",
     "text": "包含标记为 `lynx:main-thread` 且通过 test 断言的资源。"
   },
-  "MainThreadRuntimeWrapperWebpackPluginOptions.test.default": {
-    "en": "`/\\.js$/`",
-    "text": "`/\\.js$/`"
-  },
   "Externals.summary": {
     "en": "External module to global-name mappings used when building Lynx external\nbundles.",
     "text": "外部模块到全局名称的映射，\n用于构建 Lynx external bundle。"
@@ -107,33 +91,17 @@
     "en": "Built-in externals preset definitions.",
     "text": "内置的 externals 预设定义。"
   },
-  "builtInExternalsPresetDefinitions.default": {
-    "en": "...",
-    "text": "..."
-  },
   "defaultExternalBundleLibConfig.summary": {
     "en": "The default lib config`LibConfig` for external bundle.",
     "text": "external bundle 的默认 lib 配置 `LibConfig`。"
-  },
-  "defaultExternalBundleLibConfig.default": {
-    "en": "...",
-    "text": "..."
   },
   "LAYERS.summary": {
     "en": "The layer names an entry is split by without a DSL plugin.",
     "text": "没有 DSL 插件时，entry 拆分所依据的 layer 名称。"
   },
-  "LAYERS.default": {
-    "en": "...",
-    "text": "..."
-  },
   "reactLynxExternalsPreset.summary": {
     "en": "Standard ReactLynx external mappings used by the built-in `reactlynx`\npreset.",
     "text": "内置 `reactlynx`\n预设使用的标准 ReactLynx external 映射。"
-  },
-  "reactLynxExternalsPreset.default": {
-    "en": "...",
-    "text": "..."
   },
   "defineExternalBundleRslibConfig.summary": {
     "en": "Get the rslib config for building Lynx external bundles.",

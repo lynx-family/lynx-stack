@@ -3,22 +3,6 @@
     "en": "LynxTransportClient is the client transport implementation for webpack-dev-server.\nIt can be used in the\n[`devServer.client.webSocketTransport`](https://webpack.js.org/configuration/dev-server/#websockettransport)\nconfiguration of webpack.\nIt should be used with `LynxTransportServer`.",
     "text": "LynxTransportClient 是 webpack-dev-server 的客户端传输实现。\n可用于 webpack 的\n[`devServer.client.webSocketTransport`](https://webpack.js.org/configuration/dev-server/#websockettransport)\n配置中。\n需要与 `LynxTransportServer` 配合使用。"
   },
-  "default.example.0": {
-    "en": "```js\n// webpack.config.js\nimport { createRequire } from 'node:module'\nimport { LynxTransportServer } from '@lynx-js/webpack-dev-transport'\n\nconst require = createRequire(import.meta.url)\nexport default {\n  devServer: {\n    client: {\n      webSocketTransport: require.resolve('@lynx-js/webpack-dev-transport/client')\n    },\n    allowedHosts: 'all',\n    webSocketServer: LynxTransportServer\n  }\n}\n```",
-    "text": "```js\n// webpack.config.js\nimport { createRequire } from 'node:module'\nimport { LynxTransportServer } from '@lynx-js/webpack-dev-transport'\n\nconst require = createRequire(import.meta.url)\nexport default {\n  devServer: {\n    client: {\n      webSocketTransport: require.resolve('@lynx-js/webpack-dev-transport/client')\n    },\n    allowedHosts: 'all',\n    webSocketServer: LynxTransportServer\n  }\n}\n```"
-  },
-  "default.onClose.summary": {
-    "en": "`Client.onClose`",
-    "text": "`Client.onClose`"
-  },
-  "default.onMessage.summary": {
-    "en": "`Client.onMessage`",
-    "text": "`Client.onMessage`"
-  },
-  "default.onOpen.summary": {
-    "en": "`Client.onOpen`",
-    "text": "`Client.onOpen`"
-  },
   "Client.summary": {
     "en": "Client is the interface that [`webpack-dev-server`](https://github.com/webpack/webpack-dev-server/blob/48f56d57775dc4cf78bfcf51c3761adf852b0310/client-src/socket.js#L30) uses for a websocket client.",
     "text": "Client 是 [`webpack-dev-server`](https://github.com/webpack/webpack-dev-server/blob/48f56d57775dc4cf78bfcf51c3761adf852b0310/client-src/socket.js#L30) 用于 WebSocket 客户端的接口。"

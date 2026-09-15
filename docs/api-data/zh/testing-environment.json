@@ -7,25 +7,13 @@
     "en": "A pure-JavaScript implementation of the [Lynx Spec](https://lynxjs.org/guide/spec.html),\nnotably the [Element PAPI](https://lynxjs.org/api/engine/element-api) and [Dual-threaded Model](https://lynxjs.org/guide/spec#dual-threaded-model) for use with Node.js.",
     "text": "[Lynx 规范](https://lynxjs.org/guide/spec.html) 的纯 JavaScript 实现，\n主要包括 [Element PAPI](https://lynxjs.org/api/engine/element-api) 和 [双线程模型](https://lynxjs.org/guide/spec#dual-threaded-model)，供 Node.js 环境使用。"
   },
-  "LynxTestingEnv.example.0": {
-    "en": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToMainThread();\n// use the main thread Element PAPI\nconst page = __CreatePage('0', 0);\nconst view = __CreateView(0);\n__AppendElement(page, view);\n\n```",
-    "text": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToMainThread();\n// use the main thread Element PAPI\nconst page = __CreatePage('0', 0);\nconst view = __CreateView(0);\n__AppendElement(page, view);\n\n```"
-  },
   "LynxTestingEnv.backgroundThread.summary": {
     "en": "The global object for the background thread.",
     "text": "后台线程的全局对象。"
   },
-  "LynxTestingEnv.backgroundThread.example.0": {
-    "en": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToBackgroundThread();\n// use the background thread global object\nglobalThis.lynxCoreInject.tt.OnLifecycleEvent(...args);\n```",
-    "text": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToBackgroundThread();\n// use the background thread global object\nglobalThis.lynxCoreInject.tt.OnLifecycleEvent(...args);\n```"
-  },
   "LynxTestingEnv.mainThread.summary": {
     "en": "The global object for the main thread.",
     "text": "主线程的全局对象。"
-  },
-  "LynxTestingEnv.mainThread.example.0": {
-    "en": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToMainThread();\n// use the main thread global object\nconst page = globalThis.__CreatePage('0', 0);\nconst view = globalThis.__CreateView(0);\nglobalThis.__AppendElement(page, view);\n```",
-    "text": "```ts\nimport { LynxTestingEnv } from '@lynx-js/testing-environment';\nimport { JSDOM } from 'jsdom';\n\nconst lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });\n\nlynxTestingEnv.switchToMainThread();\n// use the main thread global object\nconst page = globalThis.__CreatePage('0', 0);\nconst view = globalThis.__CreateView(0);\nglobalThis.__AppendElement(page, view);\n```"
   },
   "LynxElement.summary": {
     "en": "Any Lynx Element, such as `view`, `text`, `image`, etc.\n\n[Lynx Spec Reference](https://lynxjs.org/living-spec/index.html?ts=1743416098203#element%E2%91%A0)",
