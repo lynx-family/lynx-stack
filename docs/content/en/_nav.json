@@ -1,18 +1,13 @@
 [
   {
-    "text": "Config",
-    "link": "/api/config/",
-    "activeMatch": "^/api/config/"
-  },
-  {
-    "text": "ReactLynx",
+    "text": "Frameworks",
     "link": "/api/react/",
     "activeMatch": "^/api/react/"
   },
   {
-    "text": "Packages",
-    "link": "/api/packages/",
-    "activeMatch": "^/api/packages/"
+    "text": "Build & Packages",
+    "link": "/api/config/",
+    "activeMatch": "^/api/(config|packages)/"
   },
   {
     "text": "Changelog",

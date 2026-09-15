@@ -1,18 +1,29 @@
 [
   {
-    "type": "dir",
-    "name": "config",
-    "label": "Config"
+    "type": "section-header",
+    "label": "Frameworks"
   },
   {
     "type": "dir",
     "name": "react",
-    "label": "ReactLynx"
+    "label": "@lynx-js/react"
+  },
+  {
+    "type": "divider"
+  },
+  {
+    "type": "section-header",
+    "label": "Build & Packages"
+  },
+  {
+    "type": "dir",
+    "name": "config",
+    "label": "Configuration"
   },
   {
     "type": "dir",
     "name": "packages",
-    "label": "Packages"
+    "label": "All @lynx-js packages"
   },
   {
     "type": "divider"

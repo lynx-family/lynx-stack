@@ -8,3 +8,7 @@
 .rspress-doc-container {
   @include external-links.external-links;
 }
+
+.rp-home-hero__action.rp-button {
+  padding-inline: 28px;
+}

@@ -1,18 +1,29 @@
 [
   {
+    "type": "section-header",
+    "label": "框架"
+  },
+  {
+    "type": "dir",
+    "name": "react",
+    "label": "@lynx-js/react"
+  },
+  {
+    "type": "divider"
+  },
+  {
+    "type": "section-header",
+    "label": "构建与 npm 包"
+  },
+  {
     "type": "dir",
     "name": "config",
     "label": "配置"
   },
   {
     "type": "dir",
-    "name": "react",
-    "label": "ReactLynx"
-  },
-  {
-    "type": "dir",
     "name": "packages",
-    "label": "包"
+    "label": "全部 @lynx-js 包"
   },
   {
     "type": "divider"

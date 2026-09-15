@@ -7,12 +7,12 @@ hero:
   tagline: The build configuration, the Rsbuild plugins, ReactLynx and every @lynx-js package, generated from the source.
   actions:
     - theme: brand
-      text: Build configuration
-      link: /api/config/
-    - theme: alt
-      text: ReactLynx
+      text: '@lynx-js/react'
       link: /api/react/
     - theme: alt
-      text: Packages
+      text: Configuration
+      link: /api/config/
+    - theme: alt
+      text: All @lynx-js packages
       link: /api/packages/
 ---
