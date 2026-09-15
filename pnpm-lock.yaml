@@ -2353,6 +2353,9 @@ importers:
       '@lynx-js/config-rsbuild-plugin':
         specifier: workspace:*
         version: link:../plugin-config
+      '@lynx-js/create-lynx':
+        specifier: workspace:*
+        version: link:../create-lynx
       '@lynx-js/css-extract-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/css-extract-webpack-plugin
@@ -2374,6 +2377,9 @@ importers:
       '@lynx-js/externals-loading-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/externals-loading-webpack-plugin
+      '@lynx-js/genui':
+        specifier: workspace:*
+        version: link:../../genui
       '@lynx-js/gesture-runtime':
         specifier: workspace:*
         version: link:../../lynx/gesture-runtime
@@ -2386,6 +2392,9 @@ importers:
       '@lynx-js/lynx-bundle-rslib-config':
         specifier: workspace:*
         version: link:../lynx-bundle-rslib-config
+      '@lynx-js/motion':
+        specifier: workspace:*
+        version: link:../../motion
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../plugin-qrcode
@@ -2401,6 +2410,12 @@ importers:
       '@lynx-js/react-rsbuild-plugin':
         specifier: workspace:*
         version: link:../plugin-react
+      '@lynx-js/react-signals':
+        specifier: workspace:*
+        version: link:../../react-signals
+      '@lynx-js/react-umd':
+        specifier: workspace:*
+        version: link:../../react-umd
       '@lynx-js/react-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/react-webpack-plugin
@@ -2419,6 +2434,9 @@ importers:
       '@lynx-js/skill-lynx-openui':
         specifier: workspace:*
         version: link:../../genui/skill-lynx-openui
+      '@lynx-js/tailwind-preset':
+        specifier: workspace:*
+        version: link:../../tailwind-preset
       '@lynx-js/template-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/template-webpack-plugin
@@ -2428,6 +2446,9 @@ importers:
       '@lynx-js/types':
         specifier: 4.1.0
         version: 4.1.0
+      '@lynx-js/use-sync-external-store':
+        specifier: workspace:*
+        version: link:../../use-sync-external-store
       '@lynx-js/vanilla-rsbuild-plugin':
         specifier: workspace:*
         version: link:../plugin-vanilla
@@ -2485,6 +2506,9 @@ importers:
       type-fest:
         specifier: ^5.8.0
         version: 5.8.0
+      yaml:
+        specifier: ^2.9.0
+        version: 2.9.0
 
   packages/rspeedy/websocket:
     dependencies:
