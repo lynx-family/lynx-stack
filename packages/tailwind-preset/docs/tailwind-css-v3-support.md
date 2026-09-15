@@ -314,14 +314,14 @@ The Lynx filter plugin also provides `filter-none`, which resets the entire
 | [Scale][scale]                       | Supported | Lynx plugin    | `scale-*`, `scale-{x,y}-*`, `-scale-*`, `-scale-{x,y}-*`         | Uses Lynx's adapted composed transform output.                                            |
 | [Rotate][rotate]                     | Supported | Lynx plugin    | `rotate-*`, `rotate-{x,y,z}-*`, `-rotate-*`, `-rotate-{x,y,z}-*` | Uses Lynx's adapted composed transform output.                                            |
 | [Translate][translate]               | Supported | Lynx plugin    | `translate-{x,y,z}-*`, `-translate-{x,y,z}-*`                    | Uses Lynx's adapted composed transform output; `translate-z` does not accept percentages. |
-| [Skew][skew]                         | Supported | Lynx plugin    | `skew-{x,y}-*`, `-skew-{x,y}-*`                                  | Uses Lynx's adapted composed transform output.                                            |
+| [Skew][skew]                         | Supported | Lynx plugin    | `skew-{x,y}-*`, `-skew-{x,y}-*`                                  | Uses the Tailwind CSS v3 `skewX(...) skewY(...)` order in Lynx's composed transform.      |
 | [Transform Origin][transform-origin] | Supported | Core           | `origin-*`                                                       | —                                                                                         |
 
 The Lynx Transform plugin separately provides the shared composition controls
 `transform` and `transform-{cpu,gpu,none}`. These controls apply across Scale,
 Rotate, Translate, and Skew. See
 [Transform Composition][utility-design-transform] for their implementation
-model and the combined Skew compatibility risk.
+model and compatibility details.
 
 See [preset extensions](./preset-extensions.md) for `transform-[...]`,
 `solo-*`, `perspective`, and other Lynx-specific or selected v4 syntax.
