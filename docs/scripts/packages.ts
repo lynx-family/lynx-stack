@@ -119,14 +119,14 @@ export const PACKAGES: PackageEntry[] = [
     dir: 'packages/react',
     entry: 'types/react.docs.d.ts',
     group: 'react',
-    page: '/react/api/',
+    page: '/api/react/',
   },
   {
     id: 'react-testing-library',
     dir: 'packages/react/testing-library',
     entry: 'types/index.d.ts',
     group: 'react',
-    page: '/react/api/testing-library',
+    page: '/api/react/testing-library',
     name: '@lynx-js/react/testing-library',
   },
   {

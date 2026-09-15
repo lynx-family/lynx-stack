@@ -8,11 +8,11 @@ hero:
   actions:
     - theme: brand
       text: Build configuration
-      link: /config/
+      link: /api/config/
     - theme: alt
       text: ReactLynx
-      link: /react/api/
+      link: /api/react/
     - theme: alt
       text: Packages
-      link: /packages/
+      link: /api/packages/
 ---

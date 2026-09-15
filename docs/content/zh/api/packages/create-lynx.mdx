@@ -1,0 +1,37 @@
+---
+title: '@lynx-js/create-lynx'
+---
+
+# @lynx-js/create-lynx
+
+{/* @api PackageHeader package="create-lynx" */}
+
+<div className="api-pkg-header"><code>@lynx-js/create-lynx</code> <span className="api-pkg-version">v0.2.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/create-lynx" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/create-lynx" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/create-lynx/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+一条命令创建 Lynx 应用或库。
+
+## 用法
+
+```bash
+npm create @lynx-js/lynx@latest
+```
+
+也可以在命令行中直接指定目录和模板：
+
+```bash
+npm create @lynx-js/lynx@latest my-app -- --template rsbuild-react-ts
+```
+
+## 模板
+
+模板按 `<构建工具>-<DSL>-<语言>` 命名，省略的部分取默认值，因此 `rsbuild`、`rsbuild-ts` 和 `rsbuild-react-ts` 指的是同一个模板。
+
+| 模板 | 创建 | 构建工具 | 配置文件 |
+| --- | --- | --- | --- |
+| `rsbuild-react-ts` / `rsbuild-react-js` | 应用 | [Rsbuild](https://rsbuild.rs/) 与 [`pluginLynx`](/zh/api/packages/rsbuild-plugin) | `rsbuild.config.*` |
+| `rspeedy-react-ts` / `rspeedy-react-js` | 应用 | [Rspeedy](/zh/api/packages/rspeedy) | `lynx.config.*` |
+| `rslib-react-ts` / `rslib-react-js` | 库 | [Rslib](https://rslib.rs/) | `rslib.config.*` |
+
+每个模板都已配置好 [Rstest](https://rstest.rs/) 和 `@lynx-js/react/testing-library`，用 `npm run test` 运行测试。其他选项见 [README](https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/create-lynx)。

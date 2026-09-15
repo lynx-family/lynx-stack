@@ -1,0 +1,103 @@
+---
+title: 包总览
+pageType: doc-wide
+outline: false
+---
+
+# 包总览
+
+[lynx-stack](https://github.com/lynx-family/lynx-stack) 发布的所有公开包，从每个 Lynx 应用都会用到的构建工具，到构建引擎的内部包。包名下方是它的主要导出或运行命令。
+
+{/* @api PackagesOverview */}
+
+<div className="api-config-overview api-packages-overview">
+
+<div className="api-config-group" id="build">
+
+<div className="api-config-group-title">构建工具</div>
+
+- <span id="rsbuild-plugin"></span>[rsbuild-plugin](/zh/api/packages/rsbuild-plugin) <span className="api-package-main">pluginLynx</span>
+- <span id="react-rsbuild-plugin"></span>[react-rsbuild-plugin](/zh/api/packages/react-rsbuild-plugin) <span className="api-package-main">pluginReactLynx</span>
+- <span id="vanilla-rsbuild-plugin"></span>[vanilla-rsbuild-plugin](/zh/api/packages/vanilla-rsbuild-plugin) <span className="api-package-main">pluginVanillaLynx</span>
+- <span id="create-lynx"></span>[create-lynx](/zh/api/packages/create-lynx) <span className="api-package-main">npm create @lynx-js/lynx</span>
+- <span id="qrcode-rsbuild-plugin"></span>[qrcode-rsbuild-plugin](/zh/api/packages/qrcode-rsbuild-plugin) <span className="api-package-main">pluginQRCode</span>
+- <span id="external-bundle-rsbuild-plugin"></span>[external-bundle-rsbuild-plugin](/zh/api/packages/external-bundle-rsbuild-plugin) <span className="api-package-main">pluginExternalBundle</span>
+- <span id="config-rsbuild-plugin"></span>[config-rsbuild-plugin](/zh/api/packages/config-rsbuild-plugin) <span className="api-package-main">pluginLynxConfig</span>
+- <span id="debug-metadata-rsbuild-plugin"></span>[debug-metadata-rsbuild-plugin](/zh/api/packages/debug-metadata-rsbuild-plugin) <span className="api-package-main">pluginLynxDebugMetadata</span>
+- <span id="react-alias-rsbuild-plugin"></span>[react-alias-rsbuild-plugin](/zh/api/packages/react-alias-rsbuild-plugin) <span className="api-package-main">pluginReactAlias</span>
+- <span id="lynx-bundle-rslib-config"></span>[lynx-bundle-rslib-config](/zh/api/packages/lynx-bundle-rslib-config) <span className="api-package-main">defineExternalBundleRslibConfig</span>
+- <span id="rspeedy"></span>[rspeedy](/zh/api/packages/rspeedy) <span className="api-package-main">defineConfig</span>
+- <span id="upgrade-rspeedy"></span>[upgrade-rspeedy](/zh/api/packages/upgrade-rspeedy) <span className="api-package-main">npx upgrade-rspeedy</span>
+- <span id="create-rspeedy"></span>[create-rspeedy](/zh/api/packages/create-rspeedy) <span className="api-package-main">npm create rspeedy</span>
+
+</div>
+
+<div className="api-config-group" id="react">
+
+<div className="api-config-group-title">ReactLynx</div>
+
+- <span id="react"></span>[react](/zh/api/react/)
+- <span id="react-testing-library"></span>[react/testing-library](/zh/api/react/testing-library)
+- <span id="react-signals"></span>[react-signals](/zh/api/packages/react-signals)
+- <span id="use-sync-external-store"></span>[use-sync-external-store](/zh/api/packages/use-sync-external-store)
+- <span id="background-only"></span>[background-only](/zh/api/packages/background-only)
+- <span id="react-umd"></span>[react-umd](/zh/api/packages/react-umd)
+
+</div>
+
+<div className="api-config-group" id="web">
+
+<div className="api-config-group-title">Web 平台</div>
+
+- <span id="web-core"></span>[web-core](/zh/api/packages/web-core)
+- <span id="web-elements"></span>[web-elements](/zh/api/packages/web-elements)
+- <span id="web-platform-rsbuild-plugin"></span>[web-platform-rsbuild-plugin](/zh/api/packages/web-platform-rsbuild-plugin) <span className="api-package-main">pluginWebPlatform</span>
+- <span id="web-rsbuild-server-middleware"></span>[web-rsbuild-server-middleware](/zh/api/packages/web-rsbuild-server-middleware)
+- <span id="web-explorer"></span>[web-explorer](/zh/api/packages/web-explorer)
+- <span id="web-worker-rpc"></span>[web-worker-rpc](/zh/api/packages/web-worker-rpc)
+
+</div>
+
+<div className="api-config-group" id="libraries">
+
+<div className="api-config-group-title">库与工具</div>
+
+- <span id="tailwind-preset"></span>[tailwind-preset](/zh/api/packages/tailwind-preset) <span className="api-package-main">createLynxPreset</span>
+- <span id="motion"></span>[motion](/zh/api/packages/motion)
+- <span id="gesture-runtime"></span>[gesture-runtime](/zh/api/packages/gesture-runtime)
+- <span id="websocket"></span>[websocket](/zh/api/packages/websocket)
+- <span id="genui"></span>[genui](/zh/api/packages/genui)
+- <span id="skill-lynx-openui"></span>[skill-lynx-openui](/zh/api/packages/skill-lynx-openui)
+- <span id="i18next-translation-dedupe"></span>[i18next-translation-dedupe](/zh/api/packages/i18next-translation-dedupe) <span className="api-package-main">pluginLynxI18nextTranslationDedupe</span>
+- <span id="autolink-codegen"></span>[autolink-codegen](/zh/api/packages/autolink-codegen)
+- <span id="create-lynx-library"></span>[create-lynx-library](/zh/api/packages/create-lynx-library) <span className="api-package-main">npm create lynx-library</span>
+- <span id="testing-environment"></span>[testing-environment](/zh/api/packages/testing-environment)
+- <span id="kitten-lynx"></span>[kitten-lynx-test-infra](/zh/api/packages/kitten-lynx)
+- <span id="docs-mcp-server"></span>[docs-mcp-server](/zh/api/packages/docs-mcp-server) <span className="api-package-main">npx @lynx-js/docs-mcp-server</span>
+- <span id="lynx-stack-docs"></span>[lynx-stack-docs](/zh/api/packages/lynx-stack-docs)
+
+</div>
+
+<div className="api-config-group" id="internals">
+
+<div className="api-config-group-title">构建内部包</div>
+
+- <span id="template-webpack-plugin"></span>[template-webpack-plugin](/zh/api/packages/template-webpack-plugin) <span className="api-package-main">LynxTemplatePlugin</span>
+- <span id="css-extract-webpack-plugin"></span>[css-extract-webpack-plugin](/zh/api/packages/css-extract-webpack-plugin) <span className="api-package-main">CssExtractRspackPlugin</span>
+- <span id="chunk-loading-webpack-plugin"></span>[chunk-loading-webpack-plugin](/zh/api/packages/chunk-loading-webpack-plugin) <span className="api-package-main">ChunkLoadingWebpackPlugin</span>
+- <span id="runtime-wrapper-webpack-plugin"></span>[runtime-wrapper-webpack-plugin](/zh/api/packages/runtime-wrapper-webpack-plugin) <span className="api-package-main">RuntimeWrapperWebpackPlugin</span>
+- <span id="react-webpack-plugin"></span>[react-webpack-plugin](/zh/api/packages/react-webpack-plugin) <span className="api-package-main">ReactWebpackPlugin</span>
+- <span id="react-refresh-webpack-plugin"></span>[react-refresh-webpack-plugin](/zh/api/packages/react-refresh-webpack-plugin) <span className="api-package-main">ReactRefreshRspackPlugin</span>
+- <span id="externals-loading-webpack-plugin"></span>[externals-loading-webpack-plugin](/zh/api/packages/externals-loading-webpack-plugin) <span className="api-package-main">ExternalsLoadingPlugin</span>
+- <span id="cache-events-webpack-plugin"></span>[cache-events-webpack-plugin](/zh/api/packages/cache-events-webpack-plugin) <span className="api-package-main">LynxCacheEventsPlugin</span>
+- <span id="runtime-config-webpack-plugin"></span>[runtime-config-webpack-plugin](/zh/api/packages/runtime-config-webpack-plugin) <span className="api-package-main">RuntimeConfigWebpackPlugin</span>
+- <span id="webpack-dev-transport"></span>[webpack-dev-transport](/zh/api/packages/webpack-dev-transport)
+- <span id="webpack-runtime-globals"></span>[webpack-runtime-globals](/zh/api/packages/webpack-runtime-globals)
+- <span id="css-serializer"></span>[css-serializer](/zh/api/packages/css-serializer)
+- <span id="debug-metadata"></span>[debug-metadata](/zh/api/packages/debug-metadata)
+
+</div>
+
+</div>
+
+{/* @api-end */}

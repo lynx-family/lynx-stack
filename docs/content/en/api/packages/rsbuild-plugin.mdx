@@ -1,0 +1,223 @@
+---
+title: '@lynx-js/rsbuild-plugin'
+---
+
+# @lynx-js/rsbuild-plugin
+
+{/* @api PackageHeader package="rsbuild-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/rsbuild-plugin</code> <span className="api-pkg-version">v0.1.2</span> · <a href="https://www.npmjs.com/package/@lynx-js/rsbuild-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-lynx" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-lynx/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+The Lynx build engine as an Rsbuild plugin. It builds a Lynx app with the Rsbuild CLI directly, without the Rspeedy CLI.
+
+DSL plugins such as [`pluginReactLynx`](/api/packages/react-rsbuild-plugin) register the engine automatically when it is missing, so you only add `pluginLynx` yourself to pass the options below. Rspeedy registers it for you as well and forwards `output.filename` and `performance.profile` from `lynx.config.ts`.
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/rsbuild-plugin -D" />
+
+## Usage
+
+Register the plugin next to a DSL plugin in `rsbuild.config.ts`. The environment name (`lynx` below) becomes the `[platform]` placeholder of the bundle filename, so the default output of this config is `dist/main.lynx.bundle`.
+
+```ts title="rsbuild.config.ts"
+import { defineConfig } from '@rsbuild/core'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+
+export default defineConfig({
+  source: {
+    entry: { main: './src/index.tsx' },
+  },
+  environments: {
+    lynx: {},
+  },
+  plugins: [
+    pluginLynx({
+      performance: { profile: false },
+    }),
+    pluginReactLynx(),
+  ],
+})
+```
+
+Then use the Rsbuild CLI:
+
+```bash
+rsbuild dev
+rsbuild build
+```
+
+## Migrating from Rspeedy
+
+Replace `rspeedy dev` / `rspeedy build` with `rsbuild dev` / `rsbuild build`, rename `lynx.config.ts` to `rsbuild.config.ts` and import `defineConfig` from `@rsbuild/core`. The two options Rspeedy used to forward to the engine are now passed to `pluginLynx` directly:
+
+| `lynx.config.ts` (Rspeedy) | `pluginLynx()` (Rsbuild) |
+| --- | --- |
+| `output.filename` as a string | `output.filename.bundle` |
+| `output.filename.bundle` | `output.filename.bundle` |
+| `output.filename.template` (deprecated) | `output.filename.bundle` |
+| `performance.profile` | `performance.profile` |
+
+Everything else in `output`, `source`, `dev` and `server` keeps the Rsbuild shape and stays in `rsbuild.config.ts`. The engine applies Lynx-specific defaults on top of the Rsbuild ones (bundle target, chunk loading, CSS extraction, source maps) and only overrides a setting when another plugin has not already set it.
+
+## Options
+
+{/* @api ApiOptions package="rsbuild-plugin" type="LynxPluginOptions" */}
+
+<a id="lynxpluginoptions"></a>
+
+### `output` \{#output\}
+
+- **Type:** [`LynxOutput`](#output)
+
+The build outputs.
+
+#### `output.filename` \{#output-filename\}
+
+- **Type:** [`LynxFilename`](#output-filename)
+
+The names of the emitted files.
+
+##### `output.filename.bundle` \{#output-filename-bundle\}
+
+- **Type:** [`BundleFilename`](#bundlefilename)
+- **Default:** `'[name].[platform].bundle'`
+
+The name of the bundle files.
+
+The following placeholders are supported:
+
+- `[name]`: the name of the entry.
+- `[platform]`: the name of the Rsbuild environment.
+
+#### `output.minify` \{#output-minify\}
+
+- **Type:** [`LynxMinify`](#output-minify)
+
+The per-thread minifier options.
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="output-minify-backgroundoptions"></a>`backgroundOptions` | `SwcJsMinimizerRspackPluginOptions` |  | The minifier options of the background thread. |
+| <a id="output-minify-mainthreadoptions"></a>`mainThreadOptions` | `SwcJsMinimizerRspackPluginOptions` |  | The minifier options of the main thread. |
+
+### `performance` \{#performance\}
+
+- **Type:** [`LynxPerformance`](#performance)
+
+The performance options.
+
+#### `performance.profile` \{#performance-profile\}
+
+- **Type:** `boolean`
+
+Whether to capture timing information in Lynx runtime integrations such as
+ReactLynx.
+
+A framework includes runtime information using `console.profile` when this
+is enabled.
+
+{/* @api-end */}
+
+## API
+
+{/* @api ApiExports package="rsbuild-plugin" exclude="LynxPluginOptions,LynxOutput,LynxFilename,LynxMinify,LynxPerformance" optionsType="LynxPluginOptions" */}
+
+## Functions \{#functions\}
+
+### `isPluginLynxRegistered()` \{#ispluginlynxregistered\}
+
+```ts
+isPluginLynxRegistered(host: { isPluginExists: any }, environments: string[]): boolean
+```
+
+Whether the Lynx build engine is already registered.
+
+The engine is a global one. `isPluginExists` without an environment only
+reports the global plugins, so it misses an engine a caller — `rslib`, for
+one — registered on an environment instead.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `host` | `{ isPluginExists: any }` | The Rsbuild instance or plugin API to look it up on. |
+| `environments` | `string[]` | The names of the configured environments. |
+
+**Returns:** `boolean`
+
+### `pluginLynx()` \{#pluginlynx\}
+
+```ts
+pluginLynx(options: LynxPluginOptions): RsbuildPlugin[]
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `options` | [`LynxPluginOptions`](#lynxpluginoptions) |  |
+
+**Returns:** `RsbuildPlugin[]`
+
+## Constants \{#constants\}
+
+### `PLUGIN_LYNX_NAME` \{#plugin-lynx-name\}
+
+```ts
+const PLUGIN_LYNX_NAME: "lynx:rsbuild"
+```
+
+The name of the plugin that marks `pluginLynx` as applied. Use it with
+`api.isPluginExists` to tell whether the Lynx build engine is already there.
+
+## Types \{#types\}
+
+### `BundleFilenameContext` \{#bundlefilenamecontext\}
+
+The context passed to the [`LynxFilename.bundle`](#output-filename-bundle) function.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="bundlefilenamecontext-entryname"></a>`entryName?` | `string` | The name of the entry. |
+| <a id="bundlefilenamecontext-lazybundle"></a>`lazyBundle` | `boolean` | Whether the filename is being resolved for a lazy bundle (async chunk) instead of the main bundle of an entry. |
+| <a id="bundlefilenamecontext-platform"></a>`platform` | `string` | The name of the Rsbuild environment. |
+
+### `LynxConfig` <span className="api-badge api-badge-beta">Beta</span> \{#lynxconfig\}
+
+The Lynx config that `pluginLynx` exposes to other plugins.
+
+The data mirrors [`LynxPluginOptions`](#lynxpluginoptions), so a plugin reads
+`config.output.filename` the same way it reads `output.filename` from
+`api.getRsbuildConfig()`. Values that depend on the entry being built are
+derived by the methods, which travel with the data so that the plugin that
+built the config is always the one that resolves it.
+
+```js
+const lynx = getLynxConfig(api)
+const filename = lynx.resolveBundleFilename({
+  entryName: 'main',
+  platform: environment.name,
+})
+```
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="lynxconfig-output"></a>`output` <span className="api-badge api-badge-beta">Beta</span> | [`LynxOutput`](#output) | The build outputs. |
+| <a id="lynxconfig-performance"></a>`performance` <span className="api-badge api-badge-beta">Beta</span> | [`LynxPerformance`](#performance) | The performance options. |
+| <a id="lynxconfig-resolvebundlefilename"></a>`resolveBundleFilename` | `resolveBundleFilename(context: { entryName: string; platform: string }): string` | Resolve the name of the bundle file of an entry. |
+| <a id="lynxconfig-resolveintermediatedir"></a>`resolveIntermediateDir` | `resolveIntermediateDir(context?: { entryName?: string }): string` | Resolve the directory of the intermediate files. |
+| <a id="lynxconfig-resolvelazybundlefilename"></a>`resolveLazyBundleFilename` | `resolveLazyBundleFilename(context: { platform: string }): string \| undefined` | Resolve the name of the lazy bundle files. |
+
+### `BundleFilename` \{#bundlefilename\}
+
+```ts
+type BundleFilename = string | ((context: BundleFilenameContext) => string)
+```
+
+The name of the bundle files.
+
+{/* @api-end */}

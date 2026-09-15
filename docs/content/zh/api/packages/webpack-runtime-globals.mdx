@@ -1,0 +1,39 @@
+---
+title: '@lynx-js/webpack-runtime-globals'
+---
+
+# @lynx-js/webpack-runtime-globals
+
+{/* @api PackageHeader package="webpack-runtime-globals" */}
+
+<div className="api-pkg-header"><code>@lynx-js/webpack-runtime-globals</code> <span className="api-pkg-version">v0.0.8</span> · <a href="https://www.npmjs.com/package/@lynx-js/webpack-runtime-globals" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/webpack-runtime-globals" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/webpack-runtime-globals/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+:::tip 内部包
+此包是 Lynx 构建引擎的一部分，由 [`pluginLynx`](/zh/api/packages/rsbuild-plugin) 自动应用。其 API 文档面向插件作者，应用代码不会直接使用它。
+:::
+
+使用运行时包装器，使 JavaScript 能够被 Lynx 加载。
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/webpack-runtime-globals -D" />
+
+## API
+
+{/* @api ApiExports package="webpack-runtime-globals" */}
+
+## 常量 \{#\}
+
+### `RuntimeGlobals` \{#runtimeglobals\}
+
+```ts
+const RuntimeGlobals: { lynxAsyncChunkIds: "__webpack_require__.lynx_aci"; lynxAsyncChunkMode: "__webpack_require__.lynx_acm"; lynxCacheEvents: "__webpack_require__.lynx_ce"; lynxCacheEventsSetupList: "__webpack_require__.lynx_ce.setupList"; lynxChunkEntries: "lynx.__chunk_entries__"; lynxProcessEvalResult: "globalThis.processEvalResult"; lynxProcessEvalResultByHost: "globalThis.processEvalResultByHost"; lynxRuntimeConfig: "lynx.__runtime_configs__" }
+```
+
+Lynx 使用的所有运行时依赖项。
+
+{/* @api-end */}

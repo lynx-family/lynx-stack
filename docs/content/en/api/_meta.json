@@ -1,0 +1,25 @@
+[
+  {
+    "type": "dir",
+    "name": "config",
+    "label": "Config"
+  },
+  {
+    "type": "dir",
+    "name": "react",
+    "label": "ReactLynx"
+  },
+  {
+    "type": "dir",
+    "name": "packages",
+    "label": "Packages"
+  },
+  {
+    "type": "divider"
+  },
+  {
+    "type": "custom-link",
+    "label": "ReactLynx guides on lynxjs.org",
+    "link": "https://lynxjs.org/react/"
+  }
+]

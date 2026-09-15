@@ -53,7 +53,7 @@ function readmeIntro(dir: string): string {
 }
 
 write(
-  'config/index.mdx',
+  'api/config/index.mdx',
   `---
 title: Config overview
 pageType: doc-wide
@@ -72,7 +72,7 @@ The options for building a Lynx app, whether with Rsbuild and \`pluginLynx\` or 
 );
 
 write(
-  'packages/rspeedy.mdx',
+  'api/packages/rspeedy.mdx',
   `---
 title: '@lynx-js/rspeedy'
 ---
@@ -108,7 +108,7 @@ const PLUGINS: {
     fn: 'pluginReactLynx',
     options: 'PluginReactLynxOptions',
     intro:
-      'The ReactLynx DSL plugin. It compiles JSX into the dual-thread output of ReactLynx, wires up the runtime and enables Fast Refresh in development. It registers [`pluginLynx`](/packages/rsbuild-plugin) automatically when the build engine is not already there.',
+      'The ReactLynx DSL plugin. It compiles JSX into the dual-thread output of ReactLynx, wires up the runtime and enables Fast Refresh in development. It registers [`pluginLynx`](/api/packages/rsbuild-plugin) automatically when the build engine is not already there.',
   },
   {
     id: 'qrcode-rsbuild-plugin',
@@ -143,7 +143,7 @@ const PLUGINS: {
     fn: 'pluginLynxDebugMetadata',
     options: 'PluginLynxDebugMetadataOptions',
     intro:
-      'Emits a `debug-metadata.json` next to the bundle with the information Lynx DevTool needs to map runtime errors back to the source. [`pluginLynx`](/packages/rsbuild-plugin) applies it by default.',
+      'Emits a `debug-metadata.json` next to the bundle with the information Lynx DevTool needs to map runtime errors back to the source. [`pluginLynx`](/api/packages/rsbuild-plugin) applies it by default.',
   },
   {
     id: 'react-alias-rsbuild-plugin',
@@ -164,7 +164,7 @@ const PLUGINS: {
 for (const p of PLUGINS) {
   const src = PACKAGES.find(e => e.id === p.id)!;
   write(
-    `packages/${p.id}.mdx`,
+    `api/packages/${p.id}.mdx`,
     `---
 title: '@lynx-js/${p.id}'
 ---
@@ -282,7 +282,7 @@ const REACT_PAGES: {
 
 for (const p of REACT_PAGES) {
   write(
-    `react/api/${p.file}.mdx`,
+    `api/react/${p.file}.mdx`,
     `---
 title: ${p.title}
 ---
@@ -298,7 +298,7 @@ ${p.extra ?? ''}`,
 }
 
 write(
-  'react/api/index.mdx',
+  'api/react/index.mdx',
   `---
 title: ReactLynx API
 ---
@@ -312,18 +312,18 @@ title: ReactLynx API
 
 | | |
 | --- | --- |
-| [Hooks](/react/api/hooks) | \`useInitData\`, \`useGlobalProps\`, \`useMainThreadRef\`, \`useLynxGlobalEventListener\` … |
-| [Components](/react/api/components) | \`InitDataProvider\`, \`GlobalPropsProvider\` and their consumers |
-| [Functions](/react/api/functions) | \`runOnMainThread\`, \`runOnBackground\`, \`createPortal\`, \`root\` … |
-| [Types](/react/api/types) | \`InitData\`, \`GlobalProps\`, \`Lynx\`, \`MainThreadRef\` … |
-| [Directives](/react/api/directives) | \`'background only'\`, \`'main thread'\` |
-| [Macros](/react/api/macros) | \`__BACKGROUND__\`, \`__MAIN_THREAD__\`, \`__DEV__\`, \`__PROFILE__\` … |
-| [Testing Library](/react/api/testing-library) | \`render\`, \`fireEvent\`, \`waitFor\` from \`@lynx-js/react/testing-library\` |
+| [Hooks](/api/react/hooks) | \`useInitData\`, \`useGlobalProps\`, \`useMainThreadRef\`, \`useLynxGlobalEventListener\` … |
+| [Components](/api/react/components) | \`InitDataProvider\`, \`GlobalPropsProvider\` and their consumers |
+| [Functions](/api/react/functions) | \`runOnMainThread\`, \`runOnBackground\`, \`createPortal\`, \`root\` … |
+| [Types](/api/react/types) | \`InitData\`, \`GlobalProps\`, \`Lynx\`, \`MainThreadRef\` … |
+| [Directives](/api/react/directives) | \`'background only'\`, \`'main thread'\` |
+| [Macros](/api/react/macros) | \`__BACKGROUND__\`, \`__MAIN_THREAD__\`, \`__DEV__\`, \`__PROFILE__\` … |
+| [Testing Library](/api/react/testing-library) | \`render\`, \`fireEvent\`, \`waitFor\` from \`@lynx-js/react/testing-library\` |
 `,
 );
 
 write(
-  'react/api/testing-library.mdx',
+  'api/react/testing-library.mdx',
   `---
 title: Testing Library
 ---
@@ -358,7 +358,7 @@ for (const entry of PACKAGES) {
   const intro = readmeIntro(entry.dir) || (meta?.description ?? '');
   const hasApi = (meta?.exports ?? 0) > 0;
   write(
-    `packages/${entry.id}.mdx`,
+    `api/packages/${entry.id}.mdx`,
     `---
 title: '${name}'
 ---
@@ -375,7 +375,7 @@ ${
 ${
       entry.group === 'internals'
         ? `:::tip Internal package
-This package is part of the Lynx build engine and is applied for you by [\`pluginLynx\`](/packages/rsbuild-plugin). Its API is documented for plugin authors; application code does not use it directly.
+This package is part of the Lynx build engine and is applied for you by [\`pluginLynx\`](/api/packages/rsbuild-plugin). Its API is documented for plugin authors; application code does not use it directly.
 :::
 `
         : ''
@@ -409,7 +409,7 @@ This package has no TypeScript exports to document. See its [README](https://git
 }
 
 write(
-  'packages/index.mdx',
+  'api/packages/index.mdx',
   `---
 title: Packages overview
 pageType: doc-wide

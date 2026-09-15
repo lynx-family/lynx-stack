@@ -36,42 +36,45 @@ const WEBPACK_PACKAGES = [
 const API_DOCUMENTER_REDIRECTS = [
   {
     from: '^/(zh/)?api/rspeedy\\.config\\.splitchunks(\\.html)?$',
-    to: '/$1config/',
+    to: '/$1api/config/',
   },
   {
     from:
       '^/(zh/)?api/rspeedy\\.config\\.(environments|mode|plugins)(\\.html)?$',
-    to: '/$1config/',
+    to: '/$1api/config/',
   },
   {
     from:
       '^/(zh/)?api/rspeedy\\.(dev|output|performance|resolve|server|source|tools)(\\..*)?$',
-    to: '/$1config/',
+    to: '/$1api/config/',
   },
-  { from: '^/(zh/)?api/rspeedy(\\..*)?$', to: '/$1packages/rspeedy' },
+  { from: '^/(zh/)?api/rspeedy(\\..*)?$', to: '/$1api/packages/rspeedy' },
   {
     from: '^/(zh/)?api/react-rsbuild-plugin(\\..*)?$',
-    to: '/$1packages/react-rsbuild-plugin',
+    to: '/$1api/packages/react-rsbuild-plugin',
   },
   {
     from: '^/(zh/)?api/qrcode-rsbuild-plugin(\\..*)?$',
-    to: '/$1packages/qrcode-rsbuild-plugin',
+    to: '/$1api/packages/qrcode-rsbuild-plugin',
   },
   {
     from: '^/(zh/)?api/external-bundle-rsbuild-plugin(\\..*)?$',
-    to: '/$1packages/external-bundle-rsbuild-plugin',
+    to: '/$1api/packages/external-bundle-rsbuild-plugin',
   },
   {
     from: '^/(zh/)?api/(config-rsbuild-plugin|type-config)(\\..*)?$',
-    to: '/$1packages/config-rsbuild-plugin',
+    to: '/$1api/packages/config-rsbuild-plugin',
   },
   {
     from: '^/(zh/)?api/lynx-bundle-rslib-config(\\..*)?$',
-    to: '/$1packages/lynx-bundle-rslib-config',
+    to: '/$1api/packages/lynx-bundle-rslib-config',
   },
-  { from: `^/(zh/)?api/(${WEBPACK_PACKAGES})(\\..*)?$`, to: '/$1packages/$2' },
-  { from: '^/(zh/)?api/react([./].*)?$', to: '/$1react/api/' },
-  { from: '^/(zh/)?api/?$', to: '/$1packages/' },
+  {
+    from: `^/(zh/)?api/(${WEBPACK_PACKAGES})(\\..*)?$`,
+    to: '/$1api/packages/$2',
+  },
+  { from: '^/(zh/)?api/react(\\..*)?$', to: '/$1api/react/' },
+  { from: '^/(zh/)?api/?$', to: '/$1api/packages/' },
 ];
 
 const PLUGIN_PAGES: Record<string, string> = {
@@ -89,20 +92,23 @@ const PLUGIN_PAGES: Record<string, string> = {
 const MOVED_SECTION_REDIRECTS = [
   {
     from: '^/(zh/)?(?:rspeedy/)?config/splitChunks(?:\\.html)?$',
-    to: '/$1config/split-chunks',
+    to: '/$1api/config/split-chunks',
   },
   {
     from:
       '^/(zh/)?(?:rspeedy/)?config/(?:dev|output|performance|plugins|resolve|server|source|tools)(?:\\.html)?$',
-    to: '/$1config/',
+    to: '/$1api/config/',
   },
-  { from: '^/(zh/)?rspeedy/config(/.*)?$', to: '/$1config$2' },
+  { from: '^/(zh/)?rspeedy/config(/.*)?$', to: '/$1api/config$2' },
   ...Object.entries(PLUGIN_PAGES).map(([page, id]) => ({
     from: `^/(zh/)?(?:rspeedy/)?plugins/${page}(?:\\.html)?$`,
-    to: `/$1packages/${id}`,
+    to: `/$1api/packages/${id}`,
   })),
-  { from: '^/(zh/)?(?:rspeedy/)?plugins(?:/.*)?$', to: '/$1packages/' },
-  { from: '^/(zh/)?rspeedy/api(/.*)?$', to: '/$1packages/rspeedy' },
+  { from: '^/(zh/)?(?:rspeedy/)?plugins(?:/.*)?$', to: '/$1api/packages/' },
+  { from: '^/(zh/)?rspeedy/api(/.*)?$', to: '/$1api/packages/rspeedy' },
+  { from: '^/(zh/)?config(/.*)?$', to: '/$1api/config$2' },
+  { from: '^/(zh/)?packages(/.*)?$', to: '/$1api/packages$2' },
+  { from: '^/(zh/)?react/api(/.*)?$', to: '/$1api/react$2' },
 ];
 
 const LYNXJS_GUIDES: Record<string, string> = {

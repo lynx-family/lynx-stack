@@ -1,0 +1,70 @@
+---
+title: '@lynx-js/react-refresh-webpack-plugin'
+---
+
+# @lynx-js/react-refresh-webpack-plugin
+
+{/* @api PackageHeader package="react-refresh-webpack-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/react-refresh-webpack-plugin</code> <span className="api-pkg-version">v0.4.2</span> · <a href="https://www.npmjs.com/package/@lynx-js/react-refresh-webpack-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/react-refresh-webpack-plugin" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/react-refresh-webpack-plugin/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+:::tip Internal package
+This package is part of the Lynx build engine and is applied for you by [`pluginLynx`](/api/packages/rsbuild-plugin). Its API is documented for plugin authors; application code does not use it directly.
+:::
+
+A webpack plugin to hot refresh for Lynx.
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/react-refresh-webpack-plugin -D" />
+
+## API
+
+{/* @api ApiExports package="react-refresh-webpack-plugin" */}
+
+## Classes \{#classes\}
+
+### `ReactRefreshRspackPlugin` \{#reactrefreshrspackplugin\}
+
+ReactRefreshRspackPlugin allows using fast refresh in ReactLynx.
+
+```js
+// rspack.config.js
+import { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'
+export default {
+  module: {
+    rules: [
+      {
+        test: /\.[jt]sx?$/,
+        exclude: [
+          /node_modules/,
+          /@lynx-js/,
+          /react-refresh/,
+          /compiler-nodiff-runtime3/,
+          ReactRefreshRspackPlugin.loader,
+        ],
+        use: [ReactRefreshRspackPlugin.loader],
+      },
+    ],
+  },
+  plugins: [new ReactRefreshRspackPlugin()],
+}
+```
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="reactrefreshrspackplugin-constructor"></a>`constructor` | `constructor(options: ReactRefreshRspackPluginOptions): ReactRefreshRspackPlugin` |  |
+| <a id="reactrefreshrspackplugin-loader"></a>`loader` | `string` | The loader for react refresh. |
+| <a id="reactrefreshrspackplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` | The entry point of a rspack plugin. |
+
+## Types \{#types\}
+
+### `ReactRefreshRspackPluginOptions` \{#reactrefreshrspackpluginoptions\}
+
+The options for [`ReactRefreshRspackPlugin`](#reactrefreshrspackplugin).
+
+{/* @api-end */}

@@ -54,11 +54,11 @@ Code blocks are never sent for translation; only the prose around them is.
 
 ## Configuration pages
 
-The pages under `content/*/config` apply to both `rsbuild.config.ts` with `pluginLynx` and `lynx.config.ts`. `pnpm generate` writes `api-data/rsbuild-config.json`, the option paths of `RsbuildConfig` read from the installed `@rsbuild/core` types. The overview (`config/index.mdx`) groups every option the way the Rsbuild config overview does: options that Rsbuild also has link to the Rsbuild documentation, and options whose Lynx default differs get a short page that shows both defaults and links to the Rsbuild documentation. Each option that is specific to Lynx gets its own page under `config/<namespace>/`, created by `pnpm generate` (`scripts/config-pages.ts`) with how to set it through `pluginLynx` or `lynx.config.ts`; text added outside the generated region is kept.
+The pages under `content/*/api/config` apply to both `rsbuild.config.ts` with `pluginLynx` and `lynx.config.ts`. `pnpm generate` writes `api-data/rsbuild-config.json`, the option paths of `RsbuildConfig` read from the installed `@rsbuild/core` types. The overview (`api/config/index.mdx`) groups every option the way the Rsbuild config overview does: options that Rsbuild also has link to the Rsbuild documentation, and options whose Lynx default differs get a short page that shows both defaults and links to the Rsbuild documentation. Each option that is specific to Lynx gets its own page under `api/config/<namespace>/`, created by `pnpm generate` (`scripts/config-pages.ts`) with how to set it through `pluginLynx` or `lynx.config.ts`; text added outside the generated region is kept.
 
 ## Adding a package
 
-Add an entry to `scripts/packages.ts` with the package directory and its type entry point (a `src/index.ts` or a `.d.ts`), run `pnpm generate`, then create the page under `content/en/packages/` with the directives above. `scripts/scaffold-pages.ts` creates a starting page for any package that does not have one yet; it never overwrites an existing file. The entry's `group` and its position in the list decide where the package appears in the packages overview (`packages/index.mdx`) and sidebar, which `pnpm generate` writes; put the packages most apps use first.
+Add an entry to `scripts/packages.ts` with the package directory and its type entry point (a `src/index.ts` or a `.d.ts`), run `pnpm generate`, then create the page under `content/en/api/packages/` with the directives above. `scripts/scaffold-pages.ts` creates a starting page for any package that does not have one yet; it never overwrites an existing file. The entry's `group` and its position in the list decide where the package appears in the packages overview (`api/packages/index.mdx`) and sidebar, which `pnpm generate` writes; put the packages most apps use first.
 
 ## Keeping the generated regions current
 
@@ -66,6 +66,6 @@ CI runs `pnpm --filter docs check`, which regenerates everything and fails if `a
 
 ## Sync to lynxjs.org
 
-`content/en/config`, `content/en/react/api` and `content/en/packages` mirror the layout of `lynx-website/docs/en/`. They are copied there as-is; the generated content is already inside the files, so lynx-website needs no extra tooling. Links inside these pages are absolute (`/config/output/filename-bundle`) and resolve on both sites.
+`content/en/api/config`, `content/en/api/react` and `content/en/api/packages` mirror the layout of `lynx-website/docs/en/`. They are copied there as-is; the generated content is already inside the files, so lynx-website needs no extra tooling. Links inside these pages are absolute (`/api/config/output/filename-bundle`) and resolve on both sites.
 
 The same directories are published as `@lynx-js/lynx-stack-docs` (`packages/lynx-stack-docs`), which copies them at build time. It is released with every Lynx Stack release: `.github/scripts/add-docs-changeset.cjs` adds its changeset when a release publishes other packages.

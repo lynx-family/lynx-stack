@@ -1,0 +1,51 @@
+---
+title: '@lynx-js/cache-events-webpack-plugin'
+---
+
+# @lynx-js/cache-events-webpack-plugin
+
+{/* @api PackageHeader package="cache-events-webpack-plugin" */}
+
+<div className="api-pkg-header"><code>@lynx-js/cache-events-webpack-plugin</code> <span className="api-pkg-version">v0.2.1</span> · <a href="https://www.npmjs.com/package/@lynx-js/cache-events-webpack-plugin" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/cache-events-webpack-plugin" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/webpack/cache-events-webpack-plugin/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+:::tip Internal package
+This package is part of the Lynx build engine and is applied for you by [`pluginLynx`](/api/packages/rsbuild-plugin). Its API is documented for plugin authors; application code does not use it directly.
+:::
+
+Cache Lynx native events until the BTS chunk is fully loaded, and replay them when the BTS chunk is ready.
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/cache-events-webpack-plugin -D" />
+
+## API
+
+{/* @api ApiExports package="cache-events-webpack-plugin" */}
+
+## Classes \{#classes\}
+
+### `LynxCacheEventsPlugin` \{#lynxcacheeventsplugin\}
+
+A webpack plugin that cache Lynx native events until the BTS chunk is fully loaded, and replay them when the BTS chunk is ready.
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="lynxcacheeventsplugin-constructor"></a>`constructor` | `constructor(options?: LynxCacheEventsPluginOptions): LynxCacheEventsPlugin` |  |
+| <a id="lynxcacheeventsplugin-defaultoptions"></a>`defaultOptions` | `Readonly<Required<`[`LynxCacheEventsPluginOptions`](#lynxcacheeventspluginoptions)`>>` | `defaultOptions` is the default options that the [`LynxCacheEventsPlugin`](#lynxcacheeventsplugin) uses. |
+| <a id="lynxcacheeventsplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` | The entry point of a webpack plugin. |
+
+## Types \{#types\}
+
+### `LynxCacheEventsPluginOptions` \{#lynxcacheeventspluginoptions\}
+
+The options for [`LynxCacheEventsPlugin`](#lynxcacheeventsplugin)
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="lynxcacheeventspluginoptions-setuplisttransformer"></a>`setupListTransformer?` | `(setupList: string[], context: { isMainThread: boolean }) => string[]` | The transformer function to modify the setup list. It runs once per caching chunk — separately for the background thread and for an async-external main thread — so `context.isMainThread` tells you which thread's list you are transforming. Use it to add a cache function to only one thread. |
+
+{/* @api-end */}

@@ -1,18 +1,18 @@
 [
   {
     "text": "配置",
-    "link": "/zh/config/",
-    "activeMatch": "^/zh/config/"
+    "link": "/zh/api/config/",
+    "activeMatch": "^/zh/api/config/"
   },
   {
     "text": "ReactLynx",
-    "link": "/zh/react/api/",
-    "activeMatch": "^/zh/react/"
+    "link": "/zh/api/react/",
+    "activeMatch": "^/zh/api/react/"
   },
   {
     "text": "包",
-    "link": "/zh/packages/",
-    "activeMatch": "^/zh/packages/"
+    "link": "/zh/api/packages/",
+    "activeMatch": "^/zh/api/packages/"
   },
   {
     "text": "更新日志",

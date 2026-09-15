@@ -1,0 +1,25 @@
+[
+  {
+    "type": "dir",
+    "name": "config",
+    "label": "配置"
+  },
+  {
+    "type": "dir",
+    "name": "react",
+    "label": "ReactLynx"
+  },
+  {
+    "type": "dir",
+    "name": "packages",
+    "label": "包"
+  },
+  {
+    "type": "divider"
+  },
+  {
+    "type": "custom-link",
+    "label": "lynxjs.org 上的 ReactLynx 指南",
+    "link": "https://lynxjs.org/zh/react/"
+  }
+]

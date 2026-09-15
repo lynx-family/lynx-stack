@@ -1,0 +1,273 @@
+---
+title: '@lynx-js/css-serializer'
+---
+
+# @lynx-js/css-serializer
+
+{/* @api PackageHeader package="css-serializer" */}
+
+<div className="api-pkg-header"><code>@lynx-js/css-serializer</code> <span className="api-pkg-version">v0.1.9</span> · <a href="https://www.npmjs.com/package/@lynx-js/css-serializer" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/tools/css-serializer" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/tools/css-serializer/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+:::tip Internal package
+This package is part of the Lynx build engine and is applied for you by [`pluginLynx`](/api/packages/rsbuild-plugin). Its API is documented for plugin authors; application code does not use it directly.
+:::
+
+
+
+## Installation
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/css-serializer -D" />
+
+## API
+
+{/* @api ApiExports package="css-serializer" */}
+
+## Functions \{#functions\}
+
+### `cssChunksToMap()` \{#csschunkstomap\}
+
+```ts
+cssChunksToMap(cssChunks: (string | CSSChunkAsset)[], plugins: Plugin[], enableCSSSelector: boolean): { contentMap: Map<number, string[]>; cssMap: Record<string, LynxStyleNode[]>; cssSource: Record<string, string> }
+```
+
+Convert CSS chunks into `cssMap` / `cssSource`.
+
+`loc` fields remain in bundle CSS coordinates so they can be resolved later
+via `main.css.map`.
+
+`cssSource` intentionally keeps the historical `/cssId/<id>.css` shape.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `cssChunks` | `(string \| CSSChunkAsset)[]` |  |
+| `plugins` | [`Plugin`](#plugin)`[]` |  |
+| `enableCSSSelector` | `boolean` |  |
+
+**Returns:** `{ contentMap: Map<number, string[]>; cssMap: Record<string, `[`LynxStyleNode`](#lynxstylenode)`[]>; cssSource: Record<string, string> }`
+
+### `parse()` \{#parse\}
+
+```ts
+parse(content: string, options: { filename?: string; plugins?: Plugin[]; projectRoot?: string }): { errors: ParserError[]; root: LynxStyleNode[] }
+```
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `content` | `string` |  |
+| `options` | `{ filename?: string; plugins?: `[`Plugin`](#plugin)`[]; projectRoot?: string }` |  |
+
+**Returns:** `{ errors: `[`ParserError`](#parsererror)`[]; root: `[`LynxStyleNode`](#lynxstylenode)`[] }`
+
+## Types \{#types\}
+
+### `Plugins` \{#plugins\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="plugins-removefunctionwhitespace"></a>`removeFunctionWhiteSpace` | `unknown` |  |
+
+### `Severity` \{#severity\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="severity-deprecated"></a>`Deprecated` | `4` |  |
+| <a id="severity-error"></a>`Error` | `0` |  |
+| <a id="severity-experimental"></a>`Experimental` | `5` |  |
+| <a id="severity-notsupport"></a>`NotSupport` | `3` |  |
+| <a id="severity-unused"></a>`Unused` | `2` |  |
+| <a id="severity-warning"></a>`Warning` | `1` |  |
+
+### `BaseDeclaration` \{#basedeclaration\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="basedeclaration-keyloc"></a>`keyLoc` | [`Location`](#location) |  |
+| <a id="basedeclaration-name"></a>`name` | `string` |  |
+| <a id="basedeclaration-valloc"></a>`valLoc` | [`Location`](#location) |  |
+| <a id="basedeclaration-value"></a>`value` | `string` |  |
+
+### `CSSSourceMap` \{#csssourcemap\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="csssourcemap-file"></a>`file?` | `string` |  |
+| <a id="csssourcemap-mappings"></a>`mappings` | `string` |  |
+| <a id="csssourcemap-names"></a>`names?` | `string[]` |  |
+| <a id="csssourcemap-sourceroot"></a>`sourceRoot?` | `string` |  |
+| <a id="csssourcemap-sources"></a>`sources` | `string[]` |  |
+| <a id="csssourcemap-sourcescontent"></a>`sourcesContent?` | `(string \| null)[]` |  |
+| <a id="csssourcemap-version"></a>`version` | `number` |  |
+
+### `FontFaceRule` \{#fontfacerule\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="fontfacerule-style"></a>`style` | [`Declaration`](#declaration)`[]` |  |
+| <a id="fontfacerule-type"></a>`type` | `"FontFaceRule"` |  |
+
+### `ImportRule` \{#importrule\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="importrule-href"></a>`href` | `string` |  |
+| <a id="importrule-origin"></a>`origin` | `string` |  |
+| <a id="importrule-type"></a>`type` | `"ImportRule"` |  |
+
+### `KeyframesRule` \{#keyframesrule\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="keyframesrule-name"></a>`name` | [`Value`](#value) |  |
+| <a id="keyframesrule-styles"></a>`styles` | [`KeyframesStyle`](#keyframesstyle)`[]` |  |
+| <a id="keyframesrule-type"></a>`type` | `"KeyframesRule"` |  |
+
+### `KeyframesStyle` \{#keyframesstyle\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="keyframesstyle-keytext"></a>`keyText` | [`Value`](#value) |  |
+| <a id="keyframesstyle-style"></a>`style` | [`Declaration`](#declaration)`[]` |  |
+| <a id="keyframesstyle-variables"></a>`variables` | `Record<string, string>` |  |
+
+### `LayerRule` \{#layerrule\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="layerrule-prelude"></a>`prelude?` | [`Value`](#value) |  |
+| <a id="layerrule-rules"></a>`rules` | [`LynxStyleNode`](#lynxstylenode)`[]` |  |
+| <a id="layerrule-type"></a>`type` | `"LayerRule"` |  |
+
+### `Location` \{#location\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="location-column"></a>`column` | `number` |  |
+| <a id="location-line"></a>`line` | `number` |  |
+
+### `MediaRule` \{#mediarule\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="mediarule-prelude"></a>`prelude` | [`Value`](#value) |  |
+| <a id="mediarule-rules"></a>`rules` | [`LynxStyleNode`](#lynxstylenode)`[]` |  |
+| <a id="mediarule-type"></a>`type` | `"MediaRule"` |  |
+
+### `ParserError` \{#parsererror\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="parsererror-detail"></a>`detail?` | `string` |  |
+| <a id="parsererror-message"></a>`message` | `string` |  |
+| <a id="parsererror-name"></a>`name` | `string` |  |
+| <a id="parsererror-range"></a>`range` | [`Range`](#range) |  |
+| <a id="parsererror-severity"></a>`severity` | [`Severity`](#severity) |  |
+
+### `Plugin` \{#plugin\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="plugin-name"></a>`name` | `string` |  |
+| <a id="plugin-phasestandard"></a>`phaseStandard?` | `phaseStandard(root: StyleSheet, context: { report: (error: ParserError) => void }): void` |  |
+
+### `Range` \{#range\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="range-end"></a>`end` | [`Location`](#location) |  |
+| <a id="range-start"></a>`start` | [`Location`](#location) |  |
+
+### `StyleRule` \{#stylerule\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="stylerule-selectortext"></a>`selectorText` | [`Value`](#value) |  |
+| <a id="stylerule-style"></a>`style` | [`Declaration`](#declaration)`[]` |  |
+| <a id="stylerule-type"></a>`type` | `"StyleRule"` |  |
+| <a id="stylerule-variables"></a>`variables` | `Record<string, string>` |  |
+
+### `SupportsRule` \{#supportsrule\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="supportsrule-prelude"></a>`prelude` | [`Value`](#value) |  |
+| <a id="supportsrule-rules"></a>`rules` | [`LynxStyleNode`](#lynxstylenode)`[]` |  |
+| <a id="supportsrule-type"></a>`type` | `"SupportsRule"` |  |
+
+### `Value` \{#value\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="value-loc"></a>`loc` | [`Location`](#location) |  |
+| <a id="value-value"></a>`value` | `string` |  |
+
+### `VariableDeclaration` \{#variabledeclaration\}
+
+*No description yet.*
+
+| Members | Type | Description |
+| --- | --- | --- |
+| <a id="variabledeclaration-defaultvalue"></a>`defaultValue?` | `string` |  |
+| <a id="variabledeclaration-defaultvaluemap"></a>`defaultValueMap?` | `Record<string, string>` |  |
+| <a id="variabledeclaration-keyloc"></a>`keyLoc` | [`Location`](#location) |  |
+| <a id="variabledeclaration-name"></a>`name` | `string` |  |
+| <a id="variabledeclaration-type"></a>`type` | `"css_var"` |  |
+| <a id="variabledeclaration-valloc"></a>`valLoc` | [`Location`](#location) |  |
+| <a id="variabledeclaration-value"></a>`value` | `string` |  |
+
+### `Declaration` \{#declaration\}
+
+```ts
+type Declaration = BaseDeclaration | VariableDeclaration
+```
+
+*No description yet.*
+
+### `LynxStyleNode` \{#lynxstylenode\}
+
+```ts
+type LynxStyleNode = StyleRule | FontFaceRule | ImportRule | KeyframesRule | MediaRule | SupportsRule | LayerRule
+```
+
+*No description yet.*
+
+{/* @api-end */}

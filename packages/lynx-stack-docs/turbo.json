@@ -7,9 +7,9 @@
     "build": {
       "inputs": [
         "scripts/**",
-        "../../docs/content/*/config/**",
-        "../../docs/content/*/react/api/**",
-        "../../docs/content/*/packages/**"
+        "../../docs/content/*/api/config/**",
+        "../../docs/content/*/api/react/**",
+        "../../docs/content/*/api/packages/**"
       ],
       "outputs": [
         "content/**"

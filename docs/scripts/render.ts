@@ -506,8 +506,8 @@ function showLynxDefault(
 export function configPageUrl(path: string): string {
   const [ns = '', ...rest] = path.split('.');
   return rest.length > 0
-    ? `/config/${ns}/${rest.map(s => kebab(s)).join('-')}`
-    : `/config/${kebab(ns)}`;
+    ? `/api/config/${ns}/${rest.map(s => kebab(s)).join('-')}`
+    : `/api/config/${kebab(ns)}`;
 }
 
 interface ConfigItem {
@@ -1045,7 +1045,7 @@ export function packageLabel(dataDir: string, entry: PackageEntry): string {
 }
 
 export const packagePageUrl = (entry: PackageEntry) =>
-  entry.page ?? `/packages/${entry.id}`;
+  entry.page ?? `/api/packages/${entry.id}`;
 
 function renderPackagesOverview(
   dataDir: string,

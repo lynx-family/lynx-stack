@@ -56,11 +56,11 @@ export function syncConfigPages(docsRoot: string): void {
   ) => ({
     path,
     lynx,
-    rel: configPageUrl(path).slice('/config/'.length),
+    rel: configPageUrl(path).slice('/api/config/'.length),
   }));
   const wanted = new Set(pages.map(p => p.rel));
   for (const locale of ['en', 'zh'] as const) {
-    const root = join(docsRoot, 'content', locale, 'config');
+    const root = join(docsRoot, 'content', locale, 'api', 'config');
     removeStale(root, '', wanted);
     const l = locale === 'zh' ? ZH : EN;
     const meta: unknown[] = [

@@ -29,7 +29,7 @@ export function syncPackagesMeta(docsRoot: string): void {
       }
     }
     writeFileSync(
-      join(docsRoot, 'content', locale, 'packages', '_meta.json'),
+      join(docsRoot, 'content', locale, 'api', 'packages', '_meta.json'),
       `${JSON.stringify(meta, null, 2)}\n`,
     );
   }

@@ -8,11 +8,11 @@ hero:
   actions:
     - theme: brand
       text: 构建配置
-      link: /zh/config/
+      link: /zh/api/config/
     - theme: alt
       text: ReactLynx
-      link: /zh/react/api/
+      link: /zh/api/react/
     - theme: alt
       text: 包
-      link: /zh/packages/
+      link: /zh/api/packages/
 ---
