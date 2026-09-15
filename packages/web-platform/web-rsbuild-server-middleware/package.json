@@ -31,7 +31,7 @@
     "@lynx-js/web-elements": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
     "@rstest/core": "catalog:rstest",
-    "rsbuild-plugin-arethetypeswrong": "0.3.1",
+    "rsbuild-plugin-arethetypeswrong": "0.4.0",
     "rsbuild-plugin-publint": "1.0.0"
   }
 }
