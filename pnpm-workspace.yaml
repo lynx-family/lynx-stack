@@ -38,6 +38,9 @@ publicHoistPattern: []
 resolutionMode: "lowest-direct"
 strictPeerDependencies: true
 
+# Temporary for PR #3043 preview validation; remove before merge.
+blockExoticSubdeps: false
+
 # Treat workspace topology and filter mistakes as hard errors.
 disallowWorkspaceCycles: true
 failIfNoMatch: true
@@ -68,6 +71,10 @@ minimumReleaseAgeStrict: true
 
 peerDependencyRules:
   allowedVersions:
+    # Temporary compatibility exceptions for the PR #3043 Rspack preview.
+    "sass-loader>@rspack/core": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/core@843bab005b2413345eb6efc3aaaba2a398fca908"
+    "css-loader>@rspack/core": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/core@843bab005b2413345eb6efc3aaaba2a398fca908"
+    "@rspack/test-tools>@rspack/core": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/core@843bab005b2413345eb6efc3aaaba2a398fca908"
     # `vite-plugin-babel` only calls `loadOptions`, `loadPartialConfig` and
     # `transformAsync`, which all still exist in Babel 8; its `^7.0.0` range
     # predates the release. Verified by building and testing the one package
@@ -133,8 +140,8 @@ catalogs:
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "2.2.2"
-    "@rspack/core": "2.2.2"
+    "@rspack/cli": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/cli@843bab005b2413345eb6efc3aaaba2a398fca908"
+    "@rspack/core": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/core@843bab005b2413345eb6efc3aaaba2a398fca908"
     "@rspack/dev-server": "2.2.1"
     "@rspack/test-tools": "2.2.2"
 

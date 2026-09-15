@@ -104,6 +104,7 @@ export interface TemplateHooks {
    */
   beforeEncode: AsyncSeriesWaterfallHook<{
     encodeData: EncodeRawData;
+    lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
     filenameTemplate: string;
     /**
      * The chunk groups covered by this template.
@@ -856,9 +857,12 @@ class LynxTemplatePluginImpl {
         compilation.addRuntimeModule(
           chunk,
           new LynxAsyncChunksRuntimeModule((asyncChunk) => {
-            const filename =
-              LynxTemplatePluginImpl.#getLazyBundleNameByChunkId(compilation)
-                .get(asyncChunk.id!)
+            const mappedFilename = LynxTemplatePluginImpl
+              .#getLazyBundleNameByChunkId(compilation)
+              .get(asyncChunk.id!);
+            const filename = mappedFilename === ''
+              ? undefined
+              : mappedFilename
                 ?? (asyncChunk.name !== null && asyncChunk.name !== undefined
                   ? hooks.asyncChunkName.call(asyncChunk.name)
                   : undefined);
@@ -976,6 +980,36 @@ class LynxTemplatePluginImpl {
     Record<string, ChunkGroup[]>
   >();
 
+  static #getChunkGroupFiles(
+    compilation: Compilation,
+    chunkGroups: ChunkGroup[],
+  ) {
+    // Merged chunk groups may share chunks, so dedupe the files.
+    return Array.from(new Set(chunkGroups.flatMap(cg => cg.getFiles())))
+      .filter(chunkFile =>
+        predicateNonHotModuleReplacementAsset(chunkFile, compilation)
+      );
+  }
+
+  static #chunkGroupCanEmitJavaScript(
+    compilation: Compilation,
+    chunkGroup: ChunkGroup,
+  ) {
+    return chunkGroup.chunks.some(chunk => {
+      if (compilation.chunkGraph.getNumberOfEntryModules(chunk) > 0) {
+        return true;
+      }
+      const modules = compilation.chunkGraph
+        .getChunkModulesIterableBySourceType(chunk, 'javascript');
+      // Rspack exposes Module Federation remote placeholders as JavaScript
+      // modules even though they are fulfilled by the remotes runtime and do
+      // not emit a chunk asset.
+      return Array.from(modules ?? []).some(
+        module => module.type !== 'remote-module',
+      );
+    });
+  }
+
   static #getAsyncChunkGroups(compilation: Compilation) {
     let asyncChunkGroups = LynxTemplatePluginImpl.#asyncChunkGroups.get(
       compilation,
@@ -1044,12 +1078,23 @@ class LynxTemplatePluginImpl {
       const derived = chunkGroups.every(cg =>
         cg.name === null || cg.name === undefined
       );
-      for (const chunk of chunkGroups.flatMap(cg => cg.chunks)) {
-        if (chunk.id === null || chunk.id === undefined) {
-          continue;
-        }
-        if (derived || !lazyBundleNames.has(chunk.id)) {
-          lazyBundleNames.set(chunk.id, filename);
+      for (const chunkGroup of chunkGroups) {
+        const mappedFilename =
+          LynxTemplatePluginImpl.#chunkGroupCanEmitJavaScript(
+              compilation,
+              chunkGroup,
+            )
+            ? filename
+            : '';
+        for (const chunk of chunkGroup.chunks) {
+          if (chunk.id === null || chunk.id === undefined) continue;
+          const previous = lazyBundleNames.get(chunk.id);
+          if (
+            mappedFilename === ''
+            || (previous !== '' && (derived || previous === undefined))
+          ) {
+            lazyBundleNames.set(chunk.id, mappedFilename);
+          }
         }
       }
     }
@@ -1161,6 +1206,14 @@ class LynxTemplatePluginImpl {
             return Promise.resolve();
           }
 
+          const chunkFiles = LynxTemplatePluginImpl.#getChunkGroupFiles(
+            compilation,
+            chunkGroups,
+          );
+          if (chunkFiles.length === 0) {
+            return Promise.resolve();
+          }
+
           const filenameTemplate = this.#getAsyncFilenameTemplate(filename);
 
           // Ignore the encoded templates
@@ -1172,11 +1225,7 @@ class LynxTemplatePluginImpl {
 
           const asyncAssetsInfoByGroups = this.#getAssetsInformationByFilenames(
             compilation,
-            // Merged chunk groups may share chunks, so dedupe the files.
-            Array.from(new Set(chunkGroups.flatMap(cg => cg.getFiles())))
-              .filter(chunkFile =>
-                predicateNonHotModuleReplacementAsset(chunkFile, compilation)
-              ),
+            chunkFiles,
           );
 
           return this.#encodeByAssetsInformation(
@@ -1309,6 +1358,7 @@ class LynxTemplatePluginImpl {
 
     const { encodeData } = await hooks.beforeEncode.promise({
       encodeData: encodeRawData,
+      lazyBundleFetcher: this.#options.lazyBundleFetcher,
       filenameTemplate,
       chunkGroups,
       intermediate,
