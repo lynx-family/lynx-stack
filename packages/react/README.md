@@ -17,8 +17,8 @@
 
 [**ReactLynx**](https://lynxjs.org/react/) is a framework that allows you to build cross-platform [**Lynx**](https://lynxjs.org/) apps with [**React**](https://react.dev/) paradigm.
 
-- **Aligned with React 17+**\
-  Built on battle-tested open-source implementations, it fully supports functional components, Hooks, and Context — the same set of modern React APIs.
+- **Aligned with React 19**\
+  Built on Preact 11, it supports functional components, Hooks, Context, and `ref` as a regular prop — the same set of modern React APIs.
 
 - **Made for Lynx**\
   Dual-threaded React tailor-made for Lynx, carrying over Lynx's instant launch and silky UI responsiveness.

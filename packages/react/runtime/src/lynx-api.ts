@@ -235,11 +235,14 @@ const _GlobalProps = /* @__PURE__ */ createGlobalProps<GlobalProps>({
 });
 
 /**
- * The {@link https://react.dev/reference/react/createContext#provider | Provider} Component that provide `lynx.__globalProps`,
- * you must wrap your JSX inside it
+ * The {@link https://react.dev/reference/react/createContext#provider | Provider} Component that provide `lynx.__globalProps`.
+ * Only needed with `globalPropsMode: 'event'`; in the default `'reactive'` mode it renders its children directly
+ * and updates come from a full re-render.
  * @group Components
  *
  * @example
+ *
+ * With `globalPropsMode: 'event'`:
  *
  * ```ts
  * import { root } from "@lynx-js/react"
@@ -265,7 +268,8 @@ export const GlobalPropsProvider: FC<{ children?: ReactNode | undefined }> = /* 
 
 /**
  * The {@link https://react.dev/reference/react/createContext#consumer | Consumer} Component that provide `lynx.__globalProps`.
- * This should be used with {@link GlobalPropsProvider}
+ * Only needed with `globalPropsMode: 'event'`, together with {@link GlobalPropsProvider}; in the default `'reactive'` mode
+ * it calls `children` with `lynx.__globalProps` directly and updates come from a full re-render.
  * @group Components
  * @public
  */
@@ -274,7 +278,8 @@ export const GlobalPropsConsumer: Consumer<GlobalProps> = /* @__PURE__ */ _Globa
 
 /**
  * A React Hooks for you to get `lynx.__globalProps`.
- * If `lynx.__globalProps` is changed, a re-render will be triggered automatically.
+ * With `globalPropsMode: 'event'`, the component re-renders when `lynx.__globalProps` changes;
+ * in the default `'reactive'` mode, updates arrive through a full re-render.
  *
  * @example
  *
@@ -523,7 +528,7 @@ export interface Lynx {
    * they can achieve it by extends interface `InitDataRaw` and `InitData`.
    *
    * ```ts
-   * import { root, useInitData } from "@lynx-js/react"
+   * import { useInitData } from "@lynx-js/react"
    *
    * interface AnotherExistingInterface {
    *   someAnotherPropertyFromExistingInterface: number
@@ -535,7 +540,7 @@ export interface Lynx {
    *   }
    * }
    *
-   * root.registerDataProcessors({
+   * lynx.registerDataProcessors({
    *   defaultDataProcessor: () => {
    *     return {
    *       someCustomProperty: 'value', // will be typed

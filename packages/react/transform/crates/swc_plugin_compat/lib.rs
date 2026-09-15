@@ -337,9 +337,10 @@ pub struct CompatVisitorConfig {
   /// })
   /// ```
   pub disable_deprecated_warning: bool,
-  /// @public
-  /// @deprecated
   /// Dark mode configuration
+  ///
+  /// @public
+  /// @deprecated This option has no effect.
   ///
   /// @defaultValue `undefined`
   ///
