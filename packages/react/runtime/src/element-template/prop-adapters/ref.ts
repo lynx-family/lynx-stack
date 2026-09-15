@@ -136,6 +136,10 @@ export function clearPendingRefs(): void {
   refEffectQueue.clear();
 }
 
+export function discardPendingRefAttachments(): void {
+  refEffectQueue.discardPendingAttachments();
+}
+
 export function hasPendingRefs(): boolean {
   return refEffectQueue.hasPending();
 }
