@@ -66,6 +66,6 @@ CI runs `pnpm --filter docs check`, which regenerates everything and fails if `a
 
 ## Sync to lynxjs.org
 
-`content/en/api/config`, `content/en/api/react` and `content/en/api/packages` mirror the layout of `lynx-website/docs/en/`. They are copied there as-is; the generated content is already inside the files, so lynx-website needs no extra tooling. Links inside these pages are absolute (`/api/config/output/filename-bundle`) and resolve on both sites.
+`content/en/api/config`, `content/en/api/react` and `content/en/api/packages` mirror the layout of `lynx-website/docs/en/`. lynx-website copies them there as-is from `@lynx-js/lynx-stack-docs` when it installs dependencies and does not commit them; the generated content is already inside the files, so it needs no extra tooling. Links inside these pages are absolute (`/api/config/output/filename-bundle`) and resolve on both sites.
 
 The same directories are published as `@lynx-js/lynx-stack-docs` (`packages/lynx-stack-docs`), which copies them at build time. It is released with every Lynx Stack release: `.github/scripts/add-docs-changeset.cjs` adds its changeset when a release publishes other packages.
