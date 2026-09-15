@@ -392,7 +392,7 @@ function examples(list: string[] | undefined, ctx: Ctx, key: string): string {
 
 function body(m: ApiMember, ctx: Ctx, key: string): string {
   let s = '';
-  if (m.deprecated !== undefined) {
+  if (m.deprecated) {
     s += `:::warning ${ctx.l.deprecated}\n${
       md(tr(ctx, `${key}.deprecated`, m.deprecated), ctx) || ''
     }\n:::\n\n`;
@@ -829,11 +829,11 @@ function renderRsbuildDefault(
 ): string {
   ctx.anchors.set(path, '');
   const { inline, section } = defaultParts(m, ctx, key);
-  const warning = m.deprecated === undefined
-    ? ''
-    : `:::warning ${ctx.l.deprecated}\n${
+  const warning = m.deprecated
+    ? `:::warning ${ctx.l.deprecated}\n${
       md(tr(ctx, `${key}.deprecated`, m.deprecated), ctx)
-    }\n:::\n\n`;
+    }\n:::\n\n`
+    : '';
   const mark = untranslated(ctx, `${key}.default`).trim();
   const link = `[${ctx.l.rsbuildDocsLink}](${rsbuildUrl(path, ctx)})`;
   return `${mark ? `${mark}\n\n` : ''}${configMeta(m, ctx, inline)}${warning}${

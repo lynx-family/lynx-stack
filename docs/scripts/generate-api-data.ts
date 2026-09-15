@@ -277,7 +277,7 @@ function commentFields(comment: Comment | undefined): Partial<ApiMember> {
   if (examples.length > 0) out.examples = examples;
   const dep = comment.blockTags.find(b => b.tag === '@deprecated');
   if (dep || comment.modifierTags.has('@deprecated')) {
-    out.deprecated = partsToMd(dep?.content) || 'Deprecated.';
+    out.deprecated = partsToMd(dep?.content);
   }
   const def = tag(comment, '@defaultValue') ?? tag(comment, '@default');
   if (def !== undefined) out.default = defaultText(def);
