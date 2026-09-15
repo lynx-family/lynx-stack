@@ -4,6 +4,7 @@
 
 import { expect, rstest, test } from '@rstest/core';
 
+import { createJudgeScores } from './ui-judge-fixtures.js';
 import { evaluateScreenshot } from '../agent/common/ui-judge-agent.js';
 import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 
@@ -39,11 +40,7 @@ test(
         requests.push(body);
         expect(body.response_format).toBeUndefined();
         expect(JSON.stringify(body.messages)).toContain('score');
-        const content = JSON.stringify({
-          score: 4,
-          reason: 'The requested greeting is visible.',
-          summary: 'Clear hierarchy and readable text.',
-        });
+        const content = JSON.stringify(createJudgeScores());
         if (body.stream) {
           const chunk = {
             id: 'judge-response',
@@ -105,9 +102,11 @@ test(
       });
       expect(result).toMatchObject({ score: 4, geqiScore: 80 });
       expect(result.dimensions).toHaveLength(4);
-      expect(requests).toHaveLength(5);
+      expect(requests).toHaveLength(1);
       for (const body of requests) {
         expect(body.model).toBe('bench-upstream');
+        expect(JSON.stringify(body.messages).split(screenshotDataUrl))
+          .toHaveLength(2);
         expect(body.messages).toEqual(
           expect.arrayContaining([
             expect.objectContaining({

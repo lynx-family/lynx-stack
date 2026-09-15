@@ -120,8 +120,8 @@ export function BenchReportImageAction(props: {
         <header>
           <h2 id='bench-report-image-title'>Report share image</h2>
           <p id='bench-report-image-description'>
-            Full report with the current expanded sections and saved
-            screenshots. Generated locally; no upload or sharing link.
+            Full report with all details expanded and saved screenshots.
+            Generated locally; no upload or sharing link.
           </p>
         </header>
         <div

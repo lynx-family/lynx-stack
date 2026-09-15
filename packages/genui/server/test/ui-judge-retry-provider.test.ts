@@ -4,8 +4,11 @@
 
 import { afterEach, beforeEach, expect, rstest, test } from '@rstest/core';
 
+import { createJudgeScores } from './ui-judge-fixtures.js';
 import { evaluateScreenshot } from '../agent/common/ui-judge-agent.js';
 import * as requestQueue from '../agent/common/ui-judge-request-queue.js';
+import { runBenchUiJudgeRequest } from '../service/a2ui/a2ui-bench-judge.js';
+import { convertCapturedBmp } from '../service/common/bench/screenshot.js';
 import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 
 const model = 'judge-upstream';
@@ -43,13 +46,9 @@ afterEach(() => {
 function success(
   api: 'chat' | 'responses',
   streaming: boolean,
-  score = 4,
+  scores: unknown = createJudgeScores(),
 ): Response {
-  const text = JSON.stringify({
-    score,
-    reason: 'Visible evidence.',
-    summary: 'Clear layout.',
-  });
+  const text = JSON.stringify(scores);
   let chunks: unknown[];
   if (api === 'chat') {
     const response = {
@@ -118,7 +117,8 @@ function success(
 function mockProvider(
   api: 'chat' | 'responses',
   failures: number[],
-  score = 4,
+  scores: unknown = createJudgeScores(),
+  expectedImageUrl = screenshotDataUrl,
 ) {
   process.env[GENUI_MODEL_CONFIG_ENV] = JSON.stringify({
     Judge: {
@@ -130,7 +130,6 @@ function mockProvider(
     },
   });
   const calls: Array<{ body: string; time: number }> = [];
-  const limitedCalls: typeof calls = [];
   const originalFetch = globalThis.fetch;
   rstest.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
     const url = input instanceof Request ? input.url : input.toString();
@@ -151,38 +150,107 @@ function mockProvider(
     expect(body.model).toBe(model);
     if (api === 'chat') expect(body.reasoning_effort).toBe('low');
     else expect(body.reasoning).toEqual({ effort: 'low' });
-    if (raw.includes('Dimension: Visual Correctness')) {
-      limitedCalls.push(call);
-      const status = failures[limitedCalls.length - 1];
-      if (status) {
-        return Promise.resolve(Response.json({
-          error: { message: `Provider HTTP ${status}`, type: 'server_error' },
-        }, {
-          status,
-          ...(status === 429 ? { headers: { 'Retry-After': '3' } } : {}),
-        }));
-      }
+    expect(raw.split(expectedImageUrl)).toHaveLength(2);
+    const status = failures[calls.length - 1];
+    if (status) {
+      return Promise.resolve(Response.json({
+        error: { message: `Provider HTTP ${status}`, type: 'server_error' },
+      }, {
+        status,
+        ...(status === 429 ? { headers: { 'Retry-After': '3' } } : {}),
+      }));
     }
-    return Promise.resolve(success(api, body.stream === true, score));
+    return Promise.resolve(success(api, body.stream === true, scores));
   });
-  return { calls, limitedCalls };
+  return { calls };
 }
 
 for (const api of ['chat', 'responses'] as const) {
+  test(`${api} reuses one Bench capture when retrying all scores`, async () => {
+    const bmp = Buffer.from(
+      'Qk2KAAAAAAAAAHoAAABsAAAAAgAAAP7///8BACAAAwAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/AAD/AAD/AAAAAAAA/0JHUnMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP//AP8AgP8AAAA8KBT/',
+      'base64',
+    );
+    const imageUrl = await convertCapturedBmp(bmp);
+    expect(imageUrl).toBeDefined();
+    const { calls } = mockProvider(api, [429], createJudgeScores(), imageUrl!);
+    const capture = rstest.fn(() =>
+      Promise.resolve(
+        new Response(bmp, {
+          headers: { 'Content-Type': 'image/bmp' },
+        }),
+      )
+    );
+    const result = await runBenchUiJudgeRequest({
+      model: 'Judge',
+      globalProps: {},
+      includeScreenshot: true,
+      scenario: { prompt: 'Show a greeting' },
+      session: {
+        screenshotPath: 'screenshot/zip/url',
+        zipUrl: 'https://assets.example/a2ui.lynx.zip',
+      },
+    }, capture);
+    expect(capture).toHaveBeenCalledTimes(1);
+    expect(calls).toHaveLength(2);
+    expect(new Set(calls.map(call => call.body)).size).toBe(1);
+    expect(result).toMatchObject({
+      status: 'complete',
+      score: 4,
+      geqiScore: 80,
+      screenshotDataUrl: imageUrl,
+      errors: [],
+    });
+    expect(result.dimensions).toHaveLength(4);
+  });
+
+  test(`${api} returns all five scores with one request and one image`, async () => {
+    const { calls } = mockProvider(api, [], createJudgeScores([4, 5, 4, 3, 2]));
+    const result = await evaluateScreenshot({
+      model: 'Judge',
+      screenshotDataUrl,
+      task: 'Show a greeting',
+    });
+    expect(calls).toHaveLength(1);
+    expect(result.score).toBe(4);
+    expect(result.dimensions.map(({ score }) => score)).toEqual([5, 4, 3, 2]);
+    expect(result.geqiScore).toBeCloseTo(65 / 85 * 100);
+    expect(waits).toEqual([]);
+    const body = JSON.parse(calls[0]!.body) as Record<string, unknown>;
+    expect(api === 'chat' ? body.max_completion_tokens : body.max_output_tokens)
+      .toBe(4096);
+  });
+
   test(`${api} validates JSON scores locally without native json_schema support`, async () => {
-    const { calls } = mockProvider(api, [], 4.5);
+    const { calls } = mockProvider(
+      api,
+      [],
+      createJudgeScores([4, 4, 4, 4, 4.5]),
+    );
     await expect(evaluateScreenshot({
       model: 'Judge',
       screenshotDataUrl,
       task: 'Show a greeting',
     })).rejects.toThrow();
-    expect(calls.length).toBeGreaterThan(0);
-    expect(calls.length).toBeLessThanOrEqual(5);
+    expect(calls).toHaveLength(1);
     expect(waits).toEqual([]);
   });
 
-  test(`${api} retries only the failed dimension with no nested SDK retries`, async () => {
-    const { calls, limitedCalls } = mockProvider(api, [429, 503]);
+  test(`${api} rejects incomplete score groups`, async () => {
+    const scores = createJudgeScores();
+    delete scores['architecture-writing'];
+    const { calls } = mockProvider(api, [], scores);
+    await expect(evaluateScreenshot({
+      model: 'Judge',
+      screenshotDataUrl,
+      task: 'Show a greeting',
+    })).rejects.toThrow();
+    expect(calls).toHaveLength(1);
+    expect(waits).toEqual([]);
+  });
+
+  test(`${api} retries the complete scoring request with no nested SDK retries`, async () => {
+    const { calls } = mockProvider(api, [429, 503]);
     const result = await evaluateScreenshot({
       model: 'Judge',
       screenshotDataUrl,
@@ -190,33 +258,31 @@ for (const api of ['chat', 'responses'] as const) {
     });
     expect(result).toMatchObject({ score: 4, geqiScore: 80 });
     expect(result.dimensions).toHaveLength(4);
-    expect(calls).toHaveLength(7);
-    expect(limitedCalls).toHaveLength(3);
+    expect(calls).toHaveLength(3);
     expect(waits).toEqual([3_000, 2_000]);
-    expect(limitedCalls.map(call => call.time)).toEqual([0, 3_000, 5_000]);
-    expect(new Set(limitedCalls.map(call => call.body)).size).toBe(1);
+    expect(calls.map(call => call.time)).toEqual([0, 3_000, 5_000]);
+    expect(new Set(calls.map(call => call.body)).size).toBe(1);
   });
 
-  test(`${api} stops after three attempts on a persistently limited dimension`, async () => {
-    const { calls, limitedCalls } = mockProvider(api, [429, 429, 429, 429]);
+  test(`${api} stops after three attempts on persistently limited scoring`, async () => {
+    const { calls } = mockProvider(api, [429, 429, 429, 429]);
     await expect(evaluateScreenshot({
       model: 'Judge',
       screenshotDataUrl,
       task: 'Show a greeting',
     })).rejects.toThrow('Provider HTTP 429');
-    expect(limitedCalls).toHaveLength(3);
-    expect(calls).toHaveLength(7);
+    expect(calls).toHaveLength(3);
     expect(waits).toEqual([3_000, 3_000]);
   });
 
   test(`${api} stops immediately on authentication failures`, async () => {
-    const { limitedCalls } = mockProvider(api, [401]);
+    const { calls } = mockProvider(api, [401]);
     await expect(evaluateScreenshot({
       model: 'Judge',
       screenshotDataUrl,
       task: 'Show a greeting',
     })).rejects.toThrow('Provider HTTP 401');
-    expect(limitedCalls).toHaveLength(1);
+    expect(calls).toHaveLength(1);
     expect(waits).toEqual([]);
   });
 }
