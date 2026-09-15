@@ -174,11 +174,24 @@ const reactLynxExternalsPreset: Externals
 
 编码 external bundle 的选项。
 
-| 成员 | 类型 | 说明 |
-| --- | --- | --- |
-| <a id="encodeoptions-enablejsbytecode"></a>`enableJsBytecode?` | `boolean` | 是否在产出的 bundle 中将主线程 chunk 编译为 JsBytecode。 |
-| <a id="encodeoptions-engineversion"></a>`engineVersion?` | `string` | external bundle 的引擎版本。 |
-| <a id="encodeoptions-target"></a>`target?` | `"web" \| "lynx"` | 编码后 bundle 的输出格式。 - `'lynx'`：Lynx 引擎加载的原生 bundle，通过 `@lynx-js/tasm` 生成。 - `'web'`：通过 `@lynx-js/web-core/encode` 生成的 web 二进制 bundle，可被   web 平台解码。各 section 以原始 JS 形式产出（web 运行时会在   `lynx.loadScript` 时对其进行包装），CSS 会被合并到 StyleInfo   section 中。 |
+| 成员 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="encodeoptions-engineversion"></a>`engineVersion?` | `string` | `'3.5'` | external bundle 的引擎版本。 |
+| <a id="encodeoptions-target"></a>`target?` | `"web" \| "lynx"` | `'lynx'` | 编码后 bundle 的输出格式。 - `'lynx'`：Lynx 引擎加载的原生 bundle，通过 `@lynx-js/tasm` 生成。 - `'web'`：通过 `@lynx-js/web-core/encode` 生成的 web 二进制 bundle，可被   web 平台解码。各 section 以原始 JS 形式产出（web 运行时会在   `lynx.loadScript` 时对其进行包装），CSS 会被合并到 StyleInfo   section 中。 |
+
+#### `EncodeOptions.enableJsBytecode?` \{#encodeoptions-enablejsbytecode\}
+
+- **类型：** `boolean`
+- **默认值：** `NODE_ENV` 为 `'development'` 时为 `false`，否则为 `true`
+
+是否在产出的 bundle 中将主线程 chunk 编译为 JsBytecode。
+
+禁用后，主线程 chunk 会以普通 JavaScript 源码的形式编码，
+既便于调试时阅读，也能加快编码速度。
+
+仅对 `'lynx'` 目标生效。对于 `'web'` 目标，
+`JsBytecode` 标签仅用于将主线程 chunk 路由到正确的 bundle
+槽位（chunk 不会被编译为字节码），因此始终保留。
 
 ### `ExposedLayers` \{#exposedlayers\}
 
@@ -197,10 +210,10 @@ external 映射的对象形式。
 对应的 `pluginExternalBundle` external 配置了 `async: true` 时，
 使用该形式替代普通的全局名称形式。
 
-| 成员 | 类型 | 说明 |
-| --- | --- | --- |
-| <a id="externalobject-async"></a>`async?` | `boolean` | 库是否以 Promise 的形式挂载，该 Promise resolve 为库的 命名空间。启用后，该 external 会作为 `promise` external 产出， 导入它的模块会 await 挂载的值，而不是同步 读取。 |
-| <a id="externalobject-libraryname"></a>`libraryName` | `string \| string[]` | 外部库的全局名称（可包含子路径）。 |
+| 成员 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="externalobject-async"></a>`async?` | `boolean` | `false` | 库是否以 Promise 的形式挂载，该 Promise resolve 为库的 命名空间。启用后，该 external 会作为 `promise` external 产出， 导入它的模块会 await 挂载的值，而不是同步 读取。 |
+| <a id="externalobject-libraryname"></a>`libraryName` | `string \| string[]` |  | 外部库的全局名称（可包含子路径）。 |
 
 ### `ExternalsPresetDefinition` \{#externalspresetdefinition\}
 
@@ -215,9 +228,9 @@ external 映射的对象形式。
 
 [`MainThreadRuntimeWrapperWebpackPlugin`](#mainthreadruntimewrapperwebpackplugin) 的选项。
 
-| 成员 | 类型 | 说明 |
-| --- | --- | --- |
-| <a id="mainthreadruntimewrapperwebpackpluginoptions-test"></a>`test` | `Rules \| undefined` | 包含标记为 `lynx:main-thread` 且通过 test 断言的资源。 |
+| 成员 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="mainthreadruntimewrapperwebpackpluginoptions-test"></a>`test` | `Rules \| undefined` | `/\.js$/` | 包含标记为 `lynx:main-thread` 且通过 test 断言的资源。 |
 
 ### `Externals` \{#externals\}
 

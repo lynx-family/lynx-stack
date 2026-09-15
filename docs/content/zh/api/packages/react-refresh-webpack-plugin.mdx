@@ -55,11 +55,57 @@ export default {
 }
 ```
 
-| 成员 | 类型 | 说明 |
+#### `ReactRefreshRspackPlugin.constructor` \{#reactrefreshrspackplugin-constructor\}
+
+- **类型：** `constructor(options: ReactRefreshRspackPluginOptions): ReactRefreshRspackPlugin`
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="reactrefreshrspackplugin-constructor"></a>`constructor` | `constructor(options: ReactRefreshRspackPluginOptions): ReactRefreshRspackPlugin` |  |
-| <a id="reactrefreshrspackplugin-loader"></a>`loader` | `string` | React Refresh 的 loader。 |
-| <a id="reactrefreshrspackplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` | Rspack 插件的入口。 |
+| `options` | [`ReactRefreshRspackPluginOptions`](#reactrefreshrspackpluginoptions) | React Refresh 的选项。 |
+
+#### `ReactRefreshRspackPlugin.loader` \{#reactrefreshrspackplugin-loader\}
+
+- **类型：** `string`
+
+React Refresh 的 loader。
+
+注意需要忽略 React 的运行时，参见下方示例：
+
+```js
+// rspack.config.js
+import { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'
+import { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
+
+export default {
+  module: {
+    rules: [
+      {
+        issueLayer: ReactWebpackPlugin.LAYERS.BACKGROUND,
+        test: /\.[jt]sx?$/,
+        exclude: [
+          /node_modules/,
+          /@lynx-js/react/,
+          ReactRefreshRspackPlugin.loader,
+        ],
+        use: [ReactRefreshRspackPlugin.loader],
+      },
+    ],
+  },
+  plugins: [new ReactRefreshRspackPlugin()],
+}
+```
+
+#### `ReactRefreshRspackPlugin.apply` \{#reactrefreshrspackplugin-apply\}
+
+- **类型：** `apply(compiler: Compiler): void`
+
+Rspack 插件的入口。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `compiler` | `Compiler` | Rspack 编译器 |
 
 ## 类型 \{#\}
 

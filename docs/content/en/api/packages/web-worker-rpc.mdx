@@ -54,7 +54,6 @@ The instance for handling MessagePort Remote Process Call
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="rpc-constructor"></a>`constructor` | `constructor(port: MessagePort, name: string): Rpc` |  |
 | <a id="rpc-nextretid"></a>`nextRetId` | `string` |  |
 | <a id="rpc-createcall"></a>`createCall` | `createCall(endpoint: E): (args: E["_TypeParameters"]) => E["_TypeReturn"]` | initialize a endpoint into a function |
 | <a id="rpc-createcallbackify"></a>`createCallbackify` | `createCallbackify(endpoint: E, callbackAt: number): (params: [...E["_TypeParameters"][], (param: E["_TypeReturn"]) => void]) => void` | create a call with callbackify parameters |
@@ -65,6 +64,17 @@ The instance for handling MessagePort Remote Process Call
 | <a id="rpc-registerhandlerref"></a>`registerHandlerRef` | `registerHandlerRef(endpoint: T, target: { [key in string]: Handler \| undefined }, propertyName: PropertyName): void` | register a property of an object as a handler |
 | <a id="rpc-removehandler"></a>`removeHandler` | `removeHandler(rpc: RpcEndpoint<unknown[], unknown>): void` | Remove the handler for the name |
 | <a id="rpc-setmessageport"></a>`setMessagePort` | `setMessagePort(port: MessagePort): void` |  |
+
+#### `Rpc.constructor` \{#rpc-constructor\}
+
+- **Type:** `constructor(port: MessagePort, name: string): Rpc`
+
+*No description yet.*
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `port` | `MessagePort` | one size of a message channel |
+| `name` | `string` | instance name |
 
 ## Types \{#types\}
 

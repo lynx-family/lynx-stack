@@ -52,8 +52,39 @@ export default {
 | --- | --- | --- |
 | <a id="cssextractrspackplugin-constructor"></a>`constructor` | `constructor(options?: CssExtractRspackPluginOptions): CssExtractRspackPlugin` |  |
 | <a id="cssextractrspackplugin-defaultoptions"></a>`defaultOptions` | `Readonly<`[`CssExtractRspackPluginOptions`](#cssextractrspackpluginoptions)` & Pick<Required<`[`CssExtractRspackPluginOptions`](#cssextractrspackpluginoptions)`>, "cssPlugins">>` | `defaultOptions` 是 [`CssExtractRspackPlugin`](#cssextractrspackplugin) 使用的默认选项。 |
-| <a id="cssextractrspackplugin-loader"></a>`loader` | `string` | 用于提取 CSS 的 loader。 |
-| <a id="cssextractrspackplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` | webpack 插件的入口。 |
+
+#### `CssExtractRspackPlugin.loader` \{#cssextractrspackplugin-loader\}
+
+- **类型：** `string`
+
+用于提取 CSS 的 loader。
+
+应与 ['css-loader'](https://github.com/webpack-contrib/css-loader) 配合使用。
+
+```js
+import { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'
+export default {
+  plugins: [new CssExtractRspackPlugin()],
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        uses: [CssExtractRspackPlugin.loader, 'css-loader'],
+      },
+    ],
+  },
+}
+```
+
+#### `CssExtractRspackPlugin.apply` \{#cssextractrspackplugin-apply\}
+
+- **类型：** `apply(compiler: Compiler): void`
+
+webpack 插件的入口。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `compiler` | `Compiler` | webpack 编译器 |
 
 ## 类型 \{#\}
 
@@ -73,8 +104,31 @@ CSS 提取 loader 的选项。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="loaderoptions-emit"></a>`emit?` | `boolean` | 与 [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin/tree/master?tab=readme-ov-file#emit) 相同。 控制是否将 CSS 输出到文件系统。 - 若为 `true`（默认），则输出文件（将文件写入文件系统）。 - 若为 `false`，插件会提取 CSS，但不会输出文件。 对于服务端包，通常可以禁用该选项。 |
 | <a id="loaderoptions-esmodule"></a>`esModule?` | `boolean` | `@lynx-js/rspeedy#CssExtractRspackLoaderOptions.esModule` |
-| <a id="loaderoptions-layer"></a>`layer?` | `string` | CSS 执行所在的 layer。 |
+
+#### `LoaderOptions.emit?` \{#loaderoptions-emit\}
+
+- **类型：** `boolean`
+- **默认值：** ```ts
+true
+@public
+```
+
+与 [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin/tree/master?tab=readme-ov-file#emit) 相同。
+控制是否将 CSS 输出到文件系统。
+
+- 若为 `true`（默认），则输出文件（将文件写入文件系统）。
+
+- 若为 `false`，插件会提取 CSS，但不会输出文件。
+
+对于服务端包，通常可以禁用该选项。
+
+#### `LoaderOptions.layer?` \{#loaderoptions-layer\}
+
+- **类型：** `string`
+
+CSS 执行所在的 layer。
+
+需要与 `experiments.layers` 配合使用。
 
 {/* @api-end */}

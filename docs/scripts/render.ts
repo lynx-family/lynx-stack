@@ -411,9 +411,15 @@ function expandable(m: ApiMember, ctx: Ctx): ApiExport | undefined {
   return (e?.members?.length ?? 0) > 0 ? e : undefined;
 }
 
-function isCompact(m: ApiMember, ctx: Ctx): boolean {
-  return !m.remarks && (m.examples?.length ?? 0) === 0 && !expandable(m, ctx)
-    && m.deprecated === undefined && !m.params
+function isCompact(
+  m: ApiMember,
+  ctx: Ctx,
+  notExpanded: ReadonlySet<string> = new Set(),
+): boolean {
+  const e = expandable(m, ctx);
+  return !m.remarks && (m.examples?.length ?? 0) === 0
+    && !(e && !notExpanded.has(e.name)) && m.deprecated === undefined
+    && !m.params?.some(p => p.description)
     && !(m.default ?? '').includes('\n') && !(m.summary ?? '').includes('```');
 }
 
@@ -445,9 +451,11 @@ function heading(
   m: ApiMember,
   ctx: Ctx,
   key: string,
+  showOptional = false,
 ): string {
   const d = Math.min(depth, 6);
-  return `${'#'.repeat(d)} ${code(path)}${badges(m, ctx)}${
+  const name = path + (showOptional && m.optional ? '?' : '');
+  return `${'#'.repeat(d)} ${code(name)}${badges(m, ctx)}${
     untranslated(ctx, `${key}.summary`)
   } \\{#${slug(path)}\\}\n\n`;
 }
@@ -917,23 +925,23 @@ function paramsTable(params: ApiParam[], ctx: Ctx, key: string): string {
 
 function membersTable(members: ApiMember[], ctx: Ctx, parent: string): string {
   if (members.length === 0) return '';
-  let s =
-    `| ${ctx.l.members} | ${ctx.l.type} | ${ctx.l.description} |\n| --- | --- | --- |\n`;
+  const withDefault = members.some(m => m.default !== undefined);
+  let s = `| ${ctx.l.members} | ${ctx.l.type} |${
+    withDefault ? ` ${ctx.l.default} |` : ''
+  } ${ctx.l.description} |\n| --- | --- |${
+    withDefault ? ' --- |' : ''
+  } --- |\n`;
   for (const m of members) {
     const key = `${parent}.${m.name}`;
-    const desc = [
-      tr(ctx, `${key}.summary`, m.summary),
-      m.deprecated === undefined
-        ? ''
-        : `**${ctx.l.deprecated}.** ${
-          tr(ctx, `${key}.deprecated`, m.deprecated)
-        }`,
-    ].filter(Boolean).join(' ');
-    s += `| <a id="${slug(parent + '.' + m.name)}"></a>${
-      code(m.name + (m.optional ? '?' : ''))
-    }${badges(m, ctx)} | ${pipe(typeCell(m, ctx))} | ${
-      pipe(flat(md(desc, ctx)))
-    } |\n`;
+    const summary = tr(ctx, `${key}.summary`, m.summary);
+    const def = m.default === undefined
+      ? ''
+      : pipe(flat(md(tr(ctx, `${key}.default`, m.default), ctx)));
+    s += `| <a id="${slug(key)}"></a>${code(m.name + (m.optional ? '?' : ''))}${
+      badges(m, ctx)
+    }${untranslated(ctx, `${key}.summary`)} | ${pipe(typeCell(m, ctx))} |${
+      withDefault ? ` ${def} |` : ''
+    } ${pipe(flat(md(summary, ctx)))} |\n`;
   }
   return s + '\n';
 }
@@ -977,7 +985,16 @@ function renderExport(e: ApiExport, depth: number, ctx: Ctx): string {
     }
   }
   if (e.members && e.members.length > 0) {
-    s += membersTable(e.members, ctx, e.name);
+    const exported = new Set(ctx.api.exports.map(x => x.name));
+    const compact = e.members.filter(m => isCompact(m, ctx, exported));
+    s += membersTable(compact, ctx, e.name);
+    for (const m of e.members.filter(m => !compact.includes(m))) {
+      const path = `${e.name}.${m.name}`;
+      s += heading(depth + 1, path, m, ctx, path, true);
+      s += metaList(m, ctx, path);
+      s += body(m, ctx, path);
+      if (m.params) s += paramsTable(m.params, ctx, path);
+    }
   }
   return s;
 }

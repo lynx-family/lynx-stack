@@ -182,9 +182,17 @@ const PLUGIN_LYNX_NAME: "lynx:rsbuild"
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="bundlefilenamecontext-entryname"></a>`entryName?` | `string` | 入口名称。 |
 | <a id="bundlefilenamecontext-lazybundle"></a>`lazyBundle` | `boolean` | 是否正在为 lazy bundle（异步 chunk）解析文件名， 而非为入口的主 bundle 解析。 |
 | <a id="bundlefilenamecontext-platform"></a>`platform` | `string` | Rsbuild environment 的名称。 |
+
+#### `BundleFilenameContext.entryName?` \{#bundlefilenamecontext-entryname\}
+
+- **类型：** `string`
+
+入口名称。
+
+对于 lazy bundle，该值为 `undefined`，因为 lazy bundle 的名称是按异步 chunk
+而非按入口解析的。
 
 ### `LynxConfig` <span className="api-badge api-badge-beta">Beta</span> \{#lynxconfig\}
 
@@ -208,9 +216,42 @@ const filename = lynx.resolveBundleFilename({
 | --- | --- | --- |
 | <a id="lynxconfig-output"></a>`output` <span className="api-badge api-badge-beta">Beta</span> | [`LynxOutput`](#output) | 构建产物。 |
 | <a id="lynxconfig-performance"></a>`performance` <span className="api-badge api-badge-beta">Beta</span> | [`LynxPerformance`](#performance) | 性能选项。 |
-| <a id="lynxconfig-resolvebundlefilename"></a>`resolveBundleFilename` | `resolveBundleFilename(context: { entryName: string; platform: string }): string` | 解析入口的 bundle 文件名。 |
-| <a id="lynxconfig-resolveintermediatedir"></a>`resolveIntermediateDir` | `resolveIntermediateDir(context?: { entryName?: string }): string` | 解析中间产物所在的目录。 |
-| <a id="lynxconfig-resolvelazybundlefilename"></a>`resolveLazyBundleFilename` | `resolveLazyBundleFilename(context: { platform: string }): string \| undefined` | 解析 lazy bundle 文件的名称。 |
+
+#### `LynxConfig.resolveBundleFilename` \{#lynxconfig-resolvebundlefilename\}
+
+- **类型：** `resolveBundleFilename(context: { entryName: string; platform: string }): string`
+
+解析入口的 bundle 文件名。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `context` | `{ entryName: string; platform: string }` | 要解析文件名的入口。 |
+
+#### `LynxConfig.resolveIntermediateDir` \{#lynxconfig-resolveintermediatedir\}
+
+- **类型：** `resolveIntermediateDir(context?: { entryName?: string }): string`
+
+解析中间产物所在的目录。
+
+Lynx bundle 由各线程的 JS、CSS 和 HMR 产物编码而成。这些产物
+按入口输出到该目录中，而不是与 bundle 放在一起。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `context?` | `{ entryName?: string }` | 要解析目录的入口。未提供入口 名称时，返回包含所有入口目录的父目录。 |
+
+#### `LynxConfig.resolveLazyBundleFilename` \{#lynxconfig-resolvelazybundlefilename\}
+
+- **类型：** `resolveLazyBundleFilename(context: { platform: string }): string | undefined`
+
+解析 lazy bundle 文件的名称。
+
+此时没有可用于解析 `[name]` 的入口名称，因此保留该占位符，
+由 `LynxTemplatePlugin` 按异步 chunk 填充。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `context` | `{ platform: string }` | 要解析文件名的 environment。 |
 
 ### `BundleFilename` \{#bundlefilename\}
 

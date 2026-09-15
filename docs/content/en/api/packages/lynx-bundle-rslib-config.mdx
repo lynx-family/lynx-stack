@@ -173,11 +173,24 @@ preset.
 
 The options for encoding the external bundle.
 
-| Members | Type | Description |
-| --- | --- | --- |
-| <a id="encodeoptions-enablejsbytecode"></a>`enableJsBytecode?` | `boolean` | Whether to compile main thread chunks to JsBytecode in the emitted bundle. |
-| <a id="encodeoptions-engineversion"></a>`engineVersion?` | `string` | The engine version of the external bundle. |
-| <a id="encodeoptions-target"></a>`target?` | `"web" \| "lynx"` | The output format of the encoded bundle. - `'lynx'`: the native bundle a Lynx engine loads, via `@lynx-js/tasm`. - `'web'`: a web binary bundle via `@lynx-js/web-core/encode`, decodable by   the web platform. Sections are emitted as raw JS (the web runtime wraps   them at `lynx.loadScript` time), and CSS is folded into the StyleInfo   section. |
+| Members | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="encodeoptions-engineversion"></a>`engineVersion?` | `string` | `'3.5'` | The engine version of the external bundle. |
+| <a id="encodeoptions-target"></a>`target?` | `"web" \| "lynx"` | `'lynx'` | The output format of the encoded bundle. - `'lynx'`: the native bundle a Lynx engine loads, via `@lynx-js/tasm`. - `'web'`: a web binary bundle via `@lynx-js/web-core/encode`, decodable by   the web platform. Sections are emitted as raw JS (the web runtime wraps   them at `lynx.loadScript` time), and CSS is folded into the StyleInfo   section. |
+
+#### `EncodeOptions.enableJsBytecode?` \{#encodeoptions-enablejsbytecode\}
+
+- **Type:** `boolean`
+- **Default:** `false` when `NODE_ENV` is `'development'`, otherwise `true`
+
+Whether to compile main thread chunks to JsBytecode in the emitted bundle.
+
+When disabled, main thread chunks are encoded as plain JavaScript source,
+which keeps them readable for debugging and speeds up encoding.
+
+Only takes effect for the `'lynx'` target. For the `'web'` target the
+`JsBytecode` tag only routes main thread chunks to the correct bundle
+slot (the chunk is never bytecode-compiled), so it is always kept.
 
 ### `ExposedLayers` \{#exposedlayers\}
 
@@ -196,10 +209,10 @@ Use this instead of the plain global-name form when the external library is
 mounted asynchronously (as a Promise) by the consuming application, i.e. the
 matching `pluginExternalBundle` external is configured with `async: true`.
 
-| Members | Type | Description |
-| --- | --- | --- |
-| <a id="externalobject-async"></a>`async?` | `boolean` | Whether the library is mounted as a Promise resolving to the library namespace. When enabled, the external is emitted as a `promise` external so importing modules await the mounted value instead of reading it synchronously. |
-| <a id="externalobject-libraryname"></a>`libraryName` | `string \| string[]` | The global name (with optional subpath) of the external library. |
+| Members | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="externalobject-async"></a>`async?` | `boolean` | `false` | Whether the library is mounted as a Promise resolving to the library namespace. When enabled, the external is emitted as a `promise` external so importing modules await the mounted value instead of reading it synchronously. |
+| <a id="externalobject-libraryname"></a>`libraryName` | `string \| string[]` |  | The global name (with optional subpath) of the external library. |
 
 ### `ExternalsPresetDefinition` \{#externalspresetdefinition\}
 
@@ -214,9 +227,9 @@ Definition for a named externals preset.
 
 The options of [`MainThreadRuntimeWrapperWebpackPlugin`](#mainthreadruntimewrapperwebpackplugin).
 
-| Members | Type | Description |
-| --- | --- | --- |
-| <a id="mainthreadruntimewrapperwebpackpluginoptions-test"></a>`test` | `Rules \| undefined` | Include the assets marked `lynx:main-thread` that pass test assertion. |
+| Members | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="mainthreadruntimewrapperwebpackpluginoptions-test"></a>`test` | `Rules \| undefined` | `/\.js$/` | Include the assets marked `lynx:main-thread` that pass test assertion. |
 
 ### `Externals` \{#externals\}
 

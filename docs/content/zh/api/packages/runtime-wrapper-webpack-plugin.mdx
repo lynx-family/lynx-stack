@@ -36,7 +36,16 @@ RuntimeWrapperWebpackPlugin 为 JavaScript 添加运行时包装，使其能够�
 | --- | --- | --- |
 | <a id="runtimewrapperwebpackplugin-constructor"></a>`constructor` | `constructor(options: Partial<RuntimeWrapperWebpackPluginOptions>): RuntimeWrapperWebpackPlugin` |  |
 | <a id="runtimewrapperwebpackplugin-defaultoptions"></a>`defaultOptions` | `Readonly<Required<`[`RuntimeWrapperWebpackPluginOptions`](#runtimewrapperwebpackpluginoptions)`>>` | `defaultOptions` 是 [`RuntimeWrapperWebpackPlugin`](#runtimewrapperwebpackplugin) 使用的默认选项。 |
-| <a id="runtimewrapperwebpackplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` | webpack 插件的入口。 |
+
+#### `RuntimeWrapperWebpackPlugin.apply` \{#runtimewrapperwebpackplugin-apply\}
+
+- **类型：** `apply(compiler: Compiler): void`
+
+webpack 插件的入口。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `compiler` | `Compiler` | webpack 编译器 |
 
 ## 类型 \{#\}
 
@@ -44,12 +53,12 @@ RuntimeWrapperWebpackPlugin 为 JavaScript 添加运行时包装，使其能够�
 
 RuntimeWrapperWebpackPluginOptions 的选项
 
-| 成员 | 类型 | 说明 |
-| --- | --- | --- |
-| <a id="runtimewrapperwebpackpluginoptions-bannertype"></a>`bannerType` | `(filename: string) => "script" \| "bundle"` | banner 有两种类型：script（用于 app-service）和 bundle（用于 js-render）。可以根据文件名决定使用哪种 banner。 |
-| <a id="runtimewrapperwebpackpluginoptions-experimental-islazybundle"></a>`experimental_isLazyBundle?` | `boolean` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle` |
-| <a id="runtimewrapperwebpackpluginoptions-injectvars"></a>`injectVars?` | `((vars: string[]) => string[]) \| string[]` | 要注入到 chunk 中的变量。 |
-| <a id="runtimewrapperwebpackpluginoptions-targetsdkversion"></a>`targetSdkVersion` | `string` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion` |
-| <a id="runtimewrapperwebpackpluginoptions-test"></a>`test` | `Rules \| undefined` | 包含所有通过 test 断言的模块。 |
+| 成员 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="runtimewrapperwebpackpluginoptions-bannertype"></a>`bannerType` | `(filename: string) => "script" \| "bundle"` | `() => 'script'` | banner 有两种类型：script（用于 app-service）和 bundle（用于 js-render）。可以根据文件名决定使用哪种 banner。 |
+| <a id="runtimewrapperwebpackpluginoptions-experimental-islazybundle"></a>`experimental_isLazyBundle?` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle` |
+| <a id="runtimewrapperwebpackpluginoptions-injectvars"></a>`injectVars?` | `((vars: string[]) => string[]) \| string[]` |  | 要注入到 chunk 中的变量。 |
+| <a id="runtimewrapperwebpackpluginoptions-targetsdkversion"></a>`targetSdkVersion` | `string` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion` |
+| <a id="runtimewrapperwebpackpluginoptions-test"></a>`test` | `Rules \| undefined` | `/\.js$/` | 包含所有通过 test 断言的模块。 |
 
 {/* @api-end */}

@@ -1209,12 +1209,30 @@ OpenUI 表单字段的校验状态和辅助函数。
 | <a id="rawresource-fail"></a>`fail` | `(err: unknown) => void` |  |
 | <a id="rawresource-getsnapshot"></a>`getSnapshot` | `() => ResourceSnapshot<T>` | 同步读取当前快照，适用于 `useSyncExternalStore`。每次状态迁移时返回的对象引用都会变化。 |
 | <a id="rawresource-id"></a>`id` | `string` |  |
-| <a id="rawresource-onupdate"></a>`onUpdate` <span className="api-badge api-badge-deprecated">已废弃</span> | `(callback: (result: T) => void) => () => void` | 请使用 `subscribe`，行为完全相同。 **已废弃.** 已废弃。 |
 | <a id="rawresource-promise"></a>`promise` | `Promise<T>` |  |
-| <a id="rawresource-read"></a>`read` <span className="api-badge api-badge-deprecated">已废弃</span> | `() => T \| undefined` | 请直接读取 `value` / `status`。为向后兼容而保留；在成功状态下返回该值，否则返回 undefined。不会抛出异常。 **已废弃.** 已废弃。 |
 | <a id="rawresource-status"></a>`status` | [`ResourceStatus`](#resourcestatus) |  |
 | <a id="rawresource-subscribe"></a>`subscribe` | `(callback: () => void) => () => void` | 订阅状态变化。每次 `complete()` 或 `fail()` 之后都会调用回调（当处理器针对同一 id 再次发出更新时，可能会重新发布相同的值）。返回一个取消订阅函数。 |
 | <a id="rawresource-value"></a>`value` | `T \| undefined` |  |
+
+#### `RawResource.onUpdate` <span className="api-badge api-badge-deprecated">已废弃</span> \{#rawresource-onupdate\}
+
+- **类型：** `(callback: (result: T) => void) => () => void`
+
+:::warning 已废弃
+已废弃。
+:::
+
+请使用 `subscribe`，行为完全相同。
+
+#### `RawResource.read` <span className="api-badge api-badge-deprecated">已废弃</span> \{#rawresource-read\}
+
+- **类型：** `() => T | undefined`
+
+:::warning 已废弃
+已废弃。
+:::
+
+请直接读取 `value` / `status`。为向后兼容而保留；在成功状态下返回该值，否则返回 undefined。不会抛出异常。
 
 ### `ReadA2UICatalogDirectoryOptions` \{#reada2uicatalogdirectoryoptions\}
 

@@ -104,14 +104,48 @@ __AppendElement(page, view);
 | Members | Type | Description |
 | --- | --- | --- |
 | <a id="lynxtestingenv-constructor"></a>`constructor` | `constructor(env?: LynxEnv): LynxTestingEnv` |  |
-| <a id="lynxtestingenv-backgroundthread"></a>`backgroundThread` | [`LynxGlobalThis`](#lynxglobalthis) | The global object for the background thread. |
 | <a id="lynxtestingenv-env"></a>`env` | [`LynxEnv`](#lynxenv) |  |
-| <a id="lynxtestingenv-mainthread"></a>`mainThread` | [`LynxGlobalThis`](#lynxglobalthis)` & `[`ElementTreeGlobals`](#elementtreeglobals) | The global object for the main thread. |
 | <a id="lynxtestingenv-clearglobal"></a>`clearGlobal` | `clearGlobal(): void` |  |
 | <a id="lynxtestingenv-injectglobals"></a>`injectGlobals` | `injectGlobals(): void` |  |
 | <a id="lynxtestingenv-reset"></a>`reset` | `reset(): void` |  |
 | <a id="lynxtestingenv-switchtobackgroundthread"></a>`switchToBackgroundThread` | `switchToBackgroundThread(): void` |  |
 | <a id="lynxtestingenv-switchtomainthread"></a>`switchToMainThread` | `switchToMainThread(): void` |  |
+
+#### `LynxTestingEnv.backgroundThread` \{#lynxtestingenv-backgroundthread\}
+
+- **Type:** [`LynxGlobalThis`](#lynxglobalthis)
+
+The global object for the background thread.
+
+```ts
+import { LynxTestingEnv } from '@lynx-js/testing-environment';
+import { JSDOM } from 'jsdom';
+
+const lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });
+
+lynxTestingEnv.switchToBackgroundThread();
+// use the background thread global object
+globalThis.lynxCoreInject.tt.OnLifecycleEvent(...args);
+```
+
+#### `LynxTestingEnv.mainThread` \{#lynxtestingenv-mainthread\}
+
+- **Type:** [`LynxGlobalThis`](#lynxglobalthis)` & `[`ElementTreeGlobals`](#elementtreeglobals)
+
+The global object for the main thread.
+
+```ts
+import { LynxTestingEnv } from '@lynx-js/testing-environment';
+import { JSDOM } from 'jsdom';
+
+const lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });
+
+lynxTestingEnv.switchToMainThread();
+// use the main thread global object
+const page = globalThis.__CreatePage('0', 0);
+const view = globalThis.__CreateView(0);
+globalThis.__AppendElement(page, view);
+```
 
 ## Types \{#types\}
 

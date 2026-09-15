@@ -34,7 +34,6 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="websocket-constructor"></a>`constructor` | `constructor(url: string, protocols?: string \| string[], options: { headers?: Record<string, string> }): WebSocket` |  |
 | <a id="websocket-closed"></a>`CLOSED` | [`ReadyState`](#readystate) | `@lynx-js/websocket#ReadyState.CLOSED` |
 | <a id="websocket-closing"></a>`CLOSING` | [`ReadyState`](#readystate) | `@lynx-js/websocket#ReadyState.CLOSING` |
 | <a id="websocket-connecting"></a>`CONNECTING` | [`ReadyState`](#readystate) | `@lynx-js/websocket#ReadyState.CONNECTING` |
@@ -46,11 +45,73 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 | <a id="websocket-protocol"></a>`protocol` | `string \| undefined` | WebSocket.protocol 只读属性返回服务器所选子协议的名称。 |
 | <a id="websocket-readystate"></a>`readyState` | `ReadyState` | `readyState` 只读属性返回 [`WebSocket`](#websocket) 连接的当前状态。 |
 | <a id="websocket-url"></a>`url` | `string` | `url` 只读属性返回通过构造函数传入 [`WebSocket`](#websocket) 的 URL。 |
-| <a id="websocket-addeventlistener"></a>`addEventListener` | `addEventListener(type: T, callback?: (event: EventMap[T]) => void): void` | `EventTarget` 接口的 `addEventListener()` 方法用于设置一个函数，每当指定事件派发到目标时都会调用该函数。 |
-| <a id="websocket-close"></a>`close` | `close(code?: number, reason?: string): void` | `close()` 方法关闭 [`WebSocket`](#websocket) 连接或正在进行的连接尝试（如有）。 |
-| <a id="websocket-ping"></a>`ping` | `ping(): void` | `ping` 方法通过 [`WebSocket`](#websocket) 连接向服务器发送一条空消息。 |
-| <a id="websocket-removeeventlistener"></a>`removeEventListener` | `removeEventListener(type: T, callback: (event: EventMap[T]) => void): void` | `EventTarget` 接口的 `removeEventListener()` 方法从 WebSocket 上移除一个事件监听器。 |
-| <a id="websocket-send"></a>`send` | `send(data: string): void` | `send` 方法通过 [`WebSocket`](#websocket) 连接将指定数据发送到服务器。 |
+
+#### `WebSocket.constructor` \{#websocket-constructor\}
+
+- **类型：** `constructor(url: string, protocols?: string | string[], options: { headers?: Record<string, string> }): WebSocket`
+
+*暂无说明。*
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `url` | `string` | 要连接的 URL，即 WebSocket 服务器将响应的 URL。 |
+| `protocols?` | `string \| string[]` | 单个协议字符串或协议字符串数组。省略时默认使用空数组，即 `[]`。 |
+| `options` | `{ headers?: Record<string, string> }` | 仅适用于 Lynx 的额外选项。 |
+
+#### `WebSocket.addEventListener` \{#websocket-addeventlistener\}
+
+- **类型：** `addEventListener(type: T, callback?: (event: EventMap[T]) => void): void`
+
+`EventTarget` 接口的 `addEventListener()` 方法用于设置一个函数，每当指定事件派发到目标时都会调用该函数。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `type` | `T` | 表示要监听的事件类型的字符串，区分大小写。 |
+| `callback?` | `(event: `[`EventMap`](#eventmap)`[T]) => void` | 接收通知的函数。事件详情参见 `@lynx-js/websocket#EventMap`。 |
+
+#### `WebSocket.close` \{#websocket-close\}
+
+- **类型：** `close(code?: number, reason?: string): void`
+
+`close()` 方法关闭 [`WebSocket`](#websocket) 连接或正在进行的连接尝试（如有）。
+
+如果连接已处于 [`CLOSED `](#websocket) 状态，该方法不执行任何操作。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `code?` | `number` |  |
+| `reason?` | `string` |  |
+
+#### `WebSocket.ping` \{#websocket-ping\}
+
+- **类型：** `ping(): void`
+
+`ping` 方法通过 [`WebSocket`](#websocket) 连接向服务器发送一条空消息。
+
+在连接处于 [`CONNECTING `](#websocket) 状态时调用 `ping()` 会抛出异常。在连接处于 [`CLOSING `](#websocket) 或 [`CLOSED `](#websocket) 状态时调用 `ping()`，数据会被静默丢弃。
+
+#### `WebSocket.removeEventListener` \{#websocket-removeeventlistener\}
+
+- **类型：** `removeEventListener(type: T, callback: (event: EventMap[T]) => void): void`
+
+`EventTarget` 接口的 `removeEventListener()` 方法从 WebSocket 上移除一个事件监听器。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `type` | `T` | 要停止监听的事件类型。 |
+| `callback` | `(event: `[`EventMap`](#eventmap)`[T]) => void` | 要移除的事件监听函数。 |
+
+#### `WebSocket.send` \{#websocket-send\}
+
+- **类型：** `send(data: string): void`
+
+`send` 方法通过 [`WebSocket`](#websocket) 连接将指定数据发送到服务器。
+
+在连接处于 [`CONNECTING `](#websocket) 状态时调用 `send()` 会抛出异常。在连接处于 [`CLOSING `](#websocket) 或 [`CLOSED `](#websocket) 状态时调用 `send()`，数据会被静默丢弃。
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `data` | `string` | 要发送的数据。 |
 
 ## 类型 \{#\}
 

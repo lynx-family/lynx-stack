@@ -55,11 +55,57 @@ export default {
 }
 ```
 
-| Members | Type | Description |
+#### `ReactRefreshRspackPlugin.constructor` \{#reactrefreshrspackplugin-constructor\}
+
+- **Type:** `constructor(options: ReactRefreshRspackPluginOptions): ReactRefreshRspackPlugin`
+
+*No description yet.*
+
+| Parameters | Type | Description |
 | --- | --- | --- |
-| <a id="reactrefreshrspackplugin-constructor"></a>`constructor` | `constructor(options: ReactRefreshRspackPluginOptions): ReactRefreshRspackPlugin` |  |
-| <a id="reactrefreshrspackplugin-loader"></a>`loader` | `string` | The loader for react refresh. |
-| <a id="reactrefreshrspackplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` | The entry point of a rspack plugin. |
+| `options` | [`ReactRefreshRspackPluginOptions`](#reactrefreshrspackpluginoptions) | The options for react refresh. |
+
+#### `ReactRefreshRspackPlugin.loader` \{#reactrefreshrspackplugin-loader\}
+
+- **Type:** `string`
+
+The loader for react refresh.
+
+Please note that the runtime of react should be ignored. See the example below:
+
+```js
+// rspack.config.js
+import { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'
+import { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
+
+export default {
+  module: {
+    rules: [
+      {
+        issueLayer: ReactWebpackPlugin.LAYERS.BACKGROUND,
+        test: /\.[jt]sx?$/,
+        exclude: [
+          /node_modules/,
+          /@lynx-js/react/,
+          ReactRefreshRspackPlugin.loader,
+        ],
+        use: [ReactRefreshRspackPlugin.loader],
+      },
+    ],
+  },
+  plugins: [new ReactRefreshRspackPlugin()],
+}
+```
+
+#### `ReactRefreshRspackPlugin.apply` \{#reactrefreshrspackplugin-apply\}
+
+- **Type:** `apply(compiler: Compiler): void`
+
+The entry point of a rspack plugin.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `compiler` | `Compiler` | the rspack compiler |
 
 ## Types \{#types\}
 

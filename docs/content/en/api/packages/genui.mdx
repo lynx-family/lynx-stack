@@ -1261,12 +1261,32 @@ component updates.
 | <a id="rawresource-fail"></a>`fail` | `(err: unknown) => void` |  |
 | <a id="rawresource-getsnapshot"></a>`getSnapshot` | `() => ResourceSnapshot<T>` | Synchronous read of the current snapshot, suitable for `useSyncExternalStore`. The returned object reference changes on every transition. |
 | <a id="rawresource-id"></a>`id` | `string` |  |
-| <a id="rawresource-onupdate"></a>`onUpdate` <span className="api-badge api-badge-deprecated">Deprecated</span> | `(callback: (result: T) => void) => () => void` | Use `subscribe`. Behaves identically. **Deprecated.** Deprecated. |
 | <a id="rawresource-promise"></a>`promise` | `Promise<T>` |  |
-| <a id="rawresource-read"></a>`read` <span className="api-badge api-badge-deprecated">Deprecated</span> | `() => T \| undefined` | Read `value` / `status` directly. Retained for backwards compatibility; in the success state it returns the value, otherwise it returns undefined. It does not throw. **Deprecated.** Deprecated. |
 | <a id="rawresource-status"></a>`status` | [`ResourceStatus`](#resourcestatus) |  |
 | <a id="rawresource-subscribe"></a>`subscribe` | `(callback: () => void) => () => void` | Subscribe to state changes. The callback is invoked after every `complete()` or `fail()` (the same value may be re-published when the processor re-emits an update for the same id). Returns a disposer. |
 | <a id="rawresource-value"></a>`value` | `T \| undefined` |  |
+
+#### `RawResource.onUpdate` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#rawresource-onupdate\}
+
+- **Type:** `(callback: (result: T) => void) => () => void`
+
+:::warning Deprecated
+Deprecated.
+:::
+
+Use `subscribe`. Behaves identically.
+
+#### `RawResource.read` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#rawresource-read\}
+
+- **Type:** `() => T | undefined`
+
+:::warning Deprecated
+Deprecated.
+:::
+
+Read `value` / `status` directly. Retained for backwards
+compatibility; in the success state it returns the value, otherwise it
+returns undefined. It does not throw.
 
 ### `ReadA2UICatalogDirectoryOptions` \{#reada2uicatalogdirectoryoptions\}
 

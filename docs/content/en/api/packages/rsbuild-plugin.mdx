@@ -182,9 +182,17 @@ The context passed to the [`LynxFilename.bundle`](#output-filename-bundle) funct
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="bundlefilenamecontext-entryname"></a>`entryName?` | `string` | The name of the entry. |
 | <a id="bundlefilenamecontext-lazybundle"></a>`lazyBundle` | `boolean` | Whether the filename is being resolved for a lazy bundle (async chunk) instead of the main bundle of an entry. |
 | <a id="bundlefilenamecontext-platform"></a>`platform` | `string` | The name of the Rsbuild environment. |
+
+#### `BundleFilenameContext.entryName?` \{#bundlefilenamecontext-entryname\}
+
+- **Type:** `string`
+
+The name of the entry.
+
+It is `undefined` for lazy bundles, since a lazy bundle name is resolved
+per async chunk instead of per entry.
 
 ### `LynxConfig` <span className="api-badge api-badge-beta">Beta</span> \{#lynxconfig\}
 
@@ -208,9 +216,42 @@ const filename = lynx.resolveBundleFilename({
 | --- | --- | --- |
 | <a id="lynxconfig-output"></a>`output` <span className="api-badge api-badge-beta">Beta</span> | [`LynxOutput`](#output) | The build outputs. |
 | <a id="lynxconfig-performance"></a>`performance` <span className="api-badge api-badge-beta">Beta</span> | [`LynxPerformance`](#performance) | The performance options. |
-| <a id="lynxconfig-resolvebundlefilename"></a>`resolveBundleFilename` | `resolveBundleFilename(context: { entryName: string; platform: string }): string` | Resolve the name of the bundle file of an entry. |
-| <a id="lynxconfig-resolveintermediatedir"></a>`resolveIntermediateDir` | `resolveIntermediateDir(context?: { entryName?: string }): string` | Resolve the directory of the intermediate files. |
-| <a id="lynxconfig-resolvelazybundlefilename"></a>`resolveLazyBundleFilename` | `resolveLazyBundleFilename(context: { platform: string }): string \| undefined` | Resolve the name of the lazy bundle files. |
+
+#### `LynxConfig.resolveBundleFilename` \{#lynxconfig-resolvebundlefilename\}
+
+- **Type:** `resolveBundleFilename(context: { entryName: string; platform: string }): string`
+
+Resolve the name of the bundle file of an entry.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `context` | `{ entryName: string; platform: string }` | The entry to resolve the name for. |
+
+#### `LynxConfig.resolveIntermediateDir` \{#lynxconfig-resolveintermediatedir\}
+
+- **Type:** `resolveIntermediateDir(context?: { entryName?: string }): string`
+
+Resolve the directory of the intermediate files.
+
+A Lynx bundle is encoded from per-thread JS, CSS and HMR outputs. They are
+emitted into this directory, per entry, instead of next to the bundle.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `context?` | `{ entryName?: string }` | The entry to resolve the directory for. Without an entry name, the directory that holds every entry's is returned. |
+
+#### `LynxConfig.resolveLazyBundleFilename` \{#lynxconfig-resolvelazybundlefilename\}
+
+- **Type:** `resolveLazyBundleFilename(context: { platform: string }): string | undefined`
+
+Resolve the name of the lazy bundle files.
+
+There is no entry name to resolve `[name]` with, so the placeholder is
+kept for `LynxTemplatePlugin` to fill in per async chunk.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `context` | `{ platform: string }` | The environment to resolve the name for. |
 
 ### `BundleFilename` \{#bundlefilename\}
 

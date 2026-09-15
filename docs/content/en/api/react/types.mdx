@@ -52,17 +52,165 @@ lynx.querySelectorAll(...);
 
 | Members | Type | Description |
 | --- | --- | --- |
-| <a id="lynx-registerdataprocessors"></a>`registerDataProcessors` | `(dataProcessorDefinition?: `[`DataProcessorDefinition`](#dataprocessordefinition)`) => void` | Register DataProcessors. You MUST call this before `root.render()`. |
 | <a id="lynx-triggerglobaleventfromlepus"></a>`triggerGlobalEventFromLepus` | `(eventName: string, params: any) => void` | An alias of `lynx.getJSModule("GlobalEventEmitter").trigger(eventName, params)` only in Lepus |
+
+#### `Lynx.registerDataProcessors` \{#lynx-registerdataprocessors\}
+
+- **Type:** `(dataProcessorDefinition?: `[`DataProcessorDefinition`](#dataprocessordefinition)`) => void`
+
+Register DataProcessors. You MUST call this before `root.render()`.
+
+You MUST call `lynx.registerDataProcessors` before calling `root.render()`.
+
+```ts
+import { root } from "@lynx-js/react"
+
+// You MUST call this before `root.render()`
+lynx.registerDataProcessors({
+  defaultDataProcessor: () => {...} // default DataProcessor
+  dataProcessors: {
+    getScreenMetricsOverride: () => {...} // named DataProcessor
+  }
+})
+
+root.render(<App/>);
+```
+
+If you have a class component with `static defaultDataProcessor`
+or `static dataProcessors`, you can use it to register DataProcessors.
+
+```ts
+import { root, Component } from "@lynx-js/react"
+
+class App extends Component {
+  static defaultDataProcessor() {
+     ...
+  }
+
+  static dataProcessors = {
+    getScreenMetricsOverride() {
+      ...
+    }
+  }
+}
+
+lynx.registerDataProcessors(App); // You can pass `App` because it has the required shape
+root.render(<App/>);
+```
+
+For developers who want fully typed `defaultDataProcessor`,
+they can achieve it by extends interface `InitDataRaw` and `InitData`.
+
+```ts
+import { root } from "@lynx-js/react"
+
+interface ExistingInterface {
+  somePropertyFromExistingInterface: number
+}
+
+declare module '@lynx-js/react' {
+  interface InitDataRaw extends ExistingInterface {
+    someAnotherCustomProperty: string
+  }
+}
+
+lynx.registerDataProcessors({
+  defaultDataProcessor: (initDataRaw) => {
+    initDataRaw.somePropertyFromExistingInterface // will be typed
+  }
+})
+
+```
+
+For developers who want fully typed `defaultDataProcessor`,
+they can achieve it by extends interface `InitDataRaw` and `InitData`.
+
+```ts
+import { root, useInitData } from "@lynx-js/react"
+
+interface AnotherExistingInterface {
+  someAnotherPropertyFromExistingInterface: number
+}
+
+declare module '@lynx-js/react' {
+  interface InitData extends AnotherExistingInterface {
+    someCustomProperty: string
+  }
+}
+
+root.registerDataProcessors({
+  defaultDataProcessor: () => {
+    return {
+      someCustomProperty: 'value', // will be typed
+      someAnotherPropertyFromExistingInterface: 1, // will be typed
+    }
+  }
+})
+
+function App() {
+  const initData = useInitData();
+
+  initData.someCustomProperty // will be typed
+  initData.someAnotherPropertyFromExistingInterface // will be typed
+}
+
+```
 
 ### `Root` \{#root\}
 
 The default root exported by `@lynx-js/react` for you to render a JSX
 
-| Members | Type | Description |
-| --- | --- | --- |
-| <a id="root-registerdataprocessors"></a>`registerDataProcessors` <span className="api-badge api-badge-deprecated">Deprecated</span> | `(dataProcessorDefinition: `[`DataProcessorDefinition`](#dataprocessordefinition)`) => void` | Register DataProcessors. You MUST call this before `root.render()`. **Deprecated.** Deprecated. |
-| <a id="root-render"></a>`render` | `(jsx: ReactNode) => void` | Use this API to pass in your JSX to render |
+#### `Root.registerDataProcessors` <span className="api-badge api-badge-deprecated">Deprecated</span> \{#root-registerdataprocessors\}
+
+- **Type:** `(dataProcessorDefinition: `[`DataProcessorDefinition`](#dataprocessordefinition)`) => void`
+
+:::warning Deprecated
+Deprecated.
+:::
+
+Register DataProcessors. You MUST call this before `root.render()`.
+
+#### `Root.render` \{#root-render\}
+
+- **Type:** `(jsx: ReactNode) => void`
+
+Use this API to pass in your JSX to render
+
+```ts
+import { root } from "@lynx-js/react"
+
+function App() {
+  // Your app
+  return <view>...</view>
+}
+
+root.render(<App/>);
+```
+
+```tsx
+import { root } from "@lynx-js/react"
+
+function App() {
+  // Your app
+  return <view>...</view>
+}
+
+if (__MAIN_THREAD__) {
+  root.render(
+    <DataProvider data={DEFAULT_DATA}>
+       <App/>
+    </DataProvider>
+  );
+} else if (__BACKGROUND__) {
+  fetchData().then((data) => {
+    root.render(
+      <DataProvider data={data}>
+         <App/>
+      </DataProvider>
+    ); // You can render later after your data is ready
+  })
+}
+```
 
 ### `DataProcessors` \{#dataprocessors\}
 
@@ -92,9 +240,29 @@ lynx.registerDataProcessors({
 })
 ```
 
-| Members | Type | Description |
+#### `DataProcessors.getScreenMetricsOverride?` \{#dataprocessors-getscreenmetricsoverride\}
+
+- **Type:** `getScreenMetricsOverride(metrics: { height: number; width: number }): { height: number; width: number }`
+
+Optional processor to override screen metrics used by the app
+
+```ts
+lynx.registerDataProcessors({
+  dataProcessors: {
+    getScreenMetricsOverride: (metrics) => {
+      // Force a specific aspect ratio
+      return {
+        width: metrics.width,
+        height: metrics.width * (16/9)
+      };
+    }
+  }
+});
+```
+
+| Parameters | Type | Description |
 | --- | --- | --- |
-| <a id="dataprocessors-getscreenmetricsoverride"></a>`getScreenMetricsOverride?` | `getScreenMetricsOverride(metrics: { height: number; width: number }): { height: number; width: number }` | Optional processor to override screen metrics used by the app |
+| `metrics` | `{ height: number; width: number }` | The physical screen dimensions in pixels |
 
 ### `DataProcessorDefinition` \{#dataprocessordefinition\}
 

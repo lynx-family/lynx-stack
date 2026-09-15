@@ -104,14 +104,48 @@ __AppendElement(page, view);
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="lynxtestingenv-constructor"></a>`constructor` | `constructor(env?: LynxEnv): LynxTestingEnv` |  |
-| <a id="lynxtestingenv-backgroundthread"></a>`backgroundThread` | [`LynxGlobalThis`](#lynxglobalthis) | 后台线程的全局对象。 |
 | <a id="lynxtestingenv-env"></a>`env` | [`LynxEnv`](#lynxenv) |  |
-| <a id="lynxtestingenv-mainthread"></a>`mainThread` | [`LynxGlobalThis`](#lynxglobalthis)` & `[`ElementTreeGlobals`](#elementtreeglobals) | 主线程的全局对象。 |
 | <a id="lynxtestingenv-clearglobal"></a>`clearGlobal` | `clearGlobal(): void` |  |
 | <a id="lynxtestingenv-injectglobals"></a>`injectGlobals` | `injectGlobals(): void` |  |
 | <a id="lynxtestingenv-reset"></a>`reset` | `reset(): void` |  |
 | <a id="lynxtestingenv-switchtobackgroundthread"></a>`switchToBackgroundThread` | `switchToBackgroundThread(): void` |  |
 | <a id="lynxtestingenv-switchtomainthread"></a>`switchToMainThread` | `switchToMainThread(): void` |  |
+
+#### `LynxTestingEnv.backgroundThread` \{#lynxtestingenv-backgroundthread\}
+
+- **类型：** [`LynxGlobalThis`](#lynxglobalthis)
+
+后台线程的全局对象。
+
+```ts
+import { LynxTestingEnv } from '@lynx-js/testing-environment';
+import { JSDOM } from 'jsdom';
+
+const lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });
+
+lynxTestingEnv.switchToBackgroundThread();
+// use the background thread global object
+globalThis.lynxCoreInject.tt.OnLifecycleEvent(...args);
+```
+
+#### `LynxTestingEnv.mainThread` \{#lynxtestingenv-mainthread\}
+
+- **类型：** [`LynxGlobalThis`](#lynxglobalthis)` & `[`ElementTreeGlobals`](#elementtreeglobals)
+
+主线程的全局对象。
+
+```ts
+import { LynxTestingEnv } from '@lynx-js/testing-environment';
+import { JSDOM } from 'jsdom';
+
+const lynxTestingEnv = new LynxTestingEnv({ window: new JSDOM().window });
+
+lynxTestingEnv.switchToMainThread();
+// use the main thread global object
+const page = globalThis.__CreatePage('0', 0);
+const view = globalThis.__CreateView(0);
+globalThis.__AppendElement(page, view);
+```
 
 ## 类型 \{#\}
 

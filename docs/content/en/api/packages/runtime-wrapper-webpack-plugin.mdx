@@ -36,7 +36,16 @@ RuntimeWrapperWebpackPlugin adds runtime wrappers to JavaScript and allow to be 
 | --- | --- | --- |
 | <a id="runtimewrapperwebpackplugin-constructor"></a>`constructor` | `constructor(options: Partial<RuntimeWrapperWebpackPluginOptions>): RuntimeWrapperWebpackPlugin` |  |
 | <a id="runtimewrapperwebpackplugin-defaultoptions"></a>`defaultOptions` | `Readonly<Required<`[`RuntimeWrapperWebpackPluginOptions`](#runtimewrapperwebpackpluginoptions)`>>` | `defaultOptions` is the default options that the [`RuntimeWrapperWebpackPlugin`](#runtimewrapperwebpackplugin) uses. |
-| <a id="runtimewrapperwebpackplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` | The entry point of a webpack plugin. |
+
+#### `RuntimeWrapperWebpackPlugin.apply` \{#runtimewrapperwebpackplugin-apply\}
+
+- **Type:** `apply(compiler: Compiler): void`
+
+The entry point of a webpack plugin.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `compiler` | `Compiler` | the webpack compiler |
 
 ## Types \{#types\}
 
@@ -44,12 +53,12 @@ RuntimeWrapperWebpackPlugin adds runtime wrappers to JavaScript and allow to be 
 
 The options for RuntimeWrapperWebpackPluginOptions
 
-| Members | Type | Description |
-| --- | --- | --- |
-| <a id="runtimewrapperwebpackpluginoptions-bannertype"></a>`bannerType` | `(filename: string) => "script" \| "bundle"` | There are two types of banners: script(for app-service) and bundle(for js-render). You can decide to use which banner by the filename. |
-| <a id="runtimewrapperwebpackpluginoptions-experimental-islazybundle"></a>`experimental_isLazyBundle?` | `boolean` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle` |
-| <a id="runtimewrapperwebpackpluginoptions-injectvars"></a>`injectVars?` | `((vars: string[]) => string[]) \| string[]` | The variables to be injected into the chunk. |
-| <a id="runtimewrapperwebpackpluginoptions-targetsdkversion"></a>`targetSdkVersion` | `string` | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion` |
-| <a id="runtimewrapperwebpackpluginoptions-test"></a>`test` | `Rules \| undefined` | Include all modules that pass test assertion. |
+| Members | Type | Default | Description |
+| --- | --- | --- | --- |
+| <a id="runtimewrapperwebpackpluginoptions-bannertype"></a>`bannerType` | `(filename: string) => "script" \| "bundle"` | `() => 'script'` | There are two types of banners: script(for app-service) and bundle(for js-render). You can decide to use which banner by the filename. |
+| <a id="runtimewrapperwebpackpluginoptions-experimental-islazybundle"></a>`experimental_isLazyBundle?` | `boolean` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle` |
+| <a id="runtimewrapperwebpackpluginoptions-injectvars"></a>`injectVars?` | `((vars: string[]) => string[]) \| string[]` |  | The variables to be injected into the chunk. |
+| <a id="runtimewrapperwebpackpluginoptions-targetsdkversion"></a>`targetSdkVersion` | `string` |  | `@lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion` |
+| <a id="runtimewrapperwebpackpluginoptions-test"></a>`test` | `Rules \| undefined` | `/\.js$/` | Include all modules that pass test assertion. |
 
 {/* @api-end */}

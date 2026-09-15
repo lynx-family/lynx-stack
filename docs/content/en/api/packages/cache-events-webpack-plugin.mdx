@@ -35,8 +35,37 @@ A webpack plugin that cache Lynx native events until the BTS chunk is fully load
 | Members | Type | Description |
 | --- | --- | --- |
 | <a id="lynxcacheeventsplugin-constructor"></a>`constructor` | `constructor(options?: LynxCacheEventsPluginOptions): LynxCacheEventsPlugin` |  |
-| <a id="lynxcacheeventsplugin-defaultoptions"></a>`defaultOptions` | `Readonly<Required<`[`LynxCacheEventsPluginOptions`](#lynxcacheeventspluginoptions)`>>` | `defaultOptions` is the default options that the [`LynxCacheEventsPlugin`](#lynxcacheeventsplugin) uses. |
-| <a id="lynxcacheeventsplugin-apply"></a>`apply` | `apply(compiler: Compiler): void` | The entry point of a webpack plugin. |
+
+#### `LynxCacheEventsPlugin.defaultOptions` \{#lynxcacheeventsplugin-defaultoptions\}
+
+- **Type:** `Readonly<Required<`[`LynxCacheEventsPluginOptions`](#lynxcacheeventspluginoptions)`>>`
+
+`defaultOptions` is the default options that the [`LynxCacheEventsPlugin`](#lynxcacheeventsplugin) uses.
+
+`defaultOptions` can be used to change part of the option and keep others as the default value.
+
+```js
+// webpack.config.js
+import { LynxCacheEventsPlugin } from '@lynx-js/cache-events-webpack-plugin'
+export default {
+  plugins: [
+    new LynxCacheEventsPlugin({
+      ...LynxCacheEventsPlugin.defaultOptions,
+      setupListTransformer: (setupList) => setupList,
+    }),
+  ],
+}
+```
+
+#### `LynxCacheEventsPlugin.apply` \{#lynxcacheeventsplugin-apply\}
+
+- **Type:** `apply(compiler: Compiler): void`
+
+The entry point of a webpack plugin.
+
+| Parameters | Type | Description |
+| --- | --- | --- |
+| `compiler` | `Compiler` | the webpack compiler |
 
 ## Types \{#types\}
 
@@ -44,8 +73,44 @@ A webpack plugin that cache Lynx native events until the BTS chunk is fully load
 
 The options for [`LynxCacheEventsPlugin`](#lynxcacheeventsplugin)
 
-| Members | Type | Description |
-| --- | --- | --- |
-| <a id="lynxcacheeventspluginoptions-setuplisttransformer"></a>`setupListTransformer?` | `(setupList: string[], context: { isMainThread: boolean }) => string[]` | The transformer function to modify the setup list. It runs once per caching chunk — separately for the background thread and for an async-external main thread — so `context.isMainThread` tells you which thread's list you are transforming. Use it to add a cache function to only one thread. |
+#### `LynxCacheEventsPluginOptions.setupListTransformer?` \{#lynxcacheeventspluginoptions-setuplisttransformer\}
+
+- **Type:** `(setupList: string[], context: { isMainThread: boolean }) => string[]`
+
+The transformer function to modify the setup list.
+
+It runs once per caching chunk — separately for the background thread and
+for an async-external main thread — so `context.isMainThread` tells you
+which thread's list you are transforming. Use it to add a cache function to
+only one thread.
+
+```js
+// webpack.config.js
+import { LynxCacheEventsPlugin } from '@lynx-js/cache-events-webpack-plugin'
+
+const config = {
+  plugins: [
+    new LynxCacheEventsPlugin({
+      setupListTransformer: (setupList, { isMainThread }) => {
+        // only cache this event on the background thread
+        if (!isMainThread) {
+          setupList.push(
+            `{
+              name: 'customCacheEvent',
+              setup: () => {
+                console.log('customCacheEvent setup');
+                return () => {
+                  console.log('customCacheEvent teardown');
+                }
+              }
+            }`
+          )
+        }
+        return setupList;
+      },
+    }),
+  ],
+}
+```
 
 {/* @api-end */}

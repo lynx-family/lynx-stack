@@ -180,8 +180,17 @@ const builtInExternalsPresetDefinitions: ExternalsPresetDefinitions
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="externalspresetcontext-environmentname"></a>`environmentName?` | `string` | 正在解析的 Rsbuild environment（例如 `'lynx'`、`'web'`）。 |
 | <a id="externalspresetcontext-rootpath"></a>`rootPath` | `string` | 当前 Rsbuild 项目的根路径。 |
+
+#### `ExternalsPresetContext.environmentName?` \{#externalspresetcontext-environmentname\}
+
+- **类型：** `string`
+
+正在解析的 Rsbuild environment（例如 `'lynx'`、`'web'`）。
+
+预设通过它选择特定于 environment 的产物，例如
+内置的 `reactlynx` 预设在 `web` environment 下解析 web 编码的 `react.web.bundle`，
+在其他 environment 下解析 `react.lynx.bundle`。
 
 ### `ExternalsPresetDefinition` \{#externalspresetdefinition\}
 
@@ -205,27 +214,137 @@ external bundle 依赖的预设。
 
 `pluginExternalBundle` 接受的 external bundle 引用。
 
-| 成员 | 类型 | 说明 |
-| --- | --- | --- |
-| <a id="pluginexternalvalue-async"></a>`async?` | `boolean` | 是否异步加载该资源。 |
-| <a id="pluginexternalvalue-background"></a>`background?` | `LayerOptions` | 后台线程 layer 的选项。 |
-| <a id="pluginexternalvalue-bundlepath"></a>`bundlePath?` | `string` | 基于运行时 public path 解析的 bundle 路径。 当 external bundle 需要作为当前项目的一部分被产出或提供服务时， 优先使用该选项而非 `url`。`pluginExternalBundle` 可以利用这些 信息管理本地 bundle 文件，同时运行时会使最终 URL 与当前生效的 `publicPath` 保持一致。 |
-| <a id="pluginexternalvalue-libraryname"></a>`libraryName?` | `string \| string[]` | 库的名称。与 https://webpack.js.org/configuration/externals/#string 相同。 默认情况下，库名称与 externals 的 key 相同。例如： 配置 `ExternalsLoadingPlugin({ externals: { lodash: { url: '……', } } })` 将生成以下 webpack externals 配置： ```js externals: {   lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].lodash', } ``` 如果一个 external bundle 包含多个模块，应设置相同的库名称，以确保它只被加载一次。例如： ```js ExternalsLoadingPlugin({   externals: {     lodash: {       libraryName: 'Lodash',       url: '……',     },     'lodash-es': {       libraryName: 'Lodash',       url: '……',     }   } }) ``` 将生成以下 webpack externals 配置： ```js externals: {   lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash',   'lodash-es': 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash', } ``` 可以传入数组来指定 external 的子路径。与 https://webpack.js.org/configuration/externals/#string-1 相同。例如： ```js ExternalsLoadingPlugin({   externals: {     preact: {       libraryName: ['ReactLynx', 'Preact'],       url: '……',     },   } }) ``` 将生成以下 webpack externals 配置： ```js externals: {   preact: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.Preact', } ``` |
-| <a id="pluginexternalvalue-mainthread"></a>`mainThread?` | `LayerOptions` | 主线程 layer 的选项。 |
-| <a id="pluginexternalvalue-retries"></a>`retries?` | `number` | 加载 external bundle 超时（`response.code === -2`）时的额外重试次数。 |
-| <a id="pluginexternalvalue-timeout"></a>`timeout?` | `number` | 等待时间，单位为毫秒。 |
-| <a id="pluginexternalvalue-url"></a>`url?` <span className="api-badge api-badge-deprecated">已废弃</span> | `string` | Bundle 的 URL。 仅当 external bundle 位于当前构建产物之外、 且不应由 `pluginExternalBundle` 产出或提供服务时才使用该选项。  建议优先使用 `bundlePath`，它通过运行时 public path 解析，并允许上层工具管理资源产出。 **已废弃.** 已废弃。 |
+| 成员 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="pluginexternalvalue-async"></a>`async?` | `boolean` | `true` | 是否异步加载该资源。 |
+| <a id="pluginexternalvalue-background"></a>`background?` | `LayerOptions` | `undefined` | 后台线程 layer 的选项。 |
+| <a id="pluginexternalvalue-bundlepath"></a>`bundlePath?` | `string` |  | 基于运行时 public path 解析的 bundle 路径。 当 external bundle 需要作为当前项目的一部分被产出或提供服务时， 优先使用该选项而非 `url`。`pluginExternalBundle` 可以利用这些 信息管理本地 bundle 文件，同时运行时会使最终 URL 与当前生效的 `publicPath` 保持一致。 |
+| <a id="pluginexternalvalue-mainthread"></a>`mainThread?` | `LayerOptions` | `undefined` | 主线程 layer 的选项。 |
+| <a id="pluginexternalvalue-retries"></a>`retries?` | `number` | `0` | 加载 external bundle 超时（`response.code === -2`）时的额外重试次数。 |
+| <a id="pluginexternalvalue-timeout"></a>`timeout?` | `number` | `2000` | 等待时间，单位为毫秒。 |
+
+#### `PluginExternalValue.libraryName?` \{#pluginexternalvalue-libraryname\}
+
+- **类型：** `string | string[]`
+- **默认值：** `undefined`
+
+库的名称。与 https://webpack.js.org/configuration/externals/#string 相同。
+
+默认情况下，库名称与 externals 的 key 相同。例如：
+
+配置
+
+```js
+ExternalsLoadingPlugin({
+  externals: {
+    lodash: {
+      url: '……',
+    }
+  }
+})
+```
+
+将生成以下 webpack externals 配置：
+
+```js
+externals: {
+  lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].lodash',
+}
+```
+
+如果一个 external bundle 包含多个模块，应设置相同的库名称，以确保它只被加载一次。例如：
+
+```js
+ExternalsLoadingPlugin({
+  externals: {
+    lodash: {
+      libraryName: 'Lodash',
+      url: '……',
+    },
+    'lodash-es': {
+      libraryName: 'Lodash',
+      url: '……',
+    }
+  }
+})
+```
+
+将生成以下 webpack externals 配置：
+
+```js
+externals: {
+  lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash',
+  'lodash-es': 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash',
+}
+```
+
+可以传入数组来指定 external 的子路径。与 https://webpack.js.org/configuration/externals/#string-1 相同。例如：
+
+```js
+ExternalsLoadingPlugin({
+  externals: {
+    preact: {
+      libraryName: ['ReactLynx', 'Preact'],
+      url: '……',
+    },
+  }
+})
+```
+
+将生成以下 webpack externals 配置：
+
+```js
+externals: {
+  preact: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.Preact',
+}
+```
+
+```ts
+`Lodash`
+```
+
+#### `PluginExternalValue.url?` <span className="api-badge api-badge-deprecated">已废弃</span> \{#pluginexternalvalue-url\}
+
+- **类型：** `string`
+
+:::warning 已废弃
+已废弃。
+:::
+
+Bundle 的 URL。
+
+仅当 external bundle 位于当前构建产物之外、
+且不应由 `pluginExternalBundle` 产出或提供服务时才使用该选项。
+
+ 建议优先使用 `bundlePath`，它通过运行时 public
+path 解析，并允许上层工具管理资源产出。
 
 ### `ReactLynxExternalsPresetOptions` \{#reactlynxexternalspresetoptions\}
 
 内置 `reactlynx` externals 预设的选项。
 
-| 成员 | 类型 | 说明 |
-| --- | --- | --- |
-| <a id="reactlynxexternalspresetoptions-async"></a>`async?` | `boolean` | 针对 web 目标，异步加载 ReactLynx 运行时 bundle。 web 运行时（`@lynx-js/web-core`）只能异步获取 external bundle （`fetchBundle().then`），因此 ReactLynx 必须以 promise 的形式挂载， 使用它的模块需要先 await 该 promise 再读取子路径（否则 `React.memo` 等会从一个 pending 状态的 promise 上读取，结果为 `undefined`）。 启用后还会解析 web 编码的 `@lynx-js/react-umd/{dev,prod}-web` bundle，并将 `bundlePath` 默认设为 `react.web.bundle`。 |
-| <a id="reactlynxexternalspresetoptions-bundlepath"></a>`bundlePath?` | `string` | 将 ReactLynx 运行时 bundle 产出到当前构建产物中，并通过 生成的运行时 public path 加载。 对于常规 Rspeedy 项目，优先使用该选项而非 `url`。除了让 运行时基于 `publicPath` 解析最终 URL 之外，插件还会将 对应的 `@lynx-js/react-umd` bundle 复制到产出的资源中， 因此应用 bundle 可以直接引用它，发布时无需额外的手动 复制步骤。 |
-| <a id="reactlynxexternalspresetoptions-reactumdpackagename"></a>`reactUmdPackageName?` | `string` | 提供 ReactLynx 运行时 bundle 的包名。 为其他发行版封装该插件时（例如 `@byted-lynx/react-umd`），可覆盖该选项。 |
-| <a id="reactlynxexternalspresetoptions-url"></a>`url?` <span className="api-badge api-badge-deprecated">已废弃</span> | `string` | 直接覆盖运行时 bundle 的 URL。 仅当 ReactLynx 运行时托管在当前 构建产物之外（例如 CDN 上）时才使用该选项。与 `bundlePath` 不同，该选项不会向当前编译 产出任何额外资源。  建议优先使用 `bundlePath`，它通过运行时 public path 解析，并支持自动产出资源。 **已废弃.** 已废弃。 |
+| 成员 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| <a id="reactlynxexternalspresetoptions-async"></a>`async?` | `boolean` | `false` | 针对 web 目标，异步加载 ReactLynx 运行时 bundle。 web 运行时（`@lynx-js/web-core`）只能异步获取 external bundle （`fetchBundle().then`），因此 ReactLynx 必须以 promise 的形式挂载， 使用它的模块需要先 await 该 promise 再读取子路径（否则 `React.memo` 等会从一个 pending 状态的 promise 上读取，结果为 `undefined`）。 启用后还会解析 web 编码的 `@lynx-js/react-umd/{dev,prod}-web` bundle，并将 `bundlePath` 默认设为 `react.web.bundle`。 |
+| <a id="reactlynxexternalspresetoptions-bundlepath"></a>`bundlePath?` | `string` | `'react.lynx.bundle'` | 将 ReactLynx 运行时 bundle 产出到当前构建产物中，并通过 生成的运行时 public path 加载。 对于常规 Rspeedy 项目，优先使用该选项而非 `url`。除了让 运行时基于 `publicPath` 解析最终 URL 之外，插件还会将 对应的 `@lynx-js/react-umd` bundle 复制到产出的资源中， 因此应用 bundle 可以直接引用它，发布时无需额外的手动 复制步骤。 |
+| <a id="reactlynxexternalspresetoptions-reactumdpackagename"></a>`reactUmdPackageName?` | `string` | `'@lynx-js/react-umd'` | 提供 ReactLynx 运行时 bundle 的包名。 为其他发行版封装该插件时（例如 `@byted-lynx/react-umd`），可覆盖该选项。 |
+
+#### `ReactLynxExternalsPresetOptions.url?` <span className="api-badge api-badge-deprecated">已废弃</span> \{#reactlynxexternalspresetoptions-url\}
+
+- **类型：** `string`
+
+:::warning 已废弃
+已废弃。
+:::
+
+直接覆盖运行时 bundle 的 URL。
+
+仅当 ReactLynx 运行时托管在当前
+构建产物之外（例如 CDN 上）时才使用该选项。与 `bundlePath` 不同，该选项不会向当前编译
+产出任何额外资源。
+
+ 建议优先使用 `bundlePath`，它通过运行时 public
+path 解析，并支持自动产出资源。
 
 ### `ExternalsPresetDefinitions` \{#externalspresetdefinitions\}
 
