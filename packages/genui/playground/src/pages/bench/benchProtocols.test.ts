@@ -5,14 +5,74 @@
 import { describe, expect, test } from '@rstest/core';
 
 import {
+  createBenchPresetGroups,
   createDefaultBenchGroups,
   getBenchGroupDifferences,
   getBenchProtocolLabel,
   nextBenchComparisonProtocol,
   usesCatalog,
+  withBenchGroupPatch,
   withBenchProtocol,
 } from './benchData.js';
 import { createBenchGroupsFromReport } from './benchHistory.js';
+
+describe('Bench preset group names', () => {
+  test('updates automatic protocol names and preserves the group identity', () => {
+    const group = createBenchPresetGroups('protocol', 'model')[0]!;
+    const html = withBenchProtocol(group, 'html');
+    expect(html).toMatchObject({ id: group.id, name: 'Group 01-HTML' });
+    expect(withBenchProtocol(html, 'openui').name).toBe('Group 01-OpenUI');
+    expect(withBenchProtocol(html, 'a2ui').name).toBe('Group 01-A2UI');
+    const platform = createBenchPresetGroups('platform', 'model')[0]!;
+    expect(withBenchProtocol(platform, 'lynx-xml').name).toBe(
+      'Group 01-Lynx XML',
+    );
+  });
+
+  test('updates automatic model and catalog names without encoding values in their ids', () => {
+    const model = createBenchPresetGroups('model', 'first-model')[0]!;
+    const updated = withBenchGroupPatch(model, { model: 'next-model' });
+    expect(updated).toMatchObject({
+      id: 'preset-model-1',
+      name: 'Group 01-next-model',
+      model: 'next-model',
+    });
+    expect(withBenchGroupPatch(updated, { model: 'third-model' }).name).toBe(
+      'Group 01-third-model',
+    );
+    const catalog = createBenchPresetGroups('catalog', 'model')[0]!;
+    expect(withBenchGroupPatch(catalog, { catalog: 'Minimal Catalog' }))
+      .toMatchObject({
+        id: 'preset-catalog-1',
+        name: 'Group 01-Minimal Catalog',
+      });
+  });
+
+  test('preserves manual names and labels for a different comparison variable', () => {
+    const group = createBenchPresetGroups('protocol', 'model')[0]!;
+    const renamed = withBenchGroupPatch(group, { name: 'My baseline' });
+    expect(withBenchProtocol(renamed, 'html').name).toBe('My baseline');
+    expect(withBenchGroupPatch(group, { model: 'next-model' }).name).toBe(
+      'Group 01-A2UI',
+    );
+    expect(
+      withBenchProtocol(createDefaultBenchGroups('model')[0]!, 'html')
+        .name,
+    ).toBe('Baseline');
+  });
+
+  test('repairs a stale legacy preset name when its configuration changes again', () => {
+    const legacy = {
+      ...createBenchPresetGroups('model', 'old-model')[0]!,
+      id: 'preset-old-model',
+      model: 'current-model',
+    };
+    expect(withBenchGroupPatch(legacy, { model: 'next-model' })).toMatchObject({
+      id: legacy.id,
+      name: 'Group 01-next-model',
+    });
+  });
+});
 
 describe('Bench protocol selection', () => {
   test('restores enabled conversion and reports it as a comparison difference', () => {

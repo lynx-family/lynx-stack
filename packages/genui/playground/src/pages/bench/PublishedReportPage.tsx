@@ -201,11 +201,6 @@ export function PublishedReportPage(
               </p>
             )}
           </div>
-          <p className='publishedReportShareNote'>
-            {report.capabilities?.renderMetrics === 'enabled'
-              ? 'Render metrics were enabled for this job.'
-              : 'Render metrics are unavailable for this job; zero values do not represent measured FMP, TTI, or render duration.'}
-          </p>
         </section>
 
         <section

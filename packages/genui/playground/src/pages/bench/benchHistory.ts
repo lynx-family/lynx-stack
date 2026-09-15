@@ -36,6 +36,7 @@ export interface BenchHistoryConfig {
 export interface BenchHistoryEntry {
   id: string;
   title: string;
+  titleIsCustom?: boolean;
   savedAt: string;
   report: BenchReport | null;
   config: BenchHistoryConfig;

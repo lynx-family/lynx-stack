@@ -12,6 +12,7 @@ import {
 } from '@rstest/core';
 
 import { evaluateScreenshot } from '../agent/common/ui-judge-agent.js';
+import * as requestQueue from '../agent/common/ui-judge-request-queue.js';
 import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 
 const { generate, agentModels } = rstest.hoisted(() => ({
@@ -19,7 +20,7 @@ const { generate, agentModels } = rstest.hoisted(() => ({
     (
       messages: unknown,
       options: { abortSignal?: AbortSignal },
-    ) => Promise<{ object: unknown }>
+    ) => Promise<{ object?: unknown; error?: unknown; finishReason?: string }>
   >(),
   agentModels: [] as Array<{ modelId: string }>,
 }));
@@ -55,8 +56,12 @@ beforeEach(() => {
   });
   generate.mockReset();
   agentModels.length = 0;
+  rstest.spyOn(requestQueue, 'getUiJudgeRequestQueue').mockReturnValue(
+    new requestQueue.UiJudgeRequestQueue({ intervalMs: 0 }),
+  );
 });
 afterEach(() => {
+  rstest.restoreAllMocks();
   if (previousConfig === undefined) delete process.env[GENUI_MODEL_CONFIG_ENV];
   else process.env[GENUI_MODEL_CONFIG_ENV] = previousConfig;
 });
@@ -91,7 +96,8 @@ describe('GenUI screenshot evaluation', () => {
       }]);
       expect(options).toMatchObject({
         maxSteps: 1,
-        modelSettings: { maxOutputTokens: 1024 },
+        structuredOutput: { jsonPromptInjection: true },
+        modelSettings: { maxOutputTokens: 1024, maxRetries: 0 },
         providerOptions: { openai: { reasoningEffort: 'low' } },
       });
     }
@@ -103,6 +109,10 @@ describe('GenUI screenshot evaluation', () => {
     });
     await evaluateScreenshot({ screenshotDataUrl, task: 'Build a greeting' });
     expect(agentModels[0]?.modelId).toBe('default-upstream');
+    expect(requestQueue.getUiJudgeRequestQueue).toHaveBeenCalledWith(
+      'https://default.example/v1',
+      'default-upstream',
+    );
     for (const [, options] of generate.mock.calls) {
       expect(options).toMatchObject({
         modelSettings: { maxOutputTokens: 2048 },
@@ -150,6 +160,7 @@ describe('GenUI screenshot evaluation', () => {
       task: 'Build a greeting',
       signal: controller.signal,
     });
+    await rstest.waitUntil(() => generate.mock.calls.length === 2);
     controller.abort();
     await expect(pending).rejects.toThrow('aborted');
     expect(
@@ -182,11 +193,60 @@ describe('GenUI screenshot evaluation', () => {
         return error;
       });
     await rstest.waitUntil(() =>
-      generate.mock.calls.every(([, options]) => options.abortSignal?.aborted)
+      generate.mock.calls.length >= 2
+      && generate.mock.calls.every(([, options]) =>
+        options.abortSignal?.aborted
+      )
     );
     expect(finished).toBe(false);
     settle();
     expect(await pending).toEqual(new Error('Dimension failed'));
     expect(finished).toBe(true);
+  });
+
+  test('retries only a failed dimension, including SDK result errors', async () => {
+    let now = 0;
+    const waits: number[] = [];
+    const onPhase = rstest.fn();
+    rstest.mocked(requestQueue.getUiJudgeRequestQueue).mockReturnValue(
+      new requestQueue.UiJudgeRequestQueue({
+        intervalMs: 0,
+        now: () => now,
+        sleep: (delay) => {
+          waits.push(delay);
+          now += delay;
+          return Promise.resolve();
+        },
+      }),
+    );
+    generate.mockResolvedValueOnce({
+      finishReason: 'error',
+      error: { statusCode: 429, message: 'RPM limit exceeded' },
+    });
+    generate.mockResolvedValue({
+      object: { score: 4, reason: 'Evidence.', summary: 'Visible details.' },
+    });
+    const result = await evaluateScreenshot({
+      model: 'Selected',
+      screenshotDataUrl,
+      task: 'Build a greeting',
+      onPhase,
+    });
+    expect(result).toMatchObject({ score: 4, geqiScore: 80 });
+    expect(result.dimensions).toHaveLength(4);
+    expect(generate).toHaveBeenCalledTimes(6);
+    expect(waits).toContain(60_000);
+    expect(onPhase).toHaveBeenCalledWith('judge-retry');
+    expect(onPhase).toHaveBeenLastCalledWith('judge');
+    const prompts = generate.mock.calls.map(([messages]) =>
+      JSON.stringify(messages)
+    );
+    expect(
+      prompts.filter(prompt =>
+        prompt.includes('Dimension: Visual Correctness')
+      ),
+    )
+      .toHaveLength(2);
+    expect(new Set(prompts).size).toBe(5);
   });
 });

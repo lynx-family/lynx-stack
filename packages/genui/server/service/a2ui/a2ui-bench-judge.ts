@@ -57,6 +57,8 @@ export interface BenchUiJudgeCapability {
 }
 
 export interface BenchUiJudgeResult {
+  /** Model retries are owned by the evaluator; do not recapture after scoring. */
+  retryable?: false;
   dimensions?: BenchUiJudgeDimensionResult[];
   errors: string[];
   geqiScore?: number;
@@ -468,6 +470,7 @@ export async function runBenchUiJudgeRequest(
 
   let reportScreenshot: string | undefined;
   let payload: ScreenshotEvaluation;
+  let scoringStarted = false;
   const captureController = new AbortController();
   try {
     options.onPhase?.('screenshot-queued');
@@ -502,6 +505,7 @@ export async function runBenchUiJudgeRequest(
     });
     if ('status' in captured) return captured;
     reportScreenshot = captured.reportScreenshot;
+    scoringStarted = true;
     options.onPhase?.('judge-queued');
     payload = await runStage(
       options.scheduling?.evaluation,
@@ -512,6 +516,9 @@ export async function runBenchUiJudgeRequest(
           task: options.scenario.judgeTask ?? options.scenario.prompt,
           model: options.model,
           signal,
+          ...(options.onPhase
+            ? { onPhase: options.onPhase }
+            : {}),
         });
       },
     );
@@ -522,6 +529,7 @@ export async function runBenchUiJudgeRequest(
         : [`GenUI screenshot evaluation failed: ${toErrorMessage(error)}`],
       score: 0,
       status: 'failed',
+      ...(scoringStarted ? { retryable: false as const } : {}),
       ...(reportScreenshot ? { screenshotDataUrl: reportScreenshot } : {}),
       warnings,
     };
@@ -577,6 +585,7 @@ export async function runBenchUiJudgeRequest(
     score: complete ? score : 0,
     ...(reportScreenshot ? { screenshotDataUrl: reportScreenshot } : {}),
     status: complete ? 'complete' : 'failed',
+    ...(complete ? {} : { retryable: false as const }),
     ...(complete && summary ? { summary } : {}),
     warnings: resultWarnings,
   };

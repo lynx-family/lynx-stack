@@ -360,6 +360,41 @@ describe('runGenuiBenchUiJudge', () => {
     });
   });
 
+  test.each(['html', 'a2ui'] as const)(
+    '%s does not repeat capture or evaluation after the evaluator exhausts its retries',
+    async (protocol) => {
+      const phases: string[] = [];
+      const evaluate = rstest.fn(() =>
+        Promise.reject(new Error('RPM limit exceeded'))
+      );
+      const capture = rstest.fn(() =>
+        Promise.resolve(evaluationResponse(geqiResponse(4)))
+      );
+      const result = await runGenuiBenchUiJudge({
+        artifact: protocol === 'a2ui'
+          ? { protocol, messages: [] }
+          : { protocol, rawText: '<!doctype html><html></html>' },
+        scenario: { prompt: 'Build a greeting' },
+        session: { screenshotPath: 'browser/html' },
+        onPhase: phase => phases.push(phase),
+        evaluate,
+        retryDelayMs: 0,
+      }, capture);
+      expect(capture).toHaveBeenCalledTimes(1);
+      expect(evaluate).toHaveBeenCalledTimes(1);
+      expect(phases).not.toContain('judge-retry');
+      expect(result).toMatchObject({
+        status: 'failed',
+        score: 0,
+        retryable: false,
+        errors: ['GenUI screenshot evaluation failed: RPM limit exceeded'],
+        screenshotDataUrl: expect.stringMatching(
+          /^data:image\/png;base64,/u,
+        ) as unknown,
+      });
+    },
+  );
+
   test('returns the final result after both sidecar attempts fail', async () => {
     let calls = 0;
     const result = await runGenuiBenchUiJudge(

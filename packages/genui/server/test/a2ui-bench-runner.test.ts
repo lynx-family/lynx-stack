@@ -27,6 +27,7 @@ import type {
   BenchJobRequest,
   BenchRunResult,
 } from '../service/common/bench/types.js';
+import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 import type { ChatMessage } from '../service/common/types.js';
 
 rstest.mock('../service/a2ui/a2ui-bench-judge.js', { mock: true });
@@ -143,6 +144,85 @@ function screenshotDataUrlForBytes(bytes: number): string {
 }
 
 describe('A2UI Bench UI Judge integration', () => {
+  test.each([true, false])(
+    'retains legacy model preset identities through generation and reporting (success: %s)',
+    async (success) => {
+      const model = 'public-model';
+      rstest.stubEnv(
+        GENUI_MODEL_CONFIG_ENV,
+        JSON.stringify({
+          [model]: {
+            model,
+            apiKey: 'private-key',
+            baseURL: 'https://provider.example/v1',
+          },
+        }),
+      );
+      try {
+        const benchRequest = request(false);
+        const groupId = `preset-${model}`;
+        const scenarioId = `scenario-${model}`;
+        benchRequest.groups = [{
+          ...group,
+          id: groupId,
+          model,
+          protocol: 'openui',
+          profile: 'matched-core',
+        }];
+        benchRequest.scenarios = [{
+          ...benchRequest.scenarios[0]!,
+          id: scenarioId,
+        }];
+        const store = getBenchJobStore();
+        const job = store.createJob(benchRequest, 1);
+        await runBenchJob(job.id, {
+          adapters: {
+            openui: {
+              protocol: 'openui',
+              generate: () => {
+                if (!success) throw new Error(`${model} private-key`);
+                return Promise.resolve({
+                  attempts: [],
+                  finalValid: true,
+                  finalText: 'root = Text("ready")',
+                  finalErrors: [],
+                });
+              },
+            },
+          },
+        });
+        expect(job.report?.results[0]).toMatchObject({
+          groupId,
+          scenarioId,
+          ok: success,
+        });
+        expect(job.report?.groups[0]?.id).toBe(groupId);
+        expect(job.report?.summaries[0]).toMatchObject({
+          groupId,
+          runCount: 1,
+        });
+        expect(job.report?.runProgress?.[0]).toMatchObject({
+          groupId,
+          scenarioId,
+          phase: success ? 'complete' : 'failed',
+          generation: success ? 'complete' : 'failed',
+        });
+        expect(
+          job.events.find(event =>
+            event.event === (success ? 'run-complete' : 'run-error')
+          )?.data,
+        )
+          .toMatchObject({
+            runProgress: { groupId, scenarioId },
+            result: { groupId, scenarioId },
+          });
+        expect(JSON.stringify(job.report)).not.toContain('private-key');
+      } finally {
+        rstest.unstubAllEnvs();
+      }
+    },
+  );
+
   test('routes HTML source to Judge and preserves HTML results and summaries', async () => {
     const rawText =
       '<!doctype html><html><head></head><body>Hello</body></html>';

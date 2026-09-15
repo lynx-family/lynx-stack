@@ -157,6 +157,7 @@ describe('local historical Bench reports', () => {
       expect(html).toContain('1m 28s');
       expect(html).toContain(`dateTime="${report.startedAt}"`);
       expect(html).toContain(`dateTime="${report.completedAt}"`);
+      expect(html).not.toMatch(/FMP|TTI|<th>Render<\/th>/u);
     }
     const history = renderToStaticMarkup(React.createElement(BenchHistoryRail, {
       activeId: entry.id,
@@ -409,7 +410,6 @@ describe('fixed read-only report template', () => {
         '11,408',
         '4 / 5',
         '63.5 / 100',
-        'zero values do not represent measured FMP',
       ]
     ) expect(html).toContain(text);
     expect(html).toContain(`src="${PNG}"`);

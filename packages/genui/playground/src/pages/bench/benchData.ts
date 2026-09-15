@@ -76,6 +76,37 @@ export function getBenchProtocolLabel(
     ?.label ?? protocol;
 }
 
+function getBenchGroupNameLabel(group: BenchGroup): string | undefined {
+  switch (group.variable) {
+    case 'protocol':
+      return getBenchProtocolLabel(group.protocol);
+    case 'model':
+      return group.model;
+    case 'catalog':
+      return group.catalog;
+    default:
+      return undefined;
+  }
+}
+
+export function withBenchGroupPatch(
+  group: BenchGroup,
+  patch: Partial<BenchGroup>,
+): BenchGroup {
+  const next = { ...group, ...patch };
+  if (patch.name !== undefined) return next;
+  const match = /^(Group \d+-)(.+)$/.exec(group.name);
+  const label = getBenchGroupNameLabel(next);
+  if (
+    match && label !== undefined
+    && (match[2] === getBenchGroupNameLabel(group)
+      || group.id === `preset-${match[2]!.toLowerCase().replaceAll(' ', '-')}`)
+  ) {
+    next.name = `${match[1]}${label}`;
+  }
+  return next;
+}
+
 export function withBenchProtocol(
   group: BenchGroup,
   protocol: BenchProtocol,
@@ -83,7 +114,11 @@ export function withBenchProtocol(
   if (protocol === 'a2ui') {
     return group.protocol === 'a2ui'
       ? group
-      : { ...group, protocol, profile: 'native', catalog: 'Full Catalog' };
+      : withBenchGroupPatch(group, {
+        protocol,
+        profile: 'native',
+        catalog: 'Full Catalog',
+      });
   }
   let profile = group.profile;
   if (protocol === 'openui') profile = 'matched-core';
@@ -91,15 +126,14 @@ export function withBenchProtocol(
   let catalog = group.catalog === 'none' ? 'Full Catalog' : group.catalog;
   if (profile === 'matched-core') catalog = 'Core Catalog';
   if (isDocumentBenchProtocol(protocol)) catalog = 'none';
-  return {
-    ...group,
+  return withBenchGroupPatch(group, {
     protocol,
     profile,
     catalog,
     ...(protocol === 'lynx-xml'
       ? { enableHtmlFragment: group.enableHtmlFragment === true }
       : {}),
-  };
+  });
 }
 
 export function nextBenchComparisonProtocol(
@@ -198,7 +232,7 @@ export function createBenchPresetGroups(
   ): BenchGroup => ({
     ...base,
     ...patch,
-    id: `preset-${name.toLowerCase().replaceAll(' ', '-')}`,
+    id: patch.id ?? `preset-${name.toLowerCase().replaceAll(' ', '-')}`,
     name: `Group ${String(index).padStart(2, '0')}-${name}`,
   });
   switch (preset) {

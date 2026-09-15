@@ -22,6 +22,7 @@ import {
   getBenchProtocolLabel,
   inferBenchVariable,
   usesCatalog,
+  withBenchGroupPatch,
   withBenchProtocol,
 } from './benchData.js';
 import type {
@@ -283,7 +284,7 @@ function reconcileBenchGroupModels(
   return groups.map((group) =>
     env.models.some((model) => model.id === group.model)
       ? group
-      : { ...group, model: selectedModel }
+      : withBenchGroupPatch(group, { model: selectedModel })
   );
 }
 
@@ -624,20 +625,32 @@ export function upsertBenchHistoryEntry(
   entry: BenchHistoryEntry,
 ): BenchHistoryEntry[] {
   const jobId = entry.report?.jobId;
-  const next = entries.filter((item) => {
+  const matches = (item: BenchHistoryEntry) => {
     // Redacted identifiers cannot establish that two saved reports are the same.
     const sameReport = Boolean(jobId && BENCH_JOB_ID.test(jobId))
       && item.report?.jobId === jobId;
-    return item.id !== entry.id && !sameReport;
-  });
-  return [entry, ...next];
+    return item.id === entry.id || sameReport;
+  };
+  const previous = entries.find((item) => matches(item));
+  return [
+    previous?.titleIsCustom
+      ? { ...entry, title: previous.title, titleIsCustom: true }
+      : entry,
+    ...entries.filter((item) => !matches(item)),
+  ];
 }
 
 export function saveBenchHistoryEntry(
   entries: BenchHistoryEntry[],
   entry: BenchHistoryEntry,
 ): BenchHistoryEntry[] {
-  return [entry, ...entries.filter((item) => item.id !== entry.id)];
+  const previous = entries.find((item) => item.id === entry.id);
+  return [
+    previous?.titleIsCustom
+      ? { ...entry, title: previous.title, titleIsCustom: true }
+      : entry,
+    ...entries.filter((item) => item.id !== entry.id),
+  ];
 }
 
 function getErrorMessage(error: unknown): string {
@@ -674,7 +687,7 @@ export function updateBenchGroupById(
   patch: Partial<BenchGroup>,
 ): BenchGroup[] {
   return groups.map((group) =>
-    group.id === id ? { ...group, ...patch } : group
+    group.id === id ? withBenchGroupPatch(group, patch) : group
   );
 }
 
@@ -1809,13 +1822,29 @@ export function BenchPage() {
     setHistoryItems((current) => current.filter((entry) => entry.id !== id));
   }, [setHistoryItems]);
 
+  const renameHistoryEntry = useCallback((id: string, title: string) => {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    setHistoryItems((current) =>
+      current.map((entry) =>
+        entry.id === id
+          ? { ...entry, title: trimmed, titleIsCustom: true }
+          : entry
+      )
+    );
+  }, [setHistoryItems]);
+
   const copyHistoryEntry = useCallback((entry: BenchHistoryEntry) => {
     const draft = createBenchDraftHistoryEntry(
       entry.config.groups,
       entry.config.scenarios,
       entry.config.settings,
     );
-    const copied = { ...draft, title: `${entry.title} copy` };
+    const copied = {
+      ...draft,
+      title: `${entry.title} copy`,
+      titleIsCustom: true,
+    };
     setGroups(cloneBenchGroups(copied.config.groups));
     setScenarios(cloneBenchScenarios(copied.config.scenarios));
     setSettings(cloneBenchSettings(copied.config.settings));
@@ -1904,6 +1933,7 @@ export function BenchPage() {
           storageNotice={historyStorageNotice}
           onDelete={deleteHistoryEntry}
           onCopy={copyHistoryEntry}
+          onRename={renameHistoryEntry}
           onNew={resetBench}
           onRestore={restoreHistoryEntry}
         />

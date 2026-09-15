@@ -208,9 +208,6 @@ export function BenchReportPanel(props: {
                     <th>Comparison group</th>
                     <th>Tokens</th>
                     <th>Agent</th>
-                    <th>FMP</th>
-                    <th>TTI</th>
-                    <th>Render</th>
                     <th>Attempts</th>
                     <th>Judge</th>
                   </tr>
@@ -249,9 +246,6 @@ export function BenchReportPanel(props: {
                             {deltaText(summary.avgAgentMs, baseline.avgAgentMs)}
                           </small>
                         </td>
-                        <td>{formatMs(summary.avgFmpMs)}</td>
-                        <td>{formatMs(summary.avgTtiMs)}</td>
-                        <td>{formatMs(summary.avgRenderMs)}</td>
                         <td>{summary.avgAttempts.toFixed(1)}x</td>
                         <td>
                           {formatSummaryJudgeMetric(
@@ -309,8 +303,7 @@ export function BenchReportPanel(props: {
             <div className='benchReportNotes'>
               <span>
                 Agent, token, attempts, and validation data are collected by the
-                server. Unavailable Render or UI Judge data is explicitly
-                marked.
+                server. Unavailable UI Judge data is explicitly marked.
               </span>
             </div>
             {props.report.warnings && props.report.warnings.length > 0

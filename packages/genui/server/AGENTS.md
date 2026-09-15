@@ -328,6 +328,20 @@ expose these routes publicly without authentication.
 
 ## Rate Limiting
 
+Screenshot model scoring has a separate process-local outbound queue, shared
+by resolved upstream base URL and model across Bench jobs. It allows two active
+model calls and starts at most one per second. Each of the five dimensions is
+evaluated independently. Scoring uses prompt-injected JSON instructions with
+strict local schema validation, so the selected model need not support native
+`json_schema` response formats. Only a failed dimension is retried, for at most three
+attempts with SDK retries disabled. `Retry-After` takes precedence; without it,
+HTTP 429 pauses the shared queue for 60 seconds, while other transient errors
+use bounded exponential backoff. Waits honor the Judge abort/deadline signal.
+Completed dimensions and the captured screenshot are reused. A final scoring
+failure does not restart capture or rerun successful dimensions. This queue
+does not govern generation calls or other server replicas using the same
+upstream quota.
+
 The routes at `/a2ui/chat`, `/a2ui/stream`, `/a2ui/action`,
 `/openui/stream`, `/mcp-apps/stream`, `/lynx-xml/stream`, and `/html/stream`
 share an in-process fixed-window rate limiter keyed by client IP

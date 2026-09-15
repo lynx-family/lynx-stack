@@ -6,8 +6,11 @@ import { Agent } from '@mastra/core/agent';
 import { z } from 'zod';
 
 import { createLLMProvider } from './openai-provider.js';
+import { getUiJudgeRequestQueue } from './ui-judge-request-queue.js';
+import type { UiJudgeRequestQueue } from './ui-judge-request-queue.js';
 import { createAgentStepLogger } from '../../service/common/agent-step-logger.js';
 import { buildOpenAIRunOptions } from '../../service/common/provider.js';
+import { finalizeResult } from '../../service/common/result.js';
 
 const resultSchema = z.object({
   score: z.number().int().min(0).max(5),
@@ -86,6 +89,7 @@ export interface ScreenshotEvaluationRequest {
   reference?: string;
   model?: string;
   signal?: AbortSignal;
+  onPhase?: (phase: 'judge' | 'judge-retry') => void;
 }
 
 export interface ScreenshotEvaluation {
@@ -110,8 +114,11 @@ export type ScreenshotEvaluator = (
 function createJudgeAgent(modelName?: string): {
   agent: Agent;
   model?: string;
+  queue: UiJudgeRequestQueue;
 } {
-  const { buildModel, model } = createLLMProvider({ model: modelName });
+  const { buildModel, model, baseURL } = createLLMProvider({
+    model: modelName,
+  });
   return {
     agent: new Agent({
       id: 'ui-judge-agent',
@@ -123,6 +130,7 @@ function createJudgeAgent(modelName?: string): {
     // Keep the configured model name for run options so model-specific limits
     // and reasoning settings are resolved from the shared model configuration.
     model: modelName,
+    queue: getUiJudgeRequestQueue(baseURL, model),
   };
 }
 
@@ -166,10 +174,10 @@ export async function evaluateScreenshot(
 export function createScreenshotEvaluator(
   modelName?: string,
 ): { evaluate: ScreenshotEvaluator } {
-  const { agent, model } = createJudgeAgent(modelName);
+  const { agent, model, queue } = createJudgeAgent(modelName);
   return {
     evaluate: async (request: ScreenshotEvaluationRequest) =>
-      evaluateScreenshotWithAgent(request, agent, model),
+      evaluateScreenshotWithAgent(request, agent, model, queue),
   };
 }
 
@@ -177,6 +185,7 @@ async function evaluateScreenshotWithAgent(
   request: ScreenshotEvaluationRequest,
   agent: Agent,
   model: string | undefined,
+  queue: UiJudgeRequestQueue,
 ): Promise<ScreenshotEvaluation> {
   if (!request.task.trim()) {
     throw new Error('A screenshot evaluation task is required.');
@@ -186,27 +195,39 @@ async function evaluateScreenshotWithAgent(
   const signal = request.signal
     ? AbortSignal.any([request.signal, controller.signal])
     : controller.signal;
-  const evaluations = JUDGE_DIMENSIONS.map(async (dimension) => {
-    const response = await agent.generate([{
-      role: 'user',
-      content: [
-        {
-          type: 'image',
-          image: request.screenshotDataUrl,
-          mediaType: 'image/png',
-        },
-        { type: 'text', text: buildJudgePrompt(dimension, request) },
-      ],
-    }], {
-      ...buildOpenAIRunOptions({ model }, signal, 2048),
-      ...createAgentStepLogger<z.infer<typeof resultSchema>>({
-        model,
-      }, 'ui-judge'),
-      maxSteps: 1,
-      structuredOutput: { schema: resultSchema },
-    });
-    return resultSchema.parse(response.object);
-  });
+  const evaluations = JUDGE_DIMENSIONS.map((dimension) =>
+    queue.run(
+      async () => {
+        request.onPhase?.('judge');
+        const response = await agent.generate([{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              image: request.screenshotDataUrl,
+              mediaType: 'image/png',
+            },
+            { type: 'text', text: buildJudgePrompt(dimension, request) },
+          ],
+        }], {
+          ...buildOpenAIRunOptions({ model, maxRetries: 0 }, signal, 2048),
+          ...createAgentStepLogger<z.infer<typeof resultSchema>>({
+            model,
+          }, 'ui-judge'),
+          maxSteps: 1,
+          structuredOutput: {
+            schema: resultSchema,
+            // Compatible endpoints may reject json_schema; validate JSON locally.
+            jsonPromptInjection: true,
+          },
+        });
+        await finalizeResult(response);
+        return resultSchema.parse(response.object);
+      },
+      signal,
+      () => request.onPhase?.('judge-retry'),
+    )
+  );
   const results = await Promise.all(evaluations).catch(
     async (error: unknown) => {
       controller.abort();

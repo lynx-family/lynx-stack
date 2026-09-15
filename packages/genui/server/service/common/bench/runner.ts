@@ -17,7 +17,7 @@ import type {
   ProtocolBenchJudgePayload,
 } from './protocol-adapter.js';
 import type { ProtocolBenchScenario } from './protocol-types.js';
-import { sanitizeBenchPublicValue } from './redaction.js';
+import { sanitizeBenchPlanValue } from './redaction.js';
 import { getBenchJobStore } from './store.js';
 import type {
   BenchCatalogLabel,
@@ -320,7 +320,7 @@ async function runA2UINativeOne(
           },
         }
         : {}),
-      result: sanitizeBenchPublicValue({
+      result: sanitizeBenchPlanValue({
         id: runId,
         groupId: item.group.id,
         groupName: item.group.name,
@@ -363,13 +363,13 @@ async function runA2UINativeOne(
         usage: result.usage,
         messages: result.messages,
         text: result.text,
-      }, request.provider) as BenchRunResult,
+      }, request) as BenchRunResult,
     };
   } catch (error) {
     const agentMs = performance.now() - startedAt;
     const message = error instanceof Error ? error.message : String(error);
     return {
-      result: sanitizeBenchPublicValue({
+      result: sanitizeBenchPlanValue({
         id: runId,
         groupId: item.group.id,
         groupName: item.group.name,
@@ -395,7 +395,7 @@ async function runA2UINativeOne(
         outputChars: 0,
         errors: [message],
         error: message,
-      }, request.provider) as BenchRunResult,
+      }, request) as BenchRunResult,
     };
   }
 }
@@ -541,9 +541,9 @@ async function runProtocolAdapterOne(
       ...(artifact.finalText ? { text: artifact.finalText } : {}),
     };
     return {
-      result: sanitizeBenchPublicValue(
+      result: sanitizeBenchPlanValue(
         result,
-        request.provider,
+        request,
       ) as BenchRunResult,
       ...(judgePayload
         ? {
@@ -569,7 +569,7 @@ async function runProtocolAdapterOne(
     const agentMs = performance.now() - startedAt;
     const message = error instanceof Error ? error.message : String(error);
     return {
-      result: sanitizeBenchPublicValue({
+      result: sanitizeBenchPlanValue({
         id: runId,
         groupId: item.group.id,
         groupName: item.group.name,
@@ -595,7 +595,7 @@ async function runProtocolAdapterOne(
         outputChars: 0,
         errors: [message],
         error: message,
-      }, request.provider) as BenchRunResult,
+      }, request) as BenchRunResult,
     };
   }
 }
@@ -676,7 +676,7 @@ async function finishRun(
   const errors = [...result.errors, ...judge.errors];
   const warnings = [...(result.judgeWarnings ?? []), ...judge.warnings];
   const ok = result.ok && judge.status !== 'failed';
-  return sanitizeBenchPublicValue({
+  return sanitizeBenchPlanValue({
     ...result,
     ok,
     status: ok ? 'complete' : 'failed',
@@ -698,7 +698,7 @@ async function finishRun(
     ...(judge.screenshotDataUrl
       ? { screenshotDataUrl: judge.screenshotDataUrl }
       : {}),
-  }, request.provider) as BenchRunResult;
+  }, request) as BenchRunResult;
 }
 
 /*
@@ -889,7 +889,7 @@ function buildReport(
     ),
     summary,
   };
-  return sanitizeBenchPublicValue(report, request.provider) as BenchReport;
+  return sanitizeBenchPlanValue(report, request, jobId) as BenchReport;
 }
 
 export function startBenchJob(jobId: string): void {

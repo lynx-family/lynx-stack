@@ -128,7 +128,7 @@ async function runWithBoundedRetry(
     attempt < attemptCount && result.status === 'failed';
     attempt++
   ) {
-    if (isLocalSafetyRejection(result)) break;
+    if (result.retryable === false || isLocalSafetyRejection(result)) break;
     options.onPhase?.('judge-retry');
     if (!await waitForRetry(retryDelayMs, options.signal)) break;
 
@@ -188,10 +188,10 @@ export async function runGenuiBenchUiJudge(
             scheduling: options.scheduling,
             onPhase: options.onPhase,
             ...(options.signal ? { signal: options.signal } : {}),
-            ...(options.evaluate ? { evaluate: options.evaluate } : {}),
             ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
           },
           captureScreenshot,
+          options.evaluate,
         ),
     );
   }
@@ -244,10 +244,10 @@ export async function runGenuiBenchUiJudge(
           scheduling: options.scheduling,
           onPhase: options.onPhase,
           ...(options.signal ? { signal: options.signal } : {}),
-          ...(options.evaluate ? { evaluate: options.evaluate } : {}),
           ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
         },
         captureScreenshot,
+        options.evaluate,
       ),
   );
 }

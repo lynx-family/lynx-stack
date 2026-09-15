@@ -37,6 +37,8 @@ test(
           typeof init?.body === 'string' ? init.body : '',
         ) as Record<string, unknown>;
         requests.push(body);
+        expect(body.response_format).toBeUndefined();
+        expect(JSON.stringify(body.messages)).toContain('score');
         const content = JSON.stringify({
           score: 4,
           reason: 'The requested greeting is visible.',
