@@ -57,7 +57,7 @@ function testingLoader(
       ...(typeof compat.removeComponentAttrRegex === 'string' && {
         removeComponentAttrRegex: compat.removeComponentAttrRegex,
       }),
-      darkMode: false,
+      darkMode: compat.darkMode ?? false,
     }
     : (compat ?? false);
   const result = transformReactLynxSync(
