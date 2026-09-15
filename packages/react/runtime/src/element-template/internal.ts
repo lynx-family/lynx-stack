@@ -67,3 +67,4 @@ export {
   adaptSpreadAttrSlot,
 } from './runtime/template/attr-slot-plan.js';
 export { __ElementTemplatePage } from './runtime/page/authored-page.js';
+export { __page } from './runtime/page/page.js';
