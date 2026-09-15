@@ -53,8 +53,8 @@
     "@rstest/core": "catalog:rstest",
     "@types/css-tree": "^3.2.0",
     "@types/object.groupby": "^1.0.4",
-    "css-loader": "^7.1.4",
-    "webpack": "^5.109.2"
+    "css-loader": "^7.1.5",
+    "webpack": "^5.110.3"
   },
   "engines": {
     "node": "^18.14 || >=19.4"
