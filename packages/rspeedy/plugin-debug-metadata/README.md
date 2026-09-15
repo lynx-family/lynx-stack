@@ -1,8 +1,8 @@
 # `@lynx-js/debug-metadata-rsbuild-plugin`
 
-Emits `debug-metadata.json` alongside each Lynx template build, serves it via dev-server endpoints, and repoints JS / tasm debug URLs at the unified file. Consumed by reverse-symbolication services and element inspectors.
+Emits `debug-metadata.json` alongside Lynx template builds (`lynx` / `lynx-*` environments; skipped in local production builds and removed from non-development output unless `DEBUG` is set), serves it via dev-server endpoints, and repoints JS / tasm debug URLs at the unified file. Consumed by reverse-symbolication services and element inspectors.
 
-**Auto-registered by `@lynx-js/rspeedy` as a default plugin** — Rspeedy users should not apply it explicitly.
+**Registered by `pluginLynx`** (which Rspeedy and DSL plugins apply); apps should not add it.
 
 ## What lands on disk
 
@@ -53,11 +53,12 @@ The legacy `debug-info.json` is **no longer written to disk** — its contents a
 
 ## Contents
 
-- `pluginLynxDebugMetadata` — the Rsbuild plugin wrapper (the only public export), applied by `applyDefaultPlugins` in `@lynx-js/rspeedy/core`. Internally it taps `LynxTemplatePlugin.beforeEncode` to assemble + emit the metadata asset and to rewrite JS / CSS source-map trailers, and `beforeEmit` to enrich the asset with `tasmSection` paths and bytecode debug info.
+- `pluginLynxDebugMetadata` — the Rsbuild plugin wrapper, registered by `pluginLynx`. Internally it taps `LynxTemplatePlugin.beforeEncode` to assemble + emit the metadata asset and to rewrite JS / CSS source-map trailers, and `beforeEmit` to enrich the asset with `tasmSection` paths and bytecode debug info.
+- `DEBUG_METADATA_ASSET_NAME` and `rewriteSourceMappingURLs` — the asset file name and the source-map trailer rewriter.
 
 ## Convention for plugin authors
 
-Any rsbuild plugin that drives `LynxTemplatePlugin` (DSL plugins like `pluginReactLynx`, or custom local plugins) **must** publish the plugin class via the standard exposure:
+`pluginLynx` already publishes `LynxTemplatePlugin` via the standard exposure, so DSL plugins built on it (such as `pluginReactLynx`) need nothing extra. A custom plugin that drives `LynxTemplatePlugin` without `pluginLynx` has to publish the class itself:
 
 ```ts
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
@@ -75,4 +76,4 @@ export function myPlugin() {
 }
 ```
 
-`pluginLynxDebugMetadata` reads this exposure to discover where to tap the template hook chain. Setup throws fast with an actionable error if no exposure is found, so missing the convention is a build-time error rather than a silent miss of `debug-metadata.json`.
+`pluginLynxDebugMetadata` reads this exposure to discover where to tap the template hook chain. Without it, the plugin silently skips the environment and no `debug-metadata.json` is emitted.

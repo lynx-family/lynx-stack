@@ -45,7 +45,7 @@ import { validateConfig } from './validate.js'
  */
 export interface PluginReactLynxOptions {
   /**
-   * Enable UI source map generation and debug-metadata asset emission.
+   * Generate UI source maps in the main-thread transform.
    *
    * @defaultValue `false`
    */
@@ -89,17 +89,20 @@ export interface PluginReactLynxOptions {
    *
    * By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.
    *
-   * ```js
-   * import { defineConfig } from '@lynx-js/rspeedy'
+   * ```ts
+   * // rsbuild.config.ts
+   * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+   * import { defineConfig } from '@rsbuild/core'
    *
    * export default defineConfig({
+   *  environments: { lynx: {} },
    *  plugins: [
    *    pluginReactLynx({
    *      enableCSSInheritance: true,
    *      customCSSInheritanceList: ['direction', 'overflow']
    *    }),
    *  ],
-   * }
+   * })
    * ```
    *
    * @defaultValue `undefined`
@@ -328,7 +331,7 @@ export interface PluginReactLynxOptions {
 
   /**
    * Merge same string literals in JS and Lepus to reduce output bundle size.
-   * Set to `false` to disable.
+   * Set to `false` to disable. Only takes effect when chunk splitting is disabled.
    *
    * @defaultValue false
    */

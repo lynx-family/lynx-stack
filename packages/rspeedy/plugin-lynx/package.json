@@ -1,7 +1,7 @@
 {
   "name": "@lynx-js/rsbuild-plugin",
   "version": "0.1.2",
-  "description": "An Rsbuild plugin that builds a Lynx app with the Rsbuild CLI directly, without the Rspeedy CLI.",
+  "description": "The Lynx build engine for Rsbuild; Rspeedy and DSL plugins apply it for you.",
   "keywords": [
     "rsbuild",
     "Lynx",

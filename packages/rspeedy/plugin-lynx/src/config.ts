@@ -59,6 +59,7 @@ export interface LynxFilename {
    *
    * - `[name]`: the name of the entry.
    * - `[platform]`: the name of the Rsbuild environment.
+   * - `[contenthash]`: the hash of the bundle content.
    */
   bundle?: BundleFilename | undefined
 }

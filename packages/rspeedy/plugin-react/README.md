@@ -23,11 +23,13 @@ npm install -D @lynx-js/react-rsbuild-plugin
 
 <!-- eslint-disable -->
 
-```js
+```ts
+// rsbuild.config.ts
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
-import { defineConfig } from '@lynx-js/rspeedy'
+import { defineConfig } from '@rsbuild/core'
 
 export default defineConfig({
+  environments: { lynx: {} },
   plugins: [
     pluginReactLynx(),
   ],

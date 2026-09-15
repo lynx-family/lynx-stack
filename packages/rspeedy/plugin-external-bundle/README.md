@@ -26,11 +26,13 @@ npm install -D @lynx-js/react-umd
 ## Usage
 
 ```ts
-// lynx.config.ts
+// rsbuild.config.ts
 import { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin'
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
 
-export default {
+export default defineConfig({
+  environments: { lynx: {} },
   plugins: [
     pluginReactLynx(),
     pluginExternalBundle({
@@ -52,7 +54,7 @@ export default {
       },
     }),
   ],
-}
+})
 ```
 
 If your external bundle request key already matches the produced section names,

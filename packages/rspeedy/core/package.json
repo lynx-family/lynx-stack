@@ -1,9 +1,8 @@
 {
   "name": "@lynx-js/rspeedy",
   "version": "0.17.2",
-  "description": "A webpack/rspack-based frontend toolchain for Lynx",
+  "description": "The Rspack-based build tool for Lynx.",
   "keywords": [
-    "webpack",
     "rspack",
     "Lynx",
     "ReactLynx"

@@ -23,12 +23,16 @@ npm install -D @lynx-js/qrcode-rsbuild-plugin
 
 <!-- eslint-disable -->
 
-```js
+```ts
+// rsbuild.config.ts
 import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
 
-export default {
-  plugins: [pluginQRCode()],
-}
+export default defineConfig({
+  environments: { lynx: {} },
+  plugins: [pluginReactLynx(), pluginQRCode()],
+})
 ```
 
 ## Options
@@ -42,12 +46,16 @@ The `schema` option allows you to customize the URL format displayed in the QR c
 
 <!-- eslint-disable -->
 
-```js
+```ts
+// rsbuild.config.ts
 import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
-import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
 
 export default defineConfig({
+  environments: { lynx: {} },
   plugins: [
+    pluginReactLynx(),
     pluginQRCode({
       schema(url) {
         return `lynx://${url}?dev=1`
@@ -61,12 +69,16 @@ You can also define multiple schemas to switch between them by pressing `a` in t
 
 <!-- eslint-disable -->
 
-```js
+```ts
+// rsbuild.config.ts
 import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
-import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
 
 export default defineConfig({
+  environments: { lynx: {} },
   plugins: [
+    pluginReactLynx(),
     pluginQRCode({
       schema(url) {
         return {

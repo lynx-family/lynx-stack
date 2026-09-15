@@ -20,12 +20,15 @@ npm install -D @lynx-js/config-rsbuild-plugin
 ## Usage
 
 ```ts
-// lynx.config.ts
+// rsbuild.config.ts
 import { pluginLynxConfig } from '@lynx-js/config-rsbuild-plugin'
-import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
 
 export default defineConfig({
+  environments: { lynx: {} },
   plugins: [
+    pluginReactLynx(),
     pluginLynxConfig({
       enableCheckExposureOptimize: false,
     }),

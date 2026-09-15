@@ -119,13 +119,17 @@ export interface PluginVanillaLynxOptions {
    * Override the final `.bundle` filename.
    *
    * @remarks
-   * When omitted under Rspeedy, `output.filename.bundle` is used.
-   * The default outside Rspeedy is `[name].[platform].bundle`.
+   * When omitted, `pluginLynx`'s `output.filename.bundle` is used (default
+   * `'[name].[platform].bundle'`).
    */
   bundleFilename?: VanillaBundleFilename | undefined
 
   /**
    * The minimum Lynx Engine version required by the emitted bundle.
+   *
+   * @remarks
+   * When omitted, the `targetSdkVersion` passed to `pluginLynxConfig` is used
+   * first.
    *
    * @defaultValue `'3.5'`
    */
