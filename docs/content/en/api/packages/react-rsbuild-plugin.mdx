@@ -255,7 +255,7 @@ const LAYERS: { BACKGROUND: "react:background"; MAIN_THREAD: "react:main-thread"
 
 Whether to only add component element during compilation
 
-Note that this only take effects on `Component` imported from [`CompatVisitorConfig.oldRuntimePkg`](#compatvisitorconfig).
+Note that this only take effects on `Component` imported from [`CompatVisitorConfig.oldRuntimePkg`](#compatvisitorconfig-oldruntimepkg).
 
 ```js
 import { defineConfig } from '@lynx-js/rspeedy'
@@ -305,7 +305,7 @@ export default defineConfig({
 ```
 
 Only add component element during compilation.
-Note that this only take effects on `Component` imported from [`CompatVisitorConfig.oldRuntimePkg`](#compatvisitorconfig).
+Note that this only take effects on `Component` imported from [`CompatVisitorConfig.oldRuntimePkg`](#compatvisitorconfig-oldruntimepkg).
 
 ```js
 import { defineConfig } from '@lynx-js/rspeedy'
@@ -329,7 +329,7 @@ export default defineConfig({
 
 Specifies additional component attributes list, these attributes will be passed to the wrapped `<view>` instead of the component.
 
-This only takes effect when [`CompatVisitorConfig.addComponentElement`](#compatvisitorconfig) is enabled.
+This only takes effect when [`CompatVisitorConfig.addComponentElement`](#compatvisitorconfig-addcomponentelement) is enabled.
 
 ```js
 import { defineConfig } from '@lynx-js/rspeedy'

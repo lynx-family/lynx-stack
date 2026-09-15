@@ -75,7 +75,7 @@ The `addEventListener()` method of the `EventTarget` interface sets up a functio
 
 The `close()` method closes the [`WebSocket`](#websocket) connection or connection attempt, if any.
 
-If the connection is already [`CLOSED `](#websocket), this method does nothing.
+If the connection is already [`CLOSED `](#websocket-closed), this method does nothing.
 
 | Parameters | Type | Description |
 | --- | --- | --- |
@@ -88,7 +88,7 @@ If the connection is already [`CLOSED `](#websocket), this method does nothing.
 
 The `ping` method send an empty message to the server over the [`WebSocket`](#websocket) connection.
 
-It will throw an exception if you call `ping()` when the connection is in the [`CONNECTING `](#websocket) state. If you call `ping()` when the connection is in the [`CLOSING `](#websocket) or [`CLOSED `](#websocket) states, it will silently discard the data.
+It will throw an exception if you call `ping()` when the connection is in the [`CONNECTING `](#websocket-connecting) state. If you call `ping()` when the connection is in the [`CLOSING `](#websocket-closing) or [`CLOSED `](#websocket-closed) states, it will silently discard the data.
 
 #### `WebSocket.removeEventListener` \{#websocket-removeeventlistener\}
 
@@ -107,7 +107,7 @@ The `removeEventListener()` method of the `EventTarget` interface removes an eve
 
 The `send` method send the specified data to be transmitted to the server over the [`WebSocket`](#websocket) connection.
 
-It will throw an exception if you call `send()` when the connection is in the [`CONNECTING `](#websocket) state. If you call `send()` when the connection is in the [`CLOSING `](#websocket) or [`CLOSED `](#websocket) states, it will silently discard the data.
+It will throw an exception if you call `send()` when the connection is in the [`CONNECTING `](#websocket-connecting) state. If you call `send()` when the connection is in the [`CLOSING `](#websocket-closing) or [`CLOSED `](#websocket-closed) states, it will silently discard the data.
 
 | Parameters | Type | Description |
 | --- | --- | --- |

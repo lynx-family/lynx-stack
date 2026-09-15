@@ -28,13 +28,13 @@ title: 类型
 
 可扩展此接口，以自定义 `defaultDataProcessor` 的返回值类型
 
-需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](#lynx)。
+需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](#lynx-registerdataprocessors)。
 
 ### `InitDataRaw` \{#initdataraw\}
 
 可扩展此接口，以自定义 `defaultDataProcessor` 的参数类型
 
-需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](#lynx)。
+需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](#lynx-registerdataprocessors)。
 
 ### `GlobalProps` \{#globalprops\}
 
@@ -214,7 +214,7 @@ if (__MAIN_THREAD__) {
 
 ### `DataProcessors` \{#dataprocessors\}
 
-通过 [`Lynx.registerDataProcessors`](#lynx) 注册的数据处理器。
+通过 [`Lynx.registerDataProcessors`](#lynx-registerdataprocessors) 注册的数据处理器。
 
 扩展 `dataProcessors` 接口
 
@@ -270,8 +270,8 @@ DataProcessor 的定义
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
-| <a id="dataprocessordefinition-dataprocessors"></a>`dataProcessors?` | [`DataProcessors`](#dataprocessors) | 需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](#lynx)。 |
-| <a id="dataprocessordefinition-defaultdataprocessor"></a>`defaultDataProcessor?` | `(rawInitData: `[`InitDataRaw`](#initdataraw)`) => `[`InitData`](#initdata) | 可以通过扩展 [`InitDataRaw`](#initdataraw) 和 [`InitData`](#initdata) 来自定义 `defaultDataProcessor` 的输入和输出类型 需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](#lynx)。 |
+| <a id="dataprocessordefinition-dataprocessors"></a>`dataProcessors?` | [`DataProcessors`](#dataprocessors) | 需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](#lynx-registerdataprocessors)。 |
+| <a id="dataprocessordefinition-defaultdataprocessor"></a>`defaultDataProcessor?` | `(rawInitData: `[`InitDataRaw`](#initdataraw)`) => `[`InitData`](#initdata) | 可以通过扩展 [`InitDataRaw`](#initdataraw) 和 [`InitData`](#initdata) 来自定义 `defaultDataProcessor` 的输入和输出类型 需与 `lynx.registerDataProcessors` 配合使用。更多示例参见 [`Lynx.registerDataProcessors`](#lynx-registerdataprocessors)。 |
 
 ### `CloneElement` \{#cloneelement\}
 

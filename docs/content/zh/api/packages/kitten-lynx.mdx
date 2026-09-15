@@ -134,14 +134,14 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 
 表示一个 Lynx 页面实例，类似于 Puppeteer 的 `Page`。
 
-提供导航到 Lynx bundle URL、查询 DOM 以及读取页面内容的方法。通过 [`Lynx.newPage`](#lynx) 创建。
+提供导航到 Lynx bundle URL、查询 DOM 以及读取页面内容的方法。通过 [`Lynx.newPage`](#lynx-newpage) 创建。
 
 | 成员 | 类型 | 说明 |
 | --- | --- | --- |
 | <a id="kittenlynxview-channel"></a>`_channel` | [`CDPChannel`](#cdpchannel) |  |
 | <a id="kittenlynxview-id"></a>`id` | `number` |  |
 | <a id="kittenlynxview-content"></a>`content` | `content(): Promise<string>` | 将当前页面的整个 DOM 树序列化为类 HTML 的字符串。 **Agent 用法：** 适合用于调试和记录 Lynx App DOM 的当前状态。它会强制从 CDP 服务器获取一份新的 `DOM.getDocument` 快照，并递归遍历该树，构建包含标签和属性的字符串（例如 `<view id="main"><text>...</text></view>`）。 |
-| <a id="kittenlynxview-url"></a>`url` | `url(): string` | 返回最近一次通过 [`goto`](#kittenlynxview) 成功加载的 URL。 |
+| <a id="kittenlynxview-url"></a>`url` | `url(): string` | 返回最近一次通过 [`goto`](#kittenlynxview-goto) 成功加载的 URL。 |
 
 #### `KittenLynxView.constructor` \{#kittenlynxview-constructor\}
 

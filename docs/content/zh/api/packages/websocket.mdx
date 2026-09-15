@@ -75,7 +75,7 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 
 `close()` 方法关闭 [`WebSocket`](#websocket) 连接或正在进行的连接尝试（如有）。
 
-如果连接已处于 [`CLOSED `](#websocket) 状态，该方法不执行任何操作。
+如果连接已处于 [`CLOSED `](#websocket-closed) 状态，该方法不执行任何操作。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
@@ -88,7 +88,7 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 
 `ping` 方法通过 [`WebSocket`](#websocket) 连接向服务器发送一条空消息。
 
-在连接处于 [`CONNECTING `](#websocket) 状态时调用 `ping()` 会抛出异常。在连接处于 [`CLOSING `](#websocket) 或 [`CLOSED `](#websocket) 状态时调用 `ping()`，数据会被静默丢弃。
+在连接处于 [`CONNECTING `](#websocket-connecting) 状态时调用 `ping()` 会抛出异常。在连接处于 [`CLOSING `](#websocket-closing) 或 [`CLOSED `](#websocket-closed) 状态时调用 `ping()`，数据会被静默丢弃。
 
 #### `WebSocket.removeEventListener` \{#websocket-removeeventlistener\}
 
@@ -107,7 +107,7 @@ import { PackageManagerTabs } from '@rspress/core/theme';
 
 `send` 方法通过 [`WebSocket`](#websocket) 连接将指定数据发送到服务器。
 
-在连接处于 [`CONNECTING `](#websocket) 状态时调用 `send()` 会抛出异常。在连接处于 [`CLOSING `](#websocket) 或 [`CLOSED `](#websocket) 状态时调用 `send()`，数据会被静默丢弃。
+在连接处于 [`CONNECTING `](#websocket-connecting) 状态时调用 `send()` 会抛出异常。在连接处于 [`CLOSING `](#websocket-closing) 或 [`CLOSED `](#websocket-closed) 状态时调用 `send()`，数据会被静默丢弃。
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |

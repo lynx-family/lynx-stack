@@ -255,7 +255,7 @@ const LAYERS: { BACKGROUND: "react:background"; MAIN_THREAD: "react:main-thread"
 
 是否仅在编译期添加组件元素
 
-注意，这仅对从 [`CompatVisitorConfig.oldRuntimePkg`](#compatvisitorconfig) 导入的 `Component` 生效。
+注意，这仅对从 [`CompatVisitorConfig.oldRuntimePkg`](#compatvisitorconfig-oldruntimepkg) 导入的 `Component` 生效。
 
 ```js
 import { defineConfig } from '@lynx-js/rspeedy'
@@ -305,7 +305,7 @@ export default defineConfig({
 ```
 
 仅在编译期添加组件元素。
-注意，这仅对从 [`CompatVisitorConfig.oldRuntimePkg`](#compatvisitorconfig) 导入的 `Component` 生效。
+注意，这仅对从 [`CompatVisitorConfig.oldRuntimePkg`](#compatvisitorconfig-oldruntimepkg) 导入的 `Component` 生效。
 
 ```js
 import { defineConfig } from '@lynx-js/rspeedy'
@@ -329,7 +329,7 @@ export default defineConfig({
 
 指定额外的组件属性列表，这些属性会传递给包裹的 `<view>`，而不是组件本身。
 
-仅在启用 [`CompatVisitorConfig.addComponentElement`](#compatvisitorconfig) 时生效。
+仅在启用 [`CompatVisitorConfig.addComponentElement`](#compatvisitorconfig-addcomponentelement) 时生效。
 
 ```js
 import { defineConfig } from '@lynx-js/rspeedy'

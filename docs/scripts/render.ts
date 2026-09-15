@@ -1018,7 +1018,12 @@ export function renderExports(
       opts.include!.indexOf(a.name) - opts.include!.indexOf(b.name)
     );
   }
-  for (const e of list) ctx.anchors.set(e.name, slug(e.name));
+  for (const e of list) {
+    ctx.anchors.set(e.name, slug(e.name));
+    for (const m of e.members ?? []) {
+      ctx.anchors.set(`${e.name}.${m.name}`, slug(`${e.name}.${m.name}`));
+    }
+  }
   const groups: [string, (e: ApiExport) => boolean][] = [
     [ctx.l.functions, e => e.kind === 'function'],
     [ctx.l.classes, e => e.kind === 'class'],

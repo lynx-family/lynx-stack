@@ -147,14 +147,14 @@ it returns the same `ElementNode` reference, reducing memory overhead during ext
 Represents a Lynx page instance, similar to Puppeteer's `Page`.
 
 Provides methods for navigating to Lynx bundle URLs, querying the DOM,
-and reading page content. Created via [`Lynx.newPage`](#lynx).
+and reading page content. Created via [`Lynx.newPage`](#lynx-newpage).
 
 | Members | Type | Description |
 | --- | --- | --- |
 | <a id="kittenlynxview-channel"></a>`_channel` | [`CDPChannel`](#cdpchannel) |  |
 | <a id="kittenlynxview-id"></a>`id` | `number` |  |
 | <a id="kittenlynxview-content"></a>`content` | `content(): Promise<string>` | Serializes the current page's entire DOM tree into an HTML-like string format. **Agent Usage:** This is highly useful for debugging and logging the current state of the Lynx App DOM. It forces a fresh `DOM.getDocument` snapshot from the CDP server and recursively walks the tree to build a string containing tags and attributes (e.g., `<view id="main"><text>...</text></view>`). |
-| <a id="kittenlynxview-url"></a>`url` | `url(): string` | Returns the last URL successfully loaded by [`goto`](#kittenlynxview). |
+| <a id="kittenlynxview-url"></a>`url` | `url(): string` | Returns the last URL successfully loaded by [`goto`](#kittenlynxview-goto). |
 
 #### `KittenLynxView.constructor` \{#kittenlynxview-constructor\}
 
