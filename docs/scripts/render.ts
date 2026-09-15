@@ -230,6 +230,7 @@ const code = (s: string) => {
 export interface Translation {
   hash: string;
   text: string;
+  en?: string;
 }
 export type Translations = Record<string, Translation>;
 
@@ -271,7 +272,7 @@ export function hashText(text: string): string {
 function tr(ctx: Ctx, key: string, en: string | undefined): string | undefined {
   if (!en || !ctx.tr) return en;
   const t = ctx.tr[key];
-  if (t?.text && t.hash === hashText(en)) return t.text;
+  if (t?.text && t.en === undefined && t.hash === hashText(en)) return t.text;
   ctx.stale.add(key);
   return en;
 }

@@ -10,8 +10,8 @@
     "check": "pnpm run generate && git diff --exit-code -- api-data content",
     "dev": "rspress dev",
     "generate": "node scripts/generate-api-data.ts && node scripts/expand-api-docs.ts",
-    "i18n:apply": "python3 scripts/i18n-segments.py apply-dir",
-    "i18n:dump": "python3 scripts/i18n-segments.py dump",
+    "i18n:apply": "node scripts/i18n-segments.ts apply",
+    "i18n:dump": "node scripts/i18n-segments.ts dump",
     "i18n:extract": "node scripts/i18n-extract.ts zh",
     "preview": "rspress preview"
   },

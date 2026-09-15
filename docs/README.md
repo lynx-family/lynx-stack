@@ -43,9 +43,11 @@ Handwritten pages have a Chinese copy under `content/zh/` with the same path; ed
 
 Generated text is translated through sidecar files, one per package: `api-data/zh/<package>.json` maps each string (`Output.filename.summary`, `Output.filename.example.0`, …) to its translation and a hash of the English it was translated from. `expand-api-docs.ts` uses the translation only while the hash still matches; when the English changes, the page falls back to the English text and shows a 待翻译 badge until someone updates the translation. A stale translation is never shown silently.
 
+`i18n:extract` marks each new or changed string by adding `en`, the current English, next to it. The page keeps showing the English with the badge while `en` is there: update `text`, then delete `en`. `i18n:apply` does both for you.
+
 ```sh
 pnpm --filter docs i18n:extract          # add new/changed strings to api-data/zh/*.json
-pnpm --filter docs i18n:dump <dir> <package>   # write the untranslated prose segments to <dir>/seg-<package>.tsv
+pnpm --filter docs i18n:dump <dir> <package>   # write the prose of strings marked with `en` to <dir>/seg-<package>.tsv
 pnpm --filter docs i18n:apply <dir>             # read <dir>/seg-*.zh.tsv back into the sidecars
 pnpm --filter docs generate              # re-render the pages
 ```
