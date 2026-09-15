@@ -63,9 +63,7 @@ export function syncConfigPages(docsRoot: string): void {
     const root = join(docsRoot, 'content', locale, 'api', 'config');
     removeStale(root, '', wanted);
     const l = locale === 'zh' ? ZH : EN;
-    const meta: unknown[] = [
-      { type: 'file', name: 'index', label: l.overview },
-    ];
+    const meta: unknown[] = [];
     const sections = new Map<string, unknown[]>();
     for (const { path, lynx, rel } of pages) {
       const file = join(root, `${rel}.mdx`);

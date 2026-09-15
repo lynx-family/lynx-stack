@@ -63,7 +63,6 @@ export interface Locale {
   defaultBadge: string;
   rsbuildOption: string;
   rsbuildDocsLink: string;
-  overview: string;
   packageGroups: Record<PackageGroup, string>;
 }
 
@@ -105,7 +104,6 @@ export const EN: Locale = {
   rsbuildOption:
     'Lynx changes the default of this Rsbuild option; everything else works as in Rsbuild. See the {link}.',
   rsbuildDocsLink: 'Rsbuild documentation',
-  overview: 'Overview',
   packageGroups: {
     build: 'Build tools',
     react: 'ReactLynx',
@@ -153,7 +151,6 @@ export const ZH: Locale = {
   rsbuildOption:
     'Lynx 修改了这个 Rsbuild 配置的默认值，其他用法与 Rsbuild 相同，详见 {link}。',
   rsbuildDocsLink: 'Rsbuild 文档',
-  overview: '概览',
   packageGroups: {
     build: '构建工具',
     react: 'ReactLynx',

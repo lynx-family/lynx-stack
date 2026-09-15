@@ -1,10 +1,5 @@
 [
   {
-    "type": "file",
-    "name": "index",
-    "label": "Overview"
-  },
-  {
     "type": "section-header",
     "label": "Build tools"
   },
@@ -76,16 +71,6 @@
   {
     "type": "section-header",
     "label": "ReactLynx"
-  },
-  {
-    "type": "custom-link",
-    "label": "react",
-    "link": "/api/react/"
-  },
-  {
-    "type": "custom-link",
-    "label": "react/testing-library",
-    "link": "/api/react/testing-library"
   },
   {
     "type": "file",

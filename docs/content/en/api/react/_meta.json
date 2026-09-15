@@ -1,9 +1,4 @@
 [
-  {
-    "type": "file",
-    "name": "index",
-    "label": "Overview"
-  },
   "hooks",
   "components",
   "functions",

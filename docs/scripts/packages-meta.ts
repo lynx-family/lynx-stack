@@ -11,21 +11,12 @@ export function syncPackagesMeta(docsRoot: string): void {
   const dataDir = join(docsRoot, 'api-data');
   for (const locale of ['en', 'zh'] as const) {
     const l = locale === 'zh' ? ZH : EN;
-    const prefix = locale === 'zh' ? '/zh' : '';
-    const meta: unknown[] = [{
-      type: 'file',
-      name: 'index',
-      label: l.overview,
-    }];
+    const meta: unknown[] = [];
     for (const group of PACKAGE_GROUPS) {
       meta.push({ type: 'section-header', label: l.packageGroups[group] });
-      for (const entry of PACKAGES.filter(e => e.group === group)) {
+      for (const entry of PACKAGES.filter(e => e.group === group && !e.page)) {
         const label = packageLabel(dataDir, entry);
-        meta.push(
-          entry.page
-            ? { type: 'custom-link', label, link: `${prefix}${entry.page}` }
-            : { type: 'file', name: entry.id, label },
-        );
+        meta.push({ type: 'file', name: entry.id, label });
       }
     }
     writeFileSync(

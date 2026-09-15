@@ -1,11 +1,6 @@
 [
   {
     "type": "file",
-    "name": "index",
-    "label": "概览"
-  },
-  {
-    "type": "file",
     "name": "environments",
     "label": "environments",
     "tag": "默认值不同"
