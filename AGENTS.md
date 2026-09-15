@@ -82,7 +82,7 @@ pnpm run test --update
 
 ### 5. API Documentation
 
-The API reference in `docs/` (lynx-stack.dev, and the pages synced to lynxjs.org) is generated from the exports and TSDoc comments of the public packages. When you change a public API — an export, a type, an option, a default value or its TSDoc — update the documentation in the same change:
+The API reference in `docs/` (the pages synced to lynxjs.org) is generated from the exports and TSDoc comments of the public packages. When you change a public API — an export, a type, an option, a default value or its TSDoc — update the documentation in the same change:
 
 ```bash
 # Regenerate docs/api-data and the generated regions in docs/content (requires `pnpm turbo build`; ALWAYS commit changes)
