@@ -1,5 +1,13 @@
 # @lynx-js/genui
 
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependency `@openuidev/lang-core` to `^0.2.18`. ([#3829](https://github.com/lynx-family/lynx-stack/pull/3829))
+- Updated dependencies []:
+  - @lynx-js/react-signals@0.0.3
+
 ## 0.4.0
 
 ### Minor Changes

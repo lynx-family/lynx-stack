@@ -1,5 +1,11 @@
 # @lynx-js/react
 
+## 0.126.2
+
+### Patch Changes
+
+- Preserve component owners in development error stacks after scheduled state updates, and enable background component stacks for Element Template. ([#3919](https://github.com/lynx-family/lynx-stack/pull/3919))
+
 ## 0.126.1
 
 ### Patch Changes

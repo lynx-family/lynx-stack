@@ -1,5 +1,11 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.11.5
+
+### Patch Changes
+
+- Fix `RangeError: Maximum call stack size exceeded` when lazy chunks import each other. ([#3930](https://github.com/lynx-family/lynx-stack/pull/3930))
+
 ## 0.11.4
 
 ### Patch Changes

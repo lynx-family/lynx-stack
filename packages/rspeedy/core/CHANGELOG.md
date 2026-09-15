@@ -1,5 +1,11 @@
 # @lynx-js/rspeedy
 
+## 0.17.3
+
+### Patch Changes
+
+- Write `stats.json` in chunks, so that a large project no longer fails with `RangeError: Invalid string length` when `performance.profile` is enabled. ([#3929](https://github.com/lynx-family/lynx-stack/pull/3929))
+
 ## 0.17.2
 
 ### Patch Changes
