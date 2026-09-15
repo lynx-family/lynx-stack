@@ -10,7 +10,7 @@ title: ReactLynx API
 
 {/* @api-end */}
 
-`@lynx-js/react` 是面向 Lynx 的 React。它保留了 React 17 的 API，重新导出标准的 Hooks 和 API，并补充了双线程模型所需的能力：主线程函数、页面从 Native 侧接收的数据，以及若干编译时指令和宏。
+`@lynx-js/react` 是面向 Lynx 的 React，基于 Preact 11 构建，行为与 React 19 对齐：重新导出标准的 Hooks 和 API，函数组件把 `ref` 当作普通 prop 接收，`@lynx-js/react/compat` 还提供 `use`、`useTransition` 和 `startTransition`。在此之上，它补充了双线程模型所需的能力：主线程函数、页面从 Native 侧接收的数据，以及若干编译时指令和宏。
 
 | | |
 | --- | --- |

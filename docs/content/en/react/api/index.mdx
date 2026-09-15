@@ -10,7 +10,7 @@ title: ReactLynx API
 
 {/* @api-end */}
 
-`@lynx-js/react` is React for Lynx. It keeps the React 17 API surface, re-exporting the standard hooks and APIs, and adds what the dual-thread model needs: main-thread functions, the data a page receives from native, and a few compile-time directives and macros.
+`@lynx-js/react` is React for Lynx, built on Preact 11. It follows React 19: it re-exports the standard hooks and APIs, function components receive `ref` as a regular prop, and `@lynx-js/react/compat` adds `use`, `useTransition` and `startTransition`. On top of that it adds what the dual-thread model needs: main-thread functions, the data a page receives from native, and a few compile-time directives and macros.
 
 | | |
 | --- | --- |

@@ -183,4 +183,4 @@ Arrays returned by `map`, `forEach`, and `toArray` are frozen.
 
 ## Built-in React APIs
 
-`createContext`, `forwardRef`, `lazy`, `memo`, `createRef` and `isValidElement` are re-exported from React unchanged. See the [React reference](https://react.dev/reference/react/apis).
+`createContext`, `forwardRef`, `lazy`, `memo`, `createRef` and `isValidElement` are re-exported from React. As in React 19, function components receive `ref` as a regular prop, so a new component doesn't need `forwardRef`. `@lynx-js/react/compat` also exports `startTransition`. See the [React reference](https://react.dev/reference/react/apis).

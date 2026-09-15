@@ -241,7 +241,7 @@ const REACT_PAGES: {
     extra: `
 ## Built-in React hooks
 
-\`useCallback\`, \`useContext\`, \`useDebugValue\`, \`useImperativeHandle\`, \`useMemo\`, \`useReducer\`, \`useRef\`, \`useState\` and \`useSyncExternalStore\` are re-exported from React unchanged. See the [React reference](https://react.dev/reference/react/hooks).
+\`useCallback\`, \`useContext\`, \`useDebugValue\`, \`useImperativeHandle\`, \`useMemo\`, \`useReducer\`, \`useRef\`, \`useState\` and \`useSyncExternalStore\` are re-exported from React. \`@lynx-js/react/compat\` also exports \`use\`, \`useTransition\` and \`useInsertionEffect\`, an alias of \`useEffect\`. See the [React reference](https://react.dev/reference/react/hooks).
 `,
   },
   {
@@ -267,7 +267,7 @@ const REACT_PAGES: {
     extra: `
 ## Built-in React APIs
 
-\`createContext\`, \`forwardRef\`, \`lazy\`, \`memo\`, \`createRef\` and \`isValidElement\` are re-exported from React unchanged. See the [React reference](https://react.dev/reference/react/apis).
+\`createContext\`, \`forwardRef\`, \`lazy\`, \`memo\`, \`createRef\` and \`isValidElement\` are re-exported from React. As in React 19, function components receive \`ref\` as a regular prop, so a new component doesn't need \`forwardRef\`. \`@lynx-js/react/compat\` also exports \`startTransition\`. See the [React reference](https://react.dev/reference/react/apis).
 `,
   },
   {
@@ -308,7 +308,7 @@ title: ReactLynx API
 {/* @api PackageHeader package="react" */}
 {/* @api-end */}
 
-\`@lynx-js/react\` is React for Lynx. It keeps the React 17 API surface, re-exporting the standard hooks and APIs, and adds what the dual-thread model needs: main-thread functions, the data a page receives from native, and a few compile-time directives and macros.
+\`@lynx-js/react\` is React for Lynx, built on Preact 11. It follows React 19: it re-exports the standard hooks and APIs, function components receive \`ref\` as a regular prop, and \`@lynx-js/react/compat\` adds \`use\`, \`useTransition\` and \`startTransition\`. On top of that it adds what the dual-thread model needs: main-thread functions, the data a page receives from native, and a few compile-time directives and macros.
 
 | | |
 | --- | --- |
