@@ -1,9 +1,10 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
@@ -416,6 +417,19 @@ async function generate(entry: PackageEntry): Promise<ApiData | null> {
     version: string;
     description?: string;
   };
+  const srcUrl =
+    `https://github.com/lynx-family/lynx-stack/tree/main/${entry.dir}`;
+  if (!entry.entry) {
+    return {
+      id: entry.id,
+      package: pkg.name,
+      version: pkg.version,
+      ...(pkg.description ? { description: pkg.description } : {}),
+      group: entry.group,
+      srcUrl,
+      exports: [],
+    };
+  }
   const entries = (Array.isArray(entry.entry) ? entry.entry : [entry.entry])
     .map(e => join(dir, e));
   for (const e of entries) {
@@ -463,7 +477,7 @@ async function generate(entry: PackageEntry): Promise<ApiData | null> {
     version: pkg.version,
     ...(pkg.description ? { description: pkg.description } : {}),
     group: entry.group,
-    srcUrl: `https://github.com/lynx-family/lynx-stack/tree/main/${entry.dir}`,
+    srcUrl,
     exports: apiExports,
   };
 }
@@ -546,6 +560,19 @@ const index: Record<
     exports: number;
   }
 > = {};
+function publicPackageDirs(): string[] {
+  const packages = JSON.parse(
+    execFileSync('pnpm', ['-r', 'ls', '--depth', '-1', '--json'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+    }),
+  ) as { path: string; private?: boolean }[];
+  return packages
+    .filter(p => !p.private)
+    .map(p => relative(ROOT, p.path).split('\\').join('/'))
+    .filter(Boolean);
+}
+
 for (const entry of PACKAGES) {
   if (only.length > 0 && !only.includes(entry.id)) continue;
   process.stdout.write(`${entry.id} ... `);
@@ -577,6 +604,16 @@ if (only.length === 0) {
     join(OUT_DIR, 'index.json'),
     JSON.stringify(index, null, 2) + '\n',
   );
+  const documented = new Set(PACKAGES.map(e => e.dir));
+  const undocumented = publicPackageDirs().filter(dir => !documented.has(dir));
+  if (undocumented.length > 0) {
+    console.error(
+      `\npublic packages missing from scripts/packages.ts:\n  ${
+        undocumented.join('\n  ')
+      }`,
+    );
+    process.exitCode = 1;
+  }
 }
 if (failed.length > 0) console.info(`\nfailed: ${failed.join(', ')}`);
 

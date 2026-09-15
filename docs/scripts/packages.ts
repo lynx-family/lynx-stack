@@ -14,7 +14,7 @@ export type PackageGroup = typeof PACKAGE_GROUPS[number];
 export interface PackageEntry {
   id: string;
   dir: string;
-  entry: string | string[];
+  entry?: string | string[];
   tsconfig?: string;
   group: PackageGroup;
   main?: string;
@@ -44,6 +44,12 @@ export const PACKAGES: PackageEntry[] = [
     entry: 'src/index.ts',
     group: 'build',
     main: 'pluginVanillaLynx',
+  },
+  {
+    id: 'create-lynx',
+    dir: 'packages/rspeedy/create-lynx',
+    group: 'build',
+    main: 'npm create @lynx-js/lynx',
   },
   {
     id: 'qrcode-rsbuild-plugin',
@@ -95,6 +101,18 @@ export const PACKAGES: PackageEntry[] = [
     group: 'build',
     main: 'defineConfig',
   },
+  {
+    id: 'upgrade-rspeedy',
+    dir: 'packages/rspeedy/upgrade-rspeedy',
+    group: 'build',
+    main: 'npx upgrade-rspeedy',
+  },
+  {
+    id: 'create-rspeedy',
+    dir: 'packages/rspeedy/create-rspeedy',
+    group: 'build',
+    main: 'npm create rspeedy',
+  },
 
   {
     id: 'react',
@@ -127,6 +145,11 @@ export const PACKAGES: PackageEntry[] = [
     id: 'background-only',
     dir: 'packages/background-only',
     entry: 'index.d.ts',
+    group: 'react',
+  },
+  {
+    id: 'react-umd',
+    dir: 'packages/react-umd',
     group: 'react',
   },
 
@@ -201,6 +224,11 @@ export const PACKAGES: PackageEntry[] = [
     group: 'libraries',
   },
   {
+    id: 'skill-lynx-openui',
+    dir: 'packages/genui/skill-lynx-openui',
+    group: 'libraries',
+  },
+  {
     id: 'i18next-translation-dedupe',
     dir: 'packages/i18n/i18next-translation-dedupe',
     entry: 'src/index.ts',
@@ -214,9 +242,32 @@ export const PACKAGES: PackageEntry[] = [
     group: 'libraries',
   },
   {
+    id: 'create-lynx-library',
+    dir: 'packages/lynx/create-lynx-library',
+    group: 'libraries',
+    main: 'npm create lynx-library',
+  },
+  {
     id: 'testing-environment',
     dir: 'packages/testing-library/testing-environment',
     entry: 'src/index.ts',
+    group: 'libraries',
+  },
+  {
+    id: 'kitten-lynx',
+    dir: 'packages/testing-library/kitten-lynx',
+    entry: 'src/index.ts',
+    group: 'libraries',
+  },
+  {
+    id: 'docs-mcp-server',
+    dir: 'packages/mcp-servers/docs-mcp-server',
+    group: 'libraries',
+    main: 'npx @lynx-js/docs-mcp-server',
+  },
+  {
+    id: 'lynx-stack-docs',
+    dir: 'packages/lynx-stack-docs',
     group: 'libraries',
   },
 

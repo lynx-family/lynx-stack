@@ -1,0 +1,94 @@
+---
+title: '@lynx-js/kitten-lynx-test-infra'
+---
+
+# @lynx-js/kitten-lynx-test-infra
+
+{/* @api PackageHeader package="kitten-lynx" */}
+
+<div className="api-pkg-header"><code>@lynx-js/kitten-lynx-test-infra</code> <span className="api-pkg-version">v0.1.6</span> · <a href="https://www.npmjs.com/package/@lynx-js/kitten-lynx-test-infra" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/testing-library/kitten-lynx" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/testing-library/kitten-lynx/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+类似 Puppeteer 的 Lynx 测试库。它通过 Chrome DevTools Protocol 驱动 Android 模拟器或真机上的 Lynx Explorer：打开 `.lynx.bundle` URL、用 CSS 选择器查找元素、读取样式和属性，并模拟点击。
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/kitten-lynx-test-infra -D" />
+
+## API
+
+{/* @api ApiExports package="kitten-lynx" */}
+
+## 类 \{#\}
+
+### `CDPChannel` \{#cdpchannel\}
+
+一个无状态的 CDP（Chrome DevTools Protocol）通道，用于向指定的 Lynx 会话发送命令。
+
+每次 `send()` 调用都是通过 `Connector` 发起的一次短暂的请求/响应。通道按会话 ID 通过 `WeakRef` 缓存，以便复用。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="cdpchannel-constructor"></a>`constructor` | `constructor(_connector: Connector, _clientId: string, _sessionId: number): CDPChannel` | 构造一个严格绑定到单个 Lynx 会话的 CDP 通道。 **Agent 须知：** 优先使用 `CDPChannel.from()`，而不是手动 new 一个通道，因为 `from()` 会处理 WeakRef 缓存，尽量减少内存占用。 |
+| <a id="cdpchannel-send"></a>`send` | `send(method: T, params: Protocol[T]["params"]): Promise<Protocol[T]["return"]>` | 发送一条强类型的 Chrome DevTools Protocol（CDP）方法命令，并等待其返回结果。 **Agent 用法：** 这是 `kitten-lynx` 中所有交互的核心。它不维护 socket 连接，每次 `send(...)` 调用都会构造一个独立的 ADB 请求，并等待对应的独立响应。 **类型：** 注意，泛型严格绑定到本文件顶部定义的 `Protocol` 接口。如果需要调用 TypeScript 拒绝的 CDP 命令，必须先更新 `Protocol` 接口！ |
+| <a id="cdpchannel-from"></a>`from` | `from(sessionId: number, clientId: string, connector: Connector): CDPChannel` | 为指定的 Lynx 会话获取或创建一个无状态的 `CDPChannel`。 **设计模式（Agent 须知）：** 本测试库采用**无状态**的 CDP 架构，以避免在不稳定的 ADB 链路上出现挂起的 WebSocket 连接。通道按 `sessionId` 通过 `WeakRef` 缓存，以减少内存分配。 |
+
+### `ElementNode` \{#elementnode\}
+
+表示 Lynx 页面中的一个 DOM 元素。
+
+封装一个 CDP `nodeId`，并提供检查属性、计算样式以及模拟点击等用户交互的方法。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="elementnode-constructor"></a>`constructor` | `constructor(nodeId: number, _lynxView: KittenLynxView): ElementNode` | 初始化一个新的 `ElementNode` 实例，用于表示一个 Lynx 组件或标签。 **Agent 须知：** 与 `KittenLynxView` 类似，很少需要直接调用它。请通过 `KittenLynxView.locator()` 或 `ElementNode.fromId()` 创建实例。 |
+| <a id="elementnode-nodeid"></a>`nodeId` | `number` | 在 Lynx 渲染器中标识该元素的唯一 CDP 数字 ID。 |
+| <a id="elementnode-computedstylemap"></a>`computedStyleMap` | `computedStyleMap(): Promise<Map<string, string>>` | 获取该元素当前生效的全部计算后 CSS 属性。 **Agent 用法：** 基于 `CSS.getComputedStyleForNode`。返回布局计算后完全解析的样式值（例如将 `100%` 解析为绝对的 `px` 值）。强烈建议用它做视觉断言（例如验证某个盒子确实是 `display: none`，或具有特定的 `background-color`）。 |
+| <a id="elementnode-getattribute"></a>`getAttribute` | `getAttribute(name: string): Promise<string \| null>` | 获取该元素上指定属性的字符串值。 **Agent 注意事项 / 陷阱：** 在 Lynx 中，Web 标准的 `id="foo"` 属性在内部实际存储为 `idSelector="foo"`。本库对此做了透明兼容：查询 `getAttribute('id')` 时会自动改为查询 `idSelector`，无需自行处理 `idSelector`。 |
+| <a id="elementnode-tap"></a>`tap` | `tap(): Promise<void>` | 在该元素中心直接模拟一次原生用户点击（按下后抬起）。 **内部机制（Agent 须知）：** 这不是模拟的 DOM 事件（如 Web 中的 `element.click()`），而是在原生层精确派发的手势： 1. 通过 `DOM.getBoxModel` 获取精确的边界坐标。 2. 计算内容盒的绝对中心点 `(x, y)`。 3. 通过 ADB 桥发送 `Input.emulateTouchFromMouseEvent`（`'mousePressed'`）。 4. 等待 50ms，再发送对应的 `'mouseReleased'`。 **重要：** 调用前请确保元素在屏幕上可见，否则坐标计算可能失败，或点击不到任何元素。 |
+| <a id="elementnode-fromid"></a>`fromId` | `fromId(id: number, lynxView: KittenLynxView): ElementNode` | 获取或创建与指定 Lynx DOM 节点 ID 对应的 `ElementNode` 实例。 **Agent 缓存策略：** 节点按 `KittenLynxView` 实例通过 `WeakRef` 积极缓存。这意味着如果 agent 在垃圾回收之前两次查询同一个 DOM 节点，会得到同一个 `ElementNode` 引用，从而在大量遍历 DOM 时降低内存开销。 |
+
+### `KittenLynxView` \{#kittenlynxview\}
+
+表示一个 Lynx 页面实例，类似于 Puppeteer 的 `Page`。
+
+提供导航到 Lynx bundle URL、查询 DOM 以及读取页面内容的方法。通过 [`Lynx.newPage`](#lynx) 创建。
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="kittenlynxview-constructor"></a>`constructor` | `constructor(_connector: Connector, _clientId: string, _client?: any): KittenLynxView` | 初始化一个新的 `KittenLynxView` 实例。 **Agent 须知：** 通常应避免直接调用此构造函数，而应使用 `Lynx.newPage()`，以正确初始化一个绑定到当前 ADB 连接和客户端的 `KittenLynxView` 实例。 |
+| <a id="kittenlynxview-channel"></a>`_channel` | [`CDPChannel`](#cdpchannel) |  |
+| <a id="kittenlynxview-id"></a>`id` | `number` |  |
+| <a id="kittenlynxview-content"></a>`content` | `content(): Promise<string>` | 将当前页面的整个 DOM 树序列化为类 HTML 的字符串。 **Agent 用法：** 适合用于调试和记录 Lynx App DOM 的当前状态。它会强制从 CDP 服务器获取一份新的 `DOM.getDocument` 快照，并递归遍历该树，构建包含标签和属性的字符串（例如 `<view id="main"><text>...</text></view>`）。 |
+| <a id="kittenlynxview-goto"></a>`goto` | `goto(url: string, options?: { timeout?: number }): Promise<void>` | 将 Lynx App 导航到指定的 Lynx bundle URL，并附加到对应的 CDP 会话。 **工作原理（Agent 必须了解）：** 与标准 Web 浏览器不同，在 Lynx 中调用 `Page.navigate` 会创建一个**新的**调试会话，而不是复用当前会话。本方法通过以下步骤屏蔽这一复杂性： 1. 等待 devtool 服务器启动。 2. 发送 `App.openPage`（或兜底消息）以触发导航。 3. 通过 ADB **轮询会话列表**，找到 URL 与目标 bundle URL 匹配的新会话。 4. 自动重新附加到匹配的会话，并获取初始 DOM 树（`DOM.getDocument`）。 |
+| <a id="kittenlynxview-locator"></a>`locator` | `locator(selector: string): Promise<ElementNode \| undefined>` | 在当前页面中定位第一个匹配给定 CSS 选择器的 DOM 元素。 **Agent 用法：** 行为与 `document.querySelector` 或 Playwright 的 `page.locator()` 完全一致。它依赖 CDP 的 `DOM` 域。调用前务必确保 `goto()` 已成功完成，否则 DOM 树尚不存在。 |
+| <a id="kittenlynxview-onattachedtotarget"></a>`onAttachedToTarget` | `onAttachedToTarget(sessionId: number): Promise<void>` | 将 LynxView 附加到指定的 Lynx devtool 会话，并初始化 CDP 通道。 **内部机制：** 该方法为指定的 `sessionId` 创建一个 `CDPChannel`，并立即发出 `DOM.getDocument` 请求以缓存根文档节点。该请求必须成功，页面才能交互。 **Agent 须知：** 该方法通常视为内部方法，但并非 `private`。一般无需手动调用，因为 `goto()` 会自动处理会话附加。 |
+| <a id="kittenlynxview-screenshot"></a>`screenshot` | `screenshot(options?: { format?: "jpeg" \| "png" \| "webp"; path?: string; quality?: number }): Promise<Buffer<ArrayBufferLike>>` | 截取页面截图。 |
+| <a id="kittenlynxview-url"></a>`url` | `url(): string` | 返回最近一次通过 [`goto`](#kittenlynxview) 成功加载的 URL。 |
+| <a id="kittenlynxview-getkittenlynxviewbyid"></a>`getKittenLynxViewById` | `getKittenLynxViewById(id: string): KittenLynxView \| undefined` | 通过字符串形式的数字 ID 获取之前创建的 `KittenLynxView` 实例。 **对 Agent 的用处：** 主要用于交叉引用，或在不传递对象引用的情况下查找已有的视图。 |
+
+### `Lynx` \{#lynx\}
+
+kitten-lynx 测试框架的主入口。
+
+提供类似 Puppeteer 的 API，通过 ADB 和 Chrome DevTools Protocol 连接运行在 Android 设备（真机或模拟器）上的 Lynx 应用。
+
+```typescript
+const lynx = await Lynx.connect({ deviceId: 'localhost:5555' });
+const page = await lynx.newPage();
+await page.goto('http://example.com/bundle.lynx.bundle');
+const content = await page.content();
+await lynx.close();
+```
+
+| 成员 | 类型 | 说明 |
+| --- | --- | --- |
+| <a id="lynx-constructor"></a>`constructor` | `constructor(): Lynx` |  |
+| <a id="lynx-close"></a>`close` | `close(): Promise<void>` | 关闭当前的 ADB/CDP 连接并释放相关资源。 **Agent 用法：** 请确保在测试的清理阶段（例如 `afterAll()` 中）调用该方法，以免残留的 Node.js 进程或挂起的 ADB 连接影响后续测试运行。 |
+| <a id="lynx-newpage"></a>`newPage` | `newPage(): Promise<KittenLynxView>` | 为已连接的 Lynx 环境创建一个新的页面对象。 **Agent 用法：** 类似于 Puppeteer 的 `browser.newPage()`。通过 `Lynx.connect()` 成功创建 `Lynx` 连接实例后，调用该方法获取一个 `KittenLynxView`，然后即可在该视图上调用 `post.goto(url)` 导航到 Lynx bundle。 |
+| <a id="lynx-connect"></a>`connect` | `connect(options?: ConnectOptions): Promise<Lynx>` | 主要的初始化方法。通过 ADB 连接 Lynx 应用的 devtool 服务器。 **连接流程（Agent 指南）：** 1. 发现目标 ADB 设备（Android 真机或模拟器）。 2. 强制停止目标应用以确保干净的状态（`adb shell am force-stop`）。 3. 在设备上启动应用（通常为 Lynx Explorer）。 4. 向 `Connector` 查询可用的客户端，并按设备 ID 和包名进行匹配。 5. 打开 devtool 总开关（`enable_devtool`）。 **使用时机：** 应在任何测试脚本或交互流程中最先调用该方法。 |
+
+{/* @api-end */}

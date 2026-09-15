@@ -1,0 +1,29 @@
+---
+title: 'upgrade-rspeedy'
+---
+
+# upgrade-rspeedy
+
+{/* @api PackageHeader package="upgrade-rspeedy" */}
+
+<div className="api-pkg-header"><code>upgrade-rspeedy</code> <span className="api-pkg-version">v0.17.2</span> · <a href="https://www.npmjs.com/package/upgrade-rspeedy" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/upgrade-rspeedy" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/upgrade-rspeedy/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+将 `package.json` 中的 `@lynx-js/rspeedy` 及其相关包更新到相互匹配的版本。
+
+## 用法
+
+在使用 `@lynx-js/rspeedy` 的项目中运行，然后重新安装依赖：
+
+```bash
+npx upgrade-rspeedy@latest
+npm install
+```
+
+如需升级到 Rspeedy 的某个 canary 版本，运行对应版本的 `upgrade-rspeedy-canary`，它会以 `npm:` 别名的形式写入这些包：
+
+```bash
+# 将版本号替换为你需要的 canary 版本
+npx upgrade-rspeedy-canary@0.8.2-canary-20250309-870106fc
+```

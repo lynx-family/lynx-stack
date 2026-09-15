@@ -1,0 +1,29 @@
+---
+title: 'upgrade-rspeedy'
+---
+
+# upgrade-rspeedy
+
+{/* @api PackageHeader package="upgrade-rspeedy" */}
+
+<div className="api-pkg-header"><code>upgrade-rspeedy</code> <span className="api-pkg-version">v0.17.2</span> · <a href="https://www.npmjs.com/package/upgrade-rspeedy" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/upgrade-rspeedy" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/upgrade-rspeedy/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+
+{/* @api-end */}
+
+Updates `@lynx-js/rspeedy` and the Rspeedy-related packages in `package.json` to matching versions.
+
+## Usage
+
+Run it in a project that uses `@lynx-js/rspeedy`, then install the dependencies again:
+
+```bash
+npx upgrade-rspeedy@latest
+npm install
+```
+
+To move to a canary version of Rspeedy, run `upgrade-rspeedy-canary` at that version. It writes the packages as `npm:` aliases:
+
+```bash
+# Replace the version with the canary you want
+npx upgrade-rspeedy-canary@0.8.2-canary-20250309-870106fc
+```

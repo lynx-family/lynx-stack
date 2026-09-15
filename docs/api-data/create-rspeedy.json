@@ -1,0 +1,9 @@
+{
+  "id": "create-rspeedy",
+  "package": "create-rspeedy",
+  "version": "0.17.2",
+  "description": "Deprecated: use @lynx-js/create-lynx instead",
+  "group": "build",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/create-rspeedy",
+  "exports": []
+}

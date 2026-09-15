@@ -20,6 +20,13 @@
     "description": "An Rsbuild plugin for building Vanilla Lynx applications with Element PAPI.",
     "exports": 8
   },
+  "create-lynx": {
+    "package": "@lynx-js/create-lynx",
+    "version": "0.2.0",
+    "group": "build",
+    "description": "Create a Lynx app or library with one command",
+    "exports": 0
+  },
   "qrcode-rsbuild-plugin": {
     "package": "@lynx-js/qrcode-rsbuild-plugin",
     "version": "0.7.2",
@@ -69,6 +76,20 @@
     "description": "A webpack/rspack-based frontend toolchain for Lynx",
     "exports": 42
   },
+  "upgrade-rspeedy": {
+    "package": "upgrade-rspeedy",
+    "version": "0.17.2",
+    "group": "build",
+    "description": "Upgrade Rspeedy-related packages",
+    "exports": 0
+  },
+  "create-rspeedy": {
+    "package": "create-rspeedy",
+    "version": "0.17.2",
+    "group": "build",
+    "description": "Deprecated: use @lynx-js/create-lynx instead",
+    "exports": 0
+  },
   "react": {
     "package": "@lynx-js/react",
     "version": "0.126.1",
@@ -101,6 +122,13 @@
     "version": "0.0.1",
     "group": "react",
     "description": "This is a marker package to indicate that a module can only be used in the Background Thread.",
+    "exports": 0
+  },
+  "react-umd": {
+    "package": "@lynx-js/react-umd",
+    "version": "0.126.1",
+    "group": "react",
+    "description": "UMD build for ReactLynx",
     "exports": 0
   },
   "web-core": {
@@ -177,6 +205,13 @@
     "description": "Generative UI for Lynx.",
     "exports": 116
   },
+  "skill-lynx-openui": {
+    "package": "@lynx-js/skill-lynx-openui",
+    "version": "0.0.2",
+    "group": "libraries",
+    "description": "Generate Lynx OpenUI v0.5 programs for @lynx-js/genui.",
+    "exports": 0
+  },
   "i18next-translation-dedupe": {
     "package": "@lynx-js/i18next-translation-dedupe",
     "version": "0.0.1",
@@ -191,12 +226,40 @@
     "description": "Lynx library code generator",
     "exports": 14
   },
+  "create-lynx-library": {
+    "package": "create-lynx-library",
+    "version": "0.6.1",
+    "group": "libraries",
+    "description": "Create native Lynx libraries",
+    "exports": 0
+  },
   "testing-environment": {
     "package": "@lynx-js/testing-environment",
     "version": "0.3.4",
     "group": "libraries",
     "description": "A subset of a Lynx environment to be useful for testing",
     "exports": 12
+  },
+  "kitten-lynx": {
+    "package": "@lynx-js/kitten-lynx-test-infra",
+    "version": "0.1.6",
+    "group": "libraries",
+    "description": "A testing framework executing the Lynx explorer Android application",
+    "exports": 4
+  },
+  "docs-mcp-server": {
+    "package": "@lynx-js/docs-mcp-server",
+    "version": "0.2.6",
+    "group": "libraries",
+    "description": "A MCP Server providing Lynx documentation resources for LLMs, with carefully designed prompting.",
+    "exports": 0
+  },
+  "lynx-stack-docs": {
+    "package": "@lynx-js/lynx-stack-docs",
+    "version": "0.0.0",
+    "group": "libraries",
+    "description": "The Lynx Stack API reference as MDX pages: the build configuration, the Rsbuild plugins, ReactLynx and every @lynx-js package.",
+    "exports": 0
   },
   "template-webpack-plugin": {
     "package": "@lynx-js/template-webpack-plugin",

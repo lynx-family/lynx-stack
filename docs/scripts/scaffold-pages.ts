@@ -352,7 +352,7 @@ const index = JSON.parse(
 >;
 
 for (const entry of PACKAGES) {
-  if (entry.group === 'build' || entry.page) continue;
+  if (entry.page) continue;
   const meta = index[entry.id];
   const name = meta?.package ?? `@lynx-js/${entry.id}`;
   const intro = readmeIntro(entry.dir) || (meta?.description ?? '');
@@ -418,7 +418,7 @@ outline: false
 
 # Packages overview
 
-Every public package published from [lynx-stack](https://github.com/lynx-family/lynx-stack), from the build tools every Lynx app uses to the internals of the build engine. The name under a package is its main export.
+Every public package published from [lynx-stack](https://github.com/lynx-family/lynx-stack), from the build tools every Lynx app uses to the internals of the build engine. The line under a package is its main export or the command that runs it.
 
 {/* @api PackagesOverview */}
 {/* @api-end */}

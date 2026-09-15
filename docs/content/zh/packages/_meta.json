@@ -25,6 +25,11 @@
   },
   {
     "type": "file",
+    "name": "create-lynx",
+    "label": "create-lynx"
+  },
+  {
+    "type": "file",
     "name": "qrcode-rsbuild-plugin",
     "label": "qrcode-rsbuild-plugin"
   },
@@ -59,6 +64,16 @@
     "label": "rspeedy"
   },
   {
+    "type": "file",
+    "name": "upgrade-rspeedy",
+    "label": "upgrade-rspeedy"
+  },
+  {
+    "type": "file",
+    "name": "create-rspeedy",
+    "label": "create-rspeedy"
+  },
+  {
     "type": "section-header",
     "label": "ReactLynx"
   },
@@ -86,6 +101,11 @@
     "type": "file",
     "name": "background-only",
     "label": "background-only"
+  },
+  {
+    "type": "file",
+    "name": "react-umd",
+    "label": "react-umd"
   },
   {
     "type": "section-header",
@@ -152,6 +172,11 @@
   },
   {
     "type": "file",
+    "name": "skill-lynx-openui",
+    "label": "skill-lynx-openui"
+  },
+  {
+    "type": "file",
     "name": "i18next-translation-dedupe",
     "label": "i18next-translation-dedupe"
   },
@@ -162,8 +187,28 @@
   },
   {
     "type": "file",
+    "name": "create-lynx-library",
+    "label": "create-lynx-library"
+  },
+  {
+    "type": "file",
     "name": "testing-environment",
     "label": "testing-environment"
+  },
+  {
+    "type": "file",
+    "name": "kitten-lynx",
+    "label": "kitten-lynx-test-infra"
+  },
+  {
+    "type": "file",
+    "name": "docs-mcp-server",
+    "label": "docs-mcp-server"
+  },
+  {
+    "type": "file",
+    "name": "lynx-stack-docs",
+    "label": "lynx-stack-docs"
   },
   {
     "type": "section-header",

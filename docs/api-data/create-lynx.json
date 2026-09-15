@@ -1,0 +1,9 @@
+{
+  "id": "create-lynx",
+  "package": "@lynx-js/create-lynx",
+  "version": "0.2.0",
+  "description": "Create a Lynx app or library with one command",
+  "group": "build",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/create-lynx",
+  "exports": []
+}

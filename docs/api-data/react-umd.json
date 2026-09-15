@@ -1,0 +1,9 @@
+{
+  "id": "react-umd",
+  "package": "@lynx-js/react-umd",
+  "version": "0.126.1",
+  "description": "UMD build for ReactLynx",
+  "group": "react",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/react-umd",
+  "exports": []
+}

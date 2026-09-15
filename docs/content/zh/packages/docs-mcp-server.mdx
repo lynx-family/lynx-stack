@@ -1,0 +1,36 @@
+---
+title: '@lynx-js/docs-mcp-server'
+---
+
+# @lynx-js/docs-mcp-server
+
+{/* @api PackageHeader package="docs-mcp-server" */}
+
+<div className="api-pkg-header"><code>@lynx-js/docs-mcp-server</code> <span className="api-pkg-version">v0.2.6</span> · <a href="https://www.npmjs.com/package/@lynx-js/docs-mcp-server" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/mcp-servers/docs-mcp-server" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/mcp-servers/docs-mcp-server/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+为 Claude Code、Codex、Cursor、Copilot 等编程 agent 提供 Lynx 文档的 MCP 服务器，内容来自 [llms.txt](https://lynxjs.org/next/llms.txt)。
+
+## 用法
+
+在 MCP 客户端的配置中加入：
+
+```json
+{
+  "mcpServers": {
+    "lynx-docs": {
+      "command": "npx",
+      "args": ["-y", "@lynx-js/docs-mcp-server@latest"]
+    }
+  }
+}
+```
+
+使用 Claude Code 时：
+
+```bash
+claude mcp add lynx-docs npx @lynx-js/docs-mcp-server@latest
+```
+
+需要 Node.js 18.17 或更高版本。其他客户端的配置见 [README](https://github.com/lynx-family/lynx-stack/tree/main/packages/mcp-servers/docs-mcp-server)。

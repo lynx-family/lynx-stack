@@ -1,0 +1,9 @@
+{
+  "id": "skill-lynx-openui",
+  "package": "@lynx-js/skill-lynx-openui",
+  "version": "0.0.2",
+  "description": "Generate Lynx OpenUI v0.5 programs for @lynx-js/genui.",
+  "group": "libraries",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/genui/skill-lynx-openui",
+  "exports": []
+}

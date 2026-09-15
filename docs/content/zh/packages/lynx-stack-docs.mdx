@@ -1,0 +1,32 @@
+---
+title: '@lynx-js/lynx-stack-docs'
+---
+
+# @lynx-js/lynx-stack-docs
+
+{/* @api PackageHeader package="lynx-stack-docs" */}
+
+<div className="api-pkg-header"><code>@lynx-js/lynx-stack-docs</code> <span className="api-pkg-version">v0.0.0</span> · <a href="https://www.npmjs.com/package/@lynx-js/lynx-stack-docs" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/lynx-stack-docs" target="_blank" rel="noopener">源码</a> · <a href="https://github.com/lynx-family/lynx-stack/tree/main/packages/lynx-stack-docs/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></div>
+
+{/* @api-end */}
+
+以 MDX 页面形式提供的本 API 参考（中英文），供需要在自己站点中展示它的文档站使用。每次 Lynx Stack 发版都会同步发布。
+
+## 安装
+
+import { PackageManagerTabs } from '@rspress/core/theme';
+
+<PackageManagerTabs command="add @lynx-js/lynx-stack-docs -D" />
+
+## 目录结构
+
+```
+content/
+  en/
+    config/      build configuration
+    react/api/   ReactLynx API
+    packages/    every @lynx-js package, the Rsbuild plugins included
+  zh/            the same pages in Chinese
+```
+
+每个目录都带有 Rspress 的 `_meta.json`，把目录复制到文档根目录下的相同路径即可。页面的使用要求见 [README](https://github.com/lynx-family/lynx-stack/tree/main/packages/lynx-stack-docs)。

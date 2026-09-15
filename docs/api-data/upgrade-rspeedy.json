@@ -1,0 +1,9 @@
+{
+  "id": "upgrade-rspeedy",
+  "package": "upgrade-rspeedy",
+  "version": "0.17.2",
+  "description": "Upgrade Rspeedy-related packages",
+  "group": "build",
+  "srcUrl": "https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/upgrade-rspeedy",
+  "exports": []
+}
