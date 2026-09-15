@@ -56,7 +56,6 @@ export interface Locale {
   overviewLegend: string;
   usage: string;
   withPluginLynx: string;
-  withRspeedy: string;
   rspeedyOnly: string;
   options: string;
   lynxBadge: string;
@@ -96,7 +95,6 @@ export const EN: Locale = {
     'Options marked {lynx} are specific to Lynx, and options marked {default} are Rsbuild options with a different default. Both have their own page here; the others link to the Rsbuild documentation.',
   usage: 'Usage',
   withPluginLynx: 'With Rsbuild, pass it to {link}:',
-  withRspeedy: 'With Rspeedy, set it in `lynx.config.ts`:',
   rspeedyOnly: 'Available only in `lynx.config.ts` (Rspeedy):',
   options: 'Options',
   lynxBadge: 'Lynx',
@@ -143,7 +141,6 @@ export const ZH: Locale = {
     '标有 {lynx} 的是 Lynx 特有配置，标有 {default} 的是默认值与 Rsbuild 不同的 Rsbuild 配置，二者在本站都有单独的页面；其余配置链接到 Rsbuild 文档。',
   usage: '使用方式',
   withPluginLynx: '使用 Rsbuild 构建时，将它传给 {link}：',
-  withRspeedy: '使用 Rspeedy 时，在 `lynx.config.ts` 中设置：',
   rspeedyOnly: '仅在 `lynx.config.ts`（Rspeedy）中可用：',
   options: '选项',
   lynxBadge: 'Lynx',
@@ -732,7 +729,7 @@ function configUsage(path: string, m: ApiMember, ctx: Ctx): string {
   const link = `[\`pluginLynx\`](${ctx.prefix ?? ''}${plugin.url})`;
   return `${s}${
     ctx.l.withPluginLynx.replace('{link}', link)
-  }\n\n${rsbuildConfig}\n\n${ctx.l.withRspeedy}\n\n${lynxConfig}\n\n`;
+  }\n\n${rsbuildConfig}\n\n`;
 }
 
 function splitSentences(text: string): string[] {

@@ -17,6 +17,8 @@ import type { Translations } from './render.ts';
 
 const DATA = join(dirname(fileURLToPath(import.meta.url)), '../api-data');
 const locale = process.argv[2] ?? 'zh';
+const check = process.argv.includes('--check');
+const pending: string[] = [];
 const OUT = join(DATA, locale);
 mkdirSync(OUT, { recursive: true });
 
@@ -36,17 +38,32 @@ for (
     const prev = existing[key];
     total++;
     if (prev?.text) {
-      if (prev.en !== en) stale++;
+      if (prev.en !== en) {
+        stale++;
+        pending.push(`${file} ${key} (stale)`);
+      }
       next[key] = { en: prev.en, text: prev.text };
     } else {
       todo++;
+      pending.push(`${file} ${key} (untranslated)`);
       next[key] = { en, text: '' };
     }
   }
-  if (Object.keys(next).length > 0) {
+  for (const key of Object.keys(existing)) {
+    if (!(key in next)) pending.push(`${file} ${key} (removed from source)`);
+  }
+  if (!check && Object.keys(next).length > 0) {
     writeFileSync(path, JSON.stringify(next, null, 2) + '\n');
   }
 }
 console.info(
   `${locale}: ${total} strings, ${todo} untranslated, ${stale} stale`,
 );
+if (check && pending.length > 0) {
+  console.error(
+    `${
+      pending.join('\n')
+    }\n\nRun \`pnpm --filter docs i18n:extract\`, translate the strings in docs/api-data/${locale}/*.json and commit them.`,
+  );
+  process.exitCode = 1;
+}

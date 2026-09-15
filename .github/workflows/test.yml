@@ -231,6 +231,7 @@ jobs:
           echo "::error::Please run 'pnpm --filter docs generate' and commit the result."
           exit 1;
         fi
+        pnpm --filter docs run i18n:check
   test-publish:
     needs: build
     uses: ./.github/workflows/workflow-test.yml

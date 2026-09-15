@@ -88,7 +88,7 @@ The API reference in `docs/` (the pages synced to lynxjs.org) is generated from 
 # Regenerate docs/api-data and the generated regions in docs/content (requires `pnpm turbo build`; ALWAYS commit changes)
 pnpm --filter docs generate
 
-# Queue new or changed English strings for translation, then translate them in docs/api-data/zh/*.json
+# Queue new or changed English strings for translation, then translate them in docs/api-data/zh/*.json (ALWAYS commit; CI runs `pnpm --filter docs i18n:check` and fails while a string is untranslated or stale)
 pnpm --filter docs i18n:extract
 
 # Update the API reports (ALWAYS commit changes)

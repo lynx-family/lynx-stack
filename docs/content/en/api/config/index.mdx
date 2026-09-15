@@ -6,10 +6,7 @@ outline: false
 
 # Config overview
 
-The options for building a Lynx app. The same options apply whichever way you build:
-
-- **Rsbuild with [`pluginLynx`](/api/packages/rsbuild-plugin)**: `rsbuild.config.ts` holds the Rsbuild options, and the Lynx-specific options are passed to `pluginLynx`.
-- **Rspeedy**: `lynx.config.ts` holds all of them. Rspeedy applies `pluginLynx` for you and passes the Lynx-specific options on to it.
+The options for building a Lynx app with Rsbuild: `rsbuild.config.ts` holds the Rsbuild options, and the Lynx-specific options are passed to [`pluginLynx`](/api/packages/rsbuild-plugin).
 
 ```ts title="rsbuild.config.ts"
 import { defineConfig } from '@rsbuild/core'
@@ -32,22 +29,9 @@ export default defineConfig({
 })
 ```
 
-```ts title="lynx.config.ts"
-import { defineConfig } from '@lynx-js/rspeedy'
-import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+Rspeedy takes the same options at the top level of `lynx.config.ts`.
 
-export default defineConfig({
-  source: {
-    entry: './src/index.tsx',
-  },
-  output: {
-    filename: { bundle: '[name].[platform].bundle' },
-  },
-  plugins: [pluginReactLynx()],
-})
-```
-
-Most options are standard [Rsbuild options](https://rsbuild.rs/config/) and link straight to the Rsbuild documentation. The options specific to Lynx have their own pages here, with how to set them in both setups. Rsbuild options that would break a Lynx bundle (`html`, `security`, `moduleFederation`, the polyfill settings) are not supported.
+Most options are standard [Rsbuild options](https://rsbuild.rs/config/) and link straight to the Rsbuild documentation. The options specific to Lynx have their own pages here. Rsbuild options that would break a Lynx bundle (`html`, `security`, `moduleFederation`, the polyfill settings) are not supported.
 
 ## All options
 

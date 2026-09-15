@@ -6,10 +6,7 @@ outline: false
 
 # 配置总览
 
-构建 Lynx 应用的配置项。无论用哪种方式构建，配置项都是同一套：
-
-- **Rsbuild + [`pluginLynx`](/zh/api/packages/rsbuild-plugin)**：`rsbuild.config.ts` 中放 Rsbuild 配置，Lynx 特有配置传给 `pluginLynx`。
-- **Rspeedy**：所有配置都放在 `lynx.config.ts` 中。Rspeedy 会自动应用 `pluginLynx`，并把 Lynx 特有配置转交给它。
+使用 Rsbuild 构建 Lynx 应用的配置项：`rsbuild.config.ts` 中放 Rsbuild 配置，Lynx 特有配置传给 [`pluginLynx`](/zh/api/packages/rsbuild-plugin)。
 
 ```ts title="rsbuild.config.ts"
 import { defineConfig } from '@rsbuild/core'
@@ -32,22 +29,9 @@ export default defineConfig({
 })
 ```
 
-```ts title="lynx.config.ts"
-import { defineConfig } from '@lynx-js/rspeedy'
-import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+Rspeedy 在 `lynx.config.ts` 顶层接收同样的配置项。
 
-export default defineConfig({
-  source: {
-    entry: './src/index.tsx',
-  },
-  output: {
-    filename: { bundle: '[name].[platform].bundle' },
-  },
-  plugins: [pluginReactLynx()],
-})
-```
-
-大多数配置项是标准的 [Rsbuild 配置](https://rsbuild.rs/zh/config/)，直接链接到 Rsbuild 文档。Lynx 特有的配置项在本站有单独的页面，并说明两种构建方式下的设置方法。会破坏 Lynx bundle 的 Rsbuild 配置（`html`、`security`、`moduleFederation` 以及 polyfill 相关设置）不受支持。
+大多数配置项是标准的 [Rsbuild 配置](https://rsbuild.rs/zh/config/)，直接链接到 Rsbuild 文档。Lynx 特有的配置项在本站有单独的页面。会破坏 Lynx bundle 的 Rsbuild 配置（`html`、`security`、`moduleFederation` 以及 polyfill 相关设置）不受支持。
 
 ## 全部选项
 

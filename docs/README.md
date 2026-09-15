@@ -43,7 +43,7 @@ Handwritten pages have a Chinese copy under `content/zh/` with the same path; ed
 
 Generated text is translated through sidecar files, one per package: `api-data/zh/<package>.json` maps each string (`Output.filename.summary`, `Output.filename.example.0`, …) to `en`, the English it was translated from, and `text`, its translation. `expand-api-docs.ts` uses `text` only while `en` still equals the current English; when the English changes, the page falls back to the English text and shows a 待翻译 badge until someone updates the translation. A stale translation is never shown silently.
 
-`i18n:extract` adds new strings with an empty `text` and drops strings that no longer exist. It leaves a stale entry as it is, so its `en` still shows the English it was translated from. To update an entry by hand, set `en` to the current English and `text` to its translation; `i18n:dump` and `i18n:apply` do this for you.
+`i18n:extract` adds new strings with an empty `text` and drops strings that no longer exist. It leaves a stale entry as it is, so its `en` still shows the English it was translated from. To update an entry by hand, set `en` to the current English and `text` to its translation; `i18n:dump` and `i18n:apply` do this for you. CI runs `i18n:check` and fails while any string is untranslated, stale, or no longer in the source.
 
 ```sh
 pnpm --filter docs i18n:extract          # add new strings to api-data/zh/*.json, drop removed ones
