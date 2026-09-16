@@ -11,16 +11,6 @@ export function pluginConfig(options: LynxPluginOptions): RsbuildPlugin {
     name: 'lynx:rsbuild:config',
     setup(api) {
       api.expose(LYNX_CONFIG, createLynxConfig(options))
-
-      api.modifyRsbuildConfig({
-        handler: (config, { mergeRsbuildConfig }) => {
-          if (Object.keys(config.environments ?? {}).length > 0) {
-            return config
-          }
-          return mergeRsbuildConfig(config, { environments: { lynx: {} } })
-        },
-        order: 'pre',
-      })
     },
   }
 }

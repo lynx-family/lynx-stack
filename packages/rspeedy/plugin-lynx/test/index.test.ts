@@ -40,11 +40,14 @@ describe('pluginLynx', () => {
     expect(pluginNames(config)).toContain('DropSourceMapAssetsPlugin')
   })
 
-  test('keeps the configured environments', async () => {
+  test.each([
+    { environments: { web: {} } },
+    { environments: {} },
+  ])('keeps the configured environments %o', async ({ environments }) => {
     const rsbuild = await createRsbuild({
       cwd: path.dirname(fileURLToPath(import.meta.url)),
       rsbuildConfig: {
-        environments: { web: {} },
+        environments,
         plugins: [pluginLynx()],
       },
     })
