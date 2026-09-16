@@ -43,7 +43,6 @@
     "@lynx-js/css-serializer": "workspace:*",
     "@lynx-js/debug-metadata": "workspace:*",
     "@lynx-js/debug-metadata-rsbuild-plugin": "workspace:*",
-    "@lynx-js/docs-mcp-server": "workspace:*",
     "@lynx-js/external-bundle-rsbuild-plugin": "workspace:*",
     "@lynx-js/externals-loading-webpack-plugin": "workspace:*",
     "@lynx-js/genui": "workspace:*",

@@ -1534,40 +1534,6 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(@rsbuild/core@2.2.4(core-js@3.50.0))
 
-  packages/mcp-servers/docs-mcp-server:
-    dependencies:
-      '@modelcontextprotocol/sdk':
-        specifier: 1.28.0
-        version: 1.28.0(supports-color@10.2.2)(zod@4.4.3)
-      commander:
-        specifier: ^15.0.0
-        version: 15.0.0
-      debug:
-        specifier: ^4.4.3
-        version: 4.4.3(supports-color@10.2.2)
-      empathic:
-        specifier: ^2.0.1
-        version: 2.0.1
-      mdast-util-from-markdown:
-        specifier: ^2.0.3
-        version: 2.0.3(supports-color@10.2.2)
-      mdast-util-to-markdown:
-        specifier: ^2.1.2
-        version: 2.1.2
-      undici:
-        specifier: ^8.10.0
-        version: 8.10.0
-    devDependencies:
-      '@types/debug':
-        specifier: ^4.1.13
-        version: 4.1.13
-      '@types/mdast':
-        specifier: ^4.0.4
-        version: 4.0.4
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
-
   packages/motion:
     dependencies:
       motion:
@@ -2368,9 +2334,6 @@ importers:
       '@lynx-js/debug-metadata-rsbuild-plugin':
         specifier: workspace:*
         version: link:../plugin-debug-metadata
-      '@lynx-js/docs-mcp-server':
-        specifier: workspace:*
-        version: link:../../mcp-servers/docs-mcp-server
       '@lynx-js/external-bundle-rsbuild-plugin':
         specifier: workspace:*
         version: link:../plugin-external-bundle
@@ -5177,16 +5140,6 @@ packages:
   '@modelcontextprotocol/core@2.0.0':
     resolution: {integrity: sha512-pJCEwGG7Lfr/+PQp9ZTwKXNeO5wzbfKL7H3MYpCorM4oFBoQrdjnBgEoqG+RjhsvS1FKrDbKux+M1HhlnGWqcA==}
     engines: {node: '>=20'}
-
-  '@modelcontextprotocol/sdk@1.28.0':
-    resolution: {integrity: sha512-gmloF+i+flI8ouQK7MWW4mOwuMh4RePBuPFAEPC6+pdqyWOUMDOixb6qZ69owLJpz6XmyllCouc4t8YWO+E2Nw==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@cfworker/json-schema': ^4.1.1
-      zod: ^3.25 || ^4.0
-    peerDependenciesMeta:
-      '@cfworker/json-schema':
-        optional: true
 
   '@modelcontextprotocol/sdk@1.29.0':
     resolution: {integrity: sha512-zo37mZA9hJWpULgkRpowewez1y6ML5GsXJPY8FI0tBBCd77HEvza4jDqRKOXgHNn867PVGCyTdzqpz0izu5ZjQ==}
@@ -15162,28 +15115,6 @@ snapshots:
   '@modelcontextprotocol/core@2.0.0':
     dependencies:
       zod: 4.4.3
-
-  '@modelcontextprotocol/sdk@1.28.0(supports-color@10.2.2)(zod@4.4.3)':
-    dependencies:
-      '@hono/node-server': 1.19.9(hono@4.13.0)
-      ajv: 8.20.0
-      ajv-formats: 3.0.1(ajv@8.20.0)
-      content-type: 1.0.5
-      cors: 2.8.6
-      cross-spawn: 7.0.6
-      eventsource: 3.0.7
-      eventsource-parser: 3.1.0
-      express: 5.2.1(supports-color@10.2.2)
-      express-rate-limit: 8.6.0(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)
-      hono: 4.13.0
-      jose: 6.2.10
-      json-schema-typed: 8.0.2
-      pkce-challenge: 5.0.1
-      raw-body: 3.0.2
-      zod: 4.4.3
-      zod-to-json-schema: 3.25.2(zod@4.4.3)
-    transitivePeerDependencies:
-      - supports-color
 
   '@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3)':
     dependencies:
