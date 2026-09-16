@@ -2413,6 +2413,9 @@ importers:
       '@lynx-js/react-alias-rsbuild-plugin':
         specifier: workspace:*
         version: link:../plugin-react-alias
+      '@lynx-js/react-compat':
+        specifier: workspace:*
+        version: link:../../react-compat
       '@lynx-js/react-refresh-webpack-plugin':
         specifier: workspace:*
         version: link:../../webpack/react-refresh-webpack-plugin
