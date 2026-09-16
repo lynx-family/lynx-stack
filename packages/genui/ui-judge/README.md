@@ -286,7 +286,10 @@ worker is joined.
 Untrusted staged pages, including remote templates submitted to `/screenshot/template`, are
 deliberately different. Each one is rendered by a fresh, short-lived
 `ui-judge-server` child process with its own `LynxContainer`, so native
-process-global image caches cannot return another request's bytes. The child
+process-global image caches cannot return another request's bytes. The server
+admits up to eight isolated renders per process, shared by LynXML,
+template, and ZIP requests. Additional requests wait for capacity within their
+deadline. ZIP extraction retains its separate four-permit limit. Each child
 receives only server-selected paths and page-load data, inherits no model
 credentials, and sends no request output to stdout or stderr. A private
 stdin lifeline makes the child exit if its parent dies. Cancellation and timeout
@@ -316,11 +319,11 @@ directory are validated before the ZIP library runs; ZIP64 metadata and
 ambiguous visible EOCD fallback records are rejected while EOCD bytes inside
 nested file data remain ordinary content.
 
-At most four ZIP requests may pass the isolated-render capacity gate at once.
+At most eight ZIP requests may pass the isolated-render capacity gate at once.
 When every slot is busy, the HTTP callback waits until a slot becomes available
 or its operation deadline expires; an outer middleware must implement any
 earlier load shedding. Acquiring the slot before extraction keeps staged trees
-within the same four-job bound. Synchronous ZIP work runs on Tokio's blocking
+within the same eight-job bound. Synchronous ZIP work runs on Tokio's blocking
 pool with a separate four-permit semaphore and its own ten-second absolute
 deadline. A blocking extraction retains its permit until it really exits, while
 a successful result owns its temporary-directory guard. The ZIP screenshot
@@ -335,9 +338,9 @@ cleanup itself failed. Nested ZIP entries are left as ordinary files.
 Rust limits are only one layer of containment. Production deployments must run
 the process as a non-root user with a read-only root filesystem and put
 `TMPDIR` on a dedicated `noexec,nosuid,nodev` volume with an ephemeral-storage
-quota. Size that quota for four simultaneous 100 MiB extractions plus archive
+quota. Size that quota for eight retained 100 MiB extracted trees plus archive
 and filesystem overhead. Apply container or cgroup CPU, memory, and process
-limits to the server and its four possible renderer children; the Rust deadline
+limits to the server and its eight possible renderer children; the Rust deadline
 does not prevent an allocation spike before it expires. Disable core dumps for
 the service account as defense in depth. Log the sanitized
 rejection kind, render outcome, and byte/count/timing statistics together with

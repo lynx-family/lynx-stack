@@ -68,7 +68,7 @@ const ZIP_CAPTURE_HEIGHT_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_HEIGHT";
 const ISOLATED_CAPTURE_CONFIG_ARG: &str = "--ui-judge-isolated-capture-config-file";
 const ZIP_CAPTURE_PROCESS_GRACE: Duration = Duration::from_secs(5);
 const ZIP_CAPTURE_FATAL_EXIT_CODE: i32 = 75;
-const MAX_CONCURRENT_ZIP_RENDERERS: usize = 4;
+const MAX_CONCURRENT_ZIP_RENDERERS: usize = 8;
 const ZIP_SCREENSHOT_SETTLE_MS: u64 = 500;
 static NEXT_ZIP_JOB_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -1905,6 +1905,7 @@ async fn shutdown_signal() -> io::Result<()> {
 #[cfg(test)]
 mod tests {
   use crate::capture::CaptureResponse;
+  use std::future::Future;
   use std::io::{Cursor, Write};
   use std::path::Path;
   use std::sync::mpsc::Receiver;
@@ -2955,6 +2956,33 @@ mod tests {
 
     assert_eq!(response.0, json!({ "status": "ok" }));
     headless.shutdown().expect("stop mock headless worker");
+  }
+
+  #[tokio::test]
+  async fn eight_isolated_renders_run_before_the_next_request_waits() {
+    let processes = ZipCaptureProcesses::new();
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+    let mut active = Vec::new();
+    for _ in 0..8 {
+      active.push(
+        processes
+          .begin(deadline)
+          .await
+          .expect("admit eight renders"),
+      );
+    }
+    let waiting = processes.begin(deadline);
+    tokio::pin!(waiting);
+    assert!(
+      std::future::poll_fn(|cx| { std::task::Poll::Ready(waiting.as_mut().poll(cx).is_pending()) })
+        .await
+    );
+
+    drop(active.pop());
+    let next = waiting.await.expect("admit the next render after release");
+    drop(next);
+    drop(active);
+    processes.close_and_wait().await;
   }
 
   #[tokio::test]
