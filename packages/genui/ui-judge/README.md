@@ -291,13 +291,34 @@ admits up to eight isolated renders per process, shared by LynXML,
 template, and ZIP requests. Additional requests wait for capacity within their
 deadline. ZIP extraction retains its separate four-permit limit. Each child
 receives only server-selected paths and page-load data, inherits no model
-credentials, and sends no request output to stdout or stderr. A private
+credentials, and has its stdout and stderr captured separately. A private
 stdin lifeline makes the child exit if its parent dies. Cancellation and timeout
 kill and reap the child before its render slot and staged tree are released;
 graceful shutdown drains accepted children. Failure to confirm reaping exits the
 service without unwinding the staging guard after a fixed five-second reap grace
 so its supervisor can restart it. This fail-closed exit does not request a core
 dump. The same absolute deadline also covers output reading.
+
+If a started child fails, its JSON error response includes separate `stdout`
+and `stderr` strings alongside `message`. Each stream retains its last 64 KiB
+of bytes; `stdoutTruncated` and `stderrTruncated` indicate discarded earlier
+output. Invalid UTF-8 bytes use replacement characters. Both pipes continue to
+drain after reaching the limit so verbose children cannot block on a full pipe.
+Timeout responses include output collected before cleanup. Successful requests
+still return the original BMP bytes; errors before child startup retain the
+message-only response.
+
+```json
+{
+  "error": {
+    "message": "The LynXML source could not be rendered.",
+    "stdout": "runtime output\n",
+    "stderr": "render failure\n",
+    "stdoutTruncated": false,
+    "stderrTruncated": false
+  }
+}
+```
 
 ### Secure ZIP staging
 
