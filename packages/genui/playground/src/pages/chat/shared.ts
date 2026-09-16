@@ -13,6 +13,8 @@ import {
   assertCustomProviderRequestTarget,
   buildGenuiServerUrl,
 } from '../../config/genuiServer.js';
+import { readModelPrices } from '../../utils/modelPricing.js';
+import type { ModelPrices } from '../../utils/modelPricing.js';
 import type { ProtocolName } from '../../utils/protocol.js';
 import { isDevHost } from '../../utils/publishPayload.js';
 
@@ -51,7 +53,7 @@ function getCustomProviderDefaultModel(baseURL: string): string {
   )?.model ?? CUSTOM_PROVIDER_MODEL;
 }
 
-export interface ProviderModel {
+export interface ProviderModel extends Partial<ModelPrices> {
   id: string;
   label: string;
 }
@@ -237,7 +239,7 @@ function parseModelsResponse(value: unknown): {
     if (!item || typeof item !== 'object') return [];
     const model = item as Record<string, unknown>;
     return typeof model.id === 'string' && typeof model.label === 'string'
-      ? [{ id: model.id, label: model.label }]
+      ? [{ id: model.id, label: model.label, ...readModelPrices(model) }]
       : [];
   });
   if (
@@ -317,14 +319,31 @@ export const CHAT_PROVIDER_SETTINGS_ADAPTER = {
   serialize: serializeProviderSettings,
   conversation: {
     snapshot: (settings) => ({
+      ...(settings.provider ? { provider: settings.provider } : {}),
       enableDesignGuidance: settings.enableDesignGuidance !== false,
     }),
     restore: (settings, saved) => ({
       ...settings,
+      ...(saved.provider
+          && (settings.status !== 'ready'
+            || saved.provider === CUSTOM_PROVIDER_ID
+            || settings.models.some(model => model.id === saved.provider))
+        ? { provider: saved.provider }
+        : {}),
       enableDesignGuidance: saved.enableDesignGuidance,
     }),
   },
   load: loadProviderSettings,
+  usageModel: (settings) => ({
+    model: settings.provider === CUSTOM_PROVIDER_ID
+      ? settings.model
+      : settings.provider,
+    modelPrices: settings.provider === CUSTOM_PROVIDER_ID
+      ? undefined
+      : readModelPrices(
+        settings.models.find(model => model.id === settings.provider),
+      ),
+  }),
   controls(settings) {
     const customOption = {
       value: CUSTOM_PROVIDER_ID,

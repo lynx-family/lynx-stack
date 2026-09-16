@@ -18,6 +18,7 @@ import {
   createDefaultBenchGroups,
 } from './benchData.js';
 import { BenchHistoryRail } from './BenchHistoryRail.js';
+import { benchGroupAverageCost, benchTotalCost } from './benchPricing.js';
 import { BenchReportPanel } from './BenchReportPanel.js';
 import { sanitizeBenchReportValue } from './benchReportSerialization.js';
 import type { BenchReport } from './benchReportTypes.js';
@@ -436,6 +437,17 @@ describe('fixed read-only report template', () => {
       report.scenarios.length + report.groups.length + report.results.length,
     );
     expect(disclosures.every((tag) => !tag.includes('open=""'))).toBe(true);
+    const planCount = report.scenarios.length + report.groups.length;
+    expect(
+      disclosures.slice(0, planCount).every((tag) =>
+        !tag.includes('data-report-image-exclude')
+      ),
+    ).toBe(true);
+    expect(
+      disclosures.slice(planCount).every((tag) =>
+        tag.includes('data-report-image-exclude')
+      ),
+    ).toBe(true);
   });
   test.each([
     'https://tracker.example.test/image.png',
@@ -557,4 +569,43 @@ test('preserves usage through history serialization and displays group and run d
   expect(markup).toContain('Cache hit rate: 50%');
   expect(markup).toContain('Average token details: 11,408');
   expect(markup).toContain('Token details: 11,408');
+});
+
+test('preserves per-run price snapshots and displays costs in both report views', () => {
+  const report = reportFixture();
+  const result = report.results[0]!;
+  result.modelPrices = { input_price: 2, cached_price: 0.5, output_price: 8 };
+  result.usage = { inputTokens: 10000, cachedTokens: 6000, outputTokens: 2000 };
+  report.results.push({
+    ...result,
+    id: 'failed-repair',
+    status: 'failed',
+    ok: false,
+    modelPrices: { input_price: 4, cached_price: 1, output_price: 16 },
+  });
+  report.summaries[0]!.plannedRuns = 4;
+  const saved = sanitizeBenchReportValue(report) as BenchReport;
+  expect(saved.results[0]!.modelPrices).toEqual(result.modelPrices);
+  expect(benchTotalCost(saved.results)).toBeCloseTo(81);
+  expect(benchGroupAverageCost(saved, saved.summaries[0]!)).toBeCloseTo(
+    20.25,
+  );
+  const pages = [
+    React.createElement(PublishedReportPage, { report: saved }),
+    React.createElement(BenchReportPanel, {
+      report: saved,
+      reportIsStale: false,
+      settings: saved.settings,
+      onOpenScreenshots: noop,
+    }),
+  ];
+  for (const page of pages) {
+    const html = renderToStaticMarkup(page);
+    expect(html).toContain('Est. cost (CNY)');
+    expect(html).toContain('¥81.0000');
+    expect(html).toContain('¥20.2500');
+  }
+  delete saved.results[1]!.modelPrices;
+  expect(benchTotalCost(saved.results)).toBeUndefined();
+  expect(benchGroupAverageCost(saved, saved.summaries[0]!)).toBeUndefined();
 });

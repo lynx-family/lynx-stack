@@ -74,7 +74,7 @@ export GENUI_MODEL_CONFIG_JSON='{
   recovery may increase the requested budget, within that same ceiling.
 - `reasoningEffort` is optional per model.
 - `input_price`, `cached_price`, and `output_price` optionally set prices per
-  **one million tokens**, using a common currency chosen by the deployment.
+  **one thousand tokens**, in CNY (yuan).
   These example prices are illustrative. Each price must be a finite,
   non-negative number and defaults to `0` when omitted. `input_price` applies
   to input tokens that did not hit the cache; `cached_price` applies to cache
@@ -124,11 +124,17 @@ Lynx XML, HTML, and both MCP Apps message and tool-selection responses:
 ```text
 ((inputTokens - cachedTokens) * input_price
  + cachedTokens * cached_price
- + outputTokens * output_price) / 1_000_000
+ + outputTokens * output_price) / 1_000
 ```
 
 The server does not calculate or return a monetary total. A custom provider
 has no server-configured prices.
+
+Bench run results include a `modelPrices` snapshot containing only the three
+public price fields, captured before generation. Playground displays estimated
+amounts in CNY; configure its deployment's rates in CNY per thousand tokens.
+Create stores the selected model's prices and usage with each assistant turn.
+Historical views use saved rates rather than the current model configuration.
 
 The three price dimensions are always present in `tokenUsage`; `null` means
 that the provider did not report a usable count. Keep unknown usage distinct

@@ -257,6 +257,15 @@ function hydrate(
       continue;
     }
     if (message.role !== 'assistant') continue;
+    if (message.generationError) {
+      messages.push({
+        kind: 'status',
+        tone: 'error',
+        text: message.generationError,
+        generationUsage: message.generationUsage,
+      });
+      continue;
+    }
     const source = extractLynxXmlSource(message.content);
     if (!isCompleteLynxXmlSource(source)) continue;
     output = {
@@ -270,9 +279,12 @@ function hydrate(
         : {}),
     };
     messages.push(
-      pendingLocalTitle
-        ? localExampleStatus(pendingLocalTitle)
-        : generatedStatus(output),
+      {
+        ...(pendingLocalTitle
+          ? localExampleStatus(pendingLocalTitle)
+          : generatedStatus(output)),
+        generationUsage: message.generationUsage,
+      },
     );
     pendingLocalTitle = null;
   }

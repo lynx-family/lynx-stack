@@ -12,6 +12,7 @@ import type {
   PreviewPayloadUrls,
   PreviewPerformanceMetrics,
 } from '../../storage/types.js';
+import type { GenerationUsageRecord } from '../../utils/modelPricing.js';
 import type { Protocol, ProtocolName } from '../../utils/protocol.js';
 
 export interface ChatHost {
@@ -63,6 +64,7 @@ export interface ChatInteractionLog {
 }
 
 export interface ChatMessageModel {
+  generationUsage?: GenerationUsageRecord;
   id?: string;
   kind: ChatMessageKind;
   side?: 'left' | 'right';
@@ -150,6 +152,9 @@ export interface ChatSettingControl {
 }
 
 export interface ChatSettingsAdapter<TSettings> {
+  usageModel?: (
+    value: TSettings,
+  ) => Pick<GenerationUsageRecord, 'model' | 'modelPrices'>;
   storageKeys: readonly string[];
   initial: () => TSettings;
   parseStored: (raw: unknown) => TSettings;

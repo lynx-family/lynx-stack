@@ -4,7 +4,14 @@
 import { useMemo } from 'react';
 import type { ReactNode, Ref } from 'react';
 
+import { BenchArtifactCopyButton } from './BenchArtifactCopyButton.js';
+import { BenchCost, BenchCostLabel } from './BenchCost.js';
 import { getBenchProtocolLabel } from './benchData.js';
+import {
+  benchGroupAverageCost,
+  benchResultCost,
+  benchTotalCost,
+} from './benchPricing.js';
 import type {
   BenchGroupSummary,
   BenchReport,
@@ -154,6 +161,14 @@ export function PublishedReportPage(
           </h2>
           <dl className='publishedReportStats'>
             <div>
+              <dt>
+                <BenchCostLabel>Estimated cost (CNY)</BenchCostLabel>
+              </dt>
+              <dd>
+                <BenchCost cost={benchTotalCost(report.results)} />
+              </dd>
+            </div>
+            <div>
               <dt>Planned runs</dt>
               <dd>{formatNumber(total)}</dd>
             </div>
@@ -181,6 +196,9 @@ export function PublishedReportPage(
                 <tr>
                   <th>Group</th>
                   <th>Tokens</th>
+                  <th>
+                    <BenchCostLabel>Est. cost (CNY)</BenchCostLabel>
+                  </th>
                   <th>Agent</th>
                   <th>Attempts</th>
                   <th>UI Judge</th>
@@ -207,6 +225,12 @@ export function PublishedReportPage(
                         <BenchTokens
                           tokens={summary.avgTokens}
                           usage={groupBenchTokenUsage(report, summary)}
+                          average
+                        />
+                      </td>
+                      <td>
+                        <BenchCost
+                          cost={benchGroupAverageCost(report, summary)}
                           average
                         />
                       </td>
@@ -368,6 +392,7 @@ export function PublishedReportPage(
           {report.results.map((result, index) => (
             <details
               className='publishedReportDisclosure'
+              data-report-image-exclude
               key={`${result.id}-${index}`}
             >
               <summary>
@@ -384,12 +409,17 @@ export function PublishedReportPage(
                       ? 'Complete'
                       : 'Not recorded')}
                 </span>
+                <BenchArtifactCopyButton result={result} />
               </summary>
               <div className='benchRunTokenMetrics'>
                 <BenchTokens
                   tokens={result.tokens}
                   usage={readBenchTokenUsage(result.usage)}
                 />
+                <span>
+                  · <BenchCostLabel>Est. cost</BenchCostLabel>{' '}
+                  <BenchCost cost={benchResultCost(result)} />
+                </span>
                 <span>
                   tokens · {formatMs(result.agentMs)} Agent ·{' '}
                   {formatNumber(result.attempts)} attempts

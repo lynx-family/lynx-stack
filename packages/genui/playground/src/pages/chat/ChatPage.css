@@ -392,7 +392,7 @@
   gap: 6px 8px;
   max-width: 100%;
   min-height: 26px;
-  margin-left: auto;
+  margin: 8px 0 0;
   padding: 4px 10px;
   border: 1px solid var(--geist-border);
   border-radius: 14px;
@@ -408,6 +408,12 @@
 .chatTokenUsageItem {
   display: inline-flex;
   align-items: center;
+}
+
+.chatTokenUsageModel {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .chatTokenUsageTotal {

@@ -182,7 +182,7 @@
 
 .publishedReportStats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
   margin: 0 0 16px;
 }
@@ -287,6 +287,13 @@
 
 .publishedReportRunStatus[data-failed="true"] {
   color: var(--geist-error, #e00);
+}
+
+.publishedReportArtifactAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  vertical-align: middle;
 }
 
 .publishedReportDisclosure p,

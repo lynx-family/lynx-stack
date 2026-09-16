@@ -1128,7 +1128,7 @@
 }
 
 .benchMetricLabel,
-.benchInsight span {
+.benchInsight > span {
   display: block;
   color: var(--geist-secondary);
   font-size: 10px;

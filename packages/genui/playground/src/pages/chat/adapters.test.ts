@@ -1230,3 +1230,41 @@ test('A2UI can boot an empty live preview before any model output', () => {
     previewPayloadUrls: null,
   })).toMatchObject({ kind: 'a2ui', messages: [], liveAction: true });
 });
+
+test.each([
+  A2UI_CHAT_ADAPTER,
+  OPENUI_CHAT_ADAPTER,
+  LYNX_XML_CHAT_ADAPTER,
+  HTML_CHAT_ADAPTER,
+  MCP_APPS_CHAT_ADAPTER,
+])(
+  'restores usage for failed turns without creating an artifact (%s)',
+  (adapter) => {
+    const generationUsage = {
+      model: 'saved-model',
+      modelPrices: { input_price: 2, cached_price: 0.5, output_price: 8 },
+      usage: { inputTokens: 10, cachedTokens: 0, outputTokens: 2 },
+    };
+    const hydrated = adapter.hydrate({
+      history: [{ role: 'user', content: 'Build a card' }, {
+        role: 'assistant',
+        content: '',
+        generationError: 'Generation failed',
+        generationUsage,
+      }],
+      previewMessages: [],
+      previewPayloadUrls: null,
+    });
+    expect(hydrated.messages.filter(message => message.generationUsage))
+      .toEqual([{
+        kind: 'status',
+        tone: 'error',
+        text: 'Generation failed',
+        generationUsage,
+      }]);
+    expect(
+      hydrated.output === null
+        || (Array.isArray(hydrated.output) && hydrated.output.length === 0),
+    ).toBe(true);
+  },
+);

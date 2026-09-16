@@ -58,7 +58,7 @@ import { createHtmlBenchAdapter } from '../../html/html-bench-adapter.js';
 import { createLynxXmlBenchAdapter } from '../../lynx-xml/lynx-xml-bench-adapter.js';
 import { createOpenUIBenchAdapter } from '../../openui/openui-bench-adapter.js';
 import { buildGenerationRepairMessages } from '../generation-repair.js';
-import { defaultModelName } from '../model-config.js';
+import { defaultModelName, readModelConfig } from '../model-config.js';
 import { GenerationUpstreamError } from '../result.js';
 import type { ChatMessage } from '../types.js';
 
@@ -629,24 +629,38 @@ async function generateOne(
   adapters: Partial<Record<BenchProtocol, ProtocolBenchAdapter>>,
   signal: AbortSignal,
 ): Promise<GeneratedBenchRun> {
-  if (
-    protocolForGroup(item.group) === 'a2ui'
-    && profileForGroup(item.group) === 'native'
-  ) {
-    return await runA2UINativeOne(
+  const configured = readModelConfig();
+  const modelName = pickRunModel(request, item.group);
+  const model = configured.ok
+    ? configured.config.models[modelName ?? '']
+      ?? configured.config.models[configured.config.defaultModel]
+    : undefined;
+  const modelPrices = model
+    ? {
+      input_price: model.input_price,
+      cached_price: model.cached_price,
+      output_price: model.output_price,
+    }
+    : undefined;
+  const generated = (
+      protocolForGroup(item.group) === 'a2ui'
+      && profileForGroup(item.group) === 'native'
+    )
+    ? await runA2UINativeOne(
       jobId,
       request,
       item,
       signal,
+    )
+    : await runProtocolAdapterOne(
+      jobId,
+      request,
+      item,
+      adapters[protocolForGroup(item.group)],
+      signal,
     );
-  }
-  return await runProtocolAdapterOne(
-    jobId,
-    request,
-    item,
-    adapters[protocolForGroup(item.group)],
-    signal,
-  );
+  if (modelPrices) generated.result.modelPrices = modelPrices;
+  return generated;
 }
 
 async function finishRun(

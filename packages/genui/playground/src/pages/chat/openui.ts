@@ -153,10 +153,22 @@ function buildMessagesFromHistory(
       continue;
     }
     if (message.role !== 'assistant') continue;
+    if (message.generationError) {
+      messages.push({
+        kind: 'status',
+        tone: 'error',
+        text: message.generationError,
+        generationUsage: message.generationUsage,
+      });
+      continue;
+    }
     messages.push(
-      previousScenarioTitle
-        ? createLoadedScenarioStatus(previousScenarioTitle)
-        : createGeneratedStatus(),
+      {
+        ...(previousScenarioTitle
+          ? createLoadedScenarioStatus(previousScenarioTitle)
+          : createGeneratedStatus()),
+        generationUsage: message.generationUsage,
+      },
     );
     previousScenarioTitle = null;
   }

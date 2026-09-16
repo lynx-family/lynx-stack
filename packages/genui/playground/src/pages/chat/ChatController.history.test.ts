@@ -33,7 +33,13 @@ const DOCUMENT = '<!doctype lynx><lynx engine-version="4.2">'
   + '<script thread="main">const page = __CreatePage("0", 0);</script></lynx>';
 const MODELS = {
   defaultModel: 'test-model',
-  models: [{ id: 'test-model', label: 'Test model' }],
+  models: [{
+    id: 'test-model',
+    label: 'Test model',
+    input_price: 2,
+    cached_price: 0.5,
+    output_price: 8,
+  }],
 };
 
 function jsonResponse(payload: unknown, status = 200) {
@@ -131,12 +137,22 @@ test.each([false, true])(
       const id = await getActiveConversationId('lynx-xml');
       const record = await loadConversation(id!);
       expect(record?.meta.generationSettings).toEqual({
+        provider: 'test-model',
         enableDesignGuidance: false,
         enableHtmlFragment: false,
       });
+      const payload = {
+        tokenUsage: {
+          inputTokens: 10000,
+          cachedTokens: 6000,
+          outputTokens: 2000,
+          totalTokens: 12000,
+        },
+        usage: { inputTokens: 1, cachedTokens: 0, outputTokens: 1 },
+      };
       return fail
-        ? jsonResponse({ error: 'Generation failed' }, 500)
-        : jsonResponse({ text: DOCUMENT });
+        ? jsonResponse({ ...payload, error: 'Generation failed' }, 500)
+        : jsonResponse({ ...payload, text: DOCUMENT });
     });
     rstest.stubGlobal('fetch', (url: string, init?: RequestInit) => {
       if (url.endsWith('/models')) {
@@ -167,9 +183,36 @@ test.each([false, true])(
       expect(generated).toHaveBeenCalledTimes(1);
       expect(button('New Chat').disabled).toBe(false);
     });
+    expect(
+      container.querySelector('[aria-label="Generation usage"]')?.textContent,
+    ).toContain('Total 12.0k');
+    expect(container.textContent).toContain('Est. cost ¥27.0000');
+    expect(container.querySelector('.chatTokenUsageModel')?.textContent)
+      .toBe('Model test-model');
+    expect(
+      container.querySelector('.chatTokenUsageTotal[title]')?.getAttribute(
+        'title',
+      ),
+    ).toContain('input ¥2, cached ¥0.5, output ¥8 per 1K tokens');
+    const savedId = await getActiveConversationId('lynx-xml');
+    const saved = await loadConversation(savedId!);
+    expect(
+      saved?.messages.find(message => message.role === 'assistant')
+        ?.generationUsage,
+    ).toMatchObject({
+      model: 'test-model',
+      modelPrices: { input_price: 2, cached_price: 0.5, output_price: 8 },
+      usage: { inputTokens: 10000, cachedTokens: 6000, outputTokens: 2000 },
+    });
     // Simulate unrelated global preferences having changed before reload.
     window.localStorage.setItem(CHAT_PROVIDER_SETTINGS_STORAGE_KEY, '{}');
+    rstest.stubGlobal('fetch', () =>
+      Promise.resolve(jsonResponse({
+        ...MODELS,
+        models: [{ ...MODELS.models[0], input_price: 200, output_price: 800 }],
+      })));
     await reloadPage();
+    expect(container.textContent).toContain('Est. cost ¥27.0000');
     expect(checkbox('Extra Design Skill').checked).toBe(false);
     expect(checkbox('XML fragment').checked).toBe(false);
   },
@@ -181,6 +224,7 @@ test('restores each conversation independently and survives late model loading',
   await saveConversationMeta({
     ...first,
     generationSettings: {
+      provider: 'test-model',
       enableDesignGuidance: false,
       enableHtmlFragment: true,
     },
@@ -188,6 +232,7 @@ test('restores each conversation independently and survives late model loading',
   await saveConversationMeta({
     ...second,
     generationSettings: {
+      provider: 'other-model',
       enableDesignGuidance: true,
       enableHtmlFragment: false,
     },
@@ -214,12 +259,117 @@ test('restores each conversation independently and survives late model loading',
     expect(checkbox('Extra Design Skill').checked).toBe(true);
     expect(checkbox('XML fragment').checked).toBe(false);
   });
-  await React.act(async () => resolveModels(jsonResponse(MODELS)));
+  await React.act(async () =>
+    resolveModels(jsonResponse({
+      ...MODELS,
+      models: [...MODELS.models, { id: 'other-model', label: 'Other model' }],
+    }))
+  );
   expect(checkbox('Extra Design Skill').checked).toBe(true);
   expect(checkbox('XML fragment').checked).toBe(false);
   const provider = container.querySelector<HTMLSelectElement>(
     '[aria-label="Provider"]',
   )!;
-  expect(provider.value).toBe('test-model');
+  expect(provider.value).toBe('other-model');
   expect(provider.disabled).toBe(false);
+  await updateUI(() => {
+    const item = [...container.querySelectorAll<HTMLButtonElement>(
+      '.conversationListItemMain',
+    )].find(node => node.textContent?.includes('First scenario'))!;
+    item.click();
+  });
+  await rstest.waitFor(() => expect(provider.value).toBe('test-model'));
+});
+
+test('keeps each turn badge in the chat transcript with its original model price after reload', async () => {
+  const models = {
+    ...MODELS,
+    models: [...MODELS.models, {
+      id: 'other-model',
+      label: 'Other model',
+      input_price: 4,
+      cached_price: 1,
+      output_price: 16,
+    }],
+  };
+  let calls = 0;
+  rstest.stubGlobal('fetch', (url: string, init?: RequestInit) => {
+    if (url.endsWith('/models')) return Promise.resolve(jsonResponse(models));
+    calls++;
+    const body = JSON.parse(init!.body as string) as { model: string };
+    expect(body.model).toBe(calls === 1 ? 'test-model' : 'other-model');
+    return Promise.resolve(
+      jsonResponse({
+        text: DOCUMENT,
+        tokenUsage: {
+          inputTokens: 10000,
+          cachedTokens: 6000,
+          outputTokens: 2000,
+          totalTokens: 12000,
+        },
+      }),
+    );
+  });
+  await mountPage();
+  for (const prompt of ['First request', 'Second request']) {
+    await updateUI(() => {
+      if (calls === 1) {
+        const provider = container.querySelector<HTMLSelectElement>(
+          '[aria-label="Provider"]',
+        )!;
+        provider.value = 'other-model';
+        provider.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      const input = container.querySelector('textarea')!;
+      Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!
+        .set!.call(input, prompt);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    await React.act(async () => button('Send').click());
+    await rstest.waitFor(async () => {
+      await React.act(async () => {
+        await getActiveConversationId('lynx-xml');
+      });
+      expect(button('New Chat').disabled).toBe(false);
+    });
+  }
+  const verify = () => {
+    const badges = [
+      ...container.querySelectorAll('.chatMessage .chatTokenUsageBadge'),
+    ];
+    expect(badges).toHaveLength(2);
+    expect(badges[0]?.textContent).toContain('¥27.0000');
+    expect(badges[1]?.textContent).toContain('¥54.0000');
+    expect(badges[0]?.querySelector('.chatTokenUsageModel')?.textContent)
+      .toBe('Model test-model');
+    expect(badges[1]?.querySelector('.chatTokenUsageModel')?.textContent)
+      .toBe('Model other-model');
+    expect(container.querySelector('.chatHeader .chatTokenUsageBadge'))
+      .toBeNull();
+  };
+  verify();
+  window.localStorage.setItem(
+    CHAT_PROVIDER_SETTINGS_STORAGE_KEY,
+    JSON.stringify({ provider: 'test-model' }),
+  );
+  await reloadPage();
+  verify();
+  expect(
+    container.querySelector<HTMLSelectElement>('[aria-label="Provider"]')
+      ?.value,
+  ).toBe('other-model');
+  const id = await getActiveConversationId('lynx-xml');
+  const saved = await loadConversation(id!);
+  expect(saved?.meta.generationSettings?.provider).toBe('other-model');
+  expect(
+    saved?.messages.filter(message => message.role === 'assistant').map(
+      message => message.generationUsage?.model,
+    ),
+  ).toEqual(['test-model', 'other-model']);
+  await React.act(async () => button('New Chat').click());
+  await rstest.waitFor(() =>
+    expect(container.querySelector('.chatTokenUsageBadge')).toBeNull()
+  );
+  const retained = await loadConversation(id!);
+  expect(retained?.messages).toHaveLength(4);
 });

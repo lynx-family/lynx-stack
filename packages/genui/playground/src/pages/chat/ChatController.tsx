@@ -9,6 +9,7 @@ import {
   appendChatInteraction,
   describeChatRequest,
 } from './chatInteraction.js';
+import { ChatUsage } from './ChatUsage.js';
 import { ChatWorkspace } from './ChatWorkspace.js';
 import {
   isA2UIRuntimeReadyMessage,
@@ -23,11 +24,8 @@ import type {
   PendingLivePreviewOutput,
 } from './livePreviewDelivery.js';
 import {
-  EMPTY_CHAT_TOKEN_USAGE,
-  addTokenUsage,
   createChatHost,
   createChatRequestInit,
-  formatTokenCount,
   parseSseFrame,
   targetOriginForUrl,
 } from './shared.js';
@@ -40,7 +38,6 @@ import type {
   ChatSseEvent,
   ChatStreamAdapter,
   ChatStreamEmission,
-  ChatTokenUsage,
 } from './type.js';
 import { Button } from '../../components/Button.js';
 import { useCopyToast } from '../../components/CopyToast.js';
@@ -68,6 +65,8 @@ import type {
   PreviewPerformanceMetrics,
 } from '../../storage/types.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
+import { readResponseUsage } from '../../utils/modelPricing.js';
+import type { GenerationUsageRecord } from '../../utils/modelPricing.js';
 import type { Protocol } from '../../utils/protocol.js';
 import {
   buildConversationShareUrl,
@@ -366,6 +365,9 @@ function MessageList(props: {
         );
         const messageDetails = (
           <>
+            {message.generationUsage
+              ? <ChatUsage record={message.generationUsage} />
+              : null}
             {message.payload === undefined
               ? null
               : (
@@ -630,9 +632,6 @@ export function ChatController<
   const [previewRevision, setPreviewRevision] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isActionRunning, setIsActionRunning] = useState(false);
-  const [usage, setUsage] = useState<ChatTokenUsage>({
-    ...EMPTY_CHAT_TOKEN_USAGE,
-  });
   const [metrics, setMetrics] = useState<PreviewPerformanceMetrics>(
     initialHydration.metrics ?? {},
   );
@@ -856,7 +855,6 @@ export function ChatController<
     const nextMetrics = hydrated.metrics ?? {};
     metricsRef.current = nextMetrics;
     setMetrics(nextMetrics);
-    setUsage({ ...EMPTY_CHAT_TOKEN_USAGE });
     setPreviewRevision((value) => value + 1);
     metricsPersistenceReadyRef.current = persistedMessages.some(
       (message) => message.role === 'assistant',
@@ -1055,6 +1053,32 @@ export function ChatController<
     };
   }, []);
 
+  const trackTurnUsage = useCallback(
+    (pendingId: string, requestSettings: TSettings) => {
+      let record: GenerationUsageRecord = {
+        model: 'Server default',
+        ...adapter.settings?.usageModel?.(requestSettings),
+        usage: {},
+      };
+      return {
+        current: () => record,
+        observe(payload: unknown) {
+          const usage = readResponseUsage(payload);
+          if (!usage) return;
+          record = { ...record, usage };
+          setMessages(current =>
+            current.map(message =>
+              message.id === pendingId
+                ? { ...message, generationUsage: record }
+                : message
+            )
+          );
+        },
+      };
+    },
+    [adapter.settings],
+  );
+
   const handleStreamEmission = useCallback((
     emission: ChatStreamEmission<TOutput>,
     pendingId: string,
@@ -1073,10 +1097,7 @@ export function ChatController<
       );
       return;
     }
-    if (emission.type === 'usage') {
-      setUsage((current) => addTokenUsage(current, emission.usage));
-      return;
-    }
+    if (emission.type === 'usage') return;
     if (emission.type === 'previewPayload') {
       setCurrentPreviewPayloadUrls(emission.value);
       return;
@@ -1166,15 +1187,15 @@ export function ChatController<
     setCurrentOutput(null);
     setCurrentPreviewOutput(adapter.preview.initialOutput?.() ?? null);
     setCurrentPreviewPayloadUrls(null);
-    setUsage({ ...EMPTY_CHAT_TOKEN_USAGE });
     metricsRef.current = {};
     setMetrics({});
     metricsPersistenceReadyRef.current = false;
     setIsGenerating(true);
 
+    const requestSettings = settingsRef.current;
+    const turnUsage = trackTurnUsage(pendingId, requestSettings);
     void (async () => {
       try {
-        const requestSettings = settingsRef.current;
         const generationSettings = adapter.settings?.conversation?.snapshot(
           requestSettings,
         );
@@ -1201,6 +1222,7 @@ export function ChatController<
         });
         if (!response.ok) {
           const payload: unknown = await response.json().catch(() => ({}));
+          turnUsage.observe(payload);
           throw new Error(adapter.stream.error(payload));
         }
         const finalOutput = await consumeResponse(
@@ -1208,7 +1230,10 @@ export function ChatController<
           adapter.stream,
           {
             signal: controller.signal,
-            onEvent: (event) => recordInteraction(event.event, event.data),
+            onEvent: (event) => {
+              recordInteraction(event.event, event.data);
+              if (runIdRef.current === runId) turnUsage.observe(event.data);
+            },
             onEmission: (emission) => {
               if (runIdRef.current !== runId) return;
               if (emission.type === 'usage') {
@@ -1245,6 +1270,7 @@ export function ChatController<
           userMessage,
           ...persistence,
           previewMetrics: nextMetrics,
+          generationUsage: turnUsage.current(),
         });
         metricsPersistenceReadyRef.current = true;
         void updateLastAssistantPreviewMetrics(metricsRef.current);
@@ -1253,7 +1279,14 @@ export function ChatController<
           current.flatMap((message) =>
             message.id === pendingId
               ? adapter.transcript.success(finalOutput).map((result, index) =>
-                index === 0 ? { ...result, id: pendingId, interaction } : result
+                index === 0
+                  ? {
+                    ...result,
+                    id: pendingId,
+                    interaction,
+                    generationUsage: turnUsage.current(),
+                  }
+                  : result
               )
               : [message]
           )
@@ -1261,12 +1294,22 @@ export function ChatController<
       } catch (error) {
         if (controller.signal.aborted || runIdRef.current !== runId) return;
         recordInteraction('error', getErrorMessage(error));
+        await recordTurn({
+          userMessage,
+          assistantContent: '',
+          generationError: getErrorMessage(error),
+          generationUsage: turnUsage.current(),
+          a2uiMessages: [],
+          previewMessages: persistedPreviewMessages,
+          snapshotPreviewPayloadUrls: persistedPreviewPayloadUrls,
+        });
         setMessages((current) =>
           current.map((message) =>
             message.id === pendingId
               ? {
                 ...message,
                 ...adapter.transcript.failure(getErrorMessage(error)),
+                generationUsage: turnUsage.current(),
                 id: pendingId,
               }
               : message
@@ -1285,6 +1328,9 @@ export function ChatController<
     buildConversationContext,
     busy,
     handleStreamEmission,
+    trackTurnUsage,
+    persistedPreviewMessages,
+    persistedPreviewPayloadUrls,
     host,
     inputValue,
     isReady,
@@ -1321,7 +1367,6 @@ export function ChatController<
     setCurrentOutput(hydrated.output);
     setCurrentPreviewOutput(hydrated.output);
     setCurrentPreviewPayloadUrls(null);
-    setUsage({ ...EMPTY_CHAT_TOKEN_USAGE });
     metricsRef.current = hydrated.metrics ?? {};
     setMetrics(hydrated.metrics ?? {});
     metricsPersistenceReadyRef.current = false;
@@ -1507,9 +1552,17 @@ export function ChatController<
         },
       ]);
 
+      const requestSettings = settingsRef.current;
+      const turnUsage = trackTurnUsage(pendingId, requestSettings);
       void (async () => {
         try {
-          const requestSettings = settingsRef.current;
+          const generationSettings = adapter.settings?.conversation?.snapshot(
+            requestSettings,
+          );
+          if (generationSettings) {
+            await recordGenerationSettings(generationSettings);
+          }
+          controller.signal.throwIfAborted();
           const request = actionAdapter.request({
             action,
             conversation: requestConversation,
@@ -1523,6 +1576,7 @@ export function ChatController<
           );
           if (!response.ok) {
             const payload: unknown = await response.json().catch(() => ({}));
+            turnUsage.observe(payload);
             throw new Error(actionAdapter.stream.error(payload));
           }
           const responseOutput = await consumeResponse(
@@ -1530,11 +1584,12 @@ export function ChatController<
             actionAdapter.stream,
             {
               signal: controller.signal,
+              onEvent: (event) => {
+                if (runIdRef.current === runId) turnUsage.observe(event.data);
+              },
               onEmission: (emission) => {
                 if (runIdRef.current !== runId) return;
-                if (emission.type === 'usage') {
-                  setUsage((current) => addTokenUsage(current, emission.usage));
-                } else if (emission.type === 'previewPayload') {
+                if (emission.type === 'previewPayload') {
                   actionPreviewPayloadUrls = emission.value;
                 } else if (emission.type === 'partial') {
                   streamedResponseOutput = actionAdapter.merge(
@@ -1590,6 +1645,7 @@ export function ChatController<
             userMessage,
             ...persistence,
             previewMetrics: nextMetrics,
+            generationUsage: turnUsage.current(),
           });
           metricsPersistenceReadyRef.current = true;
           void updateLastAssistantPreviewMetrics(metricsRef.current);
@@ -1600,6 +1656,7 @@ export function ChatController<
                   id: pendingId,
                   kind: 'output' as const,
                   text: 'LLM Response',
+                  generationUsage: turnUsage.current(),
                   payload: responseOutput,
                   payloadLayout: 'chunks' as const,
                 }]
@@ -1609,6 +1666,15 @@ export function ChatController<
         } catch (error) {
           if (controller.signal.aborted || runIdRef.current !== runId) return;
           metricsPersistenceReadyRef.current = true;
+          await recordTurn({
+            userMessage,
+            assistantContent: '',
+            generationError: `Action failed: ${getErrorMessage(error)}`,
+            generationUsage: turnUsage.current(),
+            a2uiMessages: [],
+            previewMessages: persistedPreviewMessages,
+            snapshotPreviewPayloadUrls: persistedPreviewPayloadUrls,
+          });
           setMessages((current) =>
             current.map((message) =>
               message.id === pendingId
@@ -1618,6 +1684,7 @@ export function ChatController<
                   tone: 'error',
                   icon: 'error',
                   text: `Action failed: ${getErrorMessage(error)}`,
+                  generationUsage: turnUsage.current(),
                 }
                 : message
             )
@@ -1636,8 +1703,12 @@ export function ChatController<
   }, [
     adapter,
     buildConversationContext,
+    trackTurnUsage,
+    persistedPreviewMessages,
+    persistedPreviewPayloadUrls,
     host,
     queueOrPostLiveOutput,
+    recordGenerationSettings,
     recordTurn,
     resetLivePreviewDelivery,
     setCurrentOutput,
@@ -1763,48 +1834,6 @@ export function ChatController<
                   Browse examples
                 </button>
               )}
-            {usage.totalTokens > 0
-              ? (
-                <span className='chatTokenUsageBadge'>
-                  <span className='chatTokenUsageItem'>
-                    Prompt {formatTokenCount(usage.promptTokens)}
-                  </span>
-                  <span
-                    className='chatTokenUsageItem'
-                    title={usage.cachedTokens === undefined
-                      ? 'Cache read usage was not reported for every model call.'
-                      : 'Input tokens read from the prompt cache, as a percentage of Prompt. Included in Prompt and Total.'}
-                  >
-                    Cached {usage.cachedTokens === undefined
-                      ? '—'
-                      : formatTokenCount(usage.cachedTokens)}
-                    {usage.cachedTokens !== undefined && usage.promptTokens > 0
-                      ? ` (${
-                        (usage.cachedTokens / usage.promptTokens * 100).toFixed(
-                          1,
-                        )
-                      }%)`
-                      : null}
-                  </span>
-                  {usage.cacheWriteTokens === undefined
-                    ? null
-                    : (
-                      <span
-                        className='chatTokenUsageItem'
-                        title='Input tokens written to the prompt cache. Included in Prompt and Total.'
-                      >
-                        Cache write {formatTokenCount(usage.cacheWriteTokens)}
-                      </span>
-                    )}
-                  <span className='chatTokenUsageItem'>
-                    Output {formatTokenCount(usage.completionTokens)}
-                  </span>
-                  <span className='chatTokenUsageItem chatTokenUsageTotal'>
-                    Total {formatTokenCount(usage.totalTokens)}
-                  </span>
-                </span>
-              )
-              : null}
           </>
         ),
       }}

@@ -28,8 +28,8 @@ describe('local report image capture', () => {
     source.className = 'publishedReportContent';
     source.innerHTML =
       '<h1>Bench report</h1><button data-report-image-exclude>Export</button>'
-      + '<details open><summary>Run evidence</summary><p>Saved result</p></details>'
-      + '<details><summary>Plan</summary><p>Collapsed content</p></details>'
+      + '<details class="publishedReportDisclosure" data-report-image-exclude open><summary>Run result</summary><p>Saved result</p></details>'
+      + '<details class="publishedReportDisclosure"><summary>Plan</summary><p>Collapsed content</p></details>'
       + '<div class="publishedReportTableWrap"><table><tr><td>Score</td></tr></table></div>';
     document.body.append(source);
     rstest.spyOn(source, 'getBoundingClientRect').mockReturnValue(
@@ -48,7 +48,7 @@ describe('local report image capture', () => {
     rstest.useRealTimers();
   });
 
-  test('expands all details in the exported image without changing the live report', async () => {
+  test('expands the recorded plan and removes run disclosures without changing the live report', async () => {
     const img = document.createElement('img');
     img.src = 'data:image/png;base64,cG5n';
     source.append(img);
@@ -59,14 +59,23 @@ describe('local report image capture', () => {
     });
     const before = source.innerHTML;
     source.scrollTop = 400;
-    rstest.mocked(toBlob).mockImplementationOnce(async (clone, options) => {
+    rstest.mocked(toBlob).mockImplementationOnce((clone, options) => {
       expect(clone).not.toBe(source);
       expect(clone.isConnected).toBe(true);
-      expect(clone.textContent).toContain('Saved result');
-      expect(clone.querySelector('button')).toBeNull();
+      expect(clone.textContent).toContain('Bench report');
+      expect(clone.textContent).toContain('Score');
+      expect(clone.textContent).not.toContain('Saved result');
+      expect(clone.textContent).not.toContain('Run result');
+      expect(clone.textContent).toContain('Plan');
+      expect(clone.textContent).toContain('Collapsed content');
+      expect(clone.querySelectorAll('.publishedReportDisclosure')).toHaveLength(
+        1,
+      );
       expect(
-        [...clone.querySelectorAll('details')].map((details) => details.open),
-      ).toEqual([true, true]);
+        clone.querySelector<HTMLDetailsElement>('.publishedReportDisclosure')
+          ?.open,
+      ).toBe(true);
+      expect(clone.querySelector('button')).toBeNull();
       expect(clone.querySelector('img')?.src).toBe(img.src);
       expect(options).toMatchObject({
         width: 900,
@@ -74,7 +83,7 @@ describe('local report image capture', () => {
         pixelRatio: 2,
         skipFonts: true,
       });
-      return png;
+      return Promise.resolve(png);
     });
     expect(await createBenchReportImage(source)).toBe(png);
     expect(decode).toHaveBeenCalled();

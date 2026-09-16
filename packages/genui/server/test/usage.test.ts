@@ -92,9 +92,9 @@ describe('generation token usage for pricing', () => {
       expect(
         ((tokens.inputTokens! - tokens.cachedTokens!) * model.input_price
           + tokens.cachedTokens! * model.cached_price
-          + tokens.outputTokens! * model.output_price) / 1_000_000,
+          + tokens.outputTokens! * model.output_price) / 1_000,
       )
-        .toBe(0.00027);
+        .toBe(0.27);
     },
   );
 

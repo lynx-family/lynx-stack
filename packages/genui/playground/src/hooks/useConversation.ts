@@ -27,8 +27,11 @@ import type {
   PreviewPayloadUrls,
   PreviewPerformanceMetrics,
 } from '../storage/types.js';
+import type { GenerationUsageRecord } from '../utils/modelPricing.js';
 
 export interface ModelChatMessage {
+  generationUsage?: GenerationUsageRecord;
+  generationError?: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
   lynxXmlFragment?: string;
@@ -51,6 +54,8 @@ interface ConversationHotState {
 }
 
 export interface RecordTurnInput {
+  generationUsage?: GenerationUsageRecord;
+  generationError?: string;
   userMessage: ModelChatMessage;
   assistantContent: string;
   lynxXmlFragment?: string;
@@ -129,7 +134,9 @@ function clonePreviewPerformanceMetrics(
 function truncateConversationHistory(
   history: ModelChatMessage[],
 ): ModelChatMessage[] {
-  const byTurns = history.slice(-MAX_CONVERSATION_TURNS * 2);
+  const byTurns = history.filter(message => !message.generationError).slice(
+    -MAX_CONVERSATION_TURNS * 2,
+  );
   let totalChars = 0;
   const kept: ModelChatMessage[] = [];
 
@@ -238,6 +245,8 @@ function toPersistedMessages(
     seq: index,
     role: message.role,
     content: message.content,
+    generationUsage: message.generationUsage,
+    generationError: message.generationError,
     ...(message.lynxXmlFragment
       ? { lynxXmlFragment: message.lynxXmlFragment }
       : {}),
@@ -256,6 +265,8 @@ function fromPersistedMessages(
   return messages.map((message) => ({
     role: message.role,
     content: message.content,
+    generationUsage: message.generationUsage,
+    generationError: message.generationError,
     ...(message.lynxXmlFragment
       ? { lynxXmlFragment: message.lynxXmlFragment }
       : {}),
@@ -639,6 +650,8 @@ export function useConversation(
         {
           role: 'assistant' as const,
           content: input.assistantContent,
+          generationUsage: input.generationUsage,
+          generationError: input.generationError,
           ...(input.lynxXmlFragment
             ? { lynxXmlFragment: input.lynxXmlFragment }
             : {}),

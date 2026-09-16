@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 /* eslint-disable n/no-unsupported-features/node-builtins -- Browser-only DOM Blob APIs. */
 
-/** Expand details in the export copy without changing the live report. */
+/** Expand the recorded plan and omit run details without changing the live report. */
 export async function createBenchReportImage(
   source: HTMLElement,
 ): Promise<Blob> {

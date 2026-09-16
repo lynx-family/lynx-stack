@@ -22,7 +22,7 @@ const REASONING_EFFORTS = new Set<OpenAIReasoningEffort>([
   'xhigh',
 ]);
 
-/** Prices per million tokens, in the deployment's common currency. */
+/** Prices in CNY per thousand tokens. */
 export interface ModelPrices {
   /** Input tokens that did not hit the prompt cache. */
   input_price: number;
