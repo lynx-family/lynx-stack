@@ -11,8 +11,5 @@ export default defineConfig({
       main: './src/index.jsx',
     },
   },
-  plugins: [
-    pluginQRCode({ fullscreen: true }),
-    pluginReactLynx(),
-  ],
+  plugins: [pluginQRCode({ fullscreen: true }), pluginReactLynx()],
 });
