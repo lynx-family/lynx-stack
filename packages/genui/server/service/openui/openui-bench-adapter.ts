@@ -31,6 +31,7 @@ import {
 } from '../common/bench/retry.js';
 import type { BenchRetrySleep } from '../common/bench/retry.js';
 import { benchAttemptTokenCounts } from '../common/bench/usage.js';
+import { buildGenerationRepairMessages } from '../common/generation-repair.js';
 import { GenerationUpstreamError } from '../common/result.js';
 import type { ChatMessage } from '../common/types.js';
 
@@ -57,6 +58,7 @@ export type OpenUIBenchGenerateRaw = (
 export type OpenUIBenchRetrySleep = BenchRetrySleep;
 
 export interface OpenUIBenchGenerateAttemptInput {
+  enableDesignGuidance?: boolean;
   index: number;
   messages: ChatMessage[];
   provider: ProtocolBenchProviderConfig;
@@ -263,6 +265,7 @@ class DefaultOpenUIBenchAdapter implements OpenUIBenchAdapter {
         maxRetries: 0,
         enableWebSearch: false,
         enableImageGeneration: false,
+        enableDesignGuidance: input.enableDesignGuidance !== false,
         resourceId: input.resourceId,
         promptComponentNames: OPENUI_BENCH_MATCHED_COMPONENTS,
         promptOptions: OPENUI_BENCH_PROMPT_OPTIONS,
@@ -337,15 +340,17 @@ class DefaultOpenUIBenchAdapter implements OpenUIBenchAdapter {
     signal?: AbortSignal,
   ): Promise<OpenUIBenchRunArtifact> {
     const attempts: OpenUIBenchAttemptResult[] = [];
-    const messages: ChatMessage[] = [{
+    const initialMessages: ChatMessage[] = [{
       role: 'user',
       content: buildOpenUIBenchPrompt(input.scenario),
     }];
+    let messages = initialMessages;
     const maxAttempts = normalizedAttemptLimit(input.maxAttempts);
 
     for (let index = 1; index <= maxAttempts; index += 1) {
       const attempt = await this.generateAttempt({
         index,
+        enableDesignGuidance: input.enableDesignGuidance,
         messages,
         provider: input.provider,
         resourceId: `bench:${input.runId}:attempt:${index}`,
@@ -361,10 +366,11 @@ class DefaultOpenUIBenchAdapter implements OpenUIBenchAdapter {
         break;
       }
       if (index < maxAttempts) {
-        messages.push({ role: 'assistant', content: attempt.rawText });
-        messages.push({
-          role: 'user',
-          content: formatOpenUIBenchRepairPrompt(attempt.normalizedErrors),
+        messages = buildGenerationRepairMessages({
+          initialMessages,
+          messages,
+          result: { text: attempt.rawText, finishReason: attempt.finishReason },
+          repairPrompt: formatOpenUIBenchRepairPrompt(attempt.normalizedErrors),
         });
       }
     }

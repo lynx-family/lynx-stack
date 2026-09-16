@@ -17,8 +17,8 @@ areas, scrolling, spacing, typography, visual hierarchy, and touch targets.
 When content can exceed one viewport, the first business node below the Page is
 required to be the definite-height vertical `scroll-view`; it is not wrapped in
 an additional business `view`. The provider-neutral design intent lives in
-`src/mobile-design.ts`; the concrete Element PAPI and `scroll-view` contract
-lives in `src/prompt.ts`. That API contract also keeps numeric component ids
+the shared GenUI server design contract; the concrete Element PAPI and
+`scroll-view` contract lives in `src/prompt.ts`. That API contract also keeps numeric component ids
 separate from Element PAPI node references: both `__AppendElement` arguments
 must be nodes, while `pageId` is used only by page-owned element creation APIs.
 

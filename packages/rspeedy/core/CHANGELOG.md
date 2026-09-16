@@ -1,5 +1,16 @@
 # @lynx-js/rspeedy
 
+## 0.17.2
+
+### Patch Changes
+
+- Tell `initConfigs` which action the preview command is for. Without it Rsbuild does not know the action yet when the plugins are initialized, and skips every plugin's `apply` filter. ([#3843](https://github.com/lynx-family/lynx-stack/pull/3843))
+
+  Leave the `dev.lazyCompilation` default to `@lynx-js/rsbuild-plugin`, which now applies it for the Rsbuild CLI too.
+- Upgrade Rsbuild to 2.2.4 and fix CSS rule cloning with its stricter bundler chain types. ([#3885](https://github.com/lynx-family/lynx-stack/pull/3885))
+- Updated dependencies [[`4cde2f4`](https://github.com/lynx-family/lynx-stack/commit/4cde2f42601fa58a6936481eb2f486c68ebd3f55), [`9a56957`](https://github.com/lynx-family/lynx-stack/commit/9a5695786d050b395e262e0964747aaa3eae69d7), [`c171d53`](https://github.com/lynx-family/lynx-stack/commit/c171d53a110e64062371357efef290fabf95dd9e), [`9b4693f`](https://github.com/lynx-family/lynx-stack/commit/9b4693f4277bf637fceaeb39022664f49428d4f2), [`958ffb4`](https://github.com/lynx-family/lynx-stack/commit/958ffb4d591f0c3be4affe7ffc2da97c3044c701)]:
+  - @lynx-js/rsbuild-plugin@0.1.2
+
 ## 0.17.1
 
 ### Patch Changes

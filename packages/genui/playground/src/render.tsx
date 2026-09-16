@@ -17,6 +17,10 @@ import '@lynx-js/web-elements/all';
 import '@lynx-js/web-elements/index.css';
 
 import { LynxXmlView } from './components/LynxXmlView.js';
+import {
+  OPENUI_RENDER_ERRORS_MESSAGE_TYPE,
+  readOpenUIRenderErrors,
+} from '../lynx-src/openui/renderErrors.js';
 import { lazyComponentDemo } from './mock/basic/lazy-component.js';
 import { mcpAppDemo } from './mock/basic/mcp-app.js';
 import { decodeBase64Url } from './utils/base64url.js';
@@ -752,6 +756,17 @@ function BundledProtocolRender() {
             { type: 'OPENUI_USER_ACTION', action: data },
             '*',
           );
+        }
+        return;
+      }
+      if (name === OPENUI_RENDER_ERRORS_MESSAGE_TYPE) {
+        const errors = readOpenUIRenderErrors(data);
+        if (errors && window.parent !== window) {
+          window.parent.postMessage({
+            type: OPENUI_RENDER_ERRORS_MESSAGE_TYPE,
+            navigationToken: previewNavigationToken,
+            errors,
+          }, '*');
         }
         return;
       }

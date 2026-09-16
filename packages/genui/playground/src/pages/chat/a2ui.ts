@@ -389,10 +389,22 @@ function hydrateMessages(
     }
 
     if (message.role !== 'assistant') continue;
+    if (message.generationError) {
+      messages.push({
+        kind: 'status',
+        tone: 'error',
+        text: message.generationError,
+        generationUsage: message.generationUsage,
+      });
+      continue;
+    }
     const output = normalizeMessages(message.content);
     if (previousWasAction && output.length > 0) {
       messages.push(
-        agentRespondedMessage(output.length, message.previewMetrics),
+        {
+          ...agentRespondedMessage(output.length, message.previewMetrics),
+          generationUsage: message.generationUsage,
+        },
         {
           kind: 'output',
           tone: 'success',
@@ -414,6 +426,7 @@ function hydrateMessages(
       messages.push({
         kind: 'status',
         tone: 'success',
+        generationUsage: message.generationUsage,
         text: renderedPreviewText(
           output.length,
           generatedCharacterCount(message.content),

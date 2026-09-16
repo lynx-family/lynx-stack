@@ -4,10 +4,14 @@
 
 import { randomUUID } from 'node:crypto';
 
+import { benchInFlightLimit } from './concurrency.js';
 import {
-  redactBenchDiagnostic,
-  sanitizeBenchPublicValue,
-} from './redaction.js';
+  advanceBenchRunProgress,
+  cancelBenchRunProgress,
+  createBenchRunProgress,
+  finishBenchRunProgress,
+} from './progress.js';
+import { redactBenchDiagnostic, sanitizeBenchPlanValue } from './redaction.js';
 import {
   MAX_BENCH_JOB_SCREENSHOT_DECODED_BYTES,
   MAX_BENCH_SCREENSHOT_DECODED_BYTES,
@@ -20,9 +24,13 @@ import type {
   BenchJobStatus,
   BenchProgress,
   BenchReport,
+  BenchRunProgress,
   BenchRunResult,
 } from './types.js';
-import type { BenchScreenshotRequest } from '../../a2ui/a2ui-bench-judge.js';
+import type {
+  BenchScreenshotRequest,
+  BenchScreenshotTask,
+} from '../../a2ui/a2ui-bench-judge.js';
 
 const MAX_EVENT_HISTORY = 500;
 const MAX_RETAINED_JOBS = 20;
@@ -50,10 +58,12 @@ export type BenchJobAdmission =
 export interface BenchJobRecord {
   screenshots: Map<string, {
     request: BenchScreenshotRequest;
+    start: () => void;
     settle: (response: Response) => void;
   }>;
   id: string;
   createdAt: string;
+  startedAtMonotonicMs: number;
   updatedAt: string;
   status: BenchJobStatus;
   request: BenchJobRequest;
@@ -69,16 +79,33 @@ export interface BenchJobRecord {
   workerActive: boolean;
 }
 
+function sanitizeJobValue(job: BenchJobRecord, value: unknown): unknown {
+  return sanitizeBenchPlanValue(value, job.request, job.id);
+}
+
 function snapshotJob(job: BenchJobRecord): BenchJobSnapshot {
-  return sanitizeBenchPublicValue({
+  return sanitizeJobValue(job, {
     ok: true,
     jobId: job.id,
     status: job.status,
+    startedAt: job.createdAt,
+    durationMs: job.report?.durationMs
+      ?? Math.max(0, Math.round(performance.now() - job.startedAtMonotonicMs)),
+    ...(job.report ? { completedAt: job.report.completedAt } : {}),
     progress: job.progress,
     ...(job.report ? { summary: job.report.summary } : {}),
     ...(job.error ? { error: job.error } : {}),
     warnings: job.warnings,
-  }, job.request.provider) as BenchJobSnapshot;
+  }) as BenchJobSnapshot;
+}
+
+function matchesRun(
+  run: BenchRunProgress,
+  other: Pick<BenchRunProgress, 'groupId' | 'scenarioId' | 'repeatIndex'>,
+): boolean {
+  return run.groupId === other.groupId
+    && run.scenarioId === other.scenarioId
+    && run.repeatIndex === other.repeatIndex;
 }
 
 export class BenchJobStore {
@@ -124,12 +151,14 @@ export class BenchJobStore {
       screenshots: new Map(),
       id: randomUUID(),
       createdAt: now,
+      startedAtMonotonicMs: performance.now(),
       updatedAt: now,
       status: 'queued',
       request,
       progress: {
         completedRuns: 0,
         totalRuns,
+        runs: createBenchRunProgress(request),
       },
       results: [],
       warnings: [...warnings],
@@ -152,16 +181,28 @@ export class BenchJobStore {
     jobId: string,
     request: BenchScreenshotRequest,
     signal: AbortSignal,
-  ): Promise<Response> {
+  ): BenchScreenshotTask {
     const job = this.jobs.get(jobId);
     if (!job || !job.workerActive || job.abortController.signal.aborted) {
-      return Promise.reject(new Error('Bench job is no longer active.'));
+      return {
+        started: Promise.resolve(),
+        response: Promise.reject(new Error('Bench job is no longer active.')),
+      };
     }
     const captureId = randomUUID();
     const combined = AbortSignal.any([signal, job.abortController.signal]);
-    return new Promise((resolve, reject) => {
+    let resolveStarted!: () => void;
+    const started = new Promise<void>((resolve) => {
+      resolveStarted = resolve;
+    });
+    const timeoutMs = Math.min(1_200_000, Math.max(1, request.timeoutMs));
+    const queueLimit = benchInFlightLimit(
+      job.request.groups.filter((group) => group.enabled).length,
+    );
+    const response = new Promise<Response>((resolve, reject) => {
       const cleanup = () => {
         clearTimeout(timer);
+        resolveStarted();
         combined.removeEventListener('abort', abort);
         job.screenshots.delete(captureId);
       };
@@ -173,14 +214,18 @@ export class BenchJobStore {
             : new Error('Screenshot cancelled.'),
         );
       };
-      const timer = setTimeout(() => {
+      const expire = (message: string) => {
         cleanup();
-        reject(
-          new Error(
-            'Timed out waiting for the browser screenshot. Keep the Bench page open and check the screenshot service connection.',
-          ),
+        reject(new Error(message));
+      };
+      // All queued tasks have been announced. Bound a missing browser without
+      // spending execution time while legitimate earlier captures are running.
+      let timer = setTimeout(() => {
+        expire(
+          'Timed out waiting for the browser to start the screenshot. Keep the Bench page open and check the screenshot service connection.',
         );
-      }, Math.min(1_200_000, Math.max(1, request.timeoutMs)));
+      }, timeoutMs * queueLimit);
+      let active = false;
       if (combined.aborted) {
         abort();
         return;
@@ -188,6 +233,17 @@ export class BenchJobStore {
       combined.addEventListener('abort', abort, { once: true });
       job.screenshots.set(captureId, {
         request,
+        start: () => {
+          if (active) return;
+          active = true;
+          clearTimeout(timer);
+          timer = setTimeout(() => {
+            expire(
+              'Timed out waiting for the browser screenshot. Keep the Bench page open and check the screenshot service connection.',
+            );
+          }, timeoutMs);
+          resolveStarted();
+        },
         settle: (response) => {
           cleanup();
           resolve(response);
@@ -197,6 +253,16 @@ export class BenchJobStore {
       // redaction, which would rewrite strings inside executable page source.
       this.emit(jobId, 'screenshot-requested', { captureId });
     });
+    return { started, response };
+  }
+
+  public startScreenshot(
+    jobId: string,
+    captureId: string,
+  ): BenchScreenshotRequest | undefined {
+    const task = this.jobs.get(jobId)?.screenshots.get(captureId);
+    task?.start();
+    return task?.request;
   }
 
   public getScreenshotRequest(
@@ -230,6 +296,11 @@ export class BenchJobStore {
     const job = this.jobs.get(jobId);
     if (!job) return undefined;
     job.status = status;
+    if (status === 'cancelled' || status === 'failed') {
+      job.progress.runs = job.progress.runs?.map(run =>
+        cancelBenchRunProgress(run)
+      );
+    }
     job.updatedAt = new Date().toISOString();
     if (error) {
       job.error = redactBenchDiagnostic(error, job.request.provider);
@@ -248,6 +319,14 @@ export class BenchJobStore {
       ...job.progress,
       ...progress,
     };
+    const current = progress.current;
+    if (current) {
+      job.progress.runs = job.progress.runs?.map(run =>
+        matchesRun(run, current)
+          ? advanceBenchRunProgress(run, current.phase)
+          : run
+      );
+    }
     job.updatedAt = new Date().toISOString();
     return job;
   }
@@ -290,6 +369,11 @@ export class BenchJobStore {
       }
     }
     job.results.push(storedResult);
+    job.progress.runs = job.progress.runs?.map(run =>
+      matchesRun(run, storedResult)
+        ? finishBenchRunProgress(run, storedResult)
+        : run
+    );
     job.progress.completedRuns = job.results.length;
     job.updatedAt = new Date().toISOString();
     return job;
@@ -308,12 +392,22 @@ export class BenchJobStore {
     job.warnings = job.warnings.map((warning) =>
       redactBenchDiagnostic(warning, provider)
     );
-    job.report = sanitizeBenchPublicValue(
-      report,
-      provider,
+    const completedAt = new Date().toISOString();
+    job.report = sanitizeJobValue(
+      job,
+      {
+        ...report,
+        runProgress: job.progress.runs,
+        startedAt: job.createdAt,
+        completedAt,
+        durationMs: Math.max(
+          0,
+          Math.round(performance.now() - job.startedAtMonotonicMs),
+        ),
+      },
     ) as BenchReport;
     job.workerActive = false;
-    job.updatedAt = new Date().toISOString();
+    job.updatedAt = completedAt;
     this.emit(jobId, 'report', job.report);
     this.emit(jobId, 'job', snapshotJob(job));
     job.request.provider = {};
@@ -340,7 +434,7 @@ export class BenchJobStore {
     const item: BenchJobEvent = {
       id: job.nextEventId++,
       event,
-      data: sanitizeBenchPublicValue(data, job.request.provider),
+      data: sanitizeJobValue(job, data),
     };
     job.events.push(item);
     if (job.events.length > MAX_EVENT_HISTORY) {

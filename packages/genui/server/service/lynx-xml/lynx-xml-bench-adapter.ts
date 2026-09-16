@@ -16,6 +16,7 @@ import {
 } from '../common/bench/retry.js';
 import type { BenchRetrySleep } from '../common/bench/retry.js';
 import { benchAttemptTokenCounts } from '../common/bench/usage.js';
+import { buildGenerationRepairMessages } from '../common/generation-repair.js';
 import {
   GenerationPostprocessError,
   GenerationUpstreamError,
@@ -71,10 +72,11 @@ export function createLynxXmlBenchAdapter(
     protocol: 'lynx-xml',
     async generate(input, signal) {
       signal?.throwIfAborted();
-      const messages: ChatMessage[] = [{
+      const initialMessages: ChatMessage[] = [{
         role: 'user',
         content: buildPrompt(input),
       }];
+      let messages = initialMessages;
       const attempts: ProtocolBenchAttemptResult[] = [];
       const maxAttempts = Number.isFinite(input.maxAttempts)
         ? Math.min(4, Math.max(1, Math.floor(input.maxAttempts)))
@@ -95,6 +97,7 @@ export function createLynxXmlBenchAdapter(
             maxRetries: 0,
             enableWebSearch: false,
             enableImageGeneration: false,
+            enableDesignGuidance: input.enableDesignGuidance !== false,
             enableHtmlFragment: input.enableHtmlFragment === true,
           }, signal);
           signal?.throwIfAborted();
@@ -138,7 +141,9 @@ export function createLynxXmlBenchAdapter(
           finalValid = true;
         } catch (error) {
           finalErrors = [
-            error instanceof Error ? error.message : String(error),
+            (error instanceof GenerationPostprocessError
+              ? error
+              : new GenerationPostprocessError(error, generated)).message,
           ];
         }
         attempts.push({
@@ -153,13 +158,14 @@ export function createLynxXmlBenchAdapter(
         });
         if (finalValid) break;
         if (index < maxAttempts) {
-          messages.push({
-            role: 'assistant',
-            content: generated.metadata?.modelOutput ?? generated.text,
-          });
-          messages.push({
-            role: 'user',
-            content:
+          messages = buildGenerationRepairMessages({
+            initialMessages,
+            messages,
+            result: {
+              text: generated.metadata?.modelOutput ?? generated.text,
+              finishReason: generated.finishReason,
+            },
+            repairPrompt:
               `Fix the following validation errors and return the complete Lynx XML artifact:\n${
                 finalErrors.join('\n')
               }`,

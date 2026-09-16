@@ -18,6 +18,9 @@ export const lynxPartIdAttribute = /*#__PURE__*/ 'dirtyID' as const;
 export const lynxDefaultDisplayLinearAttribute = /*#__PURE__*/
   'lynx-default-display-linear' as const;
 
+export const lynxEnableCSSInheritanceAttribute = /*#__PURE__*/
+  'lynx-enable-css-inheritance' as const;
+
 export const lynxDefaultOverflowVisibleAttribute /*#__PURE__*/ =
   'lynx-default-overflow-visible' as const;
 

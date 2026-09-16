@@ -1,5 +1,11 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.11.4
+
+### Patch Changes
+
+- Encode the element templates of a lazy bundle into that lazy bundle. Its chunk groups come from dynamic imports and have no name, so looking them up in `compilation.namedChunkGroups` found nothing and every Element Template lazy bundle shipped without its templates: the main thread could not create them, the lazy component never rendered, and a development build reported `No BehaviorController defined for class template`. ([#3819](https://github.com/lynx-family/lynx-stack/pull/3819))
+
 ## 0.11.3
 
 ### Patch Changes

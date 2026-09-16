@@ -12,7 +12,7 @@ import { jsonWithCors } from '../../common/cors';
 import { errorMessage } from '../../common/errors';
 import { checkRateLimit, rateLimitJsonResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
-import { extractUsageMetrics } from '../../common/usage';
+import { extractTokenUsage, extractUsageMetrics } from '../../common/usage';
 import { pickA2UIChatOptions } from '../_shared';
 import type { A2UIChatBody } from '../_shared';
 
@@ -65,6 +65,7 @@ async function postA2UIChat(req: Request) {
         ok: true,
         text,
         usage,
+        tokenUsage: extractTokenUsage(usage),
         cachedTokens: extractUsageMetrics(usage).cachedTokens,
         finishReason,
       });
@@ -79,6 +80,7 @@ async function postA2UIChat(req: Request) {
     );
     return jsonWithCors(req, {
       ...validatedResult,
+      tokenUsage: extractTokenUsage(validatedResult.usage),
       cachedTokens: extractUsageMetrics(validatedResult.usage).cachedTokens,
     });
   } catch (err: unknown) {

@@ -63,11 +63,76 @@ describe('GenUI model configuration', () => {
     }
   });
 
+  test('preserves renamed group labels containing configured model names', () => {
+    const previous = process.env[GENUI_MODEL_CONFIG_ENV];
+    process.env[GENUI_MODEL_CONFIG_ENV] = JSON.stringify(CONFIG);
+    try {
+      expect(sanitizeBenchPublicValue({
+        groups: [{ name: 'Group 01-doubao-seed-upstream' }],
+        results: [{
+          groupName: 'Group 01-doubao-seed-upstream',
+          model: 'doubao-seed-upstream',
+        }],
+      }, {})).toEqual({
+        groups: [{ name: 'Group 01-doubao-seed-upstream' }],
+        results: [{
+          groupName: 'Group 01-doubao-seed-upstream',
+          model: '[REDACTED]',
+        }],
+      });
+    } finally {
+      if (previous === undefined) delete process.env[GENUI_MODEL_CONFIG_ENV];
+      else process.env[GENUI_MODEL_CONFIG_ENV] = previous;
+    }
+  });
+
   test('parses a provider config map keyed by public model name', () => {
     expect(parseModelConfig(JSON.stringify(CONFIG))).toEqual({
       defaultModel: 'Doubao Seed',
-      models: CONFIG,
+      models: Object.fromEntries(
+        Object.entries(CONFIG).map(([name, config]) => [
+          name,
+          { ...config, input_price: 0, cached_price: 0, output_price: 0 },
+        ]),
+      ),
     });
+  });
+
+  test('defaults omitted price fields to zero', () => {
+    for (
+      const prices of [{}, { input_price: 1.5 }, {
+        cached_price: 0.25,
+        output_price: 6,
+      }]
+    ) {
+      const config = parseModelConfig(JSON.stringify({
+        Model: { ...CONFIG['Doubao Seed'], ...prices },
+      }));
+      expect(config.models.Model).toEqual({
+        ...CONFIG['Doubao Seed'],
+        input_price: 0,
+        cached_price: 0,
+        output_price: 0,
+        ...prices,
+      });
+    }
+  });
+
+  test('rejects invalid prices without including their values in errors', () => {
+    for (const key of ['input_price', 'cached_price', 'output_price']) {
+      for (const value of ['private-secret', -1, null, true, [], {}]) {
+        expect(() =>
+          parseModelConfig(JSON.stringify({
+            Model: { ...CONFIG['Doubao Seed'], [key]: value },
+          }))
+        ).toThrow(`${key} must be a finite non-negative number`);
+      }
+      const raw = JSON.stringify({
+        Model: { ...CONFIG['Doubao Seed'], [key]: 'overflow' },
+      }).replace('"overflow"', '1e999');
+      expect(() => parseModelConfig(raw))
+        .toThrow(`${key} must be a finite non-negative number`);
+    }
   });
 
   test('defaults to the first model and rejects multiple defaults', () => {
@@ -216,7 +281,12 @@ describe('GenUI model configuration', () => {
       expect(pickProviderOptions({ model: 'toString' }).model).toBeUndefined();
       expect(resolveModelConfig('toString')).toEqual({
         name: 'Doubao Seed',
-        config: CONFIG['Doubao Seed'],
+        config: {
+          ...CONFIG['Doubao Seed'],
+          input_price: 0,
+          cached_price: 0,
+          output_price: 0,
+        },
       });
     } finally {
       if (previous === undefined) {

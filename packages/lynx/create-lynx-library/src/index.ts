@@ -827,11 +827,15 @@ function typesIndex(context: TemplateContext): string {
   const exportLines: string[] = [];
 
   if (context.features.has('native-module')) {
-    exportLines.push(`export * from './platform-native-module';`);
+    exportLines.push(
+      `export { ${context.moduleName} } from '../generated/${context.moduleName}';`,
+    );
   }
 
   if (hasNapiNativeModule(context)) {
-    exportLines.push(`export * from './napi-native-module';`);
+    exportLines.push(
+      `export { ${context.napiModuleName} } from '../generated/${context.napiModuleName}';`,
+    );
   }
 
   if (exportLines.length === 0) {

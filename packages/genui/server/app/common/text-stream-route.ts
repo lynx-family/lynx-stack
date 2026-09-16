@@ -12,6 +12,7 @@ import { checkRateLimit, rateLimitSseResponse } from './rate-limit.js';
 import { readJsonBodyWithLimit } from './request.js';
 import { encodeSSE, sseHeaders } from './sse.js';
 import { createStreamLogger } from './stream-logger.js';
+import { extractTokenUsage } from './usage.js';
 import {
   GenerationPostprocessError,
   GenerationUpstreamError,
@@ -264,6 +265,7 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
             text: finalText,
             ...(metadata ? { metadata } : {}),
             usage,
+            tokenUsage: extractTokenUsage(usage),
             finishReason,
           });
         } catch (error: unknown) {
@@ -280,6 +282,7 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
             const payload = {
               ...errorMessage(error, errorOptions),
               ...(resultMetadata ?? {}),
+              tokenUsage: extractTokenUsage(resultMetadata?.usage),
             };
             log('error.enqueued', payload);
             enqueue('error', payload);

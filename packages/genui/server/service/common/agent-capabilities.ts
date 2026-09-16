@@ -13,6 +13,7 @@ export function pickAgentCapabilityConfig(opts: ChatOptions) {
     ...pickProviderConfig(opts),
     enableWebSearch: opts.enableWebSearch,
     enableImageGeneration: opts.enableImageGeneration,
+    enableDesignGuidance: opts.enableDesignGuidance,
   };
 }
 

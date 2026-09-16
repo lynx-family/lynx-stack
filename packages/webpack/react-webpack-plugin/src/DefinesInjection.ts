@@ -119,6 +119,7 @@ export function applyDefinesInjection(
         backgroundRoots: Module[],
         mainThreadRoots: Module[],
         inheritedPresent: { snapshot: string[]; worklet: string[] },
+        ancestors: ReadonlySet<string>,
         request: string,
         inject: (request: string) => Promise<void>,
       ): Promise<void> => {
@@ -165,13 +166,14 @@ export function applyDefinesInjection(
           const mainThreadBoundary = mainThread.asyncBoundaries.get(
             resource,
           );
-          if (!mainThreadBoundary) {
+          if (!mainThreadBoundary || ancestors.has(resource)) {
             continue;
           }
           await processScope(
             [backgroundBoundary],
             [mainThreadBoundary],
             present,
+            new Set([...ancestors, resource]),
             `${resource}.__lynx-react-defines.js`,
             async (boundaryRequest) => {
               definesImports.set(
@@ -193,6 +195,7 @@ export function applyDefinesInjection(
             entryRoots(background),
             entryRoots(mainThread),
             { snapshot: [], worklet: [] },
+            new Set(),
             path.join(
               compiler.context,
               `__lynx-react-defines.${mainThread}.js`,

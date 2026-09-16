@@ -107,6 +107,42 @@ describe('resolveGenuiBenchUiJudge', () => {
 });
 
 describe('runGenuiBenchUiJudge', () => {
+  test('captures HTML directly in the browser and scores PNG with the selected model', async () => {
+    const rawText =
+      '<!doctype html><html><head></head><body>Hello</body></html>';
+    const result = await runGenuiBenchUiJudge({
+      artifact: { protocol: 'html', rawText },
+      model: 'html-model',
+      scenario: { prompt: 'Build a greeting' },
+      session: { screenshotPath: 'browser/html' },
+      timeoutMs: 10_000,
+    }, (input, init) => {
+      expect(input.path).toBe('browser/html');
+      expect(input.source).toBe(rawText);
+      expect(input.timeoutMs).toBe(20000);
+      expect(init).toBeInstanceOf(AbortSignal);
+      expect(Object.entries(input.fields)).toEqual([
+        ['width', '390'],
+        ['height', '844'],
+      ]);
+      return Promise.resolve(evaluationResponse(geqiResponse(4)));
+    });
+    expect(result).toMatchObject({
+      status: 'complete',
+      score: 4,
+      geqiScore: 80,
+    });
+    expect(evaluateScreenshot).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        model: 'html-model',
+        task: 'Build a greeting',
+        screenshotDataUrl: expect.stringMatching(
+          /^data:image\/png;base64,/u,
+        ) as unknown,
+      }),
+    );
+  });
+
   test('relays Lynx XML for browser ZIP upload and scores the converted PNG', async () => {
     const rawText =
       '<!doctype lynx><lynx engine-version="4.2"><script thread="main">const page = __CreatePage("0", 0);</script></lynx>';
@@ -324,6 +360,41 @@ describe('runGenuiBenchUiJudge', () => {
     });
   });
 
+  test.each(['html', 'a2ui'] as const)(
+    '%s does not repeat capture or evaluation after the evaluator exhausts its retries',
+    async (protocol) => {
+      const phases: string[] = [];
+      const evaluate = rstest.fn(() =>
+        Promise.reject(new Error('RPM limit exceeded'))
+      );
+      const capture = rstest.fn(() =>
+        Promise.resolve(evaluationResponse(geqiResponse(4)))
+      );
+      const result = await runGenuiBenchUiJudge({
+        artifact: protocol === 'a2ui'
+          ? { protocol, messages: [] }
+          : { protocol, rawText: '<!doctype html><html></html>' },
+        scenario: { prompt: 'Build a greeting' },
+        session: { screenshotPath: 'browser/html' },
+        onPhase: phase => phases.push(phase),
+        evaluate,
+        retryDelayMs: 0,
+      }, capture);
+      expect(capture).toHaveBeenCalledTimes(1);
+      expect(evaluate).toHaveBeenCalledTimes(1);
+      expect(phases).not.toContain('judge-retry');
+      expect(result).toMatchObject({
+        status: 'failed',
+        score: 0,
+        retryable: false,
+        errors: ['GenUI screenshot evaluation failed: RPM limit exceeded'],
+        screenshotDataUrl: expect.stringMatching(
+          /^data:image\/png;base64,/u,
+        ) as unknown,
+      });
+    },
+  );
+
   test('returns the final result after both sidecar attempts fail', async () => {
     let calls = 0;
     const result = await runGenuiBenchUiJudge(
@@ -437,11 +508,19 @@ describe('runGenuiBenchUiJudge', () => {
     expect(calls).toBe(0);
     expect(result).toMatchObject({
       errors: [
-        'ui-judge rejected OpenUI output containing an external resource URL or openUrl call.',
+        'ui-judge rejected OpenUI output containing external resource URL (file:).',
       ],
       score: 0,
       status: 'failed',
       warnings: [],
     });
   });
+});
+
+test('HTML capture capability needs no Lynx bundle or sidecar configuration', async () => {
+  expect(
+    await resolveGenuiBenchUiJudge('html', {
+      env: { UI_JUDGE_ZIP_URL: 'invalid' },
+    }),
+  ).toEqual({ enabled: true, session: { screenshotPath: 'browser/html' } });
 });

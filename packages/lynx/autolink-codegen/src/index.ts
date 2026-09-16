@@ -1781,7 +1781,7 @@ declare const lynx: {
 };
 
 function getNativeModules(): Record<string, unknown> | undefined {
-  const globalObject = globalThis as typeof globalThis & {
+  const globalObject = globalThis as unknown as {
     NativeModules?: Record<string, unknown>;
   };
   return typeof NativeModules !== 'undefined'
@@ -1796,7 +1796,7 @@ ${
     NativeModules = nativeModules;
     return;
   }
-  const globalObject = globalThis as typeof globalThis & {
+  const globalObject = globalThis as unknown as {
     NativeModules?: Record<string, unknown>;
   };
   globalObject.NativeModules = nativeModules;

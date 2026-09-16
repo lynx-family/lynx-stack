@@ -1,7 +1,10 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { createParser } from '@openuidev/lang-core';
 import { describe, expect, test } from '@rstest/core';
+
+import { createOpenUiPromptLibrary } from '@lynx-js/genui/openui/prompt';
 
 import { OPENUI_COMPONENT_CATALOG } from './openui.js';
 import { parseOpenUIScenario } from '../mock/openui-scenarios.js';
@@ -10,11 +13,14 @@ import {
   canInlineOpenUIRenderUrl,
 } from '../utils/renderUrl.js';
 
+const library = createOpenUiPromptLibrary();
+const parser = createParser(library.toJSONSchema(), library.root);
+
 describe('OpenUI component preview usage', () => {
   test.each(OPENUI_COMPONENT_CATALOG)(
     '$name has valid inline preview DSL',
     (component) => {
-      const result = parseOpenUIScenario(component.usage);
+      const result = parser.parse(component.usage);
       expect(result.root).not.toBeNull();
       expect(result.meta.errors).toEqual([]);
       expect(result.meta.incomplete).toBe(false);

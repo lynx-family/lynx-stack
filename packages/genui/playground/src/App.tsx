@@ -55,8 +55,9 @@ const LYNX_XML_TABS: TabDef[] = [
   { id: 'bench', label: 'Bench' },
 ];
 
-const CREATE_ONLY_TABS: TabDef[] = [
+const HTML_TABS: TabDef[] = [
   { id: 'create', label: 'Create' },
+  { id: 'bench', label: 'Bench' },
 ];
 
 function ensureDefaultRouteHash(): void {
@@ -128,7 +129,7 @@ export function App() {
   const protocol = route.protocol;
   let tabs = GENUI_TABS;
   if (protocol.name === 'html') {
-    tabs = CREATE_ONLY_TABS;
+    tabs = HTML_TABS;
   } else if (protocol.name === 'mcp-apps') {
     tabs = CREATE_EXAMPLES_TABS;
   } else if (protocol.name === 'lynx-xml') {
@@ -290,7 +291,12 @@ export function App() {
             />
           );
         }
-        return <BenchPage key='bench' />;
+        return (
+          <BenchPage
+            key={`bench:${route.benchPlan ?? ''}`}
+            sharedPlan={route.benchPlan}
+          />
+        );
       }
       case 'examples':
         return route.demoId
@@ -326,6 +332,7 @@ export function App() {
     protocol,
     route.tab,
     route.benchReportId,
+    route.benchPlan,
     route.componentName,
     route.demoId,
     theme,

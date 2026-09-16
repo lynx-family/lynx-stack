@@ -9,7 +9,10 @@ import type { SearchAgentOptions } from './search-capability.js';
 
 export interface GenerationAgentOptions
   extends SearchAgentOptions, ImageGenerationCapabilityOptions
-{}
+{
+  /** Include the shared product and mobile design guidance in generation prompts. */
+  enableDesignGuidance?: boolean | undefined;
+}
 
 export function createAgentCapabilities(
   opts: GenerationAgentOptions = {},

@@ -2,16 +2,23 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { BenchTaskPool } from './concurrency.js';
+import {
+  BenchTaskPool,
+  MAX_BENCH_GROUPS,
+  MAX_BENCH_JUDGE_CONCURRENCY,
+  benchInFlightLimit,
+} from './concurrency.js';
 import type { BenchJudgeScheduling } from './concurrency.js';
 import { resolveGenuiBenchUiJudge, runGenuiBenchUiJudge } from './judge.js';
 import type { GenuiBenchJudgeArtifact } from './judge.js';
+import { benchProgressSummary } from './progress.js';
 import type {
   ProtocolBenchAdapter,
   ProtocolBenchJudgePayload,
 } from './protocol-adapter.js';
 import type { ProtocolBenchScenario } from './protocol-types.js';
-import { sanitizeBenchPublicValue } from './redaction.js';
+import { sanitizeBenchPlanValue } from './redaction.js';
+import { resolveBenchRetryDelay, waitForBenchRetry } from './retry.js';
 import { getBenchJobStore } from './store.js';
 import type {
   BenchCatalogLabel,
@@ -36,6 +43,8 @@ import {
   createArkImageGenerationRunScope,
   generatedArkImageURLs,
 } from '../../../agent/common/ark-image-generation-tool.js';
+import { createScreenshotEvaluator } from '../../../agent/common/ui-judge-agent.js';
+import type { ScreenshotEvaluator } from '../../../agent/common/ui-judge-agent.js';
 import { getA2UIAgentService } from '../../a2ui/a2ui-agent.js';
 import { createA2UIBenchAdapter } from '../../a2ui/a2ui-bench-adapter.js';
 import { resolveBenchCatalog } from '../../a2ui/a2ui-bench-catalog.js';
@@ -45,19 +54,18 @@ import type {
   BenchUiJudgeResult,
 } from '../../a2ui/a2ui-bench-judge.js';
 // import { runBenchPreview } from '../../a2ui/a2ui-bench-preview.js';
+import { createHtmlBenchAdapter } from '../../html/html-bench-adapter.js';
 import { createLynxXmlBenchAdapter } from '../../lynx-xml/lynx-xml-bench-adapter.js';
 import { createOpenUIBenchAdapter } from '../../openui/openui-bench-adapter.js';
-import { defaultModelName } from '../model-config.js';
+import { buildGenerationRepairMessages } from '../generation-repair.js';
+import { defaultModelName, readModelConfig } from '../model-config.js';
+import { GenerationUpstreamError } from '../result.js';
 import type { ChatMessage } from '../types.js';
 
 interface BenchRunItem {
   group: BenchGroupRequest;
   scenario: BenchScenarioRequest;
   repeatIndex: number;
-}
-
-interface BenchRunSample {
-  items: BenchRunItem[];
 }
 
 interface GeneratedBenchRun {
@@ -70,6 +78,10 @@ export interface BenchRunnerDependencies {
 }
 
 type BenchJudgeCapabilities = Map<string, BenchUiJudgeCapability>;
+
+// Shared by all jobs in this process. Admission waits stay outside Agent/Judge time.
+const generationPool = new BenchTaskPool(MAX_BENCH_GROUPS);
+const evaluationPool = new BenchTaskPool(MAX_BENCH_JUDGE_CONCURRENCY);
 
 function averagePlanned(values: number[], plannedRuns: number): number {
   if (plannedRuns === 0) return 0;
@@ -87,32 +99,6 @@ function profileForGroup(group: BenchGroupRequest): BenchProfile {
 
 function judgeCapabilityKey(group: BenchGroupRequest): string {
   return `${protocolForGroup(group)}:${profileForGroup(group)}`;
-}
-
-function buildRunSamples(request: BenchJobRequest): BenchRunSample[] {
-  const enabledGroups = request.groups.filter((group) => group.enabled);
-  const samples: BenchRunSample[] = [];
-  let sampleOrdinal = 0;
-  for (const scenario of request.scenarios) {
-    for (
-      let repeatIndex = 1;
-      repeatIndex <= request.settings.repeats;
-      repeatIndex++
-    ) {
-      const offset = enabledGroups.length === 0
-        ? 0
-        : sampleOrdinal % enabledGroups.length;
-      const groups = [
-        ...enabledGroups.slice(offset),
-        ...enabledGroups.slice(0, offset),
-      ];
-      samples.push({
-        items: groups.map((group) => ({ group, scenario, repeatIndex })),
-      });
-      sampleOrdinal++;
-    }
-  }
-  return samples;
 }
 
 function buildBenchPrompt(
@@ -159,6 +145,7 @@ function emitRunPhase(
   phase: BenchRunPhase,
 ): void {
   const store = getBenchJobStore();
+  if (store.getJob(jobId)?.abortController.signal.aborted) return;
   const job = store.updateProgress(jobId, {
     current: {
       groupId: item.group.id,
@@ -173,7 +160,11 @@ function emitRunPhase(
     scenarioId: item.scenario.id,
     repeatIndex: item.repeatIndex,
     phase,
-    progress: job.progress,
+    runProgress: job.progress.runs?.find(run =>
+      run.groupId === item.group.id && run.scenarioId === item.scenario.id
+      && run.repeatIndex === item.repeatIndex
+    ),
+    progress: benchProgressSummary(job.progress),
   });
 }
 
@@ -195,12 +186,13 @@ async function generateA2UINative(
   usage: unknown[];
   warnings: string[];
 }> {
-  const conversation = [...messages];
+  let conversation = [...messages];
   const usage: unknown[] = [];
   const maxAttempts = Math.min(
     5,
     Math.max(1, request.settings.maxRepairAttempts + 1),
   );
+  let attempts = 0;
   let lastText = '';
   let lastErrors: string[] = [];
   let lastFinishReason: unknown;
@@ -213,23 +205,42 @@ async function generateA2UINative(
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     signal.throwIfAborted();
-    const generated = await getA2UIAgentService().generateRaw(
-      conversation,
-      {
-        resourceId: `bench:${item.group.id}:${runId}:attempt-${attempt}`,
-        apiKey: request.provider.apiKey,
-        baseURL: request.provider.baseURL,
-        model,
-        api: request.provider.api,
-        catalog,
-        disableAgentCache: true,
-        enableWebSearch: false,
-        enableImageGeneration: false,
-      },
-      undefined,
-      signal,
-      imageGenerationScope,
-    );
+    attempts = attempt;
+    let generated: { text: string; usage: unknown; finishReason: unknown };
+    try {
+      generated = await getA2UIAgentService().generateRaw(
+        conversation,
+        {
+          resourceId: `bench:${item.group.id}:${runId}:attempt-${attempt}`,
+          apiKey: request.provider.apiKey,
+          baseURL: request.provider.baseURL,
+          model,
+          api: request.provider.api,
+          catalog,
+          disableAgentCache: true,
+          maxRetries: 0,
+          enableWebSearch: false,
+          enableImageGeneration: false,
+        },
+        undefined,
+        signal,
+        imageGenerationScope,
+      );
+    } catch (error) {
+      signal.throwIfAborted();
+      const failed = error instanceof GenerationUpstreamError
+        ? error.result
+        : undefined;
+      usage.push(failed?.usage);
+      lastFinishReason = failed?.finishReason ?? 'error';
+      lastErrors = [error instanceof Error ? error.message : String(error)];
+      const delayMs = resolveBenchRetryDelay(error, attempt);
+      if (attempt < maxAttempts && delayMs !== undefined) {
+        await waitForBenchRetry(delayMs, signal);
+        continue;
+      }
+      break;
+    }
     usage.push(generated.usage);
     lastText = generated.text;
     lastFinishReason = generated.finishReason;
@@ -251,16 +262,17 @@ async function generateA2UINative(
       };
     }
     if (attempt < maxAttempts) {
-      conversation.push({ role: 'assistant', content: generated.text });
-      conversation.push({
-        role: 'user',
-        content: formatErrorsForModel(validation.errors),
+      conversation = buildGenerationRepairMessages({
+        initialMessages: messages,
+        messages: conversation,
+        result: generated,
+        repairPrompt: formatErrorsForModel(validation.errors),
       });
     }
   }
 
   return {
-    attempts: maxAttempts,
+    attempts,
     errors: lastErrors,
     finishReason: lastFinishReason,
     messages: [],
@@ -288,7 +300,7 @@ async function runA2UINativeOne(
     groupId: item.group.id,
     scenarioId: item.scenario.id,
     repeatIndex: item.repeatIndex,
-    progress: store.getJob(jobId)?.progress,
+    progress: benchProgressSummary(store.getJob(jobId)!.progress),
   });
 
   const messages: ChatMessage[] = [
@@ -330,7 +342,7 @@ async function runA2UINativeOne(
           },
         }
         : {}),
-      result: sanitizeBenchPublicValue({
+      result: sanitizeBenchPlanValue({
         id: runId,
         groupId: item.group.id,
         groupName: item.group.name,
@@ -373,13 +385,13 @@ async function runA2UINativeOne(
         usage: result.usage,
         messages: result.messages,
         text: result.text,
-      }, request.provider) as BenchRunResult,
+      }, request) as BenchRunResult,
     };
   } catch (error) {
     const agentMs = performance.now() - startedAt;
     const message = error instanceof Error ? error.message : String(error);
     return {
-      result: sanitizeBenchPublicValue({
+      result: sanitizeBenchPlanValue({
         id: runId,
         groupId: item.group.id,
         groupName: item.group.name,
@@ -405,7 +417,7 @@ async function runA2UINativeOne(
         outputChars: 0,
         errors: [message],
         error: message,
-      }, request.provider) as BenchRunResult,
+      }, request) as BenchRunResult,
     };
   }
 }
@@ -444,7 +456,7 @@ async function runProtocolAdapterOne(
   const protocol = protocolForGroup(item.group);
   const profile = profileForGroup(item.group);
   const model = pickRunModel(request, item.group);
-  const catalogLabel = protocol === 'lynx-xml'
+  const catalogLabel = protocol === 'lynx-xml' || protocol === 'html'
     ? 'none' as const
     : (profile === 'matched-core'
       ? 'matched-core' as const
@@ -457,7 +469,7 @@ async function runProtocolAdapterOne(
     profile,
     scenarioId: item.scenario.id,
     repeatIndex: item.repeatIndex,
-    progress: store.getJob(jobId)?.progress,
+    progress: benchProgressSummary(store.getJob(jobId)!.progress),
   });
   emitRunPhase(jobId, item, 'agent');
   const startedAt = performance.now();
@@ -469,6 +481,7 @@ async function runProtocolAdapterOne(
       );
     }
     const artifact = await adapter.generate({
+      enableDesignGuidance: item.group.enableDesignGuidance !== false,
       ...(protocol === 'lynx-xml'
         ? { enableHtmlFragment: item.group.enableHtmlFragment === true }
         : {}),
@@ -550,9 +563,9 @@ async function runProtocolAdapterOne(
       ...(artifact.finalText ? { text: artifact.finalText } : {}),
     };
     return {
-      result: sanitizeBenchPublicValue(
+      result: sanitizeBenchPlanValue(
         result,
-        request.provider,
+        request,
       ) as BenchRunResult,
       ...(judgePayload
         ? {
@@ -566,7 +579,9 @@ async function runProtocolAdapterOne(
             : {
               protocol: judgePayload.kind === 'lynx-xml-source'
                 ? 'lynx-xml' as const
-                : 'openui' as const,
+                : (judgePayload.kind === 'html-source'
+                  ? 'html' as const
+                  : 'openui' as const),
               rawText: judgePayload.rawText,
             },
         }
@@ -576,7 +591,7 @@ async function runProtocolAdapterOne(
     const agentMs = performance.now() - startedAt;
     const message = error instanceof Error ? error.message : String(error);
     return {
-      result: sanitizeBenchPublicValue({
+      result: sanitizeBenchPlanValue({
         id: runId,
         groupId: item.group.id,
         groupName: item.group.name,
@@ -602,7 +617,7 @@ async function runProtocolAdapterOne(
         outputChars: 0,
         errors: [message],
         error: message,
-      }, request.provider) as BenchRunResult,
+      }, request) as BenchRunResult,
     };
   }
 }
@@ -614,24 +629,38 @@ async function generateOne(
   adapters: Partial<Record<BenchProtocol, ProtocolBenchAdapter>>,
   signal: AbortSignal,
 ): Promise<GeneratedBenchRun> {
-  if (
-    protocolForGroup(item.group) === 'a2ui'
-    && profileForGroup(item.group) === 'native'
-  ) {
-    return await runA2UINativeOne(
+  const configured = readModelConfig();
+  const modelName = pickRunModel(request, item.group);
+  const model = configured.ok
+    ? configured.config.models[modelName ?? '']
+      ?? configured.config.models[configured.config.defaultModel]
+    : undefined;
+  const modelPrices = model
+    ? {
+      input_price: model.input_price,
+      cached_price: model.cached_price,
+      output_price: model.output_price,
+    }
+    : undefined;
+  const generated = (
+      protocolForGroup(item.group) === 'a2ui'
+      && profileForGroup(item.group) === 'native'
+    )
+    ? await runA2UINativeOne(
       jobId,
       request,
       item,
       signal,
+    )
+    : await runProtocolAdapterOne(
+      jobId,
+      request,
+      item,
+      adapters[protocolForGroup(item.group)],
+      signal,
     );
-  }
-  return await runProtocolAdapterOne(
-    jobId,
-    request,
-    item,
-    adapters[protocolForGroup(item.group)],
-    signal,
-  );
+  if (modelPrices) generated.result.modelPrices = modelPrices;
+  return generated;
 }
 
 async function finishRun(
@@ -642,6 +671,7 @@ async function finishRun(
   judgeCapabilities: BenchJudgeCapabilities,
   scheduling: BenchJudgeScheduling,
   signal: AbortSignal,
+  evaluate?: ScreenshotEvaluator,
 ): Promise<BenchRunResult> {
   const { result, judgeArtifact } = generated;
   const session = judgeCapabilities.get(judgeCapabilityKey(item.group))
@@ -652,18 +682,21 @@ async function finishRun(
   ) {
     return result;
   }
-  emitRunPhase(jobId, item, 'judge');
+  emitRunPhase(jobId, item, 'screenshot-queued');
   let judge: BenchUiJudgeResult;
   try {
     judge = await runGenuiBenchUiJudge(
       {
-        model: pickRunModel(request, item.group),
+        model: request.settings.uiJudgeModel
+          ?? pickRunModel(request, item.group),
         artifact: judgeArtifact,
         scenario: item.scenario,
         session,
         signal,
         timeoutMs: request.settings.timeoutMs,
         scheduling,
+        onPhase: phase => emitRunPhase(jobId, item, phase),
+        ...(evaluate ? { evaluate } : {}),
       },
       (capture, captureSignal) =>
         getBenchJobStore().requestScreenshot(jobId, capture, captureSignal),
@@ -679,7 +712,7 @@ async function finishRun(
   const errors = [...result.errors, ...judge.errors];
   const warnings = [...(result.judgeWarnings ?? []), ...judge.warnings];
   const ok = result.ok && judge.status !== 'failed';
-  return sanitizeBenchPublicValue({
+  return sanitizeBenchPlanValue({
     ...result,
     ok,
     status: ok ? 'complete' : 'failed',
@@ -701,7 +734,7 @@ async function finishRun(
     ...(judge.screenshotDataUrl
       ? { screenshotDataUrl: judge.screenshotDataUrl }
       : {}),
-  }, request.provider) as BenchRunResult;
+  }, request) as BenchRunResult;
 }
 
 /*
@@ -892,7 +925,7 @@ function buildReport(
     ),
     summary,
   };
-  return sanitizeBenchPublicValue(report, request.provider) as BenchReport;
+  return sanitizeBenchPlanValue(report, request, jobId) as BenchReport;
 }
 
 export function startBenchJob(jobId: string): void {
@@ -935,12 +968,13 @@ function resolveProtocolAdapters(
   );
   const adapters: Partial<Record<BenchProtocol, ProtocolBenchAdapter>> = {};
   for (const protocol of protocols) {
-    adapters[protocol] = overrides?.[protocol]
-      ?? (protocol === 'a2ui'
-        ? createA2UIBenchAdapter()
-        : (protocol === 'openui'
-          ? createOpenUIBenchAdapter()
-          : createLynxXmlBenchAdapter()));
+    const factories = {
+      a2ui: createA2UIBenchAdapter,
+      openui: createOpenUIBenchAdapter,
+      'lynx-xml': createLynxXmlBenchAdapter,
+      html: createHtmlBenchAdapter,
+    };
+    adapters[protocol] = overrides?.[protocol] ?? factories[protocol]();
   }
   return adapters;
 }
@@ -954,14 +988,18 @@ export async function runBenchJob(
   if (!job) return;
   const activeJob = job;
   const request = activeJob.request;
-  const samples = buildRunSamples(request);
-  const totalRuns = samples.reduce(
-    (total, sample) => total + sample.items.length,
-    0,
-  );
+  const groups = request.groups.filter((group) => group.enabled);
+  const workerCount = groups.length;
+  const totalRuns = workerCount * request.scenarios.length
+    * request.settings.repeats;
   let judgeCapabilities: BenchJudgeCapabilities = new Map();
 
   try {
+    if (request.groups.length > MAX_BENCH_GROUPS) {
+      throw new Error(
+        `Bench supports at most ${MAX_BENCH_GROUPS} comparison groups, including the baseline.`,
+      );
+    }
     if (
       activeJob.abortController.signal.aborted
       || store.getJob(jobId)?.status === 'cancelled'
@@ -1011,23 +1049,18 @@ export async function runBenchJob(
       }
     }
 
-    let nextIndex = 0;
-    const mixedProtocols = new Set(
-      request.groups.filter((group) => group.enabled).map((group) =>
-        protocolForGroup(group)
-      ),
-    ).size > 1;
-    const workerCount = Math.min(
-      mixedProtocols ? 1 : request.settings.parallelism,
-      samples.length,
-    );
     const scheduling: BenchJudgeScheduling = {
-      capture: new BenchTaskPool(1),
-      evaluation: new BenchTaskPool(Math.max(1, workerCount)),
+      evaluation: evaluationPool,
     };
-    // Reserve space before generation: at most one run per generation worker
-    // and scoring worker, plus one capture, may retain artifacts at once.
-    const inFlight = new BenchTaskPool(workerCount * 2 + 1);
+    const judgeEvaluator = request.settings.judgeEnabled
+        && request.settings.uiJudgeModel
+      ? createScreenshotEvaluator(request.settings.uiJudgeModel).evaluate
+      : undefined;
+    // Reserve space before generation so announced browser tasks and pending
+    // scores stay bounded even when the client drains its capture queue slowly.
+    const inFlight = new BenchTaskPool(
+      benchInFlightLimit(workerCount),
+    );
     const pending = new Set<Promise<void>>();
     const failureController = new AbortController();
     const signal = AbortSignal.any([
@@ -1051,27 +1084,30 @@ export async function runBenchJob(
       delete eventResult.screenshotDataUrl;
       store.emit(jobId, storedResult.ok ? 'run-complete' : 'run-error', {
         result: eventResult,
-        progress: updated.progress,
+        runProgress: updated.progress.runs?.find(run =>
+          run.groupId === storedResult.groupId
+          && run.scenarioId === storedResult.scenarioId
+          && run.repeatIndex === storedResult.repeatIndex
+        ),
+        progress: benchProgressSummary(updated.progress),
       });
     }
 
-    async function worker(): Promise<void> {
-      while (!signal.aborted) {
-        const index = nextIndex++;
-        const sample = samples[index];
-        if (!sample) return;
-
-        for (const item of sample.items) {
+    async function worker(group: BenchGroupRequest): Promise<void> {
+      for (const scenario of request.scenarios) {
+        for (
+          let repeatIndex = 1;
+          repeatIndex <= request.settings.repeats;
+          repeatIndex++
+        ) {
           if (signal.aborted) return;
+          const item = { group, scenario, repeatIndex };
           const release = await inFlight.acquire(signal);
           let handedOff = false;
           try {
             if (signal.aborted) return;
-            const generated = await generateOne(
-              jobId,
-              request,
-              item,
-              adapters,
+            const generated = await generationPool.run(
+              () => generateOne(jobId, request, item, adapters, signal),
               signal,
             );
             if (signal.aborted) return;
@@ -1083,6 +1119,7 @@ export async function runBenchJob(
               judgeCapabilities,
               scheduling,
               signal,
+              judgeEvaluator,
             ).then(publishResult).catch(fail).finally(() => {
               release();
               pending.delete(completion);
@@ -1097,7 +1134,7 @@ export async function runBenchJob(
     }
 
     await Promise.all(
-      Array.from({ length: workerCount }, () => worker().catch(fail)),
+      groups.map((group) => worker(group).catch(fail)),
     );
     // A terminal report releases the job slot and credentials, so all stages
     // must settle first, including cancellation and unexpected worker failures.
@@ -1123,6 +1160,7 @@ export async function runBenchJob(
     }
 
     latest.progress = {
+      ...latest.progress,
       completedRuns: latest.results.length,
       totalRuns,
     };

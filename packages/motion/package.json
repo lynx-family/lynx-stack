@@ -42,8 +42,8 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "build": "rslib build",
-    "dev": "rslib build --watch",
+    "build": "rslib",
+    "dev": "rslib --watch",
     "test": "vitest run"
   },
   "dependencies": {

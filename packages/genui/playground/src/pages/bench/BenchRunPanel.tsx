@@ -4,9 +4,9 @@
 export interface BenchRunPanelSettings {
   collectLiveRenderMetrics: boolean;
   judgeEnabled: boolean;
-  parallelism: number;
   repairEnabled: boolean;
   repeats: number;
+  uiJudgeModel?: string;
 }
 
 function clampNumber(value: number, min: number, max: number): number {
@@ -16,12 +16,20 @@ function clampNumber(value: number, min: number, max: number): number {
 
 export function BenchRunPanel(props: {
   locked: boolean;
+  modelOptions?: readonly { id: string; label: string }[];
+  hasHtmlGroups?: boolean;
+  needsScreenshotService?: boolean;
   onSettingsChange: (patch: Partial<BenchRunPanelSettings>) => void;
   onUiJudgeServerUrlChange: (value: string) => void;
   settings: BenchRunPanelSettings;
   uiJudgeServerUrl: string;
   uiJudgeServerUrlValidationError?: string;
 }) {
+  const modelOptions = props.modelOptions ?? [];
+  const configuredJudgeModel = props.settings.uiJudgeModel;
+  const selectedJudgeModel = configuredJudgeModel ?? modelOptions[0]?.id ?? '';
+  const missingJudgeModel = configuredJudgeModel
+    && !modelOptions.some(model => model.id === configuredJudgeModel);
   return (
     <section className='benchPlanSection benchRunSection'>
       <div className='benchRunPanel'>
@@ -46,31 +54,66 @@ export function BenchRunPanel(props: {
             <section className='benchInlineConfigGroup'>
               <h4>UI Judge</h4>
               <label className='benchField'>
-                <span className='benchFieldLabel'>UI_JUDGE_SERVER_URL</span>
-                <input
+                <span className='benchFieldLabel'>Judge model</span>
+                <select
                   className='benchInput'
-                  type='url'
-                  value={props.uiJudgeServerUrl}
-                  placeholder='http://127.0.0.1:8080'
-                  readOnly={props.locked}
-                  aria-invalid={props.uiJudgeServerUrlValidationError
-                    ? 'true'
-                    : undefined}
+                  value={selectedJudgeModel}
+                  disabled={props.locked || modelOptions.length === 0}
                   onChange={(event) =>
-                    props.onUiJudgeServerUrlChange(event.target.value)}
-                />
+                    props.onSettingsChange({
+                      uiJudgeModel: event.target.value,
+                    })}
+                >
+                  {missingJudgeModel && (
+                    <option value={configuredJudgeModel} disabled>
+                      {configuredJudgeModel} (unavailable)
+                    </option>
+                  )}
+                  {modelOptions.map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.label}
+                    </option>
+                  ))}
+                </select>
               </label>
-              <p className='benchFieldHint'>
-                Your browser connects to this service and uploads screenshots
-                for scoring. The address is saved only in this browser.
-              </p>
-              {props.uiJudgeServerUrlValidationError
-                ? (
-                  <p className='benchFieldError' role='alert'>
-                    {props.uiJudgeServerUrlValidationError}
+              {props.needsScreenshotService !== false && (
+                <>
+                  <label className='benchField'>
+                    <span className='benchFieldLabel'>UI_JUDGE_SERVER_URL</span>
+                    <input
+                      className='benchInput'
+                      type='url'
+                      value={props.uiJudgeServerUrl}
+                      placeholder='http://127.0.0.1:8080'
+                      readOnly={props.locked}
+                      aria-invalid={props.uiJudgeServerUrlValidationError
+                        ? 'true'
+                        : undefined}
+                      onChange={(event) =>
+                        props.onUiJudgeServerUrlChange(event.target.value)}
+                    />
+                  </label>
+                  <p className='benchFieldHint'>
+                    Your browser connects to this service and uploads
+                    screenshots for scoring. The address is saved in this
+                    browser and included when sharing Bench parameters.
                   </p>
-                )
-                : null}
+                  {props.uiJudgeServerUrlValidationError
+                    ? (
+                      <p className='benchFieldError' role='alert'>
+                        {props.uiJudgeServerUrlValidationError}
+                      </p>
+                    )
+                    : null}
+                </>
+              )}
+              {props.hasHtmlGroups && (
+                <p className='benchFieldHint'>
+                  HTML uses your browser's screenshot capability. When UI Judge
+                  is on, Start run asks you to share this tab. Use desktop
+                  Chrome 132+ and keep this page open until the run finishes.
+                </p>
+              )}
             </section>
 
             <section className='benchInlineConfigGroup'>
@@ -91,25 +134,6 @@ export function BenchRunPanel(props: {
                           Number(event.target.value),
                           1,
                           10,
-                        ),
-                      })}
-                  />
-                </label>
-                <label className='benchField'>
-                  <span className='benchFieldLabel'>Concurrency</span>
-                  <input
-                    className='benchInput'
-                    type='number'
-                    min={1}
-                    max={8}
-                    value={props.settings.parallelism}
-                    readOnly={props.locked}
-                    onChange={(event) =>
-                      props.onSettingsChange({
-                        parallelism: clampNumber(
-                          Number(event.target.value),
-                          1,
-                          8,
                         ),
                       })}
                   />

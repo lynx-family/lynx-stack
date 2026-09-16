@@ -10,7 +10,7 @@
     "src"
   ],
   "scripts": {
-    "build": "rslib build"
+    "build": "rslib"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",

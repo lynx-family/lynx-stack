@@ -1,6 +1,6 @@
 {
   "name": "create-lynx-library",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Create native Lynx libraries",
   "keywords": [
     "Lynx",
@@ -31,8 +31,8 @@
     "template-*/**"
   ],
   "scripts": {
-    "build": "rslib build",
-    "dev": "rslib build --watch",
+    "build": "rslib",
+    "dev": "rslib --watch",
     "test": "vitest run"
   },
   "dependencies": {

@@ -220,10 +220,22 @@ function hydrate(
       continue;
     }
     if (message.role !== 'assistant') continue;
+    if (message.generationError) {
+      messages.push({
+        kind: 'status',
+        tone: 'error',
+        text: message.generationError,
+        generationUsage: message.generationUsage,
+      });
+      continue;
+    }
     const source = extractHtmlSource(message.content);
     if (!isCompleteHtmlSource(source)) continue;
     output = { source };
-    messages.push(generatedStatus(output));
+    messages.push({
+      ...generatedStatus(output),
+      generationUsage: message.generationUsage,
+    });
   }
 
   const metrics = lastMetrics(history);

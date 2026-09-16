@@ -11,7 +11,6 @@ import {
   LYNX_XML_SYSTEM_PROMPT,
   buildLynxXmlSystemPrompt,
 } from '../src/index.js';
-import { LYNX_XML_MOBILE_DESIGN_GUIDANCE } from '../src/mobile-design.js';
 
 describe('buildLynxXmlSystemPrompt', () => {
   test('builds the exported default prompt', () => {
@@ -136,6 +135,23 @@ describe('buildLynxXmlSystemPrompt', () => {
     expect(LYNX_XML_SYSTEM_PROMPT).toContain('lynx.getCoreContext()');
   });
 
+  test.each([false, true])(
+    'requires explicit helper dependencies in both output modes (fragment: %s)',
+    enableHtmlFragment => {
+      const prompt = buildLynxXmlSystemPrompt({ enableHtmlFragment });
+      expect(prompt).toContain(
+        'function buildHeader(parent) with buildHeader(sheet)',
+      );
+      expect(prompt).toContain('cannot read renderPage\'s local sheet');
+      expect(prompt).toContain(
+        'call(), apply(), and bind() only set this and arguments',
+      );
+      expect(prompt).toContain(
+        'Check every identifier in helpers and callbacks',
+      );
+    },
+  );
+
   test('keeps node references separate from ids when appending elements', () => {
     expect(LYNX_XML_SYSTEM_PROMPT).toContain(
       'every __AppendElement argument',
@@ -194,85 +210,6 @@ describe('buildLynxXmlSystemPrompt', () => {
     expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
       /Do not nest\s+vertical scroll\s+views/u,
     );
-  });
-
-  test('adds provider-neutral mobile-first design constraints', () => {
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain('Mobile design contract:');
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain('Viewport and structure:');
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'Responsive scale and spacing:',
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'Visual hierarchy, typography, and color:',
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'Interaction, forms, and state:',
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain('Media and motion:');
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain('Override boundary:');
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain('from 320px to 430px');
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'Do not default to a centered desktop canvas',
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'one outer page-level vertical scrolling surface',
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
-      /host or\s+initialization data explicitly supplies them/u,
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain('exactly once per exposed edge');
-    expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
-      /Never\s+derive safe-area insets from Web CSS environment variables/u,
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'font-size: calc(100vw / 23.4375)',
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain('small semantic palette');
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain('at least 44px by 44px');
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'Do not depend on hover feedback',
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
-      /scrolling content must\s+reserve/u,
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'avoid card-inside-card layouts',
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'Never rely on color alone',
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain('placeholder text');
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'must not be the only label',
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'loading, empty, error, offline, success, disabled, and selected states',
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
-      /Meaning and state must remain clear\s+in\s+a\s+static presentation/u,
-    );
-    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain(
-      '__CreateScrollView',
-    );
-    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain(
-      'scroll-orientation',
-    );
-    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain('CSS variables');
-    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain('aria-label');
-    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain('aspectFit');
-    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain('aspectFill');
-    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain('@media');
-    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain('container query');
-    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain('clamp(');
-    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain('srcset');
-    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain(
-      'Core Web Vitals',
-    );
-    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain('semantic HTML');
-    expect(LYNX_XML_MOBILE_DESIGN_GUIDANCE).not.toContain(
-      'prefers-reduced-motion',
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).not.toContain('env(');
   });
 
   test('maps provider-neutral accessibility intent to Lynx attributes', () => {

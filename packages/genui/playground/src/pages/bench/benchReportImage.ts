@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 /* eslint-disable n/no-unsupported-features/node-builtins -- Browser-only DOM Blob APIs. */
 
-/** Rasterize the existing report, without changing its scroll or disclosure state. */
+/** Expand the recorded plan and omit run details without changing the live report. */
 export async function createBenchReportImage(
   source: HTMLElement,
 ): Promise<Blob> {
@@ -17,7 +17,7 @@ export async function createBenchReportImage(
         timer = window.setTimeout(() =>
           reject(
             new Error(
-              'Image generation timed out. Please try again with fewer expanded sections.',
+              'Image generation timed out. Please try again.',
             ),
           ), 30000);
       }),
@@ -29,7 +29,7 @@ export async function createBenchReportImage(
   }
 
   async function capture(): Promise<Blob> {
-    const width = Math.ceil(Math.max(
+    let width = Math.ceil(Math.max(
       source.getBoundingClientRect().width,
       ...Array.from(
         source.querySelectorAll<HTMLElement>('.publishedReportTableWrap'),
@@ -48,6 +48,9 @@ export async function createBenchReportImage(
     clone.querySelectorAll('[id]').forEach((node) =>
       node.removeAttribute('id')
     );
+    clone.querySelectorAll('details').forEach((details) => {
+      details.open = true;
+    });
     Object.assign(clone.style, { maxWidth: 'none', margin: '0' });
     clone.querySelectorAll<HTMLElement>('.publishedReportTableWrap').forEach(
       (table) => {
@@ -79,6 +82,19 @@ export async function createBenchReportImage(
     });
     host.append(clone);
     document.body.append(host);
+    // Expanded token details can widen tables beyond their collapsed size.
+    width = Math.ceil(Math.max(
+      width,
+      ...Array.from(
+        clone.querySelectorAll<HTMLElement>('.publishedReportTableWrap'),
+      ).map((table) => table.scrollWidth + 96),
+    ));
+    if (width > 4096) {
+      throw new Error(
+        'The expanded report is too wide for one image. Copy Report JSON to save it instead.',
+      );
+    }
+    host.style.width = `${width}px`;
     await Promise.all(images.map(async (img) => {
       img.loading = 'eager';
       try {
@@ -98,7 +114,7 @@ export async function createBenchReportImage(
     );
     if (!height || pixelRatio < 0.5) {
       throw new Error(
-        'The report is too long for one image. Collapse some sections and try again.',
+        'The full report is too long for one image. Copy Report JSON to save it instead.',
       );
     }
     const { toBlob } = await import('html-to-image');

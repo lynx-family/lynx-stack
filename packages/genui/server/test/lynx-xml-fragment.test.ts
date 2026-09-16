@@ -18,23 +18,35 @@ const DIRECT =
   '<!doctype lynx>\n<lynx engine-version="4.2"><script thread="main">const page = __CreatePage("0", 0);</script></lynx>';
 const USAGE = { inputTokens: 12, outputTokens: 8, totalTokens: 20 };
 let calls: string[];
+let budgets: (number | undefined)[];
 let override: string | undefined;
 let upstreamFailure: Error | undefined;
+let queued: { text: string; finishReason: 'stop' | 'length' }[];
 
-function response(options: { prompt: unknown; tools?: { name?: string }[] }) {
+function response(options: {
+  prompt: unknown;
+  tools?: { name?: string }[];
+  maxOutputTokens?: number;
+}) {
   const prompt = JSON.stringify(options.prompt);
   calls.push(prompt);
+  budgets.push(options.maxOutputTokens);
   expect(
     options.tools?.some(tool =>
       tool.name === 'html_fragment_to_main_thread_script'
     ) ?? false,
   ).toBe(false);
-  return override
-    ?? (prompt.includes('XML fragment mode') ? INTERMEDIATE : DIRECT);
+  return queued.shift() ?? {
+    text: override
+      ?? (prompt.includes('XML fragment mode') ? INTERMEDIATE : DIRECT),
+    finishReason: 'stop' as const,
+  };
 }
 
 beforeEach(() => {
   calls = [];
+  budgets = [];
+  queued = [];
   override = undefined;
   upstreamFailure = undefined;
   rstest.mocked(createLLMProvider).mockReset();
@@ -49,15 +61,16 @@ beforeEach(() => {
       modelId: 'fragment-test',
       supportedUrls: {},
       doGenerate(options) {
+        const { text, finishReason } = response(options);
         return Promise.resolve({
-          content: [{ type: 'text' as const, text: response(options) }],
-          finishReason: 'stop' as const,
+          content: [{ type: 'text' as const, text }],
+          finishReason,
           usage: USAGE,
           warnings: [],
         });
       },
       doStream(options) {
-        const text = response(options);
+        const { text, finishReason } = response(options);
         return Promise.resolve({
           stream: new ReadableStream({
             start(controller) {
@@ -83,7 +96,7 @@ beforeEach(() => {
               controller.enqueue({ type: 'text-end', id: 'answer' });
               controller.enqueue({
                 type: 'finish',
-                finishReason: 'stop',
+                finishReason,
                 usage: USAGE,
               });
               controller.close();
@@ -94,6 +107,102 @@ beforeEach(() => {
     }),
   });
 });
+
+test.each([false, true])(
+  'real Mastra streaming continues truncated XML before final compilation (fragment=%s)',
+  async enableHtmlFragment => {
+    const document = enableHtmlFragment ? INTERMEDIATE : DIRECT;
+    const split = document.indexOf('const page') + 'const pa'.length;
+    const prefix = document.slice(0, split);
+    queued = [
+      { text: prefix, finishReason: 'length' },
+      {
+        text: prefix.slice(-128) + document.slice(split),
+        finishReason: 'stop',
+      },
+    ];
+    const log = rstest.fn((
+      _event: string,
+      _details?: Record<string, unknown>,
+    ) => undefined);
+    const service = new LynxXmlAgentService();
+    const stream = await service.streamAsAsyncIterable([
+      { role: 'user', content: 'Make a weather card for Hangzhou.' },
+    ], {
+      enableHtmlFragment,
+      enableWebSearch: false,
+      enableImageGeneration: false,
+      onPerformanceEvent: log,
+    });
+    let streamed = '';
+    for await (const chunk of stream.textStream) streamed += chunk;
+    expect(streamed).toBe(prefix);
+    const final = await stream.finalize();
+    expect(final.metadata).toMatchObject({
+      modelOutput: document,
+      generationAttempts: [
+        { mode: 'initial', finishReason: 'length' },
+        { mode: 'continue', finishReason: 'stop' },
+      ],
+    });
+    if (enableHtmlFragment) {
+      expect(final.metadata.xmlFragment).toBe(FRAGMENT);
+      expect(final.text).toContain('__CreateView(pageId)');
+      expect(final.text).not.toContain('<template>');
+    } else {
+      expect(final.text).toBe(DIRECT);
+    }
+    expect(final.text).toMatch(/<\/lynx>$/);
+    expect(final.usage).toMatchObject({
+      inputTokens: 24,
+      outputTokens: 16,
+      totalTokens: 40,
+    });
+    expect(calls).toHaveLength(2);
+    expect(calls[1]).toContain('Make a weather card for Hangzhou.');
+    expect(calls[1]).toContain('Continue the same artifact');
+    expect(budgets).toEqual([16_384, 16_384]);
+    expect(createLLMProvider).toHaveBeenCalledTimes(1);
+    expect(log).toHaveBeenCalledWith('agent.recovery.started', {
+      attempt: 2,
+      maxAttempts: 3,
+      mode: 'continue',
+      previousFinishReason: 'length',
+      previousOutputChars: prefix.length,
+    });
+  },
+);
+
+test.each([false, true])(
+  'real Mastra streaming recovers an empty token-limited response (fragment=%s)',
+  async enableHtmlFragment => {
+    queued = [{ text: '', finishReason: 'length' }];
+    const service = new LynxXmlAgentService();
+    const stream = await service.streamAsAsyncIterable([], {
+      enableHtmlFragment,
+      enableWebSearch: false,
+      enableImageGeneration: false,
+    });
+    for await (const _chunk of stream.textStream) { /* drain */ }
+    const final = await stream.finalize();
+    expect(final.text).toMatch(/<\/lynx>$/);
+    expect(final.metadata).toMatchObject({
+      modelOutput: enableHtmlFragment ? INTERMEDIATE : DIRECT,
+      generationAttempts: [
+        { mode: 'initial', finishReason: 'length' },
+        { mode: 'regenerate', finishReason: 'stop' },
+      ],
+    });
+    expect(final.usage).toMatchObject({
+      inputTokens: 24,
+      outputTokens: 16,
+      totalTokens: 40,
+    });
+    expect(calls).toHaveLength(2);
+    expect(calls[1]).toContain('Regenerate a shorter');
+    expect(budgets).toEqual([16_384, 16_384]);
+  },
+);
 
 test.each([false, true])(
   'real Mastra streaming retains the provider failure before compilation (fragment=%s)',

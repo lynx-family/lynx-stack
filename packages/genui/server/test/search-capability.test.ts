@@ -12,6 +12,7 @@ import {
   test,
 } from '@rstest/core';
 
+import { lynxXmlTestText } from './helpers/lynx-xml.js';
 import { createA2UIAgent } from '../agent/a2ui/a2ui-agent.js';
 import { SEARCH_INFINITY_ENDPOINT } from '../agent/common/doubao-search-tool.js';
 import { createLLMProvider } from '../agent/common/openai-provider.js';
@@ -94,6 +95,10 @@ const model = {
   },
   doStream: (options: ModelCallOptions) => {
     const { enabled, needsSearch } = searchStep(options);
+    const text = enabled ? 'searched output' : 'search disabled';
+    const output = JSON.stringify(options.prompt).includes('<!doctype lynx>')
+      ? lynxXmlTestText(text)
+      : text;
     return Promise.resolve({
       stream: readableStream([
         { type: 'stream-start' as const, warnings: [] },
@@ -104,7 +109,7 @@ const model = {
             {
               type: 'text-delta' as const,
               id: 'answer',
-              delta: enabled ? 'searched output' : 'search disabled',
+              delta: output,
             },
             { type: 'text-end' as const, id: 'answer' },
           ]),
@@ -321,15 +326,18 @@ describe('shared search capability', () => {
 
   test.each(streamingServices)(
     '%s streams the answer after consuming search results',
-    async (_name, create) => {
+    async (name, create) => {
+      const output = name === 'Lynx XML'
+        ? lynxXmlTestText('searched output')
+        : 'searched output';
       const result = await create().streamAsAsyncIterable([
         { role: 'user', content: 'Search for facts and an image' },
       ]);
       let text = '';
       for await (const chunk of result.textStream) text += chunk;
-      expect(text).toBe('searched output');
+      expect(text).toBe(output);
       expect(await result.finalize()).toMatchObject({
-        text: 'searched output',
+        text: output,
         finishReason: 'stop',
       });
       expect(searchCalls.sort()).toEqual(['image', 'web']);

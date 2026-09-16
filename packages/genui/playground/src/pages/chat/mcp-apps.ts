@@ -478,10 +478,25 @@ function hydrate(
       continue;
     }
     if (message.role !== 'assistant') continue;
+    if (message.generationError) {
+      messages.push({
+        kind: 'status',
+        tone: 'error',
+        text: message.generationError,
+        generationUsage: message.generationUsage,
+      });
+      continue;
+    }
     const parsed = parsePersistedOutput(message.content);
     if (!parsed) continue;
     output = parsed;
-    messages.push(...transcriptMessages(parsed));
+    messages.push(
+      ...transcriptMessages(parsed).map((result, index) =>
+        index === 0
+          ? { ...result, generationUsage: message.generationUsage }
+          : result
+      ),
+    );
   }
   for (let index = previewMessages.length - 1; index >= 0; index--) {
     const parsed = parseMcpAppsOutput(previewMessages[index]);

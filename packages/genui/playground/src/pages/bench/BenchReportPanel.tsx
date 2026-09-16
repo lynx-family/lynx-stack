@@ -3,9 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 import { useMemo } from 'react';
 
+import { BenchCost, BenchCostLabel } from './BenchCost.js';
 import { findComparableBaseline, getBenchProtocolLabel } from './benchData.js';
 import type { BenchSettings } from './benchData.js';
+import { benchGroupAverageCost, benchTotalCost } from './benchPricing.js';
 import type { BenchGroupSummary, BenchReport } from './benchReportTypes.js';
+import { BenchTaskTiming } from './BenchTaskTiming.js';
 import { BenchTokens } from './BenchTokens.js';
 import { groupBenchTokenUsage } from './benchTokenUsage.js';
 import { Button } from '../../components/Button.js';
@@ -157,10 +160,27 @@ export function BenchReportPanel(props: {
         }
       />
 
+      {props.report && (
+        <BenchTaskTiming
+          startedAt={props.report.startedAt}
+          completedAt={props.report.completedAt}
+          durationMs={props.report.durationMs}
+        />
+      )}
+
       {props.report && props.report.summaries.length > 0 && screenshotSummary
         ? (
           <>
             <div className='benchInsightGrid'>
+              <div className='benchInsight'>
+                <span>
+                  <BenchCostLabel>Estimated cost (CNY)</BenchCostLabel>
+                </span>
+                <strong>
+                  <BenchCost cost={benchTotalCost(props.report.results)} />
+                </strong>
+                <small>Recorded generation runs</small>
+              </div>
               <div className='benchInsight'>
                 <span>Lowest tokens</span>
                 <strong>{getGroupName(bestTokens)}</strong>
@@ -198,10 +218,10 @@ export function BenchReportPanel(props: {
                   <tr>
                     <th>Comparison group</th>
                     <th>Tokens</th>
+                    <th>
+                      <BenchCostLabel>Est. cost (CNY)</BenchCostLabel>
+                    </th>
                     <th>Agent</th>
-                    <th>FMP</th>
-                    <th>TTI</th>
-                    <th>Render</th>
                     <th>Attempts</th>
                     <th>Judge</th>
                   </tr>
@@ -235,18 +255,21 @@ export function BenchReportPanel(props: {
                           </small>
                         </td>
                         <td>
+                          <BenchCost
+                            cost={benchGroupAverageCost(props.report!, summary)}
+                            average
+                          />
+                        </td>
+                        <td>
                           <strong>{formatMs(summary.avgAgentMs)}</strong>
                           <small>
                             {deltaText(summary.avgAgentMs, baseline.avgAgentMs)}
                           </small>
                         </td>
-                        <td>{formatMs(summary.avgFmpMs)}</td>
-                        <td>{formatMs(summary.avgTtiMs)}</td>
-                        <td>{formatMs(summary.avgRenderMs)}</td>
                         <td>{summary.avgAttempts.toFixed(1)}x</td>
                         <td>
                           {formatSummaryJudgeMetric(
-                            props.report,
+                            props.report!,
                             props.settings,
                             summary,
                           )}
@@ -300,8 +323,7 @@ export function BenchReportPanel(props: {
             <div className='benchReportNotes'>
               <span>
                 Agent, token, attempts, and validation data are collected by the
-                server. Unavailable Render or UI Judge data is explicitly
-                marked.
+                server. Unavailable UI Judge data is explicitly marked.
               </span>
             </div>
             {props.report.warnings && props.report.warnings.length > 0

@@ -23,6 +23,7 @@ import { pickProviderOptions } from '../../common/provider-options';
 import { checkRateLimit, rateLimitSseResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
 import { encodeSSE, sseHeaders } from '../../common/sse';
+import { extractTokenUsage } from '../../common/usage.js';
 
 interface McpAppsChatBody {
   messages?: unknown;
@@ -128,6 +129,7 @@ async function postMcpAppsStream(req: Request) {
               protocolVersion: MCP_APPS_PROTOCOL_VERSION,
               message: selection.text,
               usage,
+              tokenUsage: extractTokenUsage(usage),
               finishReason,
             });
             return;
@@ -155,6 +157,7 @@ async function postMcpAppsStream(req: Request) {
             tool,
             resource,
             usage,
+            tokenUsage: extractTokenUsage(usage),
             finishReason,
           });
         } catch (error) {

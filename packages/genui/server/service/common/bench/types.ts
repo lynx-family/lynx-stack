@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-
+import type { ModelPrices } from '../model-config.js';
 import type { BenchProtocol } from './protocol-types.js';
 import type { A2UIMessage } from '../../../agent/a2ui/a2ui-validator.js';
 
@@ -29,9 +29,35 @@ export type BenchRunPhase =
   | 'agent'
   | 'validate'
   | 'render'
+  | 'screenshot-queued'
+  | 'screenshot'
+  | 'judge-queued'
+  | 'judge-retry'
   | 'judge'
   | 'complete'
-  | 'failed';
+  | 'failed'
+  | 'cancelled';
+
+export type BenchStageStatus =
+  | 'pending'
+  | 'queued'
+  | 'running'
+  | 'complete'
+  | 'failed'
+  | 'skipped'
+  | 'cancelled';
+
+export interface BenchRunProgress {
+  groupId: string;
+  scenarioId: string;
+  repeatIndex: number;
+  revision: number;
+  phase: BenchRunPhase;
+  generation: BenchStageStatus;
+  screenshot: BenchStageStatus;
+  judge: BenchStageStatus;
+  error?: string;
+}
 
 export interface BenchProviderConfig {
   apiKey?: string;
@@ -47,15 +73,16 @@ export interface BenchPlaygroundConfig {
 
 export interface BenchSettings {
   repeats: number;
-  parallelism: number;
   maxRepairAttempts: number;
   repairEnabled: boolean;
   judgeEnabled: boolean;
+  uiJudgeModel?: string;
   renderMetricsEnabled: boolean;
   timeoutMs?: number;
 }
 
 export interface BenchGroupRequest {
+  enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
   id: string;
   role: BenchRole;
@@ -91,6 +118,7 @@ export interface BenchJobRequest {
 export interface BenchProgress {
   completedRuns: number;
   totalRuns: number;
+  runs?: BenchRunProgress[];
   current?: {
     groupId: string;
     scenarioId: string;
@@ -100,6 +128,7 @@ export interface BenchProgress {
 }
 
 export interface BenchRunResult {
+  modelPrices?: ModelPrices;
   id: string;
   groupId: string;
   groupName: string;
@@ -184,6 +213,9 @@ export interface BenchReport {
   jobId: string;
   createdAt: string;
   completedAt: string;
+  /** Absent in reports recorded before job timing was introduced. */
+  startedAt?: string;
+  durationMs?: number;
   status: BenchJobStatus;
   settings: BenchSettings;
   env: {
@@ -198,6 +230,7 @@ export interface BenchReport {
   groups: BenchGroupRequest[];
   scenarios: BenchScenarioRequest[];
   results: BenchRunResult[];
+  runProgress?: BenchRunProgress[];
   summaries: BenchGroupSummary[];
   summary: BenchReportSummary;
 }
@@ -206,6 +239,9 @@ export interface BenchJobSnapshot {
   ok: true;
   jobId: string;
   status: BenchJobStatus;
+  startedAt: string;
+  completedAt?: string;
+  durationMs: number;
   progress: BenchProgress;
   summary?: BenchReportSummary;
   error?: string;

@@ -12,6 +12,7 @@ import {
   uniqueIdSymbol,
   lynxDefaultDisplayLinearAttribute,
   lynxDefaultOverflowVisibleAttribute,
+  lynxEnableCSSInheritanceAttribute,
   lynxEntryNameAttribute,
   lynxUniqueIdAttribute,
 } from '../../constants.js';
@@ -103,6 +104,7 @@ export function createElementAPI(
     enableCSSSelector: boolean;
     defaultOverflowVisible: boolean;
     defaultDisplayLinear: boolean;
+    enableCSSInheritance?: boolean;
     transformVW: boolean;
     transformVH: boolean;
     transformREM: boolean;
@@ -390,6 +392,14 @@ export function createElementAPI(
           wasmContext.set_attribute(id, lynxUniqueIdAttribute, id.toString());
         }
         wasmContext.set_attribute(id, 'part', 'page');
+
+        if (config.enableCSSInheritance === true) {
+          wasmContext.set_attribute(
+            id,
+            lynxEnableCSSInheritanceAttribute,
+            'true',
+          );
+        }
 
         if (config.defaultDisplayLinear === false) {
           wasmContext.set_attribute(

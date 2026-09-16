@@ -1,5 +1,11 @@
 # @lynx-js/debug-metadata-rsbuild-plugin
 
+## 0.2.3
+
+### Patch Changes
+
+- Fold `chunk.contentHash` into the release key so a CSS-only change produces a new release. ([#3823](https://github.com/lynx-family/lynx-stack/pull/3823))
+
 ## 0.2.2
 
 ### Patch Changes

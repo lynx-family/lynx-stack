@@ -133,7 +133,6 @@ pub struct LynxContainer {
 
 struct ContainerShared {
   env: &'static LynxEnv,
-  debug_router: DebugRouter,
   global_tasks: SharedTasks,
   lynx_core_path: PathBuf,
   options: ContainerOptions,
@@ -175,12 +174,10 @@ impl LynxContainer {
     let lynx_core_path = process_lynx_core_path(lynx_core_source.as_deref())?;
     claim_process_owner_thread()?;
     let env = process_env(&options)?;
-    let debug_router = process_debug_router(options.timeout)?;
     let global_tasks = register_container_thread(env)?;
     Ok(Self {
       shared: Rc::new(ContainerShared {
         env,
-        debug_router,
         global_tasks,
         lynx_core_path,
         options,
@@ -290,7 +287,8 @@ impl ContainerShared {
     T: serde::de::DeserializeOwned,
     P: serde::Serialize,
   {
-    let pending: PendingRequest = self.debug_router.send_cdp(session_id, method, params)?;
+    let pending: PendingRequest =
+      process_debug_router(self.options.timeout)?.send_cdp(session_id, method, params)?;
     loop {
       if let Some(result) = pending.poll::<T>() {
         return result;
@@ -466,6 +464,9 @@ impl LynxPage {
     if self.url.is_empty() {
       return Err(Error::PageNotLoaded);
     }
+    // Navigation and screenshots only need native frames. Discover and
+    // configure the DebugRouter when a caller first asks to inspect the DOM.
+    process_debug_router(self.timeout)?;
     // The lazy attach belongs to the navigation that produced this document,
     // so it gets that call's budget rather than the container default.
     let deadline = Instant::now() + self.timeout;
@@ -692,12 +693,13 @@ fn process_app_name() -> &'static str {
   APP.get_or_init(|| format!("{APP_NAME}-{}", std::process::id()))
 }
 
-/// Connects the single DebugRouter client this process is allowed to hold.
+static PROCESS_DEBUG_ROUTER: OnceLock<DebugRouter> = OnceLock::new();
+
+/// Lazily connects the single DebugRouter client this process is allowed to hold.
 fn process_debug_router(timeout: Duration) -> Result<DebugRouter> {
-  static ROUTER: OnceLock<DebugRouter> = OnceLock::new();
   static CONNECTING: Mutex<()> = Mutex::new(());
 
-  if let Some(router) = ROUTER.get() {
+  if let Some(router) = PROCESS_DEBUG_ROUTER.get() {
     return Ok(router.clone());
   }
   // Serialize the fallible connect separately from `OnceLock` so a failed
@@ -705,11 +707,11 @@ fn process_debug_router(timeout: Duration) -> Result<DebugRouter> {
   let _guard = CONNECTING
     .lock()
     .unwrap_or_else(|poisoned| poisoned.into_inner());
-  if let Some(router) = ROUTER.get() {
+  if let Some(router) = PROCESS_DEBUG_ROUTER.get() {
     return Ok(router.clone());
   }
   let router = DebugRouter::connect(process_app_name(), timeout)?;
-  let _ = ROUTER.set(router.clone());
+  let _ = PROCESS_DEBUG_ROUTER.set(router.clone());
   Ok(router)
 }
 
@@ -916,6 +918,46 @@ mod tests {
   static_assertions::assert_not_impl_any!(LynxContainer: Send, Sync);
   static_assertions::assert_not_impl_any!(LynxPage: Send, Sync);
   static_assertions::assert_not_impl_any!(ElementNode: Send, Sync);
+
+  // Keep native coverage in one test: the process owner cannot move between
+  // libtest threads. Other tests in this module do not initialize Lynx.
+  #[test]
+  #[cfg_attr(
+    not(target_os = "linux"),
+    ignore = "runtime-backed CI coverage is Linux-only; run explicitly for local diagnostics"
+  )]
+  fn screenshots_connect_to_debug_router_only_when_dom_is_requested() {
+    let container = LynxContainer::new(ContainerOptions {
+      width: 400,
+      height: 300,
+      ..ContainerOptions::default()
+    })
+    .expect("initialize Lynx without connecting to DebugRouter");
+    assert!(PROCESS_DEBUG_ROUTER.get().is_none());
+    let mut page = container.new_page().expect("create a native page");
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/lynxml/counter.lynxml");
+    page
+      .goto(
+        &format!("file://{}", fixture.display()),
+        GotoOptions::default(),
+      )
+      .expect("render the LynxML fixture without connecting to DebugRouter");
+    let bmp = page
+      .screenshot(ScreenshotOptions {
+        settle: Duration::from_millis(32),
+        ..ScreenshotOptions::default()
+      })
+      .expect("capture without connecting to DebugRouter");
+    let frame = decode_screenshot(&bmp).expect("decode the screenshot");
+    assert_eq!((frame.width, frame.height), (400, 300));
+    assert!(frame.rgba.chunks_exact(4).any(|pixel| pixel[3] != 0));
+    assert!(PROCESS_DEBUG_ROUTER.get().is_none());
+
+    let content = page.content().expect("connect lazily and inspect the DOM");
+    assert!(content.contains("<view"), "unexpected DOM: {content}");
+    assert!(PROCESS_DEBUG_ROUTER.get().is_some());
+    assert!(page.locator(".Counter").expect("query the DOM").is_some());
+  }
 
   #[test]
   fn lynx_core_source_allows_implicit_or_matching_reuse() {

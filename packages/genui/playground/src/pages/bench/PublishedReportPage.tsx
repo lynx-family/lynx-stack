@@ -1,20 +1,29 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { ReactNode, Ref } from 'react';
 
+import { BenchArtifactCopyButton } from './BenchArtifactCopyButton.js';
+import { BenchCost, BenchCostLabel } from './BenchCost.js';
 import { getBenchProtocolLabel } from './benchData.js';
-import type { BenchGroupSummary, BenchReport } from './benchReportTypes.js';
+import {
+  benchGroupAverageCost,
+  benchResultCost,
+  benchTotalCost,
+} from './benchPricing.js';
+import type {
+  BenchGroupSummary,
+  BenchReport,
+  BenchResult,
+} from './benchReportTypes.js';
 import { createBenchScreenshotReader } from './benchScreenshot.js';
-import { BenchScreenshotsDialog } from './BenchScreenshotsDialog.js';
+import { BenchTaskTiming } from './BenchTaskTiming.js';
 import { BenchTokens } from './BenchTokens.js';
 import {
   groupBenchTokenUsage,
   readBenchTokenUsage,
 } from './benchTokenUsage.js';
-import { Button } from '../../components/Button.js';
-import { Maximize2 } from '../../components/Icon.js';
 import './BenchPage.css';
 import './PublishedReportPage.css';
 
@@ -59,7 +68,39 @@ export function PublishedReportPage(
       })),
     };
   }, [props.report]);
-  const [screenshotsOpen, setScreenshotsOpen] = useState(false);
+  const screenshotGroups = useMemo(() => {
+    const groups = new Map(report.groups.map((group) => [group.id, {
+      id: group.id,
+      name: group.name,
+      results: [] as BenchResult[],
+    }]));
+    for (const result of report.results) {
+      if (!result.screenshotDataUrl) continue;
+      let group = groups.get(result.groupId);
+      if (!group) {
+        group = { id: result.groupId, name: result.groupName, results: [] };
+        groups.set(result.groupId, group);
+      }
+      group.results.push(result);
+    }
+    const scenarios = new Map(
+      report.scenarios.map((scenario, index) => [scenario.id, index]),
+    );
+    for (const result of report.results) {
+      if (!scenarios.has(result.scenarioId)) {
+        scenarios.set(result.scenarioId, scenarios.size);
+      }
+    }
+    return [...groups.values()].filter((group) => group.results.length > 0).map(
+      (group) => ({
+        ...group,
+        results: group.results.sort((left, right) =>
+          scenarios.get(left.scenarioId)! - scenarios.get(right.scenarioId)!
+          || (left.repeatIndex ?? 1) - (right.repeatIndex ?? 1)
+        ),
+      }),
+    );
+  }, [report]);
   const total = report.summary?.totalRuns
     ?? report.groups.filter((group) => group.enabled).length
       * report.scenarios.length * report.settings.repeats;
@@ -97,13 +138,13 @@ export function PublishedReportPage(
             scenarios · {report.settings.repeats} repeats
           </p>
           <p className='publishedReportRecordDate'>
-            <time dateTime={report.completedAt ?? report.createdAt}>
-              {new Date(report.completedAt ?? report.createdAt).toLocaleString(
-                'en-US',
-              )}
-            </time>
             <span>{report.jobId}</span>
           </p>
+          <BenchTaskTiming
+            startedAt={report.startedAt}
+            completedAt={report.completedAt}
+            durationMs={report.durationMs}
+          />
           <p className='publishedReportShareNote'>
             Read-only report. No model requests or benchmark runs are started by
             this page. Data and screenshots come only from history saved in this
@@ -119,6 +160,14 @@ export function PublishedReportPage(
             <span>01</span> Overview
           </h2>
           <dl className='publishedReportStats'>
+            <div>
+              <dt>
+                <BenchCostLabel>Estimated cost (CNY)</BenchCostLabel>
+              </dt>
+              <dd>
+                <BenchCost cost={benchTotalCost(report.results)} />
+              </dd>
+            </div>
             <div>
               <dt>Planned runs</dt>
               <dd>{formatNumber(total)}</dd>
@@ -147,6 +196,9 @@ export function PublishedReportPage(
                 <tr>
                   <th>Group</th>
                   <th>Tokens</th>
+                  <th>
+                    <BenchCostLabel>Est. cost (CNY)</BenchCostLabel>
+                  </th>
                   <th>Agent</th>
                   <th>Attempts</th>
                   <th>UI Judge</th>
@@ -176,6 +228,12 @@ export function PublishedReportPage(
                           average
                         />
                       </td>
+                      <td>
+                        <BenchCost
+                          cost={benchGroupAverageCost(report, summary)}
+                          average
+                        />
+                      </td>
                       <td>{formatMs(summary.avgAgentMs)}</td>
                       <td>{formatNumber(summary.avgAttempts)}</td>
                       <td>{judgeScore(report, summary)}</td>
@@ -200,11 +258,6 @@ export function PublishedReportPage(
               </p>
             )}
           </div>
-          <p className='publishedReportShareNote'>
-            {report.capabilities?.renderMetrics === 'enabled'
-              ? 'Render metrics were enabled for this job.'
-              : 'Render metrics are unavailable for this job; zero values do not represent measured FMP, TTI, or render duration.'}
-          </p>
         </section>
 
         <section
@@ -219,7 +272,6 @@ export function PublishedReportPage(
               <h3>Scenarios</h3>
               {report.scenarios.map((scenario) => (
                 <details
-                  open
                   key={scenario.id}
                   className='publishedReportDisclosure'
                 >
@@ -236,7 +288,6 @@ export function PublishedReportPage(
               <h3>Comparison groups</h3>
               {report.groups.map((group) => (
                 <details
-                  open
                   key={group.id}
                   className='publishedReportDisclosure'
                 >
@@ -280,10 +331,9 @@ export function PublishedReportPage(
             </div>
           </div>
           <p className='publishedReportShareNote'>
-            Parallelism: {report.settings.parallelism} · Repair:{' '}
-            {report.settings.repairEnabled ? 'enabled' : 'disabled'} · UI Judge:
+            Repair: {report.settings.repairEnabled ? 'enabled' : 'disabled'}
             {' '}
-            {report.settings.judgeEnabled
+            · UI Judge: {report.settings.judgeEnabled
                 && report.capabilities?.judge !== 'disabled'
               ? 'enabled'
               : 'disabled'}
@@ -294,45 +344,40 @@ export function PublishedReportPage(
           className='publishedReportSection'
           aria-labelledby='published-report-results'
         >
-          <div className='publishedReportSectionHeading'>
-            <h2 id='published-report-results'>
-              <span>03</span> Run evidence
-            </h2>
-            <Button
-              iconBefore={Maximize2}
-              data-report-image-exclude
-              size='sm'
-              onClick={() => setScreenshotsOpen(true)}
-              disabled={captured === 0}
-            >
-              View screenshots ({captured})
-            </Button>
-          </div>
+          <h2 id='published-report-results'>
+            <span>03</span> Run evidence
+          </h2>
           {captured > 0
             ? (
-              <div className='publishedReportScreenshots'>
-                {report.results.map((result, index) =>
-                  result.screenshotDataUrl
-                    ? (
+              screenshotGroups.map((group) => (
+                <section
+                  className='publishedReportScreenshotGroup'
+                  key={group.id}
+                  aria-label={`${group.name} screenshots`}
+                >
+                  <h3>
+                    {group.name}
+                    <span>{group.results.length} screenshots</span>
+                  </h3>
+                  <div className='publishedReportScreenshots'>
+                    {group.results.map((result, index) => (
                       <figure key={`${result.id}-${index}`}>
                         <img
                           src={result.screenshotDataUrl}
-                          alt={`${result.groupName} · ${result.scenarioName} · #${
+                          alt={`${group.name} · ${result.scenarioName} · #${
                             result.repeatIndex ?? 1
                           }`}
                           loading='lazy'
                         />
                         <figcaption>
                           <strong>{result.scenarioName}</strong>
-                          <span>
-                            {result.groupName} · #{result.repeatIndex ?? 1}
-                          </span>
+                          <span>#{result.repeatIndex ?? 1}</span>
                         </figcaption>
                       </figure>
-                    )
-                    : null
-                )}
-              </div>
+                    ))}
+                  </div>
+                </section>
+              ))
             )
             : (
               <p className='publishedReportEmpty'>
@@ -346,8 +391,8 @@ export function PublishedReportPage(
           )}
           {report.results.map((result, index) => (
             <details
-              open
               className='publishedReportDisclosure'
+              data-report-image-exclude
               key={`${result.id}-${index}`}
             >
               <summary>
@@ -364,12 +409,17 @@ export function PublishedReportPage(
                       ? 'Complete'
                       : 'Not recorded')}
                 </span>
+                <BenchArtifactCopyButton result={result} />
               </summary>
               <div className='benchRunTokenMetrics'>
                 <BenchTokens
                   tokens={result.tokens}
                   usage={readBenchTokenUsage(result.usage)}
                 />
+                <span>
+                  · <BenchCostLabel>Est. cost</BenchCostLabel>{' '}
+                  <BenchCost cost={benchResultCost(result)} />
+                </span>
                 <span>
                   tokens · {formatMs(result.agentMs)} Agent ·{' '}
                   {formatNumber(result.attempts)} attempts
@@ -404,14 +454,6 @@ export function PublishedReportPage(
           )}
         </section>
       </div>
-      {screenshotsOpen && captured > 0 && (
-        <BenchScreenshotsDialog
-          open
-          onClose={() => setScreenshotsOpen(false)}
-          report={report}
-          settings={report.settings}
-        />
-      )}
     </main>
   );
 }

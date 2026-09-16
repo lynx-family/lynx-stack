@@ -9,6 +9,7 @@ import type {
   BenchScenario,
   BenchSettings,
 } from './benchData.js';
+import type { ModelPrices } from '../../utils/modelPricing.js';
 
 export type BenchStatus =
   | 'cancelled'
@@ -16,6 +17,28 @@ export type BenchStatus =
   | 'failed'
   | 'idle'
   | 'running';
+
+export type BenchStageStatus =
+  | 'pending'
+  | 'queued'
+  | 'running'
+  | 'complete'
+  | 'failed'
+  | 'skipped'
+  | 'cancelled'
+  | 'unknown';
+
+export interface BenchRunProgress {
+  groupId: string;
+  scenarioId: string;
+  repeatIndex: number;
+  revision: number;
+  phase: string;
+  generation: BenchStageStatus;
+  screenshot: BenchStageStatus;
+  judge: BenchStageStatus;
+  error?: string;
+}
 
 export interface BenchJudgeDimensionResult {
   dimension: string;
@@ -28,6 +51,7 @@ export interface BenchJudgeDimensionResult {
 }
 
 export interface BenchResult {
+  modelPrices?: ModelPrices;
   agentMs: number;
   attempts: number;
   catalog?: string;
@@ -43,6 +67,7 @@ export interface BenchResult {
   judgeStatus?: 'complete' | 'failed' | 'skipped';
   judgeWarnings?: string[];
   messageCount?: number;
+  messages?: unknown[];
   model?: string;
   ok?: boolean;
   outputChars?: number;
@@ -55,6 +80,7 @@ export interface BenchResult {
   scenarioName: string;
   screenshotDataUrl?: string;
   status?: 'complete' | 'failed';
+  text?: string;
   ttiMs: number;
   tokens: number;
   usage?: unknown;
@@ -89,6 +115,8 @@ export interface BenchReport {
   };
   completedAt?: string;
   createdAt: string;
+  startedAt?: string;
+  durationMs?: number;
   env: {
     apiKeyConfigured: boolean;
     clientOverrideAccepted?: boolean;
@@ -98,6 +126,7 @@ export interface BenchReport {
   id: string;
   jobId?: string;
   results: BenchResult[];
+  runProgress?: BenchRunProgress[];
   scenarios: BenchScenario[];
   settings: BenchSettings;
   status?: BenchStatus;

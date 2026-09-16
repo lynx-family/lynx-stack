@@ -20,6 +20,7 @@ import { Drawer } from 'vaul';
 import { Button } from './Button.js';
 import { CopyToast, useCopyToast } from './CopyToast.js';
 import { Maximize2, Minimize2, Smartphone } from './Icon.js';
+import { OpenUIRenderErrors } from './OpenUIRenderErrors.js';
 import { PreviewSimulationBar } from './PreviewSimulationBar.js';
 import { QrCode } from './QrCode.js';
 import { componentsByMessage } from '../demos.js';
@@ -1450,6 +1451,14 @@ export function PreviewPanel(props: PreviewPanelProps) {
               />
             </div>
             {beforeBody}
+            {previewSource?.kind === 'openui'
+              ? (
+                <OpenUIRenderErrors
+                  frameSrc={metricFrameSrc}
+                  containerRef={panelRef}
+                />
+              )
+              : null}
             {renderPreviewMetrics()}
             {showSimulationBar
                 && previewSource

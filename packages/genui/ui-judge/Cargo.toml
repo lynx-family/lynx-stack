@@ -17,6 +17,7 @@ server = [
   "dep:socket2",
   "dep:tempfile",
   "dep:zip",
+  "tokio/io-util",
   "tokio/net",
   "tokio/process",
   "tokio/rt-multi-thread",
