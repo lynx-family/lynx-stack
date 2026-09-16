@@ -4,6 +4,7 @@
 import { useRef, useState } from 'react';
 
 import { Button } from './Button.js';
+import { HistoryItemMenu } from './HistoryItemMenu.js';
 import { HistoryRailShell } from './HistoryRailShell.js';
 import { Pencil, Share2, Trash2 } from './Icon.js';
 import type { ConversationMeta } from '../storage/types.js';
@@ -156,28 +157,28 @@ export function ConversationListPanel(props: ConversationListPanelProps) {
                 iconBefore={Share2}
                 disabled={disabled || editing}
                 title='Copy conversation link'
-                aria-label='Share conversation'
+                aria-label={`Share conversation ${conversation.title}`}
                 onClick={() => onShare(conversation.id)}
               />
-              <Button
-                variant='ghost'
-                size='sm'
-                iconOnly
-                iconBefore={Pencil}
+              <HistoryItemMenu
+                title={conversation.title}
                 disabled={disabled || editing}
-                title='Rename'
-                aria-label='Rename conversation'
-                onClick={() => beginEdit(conversation)}
-              />
-              <Button
-                variant='danger'
-                size='sm'
-                iconOnly
-                iconBefore={Trash2}
-                disabled={disabled || conversations.length <= 1}
-                title='Delete'
-                aria-label='Delete conversation'
-                onClick={() => onRemove(conversation.id)}
+                actions={[
+                  {
+                    label: 'Rename',
+                    ariaLabel: 'Rename conversation',
+                    icon: Pencil,
+                    onSelect: () => beginEdit(conversation),
+                  },
+                  {
+                    label: 'Delete',
+                    ariaLabel: 'Delete conversation',
+                    icon: Trash2,
+                    danger: true,
+                    disabled: conversations.length <= 1,
+                    onSelect: () => onRemove(conversation.id),
+                  },
+                ]}
               />
             </div>
           </div>

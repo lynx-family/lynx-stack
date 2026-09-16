@@ -12,6 +12,7 @@ export interface Route {
   componentName?: string;
   demoId?: string;
   benchReportId?: string;
+  benchPlan?: string;
 }
 
 export const DEFAULT_ROUTE_HASH = '#/a2ui';
@@ -37,7 +38,8 @@ export function buildRouteHash(protocolName: ProtocolName, tab: Tab): string {
 
 export function parseRouteHash(hash: string): Route {
   const cleaned = getRouteHash(hash).replace(/^#\/?/u, '');
-  const parts = cleaned.split('/');
+  const [path, query] = cleaned.split('?');
+  const parts = path!.split('/');
 
   let protocol: Protocol = DEFAULT_PROTOCOL;
   let rest = parts;
@@ -78,7 +80,12 @@ export function parseRouteHash(hash: string): Route {
         benchReportId: rest.length === 3 ? rest[2] : '',
       };
     }
-    return { protocol, tab: 'bench' };
+    const benchPlan = new URLSearchParams(query).get('plan');
+    return {
+      protocol,
+      tab: 'bench',
+      ...(benchPlan === null ? {} : { benchPlan }),
+    };
   }
   // Back-compat: the standalone Playback tab is gone; route it to Examples.
   if (rest[0] === 'playback') {

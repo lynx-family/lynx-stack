@@ -5,8 +5,15 @@ import { useRef, useState } from 'react';
 
 import { formatBenchDuration } from './benchTiming.js';
 import { Button } from '../../components/Button.js';
+import { HistoryItemMenu } from '../../components/HistoryItemMenu.js';
 import { HistoryRailShell } from '../../components/HistoryRailShell.js';
-import { Copy, History, Pencil, Trash2 } from '../../components/Icon.js';
+import {
+  Copy,
+  History,
+  Pencil,
+  Share2,
+  Trash2,
+} from '../../components/Icon.js';
 
 interface BenchHistoryRailEntry {
   config: { env: { model: string } };
@@ -32,6 +39,7 @@ export function BenchHistoryRail<T extends BenchHistoryRailEntry>(props: {
   onNew: () => void;
   onRename: (id: string, title: string) => void;
   onRestore: (entry: T) => void;
+  onShare?: (entry: T) => void;
   reportNotice?: string;
   storageNotice?: string;
 }) {
@@ -153,38 +161,46 @@ export function BenchHistoryRail<T extends BenchHistoryRailEntry>(props: {
               )}
             <div className='benchHistoryRailItemActions'>
               <Button
+                className='benchPlanShare'
                 variant='ghost'
                 size='sm'
                 iconOnly
-                iconBefore={Pencil}
-                disabled={props.disabled}
-                aria-label={`Rename ${entry.title}`}
-                title='Rename'
-                onClick={() => {
-                  cancelRenameRef.current = false;
-                  setEditingId(entry.id);
-                  setDraftTitle(entry.title);
-                }}
+                iconBefore={Share2}
+                disabled={props.disabled || editingId === entry.id
+                  || !props.onShare}
+                aria-label={`Share parameters for ${entry.title}`}
+                title='Share parameters'
+                onClick={() => props.onShare?.(entry)}
               />
-              <Button
-                variant='ghost'
-                size='sm'
-                iconOnly
-                iconBefore={Copy}
-                disabled={props.disabled || !props.onCopy}
-                aria-label={`Copy ${entry.title}`}
-                title='Copy as new Bench'
-                onClick={() => props.onCopy?.(entry)}
-              />
-              <Button
-                variant='danger'
-                size='sm'
-                iconOnly
-                iconBefore={Trash2}
-                disabled={props.disabled}
-                aria-label={`Delete ${entry.title}`}
-                title='Delete'
-                onClick={() => props.onDelete(entry.id)}
+              <HistoryItemMenu
+                title={entry.title}
+                disabled={props.disabled || editingId === entry.id}
+                actions={[
+                  {
+                    label: 'Rename',
+                    ariaLabel: `Rename ${entry.title}`,
+                    icon: Pencil,
+                    onSelect: () => {
+                      cancelRenameRef.current = false;
+                      setEditingId(entry.id);
+                      setDraftTitle(entry.title);
+                    },
+                  },
+                  {
+                    label: 'Copy as new Bench',
+                    ariaLabel: `Copy ${entry.title}`,
+                    icon: Copy,
+                    disabled: !props.onCopy,
+                    onSelect: () => props.onCopy?.(entry),
+                  },
+                  {
+                    label: 'Delete',
+                    ariaLabel: `Delete ${entry.title}`,
+                    icon: Trash2,
+                    danger: true,
+                    onSelect: () => props.onDelete(entry.id),
+                  },
+                ]}
               />
             </div>
           </article>

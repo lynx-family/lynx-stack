@@ -194,8 +194,8 @@
 .conversationListItem {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
   border: 1px solid var(--geist-border);
   border-radius: var(--geist-radius-md);
   background: var(--geist-background);
@@ -236,6 +236,7 @@
 
 .conversationListItemMain {
   min-width: 0;
+  min-height: 28px;
   padding: 0;
   border: none;
   background: transparent;
@@ -244,6 +245,7 @@
   cursor: pointer;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 3px;
 }
 
@@ -253,6 +255,7 @@
 }
 
 .conversationListItemTitle {
+  padding-right: 64px;
   overflow: hidden;
   color: var(--geist-foreground);
   font-size: 13px;
@@ -281,15 +284,13 @@
 }
 
 .conversationListItemActions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: flex-end;
   gap: 4px;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(4px);
-  transition:
-    opacity var(--geist-transition),
-    transform var(--geist-transition);
 }
 
 .historyRailClear,
@@ -316,19 +317,11 @@
   opacity: 0.4;
 }
 
-.conversationListItem:hover .conversationListItemActions,
-.conversationListItem-active .conversationListItemActions,
-.conversationListItem:focus-within .conversationListItemActions {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateX(0);
-}
-
 /* conversationIconButton / conversationIconButtonDanger: replaced by
    <Button variant="ghost"|"danger" size="sm" iconOnly>. */
 
 .conversationRenameInput {
-  width: 100%;
+  width: calc(100% - 64px);
   height: 28px;
   min-width: 0;
   border: 1px solid var(--geist-border);
@@ -1568,14 +1561,16 @@
   .conversationPanel {
     width: 100%;
     max-width: none;
-    min-height: 132px;
-    max-height: 180px;
+    min-height: 0;
+    max-height: none;
     border-right: none;
     border-bottom: 1px solid var(--geist-border);
   }
 
   .conversationList {
+    flex: none;
     flex-direction: row;
+    align-items: flex-start;
     overflow-x: auto;
     overflow-y: hidden;
   }
@@ -1593,12 +1588,6 @@
   .conversationListItem {
     width: 220px;
     flex-shrink: 0;
-  }
-
-  .conversationListItemActions {
-    opacity: 1;
-    pointer-events: auto;
-    transform: none;
   }
 
   .chatPanel {
@@ -1672,20 +1661,18 @@
     border-left: none;
   }
 
-  /* Conversation panel collapses into a single horizontal strip on
-     phones: +New Chat is an icon button on the left, conversations
-     scroll as compact one-line cards on the right. Drops from ~150px
-     to ~52px of vertical chrome. */
+  /* Keep phone history compact with menu triggers beside the titles. */
   .chatPage[data-active-tab="edit"] .conversationPanel {
     flex-direction: row;
     align-items: stretch;
     min-height: 0;
     max-height: none;
-    height: 52px;
+    height: 56px;
     background: var(--geist-background);
   }
   .conversationPanelHeader,
-  .conversationPanelCreateRow {
+  .conversationPanelCreateRow,
+  .conversationPanel .historyRailCreate {
     flex: 0 0 auto;
     width: auto;
     min-height: 0;
@@ -1693,6 +1680,10 @@
     border-bottom: none;
     border-right: 1px solid var(--geist-border);
     background: transparent;
+  }
+  .conversationPanel .historyRailHeader,
+  .conversationPanel .conversationHistoryClear {
+    display: none;
   }
   .conversationNewButton {
     width: 36px;
@@ -1710,11 +1701,6 @@
     padding: 6px 8px;
     gap: 6px;
   }
-  /* Keep the desktop card aesthetic on mobile: rounded rectangle, active
-     bar on the left, Edit/Del hidden by default and revealed only on the
-     active card (matching the desktop hover/active behavior). Vertically
-     center title + actions since the meta/date row is hidden — the
-     desktop card is a two-line block, the mobile chip is single-line. */
   .conversationListItem {
     flex: 0 0 auto;
     width: auto;
@@ -1731,18 +1717,6 @@
     font-size: 12px;
     line-height: 1.25;
   }
-  .conversationListItemActions {
-    opacity: 0;
-    pointer-events: none;
-    transform: none;
-    gap: 4px;
-  }
-  .conversationListItem-active .conversationListItemActions,
-  .conversationListItem:focus-within .conversationListItemActions {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
   /* Pill Send button (drops the desktop drop-shadow on mobile). */
   .chatSendBtn {
     min-width: 84px;

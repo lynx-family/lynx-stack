@@ -291,7 +291,12 @@ export function App() {
             />
           );
         }
-        return <BenchPage key='bench' />;
+        return (
+          <BenchPage
+            key={`bench:${route.benchPlan ?? ''}`}
+            sharedPlan={route.benchPlan}
+          />
+        );
       }
       case 'examples':
         return route.demoId
@@ -327,6 +332,7 @@ export function App() {
     protocol,
     route.tab,
     route.benchReportId,
+    route.benchPlan,
     route.componentName,
     route.demoId,
     theme,

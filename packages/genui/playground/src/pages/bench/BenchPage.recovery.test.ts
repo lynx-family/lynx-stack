@@ -22,6 +22,10 @@ import {
   createDefaultBenchGroups,
 } from './benchData.js';
 import { BenchPage } from './BenchPage.js';
+import {
+  buildBenchPlanShareUrl,
+  readBenchPlanShare,
+} from './benchPlanShare.js';
 import type { BenchReport, BenchRunProgress } from './benchReportTypes.js';
 import { GENUI_SERVER_URL } from '../../config/genuiServer.js';
 import {
@@ -30,6 +34,8 @@ import {
 } from '../../storage/benchRepo.js';
 import * as benchRepo from '../../storage/benchRepo.js';
 import { getDB } from '../../storage/db.js';
+import { parseRouteHash } from '../../utils/appRoute.js';
+import * as clipboard from '../../utils/clipboard.js';
 
 const HISTORY_KEY = 'a2ui-bench-history';
 const REDACTED_JOB_ID = '[redacted credential]';
@@ -162,8 +168,10 @@ describe('BenchPage report recovery', () => {
     rstest.unstubAllGlobals();
   });
 
-  async function mountPage() {
-    await React.act(async () => root.render(React.createElement(BenchPage)));
+  async function mountPage(sharedPlan?: string) {
+    await React.act(async () =>
+      root.render(React.createElement(BenchPage, { sharedPlan }))
+    );
     await rstest.waitFor(async () => {
       await React.act(async () => {
         await readBenchHistory();
@@ -184,8 +192,239 @@ describe('BenchPage report recovery', () => {
     return container.querySelector('[aria-label="Bench Report"]')?.textContent;
   }
 
+  test('imports parameters as an editable draft, preserves existing history, and submits only after Start run', async () => {
+    const old = createHistoryEntry(
+      'Existing report',
+      createReport(JOB_ID, 'Old group'),
+    );
+    window.localStorage.setItem(HISTORY_KEY, JSON.stringify([old]));
+    const plan = {
+      title: 'Shared plan',
+      uiJudgeServerUrl: 'https://shared-judge.example.com/capture/',
+      groups: createDefaultBenchGroups('test-model').map(group => ({
+        ...group,
+        name: 'Shared group',
+        enableDesignGuidance: false,
+        protocol: 'lynx-xml' as const,
+        catalog: 'none',
+        enableHtmlFragment: true,
+        extraInstruction: 'Use compact spacing',
+      })),
+      scenarios: [{ ...DEFAULT_BENCH_SCENARIOS[0]!, prompt: '显示天气 🌤' }],
+      settings: {
+        ...DEFAULT_BENCH_SETTINGS,
+        judgeEnabled: false,
+        repeats: 3,
+        repairEnabled: false,
+      },
+    };
+    const url = new URL(buildBenchPlanShareUrl(window.location.href, plan));
+    window.localStorage.setItem(
+      'genui-bench-ui-judge-server-url',
+      'http://localhost:9999/',
+    );
+    window.history.replaceState(null, '', url);
+    await mountPage(parseRouteHash(url.hash).benchPlan);
+    await rstest.waitFor(async () => {
+      const entries = await readBenchHistory();
+      expect(entries).toHaveLength(2);
+      expect(entries[0]).toMatchObject({
+        title: plan.title,
+        report: null,
+        config: {
+          groups: plan.groups,
+          scenarios: plan.scenarios,
+          settings: plan.settings,
+        },
+      });
+      expect(entries[1]?.report).toEqual(old.report);
+      expect(window.location.hash).toBe('#/bench');
+    });
+    expect(benchRequests()).toHaveLength(0);
+    expect(
+      container.querySelector<HTMLInputElement>('input[type="url"]')?.value,
+    )
+      .toBe(plan.uiJudgeServerUrl);
+    expect(window.localStorage.getItem('genui-bench-ui-judge-server-url'))
+      .toBe(plan.uiJudgeServerUrl);
+    expect(
+      container.querySelector<HTMLInputElement>('[aria-label="Scenario name"]')
+        ?.readOnly,
+    ).toBe(false);
+    const importedHistory = await readBenchHistory();
+    const draftId = importedHistory[0]!.id;
+    await React.act(async () => root.unmount());
+    root = createRoot(container);
+    await mountPage();
+    const reloadedHistory = await readBenchHistory();
+    expect(
+      container.querySelector<HTMLInputElement>('input[type="url"]')?.value,
+    )
+      .toBe(plan.uiJudgeServerUrl);
+    expect(reloadedHistory[0]!.id).toBe(draftId);
+    expect(reloadedHistory).toHaveLength(2);
+    const start = [...container.querySelectorAll('button')].find(button =>
+      button.textContent === 'Start run'
+    )!;
+    await React.act(async () => start.click());
+    await rstest.waitFor(() => expect(benchRequests()).toHaveLength(1));
+    const body = JSON.parse(benchRequests()[0]!.body!) as {
+      groups: unknown;
+      scenarios: unknown;
+      settings: unknown;
+    };
+    expect(body.groups).toMatchObject(plan.groups);
+    expect(body.scenarios).toEqual(plan.scenarios);
+    expect(body.settings).toMatchObject({
+      repeats: 3,
+      judgeEnabled: false,
+      repairEnabled: false,
+      maxRepairAttempts: 0,
+    });
+  });
+
+  test('shares an inactive history plan without switching selection, report data, or model requests', async () => {
+    const entry = createHistoryEntry(
+      'Completed plan',
+      createReport(REDACTED_JOB_ID, 'Saved group'),
+    );
+    const activeEntry = {
+      ...createHistoryEntry(
+        'Active plan',
+        createReport(REDACTED_JOB_ID, 'Active group'),
+      ),
+      savedAt: '2026-09-05T00:00:00.000Z',
+    };
+    window.localStorage.setItem(
+      HISTORY_KEY,
+      JSON.stringify([activeEntry, entry]),
+    );
+    window.localStorage.setItem(
+      'genui-bench-ui-judge-server-url',
+      'https://shared-judge.example.com/capture',
+    );
+    const copy = rstest.spyOn(clipboard, 'copyToClipboard').mockResolvedValue(
+      true,
+    );
+    await mountPage();
+    const activeRow = () =>
+      container.querySelector('.benchHistoryRailItem[data-active="true"]');
+    expect(activeRow()?.textContent).toContain(activeEntry.title);
+    expect(
+      container.querySelectorAll(
+        '.benchHistoryRailItem .historyItemMenuTrigger',
+      ),
+    )
+      .toHaveLength(2);
+    expect(container.querySelector('.benchHeader .historyItemMenuTrigger'))
+      .toBeNull();
+    const trigger = container.querySelector<HTMLButtonElement>(
+      '[aria-label="Actions for Completed plan"]',
+    )!;
+    expect(trigger.closest('.benchHistoryRailItem')).not.toBe(activeRow());
+    const button = container.querySelector<HTMLButtonElement>(
+      '[aria-label="Share parameters for Completed plan"]',
+    )!;
+    expect(button.classList.contains('btn-iconOnly')).toBe(true);
+    expect(document.querySelector('[role="menu"]')).toBeNull();
+    await React.act(async () => button.click());
+    expect(copy).toHaveBeenCalledTimes(1);
+    const plan = readBenchPlanShare(
+      parseRouteHash(new URL(copy.mock.calls[0]![0]).hash).benchPlan!,
+    );
+    expect(plan).toEqual({
+      version: 1,
+      title: entry.title,
+      uiJudgeServerUrl: 'https://shared-judge.example.com/capture/',
+      groups: entry.config.groups,
+      scenarios: entry.config.scenarios,
+      settings: entry.config.settings,
+    });
+    expect(benchRequests()).toHaveLength(0);
+    expect(activeRow()?.textContent).toContain(activeEntry.title);
+    expect(container.textContent).toContain(
+      'Parameter link copied for "Completed plan".',
+    );
+  });
+
+  test.each([undefined, ''])(
+    'preserves the local screenshot URL for legacy links and clears it for an explicit empty URL (%s)',
+    async uiJudgeServerUrl => {
+      const localUrl = 'https://local-judge.example.com/';
+      window.localStorage.setItem('genui-bench-ui-judge-server-url', localUrl);
+      const url = new URL(buildBenchPlanShareUrl(window.location.href, {
+        title: 'Shared plan',
+        groups: createDefaultBenchGroups('test-model'),
+        scenarios: [DEFAULT_BENCH_SCENARIOS[0]!],
+        settings: { ...DEFAULT_BENCH_SETTINGS },
+        ...(uiJudgeServerUrl === undefined ? {} : { uiJudgeServerUrl }),
+      }));
+      await mountPage(parseRouteHash(url.hash).benchPlan);
+      expect(
+        container.querySelector<HTMLInputElement>('input[type="url"]')?.value,
+      )
+        .toBe(uiJudgeServerUrl ?? localUrl);
+      expect(window.localStorage.getItem('genui-bench-ui-judge-server-url'))
+        .toBe(uiJudgeServerUrl === '' ? null : localUrl);
+      expect(benchRequests()).toHaveLength(0);
+    },
+  );
+
+  test('retains unavailable shared models through late loading and reload instead of replacing them', async () => {
+    const plan = {
+      title: 'Unavailable model',
+      groups: createDefaultBenchGroups('missing-model'),
+      scenarios: [DEFAULT_BENCH_SCENARIOS[0]!],
+      settings: { ...DEFAULT_BENCH_SETTINGS, judgeEnabled: false },
+    };
+    const url = new URL(buildBenchPlanShareUrl(window.location.href, plan));
+    window.history.replaceState(null, '', url);
+    await mountPage(parseRouteHash(url.hash).benchPlan);
+    await rstest.waitFor(async () => {
+      const history = await readBenchHistory();
+      expect(history[0]?.config.groups[0]?.model).toBe('missing-model');
+    });
+    expect(
+      container.querySelector('[aria-label="Baseline Model"]')?.textContent,
+    ).toBe('missing-model');
+    await React.act(async () => root.unmount());
+    root = createRoot(container);
+    await mountPage();
+    expect(
+      container.querySelector('[aria-label="Baseline Model"]')?.textContent,
+    ).toBe('missing-model');
+    const start = [...container.querySelectorAll('button')].find(button =>
+      button.textContent === 'Start run'
+    )!;
+    await React.act(async () => start.click());
+    expect(benchRequests()).toHaveLength(0);
+    expect(container.textContent).toContain(
+      'Select a server model for every enabled comparison group.',
+    );
+  });
+
+  test('rejects invalid links without restoring a report or modifying history', async () => {
+    const entry = createHistoryEntry(
+      'Existing report',
+      createReport(JOB_ID, 'Existing'),
+    );
+    window.localStorage.setItem(HISTORY_KEY, JSON.stringify([entry]));
+    await mountPage('invalid');
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain(
+      'invalid or unsupported',
+    );
+    expect(benchRequests()).toHaveLength(0);
+    const history = await readBenchHistory();
+    expect(history).toHaveLength(1);
+    expect(history[0]?.report).toEqual(entry.report);
+  });
+
   async function editHistoryName(title: string, value: string) {
-    const rename = [...container.querySelectorAll('button')].find((item) =>
+    const trigger = container.querySelector<HTMLButtonElement>(
+      `[aria-label="Actions for ${title}"]`,
+    )!;
+    await React.act(async () => trigger.click());
+    const rename = [...document.querySelectorAll('button')].find((item) =>
       item.getAttribute('aria-label') === `Rename ${title}`
     )!;
     await React.act(async () => rename.click());
@@ -392,7 +631,9 @@ describe('BenchPage report recovery', () => {
     await React.act(async () => root.unmount());
     root = createRoot(container);
     await mountPage();
-    expect(container.querySelector('[aria-label="Rename Weather comparison"]'))
+    expect(
+      container.querySelector('[aria-label="Actions for Weather comparison"]'),
+    )
       .not.toBeNull();
     expect(benchRequests()).toEqual([]);
   });

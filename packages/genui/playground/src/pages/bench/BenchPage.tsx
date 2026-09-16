@@ -40,6 +40,8 @@ import {
 import type { BenchHistoryEntry } from './benchHistory.js';
 import { BenchHistoryRail } from './BenchHistoryRail.js';
 import { startBenchHtmlCapture } from './benchHtmlCapture.js';
+import { readBenchPlanShare } from './benchPlanShare.js';
+import type { BenchSharedPlan } from './benchPlanShare.js';
 import { mergeBenchRunProgress } from './benchProgress.js';
 import { BenchReportPanel } from './BenchReportPanel.js';
 import { sanitizeBenchReportValue } from './benchReportSerialization.js';
@@ -59,6 +61,8 @@ import {
 } from './benchScreenshots.js';
 import { BenchScreenshotsDialog } from './BenchScreenshotsDialog.js';
 import type { BenchLiveTiming } from './benchTiming.js';
+import { normalizeBenchUiJudgeServerUrl } from './benchUiJudgeServerUrl.js';
+import { shareBenchPlan } from './shareBenchPlan.js';
 import { useBenchHistory } from './useBenchHistory.js';
 import { PageHeader } from '../../components/PageHeader.js';
 import { PanelResizeHandle } from '../../components/PanelResizeHandle.js';
@@ -80,6 +84,7 @@ import {
 import type { ProviderSettings } from '../chat/shared.js';
 
 export { serializeBenchReport } from './benchReportSerialization.js';
+export { normalizeBenchUiJudgeServerUrl } from './benchUiJudgeServerUrl.js';
 
 type BenchRunMessage =
   | { code: 'bench-cancelled' }
@@ -243,27 +248,6 @@ export function readBenchUiJudgeServerUrl(): string {
     return window.localStorage.getItem(UI_JUDGE_SERVER_URL_STORAGE_KEY) ?? '';
   } catch {
     return '';
-  }
-}
-
-export function normalizeBenchUiJudgeServerUrl(raw: string): string | null {
-  const value = raw.trim();
-  if (!value) return '';
-  try {
-    const url = new URL(value);
-    if (
-      (url.protocol !== 'http:' && url.protocol !== 'https:')
-      || url.username
-      || url.password
-    ) {
-      return null;
-    }
-    url.hash = '';
-    url.search = '';
-    if (!url.pathname.endsWith('/')) url.pathname = `${url.pathname}/`;
-    return url.toString();
-  } catch {
-    return null;
   }
 }
 
@@ -726,19 +710,29 @@ export function getBenchRunBlockers(
   return issues;
 }
 
-export function BenchPage() {
+export function BenchPage({ sharedPlan }: { sharedPlan?: string }) {
+  const [shared] = useState<{ plan?: BenchSharedPlan; error?: string }>(() => {
+    if (sharedPlan === undefined) return {};
+    try {
+      return { plan: readBenchPlanShare(sharedPlan) };
+    } catch (error) {
+      return { error: getErrorMessage(error) };
+    }
+  });
   const [env, setEnv] = useState<BenchEnv>(createDefaultProviderSettings);
   const [uiJudgeServerUrl, setUiJudgeServerUrl] = useState(
-    readBenchUiJudgeServerUrl,
+    () => shared.plan?.uiJudgeServerUrl ?? readBenchUiJudgeServerUrl(),
   );
   const [groups, setGroups] = useState<BenchGroup[]>(() =>
-    createBenchPresetGroups('protocol', DEFAULT_ENV.model)
+    shared.plan?.groups
+      ?? createBenchPresetGroups('protocol', DEFAULT_ENV.model)
   );
   const [scenarios, setScenarios] = useState<BenchScenario[]>(
-    () => cloneBenchScenarios(DEFAULT_BENCH_SCENARIOS),
+    () =>
+      shared.plan?.scenarios ?? cloneBenchScenarios(DEFAULT_BENCH_SCENARIOS),
   );
   const [settings, setSettings] = useState<BenchSettings>(
-    () => cloneBenchSettings(DEFAULT_BENCH_SETTINGS),
+    () => shared.plan?.settings ?? cloneBenchSettings(DEFAULT_BENCH_SETTINGS),
   );
   const [status, setStatus] = useState<BenchStatus>('idle');
   const [progress, setProgress] = useState(0);
@@ -780,6 +774,8 @@ export function BenchPage() {
   const benchOperationIdRef = useRef(0);
   const initialEnvRef = useRef(env);
   const initialHistoryRestoredRef = useRef(false);
+  const preservePlanModelsRef = useRef(Boolean(shared.plan));
+  const [planNotice, setPlanNotice] = useState(shared.error ?? '');
 
   useEffect(() => {
     const controller = new AbortController();
@@ -791,7 +787,9 @@ export function BenchPage() {
       (next) => {
         if (controller.signal.aborted) return;
         setEnv(next);
-        setGroups((current) => reconcileBenchGroupModels(current, next));
+        if (!preservePlanModelsRef.current) {
+          setGroups((current) => reconcileBenchGroupModels(current, next));
+        }
       },
       () => {
         // Abort-driven rejections are expected when Bench unmounts.
@@ -903,8 +901,14 @@ export function BenchPage() {
     ) {
       return 'Select a server model for every enabled comparison group.';
     }
+    if (
+      settings.judgeEnabled && settings.uiJudgeModel
+      && !env.models.some(model => model.id === settings.uiJudgeModel)
+    ) {
+      return 'Select an available server model for UI Judge.';
+    }
     return undefined;
-  }, [activeGroups, env]);
+  }, [activeGroups, env, settings.judgeEnabled, settings.uiJudgeModel]);
   const hasHtmlGroups = activeGroups.some((group) => group.protocol === 'html');
   const needsScreenshotService = activeGroups.some((group) =>
     group.protocol !== 'html'
@@ -1058,7 +1062,7 @@ export function BenchPage() {
   }, []);
 
   useEffect(() => {
-    if (!historyReady) return;
+    if (!historyReady || sharedPlan !== undefined) return;
     const jobId = getA2UIBenchJobIdFromUrl();
     if (!jobId) return;
     const endpoint = getA2UIBenchReportEndpoint(jobId);
@@ -1154,7 +1158,7 @@ export function BenchPage() {
         historyReportAbortRef.current = null;
       }
     };
-  }, [historyReady, setHistoryItems]);
+  }, [historyReady, setHistoryItems, sharedPlan]);
 
   const updateGroup = useCallback(
     (id: string, patch: Partial<BenchGroup>) => {
@@ -1248,6 +1252,8 @@ export function BenchPage() {
   }, []);
 
   const resetBench = useCallback(() => {
+    preservePlanModelsRef.current = false;
+    setPlanNotice('');
     void cancelActiveBenchJob();
     const nextGroups = reconcileBenchGroupModels(
       createBenchPresetGroups('protocol', DEFAULT_ENV.model),
@@ -1711,6 +1717,8 @@ export function BenchPage() {
     })();
   }, [historyItems, historyReady, saveHistory]);
   const restoreHistoryEntry = useCallback((entry: BenchHistoryEntry) => {
+    preservePlanModelsRef.current = true;
+    setPlanNotice('');
     void cancelActiveBenchJob();
     setJobTiming(null);
     setRunProgress([]);
@@ -1720,11 +1728,7 @@ export function BenchPage() {
       entry.config.scenarios,
       entry.config.settings,
     );
-    setGroups(
-      entry.report
-        ? cloneBenchGroups(entry.config.groups)
-        : reconcileBenchGroupModels(cloneBenchGroups(entry.config.groups), env),
-    );
+    setGroups(cloneBenchGroups(entry.config.groups));
     setScenarios(cloneBenchScenarios(entry.config.scenarios));
     setSettings(cloneBenchSettings(entry.config.settings));
     if (!entry.report) {
@@ -1806,16 +1810,56 @@ export function BenchPage() {
         }
       }
     })();
-  }, [cancelActiveBenchJob, env, setHistoryItems]);
+  }, [cancelActiveBenchJob, setHistoryItems]);
 
   useEffect(() => {
     if (!historyReady || initialHistoryRestoredRef.current) return;
     initialHistoryRestoredRef.current = true;
+    if (sharedPlan !== undefined) {
+      if (!shared.plan) return;
+      const draft = {
+        ...createBenchDraftHistoryEntry(
+          shared.plan.groups,
+          shared.plan.scenarios,
+          shared.plan.settings,
+        ),
+        title: shared.plan.title.trim() || 'Shared Bench',
+        titleIsCustom: true,
+      };
+      const entries = saveBenchHistoryEntry(historyItems, draft);
+      setActiveHistoryId(draft.id);
+      setHistoryItems(entries);
+      setPlanNotice(
+        'Shared parameters loaded as an editable Bench. Review the setup, then select Start run.',
+      );
+      // Remove the import payload only after it is durable, so a refresh opens
+      // this draft without creating another copy or losing edits.
+      void saveHistory(entries).then(() => {
+        const url = new URL(window.location.href);
+        if (
+          new URLSearchParams(url.hash.split('?')[1]).get('plan') !== sharedPlan
+        ) return;
+        url.search = '';
+        url.hash = '/bench';
+        window.history.replaceState(window.history.state, '', url);
+      }).catch(() => {
+        // The history hook exposes storage failures; retain the import link.
+      });
+      return;
+    }
     // An explicit report link owns restoration, including invalid-link feedback.
     if (getA2UIBenchJobIdFromUrl()) return;
     const firstEntry = historyItems[0];
     if (firstEntry) restoreHistoryEntry(firstEntry);
-  }, [historyItems, historyReady, restoreHistoryEntry]);
+  }, [
+    historyItems,
+    historyReady,
+    restoreHistoryEntry,
+    saveHistory,
+    setHistoryItems,
+    shared,
+    sharedPlan,
+  ]);
 
   const deleteHistoryEntry = useCallback((id: string) => {
     setActiveHistoryId((current) => current === id ? null : current);
@@ -1835,6 +1879,8 @@ export function BenchPage() {
   }, [setHistoryItems]);
 
   const copyHistoryEntry = useCallback((entry: BenchHistoryEntry) => {
+    preservePlanModelsRef.current = true;
+    setPlanNotice('');
     const draft = createBenchDraftHistoryEntry(
       entry.config.groups,
       entry.config.scenarios,
@@ -1936,6 +1982,15 @@ export function BenchPage() {
           onRename={renameHistoryEntry}
           onNew={resetBench}
           onRestore={restoreHistoryEntry}
+          onShare={entry => {
+            void shareBenchPlan({
+              title: entry.title,
+              groups: entry.config.groups,
+              scenarios: entry.config.scenarios,
+              settings: entry.config.settings,
+              uiJudgeServerUrl,
+            }, setHistoryReportNotice);
+          }}
         />
         <main
           className='benchMain'
@@ -1946,6 +2001,14 @@ export function BenchPage() {
             title='Bench Runner'
             description={'Combine Protocol, Model, Prompt, and Catalog freely, then review the results in one report.'}
           />
+          {planNotice && (
+            <p
+              className='benchPlanShareNotice'
+              role={shared.error ? 'alert' : 'status'}
+            >
+              {planNotice}
+            </p>
+          )}
           <div className='benchWorkflow'>
             <div className='benchWorkflowScroll'>
               <BenchRunPanel
