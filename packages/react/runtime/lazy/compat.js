@@ -40,6 +40,7 @@ export const {
   useInitDataChanged,
   useGlobalProps,
   useGlobalPropsChanged,
+  useLynx,
   useLynxGlobalEventListener,
   useLayoutEffect,
   useMainThreadRef,
