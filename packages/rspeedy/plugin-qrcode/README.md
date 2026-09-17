@@ -26,7 +26,6 @@ import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
 import { defineConfig } from '@rsbuild/core'
 
 export default defineConfig({
-  environments: { lynx: {} },
   plugins: [pluginReactLynx(), pluginQRCode()],
 })
 ```
@@ -49,7 +48,6 @@ import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
 import { defineConfig } from '@rsbuild/core'
 
 export default defineConfig({
-  environments: { lynx: {} },
   plugins: [
     pluginReactLynx(),
     pluginQRCode({
@@ -72,7 +70,6 @@ import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
 import { defineConfig } from '@rsbuild/core'
 
 export default defineConfig({
-  environments: { lynx: {} },
   plugins: [
     pluginReactLynx(),
     pluginQRCode({

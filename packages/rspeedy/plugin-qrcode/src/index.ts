@@ -55,7 +55,6 @@ export interface PluginQRCodeOptions {
    * import { defineConfig } from '@rsbuild/core'
    *
    * export default defineConfig({
-   *   environments: { lynx: {} },
    *   plugins: [
    *     pluginReactLynx(),
    *     pluginQRCode({
@@ -80,7 +79,6 @@ export interface PluginQRCodeOptions {
    * import { defineConfig } from '@rsbuild/core'
    *
    * export default defineConfig({
-   *   environments: { lynx: {} },
    *   plugins: [
    *     pluginReactLynx(),
    *     pluginQRCode({

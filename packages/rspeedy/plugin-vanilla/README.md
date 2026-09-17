@@ -11,7 +11,6 @@ import { pluginVanillaLynx } from '@lynx-js/vanilla-rsbuild-plugin'
 import { defineConfig } from '@rsbuild/core'
 
 export default defineConfig({
-  environments: { lynx: {} },
   plugins: [
     pluginLynx(),
     pluginVanillaLynx({
@@ -33,7 +32,6 @@ For a convention-based entry, `source.entry` points to the main-thread source:
 
 ```ts
 export default defineConfig({
-  environments: { lynx: {} },
   source: {
     entry: {
       card: './src/card/main-thread.ts',
