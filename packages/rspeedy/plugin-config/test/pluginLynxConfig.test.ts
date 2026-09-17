@@ -125,4 +125,36 @@ describe('pluginLynxConfig', () => {
       },
     )
   })
+
+  test('should expose the config but skip LynxConfigWebpackPlugin under Rstest', async () => {
+    const { LynxConfigWebpackPlugin } = await import(
+      '../src/LynxConfigWebpackPlugin.js'
+    )
+    const { pluginLynxConfig } = await import('../src/pluginLynxConfig.js')
+    rstest.mocked(LynxConfigWebpackPlugin).mockClear()
+
+    let exposedConfig: unknown
+
+    const rsbuild = await createRsbuild({
+      callerName: 'rstest',
+      rsbuildConfig: {
+        plugins: [
+          pluginLynxConfig({ enableAccessibilityElement: true }),
+          {
+            name: 'test',
+            setup(api: RsbuildPluginAPI) {
+              exposedConfig = api.useExposed(Symbol.for('lynx.config'))
+            },
+          },
+        ],
+      },
+    })
+
+    await expect(rsbuild.initConfigs()).resolves.not.toThrow()
+
+    expect(exposedConfig).toStrictEqual({
+      config: { enableAccessibilityElement: true },
+    })
+    expect(LynxConfigWebpackPlugin).not.toHaveBeenCalled()
+  })
 })

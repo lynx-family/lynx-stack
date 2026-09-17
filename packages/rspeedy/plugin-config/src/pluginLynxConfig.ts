@@ -109,6 +109,10 @@ export function pluginLynxConfig(
     async setup(api) {
       api.expose(Symbol.for('lynx.config'), { config })
 
+      if (api.context.callerName === 'rstest') {
+        return
+      }
+
       api.modifyBundlerChain(chain => {
         const exposed = api.useExposed<
           { LynxTemplatePlugin: typeof LynxTemplatePlugin }
