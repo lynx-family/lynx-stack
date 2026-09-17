@@ -138,10 +138,10 @@ export interface CssLoaderModules {
    * ```js
    * import * as styles from "./styles.css";
    *
-   * // If using `exportLocalsConvention: "as-is"` (default value):
+   * // If using `exportLocalsConvention: "asIs"`:
    * console.log(styles["foo-baz"], styles.bar);
    *
-   * // If using `exportLocalsConvention: "camel-case-only"`:
+   * // If using `exportLocalsConvention: "camelCaseOnly"`:
    * console.log(styles.fooBaz, styles.bar);
    *
    * // For the `default` class name

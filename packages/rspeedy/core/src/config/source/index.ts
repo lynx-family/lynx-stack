@@ -436,7 +436,7 @@ export interface Source {
    *
    * The `tsconfigPath` configuration affects the following behaviors:
    *
-   * - The `paths` field is used to configure {@link Source.alias | Path Aliases}.
+   * - The `paths` field is used to configure {@link Resolve.alias | Path Aliases}.
    *
    * - Sets the scope and rules for the {@link https://rsbuild.rs/guide/basic/typescript#type-checking | Type Check Plugin}.
    *

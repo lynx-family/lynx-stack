@@ -220,8 +220,7 @@ export interface LynxPerformance {
    * A framework includes runtime information using `console.profile` when this
    * is enabled.
    *
-   * @defaultValue `true` when `DEBUG` includes `lynx`, `rsbuild`, `rspeedy` or
-   * `*`, otherwise `undefined`
+   * @defaultValue `true` when `DEBUG=lynx`, otherwise `undefined`
    *
    * @example
    *

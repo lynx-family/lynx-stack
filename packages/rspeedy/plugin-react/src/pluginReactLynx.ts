@@ -45,7 +45,7 @@ import { validateConfig } from './validate.js'
  */
 export interface PluginReactLynxOptions {
   /**
-   * Enable UI source map generation and debug-metadata asset emission.
+   * Generate UI source maps in the main-thread transform.
    *
    * @defaultValue `false`
    */
@@ -99,7 +99,7 @@ export interface PluginReactLynxOptions {
    *      customCSSInheritanceList: ['direction', 'overflow']
    *    }),
    *  ],
-   * }
+   * })
    * ```
    *
    * @defaultValue `undefined`

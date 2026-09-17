@@ -39,6 +39,8 @@ export interface Server {
    *
    * @defaultValue true
    *
+   * @remarks
+   *
    * See {@link https://rsbuild.rs/config/server/compress | Rsbuild - server.compress } for details.
    *
    * @example
@@ -92,6 +94,8 @@ export interface Server {
    * Configure CORS for the dev server or preview server.
    *
    * @defaultValue Uses Rsbuild's default CORS options.
+   *
+   * @remarks
    *
    * - Set to an object to enable CORS with the specified options.
    *
@@ -206,6 +210,8 @@ export interface Server {
    * When a port is occupied, Rspeedy will automatically increment the port number until an available port is found.
    *
    * @defaultValue false
+   *
+   * @remarks
    *
    * By default, strict port mode is disabled. Set strictPort to true and Rspeedy will throw an exception when the port is occupied.
    */

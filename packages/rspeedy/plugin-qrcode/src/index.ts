@@ -5,7 +5,7 @@
 /**
  * @packageDocumentation
  *
- * A rsbuild plugin that print the template.js url using QRCode.
+ * A rsbuild plugin that print the Lynx bundle url using QRCode.
  */
 
 import type {

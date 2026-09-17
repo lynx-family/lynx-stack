@@ -37,7 +37,11 @@ export interface Performance {
    *
    * @defaultValue false
    *
-   * @beta This feature is experimental and may be changed in the future.
+   * @remarks
+   *
+   * This feature is experimental and may be changed in the future.
+   *
+   * @beta
    *
    * @example
    *
@@ -75,7 +79,7 @@ export interface Performance {
   /**
    * {@link Performance.chunkSplit} is used to configure the chunk splitting strategy.
    *
-   * @defaultValue For web builds, Rsbuild currently uses `{ strategy: 'split-by-experience' }` when this option is unset.
+   * @defaultValue Unset, which bundles everything into one chunk (same as `'all-in-one'`).
    *
    * @deprecated Use the top-level {@link Config.splitChunks} option instead.
    */
@@ -85,7 +89,7 @@ export interface Performance {
   /**
    * {@inheritDoc @lynx-js/rsbuild-plugin#LynxPerformance.profile}
    *
-   * @defaultValue `true` when `DEBUG` includes `lynx`, `rsbuild`, `rspeedy` or `*`, otherwise `undefined`
+   * @defaultValue `true` when `DEBUG=lynx`, otherwise `undefined`
    *
    * @example
    *
@@ -144,7 +148,7 @@ export interface Performance {
    *
    * @defaultValue true
    *
-   * {@link Performance.printFileSize}
+   * @remarks
    *
    * See {@link https://rsbuild.rs/config/performance/print-file-size | Rsbuild - performance.printFileSize} for details.
    *

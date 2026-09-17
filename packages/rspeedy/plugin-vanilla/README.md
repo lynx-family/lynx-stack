@@ -74,4 +74,4 @@ pluginVanillaLynx({
 })
 ```
 
-When `bundleFilename` is omitted, the plugin uses Rspeedy's `output.filename.bundle`. Outside Rspeedy it defaults to `[name].[platform].bundle`.
+When `bundleFilename` is omitted, `pluginLynx`'s `output.filename.bundle` is used (default `'[name].[platform].bundle'`).

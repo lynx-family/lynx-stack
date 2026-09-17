@@ -161,6 +161,8 @@ export interface Config {
    *
    * @defaultValue Rspeedy defaults this to `false`; if configured, Rsbuild handles it with its top-level `splitChunks` option.
    *
+   * @remarks
+   *
    * See {@link https://rsbuild.rs/config/split-chunks | Rsbuild - splitChunks} for details.
    */
   splitChunks?: RsbuildConfig['splitChunks'] | undefined
