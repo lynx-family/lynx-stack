@@ -41,10 +41,6 @@ export interface ReactLoaderOptions {
    * {@inheritDoc @lynx-js/template-webpack-plugin#LynxTemplatePluginOptions.enableRemoveCSSScope}
    */
   enableRemoveCSSScope?: boolean | undefined;
-  /**
-   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.jsx}
-   */
-  jsx?: JsxTransformerConfig | undefined;
 
   /**
    * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableUiSourceMap}
