@@ -55,7 +55,6 @@ export { LAYERS }
 //
 // @public
 export interface LynxTemplatePlugin {
-    // Warning: (ae-unresolved-link) The @link reference could not be resolved: This type of declaration is not supported yet by the resolver
     getLynxTemplatePluginHooks: typeof LynxTemplatePlugin_2.getLynxTemplatePluginHooks;
 }
 
