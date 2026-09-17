@@ -8,10 +8,6 @@ import type { UndefinedOnPartialDeep } from 'type-fest'
 import { toRsbuildEntry } from './entry.js'
 import type { Config } from '../index.js'
 
-// This is the default value from lynx-speedy.
-// We may change it based on new benchmarks.
-const defaultDataUriLimit = 2 * 1024
-
 export function toRsbuildConfig(
   config: Config,
 ): UndefinedOnPartialDeep<RsbuildConfig> {
@@ -39,8 +35,7 @@ export function toRsbuildConfig(
 
       cssModules: config.output?.cssModules,
 
-      // We expect to use different default dataUriLimit with Rsbuild
-      dataUriLimit: config.output?.dataUriLimit ?? defaultDataUriLimit,
+      dataUriLimit: config.output?.dataUriLimit,
 
       distPath: config.output?.distPath,
 

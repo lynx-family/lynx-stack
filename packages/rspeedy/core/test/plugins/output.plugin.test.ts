@@ -122,6 +122,21 @@ describe('Plugins - Output', () => {
     rstest.unstubAllEnvs()
   })
 
+  test('output.dataUriLimit defaults to 2 KiB', async () => {
+    const rsbuild = await createStubRspeedy({})
+
+    const config = await rsbuild.unwrapConfig()
+
+    const conditions = getAssetRules(config)
+      ?.filter(rule => rule.parser)
+      .map(rule => rule.parser?.['dataUrlCondition'] as unknown)
+
+    expect(conditions?.length).toBeGreaterThan(0)
+    for (const condition of conditions ?? []) {
+      expect(condition).toEqual({ maxSize: 2 * 1024 })
+    }
+  })
+
   test('output.dataUriLimit', async () => {
     const rsbuild = await createStubRspeedy({
       output: {

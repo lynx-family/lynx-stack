@@ -462,7 +462,7 @@ describe('Config - toRsBuildConfig', () => {
           "cleanDistPath": undefined,
           "copy": undefined,
           "cssModules": undefined,
-          "dataUriLimit": 2048,
+          "dataUriLimit": undefined,
           "distPath": undefined,
           "filename": undefined,
           "filenameHash": undefined,
