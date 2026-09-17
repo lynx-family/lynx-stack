@@ -50,7 +50,10 @@ function parseArgs(argv: string[]): CliOptions {
 function printHelp(): void {
   console.info(`Usage: lynx-autolink-codegen [--root <dir>]
 
-Generate Lynx library JS, Android, iOS, and HarmonyOS specs from types/**/*.d.ts.
+Generate Lynx library JS facades, Android, iOS, and HarmonyOS specs, and
+Lynxtron and Node-API native module files from types/platform-native-module.d.ts
+and types/napi-native-module.d.ts (falls back to types/**/*.d.ts when
+platform-native-module.d.ts is missing).
 
 Options:
   --root, -r <dir>  Library package root. Defaults to the current directory.

@@ -8,7 +8,7 @@ use swc_core::{
   quote,
 };
 
-/// {@inheritdoc PluginReactLynxOptions.extractStr}
+/// {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.extractStr}
 /// @public
 #[derive(PartialEq, Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]

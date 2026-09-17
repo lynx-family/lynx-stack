@@ -4,7 +4,7 @@
 import type { WatchFiles } from '@rsbuild/core'
 
 /**
- * {@inheritdoc Config.dev}
+ * {@inheritDoc Config.dev}
  * @public
  */
 export interface Dev {
