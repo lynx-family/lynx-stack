@@ -1,6 +1,6 @@
 # @lynx-js/motion
 
-A powerful animation library for Lynx, ported from [Motion for React (framer-motion)](https://motion.dev/). It brings imperative animations (`animate`, `stagger`), motion values and two hooks (`useMotionValueRef`, `useMotionValueRefEvent`) to the Lynx ecosystem.
+A powerful animation library for Lynx, ported from [Motion for React (framer-motion)](https://motion.dev/). It brings imperative animations, motion values to the Lynx ecosystem.
 
 ## Installation
 

@@ -43,7 +43,7 @@ export interface GestureChangeEvent {
 }
 
 /**
- * Pan gesture change event with scroll offsets (`scrollX`, `scrollY`) and boundary flags (`isAtStart`, `isAtEnd`).
+ * Pan gesture change event with translation and velocity information.
  */
 export interface PanGestureChangeEvent extends GestureChangeEvent {
   params: GestureChangeEvent['params'] & {
@@ -55,17 +55,17 @@ export interface PanGestureChangeEvent extends GestureChangeEvent {
 }
 
 /**
- * Tap gesture change event. Uses the base `GestureChangeEvent` params.
+ * Tap gesture change event with tap location and count information.
  */
 export interface TapGestureChangeEvent extends GestureChangeEvent {}
 
 /**
- * Long press gesture change event. Uses the base `GestureChangeEvent` params.
+ * Long press gesture change event with press location and duration information.
  */
 export interface LongPressGestureChangeEvent extends GestureChangeEvent {}
 
 /**
- * Fling gesture change event with scroll offsets (`scrollX`, `scrollY`), deltas (`deltaX`, `deltaY`) and boundary flags (`isAtStart`, `isAtEnd`).
+ * Fling gesture change event with fling location and velocity information.
  */
 export interface FlingGestureChangeEvent extends GestureChangeEvent {
   params: GestureChangeEvent['params'] & {
@@ -80,7 +80,7 @@ export interface FlingGestureChangeEvent extends GestureChangeEvent {
 
 /**
  * Default gesture change event.
- * Adds scroll offsets (`scrollX`, `scrollY`), deltas (`deltaX`, `deltaY`) and boundary flags (`isAtStart`, `isAtEnd`).
+ * Uses the base GestureChangeEvent without additional properties.
  */
 export interface DefaultGestureChangeEvent extends GestureChangeEvent {
   params: GestureChangeEvent['params'] & {
@@ -95,7 +95,7 @@ export interface DefaultGestureChangeEvent extends GestureChangeEvent {
 
 /**
  * Native gesture change event.
- * Adds scroll offsets (`scrollX`, `scrollY`), deltas (`deltaX`, `deltaY`) and boundary flags (`isAtStart`, `isAtEnd`).
+ * Uses the base GestureChangeEvent without additional properties.
  */
 export interface NativeGestureChangeEvent extends GestureChangeEvent {
   params: GestureChangeEvent['params'] & {
@@ -260,7 +260,7 @@ export interface FlingGestureConfig extends BaseGestureConfig {
 }
 
 /**
- * Configuration interface for DefaultScrollGesture.
+ * Configuration interface for DefaultGesture.
  * Default gesture is a basic gesture handler.
  */
 export interface DefaultGestureConfig extends BaseGestureConfig {

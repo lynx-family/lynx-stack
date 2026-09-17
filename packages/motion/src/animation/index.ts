@@ -49,7 +49,7 @@ function animate(
 ): AnimationPlaybackControlsWithThen;
 
 /**
- * Animate the main-thread elements matched by a selector
+ * Animate a string
  */
 function animate(
   value: string,
