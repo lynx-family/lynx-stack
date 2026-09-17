@@ -42,7 +42,7 @@ export interface ReactLoaderOptions {
    */
   enableRemoveCSSScope?: boolean | undefined;
   /**
-   * The `jsx` option controls how JSX is transformed.
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.jsx}
    */
   jsx?: JsxTransformerConfig | undefined;
 

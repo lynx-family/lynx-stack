@@ -9,14 +9,14 @@
  */
 export interface CssExtract {
   /**
-   * The options of the CSS extract loader.
+   * {@inheritDoc @lynx-js/css-extract-webpack-plugin#LoaderOptions}
    *
    * @defaultValue undefined
    */
   loaderOptions?: CssExtractRspackLoaderOptions | undefined
 
   /**
-   * The options of the CSS extract plugin.
+   * {@inheritDoc @lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions}
    *
    * @defaultValue undefined
    */
@@ -24,7 +24,7 @@ export interface CssExtract {
 }
 
 /**
- * The options of the CSS extract loader.
+ * {@inheritDoc @lynx-js/css-extract-webpack-plugin#LoaderOptions}
  *
  * @public
  */
@@ -69,7 +69,7 @@ export interface CssExtractRspackLoaderOptions {
 }
 
 /**
- * The options of the CSS extract plugin.
+ * {@inheritDoc @lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions}
  *
  * @public
  */
