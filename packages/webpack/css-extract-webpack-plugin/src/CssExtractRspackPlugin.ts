@@ -30,6 +30,11 @@ interface CssExtractRspackPluginOptions
 
   /**
    * The name of non-initial CSS chunk files
+   *
+   * @remarks
+   * When set, CSS chunks of lazy bundles still go to
+   * `.lynx/lazy-bundle/<name>/<layer>.css` (or `.lynx/lazy-bundle/<name>.css`
+   * when the chunk has no layer); this template applies to the other chunks.
    */
   chunkFilename?: string;
 
@@ -56,7 +61,7 @@ const require = createRequire(import.meta.url);
  *     rules: [
  *       {
  *         test: /\.css$/,
- *         uses: [CssExtractRspackPlugin.loader, 'css-loader'],
+ *         use: [CssExtractRspackPlugin.loader, 'css-loader'],
  *       },
  *     ],
  *   },
@@ -85,7 +90,7 @@ class CssExtractRspackPlugin {
    *     rules: [
    *       {
    *         test: /\.css$/,
-   *         uses: [CssExtractRspackPlugin.loader, 'css-loader'],
+   *         use: [CssExtractRspackPlugin.loader, 'css-loader'],
    *       },
    *     ],
    *   },

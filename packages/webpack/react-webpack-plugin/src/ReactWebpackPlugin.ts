@@ -301,9 +301,8 @@ class ReactWebpackPlugin {
    * The loaders for ReactLynx.
    *
    * @remarks
-   * Note that this loader will only transform JSX/TSX to valid JavaScript.
-   * For `.tsx` files, the type annotations would not be eliminated.
-   * You should use `babel-loader` or `swc-loader` to load TypeScript files.
+   * Note that this loader transforms JSX/TSX to valid JavaScript.
+   * For `.ts` and `.tsx` files, the TypeScript types are stripped as well.
    *
    * @example
    * ```js
