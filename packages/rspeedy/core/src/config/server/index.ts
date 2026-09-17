@@ -5,7 +5,7 @@
 import type { CompressOptions, ProxyConfig, ServerConfig } from '@rsbuild/core'
 
 /**
- * {@inheritdoc Config.server}
+ * {@inheritDoc Config.server}
  * @public
  */
 export interface Server {

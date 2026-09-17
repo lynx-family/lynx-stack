@@ -8,15 +8,15 @@ import type { Entry } from './entry.js'
 import type { TransformImport } from './transformImport.js'
 
 /**
- * {@inheritdoc Config.source}
+ * {@inheritDoc Config.source}
  *
  * @public
  */
 export interface Source {
   /**
-   * {@inheritdoc Resolve.alias}
+   * {@inheritDoc Resolve.alias}
    *
-   * @deprecated - Use {@link Resolve.alias} instead.
+   * @deprecated Use {@link Resolve.alias} instead.
    *
    * @defaultValue undefined
    */

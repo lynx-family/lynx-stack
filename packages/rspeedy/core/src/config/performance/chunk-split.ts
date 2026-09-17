@@ -4,7 +4,7 @@
 import type { Rspack } from '@rsbuild/core'
 
 /**
- * {@inheritdoc Performance.chunkSplit}
+ * {@inheritDoc Performance.chunkSplit}
  *
  * @deprecated Use the top-level {@link Config.splitChunks} option instead.
  *
@@ -107,7 +107,7 @@ export interface ChunkSplit {
 }
 
 /**
- * {@inheritdoc Performance.chunkSplit}
+ * {@inheritDoc Performance.chunkSplit}
  *
  * @deprecated Use the top-level {@link Config.splitChunks} option instead.
  *
@@ -115,7 +115,7 @@ export interface ChunkSplit {
  */
 export interface ChunkSplitBySize {
   /**
-   * {@inheritdoc ChunkSplit.strategy}
+   * {@inheritDoc ChunkSplit.strategy}
    */
   strategy: 'split-by-size'
 
@@ -164,7 +164,7 @@ export interface ChunkSplitBySize {
   maxSize?: number | undefined
 
   /**
-   * {@inheritdoc ChunkSplit.override}
+   * {@inheritDoc ChunkSplit.override}
    *
    * @defaultValue undefined
    */
@@ -177,7 +177,7 @@ export interface ChunkSplitBySize {
 }
 
 /**
- * {@inheritdoc Performance.chunkSplit}
+ * {@inheritDoc Performance.chunkSplit}
  *
  * @deprecated Use the top-level {@link Config.splitChunks} option instead.
  *
@@ -185,12 +185,12 @@ export interface ChunkSplitBySize {
  */
 export interface ChunkSplitCustom {
   /**
-   * {@inheritdoc ChunkSplit.strategy}
+   * {@inheritDoc ChunkSplit.strategy}
    */
   strategy: 'custom'
 
   /**
-   * {@inheritdoc ChunkSplit.override}
+   * {@inheritDoc ChunkSplit.override}
    *
    * @defaultValue undefined
    *

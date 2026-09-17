@@ -404,7 +404,7 @@ export class LynxViewElement extends HTMLElement {
    * @override
    * "false" value will be omitted
    *
-   * {@inheritdoc HTMLElement.setAttribute}
+   * See {@link https://developer.mozilla.org/docs/Web/API/Element/setAttribute | HTMLElement.setAttribute}.
    */
   override setAttribute(qualifiedName: string, value: string): void {
     if (value === 'false') {

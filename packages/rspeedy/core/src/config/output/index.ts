@@ -14,7 +14,7 @@ import type { Minify } from './minify.js'
 import type { SourceMap } from './source-map.js'
 
 /**
- * {@inheritdoc Config.output}
+ * {@inheritDoc Config.output}
  * @public
  */
 export interface Output {

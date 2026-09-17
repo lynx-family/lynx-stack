@@ -4,7 +4,7 @@
 import type { CssModuleLocalsConvention } from '../output/css-modules.js'
 
 /**
- * {@inheritdoc Tools.cssLoader}
+ * {@inheritDoc Tools.cssLoader}
  *
  * @public
  */
@@ -86,27 +86,27 @@ export interface CssLoader {
 }
 
 /**
- * {@inheritdoc CssLoader.modules}
+ * {@inheritDoc CssLoader.modules}
  *
  * @public
  */
 export interface CssLoaderModules {
   /**
-   * {@inheritdoc CssModules.auto}
+   * {@inheritDoc CssModules.auto}
    *
    * @defaultValue true
    */
   auto?: boolean | RegExp | ((filename: string) => boolean) | undefined
 
   /**
-   * {@inheritdoc CssModules.exportLocalsConvention}
+   * {@inheritDoc CssModules.exportLocalsConvention}
    *
    * @defaultValue `'camelCase'`
    */
   exportLocalsConvention?: CssModuleLocalsConvention | undefined
 
   /**
-   * {@inheritdoc CssModules.localIdentName}
+   * {@inheritDoc CssModules.localIdentName}
    *
    * @defaultValue `'[local]-[hash:base64:6]'`
    */

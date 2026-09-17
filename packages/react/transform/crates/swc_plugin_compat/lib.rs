@@ -74,7 +74,7 @@ pub struct DarkModeConfig {
   pub theme_expr: String,
 }
 
-/// {@inheritdoc CompatVisitorConfig.addComponentElement}
+/// {@inheritDoc CompatVisitorConfig.addComponentElement}
 /// @public
 #[derive(Deserialize, Clone, Debug)]
 pub struct AddComponentElementConfig {
@@ -102,7 +102,7 @@ pub struct AddComponentElementConfig {
   pub compiler_only: bool,
 }
 
-/// {@inheritdoc PluginReactLynxOptions.compat}
+/// {@inheritDoc PluginReactLynxOptions.compat}
 /// @public
 #[derive(Deserialize, Clone, Debug)]
 pub struct CompatVisitorConfig {
