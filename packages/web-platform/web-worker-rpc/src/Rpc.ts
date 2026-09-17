@@ -264,7 +264,8 @@ export class Rpc {
   /**
    * register a property of an object as a handler
    * @param endpoint
-   * @param handler
+   * @param target
+   * @param propertyName
    */
 
   registerHandlerRef<
@@ -310,12 +311,8 @@ export class Rpc {
    * It will add a setter for the target property name
    * once the value is set, we will add it as a handler.
    * @param endpoint
-   * @param handler
-   */
-  /**
-   * register a handler for an endpoint
-   * @param endpoint
-   * @param handler
+   * @param target
+   * @param propertyName
    */
   registerHandlerLazy<
     T extends RetEndpoint<any>,
@@ -374,8 +371,8 @@ export class Rpc {
   }
 
   /**
-   * Remove the handler for the name
-   * @param name
+   * Remove the handler for the endpoint
+   * @param rpc
    */
   removeHandler(rpc: RpcEndpoint<unknown[], unknown>): void {
     this.#handlerMap.delete(rpc.name);

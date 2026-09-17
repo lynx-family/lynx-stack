@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { createRsbuild } from '@rsbuild/core'
 import type { RsbuildPluginAPI } from '@rsbuild/core'
-import { describe, expect, test } from '@rstest/core'
+import { afterEach, describe, expect, rstest, test } from '@rstest/core'
 
 import { createStubRsbuild } from './createStubRsbuild.js'
 import { getLynxConfig } from '../src/config.js'
@@ -137,13 +137,6 @@ describe('pluginConfig', () => {
     })).toBe('lazy/[name].lynx.bundle')
   })
 
-  test('performance defaults to empty', async () => {
-    const lynx = await usingLynxConfig()
-
-    expect(lynx.performance).toEqual({})
-    expect(lynx.performance.profile).toBeUndefined()
-  })
-
   test('exposes performance.profile', async () => {
     const lynx = await usingLynxConfig({ performance: { profile: true } })
 
@@ -181,5 +174,35 @@ describe('pluginConfig', () => {
 
     expect(error).toBeInstanceOf(Error)
     expect((error as Error).message).toContain('`pluginLynx` has to be applied')
+  })
+
+  describe('performance.profile', () => {
+    afterEach(() => {
+      rstest.unstubAllEnvs()
+    })
+
+    test('is unset without DEBUG', async () => {
+      rstest.stubEnv('DEBUG', '')
+      const lynx = await usingLynxConfig()
+
+      expect(lynx.performance.profile).toBeUndefined()
+    })
+
+    test.each(['lynx', 'rsbuild', 'rspeedy', '*'])(
+      'defaults to true with DEBUG=%s',
+      async (value) => {
+        rstest.stubEnv('DEBUG', value)
+        const lynx = await usingLynxConfig()
+
+        expect(lynx.performance.profile).toBe(true)
+      },
+    )
+
+    test('keeps a user-set false with DEBUG', async () => {
+      rstest.stubEnv('DEBUG', 'lynx')
+      const lynx = await usingLynxConfig({ performance: { profile: false } })
+
+      expect(lynx.performance.profile).toBe(false)
+    })
   })
 })
