@@ -207,6 +207,7 @@ export const InitDataConsumer: Consumer<InitData> = /* @__PURE__ */ _InitData.Co
  * }
  * ```
  *
+ * @function
  * @public
  */
 export const useInitData: () => InitData = /* @__PURE__ */ _InitData.use();
@@ -221,6 +222,7 @@ export const useInitData: () => InitData = /* @__PURE__ */ _InitData.use();
  *   })
  * }
  * ```
+ * @function
  * @public
  */
 export const useInitDataChanged: (callback: (data: InitData) => void) => void = /* @__PURE__ */ _InitData.useChanged();
@@ -286,6 +288,7 @@ export const GlobalPropsConsumer: Consumer<GlobalProps> = /* @__PURE__ */ _Globa
  * }
  * ```
  *
+ * @function
  * @public
  */
 export const useGlobalProps: () => GlobalProps = /* @__PURE__ */ _GlobalProps.use();
@@ -302,6 +305,7 @@ export const useGlobalProps: () => GlobalProps = /* @__PURE__ */ _GlobalProps.us
  *   })
  * }
  * ```
+ * @function
  * @public
  */
 export const useGlobalPropsChanged: (callback: (data: GlobalProps) => void) => void = /* @__PURE__ */ _GlobalProps

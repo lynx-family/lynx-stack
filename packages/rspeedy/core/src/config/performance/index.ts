@@ -27,7 +27,7 @@ export type ConsoleType =
   | (string & Record<never, never>)
 
 /**
- * {@inheritdoc Config.performance}
+ * {@inheritDoc Config.performance}
  *
  * @public
  */
@@ -83,7 +83,7 @@ export interface Performance {
 
   // TODO: Remove this option in Rspeedy v1 to align with Rsbuild v2.
   /**
-   * Whether capture timing information in Lynx runtime integrations such as ReactLynx.
+   * {@inheritDoc @lynx-js/rsbuild-plugin#LynxPerformance.profile}
    *
    * @defaultValue Rspeedy sets this to `true` when `DEBUG` contains `rspeedy`; otherwise it leaves the option unset.
    *

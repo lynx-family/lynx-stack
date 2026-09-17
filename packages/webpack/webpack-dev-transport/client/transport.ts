@@ -66,19 +66,19 @@ export class LynxTransportClient implements Client {
   /** @internal */
   static EventType = 'message';
 
-  /** {@inheritdoc Client.onOpen} */
+  /** {@inheritDoc Client.onOpen} */
   onOpen(callback: () => void): void {
     callback();
   }
 
-  /** {@inheritdoc Client.onClose} */
+  /** {@inheritDoc Client.onClose} */
 
   onClose(_callback: () => void): void {
     // webpack-dev-server will retry in the `callback`
     // but `onOpen` in Lynx will never fail.
   }
 
-  /** {@inheritdoc Client.onMessage} */
+  /** {@inheritDoc Client.onMessage} */
   onMessage(
     callback: (message: string) => void,
   ): void {

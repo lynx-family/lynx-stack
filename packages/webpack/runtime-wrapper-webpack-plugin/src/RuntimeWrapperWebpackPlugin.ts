@@ -13,7 +13,7 @@ import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
  */
 interface RuntimeWrapperWebpackPluginOptions {
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion}
    */
   targetSdkVersion: string;
   /**
@@ -39,7 +39,7 @@ interface RuntimeWrapperWebpackPluginOptions {
   injectVars?: ((vars: string[]) => string[]) | string[];
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle}
    */
   experimental_isLazyBundle?: boolean;
 }

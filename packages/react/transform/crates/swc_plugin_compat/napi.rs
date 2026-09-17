@@ -66,7 +66,7 @@ fn convert_dark_mode_option_back(
   val.map(|either| either.into())
 }
 
-/// {@inheritdoc CompatVisitorConfig.addComponentElement}
+/// {@inheritDoc CompatVisitorConfig.addComponentElement}
 /// @public
 #[napi(object)]
 #[derive(Clone, Debug)]
@@ -133,7 +133,7 @@ impl From<Either<bool, CoreAddComponentElementConfig>>
   }
 }
 
-/// {@inheritdoc PluginReactLynxOptions.compat}
+/// {@inheritDoc PluginReactLynxOptions.compat}
 /// @public
 #[napi(object)]
 #[derive(Clone, Debug)]

@@ -107,6 +107,7 @@ function pickChildrenProps(
 /**
  * Creates a ReactLynx element using the snapshot runtime.
  *
+ * @function
  * @public
  */
 export const createElement =
@@ -143,6 +144,7 @@ export const createElement =
 /**
  * Clones a ReactLynx element using the snapshot runtime.
  *
+ * @function
  * @public
  */
 export const cloneElement =

@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * {@inheritdoc Output.cssModules}
+ * {@inheritDoc Output.cssModules}
  *
  * @public
  */
@@ -135,7 +135,7 @@ export interface CssModules {
 }
 
 /**
- * {@inheritdoc CssModules.exportLocalsConvention}
+ * {@inheritDoc CssModules.exportLocalsConvention}
  *
  * @public
  */
