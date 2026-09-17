@@ -15,13 +15,13 @@ import { clearConfigCacheForTesting } from '../../../src/snapshot/worklet/functi
 import { MainThreadRef, isMainThreadRef, useMainThreadRef } from '../../../src/core/main-thread-ref';
 import { isMainThreadFunction } from '../../../src/core/main-thread-function';
 import { takeMainThreadRefInitValuePatch } from '../../../src/core/main-thread-ref-init-value';
-import { captureMainThreadObject } from '../../../src/snapshot/worklet/capture';
+import { captureMainThreadObject } from '../../../src/core/capture-main-thread-object';
 import {
   defineMainThreadObjectType,
   isMainThreadObjectHandle,
   registerMainThreadObjectDefinition,
   useMainThreadObject,
-} from '../../../src/snapshot/worklet/ref/mainThreadObject';
+} from '../../../src/core/main-thread-object';
 import { globalEnvManager } from '../utils/envManager';
 import { injectUpdateMTRefInitValue } from '../../../src/snapshot/worklet/ref/updateInitValue';
 

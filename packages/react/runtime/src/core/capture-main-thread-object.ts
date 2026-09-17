@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { isMainThreadObjectHandle } from './ref/mainThreadObjectHandleRegistry.js';
+import { isMainThreadObjectHandle } from './main-thread-object-handle-registry.js';
 
 /**
  * Preserve opaque main-thread object handles when the worklet transform narrows a
