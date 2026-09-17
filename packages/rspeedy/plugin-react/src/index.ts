@@ -33,7 +33,9 @@ export type {
  */
 interface LynxTemplatePlugin {
   /**
-   * Returns the {@link TemplateHooks} of a compilation.
+   * Returns the
+   * {@link @lynx-js/template-webpack-plugin#TemplateHooks | TemplateHooks}
+   * of a compilation.
    */
   getLynxTemplatePluginHooks:
     typeof InnerLynxTemplatePlugin.getLynxTemplatePluginHooks

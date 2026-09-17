@@ -790,7 +790,6 @@ function normalizePluginExternal(
  * import { defineConfig } from '@rsbuild/core'
  *
  * export default defineConfig({
- *   environments: { lynx: {} },
  *   plugins: [
  *     pluginReactLynx(),
  *     pluginExternalBundle({

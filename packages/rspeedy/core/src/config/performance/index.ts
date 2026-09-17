@@ -89,7 +89,7 @@ export interface Performance {
   /**
    * Whether capture timing information in Lynx runtime integrations such as ReactLynx.
    *
-   * @defaultValue Rspeedy and `pluginReactLynx` set this to `true` when `DEBUG` contains `lynx`, `rspeedy` or `*` (Rspeedy also accepts `rsbuild`); otherwise the option is left unset.
+   * @defaultValue `true` when `DEBUG=lynx`, otherwise `undefined`
    *
    * @example
    *
