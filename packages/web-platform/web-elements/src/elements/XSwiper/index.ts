@@ -10,13 +10,12 @@ export { SwiperItem } from './SwiperItem.js';
  * `x-swiper` provides a swipeable container for items.
  *
  * Attributes:
- * - `mode`: 'normal' | 'carousel' | 'flat-coverflow'.
+ * - `mode`: 'normal' | 'carousel' | 'coverflow' | 'flat-coverflow'.
  * - `vertical`: 'true' | 'false', vertical scrolling.
  * - `circular`: 'true' | 'false', circular scrolling.
  * - `current`: Current index.
  * - `autoplay`: 'true' | 'false'.
  * - `interval`: Autoplay interval in ms (default 5000).
- * - `duration`: Animation duration.
  * - `smooth-scroll`: 'true' | 'false'.
  * - `indicator-dots`: 'true' | 'false', show indicator dots.
  * - `indicator-color`: Color of inactive indicator dots.

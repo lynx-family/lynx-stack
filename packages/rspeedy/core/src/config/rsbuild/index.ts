@@ -15,8 +15,8 @@ export function toRsbuildConfig(
     dev: {
       assetPrefix: config.dev?.assetPrefix,
 
-      hmr: config.dev?.hmr ?? true,
-      liveReload: config.dev?.liveReload ?? true,
+      hmr: config.dev?.hmr,
+      liveReload: config.dev?.liveReload,
       watchFiles: config.dev?.watchFiles,
       writeToDisk: config.dev?.writeToDisk,
 
@@ -112,7 +112,7 @@ export function toRsbuildConfig(
         | false
         | undefined,
 
-      printFileSize: config.performance?.printFileSize ?? true,
+      printFileSize: config.performance?.printFileSize,
     },
     tools: {
       bundlerChain: config.tools?.bundlerChain,

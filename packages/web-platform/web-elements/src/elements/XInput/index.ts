@@ -24,8 +24,8 @@
  *
  * Events:
  * - `input` (mapped to `lynxinput`): Fired on input.
- * - `focus`: Fired on focus.
- * - `blur`: Fired on blur.
+ * - `focus` (mapped to `lynxfocus`): Fired on focus.
+ * - `blur` (mapped to `lynxblur`): Fired on blur.
  * - `confirm` (submit): Fired on enter key.
  *
  * Methods:

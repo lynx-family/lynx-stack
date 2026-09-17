@@ -8,6 +8,7 @@ import { describe, expect, test } from '@rstest/core'
 
 import { toRsbuildConfig } from '../../src/config/rsbuild/index.js'
 import type { Config } from '../../src/index.js'
+import { createStubRspeedy } from '../createStubRspeedy.js'
 
 describe('Config - toRsBuildConfig', () => {
   describe('splitChunks', () => {
@@ -66,6 +67,16 @@ describe('Config - toRsBuildConfig', () => {
   })
 
   describe('Dev', () => {
+    test('uses the Rsbuild defaults of dev.hmr and dev.liveReload', async () => {
+      const rspeedy = await createStubRspeedy({})
+
+      await rspeedy.initConfigs()
+
+      const { dev } = rspeedy.getNormalizedConfig()
+      expect(dev.hmr).toBe(true)
+      expect(dev.liveReload).toBe(true)
+    })
+
     test('transform empty dev', () => {
       const rsbuildConfig = toRsbuildConfig({
         dev: void 0,
@@ -73,8 +84,8 @@ describe('Config - toRsBuildConfig', () => {
       expect(rsbuildConfig.dev).toMatchInlineSnapshot(`
         {
           "assetPrefix": undefined,
-          "hmr": true,
-          "liveReload": true,
+          "hmr": undefined,
+          "liveReload": undefined,
           "progressBar": undefined,
           "watchFiles": undefined,
           "writeToDisk": undefined,
@@ -625,6 +636,16 @@ describe('Config - toRsBuildConfig', () => {
         performance: { removeConsole: false },
       })
       expect(rsbuildConfig.performance?.removeConsole).toBe(false)
+    })
+
+    test('uses the Rsbuild default of performance.printFileSize', async () => {
+      const rspeedy = await createStubRspeedy({})
+
+      await rspeedy.initConfigs()
+
+      expect(rspeedy.getNormalizedConfig().performance.printFileSize).toBe(
+        true,
+      )
     })
 
     test('transform performance.printFileSize false', () => {
