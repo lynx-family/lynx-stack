@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { ToolsConfig } from '@rsbuild/core'
-import type { RsdoctorRspackPluginOptions as RawRsdoctorRspackPluginOptions } from '@rsdoctor/core'
+import type { CompatibleRsdoctorOptions } from '@rsdoctor/core'
 
 import type { CssExtract } from './css-extract.js'
 import type { CssLoader } from './css-loader.js'
@@ -16,7 +16,7 @@ import type { CssLoader } from './css-loader.js'
  * @public
  */
 export interface RsdoctorRspackPluginOptions
-  extends Omit<RawRsdoctorRspackPluginOptions<[]>, 'linter' | 'sdkInstance'>
+  extends Omit<CompatibleRsdoctorOptions<[]>, 'linter' | 'sdkInstance'>
 {
   /** Custom SDK instances are opaque to the config validator. */
   sdkInstance?: object

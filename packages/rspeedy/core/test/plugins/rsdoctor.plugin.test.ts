@@ -53,7 +53,7 @@ describe('Plugins - Rsdoctor', () => {
     expect(plugins).toEqual([plugin])
   })
 
-  test('validates Rsdoctor 2 options and rejects the removed native plugin switch', async () => {
+  test('validates current and legacy Rsdoctor options', async () => {
     const { validateConfig } = await import('../../src/config/validate.js')
 
     expect(
@@ -71,7 +71,38 @@ describe('Plugins - Rsdoctor', () => {
       validateConfig({
         tools: { rsdoctor: { experiments: { enableNativePlugin: false } } },
       }).success,
-    ).toBe(false)
+    ).toBe(true)
+  })
+
+  test('migrates legacy Rsdoctor options before plugin construction', async () => {
+    rstest.stubEnv('RSDOCTOR', 'true')
+
+    const { createStubRspeedy } = await import('../createStubRspeedy.js')
+    const rsbuild = await createStubRspeedy({
+      tools: {
+        rsdoctor: {
+          port: 3300,
+          mode: 'brief',
+          brief: { writeDataJson: true },
+          experiments: { enableNativePlugin: false },
+          supports: { generateTileGraph: true },
+        },
+      },
+    })
+    const compiler = await rsbuild.createCompiler() as Rspack.Compiler
+    const { options } = compiler.options.plugins
+      ?.find(
+        (plugin) => (typeof plugin === 'object'
+          && plugin?.['isRsdoctorPlugin'] === true),
+      ) as RsdoctorRspackPlugin<[]>
+
+    expect(options.server.port).toBe(3300)
+    expect(options.output).toMatchObject({
+      mode: 'brief',
+      options: { type: ['html', 'json'] },
+    })
+    expect(options).not.toHaveProperty('experiments')
+    expect(options.supports).not.toHaveProperty('generateTileGraph')
   })
 
   test('linter.rules.ecma-version-check', async () => {
