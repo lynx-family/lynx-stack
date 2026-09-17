@@ -82,10 +82,22 @@ pnpm run test --update
 
 ### 5. API Documentation
 
+The API reference in `docs/` (the pages synced to lynxjs.org) is generated from the exports and TSDoc comments of the public packages when the site builds; the generated pages are not committed. When you change a public API — an export, a type, an option, a default value or its TSDoc — check the documentation in the same change:
+
 ```bash
-# Update API documentation (ALWAYS commit changes)
+# Generate the pages and build the site (fails on any TypeDoc warning or dead link; ALWAYS commit docs/i18n/zh.json)
+pnpm turbo build --filter docs
+
+# Translate the strings that the build left empty in docs/i18n/zh.json (CI fails while a string is untranslated)
+pnpm --filter docs i18n:check
+
+# Update the API reports (ALWAYS commit changes)
 pnpm turbo api-extractor -- --local
 ```
+
+- Write TSDoc for every public export and option: a one-sentence summary, `@defaultValue` when there is a default, and `@example` for options that need one. The pages render it as written.
+- A package is documented from `src/index.ts`; add a `typedoc.json` to the package for other entry points. Describe the package with `@packageDocumentation`.
+- See `docs/README.md` for how the pages are produced.
 
 ### 6. Changesets (for contributions)
 
@@ -114,6 +126,14 @@ rustup target add wasm32-unknown-unknown
 ```bash
 pnpm turbo api-extractor -- --local
 git add packages/**/*.api.md
+```
+
+**Issue**: "API Docs Translations Changed" error
+**Solution**: Build the API reference, translate the new strings and commit them:
+
+```bash
+pnpm turbo build --filter docs
+git add docs/i18n
 ```
 
 **Issue**: Tests fail with missing build artifacts
@@ -171,7 +191,7 @@ export NODE_OPTIONS="--max-old-space-size=32768"
 The CI runs these checks (replicate locally for confidence):
 
 1. **Code style**: `pnpm dprint check && pnpm biome check`
-2. **API consistency**: `pnpm turbo api-extractor`
+2. **API consistency**: `pnpm turbo api-extractor`, and `pnpm turbo build --filter docs` leaves no changes in `docs/i18n`
 3. **Changeset validation**: `pnpm changeset status --since=origin/main`
 4. **Linting**: `pnpm eslint .` (allow 5+ minutes)
 5. **TypeScript compilation**: Part of `pnpm turbo build`

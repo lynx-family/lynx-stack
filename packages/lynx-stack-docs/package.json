@@ -1,0 +1,30 @@
+{
+  "name": "@lynx-js/lynx-stack-docs",
+  "version": "0.0.0",
+  "description": "The Lynx Stack API reference as MDX pages: the build configuration, the Rsbuild plugins, ReactLynx and every @lynx-js package.",
+  "keywords": [
+    "Lynx",
+    "documentation",
+    "API reference"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/lynx-stack-docs"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    "./package.json": "./package.json",
+    "./shown-packages.json": "./shown-packages.json"
+  },
+  "files": [
+    "content",
+    "shown-packages.json",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node scripts/copy-content.js"
+  }
+}

@@ -217,6 +217,20 @@ jobs:
           echo ""
           exit 1;
         fi
+  test-docs:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    with:
+      runs-on: lynx-ubuntu-26.04-medium
+      run: |
+        pnpm turbo build --filter docs
+        if test "$(git status --porcelain -- docs/i18n | wc -l)" -gt 0 ; then
+          echo "::error::API Docs Translations Changed"
+          git diff -- docs/i18n
+          echo "::error::Please run 'pnpm turbo build --filter docs' and commit docs/i18n."
+          exit 1;
+        fi
+        pnpm --filter docs run i18n:check
   test-publish:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -539,6 +553,7 @@ jobs:
       - playwright-web-elements
       - sherif
       - test-api
+      - test-docs
       - test-publish
       - test-react
       - test-rust

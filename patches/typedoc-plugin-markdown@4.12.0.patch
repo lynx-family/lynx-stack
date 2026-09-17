@@ -1,0 +1,18 @@
+diff --git a/dist/libs/utils/remove-first-scoped-directory.js b/dist/libs/utils/remove-first-scoped-directory.js
+index d4326570b083e7f77730dd1f1aebf49abd3cd8f7..4d5c39f3380a5046bdc5ce8e431de28e96f81d9e 100644
+--- a/dist/libs/utils/remove-first-scoped-directory.js
++++ b/dist/libs/utils/remove-first-scoped-directory.js
+@@ -1,10 +1,8 @@
+-import * as path from 'path';
+-export function removeFirstScopedDirectory(urlString, sep) {
+-    const separator = sep || path.sep;
+-    const pathParts = urlString.replace(/\//g, path.sep).split(separator);
++export function removeFirstScopedDirectory(urlString, sep = '/') {
++    const pathParts = urlString.split(sep);
+     const scopedDirectoryIndex = pathParts.findIndex((part) => part.startsWith('@'));
+     if (scopedDirectoryIndex !== -1) {
+         pathParts.splice(scopedDirectoryIndex, 1);
+     }
+-    return pathParts.join(separator);
++    return pathParts.join(sep);
+ }

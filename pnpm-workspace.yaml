@@ -6,6 +6,7 @@ packages:
   - packages/genui/*
   - packages/i18n/*
   - packages/lynx/*
+  - packages/lynx-stack-docs
   - packages/repl
   - packages/react
   - packages/react-signals
@@ -27,6 +28,7 @@ packages:
   - packages/web-platform/*
   - packages/webpack/*
   - website
+  - docs
 
 # From `@pnpm/plugin-better-defaults`
 enablePrePostScripts: false
@@ -170,6 +172,8 @@ packageExtensions:
 patchedDependencies:
   "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"
   "@rollup/plugin-typescript": "patches/@rollup__plugin-typescript.patch"
+  # https://github.com/typedoc2md/typedoc-plugin-markdown/issues/903
+  "typedoc-plugin-markdown@4.12.0": "patches/typedoc-plugin-markdown@4.12.0.patch"
 
 strictDepBuilds: true
 

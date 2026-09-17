@@ -28,6 +28,8 @@ interface GlobalPropsApi<Data> {
  * The interface you can extends so that the `useGlobalProps` returning value can be customized
  *
  * @public
+ *
+ * @group Types
  */
 export interface GlobalProps {}
 

@@ -219,6 +219,7 @@ packageExtensionsChecksum: sha256-Y9ZLHWMP51V1VaeUicx/UxFRX96fq7QFLXtege8aEOA=
 patchedDependencies:
   '@napi-rs/cli@2.18.4': ba947eb1c48b2a85834e99f92cbbae896722ce61fd5ae67507a3be9041959ebd
   '@rollup/plugin-typescript': 926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d
+  typedoc-plugin-markdown@4.12.0: 88cbe2f3970680b5e6fbc83b8b4f85b3523c1a30e310d6b0b90373802dea5110
 
 importers:
 
@@ -399,6 +400,37 @@ importers:
       '@types/react':
         specifier: ^19.2.18
         version: 19.2.18
+
+  docs:
+    dependencies:
+      react:
+        specifier: 19.2.8
+        version: 19.2.8
+      react-dom:
+        specifier: 19.2.8
+        version: 19.2.8(react@19.2.8)
+    devDependencies:
+      '@rspress/core':
+        specifier: 2.0.21
+        version: 2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
+      '@rspress/plugin-typedoc':
+        specifier: 2.0.21
+        version: 2.0.21(@rspress/core@2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))(typescript@6.0.3)
+      '@types/react':
+        specifier: npm:@types/react@^19.2.18
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.2.4
+        version: 19.2.4(@types/react@19.2.18)
+      typedoc:
+        specifier: ^0.28.20
+        version: 0.28.20(typescript@6.0.3)
+      typedoc-plugin-markdown:
+        specifier: 4.12.0
+        version: 4.12.0(patch_hash=88cbe2f3970680b5e6fbc83b8b4f85b3523c1a30e310d6b0b90373802dea5110)(typedoc@0.28.20(typescript@6.0.3))
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
 
   examples/gesture:
     dependencies:
@@ -1485,6 +1517,8 @@ importers:
         specifier: 0.2.1
         version: 0.2.1(@rsbuild/core@2.2.4(core-js@3.50.0))(i18next-cli@1.67.7(@swc/helpers@0.5.23)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(typescript@6.0.3))(rollup@4.62.2)
 
+  packages/lynx-stack-docs: {}
+
   packages/lynx/autolink-codegen:
     devDependencies:
       typescript:
@@ -2355,6 +2389,9 @@ importers:
       '@lynx-js/lynx-bundle-rslib-config':
         specifier: workspace:*
         version: link:../lynx-bundle-rslib-config
+      '@lynx-js/lynx-stack-docs':
+        specifier: workspace:*
+        version: link:../../lynx-stack-docs
       '@lynx-js/motion':
         specifier: workspace:*
         version: link:../../motion
@@ -6325,6 +6362,12 @@ packages:
 
   '@rspress/plugin-client-redirects@2.0.21':
     resolution: {integrity: sha512-21giX10Blom+dOJBJOxXZUS+pjez1Tb9iNA7L7km8uUkn5L45KfdQvYqbBHY6Nv6L46zaDdz0Mt97eAqBPgNoA==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    peerDependencies:
+      '@rspress/core': ^2.0.10
+
+  '@rspress/plugin-typedoc@2.0.21':
+    resolution: {integrity: sha512-xM53g9wI9vl1mDirYn1wfTnh0Q+Fb+zkp0VxHYVQV8lJf/sHvxerf5CHlVSznBdd4Q1BMC5g/kIqdWGs7mqNYQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     peerDependencies:
       '@rspress/core': ^2.0.10
@@ -12449,6 +12492,12 @@ packages:
   typedarray-to-buffer@3.1.5:
     resolution: {integrity: sha512-zdu8XMNEDepKKR+XYOXAVPtWui0ly0NtohUscw+UmaHiAWT8hrV1rr//H6V+0DvJ3OQ19S979M0laLfX8rm82Q==}
 
+  typedoc-plugin-markdown@4.12.0:
+    resolution: {integrity: sha512-eJDEMAfxCmede22c/Jw7d0FA13ggAQv+KkwQYKYCdqI02cin6Rc9QRwbG/7XvvHWinuFejySnZVUWDtvGk3Vbg==}
+    engines: {node: '>= 18'}
+    peerDependencies:
+      typedoc: 0.28.x
+
   typedoc@0.28.20:
     resolution: {integrity: sha512-uSKqkh8Cr48vllnEy+jdaAgOeR6Y+QCBW7usgUsKj7gJEfR7stw9U/fE49LBnj2tPRKPY0c0EBJSWe9Appmplg==}
     engines: {node: '>= 18', pnpm: '>= 10'}
@@ -16302,6 +16351,14 @@ snapshots:
   '@rspress/plugin-client-redirects@2.0.21(@rspress/core@2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))':
     dependencies:
       '@rspress/core': 2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
+
+  '@rspress/plugin-typedoc@2.0.21(@rspress/core@2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))(typescript@6.0.3)':
+    dependencies:
+      '@rspress/core': 2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
+      typedoc: 0.28.20(typescript@6.0.3)
+      typedoc-plugin-markdown: 4.12.0(patch_hash=88cbe2f3970680b5e6fbc83b8b4f85b3523c1a30e310d6b0b90373802dea5110)(typedoc@0.28.20(typescript@6.0.3))
+    transitivePeerDependencies:
+      - typescript
 
   '@rspress/shared@2.0.21(core-js@3.50.0)(supports-color@10.2.2)':
     dependencies:
@@ -23083,6 +23140,10 @@ snapshots:
   typedarray-to-buffer@3.1.5:
     dependencies:
       is-typedarray: 1.0.0
+
+  typedoc-plugin-markdown@4.12.0(patch_hash=88cbe2f3970680b5e6fbc83b8b4f85b3523c1a30e310d6b0b90373802dea5110)(typedoc@0.28.20(typescript@6.0.3)):
+    dependencies:
+      typedoc: 0.28.20(typescript@6.0.3)
 
   typedoc@0.28.20(typescript@6.0.3):
     dependencies:

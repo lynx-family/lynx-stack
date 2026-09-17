@@ -101,6 +101,8 @@ export function resetBackgroundFunctionRuntime(): void {
  * @param f - The js function to be called.
  * @returns A function. Calling which with the arguments to be passed to the js function to trigger it on the background thread. This function returns a promise that resolves to the return value of the js function.
  * @public
+ *
+ * @group Functions
  */
 export function runOnBackground<R, Fn extends (...args: any[]) => R>(
   f: Fn,

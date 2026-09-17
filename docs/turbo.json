@@ -1,0 +1,45 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": [
+    "//"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": [
+        "//#build",
+        "@lynx-js/reactlynx-testing-library#build"
+      ],
+      "env": [
+        "NODE_ENV"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "../packages/**/src/**",
+        "../packages/**/types/**",
+        "../packages/**/docs/**",
+        "../packages/**/package.json",
+        "../packages/**/README.md",
+        "../packages/**/typedoc.json",
+        "../packages/**/tsdoc.json",
+        "../packages/**/tsconfig*.json",
+        "!../packages/**/node_modules/**"
+      ],
+      "outputs": [
+        "doc_build/**",
+        "content/*/api/**",
+        "i18n/**"
+      ]
+    },
+    "dev": {
+      "dependsOn": [
+        "//#build",
+        "@lynx-js/reactlynx-testing-library#build"
+      ],
+      "env": [
+        "NODE_ENV"
+      ],
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

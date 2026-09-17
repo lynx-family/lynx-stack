@@ -1,0 +1,30 @@
+{
+  "name": "docs",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The API reference site of the lynx-stack packages, generated from TSDoc",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "rspress build",
+    "dev": "rspress dev",
+    "i18n:check": "node -e \"const d = require('./i18n/zh.json'); const missing = Object.keys(d).filter(k => !d[k]); if (missing.length) { console.error(missing.join('\\n\\n')); process.exit(1) }\"",
+    "preview": "rspress preview"
+  },
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@rspress/core": "2.0.21",
+    "@rspress/plugin-typedoc": "2.0.21",
+    "@types/react": "npm:@types/react@^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "typedoc": "^0.28.20",
+    "typedoc-plugin-markdown": "4.12.0",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": "^22 || ^24"
+  }
+}

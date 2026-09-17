@@ -1,0 +1,20 @@
+[
+  {
+    "group": "Build tools",
+    "packages": [
+      "@lynx-js/rsbuild-plugin",
+      "@lynx-js/react-rsbuild-plugin",
+      "@lynx-js/qrcode-rsbuild-plugin",
+      "@lynx-js/external-bundle-rsbuild-plugin",
+      "@lynx-js/config-rsbuild-plugin",
+      "@lynx-js/lynx-bundle-rslib-config",
+      "@lynx-js/rspeedy"
+    ]
+  },
+  {
+    "group": "Libraries and tools",
+    "packages": [
+      "@lynx-js/testing-environment"
+    ]
+  }
+]
