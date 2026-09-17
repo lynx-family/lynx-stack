@@ -9,9 +9,10 @@ function randomId(prefix = '') {
 }
 
 /**
- * Build a single-Text fallback message stream from a plain string. Used by
- * transports / `Session.ingest` callers that receive free-form text from
- * the agent instead of structured protocol messages.
+ * Build a single-Text fallback message stream (surface `default`, catalog
+ * `inline-text`, root `root-text`) from a plain string. Used by
+ * `normalizePayloadToMessages` and by transports that receive free-form text
+ * from the agent instead of structured protocol messages.
  */
 export function createFallbackMessagesFromPlainText(
   text: string,
@@ -172,9 +173,11 @@ export function normalizePayloadToMessages(
 }
 
 /**
- * Tag messages with the given messageId and report whether any of them
- * carries a non-empty `updateComponents`. Also dedupes `createSurface`
- * messages against the set of currently-active surfaces.
+ * Filter a message batch for processing and report whether any kept message
+ * carries a non-empty `updateComponents`. Mutates its inputs: sets
+ * `messageId` only on messages that lack one, and updates `activeSurfaceIds`
+ * as `deleteSurface` / `createSurface` messages are seen. `createSurface`
+ * messages for surfaces that are already active are dropped.
  */
 export function prepareMessagesForProcessing(
   rawMessages: ServerToClientMessage[],

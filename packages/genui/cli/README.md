@@ -38,22 +38,23 @@ Generate catalog artifacts for a custom catalog:
 genui a2ui generate catalog \
   --catalog-dir src/catalog \
   --source src/functions \
-  --out-dir dist/catalog
+  --out-dir dist
 ```
 
 Generate a system prompt for a custom catalog:
 
 ```bash
 genui a2ui generate prompt \
-  --catalog-dir dist/catalog \
+  --catalog-dir dist \
   --catalog-id https://example.com/catalogs/custom/v1/catalog.json \
   --out dist/a2ui-system-prompt.txt
 ```
 
 `generate prompt` uses the built-in A2UI basic catalog by default. Pass
 `--catalog-dir` only when generating a prompt for custom generated catalog
-artifacts. When `--catalog-dir` is provided, the directory must contain files
-like `<Component>/catalog.json`.
+artifacts. When `--catalog-dir` is provided, the directory or its parent must
+contain the `catalog.json` written by `generate catalog`, or the directory must
+contain files like `<Component>/catalog.json`.
 
 ## OpenUI Commands
 
@@ -99,8 +100,8 @@ Useful options:
 - `--source <path>`: source file or directory to scan for catalog functions.
   Repeatable.
 - `--typedoc-json <file>`: read an existing TypeDoc JSON project.
-- `--out-dir <dir>`: output directory for generated catalog artifacts. Defaults
-  to `dist/catalog`.
+- `--out-dir <dir>`: root directory for `catalog.json` and
+  `catalog/<Name>/catalog.json`. Defaults to `dist`.
 
 ### `genui a2ui generate prompt`
 
@@ -120,7 +121,7 @@ Useful options:
 Existing A2UI commands still work:
 
 ```bash
-a2ui-cli generate catalog --catalog-dir src/catalog --out-dir dist/catalog
+a2ui-cli generate catalog --catalog-dir src/catalog --out-dir dist
 a2ui-cli generate prompt --out dist/a2ui-system-prompt.txt
 ```
 

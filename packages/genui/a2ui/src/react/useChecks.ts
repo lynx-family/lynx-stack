@@ -93,11 +93,10 @@ function evaluateChecks(
 }
 
 /**
- * Evaluate an input component's `checks` array reactively. Returns the
- * current outcome plus the first failure message (handy for inline error
- * rendering). When an enclosing `<FormContext.Provider>` exists, the input
- * is also registered with it so Buttons in the same form can react to
- * `isValid`.
+ * Evaluate an input component's `checks` array reactively against the
+ * surface's data model and the catalog's functions, re-running when bound
+ * data changes. Returns the current outcome plus the first failure message
+ * (handy for inline error rendering).
  */
 export function useChecks(
   options: {

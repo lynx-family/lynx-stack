@@ -26,7 +26,9 @@ export interface OpenUIContextValue {
 
   /**
    * Trigger an action. Accepts either:
-   * - ActionPlan (v0.5): runs steps sequentially (Run, Set, ToAssistant, OpenUrl)
+   * - ActionPlan (v0.5): runs steps sequentially (Run, Set, Reset, ToAssistant,
+   *   OpenUrl) and stops if a Run mutation fails. When the renderer is given a
+   *   pre-parsed `result`, only ToAssistant and OpenUrl run; other steps warn.
    * - Legacy action config (v0.1): object with optional type and params.
    * - Nothing: fires ContinueConversation with the label
    */
@@ -56,7 +58,7 @@ export interface OpenUIContextValue {
    * Set a form field value.
    *
    * @param formName - The form's name prop.
-   * @param componentType - The component type (e.g. "Input", "Select").
+   * @param componentType - The component type (e.g. "TextField", "RadioGroup").
    * @param name - The field's name prop.
    * @param value - The new value.
    * @param shouldTriggerSaveCallback - When true, persists state via onStateUpdate.

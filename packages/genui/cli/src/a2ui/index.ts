@@ -29,13 +29,14 @@ Options:
   --typedoc-json <file>
                        Read an existing TypeDoc JSON project instead of
                        running TypeDoc conversion.
-  --out-dir <dir>      Output directory for component catalog.json files.
+  --out-dir <dir>      Root directory for catalog.json and
+                       catalog/<Name>/catalog.json files.
   --version            Print the package version.
   --help               Print this help message.
 
 Defaults:
   --catalog-dir src/catalog
-  --out-dir dist/catalog
+  --out-dir dist
 `;
 }
 

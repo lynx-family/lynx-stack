@@ -49,10 +49,12 @@ export interface A2UIProps {
    */
   messageStore: MessageStore;
   /**
-   * Components the renderer is allowed to instantiate. Each item is either
-   * a bare component (name read from `displayName ?? name`) or a tuple
+   * Components and functions the renderer is allowed to use. Each item is
+   * a bare component (name read from `displayName ?? name`), a tuple
    * `[component, manifest]` where the manifest is the JSON the extractor
-   * emits at `dist/catalog/<Name>/catalog.json`.
+   * emits at `dist/catalog/<Name>/catalog.json`, a resolved
+   * `{ name, component, schema? }` entry, or a function entry such as those
+   * in `basicFunctions`.
    */
   catalogs: readonly CatalogInput[];
   /**
