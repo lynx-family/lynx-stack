@@ -795,7 +795,7 @@ describe('Plugins - Terminal', () => {
       expect(wrapped('http://example.com/main.lynx.bundle')).toEqual({})
     })
 
-    test('appends fullscreen after the user-defined entries', () => {
+    test('puts fullscreen before the user-defined entries', () => {
       const wrapped = withFullscreenSchema(() => ({
         http: 'http://example.com/main.lynx.bundle',
         lynx: 'lynx://example.com/main.lynx.bundle',
@@ -806,7 +806,7 @@ describe('Plugins - Terminal', () => {
         string
       >
 
-      expect(Object.keys(result)).toEqual(['http', 'lynx', 'fullscreen'])
+      expect(Object.keys(result)).toEqual(['fullscreen', 'http', 'lynx'])
     })
   })
 })
