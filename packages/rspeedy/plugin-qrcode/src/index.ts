@@ -50,10 +50,12 @@ export interface PluginQRCodeOptions {
    *
    * ```js
    * import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
-   * import { defineConfig } from '@lynx-js/rspeedy'
+   * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+   * import { defineConfig } from '@rsbuild/core'
    *
    * export default defineConfig({
    *   plugins: [
+   *     pluginReactLynx(),
    *     pluginQRCode({
    *       schema(url) {
    *         return `lynx://${url}?dev=1`
@@ -71,10 +73,12 @@ export interface PluginQRCodeOptions {
    *
    * ```js
    * import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
-   * import { defineConfig } from '@lynx-js/rspeedy'
+   * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+   * import { defineConfig } from '@rsbuild/core'
    *
    * export default defineConfig({
    *   plugins: [
+   *     pluginReactLynx(),
    *     pluginQRCode({
    *       schema(url) {
    *         return {

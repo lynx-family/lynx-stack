@@ -782,7 +782,7 @@ function normalizePluginExternal(
  *
  * @example
  * ```ts
- * // lynx.config.ts
+ * // rsbuild.config.ts
  * import { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin'
  * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
  *
