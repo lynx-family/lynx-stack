@@ -4,6 +4,7 @@
 
 ```ts
 
+import type { CompatibleRsdoctorOptions } from '@rsdoctor/core';
 import type { CompressOptions } from '@rsbuild/core';
 import type { CreateRsbuildOptions } from '@rsbuild/core';
 import type { DataUriLimit } from '@rsbuild/core';
@@ -18,7 +19,6 @@ import { RsbuildPlugin } from '@rsbuild/core';
 import { RsbuildPluginAPI } from '@rsbuild/core';
 import type { RsbuildPlugins } from '@rsbuild/core';
 import { version as rsbuildVersion } from '@rsbuild/core';
-import type { RsdoctorRspackPluginOptions as RsdoctorRspackPluginOptions_2 } from '@rsdoctor/core';
 import { Rspack } from '@rsbuild/core';
 import { rspack } from '@rsbuild/core';
 import type { ServerConfig } from '@rsbuild/core';
@@ -286,7 +286,7 @@ export { RsbuildPluginAPI }
 export { rsbuildVersion }
 
 // @public
-export interface RsdoctorRspackPluginOptions extends Omit<RsdoctorRspackPluginOptions_2<[]>, 'linter' | 'sdkInstance'> {
+export interface RsdoctorRspackPluginOptions extends Omit<CompatibleRsdoctorOptions<[]>, 'linter' | 'sdkInstance'> {
     // (undocumented)
     linter?: {
         rules?: Record<string, unknown>;
