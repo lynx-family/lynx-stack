@@ -75,7 +75,7 @@ describe('Config - toRsBuildConfig', () => {
           "assetPrefix": undefined,
           "hmr": true,
           "liveReload": true,
-          "progressBar": true,
+          "progressBar": undefined,
           "watchFiles": undefined,
           "writeToDisk": undefined,
         }
