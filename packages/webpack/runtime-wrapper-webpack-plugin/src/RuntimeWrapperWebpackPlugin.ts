@@ -17,7 +17,8 @@ interface RuntimeWrapperWebpackPluginOptions {
    */
   targetSdkVersion: string;
   /**
-   * Include all modules that pass test assertion.
+   * Wrap the emitted JS assets whose filenames match this condition.
+   * Assets marked as main thread are never wrapped.
    *
    * @defaultValue `/\.js$/`
    *
@@ -34,7 +35,7 @@ interface RuntimeWrapperWebpackPluginOptions {
   bannerType: (filename: string) => 'script' | 'bundle';
 
   /**
-   * The variables to be injected into the chunk.
+   * A function that receives the default variable list and returns the list to inject.
    */
   injectVars?: ((vars: string[]) => string[]) | string[];
 

@@ -21,8 +21,8 @@ export { ListItem } from './ListItem.js';
  * Events:
  * - `scrolltoupper`: Reached top threshold.
  * - `scrolltolower`: Reached bottom threshold.
- * - `scroll`: Fired on scroll.
- * - `scrollend`: Fired when scrolling stops.
+ * - `scroll` (mapped to `lynxscroll`): Fired on scroll.
+ * - `scrollend` (mapped to `lynxscrollend`): Fired when scrolling stops.
  * - `snap`: Fired on scroll snap.
  *
  * Methods:
@@ -31,7 +31,7 @@ export { ListItem } from './ListItem.js';
  *
  * CSS:
  * - `list-type="flow"` uses `display: grid`.
- * - `list-type="waterfall"` uses `display: flex` (column) / `display: row` with absolute positioning for items.
+ * - `list-type="waterfall"` uses `display: flex` (`flex-direction: column`, or `row` when horizontal) with absolute positioning for items.
  * - `sticky` items use `position: sticky`.
  */
 export { XList } from './XList.js';

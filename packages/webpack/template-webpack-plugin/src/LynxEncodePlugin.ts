@@ -86,7 +86,7 @@ export class LynxEncodePlugin {
    *   plugins: [
    *     new LynxEncodePlugin({
    *       ...LynxEncodePlugin.defaultOptions,
-   *       enableRemoveCSSScope: true,
+   *       inlineScripts: false,
    *     }),
    *   ],
    * }
