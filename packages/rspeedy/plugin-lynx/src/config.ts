@@ -215,8 +215,6 @@ export interface LynxPerformance {
    * Whether to capture timing information in Lynx runtime integrations such as
    * ReactLynx.
    *
-   * @defaultValue `pluginReactLynx` sets this to `true` when `DEBUG` contains `lynx`, `rspeedy` or `*`; otherwise the option is left unset.
-   *
    * @remarks
    *
    * A framework includes runtime information using `console.profile` when this
