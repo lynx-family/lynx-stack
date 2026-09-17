@@ -26,7 +26,7 @@ export function toRsbuildConfig(
 
       progressBar: config.dev?.progressBar ?? true,
     },
-    environments: config.environments ?? { lynx: {} },
+    environments: config.environments,
     mode: config.mode,
     output: {
       assetPrefix: config.output?.assetPrefix,

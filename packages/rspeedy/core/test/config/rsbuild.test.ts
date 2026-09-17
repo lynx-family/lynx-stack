@@ -8,6 +8,7 @@ import { describe, expect, test } from '@rstest/core'
 
 import { toRsbuildConfig } from '../../src/config/rsbuild/index.js'
 import type { Config } from '../../src/index.js'
+import { createStubRspeedy } from '../createStubRspeedy.js'
 
 describe('Config - toRsBuildConfig', () => {
   describe('splitChunks', () => {
@@ -415,10 +416,13 @@ describe('Config - toRsBuildConfig', () => {
   })
 
   describe('Environments', () => {
-    test('with default lynx environment', () => {
-      const rsbuildConfig = toRsbuildConfig({})
+    test('with default lynx environment', async () => {
+      const rspeedy = await createStubRspeedy({})
 
-      expect(rsbuildConfig.environments?.['lynx']).toStrictEqual({})
+      await rspeedy.initConfigs()
+
+      expect(Object.keys(rspeedy.getNormalizedConfig().environments))
+        .toStrictEqual(['lynx'])
     })
 
     test('with web-only environment', () => {
