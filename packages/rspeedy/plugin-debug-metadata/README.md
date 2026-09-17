@@ -1,6 +1,6 @@
 # `@lynx-js/debug-metadata-rsbuild-plugin`
 
-Emits `debug-metadata.json` alongside Lynx template builds (`lynx` / `lynx-*` environments; skipped in local production builds and removed from non-development output unless `DEBUG` is set), serves it via dev-server endpoints, and repoints JS / tasm debug URLs at the unified file. Consumed by reverse-symbolication services and element inspectors.
+Emits `debug-metadata.json` alongside Lynx template builds (`lynx` / `lynx-*` environments; skipped in local production builds and removed from non-development output unless `DEBUG=lynx`), serves it via dev-server endpoints, and repoints JS / tasm debug URLs at the unified file. Consumed by reverse-symbolication services and element inspectors.
 
 **Registered by `pluginLynx`** (which Rspeedy and DSL plugins apply); apps should not add it.
 
