@@ -29,7 +29,7 @@ function logShortcutError(error: unknown): void {
 }
 
 /**
- * {@inheritdoc PluginQRCodeOptions.schema}
+ * {@inheritDoc PluginQRCodeOptions.schema}
  *
  * @public
  */

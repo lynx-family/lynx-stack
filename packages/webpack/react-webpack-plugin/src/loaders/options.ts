@@ -33,26 +33,26 @@ const COMPONENT_PKG = '@lynx-js/react-components';
  */
 export interface ReactLoaderOptions {
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat}
    */
   compat?: CompatVisitorConfig | undefined;
 
   /**
-   * {@inheritdoc @lynx-js/template-webpack-plugin#LynxTemplatePluginOptions.enableRemoveCSSScope}
+   * {@inheritDoc @lynx-js/template-webpack-plugin#LynxTemplatePluginOptions.enableRemoveCSSScope}
    */
   enableRemoveCSSScope?: boolean | undefined;
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.jsx}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.jsx}
    */
   jsx?: JsxTransformerConfig | undefined;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableUiSourceMap}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableUiSourceMap}
    */
   enableUiSourceMap?: boolean | undefined;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_transformBuiltinAttributeNames}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_transformBuiltinAttributeNames}
    */
   experimental_transformBuiltinAttributeNames?:
     | boolean

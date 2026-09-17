@@ -21,22 +21,22 @@ declare const NativeModules: {
  */
 export class WebSocket {
   /**
-   * {@inheritdoc @lynx-js/websocket#ReadyState.CONNECTING}
+   * {@inheritDoc @lynx-js/websocket#ReadyState.CONNECTING}
    */
   static CONNECTING: ReadyState = ReadyState.CONNECTING
 
   /**
-   * {@inheritdoc @lynx-js/websocket#ReadyState.OPEN}
+   * {@inheritDoc @lynx-js/websocket#ReadyState.OPEN}
    */
   static OPEN: ReadyState = ReadyState.OPEN
 
   /**
-   * {@inheritdoc @lynx-js/websocket#ReadyState.CLOSING}
+   * {@inheritDoc @lynx-js/websocket#ReadyState.CLOSING}
    */
   static CLOSING: ReadyState = ReadyState.CLOSING
 
   /**
-   * {@inheritdoc @lynx-js/websocket#ReadyState.CLOSED}
+   * {@inheritDoc @lynx-js/websocket#ReadyState.CLOSED}
    */
   static CLOSED: ReadyState = ReadyState.CLOSED
 

@@ -198,22 +198,22 @@ export function collectElementTemplatesForChunkGroups<TChunk>(
  */
 interface ReactWebpackPluginOptions {
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat.disableCreateSelectorQueryIncompatibleWarning}
+   * Whether disable runtime warnings about using ReactLynx2.0-incompatible `SelectorQuery` APIs.
    */
   disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.firstScreenSyncTiming}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.firstScreenSyncTiming}
    */
   firstScreenSyncTiming?: 'immediately' | 'jsReady' | 'manual';
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.globalPropsMode}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.globalPropsMode}
    */
   globalPropsMode?: 'reactive' | 'event';
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableSSR}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableSSR}
    */
   enableSSR?: boolean;
 
@@ -301,9 +301,8 @@ class ReactWebpackPlugin {
    * The loaders for ReactLynx.
    *
    * @remarks
-   * Note that this loader will only transform JSX/TSX to valid JavaScript.
-   * For `.tsx` files, the type annotations would not be eliminated.
-   * You should use `babel-loader` or `swc-loader` to load TypeScript files.
+   * Note that this loader transforms JSX/TSX to valid JavaScript.
+   * For `.ts` and `.tsx` files, the TypeScript types are stripped as well.
    *
    * @example
    * ```js

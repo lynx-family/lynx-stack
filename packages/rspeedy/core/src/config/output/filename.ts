@@ -48,23 +48,15 @@ export type BundleFilename =
   | ((context: BundleFilenameContext) => string)
 
 /**
- * {@inheritdoc Output.filename}
+ * {@inheritDoc Output.filename}
  *
  * @public
  */
 export interface Filename {
   /**
-   * The name of the bundle files.
+   * {@inheritDoc @lynx-js/rsbuild-plugin#LynxFilename.bundle}
    *
    * @defaultValue `'[name].[platform].bundle'`
-   *
-   * @remarks
-   *
-   * The following placeholder is supported:
-   *
-   * - `[name]`: the name of the entry.
-   * - `[contenthash]`: the contenthash of the bundle.
-   * - `[platform]`: the environment name of the bundle.
    *
    * @example
    *
