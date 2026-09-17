@@ -4,7 +4,6 @@
 import { mergeRsbuildConfig } from '@rsbuild/core'
 import type { RsbuildMode } from '@rsbuild/core'
 
-import { isDebug } from '../debug.js'
 import type { Filename } from './output/filename.js'
 
 import type { Config } from './index.js'
@@ -34,10 +33,6 @@ export function applyDefaultRspeedyConfig(config: Config): Config {
       cssModules: {
         localIdentName: '[local]-[hash:base64:6]',
       },
-    },
-
-    performance: {
-      profile: isDebug() ? true : undefined,
     },
 
     tools: {
