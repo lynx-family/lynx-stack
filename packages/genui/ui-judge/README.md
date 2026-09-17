@@ -304,9 +304,14 @@ and `stderr` strings alongside `message`. Each stream retains its last 64 KiB
 of bytes; `stdoutTruncated` and `stderrTruncated` indicate discarded earlier
 output. Invalid UTF-8 bytes use replacement characters. Both pipes continue to
 drain after reaching the limit so verbose children cannot block on a full pipe.
-Timeout responses include output collected before cleanup. Successful requests
-still return the original BMP bytes; errors before child startup retain the
-message-only response.
+`exitCode` reports a normal process exit code; it is `null` for signal termination
+or when the status is unavailable. `signal` reports the Unix termination signal
+number; it is `null` for normal exits, unavailable status, or non-Unix platforms.
+Timeout responses include output collected before cleanup and the final reaped
+status. A signal in an HTTP 408 response can result from the supervisor killing
+the timed-out child; it does not by itself indicate an external kill or OOM.
+Successful requests still return the original BMP bytes; errors before child
+startup retain the message-only response.
 
 ```json
 {
@@ -315,7 +320,9 @@ message-only response.
     "stdout": "runtime output\n",
     "stderr": "render failure\n",
     "stdoutTruncated": false,
-    "stderrTruncated": false
+    "stderrTruncated": false,
+    "exitCode": 1,
+    "signal": null
   }
 }
 ```

@@ -504,6 +504,8 @@ struct ChildOutput {
   stderr: String,
   stdout_truncated: bool,
   stderr_truncated: bool,
+  exit_code: Option<i32>,
+  signal: Option<i32>,
 }
 
 #[derive(Default)]
@@ -1702,11 +1704,23 @@ async fn wait_for_capture_child(
   if result.is_err() {
     terminate_zip_capture_child_or_exit(child).await;
   }
+  // Waiting and cleanup both reap the child. Read the cached status so timeout
+  // responses also describe the termination performed by this supervisor.
+  let exit_status = child.try_wait().ok().flatten();
+  #[cfg(unix)]
+  let signal = {
+    use std::os::unix::process::ExitStatusExt;
+    exit_status.and_then(|status| status.signal())
+  };
+  #[cfg(not(unix))]
+  let signal = None;
   let output = ChildOutput {
     stdout: String::from_utf8_lossy(&stdout_output.bytes).into_owned(),
     stderr: String::from_utf8_lossy(&stderr_output.bytes).into_owned(),
     stdout_truncated: stdout_output.truncated,
     stderr_truncated: stderr_output.truncated,
+    exit_code: exit_status.and_then(|status| status.code()),
+    signal,
   };
   match result {
     Ok(()) => Ok(output),
@@ -3089,6 +3103,41 @@ mod tests {
     assert!(!stderr.contains("stdout"));
     assert_eq!(error["stdoutTruncated"], true);
     assert_eq!(error["stderrTruncated"], true);
+    assert_eq!(error["exitCode"], 7);
+    assert_eq!(error["signal"], Value::Null);
+  }
+
+  #[cfg(unix)]
+  #[tokio::test]
+  async fn signalled_child_returns_signal_even_without_output() {
+    let mut child = output_test_child("kill -TERM $$");
+    let (mut reply, _response) = oneshot::channel();
+    let error = wait_for_capture_child(
+      &mut child,
+      &mut reply,
+      tokio::time::Instant::now() + Duration::from_secs(5),
+    )
+    .await
+    .unwrap_err();
+    let response = staged_source_render_api_error(StagedSourceKind::Lynxml, error).into_response();
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    let body = axum::body::to_bytes(response.into_body(), 1024)
+      .await
+      .unwrap();
+    assert_eq!(
+      serde_json::from_slice::<Value>(&body).unwrap(),
+      json!({
+        "error": {
+          "message": "The LynXML source could not be rendered.",
+          "stdout": "",
+          "stderr": "",
+          "stdoutTruncated": false,
+          "stderrTruncated": false,
+          "exitCode": null,
+          "signal": 15
+        }
+      })
+    );
   }
 
   #[cfg(unix)]
@@ -3107,6 +3156,8 @@ mod tests {
     assert_eq!(output.stderr, "");
     assert!(!output.stdout_truncated);
     assert!(!output.stderr_truncated);
+    assert_eq!(output.exit_code, Some(0));
+    assert_eq!(output.signal, None);
     assert!(child.try_wait().unwrap().unwrap().success());
   }
 
@@ -3127,6 +3178,8 @@ mod tests {
     let output = error.child_output.unwrap();
     assert_eq!(output.stdout, "before-timeout");
     assert_eq!(output.stderr, "diagnostic");
+    assert_eq!(output.exit_code, None);
+    assert_eq!(output.signal, Some(9));
     assert!(child.try_wait().unwrap().is_some());
   }
 
