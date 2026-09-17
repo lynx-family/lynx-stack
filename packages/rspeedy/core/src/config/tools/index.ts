@@ -28,7 +28,7 @@ export interface RsdoctorRspackPluginOptions
 }
 
 /**
- * {@inheritdoc Config.tools}
+ * {@inheritDoc Config.tools}
  *
  * @public
  */
