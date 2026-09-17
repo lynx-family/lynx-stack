@@ -90,7 +90,8 @@ export interface PluginReactLynxOptions {
    * By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.
    *
    * ```js
-   * import { defineConfig } from '@lynx-js/rspeedy'
+   * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+   * import { defineConfig } from '@rsbuild/core'
    *
    * export default defineConfig({
    *  plugins: [
