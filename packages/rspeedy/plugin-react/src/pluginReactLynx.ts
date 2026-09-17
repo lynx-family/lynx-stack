@@ -89,10 +89,8 @@ export interface PluginReactLynxOptions {
    *
    * By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.
    *
-   * ```ts
-   * // rsbuild.config.ts
-   * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
-   * import { defineConfig } from '@rsbuild/core'
+   * ```js
+   * import { defineConfig } from '@lynx-js/rspeedy'
    *
    * export default defineConfig({
    *  plugins: [
@@ -330,7 +328,7 @@ export interface PluginReactLynxOptions {
 
   /**
    * Merge same string literals in JS and Lepus to reduce output bundle size.
-   * Set to `false` to disable. Only takes effect when chunk splitting is disabled.
+   * Set to `false` to disable.
    *
    * @defaultValue false
    */

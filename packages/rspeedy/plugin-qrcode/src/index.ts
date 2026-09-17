@@ -5,7 +5,7 @@
 /**
  * @packageDocumentation
  *
- * An Rsbuild plugin that prints each Lynx bundle URL as a QR code in the terminal.
+ * A rsbuild plugin that print the Lynx bundle url using QRCode.
  */
 
 import type {
@@ -48,15 +48,12 @@ export interface PluginQRCodeOptions {
    *
    * @example
    *
-   * ```ts
-   * // rsbuild.config.ts
+   * ```js
    * import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
-   * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
-   * import { defineConfig } from '@rsbuild/core'
+   * import { defineConfig } from '@lynx-js/rspeedy'
    *
    * export default defineConfig({
    *   plugins: [
-   *     pluginReactLynx(),
    *     pluginQRCode({
    *       schema(url) {
    *         return `lynx://${url}?dev=1`
@@ -72,15 +69,12 @@ export interface PluginQRCodeOptions {
    *
    * You may press `a` in the terminal to switch between schemas.
    *
-   * ```ts
-   * // rsbuild.config.ts
+   * ```js
    * import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
-   * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
-   * import { defineConfig } from '@rsbuild/core'
+   * import { defineConfig } from '@lynx-js/rspeedy'
    *
    * export default defineConfig({
    *   plugins: [
-   *     pluginReactLynx(),
    *     pluginQRCode({
    *       schema(url) {
    *         return {

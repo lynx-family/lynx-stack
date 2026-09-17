@@ -15,7 +15,7 @@ export interface Dev {
    *
    * @remarks
    *
-   * In development, `true` or unset becomes `http://<detected-host>:<port>/`. A string is kept, with its port changed to `server.port` when that is set and the string has no `<port>` placeholder. `server.base` is appended when configured.
+   * During `rspeedy dev`, if this option is not set to `false`, the dev plugin normalizes it to `http://<detected-host>:<port>/` and appends `server.base` when configured.
    *
    * The functionality of {@link Dev.assetPrefix} is basically the same as the {@link https://rspack.rs/config/output#outputpublicpath | output.publicPath}
    * config in Rspack. With the following differences:
@@ -54,7 +54,7 @@ export interface Dev {
    *
    * @example
    *
-   * The port number that the dev server listens on may change. For example, if the port is in use, the dev server will automatically increment the port number until it finds an available port.
+   * The port number that Rspeedy server listens on may change. For example, if the port is in use, Rspeedy will automatically increment the port number until it finds an available port.
    *
    * To avoid `dev.assetPrefix` becoming invalid due to port changes, you can use one of the following methods:
    *
@@ -80,7 +80,7 @@ export interface Dev {
    *
    * @remarks
    *
-   * By default, the dev server uses HMR as the preferred method to update modules. If HMR is disabled or cannot be used in certain scenarios, it will automatically fallback to {@link Dev.liveReload}.
+   * By default, Rspeedy uses HMR as the preferred method to update modules. If HMR is disabled or cannot be used in certain scenarios, it will automatically fallback to {@link Dev.liveReload}.
    *
    * To completely disable both HMR and live reload, set both `dev.hmr` and `dev.liveReload` to `false`. Then, no WebSocket requests will be made to the dev server on the page, and the page will not automatically refresh when file changes.
    *

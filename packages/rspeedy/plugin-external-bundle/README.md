@@ -1,3 +1,7 @@
+<p align="center">
+  <a href="https://lynxjs.org/rspeedy" target="blank"><img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/rspeedy-banner.png" alt="Rspeedy Logo" /></a>
+</p>
+
 <p>
   <a aria-label="NPM version" href="https://www.npmjs.com/package/@lynx-js/external-bundle-rsbuild-plugin">
     <img alt="" src="https://img.shields.io/npm/v/@lynx-js/external-bundle-rsbuild-plugin?logo=npm">
@@ -22,12 +26,11 @@ npm install -D @lynx-js/react-umd
 ## Usage
 
 ```ts
-// rsbuild.config.ts
+// lynx.config.ts
 import { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin'
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
-import { defineConfig } from '@rsbuild/core'
 
-export default defineConfig({
+export default {
   plugins: [
     pluginReactLynx(),
     pluginExternalBundle({
@@ -49,7 +52,7 @@ export default defineConfig({
       },
     }),
   ],
-})
+}
 ```
 
 If your external bundle request key already matches the produced section names,

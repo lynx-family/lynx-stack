@@ -240,7 +240,7 @@ export interface Performance {
    *
    * To exclude static assets that meet certain criteria, use a filter function with exclude. If both include and exclude are set, exclude will take precedence.
    *
-   * Rsbuild defaults to excluding source map, license files, and .d.ts type files, as these files do not affect page load performance.
+   * Rspeedy defaults to excluding source map, license files, and .d.ts type files, as these files do not affect page load performance.
    *
    * exclude .html files in addition to the default:
    *

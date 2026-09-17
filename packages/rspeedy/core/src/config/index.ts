@@ -99,7 +99,9 @@ export interface Config {
    *
    * - Enable JavaScript code minification and register the {@link https://rspack.rs/plugins/rspack/swc-js-minimizer-rspack-plugin | SwcJsMinimizerRspackPlugin}.
    *
-   * - Generated JavaScript filenames will have hash suffixes, see {@link Output.filenameHash}.
+   * - Generated JavaScript and CSS filenames will have hash suffixes, see {@link Output.filenameHash}.
+   *
+   * - Generated CSS Modules classnames will be shorter, see {@link CssModules.localIdentName}.
    *
    * - Generate JavaScript and CSS source maps. In Lynx environments, all `.map` assets are removed before emit. See {@link Output.sourceMap}.
    *
@@ -151,7 +153,7 @@ export interface Config {
   /**
    * Configure chunk splitting.
    *
-   * @defaultValue Lynx builds default this to `false`; if configured, Rsbuild handles it with its top-level `splitChunks` option.
+   * @defaultValue Rspeedy defaults this to `false`; if configured, Rsbuild handles it with its top-level `splitChunks` option.
    *
    * @remarks
    *

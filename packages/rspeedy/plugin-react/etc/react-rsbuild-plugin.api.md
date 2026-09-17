@@ -53,8 +53,9 @@ export { LAYERS }
 
 // Warning: (ae-missing-release-tag) "LynxTemplatePlugin" is part of the package's API, but it is missing a release tag (@alpha, @beta, @public, or @internal)
 //
-// @public
+// @public (undocumented)
 export interface LynxTemplatePlugin {
+    // (undocumented)
     getLynxTemplatePluginHooks: typeof LynxTemplatePlugin_2.getLynxTemplatePluginHooks;
 }
 

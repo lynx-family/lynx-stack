@@ -127,10 +127,6 @@ export interface PluginVanillaLynxOptions {
   /**
    * The minimum Lynx Engine version required by the emitted bundle.
    *
-   * @remarks
-   * When omitted, the `targetSdkVersion` passed to `pluginLynxConfig` is used
-   * first.
-   *
    * @defaultValue `'3.5'`
    */
   engineVersion?: string | undefined

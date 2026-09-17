@@ -335,7 +335,7 @@ export interface Output {
   /**
    * The {@link Output.inlineScripts} option controls whether to inline scripts into Lynx bundle (`.lynx.bundle`).
    *
-   * @defaultValue Rspeedy defaults this to `true` and only switches it to `false` when the user explicitly enables the top-level `splitChunks` option, or sets the deprecated `performance.chunkSplit.strategy` to anything other than `'all-in-one'`. On plain Rsbuild, the Rsbuild default applies.
+   * @defaultValue Rspeedy defaults this to `true` and only switches it to `false` when the user explicitly enables the top-level `splitChunks` option.
    *
    * @remarks
    *
