@@ -85,7 +85,7 @@ export interface Performance {
   /**
    * {@inheritDoc @lynx-js/rsbuild-plugin#LynxPerformance.profile}
    *
-   * @defaultValue Rspeedy sets this to `true` when `DEBUG` contains `rspeedy`; otherwise it leaves the option unset.
+   * @defaultValue `true` when `DEBUG` includes `lynx`, `rsbuild`, `rspeedy` or `*`, otherwise `undefined`
    *
    * @example
    *

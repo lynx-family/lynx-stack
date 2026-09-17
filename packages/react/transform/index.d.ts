@@ -341,9 +341,10 @@ export interface CompatVisitorConfig {
    */
   disableDeprecatedWarning: boolean
   /**
+   * Dark mode configuration
+   *
    * @public
    * @deprecated
-   * Dark mode configuration
    *
    * @defaultValue `undefined`
    *

@@ -5,6 +5,8 @@ import { posix } from 'node:path'
 
 import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
 
+import { isDebug } from './debug.js'
+
 /**
  * The context passed to the {@link LynxFilename.bundle} function.
  *
@@ -220,6 +222,9 @@ export interface LynxPerformance {
    * A framework includes runtime information using `console.profile` when this
    * is enabled.
    *
+   * @defaultValue `true` when `DEBUG` includes `lynx`, `rsbuild`, `rspeedy` or
+   * `*`, otherwise `undefined`
+   *
    * @example
    *
    * ```ts
@@ -395,7 +400,10 @@ export function createLynxConfig(options: LynxPluginOptions): LynxConfig {
   return {
     output,
 
-    performance: options.performance ?? {},
+    performance: {
+      ...options.performance,
+      profile: options.performance?.profile ?? (isDebug() ? true : undefined),
+    },
 
     resolveBundleFilename({ entryName, platform }) {
       return resolve(output.filename?.bundle, {

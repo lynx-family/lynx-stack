@@ -16,6 +16,7 @@
  *
  * Example:
  *  <div class="ui-open:bg-blue-500 ui-side-left:border-l" />
+ *  (`ui-side-left` requires `prefixes` to include `ui-side`; the default registers only `ui`.)
  *
  * Supports:
  * - State-like values: `open`, `checked`, `disabled`
@@ -68,9 +69,11 @@ interface UIVariantsOptions {
    * Configures state-based variant prefixes.
    *
    * You can provide:
-   * - An array of prefixes to use their default states
-   * - Or an object mapping each prefix to an array or map of custom states.
-   * - An explicit object of prefix → values (array or map)
+   * - An array of prefixes to use their built-in states
+   * - An object mapping each prefix to an array or map of custom states
+   * - A function that receives the built-in prefix map and returns such an object
+   *
+   * Defaults to the `ui` prefix with its built-in states only.
    *
    * @example
    * prefixes: ['ui'] // → `ui-checked:*`, `ui-open:*` using default states
