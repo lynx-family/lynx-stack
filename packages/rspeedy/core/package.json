@@ -55,7 +55,7 @@
   "dependencies": {
     "@lynx-js/rsbuild-plugin": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rsdoctor/core": "2.0.0-beta.2"
+    "@rsdoctor/core": "2.0.0-beta.4"
   },
   "devDependencies": {
     "@lynx-js/test-tools": "workspace:*",

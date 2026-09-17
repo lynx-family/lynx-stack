@@ -16,6 +16,7 @@ import { pluginRsdoctor } from '../../src/plugins/rsdoctor.plugin.js'
 
 const { createPlugin } = rstest.hoisted(() => ({ createPlugin: rstest.fn() }))
 rstest.mock('@rsdoctor/core', () => ({
+  migrateRsdoctorOptions: (options: unknown) => options,
   RsdoctorRspackPlugin: class {
     readonly isRsdoctorPlugin = true
     constructor(options: unknown) {

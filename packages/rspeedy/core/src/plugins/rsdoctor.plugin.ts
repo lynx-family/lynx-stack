@@ -4,6 +4,10 @@
 
 import { logger, mergeRsbuildConfig } from '@rsbuild/core'
 import type { RsbuildPlugin } from '@rsbuild/core'
+import type {
+  CompatibleRsdoctorOptions,
+  RsdoctorRspackPluginOptions as RawRsdoctorRspackPluginOptions,
+} from '@rsdoctor/core'
 
 import type {
   RsdoctorRspackPluginOptions,
@@ -33,7 +37,9 @@ export function pluginRsdoctor(
         )
         if (pendingConfigs.length === 0) return
 
-        const { RsdoctorRspackPlugin } = await import('@rsdoctor/core')
+        const { RsdoctorRspackPlugin, migrateRsdoctorOptions } = await import(
+          '@rsdoctor/core'
+        )
 
         for (const config of pendingConfigs) {
           config.plugins ??= []
@@ -62,8 +68,10 @@ export function pluginRsdoctor(
             // Normalize the simplified config type at the plugin boundary.
             new RsdoctorRspackPlugin(
               mergeRsbuildConfig(
-                defaultOptions,
-                options,
+                defaultOptions as RawRsdoctorRspackPluginOptions<[]>,
+                migrateRsdoctorOptions<[]>(
+                  options as CompatibleRsdoctorOptions<[]>,
+                ),
               ) as unknown as ConstructorParameters<
                 typeof RsdoctorRspackPlugin<[]>
               >[0],
