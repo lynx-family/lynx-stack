@@ -14,7 +14,6 @@ import { pluginEnvironments } from './plugins/environments.plugin.js'
 import { pluginMinify } from './plugins/minify.plugin.js'
 import { pluginOptimization } from './plugins/optimization.plugin.js'
 import { pluginOutput } from './plugins/output.plugin.js'
-import { pluginProgressBar } from './plugins/progressBar.plugin.js'
 import { pluginResolve } from './plugins/resolve.plugin.js'
 import { pluginServer } from './plugins/server.plugin.js'
 import { pluginSourcemap } from './plugins/sourcemap.plugin.js'
@@ -96,7 +95,6 @@ export function pluginLynx(
     pluginTemplate(),
     pluginChunkLoading(),
     pluginDev(),
-    pluginProgressBar(),
     pluginOptimization(),
     pluginServer(),
   ]
