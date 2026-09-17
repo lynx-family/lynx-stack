@@ -61,8 +61,11 @@ export function applyEntry(
     extractStr: originalExtractStr,
 
     experimental_isLazyBundle,
+    experimental_backgroundOnlyEntries,
     experimental_transformBuiltinAttributeNames,
   } = options
+
+  const backgroundOnlyEntries = new Set(experimental_backgroundOnlyEntries)
 
   const lazyBundleFetcher = resolveLazyBundleFetcher(targetSdkVersion)
   const runtimeConfig: RuntimeConfigWebpackPluginOptions = {}
@@ -144,49 +147,61 @@ export function applyEntry(
           `${entryName}/main-thread.js`,
         )
 
-        const backgroundName = path.posix.join(
-          isLynx
-            ? lynxConfig.resolveIntermediateDir()
-            // For non-Lynx environment, the entry is not deleted.
-            // So we do not put it in the intermediate.
-            : '',
-          getBackgroundFilename(
-            entryName,
-            environment.config,
-            isProd,
-            experimental_isLazyBundle,
-          ),
-        )
+        // A background-only entry is the host's own runtime rather than a card,
+        // so it has no template to be packed into and its bundle is the
+        // deliverable — keep it out of the intermediate that gets cleaned.
+        const isBackgroundOnly = backgroundOnlyEntries.has(entryName)
+
+        const backgroundName = isBackgroundOnly
+          ? `${entryName}-runtime.js`
+          : path.posix.join(
+            isLynx
+              ? lynxConfig.resolveIntermediateDir()
+              // For non-Lynx environment, the entry is not deleted.
+              // So we do not put it in the intermediate.
+              : '',
+            getBackgroundFilename(
+              entryName,
+              environment.config,
+              isProd,
+              experimental_isLazyBundle,
+            ),
+          )
 
         const backgroundEntry = entryName
 
-        mainThreadChunks.push(mainThreadName)
+        if (!isBackgroundOnly) {
+          mainThreadChunks.push(mainThreadName)
 
-        entryPairs.push({
-          mainThread: mainThreadEntry,
-          background: backgroundEntry,
-        })
+          entryPairs.push({
+            mainThread: mainThreadEntry,
+            background: backgroundEntry,
+          })
+        }
 
         chain
-          .entry(mainThreadEntry)
-          .add({
-            layer: LAYERS.MAIN_THREAD,
-            import: imports,
-            filename: mainThreadName,
-          })
-          .when(enabledHMR, entry => {
-            const require = createRequire(import.meta.url)
-            // use prepend to make sure it does not affect the exports
-            // from the entry
-            entry
-              .prepend({
+          .when(!isBackgroundOnly, chain => {
+            chain
+              .entry(mainThreadEntry)
+              .add({
                 layer: LAYERS.MAIN_THREAD,
-                import: require.resolve(
-                  '@lynx-js/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs',
-                ),
+                import: imports,
+                filename: mainThreadName,
               })
+              .when(enabledHMR, entry => {
+                const require = createRequire(import.meta.url)
+                // use prepend to make sure it does not affect the exports
+                // from the entry
+                entry
+                  .prepend({
+                    layer: LAYERS.MAIN_THREAD,
+                    import: require.resolve(
+                      '@lynx-js/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs',
+                    ),
+                  })
+              })
+              .end()
           })
-          .end()
           .entry(backgroundEntry)
           .add({
             layer: LAYERS.BACKGROUND,
@@ -219,31 +234,34 @@ export function applyEntry(
               })
           })
           .end()
-          .plugin(`${PLUGIN_NAME_TEMPLATE}-${entryName}`)
-          .use(LynxTemplatePlugin, [{
-            dsl: 'react_nodiff',
-            chunks: [mainThreadEntry, backgroundEntry],
-            filename: templateFilename,
-            ...(lazyBundleFilename ? { lazyBundleFilename } : {}),
-            intermediate: lynxConfig.resolveIntermediateDir({ entryName }),
-            customCSSInheritanceList,
-            debugInfoOutside,
-            defaultDisplayLinear,
-            enableA11y: true,
-            enableAccessibilityElement,
-            enableCSSInheritance,
-            enableCSSInvalidation,
-            enableCSSSelector,
-            enableNewGesture,
-            enableRemoveCSSScope: enableRemoveCSSScope ?? true,
-            removeDescendantSelectorScope,
-            targetSdkVersion,
+          .when(!isBackgroundOnly, chain => {
+            chain
+              .plugin(`${PLUGIN_NAME_TEMPLATE}-${entryName}`)
+              .use(LynxTemplatePlugin, [{
+                dsl: 'react_nodiff',
+                chunks: [mainThreadEntry, backgroundEntry],
+                filename: templateFilename,
+                ...(lazyBundleFilename ? { lazyBundleFilename } : {}),
+                intermediate: lynxConfig.resolveIntermediateDir({ entryName }),
+                customCSSInheritanceList,
+                debugInfoOutside,
+                defaultDisplayLinear,
+                enableA11y: true,
+                enableAccessibilityElement,
+                enableCSSInheritance,
+                enableCSSInvalidation,
+                enableCSSSelector,
+                enableNewGesture,
+                enableRemoveCSSScope: enableRemoveCSSScope ?? true,
+                removeDescendantSelectorScope,
+                targetSdkVersion,
 
-            experimental_isLazyBundle,
-            lazyBundleFetcher,
-            cssPlugins: [],
-          }])
-          .end()
+                experimental_isLazyBundle,
+                lazyBundleFetcher,
+                cssPlugins: [],
+              }])
+              .end()
+          })
       })
     }
 
