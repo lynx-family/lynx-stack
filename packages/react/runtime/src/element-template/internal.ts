@@ -52,16 +52,7 @@ export { loadLazyBundle } from '../core/lynx/lazy-bundle.js';
 export { transformToWorklet } from './runtime/template/main-thread-background-function.js';
 export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';
 
-/**
- * Element Template does not create snapshot MainThreadObject handles. Keep the
- * compiler-injected helper on this backend's internal surface while allowing
- * ordinary object captures to use their generated fallback shape.
- *
- * @internal
- */
-export function captureMainThreadObject<T>(_source: T): undefined {
-  return undefined;
-}
+export { captureMainThreadObject } from '../core/capture-main-thread-object.js';
 
 export function registerWorkletOnBackground(
   _type: string,

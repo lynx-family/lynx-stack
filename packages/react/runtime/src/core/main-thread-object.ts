@@ -9,14 +9,14 @@ import {
 } from '@lynx-js/react/worklet-runtime/bindings';
 import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
+import { useMemo } from './hooks/react.js';
 import {
   getMainThreadObjectHandleMetadata,
   isMainThreadObjectHandle as isRegisteredMainThreadObjectHandle,
   registerMainThreadObjectHandle,
-} from './mainThreadObjectHandleRegistry.js';
-import { useMemo } from '../../../core/hooks/react.js';
-import { allocateMainThreadRefId } from '../../../core/main-thread-ref-id.js';
-import { addMainThreadRefInitValue } from '../../../core/main-thread-ref-init-value.js';
+} from './main-thread-object-handle-registry.js';
+import { allocateMainThreadRefId } from './main-thread-ref-id.js';
+import { addMainThreadRefInitValue } from './main-thread-ref-init-value.js';
 
 /** @internal */
 export const MAIN_THREAD_OBJECT_PROTOCOL_VERSION = 1;
