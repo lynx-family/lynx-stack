@@ -27,11 +27,7 @@ function runChain(utils: ChainUtils): string[] {
   const api = {
     onAfterCreateCompiler: noop,
     onBeforeStartDevServer: noop,
-    expose: noop,
-    useExposed: (id: symbol) =>
-      id === Symbol.for('LynxTemplatePlugin')
-        ? { LynxTemplatePlugin: class {} }
-        : undefined,
+    useExposed: () => ({ LynxTemplatePlugin: class {} }),
     getNormalizedConfig: () => ({ dev: { assetPrefix: '' } }),
     context: {},
     modifyBundlerChain: (
