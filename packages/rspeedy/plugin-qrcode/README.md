@@ -1,7 +1,3 @@
-<p align="center">
-  <a href="https://lynxjs.org/rspeedy" target="blank"><img src="https://lf-lynx.tiktok-cdns.com/obj/lynx-artifacts-oss-sg/lynx-website/assets/rspeedy-banner.png" alt="Rspeedy Logo" /></a>
-</p>
-
 <p>
   <a aria-label="NPM version" href="https://www.npmjs.com/package/@lynx-js/qrcode-rsbuild-plugin">
     <img alt="" src="https://img.shields.io/npm/v/@lynx-js/qrcode-rsbuild-plugin?logo=npm">
@@ -23,12 +19,16 @@ npm install -D @lynx-js/qrcode-rsbuild-plugin
 
 <!-- eslint-disable -->
 
-```js
+```ts
+// rsbuild.config.ts
 import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
 
-export default {
-  plugins: [pluginQRCode()],
-}
+export default defineConfig({
+  environments: { lynx: {} },
+  plugins: [pluginReactLynx(), pluginQRCode()],
+})
 ```
 
 ## Options
@@ -42,12 +42,16 @@ The `schema` option allows you to customize the URL format displayed in the QR c
 
 <!-- eslint-disable -->
 
-```js
+```ts
+// rsbuild.config.ts
 import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
-import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
 
 export default defineConfig({
+  environments: { lynx: {} },
   plugins: [
+    pluginReactLynx(),
     pluginQRCode({
       schema(url) {
         return `lynx://${url}?dev=1`
@@ -61,12 +65,16 @@ You can also define multiple schemas to switch between them by pressing `a` in t
 
 <!-- eslint-disable -->
 
-```js
+```ts
+// rsbuild.config.ts
 import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
-import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
 
 export default defineConfig({
+  environments: { lynx: {} },
   plugins: [
+    pluginReactLynx(),
     pluginQRCode({
       schema(url) {
         return {

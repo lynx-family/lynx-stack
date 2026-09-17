@@ -2,14 +2,18 @@
 
 An Rsbuild plugin for building Vanilla Lynx applications directly with Element PAPI.
 
-## Usage with Rspeedy
+## Usage
 
 ```ts
-import { defineConfig } from '@lynx-js/rspeedy'
+// rsbuild.config.ts
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
 import { pluginVanillaLynx } from '@lynx-js/vanilla-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
 
 export default defineConfig({
+  environments: { lynx: {} },
   plugins: [
+    pluginLynx(),
     pluginVanillaLynx({
       entries: {
         card: {
@@ -23,16 +27,19 @@ export default defineConfig({
 })
 ```
 
+With Rspeedy, add only `pluginVanillaLynx()` to `lynx.config.ts`; Rspeedy applies `pluginLynx` itself.
+
 For a convention-based entry, `source.entry` points to the main-thread source:
 
 ```ts
 export default defineConfig({
+  environments: { lynx: {} },
   source: {
     entry: {
       card: './src/card/main-thread.ts',
     },
   },
-  plugins: [pluginVanillaLynx()],
+  plugins: [pluginLynx(), pluginVanillaLynx()],
 })
 ```
 
@@ -57,7 +64,7 @@ and `css` explicitly when they are needed.
 
 The plugin emits one `.bundle` per logical entry, marks the main-thread asset for Lepus encoding, wraps only the native background asset, and enables the event-handler config required by Element PAPI listeners. HMR and live reload are disabled because Vanilla Lynx does not currently install a compatible hot-update runtime.
 
-When Rspeedy configures both `web` and `lynx` environments, the plugin emits a web-encoded `[name].web.bundle` and a native `[name].lynx.bundle`. Background JavaScript is runtime-wrapped only for native Lynx; the web encoder embeds the unwrapped background chunk for the web runtime.
+When both `web` and `lynx` environments are configured, the plugin emits a web-encoded `[name].web.bundle` and a native `[name].lynx.bundle`. Background JavaScript is runtime-wrapped only for native Lynx; the web encoder embeds the unwrapped background chunk for the web runtime.
 
 ## Options
 
@@ -74,4 +81,4 @@ pluginVanillaLynx({
 })
 ```
 
-When `bundleFilename` is omitted, the plugin uses Rspeedy's `output.filename.bundle`. Outside Rspeedy it defaults to `[name].[platform].bundle`.
+When `bundleFilename` is omitted, `pluginLynx`'s `output.filename.bundle` is used (default `'[name].[platform].bundle'`).

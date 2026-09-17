@@ -145,13 +145,14 @@ export interface ReactLynxExternalsPresetOptions {
    * Emit the ReactLynx runtime bundle into the current build output and load it
    * through the generated runtime public path.
    *
-   * Prefer this over `url` for normal Rspeedy projects. In addition to letting
-   * the runtime resolve the final URL from `publicPath`, the plugin will also
-   * copy the corresponding `@lynx-js/react-umd` bundle into the emitted assets,
-   * so application bundles can reference it without requiring an extra manual
-   * copy step when publishing.
+   * Prefer this over `url` for bundles shipped with this project. In addition
+   * to letting the runtime resolve the final URL from `publicPath`, the plugin
+   * will also copy the corresponding `@lynx-js/react-umd` bundle into the
+   * emitted assets, so application bundles can reference it without requiring
+   * an extra manual copy step when publishing.
    *
-   * @defaultValue `'react.lynx.bundle'`
+   * @defaultValue `'react.lynx.bundle'`, or `'react.web.bundle'` outside
+   * `lynx` / `lynx-*` environments
    */
   bundlePath?: string
 
@@ -172,8 +173,8 @@ export interface ReactLynxExternalsPresetOptions {
    * asynchronously (`fetchBundle().then`), so ReactLynx must be mounted as a
    * promise that consuming modules await before reading a subpath (otherwise
    * `React.memo` etc. are read off a pending promise and are `undefined`).
-   * Enabling this also resolves the web-encoded `@lynx-js/react-umd/{dev,prod}-web`
-   * bundle and defaults `bundlePath` to `react.web.bundle`.
+   * Only controls how the runtime is mounted; the web bundle is chosen for
+   * environments other than `lynx` / `lynx-*`.
    *
    * @defaultValue `false`
    */
@@ -294,9 +295,9 @@ export interface PluginExternalBundleOptions extends
    * `bundlePath`.
    *
    * `pluginExternalBundle` uses this directory for both development serving
-   * and build-time asset emission. Prefer setting this explicitly when
-   * external bundles are built into a separate output folder, such as
-   * `dist-external-bundle`.
+   * and build-time asset emission. Set it when bundles are built elsewhere.
+   *
+   * @defaultValue `'dist-external-bundle'`
    */
   externalBundleRoot?: string
 
@@ -357,6 +358,7 @@ export interface PluginExternalValue extends Omit<ExternalValue, 'url'> {
  * - `libraryName`: the external request key
  * - `background.sectionPath`: the external request key
  * - `mainThread.sectionPath`: `${request}__main-thread`
+ * - `async`: `true`
  *
  * @public
  */
@@ -777,15 +779,18 @@ function normalizePluginExternal(
  * Create a rsbuild plugin for loading external bundles.
  *
  * This plugin wraps the externals-loading-webpack-plugin and automatically
- * retrieves layer names from the react-rsbuild-plugin via api.useExposed.
+ * retrieves layer names from any DSL plugin that exposes `LAYERS`, such as
+ * `pluginReactLynx` or `pluginVanillaLynx`, via api.useExposed.
  *
  * @example
  * ```ts
- * // lynx.config.ts
+ * // rsbuild.config.ts
  * import { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin'
  * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+ * import { defineConfig } from '@rsbuild/core'
  *
- * export default {
+ * export default defineConfig({
+ *   environments: { lynx: {} },
  *   plugins: [
  *     pluginReactLynx(),
  *     pluginExternalBundle({
@@ -798,7 +803,7 @@ function normalizePluginExternal(
  *       },
  *     }),
  *   ],
- * }
+ * })
  * ```
  *
  * @public

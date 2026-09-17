@@ -14,7 +14,7 @@
  * ```ts
  * import { defineConfig } from '@lynx-js/rspeedy'
  * export default defineConfig({
- *   entry: './src/index.tsx',
+ *   source: { entry: './src/index.tsx' },
  * })
  * ```
  */

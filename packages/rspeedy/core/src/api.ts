@@ -55,7 +55,7 @@ export interface ExposedAPI {
   version: string
 
   /**
-   * Used for plugin qrcode get entry points from self-defined environments rather than default lynx environment.
+   * Entry points of self-defined environments. Rspeedy no longer sets this field.
    */
   entries?: RsbuildEntry
 }
