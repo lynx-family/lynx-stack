@@ -48,11 +48,6 @@ export function pluginOutput(): RsbuildPlugin {
               legalComments: output?.legalComments ?? 'none',
               // Align the asset inlining threshold with Rspeedy.
               dataUriLimit: output?.dataUriLimit ?? 2 * 1024,
-              cssModules: {
-                // Align the CSS Modules class names with Rspeedy in every mode.
-                localIdentName: output?.cssModules?.localIdentName
-                  ?? '[local]-[hash:base64:6]',
-              },
             },
           })
         },

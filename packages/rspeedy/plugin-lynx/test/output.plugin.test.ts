@@ -198,22 +198,4 @@ describe('pluginOutput', () => {
       image: 1000,
     })
   })
-
-  test('defaults output.cssModules.localIdentName in development', async () => {
-    const rsbuild = await createStubRsbuild({ mode: 'development' })
-    await rsbuild.initConfigs()
-    expect(
-      rsbuild.getNormalizedConfig().output.cssModules.localIdentName,
-    ).toBe('[local]-[hash:base64:6]')
-  })
-
-  test('keeps a user-set output.cssModules.localIdentName', async () => {
-    const rsbuild = await createStubRsbuild({
-      output: { cssModules: { localIdentName: '[hash:7]' } },
-    })
-    await rsbuild.initConfigs()
-    expect(
-      rsbuild.getNormalizedConfig().output.cssModules.localIdentName,
-    ).toBe('[hash:7]')
-  })
 })
