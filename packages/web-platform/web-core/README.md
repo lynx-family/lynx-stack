@@ -9,8 +9,8 @@ Lynx3 Web Platform runtime core
 #### unpkg
 
 ```html
-<script src="https://app.unpkg.com/@lynx-js/web-core/files/dist/client_prod/static/js/client.js" type="module"></script>
-<link rel="stylesheet" href="https://app.unpkg.com/@lynx-js/web-core/files/dist/client_prod/static/css/client.css">
+<script src="https://unpkg.com/@lynx-js/web-core/dist/client_prod/static/js/client.js" type="module"></script>
+<link rel="stylesheet" href="https://unpkg.com/@lynx-js/web-core/dist/client_prod/static/css/client.css">
 ```
 
 #### jsdelivr
@@ -28,7 +28,7 @@ import '@lynx-js/web-core/client';
 document.body.innerHTML = `
 <lynx-view 
   style="height:100vh; width:100vw;" 
-  url="http://localhost:3000/main/main-thread.js"
+  url="http://localhost:3000/main.web.bundle"
 >
 </lynx-view>`;
 ```
