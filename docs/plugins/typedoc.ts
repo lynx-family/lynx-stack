@@ -48,6 +48,9 @@ export function pluginApiSection(
       app.options.setValue('router', section.router);
       app.options.setValue('fileExtension', '.mdx');
       app.options.setValue('sanitizeComments', true);
+      app.options.setValue('useCodeBlocks', true);
+      app.options.setValue('expandParameters', true);
+      app.options.setValue('parametersFormat', 'table');
       app.options.setValue('excludeScopesInPaths', true);
       if (section.readme) {
         app.options.setValue('readme', section.readme);

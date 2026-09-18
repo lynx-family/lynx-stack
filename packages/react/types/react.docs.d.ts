@@ -122,6 +122,8 @@ export { createContext, forwardRef, lazy, memo } from 'react';
  * @public
  *
  * @group Components
+ *
+ * @function
  */
 export const Fragment: typeof import('react').Fragment;
 
@@ -132,6 +134,8 @@ export const Fragment: typeof import('react').Fragment;
  * @public
  *
  * @group Components
+ *
+ * @function
  */
 export const Suspense: typeof import('react').Suspense;
 

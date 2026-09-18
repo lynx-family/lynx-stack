@@ -188,6 +188,8 @@ const _InitData = /* @__PURE__ */ factory<InitData>(
  * ```
  *
  * @public
+ *
+ * @function
  */
 // @ts-expect-error make preact and react types work
 export const InitDataProvider: FC<{ children?: ReactNode | undefined }> = /* @__PURE__ */ _InitData.Provider();
@@ -196,6 +198,8 @@ export const InitDataProvider: FC<{ children?: ReactNode | undefined }> = /* @__
  * This should be used with {@link InitDataProvider}
  * @group Components
  * @public
+ *
+ * @function
  */
 // @ts-expect-error make preact and react types work
 export const InitDataConsumer: Consumer<InitData> = /* @__PURE__ */ _InitData.Consumer();
@@ -274,6 +278,8 @@ const _GlobalProps = /* @__PURE__ */ createGlobalProps<GlobalProps>({
  * ```
  *
  * @public
+ *
+ * @function
  */
 // @ts-expect-error make preact and react types work
 export const GlobalPropsProvider: FC<{ children?: ReactNode | undefined }> = /* @__PURE__ */ _GlobalProps.Provider();
@@ -284,6 +290,8 @@ export const GlobalPropsProvider: FC<{ children?: ReactNode | undefined }> = /* 
  * it calls `children` with `lynx.__globalProps` directly and updates come from a full re-render.
  * @group Components
  * @public
+ *
+ * @function
  */
 // @ts-expect-error make preact and react types work
 export const GlobalPropsConsumer: Consumer<GlobalProps> = /* @__PURE__ */ _GlobalProps.Consumer();
