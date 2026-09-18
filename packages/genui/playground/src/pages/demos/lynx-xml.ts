@@ -5,11 +5,13 @@
 import { html } from '@codemirror/lang-html';
 
 import { compileLynxXmlFragment } from '@lynx-js/genui/lynx-xml';
+import type { LynxXmlStylePreset } from '@lynx-js/genui/lynx-xml';
 
 import type { DemosListSource } from './DemosList.js';
 import type { DemosPageSource } from './type.js';
 import counterSource from '../../mock/lynx-xml/counter.lynxml?raw';
 import productCardSource from '../../mock/lynx-xml/product-card.lynxml?raw';
+import stylePresetCounterSource from '../../mock/lynx-xml/style-preset-counter.lynxml?raw';
 import templateCounterSource from '../../mock/lynx-xml/template-counter.lynxml?raw';
 import todoListSource from '../../mock/lynx-xml/todo-list.lynxml?raw';
 import travelPlanSource from '../../mock/lynx-xml/travel-plan.lynxml?raw';
@@ -24,6 +26,7 @@ export interface LynxXmlScenario {
   sourcePath: string;
   source: string;
   templateSource?: string;
+  stylePreset?: LynxXmlStylePreset;
 }
 
 interface LynxXmlPreviewInput {
@@ -89,6 +92,19 @@ export const LYNX_XML_SCENARIOS: readonly LynxXmlScenario[] = [
     source: compileLynxXmlFragment(templateCounterSource).text,
     templateSource: templateCounterSource,
   },
+  {
+    id: 'style-preset-counter',
+    title: 'StylePreset Counter',
+    description:
+      'The same Template Counter UI and interactions with utility styles, for comparing source token counts.',
+    badge: 'StylePreset',
+    sourcePath: 'demos/lynx-xml/style-preset-counter.lynxml',
+    source: compileLynxXmlFragment(stylePresetCounterSource, {
+      stylePreset: 'default',
+    }).text,
+    templateSource: stylePresetCounterSource,
+    stylePreset: 'default',
+  },
 ];
 
 export const LYNX_XML_DEMOS_LIST_SOURCE = {
@@ -127,7 +143,8 @@ function compileEditorSource(
 ): string {
   return scenario?.templateSource === undefined
     ? source
-    : compileLynxXmlFragment(source).text;
+    : compileLynxXmlFragment(source, { stylePreset: scenario.stylePreset })
+      .text;
 }
 
 export const LYNX_XML_DEMOS_PAGE_SOURCE = {

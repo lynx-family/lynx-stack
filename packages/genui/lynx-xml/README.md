@@ -12,10 +12,11 @@ extraction, and rendering.
 | Mode             | Model output                                                        | Consumer action                                              |
 | ---------------- | ------------------------------------------------------------------- | ------------------------------------------------------------ |
 | Direct (default) | A complete `.lynxml` document with model-authored Element PAPI code | Pass the document to the renderer                            |
-| XML fragment     | An intermediate `.lynxml` document containing a `<template>`        | Call `compileLynxXmlFragment`, then render its `text` result |
+| Template         | An intermediate `.lynxml` document containing a `<template>`        | Call `compileLynxXmlFragment`, then render its `text` result |
 
-Both modes keep styles, state, lifecycle, and interactions model-authored.
-Fragment mode generates the static element tree deterministically, without an
+Both modes keep state, lifecycle, and interactions model-authored. Styles are
+model-authored unless the optional StylePreset is enabled.
+Template mode generates the static element tree deterministically, without an
 additional model round trip.
 
 ## Build a system prompt
@@ -38,12 +39,12 @@ const prompt = buildLynxXmlSystemPrompt({
 ```
 
 `engineVersion` defaults to `4.2`. Set `enableHtmlFragment: true` to select
-fragment mode; it defaults to `false`. `appendix` is appended after the built-in
+Template mode; it defaults to `false`. `appendix` is appended after the built-in
 instructions.
 
-## Compile an XML fragment document
+## Compile a template document
 
-Use `LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT` for fragment generation, or build a
+Use `LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT` for template generation, or build a
 custom prompt with `enableHtmlFragment: true`:
 
 ```ts
@@ -84,6 +85,75 @@ It preserves source order and whitespace within nonempty text, rejects duplicate
 ids, and bounds fragment length and nesting. Rendering remains the consumer's
 responsibility.
 
+### Optional StylePreset
+
+Use the same `stylePreset` option for prompt construction and conversion:
+
+```ts
+import {
+  buildLynxXmlSystemPrompt,
+  compileLynxXmlFragment,
+} from '@lynx-js/genui/lynx-xml';
+
+const stylePreset = 'default';
+const prompt = buildLynxXmlSystemPrompt({
+  enableHtmlFragment: true,
+  stylePreset,
+});
+
+// The model can write class="flex flex-col gap-4 p-6 bg-slate-50".
+const { text } = compileLynxXmlFragment(modelOutput, { stylePreset });
+```
+
+Omitting `stylePreset` or setting it to `false` disables preset styling.
+StylePreset is independent of Template. For a direct Element PAPI document:
+
+```ts
+import { applyLynxXmlStylePreset } from '@lynx-js/genui/lynx-xml';
+
+const prompt = buildLynxXmlSystemPrompt({ stylePreset: 'default' });
+// The model uses __SetClasses(node, 'flex flex-col p-4') without a template.
+const text = applyLynxXmlStylePreset(modelOutput, 'default');
+```
+
+`'default'` enables the built-in StylePreset, a finite Lynx utility vocabulary.
+The converter collects classes from the template and complete string
+literals in the authored main-thread script, then injects only matching rules
+before authored styles in a single `<style>` block. Multiple authored style
+blocks are merged in source order. Rule order is stable and independent of
+class order;
+same-specificity custom CSS can override the preset. Unknown classes remain
+available for custom styles. Avoid conflicting utilities for the same property.
+
+The preset includes Flex layout, spacing and sizing (4px steps), typography,
+colors, rounded corners, borders, opacity, and overflow. For example, `p-4`
+means `padding: 16px`, `text-lg` sets only `font-size: 18px`, and `border` sets
+a solid 1px border. Values are literal px/hex values. There is no automatic
+reset, CSS variable, arbitrary value, fractional size, variant
+such as `hover:` or `sm:`, or `@apply` support. Use custom CSS for these needs.
+The complete supported vocabulary is included in the enabled system prompt.
+
+Dynamic state classes must appear as complete literals, such as
+`active ? 'bg-blue-500' : 'bg-gray-100'`; concatenating `'bg-' + color + '-500'`
+does not register a class. JavaScript is never executed during conversion.
+The resulting document remains self-contained: no stylesheet download or build
+configuration is required. The model saves output tokens by referencing classes;
+the preset vocabulary adds input tokens, and the compiled artifact still contains
+the resolved CSS. Measure generation latency and token usage for the actual task.
+
+GenUI Create exposes **Design**, **Template**, and **StylePreset** as independent
+checkboxes, all enabled for new records. Changes are saved with the current
+record and restored on selection or reload. Once a conversation has generated
+history, these options are read-only; start a new conversation to change them.
+Template converts markup to Element
+PAPI; StylePreset supplies the built-in utility CSS for either source format.
+New Lynx XML Bench groups also default all three options on and save them in
+their plans; historical settings are preserved.
+The Template setting uses the existing `enableHtmlFragment` option.
+Server requests select Template with `enableHtmlFragment: true` and StylePreset
+with `stylePreset: 'default'` independently; both remain opt-in at the API level.
+Final metadata records the selected preset.
+
 ### Convert a standalone fragment
 
 For custom compilation pipelines, convert an XML fragment directly into
@@ -100,6 +170,7 @@ const { bindings, javascript } = generateMainThreadScriptResult(
 The generated `javascript` expects `page` and `pageId` in scope and creates a
 `nodeMap`. `bindings` maps explicit XML ids to JavaScript expression strings,
 for example `{ root: 'nodeMap["root"]' }`; it does not contain live nodes.
+The result also includes deduplicated `classNames` from template attributes.
 Use `generateMainThreadScript` when only the JavaScript string is needed.
 
 ## Prompt composition and constraints

@@ -35,23 +35,84 @@ const reduceA2UIStream = A2UI_CHAT_ADAPTER.stream.reduce.bind(
   A2UI_CHAT_ADAPTER.stream,
 );
 
-test('Lynx XML Create defaults the fragment checkbox on and keeps toggles in page memory', () => {
-  const adapter = LYNX_XML_CHAT_ADAPTER;
-  let settings = adapter.settings.initial();
-  expect(
-    adapter.settings.controls(settings).find((control) =>
-      control.id === 'enableHtmlFragment'
-    ),
-  ).toMatchObject({ kind: 'checkbox', value: 'on' });
-  for (const value of [undefined, 'off', 'on', 'off']) {
-    if (value !== undefined) {
-      settings = adapter.settings.update(
-        settings,
-        'enableHtmlFragment',
-        value,
-      );
+test('Lynx XML starts all options on without inheriting another record’s preferences', () => {
+  const adapter = LYNX_XML_CHAT_ADAPTER.settings;
+  const defaults = {
+    enableDesignGuidance: true,
+    enableHtmlFragment: true,
+    stylePreset: 'default',
+  };
+  expect(adapter.initial()).toMatchObject(defaults);
+  for (
+    const raw of [
+      undefined,
+      '',
+      '{}',
+      'invalid JSON',
+      JSON.stringify({
+        provider: 'test-model',
+        enableDesignGuidance: false,
+        enableHtmlFragment: false,
+        stylePreset: false,
+      }),
+    ]
+  ) {
+    expect(adapter.parseStored(raw)).toMatchObject(defaults);
+  }
+  expect(adapter.conversation.restore(adapter.initial(), {
+    enableDesignGuidance: true,
+  })).toMatchObject(defaults);
+});
+
+test.each([
+  [true, true, true],
+  [true, true, false],
+  [true, false, true],
+  [true, false, false],
+  [false, true, true],
+  [false, true, false],
+  [false, false, true],
+  [false, false, false],
+])(
+  'independently saves and requests Design=%s Template=%s StylePreset=%s',
+  (design, template, preset) => {
+    const adapter = LYNX_XML_CHAT_ADAPTER;
+    let settings = adapter.settings.initial();
+    for (
+      const [id, enabled] of [
+        ['enableDesignGuidance', design],
+        ['enableHtmlFragment', template],
+        ['stylePreset', preset],
+      ] as const
+    ) {
+      settings = adapter.settings.update(settings, id, enabled ? 'on' : 'off');
+      expect(
+        adapter.settings.controls(settings).find(control => control.id === id),
+      )
+        .toMatchObject({ kind: 'checkbox', value: enabled ? 'on' : 'off' });
     }
-    expect(settings.enableHtmlFragment !== false).toBe(value !== 'off');
+    expect(
+      adapter.settings.controls(settings).filter(control =>
+        control.kind === 'checkbox'
+      )
+        .every(control => !('disabled' in control && control.disabled)),
+    ).toBe(true);
+    const saved = adapter.settings.conversation.snapshot(settings);
+    expect(saved).toEqual({
+      enableDesignGuidance: design,
+      enableHtmlFragment: template,
+      stylePreset: preset ? 'default' : false,
+    });
+    expect(
+      adapter.settings.conversation.restore(adapter.settings.initial(), saved),
+    )
+      .toMatchObject(saved);
+    const stored = adapter.settings.serialize(settings);
+    for (
+      const key of ['enableDesignGuidance', 'enableHtmlFragment', 'stylePreset']
+    ) {
+      expect(stored).not.toHaveProperty(key);
+    }
     const request = adapter.createRequest({
       prompt: 'Hello',
       settings,
@@ -65,30 +126,23 @@ test('Lynx XML Create defaults the fragment checkbox on and keeps toggles in pag
       },
       signal: new AbortController().signal,
     });
-    expect(request.body).toMatchObject({
-      enableHtmlFragment: value !== 'off',
-    });
-    const stored = adapter.settings.serialize(settings);
-    expect(stored).not.toHaveProperty('enableHtmlFragment');
-    expect(adapter.settings.parseStored(JSON.stringify(stored)))
-      .toMatchObject({ enableHtmlFragment: true });
-  }
-  for (const key of ['enableHtmlFragment', 'enableHtmlFragmentTool']) {
-    expect(adapter.settings.parseStored(JSON.stringify({
-      provider: 'test-model',
-      enableDesignGuidance: false,
-      [key]: false,
-    }))).toMatchObject({
-      provider: 'test-model',
-      enableDesignGuidance: false,
-      enableHtmlFragment: true,
-    });
-  }
-  expect(
-    CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings).some((control) =>
-      control.id === 'enableHtmlFragment'
-    ),
-  ).toBe(false);
+    expect(request.body.enableDesignGuidance !== false).toBe(design);
+    expect(request.body.enableHtmlFragment).toBe(template);
+    expect(request.body.stylePreset).toBe(preset ? 'default' : undefined);
+  },
+);
+
+test('toggling Template preserves the independent StylePreset selection', () => {
+  const adapter = LYNX_XML_CHAT_ADAPTER.settings;
+  const settings = adapter.update(
+    adapter.initial(),
+    'enableHtmlFragment',
+    'off',
+  );
+  expect(settings.stylePreset).toBe('default');
+  expect(adapter.update(settings, 'enableHtmlFragment', 'on').stylePreset).toBe(
+    'default',
+  );
 });
 
 test('keeps intermediate fragment source out of preview and migrates the saved switch', () => {
@@ -779,6 +833,31 @@ describe('chat protocol adapters', () => {
         }),
       ),
     ).not.toContain('xmlFragment');
+  });
+
+  test('shows Original and Transformed for preset-only artifacts without fragment metadata', () => {
+    const source = VALID_LYNX_XML.replace(
+      '</lynx>',
+      '<style>.flex { display: flex; }</style></lynx>',
+    );
+    const result = LYNX_XML_CHAT_ADAPTER.stream.fromJson({
+      text: source,
+      metadata: { modelOutput: VALID_LYNX_XML, stylePreset: 'default' },
+    });
+    const output = LYNX_XML_CHAT_ADAPTER.stream.finish(result.state)!;
+    expect(output).not.toHaveProperty('xmlFragment');
+    expect(
+      LYNX_XML_CHAT_ADAPTER.preview.artifact(output).views.map((
+        { label, text },
+      ) => ({ label, text })),
+    ).toEqual([
+      { label: 'Original', text: VALID_LYNX_XML },
+      { label: 'Transformed', text: source },
+    ]);
+    expect(LYNX_XML_CHAT_ADAPTER.persist(output)).toMatchObject({
+      assistantContent: source,
+      lynxXmlModelOutput: VALID_LYNX_XML,
+    });
   });
 
   test.each([undefined, {}, { xmlFragment: 42 }])(

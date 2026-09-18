@@ -2,6 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import {
+  LYNX_XML_STYLE_PRESET_INSTRUCTIONS,
+  validateStylePreset,
+} from './style-preset.js';
+import type { LynxXmlStylePreset } from './style-preset.js';
 import { VANILLA_LYNX_SKILL_GUIDANCE } from './vanilla-lynx-skill.js';
 
 /** The default Lynx engine version used by generated XML artifacts. */
@@ -11,6 +16,8 @@ export const LYNX_XML_ENGINE_VERSION = '4.2';
 export interface BuildLynxXmlSystemPromptOptions {
   /** Generate an intermediate document for deterministic fragment compilation. */
   enableHtmlFragment?: boolean;
+  /** Reuse preset utility CSS independently of Template. Disabled when omitted or false. */
+  stylePreset?: LynxXmlStylePreset | false;
   /** Override the generated artifact's Lynx engine version. */
   engineVersion?: string;
   /** Append caller-specific instructions after the built-in contract. */
@@ -21,7 +28,7 @@ const ENGINE_VERSION_PATTERN = /^\d+(?:\.\d+)*$/u;
 
 /** Intermediate source contract for deterministic fragment compilation. */
 export const LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS =
-  `XML fragment mode is enabled for this request (this output contract overrides the imported document guidance below):
+  `Template mode is enabled for this request (this output contract overrides the imported document guidance below):
 - Generate the entire document in one response: one <template> containing the initial XML element fragment directly inside <lynx>, alongside CSS and main/background scripts in their normal source blocks. Prefer placing the template first, but block order is not significant. Never omit the template, even when conversation history contains already-compiled .lynxml artifacts. The server removes <template> and compiles it to Element PAPI before delivery; it is an intermediate format, not a runtime Lynx element.
 - Give a unique id ONLY to nodes referenced later by event binding, state updates, or cleanup. Omit id on purely static nodes; do not assign ids to every node. Use well-formed XML, literal attributes and XML entities in the template. Keep style, script, lynx, and page elements outside the fragment. Prefer literal text directly inside <text>. An explicit <raw-text> leaf may use text content or a text attribute, never both; put styling, event handlers, and update ids on its parent <text>. Do not use interpolation, loops, conditional directives, or inline event-handler attributes; implement dynamic behavior in JavaScript.
 - The server supplies createFragment(page, pageId). Call it exactly once in renderPage(), after page and pageId exist: nodes = createFragment(page, pageId). Declare let nodes at main-thread script scope so later event, update, and cleanup handlers can use nodes["cityText"] for id="cityText". Access nodes only after rendering. Do not declare or shadow createFragment, invent nodeN variables, or assume XML ids declare variables.
@@ -32,12 +39,14 @@ export const LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS =
 export function buildLynxXmlSystemPrompt(
   options: BuildLynxXmlSystemPromptOptions = {},
 ): string {
+  validateStylePreset(options.stylePreset);
   const engineVersion = normalizeEngineVersion(
     options.engineVersion ?? LYNX_XML_ENGINE_VERSION,
   );
   const prompt = buildBasePrompt(
     engineVersion,
     options.enableHtmlFragment === true,
+    options.stylePreset === 'default',
   );
   const appendix = options.appendix?.trim();
   return appendix ? `${prompt}\n\n${appendix}` : prompt;
@@ -58,6 +67,7 @@ function normalizeEngineVersion(engineVersion: string): string {
 function buildBasePrompt(
   engineVersion: string,
   enableHtmlFragment: boolean,
+  enableStylePreset: boolean,
 ): string {
   return `
 You are the Lynx XML generation agent for Lynx GenUI. Turn the user's request
@@ -81,11 +91,20 @@ GenUI output requirements:
 
 ${
     enableHtmlFragment
-      ? LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS + '\n\n'
+      ? (enableStylePreset
+        ? LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS.replace(
+          'Write all CSS,',
+          'Write only custom CSS beyond the enabled preset,',
+        )
+        : LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS) + '\n\n'
       : ''
   }${VANILLA_LYNX_SKILL_GUIDANCE}
 
-Lynx XML adaptation contract:
+${
+    enableStylePreset
+      ? LYNX_XML_STYLE_PRESET_INSTRUCTIONS + '\n\n'
+      : ''
+  }Lynx XML adaptation contract:
 - __AppendElement and append helpers accept node references, never numeric ids.
   Use pageId only as the first argument to page-owned creation APIs.
 - Pass parent nodes and render-local dependencies as helper parameters.

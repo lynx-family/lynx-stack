@@ -42,7 +42,7 @@ export function ExampleTokenCount({ source }: { source: string }) {
   return (
     <div
       className='exampleTokenCount'
-      title='Token count of the original editor source, including whitespace, using o200k_base. This is not model API usage.'
+      title='Token count of the currently displayed source, including whitespace, using o200k_base. This is not model API usage.'
     >
       <span
         className='exampleTokenCountMetric'

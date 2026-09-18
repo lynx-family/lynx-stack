@@ -38,7 +38,7 @@ function response(options: {
   ).toBe(false);
   return queued.shift() ?? {
     text: override
-      ?? (prompt.includes('XML fragment mode') ? INTERMEDIATE : DIRECT),
+      ?? (prompt.includes('Template mode') ? INTERMEDIATE : DIRECT),
     finishReason: 'stop' as const,
   };
 }
@@ -285,6 +285,60 @@ test('isolates cached configurations and defaults to direct output', async () =>
   expect(calls).toHaveLength(4);
   expect(createLLMProvider).toHaveBeenCalledTimes(2);
 });
+
+test.each(['generate', 'stream'] as const)(
+  '%s applies both independent options and isolates all four agent cache variants',
+  async mode => {
+    const service = new LynxXmlAgentService();
+    for (const enableHtmlFragment of [false, true]) {
+      override = enableHtmlFragment
+        ? INTERMEDIATE.replace(
+          'id="root"',
+          'id="root" class="flex flex-col p-4"',
+        )
+        : DIRECT.replace(
+          '</script>',
+          '__SetClasses(page, "flex flex-col p-4");</script>',
+        );
+      for (const stylePreset of [false, 'default', false, 'default'] as const) {
+        const options = {
+          enableHtmlFragment,
+          stylePreset,
+          enableWebSearch: false,
+          enableImageGeneration: false,
+        };
+        let result;
+        if (mode === 'generate') {
+          result = await service.generateRaw([], options);
+        } else {
+          const stream = await service.streamAsAsyncIterable([], options);
+          let raw = '';
+          for await (const chunk of stream.textStream) raw += chunk;
+          expect(raw).toBe(override);
+          result = await stream.finalize();
+        }
+        expect(result.text?.includes('.p-4 { padding: 16px; }')).toBe(
+          stylePreset === 'default',
+        );
+        expect(result.text?.match(/<style>/gu) ?? []).toHaveLength(
+          enableHtmlFragment || stylePreset ? 1 : 0,
+        );
+        expect(result.metadata.xmlFragment !== undefined).toBe(
+          enableHtmlFragment,
+        );
+        expect(result.text).not.toContain('<template>');
+        expect(calls.at(-1)?.includes('Lynx StylePreset')).toBe(
+          stylePreset === 'default',
+        );
+        expect(result.metadata.modelOutput).toBe(override);
+        expect(result.metadata.stylePreset).toBe(stylePreset || undefined);
+        expect(result.usage).toMatchObject(USAGE);
+      }
+    }
+    expect(createLLMProvider).toHaveBeenCalledTimes(4);
+    expect(calls).toHaveLength(8);
+  },
+);
 
 test.each(['generate', 'stream'] as const)(
   '%s conversion failures preserve model evidence and never silently request another round',

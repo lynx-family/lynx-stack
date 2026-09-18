@@ -28,7 +28,7 @@ describe('buildLynxXmlSystemPrompt', () => {
     expect(LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT).toBe(buildLynxXmlSystemPrompt({
       enableHtmlFragment: true,
     }));
-    expect(LYNX_XML_SYSTEM_PROMPT).not.toContain('XML fragment mode');
+    expect(LYNX_XML_SYSTEM_PROMPT).not.toContain('Template mode');
     expect(LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT).toContain(
       'nodes = createFragment(page, pageId)',
     );
@@ -36,7 +36,7 @@ describe('buildLynxXmlSystemPrompt', () => {
     expect(LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT).toContain(
       LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS,
     );
-    expect(LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT.indexOf('XML fragment mode'))
+    expect(LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT.indexOf('Template mode'))
       .toBeLessThan(
         LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT.indexOf(
           '### references/lynxml.md',

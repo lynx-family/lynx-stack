@@ -14,6 +14,7 @@ export interface ConversationGenerationSettings {
   provider?: string;
   enableDesignGuidance: boolean;
   enableHtmlFragment?: boolean;
+  stylePreset?: 'default' | false;
 }
 
 export interface ConversationMeta {

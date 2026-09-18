@@ -140,6 +140,7 @@ test.each([false, true])(
         provider: 'test-model',
         enableDesignGuidance: false,
         enableHtmlFragment: false,
+        stylePreset: 'default',
       });
       const payload = {
         tokenUsage: {
@@ -162,12 +163,13 @@ test.each([false, true])(
       const body = JSON.parse(init.body) as Record<string, unknown>;
       expect(body.enableDesignGuidance).toBe(false);
       expect(body.enableHtmlFragment).toBe(false);
+      expect(body.stylePreset).toBe('default');
       return generated();
     });
     await mountPage();
     await updateUI(() => {
-      checkbox('Extra Design Skill').click();
-      checkbox('XML fragment').click();
+      checkbox('Design').click();
+      checkbox('Template').click();
     });
     await updateUI(() => {
       const textarea = container.querySelector('textarea')!;
@@ -213,8 +215,54 @@ test.each([false, true])(
       })));
     await reloadPage();
     expect(container.textContent).toContain('Est. cost ¥27.0000');
-    expect(checkbox('Extra Design Skill').checked).toBe(false);
-    expect(checkbox('XML fragment').checked).toBe(false);
+    expect(checkbox('Design').checked).toBe(false);
+    expect(checkbox('Template').checked).toBe(false);
+    expect(checkbox('StylePreset').checked).toBe(true);
+    for (const label of ['Design', 'Template', 'StylePreset']) {
+      expect(checkbox(label).disabled).toBe(true);
+    }
+    await updateUI(() => {
+      for (const label of ['Design', 'Template', 'StylePreset']) {
+        checkbox(label).click();
+      }
+    });
+    expect(checkbox('Design').checked).toBe(false);
+    expect(checkbox('Template').checked).toBe(false);
+    expect(checkbox('StylePreset').checked).toBe(true);
+    const unchanged = await loadConversation(savedId!);
+    expect(unchanged?.meta.generationSettings).toEqual(
+      saved?.meta.generationSettings,
+    );
+    await updateUI(() => button('New Chat').click());
+    await rstest.waitFor(async () => {
+      await React.act(async () => {
+        expect(await getActiveConversationId('lynx-xml')).not.toBe(savedId);
+      });
+      for (const label of ['Design', 'Template', 'StylePreset']) {
+        expect(checkbox(label).checked).toBe(true);
+        expect(checkbox(label).disabled).toBe(false);
+      }
+    });
+    await updateUI(() => {
+      const item = [
+        ...container.querySelectorAll<HTMLButtonElement>(
+          '.conversationListItemMain',
+        ),
+      ]
+        .find(node => node.textContent?.includes('Build a weather dashboard'))!;
+      item.click();
+    });
+    await rstest.waitFor(async () => {
+      await React.act(async () => {
+        expect(await getActiveConversationId('lynx-xml')).toBe(savedId);
+      });
+      expect(checkbox('Design').checked).toBe(false);
+      expect(checkbox('Template').checked).toBe(false);
+      expect(checkbox('StylePreset').checked).toBe(true);
+      for (const label of ['Design', 'Template', 'StylePreset']) {
+        expect(checkbox(label).disabled).toBe(true);
+      }
+    });
   },
 );
 
@@ -227,6 +275,7 @@ test('restores each conversation independently and survives late model loading',
       provider: 'test-model',
       enableDesignGuidance: false,
       enableHtmlFragment: true,
+      stylePreset: false,
     },
   });
   await saveConversationMeta({
@@ -235,6 +284,7 @@ test('restores each conversation independently and survives late model loading',
       provider: 'other-model',
       enableDesignGuidance: true,
       enableHtmlFragment: false,
+      stylePreset: 'default',
     },
   });
   await setActiveConversationId(first.id, 'lynx-xml');
@@ -244,8 +294,9 @@ test('restores each conversation independently and survives late model loading',
   });
   rstest.stubGlobal('fetch', () => loading);
   await mountPage();
-  expect(checkbox('Extra Design Skill').checked).toBe(false);
-  expect(checkbox('XML fragment').checked).toBe(true);
+  expect(checkbox('Design').checked).toBe(false);
+  expect(checkbox('Template').checked).toBe(true);
+  expect(checkbox('StylePreset').checked).toBe(false);
   await updateUI(() => {
     const item = [...container.querySelectorAll<HTMLButtonElement>(
       '.conversationListItemMain',
@@ -256,8 +307,9 @@ test('restores each conversation independently and survives late model loading',
     await React.act(async () => {
       await getActiveConversationId('lynx-xml');
     });
-    expect(checkbox('Extra Design Skill').checked).toBe(true);
-    expect(checkbox('XML fragment').checked).toBe(false);
+    expect(checkbox('Design').checked).toBe(true);
+    expect(checkbox('Template').checked).toBe(false);
+    expect(checkbox('StylePreset').checked).toBe(true);
   });
   await React.act(async () =>
     resolveModels(jsonResponse({
@@ -265,8 +317,9 @@ test('restores each conversation independently and survives late model loading',
       models: [...MODELS.models, { id: 'other-model', label: 'Other model' }],
     }))
   );
-  expect(checkbox('Extra Design Skill').checked).toBe(true);
-  expect(checkbox('XML fragment').checked).toBe(false);
+  expect(checkbox('Design').checked).toBe(true);
+  expect(checkbox('Template').checked).toBe(false);
+  expect(checkbox('StylePreset').checked).toBe(true);
   const provider = container.querySelector<HTMLSelectElement>(
     '[aria-label="Provider"]',
   )!;
@@ -279,6 +332,46 @@ test('restores each conversation independently and survives late model loading',
     item.click();
   });
   await rstest.waitFor(() => expect(provider.value).toBe('test-model'));
+  expect(checkbox('StylePreset').checked).toBe(false);
+});
+
+test('saves checkbox edits before sending, reloads them, and defaults new records on', async () => {
+  rstest.stubGlobal('fetch', () => Promise.resolve(jsonResponse(MODELS)));
+  await mountPage();
+  const labels = ['Design', 'Template', 'StylePreset'];
+  for (const label of labels) expect(checkbox(label).checked).toBe(true);
+  await updateUI(() => {
+    for (const label of labels) checkbox(label).click();
+  });
+  const id = await getActiveConversationId('lynx-xml');
+  await rstest.waitFor(async () => {
+    const saved = await loadConversation(id!);
+    expect(saved?.messages).toHaveLength(0);
+    expect(saved?.meta.generationSettings).toEqual({
+      provider: 'test-model',
+      enableDesignGuidance: false,
+      enableHtmlFragment: false,
+      stylePreset: false,
+    });
+  });
+  await reloadPage();
+  for (const label of labels) {
+    expect(checkbox(label).checked).toBe(false);
+    expect(checkbox(label).disabled).toBe(false);
+  }
+  await updateUI(() => button('New Chat').click());
+  await rstest.waitFor(async () => {
+    await React.act(async () => {
+      expect(await getActiveConversationId('lynx-xml')).not.toBe(id);
+    });
+    for (const label of labels) expect(checkbox(label).checked).toBe(true);
+  });
+  const previous = await loadConversation(id!);
+  expect(previous?.meta.generationSettings).toMatchObject({
+    enableDesignGuidance: false,
+    enableHtmlFragment: false,
+    stylePreset: false,
+  });
 });
 
 test('keeps each turn badge in the chat transcript with its original model price after reload', async () => {

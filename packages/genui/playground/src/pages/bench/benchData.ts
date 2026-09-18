@@ -18,6 +18,7 @@ export type BenchComparisonDirection = Extract<
 export interface BenchGroup {
   enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
+  stylePreset?: 'default' | false;
   catalog: string;
   enabled: boolean;
   extraInstruction: string;
@@ -131,7 +132,10 @@ export function withBenchProtocol(
     profile,
     catalog,
     ...(protocol === 'lynx-xml'
-      ? { enableHtmlFragment: group.enableHtmlFragment === true }
+      ? {
+        enableHtmlFragment: group.enableHtmlFragment ?? true,
+        stylePreset: group.stylePreset ?? 'default',
+      }
       : {}),
   });
 }
@@ -248,6 +252,8 @@ export function createBenchPresetGroups(
         }),
         group('Lynx XML', 3, {
           protocol: 'lynx-xml',
+          enableHtmlFragment: true,
+          stylePreset: 'default',
           catalog: 'none',
           role: 'experiment',
           variable: 'protocol',
@@ -303,6 +309,8 @@ export function createBenchPresetGroups(
         }),
         group('Lynx XML', 2, {
           protocol: 'lynx-xml',
+          enableHtmlFragment: true,
+          stylePreset: 'default',
           catalog: 'none',
           role: 'experiment',
           variable: 'protocol',
@@ -374,7 +382,14 @@ export function getBenchGroupDifferences(
     && (group.enableHtmlFragment === true)
       !== (baseline.enableHtmlFragment === true)
   ) {
-    differences.push('XML fragment');
+    differences.push('Template');
+  }
+  if (
+    group.protocol === 'lynx-xml' && baseline.protocol === 'lynx-xml'
+    && (group.stylePreset === 'default')
+      !== (baseline.stylePreset === 'default')
+  ) {
+    differences.push('StylePreset');
   }
   if (
     usesCatalog(group) && usesCatalog(baseline)

@@ -29,6 +29,7 @@ export function BenchComparisonGroupsSection(props: {
   onPresetChange?: (preset: BenchPreset) => void;
   onCatalogChange: (id: string, catalog: string) => void;
   onFragmentChange: (id: string, enabled: boolean) => void;
+  onStylePresetChange: (id: string, preset: 'default' | false) => void;
   onDesignGuidanceChange: (id: string, enabled: boolean) => void;
   onEnabledChange: (id: string, enabled: boolean) => void;
   onModelChange: (id: string, model: string) => void;
@@ -213,11 +214,11 @@ export function BenchComparisonGroupsSection(props: {
                 {group.protocol === 'lynx-xml' && (
                   <div
                     className='benchField benchXmlFragmentField'
-                    title='Convert the initial XML fragment to Element PAPI using the agent tool.'
+                    title='Convert <template> markup to Element PAPI at runtime.'
                   >
-                    <span className='benchFieldLabel'>XML fragment</span>
+                    <span className='benchFieldLabel'>Template</span>
                     <BenchDropdown
-                      ariaLabel={`${groupName} XML fragment`}
+                      ariaLabel={`${groupName} Template`}
                       value={group.enableHtmlFragment === true
                         ? 'on'
                         : 'off'}
@@ -228,6 +229,30 @@ export function BenchComparisonGroupsSection(props: {
                       }]}
                       onChange={(value) =>
                         props.onFragmentChange(group.id, value === 'on')}
+                    />
+                  </div>
+                )}
+                {group.protocol === 'lynx-xml' && (
+                  <div
+                    className='benchField benchXmlFragmentField'
+                    title='Reuse built-in utility styles with Template or Element PAPI.'
+                  >
+                    <span className='benchFieldLabel'>StylePreset</span>
+                    <BenchDropdown
+                      ariaLabel={`${groupName} StylePreset`}
+                      value={group.stylePreset === 'default'
+                        ? 'default'
+                        : 'off'}
+                      disabled={props.locked}
+                      options={[{ value: 'off', label: 'Off' }, {
+                        value: 'default',
+                        label: 'On',
+                      }]}
+                      onChange={value =>
+                        props.onStylePresetChange(
+                          group.id,
+                          value === 'default' ? 'default' : false,
+                        )}
                     />
                   </div>
                 )}

@@ -55,6 +55,8 @@ test('renders a Lynx XML comparison with native capability and no catalog', () =
       onAdd: noop,
       onCatalogChange: noop,
       onFragmentChange: noop,
+      onStylePresetChange: noop,
+      onDesignGuidanceChange: noop,
       onEnabledChange: noop,
       onModelChange: noop,
       onNameChange: noop,
@@ -65,8 +67,9 @@ test('renders a Lynx XML comparison with native capability and no catalog', () =
   );
   expect(markup).toContain('Lynx XML');
   expect(markup).toMatch(
-    /aria-label="Baseline XML fragment"><span>Off<\/span>/u,
+    /aria-label="Baseline Template"><span>On<\/span>/u,
   );
+  expect(markup).toMatch(/aria-label="Baseline StylePreset"><span>On<\/span>/u);
   expect(markup).not.toContain('<p class="benchFieldHint">');
   expect(markup).not.toContain('Baseline Profile');
   expect(markup).not.toContain('Baseline Catalog');
@@ -225,6 +228,8 @@ describe('BenchPage', () => {
         onAdd: noop,
         onCatalogChange: noop,
         onFragmentChange: noop,
+        onStylePresetChange: noop,
+        onDesignGuidanceChange: noop,
         onEnabledChange: noop,
         onModelChange: noop,
         onNameChange: noop,
@@ -275,6 +280,8 @@ describe('BenchPage', () => {
         onAdd: noop,
         onCatalogChange: noop,
         onFragmentChange: noop,
+        onStylePresetChange: noop,
+        onDesignGuidanceChange: noop,
         onEnabledChange: noop,
         onModelChange: noop,
         onNameChange: noop,

@@ -168,7 +168,12 @@ function normalizeGroups(
         protocol,
         enableDesignGuidance: item.enableDesignGuidance !== false,
         ...(protocol === 'lynx-xml'
-          ? { enableHtmlFragment: item.enableHtmlFragment === true }
+          ? {
+            enableHtmlFragment: item.enableHtmlFragment === true,
+            ...(item.stylePreset === 'default'
+              ? { stylePreset: 'default' as const }
+              : {}),
+          }
           : {}),
         profile,
         ...(model ? { model } : {}),
@@ -273,6 +278,20 @@ export function normalizeBenchJobRequest(
     };
   }
   const groups = normalizeGroups(value.groups);
+  if (
+    Array.isArray(value.groups)
+    && value.groups.some(group =>
+      isRecord(group) && group.protocol === 'lynx-xml'
+      && group.stylePreset !== undefined && group.stylePreset !== false
+      && group.stylePreset !== 'default'
+    )
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'stylePreset must be false or "default"',
+    };
+  }
   if (
     Array.isArray(value.groups)
     && value.groups.some((group) =>
