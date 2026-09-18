@@ -4,9 +4,20 @@ const callback = ()=>{};
 const valueType = defineMainThreadObjectType({
     type: '@test/capturing-value',
     helper: 1,
-    get create () {
+    callback,
+    get callbackOnly () {
         return {
             _wkltId: "a77b:test:1",
+            _jsFn: {
+                _jsFn1: {
+                    _isFirstScreen: true
+                }
+            }
+        };
+    },
+    get create () {
+        return {
+            _wkltId: "a77b:test:2",
             _jsFn: {
                 _jsFn1: {
                     _isFirstScreen: true
@@ -19,7 +30,12 @@ const valueType = defineMainThreadObjectType({
     }
 });
 const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-__workletRuntimeLoaded && registerWorkletInternal("main-thread", "a77b:test:1", function(initialValue: number) {
+__workletRuntimeLoaded && registerWorkletInternal("main-thread", "a77b:test:1", function() {
+    let { _jsFn1 } = this["_jsFn"];
+    "main thread";
+    runOnBackground(_jsFn1)();
+});
+__workletRuntimeLoaded && registerWorkletInternal("main-thread", "a77b:test:2", function(initialValue: number) {
     let { _jsFn1 } = this["_jsFn"];
     "main thread";
     runOnBackground(_jsFn1)();

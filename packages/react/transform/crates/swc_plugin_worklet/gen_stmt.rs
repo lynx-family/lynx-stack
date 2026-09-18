@@ -278,13 +278,6 @@ impl StmtGen {
       StmtGen::wrap_main_thread_object_candidate(&mut key_value.value, child_source);
     }
 
-    if let Some(wrapped) =
-      StmtGen::wrap_main_thread_object_candidate_with_computed_source(value, &source)
-    {
-      *value = wrapped;
-      return true;
-    }
-
     let mut fallback = value.clone();
     let source_argument = source.clone();
     let capture_argument = if source.is_ident() {
@@ -337,130 +330,6 @@ impl StmtGen {
       .into()
     };
     true
-  }
-
-  /// Wrap a source member expression whose computed keys must be evaluated
-  /// exactly once. The generated block evaluates the member chain from left to
-  /// right, binding each computed key before applying it, then reuses the
-  /// resulting value for both capture and fallback.
-  fn wrap_main_thread_object_candidate_with_computed_source(
-    value: &Expr,
-    source: &Expr,
-  ) -> Option<Box<Expr>> {
-    let mut properties = vec![];
-    let base = StmtGen::split_member_chain(source, &mut properties);
-    if !properties.iter().any(StmtGen::is_dynamic_computed_property) {
-      return None;
-    }
-
-    let base_ident = private_ident!("__mainThreadObjectBase");
-    let mut current = Expr::Ident(base_ident.clone());
-    let mut stmts = vec![];
-
-    for property in properties {
-      let property = match property {
-        MemberProp::Computed(computed) if !computed.expr.is_lit() => {
-          let key_ident = private_ident!("__mainThreadObjectKey");
-          stmts.push(StmtGen::gen_const_decl(key_ident.clone(), *computed.expr));
-          MemberProp::Computed(ComputedPropName {
-            span: computed.span,
-            expr: Expr::Ident(key_ident).into(),
-          })
-        }
-        property => property,
-      };
-
-      current = StmtGen::append_member_prop(current, property);
-      let value_ident = private_ident!("__mainThreadObjectValue");
-      stmts.push(StmtGen::gen_const_decl(value_ident.clone(), current));
-      current = Expr::Ident(value_ident);
-    }
-
-    let mut fallback: Box<Expr> = value.clone().into();
-    fallback.visit_mut_with(&mut CaptureRootReplacer {
-      source: source.clone(),
-      replacement: current.as_ident().unwrap().clone(),
-    });
-
-    let captured = CallExpr {
-      ctxt: Default::default(),
-      span: DUMMY_SP,
-      args: vec![current.clone().into()],
-      callee: Callee::Expr(quote_expr!("captureMainThreadObject")),
-      type_args: None,
-    };
-    stmts.push(
-      ReturnStmt {
-        span: DUMMY_SP,
-        arg: Some(
-          BinExpr {
-            span: DUMMY_SP,
-            op: BinaryOp::NullishCoalescing,
-            left: captured.into(),
-            right: fallback,
-          }
-          .into(),
-        ),
-      }
-      .into(),
-    );
-
-    Some(
-      CallExpr {
-        ctxt: Default::default(),
-        span: DUMMY_SP,
-        callee: Callee::Expr(
-          ArrowExpr {
-            ctxt: Default::default(),
-            span: DUMMY_SP,
-            params: vec![Pat::Ident(base_ident.into())],
-            body: Box::new(ArrowFunctionBody::FunctionBody(FunctionBody {
-              span: DUMMY_SP,
-              stmts,
-            })),
-            is_async: false,
-            is_generator: false,
-            type_params: None,
-            return_type: None,
-          }
-          .into(),
-        ),
-        args: vec![base.into()],
-        type_args: None,
-      }
-      .into(),
-    )
-  }
-
-  fn split_member_chain(expr: &Expr, properties: &mut Vec<MemberProp>) -> Expr {
-    match expr {
-      Expr::Member(member) => {
-        let base = StmtGen::split_member_chain(&member.obj, properties);
-        properties.push(member.prop.clone());
-        base
-      }
-      _ => expr.clone(),
-    }
-  }
-
-  fn is_dynamic_computed_property(property: &MemberProp) -> bool {
-    matches!(property, MemberProp::Computed(computed) if !computed.expr.is_lit())
-  }
-
-  fn gen_const_decl(name: Ident, init: Expr) -> Stmt {
-    VarDecl {
-      span: DUMMY_SP,
-      ctxt: Default::default(),
-      kind: VarDeclKind::Const,
-      declare: false,
-      decls: vec![VarDeclarator {
-        span: DUMMY_SP,
-        name: Pat::Ident(name.into()),
-        init: Some(init.into()),
-        definite: false,
-      }],
-    }
-    .into()
   }
 
   fn append_member(source: Expr, property: &PropName) -> Expr {
@@ -652,44 +521,5 @@ impl StmtGen {
         optional: false,
       })
     )
-  }
-}
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-  use swc_core::common::{Globals, GLOBALS};
-  use swc_core::ecma::visit::{noop_visit_type, Visit, VisitWith};
-
-  #[derive(Default)]
-  struct GetKeyCallCounter(usize);
-
-  impl Visit for GetKeyCallCounter {
-    noop_visit_type!();
-
-    fn visit_call_expr(&mut self, node: &CallExpr) {
-      if let Callee::Expr(callee) = &node.callee {
-        if matches!(callee.as_ref(), Expr::Ident(ident) if ident.sym == "getKey") {
-          self.0 += 1;
-        }
-      }
-      node.visit_children_with(self);
-    }
-  }
-
-  #[test]
-  fn materializes_computed_capture_keys_once() {
-    GLOBALS.set(&Globals::new(), || {
-      let source: Expr = *quote_expr!("root[getKey()]");
-      let mut value: Box<Expr> = quote_expr!("{ value: root[getKey()] }");
-
-      assert!(StmtGen::wrap_main_thread_object_candidate(
-        &mut value, source
-      ));
-
-      let mut counter = GetKeyCallCounter::default();
-      value.visit_with(&mut counter);
-      assert_eq!(counter.0, 1);
-    });
   }
 }
