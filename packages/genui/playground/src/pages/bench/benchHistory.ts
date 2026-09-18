@@ -131,6 +131,9 @@ export function createBenchGroupsFromReport(
         ? {
           enableHtmlFragment:
             (item.enableHtmlFragment ?? item.enableHtmlFragmentTool) === true,
+          ...(item.stylePreset === 'default' || item.stylePreset === false
+            ? { stylePreset: item.stylePreset }
+            : {}),
         }
         : {}),
       profile: isBenchProfile(item.profile)

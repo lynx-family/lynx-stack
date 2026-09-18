@@ -76,17 +76,21 @@ describe('Bench preset group names', () => {
 
 describe('Bench protocol selection', () => {
   test('restores enabled conversion and reports it as a comparison difference', () => {
-    const baseline = withBenchProtocol(
-      createDefaultBenchGroups('model')[0]!,
-      'lynx-xml',
-    );
+    const baseline = {
+      ...withBenchProtocol(
+        createDefaultBenchGroups('model')[0]!,
+        'lynx-xml',
+      ),
+      enableHtmlFragment: false,
+      stylePreset: false as const,
+    };
     const enabled = {
       ...baseline,
       id: 'enabled',
       enableHtmlFragment: true,
     };
     expect(getBenchGroupDifferences(enabled, baseline)).toEqual([
-      'XML fragment',
+      'Template',
     ]);
     expect(
       createBenchGroupsFromReport({
@@ -104,6 +108,31 @@ describe('Bench protocol selection', () => {
         ?.enableHtmlFragment,
     ).toBe(false);
   });
+  test('restores preset styles and identifies them in XML comparisons', () => {
+    const baseline = withBenchProtocol(
+      createDefaultBenchGroups('model')[0]!,
+      'lynx-xml',
+    );
+    const enabled = {
+      ...baseline,
+      enableHtmlFragment: false,
+      stylePreset: false as const,
+    };
+    const preset = {
+      ...enabled,
+      id: 'preset',
+      stylePreset: 'default' as const,
+    };
+    expect(getBenchGroupDifferences(preset, enabled)).toEqual([
+      'StylePreset',
+    ]);
+    const groups = createBenchGroupsFromReport({
+      groups: [preset, { ...preset, id: 'off', enableHtmlFragment: false }],
+      env: { apiKeyConfigured: false, model: 'model' },
+    });
+    expect(groups[0]?.stylePreset).toBe('default');
+    expect(groups[1]?.stylePreset).toBe('default');
+  });
   test('switches to XML native without retaining a component catalog', () => {
     const original = createDefaultBenchGroups('test-model')[0]!;
     const xml = withBenchProtocol(
@@ -115,6 +144,8 @@ describe('Bench protocol selection', () => {
       profile: 'native',
       catalog: 'none',
       model: 'test-model',
+      enableHtmlFragment: true,
+      stylePreset: 'default',
     });
     expect(usesCatalog(xml)).toBe(false);
     expect(getBenchProtocolLabel(xml.protocol)).toBe('Lynx XML');
@@ -128,6 +159,14 @@ describe('Bench protocol selection', () => {
       profile: 'matched-core',
       catalog: 'Core Catalog',
     });
+    expect(
+      withBenchProtocol({
+        ...xml,
+        enableHtmlFragment: false,
+        stylePreset: false,
+      }, 'lynx-xml'),
+    )
+      .toMatchObject({ enableHtmlFragment: false, stylePreset: false });
   });
 
   test('offers XML after A2UI/OpenUI and supports an XML baseline', () => {

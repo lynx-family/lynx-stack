@@ -1453,86 +1453,112 @@
 }
 
 .chatComposerFooter {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px;
 }
 
 .chatProviderControl {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.chatProviderSelectGroup,
+.chatProviderOptions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.chatProviderSelectField {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   min-width: 0;
-  max-width: min(360px, 65%);
-  height: 34px;
-  padding: 0 8px 0 10px;
+  max-width: 100%;
+  height: 32px;
+  padding: 0 8px;
   border: 1px solid var(--geist-border);
-  border-radius: 999px;
+  border-radius: 8px;
   background: color-mix(
     in srgb,
     var(--geist-surface) 72%,
     var(--geist-background)
   );
+  transition:
+    border-color var(--geist-transition),
+    background var(--geist-transition);
 }
 
-.chatProviderControlWrap {
-  flex: 1;
-  flex-wrap: wrap;
-  row-gap: 4px;
-  max-width: 440px;
-  min-height: 34px;
-  height: auto;
-  padding-block: 2px;
+.chatProviderSelectField:hover:not(:has(select:disabled)) {
+  border-color: var(--geist-border-hover);
+  background: var(--geist-background);
 }
 
-.chatProviderStatus {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: color-mix(
-    in srgb,
-    var(--geist-success) 85%,
-    var(--geist-foreground)
-  );
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--geist-success) 14%, transparent);
+.chatProviderSelectField:has(select:focus-visible) {
+  outline: 2px solid
+    color-mix(in srgb, var(--geist-foreground) 35%, transparent);
+  outline-offset: 2px;
+}
+
+.chatProviderSelectLabel {
   flex-shrink: 0;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  line-height: 1;
 }
 
 .chatProviderSelect {
+  flex: 1;
   min-width: 0;
-  max-width: 260px;
+  max-width: 220px;
   height: 30px;
-  padding: 0 24px 0 0;
+  padding: 0 2px;
   border: 0;
   background: transparent;
-  color: var(--geist-secondary);
+  color: var(--geist-foreground);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   font-family: inherit;
+  text-overflow: ellipsis;
   outline: none;
   cursor: pointer;
 }
 
-.chatProviderSelect:hover,
-.chatProviderSelect:focus {
+.chatProviderSelect option {
+  background: var(--geist-background);
   color: var(--geist-foreground);
+}
+
+.chatProviderOptions {
+  column-gap: 14px;
+  row-gap: 2px;
 }
 
 .chatProviderCheckbox {
   display: inline-flex;
-  flex-shrink: 0;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  min-height: 24px;
+  padding: 2px 0;
   color: var(--geist-secondary);
   font-size: 11px;
   font-weight: 400;
-  white-space: nowrap;
+  line-height: 1.4;
   cursor: pointer;
 }
 
+.chatProviderCheckbox:hover:not(:has(input:disabled)) {
+  color: var(--geist-foreground);
+}
+
 .chatProviderCheckbox input {
+  flex-shrink: 0;
   width: 12px;
   height: 12px;
   margin: 0;
@@ -1540,9 +1566,14 @@
   cursor: inherit;
 }
 
+.chatProviderSelectField:has(select:disabled),
 .chatProviderCheckbox:has(input:disabled) {
   opacity: 0.5;
-  cursor: default;
+  cursor: not-allowed;
+}
+
+.chatProviderSelect:disabled {
+  cursor: inherit;
 }
 
 /* chatSendBtn / chatSendIcon: replaced by <Button variant="primary" size="lg"

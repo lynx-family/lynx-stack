@@ -251,7 +251,7 @@ describe('shared search capability', () => {
         throw new Error('Expected string instructions');
       }
       expect(
-        instructions.includes('XML fragment mode'),
+        instructions.includes('Template mode'),
       ).toBe(enabled === true);
       expect(instructions).toContain('Element PAPI');
     }

@@ -56,6 +56,7 @@ export interface McpAppsRenderInit {
 
 export interface LynxXmlRenderInit {
   sourceUrl: string;
+  exampleId?: string;
   theme?: 'light' | 'dark';
 }
 
@@ -418,6 +419,7 @@ export function buildLynxXmlRenderUrl(
   const url = new URL('render.html', baseUrl);
   url.searchParams.set('protocol', 'lynx-xml');
   url.searchParams.set(LYNX_XML_SOURCE_URL_QUERY_PARAM, init.sourceUrl);
+  if (init.exampleId) url.searchParams.set('exampleId', init.exampleId);
   if (init.theme) url.searchParams.set('theme', init.theme);
   return url.toString();
 }

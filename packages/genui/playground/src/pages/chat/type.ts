@@ -144,6 +144,7 @@ export interface ChatSettingOption {
 export interface ChatSettingControl {
   id: string;
   label: string;
+  description?: string;
   value: string;
   kind: 'select' | 'text' | 'password' | 'checkbox';
   disabled?: boolean;
@@ -160,6 +161,7 @@ export interface ChatSettingsAdapter<TSettings> {
   parseStored: (raw: unknown) => TSettings;
   serialize: (value: TSettings) => unknown;
   conversation?: {
+    defaults?: ConversationGenerationSettings;
     snapshot: (value: TSettings) => ConversationGenerationSettings;
     restore: (
       value: TSettings,

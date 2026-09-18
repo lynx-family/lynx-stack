@@ -35,7 +35,7 @@ export type ClosureValueType =
   | WorkletRef<unknown>
   | Element
   | (((...args: unknown[]) => unknown) & {
-    ctxRef?: WeakRef<object>;
+    boundCtx?: object;
   })
   | ClosureValueType_
   | ClosureValueType[];

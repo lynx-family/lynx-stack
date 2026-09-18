@@ -298,7 +298,8 @@ function hydrate(
 }
 
 function createArtifact(output: LynxXmlOutput): ChatArtifact {
-  const hasConversion = Boolean(output.xmlFragment);
+  const hasConversion = Boolean(output.xmlFragment)
+    || Boolean(output.modelOutput && output.modelOutput !== output.source);
   return {
     title: 'Generated Lynx XML Artifact',
     meta: `.lynxml · ${formatCharacterCount(output.source)}`,
@@ -331,6 +332,12 @@ function persistOutput(output: LynxXmlOutput): ChatTurnPersistence {
   };
 }
 
+const GENERATION_DEFAULTS = {
+  enableDesignGuidance: true,
+  enableHtmlFragment: true,
+  stylePreset: 'default' as const,
+};
+
 export const LYNX_XML_CHAT_ADAPTER = {
   id: 'lynx-xml',
   copy: {
@@ -349,48 +356,76 @@ export const LYNX_XML_CHAT_ADAPTER = {
     initial(): ProviderSettings {
       return {
         ...CHAT_PROVIDER_SETTINGS_ADAPTER.initial(),
-        enableHtmlFragment: true,
+        ...GENERATION_DEFAULTS,
       };
     },
     parseStored(raw: unknown): ProviderSettings {
+      const settings = CHAT_PROVIDER_SETTINGS_ADAPTER.parseStored(raw);
       return {
-        ...CHAT_PROVIDER_SETTINGS_ADAPTER.parseStored(raw),
-        enableHtmlFragment: true,
+        ...settings,
+        ...GENERATION_DEFAULTS,
       };
     },
     serialize(settings: ProviderSettings) {
       const stored = CHAT_PROVIDER_SETTINGS_ADAPTER.serialize(settings);
+      delete stored.enableDesignGuidance;
       delete stored.enableHtmlFragment;
+      delete stored.stylePreset;
       return stored;
     },
     conversation: {
+      defaults: GENERATION_DEFAULTS,
       snapshot(settings) {
         return {
           ...CHAT_PROVIDER_SETTINGS_ADAPTER.conversation.snapshot(settings),
           enableHtmlFragment: settings.enableHtmlFragment !== false,
+          stylePreset: settings.stylePreset ?? GENERATION_DEFAULTS.stylePreset,
         };
       },
       restore(settings, saved) {
         return {
           ...CHAT_PROVIDER_SETTINGS_ADAPTER.conversation.restore(
             settings,
-            saved,
+            {
+              ...saved,
+              enableDesignGuidance: saved.enableDesignGuidance ?? true,
+            },
           ),
           enableHtmlFragment: saved.enableHtmlFragment ?? true,
+          stylePreset: saved.stylePreset ?? GENERATION_DEFAULTS.stylePreset,
         };
       },
     },
     controls(settings: ProviderSettings) {
       return [...CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings), {
         id: 'enableHtmlFragment',
-        label: 'XML fragment',
+        label: 'Template',
+        description: 'Convert <template> markup to Element PAPI at runtime.',
         kind: 'checkbox' as const,
         value: settings.enableHtmlFragment === false ? 'off' : 'on',
+      }, {
+        id: 'stylePreset',
+        label: 'StylePreset',
+        description:
+          'Reuse built-in utility styles with Template or Element PAPI.',
+        kind: 'checkbox' as const,
+        value: settings.stylePreset === false ? 'off' : 'on',
       }];
     },
     update(settings: ProviderSettings, id: string, next: string) {
+      if (id === 'stylePreset') {
+        return {
+          ...settings,
+          stylePreset: next === 'on'
+            ? 'default' as const
+            : false as const,
+        };
+      }
       return id === 'enableHtmlFragment'
-        ? { ...settings, enableHtmlFragment: next === 'on' }
+        ? {
+          ...settings,
+          enableHtmlFragment: next === 'on',
+        }
         : CHAT_PROVIDER_SETTINGS_ADAPTER.update(settings, id, next);
     },
   },
@@ -405,6 +440,9 @@ export const LYNX_XML_CHAT_ADAPTER = {
       body: {
         resourceId: 'lynx-xml-create',
         enableHtmlFragment: settings.enableHtmlFragment !== false,
+        ...(settings.stylePreset === false
+          ? {}
+          : { stylePreset: settings.stylePreset ?? 'default' }),
         messages: [{ role: 'user', content: prompt }],
         conversation: {
           ...conversation,

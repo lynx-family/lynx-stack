@@ -6,6 +6,17 @@ Keep provider-neutral prompts and deterministic fragment compilation in
 `packages/genui/lynx-xml`; keep model providers, Agent wiring, streaming, and
 request options in GenUI Server.
 
+Keep `stylePreset` opt-in and consistent across prompt construction, fragment
+conversion, Agent cache keys, and Bench repairs. StylePreset uses `default`
+for the built-in Lynx utility vocabulary: inject only referenced
+rules before authored CSS in a single `<style>` block at runtime (TemplateBundle
+rejects duplicate style sections), preserve original model output, and never
+execute scripts or fetch stylesheets during conversion.
+Template and StylePreset are independent: preset-only requests scan literal
+classes in direct Element PAPI scripts with `applyLynxXmlStylePreset`, preserve
+those scripts unchanged, and do not require a template or createFragment call.
+Test all four combinations across prompts, compilation, requests, and caching.
+
 `enableHtmlFragment` defaults to false and selects both the prompt and Agent
 cache variant. Off generates a complete Element PAPI document directly. On
 produces one intermediate document containing one `<template>` directly inside

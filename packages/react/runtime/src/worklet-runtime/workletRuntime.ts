@@ -180,15 +180,14 @@ const transformWorkletInner = (
     if (isWorklet) {
       const isRootWorklet = subObj === ctx;
       const boundCtx = { ...subObj };
-      // `subObj` is worklet ctx. Shallow copy it to prevent the transformed worklet from referencing ctx.
-      // This would result in the value of `workletCache` referencing its key.
+      // Keep the original context collectible. PrimJS traces WeakMap values even
+      // when their keys are otherwise unreachable, so the cached function must not point back to its key.
       obj[key] = lynxWorkletImpl._workletMap[(subObj as Worklet)._wkltId]!
         .bind(boundCtx);
       if (!isRootWorklet) {
-        const ctxRef = createWeakCtxRef(subObj as object);
-        if (ctxRef) {
-          obj[key].ctxRef = ctxRef;
-        }
+        // Hydration needs the same context that the function already owns through bind().
+        // The original nested context can disappear after its parent replaces it with this function.
+        obj[key].boundCtx = boundCtx;
       }
       continue;
     }
@@ -203,13 +202,5 @@ const transformWorkletInner = (
     }
   }
 };
-
-function createWeakCtxRef(ctx: object): WeakRef<object> | undefined {
-  try {
-    return new WeakRef(ctx);
-  } catch {
-    return undefined;
-  }
-}
 
 export { initWorklet };

@@ -25,6 +25,9 @@ function fixture() {
         extraInstruction: '保持中文内容完整',
         enableDesignGuidance: false,
         enableHtmlFragment: true,
+        ...(group.protocol === 'lynx-xml'
+          ? { stylePreset: 'default' as const }
+          : {}),
       }),
     ),
     scenarios: DEFAULT_BENCH_SCENARIOS.map(scenario => ({
@@ -39,21 +42,35 @@ function fixture() {
   };
 }
 
-test('round-trips all plan parameters in a deployment-relative Bench link', () => {
-  const plan = fixture();
-  const url = new URL(
-    buildBenchPlanShareUrl(
-      'https://example.com/genui/?token=secret#/bench/reports',
-      plan,
-    ),
-  );
-  expect(url.pathname).toBe('/genui/');
-  expect(url.search).toBe('');
-  const route = parseRouteHash(url.hash);
-  expect(route.tab).toBe('bench');
-  expect(route.benchReportId).toBeUndefined();
-  expect(readBenchPlanShare(route.benchPlan!)).toEqual({ version: 1, ...plan });
-});
+test.each([false, 'default'] as const)(
+  'round-trips independent options in a deployment-relative Bench link (preset=%s)',
+  stylePreset => {
+    const initial = fixture();
+    const plan = {
+      ...initial,
+      groups: initial.groups.map(group =>
+        group.protocol === 'lynx-xml'
+          ? { ...group, enableHtmlFragment: false, stylePreset }
+          : group
+      ),
+    };
+    const url = new URL(
+      buildBenchPlanShareUrl(
+        'https://example.com/genui/?token=secret#/bench/reports',
+        plan,
+      ),
+    );
+    expect(url.pathname).toBe('/genui/');
+    expect(url.search).toBe('');
+    const route = parseRouteHash(url.hash);
+    expect(route.tab).toBe('bench');
+    expect(route.benchReportId).toBeUndefined();
+    expect(readBenchPlanShare(route.benchPlan!)).toEqual({
+      version: 1,
+      ...plan,
+    });
+  },
+);
 
 test('only shares whitelisted parameters, even when extra fields come from a completed report', () => {
   const plan = fixture();

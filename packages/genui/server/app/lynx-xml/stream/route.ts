@@ -21,6 +21,13 @@ export default createTextStreamRoute({
     const options: LynxXmlChatOptions = {
       enableHtmlFragment: body.enableHtmlFragment === true,
     };
+    if (
+      body.stylePreset !== undefined && body.stylePreset !== false
+      && body.stylePreset !== 'default'
+    ) {
+      return { ok: false, error: 'stylePreset must be false or "default"' };
+    }
+    if (body.stylePreset) options.stylePreset = body.stylePreset;
     return { ok: true, options };
   },
   normalizeFinalText: normalizeLynxXmlArtifact,

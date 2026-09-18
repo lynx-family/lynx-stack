@@ -90,13 +90,20 @@ describe('Lynx XML Bench adapter', () => {
     ]);
     expect(result.attempts[0]?.outputChars).toBe(source.length);
   });
-  test.each([undefined, false, true])(
+  test.each([undefined, false, true, 'default', 'preset-only'] as const)(
     'passes fragment selection through every repair: %s',
     async (enabled) => {
       let calls = 0;
       const adapter = createLynxXmlBenchAdapter({
         generateRaw(_messages, options) {
-          expect(options.enableHtmlFragment).toBe(enabled === true);
+          expect(options.enableHtmlFragment).toBe(
+            enabled === true || enabled === 'default',
+          );
+          expect(options.stylePreset).toBe(
+            enabled === 'default' || enabled === 'preset-only'
+              ? 'default'
+              : undefined,
+          );
           return Promise.resolve({
             text: ++calls === 1 ? '<!doctype lynx>' : SOURCE,
             usage: undefined,
@@ -106,7 +113,12 @@ describe('Lynx XML Bench adapter', () => {
       });
       await adapter.generate({
         ...INPUT,
-        ...(enabled === undefined ? {} : { enableHtmlFragment: enabled }),
+        ...(enabled === undefined
+          ? {}
+          : { enableHtmlFragment: enabled === true || enabled === 'default' }),
+        ...(enabled === 'default' || enabled === 'preset-only'
+          ? { stylePreset: 'default' as const }
+          : {}),
       });
       expect(calls).toBe(2);
     },
