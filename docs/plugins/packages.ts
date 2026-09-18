@@ -129,10 +129,12 @@ function writePackagePages(
               .filter(pkg => packageRoute(pkg).startsWith('packages/'))
               .map(pkg => {
                 const name = packageRoute(pkg).slice('packages/'.length);
+                const dir = existsSync(join(out, name));
                 return {
-                  type: existsSync(join(out, name)) ? 'dir' : 'file',
+                  type: dir ? 'dir' : 'file',
                   name,
                   label: pkg.name,
+                  ...dir ? { collapsible: true, collapsed: true } : {},
                 };
               }),
           ]),

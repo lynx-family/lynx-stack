@@ -21,16 +21,20 @@ import { pluginApiSection } from './typedoc.ts';
 import { CONTENT, DOCS, LOCALES, publicPackages } from './workspace.ts';
 
 const SIDEBAR = [
-  { type: 'dir', name: 'react', label: '@lynx-js/react' },
+  { name: 'react', label: '@lynx-js/react' },
   {
-    type: 'dir',
     name: 'react/testing-library',
     label: '@lynx-js/react/testing-library',
   },
-  { type: 'dir', name: 'genui', label: '@lynx-js/genui' },
-  { type: 'dir', name: 'config', label: 'Build configuration' },
-  { type: 'dir', name: 'packages', label: 'All packages' },
-];
+  { name: 'genui', label: '@lynx-js/genui' },
+  { name: 'config', label: 'Build configuration' },
+  { name: 'packages', label: 'All packages' },
+].map(item => ({
+  type: 'dir',
+  ...item,
+  collapsible: true,
+  collapsed: true,
+}));
 
 /** The sections listed by {@link SIDEBAR} instead of by their parent. */
 const OWN_SIDEBAR_ENTRY = ['testing-library'];
@@ -38,7 +42,14 @@ const OWN_SIDEBAR_ENTRY = ['testing-library'];
 /** The group TypeDoc puts the `@document` pages of a package in. */
 const DOCUMENTS = 'Documents';
 
-type SidebarItem = string | { type?: string; name?: string };
+type SidebarItem =
+  | string
+  | {
+    type?: string;
+    name?: string;
+    collapsible?: boolean;
+    collapsed?: boolean;
+  };
 
 /**
  * Rewrites an entry of a generated sidebar: the index page is the link of the
@@ -48,7 +59,13 @@ type SidebarItem = string | { type?: string; name?: string };
 function sidebarItems(item: SidebarItem, dir: string): SidebarItem[] {
   if (typeof item === 'string') return item === 'index' ? [] : [item];
   if (OWN_SIDEBAR_ENTRY.includes(item.name ?? '')) return [];
-  if (item.name !== DOCUMENTS) return [item];
+  if (item.name !== DOCUMENTS) {
+    return [
+      item.type === 'dir'
+        ? { ...item, collapsible: true, collapsed: true }
+        : item,
+    ];
+  }
   return readdirSync(join(dir, DOCUMENTS)).filter(file => file !== '_meta.json')
     .sort().map(file => ({
       type: 'file',
@@ -62,46 +79,84 @@ function isDocument(item: SidebarItem): boolean {
     && (item.name?.startsWith(`${DOCUMENTS}/`) ?? false);
 }
 
-/** The directories the `member` router writes, in the order they are listed. */
-const KINDS: Record<string, string> = {
-  classes: 'Classes',
-  interfaces: 'Interfaces',
-  'type-aliases': 'Type Aliases',
-  enumerations: 'Enumerations',
-  functions: 'Functions',
-  variables: 'Variables',
-  namespaces: 'Namespaces',
-};
+/**
+ * The directories the `member` router writes for the exports a reader calls,
+ * in the order the sidebar lists them.
+ */
+const API_KINDS = ['classes', 'functions', 'variables', 'enumerations'];
 
 /**
- * Names the directories of a module the way the generated pages read: a
- * subpath keeps its name, a kind gets its plural title.
+ * The directories for the types those exports refer to. The sidebar leaves
+ * them to the links of the pages that use them.
  */
-function writeKindMeta(dir: string): void {
-  if (!statSync(dir).isDirectory()) return;
-  const names = readdirSync(dir).filter(name =>
-    statSync(join(dir, name)).isDirectory()
+const TYPE_KINDS = ['interfaces', 'type-aliases'];
+
+/** The pages of a kind directory, as sidebar entries below the module. */
+function kindItems(dir: string, kind: string): SidebarItem[] {
+  const path = join(dir, kind);
+  if (!existsSync(path)) return [];
+  return readdirSync(path).filter(file => file !== '_meta.json').sort().map(
+    file => ({
+      type: 'file',
+      name: `${kind}/${basename(file, extname(file))}`,
+      label: basename(file, extname(file)),
+    }),
   );
-  if (names.length === 0) return;
-  const kinds = Object.keys(KINDS);
-  const order = (name: string) =>
-    kinds.includes(name) ? kinds.indexOf(name) + 1 : 0;
+}
+
+/**
+ * Lists the exports of a module without their kind directories: what a reader
+ * calls comes first, and a module of types alone still lists them.
+ */
+function writeMemberMeta(dir: string): void {
+  const namespaces = join(dir, 'namespaces');
+  const modules = readdirSync(dir).filter(name =>
+    statSync(join(dir, name)).isDirectory()
+    && ![...API_KINDS, ...TYPE_KINDS, 'namespaces'].includes(name)
+  );
+  const items = [
+    ...modules.map(name => ({
+      type: 'dir',
+      name,
+      label: name,
+      collapsible: true,
+      collapsed: true,
+    })),
+    ...API_KINDS.flatMap(kind => kindItems(dir, kind)),
+    ...existsSync(namespaces)
+      ? readdirSync(namespaces).filter(name =>
+        statSync(join(namespaces, name)).isDirectory()
+      ).sort().map(name => ({
+        type: 'dir',
+        name: `namespaces/${name}`,
+        label: name,
+        collapsible: true,
+        collapsed: true,
+      }))
+      : [],
+  ];
   writeFileSync(
     join(dir, '_meta.json'),
     `${
       JSON.stringify(
-        names
-          .sort((a, b) => order(a) - order(b) || a.localeCompare(b))
-          .map(name => ({ type: 'dir', name, label: KINDS[name] ?? name })),
+        items.length > 0
+          ? items
+          : TYPE_KINDS.flatMap(kind => kindItems(dir, kind)),
         null,
         2,
       )
     }\n`,
   );
-  for (const name of names) writeKindMeta(join(dir, name));
+  for (const name of modules) writeMemberMeta(join(dir, name));
+  if (existsSync(namespaces)) {
+    for (const name of readdirSync(namespaces)) {
+      const path = join(namespaces, name);
+      if (statSync(path).isDirectory()) writeMemberMeta(path);
+    }
+  }
 }
 
-/** The kinds a page can document, in the order {@link KINDS} lists them. */
+/** The kinds a page of a group can document, in the order they are listed. */
 const KIND_TITLES = [
   'Class',
   'Interface',
@@ -208,10 +263,11 @@ export function pluginApiReference(): RspressPlugin[] {
             } else if (section.out === 'api/packages') {
               // The sidebar of the section itself lists the packages.
               for (const name of readdirSync(dir)) {
-                writeKindMeta(join(dir, name));
+                const path = join(dir, name);
+                if (statSync(path).isDirectory()) writeMemberMeta(path);
               }
             } else {
-              writeKindMeta(dir);
+              writeMemberMeta(dir);
             }
           }
           writeFileSync(

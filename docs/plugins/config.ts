@@ -254,7 +254,13 @@ function writeGroupMeta(
   const meta = [...level].map(([name, node]) => {
     if (node.children.size > 0) {
       writeGroupMeta(join(dir, kebab(name)), node.children, text);
-      return { type: 'dir', name: kebab(name), label: name };
+      return {
+        type: 'dir',
+        name: kebab(name),
+        label: name,
+        collapsible: true,
+        collapsed: true,
+      };
     }
     return {
       type: 'file',
@@ -277,7 +283,6 @@ function writeSidebar(
   write(
     join(out, '_meta.json'),
     json([
-      { type: 'section-header', label: text('Base options') },
       ...names.map(([name, node]) => ({
         type: 'file',
         name: kebab(name),
@@ -285,9 +290,11 @@ function writeSidebar(
         tag: text(node.option!.category),
       })),
       ...namespaces.map(([name]) => ({
-        type: 'dir-section-header',
+        type: 'dir',
         name: kebab(name),
         label: text(section(name)),
+        collapsible: true,
+        collapsed: true,
       })),
     ]),
   );
