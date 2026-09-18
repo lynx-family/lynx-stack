@@ -12,6 +12,12 @@ import {
   buildLynxXmlSystemPrompt,
 } from '../src/index.js';
 
+function localContracts(enableHtmlFragment: boolean): string {
+  const [, contracts = ''] = buildLynxXmlSystemPrompt({ enableHtmlFragment })
+    .split('\nLynx XML adaptation contract:\n');
+  return contracts.replace(/\s+/gu, ' ');
+}
+
 describe('buildLynxXmlSystemPrompt', () => {
   test('builds the exported default prompt', () => {
     expect(LYNX_XML_ENGINE_VERSION).toBe('4.2');
@@ -138,34 +144,34 @@ describe('buildLynxXmlSystemPrompt', () => {
   test.each([false, true])(
     'requires explicit helper dependencies in both output modes (fragment: %s)',
     enableHtmlFragment => {
-      const prompt = buildLynxXmlSystemPrompt({ enableHtmlFragment });
+      const prompt = localContracts(enableHtmlFragment);
       expect(prompt).toContain(
-        'function buildHeader(parent) with buildHeader(sheet)',
-      );
-      expect(prompt).toContain('cannot read renderPage\'s local sheet');
-      expect(prompt).toContain(
-        'call(), apply(), and bind() only set this and arguments',
+        'Pass parent nodes and render-local dependencies as helper parameters',
       );
       expect(prompt).toContain(
-        'Check every identifier in helpers and callbacks',
+        'call(), apply(), and bind() do not expose caller-local variables',
+      );
+      expect(prompt).toContain(
+        'Keep shared state and node references in scope for render, event, update, and cleanup handlers',
+      );
+      expect(prompt).toContain(
+        'initialize before use and verify all identifier bindings',
       );
     },
   );
 
-  test('keeps node references separate from ids when appending elements', () => {
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'every __AppendElement argument',
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
-      /append helper's parent must be a node/u,
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
-      /never append\s+pageId,\s+__GetElementUniqueID\(\.\.\.\), or another number/u,
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
-      /Use pageId\s+only as the first argument\s+to page-owned element creation APIs/u,
-    );
-  });
+  test.each([false, true])(
+    'keeps node references separate from ids (fragment: %s)',
+    enableHtmlFragment => {
+      const prompt = localContracts(enableHtmlFragment);
+      expect(prompt).toContain(
+        '__AppendElement and append helpers accept node references, never numeric ids',
+      );
+      expect(prompt).toContain(
+        'Use pageId only as the first argument to page-owned creation APIs',
+      );
+    },
+  );
 
   test('overrides the imported layout guidance for Lynx XML', () => {
     expect(LYNX_XML_SYSTEM_PROMPT).toContain('white-space: normal');
@@ -179,12 +185,12 @@ describe('buildLynxXmlSystemPrompt', () => {
     expect(LYNX_XML_SYSTEM_PROMPT).toContain(
       'every container that lays out Element children',
     );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'Apply a class with display: flex',
+    const prompt = localContracts(false);
+    expect(prompt).toContain(
+      'Apply classes with display: flex and explicit flex-direction: row or column',
     );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'an explicit row or column flex-direction',
-    );
+    expect(prompt).toContain('not inline styles or implicit layout');
+    expect(prompt).toContain('Leaf text and images are exempt');
     expect(LYNX_XML_SYSTEM_PROMPT).not.toContain(
       'Prefer it for simple columns',
     );
@@ -193,35 +199,54 @@ describe('buildLynxXmlSystemPrompt', () => {
     );
   });
 
-  test('adds the concrete long-page scroll-view contract to the XML adaptation', () => {
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'Append the first business node directly to it',
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
-      /append\s+__CreateScrollView\(pageId\) directly to/u,
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain('__CreateScrollView(pageId)');
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'never below a business view',
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'scroll-orientation to "vertical" with',
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toMatch(
-      /Do not nest\s+vertical scroll\s+views/u,
-    );
-  });
+  test.each([false, true])(
+    'keeps the direct Page scroll-view and fixed-bar contracts (fragment: %s)',
+    enableHtmlFragment => {
+      const prompt = localContracts(enableHtmlFragment);
+      expect(prompt).toContain('Keep Page visually unstyled');
+      expect(prompt).toContain(
+        'Use __CreateView(pageId) only when content fits one viewport',
+      );
+      expect(prompt).toContain(
+        'append __CreateScrollView(pageId) as Page\'s first business child, never below a business view',
+      );
+      expect(prompt).toContain(
+        'scroll-orientation to "vertical" with __SetAttribute',
+      );
+      expect(prompt).toContain(
+        'width: 100%, a definite height such as 100vh, and flex-direction: column',
+      );
+      expect(prompt).toContain('one growing wrapper without 100vh');
+      expect(prompt).toContain('Do not nest vertical scroll views');
+      expect(prompt).toContain(
+        'Fixed bars are direct Page children beside the scroll view',
+      );
+      expect(prompt).toContain(
+        'reserve their full size and host-supplied safe-area insets in scrolling content',
+      );
+    },
+  );
 
-  test('maps provider-neutral accessibility intent to Lynx attributes', () => {
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'accessibility-element to true',
-    );
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain('accessibility-label');
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain('accessibility-traits');
-    expect(LYNX_XML_SYSTEM_PROMPT).toContain(
-      'never use Web aria-label',
-    );
-  });
+  test.each([false, true])(
+    'allows approved resource URLs while preserving artifact boundaries (fragment: %s)',
+    enableHtmlFragment => {
+      const prompt = localContracts(enableHtmlFragment);
+      expect(prompt).toContain('Artifact boundaries:');
+      expect(prompt).toContain(
+        'no imports, package dependencies, eval, Function, fetchBundle, loadScript, analytics, or tracking',
+      );
+      expect(prompt).toContain(
+        'Use only asset/link URLs supplied by the user or host, or returned by enabled search/image tools',
+      );
+      expect(prompt).toContain('Never invent URLs or execute external scripts');
+      expect(prompt).toContain(
+        'background-thread data fetching only for explicitly requested integrations',
+      );
+      expect(prompt).toContain('Do not claim device testing');
+      expect(prompt).not.toContain('Product and safety requirements:');
+      expect(prompt).not.toContain('Produce a polished, responsive interface');
+    },
+  );
 
   test('supports a validated engine version and caller appendix', () => {
     const prompt = buildLynxXmlSystemPrompt({

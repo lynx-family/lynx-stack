@@ -2,7 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { describe, expect, test } from '@rstest/core';
+import { runInNewContext } from 'node:vm';
+
+import { describe, expect, rstest, test } from '@rstest/core';
 
 import {
   LYNX_XML_DEMOS_LIST_SOURCE,
@@ -12,6 +14,15 @@ import {
 import { PROTOCOLS } from '../../utils/protocol.js';
 
 const FLEX_LAYOUT_CLASSES: Readonly<Record<string, readonly string[]>> = {
+  'template-counter': [
+    'counter-card',
+    'value-panel',
+    'stats',
+    'stat',
+    'stepper',
+    'step-button',
+    'reset-button',
+  ],
   counter: [
     'counter-card',
     'value-panel',
@@ -79,6 +90,7 @@ const FLEX_LAYOUT_CLASSES: Readonly<Record<string, readonly string[]>> = {
 };
 
 const ROW_LAYOUT_CLASSES: Readonly<Record<string, readonly string[]>> = {
+  'template-counter': ['stats', 'stepper'],
   counter: ['stepper'],
   'travel-plan': ['hero-stats', 'day-tabs', 'route-header', 'stop'],
   'product-card': ['meta-row', 'swatches', 'purchase-row', 'quantity'],
@@ -113,6 +125,7 @@ describe('Lynx XML showcase', () => {
       'product-card',
       'weather-card',
       'todo-list',
+      'template-counter',
     ]);
     for (const scenario of LYNX_XML_SCENARIOS) {
       expect(scenario.source).toMatch(/^<!doctype lynx>/u);
@@ -124,9 +137,12 @@ describe('Lynx XML showcase', () => {
       expect(scenario.source).not.toContain('__SetClasses(page,');
       expect(scenario.source).not.toContain('const app = __CreateView');
       expect(scenario.source).not.toMatch(/\.page\s*\{/u);
-      expect(scenario.source).toMatch(
-        /__AppendElement\(page, (?:card|scroll)\);/u,
-      );
+      if (!scenario.templateSource) {
+        expect(scenario.source).toMatch(
+          /__AppendElement\(page, (?:card|scroll)\);/u,
+        );
+      }
+      expect(scenario.source).not.toContain('<template>');
     }
     expect(LYNX_XML_SCENARIOS[1]!.source).toContain('__ReplaceElements');
     expect(LYNX_XML_SCENARIOS[3]!.source).toContain(
@@ -154,11 +170,15 @@ describe('Lynx XML showcase', () => {
 
   test('uses the entry node itself as a vertical scroll view', () => {
     for (const scenario of LYNX_XML_SCENARIOS) {
+      const node = scenario.templateSource ? 'element' : '(?:card|scroll)';
       expect(scenario.source).toMatch(
-        /const (?:card|scroll) = __CreateScrollView\(pageId\);/u,
+        new RegExp(`${node} = __CreateScrollView\\(pageId\\);`, 'u'),
       );
       expect(scenario.source).toMatch(
-        /__SetAttribute\((?:card|scroll), "scroll-orientation", "vertical"\)/u,
+        new RegExp(
+          `__SetAttribute\\(${node}, "scroll-orientation", "vertical"\\)`,
+          'u',
+        ),
       );
     }
   });
@@ -205,5 +225,145 @@ describe('Lynx XML showcase', () => {
         playbackChunks: [],
       },
     });
+  });
+
+  test('converts templates with authored scripts at preview time and marks template list URLs', () => {
+    const scenario = LYNX_XML_DEMOS_PAGE_SOURCE.findScenario(
+      'template-counter',
+    )!;
+    const original = LYNX_XML_DEMOS_PAGE_SOURCE.getEditorValue(scenario);
+    expect(original).toContain('<template>');
+    expect(original).toContain('<script thread="main">');
+    expect(original).toContain('nodes = createFragment(page, pageId);');
+    expect(original).not.toContain('function createFragment(');
+    expect(LYNX_XML_DEMOS_PAGE_SOURCE.commit({
+      scenario,
+      editorValue: original,
+      editorEdited: false,
+    })).toMatchObject({
+      value: {
+        previewInput: {
+          source: scenario.source,
+          sourcePath: undefined,
+        },
+      },
+    });
+    const previewUrl = new URL(LYNX_XML_DEMOS_LIST_SOURCE.createPreviewUrl({
+      baseUrl: 'https://lynx-stack.dev/genui/',
+      protocol: PROTOCOLS['lynx-xml'],
+      scenario,
+      theme: 'light',
+    }));
+    expect(previewUrl.searchParams.get('exampleId')).toBe('template-counter');
+    expect(previewUrl.searchParams.get('sourceUrl')).toBe(
+      'https://lynx-stack.dev/genui/demos/lynx-xml/template-counter.lynxml',
+    );
+
+    const editorValue = original.replace('Daily counter', 'Reading counter')
+      .replace('count += 1;', 'count += 2;');
+    const edited = LYNX_XML_DEMOS_PAGE_SOURCE.commit({
+      scenario,
+      editorValue,
+      editorEdited: true,
+    });
+    if (!('value' in edited)) throw new Error(edited.error);
+    expect(edited.value.previewInput.sourcePath).toBeUndefined();
+    expect(edited.value.previewInput.source).not.toContain('<template>');
+    expect(edited.value.previewInput.source).toContain(
+      '__CreateRawText("Reading counter")',
+    );
+    expect(edited.value.previewInput.source).toContain('count += 2;');
+    const transformed = LYNX_XML_DEMOS_PAGE_SOURCE.editor.views[1]!;
+    expect(transformed.editable).toBe(false);
+    expect(transformed.getValue({ editorValue, scenario })).toBe(
+      edited.value.previewInput.source,
+    );
+
+    const invalid = original.replace('</template>', '');
+    expect(LYNX_XML_DEMOS_PAGE_SOURCE.commit({
+      scenario,
+      editorValue: invalid,
+      editorEdited: true,
+    })).toEqual({
+      error: 'Fragment document contains an unclosed source block',
+    });
+    expect(transformed.getValue({ editorValue: invalid, scenario })).toContain(
+      'Conversion failed: Fragment document contains an unclosed source block',
+    );
+  });
+
+  test('renders once, handles counter events from the embedded script, and cleans up', () => {
+    const scenario = LYNX_XML_DEMOS_PAGE_SOURCE.findScenario(
+      'template-counter',
+    )!;
+    interface Element {
+      tag: string;
+      children: (Element | string)[];
+    }
+    const create = (tag: string): Element => ({ tag, children: [] });
+    const page = create('page');
+    const byId = new Map<string, Element>();
+    const taps = new Map<Element, () => void>();
+    const lifecycle = new Map<string, () => void>();
+    const flush = rstest.fn();
+    const context = {
+      lynx: {
+        getEngine: () => ({
+          addEventListener: (name: string, handler: () => void) =>
+            lifecycle.set(name, handler),
+          removeEventListener: (name: string) => lifecycle.delete(name),
+        }),
+      },
+      __CreatePage: () => page,
+      __GetElementUniqueID: () => 0,
+      __CreateScrollView: () => create('scroll-view'),
+      __CreateView: () => create('view'),
+      __CreateText: () => create('text'),
+      __CreateRawText: (text: string) => text,
+      __SetClasses: rstest.fn(),
+      __SetAttribute: rstest.fn(),
+      __SetID: (node: Element, id: string) => byId.set(id, node),
+      __AppendElement: (parent: Element, child: Element | string) =>
+        parent.children.push(child),
+      __GetChildren: (node: Element) => node.children,
+      __ReplaceElements: (node: Element, children: Element['children']) => {
+        node.children = children;
+      },
+      __AddEventListener: (node: Element, _name: string, handler: () => void) =>
+        taps.set(node, handler),
+      __RemoveEventListener: (node: Element) => taps.delete(node),
+      __FlushElementTree: flush,
+    };
+    const script = scenario.source.split('<script thread="main">')[1]!.split(
+      '</script>',
+    )[0]!;
+    runInNewContext(script, context);
+    lifecycle.get('__RenderPage')!();
+    lifecycle.get('__RenderPage')!();
+    expect(page.children).toHaveLength(1);
+    expect(page.children[0]).toMatchObject({ tag: 'scroll-view' });
+    expect(JSON.stringify(page)).toContain('Daily counter');
+    expect(JSON.stringify(page)).toContain('Steps to go');
+    expect(flush).not.toHaveBeenCalled();
+    expect(byId.get('count')?.children).toEqual(['8']);
+    expect(taps.size).toBe(3);
+    const tap = (id: string) => taps.get(byId.get(id)!)!();
+    tap('increment');
+    expect(byId.get('count')?.children).toEqual(['9']);
+    expect(byId.get('remaining')?.children).toEqual(['3']);
+    tap('decrement');
+    expect(byId.get('count')?.children).toEqual(['8']);
+    for (let step = 0; step < 4; step++) tap('increment');
+    expect(byId.get('count')?.children).toEqual(['12']);
+    expect(byId.get('note')?.children).toEqual(['Daily goal reached!']);
+    expect(byId.get('remaining')?.children).toEqual(['0']);
+    tap('reset');
+    tap('decrement');
+    expect(byId.get('count')?.children).toEqual(['0']);
+    expect(byId.get('remaining')?.children).toEqual(['12']);
+    expect(flush).toHaveBeenCalledTimes(8);
+    lifecycle.get('__DestroyLifetime')!();
+    expect(taps.size).toBe(0);
+    expect(lifecycle.size).toBe(0);
   });
 });

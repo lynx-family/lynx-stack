@@ -362,9 +362,38 @@ function DirectLynxXmlRender() {
     const params = new URLSearchParams(window.location.search);
     return {
       sourceUrl: params.get(LYNX_XML_SOURCE_URL_QUERY_PARAM) ?? '',
+      exampleId: params.get('exampleId'),
       theme: readTheme(params.get('theme')) ?? 'light',
     };
   }, []);
+
+  const [templateSource, setTemplateSource] = useState<string>();
+  const [templateError, setTemplateError] = useState('');
+  useEffect(() => {
+    if (!initial.exampleId) return;
+    let active = true;
+    void import('./pages/demos/lynx-xml.js')
+      .then(({ LYNX_XML_SCENARIOS }) => {
+        if (!active) return;
+        const scenario = LYNX_XML_SCENARIOS.find(({ id }) =>
+          id === initial.exampleId
+        );
+        if (!scenario?.templateSource) {
+          throw new Error('Unknown Lynx XML template example.');
+        }
+        setTemplateSource(scenario.source);
+      })
+      .catch(error => {
+        if (active) {
+          setTemplateError(
+            error instanceof Error ? error.message : String(error),
+          );
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [initial]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = initial.theme;
@@ -379,11 +408,19 @@ function DirectLynxXmlRender() {
     );
   }, []);
 
-  return initial.sourceUrl
+  if (templateError) {
+    return <div className='lynxXmlRenderError'>{templateError}</div>;
+  }
+  if (initial.exampleId && !templateSource) {
+    return null;
+  }
+
+  return initial.sourceUrl || templateSource
     ? (
       <LynxXmlView
         className='lynxXmlRenderView'
-        sourceUrl={initial.sourceUrl}
+        sourceUrl={initial.exampleId ? undefined : initial.sourceUrl}
+        source={templateSource}
         onLoad={handleLoad}
       />
     )
