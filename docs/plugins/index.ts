@@ -15,10 +15,18 @@ import { CONTENT, DOCS, LOCALES, publicPackages } from './workspace.ts';
 
 const SIDEBAR = [
   { type: 'dir', name: 'react', label: '@lynx-js/react' },
+  {
+    type: 'dir',
+    name: 'react/testing-library',
+    label: '@lynx-js/react/testing-library',
+  },
   { type: 'dir', name: 'genui', label: '@lynx-js/genui' },
   { type: 'dir', name: 'config', label: 'Build configuration' },
   { type: 'dir', name: 'packages', label: 'All packages' },
 ];
+
+/** The sections listed by {@link SIDEBAR} instead of by their parent. */
+const OWN_SIDEBAR_ENTRY = ['testing-library'];
 
 /**
  * Generates the API reference under `content/<locale>/api` from the TSDoc of
@@ -65,12 +73,19 @@ export function pluginApiReference(): RspressPlugin[] {
             if (section.router === 'module' && section.out !== 'api/packages') {
               rmSync(meta);
             } else if (section.router === 'group') {
-              const items = JSON.parse(readFileSync(meta, 'utf8')) as unknown[];
+              const items = JSON.parse(readFileSync(meta, 'utf8')) as (
+                | string
+                | { name?: string }
+              )[];
               writeFileSync(
                 meta,
                 `${
                   JSON.stringify(
-                    items.filter(item => item !== 'index'),
+                    items.filter(item =>
+                      typeof item === 'string'
+                        ? item !== 'index'
+                        : !OWN_SIDEBAR_ENTRY.includes(item.name ?? '')
+                    ),
                     null,
                     2,
                   )
