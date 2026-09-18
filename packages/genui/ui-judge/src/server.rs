@@ -1673,6 +1673,14 @@ async fn read_capture_output(
     }
     Err(error) => return Err(error),
   };
+  // Tokio timers round deadlines up to a millisecond tick. A ready file read
+  // can win the select below after the actual deadline, even with `biased`.
+  if tokio::time::Instant::now() >= deadline {
+    return Err(zip_render_timeout_error().with_child_output(child_output));
+  }
+  if reply.is_closed() {
+    return Err(isolated_zip_worker_error().with_child_output(child_output));
+  }
   let recovering = child_error.is_some();
   let postprocess = async move {
     tokio::task::spawn_blocking(move || {
@@ -1712,6 +1720,14 @@ async fn read_capture_output(
     _ = tokio::time::sleep_until(deadline) => Err(zip_render_timeout_error()),
     _ = reply.closed() => Err(isolated_zip_worker_error()),
     result = postprocess => result,
+  };
+  // Recheck after the blocking read, before accepting or logging a recovery.
+  let result = if tokio::time::Instant::now() >= deadline {
+    Err(zip_render_timeout_error())
+  } else if reply.is_closed() {
+    Err(isolated_zip_worker_error())
+  } else {
+    result
   };
   if let Ok(bmp) = &result {
     if recovering {
@@ -3291,6 +3307,8 @@ mod tests {
       "cancelled",
       "timeout-after-crash",
       "cancelled-after-crash",
+      "timeout-after-success",
+      "cancelled-after-success",
     ] {
       let directory = tempfile::tempdir().unwrap();
       publish_capture_bmp(&directory.path().join("capture.bmp"), &capture_output_bmp()).unwrap();
@@ -3298,6 +3316,7 @@ mod tests {
         "exit" => "exit 7",
         "signal" => "kill -TERM $$",
         "timeout" | "cancelled" => "exec sleep 30",
+        "timeout-after-success" | "cancelled-after-success" => "exit 0",
         _ => "ulimit -c 0; kill -SEGV $$",
       });
       let (mut reply, response) = oneshot::channel();
@@ -3310,9 +3329,9 @@ mod tests {
       }
       let child_result = wait_for_capture_child(&mut child, &mut reply, deadline).await;
       assert!(child.try_wait().unwrap().is_some());
-      if case == "timeout-after-crash" {
+      if case.starts_with("timeout-after-") {
         deadline = tokio::time::Instant::now();
-      } else if case == "cancelled-after-crash" {
+      } else if case.starts_with("cancelled-after-") {
         drop(response.take());
       }
       let error = read_capture_output(
@@ -3324,7 +3343,7 @@ mod tests {
         deadline,
       )
       .await
-      .unwrap_err();
+      .expect_err(case);
       let expected = if case.starts_with("timeout") {
         StatusCode::REQUEST_TIMEOUT
       } else if case.starts_with("cancelled") {
