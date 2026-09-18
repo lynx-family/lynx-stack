@@ -74,7 +74,7 @@ pub struct DarkModeConfig {
   pub theme_expr: String,
 }
 
-/// {@inheritdoc CompatVisitorConfig.addComponentElement}
+/// {@inheritDoc CompatVisitorConfig.addComponentElement}
 /// @public
 #[derive(Deserialize, Clone, Debug)]
 pub struct AddComponentElementConfig {
@@ -102,7 +102,7 @@ pub struct AddComponentElementConfig {
   pub compiler_only: bool,
 }
 
-/// {@inheritdoc PluginReactLynxOptions.compat}
+/// {@inheritDoc PluginReactLynxOptions.compat}
 /// @public
 #[derive(Deserialize, Clone, Debug)]
 pub struct CompatVisitorConfig {
@@ -278,6 +278,16 @@ pub struct CompatVisitorConfig {
   pub simplify_ctor_like_react_lynx_2: bool,
 
   /// @public
+  /// Whether to transform legacy event attribute names on Lynx elements.
+  ///
+  /// When enabled, legacy event attributes such as `onClick` and
+  /// `onClickCatch` are transformed to `bindtap` and `catchtap`.
+  /// Disable this when another transform owns event attribute-name conversion.
+  ///
+  /// @defaultValue `true`
+  pub transform_legacy_event_attribute_names: Option<bool>,
+
+  /// @public
   /// Regular expression used to remove component attributes
   ///
   /// @deprecated It's recommended to use `background-only`.
@@ -327,9 +337,10 @@ pub struct CompatVisitorConfig {
   /// })
   /// ```
   pub disable_deprecated_warning: bool,
+  /// Dark mode configuration
+  ///
   /// @public
   /// @deprecated
-  /// Dark mode configuration
   ///
   /// @defaultValue `undefined`
   ///
@@ -362,6 +373,7 @@ impl Default for CompatVisitorConfig {
       additional_component_attributes: vec![],
       add_component_element: Either::A(false),
       simplify_ctor_like_react_lynx_2: false,
+      transform_legacy_event_attribute_names: None,
       remove_component_attr_regex: None,
       disable_deprecated_warning: false,
       dark_mode: None,
@@ -966,7 +978,12 @@ where
       );
     };
 
-    if *self.is_target_jsx_element.last().unwrap_or(&false) {
+    if self
+      .opts
+      .transform_legacy_event_attribute_names
+      .unwrap_or(true)
+      && *self.is_target_jsx_element.last().unwrap_or(&false)
+    {
       match &n.name {
         JSXAttrName::Ident(id) => {
           if let Some(new_name) = transform_legacy_react_event_attribute_name(id.sym.as_ref()) {
@@ -1113,8 +1130,7 @@ where
                     ctxt: Default::default(),
                     span: DUMMY_SP,
                     params: vec![],
-                    body: Box::new(BlockStmtOrExpr::BlockStmt(BlockStmt {
-                      ctxt: Default::default(),
+                    body: Box::new(ArrowFunctionBody::FunctionBody(FunctionBody {
                       span: DUMMY_SP,
                       stmts: simplify_ctor_like_react_lynx_2_visitor.remain_stmts,
                     })),
@@ -1370,6 +1386,30 @@ mod tests {
       hygiene_with_config(Default::default()),
     ),
     should_transform_event_props_2,
+    r#"
+    const a = <view onClick onClickCatch/>;
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| (
+      fixer(None),
+      resolver(Mark::new(), Mark::new(), true),
+      visit_mut_pass(CompatVisitor::new(
+        CompatVisitorConfig {
+          transform_legacy_event_attribute_names: Some(false),
+          ..Default::default()
+        },
+        Some(t.comments.clone())
+      )),
+      hygiene_with_config(Default::default()),
+    ),
+    should_not_transform_event_props_when_disabled,
     r#"
     const a = <view onClick onClickCatch/>;
     "#

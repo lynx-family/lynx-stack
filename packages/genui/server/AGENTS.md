@@ -1,7 +1,28 @@
 # GenUI Server
 
 This package contains the Rslib-built Hono server for GenUI agent APIs,
-including A2UI, OpenUI, and MCP Apps.
+including A2UI, OpenUI, MCP Apps, streamed Lynx XML, and standalone HTML
+generation.
+
+## Source Layout
+
+Both `agent` and `service` are organized into `common`, `a2ui`, `openui`,
+`html`, `lynx-xml`, and `mcp-apps` directories. Keep protocol factories,
+prompts, catalogs, parsers, validators, and custom tools in the corresponding
+`agent/<protocol>` directory; keep protocol services and Bench adapters in
+`service/<protocol>`.
+
+`agent/common` owns provider/security helpers, search and image-generation
+tools, the Mastra runtime, and screenshot evaluation. `service/common` owns
+shared service contracts and infrastructure. `service/common/bench` contains
+cross-protocol scheduling, request normalization, storage, report types,
+redaction, screenshot conversion, and Judge orchestration. Bench orchestration
+may wire protocol implementations; ordinary common helpers must not depend on
+protocol services.
+
+When moving sources, update route imports, test mocks, documentation, and the
+`a2ui-prompt` package's re-exports, TypeScript includes, and Turbo inputs
+together. Do not leave forwarding modules at obsolete paths.
 
 ## Deployment Model
 
@@ -18,46 +39,311 @@ For multi-instance deployments, place a shared rate limiter (e.g. an API
 gateway or Redis-backed limiter) in front of this server when global rate
 limits are required.
 
-## Required Environment Variables
+## Model Configuration
 
-Before starting this server, explicitly provide these three environment
-variables:
-
-```bash
-export OPENAI_API_KEY="..."
-export OPENAI_BASE_URL="..."
-export OPENAI_MODEL="..."
-```
-
-- `OPENAI_API_KEY` is required by the OpenAI provider.
-- `OPENAI_BASE_URL` selects the OpenAI-compatible API endpoint.
-- `OPENAI_MODEL` selects the model used by the A2UI agent.
-
-Image components are resolved after A2UI validation. To enable query-matched
-stock images, provide a Pexels API key:
+To provide server-owned model choices, configure the provider credentials,
+endpoint, and model list through one JSON environment variable:
 
 ```bash
-export PEXELS_API_KEY="..."
+export GENUI_MODEL_CONFIG_JSON='{
+  "GPT-5.4": {
+    "model": "gpt-5.4",
+    "apiKey": "...",
+    "baseURL": "https://api.openai.com/v1",
+    "api": "responses",
+    "default": true,
+    "maxOutputTokens": 16384,
+    "input_price": 2,
+    "cached_price": 0.5,
+    "output_price": 8
+  }
+}'
 ```
 
-When `PEXELS_API_KEY` is absent or Pexels returns no result, the server falls
-back to a deterministic Picsum URL.
+- Each top-level key is the public model name returned to the playground.
+- Each value requires `model`, `apiKey`, and `baseURL`, so models may use
+  independent upstream ids, credentials, and endpoints.
+- `api` is optional and accepts `chat` or `responses`.
+- `default: true` is optional. When omitted, the first entry is the default.
+- `maxOutputTokens` is an optional positive integer describing the provider's
+  supported output ceiling. All generation agents share a 16384-token per-call
+  target through `buildOpenAIRunOptions`, clamped to the effective model ceiling.
+  This includes raw generation, streaming, continuations, and repairs. Judge
+  requests score all five dimensions together using the same resolver with a
+  4096-token target. Reasoning-only
+  recovery may increase the requested budget, within that same ceiling.
+- `reasoningEffort` is optional per model.
+- `input_price`, `cached_price`, and `output_price` optionally set prices per
+  **one thousand tokens**, in CNY (yuan).
+  These example prices are illustrative. Each price must be a finite,
+  non-negative number and defaults to `0` when omitted. `input_price` applies
+  to input tokens that did not hit the cache; `cached_price` applies to cache
+  hits; `output_price` includes reasoning tokens.
+
+For generation latency, keep static instructions/catalogs ahead of conversation
+history and the latest request. Prompt Cache behavior follows the upstream
+provider's defaults. GenUI reports returned cache usage without adding routing
+keys, cache options, or explicit breakpoints to model requests. Provider caching
+is independent of the process-local Agent instance cache.
+
+Compare cold and warm requests with the same model, catalog, tool availability,
+and reasoning settings. The stream logs report `upstream.first_chunk`,
+`protocol.first_messages`, cumulative `parseTotalMs`, and final cached-token
+counts/ratios. Measure the preview's paint separately: cache-hit counts and
+parser microbenchmarks alone do not establish end-to-end latency improvements.
+
+`GENUI_MODEL_CONFIG_JSON` is optional when the request supplies a complete
+custom provider with `model`, `apiKey`, and `baseURL`. Partial custom provider
+values are ignored rather than inheriting a server-owned credential. A
+request-scoped custom `baseURL` must exactly match one of the public
+OpenAI-compatible provider URLs in `ALLOWED_CUSTOM_PROVIDER_BASE_URLS` (an
+optional trailing slash is normalized). Server-owned model configuration
+remains the trusted path for private, HTTP, or deployment-specific endpoints.
+
+`GET /models` returns `defaultModel` and `models: [{ id, label, input_price, cached_price, output_price }]`.
+Every entry includes all three prices, including zeros when unconfigured. It
+must never expose `model`, `apiKey`, or `baseURL` to the playground.
+
+Generation JSON responses and SSE `done` events include `tokenUsage` alongside
+the existing `usage` field. This applies to A2UI chat and actions, OpenUI,
+Lynx XML, HTML, and both MCP Apps message and tool-selection responses:
+
+```json
+{
+  "tokenUsage": {
+    "inputTokens": 100,
+    "cachedTokens": 60,
+    "outputTokens": 20,
+    "totalTokens": 120
+  }
+}
+```
+
+`inputTokens` includes `cachedTokens`. The client computes the amount using:
+
+```text
+((inputTokens - cachedTokens) * input_price
+ + cachedTokens * cached_price
+ + outputTokens * output_price) / 1_000
+```
+
+The server does not calculate or return a monetary total. A custom provider
+has no server-configured prices.
+
+Bench run results include a `modelPrices` snapshot containing only the three
+public price fields, captured before generation. Playground displays estimated
+amounts in CNY; configure its deployment's rates in CNY per thousand tokens.
+Create stores the selected model's prices and usage with each assistant turn.
+Historical views use saved rates rather than the current model configuration.
+
+The three price dimensions are always present in `tokenUsage`; `null` means
+that the provider did not report a usable count. Keep unknown usage distinct
+from an explicit zero, and do not present a complete price when a required
+count is unknown. `totalTokens`, `cacheWriteTokens`, and `reasoningTokens` are
+also returned when available. Cache-write tokens use the ordinary input price;
+reasoning tokens are already included in output and must not be billed twice.
+When repairs make additional model calls, return their accumulated usage,
+including failed validation attempts. A dimension missing from any attempt
+remains unknown in the aggregate.
+
+All five generation agents optionally generate image assets through a shared
+server-side Volcengine Ark tool. To enable it, configure all three values:
+
+```bash
+export IMG_GEN_ARK_API_KEY="..."
+export IMG_GEN_ARK_IMAGE_MODEL="doubao-seedream-..."
+export IMG_GEN_ARK_IMAGE_BASE_URL="https://ark.cn-beijing.volces.com/api/v3"
+```
+
+`IMG_GEN_ARK_IMAGE_REQUEST_TIMEOUT_MS` optionally overrides the 120-second
+request timeout and must be an integer from 1 through 600000. The agent may
+make at most four image-generation calls across the initial response and all
+repair attempts for one request. Keep the credential, model name, and endpoint
+server-only. The text model configured through `GENUI_MODEL_CONFIG_JSON` must
+support tool/function calling. Only user/host-provided image sources and URLs
+returned by the request's tool scope may reach the renderer. There is no
+stock-image or placeholder-image fallback when generation fails.
+
+A2UI image generation uses Mastra tool suspension. The agent first streams a
+complete surface with its theme, body, and a stable-id `Loading` placeholder.
+`generate_image` starts Ark generation and suspends the run; the service waits
+without closing the SSE response and resumes the same agent run with the image
+result. The resumed agent owns the final `updateComponents` or
+`updateDataModel` patch. The tool itself never constructs protocol messages.
+The JSON endpoints use the same continuation internally but return only after
+the resumed agent has completed. Suspended workflow snapshots and pending image
+jobs are held in process memory, so an in-flight continuation must remain in
+the same live server process. Process restarts and cross-replica continuation
+are not supported by this minimum storage configuration.
 
 The hosting runtime must provide these variables before starting the server.
 
-To enable UI Judge scoring for A2UI Bench jobs, run the independent Rust UI
-Judge HTTP server and configure its private base URL:
+A2UI, OpenUI, Lynx XML, HTML, and MCP Apps generation agents share the same
+optional web-search and image-search capability. Configure the server-side
+Doubao Search credential:
 
 ```bash
-export UI_JUDGE_SERVER_URL="http://127.0.0.1:8080"
+export SEARCH_INFINITY_API_KEY="..."
 ```
 
-The server probes `GET /health` for each Bench job and reports Judge as enabled
-only when the sidecar worker is ready. This is a shallow readiness check; model
-credentials, the configured bundle, and runtime resources are validated by the
-first `/judge` request. Successful A2UI generations are submitted to
-`POST /judge`; generated messages are injected through server-owned Lynx
-`globalProps` and cannot be supplied or overridden by Bench clients.
+When the key is present, each generation agent registers `web_search` and
+`image_search` through `agent/common/search-capability.ts`. The internal
+`enableWebSearch` option controls both tools and defaults to enabled; missing
+or invalid credentials leave both tools unregistered. UI Judge evaluation
+agents remain tool-free. Both search tools call the Doubao Search Custom API,
+which supports
+subscription-plan and post-paid API keys. Web search returns at most five
+normalized text results. Image search returns at most five image URLs with
+source and quality metadata. The agent should prefer image search whenever a
+UI needs an existing image. All five generation agents also provide optional `generate_image`, used
+when search fails, has no suitable result, or the user explicitly asks for
+original generated artwork. If neither image tool is available or succeeds,
+use a non-image presentation. The two search tools may make at most three
+calls combined
+per HTTP request across the initial generation and all repair attempts.
+`SEARCH_INFINITY_REQUEST_TIMEOUT_MS` optionally overrides the 10-second
+request timeout and must be an integer from 1 through 60000. Keep the key
+server-only and do not include a `Bearer` prefix. Missing configuration leaves
+search disabled without affecting the rest of the GenUI server; `GET
+/a2ui/health` reports this through `webSearchReady` and `imageSearchReady`.
+
+Each generation request owns its search budget and returned URL registry,
+independent of the cached Agent instance. A2UI reuses its image-generation
+RequestContext across continuations and validation repairs; Lynx XML shares
+its fragment-conversion RequestContext with search. Other generation services
+create a shared tool RequestContext through `service/common/agent-capabilities.ts`.
+Agent cache keys include both capability settings.
+
+In A2UI, image URLs returned by the current request's image-search scope may
+reach the renderer. Source-page URLs returned by either search tool may be
+used with
+`openUrl`, as may URLs supplied by the user. The server rejects other
+model-generated targets, and the streaming parser keeps components with
+untrusted sources in a loading state until final validation. A2UI and OpenUI
+Bench runs
+explicitly disable search and image generation so their output stays deterministic.
+Search guidance preserves each protocol's output contract: searches run inside
+the server agent, never as OpenUI Query/Mutation calls or MCP Apps routing
+targets. HTML keeps scripts and styles inline while allowing image URLs from
+the user/host, image search, or image generation, and source links from the user or search.
+
+The internal `enableImageGeneration` option mirrors `enableWebSearch`: it
+is enabled by default, `false` omits the tool, and missing or invalid Ark
+configuration leaves it unregistered without making health checks fail.
+`GET /a2ui/health` reports availability through `imageGenerationReady`.
+`agent/common/agent-capabilities.ts` composes both capabilities, and search
+instructions suggest generation only when `generate_image` is registered.
+OpenUI, Lynx XML, HTML, and MCP Apps await the image tool before emitting their
+complete protocol output; only A2UI uses the continuation described above.
+All requests receive an independent four-call image budget, sharing their
+existing RequestContext with search and protocol-specific tools. UI Judge
+scoring agents remain tool-free. Neither capability accepts client credentials.
+
+To publish short, shareable A2UI and OpenUI preview URLs, configure the
+public-read Volcengine TOS bucket and server-only write credentials. All four
+variables are required; do not add fallback bucket or region values:
+
+```bash
+export TOS_ACCESS_KEY="..."
+export TOS_SECRET_KEY="..."
+export TOS_BUCKET="genui"
+export TOS_REGION="cn-beijing"
+```
+
+Use a dedicated IAM identity with `tos:PutObject` access only to the configured
+`a2ui`, `openui`, `mcp-apps`, `lynx-xml`, and `html` prefixes. Preview objects use
+`<method>/preview/<uuid>/<file>`; shared conversations use
+`<method>/conversation/<uuid>/messages.json`. The server signs writes with
+these credentials; the browser reads the resulting public object URL without
+credentials. Optional overrides are `TOS_ENDPOINT`, `TOS_STORAGE_PREFIX`,
+`TOS_OPENUI_STORAGE_PREFIX`, `TOS_MCP_APPS_STORAGE_PREFIX`,
+`TOS_LYNX_XML_STORAGE_PREFIX`, `TOS_HTML_STORAGE_PREFIX`, and
+`TOS_SECURITY_TOKEN`.
+
+## Lynx XML Generation
+
+`POST /lynx-xml/stream` uses a dedicated Vanilla Lynx agent and the shared text
+SSE route infrastructure. Stream raw model deltas so the Playground can show
+source growth, but normalize and validate the final document envelope before
+sending `done`. Preserve usage and finish-reason metadata when validation
+fails, and report `length` as an exhausted model output budget rather than only
+as a missing XML tag. The final artifact must start with lowercase
+`<!doctype lynx>`, use `<lynx engine-version="4.2">`, include exactly one main
+thread script, and end with `</lynx>`. Keep generated UI on Element PAPI; do
+not route it through ReactLynx, JSX, OpenUI, or A2UI.
+
+The streaming service allows at most three generation attempts to recover an
+invalid response ending in `length`. It tries one continuation with an exact
+source-boundary echo, then falls back to requesting a shorter complete artifact.
+Empty or oversized prefixes go straight to compact regeneration. Keep the model,
+abort signal, and capability scope unchanged. Ordinary artifact recovery also
+keeps the per-call token budget. Recovery
+responses are buffered; only the validated final document replaces the initial
+streamed prefix in `done`. Sum all attempt usage and expose recovery modes in
+`metadata.generationAttempts`. Raw generation remains single-call so Bench owns
+its configured repair budget. Upstream failures normally stop recovery.
+
+The shared recovery helper also supports one fresh attempt after reasoning-only
+exhaustion: no text or tool output, positive input usage, and all output tokens
+used by reasoning at the exact request budget. Require `length` or the observed
+400 `input` / `<nil>` error. Keep that original error and finish reason, lower
+reasoning effort to `low` unless already none/minimal/low, and increase output
+tokens only within a known configured ceiling, at most 2x. Never append an empty
+assistant reply or replay hidden reasoning. Count this within the same three
+attempts and aggregate usage; keep the override request-scoped and skip it when
+settings would be unchanged or `inheritReasoningEffort` is false.
+
+`enableHtmlFragment` defaults to false. When enabled, the model outputs one
+intermediate document with one root-child `<template>` plus styles and scripts in any order;
+the service compiles the template and injects an id-based `createFragment`
+helper before final validation. Conversion is deterministic postprocessing,
+not a Mastra tool. Keep shared search/image capability scopes independent of it.
+
+Return the exact assembled model text in `metadata.modelOutput` and the successful
+original fragment in `metadata.xmlFragment`; omit fragment metadata when off.
+Stream model text for source inspection, but deliver only the compiled document
+to preview and Judge. Preserve usage and finish reason on compilation failure
+so configured Bench repairs count the failed generation.
+
+## HTML Generation
+
+`POST /html/stream` uses a dedicated HTML agent and the shared text SSE route
+infrastructure. Stream raw model deltas so the Playground can display source
+growth, then extract and validate one complete HTML5 document before sending
+`done`. Generated documents must be self-contained and begin with
+`<!doctype html>`, contain `<html>`, `<head>`, and `<body>`, and end with
+`</html>`. The Playground executes inline scripts in an isolated iframe
+without same-origin access; do not add a server-side browser runtime or route
+HTML through Lynx.
+
+For Lynx-protocol UI Judge scoring, configure `UI_JUDGE_SERVER_URL` in the Playground's
+Bench run settings. The address stays in browser local storage; GenUI Server
+must never read it or access the screenshot service. The browser checks
+`GET /health` before creating a job with `playground.browserScreenshots: true`.
+For each `screenshot-requested` SSE task, it fetches the pending task's capture
+fields from `/a2ui/bench/jobs/:jobId/screenshots/:captureId`, requests multipart
+`/screenshot/template` or `/screenshot/lynxml` directly from the configured service,
+and posts raw BMP or a JSON capture error to the task endpoint. Bound uploads,
+timeouts, replay, and cancellation. The deployment must allow browser CORS.
+GenUI Server validates the uploaded BMP, converts
+the capture to PNG and runs visual-correctness and four GEQI evaluations with
+the Bench group's selected model, or the GenUI default. Reuse
+`createLLMProvider`, `GENUI_MODEL_CONFIG_JSON`, reasoning settings, token limits,
+and cancellation. The screenshot service receives no task, model, or credentials.
+Nonempty `judgeSteps` remain unsupported and are rejected before capture.
+
+HTML Bench uses `native` with no catalog and reuses the HTML generation service,
+with search and image generation disabled. Its `browser/html` screenshot tasks
+carry the complete HTML source and viewport dimensions to the Playground.
+The browser uses Element Capture on the sandboxed iframe and uploads the same
+top-down 32-bit BMP format. No server browser, Lynx bundle, or screenshot
+service URL is involved for HTML-only jobs. Keep shared scoring, cancellation,
+usage accounting, and report storage unchanged.
+
+PNG conversion preserves RGBA pixels and happens before model evaluation. Model
+inputs retain the full capture; Bench report storage separately applies its
+2 MiB per-image and 8 MiB per-job limits. A scoring failure makes the whole Judge
+result unavailable, while a report storage limit only omits the screenshot.
 
 Before rendering, the Bench integration replaces `Image`, `LazyComponent`,
 `LineChart`, `McpApp`, and `PieChart` definitions with inert loading
@@ -67,41 +353,59 @@ those calls in the first place. Keep this boundary in place: model output must
 not make the server-side headless resource loader fetch arbitrary URLs, read
 local files, or execute nested bundles.
 
-By default, Judge renders
+By default, Judge securely fetches and renders
 `https://lynx-stack.dev/genui/a2ui.lynx.js`. Override that server-owned bundle
-URL when running a local or pinned bundle:
+URL with another publicly resolvable HTTP(S) asset when pinning a bundle:
 
 ```bash
-export UI_JUDGE_BUNDLE_URL="http://127.0.0.1:3000/a2ui.lynx.js"
+export UI_JUDGE_BUNDLE_URL="https://cdn.example.com/a2ui.lynx.js"
 ```
+
+The sidecar applies the screenshot endpoint's SSRF policy to this URL, so
+localhost, private-network targets, redirects, and URL credentials are
+rejected. Use the Rust library API for trusted local bundle capture.
 
 ## Security
 
-By default, request bodies submitted to `/a2ui/chat`, `/a2ui/stream`,
-`/a2ui/action`, and `/mcp-apps/stream` **cannot** override `apiKey` or
-`baseURL`. This
-prevents an unauthenticated client from turning the server into an open
-proxy that uses arbitrary keys against arbitrary OpenAI-compatible
-endpoints.
+Request bodies submitted to `/a2ui/chat`, `/a2ui/stream`, `/a2ui/action`,
+`/openui/stream`, `/mcp-apps/stream`, `/lynx-xml/stream`, and `/html/stream`
+may provide a complete custom `model`, `apiKey`, and `baseURL`. Incomplete
+overrides are ignored and ordinary model names resolve only through
+`GENUI_MODEL_CONFIG_JSON`.
 
-For trusted local development workflows where overriding is desirable
-(e.g. the playground swapping providers), opt in explicitly:
-
-```bash
-export A2UI_ALLOW_CLIENT_OVERRIDE="1"
-```
-
-Do **not** enable this flag on a publicly reachable deployment unless
-authentication and an allow-list are added in front of the server.
+Request-scoped custom providers accept only the exact HTTPS base URLs in
+`ALLOWED_CUSTOM_PROVIDER_BASE_URLS`; reject alternate origins, ports, paths,
+credentials, query strings, and fragments. Add a provider only when its
+official OpenAI-compatible endpoint is documented and covered by tests. Do not
+expose these routes publicly without authentication.
 
 ## Rate Limiting
 
-The routes at `/a2ui/chat`, `/a2ui/stream`, `/a2ui/action`, and
-`/mcp-apps/stream` share an in-process fixed-window rate limiter keyed by
-client IP (`x-forwarded-for` > `x-real-ip` > `unknown`). When a client exceeds
-the limit, the JSON routes respond with HTTP `429` and the SSE route emits a
-single `event: error` frame; both responses include the standard `Retry-After`
-and `X-RateLimit-*` headers.
+Screenshot model scoring has a separate process-local outbound queue, shared
+by resolved upstream base URL and model across Bench jobs. It allows two active
+model calls and starts at most one per second. One request contains the screenshot
+once and returns visual correctness plus all four GEQI dimension scores, each
+with its own criteria and evidence. Keep weights and aggregate calculation
+server-owned. Scoring uses prompt-injected JSON instructions with
+strict local schema validation, so the selected model need not support native
+`json_schema` response formats. Require all five fixed dimension keys and reject
+missing or invalid scores. A transient failure retries the complete scoring
+request, for at most three attempts with SDK retries disabled. `Retry-After` takes precedence; without it,
+HTTP 429 pauses the shared queue for 60 seconds, while other transient errors
+use bounded exponential backoff. Waits honor the Judge abort/deadline signal.
+Retries reuse the captured screenshot. A final scoring failure does not restart
+capture. This queue
+does not govern generation calls or other server replicas using the same
+upstream quota.
+
+The routes at `/a2ui/chat`, `/a2ui/stream`, `/a2ui/action`,
+`/openui/stream`, `/mcp-apps/stream`, `/lynx-xml/stream`, and `/html/stream`
+share an in-process fixed-window rate limiter keyed by client IP
+(`x-forwarded-for` > `x-real-ip`
+
+> `unknown`). When a client exceeds the limit, the JSON routes respond with
+> HTTP `429` and the SSE route emits a single `event: error` frame; both responses
+> include the standard `Retry-After` and `X-RateLimit-*` headers.
 
 Tune the limiter with the following optional environment variables:
 
@@ -121,8 +425,9 @@ front of this server.
 ## Conversation Context
 
 The server does not keep per-thread conversation memory. `/a2ui/chat`,
-`/a2ui/stream`, `/a2ui/action`, `/a2ui/action/stream`, and
-`/mcp-apps/stream` accept an optional `conversation` request field:
+`/a2ui/stream`, `/a2ui/action`, `/a2ui/action/stream`, `/openui/stream`,
+`/mcp-apps/stream`, `/lynx-xml/stream`, and `/html/stream` accept an optional
+`conversation` request field:
 
 ```json
 {

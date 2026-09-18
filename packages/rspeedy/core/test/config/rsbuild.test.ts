@@ -8,6 +8,7 @@ import { describe, expect, test } from '@rstest/core'
 
 import { toRsbuildConfig } from '../../src/config/rsbuild/index.js'
 import type { Config } from '../../src/index.js'
+import { createStubRspeedy } from '../createStubRspeedy.js'
 
 describe('Config - toRsBuildConfig', () => {
   describe('splitChunks', () => {
@@ -66,18 +67,28 @@ describe('Config - toRsBuildConfig', () => {
   })
 
   describe('Dev', () => {
+    test('uses the Rsbuild defaults of dev.hmr and dev.liveReload', async () => {
+      const rspeedy = await createStubRspeedy({})
+
+      await rspeedy.initConfigs()
+
+      const { dev } = rspeedy.getNormalizedConfig()
+      expect(dev.hmr).toBe(true)
+      expect(dev.liveReload).toBe(true)
+    })
+
     test('transform empty dev', () => {
       const rsbuildConfig = toRsbuildConfig({
         dev: void 0,
       })
       expect(rsbuildConfig.dev).toMatchInlineSnapshot(`
         {
-          "hmr": true,
-          "lazyCompilation": false,
-          "liveReload": true,
+          "assetPrefix": undefined,
+          "hmr": undefined,
+          "liveReload": undefined,
           "progressBar": true,
           "watchFiles": undefined,
-          "writeToDisk": true,
+          "writeToDisk": undefined,
         }
       `)
     })
@@ -415,10 +426,10 @@ describe('Config - toRsBuildConfig', () => {
   })
 
   describe('Environments', () => {
-    test('with default lynx environment', () => {
+    test('without environments', () => {
       const rsbuildConfig = toRsbuildConfig({})
 
-      expect(rsbuildConfig.environments?.['lynx']).toStrictEqual({})
+      expect(rsbuildConfig.environments).toBeUndefined()
     })
 
     test('with web-only environment', () => {
@@ -462,12 +473,12 @@ describe('Config - toRsBuildConfig', () => {
           "cleanDistPath": undefined,
           "copy": undefined,
           "cssModules": undefined,
-          "dataUriLimit": 2048,
+          "dataUriLimit": undefined,
           "distPath": undefined,
           "filename": undefined,
           "filenameHash": undefined,
           "inlineScripts": undefined,
-          "legalComments": "none",
+          "legalComments": undefined,
           "minify": undefined,
           "polyfill": "off",
           "sourceMap": undefined,
@@ -525,7 +536,7 @@ describe('Config - toRsBuildConfig', () => {
       expect(rsbuildConfig.output?.filename).toHaveProperty('css', 'style.css')
     })
 
-    test('transform output.filename string is not forwarded', () => {
+    test('does not transform output.filename string', () => {
       const rsbuildConfig = toRsbuildConfig({
         output: {
           filename: 'main.bundle',
@@ -625,6 +636,16 @@ describe('Config - toRsBuildConfig', () => {
         performance: { removeConsole: false },
       })
       expect(rsbuildConfig.performance?.removeConsole).toBe(false)
+    })
+
+    test('uses the Rsbuild default of performance.printFileSize', async () => {
+      const rspeedy = await createStubRspeedy({})
+
+      await rspeedy.initConfigs()
+
+      expect(rspeedy.getNormalizedConfig().performance.printFileSize).toBe(
+        true,
+      )
     })
 
     test('transform performance.printFileSize false', () => {
@@ -777,7 +798,7 @@ describe('Config - toRsBuildConfig', () => {
   describe('Server', () => {
     test('transform default server.host', () => {
       const rsbuildConfig = toRsbuildConfig({})
-      expect(rsbuildConfig.server?.host).toBe('0.0.0.0')
+      expect(rsbuildConfig.server?.host).toBeUndefined()
     })
 
     test('transform server.host', () => {

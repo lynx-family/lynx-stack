@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from '@rstest/core';
 
-import { resolveBenchCatalog } from '../service/a2ui-bench-catalog.js';
+import { resolveBenchCatalog } from '../service/a2ui/a2ui-bench-catalog.js';
 
 describe('resolveBenchCatalog', () => {
   test.each(

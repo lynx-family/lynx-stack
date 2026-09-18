@@ -11,6 +11,8 @@ import {
 } from './commit-context.js';
 import type { BackgroundElementTemplateInstance } from './instance.js';
 import { clearElementTemplateRenderScope, resetElementTemplateRenderScope } from './render-scope.js';
+import type { MainThreadRefInitValuePatch } from '../../core/main-thread-ref-init-value.js';
+import { takeMainThreadRefInitValuePatch } from '../../core/main-thread-ref-init-value.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../core/performance.js';
 import { getReloadVersion } from '../../core/reload-version.js';
 import {
@@ -26,6 +28,7 @@ import { clearPendingRefs, flushPendingRefs, hasPendingRefs } from '../prop-adap
 import { createElementTemplateUpdateEvent } from '../protocol/update-event.js';
 
 let installed = false;
+let previousCommit: typeof options[typeof COMMIT];
 let hasHydrated = false;
 const scheduledRemovedSubtreeCleanupTimers = /*#__PURE__*/ new Set<ReturnType<typeof setTimeout>>();
 
@@ -65,44 +68,44 @@ export function cancelElementTemplateRemovedSubtreeCleanup(): void {
   scheduledRemovedSubtreeCleanupTimers.clear();
 }
 
-function flushElementTemplateCommitChanges(): void {
+function flushElementTemplateCommitChanges(mainThreadRefInitValuePatch: MainThreadRefInitValuePatch): void {
   const hasNativeOps = globalCommitContext.ops.length > 0;
   const hasDelayedRunOnMainThread = delayedRunOnMainThreadData.length > 0;
+  const hasMainThreadRefInitValuePatch = mainThreadRefInitValuePatch.length > 0;
   const hasUpdatePayload = hasNativeOps
     || !isEmptyObject(globalCommitContext.flushOptions)
-    || hasDelayedRunOnMainThread;
+    || hasDelayedRunOnMainThread
+    || hasMainThreadRefInitValuePatch;
   const removedSubtreesAwaitingTeardown = hasNativeOps ? takeRemovedSubtreesForPostDispatchTeardown() : [];
-  let didFlushRefs = false;
-  let didDispatchUpdatePayload = false;
-  let delayedRunOnMainThreadPayload: typeof delayedRunOnMainThreadData | undefined;
-  try {
-    if (hasUpdatePayload) {
-      markTimingLegacy('updateDiffVdomEnd');
-      markTiming('diffVdomEnd');
+  if (hasUpdatePayload) {
+    markTimingLegacy('updateDiffVdomEnd');
+    markTiming('diffVdomEnd');
 
-      if (__PROFILE__) {
-        profileStart('ReactLynx::commitChanges');
-      }
-      markTiming('packChangesStart');
-      if (globalPipelineOptions) {
-        globalCommitContext.flushOptions.pipelineOptions = globalPipelineOptions;
-      }
-      markTiming('packChangesEnd');
-      if (globalPipelineOptions) {
-        setPipeline(undefined);
-      }
-      if (__PROFILE__) {
-        profileEnd();
-      }
+    if (__PROFILE__) {
+      profileStart('ReactLynx::commitChanges');
+    }
+    markTiming('packChangesStart');
+    if (globalPipelineOptions) {
+      globalCommitContext.flushOptions.pipelineOptions = globalPipelineOptions;
+    }
+    markTiming('packChangesEnd');
+    if (globalPipelineOptions) {
+      setPipeline(undefined);
+    }
+    if (__PROFILE__) {
+      profileEnd();
+    }
 
-      if (!hasNativeOps && !hasDelayedRunOnMainThread) {
-        globalCommitContext.flushOptions.emptyPatch = true;
-      }
+    if (!hasNativeOps && !hasDelayedRunOnMainThread) {
+      globalCommitContext.flushOptions.emptyPatch = true;
+    }
 
-      delayedRunOnMainThreadPayload = hasDelayedRunOnMainThread
-        ? takeDelayedRunOnMainThreadData()
-        : undefined;
+    const delayedRunOnMainThreadPayload = hasDelayedRunOnMainThread
+      ? takeDelayedRunOnMainThreadData()
+      : undefined;
 
+    let updateEvent: ReturnType<typeof createElementTemplateUpdateEvent>;
+    try {
       if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
         console.alog?.(
           '[ReactLynxDebug] ElementTemplate BTS -> MTS update:\n'
@@ -112,6 +115,7 @@ function flushElementTemplateCommitChanges(): void {
                 flushOptions: globalCommitContext.flushOptions,
                 flowIds: globalCommitContext.flowIds,
                 delayedRunOnMainThreadDataCount: delayedRunOnMainThreadPayload?.length,
+                mainThreadRefInitValuePatchCount: mainThreadRefInitValuePatch.length,
               },
               null,
               2,
@@ -119,32 +123,36 @@ function flushElementTemplateCommitChanges(): void {
         );
       }
 
-      lynx.getCoreContext().dispatchEvent(createElementTemplateUpdateEvent({
+      updateEvent = createElementTemplateUpdateEvent({
         ops: globalCommitContext.ops,
         flushOptions: globalCommitContext.flushOptions,
         reloadVersion: getReloadVersion(),
         flowIds: globalCommitContext.flowIds,
         delayedRunOnMainThreadData: delayedRunOnMainThreadPayload,
-      }));
-      didDispatchUpdatePayload = true;
-    }
-    // When native ops exist, patch first so a newly attached ref observes the
-    // committed native state. Ref-only commits still flush through this path.
-    flushPendingRefs();
-    didFlushRefs = true;
-  } finally {
-    if (delayedRunOnMainThreadPayload && !didDispatchUpdatePayload) {
-      dropFunctionCallReturnIds(delayedRunOnMainThreadPayload.map(data => data.resolveId));
-    }
-    if (!didFlushRefs) {
+        mainThreadRefInitValuePatch: hasMainThreadRefInitValuePatch
+          ? mainThreadRefInitValuePatch
+          : undefined,
+      });
+    } catch (error) {
+      if (delayedRunOnMainThreadPayload) {
+        dropFunctionCallReturnIds(delayedRunOnMainThreadPayload.map(data => data.resolveId));
+      }
       clearPendingRefs();
+      resetGlobalCommitContext();
+      scheduleElementTemplateRemovedSubtreeCleanup(removedSubtreesAwaitingTeardown);
+      throw error;
     }
-    resetGlobalCommitContext();
-    // Match Snapshot's cleanup boundary: start the delayed teardown only
-    // after the bridge dispatch attempt, so background JS objects are not
-    // torn down before main-thread detach observes the same commit.
-    scheduleElementTemplateRemovedSubtreeCleanup(removedSubtreesAwaitingTeardown);
+
+    lynx.getCoreContext().dispatchEvent(updateEvent);
   }
+  // When native ops exist, patch first so a newly attached ref observes the
+  // committed native state. Ref-only commits still flush through this path.
+  flushPendingRefs();
+  resetGlobalCommitContext();
+  // Match Snapshot's cleanup boundary: start the delayed teardown only
+  // after the bridge dispatch, so background JS objects are not torn down
+  // before main-thread detach observes the same commit.
+  scheduleElementTemplateRemovedSubtreeCleanup(removedSubtreesAwaitingTeardown);
 }
 
 export function installElementTemplateCommitHook(): void {
@@ -152,6 +160,8 @@ export function installElementTemplateCommitHook(): void {
     return;
   }
   installed = true;
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  previousCommit = options[COMMIT];
 
   hook(options, COMMIT, (originalCommit, vnode, commitQueue) => {
     if (__BACKGROUND__) {
@@ -162,18 +172,40 @@ export function installElementTemplateCommitHook(): void {
       // User effects can run before ET hydrate arrives, so ordinary refs must be
       // attached on the background commit even though native UI ops are delayed.
       flushPendingRefs();
-    } else if (
-      __BACKGROUND__ && hasHydrated
-      && (
+    } else if (__BACKGROUND__ && hasHydrated) {
+      const mainThreadRefInitValuePatch = takeMainThreadRefInitValuePatch();
+      if (
         globalCommitContext.ops.length > 0
         || !isEmptyObject(globalCommitContext.flushOptions)
         || hasPendingRefs()
         || delayedRunOnMainThreadData.length > 0
-      )
-    ) {
-      flushElementTemplateCommitChanges();
+        || mainThreadRefInitValuePatch.length > 0
+      ) {
+        flushElementTemplateCommitChanges(mainThreadRefInitValuePatch);
+      }
     }
 
     originalCommit?.(vnode, commitQueue);
   });
+}
+
+/**
+ * Restores the commit option replaced by
+ * {@link installElementTemplateCommitHook} so tests can clean up the global
+ * Preact `options` object. Assumes the matching install was the most recent
+ * commit-option replacement; the snapshot and ElementTemplate runtimes are
+ * separate entrypoints and never install their commit hooks in the same
+ * context.
+ */
+export function uninstallElementTemplateCommitHookForTesting(): void {
+  if (!installed) {
+    return;
+  }
+  installed = false;
+  if (previousCommit) {
+    options[COMMIT] = previousCommit;
+    previousCommit = undefined;
+  } else {
+    delete options[COMMIT];
+  }
 }

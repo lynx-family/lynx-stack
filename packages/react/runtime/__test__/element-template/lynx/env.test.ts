@@ -96,7 +96,7 @@ describe('setupLynxEnv', () => {
 
   it('merges initData and updateData in JS env', () => {
     envManager.resetEnv('background');
-    globalThis.lynxCoreInject.tt._params = {
+    globalThis.lynx.getApp()._params = {
       initData: { answer: 41, stale: true },
       updateData: { answer: 42, fresh: true },
     };
@@ -114,7 +114,7 @@ describe('setupLynxEnv', () => {
 
   it('falls back to empty initData when reading params throws', () => {
     envManager.resetEnv('background');
-    Object.defineProperty(globalThis.lynxCoreInject.tt, '_params', {
+    Object.defineProperty(globalThis.lynx.getApp(), '_params', {
       configurable: true,
       get() {
         throw new Error('boom');
@@ -128,7 +128,7 @@ describe('setupLynxEnv', () => {
 
   it('treats missing initData and updateData params as empty objects in JS env', () => {
     envManager.resetEnv('background');
-    Object.defineProperty(globalThis.lynxCoreInject.tt, '_params', {
+    Object.defineProperty(globalThis.lynx.getApp(), '_params', {
       configurable: true,
       value: {
         initData: undefined,

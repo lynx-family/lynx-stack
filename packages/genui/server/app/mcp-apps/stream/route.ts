@@ -11,8 +11,8 @@ import {
   parseMcpAppsAgentOutputs,
   resolveMcpAppsResource,
   validateMcpAppsClientRegistry,
-} from '../../../agent/mcp-apps-registry';
-import { getMcpAppsAgentService } from '../../../service/mcp-apps-agent';
+} from '../../../agent/mcp-apps/mcp-apps-registry.js';
+import { getMcpAppsAgentService } from '../../../service/mcp-apps/mcp-apps-agent.js';
 import {
   validateConversation,
   validateMessages,
@@ -23,6 +23,7 @@ import { pickProviderOptions } from '../../common/provider-options';
 import { checkRateLimit, rateLimitSseResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
 import { encodeSSE, sseHeaders } from '../../common/sse';
+import { extractTokenUsage } from '../../common/usage.js';
 
 interface McpAppsChatBody {
   messages?: unknown;
@@ -74,6 +75,7 @@ async function postMcpAppsStream(req: Request) {
 
   const registry = validatedRegistry.registry;
   const opts = pickProviderOptions(parsed.body);
+  const errorOptions = { secrets: [parsed.body.apiKey, opts.apiKey] };
   const service = getMcpAppsAgentService();
   const modelMessages = [
     {
@@ -127,6 +129,7 @@ async function postMcpAppsStream(req: Request) {
               protocolVersion: MCP_APPS_PROTOCOL_VERSION,
               message: selection.text,
               usage,
+              tokenUsage: extractTokenUsage(usage),
               finishReason,
             });
             return;
@@ -154,11 +157,12 @@ async function postMcpAppsStream(req: Request) {
             tool,
             resource,
             usage,
+            tokenUsage: extractTokenUsage(usage),
             finishReason,
           });
         } catch (error) {
           if (!closed && !generationController.signal.aborted) {
-            enqueue('error', errorMessage(error));
+            enqueue('error', errorMessage(error, errorOptions));
           }
         } finally {
           req.signal.removeEventListener('abort', onRequestAbort);

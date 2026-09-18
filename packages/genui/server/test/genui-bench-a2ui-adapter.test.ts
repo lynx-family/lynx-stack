@@ -4,11 +4,11 @@
 
 import { describe, expect, test } from '@rstest/core';
 
-import type { A2UIChatOptions } from '../service/a2ui-agent.js';
-import { createA2UIBenchAdapter } from '../service/genui-bench/a2ui-adapter.js';
+import type { A2UIChatOptions } from '../service/a2ui/a2ui-agent.js';
+import { createA2UIBenchAdapter } from '../service/a2ui/a2ui-bench-adapter.js';
 import type {
   ProtocolBenchAdapterInput,
-} from '../service/genui-bench/protocol-adapter.js';
+} from '../service/common/bench/protocol-adapter.js';
 
 function adapterInput(maxAttempts = 2): ProtocolBenchAdapterInput {
   return {
@@ -96,8 +96,11 @@ describe('A2UI matched-core bench adapter', () => {
     expect(receivedOptions).toMatchObject({
       apiKey: 'request-scoped-key',
       disableAgentCache: true,
-      inheritReasoningEffort: false,
+      maxRetries: 0,
+      enableWebSearch: false,
+      enableImageGeneration: false,
     });
+    expect(receivedOptions?.inheritReasoningEffort).not.toBe(false);
     expect(receivedSignal).toBe(abortController.signal);
     expect(receivedOptions?.catalog?.examples).toEqual([]);
     expect(receivedOptions?.catalog?.functions).toEqual([]);
@@ -187,7 +190,11 @@ describe('A2UI matched-core bench adapter', () => {
         receivedMessages.push(messages.map((message) => message.content));
         callCount += 1;
         if (callCount === 1) {
-          return Promise.reject(new Error('provider temporarily unavailable'));
+          return Promise.reject(
+            Object.assign(new Error('provider temporarily unavailable'), {
+              statusCode: 503,
+            }),
+          );
         }
         return Promise.resolve({
           text: validA2UIOutput(options.catalog?.id),
@@ -210,7 +217,7 @@ describe('A2UI matched-core bench adapter', () => {
     await backoffStarted;
 
     expect(callCount).toBe(1);
-    expect(sleepCalls).toEqual([10_000]);
+    expect(sleepCalls).toEqual([1_000]);
     releaseBackoff?.();
     const artifact = await generation;
     expect(callCount).toBe(2);
@@ -236,7 +243,11 @@ describe('A2UI matched-core bench adapter', () => {
     const adapter = createA2UIBenchAdapter({
       generateRaw() {
         callCount += 1;
-        return Promise.reject(new Error('provider temporarily unavailable'));
+        return Promise.reject(
+          Object.assign(new Error('provider temporarily unavailable'), {
+            statusCode: 503,
+          }),
+        );
       },
       sleep() {
         markBackoffStarted?.();
@@ -257,35 +268,46 @@ describe('A2UI matched-core bench adapter', () => {
     expect(callCount).toBe(1);
   });
 
-  test('repairs protocol validation failures without transport backoff', async () => {
-    const receivedMessages: string[][] = [];
-    const sleepCalls: number[] = [];
-    let callCount = 0;
-    const adapter = createA2UIBenchAdapter({
-      generateRaw(messages, options) {
-        receivedMessages.push(messages.map((message) => message.content));
-        callCount += 1;
-        return Promise.resolve({
-          text: callCount === 1
-            ? 'not valid A2UI'
-            : validA2UIOutput(options.catalog?.id),
-          usage: {},
-          finishReason: 'stop',
-        });
-      },
-      sleep(delayMs) {
-        sleepCalls.push(delayMs);
-        return Promise.resolve();
-      },
-    });
+  test.each(['stop', 'length'])(
+    'repairs invalid output ending with %s without transport backoff',
+    async (finishReason) => {
+      const receivedMessages: string[][] = [];
+      const sleepCalls: number[] = [];
+      let callCount = 0;
+      const adapter = createA2UIBenchAdapter({
+        generateRaw(messages, options) {
+          receivedMessages.push(messages.map((message) => message.content));
+          callCount += 1;
+          return Promise.resolve({
+            text: callCount === 1
+              ? 'not valid A2UI'
+              : validA2UIOutput(options.catalog?.id),
+            usage: {},
+            finishReason,
+          });
+        },
+        sleep(delayMs) {
+          sleepCalls.push(delayMs);
+          return Promise.resolve();
+        },
+      });
 
-    const artifact = await adapter.generate(adapterInput());
+      const artifact = await adapter.generate(adapterInput());
 
-    expect(callCount).toBe(2);
-    expect(sleepCalls).toEqual([]);
-    expect(receivedMessages.map((messages) => messages.length)).toEqual([1, 3]);
-    expect(artifact.finalValid).toBe(true);
-  });
+      expect(callCount).toBe(2);
+      expect(sleepCalls).toEqual([]);
+      expect(receivedMessages[1]?.[0]).toBe(receivedMessages[0]?.[0]);
+      if (finishReason === 'length') {
+        expect(receivedMessages[1]).toHaveLength(2);
+        expect(receivedMessages[1]?.[1]).toContain('Regenerate a shorter');
+        expect(receivedMessages[1]).not.toContain('not valid A2UI');
+      } else {
+        expect(receivedMessages[1]).toHaveLength(3);
+        expect(receivedMessages[1]?.[1]).toBe('not valid A2UI');
+      }
+      expect(artifact.finalValid).toBe(true);
+    },
+  );
 
   test('bounds and exhausts repeated generation failures', async () => {
     let callCount = 0;
@@ -293,7 +315,9 @@ describe('A2UI matched-core bench adapter', () => {
       generateRaw() {
         callCount += 1;
         return Promise.reject(
-          new Error(`provider failure ${callCount}`),
+          Object.assign(new Error(`provider failure ${callCount}`), {
+            statusCode: 503,
+          }),
         );
       },
       retryDelayMs: 0,

@@ -126,9 +126,16 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
 
           // HMR-related
           // Update the evaluated snapshot entryName from JS.
-          snapshotCreatorMap[uniqID] = evaluate<(uniqId: string) => string>(
-            snapshotCreatorMap[uniqID]!.toString().replace(/globDynamicComponentEntry/g, JSON.stringify(entryName)),
-          );
+          const source = snapshotCreatorMap[uniqID]?.toString();
+          if (source?.includes('globDynamicComponentEntry')) {
+            try {
+              snapshotCreatorMap[uniqID] = evaluate<(uniqId: string) => string>(
+                source.replace(/globDynamicComponentEntry/g, JSON.stringify(entryName)),
+              );
+            } catch (e) {
+              console.warn(`[ReactLynx] failed to rewrite snapshot entryName for ${uniqID}`, e);
+            }
+          }
         }
         break;
       }

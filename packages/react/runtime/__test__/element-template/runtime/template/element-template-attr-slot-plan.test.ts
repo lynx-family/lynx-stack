@@ -8,12 +8,14 @@ import { resetElementTemplateBackgroundFunctionRuntime } from '../../../../src/e
 import {
   __etAttrPlanMap,
   adaptMTEventAttrSlot,
+  adaptMTRefAttrSlot,
   adaptRefAttrSlot,
   adaptSpreadAttrSlot,
   clearEtAttrPlanMap,
   type EtAttrAdapter,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { isMTEventNativeWrapper } from '../../../../src/element-template/runtime/template/main-thread-event-ctx.js';
+import type { MTRefNativeWrapper } from '../../../../src/element-template/runtime/template/main-thread-ref-ctx.js';
 import { clearRefState, flushPendingRefs } from '../../../../src/element-template/prop-adapters/ref.js';
 
 function expectMTEventPreparedWrapper(value: unknown): {
@@ -35,6 +37,11 @@ function expectMTEventPreparedWrapper(value: unknown): {
       _wkltId: string;
     };
   };
+}
+
+function expectMTRefPreparedWrapper(value: unknown): MTRefNativeWrapper {
+  expect(value).toEqual(expect.objectContaining({ type: 'main-thread-ref' }));
+  return value as MTRefNativeWrapper;
 }
 
 describe('ElementTemplate attr slot plan registry', () => {
@@ -222,9 +229,75 @@ describe('ElementTemplate attr slot plan registry', () => {
     ).toBe(preparedSlots[0]);
   });
 
+  it('wraps direct main-thread ref object values for ET runtime state', () => {
+    const ref = { _wvid: 7, _type: 'main-thread' };
+
+    const wrapper = expectMTRefPreparedWrapper(adaptMTRefAttrSlot(-2, 0, ref));
+
+    expect(wrapper.type).toBe('main-thread-ref');
+    expect(wrapper.value).toBe(ref);
+  });
+
+  it('wraps direct main-thread callback refs without mutating the raw callback', () => {
+    const rawCallback = { _wkltId: 'main-thread-ref-callback', _c: { label: 'first' } };
+
+    const wrapper = expectMTRefPreparedWrapper(adaptMTRefAttrSlot(-2, 0, rawCallback));
+
+    expect(wrapper.value).toEqual(expect.objectContaining({
+      _c: { label: 'first' },
+      _wkltId: 'main-thread-ref-callback',
+    }));
+    expect(wrapper.value).not.toBe(rawCallback);
+    expect(wrapper.value._c).toBe(rawCallback._c);
+    expect(rawCallback).not.toHaveProperty('_execId');
+  });
+
+  it('normalizes empty direct main-thread ref slots to null', () => {
+    expect(adaptMTRefAttrSlot(-2, 0, null)).toBeNull();
+    expect(adaptMTRefAttrSlot(-2, 0, undefined)).toBeNull();
+  });
+
+  it('throws for invalid direct main-thread ref values', () => {
+    for (const value of [false, true, 1, 'ref', {}, { _lepusWorkletHash: 'legacy' }, { _wkltId: 1 }]) {
+      expect(() => adaptMTRefAttrSlot(-2, 0, value)).toThrow(
+        'ElementTemplate main-thread:ref expects a MainThreadRef object or a main-thread function.',
+      );
+    }
+  });
+
+  it('rejects false before it can replace an existing direct main-thread ref', () => {
+    const ref = { _wvid: 7 };
+    const previousWrapper = adaptMTRefAttrSlot(-2, 0, ref);
+
+    expect(() =>
+      adaptMTRefAttrSlot(-2, 0, false, {
+        previousPreparedSlots: [previousWrapper],
+        previousRawSlots: [ref],
+      })
+    ).toThrow(
+      'ElementTemplate main-thread:ref expects a MainThreadRef object or a main-thread function.',
+    );
+    expect(expectMTRefPreparedWrapper(previousWrapper).value).toBe(ref);
+  });
+
+  it('reuses the previous prepared direct main-thread ref wrapper for the same raw value', () => {
+    const ref = { _wvid: 7 };
+    const firstWrapper = adaptMTRefAttrSlot(-2, 0, ref);
+
+    expect(adaptMTRefAttrSlot(-2, 0, ref, {
+      previousPreparedSlots: [firstWrapper],
+      previousRawSlots: [ref],
+    })).toBe(firstWrapper);
+
+    expect(adaptMTRefAttrSlot(-2, 0, { _wvid: 7 }, {
+      previousPreparedSlots: [firstWrapper],
+      previousRawSlots: [ref],
+    })).not.toBe(firstWrapper);
+  });
+
   it('skips queued ref effects for templates without attr plans', () => {
     expect(() => {
-      queueRefAttributeSlotUpdates('_et_without_backend_attrs', -2, [() => {}]);
+      queueRefAttributeSlotUpdates('_et_without_backend_attrs', { instanceId: -2 }, [() => {}]);
     }).not.toThrow();
   });
 
@@ -233,7 +306,7 @@ describe('ElementTemplate attr slot plan registry', () => {
     const newRef = vi.fn();
     __etAttrPlanMap._et_ref = [0, adaptRefAttrSlot];
 
-    queueRefAttributeSlotUpdates('_et_ref', -2, [oldRef], [newRef]);
+    queueRefAttributeSlotUpdates('_et_ref', { instanceId: -2 }, [oldRef], [newRef]);
     flushPendingRefs();
 
     expect(oldRef).toHaveBeenCalledWith(null);
@@ -262,7 +335,7 @@ describe('ElementTemplate attr slot plan registry', () => {
       '-7-1',
       { ref: '-7-2' },
     ]);
-    queueRefAttributeSlotUpdates('_et_multi_ref', -7, undefined, rawSlots);
+    queueRefAttributeSlotUpdates('_et_multi_ref', { instanceId: -7 }, undefined, rawSlots);
     flushPendingRefs();
 
     expect(directRef).toHaveBeenCalledWith(expect.objectContaining({
@@ -288,7 +361,7 @@ describe('ElementTemplate attr slot plan registry', () => {
 
     queueRefAttributeSlotUpdates(
       '_et_multi_ref',
-      -7,
+      { instanceId: -7 },
       [directRef, { ref: spreadRef }],
       [directRef, { ref: undefined }],
     );

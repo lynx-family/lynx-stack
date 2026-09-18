@@ -78,7 +78,7 @@ describe('updateGlobalProps event mode', () => {
 
     // hydrate
     {
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
     // rLynxChange
@@ -94,7 +94,7 @@ describe('updateGlobalProps event mode', () => {
     {
       globalEnvManager.switchToBackground();
       lynx.getNativeApp().callLepusMethod.mockClear();
-      lynxCoreInject.tt.updateGlobalProps({ theme: 'light' });
+      lynx.getApp().updateGlobalProps({ theme: 'light' });
       await waitSchedule();
 
       // rLynxChange should be called
@@ -164,7 +164,7 @@ describe('updateGlobalProps event mode', () => {
 
     // hydrate
     {
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
     // rLynxChange
@@ -180,31 +180,23 @@ describe('updateGlobalProps event mode', () => {
     {
       globalEnvManager.switchToBackground();
       lynx.getNativeApp().callLepusMethod.mockClear();
-      lynxCoreInject.tt.updateGlobalProps({ theme: 'light' });
+      lynx.getApp().updateGlobalProps({ theme: 'light' });
       await waitSchedule();
 
       // rLynxChange should be called
-      expect(lynx.getNativeApp().callLepusMethod.mock.calls.length).toBe(2);
+      // (Preact 11 no longer double-renders context consumers, so a single
+      // patch is flushed)
+      expect(lynx.getNativeApp().callLepusMethod.mock.calls.length).toBe(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls).toMatchInlineSnapshot(`
         [
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":6}],"flushOptions":{"emptyPatch":true}}",
+              "data": "{"patchList":[{"id":6,"snapshotPatch":[3,-3,0,"light"]}]}",
               "patchOptions": {
                 "flowIds": [
                   666,
                 ],
-                "reloadVersion": 0,
-              },
-            },
-            [Function],
-          ],
-          [
-            "rLynxChange",
-            {
-              "data": "{"patchList":[{"id":7,"snapshotPatch":[3,-3,0,"light"]}]}",
-              "patchOptions": {
                 "reloadVersion": 0,
               },
             },

@@ -8,7 +8,6 @@ import type { CompatVisitorConfig } from '@lynx-js/react/transform';
 import type { Compiler } from '@rspack/core';
 import type { DefineDceVisitorConfig } from '@lynx-js/react/transform';
 import { ExtractStrConfig } from '@lynx-js/react/transform';
-import type { JsxTransformerConfig } from '@lynx-js/react/transform';
 import type { ShakeVisitorConfig } from '@lynx-js/react/transform';
 import type { TransformBuiltinAttributeNamesOptions } from '@lynx-js/react/transform';
 
@@ -32,7 +31,6 @@ export interface ReactLoaderOptions {
     experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions | undefined;
     experimental_useElementTemplate?: boolean | undefined;
     inlineSourcesContent?: boolean | undefined;
-    jsx?: JsxTransformerConfig | undefined;
     refresh?: boolean | undefined;
     shake?: ShakeVisitorConfig | undefined;
 }
@@ -49,6 +47,10 @@ export class ReactWebpackPlugin {
 export interface ReactWebpackPluginOptions {
     disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
     enableSSR?: boolean;
+    entryPairs?: Array<{
+        mainThread: string;
+        background: string;
+    }>;
     // @alpha
     experimental_isLazyBundle?: boolean;
     experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions;

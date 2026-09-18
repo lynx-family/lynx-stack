@@ -1,0 +1,9 @@
+{
+  "name": "preact",
+  "version": "10.29.1-signals-fixture",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./hooks": "./hooks.js"
+  }
+}

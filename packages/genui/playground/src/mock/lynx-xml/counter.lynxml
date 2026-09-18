@@ -1,0 +1,272 @@
+<!doctype lynx>
+<lynx engine-version="4.2">
+<style>
+.counter-card {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px;
+  border-radius: 24px;
+  background-color: #f2f5fb;
+  box-shadow: 0 12px 40px rgba(31, 50, 81, 0.12);
+}
+
+.eyebrow {
+  color: #6f7d95;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+}
+
+.title {
+  margin-top: 8px;
+  color: #172033;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.description {
+  margin-top: 8px;
+  color: #718096;
+  font-size: 14px;
+  line-height: 20px;
+  white-space: normal;
+}
+
+.value-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 24px;
+  padding: 24px 16px;
+  border-radius: 20px;
+  background-color: #f7f9fc;
+}
+
+.value-label {
+  color: #8a96aa;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.value {
+  margin-top: 4px;
+  color: #315efb;
+  font-size: 64px;
+  font-weight: 800;
+  line-height: 72px;
+}
+
+.value.negative {
+  color: #e55561;
+}
+
+.value-note {
+  margin-top: 2px;
+  color: #8792a6;
+  font-size: 12px;
+}
+
+.stepper {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.step-button {
+  width: 72px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background-color: #edf1ff;
+}
+
+.step-button.add {
+  margin-left: 12px;
+  background-color: #315efb;
+}
+
+.step-button:active,
+.reset-button:active {
+  opacity: 0.72;
+}
+
+.step-button-text {
+  color: #315efb;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.step-button-text.add {
+  color: #ffffff;
+}
+
+.reset-button {
+  width: 100%;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  border-radius: 14px;
+  background-color: #172033;
+}
+
+.reset-button-text {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+}
+</style>
+<script thread="main">
+const engine = lynx.getEngine();
+const page = __CreatePage("0", 0);
+const pageId = __GetElementUniqueID(page);
+const tapOptions = {};
+const renderPageEventName = "__RenderPage";
+const destroyLifetimeEventName = "__DestroyLifetime";
+
+let count = 8;
+let countText;
+let noteText;
+let rendered = false;
+const buttonListeners = [];
+
+function createText(className, value) {
+  const text = __CreateText(pageId);
+  __SetClasses(text, className);
+  __AppendElement(text, __CreateRawText(value));
+  return text;
+}
+
+function replaceText(text, value) {
+  __ReplaceElements(
+    text,
+    [__CreateRawText(value)],
+    __GetChildren(text),
+  );
+}
+
+function bindTap(node, handler) {
+  __AddEventListener(node, "tap", handler, tapOptions);
+  buttonListeners.push({ node, handler });
+}
+
+function createButton(className, textClassName, label, ariaLabel, handler) {
+  const button = __CreateView(pageId);
+  __SetClasses(button, className);
+  __SetAttribute(button, "aria-label", ariaLabel);
+  __AppendElement(button, createText(textClassName, label));
+  bindTap(button, handler);
+  return button;
+}
+
+function syncCounter() {
+  replaceText(countText, String(count));
+  replaceText(
+    noteText,
+    count === 0
+      ? "Back at the starting point"
+      : `${Math.abs(count)} step${Math.abs(count) === 1 ? "" : "s"} ${count > 0 ? "above" : "below"} zero`,
+  );
+  __SetClasses(countText, count < 0 ? "value negative" : "value");
+  __FlushElementTree();
+}
+
+function decrement() {
+  count -= 1;
+  syncCounter();
+}
+
+function increment() {
+  count += 1;
+  syncCounter();
+}
+
+function reset() {
+  count = 0;
+  syncCounter();
+}
+
+function renderPage() {
+  if (rendered) return;
+  rendered = true;
+
+  const card = __CreateScrollView(pageId);
+  __SetClasses(card, "counter-card");
+  __SetAttribute(card, "scroll-orientation", "vertical");
+  __AppendElement(card, createText("eyebrow", "MAIN THREAD STATE"));
+  __AppendElement(card, createText("title", "Daily counter"));
+  __AppendElement(
+    card,
+    createText(
+      "description",
+      "A compact state example with immediate Element PAPI updates.",
+    ),
+  );
+
+  const valuePanel = __CreateView(pageId);
+  __SetClasses(valuePanel, "value-panel");
+  __AppendElement(valuePanel, createText("value-label", "CURRENT VALUE"));
+  countText = createText("value", String(count));
+  __AppendElement(valuePanel, countText);
+  noteText = createText("value-note", "8 steps above zero");
+  __AppendElement(valuePanel, noteText);
+  __AppendElement(card, valuePanel);
+
+  const stepper = __CreateView(pageId);
+  __SetClasses(stepper, "stepper");
+  __AppendElement(
+    stepper,
+    createButton(
+      "step-button",
+      "step-button-text",
+      "−",
+      "Decrease counter",
+      decrement,
+    ),
+  );
+  __AppendElement(
+    stepper,
+    createButton(
+      "step-button add",
+      "step-button-text add",
+      "+",
+      "Increase counter",
+      increment,
+    ),
+  );
+  __AppendElement(card, stepper);
+
+  __AppendElement(
+    card,
+    createButton(
+      "reset-button",
+      "reset-button-text",
+      "Reset counter",
+      "Reset counter",
+      reset,
+    ),
+  );
+  __AppendElement(page, card);
+}
+
+function cleanup() {
+  for (const { node, handler } of buttonListeners.splice(0)) {
+    __RemoveEventListener(node, "tap", handler, tapOptions);
+  }
+  engine.removeEventListener(renderPageEventName, renderPage);
+  engine.removeEventListener(destroyLifetimeEventName, cleanup);
+  countText = undefined;
+  noteText = undefined;
+}
+
+engine.addEventListener(renderPageEventName, renderPage);
+engine.addEventListener(destroyLifetimeEventName, cleanup);
+</script>
+</lynx>

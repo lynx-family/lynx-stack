@@ -1,0 +1,12 @@
+{
+  "extends": ["./tsconfig.build.json"],
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+  },
+  "include": ["src", "test", "rstest.config.ts"],
+  "references": [
+    { "path": "../../webpack/runtime-wrapper-webpack-plugin/tsconfig.build.json" },
+    { "path": "../../webpack/template-webpack-plugin/tsconfig.build.json" },
+  ],
+}

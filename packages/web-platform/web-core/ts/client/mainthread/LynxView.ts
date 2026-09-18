@@ -37,6 +37,8 @@ export interface BrowserConfig {
  * @property {Cloneable} globalProps [optional] (attribute: "global-props") The globalProps value of this Lynx card
  * @property {Cloneable} initData [optional] (attribute: "init-data") The initial data of this Lynx card
  * @property {NativeModulesMap} nativeModulesMap [optional] use to customize NativeModules. key is module-name, value is esm url.
+ * A `LynxConsoleModule` whose factory returns a Console-like object provides
+ * the lexical `console` for this view's background bundles.
  * @property {NativeModulesCall} onNativeModulesCall [optional] the NativeModules value handler. Arguments will be cached before this property is assigned.
  * @property {"auto" | null} height [optional] (attribute: "height") set it to "auto" for height auto-sizing
  * @property {"auto" | null} width [optional] (attribute: "width") set it to "auto" for width auto-sizing
@@ -44,7 +46,7 @@ export interface BrowserConfig {
  * @property {NapiModulesCall} onNapiModulesCall [optional] the NapiModule value handler.
  * @property {string[]} injectStyleRules [optional] the css rules which will be injected into shadowroot. Each items will be inserted by `insertRule` method. @see https://developer.mozilla.org/docs/Web/API/CSSStyleSheet/insertRule
  * @property {number} lynxGroupId [optional] (attribute: "lynx-group-id") the background shared context id, which is used to share webworker between different lynx cards
- * @property {InitI18nResources} initI18nResources [optional] (attribute: "init-i18n-resources") the complete set of i18nResources that on the container side, which can be obtained synchronously by _I18nResourceTranslation
+ * @property {InitI18nResources} initI18nResources [optional] the complete set of i18nResources that on the container side, which can be obtained synchronously by _I18nResourceTranslation
  *
  * @event error lynx card fired an error
  * @event i18nResourceMissed i18n resource cache miss
@@ -56,13 +58,13 @@ export interface BrowserConfig {
  * Note that you should declarae the size of lynx-view
  *
  * ```html
- * <lynx-view url="https://path/to/main-thread.js" raw-data="{}" global-props="{}" style="height:300px;width:300px">
+ * <lynx-view url="https://path/to/main.web.bundle" init-data="{}" global-props="{}" style="height:300px;width:300px">
  * </lynx-view>
  * ```
  *
  * React 19 Example
  * ```jsx
- * <lynx-view url={myLynxCardUrl} rawData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>
+ * <lynx-view url={myLynxCardUrl} initData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>
  * </lynx-view>
  * ```
  */
@@ -95,6 +97,8 @@ export class LynxViewElement extends HTMLElement {
    * @public
    * @property nativeModulesMap
    * @default {}
+   * A `LynxConsoleModule` whose factory returns a Console-like object provides
+   * the lexical `console` for this view's background bundles.
    */
   nativeModulesMap: NativeModulesMap | undefined;
 
@@ -275,7 +279,7 @@ export class LynxViewElement extends HTMLElement {
   /**
    * @public
    * @property initI18nResources
-   * @default {}
+   * @default []
    */
   get initI18nResources(): InitI18nResources {
     return this.#initI18nResources;
@@ -291,7 +295,7 @@ export class LynxViewElement extends HTMLElement {
   /**
    * @public
    * @method
-   * update the `__initData` and trigger essential flow
+   * Update the i18n resources for the given translation options.
    */
   updateI18nResources(
     data: InitI18nResources,
@@ -400,7 +404,7 @@ export class LynxViewElement extends HTMLElement {
    * @override
    * "false" value will be omitted
    *
-   * {@inheritdoc HTMLElement.setAttribute}
+   * See {@link https://developer.mozilla.org/docs/Web/API/Element/setAttribute | HTMLElement.setAttribute}.
    */
   override setAttribute(qualifiedName: string, value: string): void {
     if (value === 'false') {

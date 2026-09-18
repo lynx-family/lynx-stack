@@ -37,7 +37,7 @@ export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(
 ): void {
   'background only';
 
-  const previousArgsRef = useRef<[string, T]>();
+  const previousArgsRef = useRef<[string, T]>(undefined);
 
   useMemo(() => {
     if (previousArgsRef.current) {

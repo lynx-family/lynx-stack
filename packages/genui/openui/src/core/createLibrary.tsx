@@ -1,21 +1,12 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createLibrary } from './library.jsx';
+import { createOpenUiLibraryWithDefaults } from './createLibraryBase.js';
+import type { CreateOpenUiLibraryOptions } from './createLibraryBase.js';
 import type { ComponentGroup, DefinedComponent, Library } from './library.jsx';
 import * as c from '../catalog/index.js';
 
-/**
- * Options for creating the default ReactLynx OpenUI component library.
- */
-export interface CreateOpenUiLibraryOptions {
-  /** Override the root component name. Defaults to `'Stack'`. */
-  root?: string;
-  /** Replace or extend the built-in component set. */
-  components?: DefinedComponent<any>[];
-  /** Replace or extend the built-in component groups. */
-  componentGroups?: ComponentGroup[];
-}
+export type { CreateOpenUiLibraryOptions } from './createLibraryBase.js';
 
 const DEFAULT_COMPONENTS: DefinedComponent<any>[] = [
   c.Stack,
@@ -79,19 +70,14 @@ const DEFAULT_COMPONENT_GROUPS: ComponentGroup[] = [
 ];
 
 /**
- * Create a ReactLynx OpenUI library with the built-in components plus any
- * caller-provided extensions.
+ * Create a ReactLynx OpenUI library with caller-provided components and,
+ * unless disabled, the built-in components.
  */
 export function createOpenUiLibrary(
   options?: CreateOpenUiLibraryOptions,
 ): Library {
-  return createLibrary({
-    root: options?.root ?? 'Stack',
-    components: options?.components
-      ? [...DEFAULT_COMPONENTS, ...options.components]
-      : DEFAULT_COMPONENTS,
-    componentGroups: options?.componentGroups
-      ? [...DEFAULT_COMPONENT_GROUPS, ...options.componentGroups]
-      : DEFAULT_COMPONENT_GROUPS,
+  return createOpenUiLibraryWithDefaults(options, {
+    components: DEFAULT_COMPONENTS,
+    componentGroups: DEFAULT_COMPONENT_GROUPS,
   });
 }

@@ -30,7 +30,7 @@ function build(
   rustFlags,
   wasmBindgenArgs,
   optimizeArgs,
-  isNode = false,
+  wasmTarget = 'web',
   overrideOutDir = undefined,
 ) {
   const outDir = path.join(
@@ -53,9 +53,7 @@ function build(
     },
   );
   execSync(
-    `pnpm exec dotslash ./scripts/wasm-bindgen ${wasmBindgenArgs} --out-dir ${outDir} --target ${
-      isNode ? 'experimental-nodejs-module' : 'web'
-    } --out-name ${outputWasmName} ${cargoOutput}`,
+    `pnpm exec dotslash ./scripts/wasm-bindgen ${wasmBindgenArgs} --out-dir ${outDir} --target ${wasmTarget} --out-name ${outputWasmName} ${cargoOutput}`,
     { cwd: packageRoot, stdio: 'inherit' },
   );
   execSync(
@@ -73,9 +71,7 @@ function build(
     },
   );
   execSync(
-    `pnpm exec dotslash ./scripts/wasm-bindgen ${wasmBindgenArgs} --keep-debug --out-dir ${outDir} --target ${
-      isNode ? 'experimental-nodejs-module' : 'web'
-    } --out-name ${outputWasmDebugName} ${cargoOutputDebug}`,
+    `pnpm exec dotslash ./scripts/wasm-bindgen ${wasmBindgenArgs} --keep-debug --out-dir ${outDir} --target ${wasmTarget} --out-name ${outputWasmDebugName} ${cargoOutputDebug}`,
     { cwd: packageRoot, stdio: 'inherit' },
   );
 }
@@ -104,7 +100,7 @@ build(
   '-C opt-level=z -C target_feature=+bulk-memory -C strip=symbols',
   '',
   '-Oz --enable-nontrapping-float-to-int',
-  false,
+  'web',
   'client_legacy',
 );
 build(
@@ -112,6 +108,10 @@ build(
   '-C opt-level=3 -C target_feature=+bulk-memory,+sign-ext,+simd128,+reference-types,+nontrapping-fptoint,+mutable-globals',
   '',
   '-O4 --enable-bulk-memory-opt --enable-sign-ext --enable-simd --enable-reference-types --enable-nontrapping-float-to-int --enable-mutable-globals',
-  true,
+  'experimental-nodejs-module',
 );
-build('encode', '', '', '--all-features', true);
+// `bundler` emits an "async wasm module" glue (`import * as wasm from
+// './encode_bg.wasm'`). It is consumed by a bundler on both platforms: rslib
+// bundles it into `dist/encode_prod` for Node, and rspack/rsbuild handles it for
+// the browser. Keeping a single glue is what lets `./encode` serve both.
+build('encode', '', '', '--all-features', 'bundler');

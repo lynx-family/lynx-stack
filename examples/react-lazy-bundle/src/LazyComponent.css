@@ -1,4 +1,59 @@
+.LazyCard {
+  width: 82vw;
+  padding: 18px;
+  border-radius: 18px;
+  background-color: rgba(10, 13, 24, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.LazyCard__badgeRow {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 10px;
+}
+
+.LazyCard__badge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background-color: rgba(18, 229, 229, 0.16);
+  border: 1px solid rgba(18, 229, 229, 0.45);
+}
+
+.LazyCard__badgeText {
+  font-size: 11px;
+  color: #7ef3f3;
+}
+
 .LazyComponent {
+  font-size: 20px;
   font-weight: 700;
-  color: yellow;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.LazyCard__skeleton {
+  height: 72px;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.BgCard {
+  padding: 14px;
+  border-radius: 12px;
+  background-color: rgba(24, 30, 46, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 3px solid #5eea95;
+}
+
+.BgCard__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #d9ffe9;
+  margin-bottom: 6px;
+}
+
+.BgCard__hint {
+  font-size: 12px;
+  line-height: 18px;
+  color: rgba(255, 255, 255, 0.88);
 }

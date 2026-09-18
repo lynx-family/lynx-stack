@@ -15,6 +15,8 @@ import type {
 } from '@openuidev/lang-core';
 import { z } from 'zod/v4';
 
+import { OPENUI_GAP_VALUES } from '../shared/layout.js';
+
 type HeadlessRenderer = () => null;
 
 export type OpenUiPromptComponent = DefinedComponent<any, HeadlessRenderer>;
@@ -76,7 +78,6 @@ const ICON_NAMES = [
   'warning',
 ] as const;
 
-const GAP_VALUES = ['none', 'xs', 's', 'm', 'l', 'xl'] as const;
 const ALIGN_VALUES = ['start', 'center', 'end', 'stretch'] as const;
 const STACK_JUSTIFY_VALUES = ['start', 'center', 'end', 'between'] as const;
 const EXTENDED_JUSTIFY_VALUES = [
@@ -159,7 +160,7 @@ const Stack = defineComponent({
     children: z.array(z.any()),
     direction: z.enum(['row', 'column']).optional(),
     wrap: z.boolean().optional(),
-    gap: z.enum(GAP_VALUES).optional(),
+    gap: z.enum(OPENUI_GAP_VALUES).optional(),
     align: z.enum(ALIGN_VALUES).optional(),
     justify: z.enum(STACK_JUSTIFY_VALUES).optional(),
   }),
@@ -173,7 +174,7 @@ const Row = defineComponent({
     children: z.array(z.any()),
     justify: z.enum(EXTENDED_JUSTIFY_VALUES).optional(),
     align: z.enum(ALIGN_VALUES).optional(),
-    gap: z.enum(GAP_VALUES).optional(),
+    gap: z.enum(OPENUI_GAP_VALUES).optional(),
     wrap: z.boolean().optional(),
   }),
   description: 'Horizontal flex layout container.',
@@ -186,7 +187,7 @@ const Column = defineComponent({
     children: z.array(z.any()),
     justify: z.enum(EXTENDED_JUSTIFY_VALUES).optional(),
     align: z.enum(ALIGN_VALUES).optional(),
-    gap: z.enum(GAP_VALUES).optional(),
+    gap: z.enum(OPENUI_GAP_VALUES).optional(),
   }),
   description: 'Vertical flex layout container.',
   component: () => null,
@@ -199,7 +200,7 @@ const List = defineComponent({
     items: listChildrenSchema.optional(),
     direction: z.enum(['vertical', 'horizontal']).optional(),
     align: z.enum(ALIGN_VALUES).optional(),
-    gap: z.enum(GAP_VALUES).optional(),
+    gap: z.enum(OPENUI_GAP_VALUES).optional(),
     divider: z.boolean().optional(),
   }),
   description:
@@ -214,7 +215,7 @@ const Card = defineComponent({
     variant: z.enum(['card', 'sunk', 'clear']).optional(),
     direction: z.enum(['row', 'column']).optional(),
     wrap: z.boolean().optional(),
-    gap: z.enum(GAP_VALUES).optional(),
+    gap: z.enum(OPENUI_GAP_VALUES).optional(),
     align: z.enum(ALIGN_VALUES).optional(),
     justify: z.enum(STACK_JUSTIFY_VALUES).optional(),
   }),

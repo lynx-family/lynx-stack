@@ -13,6 +13,7 @@ export type BTSChunkEntry = (
   clearInterval: unknown,
   clearTimeout: unknown,
   NativeModules: unknown,
+  console: unknown,
   Component: unknown,
   ReactLynx: unknown,
   nativeAppId: unknown,

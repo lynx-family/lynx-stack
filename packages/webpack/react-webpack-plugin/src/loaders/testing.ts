@@ -52,6 +52,8 @@ function testingLoader(
       newRuntimePkg: compat.newRuntimePkg ?? '@lynx-js/react',
       oldRuntimePkg: compat.oldRuntimePkg ?? ['@lynx-js/react-runtime'],
       simplifyCtorLikeReactLynx2: compat.simplifyCtorLikeReactLynx2 ?? false,
+      transformLegacyEventAttributeNames:
+        compat.transformLegacyEventAttributeNames ?? true,
       ...(typeof compat.removeComponentAttrRegex === 'string' && {
         removeComponentAttrRegex: compat.removeComponentAttrRegex,
       }),

@@ -36,8 +36,13 @@ export const LYNX_PLUGIN_ENTRIES: readonly LynxPluginEntry[] = [
   ['rotate', P.rotate],
   ['skew', P.skew],
   ['scale', P.scale],
+
+  // Reset and arbitrary transform declarations must follow the composed
+  // transform utilities so their direct `transform` values take precedence.
   ['transform', P.transform],
 
+  // Standalone utilities also write `transform` directly. They follow the
+  // composed group and are mutually exclusive with it and with each other.
   ['soloTranslate', P.soloTranslate],
   ['soloRotate', P.soloRotate],
   ['soloSkew', P.soloSkew],
@@ -57,6 +62,8 @@ export const LYNX_PLUGIN_ENTRIES: readonly LynxPluginEntry[] = [
 
   ['backgroundClip', P.backgroundClip],
   ['boxShadow', P.boxShadow],
+
+  // These utilities write `filter` directly, so they are mutually exclusive.
   ['blur', P.blur],
   ['grayscale', P.grayscale],
   ['filter', P.filter],

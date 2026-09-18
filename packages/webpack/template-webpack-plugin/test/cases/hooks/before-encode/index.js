@@ -16,7 +16,7 @@ it('should have changed bundle', async () => {
 it('should have changed lepusCode.filename', async () => {
   const target = path.resolve(
     __dirname,
-    '.rspeedy',
+    '.lynx',
     'tasm.json',
   );
   expect(existsSync(target));

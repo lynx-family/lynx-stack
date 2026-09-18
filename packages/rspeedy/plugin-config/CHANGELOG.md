@@ -1,5 +1,15 @@
 # @lynx-js/config-rsbuild-plugin
 
+## 0.2.3
+
+### Patch Changes
+
+- Declare the build host as an optional peer dependency. `@rsbuild/core` covers a plain Rsbuild build, and `@lynx-js/rspeedy` covers an Rspeedy one, so whichever host is installed is version-checked. ([#3678](https://github.com/lynx-family/lynx-stack/pull/3678))
+
+- **BREAKING CHANGE**: Require `@lynx-js/rspeedy` `^0.17.0` in the plugins that read the build engine config through `Symbol.for('@lynx-js/rsbuild-plugin:config')`, since the engine that ships with `0.16` does not expose it. The plugins that do not touch the engine keep their existing range and add `^0.17.0` to it. ([#3682](https://github.com/lynx-family/lynx-stack/pull/3682))
+
+- Updated dependency `@lynx-js/type-config` to `4.2.0`. ([#3771](https://github.com/lynx-family/lynx-stack/pull/3771))
+
 ## 0.2.2
 
 ### Patch Changes

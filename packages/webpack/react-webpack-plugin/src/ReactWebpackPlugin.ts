@@ -15,6 +15,7 @@ import type {
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
+import { applyDefinesInjection } from './DefinesInjection.js';
 import { LAYERS } from './layer.js';
 import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
@@ -148,13 +149,35 @@ export function collectElementTemplatesForEntries<TChunk>(
     chunk: TChunk,
   ) => Iterable<ModuleWithElementTemplateBuildInfo>,
 ): Record<string, Record<string, unknown>> {
-  const elementTemplates: Record<string, Record<string, unknown>> = {};
-  const visited = new Set<ModuleWithElementTemplateBuildInfo>();
+  const chunkGroups: { chunks: Iterable<TChunk> }[] = [];
   for (const entryName of entryNames) {
     const chunkGroup = getChunkGroup(entryName);
-    if (chunkGroup === undefined) {
-      continue;
+    if (chunkGroup !== undefined) {
+      chunkGroups.push(chunkGroup);
     }
+  }
+  return collectElementTemplatesForChunkGroups(chunkGroups, getChunkModules);
+}
+
+/**
+ * Collect element templates for the chunk groups an encoded bundle covers.
+ *
+ * A lazy bundle's chunk groups come from dynamic imports and have no name, so
+ * they have to be walked directly rather than looked up in
+ * `compilation.namedChunkGroups`; otherwise the lazy bundle is encoded without
+ * its templates and the main thread cannot create them.
+ *
+ * @internal
+ */
+export function collectElementTemplatesForChunkGroups<TChunk>(
+  chunkGroups: Iterable<{ chunks: Iterable<TChunk> }>,
+  getChunkModules: (
+    chunk: TChunk,
+  ) => Iterable<ModuleWithElementTemplateBuildInfo>,
+): Record<string, Record<string, unknown>> {
+  const elementTemplates: Record<string, Record<string, unknown>> = {};
+  const visited = new Set<ModuleWithElementTemplateBuildInfo>();
+  for (const chunkGroup of chunkGroups) {
     for (const chunk of chunkGroup.chunks) {
       for (const module of getChunkModules(chunk)) {
         if (visited.has(module)) {
@@ -175,22 +198,22 @@ export function collectElementTemplatesForEntries<TChunk>(
  */
 interface ReactWebpackPluginOptions {
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat.disableCreateSelectorQueryIncompatibleWarning}
+   * Whether disable runtime warnings about using ReactLynx2.0-incompatible `SelectorQuery` APIs.
    */
   disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.firstScreenSyncTiming}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.firstScreenSyncTiming}
    */
   firstScreenSyncTiming?: 'immediately' | 'jsReady' | 'manual';
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.globalPropsMode}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.globalPropsMode}
    */
   globalPropsMode?: 'reactive' | 'event';
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableSSR}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableSSR}
    */
   enableSSR?: boolean;
 
@@ -198,6 +221,12 @@ interface ReactWebpackPluginOptions {
    * The chunk names to be considered as main thread chunks.
    */
   mainThreadChunks?: string[] | undefined;
+
+  /**
+   * The main-thread and background entry pairs to merge the main-thread
+   * definitions across.
+   */
+  entryPairs?: Array<{ mainThread: string; background: string }>;
 
   /**
    * Merge same string literals in JS and Lepus to reduce output bundle size.
@@ -272,9 +301,8 @@ class ReactWebpackPlugin {
    * The loaders for ReactLynx.
    *
    * @remarks
-   * Note that this loader will only transform JSX/TSX to valid JavaScript.
-   * For `.tsx` files, the type annotations would not be eliminated.
-   * You should use `babel-loader` or `swc-loader` to load TypeScript files.
+   * Note that this loader transforms JSX/TSX to valid JavaScript.
+   * For `.ts` and `.tsx` files, the TypeScript types are stripped as well.
    *
    * @example
    * ```js
@@ -323,6 +351,7 @@ class ReactWebpackPlugin {
       globalPropsMode: 'reactive',
       enableSSR: false,
       mainThreadChunks: [],
+      entryPairs: [],
       extractStr: false,
       experimental_isLazyBundle: false,
       profile: undefined,
@@ -403,6 +432,11 @@ class ReactWebpackPlugin {
       ),
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
     }).apply(compiler);
+
+    const entryPairs = options.entryPairs ?? [];
+    if (entryPairs.length > 0) {
+      applyDefinesInjection(compiler, entryPairs, this.constructor.name);
+    }
 
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
       const onceForChunkSet = new WeakSet<Chunk>();
@@ -573,12 +607,9 @@ class ReactWebpackPlugin {
           `${this.constructor.name}.ElementTemplate`,
           (args) => {
             const { chunkGraph } = compilation;
-            const elementTemplates = collectElementTemplatesForEntries(
-              args.chunkGroups.flatMap(cg =>
-                cg.name === null || cg.name === undefined ? [] : [cg.name]
-              ),
-              (name) => compilation.namedChunkGroups.get(name),
-              (chunk) =>
+            const elementTemplates = collectElementTemplatesForChunkGroups(
+              args.chunkGroups,
+              (chunk: Chunk) =>
                 chunkGraph.getChunkModules(
                   chunk,
                 ) as ModuleWithElementTemplateBuildInfo[],

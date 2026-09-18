@@ -21,20 +21,6 @@ describe('Config - Dev', () => {
     assertType<Dev>({ assetPrefix: false })
   })
 
-  test('client', () => {
-    assertType<Dev>({ client: {} })
-    assertType<Dev>({
-      client: {
-        websocketTransport: undefined,
-      },
-    })
-    assertType<Dev>({
-      client: {
-        websocketTransport: '/foo',
-      },
-    })
-  })
-
   test('hmr', () => {
     assertType<Dev>({ hmr: true })
     assertType<Dev>({ hmr: false })

@@ -26,7 +26,7 @@ declare global {
   var globDynamicComponentEntry: string | undefined;
 }
 
-interface RootNode {
+interface RootNode extends ElementTemplateHandle {
   type: 'page';
   children?: unknown[];
 }
@@ -155,24 +155,12 @@ async function runCompiledRenderFixture(options: {
   globalThis.__MAIN_THREAD__ = true;
   globalThis.__BACKGROUND__ = false;
 
-  const globalWithInject = globalThis as typeof globalThis & {
-    lynxCoreInject?: {
-      tt?: {
-        _params?: {
-          initData: Record<string, unknown>;
-          updateData: Record<string, unknown>;
-        };
-      };
-    };
-  };
-  globalWithInject.lynxCoreInject ??= {};
-  globalWithInject.lynxCoreInject.tt ??= {};
-  globalWithInject.lynxCoreInject.tt._params ??= { initData: {}, updateData: {} };
+  lynx.getApp()._params ??= { initData: {}, updateData: {} };
 
   const installed = installMockNativePapi({ clearTemplatesOnCleanup: true });
   const nativeLog = installed.nativeLog as unknown[];
   const cleanup = installed.cleanup;
-  const root = __CreateTypedElementTemplate('page', null, null, '0', null) as unknown as RootNode;
+  const root = __CreateTypedElementTemplate('page', null, null, 0, null) as RootNode;
   if (fixtureConfig.dynamicComponentEntry !== undefined) {
     globalThis.globDynamicComponentEntry = fixtureConfig.dynamicComponentEntry;
   }
@@ -253,7 +241,7 @@ async function runCompiledRenderFixture(options: {
       const opcodes = renderToString(vnode, null);
       const { rootRefs } = renderOpcodesIntoElementTemplate(opcodes);
       for (const rootRef of rootRefs) {
-        __InsertNodeToElementTemplate(root as FiberElement, 0, rootRef, null);
+        __InsertNodeToElementTemplate(root, 0, rootRef, null);
       }
 
       assertOrUpdateTextFile({

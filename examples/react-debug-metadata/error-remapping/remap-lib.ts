@@ -21,7 +21,7 @@ import type {
 
 export interface MapEntry {
   kind: string;
-  /** Bundle path with content hash, e.g. `.rspeedy/LazyComponent/background.<hash>.js`. */
+  /** Bundle path with content hash, e.g. `.lynx/LazyComponent/background.<hash>.js`. */
   path: string;
   /** Absolute path to the emitted bundle .js, for locating tokens in generated code. */
   jsFile: string;

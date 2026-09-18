@@ -3,7 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
+import {
+  BackgroundElementTemplateInstance,
+  BackgroundPageRootInstance,
+} from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 
 describe('BackgroundElementTemplateInstanceManager', () => {
@@ -23,6 +26,27 @@ describe('BackgroundElementTemplateInstanceManager', () => {
     expect(backgroundElementTemplateInstanceManager.get(instance2.instanceId)).toBe(instance2);
   });
 
+  it('registers the pre-existing page root at reserved handleId 0', () => {
+    const root = new BackgroundPageRootInstance();
+    const ordinary = new BackgroundElementTemplateInstance('view');
+
+    expect(root.instanceId).toBe(0);
+    expect(backgroundElementTemplateInstanceManager.get(0)).toBe(root);
+    expect(ordinary.instanceId).toBeGreaterThan(0);
+  });
+
+  it('transfers the reserved handleId 0 entry to a fresh page root', () => {
+    const oldRoot = new BackgroundPageRootInstance();
+    const newRoot = new BackgroundPageRootInstance();
+
+    expect(oldRoot.instanceId).toBe(0);
+    expect(newRoot.instanceId).toBe(0);
+    expect(backgroundElementTemplateInstanceManager.get(0)).toBe(newRoot);
+
+    oldRoot.tearDown();
+    expect(backgroundElementTemplateInstanceManager.get(0)).toBe(newRoot);
+  });
+
   it('should update ID correctly', () => {
     const instance = new BackgroundElementTemplateInstance('view');
     const oldId = instance.instanceId;
@@ -36,10 +60,13 @@ describe('BackgroundElementTemplateInstanceManager', () => {
   });
 
   it('rejects illegal handleId 0', () => {
+    const root = new BackgroundPageRootInstance();
     const instance = new BackgroundElementTemplateInstance('view');
 
     expect(() => backgroundElementTemplateInstanceManager.updateId(instance.instanceId, 0))
       .toThrow('ElementTemplate handleId must be a non-zero integer');
+    expect(backgroundElementTemplateInstanceManager.get(0)).toBe(root);
+    expect(backgroundElementTemplateInstanceManager.get(instance.instanceId)).toBe(instance);
   });
 
   it('rejects duplicate handleId rebinding', () => {
@@ -74,6 +101,23 @@ describe('BackgroundElementTemplateInstanceManager', () => {
       .toBe(handler);
     expect(
       backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue(`${instance.instanceId}:0:missing`),
+    )
+      .toBeUndefined();
+  });
+
+  it('resolves page events through the registered root attribute slot', () => {
+    const handler = () => {};
+    const root = new BackgroundPageRootInstance();
+    root.setAuthoredPageAttributes({}, { bindtap: handler });
+
+    expect(backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue('0:0:bindtap')).toBe(handler);
+  });
+
+  it('preserves undefined for a missing slot on a registered ordinary instance', () => {
+    const instance = new BackgroundElementTemplateInstance('view', []);
+
+    expect(
+      backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue(`${instance.instanceId}:0`),
     )
       .toBeUndefined();
   });

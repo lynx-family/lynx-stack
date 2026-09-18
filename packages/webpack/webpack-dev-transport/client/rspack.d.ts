@@ -10,3 +10,18 @@ declare module '@rspack/core/hot/emitter.js' {
     on(eventName: string, callback: (...args: unknown[]) => void): void;
   };
 }
+
+declare module '@rspack/core/hot/log.js' {
+  export function log(
+    level: 'info' | 'warning' | 'error',
+    message: string,
+  ): void;
+  export function formatError(error: unknown): string;
+}
+
+declare module '@rspack/core/hot/log-apply-result.js' {
+  export function logApplyResult(
+    updatedModules: (string | number)[],
+    renewedModules: (string | number)[],
+  ): void;
+}

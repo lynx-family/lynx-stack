@@ -63,7 +63,7 @@ function mountAndHydrate(jsx) {
   render(jsx, __root);
 
   // LifecycleConstant.firstScreen
-  lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+  lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
   // hydrate patch -> main thread
   globalEnvManager.switchToMainThread();

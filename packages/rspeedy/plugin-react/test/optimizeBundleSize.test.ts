@@ -39,7 +39,7 @@ async function createIsolatedRspeedy(
         ...options.rspeedyConfig?.output,
         // These tests only need isolated build artifacts. Keeping the original
         // cwd preserves package resolution while avoiding cross-test writes to
-        // the shared default `.rspeedy` directory under the test folder.
+        // the shared default `.lynx` directory under the test folder.
         distPath: {
           ...options.rspeedyConfig?.output?.distPath,
           root,
@@ -58,13 +58,13 @@ async function getCode(rsbuild: RspeedyInstance, entryName: string) {
 
   const mainThreadPath = path.join(
     rsbuild.context.distPath,
-    '.rspeedy',
+    '.lynx',
     entryName,
     'main-thread.js',
   )
   const backgroundPath = path.join(
     rsbuild.context.distPath,
-    '.rspeedy',
+    '.lynx',
     entryName,
     'background.js',
   )

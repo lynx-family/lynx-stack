@@ -3,15 +3,19 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
+  attachMainThreadDynamicAttrRefsForSubtree,
   deleteMainThreadDynamicAttrStateForSubtree,
   initializeMainThreadDynamicAttrSlots,
+  prepareMainThreadDynamicAttrSlotsForNative,
 } from './main-thread-dynamic-attr-state.js';
+import type { MainThreadDynamicAttrSubtreeHandle } from './main-thread-dynamic-attr-state.js';
 import { deleteElementTemplateNativeRef, setElementTemplateNativeRef } from './registry.js';
 import { elementTemplateTypeTag } from '../../protocol/template-type.js';
 import type {
-  RuntimeElementSlots,
+  RuntimeChildSlots,
   RuntimeOptions,
   RuntimeTypedElementAttributes,
+  RuntimeTypedListOptions,
   SerializableValue,
 } from '../../protocol/types.js';
 
@@ -28,20 +32,22 @@ export function createElementTemplateWithReservedHandle(
   templateKey: string,
   bundleUrl: string | null | undefined,
   attributeSlots: SerializableValue[] | null | undefined,
-  elementSlots: RuntimeElementSlots | null | undefined,
-): ElementRef {
+  childSlots: RuntimeChildSlots | null | undefined,
+): ElementTemplateHandle {
+  const templateType = elementTemplateTypeTag(templateKey, bundleUrl);
+  const nativeAttributeSlots = prepareMainThreadDynamicAttrSlotsForNative(templateType, attributeSlots);
   const nativeRef = __CreateElementTemplate(
     templateKey,
     bundleUrl,
-    attributeSlots,
-    elementSlots,
+    nativeAttributeSlots,
+    childSlots,
     handleId,
   );
   if (nativeRef) {
     setElementTemplateNativeRef(handleId, nativeRef);
     initializeMainThreadDynamicAttrSlots(
       handleId,
-      elementTemplateTypeTag(templateKey, bundleUrl),
+      templateType,
       attributeSlots,
     );
   }
@@ -52,18 +58,31 @@ export function createTypedElementTemplateWithReservedHandle(
   handleId: number,
   type: string,
   attributes: RuntimeTypedElementAttributes | null | undefined,
-  elementSlots: RuntimeElementSlots | null | undefined,
-  options: RuntimeOptions | null | undefined,
-): ElementRef {
+  childSlots: RuntimeChildSlots | null | undefined,
+  options: RuntimeOptions | RuntimeTypedListOptions | null | undefined,
+): ElementTemplateHandle {
   const nativeRef = __CreateTypedElementTemplate(
     type,
     attributes,
-    elementSlots,
+    childSlots,
     handleId,
     options,
   );
   setElementTemplateNativeRef(handleId, nativeRef);
   return nativeRef;
+}
+
+export function insertElementTemplateSubtree(
+  targetRef: ElementTemplateHandle,
+  childSlotIndex: number,
+  childRef: ElementTemplateHandle,
+  referenceRef: ElementTemplateHandle | null,
+  subtreeHandles: readonly MainThreadDynamicAttrSubtreeHandle[] | null,
+): void {
+  __InsertNodeToElementTemplate(targetRef, childSlotIndex, childRef, referenceRef);
+  if (subtreeHandles !== null) {
+    attachMainThreadDynamicAttrRefsForSubtree(subtreeHandles);
+  }
 }
 
 export function resetTemplateId(): void {

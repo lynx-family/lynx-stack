@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * {@inheritdoc Config.resolve}
+ * {@inheritDoc Config.resolve}
  *
  * @public
  */
@@ -99,6 +99,8 @@ export interface Resolve {
    *
    * @defaultValue `'prefer-tsconfig'`
    *
+   * @remarks
+   *
    * - `prefer-tsconfig` (default): The `paths` option in `tsconfig.json` will take precedence over the
    * `resolve.alias` option of Rsbuild.
    * - `prefer-alias`: The `resolve.alias` option of Rsbuild will take precedence over the
@@ -153,6 +155,8 @@ export interface Resolve {
    *
    * @defaultValue `['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json', '.cjs']`
    *
+   * @remarks
+   *
    * For example, if importing './index', Rsbuild will try to resolve using the following order:
    *
    * - `./index.ts`
@@ -169,10 +173,9 @@ export interface Resolve {
    *
    * - `./index.cjs`
    *
-   * @remarks
    * The difference between `resolve.extensions` and `tools.rspack.resolve.extensions`:
    *
-   * `resolve.extensions`: Completely overrides Rspeedy's default resolution.
+   * `resolve.extensions`: Replaces the default list; `pluginLynx` still appends `.cjs`.
    *
    * `tools.rspack.resolve.extensions`: Merges with the default configuration using [`webpack-merge`](https://github.com/survivejs/webpack-merge).
    *

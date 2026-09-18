@@ -350,16 +350,10 @@ function transformSpread(
     } else if (key === '__self' || key === '__source') {
       // for react debug tools
     } else if (typeof value === 'function') {
-      const transformedKey = typeof __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ !== 'undefined'
-          && __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__
-        ? transformAttrName(key)
-        : key;
+      const transformedKey = transformAttrName(key);
       result[transformedKey] = `${snapshot.__id}:${index}:${key}`;
     } else {
-      const transformedKey = typeof __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ !== 'undefined'
-          && __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__
-        ? transformAttrName(key)
-        : key;
+      const transformedKey = transformAttrName(key);
       if (!hasNoFlattenAttributes) {
         // Keep the switch for a small fixed list; consider Set.has if the list grows significantly.
         switch (transformedKey) {

@@ -174,6 +174,10 @@ export type GetAttributesPAPI = (
   element: HTMLElement,
 ) => Record<string, string>;
 
+export type GetAttributeNamesPAPI = (
+  element: HTMLElement,
+) => string[];
+
 export type GetComponentIdPAPI = (
   element: HTMLElement,
 ) => string | null | undefined;
@@ -402,6 +406,19 @@ export type QuerySelectorAllPAPI = (
   options?: unknown,
 ) => unknown[];
 
+export type SetGestureDetectorPAPI = (
+  element: HTMLElement,
+  id: number,
+  type: number,
+  config: unknown,
+  relationMap: Record<string, number[]>,
+) => void;
+
+export type RemoveGestureDetectorPAPI = (
+  element: HTMLElement,
+  id: number,
+) => void;
+
 export interface ElementPAPIs {
   // __GetTemplateParts currently only provided by the thread-strategy = "all-on-ui" (default)
   __GetTemplateParts: GetTemplatePartsPAPI;
@@ -430,6 +447,7 @@ export interface ElementPAPIs {
   __GetDataset: GetDatasetPAPI;
   __GetDataByKey: GetDataByKeyPAPI;
   __GetAttributes: GetAttributesPAPI;
+  __GetAttributeNames: GetAttributeNamesPAPI;
   __GetComponentID: GetComponentIdPAPI;
   __GetElementConfig: GetElementConfigPAPI;
   __GetElementUniqueID: GetElementUniqueIDPAPI;
@@ -468,6 +486,12 @@ export interface ElementPAPIs {
   __InvokeUIMethod: InvokeUIMethodPAPI;
   __QuerySelector: QuerySelectorPAPI;
   __QuerySelectorAll: QuerySelectorAllPAPI;
+  /**
+   * Gesture recognition is not implemented on the web platform yet. These
+   * PAPIs are still provided so bundles using `main-thread:gesture` can run.
+   */
+  __SetGestureDetector: SetGestureDetectorPAPI;
+  __RemoveGestureDetector: RemoveGestureDetectorPAPI;
   __FlushElementTree: (
     _subTree?: unknown,
     options?: FlushElementTreeOptions,

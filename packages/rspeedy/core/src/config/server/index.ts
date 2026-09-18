@@ -5,7 +5,7 @@
 import type { CompressOptions, ProxyConfig, ServerConfig } from '@rsbuild/core'
 
 /**
- * {@inheritdoc Config.server}
+ * {@inheritDoc Config.server}
  * @public
  */
 export interface Server {
@@ -38,6 +38,8 @@ export interface Server {
    * Configure whether to enable {@link https://developer.mozilla.org/en-US/docs/Glossary/gzip_compression | gzip compression } for static assets served by the dev server or preview server.
    *
    * @defaultValue true
+   *
+   * @remarks
    *
    * See {@link https://rsbuild.rs/config/server/compress | Rsbuild - server.compress } for details.
    *
@@ -93,6 +95,8 @@ export interface Server {
    *
    * @defaultValue Uses Rsbuild's default CORS options.
    *
+   * @remarks
+   *
    * - Set to an object to enable CORS with the specified options.
    *
    * - Set to `true` to enable CORS with the default options (allows all origins, not recommended).
@@ -141,7 +145,7 @@ export interface Server {
    * @defaultValue "0.0.0.0"
    *
    * @remarks
-   * During `rspeedy dev`, if `server.host` is unset, the dev plugin resolves dev-server-related URLs and client host settings with a detected non-loopback IPv4 address, such as `192.168.1.50`. It falls back to an eligible IPv6 address, then to an IPv4 loopback address when no non-loopback IP is available. If you have multiple network interfaces, set `server.host` explicitly to choose the desired address.
+   * During `rspeedy dev`, if `server.host` is unset, the dev plugin keeps the server bound to the IPv4 wildcard address while resolving dev-server-related URLs and client host settings with a detected non-loopback IPv4 address, such as `192.168.1.50`. If no eligible IPv4 address exists, it binds to the IPv6 wildcard address and uses a detected IPv6 address for URLs. It falls back to an IPv4 loopback URL when no non-loopback IP is available. If you have multiple network interfaces, set `server.host` explicitly to choose the desired address.
    *
    * @example
    *
@@ -206,6 +210,8 @@ export interface Server {
    * When a port is occupied, Rspeedy will automatically increment the port number until an available port is found.
    *
    * @defaultValue false
+   *
+   * @remarks
    *
    * By default, strict port mode is disabled. Set strictPort to true and Rspeedy will throw an exception when the port is occupied.
    */

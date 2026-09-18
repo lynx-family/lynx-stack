@@ -18,7 +18,7 @@ use wasm_bindgen::prelude::*;
 pub struct MainThreadWasmContext {
   pub(super) unique_id_to_element_map: Vec<Option<Rc<RefCell<Box<LynxElementData>>>>>,
   pub(super) unique_id_to_dom_map: FnvHashMap<usize, js_sys::WeakRef>,
-  pub(super) timing_flags: Vec<String>,
+  pub(super) timing_flags: RefCell<Vec<String>>,
 
   pub(super) enabled_events: FnvHashSet<String>,
   pub(super) page_element_unique_id: Option<usize>,
@@ -54,7 +54,7 @@ impl MainThreadWasmContext {
       unique_id_to_element_map: vec![None],
       unique_id_to_dom_map: FnvHashMap::default(),
       enabled_events: FnvHashSet::default(),
-      timing_flags: vec![],
+      timing_flags: RefCell::new(vec![]),
       page_element_unique_id: None,
       config_enable_css_selector,
       style_manager,
@@ -123,8 +123,8 @@ impl MainThreadWasmContext {
     self.unique_id_to_dom_map.get(&unique_id).cloned()
   }
 
-  pub fn take_timing_flags(&mut self) -> Vec<String> {
-    std::mem::take(&mut self.timing_flags)
+  pub fn take_timing_flags(&self) -> Vec<String> {
+    std::mem::take(&mut *self.timing_flags.borrow_mut())
   }
 
   pub fn get_unique_id_by_component_id(&self, component_id: &str) -> Option<usize> {

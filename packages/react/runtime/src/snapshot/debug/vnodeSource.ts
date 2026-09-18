@@ -54,6 +54,7 @@ export function setupVNodeSourceHook(): void {
     return;
   }
   hookInstalled = true;
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   const oldDiffed = options[DIFFED];
   options[DIFFED] = (vnode) => {
     captureVNodeSource(vnode as PatchedVNode);

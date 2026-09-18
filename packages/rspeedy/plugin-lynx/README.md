@@ -12,6 +12,5 @@ import { pluginLynx } from '@lynx-js/rsbuild-plugin'
 
 export default defineConfig({
   plugins: [pluginLynx()],
-  environments: { lynx: {} },
 })
 ```

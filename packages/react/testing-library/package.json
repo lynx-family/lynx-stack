@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "rslib build",
-    "dev": "rslib build --watch",
+    "build": "rslib",
+    "dev": "rslib --watch",
     "rstest": "rstest",
     "test": "npm run test:base && npm run test:3.1",
     "test:3.1": "vitest --config vitest.3.1.config.ts",
@@ -15,13 +15,14 @@
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react-signals": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/testing-environment": "workspace:*",
-    "@preact/signals": "^2.9.4",
     "@rsbuild/core": "catalog:rsbuild",
     "@rstest/adapter-rsbuild": "catalog:rstest",
+    "@rstest/core": "catalog:rstest",
     "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/jest-dom": "^7.0.0",
     "preact": "catalog:lynxjs"
   }
 }

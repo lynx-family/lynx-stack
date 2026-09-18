@@ -1,0 +1,547 @@
+<!doctype lynx>
+<lynx engine-version="4.2">
+<style>
+.weather-card {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  border-radius: 28px;
+  background-color: #dfe8f7;
+  box-shadow: 0 16px 44px rgba(18, 43, 82, 0.24);
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  background-color: #24508e;
+}
+
+.top-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.location-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.location-label {
+  color: #a8c4ea;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+}
+
+.location {
+  margin-top: 4px;
+  color: #ffffff;
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.condition-icon {
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 29px;
+  color: #234a80;
+  font-size: 26px;
+  font-weight: 800;
+  background-color: #ffdb70;
+}
+
+.temperature-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  margin-top: 22px;
+}
+
+.temperature {
+  color: #ffffff;
+  font-size: 64px;
+  font-weight: 300;
+  line-height: 68px;
+}
+
+.condition-copy {
+  display: flex;
+  flex-direction: column;
+  margin-left: 14px;
+  padding-bottom: 8px;
+}
+
+.condition {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.range {
+  margin-top: 4px;
+  color: #b9ceed;
+  font-size: 12px;
+}
+
+.city-tabs {
+  display: flex;
+  flex-direction: row;
+  margin-top: 22px;
+}
+
+.city-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 5px;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.city-tab.second,
+.city-tab.third {
+  margin-left: 8px;
+}
+
+.city-tab.selected {
+  background-color: #ffffff;
+}
+
+.city-tab-text {
+  color: #c3d7f2;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.city-tab-text.selected {
+  color: #234a80;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 24px 24px;
+  background-color: #173767;
+}
+
+.background-status {
+  color: #87a8d2;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.metrics {
+  display: flex;
+  flex-direction: row;
+  margin-top: 16px;
+}
+
+.metric {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.metric.second {
+  margin-left: 22px;
+}
+
+.metric-label {
+  color: #8ba8cd;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.metric-value {
+  margin-top: 5px;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.bar-track {
+  height: 6px;
+  display: flex;
+  flex-direction: row;
+  margin-top: 9px;
+  border-radius: 3px;
+  background-color: #294a76;
+}
+
+.bar-fill {
+  width: 64%;
+  height: 6px;
+  border-radius: 3px;
+  background-color: #66d0c0;
+}
+
+.bar-fill.wind {
+  width: 42%;
+  background-color: #ffca68;
+}
+
+.advisory {
+  margin-top: 20px;
+  padding: 14px;
+  border-radius: 14px;
+  color: #c4d8f3;
+  font-size: 12px;
+  line-height: 18px;
+  white-space: normal;
+  background-color: #214475;
+}
+
+.refresh-button {
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 14px;
+  border-radius: 14px;
+  background-color: #ffca68;
+}
+
+.refresh-button:active,
+.city-tab:active {
+  opacity: 0.72;
+}
+
+.refresh-button-text {
+  color: #173767;
+  font-size: 13px;
+  font-weight: 800;
+}
+</style>
+<script thread="main">
+const engine = lynx.getEngine();
+const backgroundThread = lynx.getJSContext();
+const page = __CreatePage("0", 0);
+const pageId = __GetElementUniqueID(page);
+const tapOptions = {};
+const forecastRequestEventName = "WeatherForecastRequest";
+const forecastResultEventName = "WeatherForecastResult";
+const renderPageEventName = "__RenderPage";
+const destroyLifetimeEventName = "__DestroyLifetime";
+
+const cities = ["Tokyo", "Singapore", "Paris"];
+let selectedCity = 0;
+let activeRequestId = 0;
+let rendered = false;
+let locationText;
+let temperatureText;
+let conditionText;
+let rangeText;
+let statusText;
+let humidityText;
+let windText;
+let humidityBar;
+let windBar;
+let advisoryText;
+const cityTabs = [];
+const cityTabTexts = [];
+const buttonListeners = [];
+
+function createText(className, value) {
+  const text = __CreateText(pageId);
+  __SetClasses(text, className);
+  __AppendElement(text, __CreateRawText(value));
+  return text;
+}
+
+function replaceText(text, value) {
+  __ReplaceElements(text, [__CreateRawText(value)], __GetChildren(text));
+}
+
+function bindTap(node, handler) {
+  __AddEventListener(node, "tap", handler, tapOptions);
+  buttonListeners.push({ node, handler });
+}
+
+function updateCityTabs() {
+  for (let index = 0; index < cityTabs.length; index += 1) {
+    const position = index === 1 ? "second" : index === 2 ? "third" : "";
+    const selected = index === selectedCity;
+    __SetClasses(
+      cityTabs[index],
+      `city-tab ${position}${selected ? " selected" : ""}`,
+    );
+    __SetClasses(
+      cityTabTexts[index],
+      selected ? "city-tab-text selected" : "city-tab-text",
+    );
+  }
+}
+
+function requestForecast(cityIndex) {
+  selectedCity = cityIndex;
+  activeRequestId += 1;
+  updateCityTabs();
+  replaceText(locationText, cities[selectedCity]);
+  replaceText(statusText, "BACKGROUND THREAD · CALCULATING…");
+  replaceText(advisoryText, "Refreshing the hourly sample in the background.");
+  __FlushElementTree();
+
+  backgroundThread.dispatchEvent({
+    type: forecastRequestEventName,
+    data: {
+      city: cities[selectedCity],
+      requestId: activeRequestId,
+    },
+  });
+}
+
+function onForecastResult(event) {
+  const result = event.data;
+  if (!result || result.requestId !== activeRequestId) return;
+  replaceText(temperatureText, `${result.temperature}°`);
+  replaceText(conditionText, result.condition);
+  replaceText(rangeText, `H ${result.high}° · L ${result.low}°`);
+  replaceText(statusText, "BACKGROUND THREAD · UPDATED NOW");
+  replaceText(humidityText, `${result.humidity}%`);
+  replaceText(windText, `${result.wind} km/h`);
+  replaceText(advisoryText, result.advisory);
+  __SetInlineStyles(humidityBar, `width: ${result.humidity}%;`);
+  __SetInlineStyles(windBar, `width: ${Math.min(result.wind * 3, 100)}%;`);
+  __FlushElementTree();
+}
+
+function createCityTab(city, index) {
+  const tab = __CreateView(pageId);
+  const position = index === 1 ? "second" : index === 2 ? "third" : "";
+  __SetClasses(
+    tab,
+    `city-tab ${position}${index === selectedCity ? " selected" : ""}`,
+  );
+  __SetAttribute(tab, "aria-label", `Load ${city} forecast`);
+  const label = createText(
+    index === selectedCity ? "city-tab-text selected" : "city-tab-text",
+    city,
+  );
+  __AppendElement(tab, label);
+  cityTabs.push(tab);
+  cityTabTexts.push(label);
+  bindTap(tab, () => requestForecast(index));
+  return tab;
+}
+
+function createMetric(className, label, value, barClass) {
+  const metric = __CreateView(pageId);
+  __SetClasses(metric, className);
+  __AppendElement(metric, createText("metric-label", label));
+  const valueNode = createText("metric-value", value);
+  __AppendElement(metric, valueNode);
+  const track = __CreateView(pageId);
+  __SetClasses(track, "bar-track");
+  const fill = __CreateView(pageId);
+  __SetClasses(fill, barClass);
+  __AppendElement(track, fill);
+  __AppendElement(metric, track);
+  return { metric, valueNode, fill };
+}
+
+function renderPage() {
+  if (rendered) return;
+  rendered = true;
+
+  const card = __CreateScrollView(pageId);
+  __SetClasses(card, "weather-card");
+  __SetAttribute(card, "scroll-orientation", "vertical");
+  const hero = __CreateView(pageId);
+  __SetClasses(hero, "hero");
+
+  const top = __CreateView(pageId);
+  __SetClasses(top, "top-row");
+  const locationBlock = __CreateView(pageId);
+  __SetClasses(locationBlock, "location-block");
+  __AppendElement(locationBlock, createText("location-label", "CURRENT LOCATION"));
+  locationText = createText("location", "Tokyo");
+  __AppendElement(locationBlock, locationText);
+  __AppendElement(top, locationBlock);
+  __AppendElement(top, createText("condition-icon", "☀"));
+  __AppendElement(hero, top);
+
+  const temperatureRow = __CreateView(pageId);
+  __SetClasses(temperatureRow, "temperature-row");
+  temperatureText = createText("temperature", "--°");
+  __AppendElement(temperatureRow, temperatureText);
+  const conditionCopy = __CreateView(pageId);
+  __SetClasses(conditionCopy, "condition-copy");
+  conditionText = createText("condition", "Loading forecast");
+  rangeText = createText("range", "H --° · L --°");
+  __AppendElement(conditionCopy, conditionText);
+  __AppendElement(conditionCopy, rangeText);
+  __AppendElement(temperatureRow, conditionCopy);
+  __AppendElement(hero, temperatureRow);
+
+  const cityTabsView = __CreateView(pageId);
+  __SetClasses(cityTabsView, "city-tabs");
+  for (let index = 0; index < cities.length; index += 1) {
+    __AppendElement(cityTabsView, createCityTab(cities[index], index));
+  }
+  __AppendElement(hero, cityTabsView);
+  __AppendElement(card, hero);
+
+  const details = __CreateView(pageId);
+  __SetClasses(details, "details");
+  statusText = createText("background-status", "BACKGROUND THREAD · WAITING");
+  __AppendElement(details, statusText);
+
+  const metrics = __CreateView(pageId);
+  __SetClasses(metrics, "metrics");
+  const humidity = createMetric("metric", "HUMIDITY", "--%", "bar-fill");
+  humidityText = humidity.valueNode;
+  humidityBar = humidity.fill;
+  __AppendElement(metrics, humidity.metric);
+  const wind = createMetric(
+    "metric second",
+    "WIND",
+    "-- km/h",
+    "bar-fill wind",
+  );
+  windText = wind.valueNode;
+  windBar = wind.fill;
+  __AppendElement(metrics, wind.metric);
+  __AppendElement(details, metrics);
+
+  advisoryText = createText(
+    "advisory",
+    "Preparing a local recommendation from the hourly sample.",
+  );
+  __AppendElement(details, advisoryText);
+
+  const refresh = __CreateView(pageId);
+  __SetClasses(refresh, "refresh-button");
+  __SetAttribute(refresh, "aria-label", "Refresh weather in background thread");
+  __AppendElement(refresh, createText("refresh-button-text", "Refresh forecast"));
+  bindTap(refresh, () => requestForecast(selectedCity));
+  __AppendElement(details, refresh);
+  __AppendElement(card, details);
+  __AppendElement(page, card);
+
+  requestForecast(0);
+}
+
+function cleanup() {
+  backgroundThread.dispatchEvent({ type: destroyLifetimeEventName });
+  backgroundThread.removeEventListener(
+    forecastResultEventName,
+    onForecastResult,
+  );
+  for (const { node, handler } of buttonListeners.splice(0)) {
+    __RemoveEventListener(node, "tap", handler, tapOptions);
+  }
+  engine.removeEventListener(renderPageEventName, renderPage);
+  engine.removeEventListener(destroyLifetimeEventName, cleanup);
+  cityTabs.length = 0;
+  cityTabTexts.length = 0;
+  locationText = undefined;
+  temperatureText = undefined;
+  conditionText = undefined;
+  rangeText = undefined;
+  statusText = undefined;
+  humidityText = undefined;
+  windText = undefined;
+  humidityBar = undefined;
+  windBar = undefined;
+  advisoryText = undefined;
+}
+
+backgroundThread.addEventListener(forecastResultEventName, onForecastResult);
+engine.addEventListener(renderPageEventName, renderPage);
+engine.addEventListener(destroyLifetimeEventName, cleanup);
+</script>
+<script thread="background">
+const mainThread = lynx.getCoreContext();
+const forecastRequestEventName = "WeatherForecastRequest";
+const forecastResultEventName = "WeatherForecastResult";
+const destroyLifetimeEventName = "__DestroyLifetime";
+
+const samples = {
+  Tokyo: {
+    hourly: [21, 23, 25, 24, 22],
+    condition: "Clear and bright",
+    high: 26,
+    low: 18,
+    humidity: 58,
+    wind: 12,
+    advisory: "Comfortable through sunset. A light layer is enough after 19:00.",
+  },
+  Singapore: {
+    hourly: [29, 31, 32, 31, 29],
+    condition: "Warm with showers",
+    high: 33,
+    low: 27,
+    humidity: 82,
+    wind: 9,
+    advisory: "A brief shower is likely after 16:00. Keep a compact umbrella nearby.",
+  },
+  Paris: {
+    hourly: [13, 15, 16, 14, 12],
+    condition: "Clouds clearing",
+    high: 17,
+    low: 10,
+    humidity: 67,
+    wind: 18,
+    advisory: "Breezy on exposed streets. The clearest window starts around 15:00.",
+  },
+};
+
+let forecastTimer;
+
+function onForecastRequest(event) {
+  const request = event.data;
+  if (
+    !request
+    || typeof request.city !== "string"
+    || typeof request.requestId !== "number"
+  ) return;
+  const sample = samples[request.city];
+  if (!sample) return;
+
+  if (forecastTimer !== undefined) clearTimeout(forecastTimer);
+  forecastTimer = setTimeout(() => {
+    forecastTimer = undefined;
+    const total = sample.hourly.reduce((sum, value) => sum + value, 0);
+    const temperature = Math.round(total / sample.hourly.length);
+    mainThread.dispatchEvent({
+      type: forecastResultEventName,
+      data: {
+        requestId: request.requestId,
+        temperature,
+        condition: sample.condition,
+        high: sample.high,
+        low: sample.low,
+        humidity: sample.humidity,
+        wind: sample.wind,
+        advisory: sample.advisory,
+      },
+    });
+  }, 260);
+}
+
+function cleanup() {
+  mainThread.removeEventListener(
+    forecastRequestEventName,
+    onForecastRequest,
+  );
+  mainThread.removeEventListener(destroyLifetimeEventName, cleanup);
+  if (forecastTimer !== undefined) {
+    clearTimeout(forecastTimer);
+    forecastTimer = undefined;
+  }
+}
+
+mainThread.addEventListener(forecastRequestEventName, onForecastRequest);
+mainThread.addEventListener(destroyLifetimeEventName, cleanup);
+</script>
+</lynx>

@@ -1,5 +1,40 @@
 # @lynx-js/autolink-codegen
 
+## 0.6.0
+
+### Minor Changes
+
+- Type and validate platform-selected Lynxtron `targets`, with each target ([#3760](https://github.com/lynx-family/lynx-stack/pull/3760))
+  declaring `files`, macOS `frameworks`, and signed macOS `appBundles` as needed.
+  Generate the same manifest shape and `dist/<os>/<arch>` output layout in new
+  Lynxtron library projects.
+
+### Patch Changes
+
+- Avoid intersecting the generated Node-API shim's dynamic global access with ([#3914](https://github.com/lynx-family/lynx-stack/pull/3914))
+  host-specific NativeModules declarations, which may require fields such as bridge.
+
+## 0.5.0
+
+### Minor Changes
+
+- Generate separate Lynxtron registration paths for platform and NAPI native ([#3646](https://github.com/lynx-family/lynx-stack/pull/3646))
+  modules, register shared NAPI addons with standard `napi_module_register`, and
+  preserve existing AutoLink modules before falling back to runtime loaders.
+
+### Patch Changes
+
+- Fix strict TypeScript checks for generated Node-API facades and scope generated podspecs to iOS. ([#3733](https://github.com/lynx-family/lynx-stack/pull/3733))
+
+- Prefer the unambiguous LynxWeakNodeAPI C++ header in generated Node-API sources when it is available. ([#3737](https://github.com/lynx-family/lynx-stack/pull/3737))
+
+## 0.4.1
+
+### Patch Changes
+
+- Build shared Node-API module sources against `@lynx-js/weak-node-api` on every ([#3403](https://github.com/lynx-family/lynx-stack/pull/3403))
+  platform while limiting weak suffix remapping to runtimes that require it.
+
 ## 0.4.0
 
 ### Minor Changes

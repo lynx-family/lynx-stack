@@ -9,12 +9,14 @@
  */
 export {
   defineExternalBundleRslibConfig,
+  LAYERS,
   builtInExternalsPresetDefinitions,
   reactLynxExternalsPreset,
   DEFAULT_EXTERNAL_BUNDLE_LIB_CONFIG as defaultExternalBundleLibConfig,
 } from './externalBundleRslibConfig.js'
 export type {
   EncodeOptions,
+  ExposedLayers,
   ExternalBundleLibConfig,
   ExternalObject,
   Externals,
@@ -24,7 +26,5 @@ export type {
   ExternalsPresetValue,
   OutputConfig,
 } from './externalBundleRslibConfig.js'
-export { ExternalBundleWebpackPlugin } from './webpack/ExternalBundleWebpackPlugin.js'
-export type { ExternalBundleWebpackPluginOptions } from './webpack/ExternalBundleWebpackPlugin.js'
 export { MainThreadRuntimeWrapperWebpackPlugin } from './webpack/MainThreadRuntimeWrapperWebpackPlugin.js'
 export type { MainThreadRuntimeWrapperWebpackPluginOptions } from './webpack/MainThreadRuntimeWrapperWebpackPlugin.js'

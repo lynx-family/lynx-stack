@@ -37,6 +37,13 @@ function updateWorkletRefInitValueChanges(patch?: [number, unknown][]): void {
 }
 
 /**
+ * Releases the temporary negative-ID MainThreadRefs after hydration handoff.
+ */
+function clearFirstScreenMainThreadRefs(): void {
+  globalThis.lynxWorkletImpl?._refImpl.clearFirstScreenWorkletRefMap();
+}
+
+/**
  * Register a worklet.
  *
  * @internal
@@ -76,6 +83,7 @@ export {
   runWorkletCtx,
   updateWorkletRef,
   updateWorkletRefInitValueChanges,
+  clearFirstScreenMainThreadRefs,
   registerWorklet,
   delayRunOnBackground,
   setEomShouldFlushElementTree,

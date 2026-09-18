@@ -3,8 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { Hono } from 'hono';
 
-import type { A2UICatalog } from '../../../agent/a2ui-catalog';
-import { getA2UIAgentService } from '../../../service/a2ui-agent';
+import type { A2UICatalog } from '../../../agent/a2ui/a2ui-catalog.js';
+import { getA2UIAgentService } from '../../../service/a2ui/a2ui-agent.js';
 import type { ChatMessage } from '../../../service/common/types';
 import {
   MAX_MESSAGE_CHARS,
@@ -14,6 +14,7 @@ import { jsonWithCors } from '../../common/cors';
 import { errorMessage } from '../../common/errors';
 import { checkRateLimit, rateLimitJsonResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
+import { extractTokenUsage } from '../../common/usage.js';
 import { pickA2UIChatOptions, validateAction } from '../_shared';
 
 interface A2UIActionBody {
@@ -104,11 +105,23 @@ async function postA2UIAction(req: Request) {
       {
         requireCreateSurface: false,
         existingSurfaceIds: body.surfaceId ? [body.surfaceId] : [],
+        existingDataModelBySurface: body.surfaceId
+          ? {
+            [body.surfaceId]: validatedConversation.conversation?.dataModel
+              ?? {},
+          }
+          : {},
       },
+      req.signal,
     );
-    return jsonWithCors(req, validated);
+    return jsonWithCors(req, {
+      ...validated,
+      tokenUsage: extractTokenUsage(validated.usage),
+    });
   } catch (err: unknown) {
-    const { message, name } = errorMessage(err);
+    const { message, name } = errorMessage(err, {
+      secrets: [body.apiKey, opts.apiKey],
+    });
     return jsonWithCors(req, { ok: false, error: message, name });
   }
 }

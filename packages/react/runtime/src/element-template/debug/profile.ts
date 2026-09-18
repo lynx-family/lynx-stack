@@ -7,7 +7,17 @@ import type { ComponentClass, VNode } from 'preact';
 import type { TraceOption } from '@lynx-js/types';
 
 import { profileEnd, profileStart } from '../../shared/profile.js';
-import { COMMIT, COMPONENT, DIFF, DIFF2, DIFFED, DIRTY, NEXT_STATE, RENDER } from '../../shared/render-constants.js';
+import {
+  BITS,
+  COMMIT,
+  COMPONENT,
+  COMPONENT_DIRTY,
+  DIFF,
+  DIFF2,
+  DIFFED,
+  NEXT_STATE,
+  RENDER,
+} from '../../shared/render-constants.js';
 import { getDisplayName, hook } from '../../utils.js';
 import { globalCommitContext } from '../background/commit-context.js';
 
@@ -74,7 +84,7 @@ export function initProfileHook(): void {
         function(this: PatchedComponent & { [NEXT_STATE]: unknown }, old, state, callback) {
           old?.call(this, state, callback);
 
-          if (this[DIRTY]) {
+          if (this[BITS] & COMPONENT_DIRTY) {
             profileMark('ReactLynx::setState', {
               flowId: this[sFlowID] ??= profileFlowId(),
               args: buildSetStateProfileMarkArgs(

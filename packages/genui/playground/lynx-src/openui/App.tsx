@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { OpenUiRenderer, createOpenUiLibrary } from '@lynx-js/genui/openui';
-import type { ActionEvent } from '@lynx-js/genui/openui';
+import type { ActionEvent, OpenUIError } from '@lynx-js/genui/openui';
 import {
   useCallback,
   useEffect,
@@ -14,6 +14,10 @@ import {
 } from '@lynx-js/react';
 
 import { OPENUI_SCENARIOS } from './mockData.js';
+import {
+  OPENUI_RENDER_ERRORS_MESSAGE_TYPE,
+  formatOpenUIRenderErrors,
+} from './renderErrors.js';
 
 const DEFAULT_CHUNK_SIZE = 8;
 const DEFAULT_STREAM_DELAY_MS = 30;
@@ -136,6 +140,20 @@ export function App() {
   const playbackPausedRef = useRef(false);
   const playbackChunks = useMemo(() => chunkOpenUIResponse(rawText), [rawText]);
 
+  const onOpenUiError = useCallback((errors: OpenUIError[]) => {
+    const firstError = formatOpenUIRenderErrors(errors.slice(0, 1));
+    setError(
+      errors.length > 1
+        ? `${errors.length} OpenUI errors\n${firstError}`
+        : firstError,
+    );
+    NativeModules.bridge?.call?.(
+      OPENUI_RENDER_ERRORS_MESSAGE_TYPE,
+      { errors },
+      () => undefined,
+    );
+  }, []);
+
   useEffect(() => {
     setPlaybackTargetCount(0);
     playbackPausedRef.current = false;
@@ -166,7 +184,7 @@ export function App() {
     let cancelled = false;
     setLoading(true);
     setIsStreaming(true);
-    setError('');
+    onOpenUiError([]);
     setResponse('');
 
     if (instant) {
@@ -219,6 +237,7 @@ export function App() {
     };
   }, [
     instant,
+    onOpenUiError,
     openUiLibrary,
     playbackChunks,
     playbackMode,
@@ -241,7 +260,7 @@ export function App() {
       {error
         ? (
           <view className='openui-feedback'>
-            <text className='openui-error'>{error}</text>
+            <text className='openui-error' text-maxline={6}>{error}</text>
           </view>
         )
         : null}
@@ -262,6 +281,7 @@ export function App() {
               library={openUiLibrary}
               toolProvider={openUiToolProvider}
               onAction={onOpenUiAction}
+              onError={onOpenUiError}
               isStreaming={isStreaming}
             />
           </scroll-view>

@@ -10,6 +10,7 @@ import type {
 } from '../../../types/index.js';
 import {
   callLepusMethodEndpoint,
+  dispatchIntersectionObserverEventEndpoint,
   setNativePropsEndpoint,
   triggerComponentEventEndpoint,
   selectComponentEndpoint,
@@ -153,5 +154,15 @@ export async function createNativeApp(
       });
     },
   };
+  mainThreadRpc.registerHandler(
+    dispatchIntersectionObserverEventEndpoint,
+    (observerId, callbackId, payload) => {
+      nativeApp.tt?.onIntersectionObserverEvent(
+        observerId,
+        callbackId,
+        payload,
+      );
+    },
+  );
   return nativeApp;
 }

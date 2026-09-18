@@ -4,29 +4,44 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 
+import { ChatAgentInteraction } from './ChatAgentInteraction.js';
+import {
+  appendChatInteraction,
+  describeChatRequest,
+} from './chatInteraction.js';
+import { ChatUsage } from './ChatUsage.js';
 import { ChatWorkspace } from './ChatWorkspace.js';
 import {
-  EMPTY_CHAT_TOKEN_USAGE,
-  addTokenUsage,
+  isA2UIRuntimeReadyMessage,
+  isMatchingLivePreviewFrame,
+  isMatchingReadyLivePreviewFrame,
+  prepareLivePreviewOutputs,
+  queueOrDeliverLivePreviewOutput,
+  readLivePreviewNavigationToken,
+} from './livePreviewDelivery.js';
+import type {
+  LivePreviewMessageType,
+  PendingLivePreviewOutput,
+} from './livePreviewDelivery.js';
+import {
   createChatHost,
-  formatTokenCount,
+  createChatRequestInit,
   parseSseFrame,
   targetOriginForUrl,
 } from './shared.js';
 import type {
   ChatArtifact,
-  ChatHttpRequest,
   ChatMessageIcon,
   ChatMessageModel,
   ChatProtocolAdapter,
   ChatSettingsAdapter,
+  ChatSseEvent,
   ChatStreamAdapter,
   ChatStreamEmission,
-  ChatTokenUsage,
 } from './type.js';
 import { Button } from '../../components/Button.js';
 import { useCopyToast } from '../../components/CopyToast.js';
-import { Send, Sparkles, Zap } from '../../components/Icon.js';
+import { Send, Sparkles, TriangleAlert, Zap } from '../../components/Icon.js';
 import type { MobilePaneTab } from '../../components/MobileTabBar.js';
 import type {
   PreviewMetricName,
@@ -50,6 +65,8 @@ import type {
   PreviewPerformanceMetrics,
 } from '../../storage/types.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
+import { readResponseUsage } from '../../utils/modelPricing.js';
+import type { GenerationUsageRecord } from '../../utils/modelPricing.js';
 import type { Protocol } from '../../utils/protocol.js';
 import {
   buildConversationShareUrl,
@@ -64,6 +81,7 @@ const DESKTOP_CHAT_MIN_WIDTH = 360;
 const COMPACT_CHAT_MIN_HEIGHT = 280;
 const COMPACT_PREVIEW_MIN_HEIGHT = 320;
 const RESIZE_BREAKPOINT = 980;
+const PREVIEW_RENDER_READY_FALLBACK_MS = 5_000;
 
 interface ChatControllerProps<
   TOutput,
@@ -88,13 +106,7 @@ interface ChatControllerProps<
 interface ConsumeResponseOptions<TOutput> {
   signal: AbortSignal;
   onEmission: (emission: ChatStreamEmission<TOutput>) => void;
-}
-
-type LiveMessageType = 'A2UI_LIVE_MESSAGES' | 'A2UI_ACTION_RESPONSE';
-
-interface PendingLiveOutput<TOutput> {
-  type: LiveMessageType;
-  output: TOutput;
+  onEvent?: (event: ChatSseEvent) => void;
 }
 
 type BrowserResponse = Awaited<ReturnType<typeof window.fetch>>;
@@ -135,27 +147,6 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function requestInit(
-  request: ChatHttpRequest,
-  signal: AbortSignal,
-): RequestInit {
-  const body = request.body === undefined
-    ? undefined
-    : (typeof request.body === 'string'
-      ? request.body
-      : JSON.stringify(request.body));
-  return {
-    method: request.method ?? 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'text/event-stream',
-      ...request.headers,
-    },
-    body,
-    signal,
-  };
-}
-
 async function consumeResponse<TState, TOutput>(
   response: BrowserResponse,
   stream: ChatStreamAdapter<TState, TOutput>,
@@ -178,6 +169,7 @@ async function consumeResponse<TState, TOutput>(
   const applyFrame = (frame: string) => {
     const parsed = parseSseFrame(frame);
     if (!parsed) return;
+    options.onEvent?.(parsed);
     if (parsed.event === 'error') {
       throw new Error(stream.error(parsed.data));
     }
@@ -207,6 +199,7 @@ async function consumeResponse<TState, TOutput>(
     if (buffer.trim()) applyFrame(buffer);
   } else {
     const payload: unknown = await response.json().catch(() => ({}));
+    options.onEvent?.({ event: 'json', data: payload });
     const step = stream.fromJson(payload);
     state = step.state;
     applyEmissions(step.emissions);
@@ -338,6 +331,70 @@ function MessageList(props: {
   return (
     <>
       {messages.map((message, index) => {
+        const payloadText = message.payload === undefined
+          ? ''
+          : safeStringifyPayload(message.payload);
+        const messageBody = (
+          <>
+            <MessageStatusIcon icon={message.icon} />
+            <span>
+              {message.text}
+              {message.code
+                ? (
+                  <>
+                    {' '}
+                    <code className='chatMessageStatusInline'>
+                      {message.code}
+                    </code>
+                  </>
+                )
+                : null}
+            </span>
+            {message.payload === undefined
+              ? null
+              : (
+                <button
+                  type='button'
+                  className='chatJsonCopyButton'
+                  onClick={() => onCopy(payloadText)}
+                >
+                  Copy all
+                </button>
+              )}
+          </>
+        );
+        const messageDetails = (
+          <>
+            {message.generationUsage
+              ? <ChatUsage record={message.generationUsage} />
+              : null}
+            {message.payload === undefined
+              ? null
+              : (
+                <JsonPayloadViewer
+                  payload={message.payload}
+                  layout={message.payloadLayout}
+                  onCopy={onCopy}
+                />
+              )}
+            {message.metrics
+              ? <MessageMetrics metrics={message.metrics} />
+              : null}
+          </>
+        );
+        if (message.interaction) {
+          return (
+            <ChatAgentInteraction
+              key={message.id ?? index}
+              summary={messageBody}
+              tone={message.tone}
+              log={message.interaction}
+              onCopy={onCopy}
+            >
+              {messageDetails}
+            </ChatAgentInteraction>
+          );
+        }
         const roleClassName = (() => {
           if (message.kind === 'user') return 'chatMessageUser';
           if (message.kind === 'action') {
@@ -353,9 +410,6 @@ function MessageList(props: {
           }
           return 'chatMessageAI';
         })();
-        const payloadText = message.payload === undefined
-          ? ''
-          : safeStringifyPayload(message.payload);
         return (
           <div
             className={`chatMessage ${roleClassName}${
@@ -363,45 +417,8 @@ function MessageList(props: {
             }`}
             key={message.id ?? index}
           >
-            <div className='chatMessageBody'>
-              <MessageStatusIcon icon={message.icon} />
-              <span>
-                {message.text}
-                {message.code
-                  ? (
-                    <>
-                      {' '}
-                      <code className='chatMessageStatusInline'>
-                        {message.code}
-                      </code>
-                    </>
-                  )
-                  : null}
-              </span>
-              {message.payload === undefined
-                ? null
-                : (
-                  <button
-                    type='button'
-                    className='chatJsonCopyButton'
-                    onClick={() => onCopy(payloadText)}
-                  >
-                    Copy all
-                  </button>
-                )}
-            </div>
-            {message.payload === undefined
-              ? null
-              : (
-                <JsonPayloadViewer
-                  payload={message.payload}
-                  layout={message.payloadLayout}
-                  onCopy={onCopy}
-                />
-              )}
-            {message.metrics
-              ? <MessageMetrics metrics={message.metrics} />
-              : null}
+            <div className='chatMessageBody'>{messageBody}</div>
+            {messageDetails}
           </div>
         );
       })}
@@ -414,6 +431,7 @@ function ArtifactViewer(props: {
   onCopy: (text: string) => void;
 }) {
   const { artifact, onCopy } = props;
+  const [showFormatted, setShowFormatted] = useState(false);
   const [activeViewId, setActiveViewId] = useState(
     () => artifact.views[0]?.id ?? '',
   );
@@ -426,6 +444,9 @@ function ArtifactViewer(props: {
   }, [activeViewId, artifact.views]);
 
   if (!activeView) return null;
+  const displayedText = showFormatted
+    ? activeView.formattedText ?? activeView.text
+    : activeView.text;
   return (
     <div className='chatGeneratedJson chatArtifact'>
       <div className='chatGeneratedJsonTitle chatArtifactHeader'>
@@ -454,17 +475,45 @@ function ArtifactViewer(props: {
               </div>
             )
             : null}
-          <button
-            type='button'
-            className='chatJsonCopyButton'
-            onClick={() => onCopy(activeView.text)}
-          >
-            Copy
-          </button>
         </div>
       </div>
+      <div className='chatArtifactCodeToolbar'>
+        {activeView.formattedText === undefined
+          ? <span className='chatArtifactCodeLabel'>{activeView.label}</span>
+          : (
+            <div
+              className='chatArtifactFormatSwitch'
+              role='group'
+              aria-label={`${activeView.label} formatting`}
+            >
+              <button
+                type='button'
+                className='chatArtifactFormatButton'
+                aria-pressed={!showFormatted}
+                onClick={() => setShowFormatted(false)}
+              >
+                Raw
+              </button>
+              <button
+                type='button'
+                className='chatArtifactFormatButton'
+                aria-pressed={showFormatted}
+                onClick={() => setShowFormatted(true)}
+              >
+                Formatted
+              </button>
+            </div>
+          )}
+        <button
+          type='button'
+          className='chatJsonCopyButton chatArtifactCopyButton'
+          onClick={() => onCopy(displayedText)}
+        >
+          Copy
+        </button>
+      </div>
       <pre className='chatMessageChunkJson chatArtifactCodeBlock'>
-        {activeView.text}
+        {displayedText}
       </pre>
     </div>
   );
@@ -500,11 +549,15 @@ function previewMetricPatch(
   return { renderMs: value };
 }
 
+const volatileSettingsByAdapter = new WeakMap<object, unknown>();
+
 function readInitialSettings<TSettings>(
   adapter: { settings?: ChatSettingsAdapter<TSettings> },
 ): TSettings {
   const settings = adapter.settings;
   if (!settings) return undefined as TSettings;
+  const volatileSettings = volatileSettingsByAdapter.get(settings);
+  if (volatileSettings !== undefined) return volatileSettings as TSettings;
   try {
     for (const key of settings.storageKeys) {
       const raw = window.localStorage.getItem(key);
@@ -538,6 +591,7 @@ export function ChatController<
   const {
     activeId,
     buildConversationContext,
+    clearAll,
     conversations,
     createNew,
     importShared,
@@ -547,6 +601,7 @@ export function ChatController<
     previewMessages: persistedPreviewMessages,
     previewPayloadUrls: persistedPreviewPayloadUrls,
     recordTurn,
+    recordGenerationSettings,
     remove,
     rename,
     switchTo,
@@ -577,9 +632,6 @@ export function ChatController<
   const [previewRevision, setPreviewRevision] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isActionRunning, setIsActionRunning] = useState(false);
-  const [usage, setUsage] = useState<ChatTokenUsage>({
-    ...EMPTY_CHAT_TOKEN_USAGE,
-  });
   const [metrics, setMetrics] = useState<PreviewPerformanceMetrics>(
     initialHydration.metrics ?? {},
   );
@@ -610,8 +662,13 @@ export function ChatController<
   const metricsRef = useRef(metrics);
   const metricsPersistenceReadyRef = useRef(false);
   const previewFrameReadyRef = useRef(false);
+  const previewReadyFrameUrlRef = useRef('');
+  const previewReadyWindowRef = useRef<Window | null>(null);
+  const previewReadyFallbackTimerRef = useRef<number | null>(null);
   const liveDeliveryGenerationRef = useRef(0);
-  const pendingLiveOutputsRef = useRef<PendingLiveOutput<TOutput>[]>([]);
+  const pendingLiveOutputsRef = useRef<
+    PendingLivePreviewOutput<TOutput>[]
+  >([]);
   outputRef.current = output;
   previewOutputRef.current = previewOutput;
   previewPayloadUrlsRef.current = previewPayloadUrls;
@@ -636,6 +693,7 @@ export function ChatController<
   });
 
   const busy = isGenerating || isActionRunning;
+  const settingsValidationError = adapter.settings?.validate?.(settings);
 
   const setCurrentOutput = useCallback((next: TOutput | null) => {
     outputRef.current = next;
@@ -658,6 +716,12 @@ export function ChatController<
   const resetLivePreviewDelivery = useCallback(() => {
     liveDeliveryGenerationRef.current++;
     previewFrameReadyRef.current = false;
+    previewReadyFrameUrlRef.current = '';
+    previewReadyWindowRef.current = null;
+    if (previewReadyFallbackTimerRef.current !== null) {
+      window.clearTimeout(previewReadyFallbackTimerRef.current);
+      previewReadyFallbackTimerRef.current = null;
+    }
     pendingLiveOutputsRef.current = [];
   }, []);
 
@@ -681,8 +745,31 @@ export function ChatController<
   useEffect(() => () => abortOperations(), [abortOperations]);
 
   useEffect(() => {
+    const loadSettings = adapter.settings?.load;
+    if (!loadSettings) return;
+    const controller = new AbortController();
+    void loadSettings(settingsRef.current, host, controller.signal).then(
+      (next) => {
+        if (!controller.signal.aborted) {
+          setSettings((current) => {
+            const historySettings = adapter.settings?.conversation;
+            return historySettings
+              ? historySettings.restore(next, historySettings.snapshot(current))
+              : next;
+          });
+        }
+      },
+      () => {
+        // Abort-driven rejections are expected when the protocol changes.
+      },
+    );
+    return () => controller.abort();
+  }, [adapter.settings, host]);
+
+  useEffect(() => {
     const settingsAdapter = adapter.settings;
     if (!settingsAdapter) return;
+    volatileSettingsByAdapter.set(settingsAdapter, settings);
     try {
       const serialized = JSON.stringify(settingsAdapter.serialize(settings));
       for (const key of settingsAdapter.storageKeys) {
@@ -740,10 +827,20 @@ export function ChatController<
     followBottomRef.current = distanceFromBottom <= 32;
   }, []);
 
+  const savedGenerationSettings = conversations.find((item) =>
+    item.id === activeId
+  )?.generationSettings;
+
   useEffect(() => {
     if (!isReady || busy) return;
     if (hydratedActiveIdRef.current === activeId) return;
     hydratedActiveIdRef.current = activeId;
+    const historySettings = adapter.settings?.conversation;
+    if (historySettings && savedGenerationSettings) {
+      setSettings((current) =>
+        historySettings.restore(current, savedGenerationSettings)
+      );
+    }
     const hydrated = adapter.hydrate({
       history: persistedMessages,
       previewMessages: persistedPreviewMessages,
@@ -758,7 +855,6 @@ export function ChatController<
     const nextMetrics = hydrated.metrics ?? {};
     metricsRef.current = nextMetrics;
     setMetrics(nextMetrics);
-    setUsage({ ...EMPTY_CHAT_TOKEN_USAGE });
     setPreviewRevision((value) => value + 1);
     metricsPersistenceReadyRef.current = persistedMessages.some(
       (message) => message.role === 'assistant',
@@ -772,6 +868,7 @@ export function ChatController<
     persistedPreviewMessages,
     persistedPreviewPayloadUrls,
     resetLivePreviewDelivery,
+    savedGenerationSettings,
     setCurrentOutput,
     setCurrentPreviewOutput,
     setCurrentPreviewPayloadUrls,
@@ -816,16 +913,28 @@ export function ChatController<
   }, [adapter.id, importShared, isReady, protocol.name]);
 
   const postLiveOutput = useCallback((
-    type: LiveMessageType,
+    type: LivePreviewMessageType,
     nextOutput: TOutput,
   ) => {
     if (adapter.preview.delivery !== 'live-message') return false;
     const messages = adapter.preview.livePayload?.(nextOutput);
     const frame = previewFrameRef.current;
-    if (!previewFrameReadyRef.current || !messages || !frame?.contentWindow) {
+    const frameWindow = frame?.contentWindow;
+    if (
+      !messages
+      || !frame
+      || !frameWindow
+      || !isMatchingReadyLivePreviewFrame(
+        previewFrameReadyRef.current,
+        previewReadyFrameUrlRef.current,
+        previewReadyWindowRef.current,
+        frame.src,
+        frameWindow,
+      )
+    ) {
       return false;
     }
-    frame.contentWindow.postMessage(
+    frameWindow.postMessage(
       { type, messages },
       targetOriginForUrl(frame.src, host),
     );
@@ -833,29 +942,142 @@ export function ChatController<
   }, [adapter.preview, host]);
 
   const queueOrPostLiveOutput = useCallback((
-    type: LiveMessageType,
+    type: LivePreviewMessageType,
     nextOutput: TOutput,
   ) => {
-    if (postLiveOutput(type, nextOutput)) return;
-    pendingLiveOutputsRef.current.push({ type, output: nextOutput });
+    queueOrDeliverLivePreviewOutput(
+      pendingLiveOutputsRef.current,
+      { type, output: nextOutput },
+      (item) => postLiveOutput(item.type, item.output),
+    );
   }, [postLiveOutput]);
+
+  const handlePreviewFrameReady = useCallback((
+    expectedFrameUrl: string,
+    expectedFrameWindow: Window,
+  ) => {
+    if (adapter.preview.delivery !== 'live-message') return;
+    const frame = previewFrameRef.current;
+    const frameWindow = frame?.contentWindow;
+    if (
+      !frame || !frameWindow || !isMatchingLivePreviewFrame(
+        expectedFrameUrl,
+        expectedFrameWindow,
+        frame.src,
+        frameWindow,
+      )
+    ) {
+      return;
+    }
+
+    if (previewReadyFallbackTimerRef.current !== null) {
+      window.clearTimeout(previewReadyFallbackTimerRef.current);
+      previewReadyFallbackTimerRef.current = null;
+    }
+    previewFrameReadyRef.current = true;
+    previewReadyFrameUrlRef.current = frame.src;
+    previewReadyWindowRef.current = frameWindow;
+
+    const pending = prepareLivePreviewOutputs(
+      outputRef.current,
+      pendingLiveOutputsRef.current,
+    );
+    pendingLiveOutputsRef.current = [];
+    for (let index = 0; index < pending.length; index++) {
+      const item = pending[index];
+      if (item && postLiveOutput(item.type, item.output)) continue;
+      pendingLiveOutputsRef.current.push(...pending.slice(index));
+      break;
+    }
+  }, [adapter.preview.delivery, postLiveOutput]);
 
   const handlePreviewFrameLoad = useCallback(() => {
     if (adapter.preview.delivery !== 'live-message') return;
+    const frame = previewFrameRef.current;
+    const frameWindow = frame?.contentWindow;
+    if (!frame || !frameWindow) return;
+    if (
+      isMatchingReadyLivePreviewFrame(
+        previewFrameReadyRef.current,
+        previewReadyFrameUrlRef.current,
+        previewReadyWindowRef.current,
+        frame.src,
+        frameWindow,
+      )
+    ) {
+      return;
+    }
+    previewFrameReadyRef.current = false;
+    previewReadyFrameUrlRef.current = '';
+    previewReadyWindowRef.current = null;
     const generation = liveDeliveryGenerationRef.current;
-    window.setTimeout(() => {
+    const loadedFrameUrl = frame.src;
+    if (previewReadyFallbackTimerRef.current !== null) {
+      window.clearTimeout(previewReadyFallbackTimerRef.current);
+    }
+    previewReadyFallbackTimerRef.current = window.setTimeout(() => {
+      previewReadyFallbackTimerRef.current = null;
       if (generation !== liveDeliveryGenerationRef.current) return;
-      previewFrameReadyRef.current = true;
-      const pending = pendingLiveOutputsRef.current;
-      pendingLiveOutputsRef.current = [];
-      for (let index = 0; index < pending.length; index++) {
-        const item = pending[index];
-        if (item && postLiveOutput(item.type, item.output)) continue;
-        pendingLiveOutputsRef.current.push(...pending.slice(index));
-        break;
+      handlePreviewFrameReady(loadedFrameUrl, frameWindow);
+    }, PREVIEW_RENDER_READY_FALLBACK_MS);
+  }, [adapter.preview.delivery, handlePreviewFrameReady]);
+
+  useEffect(() => {
+    if (adapter.preview.delivery !== 'live-message') return;
+    const handleRenderReady = (event: MessageEvent<unknown>) => {
+      const frame = previewFrameRef.current;
+      if (!frame?.contentWindow || event.source !== frame.contentWindow) return;
+      if (event.origin !== targetOriginForUrl(frame.src, host)) return;
+      const navigationToken = readLivePreviewNavigationToken(frame.src);
+      if (
+        !isA2UIRuntimeReadyMessage(
+          event.data,
+          frame.src,
+          navigationToken,
+        )
+      ) {
+        return;
       }
-    }, 0);
-  }, [adapter.preview.delivery, postLiveOutput]);
+      handlePreviewFrameReady(frame.src, frame.contentWindow);
+    };
+
+    window.addEventListener('message', handleRenderReady);
+    return () => window.removeEventListener('message', handleRenderReady);
+  }, [adapter.preview.delivery, handlePreviewFrameReady, host]);
+
+  useEffect(() => {
+    return () => {
+      if (previewReadyFallbackTimerRef.current !== null) {
+        window.clearTimeout(previewReadyFallbackTimerRef.current);
+      }
+    };
+  }, []);
+
+  const trackTurnUsage = useCallback(
+    (pendingId: string, requestSettings: TSettings) => {
+      let record: GenerationUsageRecord = {
+        model: 'Server default',
+        ...adapter.settings?.usageModel?.(requestSettings),
+        usage: {},
+      };
+      return {
+        current: () => record,
+        observe(payload: unknown) {
+          const usage = readResponseUsage(payload);
+          if (!usage) return;
+          record = { ...record, usage };
+          setMessages(current =>
+            current.map(message =>
+              message.id === pendingId
+                ? { ...message, generationUsage: record }
+                : message
+            )
+          );
+        },
+      };
+    },
+    [adapter.settings],
+  );
 
   const handleStreamEmission = useCallback((
     emission: ChatStreamEmission<TOutput>,
@@ -865,16 +1087,17 @@ export function ChatController<
       setMessages((current) =>
         current.map((message) =>
           message.id === pendingId
-            ? { ...adapter.transcript.progress(emission.text), id: pendingId }
+            ? {
+              ...message,
+              ...adapter.transcript.progress(emission.text),
+              id: pendingId,
+            }
             : message
         )
       );
       return;
     }
-    if (emission.type === 'usage') {
-      setUsage((current) => addTokenUsage(current, emission.usage));
-      return;
-    }
+    if (emission.type === 'usage') return;
     if (emission.type === 'previewPayload') {
       setCurrentPreviewPayloadUrls(emission.value);
       return;
@@ -894,9 +1117,14 @@ export function ChatController<
       }
       return;
     }
-    resetLivePreviewDelivery();
-    setCurrentPreviewOutput(nextOutput);
-    setPreviewRevision((value) => value + 1);
+    if (adapter.preview.delivery === 'live-message') {
+      setCurrentPreviewOutput(nextOutput);
+      queueOrPostLiveOutput('A2UI_REPLAY_MESSAGES', nextOutput);
+    } else {
+      resetLivePreviewDelivery();
+      setCurrentPreviewOutput(nextOutput);
+      setPreviewRevision((value) => value + 1);
+    }
   }, [
     adapter.preview.delivery,
     adapter.preview.merge,
@@ -910,7 +1138,13 @@ export function ChatController<
 
   const handleSend = useCallback(() => {
     const prompt = inputValue.trim();
-    if (!isReady || !prompt || busy) return;
+    const validationError = adapter.settings?.validate?.(
+      settingsRef.current,
+    );
+    if (
+      !isReady || !prompt || busy
+      || validationError !== undefined
+    ) return;
     abortOperations();
     const runId = ++runIdRef.current;
     const controller = new AbortController();
@@ -918,41 +1152,77 @@ export function ChatController<
     const previousOutput = outputRef.current;
     const userMessage: ModelChatMessage = { role: 'user', content: prompt };
     const pendingId = createMessageId(`${adapter.id}-pending`);
-    const pending = { ...adapter.transcript.pending(prompt), id: pendingId };
     const requestConversation = buildConversationContext();
     const startedAt = performance.now();
+    const pending = { ...adapter.transcript.pending(prompt), id: pendingId };
+    let interaction = appendChatInteraction(
+      { entries: [], omittedEntries: 0 },
+      'start',
+      0,
+      pending.text,
+    );
+    const recordInteraction = (event: string, data?: unknown) => {
+      if (controller.signal.aborted || runIdRef.current !== runId) return;
+      const next = appendChatInteraction(
+        interaction,
+        event,
+        performance.now() - startedAt,
+        data,
+      );
+      interaction = next;
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === pendingId ? { ...message, interaction: next } : message
+        )
+      );
+    };
 
     setInputValue('');
     setMessages((current) => [
       ...current,
       { kind: 'user', text: prompt },
-      pending,
+      { ...pending, interaction },
     ]);
     resetLivePreviewDelivery();
     setCurrentOutput(null);
-    setCurrentPreviewOutput(null);
+    setCurrentPreviewOutput(adapter.preview.initialOutput?.() ?? null);
     setCurrentPreviewPayloadUrls(null);
-    setUsage({ ...EMPTY_CHAT_TOKEN_USAGE });
     metricsRef.current = {};
     setMetrics({});
     metricsPersistenceReadyRef.current = false;
     setIsGenerating(true);
 
+    const requestSettings = settingsRef.current;
+    const turnUsage = trackTurnUsage(pendingId, requestSettings);
     void (async () => {
       try {
+        const generationSettings = adapter.settings?.conversation?.snapshot(
+          requestSettings,
+        );
+        if (generationSettings) {
+          await recordGenerationSettings(generationSettings);
+        }
+        controller.signal.throwIfAborted();
         const request = await adapter.createRequest({
           prompt,
           conversation: requestConversation,
-          settings: settingsRef.current,
+          settings: requestSettings,
           host,
           signal: controller.signal,
         });
+        adapter.settings?.validateRequest?.(requestSettings, request.url);
+        recordInteraction('request', describeChatRequest(request));
         const response = await window.fetch(
           request.url,
-          requestInit(request, controller.signal),
+          createChatRequestInit(request, controller.signal),
         );
+        recordInteraction('response', {
+          status: response.status,
+          contentType: response.headers.get('content-type'),
+        });
         if (!response.ok) {
           const payload: unknown = await response.json().catch(() => ({}));
+          turnUsage.observe(payload);
           throw new Error(adapter.stream.error(payload));
         }
         const finalOutput = await consumeResponse(
@@ -960,8 +1230,15 @@ export function ChatController<
           adapter.stream,
           {
             signal: controller.signal,
+            onEvent: (event) => {
+              recordInteraction(event.event, event.data);
+              if (runIdRef.current === runId) turnUsage.observe(event.data);
+            },
             onEmission: (emission) => {
               if (runIdRef.current !== runId) return;
+              if (emission.type === 'usage') {
+                recordInteraction('usage', emission.usage);
+              }
               handleStreamEmission(emission, pendingId);
             },
           },
@@ -969,8 +1246,16 @@ export function ChatController<
         if (controller.signal.aborted || runIdRef.current !== runId) return;
 
         setCurrentOutput(finalOutput);
+        if (
+          adapter.preview.delivery === 'live-message'
+          && previewOutputRef.current !== finalOutput
+        ) {
+          queueOrPostLiveOutput('A2UI_REPLAY_MESSAGES', finalOutput);
+        }
         setCurrentPreviewOutput(finalOutput);
-        setPreviewRevision((value) => value + 1);
+        if (adapter.preview.delivery === 'reload') {
+          setPreviewRevision((value) => value + 1);
+        }
         const nextMetrics = mergeMetrics(metricsRef.current, {
           agentOutputMs: performance.now() - startedAt,
         });
@@ -985,23 +1270,46 @@ export function ChatController<
           userMessage,
           ...persistence,
           previewMetrics: nextMetrics,
+          generationUsage: turnUsage.current(),
         });
         metricsPersistenceReadyRef.current = true;
         void updateLastAssistantPreviewMetrics(metricsRef.current);
+        recordInteraction('complete');
         setMessages((current) =>
           current.flatMap((message) =>
             message.id === pendingId
-              ? [...adapter.transcript.success(finalOutput)]
+              ? adapter.transcript.success(finalOutput).map((result, index) =>
+                index === 0
+                  ? {
+                    ...result,
+                    id: pendingId,
+                    interaction,
+                    generationUsage: turnUsage.current(),
+                  }
+                  : result
+              )
               : [message]
           )
         );
       } catch (error) {
         if (controller.signal.aborted || runIdRef.current !== runId) return;
+        recordInteraction('error', getErrorMessage(error));
+        await recordTurn({
+          userMessage,
+          assistantContent: '',
+          generationError: getErrorMessage(error),
+          generationUsage: turnUsage.current(),
+          a2uiMessages: [],
+          previewMessages: persistedPreviewMessages,
+          snapshotPreviewPayloadUrls: persistedPreviewPayloadUrls,
+        });
         setMessages((current) =>
           current.map((message) =>
             message.id === pendingId
               ? {
+                ...message,
                 ...adapter.transcript.failure(getErrorMessage(error)),
+                generationUsage: turnUsage.current(),
                 id: pendingId,
               }
               : message
@@ -1020,10 +1328,15 @@ export function ChatController<
     buildConversationContext,
     busy,
     handleStreamEmission,
+    trackTurnUsage,
+    persistedPreviewMessages,
+    persistedPreviewPayloadUrls,
     host,
     inputValue,
     isReady,
+    queueOrPostLiveOutput,
     recordTurn,
+    recordGenerationSettings,
     resetLivePreviewDelivery,
     setCurrentOutput,
     setCurrentPreviewOutput,
@@ -1054,7 +1367,6 @@ export function ChatController<
     setCurrentOutput(hydrated.output);
     setCurrentPreviewOutput(hydrated.output);
     setCurrentPreviewPayloadUrls(null);
-    setUsage({ ...EMPTY_CHAT_TOKEN_USAGE });
     metricsRef.current = hydrated.metrics ?? {};
     setMetrics(hydrated.metrics ?? {});
     metricsPersistenceReadyRef.current = false;
@@ -1190,6 +1502,21 @@ export function ChatController<
       if (generationAbortRef.current !== null) return;
       const action = actionAdapter.parseWindowMessage(event.data);
       if (action === null) return;
+      const validationError = adapter.settings?.validate?.(
+        settingsRef.current,
+      );
+      if (validationError !== undefined) {
+        setMessages((current) => [
+          ...current,
+          {
+            kind: 'status',
+            tone: 'error',
+            icon: 'error',
+            text: validationError,
+          },
+        ]);
+        return;
+      }
 
       actionAbortRef.current?.abort();
       const controller = new AbortController();
@@ -1225,20 +1552,31 @@ export function ChatController<
         },
       ]);
 
+      const requestSettings = settingsRef.current;
+      const turnUsage = trackTurnUsage(pendingId, requestSettings);
       void (async () => {
         try {
+          const generationSettings = adapter.settings?.conversation?.snapshot(
+            requestSettings,
+          );
+          if (generationSettings) {
+            await recordGenerationSettings(generationSettings);
+          }
+          controller.signal.throwIfAborted();
           const request = actionAdapter.request({
             action,
             conversation: requestConversation,
-            settings: settingsRef.current,
+            settings: requestSettings,
             host,
           });
+          adapter.settings?.validateRequest?.(requestSettings, request.url);
           const response = await window.fetch(
             request.url,
-            requestInit(request, controller.signal),
+            createChatRequestInit(request, controller.signal),
           );
           if (!response.ok) {
             const payload: unknown = await response.json().catch(() => ({}));
+            turnUsage.observe(payload);
             throw new Error(actionAdapter.stream.error(payload));
           }
           const responseOutput = await consumeResponse(
@@ -1246,11 +1584,12 @@ export function ChatController<
             actionAdapter.stream,
             {
               signal: controller.signal,
+              onEvent: (event) => {
+                if (runIdRef.current === runId) turnUsage.observe(event.data);
+              },
               onEmission: (emission) => {
                 if (runIdRef.current !== runId) return;
-                if (emission.type === 'usage') {
-                  setUsage((current) => addTokenUsage(current, emission.usage));
-                } else if (emission.type === 'previewPayload') {
+                if (emission.type === 'previewPayload') {
                   actionPreviewPayloadUrls = emission.value;
                 } else if (emission.type === 'partial') {
                   streamedResponseOutput = actionAdapter.merge(
@@ -1268,10 +1607,12 @@ export function ChatController<
                         : message
                     )
                   );
-                  queueOrPostLiveOutput(
-                    'A2UI_ACTION_RESPONSE',
-                    emission.output,
-                  );
+                  if (adapter.preview.delivery === 'live-message') {
+                    queueOrPostLiveOutput(
+                      'A2UI_ACTION_RESPONSE',
+                      emission.output,
+                    );
+                  }
                 }
               },
             },
@@ -1282,10 +1623,14 @@ export function ChatController<
             responseOutput,
           );
           setCurrentPreviewPayloadUrls(null);
-          resetLivePreviewDelivery();
           setCurrentOutput(mergedOutput);
           setCurrentPreviewOutput(mergedOutput);
-          setPreviewRevision((value) => value + 1);
+          if (adapter.preview.delivery === 'live-message') {
+            queueOrPostLiveOutput('A2UI_REPLAY_MESSAGES', mergedOutput);
+          } else {
+            resetLivePreviewDelivery();
+            setPreviewRevision((value) => value + 1);
+          }
           const nextMetrics = mergeMetrics(metricsRef.current, {
             agentOutputMs: performance.now() - startedAt,
           });
@@ -1300,6 +1645,7 @@ export function ChatController<
             userMessage,
             ...persistence,
             previewMetrics: nextMetrics,
+            generationUsage: turnUsage.current(),
           });
           metricsPersistenceReadyRef.current = true;
           void updateLastAssistantPreviewMetrics(metricsRef.current);
@@ -1310,6 +1656,7 @@ export function ChatController<
                   id: pendingId,
                   kind: 'output' as const,
                   text: 'LLM Response',
+                  generationUsage: turnUsage.current(),
                   payload: responseOutput,
                   payloadLayout: 'chunks' as const,
                 }]
@@ -1319,6 +1666,15 @@ export function ChatController<
         } catch (error) {
           if (controller.signal.aborted || runIdRef.current !== runId) return;
           metricsPersistenceReadyRef.current = true;
+          await recordTurn({
+            userMessage,
+            assistantContent: '',
+            generationError: `Action failed: ${getErrorMessage(error)}`,
+            generationUsage: turnUsage.current(),
+            a2uiMessages: [],
+            previewMessages: persistedPreviewMessages,
+            snapshotPreviewPayloadUrls: persistedPreviewPayloadUrls,
+          });
           setMessages((current) =>
             current.map((message) =>
               message.id === pendingId
@@ -1328,6 +1684,7 @@ export function ChatController<
                   tone: 'error',
                   icon: 'error',
                   text: `Action failed: ${getErrorMessage(error)}`,
+                  generationUsage: turnUsage.current(),
                 }
                 : message
             )
@@ -1346,8 +1703,12 @@ export function ChatController<
   }, [
     adapter,
     buildConversationContext,
+    trackTurnUsage,
+    persistedPreviewMessages,
+    persistedPreviewPayloadUrls,
     host,
     queueOrPostLiveOutput,
+    recordGenerationSettings,
     recordTurn,
     resetLivePreviewDelivery,
     setCurrentOutput,
@@ -1361,7 +1722,10 @@ export function ChatController<
     item.kind === 'select'
   );
   const fieldControls = settingsControls.filter((item) =>
-    item.kind !== 'select'
+    item.kind === 'text' || item.kind === 'password'
+  );
+  const checkboxControls = settingsControls.filter((item) =>
+    item.kind === 'checkbox'
   );
   const updateSetting = (id: string, value: string) => {
     const settingsAdapter = adapter.settings;
@@ -1439,6 +1803,7 @@ export function ChatController<
         disabled: !isReady || busy,
         isPersistent,
         onCreate: handleCreateConversation,
+        onClear: () => void clearAll(),
         onSwitch: handleSwitchConversation,
         onShare: (id) => void shareConversation(id),
         onRename: handleRenameConversation,
@@ -1469,21 +1834,6 @@ export function ChatController<
                   Browse examples
                 </button>
               )}
-            {usage.totalTokens > 0
-              ? (
-                <span className='chatTokenUsageBadge'>
-                  <span className='chatTokenUsageItem'>
-                    Prompt {formatTokenCount(usage.promptTokens)}
-                  </span>
-                  <span className='chatTokenUsageItem'>
-                    Output {formatTokenCount(usage.completionTokens)}
-                  </span>
-                  <span className='chatTokenUsageItem chatTokenUsageTotal'>
-                    Total {formatTokenCount(usage.totalTokens)}
-                  </span>
-                </span>
-              )
-              : null}
           </>
         ),
       }}
@@ -1564,6 +1914,20 @@ export function ChatController<
               </>
             )
             : null}
+          <aside className='chatPrivacyNotice' aria-label='Privacy notice'>
+            <TriangleAlert
+              className='chatPrivacyNoticeIcon'
+              size={16}
+              strokeWidth={2}
+              aria-hidden='true'
+            />
+            <p className='chatPrivacyNoticeText'>
+              <strong>Privacy notice:</strong>{' '}
+              Conversations in this playground are public and will be
+              transmitted to mainland China for processing. Do not include
+              personal, confidential, or sensitive information.
+            </p>
+          </aside>
           <div className='chatComposer'>
             <textarea
               className='chatInput'
@@ -1586,9 +1950,18 @@ export function ChatController<
                         : 'chatProviderInputField'}
                       aria-label={control.label}
                       type={control.kind}
+                      autoComplete={control.kind === 'password'
+                        ? 'off'
+                        : undefined}
                       placeholder={control.placeholder}
                       value={control.value}
-                      disabled={busy}
+                      disabled={busy || control.disabled}
+                      aria-invalid={settingsValidationError !== undefined
+                        && control.value.trim().length === 0}
+                      aria-describedby={settingsValidationError
+                          && control.value.trim().length === 0
+                        ? 'chatProviderValidationError'
+                        : undefined}
                       onChange={(event) =>
                         updateSetting(control.id, event.target.value)}
                     />
@@ -1596,15 +1969,31 @@ export function ChatController<
                 </div>
               )
               : null}
+            {settingsValidationError
+              ? (
+                <p
+                  id='chatProviderValidationError'
+                  className='chatProviderValidation'
+                  role='alert'
+                >
+                  {settingsValidationError}
+                </p>
+              )
+              : null}
             <div className='chatComposerFooter'>
-              <div className='chatProviderControl'>
+              <div
+                className={checkboxControls.length > 1
+                  ? 'chatProviderControl chatProviderControlWrap'
+                  : 'chatProviderControl'}
+              >
                 {selectControls.map((control) => (
                   <select
                     key={control.id}
                     className='chatProviderSelect'
+                    title={control.label}
                     aria-label={control.label}
                     value={control.value}
-                    disabled={busy}
+                    disabled={busy || control.disabled}
                     onChange={(event) =>
                       updateSetting(control.id, event.target.value)}
                   >
@@ -1615,12 +2004,29 @@ export function ChatController<
                     ))}
                   </select>
                 ))}
+                {checkboxControls.map((control) => (
+                  <label key={control.id} className='chatProviderCheckbox'>
+                    <input
+                      type='checkbox'
+                      checked={control.value === 'on'}
+                      disabled={busy || control.disabled}
+                      onChange={(event) =>
+                        updateSetting(
+                          control.id,
+                          event.target.checked ? 'on' : 'off',
+                        )}
+                    />
+                    <span>{control.label}</span>
+                  </label>
+                ))}
               </div>
               <Button
                 variant='primary'
                 size='lg'
                 iconBefore={Send}
-                disabled={!isReady || busy || inputValue.trim().length === 0}
+                disabled={!isReady || busy || inputValue.trim().length === 0
+                  || settingsValidationError !== undefined}
+                title={settingsValidationError}
                 onClick={handleSend}
               >
                 {isGenerating ? 'Generating' : 'Send'}
@@ -1636,7 +2042,7 @@ export function ChatController<
         onPointerDown: handlePanelResizeStart,
       }}
       preview={{
-        title: 'Lynx Preview',
+        title: protocol.name === 'html' ? 'Web Preview' : 'Lynx Preview',
         showPreviewModeSwitch: true,
         showSimulationBar: false,
         previewSource,
@@ -1645,9 +2051,10 @@ export function ChatController<
         onPreviewMetric: handlePreviewMetric,
         children: (
           <PreviewViewport
-            key={adapter.preview.delivery === 'reload'
-              ? previewRevision
-              : undefined}
+            key={previewRevision}
+            iframeTitle={protocol.name === 'html'
+              ? 'Generated HTML preview'
+              : 'Lynx preview'}
             iframeRef={previewFrameRef}
             onLoad={handlePreviewFrameLoad}
             retainPreviousFrame

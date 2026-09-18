@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 import {
   CHAT_PROVIDER_SETTINGS_ADAPTER,
-  filterProviderRequestOptionsForEndpoint,
   getChatEndpoint,
   parseTokenUsage,
   toProviderRequestOptions,
@@ -154,10 +153,22 @@ function buildMessagesFromHistory(
       continue;
     }
     if (message.role !== 'assistant') continue;
+    if (message.generationError) {
+      messages.push({
+        kind: 'status',
+        tone: 'error',
+        text: message.generationError,
+        generationUsage: message.generationUsage,
+      });
+      continue;
+    }
     messages.push(
-      previousScenarioTitle
-        ? createLoadedScenarioStatus(previousScenarioTitle)
-        : createGeneratedStatus(),
+      {
+        ...(previousScenarioTitle
+          ? createLoadedScenarioStatus(previousScenarioTitle)
+          : createGeneratedStatus()),
+        generationUsage: message.generationUsage,
+      },
     );
     previousScenarioTitle = null;
   }
@@ -211,12 +222,8 @@ function createOpenUIRequest(
   settings: ProviderSettings,
   host: ChatHost,
 ): ChatHttpRequest {
-  const endpoint = getChatEndpoint('openui', host);
-  const providerOptions = filterProviderRequestOptionsForEndpoint(
-    toProviderRequestOptions(settings),
-    endpoint,
-    host,
-  );
+  const endpoint = getChatEndpoint('openui', host, settings);
+  const providerOptions = toProviderRequestOptions(settings);
   return {
     url: endpoint,
     method: 'POST' as const,

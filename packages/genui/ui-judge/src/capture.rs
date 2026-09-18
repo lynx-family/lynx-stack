@@ -1,0 +1,473 @@
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
+//! The bounded queue for the thread that owns native Lynx capture.
+//!
+//! `LynxContainer` and its pages are blocking and bound to their creating
+//! thread. The process therefore keeps one dedicated owner thread and moves
+//! concurrency to request handling and image comparison. Callers hand a job
+//! to the bounded queue and await one reply.
+
+use std::io;
+use std::panic::{catch_unwind, resume_unwind, AssertUnwindSafe};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::{self, Receiver, SyncSender, TrySendError};
+use std::sync::{Arc, Mutex, OnceLock};
+use std::thread::{self, JoinHandle};
+
+use lynx_headless_rust_test_runner::{ContainerOptions, LynxContainer};
+use thiserror::Error;
+use tokio::sync::{oneshot, OwnedSemaphorePermit, Semaphore};
+
+use crate::headless::{capture_with_container, CapturedPage, PageLoadOptions};
+use crate::{CapturePageError, CapturePageRequest};
+
+/// Native Lynx currently permits one process-wide owner thread.
+const NATIVE_CAPTURE_WORKERS: usize = 1;
+/// Jobs that may wait for a free worker before callers are told to retry.
+const MAX_QUEUED_CAPTURES: usize = 8;
+
+#[derive(Debug, Error)]
+pub(crate) enum CaptureError {
+  #[error("The UI Judge capture queue wait timed out.")]
+  TimedOut,
+  #[error("The UI Judge headless worker is unavailable.")]
+  Unavailable,
+  #[error("The UI Judge headless worker is shutting down.")]
+  ShuttingDown,
+  #[error("The UI Judge headless worker stopped before returning a result.")]
+  Stopped,
+}
+
+#[derive(Debug, Error)]
+#[error("UI Judge headless worker panicked")]
+pub(crate) struct WorkerPanicked;
+
+pub(crate) struct CaptureJob {
+  pub(crate) load_options: PageLoadOptions,
+  pub(crate) request: CapturePageRequest,
+  _resources: CaptureResources,
+  queue_slot: Option<OwnedSemaphorePermit>,
+  pub(crate) response: oneshot::Sender<CaptureResponse>,
+}
+
+impl CaptureJob {
+  pub(crate) fn release_queue_slot(&mut self) {
+    drop(self.queue_slot.take());
+  }
+}
+
+#[derive(Default)]
+struct CaptureResources {
+  // The extracted tree must outlive queued and active native work. Keeping its
+  // owner in the job also makes cancellation and queue purging clean it up.
+  #[cfg(all(feature = "server", test))]
+  _staged_zip: Option<crate::server::zip::ExtractedZip>,
+}
+
+impl CaptureResources {
+  #[cfg(all(feature = "server", test))]
+  fn staged_zip(staged_zip: crate::server::zip::ExtractedZip) -> Self {
+    Self {
+      _staged_zip: Some(staged_zip),
+    }
+  }
+}
+
+pub(crate) struct CaptureResponse {
+  pub(crate) capture: Result<CapturedPage, CapturePageError>,
+}
+
+/// Container-owning worker threads behind a bounded queue.
+///
+/// Production always creates exactly one native worker. Tests may inject mock
+/// workers through `with_worker_main` without touching native Lynx.
+pub(crate) struct CaptureWorkers {
+  failure_receiver: Mutex<Option<oneshot::Receiver<()>>>,
+  healthy: Arc<AtomicBool>,
+  #[cfg(test)]
+  jobs: Arc<Mutex<Receiver<CaptureJob>>>,
+  sender: Arc<Mutex<Option<SyncSender<CaptureJob>>>>,
+  queue_slots: Arc<Semaphore>,
+  workers: Mutex<Vec<JoinHandle<()>>>,
+}
+
+impl CaptureWorkers {
+  fn new() -> io::Result<Self> {
+    Self::with_worker_main(NATIVE_CAPTURE_WORKERS, run_capture_worker)
+  }
+
+  /// Starts `worker_count` threads running `worker_main`.
+  ///
+  /// Tests substitute a deterministic `worker_main` so the HTTP layer can be
+  /// exercised without a native runtime.
+  pub(crate) fn with_worker_main<F>(worker_count: usize, worker_main: F) -> io::Result<Self>
+  where
+    F: Fn(Arc<Mutex<Receiver<CaptureJob>>>) + Clone + Send + 'static,
+  {
+    let (sender, receiver) = mpsc::sync_channel(MAX_QUEUED_CAPTURES);
+    let receiver = Arc::new(Mutex::new(receiver));
+    let sender = Arc::new(Mutex::new(Some(sender)));
+    let queue_slots = Arc::new(Semaphore::new(MAX_QUEUED_CAPTURES));
+    let (failure_sender, failure_receiver) = oneshot::channel();
+    let failure_sender = Arc::new(Mutex::new(Some(failure_sender)));
+    let healthy = Arc::new(AtomicBool::new(true));
+
+    let mut workers = Vec::with_capacity(worker_count);
+    for index in 0..worker_count {
+      let receiver = Arc::clone(&receiver);
+      let worker_main = worker_main.clone();
+      let worker_healthy = Arc::clone(&healthy);
+      let failure_sender = Arc::clone(&failure_sender);
+      let worker_sender = Arc::clone(&sender);
+      let worker_queue_slots = Arc::clone(&queue_slots);
+      workers.push(
+        thread::Builder::new()
+          .name(format!("ui-judge-headless-{index}"))
+          .spawn(move || {
+            let result = catch_unwind(AssertUnwindSafe(|| worker_main(Arc::clone(&receiver))));
+            if let Err(payload) = result {
+              // One dead container leaves the process without a reliable
+              // native owner. Stop admission and release every queued waiter
+              // before asking the HTTP server to drain.
+              worker_healthy.store(false, Ordering::Release);
+              worker_queue_slots.close();
+              close_and_discard_queue(&worker_sender, &receiver);
+              if let Some(sender) = failure_sender
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .take()
+              {
+                let _ = sender.send(());
+              }
+              resume_unwind(payload);
+            }
+          })?,
+      );
+    }
+
+    Ok(Self {
+      failure_receiver: Mutex::new(Some(failure_receiver)),
+      healthy,
+      #[cfg(test)]
+      jobs: Arc::clone(&receiver),
+      sender,
+      queue_slots,
+      workers: Mutex::new(workers),
+    })
+  }
+
+  pub(crate) fn take_failure_receiver(&self) -> Result<oneshot::Receiver<()>, CaptureError> {
+    if !self.is_healthy() {
+      return Err(CaptureError::Unavailable);
+    }
+    self
+      .failure_receiver
+      .lock()
+      .unwrap_or_else(|poisoned| poisoned.into_inner())
+      .take()
+      .ok_or(CaptureError::Unavailable)
+  }
+
+  pub(crate) fn is_healthy(&self) -> bool {
+    self.healthy.load(Ordering::Acquire)
+  }
+
+  /// Waits for bounded queue capacity, enqueues a capture, and returns the
+  /// channel its worker will reply on. HTTP request futures provide the
+  /// backpressure; any eager load shedding belongs at the middleware layer.
+  pub(crate) async fn submit(
+    &self,
+    request: CapturePageRequest,
+    load_options: PageLoadOptions,
+  ) -> Result<oneshot::Receiver<CaptureResponse>, CaptureError> {
+    self
+      .submit_with_resources(request, load_options, CaptureResources::default())
+      .await
+  }
+
+  async fn submit_with_resources(
+    &self,
+    request: CapturePageRequest,
+    load_options: PageLoadOptions,
+    resources: CaptureResources,
+  ) -> Result<oneshot::Receiver<CaptureResponse>, CaptureError> {
+    let queue_slot = match tokio::time::timeout(
+      request.timeout,
+      Arc::clone(&self.queue_slots).acquire_owned(),
+    )
+    .await
+    {
+      Ok(Ok(queue_slot)) => queue_slot,
+      Ok(Err(_)) => return Err(CaptureError::ShuttingDown),
+      Err(_) => return Err(CaptureError::TimedOut),
+    };
+    let (response, response_receiver) = oneshot::channel();
+    let job = CaptureJob {
+      load_options,
+      request,
+      _resources: resources,
+      queue_slot: Some(queue_slot),
+      response,
+    };
+    let sender = self
+      .sender
+      .lock()
+      .unwrap_or_else(|poisoned| poisoned.into_inner());
+    let Some(sender) = sender.as_ref() else {
+      return Err(CaptureError::ShuttingDown);
+    };
+    match sender.try_send(job) {
+      Ok(()) => Ok(response_receiver),
+      // Every queued job owns one slot, and the worker releases that slot as
+      // soon as it dequeues the job. Acquiring a slot therefore guarantees
+      // space in this channel.
+      Err(TrySendError::Full(_)) => Err(CaptureError::Unavailable),
+      Err(TrySendError::Disconnected(_)) => Err(CaptureError::Unavailable),
+    }
+  }
+
+  pub(crate) async fn capture(
+    &self,
+    request: CapturePageRequest,
+    load_options: PageLoadOptions,
+  ) -> Result<CaptureResponse, CaptureError> {
+    self
+      .submit(request, load_options)
+      .await?
+      .await
+      .map_err(|_| CaptureError::Stopped)
+  }
+
+  #[cfg(all(feature = "server", test))]
+  pub(crate) async fn capture_staged_zip(
+    &self,
+    request: CapturePageRequest,
+    load_options: PageLoadOptions,
+    staged_zip: crate::server::zip::ExtractedZip,
+  ) -> Result<CaptureResponse, CaptureError> {
+    self
+      .submit_with_resources(
+        request,
+        load_options,
+        CaptureResources::staged_zip(staged_zip),
+      )
+      .await?
+      .await
+      .map_err(|_| CaptureError::Stopped)
+  }
+
+  pub(crate) fn shutdown(&self) -> Result<(), WorkerPanicked> {
+    // Closing the only sender lets every worker drain and exit.
+    self.healthy.store(false, Ordering::Release);
+    self.queue_slots.close();
+    let sender = self
+      .sender
+      .lock()
+      .unwrap_or_else(|poisoned| poisoned.into_inner())
+      .take();
+    drop(sender);
+    let workers = std::mem::take(
+      &mut *self
+        .workers
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner()),
+    );
+    let mut panicked = false;
+    for worker in workers {
+      panicked |= worker.join().is_err();
+    }
+    if panicked {
+      Err(WorkerPanicked)
+    } else {
+      Ok(())
+    }
+  }
+}
+
+fn close_and_discard_queue(
+  sender: &Mutex<Option<SyncSender<CaptureJob>>>,
+  jobs: &Mutex<Receiver<CaptureJob>>,
+) {
+  let sender = sender
+    .lock()
+    .unwrap_or_else(|poisoned| poisoned.into_inner())
+    .take();
+  drop(sender);
+  let jobs = jobs.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+  while jobs.try_recv().is_ok() {}
+}
+
+impl Drop for CaptureWorkers {
+  fn drop(&mut self) {
+    let _ = self.shutdown();
+  }
+}
+
+/// The process-wide capture worker used by the library and HTTP server.
+pub(crate) fn shared_workers() -> Result<Arc<CaptureWorkers>, String> {
+  static WORKERS: OnceLock<Result<Arc<CaptureWorkers>, String>> = OnceLock::new();
+  WORKERS
+    .get_or_init(|| {
+      CaptureWorkers::new()
+        .map(Arc::new)
+        .map_err(|error| format!("failed to start the UI Judge headless worker: {error}"))
+    })
+    .as_ref()
+    .map(Arc::clone)
+    .map_err(Clone::clone)
+}
+
+fn run_capture_worker(jobs: Arc<Mutex<Receiver<CaptureJob>>>) {
+  // The container is created on the first real job so an idle worker never
+  // loads the native runtime, and it is reused for every later job.
+  let mut container: Option<LynxContainer> = None;
+  loop {
+    let job = {
+      let jobs = jobs.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+      jobs.recv()
+    };
+    let Ok(mut job) = job else { return };
+    job.release_queue_slot();
+    if job.response.is_closed() {
+      continue;
+    }
+    let capture = match container_for(&mut container, &job) {
+      Ok(container) => capture_with_container(container, &job.request, &job.load_options),
+      Err(result) => Err(result),
+    };
+    let _ = job.response.send(CaptureResponse { capture });
+  }
+}
+
+fn container_for<'a>(
+  container: &'a mut Option<LynxContainer>,
+  job: &CaptureJob,
+) -> Result<&'a LynxContainer, CapturePageError> {
+  if container.is_none() {
+    let created = LynxContainer::new(ContainerOptions {
+      timeout: job.request.timeout,
+      ..ContainerOptions::default()
+    })
+    .map_err(|error| crate::headless::page_request_error(error.to_string()))?;
+    *container = Some(created);
+  }
+  Ok(container.as_ref().expect("the container was just created"))
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  fn assert_send_sync<T: Send + Sync>() {}
+
+  #[test]
+  fn the_pool_handle_can_be_shared_across_request_tasks() {
+    assert_send_sync::<CaptureWorkers>();
+  }
+
+  #[tokio::test]
+  async fn a_full_queue_waits_until_the_request_timeout() {
+    // A pool with no workers never dequeues, so the queue reaches exactly its
+    // bound and the next submission waits asynchronously for capacity.
+    let workers = CaptureWorkers::with_worker_main(0, |_jobs| unreachable!())
+      .expect("start a pool with no workers");
+
+    let mut accepted = Vec::with_capacity(MAX_QUEUED_CAPTURES);
+    for _ in 0..MAX_QUEUED_CAPTURES {
+      accepted.push(
+        workers
+          .submit(
+            request("file:///tmp/queued.lynx.bundle"),
+            PageLoadOptions::default(),
+          )
+          .await
+          .expect("the queue must accept this job"),
+      );
+    }
+    let mut overflow_request = request("file:///tmp/overflow.lynx.bundle");
+    overflow_request.timeout = std::time::Duration::from_millis(1);
+    let overflow = workers
+      .submit(overflow_request, PageLoadOptions::default())
+      .await;
+
+    assert_eq!(accepted.len(), MAX_QUEUED_CAPTURES);
+    assert!(matches!(overflow, Err(CaptureError::TimedOut)));
+    workers.shutdown().expect("stop the idle pool");
+  }
+
+  #[tokio::test]
+  async fn a_waiting_request_is_enqueued_when_the_owner_dequeues() {
+    let workers = Arc::new(
+      CaptureWorkers::with_worker_main(0, |_jobs| unreachable!())
+        .expect("start a pool with no workers"),
+    );
+    let mut accepted = Vec::with_capacity(MAX_QUEUED_CAPTURES);
+    for _ in 0..MAX_QUEUED_CAPTURES {
+      accepted.push(
+        workers
+          .submit(
+            request("file:///tmp/queued.lynx.bundle"),
+            PageLoadOptions::default(),
+          )
+          .await
+          .expect("fill the capture queue"),
+      );
+    }
+
+    let waiting_workers = Arc::clone(&workers);
+    let waiting = tokio::spawn(async move {
+      waiting_workers
+        .submit(
+          request("file:///tmp/waiting.lynx.bundle"),
+          PageLoadOptions::default(),
+        )
+        .await
+    });
+    tokio::task::yield_now().await;
+    assert!(!waiting.is_finished());
+
+    let mut dequeued = workers
+      .jobs
+      .lock()
+      .unwrap_or_else(|poisoned| poisoned.into_inner())
+      .try_recv()
+      .expect("dequeue one capture");
+    dequeued.release_queue_slot();
+    drop(dequeued);
+    let replacement = waiting
+      .await
+      .expect("join the waiting request")
+      .expect("enqueue after capacity is available");
+    drop(replacement);
+    drop(accepted);
+    workers.shutdown().expect("stop the idle pool");
+  }
+
+  #[tokio::test]
+  async fn a_shut_down_pool_reports_that_it_is_no_longer_accepting_work() {
+    let workers =
+      CaptureWorkers::with_worker_main(0, |_jobs| unreachable!()).expect("start an idle pool");
+    workers.shutdown().expect("stop the idle pool");
+
+    let error = match workers
+      .capture(
+        request("file:///tmp/late.lynx.bundle"),
+        PageLoadOptions::default(),
+      )
+      .await
+    {
+      Err(error) => error,
+      Ok(_) => panic!("a shut down pool must reject new work"),
+    };
+    assert!(matches!(error, CaptureError::ShuttingDown), "got {error:?}");
+  }
+
+  fn request(url: &str) -> CapturePageRequest {
+    CapturePageRequest {
+      url: url.into(),
+      ..Default::default()
+    }
+  }
+}

@@ -77,6 +77,7 @@ export const initElementTree: () => {
     __CreateList(parentComponentUniqueId: number, componentAtIndex: any, enqueueComponent: any): LynxElement;
     __GetTag(ele: LynxElement): string;
     __GetAttributeByName(ele: LynxElement, name: string): string | null;
+    __GetAttributeNames(ele: LynxElement): string[];
     __GetComputedStyleByKey(ele: LynxElement, key: string): string;
     animationMap: Map<string, {
         element: LynxElement;

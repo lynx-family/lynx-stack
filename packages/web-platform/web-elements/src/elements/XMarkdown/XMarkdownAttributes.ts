@@ -3,7 +3,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import type MarkdownIt from 'markdown-it';
+// markdown-it 15 ships its own types: the default export is the callable
+// factory and the instance type is a named `MarkdownIt` export, so the two
+// cannot come from one `import type` (TS1363).
+import type MarkdownItCallable from 'markdown-it';
+import type { MarkdownIt } from 'markdown-it';
 import type createDOMPurify from 'dompurify';
 import {
   boostedQueueMicrotask,
@@ -12,7 +16,7 @@ import {
 } from '../../element-reactive/index.js';
 import type { XMarkdown } from './XMarkdown.js';
 
-type MarkdownItCtor = typeof MarkdownIt;
+type MarkdownItCtor = typeof MarkdownItCallable;
 type DOMPurifyCtor = typeof createDOMPurify;
 
 let MarkdownItLoaded: MarkdownItCtor | undefined;

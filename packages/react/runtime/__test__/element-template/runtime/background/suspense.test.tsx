@@ -41,31 +41,42 @@ interface ParsedCreateTemplateOp {
   templateKey: string;
   bundleUrl: string | null | undefined;
   attributeSlots: SerializableValue[] | null | undefined;
-  elementSlots: number[][] | null | undefined;
+  childSlots: number[][] | null | undefined;
 }
 
 interface ParsedInsertNodeOp {
   op: 'insertNode';
   targetId: number;
-  elementSlotIndex: number;
+  childSlotIndex: number;
   childId: number;
   referenceId: number;
+  attachedSubtreeHandleIds: number[] | null;
 }
 
 interface ParsedRemoveNodeOp {
   op: 'removeNode';
   targetId: number;
-  elementSlotIndex: number;
+  childSlotIndex: number;
   childId: number;
   removedSubtreeHandleIds: number[];
 }
 
-type ParsedOp = ParsedCreateTemplateOp | ParsedInsertNodeOp | ParsedRemoveNodeOp | {
-  op: 'setAttribute';
-  targetId: number;
-  attrSlotIndex: number;
-  value: SerializableValue | null;
-};
+type ParsedOp =
+  | ParsedCreateTemplateOp
+  | ParsedInsertNodeOp
+  | ParsedRemoveNodeOp
+  | {
+    op: 'setAttribute';
+    targetId: number;
+    attrSlotIndex: number;
+    value: SerializableValue | null;
+  }
+  | {
+    op: 'setMainThreadEvent' | 'setMainThreadRef';
+    targetId: number;
+    attrSlotIndex: number;
+    value: SerializableValue | null;
+  };
 
 function createDeferred<T>(): Deferred<T> {
   let resolve: Deferred<T>['resolve'];
@@ -172,7 +183,7 @@ function findMarkerElementByValue(
 }
 
 function getSlotChildren(host: BackgroundElementTemplateInstance): BackgroundElementTemplateInstance[] {
-  return host.elementSlots[0] ?? [];
+  return host.childSlots[0] ?? [];
 }
 
 function markTreeMaterializedByHydration(instance: BackgroundElementTemplateInstance): void {
@@ -195,19 +206,31 @@ function parseUpdateOps(stream: ElementTemplateUpdateCommandStream): ParsedOp[] 
   while (i < stream.length) {
     const op = stream[i++] as number;
     switch (op) {
-      case ElementTemplateUpdateOps.createTemplate:
+      case ElementTemplateUpdateOps.createTemplate: {
         parsed.push({
           op: 'createTemplate',
           handleId: stream[i++] as number,
           templateKey: stream[i++] as string,
           bundleUrl: stream[i++] as string | null | undefined,
           attributeSlots: stream[i++] as SerializableValue[] | null | undefined,
-          elementSlots: stream[i++] as number[][] | null | undefined,
+          childSlots: stream[i++] as number[][] | null | undefined,
         });
         break;
+      }
       case ElementTemplateUpdateOps.setAttribute:
         parsed.push({
           op: 'setAttribute',
+          targetId: stream[i++] as number,
+          attrSlotIndex: stream[i++] as number,
+          value: stream[i++] as SerializableValue | null,
+        });
+        break;
+      case ElementTemplateUpdateOps.setMainThreadEvent:
+      case ElementTemplateUpdateOps.setMainThreadRef:
+        parsed.push({
+          op: op === ElementTemplateUpdateOps.setMainThreadEvent
+            ? 'setMainThreadEvent'
+            : 'setMainThreadRef',
           targetId: stream[i++] as number,
           attrSlotIndex: stream[i++] as number,
           value: stream[i++] as SerializableValue | null,
@@ -217,16 +240,17 @@ function parseUpdateOps(stream: ElementTemplateUpdateCommandStream): ParsedOp[] 
         parsed.push({
           op: 'insertNode',
           targetId: stream[i++] as number,
-          elementSlotIndex: stream[i++] as number,
+          childSlotIndex: stream[i++] as number,
           childId: stream[i++] as number,
           referenceId: stream[i++] as number,
+          attachedSubtreeHandleIds: stream[i++] as number[],
         });
         break;
       case ElementTemplateUpdateOps.removeNode:
         parsed.push({
           op: 'removeNode',
           targetId: stream[i++] as number,
-          elementSlotIndex: stream[i++] as number,
+          childSlotIndex: stream[i++] as number,
           childId: stream[i++] as number,
           removedSubtreeHandleIds: stream[i++] as number[],
         });
@@ -349,9 +373,10 @@ describe('ElementTemplate Suspense background lifecycle', () => {
     expect(ops).toContainEqual({
       op: 'insertNode',
       targetId: host.instanceId,
-      elementSlotIndex: 0,
+      childSlotIndex: 0,
       childId: loaded.instanceId,
       referenceId: after.instanceId,
+      attachedSubtreeHandleIds: null,
     });
     expect(ops.filter(op => op.op === 'removeNode')).toEqual([]);
     envManager.switchToBackground();
@@ -770,7 +795,7 @@ describe('ElementTemplate Suspense background lifecycle', () => {
     const lynxWithQuery = lynx as typeof lynx & {
       QueryComponent?: (source: string, callback: QueryComponentCallback) => void;
     };
-    const ttWithDynamic = lynxCoreInject.tt as typeof lynxCoreInject.tt & {
+    const ttWithDynamic = lynx.getApp() as LynxApp & {
       getDynamicComponentExports?: (schema: string) => { default: ComponentType<Record<string, never>> } | undefined;
     };
     const originalQueryComponent = lynxWithQuery.QueryComponent;
@@ -852,7 +877,7 @@ describe('ElementTemplate Suspense background lifecycle', () => {
     const lynxWithQuery = lynx as typeof lynx & {
       QueryComponent?: (source: string, callback: QueryComponentCallback) => void;
     };
-    const ttWithDynamic = lynxCoreInject.tt as typeof lynxCoreInject.tt & {
+    const ttWithDynamic = lynx.getApp() as LynxApp & {
       getDynamicComponentExports?: (schema: string) => { default: ComponentType<Record<string, never>> } | undefined;
     };
     const originalQueryComponent = lynxWithQuery.QueryComponent;

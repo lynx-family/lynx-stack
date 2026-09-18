@@ -1,0 +1,22 @@
+{
+  "name": "@lynx-js/react",
+  "version": "0.123.0",
+  "type": "module",
+  "exports": {
+    ".": "./empty.js",
+    "./compat": "./empty.js",
+    "./experimental/lazy/import": "./empty.js",
+    "./hooks": "./empty.js",
+    "./internal": "./empty.js",
+    "./jsx-dev-runtime": "./empty.js",
+    "./jsx-runtime": "./empty.js",
+    "./legacy-react-runtime": "./empty.js",
+    "./lepus": "./empty.js",
+    "./lepus/hooks": "./empty.js",
+    "./lepus/jsx-dev-runtime": "./empty.js",
+    "./lepus/jsx-runtime": "./empty.js",
+    "./package.json": "./package.json",
+    "./runtime-components": "./empty.js",
+    "./worklet-runtime/bindings": "./empty.js"
+  }
+}

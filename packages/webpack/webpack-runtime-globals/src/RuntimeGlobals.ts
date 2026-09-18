@@ -9,7 +9,7 @@
  */
 export const RuntimeGlobals = {
   /**
-   * An array of all the async chunk ids.
+   * A map from async `chunk.id` to the lazy-bundle URL it loads from.
    */
   lynxAsyncChunkIds: '__webpack_require__.lynx_aci',
 
@@ -24,6 +24,11 @@ export const RuntimeGlobals = {
    * A map from `chunk.id` to entryName of the chunk.
    */
   lynxChunkEntries: 'lynx.__chunk_entries__',
+
+  /**
+   * Runtime-readable build configuration.
+   */
+  lynxRuntimeConfig: 'lynx.__runtime_configs__',
 
   /**
    * A function to process the eval result of a lazy bundle.

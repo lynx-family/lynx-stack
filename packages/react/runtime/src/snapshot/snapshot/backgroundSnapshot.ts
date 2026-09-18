@@ -16,7 +16,7 @@ import { DynamicPartType } from './dynamicPartType.js';
 import { getListItemPlatformInfoFromIndexedValue } from './platformInfo.js';
 import type { PlatformInfo } from './platformInfo.js';
 import { reconstructInstanceTree } from './reconstructInstanceTree.js';
-import { clearQueuedRefs, clearRef, getRefFromValue, queueRefAttrUpdate } from './ref.js';
+import { clearQueuedRefs, getRefFromValue, queueRefAttrUpdate } from './ref.js';
 import type { Ref } from './ref.js';
 import { snapshotCreatorMap } from './snapshot.js';
 import { snapshotCreatorRuntime } from './snapshotCreatorMap.js';
@@ -204,6 +204,12 @@ export class BackgroundSnapshotInstance {
   //   return child.parentNode === this;
   // }
 
+  // Preact 11's `removeNode` calls `node.remove()` instead of
+  // `parentNode.removeChild(node)`.
+  remove(): void {
+    this.parentNode?.removeChild(this);
+  }
+
   // This will be called in `lazy`/`Suspense`.
   appendChild(child: BackgroundSnapshotInstance): void {
     return this.insertBefore(child);
@@ -299,27 +305,16 @@ export class BackgroundSnapshotInstance {
     node.__previousSibling = null;
     node.__nextSibling = null;
 
-    queueRefAttrUpdate(
-      () => {
-        traverseSnapshotInstance(node, v => {
-          if (v.__values) {
-            v.__snapshot_def.refAndSpreadIndexes?.forEach((i) => {
-              const value = v.__values![i];
-              if (value && (typeof value === 'object' || typeof value === 'function')) {
-                if ('__spread' in value && 'ref' in value && value.ref) {
-                  clearRef(value.ref as Ref);
-                } else if ('__ref' in value) {
-                  clearRef(value as Ref);
-                }
-              }
-            });
+    traverseSnapshotInstance(node, instance => {
+      if (instance.__values) {
+        instance.__snapshot_def.refAndSpreadIndexes?.forEach(index => {
+          const ref = getRefFromValue(instance.__values![index]);
+          if (ref) {
+            queueRefAttrUpdate(ref, null, instance, index);
           }
         });
-      },
-      null,
-      0,
-      0,
-    );
+      }
+    });
 
     globalBackgroundSnapshotInstancesToRemove.push(node.__id);
   }
@@ -385,7 +380,7 @@ export class BackgroundSnapshotInstance {
           // In next rerenders before hydration, this.__values is not undefined.
           const oldValue: unknown = this.__values?.[index];
           const v = (value as unknown[])[index];
-          queueRefAttrUpdate(getRefFromValue(oldValue), getRefFromValue(v), this.__id, index);
+          queueRefAttrUpdate(getRefFromValue(oldValue), getRefFromValue(v), this, index);
         });
       }
       this.__values = value as unknown[];
@@ -446,9 +441,9 @@ export class BackgroundSnapshotInstance {
     valueToCommit: unknown;
   } {
     if (!newValue) {
-      // `oldValue` can't be a spread.
-      if (oldValue && typeof oldValue === 'object' && '__ref' in oldValue) {
-        queueRefAttrUpdate(oldValue as Ref, null, this.__id, index);
+      const oldRef = getRefFromValue(oldValue);
+      if (oldRef) {
+        queueRefAttrUpdate(oldRef, null, this, index);
       }
       return { needUpdate: oldValue !== newValue, valueToCommit: newValue };
     }
@@ -465,7 +460,7 @@ export class BackgroundSnapshotInstance {
         queueRefAttrUpdate(
           oldSpread && ((oldValue as { ref?: Ref }).ref),
           newValueObj['ref'] as Ref,
-          this.__id,
+          this,
           index,
         );
         return {
@@ -474,7 +469,7 @@ export class BackgroundSnapshotInstance {
         };
       }
       if ('__ref' in newValueObj) {
-        queueRefAttrUpdate(oldValue as Ref, newValueObj as unknown as Ref, this.__id, index);
+        queueRefAttrUpdate(oldValue as Ref, newValueObj as unknown as Ref, this, index);
         return { needUpdate: false, valueToCommit: 1 };
       }
       if ('_wkltId' in newValueObj) {
@@ -509,7 +504,7 @@ export class BackgroundSnapshotInstance {
     }
     if (newType === 'function') {
       if ((newValue as { __ref?: unknown }).__ref) {
-        queueRefAttrUpdate(oldValue as Ref, newValue as Ref, this.__id, index);
+        queueRefAttrUpdate(oldValue as Ref, newValue as Ref, this, index);
         return { needUpdate: false, valueToCommit: 1 };
       }
       /* event */

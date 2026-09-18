@@ -22,8 +22,8 @@ import type {
   TransformBuiltinAttributeNamesOptions,
 } from '@lynx-js/react-transform'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
-import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
+import { pluginAutoLynx } from './autoLynx.js'
 import { applyBackgroundOnly } from './backgroundOnly.js'
 import { applyCSS } from './css.js'
 import { applyEntry } from './entry.js'
@@ -45,7 +45,7 @@ import { validateConfig } from './validate.js'
  */
 export interface PluginReactLynxOptions {
   /**
-   * Enable UI source map generation and debug-metadata asset emission.
+   * Generate UI source maps in the main-thread transform.
    *
    * @defaultValue `false`
    */
@@ -90,7 +90,8 @@ export interface PluginReactLynxOptions {
    * By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.
    *
    * ```js
-   * import { defineConfig } from '@lynx-js/rspeedy'
+   * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+   * import { defineConfig } from '@rsbuild/core'
    *
    * export default defineConfig({
    *  plugins: [
@@ -99,7 +100,7 @@ export interface PluginReactLynxOptions {
    *      customCSSInheritanceList: ['direction', 'overflow']
    *    }),
    *  ],
-   * }
+   * })
    * ```
    *
    * @defaultValue `undefined`
@@ -427,6 +428,7 @@ export function pluginReactLynx(
   })
 
   return [
+    pluginAutoLynx(),
     pluginReactAlias({
       lazy: resolvedOptions.experimental_isLazyBundle,
       elementTemplate: resolvedOptions.experimental_useElementTemplate,
@@ -508,15 +510,6 @@ export function pluginReactLynx(
         }
 
         api.expose(Symbol.for('LAYERS'), LAYERS)
-        // Only expose `LynxTemplatePlugin.getLynxTemplatePluginHooks` to avoid
-        // other breaking changes in `LynxTemplatePlugin`
-        // breaks `pluginReactLynx`
-        api.expose(Symbol.for('LynxTemplatePlugin'), {
-          LynxTemplatePlugin: {
-            getLynxTemplatePluginHooks: LynxTemplatePlugin
-              .getLynxTemplatePluginHooks.bind(LynxTemplatePlugin),
-          },
-        })
         const require = createRequire(import.meta.url)
 
         const { version } = require('../package.json') as { version: string }

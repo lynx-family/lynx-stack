@@ -4,7 +4,6 @@
 import { mergeRsbuildConfig } from '@rsbuild/core'
 import type { RsbuildMode } from '@rsbuild/core'
 
-import { isDebug } from '../debug.js'
 import type { Filename } from './output/filename.js'
 
 import type { Config } from './index.js'
@@ -28,20 +27,8 @@ export function applyDefaultRspeedyConfig(config: Config): Config {
       // from the `output.filename.bundle` field.
       filename: getFilename(config.output?.filename),
 
-      sourceMap: {
-        css: true,
-      },
-
       // inlineScripts defaults to false when chunk splitting is enabled, true otherwise
       inlineScripts: !enableChunkSplitting,
-
-      cssModules: {
-        localIdentName: '[local]-[hash:base64:6]',
-      },
-    },
-
-    performance: {
-      profile: isDebug() ? true : undefined,
     },
 
     tools: {
@@ -65,7 +52,7 @@ function getEnableChunkSplitting(config: Config): boolean {
 
 const DEFAULT_FILENAME = '[name].[platform].bundle'
 
-function getFilename(filename: string | Filename | undefined): Filename {
+export function getFilename(filename: string | Filename | undefined): Filename {
   if (typeof filename === 'string') {
     return {
       bundle: filename,

@@ -1,0 +1,441 @@
+<!doctype lynx>
+<lynx engine-version="4.2">
+<style>
+.product-card {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  border-radius: 26px;
+  background-color: #f4f0e9;
+  box-shadow: 0 14px 42px rgba(71, 55, 38, 0.14);
+}
+
+.visual {
+  height: 210px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #d9c5aa;
+}
+
+.visual-label {
+  color: rgba(40, 32, 23, 0.55);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+}
+
+.product-shape {
+  width: 210px;
+  height: 74px;
+  margin-top: 18px;
+  border-radius: 40px 18px 28px 18px;
+  background-color: #fffdf9;
+  transform: rotate(-8deg);
+}
+
+.product-sole {
+  width: 220px;
+  height: 13px;
+  margin-top: -3px;
+  border-radius: 7px;
+  background-color: #4b4035;
+  transform: rotate(-8deg);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  padding: 22px;
+  background-color: #fffdf9;
+}
+
+.meta-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.category {
+  color: #9b7552;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.rating {
+  color: #6d6257;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.title {
+  margin-top: 9px;
+  color: #29251f;
+  font-size: 25px;
+  font-weight: 800;
+}
+
+.description {
+  margin-top: 7px;
+  color: #81766c;
+  font-size: 13px;
+  line-height: 19px;
+  white-space: normal;
+}
+
+.option-label {
+  margin-top: 18px;
+  color: #554c43;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.swatches {
+  display: flex;
+  flex-direction: row;
+  margin-top: 10px;
+}
+
+.swatch {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 19px;
+  background-color: #f0ebe4;
+}
+
+.swatch.second,
+.swatch.third {
+  margin-left: 10px;
+}
+
+.swatch.selected {
+  border: 3px solid #29251f;
+}
+
+.swatch-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  background-color: #c9aa82;
+}
+
+.swatch-dot.ink {
+  background-color: #39434f;
+}
+
+.swatch-dot.moss {
+  background-color: #68745c;
+}
+
+.purchase-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.price-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.price-label {
+  color: #958a7e;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.price {
+  margin-top: 2px;
+  color: #29251f;
+  font-size: 23px;
+  font-weight: 800;
+}
+
+.quantity {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 5px;
+  border-radius: 14px;
+  background-color: #f1ece5;
+}
+
+.quantity-button {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background-color: #fffdf9;
+}
+
+.quantity-button-text {
+  color: #29251f;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.quantity-value {
+  width: 34px;
+  color: #29251f;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.add-button {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 16px;
+  border-radius: 15px;
+  background-color: #29251f;
+}
+
+.add-button.added {
+  background-color: #55705a;
+}
+
+.add-button:active,
+.quantity-button:active,
+.swatch:active {
+  opacity: 0.72;
+}
+
+.add-button-text {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+}
+</style>
+<script thread="main">
+const engine = lynx.getEngine();
+const page = __CreatePage("0", 0);
+const pageId = __GetElementUniqueID(page);
+const tapOptions = {};
+const renderPageEventName = "__RenderPage";
+const destroyLifetimeEventName = "__DestroyLifetime";
+
+const colors = [
+  { name: "Sand", visual: "#d9c5aa" },
+  { name: "Ink", visual: "#aeb8c3" },
+  { name: "Moss", visual: "#b6bea9" },
+];
+const unitPrice = 128;
+let selectedColor = 0;
+let quantity = 1;
+let rendered = false;
+let visual;
+let optionLabel;
+let quantityText;
+let priceText;
+let addButton;
+let addButtonText;
+const swatchNodes = [];
+const buttonListeners = [];
+
+
+function createText(className, value) {
+  const text = __CreateText(pageId);
+  __SetClasses(text, className);
+  __AppendElement(text, __CreateRawText(value));
+  return text;
+}
+
+function replaceText(text, value) {
+  __ReplaceElements(text, [__CreateRawText(value)], __GetChildren(text));
+}
+
+function bindTap(node, handler) {
+  __AddEventListener(node, "tap", handler, tapOptions);
+  buttonListeners.push({ node, handler });
+}
+
+function createAction(className, textClass, label, ariaLabel, handler) {
+  const action = __CreateView(pageId);
+  __SetClasses(action, className);
+  __SetAttribute(action, "aria-label", ariaLabel);
+  __AppendElement(action, createText(textClass, label));
+  bindTap(action, handler);
+  return action;
+}
+
+function syncProduct() {
+  __SetInlineStyles(visual, `background-color: ${colors[selectedColor].visual};`);
+  replaceText(optionLabel, `Color · ${colors[selectedColor].name}`);
+  replaceText(quantityText, String(quantity));
+  replaceText(priceText, `$${unitPrice * quantity}`);
+  for (let index = 0; index < swatchNodes.length; index += 1) {
+    const position = index === 1 ? "second" : index === 2 ? "third" : "";
+    __SetClasses(
+      swatchNodes[index],
+      `swatch ${position}${index === selectedColor ? " selected" : ""}`,
+    );
+  }
+  __SetClasses(addButton, "add-button");
+  replaceText(addButtonText, "Add to bag");
+  __FlushElementTree();
+}
+
+function selectColor(index) {
+  selectedColor = index;
+  syncProduct();
+}
+
+function decrementQuantity() {
+  quantity = Math.max(1, quantity - 1);
+  syncProduct();
+}
+
+function incrementQuantity() {
+  quantity = Math.min(9, quantity + 1);
+  syncProduct();
+}
+
+function addToBag() {
+  __SetClasses(addButton, "add-button added");
+  replaceText(
+    addButtonText,
+    `${quantity} ${colors[selectedColor].name} pair${quantity === 1 ? "" : "s"} added`,
+  );
+  __FlushElementTree();
+}
+
+function createSwatch(index, dotClass) {
+  const swatch = __CreateView(pageId);
+  const position = index === 1 ? "second" : index === 2 ? "third" : "";
+  __SetClasses(
+    swatch,
+    `swatch ${position}${index === selectedColor ? " selected" : ""}`,
+  );
+  __SetAttribute(swatch, "aria-label", `Select ${colors[index].name}`);
+  const dot = __CreateView(pageId);
+  __SetClasses(dot, dotClass);
+  __AppendElement(swatch, dot);
+  swatchNodes.push(swatch);
+  bindTap(swatch, () => selectColor(index));
+  return swatch;
+}
+
+function renderPage() {
+  if (rendered) return;
+  rendered = true;
+
+  const card = __CreateScrollView(pageId);
+  __SetClasses(card, "product-card");
+  __SetAttribute(card, "scroll-orientation", "vertical");
+
+  visual = __CreateView(pageId);
+  __SetClasses(visual, "visual");
+  __AppendElement(visual, createText("visual-label", "FIELD NOTE / 04"));
+  const shape = __CreateView(pageId);
+  __SetClasses(shape, "product-shape");
+  __AppendElement(visual, shape);
+  const sole = __CreateView(pageId);
+  __SetClasses(sole, "product-sole");
+  __AppendElement(visual, sole);
+  __AppendElement(card, visual);
+
+  const content = __CreateView(pageId);
+  __SetClasses(content, "content");
+  const meta = __CreateView(pageId);
+  __SetClasses(meta, "meta-row");
+  __AppendElement(meta, createText("category", "EVERYDAY FOOTWEAR"));
+  __AppendElement(meta, createText("rating", "★ 4.9 · 86 reviews"));
+  __AppendElement(content, meta);
+  __AppendElement(content, createText("title", "Cloudstep Trainer"));
+  __AppendElement(
+    content,
+    createText(
+      "description",
+      "A lightweight city trainer with a soft recycled-knit upper.",
+    ),
+  );
+
+  optionLabel = createText("option-label", "Color · Sand");
+  __AppendElement(content, optionLabel);
+  const swatches = __CreateView(pageId);
+  __SetClasses(swatches, "swatches");
+  __AppendElement(swatches, createSwatch(0, "swatch-dot"));
+  __AppendElement(swatches, createSwatch(1, "swatch-dot ink"));
+  __AppendElement(swatches, createSwatch(2, "swatch-dot moss"));
+  __AppendElement(content, swatches);
+
+  const purchase = __CreateView(pageId);
+  __SetClasses(purchase, "purchase-row");
+  const priceBlock = __CreateView(pageId);
+  __SetClasses(priceBlock, "price-block");
+  __AppendElement(priceBlock, createText("price-label", "TOTAL"));
+  priceText = createText("price", "$128");
+  __AppendElement(priceBlock, priceText);
+  __AppendElement(purchase, priceBlock);
+
+  const quantityControl = __CreateView(pageId);
+  __SetClasses(quantityControl, "quantity");
+  __AppendElement(
+    quantityControl,
+    createAction(
+      "quantity-button",
+      "quantity-button-text",
+      "−",
+      "Decrease quantity",
+      decrementQuantity,
+    ),
+  );
+  quantityText = createText("quantity-value", "1");
+  __AppendElement(quantityControl, quantityText);
+  __AppendElement(
+    quantityControl,
+    createAction(
+      "quantity-button",
+      "quantity-button-text",
+      "+",
+      "Increase quantity",
+      incrementQuantity,
+    ),
+  );
+  __AppendElement(purchase, quantityControl);
+  __AppendElement(content, purchase);
+
+  addButton = __CreateView(pageId);
+  __SetClasses(addButton, "add-button");
+  __SetAttribute(addButton, "aria-label", "Add product to bag");
+  addButtonText = createText("add-button-text", "Add to bag");
+  __AppendElement(addButton, addButtonText);
+  bindTap(addButton, addToBag);
+  __AppendElement(content, addButton);
+  __AppendElement(card, content);
+  __AppendElement(page, card);
+}
+
+function cleanup() {
+  for (const { node, handler } of buttonListeners.splice(0)) {
+    __RemoveEventListener(node, "tap", handler, tapOptions);
+  }
+  engine.removeEventListener(renderPageEventName, renderPage);
+  engine.removeEventListener(destroyLifetimeEventName, cleanup);
+  swatchNodes.length = 0;
+  visual = undefined;
+  optionLabel = undefined;
+  quantityText = undefined;
+  priceText = undefined;
+  addButton = undefined;
+  addButtonText = undefined;
+}
+
+engine.addEventListener(renderPageEventName, renderPage);
+engine.addEventListener(destroyLifetimeEventName, cleanup);
+</script>
+</lynx>

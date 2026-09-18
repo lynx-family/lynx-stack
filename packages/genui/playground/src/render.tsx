@@ -16,13 +16,21 @@ import '@lynx-js/web-core/client';
 import '@lynx-js/web-elements/all';
 import '@lynx-js/web-elements/index.css';
 
+import { LynxXmlView } from './components/LynxXmlView.js';
+import {
+  OPENUI_RENDER_ERRORS_MESSAGE_TYPE,
+  readOpenUIRenderErrors,
+} from '../lynx-src/openui/renderErrors.js';
 import { lazyComponentDemo } from './mock/basic/lazy-component.js';
 import { mcpAppDemo } from './mock/basic/mcp-app.js';
 import { decodeBase64Url } from './utils/base64url.js';
 import { DEFAULT_A2UI_DEMO_URL } from './utils/demoUrl.js';
 import {
+  LYNX_XML_RENDER_READY_MESSAGE_TYPE,
+  LYNX_XML_SOURCE_URL_QUERY_PARAM,
   RENDER_INIT_DATA_QUERY_PARAM,
   RENDER_METRIC_ID_QUERY_PARAM,
+  RENDER_NAVIGATION_TOKEN_QUERY_PARAM,
 } from './utils/renderUrl.js';
 
 interface InitData {
@@ -144,6 +152,12 @@ function readProtocol(value: unknown): InitData['protocol'] {
       || value === 'mcp-apps'
     ? value
     : undefined;
+}
+
+function readRenderProtocol(
+  value: unknown,
+): InitData['protocol'] | 'lynx-xml' {
+  return value === 'lynx-xml' ? value : readProtocol(value);
 }
 
 function readTheme(value: unknown): InitData['theme'] {
@@ -280,6 +294,12 @@ function readPreviewMetricId(): string {
   ) ?? '';
 }
 
+function readPreviewNavigationToken(): string {
+  return new URLSearchParams(window.location.search).get(
+    RENDER_NAVIGATION_TOKEN_QUERY_PARAM,
+  ) ?? '';
+}
+
 function readFiniteNumber(value: unknown): number | null {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value === 'string') {
@@ -337,7 +357,81 @@ function isPlaybackControlMessage(
     && (payload.action === 'pause' || payload.action === 'resume');
 }
 
-function Render() {
+function DirectLynxXmlRender() {
+  const initial = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      sourceUrl: params.get(LYNX_XML_SOURCE_URL_QUERY_PARAM) ?? '',
+      exampleId: params.get('exampleId'),
+      theme: readTheme(params.get('theme')) ?? 'light',
+    };
+  }, []);
+
+  const [templateSource, setTemplateSource] = useState<string>();
+  const [templateError, setTemplateError] = useState('');
+  useEffect(() => {
+    if (!initial.exampleId) return;
+    let active = true;
+    void import('./pages/demos/lynx-xml.js')
+      .then(({ LYNX_XML_SCENARIOS }) => {
+        if (!active) return;
+        const scenario = LYNX_XML_SCENARIOS.find(({ id }) =>
+          id === initial.exampleId
+        );
+        if (!scenario?.templateSource) {
+          throw new Error('Unknown Lynx XML template example.');
+        }
+        setTemplateSource(scenario.source);
+      })
+      .catch(error => {
+        if (active) {
+          setTemplateError(
+            error instanceof Error ? error.message : String(error),
+          );
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [initial]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = initial.theme;
+    document.documentElement.style.colorScheme = initial.theme;
+  }, [initial.theme]);
+
+  const handleLoad = useCallback(() => {
+    if (!window.parent || window.parent === window) return;
+    window.parent.postMessage(
+      { type: LYNX_XML_RENDER_READY_MESSAGE_TYPE },
+      '*',
+    );
+  }, []);
+
+  if (templateError) {
+    return <div className='lynxXmlRenderError'>{templateError}</div>;
+  }
+  if (initial.exampleId && !templateSource) {
+    return null;
+  }
+
+  return initial.sourceUrl || templateSource
+    ? (
+      <LynxXmlView
+        className='lynxXmlRenderView'
+        sourceUrl={initial.exampleId ? undefined : initial.sourceUrl}
+        source={templateSource}
+        onLoad={handleLoad}
+      />
+    )
+    : (
+      <div className='lynxXmlRenderError'>
+        Missing Lynx XML source URL.
+      </div>
+    );
+}
+
+function BundledProtocolRender() {
   const initial = useMemo(() => {
     const initData = parseInitDataFromQuery();
     const globalProps = parseGlobalPropsFromQuery();
@@ -360,6 +454,10 @@ function Render() {
   const pendingFlushTimerRef = useRef<number | null>(null);
   const pendingFlushAttemptsRef = useRef(0);
   const previewMetricId = useMemo(() => readPreviewMetricId(), []);
+  const previewNavigationToken = useMemo(
+    () => readPreviewNavigationToken(),
+    [],
+  );
   const initDataRef = useRef<InitData | null>(initData);
   const reportedMetricsRef = useRef<Set<PreviewMetricName>>(new Set());
   const ttiTimerRef = useRef<number | null>(null);
@@ -433,13 +531,25 @@ function Render() {
 
   const postRenderReady = useCallback(() => {
     if (!window.parent || window.parent === window) return;
-    window.parent.postMessage({ type: 'A2UI_RENDER_READY' }, '*');
+    window.parent.postMessage(
+      {
+        type: 'A2UI_RENDER_READY',
+        frameUrl: window.location.href,
+        navigationToken: previewNavigationToken,
+      },
+      '*',
+    );
     scheduleFcpFallbackMetric();
     if (initDataRef.current?.protocol !== 'a2ui') {
       scheduleFmpMetric();
       scheduleTtiMetric(TTI_READY_FALLBACK_MS);
     }
-  }, [scheduleFcpFallbackMetric, scheduleFmpMetric, scheduleTtiMetric]);
+  }, [
+    previewNavigationToken,
+    scheduleFcpFallbackMetric,
+    scheduleFmpMetric,
+    scheduleTtiMetric,
+  ]);
 
   useEffect(() => {
     initDataRef.current = initData;
@@ -652,6 +762,22 @@ function Render() {
         }
         return;
       }
+      if (name === 'A2UI_RUNTIME_READY') {
+        if (window.parent && window.parent !== window) {
+          const messagesUrl = initDataRef.current?.messagesUrl;
+          window.parent.postMessage(
+            {
+              type: 'A2UI_RENDER_READY',
+              runtimeReady: true,
+              frameUrl: window.location.href,
+              navigationToken: previewNavigationToken,
+              ...(messagesUrl ? { messagesUrl } : {}),
+            },
+            '*',
+          );
+        }
+        return;
+      }
       if (name === 'A2UI_USER_ACTION') {
         if (window.parent && window.parent !== window) {
           window.parent.postMessage(
@@ -670,6 +796,17 @@ function Render() {
         }
         return;
       }
+      if (name === OPENUI_RENDER_ERRORS_MESSAGE_TYPE) {
+        const errors = readOpenUIRenderErrors(data);
+        if (errors && window.parent !== window) {
+          window.parent.postMessage({
+            type: OPENUI_RENDER_ERRORS_MESSAGE_TYPE,
+            navigationToken: previewNavigationToken,
+            errors,
+          }, '*');
+        }
+        return;
+      }
     };
 
     return () => {
@@ -678,6 +815,7 @@ function Render() {
     };
   }, [
     clearTtiTimer,
+    previewNavigationToken,
     scheduleFmpMetric,
     scheduleTtiMetric,
   ]);
@@ -847,15 +985,32 @@ function Render() {
   return createElement('lynx-view', {
     ref: lynxViewRef,
     className: 'renderLynx',
-    style: { height: '100%' },
     'thread-strategy': 'multi-thread',
+    'transform-vh': 'true',
+    'transform-vw': 'true',
     url: initData?.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
   });
+}
+
+function Render() {
+  const protocol = useMemo(
+    () =>
+      readRenderProtocol(
+        new URLSearchParams(window.location.search).get('protocol'),
+      ),
+    [],
+  );
+
+  return protocol === 'lynx-xml'
+    ? <DirectLynxXmlRender />
+    : <BundledProtocolRender />;
 }
 
 const container = document.getElementById('root');
 if (!container) {
   throw new Error('Missing #root element');
 }
+
+document.documentElement.dataset.playgroundEntry = 'render';
 
 ReactDOM.createRoot(container).render(<Render />);

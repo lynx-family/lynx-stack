@@ -44,10 +44,12 @@ The `schema` option allows you to customize the URL format displayed in the QR c
 
 ```js
 import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
-import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
 
 export default defineConfig({
   plugins: [
+    pluginReactLynx(),
     pluginQRCode({
       schema(url) {
         return `lynx://${url}?dev=1`
@@ -63,10 +65,12 @@ You can also define multiple schemas to switch between them by pressing `a` in t
 
 ```js
 import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
-import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
 
 export default defineConfig({
   plugins: [
+    pluginReactLynx(),
     pluginQRCode({
       schema(url) {
         return {

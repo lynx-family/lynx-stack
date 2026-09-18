@@ -1229,12 +1229,14 @@ describe('renderOpcodesInto', () => {
   it('should render component with ref', () => {
     scratch.ensureElements();
 
-    function Counter({ ref, count: _ }) {
-      expect(ref).toBe(undefined);
+    const ref = vi.fn();
+
+    function Counter({ ref: r, count: _ }) {
+      expect(r).toBe(ref);
       return <view />;
     }
 
-    renderToString(<Counter ref={vi.fn()} count={1} />, scratch);
+    renderToString(<Counter ref={ref} count={1} />, scratch);
     // renderOpcodesInto(opcodes, scratch);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
@@ -1395,13 +1397,15 @@ describe('createElement', () => {
     `);
   });
 
-  it('ref should not be accessible to developer', () => {
-    function Key({ ref }) {
-      expect(ref).toBe(undefined);
+  it('ref should be accessible to developer', () => {
+    const ref = vi.fn();
+
+    function Key({ ref: r }) {
+      expect(r).toBe(ref);
       return <view />;
     }
 
-    const opcodes1 = renderToString(<Key key={1} {...s} ref={vi.fn()} />);
+    const opcodes1 = renderToString(<Key key={1} {...s} ref={ref} />);
     expect(opcodes1).toMatchInlineSnapshot(`
       [
         0,
@@ -1416,7 +1420,7 @@ describe('createElement', () => {
         1,
       ]
     `);
-    const opcodes2 = renderToString(<Key {...s} key={1} ref={vi.fn()} />);
+    const opcodes2 = renderToString(<Key {...s} key={1} ref={ref} />);
     expect(opcodes2).toMatchInlineSnapshot(`
       [
         0,

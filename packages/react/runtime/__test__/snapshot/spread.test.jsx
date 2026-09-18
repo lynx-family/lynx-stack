@@ -3,7 +3,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { render } from 'preact';
+import { options, render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useState } from '../../src/index';
@@ -42,31 +42,12 @@ afterEach(() => {
   backgroundSnapshotInstanceManager.nextId = 0;
   snapshotInstanceManager.clear();
   snapshotInstanceManager.nextId = 0;
-  globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = false;
+  lynx.__runtime_configs__ = { transformBuiltinAttributeNames: false };
 });
 
 describe('spreadUpdate', () => {
-  it('preserves spread attribute names when the compile-time config is unavailable', () => {
-    Reflect.deleteProperty(globalThis, '__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__');
-
-    expect(
-      transformSpread(
-        { __id: 6 },
-        1,
-        {
-          __spread: true,
-          textMaxline: 2,
-          onClick: vi.fn(),
-        },
-      ),
-    ).toEqual({
-      textMaxline: 2,
-      onClick: '6:1:onClick',
-    });
-  });
-
   it('transforms builtin attribute names and preserves event handler lookup keys', () => {
-    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = true;
+    lynx.__runtime_configs__ = { transformBuiltinAttributeNames: true };
 
     expect(
       transformSpread(
@@ -93,11 +74,13 @@ describe('spreadUpdate', () => {
   });
 
   it('transforms only after identifying special spread attributes', () => {
-    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = {
-      rename: {
-        className: 'renamed-class',
-        ref: 'renamed-ref',
-        textMaxline: 'custom-maxline',
+    lynx.__runtime_configs__ = {
+      transformBuiltinAttributeNames: {
+        rename: {
+          className: 'renamed-class',
+          ref: 'renamed-ref',
+          textMaxline: 'custom-maxline',
+        },
       },
     };
 
@@ -120,7 +103,7 @@ describe('spreadUpdate', () => {
   });
 
   it('renders camel-case spread attributes with transformed element state', () => {
-    globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = true;
+    lynx.__runtime_configs__ = { transformBuiltinAttributeNames: true };
 
     function Comp() {
       const attributes = {
@@ -707,7 +690,7 @@ describe('spreadUpdate', () => {
     `);
   });
 
-  it('circular reference', async () => {
+  it.each(['root', 'scheduled'])('circular reference during %s render', async (renderMode) => {
     await import('../../src/lynx');
     let patch;
     let setSpread_;
@@ -740,19 +723,26 @@ describe('spreadUpdate', () => {
     render(<Comp />, scratchBackground);
 
     initGlobalSnapshotPatch();
-    setSpread_(a);
+    const previousDebounce = options.debounceRendering;
+    let flushScheduledRender;
+    options.debounceRendering = callback => {
+      flushScheduledRender = callback;
+    };
+    try {
+      setSpread_(a);
 
-    expect(() => render(<Comp />, scratchBackground)).toThrowErrorMatchingInlineSnapshot(`
-      [TypeError: Converting circular structure to JSON
-          --> starting at object with constructor 'Object'
-          --- property 'a' closes the circle
-
-        in Bar
-        in Comp
-      ]
-    `);
-    patch = takeGlobalSnapshotPatch();
-    expect(patch).toMatchInlineSnapshot(`[]`);
+      expect(() => {
+        if (renderMode === 'scheduled') {
+          flushScheduledRender();
+        } else {
+          render(<Comp />, scratchBackground);
+        }
+      }).toThrowError(/Converting circular structure to JSON[\s\S]*in Bar\n  in Comp\n$/);
+      patch = takeGlobalSnapshotPatch();
+      expect(patch).toEqual([]);
+    } finally {
+      options.debounceRendering = previousDebounce;
+    }
   });
 
   it('should remove __self and __source when spreading props onto element', async function() {

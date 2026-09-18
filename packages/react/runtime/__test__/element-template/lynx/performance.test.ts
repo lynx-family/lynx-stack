@@ -110,7 +110,7 @@ describe('ElementTemplate performance timing (current api)', () => {
     markTimingLegacy('updateSetStateTrigger', 'flag');
     globalCommitContext.ops = createRawTextOps(1, 'payload');
 
-    options.__?.({} as unknown as object, null);
+    options.__?.({} as unknown as object, {} as unknown as object);
 
     expect(nativeMarkTiming.mock.calls).toEqual([
       ['flag', 'updateSetStateTrigger'],

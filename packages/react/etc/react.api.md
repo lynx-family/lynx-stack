@@ -137,11 +137,12 @@ export interface Lynx {
     triggerGlobalEventFromLepus: (eventName: string, params: any) => void;
 }
 
-// Warning: (ae-forgotten-export) The symbol "WorkletRef" needs to be exported by the entry point react.docs.d.ts
-//
 // @public
-export class MainThreadRef<T> extends WorkletRef<T> {
+export class MainThreadRef<T> {
     constructor(initValue: T);
+    // (undocumented)
+    get current(): T;
+    set current(_: T);
 }
 
 // @public

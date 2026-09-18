@@ -37,11 +37,11 @@ dist/
 
 ### 开发环境
 
-开发环境下会生成 `dist/.rspeedy` 目录用于调试：
+开发环境下会生成 `dist/.lynx` 目录用于调试：
 
 ```
 dist/
-├── .rspeedy
+├── .lynx
 │   ├── lazy-bundle
 │   │   └── [name]
 │   │       ├── background.js
@@ -69,8 +69,8 @@ dist/
 
 开发环境额外生成的文件包括：
 
-- 后台线程脚本（Background Thread Script）：内联到 Bundle 中的脚本，默认输出到 `.rspeedy/[name]/background.js`
-- 主线程脚本（MainThread Thread Script）：默认输出到 `.rspeedy/[name]/main-thread.js`
+- 后台线程脚本（Background Thread Script）：内联到 Bundle 中的脚本，默认输出到 `.lynx/[name]/background.js`
+- 主线程脚本（MainThread Thread Script）：默认输出到 `.lynx/[name]/main-thread.js`
 - Source Map 文件：开启 [`output.sourceMap`] 后，与 JS 文件同目录，以 `.map` 为后缀
 
 ## 修改目录结构
@@ -115,6 +115,6 @@ dist
 [`output.filename.js`]: ../../api/rspeedy.filename.js
 [`output.filename.bundle`]: ../../api/rspeedy.filename.bundle
 [`output.distPath`]: ../../api/rspeedy.output.distpath
-[`output.distPath.js`]: ../../api/rspeedy.distpath.js
+[`output.distPath.js`]: https://rsbuild.rs/config/output/dist-path
 [`output.legalComments`]: ../../api/rspeedy.output.legalcomments
 [`output.sourceMap`]: ../../api/rspeedy.output.sourcemap

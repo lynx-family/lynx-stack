@@ -3,12 +3,22 @@
 // LICENSE file in the root directory of this source tree.
 import { A2UI_DEMOS_LIST_SOURCE } from './a2ui.js';
 import { DemosList } from './DemosList.js';
+import { LYNX_XML_DEMOS_LIST_SOURCE } from './lynx-xml.js';
+import { MCP_APPS_DEMOS_LIST_SOURCE } from './mcp-apps.js';
 import { OPENUI_DEMOS_LIST_SOURCE } from './openui.js';
 import type { Protocol } from '../../utils/protocol.js';
 
 export function DemosListPage(
   props: { protocol: Protocol; theme: 'light' | 'dark' },
 ) {
+  if (props.protocol.name === 'lynx-xml') {
+    return <DemosList {...props} source={LYNX_XML_DEMOS_LIST_SOURCE} />;
+  }
+
+  if (props.protocol.name === 'mcp-apps') {
+    return <DemosList {...props} source={MCP_APPS_DEMOS_LIST_SOURCE} />;
+  }
+
   if (props.protocol.name === 'openui') {
     return <DemosList {...props} source={OPENUI_DEMOS_LIST_SOURCE} />;
   }

@@ -19,9 +19,10 @@ export interface CompatVisitorConfig {
     addComponentElement: boolean | AddComponentElementConfig
     additionalComponentAttributes: Array<string>
     componentsPkg: Array<string>
+    // Warning: (tsdoc-missing-deprecation-message) The @deprecated block must include a deprecation message, e.g. describing the recommended alternative
     // Warning: (ae-forgotten-export) The symbol "DarkModeConfig" needs to be exported by the entry point index.d.ts
     //
-    // @deprecated (undocumented)
+    // @deprecated
     darkMode?: boolean | DarkModeConfig
     disableDeprecatedWarning: boolean
     legacySlot?: boolean
@@ -33,6 +34,7 @@ export interface CompatVisitorConfig {
     simplifyCtorLikeReactLynx2: boolean
     // @internal (undocumented)
     target: 'LEPUS' | 'JS' | 'MIXED'
+    transformLegacyEventAttributeNames?: boolean
 }
 
 // @public

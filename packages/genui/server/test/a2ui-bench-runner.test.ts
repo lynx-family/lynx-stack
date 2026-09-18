@@ -4,33 +4,35 @@
 
 import { describe, expect, rstest, test } from '@rstest/core';
 
-import { getA2UIAgentService } from '../service/a2ui-agent.js';
-import { probeBenchUiJudge } from '../service/a2ui-bench-judge.js';
-import { runBenchJob, summarizeGroup } from '../service/a2ui-bench-runner.js';
+import { getA2UIAgentService } from '../service/a2ui/a2ui-agent.js';
+import { resolveBenchUiJudge } from '../service/a2ui/a2ui-bench-judge.js';
+import {
+  resolveGenuiBenchUiJudge,
+  runGenuiBenchUiJudge,
+} from '../service/common/bench/judge.js';
+import type {
+  ProtocolBenchAdapter,
+} from '../service/common/bench/protocol-adapter.js';
+import { runBenchJob, summarizeGroup } from '../service/common/bench/runner.js';
 import {
   BENCH_SCREENSHOT_DATA_URL_PREFIX,
   MAX_BENCH_SCREENSHOT_DECODED_BYTES,
-} from '../service/a2ui-bench-screenshot.js';
+} from '../service/common/bench/screenshot.js';
 import {
   BenchJobStore,
   getBenchJobStore,
-} from '../service/a2ui-bench-store.js';
+} from '../service/common/bench/store.js';
 import type {
   BenchGroupRequest,
   BenchJobRequest,
   BenchRunResult,
-} from '../service/a2ui-bench-types.js';
-import type {
-  ProtocolBenchAdapter,
-} from '../service/genui-bench/protocol-adapter.js';
-import {
-  probeGenuiBenchUiJudge,
-  runGenuiBenchUiJudge,
-} from '../service/genui-bench-judge.js';
+} from '../service/common/bench/types.js';
+import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
+import type { ChatMessage } from '../service/common/types.js';
 
-rstest.mock('../service/a2ui-bench-judge.js', { mock: true });
-rstest.mock('../service/a2ui-agent.js', { mock: true });
-rstest.mock('../service/genui-bench-judge.js', { mock: true });
+rstest.mock('../service/a2ui/a2ui-bench-judge.js', { mock: true });
+rstest.mock('../service/a2ui/a2ui-agent.js', { mock: true });
+rstest.mock('../service/common/bench/judge.js', { mock: true });
 
 const group: BenchGroupRequest = {
   enabled: true,
@@ -53,7 +55,6 @@ function request(judgeEnabled = true): BenchJobRequest {
     settings: {
       judgeEnabled,
       maxRepairAttempts: 0,
-      parallelism: 1,
       renderMetricsEnabled: false,
       repairEnabled: false,
       repeats: 1,
@@ -143,18 +144,270 @@ function screenshotDataUrlForBytes(bytes: number): string {
 }
 
 describe('A2UI Bench UI Judge integration', () => {
-  test('does not restore a cancelled job to running after the health probe', async () => {
+  test.each([true, false])(
+    'retains legacy model preset identities through generation and reporting (success: %s)',
+    async (success) => {
+      const model = 'public-model';
+      rstest.stubEnv(
+        GENUI_MODEL_CONFIG_ENV,
+        JSON.stringify({
+          [model]: {
+            model,
+            apiKey: 'private-key',
+            baseURL: 'https://provider.example/v1',
+          },
+        }),
+      );
+      try {
+        const benchRequest = request(false);
+        const groupId = `preset-${model}`;
+        const scenarioId = `scenario-${model}`;
+        benchRequest.groups = [{
+          ...group,
+          id: groupId,
+          model,
+          protocol: 'openui',
+          profile: 'matched-core',
+        }];
+        benchRequest.scenarios = [{
+          ...benchRequest.scenarios[0]!,
+          id: scenarioId,
+        }];
+        const store = getBenchJobStore();
+        const job = store.createJob(benchRequest, 1);
+        await runBenchJob(job.id, {
+          adapters: {
+            openui: {
+              protocol: 'openui',
+              generate: () => {
+                if (!success) throw new Error(`${model} private-key`);
+                return Promise.resolve({
+                  attempts: [],
+                  finalValid: true,
+                  finalText: 'root = Text("ready")',
+                  finalErrors: [],
+                });
+              },
+            },
+          },
+        });
+        expect(job.report?.results[0]).toMatchObject({
+          groupId,
+          scenarioId,
+          ok: success,
+        });
+        expect(job.report?.groups[0]?.id).toBe(groupId);
+        expect(job.report?.summaries[0]).toMatchObject({
+          groupId,
+          runCount: 1,
+        });
+        expect(job.report?.runProgress?.[0]).toMatchObject({
+          groupId,
+          scenarioId,
+          phase: success ? 'complete' : 'failed',
+          generation: success ? 'complete' : 'failed',
+        });
+        expect(
+          job.events.find(event =>
+            event.event === (success ? 'run-complete' : 'run-error')
+          )?.data,
+        )
+          .toMatchObject({
+            runProgress: { groupId, scenarioId },
+            result: { groupId, scenarioId },
+          });
+        expect(JSON.stringify(job.report)).not.toContain('private-key');
+      } finally {
+        rstest.unstubAllEnvs();
+      }
+    },
+  );
+
+  test('routes HTML source to Judge and preserves HTML results and summaries', async () => {
+    const rawText =
+      '<!doctype html><html><head></head><body>Hello</body></html>';
+    rstest.mocked(resolveGenuiBenchUiJudge).mockResolvedValueOnce({
+      enabled: true,
+      session: { screenshotPath: 'browser/html' },
+    });
+    rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
+      errors: [],
+      score: 4,
+      status: 'complete',
+      warnings: [],
+    });
+    const benchRequest = request();
+    benchRequest.groups = [{
+      ...group,
+      protocol: 'html',
+      profile: 'native',
+      model: 'html-model',
+    }];
+    const store = getBenchJobStore();
+    const job = store.createJob(benchRequest, 1);
+    await runBenchJob(job.id, {
+      adapters: {
+        'html': {
+          protocol: 'html',
+          generate: (input) => {
+            expect(input.enableHtmlFragment).toBeUndefined();
+            return Promise.resolve({
+              attempts: [{
+                index: 1,
+                durationMs: 10,
+                inputTokens: 2,
+                outputTokens: 3,
+                totalTokens: 5,
+                usage: {
+                  inputTokens: 2,
+                  outputTokens: 3,
+                  inputTokenDetails: { cacheReadTokens: 1 },
+                },
+                valid: true,
+                validationErrors: [],
+                outputChars: rawText.length,
+              }],
+              finalValid: true,
+              finalText: rawText,
+              finalErrors: [],
+              judgePayload: { kind: 'html-source', rawText },
+            });
+          },
+        },
+      },
+    });
+    expect(runGenuiBenchUiJudge).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        model: 'html-model',
+        artifact: { protocol: 'html', rawText },
+      }),
+      expect.any(Function),
+    );
+    const report = store.getJob(job.id)?.report;
+    expect(report?.results[0]).toMatchObject({
+      protocol: 'html',
+      profile: 'native',
+      catalog: 'none',
+      text: rawText,
+      tokens: 5,
+      usage: {
+        inputTokens: 2,
+        outputTokens: 3,
+        totalTokens: 5,
+        cachedTokens: 1,
+      },
+      judgeScore: 4,
+      status: 'complete',
+      ok: true,
+    });
+    expect(report?.summaries[0]).toMatchObject({
+      protocol: 'html',
+      profile: 'native',
+      judgeRunCount: 1,
+    });
+  });
+
+  test('routes XML source to Judge and preserves XML results and summaries', async () => {
+    const rawText =
+      '<!doctype lynx><lynx engine-version="4.2"><script thread="main"></script></lynx>';
+    rstest.mocked(resolveGenuiBenchUiJudge).mockResolvedValueOnce({
+      enabled: true,
+      session: { screenshotPath: 'screenshot/zip/upload' },
+    });
+    rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
+      errors: [],
+      score: 4,
+      status: 'complete',
+      warnings: [],
+    });
+    const benchRequest = request();
+    benchRequest.groups = [{
+      ...group,
+      protocol: 'lynx-xml',
+      profile: 'native',
+      model: 'xml-model',
+      enableHtmlFragment: true,
+    }];
+    const store = getBenchJobStore();
+    const job = store.createJob(benchRequest, 1);
+    await runBenchJob(job.id, {
+      adapters: {
+        'lynx-xml': {
+          protocol: 'lynx-xml',
+          generate: (input) => {
+            expect(input.enableHtmlFragment).toBe(true);
+            return Promise.resolve({
+              attempts: [{
+                index: 1,
+                durationMs: 10,
+                inputTokens: 2,
+                outputTokens: 3,
+                totalTokens: 5,
+                usage: {
+                  inputTokens: 2,
+                  outputTokens: 3,
+                  inputTokenDetails: { cacheReadTokens: 1 },
+                },
+                valid: true,
+                validationErrors: [],
+                outputChars: rawText.length,
+              }],
+              finalValid: true,
+              finalText: rawText,
+              finalErrors: [],
+              judgePayload: { kind: 'lynx-xml-source', rawText },
+            });
+          },
+        },
+      },
+    });
+    expect(runGenuiBenchUiJudge).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        model: 'xml-model',
+        artifact: { protocol: 'lynx-xml', rawText },
+      }),
+      expect.any(Function),
+    );
+    const report = store.getJob(job.id)?.report;
+    expect(report?.results[0]).toMatchObject({
+      protocol: 'lynx-xml',
+      profile: 'native',
+      catalog: 'none',
+      text: rawText,
+      tokens: 5,
+      usage: {
+        inputTokens: 2,
+        outputTokens: 3,
+        totalTokens: 5,
+        cachedTokens: 1,
+      },
+      judgeScore: 4,
+      status: 'complete',
+      ok: true,
+    });
+    expect(report?.summaries[0]).toMatchObject({
+      protocol: 'lynx-xml',
+      profile: 'native',
+      judgeRunCount: 1,
+    });
+  });
+
+  test('does not restore a cancelled job to running after resolving capture configuration', async () => {
     let resolveProbe:
-      | ((capability: Awaited<ReturnType<typeof probeBenchUiJudge>>) => void)
+      | ((capability: Awaited<ReturnType<typeof resolveBenchUiJudge>>) => void)
       | undefined;
-    rstest.mocked(probeBenchUiJudge).mockImplementationOnce(
+    rstest.mocked(resolveBenchUiJudge).mockImplementationOnce(
       () =>
         new Promise((resolve) => {
           resolveProbe = resolve;
         }),
     );
     const store = getBenchJobStore();
-    const job = store.createJob(request(), 1);
+    const benchRequest = request();
+    benchRequest.playground = {
+      browserScreenshots: true,
+    };
+    const job = store.createJob(benchRequest, 1);
 
     const running = runBenchJob(job.id);
     store.cancelJob(job.id);
@@ -164,6 +417,7 @@ describe('A2UI Bench UI Judge integration', () => {
     });
     await running;
 
+    expect(resolveBenchUiJudge).toHaveBeenCalledWith();
     const completed = store.getJob(job.id);
     expect(completed?.status).toBe('cancelled');
     expect(completed?.report?.status).toBe('cancelled');
@@ -186,11 +440,11 @@ describe('A2UI Bench UI Judge integration', () => {
   });
 
   test('marks a matched-core run failed when Judge fails', async () => {
-    rstest.mocked(probeGenuiBenchUiJudge).mockResolvedValueOnce({
+    rstest.mocked(resolveGenuiBenchUiJudge).mockResolvedValueOnce({
       enabled: true,
       session: {
-        bundleUrl: 'https://bundle.example/bench.lynx.js',
-        judgeUrl: 'https://judge.example/judge',
+        zipUrl: 'https://bundle.example/bench.lynx.zip',
+        screenshotPath: 'screenshot/zip/url',
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
@@ -262,86 +516,126 @@ describe('A2UI Bench UI Judge integration', () => {
     expect(report?.summaries[0]?.avgJudgeGeqiScore).toBeUndefined();
   });
 
-  test('runs mixed protocol arms serially and rotates their order per sample', async () => {
-    const order: string[] = [];
-    const adapter = (
-      protocol: 'a2ui' | 'openui',
-    ): ProtocolBenchAdapter => ({
-      protocol,
-      generate(input) {
-        order.push(`${input.repeatIndex}:${protocol}`);
-        return Promise.resolve({
-          attempts: [{
-            index: 1,
-            durationMs: 1,
-            inputTokens: 2,
-            outputTokens: 3,
-            totalTokens: 5,
-            valid: true,
-            validationErrors: [],
-            outputChars: 10,
-          }],
-          finalValid: true,
-          finalText: `${protocol} output`,
-          finalErrors: [],
-          judgePayload: protocol === 'a2ui'
-            ? { kind: 'a2ui-messages', messages: [] }
-            : { kind: 'openui-text', rawText: 'root = Text("ready")' },
-        });
-      },
-    });
-    const benchRequest = request(false);
-    benchRequest.groups = [
-      {
-        ...group,
-        id: 'a2ui',
-        name: 'A2UI',
-        protocol: 'a2ui',
-        profile: 'matched-core',
-        variable: 'protocol',
-      },
-      {
-        ...group,
-        id: 'openui',
-        name: 'OpenUI',
-        protocol: 'openui',
-        profile: 'matched-core',
-        variable: 'protocol',
-      },
-    ];
-    benchRequest.settings.repeats = 2;
-    benchRequest.settings.parallelism = 4;
-    const store = getBenchJobStore();
-    const job = store.createJob(benchRequest, 4);
-
-    await runBenchJob(job.id, {
-      adapters: {
-        a2ui: adapter('a2ui'),
-        openui: adapter('openui'),
-      },
-    });
-
-    expect(order).toEqual([
-      '1:a2ui',
-      '1:openui',
-      '2:openui',
-      '2:a2ui',
-    ]);
-    expect(store.getJob(job.id)?.report?.summary).toMatchObject({
-      totalRuns: 4,
-      completedRuns: 4,
-      failedRuns: 0,
-    });
-  });
+  test.each([1, 4, 8])(
+    'starts one worker per enabled group and keeps scenario/repeat order with %s groups',
+    async (groupCount) => {
+      const orders = new Map<string, string[]>();
+      const activeGroups = new Set<string>();
+      let active = 0;
+      let maxActive = 0;
+      let releaseGeneration!: () => void;
+      const generationGate = new Promise<void>((resolve) => {
+        releaseGeneration = resolve;
+      });
+      const adapter = (
+        protocol: 'a2ui' | 'openui' | 'lynx-xml',
+      ): ProtocolBenchAdapter => ({
+        protocol,
+        async generate(input) {
+          const model = input.provider.model!;
+          expect(activeGroups.has(model)).toBe(false);
+          activeGroups.add(model);
+          active++;
+          maxActive = Math.max(maxActive, active);
+          const order = orders.get(model) ?? [];
+          order.push(`${input.scenario.id}:${input.repeatIndex}`);
+          orders.set(model, order);
+          try {
+            await generationGate;
+            return {
+              attempts: [{
+                index: 1,
+                durationMs: 1,
+                inputTokens: 2,
+                outputTokens: 3,
+                totalTokens: 5,
+                valid: true,
+                validationErrors: [],
+                outputChars: 10,
+              }],
+              finalValid: true,
+              finalText: `${protocol} output`,
+              finalErrors: [],
+            };
+          } finally {
+            active--;
+            activeGroups.delete(model);
+          }
+        },
+      });
+      const benchRequest = request(false);
+      const protocols = ['a2ui', 'openui', 'lynx-xml'] as const;
+      benchRequest.groups = Array.from({ length: groupCount }, (_, index) => {
+        const protocol = protocols[index % protocols.length]!;
+        return {
+          ...group,
+          id: `group-${index}`,
+          model: `model-${index}`,
+          protocol,
+          profile: protocol === 'lynx-xml' ? 'native' : 'matched-core',
+          enabled: !(groupCount === 4 && index === 3),
+        };
+      });
+      benchRequest.scenarios.push({
+        ...benchRequest.scenarios[0]!,
+        id: 'second',
+      });
+      benchRequest.settings.repeats = 2;
+      const workerCount = groupCount === 4 ? 3 : groupCount;
+      const totalRuns = workerCount * 4;
+      const store = getBenchJobStore();
+      const job = store.createJob(benchRequest, totalRuns);
+      const running = runBenchJob(job.id, {
+        adapters: {
+          a2ui: adapter('a2ui'),
+          openui: adapter('openui'),
+          'lynx-xml': adapter('lynx-xml'),
+        },
+      });
+      try {
+        await rstest.waitUntil(() => active === workerCount);
+        expect(activeGroups.size).toBe(workerCount);
+        expect([...orders.values()]).toEqual(
+          Array.from({ length: workerCount }, () => ['scenario:1']),
+        );
+      } finally {
+        releaseGeneration();
+        await running;
+      }
+      expect(maxActive).toBe(workerCount);
+      expect(activeGroups.size).toBe(0);
+      expect([...orders.keys()]).toEqual(
+        Array.from({ length: workerCount }, (_, index) => `model-${index}`),
+      );
+      for (const order of orders.values()) {
+        expect(order).toEqual([
+          'scenario:1',
+          'scenario:2',
+          'second:1',
+          'second:2',
+        ]);
+      }
+      const report = store.getJob(job.id)?.report;
+      expect(report?.settings).not.toHaveProperty('parallelism');
+      expect(new Set(report?.results.map((run) => run.id)).size).toBe(
+        totalRuns,
+      );
+      expect(report?.summary).toMatchObject({
+        totalRuns,
+        completedRuns: totalRuns,
+        failedRuns: 0,
+      });
+    },
+  );
 
   test('uses each group model and stores the Judge scoring frame for both protocols', async () => {
     const screenshotDataUrl =
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB';
-    rstest.mocked(probeGenuiBenchUiJudge).mockResolvedValue({
+    rstest.mocked(resolveGenuiBenchUiJudge).mockResolvedValue({
       enabled: true,
       session: {
-        bundleUrl: 'https://bundle.example/bench.lynx.js',
-        judgeUrl: 'https://judge.example/judge',
+        zipUrl: 'https://bundle.example/bench.lynx.zip',
+        screenshotPath: 'screenshot/zip/url',
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValue({
@@ -416,6 +710,14 @@ describe('A2UI Bench UI Judge integration', () => {
       a2ui: 'a2ui-group-model',
       openui: 'openui-group-model',
     });
+    expect(
+      rstest.mocked(runGenuiBenchUiJudge).mock.calls.map((
+        [options],
+      ) => [options.artifact.protocol, options.model]),
+    ).toEqual(expect.arrayContaining([
+      ['a2ui', 'a2ui-group-model'],
+      ['openui', 'openui-group-model'],
+    ]));
     expect(store.getJob(job.id)?.report?.results).toEqual([
       expect.objectContaining({
         judgeDimensions: geqiDimensions(4),
@@ -435,11 +737,11 @@ describe('A2UI Bench UI Judge integration', () => {
   test('maps an OpenUI matched-core result and redacts provider configuration from public output', async () => {
     const secret = 'must-not-appear-in-report';
     const providerUrl = `https://provider.example/v1?key=${secret}`;
-    rstest.mocked(probeGenuiBenchUiJudge).mockResolvedValueOnce({
+    rstest.mocked(resolveGenuiBenchUiJudge).mockResolvedValueOnce({
       enabled: true,
       session: {
-        bundleUrl: 'https://bundle.example/openui.lynx.js',
-        judgeUrl: 'https://judge.example/judge',
+        zipUrl: 'https://bundle.example/openui.lynx.zip',
+        screenshotPath: 'screenshot/zip/url',
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
@@ -464,6 +766,7 @@ describe('A2UI Bench UI Judge integration', () => {
               inputTokens: 7,
               outputTokens: 3,
               totalTokens: 10,
+              usage: { inputTokens: 7, outputTokens: 3, cachedTokens: 2 },
               valid: false,
               validationErrors: ['repair'],
               outputChars: 5,
@@ -474,6 +777,7 @@ describe('A2UI Bench UI Judge integration', () => {
               inputTokens: 11,
               outputTokens: 4,
               totalTokens: 15,
+              usage: { inputTokens: 11, outputTokens: 4, cachedTokens: 5 },
               valid: true,
               validationErrors: [],
               outputChars: 12,
@@ -521,6 +825,12 @@ describe('A2UI Bench UI Judge integration', () => {
       profile: 'matched-core',
       catalog: 'matched-core',
       tokens: 25,
+      usage: {
+        inputTokens: 18,
+        outputTokens: 7,
+        totalTokens: 25,
+        cachedTokens: 7,
+      },
       attempts: 2,
       judgeScore: 4.5,
       judgeStatus: 'complete',
@@ -636,89 +946,115 @@ describe('A2UI Bench UI Judge integration', () => {
     );
   });
 
-  test('aggregates native A2UI repair tokens and keeps its Judge screenshot', async () => {
-    rstest.mocked(probeBenchUiJudge).mockResolvedValueOnce({
-      enabled: true,
-      session: {
-        bundleUrl: 'https://bundle.example/a2ui.lynx.js',
-        judgeUrl: 'https://judge.example/judge',
-      },
-    });
-    rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
-      dimensions: geqiDimensions(4),
-      errors: [],
-      geqiScore: 80,
-      score: 4,
-      screenshotDataUrl:
-        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB',
-      status: 'complete',
-      warnings: [],
-    });
-    let callCount = 0;
-    rstest.mocked(getA2UIAgentService).mockReturnValue({
-      generateRaw(_messages: unknown, options: {
-        catalog?: { id?: string };
-      }) {
-        callCount += 1;
-        if (callCount === 1) {
+  test.each(['stop', 'length'])(
+    'aggregates native A2UI repair tokens after %s and keeps its Judge screenshot',
+    async (finishReason) => {
+      rstest.mocked(resolveBenchUiJudge).mockResolvedValueOnce({
+        enabled: true,
+        session: {
+          zipUrl: 'https://bundle.example/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
+        },
+      });
+      rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
+        dimensions: geqiDimensions(4),
+        errors: [],
+        geqiScore: 80,
+        score: 4,
+        screenshotDataUrl:
+          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB',
+        status: 'complete',
+        warnings: [],
+      });
+      let callCount = 0;
+      const conversations: ChatMessage[][] = [];
+      let receivedEnableWebSearch: boolean | undefined;
+      let receivedEnableImageGeneration: boolean | undefined;
+      rstest.mocked(getA2UIAgentService).mockReturnValue({
+        generateRaw(messages: ChatMessage[], options: {
+          catalog?: { id?: string };
+          enableWebSearch?: boolean;
+          enableImageGeneration?: boolean;
+        }) {
+          conversations.push([...messages]);
+          callCount += 1;
+          receivedEnableWebSearch = options.enableWebSearch;
+          receivedEnableImageGeneration = options.enableImageGeneration;
+          if (callCount === 1) {
+            return Promise.resolve({
+              text: 'invalid',
+              usage: { total_tokens: 5 },
+              finishReason,
+            });
+          }
           return Promise.resolve({
-            text: 'invalid',
-            usage: { total_tokens: 5 },
-            finishReason: 'stop',
+            text: JSON.stringify([
+              {
+                version: 'v0.9',
+                createSurface: {
+                  surfaceId: 'main',
+                  catalogId: options.catalog?.id,
+                },
+              },
+              {
+                version: 'v0.9',
+                updateComponents: {
+                  surfaceId: 'main',
+                  components: [{
+                    id: 'root',
+                    component: 'Text',
+                    text: 'Ready',
+                    variant: 'body',
+                  }],
+                },
+              },
+            ]),
+            usage: { total_tokens: 7 },
+            finishReason,
           });
-        }
-        return Promise.resolve({
-          text: JSON.stringify([
-            {
-              version: 'v0.9',
-              createSurface: {
-                surfaceId: 'main',
-                catalogId: options.catalog?.id,
-              },
-            },
-            {
-              version: 'v0.9',
-              updateComponents: {
-                surfaceId: 'main',
-                components: [{
-                  id: 'root',
-                  component: 'Text',
-                  text: 'Ready',
-                  variant: 'body',
-                }],
-              },
-            },
-          ]),
-          usage: { total_tokens: 7 },
-          finishReason: 'stop',
-        });
-      },
-    } as unknown as ReturnType<typeof getA2UIAgentService>);
-    const benchRequest = request();
-    benchRequest.settings.maxRepairAttempts = 1;
-    const store = getBenchJobStore();
-    const job = store.createJob(benchRequest, 1);
+        },
+      } as unknown as ReturnType<typeof getA2UIAgentService>);
+      const benchRequest = request();
+      benchRequest.settings.maxRepairAttempts = 1;
+      const store = getBenchJobStore();
+      const job = store.createJob(benchRequest, 1);
 
-    await runBenchJob(job.id);
+      await runBenchJob(job.id);
 
-    expect(store.getJob(job.id)?.report?.results[0]).toMatchObject({
-      judgeDimensions: geqiDimensions(4),
-      judgeGeqiScore: 80,
-      protocol: 'a2ui',
-      profile: 'native',
-      tokens: 12,
-      attempts: 2,
-      screenshotDataUrl:
-        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB',
-    });
-  });
+      expect(conversations).toHaveLength(2);
+      expect(conversations[1]?.[0]).toEqual(conversations[0]?.[0]);
+      if (finishReason === 'length') {
+        expect(conversations[1]).toHaveLength(2);
+        expect(conversations[1]?.[1]?.content).toContain(
+          'Regenerate a shorter',
+        );
+        expect(conversations[1]?.some(message => message.role === 'assistant'))
+          .toBe(false);
+      } else {
+        expect(conversations[1]).toHaveLength(3);
+        expect(conversations[1]?.[1]?.content).toBe('invalid');
+      }
+      expect(receivedEnableWebSearch).toBe(false);
+      expect(receivedEnableImageGeneration).toBe(false);
+      expect(store.getJob(job.id)?.report?.results[0]).toMatchObject({
+        judgeDimensions: geqiDimensions(4),
+        judgeGeqiScore: 80,
+        protocol: 'a2ui',
+        profile: 'native',
+        tokens: 12,
+        attempts: 2,
+        screenshotDataUrl:
+          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB',
+      });
+    },
+  );
 
   test('marks a native A2UI run failed when Judge fails', async () => {
-    rstest.mocked(probeBenchUiJudge).mockResolvedValueOnce({
+    rstest.mocked(resolveBenchUiJudge).mockResolvedValueOnce({
       enabled: true,
       session: {
-        bundleUrl: 'https://bundle.example/a2ui.lynx.js',
-        judgeUrl: 'https://judge.example/judge',
+        zipUrl: 'https://bundle.example/a2ui.lynx.zip',
+        screenshotPath: 'screenshot/zip/url',
       },
     });
     rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({

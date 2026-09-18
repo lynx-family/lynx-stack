@@ -14,11 +14,13 @@ import {
   previewTextFromSharedMessages,
   renameConversation,
   saveConversationMessages,
+  saveConversationMeta,
   setActiveConversationId,
 } from '../storage/conversationRepo.js';
 import { applyA2UIMessagesToSnapshot } from '../storage/conversationSnapshot.js';
 import type { SharedConversationDoc } from '../storage/sharedConversation.js';
 import type {
+  ConversationGenerationSettings,
   ConversationMeta,
   ConversationProtocol,
   DataModelSnapshot,
@@ -26,10 +28,15 @@ import type {
   PreviewPayloadUrls,
   PreviewPerformanceMetrics,
 } from '../storage/types.js';
+import type { GenerationUsageRecord } from '../utils/modelPricing.js';
 
 export interface ModelChatMessage {
+  generationUsage?: GenerationUsageRecord;
+  generationError?: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
+  lynxXmlFragment?: string;
+  lynxXmlModelOutput?: string;
   previewPayloadUrls?: PreviewPayloadUrls;
   previewMetrics?: PreviewPerformanceMetrics;
 }
@@ -48,8 +55,12 @@ interface ConversationHotState {
 }
 
 export interface RecordTurnInput {
+  generationUsage?: GenerationUsageRecord;
+  generationError?: string;
   userMessage: ModelChatMessage;
   assistantContent: string;
+  lynxXmlFragment?: string;
+  lynxXmlModelOutput?: string;
   a2uiMessages: unknown[];
   previewMessages?: unknown[];
   previewPayloadUrls?: PreviewPayloadUrls | null;
@@ -70,10 +81,14 @@ export interface UseConversationReturn {
   isPersistent: boolean;
   switchTo: (id: string) => Promise<void>;
   createNew: () => Promise<string>;
+  clearAll: () => Promise<void>;
   importShared: (doc: SharedConversationDoc) => Promise<string>;
   remove: (id: string) => Promise<void>;
   rename: (id: string, title: string) => Promise<void>;
   recordTurn: (input: RecordTurnInput) => Promise<void>;
+  recordGenerationSettings: (
+    settings: ConversationGenerationSettings,
+  ) => Promise<void>;
   updateLastAssistantPreviewMetrics: (
     metrics: PreviewPerformanceMetrics,
   ) => Promise<void>;
@@ -111,7 +126,9 @@ function clonePreviewPerformanceMetrics(
 function truncateConversationHistory(
   history: ModelChatMessage[],
 ): ModelChatMessage[] {
-  const byTurns = history.slice(-MAX_CONVERSATION_TURNS * 2);
+  const byTurns = history.filter(message => !message.generationError).slice(
+    -MAX_CONVERSATION_TURNS * 2,
+  );
   let totalChars = 0;
   const kept: ModelChatMessage[] = [];
 
@@ -147,6 +164,14 @@ function toPersistedMessages(
     seq: index,
     role: message.role,
     content: message.content,
+    generationUsage: message.generationUsage,
+    generationError: message.generationError,
+    ...(message.lynxXmlFragment
+      ? { lynxXmlFragment: message.lynxXmlFragment }
+      : {}),
+    ...(message.lynxXmlModelOutput
+      ? { lynxXmlModelOutput: message.lynxXmlModelOutput }
+      : {}),
     previewPayloadUrls: message.previewPayloadUrls,
     previewMetrics: clonePreviewPerformanceMetrics(message.previewMetrics),
     createdAt: now + index,
@@ -159,6 +184,14 @@ function fromPersistedMessages(
   return messages.map((message) => ({
     role: message.role,
     content: message.content,
+    generationUsage: message.generationUsage,
+    generationError: message.generationError,
+    ...(message.lynxXmlFragment
+      ? { lynxXmlFragment: message.lynxXmlFragment }
+      : {}),
+    ...(message.lynxXmlModelOutput
+      ? { lynxXmlModelOutput: message.lynxXmlModelOutput }
+      : {}),
     previewPayloadUrls: message.previewPayloadUrls,
     previewMetrics: clonePreviewPerformanceMetrics(message.previewMetrics),
   }));
@@ -393,6 +426,12 @@ export function useConversation(
           messages: doc.messages.map((message) => ({
             role: message.role,
             content: message.content,
+            ...(message.lynxXmlFragment
+              ? { lynxXmlFragment: message.lynxXmlFragment }
+              : {}),
+            ...(message.lynxXmlModelOutput
+              ? { lynxXmlModelOutput: message.lynxXmlModelOutput }
+              : {}),
             previewPayloadUrls: message.previewPayloadUrls,
             previewMetrics: clonePreviewPerformanceMetrics(
               message.previewMetrics,
@@ -454,6 +493,18 @@ export function useConversation(
     [conversations, createNew, protocol, switchTo],
   );
 
+  const clearAll = useCallback(async () => {
+    const ids = conversations.map((item) => item.id);
+    if (persistentRef.current) {
+      await Promise.all(ids.map((id) => deleteConversation(id, protocol)));
+    } else {
+      conversationHotStateMapRef.current.clear();
+    }
+    setConversations([]);
+    const nextId = await createNew();
+    await switchTo(nextId);
+  }, [conversations, createNew, protocol, switchTo]);
+
   const rename = useCallback(async (id: string, title: string) => {
     const trimmed = title.trim();
     if (!trimmed) return;
@@ -467,6 +518,46 @@ export function useConversation(
     );
   }, [refreshConversations]);
 
+  const recordGenerationSettings = useCallback(
+    async (settings: ConversationGenerationSettings) => {
+      const id = activeIdRef.current;
+      const meta = conversationsRef.current.find((item) => item.id === id);
+      if (!meta) return;
+      const nextMeta: ConversationMeta = {
+        ...meta,
+        generationSettings: { ...settings },
+        updatedAt: Date.now(),
+      };
+      const nextConversations = conversationsRef.current.map((item) =>
+        item.id === id ? nextMeta : item
+      );
+      conversationsRef.current = nextConversations;
+      setConversations(nextConversations);
+      if (!persistentRef.current) return;
+      try {
+        await saveConversationMeta(nextMeta);
+      } catch (err) {
+        console.warn(
+          '[a2ui] Failed to persist generation settings; continuing in memory',
+          err,
+        );
+        persistentRef.current = false;
+        setIsPersistent(false);
+        conversationHotStateMapRef.current.set(
+          meta.id,
+          cloneHotState({
+            messages: messagesRef.current,
+            dataModel: dataModelRef.current,
+            surfaceIds: surfaceIdsRef.current,
+            previewMessages: previewMessagesRef.current,
+            previewPayloadUrls: previewPayloadUrlsRef.current,
+          }),
+        );
+      }
+    },
+    [],
+  );
+
   const recordTurn = useCallback(
     async (input: RecordTurnInput) => {
       let id = activeIdRef.current;
@@ -478,6 +569,14 @@ export function useConversation(
         {
           role: 'assistant' as const,
           content: input.assistantContent,
+          generationUsage: input.generationUsage,
+          generationError: input.generationError,
+          ...(input.lynxXmlFragment
+            ? { lynxXmlFragment: input.lynxXmlFragment }
+            : {}),
+          ...(input.lynxXmlModelOutput
+            ? { lynxXmlModelOutput: input.lynxXmlModelOutput }
+            : {}),
           previewPayloadUrls: input.previewPayloadUrls ?? undefined,
           previewMetrics: clonePreviewPerformanceMetrics(input.previewMetrics),
         },
@@ -665,10 +764,12 @@ export function useConversation(
     isPersistent,
     switchTo,
     createNew,
+    clearAll,
     importShared,
     remove,
     rename,
     recordTurn,
+    recordGenerationSettings,
     updateLastAssistantPreviewMetrics,
     buildConversationContext,
   };

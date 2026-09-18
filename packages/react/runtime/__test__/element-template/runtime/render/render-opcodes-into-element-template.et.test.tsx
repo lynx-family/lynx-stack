@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { h } from 'preact';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderOpcodesIntoElementTemplate } from '../../../../src/element-template/runtime/render/render-opcodes.js';
@@ -22,8 +23,11 @@ import {
   __OpAttr,
   __OpBegin,
   __OpEnd,
+  __OpPageEnd,
+  __OpPageStart,
   __OpSlot,
   __OpText,
+  renderToString,
 } from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
 
 describe('renderOpcodesIntoElementTemplate', () => {
@@ -78,6 +82,8 @@ describe('renderOpcodesIntoElementTemplate', () => {
     const result = renderOpcodesIntoElementTemplate([__OpText, 'hello']);
 
     expect(result.rootRefs).toEqual([rootTextRef]);
+    expect(result.pageAttributes).toBeNull();
+    expect(result.rootSubtreeHandles).toEqual([[]]);
     expect(createElementTemplate).toHaveBeenCalledWith(
       '_et_builtin_raw_text',
       null,
@@ -88,10 +94,111 @@ describe('renderOpcodesIntoElementTemplate', () => {
     expect(elementTemplateRegistry.get(-1)).toBe(rootTextRef);
   });
 
+  it('returns singleton page attrs from the synthetic root frame', () => {
+    const attributes = { id: 'screen' };
+
+    const result = renderOpcodesIntoElementTemplate([
+      __OpPageStart,
+      attributes,
+    ]);
+
+    expect(result).toEqual({
+      pageAttributes: attributes,
+      rootRefs: [],
+      rootSubtreeHandles: [],
+    });
+  });
+
+  it('rejects page attrs inside a materialized host', () => {
+    expect(() =>
+      renderOpcodesIntoElementTemplate([
+        __OpBegin,
+        { type: '_et_parent' },
+        __OpPageStart,
+        { id: 'nested' },
+        __OpEnd,
+      ])
+    ).toThrow('must be the outermost element');
+  });
+
+  it('rejects more than one page attr instruction', () => {
+    expect(() =>
+      renderOpcodesIntoElementTemplate([
+        __OpPageStart,
+        { id: 'first' },
+        __OpPageStart,
+        { id: 'second' },
+      ])
+    ).toThrow('does not support multiple authored <page /> elements');
+  });
+
+  it('materializes multiple roots inside one outermost page', () => {
+    const firstRootRef = { kind: 'first-root-ref' };
+    const secondRootRef = { kind: 'second-root-ref' };
+    const attributes = { id: 'page' };
+    createElementTemplate
+      .mockReturnValueOnce(firstRootRef)
+      .mockReturnValueOnce(secondRootRef);
+
+    const result = renderOpcodesIntoElementTemplate([
+      __OpPageStart,
+      attributes,
+      __OpBegin,
+      { type: '_et_first_root' },
+      __OpEnd,
+      __OpBegin,
+      { type: '_et_second_root' },
+      __OpEnd,
+      __OpPageEnd,
+    ]);
+
+    expect(result).toEqual({
+      pageAttributes: attributes,
+      rootRefs: [firstRootRef, secondRootRef],
+      rootSubtreeHandles: [[], []],
+    });
+  });
+
+  it.each([
+    [
+      __OpBegin,
+      { type: '_et_before_page' },
+      __OpEnd,
+      __OpPageStart,
+      { id: 'page' },
+    ],
+    [
+      __OpPageStart,
+      { id: 'page' },
+      __OpPageEnd,
+      __OpBegin,
+      { type: '_et_after_page' },
+      __OpEnd,
+    ],
+    [
+      __OpPageStart,
+      { id: 'page' },
+      __OpPageEnd,
+      __OpText,
+      'outside page',
+    ],
+  ])('rejects a materialized root sibling outside page', (...opcodes) => {
+    createElementTemplate.mockReturnValue({ kind: 'root-ref' });
+
+    expect(() => renderOpcodesIntoElementTemplate(opcodes)).toThrow(
+      'must wrap all materialized roots',
+    );
+  });
+
   it('creates exact list through typed native create with slot-0 refs as listChildren', () => {
     const itemRef = { kind: 'item-ref' };
     const listRef = { kind: 'list-ref' };
-    const attributes = { id: 'typed-list' };
+    const handler = vi.fn();
+    const attributes = {
+      bindtap: handler,
+      className: 'feed',
+      id: 'typed-list',
+    };
     createElementTemplate.mockReturnValueOnce(itemRef);
     createTypedElementTemplate.mockReturnValueOnce(listRef);
 
@@ -99,7 +206,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
       __OpBegin,
       { type: 'list' },
       __OpAttr,
-      'typedAttributes',
       attributes,
       __OpSlot,
       0,
@@ -110,6 +216,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
     ]);
 
     expect(result.rootRefs).toEqual([listRef]);
+    expect(result.rootSubtreeHandles).toEqual([[]]);
     expect(createElementTemplate).toHaveBeenCalledWith(
       '_et_item',
       null,
@@ -123,6 +230,8 @@ describe('renderOpcodesIntoElementTemplate', () => {
     const typedCreateCall = createTypedElementTemplate.mock.calls[0]!;
     expect(typedCreateCall[0]).toBe('list');
     expect(typedCreateCall[1]).toEqual({
+      bindtap: '-2:0:bindtap',
+      class: 'feed',
       id: 'typed-list',
       'component-at-index': expect.any(Function),
       'component-at-indexes': expect.any(Function),
@@ -134,6 +243,8 @@ describe('renderOpcodesIntoElementTemplate', () => {
     expect(flushInitialElementTemplateListUpdates()).toEqual([{
       uid: -2,
       attributes: {
+        bindtap: '-2:0:bindtap',
+        class: 'feed',
         id: 'typed-list',
         'component-at-index': expect.any(Function),
         'component-at-indexes': expect.any(Function),
@@ -149,6 +260,102 @@ describe('renderOpcodesIntoElementTemplate', () => {
     expect(elementTemplateRegistry.get(-2)).toBe(listRef);
   });
 
+  it('keeps compiled and typed attributes separate across nested frames', () => {
+    const itemRef = { kind: 'item-ref' };
+    const listRef = { kind: 'list-ref' };
+    const parentRef = { kind: 'parent-ref' };
+    const handleTap = vi.fn();
+    const parentAttributes = [handleTap, 'parent'];
+    const itemAttributes = ['item'];
+    const listAttributes = { id: 'feed', bindtap: handleTap };
+    __etAttrPlanMap._et_parent = [0, adaptEventAttrSlot];
+    createElementTemplate.mockReturnValueOnce(itemRef).mockReturnValueOnce(parentRef);
+    createTypedElementTemplate.mockReturnValueOnce(listRef);
+
+    const result = renderOpcodesIntoElementTemplate(renderToString(
+      h('_et_parent', {
+        attributeSlots: parentAttributes,
+        $0: h('list', {
+          attributes: listAttributes,
+          $0: h('_et_item', {
+            attributeSlots: itemAttributes,
+            __listItemPlatformInfo: { 'item-key': 'a' },
+          }),
+        }),
+      }),
+      undefined,
+    ));
+
+    expect(result.rootRefs).toEqual([parentRef]);
+    expect(createElementTemplate).toHaveBeenNthCalledWith(1, '_et_item', null, itemAttributes, null, -1);
+    expect(createTypedElementTemplate).toHaveBeenCalledWith(
+      'list',
+      {
+        id: 'feed',
+        bindtap: '-2:0:bindtap',
+        'component-at-index': expect.any(Function),
+        'component-at-indexes': expect.any(Function),
+        'enqueue-component': expect.any(Function),
+      },
+      null,
+      -2,
+      { listChildren: [itemRef] },
+    );
+    expect(createElementTemplate).toHaveBeenNthCalledWith(
+      2,
+      '_et_parent',
+      null,
+      ['-3:0:', 'parent'],
+      [[listRef]],
+      -3,
+    );
+    expect(parentAttributes).toEqual([handleTap, 'parent']);
+    expect(createElementTemplate.mock.calls[1]![2]).not.toBe(parentAttributes);
+    expect(itemAttributes).toEqual(['item']);
+    expect(listAttributes).toEqual({ id: 'feed', bindtap: handleTap });
+    expect(addEvent).not.toHaveBeenCalled();
+  });
+
+  it('resets attribute payloads when sibling frames switch host types', () => {
+    createElementTemplate.mockImplementation(type => ({ type }));
+    createTypedElementTemplate.mockImplementation(type => ({ type }));
+
+    renderOpcodesIntoElementTemplate(renderToString([
+      h('_et_with_attrs', { attributeSlots: ['compiled'] }),
+      h('list', {}),
+      h('list', { attributes: { id: 'typed' } }),
+      h('_et_without_attrs', {}),
+    ], undefined));
+
+    expect(createElementTemplate).toHaveBeenNthCalledWith(1, '_et_with_attrs', null, ['compiled'], null, -1);
+    expect(createTypedElementTemplate).toHaveBeenNthCalledWith(
+      1,
+      'list',
+      {
+        'component-at-index': expect.any(Function),
+        'component-at-indexes': expect.any(Function),
+        'enqueue-component': expect.any(Function),
+      },
+      null,
+      -2,
+      { listChildren: [] },
+    );
+    expect(createTypedElementTemplate).toHaveBeenNthCalledWith(
+      2,
+      'list',
+      {
+        id: 'typed',
+        'component-at-index': expect.any(Function),
+        'component-at-indexes': expect.any(Function),
+        'enqueue-component': expect.any(Function),
+      },
+      null,
+      -3,
+      { listChildren: [] },
+    );
+    expect(createElementTemplate).toHaveBeenNthCalledWith(2, '_et_without_attrs', null, null, null, -4);
+  });
+
   it('creates empty exact lists without logical children or typed attributes', () => {
     const listRef = { kind: 'list-ref' };
     createTypedElementTemplate.mockReturnValueOnce(listRef);
@@ -160,6 +367,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
     ]);
 
     expect(result.rootRefs).toEqual([listRef]);
+    expect(result.rootSubtreeHandles).toEqual([[]]);
     expect(createTypedElementTemplate).toHaveBeenCalledWith(
       'list',
       {
@@ -186,10 +394,11 @@ describe('renderOpcodesIntoElementTemplate', () => {
     }]);
   });
 
-  it('installs Snapshot-aligned callbacks for first-screen typed list items', () => {
-    const itemARef = { kind: 'item-a-ref', __mockNativeId: 101 };
-    const itemBRef = { kind: 'item-b-ref', __mockNativeId: 102 };
-    const listRef = { kind: 'list-ref', __mockNativeId: 200 };
+  it('installs first-screen list callbacks', () => {
+    const itemARef = { kind: 'item-a-ref', __mockNativeId: 101 } as unknown as ElementTemplateHandle;
+    const itemBRef = { kind: 'item-b-ref', __mockNativeId: 102 } as unknown as ElementTemplateHandle;
+    const listRef = { kind: 'list-ref' } as unknown as ElementTemplateHandle;
+    const materializedListRef = { kind: 'materialized-list-ref', __mockNativeId: 300 } as unknown as FiberElement;
     createElementTemplate
       .mockReturnValueOnce(itemARef)
       .mockReturnValueOnce(itemBRef);
@@ -199,7 +408,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
       __OpBegin,
       { type: 'list' },
       __OpAttr,
-      'typedAttributes',
       {},
       __OpSlot,
       0,
@@ -216,8 +424,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
     const componentAtIndex = attrs['component-at-index']!;
     const componentAtIndexes = attrs['component-at-indexes']!;
     const enqueueComponent = attrs['enqueue-component']!;
-    const materializedListRef = { kind: 'materialized-list-ref', __mockNativeId: 300 };
-
     expect(componentAtIndex(materializedListRef, 9, 1, 72, true)).toBe(102);
     expect(insertNodeToElementTemplate).toHaveBeenLastCalledWith(
       listRef,
@@ -379,7 +585,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
       __OpBegin,
       { type: '_et_event' },
       __OpAttr,
-      'attributeSlots',
       [handleTap, 'title', 1],
       __OpEnd,
     ]);
@@ -433,7 +638,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
       __OpBegin,
       { type: '_et_event' },
       __OpAttr,
-      'attributeSlots',
       [null, undefined, false, true],
       __OpEnd,
     ]);
@@ -478,7 +682,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
       __OpBegin,
       { type: '_et_ref' },
       __OpAttr,
-      'attributeSlots',
       [ref],
       __OpEnd,
     ]);
@@ -503,7 +706,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
       __OpBegin,
       { type: '_et_spread' },
       __OpAttr,
-      'attributeSlots',
       [{
         id: 'cta',
         className: 'primary',
@@ -535,7 +737,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
       __OpBegin,
       { type: '_et_spread' },
       __OpAttr,
-      'attributeSlots',
       [{
         id: 'cta',
         ref,
@@ -555,7 +756,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
     expect(ref).not.toHaveBeenCalled();
   });
 
-  it('throws when text is emitted outside of an element slot', () => {
+  it('throws when text is emitted outside of a child slot', () => {
     expect(() =>
       renderOpcodesIntoElementTemplate([
         __OpBegin,
@@ -564,10 +765,10 @@ describe('renderOpcodesIntoElementTemplate', () => {
         'hello',
         __OpEnd,
       ])
-    ).toThrow('Template \'_et_parent\' received a text child outside of any element slot.');
+    ).toThrow('Template \'_et_parent\' received a text child outside of any child slot.');
   });
 
-  it('throws when an element child is emitted outside of an element slot', () => {
+  it('throws when an element child is emitted outside of a child slot', () => {
     expect(() =>
       renderOpcodesIntoElementTemplate([
         __OpBegin,
@@ -579,7 +780,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
         __OpEnd,
         __OpEnd,
       ])
-    ).toThrow('Template \'_et_parent\' received a child outside of any element slot.');
+    ).toThrow('Template \'_et_parent\' received a child outside of any child slot.');
   });
 
   it('throws on unknown opcodes', () => {

@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 import {
   CHAT_PROVIDER_SETTINGS_ADAPTER,
-  filterProviderRequestOptionsForEndpoint,
   getA2UIActionEndpoint,
   getChatEndpoint,
   parseTokenUsage,
@@ -390,10 +389,22 @@ function hydrateMessages(
     }
 
     if (message.role !== 'assistant') continue;
+    if (message.generationError) {
+      messages.push({
+        kind: 'status',
+        tone: 'error',
+        text: message.generationError,
+        generationUsage: message.generationUsage,
+      });
+      continue;
+    }
     const output = normalizeMessages(message.content);
     if (previousWasAction && output.length > 0) {
       messages.push(
-        agentRespondedMessage(output.length, message.previewMetrics),
+        {
+          ...agentRespondedMessage(output.length, message.previewMetrics),
+          generationUsage: message.generationUsage,
+        },
         {
           kind: 'output',
           tone: 'success',
@@ -415,6 +426,7 @@ function hydrateMessages(
       messages.push({
         kind: 'status',
         tone: 'success',
+        generationUsage: message.generationUsage,
         text: renderedPreviewText(
           output.length,
           generatedCharacterCount(message.content),
@@ -476,12 +488,8 @@ export const A2UI_CHAT_ADAPTER = {
   suggestions: SUGGESTIONS,
   settings: CHAT_PROVIDER_SETTINGS_ADAPTER,
   createRequest({ prompt, conversation, settings, host }) {
-    const url = getChatEndpoint('a2ui', host);
-    const provider = filterProviderRequestOptionsForEndpoint(
-      toProviderRequestOptions(settings),
-      url,
-      host,
-    );
+    const url = getChatEndpoint('a2ui', host, settings);
+    const provider = toProviderRequestOptions(settings);
     return {
       url,
       method: 'POST',
@@ -588,6 +596,7 @@ export const A2UI_CHAT_ADAPTER = {
   },
   preview: {
     delivery: 'live-message',
+    initialOutput: (): A2UIOutput => [],
     source(output, context) {
       if (!output) return undefined;
       return {
@@ -639,13 +648,9 @@ export const A2UI_CHAT_ADAPTER = {
     },
     label: actionLabel,
     request({ action, conversation, settings, host }) {
-      const chatEndpoint = getChatEndpoint('a2ui', host);
+      const chatEndpoint = getChatEndpoint('a2ui', host, settings);
       const url = getA2UIActionEndpoint(chatEndpoint);
-      const provider = filterProviderRequestOptionsForEndpoint(
-        toProviderRequestOptions(settings),
-        url,
-        host,
-      );
+      const provider = toProviderRequestOptions(settings);
       return {
         url,
         method: 'POST',

@@ -3,13 +3,17 @@
 // LICENSE file in the root directory of this source tree.
 import { z } from 'zod/v4';
 
-export const GAP_CLASS: Record<string, string> = {
+import type { OpenUiGap } from '../shared/layout.js';
+
+export const GAP_CLASS: Record<OpenUiGap, string> = {
   none: 'OpenUIGapNone',
+  xxs: 'OpenUIGapXxs',
   xs: 'OpenUIGapXs',
   s: 'OpenUIGapS',
   m: 'OpenUIGapM',
   l: 'OpenUIGapL',
   xl: 'OpenUIGapXl',
+  '2xl': 'OpenUIGap2Xl',
 };
 
 export function asArray<T>(value: T | T[] | null | undefined): T[] {

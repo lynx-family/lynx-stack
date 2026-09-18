@@ -31,7 +31,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rslib build",
+    "build": "rslib",
     "test": "vitest",
     "test:coverage": "vitest run --coverage"
   },

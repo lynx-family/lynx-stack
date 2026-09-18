@@ -11,6 +11,8 @@ export const ElementTemplateUpdateOps = {
   insertTypedListItem: 6,
   removeTypedListItem: 7,
   updateTypedListItem: 8,
+  setMainThreadEvent: 9,
+  setMainThreadRef: 10,
 } as const;
 
 export type ElementTemplateUpdateOp = typeof ElementTemplateUpdateOps[keyof typeof ElementTemplateUpdateOps];

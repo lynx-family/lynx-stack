@@ -1,7 +1,8 @@
+use std::io::{Read, Write};
+
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
 use crate::{Error, Result};
 
@@ -14,15 +15,6 @@ const PEERTALK_TYPE: u32 = 101;
 pub(crate) struct AppInfo {
   #[serde(rename = "App")]
   pub app: String,
-}
-
-#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
-pub(crate) struct Session {
-  pub session_id: i64,
-  #[serde(default)]
-  pub r#type: String,
-  #[serde(default)]
-  pub url: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -76,7 +68,7 @@ pub(crate) struct ComputedStyleProperty {
   pub value: String,
 }
 
-pub(crate) async fn write_peertalk_message<W: AsyncWrite + Unpin, T: Serialize>(
+pub(crate) fn write_peertalk_message<W: Write, T: Serialize>(
   writer: &mut W,
   message: &T,
 ) -> Result<()> {
@@ -89,14 +81,14 @@ pub(crate) async fn write_peertalk_message<W: AsyncWrite + Unpin, T: Serialize>(
   write_u32(&mut frame[12..16], len as u32 + 4);
   write_u32(&mut frame[16..20], len as u32);
   frame[PEERTALK_HEADER_LEN..].copy_from_slice(&body);
-  writer.write_all(&frame).await?;
-  writer.flush().await?;
+  writer.write_all(&frame)?;
+  writer.flush()?;
   Ok(())
 }
 
-pub(crate) async fn read_peertalk_message<R: AsyncRead + Unpin>(reader: &mut R) -> Result<Value> {
+pub(crate) fn read_peertalk_message<R: Read>(reader: &mut R) -> Result<Value> {
   let mut header = [0_u8; PEERTALK_HEADER_LEN];
-  reader.read_exact(&mut header).await?;
+  reader.read_exact(&mut header)?;
   let payload_len = read_u32(&header[16..20]) as usize;
   if payload_len > MAX_PEERTALK_PAYLOAD_LEN {
     return Err(Error::Protocol(format!(
@@ -104,7 +96,7 @@ pub(crate) async fn read_peertalk_message<R: AsyncRead + Unpin>(reader: &mut R) 
     )));
   }
   let mut payload = vec![0_u8; payload_len];
-  reader.read_exact(&mut payload).await?;
+  reader.read_exact(&mut payload)?;
   Ok(serde_json::from_slice(&payload)?)
 }
 
@@ -121,28 +113,6 @@ pub(crate) fn parse_initialize_response(value: &Value) -> Result<Option<AppInfo>
     .and_then(|data| data.get("info"))
     .ok_or_else(|| Error::Protocol("Register response missing data.info".into()))?;
   Ok(Some(serde_json::from_value(info.clone())?))
-}
-
-pub(crate) fn list_session_request(port: u16) -> Value {
-  json!({
-    "event": "Customized",
-    "data": {
-      "type": "ListSession",
-      "sender": port,
-      "data": { "client_id": port },
-    },
-  })
-}
-
-pub(crate) fn parse_session_list_response(value: &Value) -> Result<Option<Vec<Session>>> {
-  if customized_type(value) != Some("SessionList") {
-    return Ok(None);
-  }
-  let data = value
-    .get("data")
-    .and_then(|data| data.get("data"))
-    .ok_or_else(|| Error::Protocol("SessionList response missing data.data".into()))?;
-  Ok(Some(serde_json::from_value(data.clone())?))
 }
 
 pub(crate) fn global_switch_request(port: u16, key: &str, value: bool) -> Value {
@@ -193,16 +163,9 @@ pub(crate) fn parse_cdp_response<T: DeserializeOwned>(
   value: &Value,
   expected_id: u32,
 ) -> Result<Option<T>> {
-  if customized_type(value) != Some("CDP") {
+  let Some(message) = cdp_message(value)? else {
     return Ok(None);
-  }
-  let message = value
-    .get("data")
-    .and_then(|data| data.get("data"))
-    .and_then(|data| data.get("message"))
-    .and_then(Value::as_str)
-    .ok_or_else(|| Error::Protocol("CDP response missing message".into()))?;
-  let message: Value = serde_json::from_str(message)?;
+  };
   if message.get("id").and_then(Value::as_u64) != Some(expected_id as u64) {
     return Ok(None);
   }
@@ -218,6 +181,44 @@ pub(crate) fn parse_cdp_response<T: DeserializeOwned>(
     .cloned()
     .ok_or_else(|| Error::Protocol("CDP response missing result".into()))?;
   Ok(Some(serde_json::from_value(result)?))
+}
+
+/// Extracts the inner CDP request id without deserializing its result.
+///
+/// CDP notifications have no `id` and deliberately return `None`. This lets
+/// the router's single reader dispatch out-of-order responses while safely
+/// ignoring notifications instead of consuming another request's response.
+pub(crate) fn cdp_response_id(value: &Value) -> Result<Option<u32>> {
+  let Some(message) = cdp_message(value)? else {
+    return Ok(None);
+  };
+  let Some(id) = message.get("id") else {
+    return Ok(None);
+  };
+  let id = id
+    .as_u64()
+    .ok_or_else(|| Error::Protocol("CDP response id is not an unsigned integer".into()))?;
+  let id =
+    u32::try_from(id).map_err(|_| Error::Protocol(format!("CDP response id {id} exceeds u32")))?;
+  Ok(Some(id))
+}
+
+fn cdp_message(value: &Value) -> Result<Option<Value>> {
+  if customized_type(value) != Some("CDP") {
+    return Ok(None);
+  }
+  let message = value
+    .get("data")
+    .and_then(|data| data.get("data"))
+    .and_then(|data| data.get("message"))
+    .ok_or_else(|| Error::Protocol("CDP response missing message".into()))?;
+  match message {
+    Value::String(message) => Ok(Some(serde_json::from_str(message)?)),
+    Value::Object(_) => Ok(Some(message.clone())),
+    _ => Err(Error::Protocol(
+      "CDP response message must be a JSON string or object".into(),
+    )),
+  }
 }
 
 fn customized_type(value: &Value) -> Option<&str> {
@@ -242,35 +243,26 @@ fn read_u32(source: &[u8]) -> u32 {
 mod tests {
   use super::*;
 
-  fn cdp_response(message: Value) -> Value {
+  fn cdp_envelope(message: Value) -> Value {
     json!({
       "event": "Customized",
       "data": {
         "type": "CDP",
-        "data": { "message": message.to_string() },
+        "data": { "message": message },
       },
     })
   }
 
-  #[tokio::test]
-  async fn peertalk_frame_roundtrip() {
-    let value = json!({ "event": "Initialize", "data": 8901 });
-    let (mut writer, mut reader) = tokio::io::duplex(1024);
-    write_peertalk_message(&mut writer, &value).await.unwrap();
-    assert_eq!(read_peertalk_message(&mut reader).await.unwrap(), value);
+  fn cdp_response(message: Value) -> Value {
+    cdp_envelope(Value::String(message.to_string()))
   }
 
   #[test]
-  fn parses_session_list() {
-    let response = json!({
-      "event": "Customized",
-      "data": {
-        "type": "SessionList",
-        "data": [{ "session_id": 1, "url": "main.lynx.bundle" }],
-      },
-    });
-    let sessions = parse_session_list_response(&response).unwrap().unwrap();
-    assert_eq!(sessions[0].session_id, 1);
+  fn peertalk_frame_roundtrip() {
+    let value = json!({ "event": "Initialize", "data": 8901 });
+    let mut frame = Vec::new();
+    write_peertalk_message(&mut frame, &value).unwrap();
+    assert_eq!(read_peertalk_message(&mut frame.as_slice()).unwrap(), value);
   }
 
   #[test]
@@ -281,6 +273,41 @@ mod tests {
     }));
     let result: QuerySelectorResult = parse_cdp_response(&response, 42).unwrap().unwrap();
     assert_eq!(result.node_id, 7);
+  }
+
+  #[test]
+  fn parses_object_encoded_cdp_response() {
+    let response = cdp_envelope(json!({
+      "id": 42,
+      "result": { "nodeId": 7 },
+    }));
+    assert_eq!(cdp_response_id(&response).unwrap(), Some(42));
+    let result: QuerySelectorResult = parse_cdp_response(&response, 42).unwrap().unwrap();
+    assert_eq!(result.node_id, 7);
+  }
+
+  #[test]
+  fn recognizes_object_encoded_cdp_notification() {
+    let notification = cdp_envelope(json!({
+      "method": "DOM.documentUpdated",
+    }));
+    assert_eq!(cdp_response_id(&notification).unwrap(), None);
+    assert!(parse_cdp_response::<Value>(&notification, 42)
+      .unwrap()
+      .is_none());
+  }
+
+  #[test]
+  fn rejects_object_encoded_cdp_response_with_malformed_id() {
+    let response = cdp_envelope(json!({
+      "id": "not-an-id",
+      "result": {},
+    }));
+    assert!(matches!(
+      cdp_response_id(&response),
+      Err(Error::Protocol(message))
+        if message == "CDP response id is not an unsigned integer"
+    ));
   }
 
   #[test]

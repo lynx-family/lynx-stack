@@ -36,8 +36,9 @@ const library = useMemo(() => createOpenUiLibrary(), []);
 
 ## 内置组件
 
-`createOpenUiLibrary()` 包含以下组件。它们也从
-`@lynx-js/genui/openui/catalog` 导出。
+默认情况下，`createOpenUiLibrary()` 包含以下组件。它们既从聚合入口
+`@lynx-js/genui/openui/catalog` 导出，也可以通过
+`@lynx-js/genui/openui/catalog/Stack` 等逐组件子路径导入。
 
 ### 布局
 
@@ -182,6 +183,35 @@ notice = Banner("Payment received", "success")
 调用方提供的 components 和 groups 会追加在默认值后。如果自定义组件与内置组件
 同名，后加入的自定义 definition 会覆盖 `components` map 中的默认值。这应当被
 视为一次有意 override，并且 prompt 侧 schema 必须与它保持一致。
+
+## 显式选择组件
+
+如果 Library 只应包含调用方提供的 definitions，请把
+`includeDefaultComponents` 设为 `false`。仍要使用的每个内置组件都需要从 catalog
+导入，并通过 `components` 传入：
+
+```ts
+import { createOpenUiLibrary } from '@lynx-js/genui/openui/explicit';
+import { Stack } from '@lynx-js/genui/openui/catalog/Stack';
+import { TextContent } from '@lynx-js/genui/openui/catalog/TextContent';
+
+export const library = createOpenUiLibrary({
+  includeDefaultComponents: false,
+  components: [Stack, TextContent],
+  componentGroups: [
+    { name: 'Selected', components: ['Stack', 'TextContent'] },
+  ],
+});
+```
+
+关闭 defaults 后，26 个内置 component definitions 及其 groups 都不会加入。
+root 仍默认是 `Stack`；如果所选 components 不包含 root，创建 Library 时会报错。
+可以像示例一样导入并传入 `Stack`，也可以把 `root` 设为另一个由调用方提供的组件。
+Agent prompt 和客户端 Library 必须限制为相同的组件名称。
+
+`includeDefaultComponents` 控制的是 Library vocabulary。从 `openui` 主入口导入
+factory 时，该入口仍会静态引用默认 catalog。如果未选择的 catalog modules 不应
+进入静态依赖图，请像上面的示例一样使用 `openui/explicit` 和逐组件子路径。
 
 ## 渲染嵌套 component values
 

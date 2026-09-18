@@ -15,6 +15,7 @@ import type {
 } from '@rsbuild/core'
 import { beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest'
 
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
 import type { Config, ExposedAPI } from '@lynx-js/rspeedy'
 
 import { getRandomNumberInRange } from './port.js'
@@ -26,6 +27,26 @@ import {
 
 const exit = vi.fn()
 
+// `pluginQRCode` reads the Lynx config the build engine exposes, so the stub
+// applies the engine's config plugin the way a real Lynx build does.
+const exposeLynxConfig = (api: RsbuildPluginAPI): void => {
+  let lynx: unknown
+
+  for (const plugin of pluginLynx()) {
+    void plugin.setup({
+      expose(_id: string | symbol, value: unknown) {
+        lynx = value
+      },
+    } as unknown as RsbuildPluginAPI)
+
+    if (lynx) {
+      break
+    }
+  }
+
+  api.expose(Symbol.for('@lynx-js/rsbuild-plugin:config'), lynx)
+}
+
 const pluginStubRspeedyAPI = (config: Config = {}): RsbuildPlugin => ({
   name: 'lynx:rsbuild:api',
   setup(api) {
@@ -36,6 +57,8 @@ const pluginStubRspeedyAPI = (config: Config = {}): RsbuildPlugin => ({
       logger,
       version: '1.0.0',
     })
+
+    exposeLynxConfig(api)
   },
 })
 
@@ -684,6 +707,40 @@ describe('Plugins - Terminal', () => {
           url: 'http://example.com/b.lynx.bundle?fullscreen=true',
         },
       ])
+    })
+  })
+
+  describe('without the Lynx build engine', () => {
+    test('reports instead of hanging the dev server', async () => {
+      vi.stubEnv('NODE_ENV', 'development')
+      const errorSpy = vi.spyOn(logger, 'error').mockReturnValue(undefined)
+
+      const rsbuild = await createRsbuild({
+        rsbuildConfig: {
+          dev: { assetPrefix: 'http://example.com/' },
+          environments: { lynx: {} },
+          server: { port: getRandomNumberInRange(3000, 60000) },
+          source: {
+            entry: {
+              main: join(
+                dirname(fileURLToPath(import.meta.url)),
+                'fixtures',
+                'hello-world',
+              ),
+            },
+          },
+          // No `pluginLynx`, so no Lynx config is exposed.
+          plugins: [pluginQRCode({ fullscreen: false })],
+        },
+      })
+
+      await using server = await usingDevServer(rsbuild)
+
+      await server.waitDevCompileDone()
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('`pluginLynx` has to be applied'),
+      )
     })
   })
 

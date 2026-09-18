@@ -3,10 +3,18 @@
 // LICENSE file in the root directory of this source tree.
 
 import { EventEmitter } from '@lynx-js/types';
+import type { TransformBuiltinAttributeNamesOptions } from '@lynx-js/react-transform';
 
 import { LifecycleConstant } from '../src/snapshot/lifecycle/constant.js';
 import { Lynx as LynxApi } from '../src/lynx-api.js';
 import type { InitData, InitDataRaw } from '../src/lynx-api.js';
+
+interface ReactLynxRuntimeConfig {
+  [key: string]: unknown;
+  transformBuiltinAttributeNames?:
+    | boolean
+    | TransformBuiltinAttributeNamesOptions;
+}
 
 declare global {
   declare const __DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__: boolean;
@@ -25,14 +33,6 @@ declare global {
   declare const __ENABLE_SSR__: boolean;
   declare const __GLOBAL_PROPS_MODE__: 'reactive' | 'event' | undefined;
   declare const __LAZY_BUNDLE_FETCHER__: 'FetchBundle' | 'QueryComponent';
-  declare const __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__:
-    | boolean
-    | {
-      mode?: 'dash-case' | 'mapping-only';
-      preserve?: ReadonlyArray<string>;
-      rename?: Readonly<Record<string, string>>;
-    };
-
   declare function __CreatePage(componentId: string, cssId: number): FiberElement;
   declare function __CreateElement(
     tag: string,
@@ -208,25 +208,23 @@ declare global {
     [prop: string]: unknown;
   }
 
-  namespace lynxCoreInject {
-    const tt: {
-      _params: {
-        initData: Record<string, any>;
-        updateData: Record<string, any>;
-      };
-
-      OnLifecycleEvent: ([type, data]: [LifecycleConstant, unknown]) => void;
-      publishEvent: (handlerName: string, data: EventDataType) => void;
-      publicComponentEvent: (componentId: string, handlerName: string, data: EventDataType) => void;
-      callDestroyLifetimeFun: () => void;
-      updateGlobalProps: (newData: Record<string, unknown>) => void;
-      updateCardData: (newData: Record<string, any>, options?: Record<string, unknown>) => void;
-      onAppReload: (updateData: Record<string, any>) => void;
-      processCardConfig: () => void;
-      callBeforePublishEvent: (data: unknown) => void;
-      getDynamicComponentExports: (schema: string) => { default: React.ComponentType<any> } | null | undefined;
-      GlobalEventEmitter: EventEmitter;
+  declare interface LynxApp {
+    _params: {
+      initData: Record<string, any>;
+      updateData: Record<string, any>;
     };
+
+    OnLifecycleEvent: ([type, data]: [LifecycleConstant, unknown]) => void;
+    publishEvent: (handlerName: string, data: EventDataType) => void;
+    publicComponentEvent: (componentId: string, handlerName: string, data: EventDataType) => void;
+    callDestroyLifetimeFun: () => void;
+    updateGlobalProps: (newData: Record<string, unknown>) => void;
+    updateCardData: (newData: Record<string, any>, options?: Record<string, unknown>) => void;
+    onAppReload: (updateData: Record<string, any>) => void;
+    processCardConfig: () => void;
+    callBeforePublishEvent?: (data: unknown) => void;
+    getDynamicComponentExports: (schema: string) => { default: React.ComponentType<any> } | null | undefined;
+    GlobalEventEmitter: EventEmitter;
   }
 
   declare interface PipelineOptions {
@@ -236,8 +234,6 @@ declare global {
     dsl: string;
     stage: string;
   }
-
-  declare let lynxCoreInject: any;
 
   interface ISystemInfo {
     osVersion: string;
@@ -302,8 +298,12 @@ declare module '@lynx-js/types/background' {
   interface Lynx extends LynxApi {
     __initData: Record<string, unknown>;
 
+    /** @internal Host-injected page config shared with loaded bundles. */
+    __runtime_configs__?: Readonly<ReactLynxRuntimeConfig>;
+
     getNativeApp(): NativeApp;
     getNativeLynx(): NativeLynx;
+    getApp(): LynxApp;
     reportError(e: Error): void;
     QueryComponent?(source: string, callback: (result: any) => void): void;
     loadLazyBundle?<T extends { default: React.ComponentType<any> }>(

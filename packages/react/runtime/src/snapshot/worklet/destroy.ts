@@ -2,12 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { takeWorkletRefInitValuePatch } from './ref/workletRefPool.js';
+import { takeMainThreadRefInitValuePatch } from '../../core/main-thread-ref-init-value.js';
 import { runDestroyTasks } from '../../core/runtime-destroy.js';
 
 export function destroyWorklet(): void {
   if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
-    takeWorkletRefInitValuePatch();
+    takeMainThreadRefInitValuePatch();
   }
 
   runDestroyTasks();

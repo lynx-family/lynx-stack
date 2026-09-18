@@ -41,7 +41,7 @@ if (typeof Codspeed !== "undefined") {
             if (filename.endsWith('.css')) return '';
             // TODO(hzy): avoid hardcoded case dir
             const caseDir = `benchmark/react`;
-            const chunkName = filename.replace(/^\.rspeedy\//, '');
+            const chunkName = filename.replace(/^\.lynx\//, '');
             // dprint-ignore
             return `\
 if (typeof Codspeed !== "undefined") {

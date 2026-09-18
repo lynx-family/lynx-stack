@@ -59,7 +59,7 @@ export interface DarkModeConfig {
   themeExpr: string
 }
 /**
- * {@inheritdoc CompatVisitorConfig.addComponentElement}
+ * {@inheritDoc CompatVisitorConfig.addComponentElement}
  * @public
  */
 export interface AddComponentElementConfig {
@@ -89,7 +89,7 @@ export interface AddComponentElementConfig {
   compilerOnly: boolean
 }
 /**
- * {@inheritdoc PluginReactLynxOptions.compat}
+ * {@inheritDoc PluginReactLynxOptions.compat}
  * @public
  */
 export interface CompatVisitorConfig {
@@ -277,6 +277,17 @@ export interface CompatVisitorConfig {
   simplifyCtorLikeReactLynx2: boolean
   /**
    * @public
+   * Whether to transform legacy event attribute names on Lynx elements.
+   *
+   * When enabled, legacy event attributes such as `onClick` and
+   * `onClickCatch` are transformed to `bindtap` and `catchtap`.
+   * Disable this when another transform owns event attribute-name conversion.
+   *
+   * @defaultValue `true`
+   */
+  transformLegacyEventAttributeNames?: boolean
+  /**
+   * @public
    * Regular expression used to remove component attributes
    *
    * @deprecated It's recommended to use `background-only`.
@@ -330,9 +341,10 @@ export interface CompatVisitorConfig {
    */
   disableDeprecatedWarning: boolean
   /**
+   * Dark mode configuration
+   *
    * @public
    * @deprecated
-   * Dark mode configuration
    *
    * @defaultValue `undefined`
    *
@@ -396,7 +408,7 @@ export interface CssScopeVisitorConfig {
   filename: string
 }
 /**
- * {@inheritdoc PluginReactLynxOptions.defineDCE}
+ * {@inheritDoc PluginReactLynxOptions.defineDCE}
  * @public
  */
 export interface DefineDceVisitorConfig {
@@ -461,7 +473,7 @@ export interface DynamicImportVisitorConfig {
   injectLazyBundle?: boolean
 }
 /**
- * {@inheritdoc PluginReactLynxOptions.extractStr}
+ * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.extractStr}
  * @public
  */
 export interface ExtractStrConfig {
@@ -499,7 +511,7 @@ export interface RefreshVisitorConfig {
   library?: Array<string>
 }
 /**
- * {@inheritdoc PluginReactLynxOptions.shake}
+ * {@inheritDoc PluginReactLynxOptions.shake}
  * @public
  */
 export interface ShakeVisitorConfig {
@@ -750,6 +762,35 @@ export interface TransformNodiffOutput {
   uiSourceMapRecords: Array<UiSourceMapRecord>
   /** @internal */
   elementTemplates?: Array<ElementTemplateAsset>
+  /** @internal */
+  definesForSnapshot?: Array<Define>
+  /** @internal */
+  definesForWorklet?: Array<Define>
+}
+/**
+ * @internal
+ * A snapshot or worklet definition collected from the module. The same
+ * definition is emitted regardless of the compile target.
+ */
+export interface Define {
+  /**
+   * @internal
+   * The snapshot uid or the worklet hash. Definitions that share an id are
+   * interchangeable, so duplicates can be dropped.
+   */
+  id: string
+  /**
+   * @internal
+   * A self-contained statement list registering the definition.
+   */
+  code: string
+  /**
+   * @internal
+   * Set when the definition cannot run inside an injected module, e.g. a
+   * worklet closing over a shared-runtime import. The build must fail when
+   * the main thread lacks such a definition.
+   */
+  unmergeable?: boolean
 }
 /** @internal */
 export interface ElementTemplateAsset {

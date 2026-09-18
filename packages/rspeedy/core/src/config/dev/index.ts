@@ -3,10 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import type { WatchFiles } from '@rsbuild/core'
 
-import type { Client } from './client.js'
-
 /**
- * {@inheritdoc Config.dev}
+ * {@inheritDoc Config.dev}
  * @public
  */
 export interface Dev {
@@ -76,13 +74,6 @@ export interface Dev {
   assetPrefix?: string | boolean | undefined
 
   /**
-   * Configuration of the development client.
-   *
-   * @defaultValue undefined
-   */
-  client?: Client | undefined
-
-  /**
    * Whether to enable Hot Module Replacement (HMR).
    *
    * @defaultValue true
@@ -128,6 +119,8 @@ export interface Dev {
    * Whether to enable live reload functionality.
    *
    * @defaultValue true
+   *
+   * @remarks
    *
    * Live reload is used as a fallback when {@link Dev.hmr} is disabled or cannot be used in certain scenarios. When enabled, the page will automatically refresh when source files are changed.
    *

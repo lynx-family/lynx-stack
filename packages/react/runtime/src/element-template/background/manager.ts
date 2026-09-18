@@ -3,17 +3,19 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { BackgroundElementTemplateInstance } from './instance.js';
+import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID } from '../protocol/page.js';
 
 export const backgroundElementTemplateInstanceManager: {
   nextId: number;
   values: Map<number, BackgroundElementTemplateInstance>;
   register(instance: BackgroundElementTemplateInstance): void;
+  registerPageRoot(instance: BackgroundElementTemplateInstance): void;
   updateId(oldId: number, newId: number): void;
   get(id: number): BackgroundElementTemplateInstance | undefined;
   getRawAttributeValueByEventValue(eventValue: string): unknown;
   clear(): void;
 } = {
-  nextId: 0,
+  nextId: ELEMENT_TEMPLATE_PAGE_HANDLE_ID,
   values: new Map<number, BackgroundElementTemplateInstance>(),
 
   register(instance: BackgroundElementTemplateInstance): void {
@@ -21,8 +23,14 @@ export const backgroundElementTemplateInstanceManager: {
     this.values.set(instance.instanceId, instance);
   },
 
+  registerPageRoot(instance: BackgroundElementTemplateInstance): void {
+    this.values.delete(instance.instanceId);
+    instance.instanceId = ELEMENT_TEMPLATE_PAGE_HANDLE_ID;
+    this.values.set(ELEMENT_TEMPLATE_PAGE_HANDLE_ID, instance);
+  },
+
   updateId(oldId: number, newId: number): void {
-    if (!Number.isInteger(newId) || newId === 0) {
+    if (!Number.isInteger(newId) || newId === ELEMENT_TEMPLATE_PAGE_HANDLE_ID) {
       throw new Error(`ElementTemplate handleId must be a non-zero integer, got ${String(newId)}.`);
     }
 
@@ -62,7 +70,6 @@ export const backgroundElementTemplateInstanceManager: {
     if (!instance) {
       return null;
     }
-
     const value = instance.getRawAttributeSlot(Number(parts[1]));
     const spreadKey = parts[2];
     if (!spreadKey) {

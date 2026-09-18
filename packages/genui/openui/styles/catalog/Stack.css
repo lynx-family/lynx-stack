@@ -22,6 +22,10 @@
   gap: 0;
 }
 
+.OpenUIGapXxs {
+  gap: 2rpx;
+}
+
 .OpenUIGapXs {
   gap: 6rpx;
 }
@@ -40,6 +44,10 @@
 
 .OpenUIGapXl {
   gap: 24rpx;
+}
+
+.OpenUIGap2Xl {
+  gap: 32rpx;
 }
 
 .OpenUIAlignStart {

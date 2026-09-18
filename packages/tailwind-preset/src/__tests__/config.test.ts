@@ -1,43 +1,121 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import fs from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { beforeAll, describe, expect, test } from 'vitest';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { testClasses, unsupportedClasses } from './test-content.js';
+import { cssTransformValue } from '../plugins/lynx/transform.js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
+const TAILWIND_CLI_TIMEOUT = 30_000;
+const TAILWIND_HOOK_TIMEOUT = 50_000;
+const escapeClassName = (
+  require('tailwindcss/lib/util/escapeClassName.js') as {
+    default: (className: string) => string;
+  }
+).default;
+
+/**
+ * Compiles the test config with the real Tailwind CSS v3 CLI.
+ *
+ * The CLI is resolved from the `tailwindcss` devDependency instead of
+ * `node_modules/.bin`, because `postcss` is not hoisted into this package
+ * and the bin link depends on the installer layout.
+ */
+function compilePresetCSS(): string {
+  return execFileSync(process.execPath, [
+    require.resolve('tailwindcss/lib/cli.js'),
+    '--config',
+    path.resolve(__dirname, 'tailwind.config.ts'),
+    '--input',
+    path.resolve(__dirname, 'styles.css'),
+    '--no-autoprefixer',
+  ], {
+    encoding: 'utf-8',
+    timeout: TAILWIND_CLI_TIMEOUT,
+    // Progress notices go to stderr, CSS goes to stdout.
+    stdio: ['ignore', 'pipe', 'ignore'],
+  });
+}
+
+/**
+ * Integration coverage for CSS emitted by the real Tailwind CSS v3 CLI.
+ *
+ * The composed transform case verifies that each utility emits its variable
+ * assignment and the shared transform chain. Runtime rendering and matrix
+ * evaluation are outside this suite.
+ *
+ * Full-suite Windows CI can exceed Vitest's default 10-second hook timeout, so
+ * the hook limit stays above the child-process limit and lets the CLI own
+ * timeouts.
+ */
 describe('Lynx Tailwind Preset', () => {
   let compiledCSS = '';
   let usedProperties = new Set<string>();
 
   beforeAll(() => {
-    try {
-      const outputPath = path.resolve(__dirname, 'output.css');
+    compiledCSS = compilePresetCSS();
+    usedProperties = extractPropertiesFromCSS(compiledCSS);
+  }, TAILWIND_HOOK_TIMEOUT);
 
-      // Read the generated CSS
-      compiledCSS = fs.readFileSync(outputPath, 'utf-8');
+  test('compiles the preset without changing its output', async () => {
+    await expect(compiledCSS).toMatchFileSnapshot(
+      path.resolve(__dirname, 'output.css'),
+    );
+  });
 
-      // Extract classes and properties
-      usedProperties = extractPropertiesFromCSS(compiledCSS);
-    } catch (error) {
-      console.error('Failed to read output.css:', error);
-      throw error;
+  test('generates every representative utility class', () => {
+    for (const className of testClasses.split(' ')) {
+      expect(compiledCSS).toMatch(
+        new RegExp(
+          `\\.${escapeRegExp(escapeClassName(className))}(?![-_a-zA-Z0-9])`,
+        ),
+      );
     }
   });
 
-  describe('Test against allowed CSS Properties', () => {
-    test('all used properties are supported', () => {
-      const allowedProperties = [
-        ...supportedProperties,
-        ...allowedUnsupportedProperties,
+  test('composes dual-axis skew with scale and rotate', () => {
+    expect(extractClassRule(compiledCSS, 'skew-x-12')).toContain(
+      '--tw-skx: 12deg;',
+    );
+    expect(extractClassRule(compiledCSS, 'skew-y-6')).toContain(
+      '--tw-sky: 6deg;',
+    );
+
+    for (
+      const className of ['skew-x-12', 'skew-y-6', 'scale-95', 'rotate-45']
+    ) {
+      expect(extractClassRule(compiledCSS, className)).toContain(
+        `transform: ${cssTransformValue}`,
+      );
+    }
+  });
+
+  test('does not generate unsupported utility classes', () => {
+    for (const className of unsupportedClasses) {
+      expect(compiledCSS).not.toMatch(
+        new RegExp(
+          `\\.${escapeRegExp(escapeClassName(className))}(?![-_a-zA-Z0-9])`,
+        ),
+      );
+    }
+  });
+
+  describe('Test against verified CSS properties', () => {
+    test('all generated properties are verified', () => {
+      const verifiedProperties = [
+        ...documentedProperties,
+        ...verifiedUndocumentedProperties,
       ];
 
-      // Check that all used properties are supported
       for (const property of usedProperties) {
-        expect(allowedProperties).toContain(property);
+        expect(verifiedProperties).toContain(property);
       }
     });
   });
@@ -49,6 +127,32 @@ function kebabToCamel(str: string): string {
     /-([a-z])/g,
     (_: string, letter: string) => letter.toUpperCase(),
   );
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Extracts the declarations from the first standalone class rule emitted by
+ * the Tailwind CLI.
+ *
+ * This helper is intentionally limited to generated `.class { ... }` rules.
+ * It is not a general CSS parser and does not handle variant selectors,
+ * selector lists, duplicate rules, or declaration values containing braces.
+ * The composed transform CLI test currently uses it to inspect `skew-x-*`,
+ * `skew-y-*`, `scale-*`, and `rotate-*` utilities.
+ */
+function extractClassRule(css: string, className: string): string {
+  const selector = escapeRegExp(escapeClassName(className));
+  const match = new RegExp(
+    `^\\s*\\.${selector}\\s*\\{([^}]*)\\}`,
+    'm',
+  ).exec(css);
+  if (!match?.[1]) {
+    throw new Error(`Missing generated rule for ${className}`);
+  }
+  return match[1];
 }
 
 // Helper function to extract CSS property names from generated utilities
@@ -67,11 +171,18 @@ function extractPropertiesFromCSS(css: string): Set<string> {
 }
 
 /**
- * Get all supported CSS properties in LynxJS Official Docs
- * Ideally this should be generated from the
- * {@link https://www.npmjs.com/package/@lynx-js/css-defines}
+ * CSS properties from a July 4, 2025 snapshot of the LynxJS official docs.
+ *
+ * This conservative list guards the CLI fixture. It is not a current or
+ * exhaustive runtime capability definition, so verify documented omissions
+ * against the applicable SDK/runtime before using them to update the support matrix.
+ *
+ * A generated replacement could use
+ * {@link https://www.npmjs.com/package/@lynx-js/css-defines}, but it must
+ * filter by maintained target and SDK support. A registered CSS definition
+ * alone is insufficient because legacy, unmaintained entries may remain.
  */
-const supportedProperties: string[] = [
+const documentedProperties: string[] = [
   'XAutoFontSizePresetSizes',
   'XAutoFontSize',
   'XHandleColor',
@@ -248,6 +359,13 @@ const supportedProperties: string[] = [
   'zIndex',
 ];
 
-const allowedUnsupportedProperties = [
-  'overflowWrap',
+/**
+ * Runtime-supported properties missing from the documentation snapshot above.
+ *
+ * Keep each entry tied to runtime/source evidence and a representative class
+ * in test-content.ts.
+ */
+const verifiedUndocumentedProperties: string[] = [
+  // Supported on `<input>` in Lynx SDK 3.4+; absent from the CSS docs snapshot.
+  'caretColor',
 ];

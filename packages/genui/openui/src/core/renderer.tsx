@@ -32,6 +32,7 @@ import type { ReactNode } from '@lynx-js/react';
 
 import { OpenUIContext, useOpenUI, useRenderNode } from './context.jsx';
 import { useOpenUIState } from './hooks/useOpenUIState.js';
+import type { InitialQueryResults } from './hooks/useOpenUIState.js';
 import type { ComponentRenderer, Library, RenderOutput } from './library.jsx';
 import { keyFrom } from './utils.js';
 import type { LegacyActionConfig } from '../catalog/Action/index.jsx';
@@ -62,6 +63,11 @@ export interface OpenUiRendererRuntimeProps {
   onStateUpdate?: (state: Record<string, unknown>) => void;
   /** Initial persisted state. $-prefixed keys hydrate reactive bindings. */
   initialState?: Record<string, unknown>;
+  /**
+   * Prefetched Query results keyed by Query assignment name (statement ID).
+   * Results render synchronously, then an optional toolProvider revalidates.
+   */
+  initialQueryResults?: InitialQueryResults;
   /** Called whenever the raw parse result changes. */
   onParseResult?: (result: ParseResult | null) => void;
   /** Tool provider for Query()/Mutation(): function map or MCP client. */
@@ -226,6 +232,7 @@ function RuntimeOpenUiRenderer(
     onAction,
     onStateUpdate,
     initialState,
+    initialQueryResults,
     onParseResult,
     toolProvider,
     queryLoader,
@@ -278,6 +285,7 @@ function RuntimeOpenUiRenderer(
     ...(onAction ? { onAction } : {}),
     ...(onStateUpdate ? { onStateUpdate } : {}),
     ...(initialState ? { initialState } : {}),
+    ...(initialQueryResults ? { initialQueryResults } : {}),
     ...(onError ? { onError } : {}),
   };
 

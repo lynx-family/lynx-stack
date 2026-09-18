@@ -2,17 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { clearMtsConfigCacheForTesting, isMtsEnabled } from '../../core/mts-capability.js';
 import { isSdkVersionGt } from '../../utils.js';
 
-let mtsEnabled: boolean | undefined;
 let runOnBackgroundEnabled: boolean | undefined;
-
-/**
- * @internal
- */
-function isMtsEnabled(): boolean {
-  return mtsEnabled ??= isSdkVersionGt(2, 13);
-}
 
 /**
  * @internal
@@ -22,7 +15,7 @@ function isRunOnBackgroundEnabled(): boolean {
 }
 
 function clearConfigCacheForTesting(): void {
-  mtsEnabled = undefined;
+  clearMtsConfigCacheForTesting();
   runOnBackgroundEnabled = undefined;
 }
 

@@ -1,0 +1,20 @@
+{
+  "name": "preact",
+  "version": "10.29.1-react-fixture",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./compat": "./empty.js",
+    "./compat/client": "./empty.js",
+    "./compat/jsx-dev-runtime": "./empty.js",
+    "./compat/jsx-runtime": "./empty.js",
+    "./compat/scheduler": "./empty.js",
+    "./compat/server": "./empty.js",
+    "./debug": "./empty.js",
+    "./devtools": "./empty.js",
+    "./hooks": "./hooks.js",
+    "./jsx-dev-runtime": "./empty.js",
+    "./jsx-runtime": "./empty.js",
+    "./test-utils": "./empty.js"
+  }
+}

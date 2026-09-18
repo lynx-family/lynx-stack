@@ -151,7 +151,7 @@ impl Visit for FuncDetectVisitor {
     self.has = true;
   }
 
-  fn visit_block_stmt_or_expr(&mut self, _n: &BlockStmtOrExpr) {
+  fn visit_arrow_function_body(&mut self, _n: &ArrowFunctionBody) {
     self.has = true;
   }
 }

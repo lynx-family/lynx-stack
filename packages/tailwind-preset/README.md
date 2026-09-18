@@ -2,16 +2,13 @@
 
 A [Tailwind CSS v3](https://v3.tailwindcss.com/) preset for the Lynx ecosystem.
 
-This preset is not a 1:1 port of Tailwind's core. Instead, it provides a **Lynx-native Tailwind experience** tailored for the platform's rendering model and ecosystem needs by:
+This preset adapts Tailwind CSS v3 to Lynx's rendering model and ecosystem by:
 
 - Including only CSS utilities that Lynx supports
 
 - Reimagining certain utilities to align with Lynx's styling constraints and runtime behavior
 
 - Enabling ecosystem extensions such as UI state variants, animation presets, and design token integration
-
-> **⚠️ Experimental**\
-> This preset is currently in experimental stage as we are still exploring the best possible DX to write Tailwind upon Lynx. We welcome and encourage contributions from the community to help shape its future development. Your feedback, bug reports, and pull requests are invaluable in making this preset more robust and feature-complete.
 
 ## Basic Usage
 
@@ -55,7 +52,46 @@ createLynxPreset({
 });
 ```
 
+## Utility Support
+
+See the [Tailwind CSS v3 utility support matrix][support-matrix]
+for the supported, partial, and unsupported utility families. Lynx-specific
+features are documented separately in [preset extensions][preset-extensions].
+
 ## Integration Notes
+
+### Combining Presets
+
+Place the Lynx preset before any additional presets. Every preset that follows
+it should be a **leaf preset** by explicitly setting `presets: []`. Otherwise,
+[Tailwind CSS v3](https://v3.tailwindcss.com/docs/presets) implicitly adds its
+default configuration to that preset's chain, which can restore theme values
+intentionally restricted by the Lynx preset.
+
+Use `theme.extend` in a leaf preset to add design tokens without replacing an
+entire top-level theme scale:
+
+```ts
+// tailwind.config.ts
+import type { Config } from 'tailwindcss';
+import lynxPreset from '@lynx-js/tailwind-preset';
+
+const designSystemPreset = {
+  presets: [],
+  theme: {
+    extend: {
+      colors: {
+        brand: '#ff351a',
+      },
+    },
+  },
+} satisfies Partial<Config>;
+
+export default {
+  content: ['./src/**/*.{ts,tsx}'],
+  presets: [lynxPreset, designSystemPreset],
+} satisfies Config;
+```
 
 ### tailwind-merge & rsbuild-plugin-tailwindcss
 
@@ -131,4 +167,8 @@ createLynxPreset({
 
 #### Available Plugins
 
-- [uiVariants](https://github.com/lynx-family/lynx-stack/tree/main/packages/tailwind-preset/docs/plugins/lynx-ui/uiVariants.md) — Class-based variants for expressing component state or structure using `ui-*` prefixes (for example, the default `.ui-open:` and opt-in `.ui-side-left:`).
+- [uiVariants][ui-variants] — Class-based variants for expressing component state or structure using `ui-*` prefixes (for example, the default `.ui-open:` and opt-in `.ui-side-left:`).
+
+[preset-extensions]: https://github.com/lynx-family/lynx-stack/blob/main/packages/tailwind-preset/docs/preset-extensions.md
+[support-matrix]: https://github.com/lynx-family/lynx-stack/blob/main/packages/tailwind-preset/docs/tailwind-css-v3-support.md
+[ui-variants]: https://github.com/lynx-family/lynx-stack/tree/main/packages/tailwind-preset/docs/plugins/lynx-ui/uiVariants.md

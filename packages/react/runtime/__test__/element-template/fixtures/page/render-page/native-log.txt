@@ -4,7 +4,7 @@ Array [
     "page",
     null,
     null,
-    "0",
+    0,
     null,
   ],
   Array [
@@ -14,6 +14,12 @@ Array [
     null,
     null,
     -1,
+  ],
+  Array [
+    "__SetAttributeOfElementTemplate",
+    "<page />",
+    0,
+    null,
   ],
   Array [
     "__InsertNodeToElementTemplate",

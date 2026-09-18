@@ -1,4 +1,4 @@
-ERROR in × Module build failed (from <PNPM_INNER>/sass-loader/dist/cjs.js):
+ERROR in × Module build failed (from <PNPM_INNER>/sass-loader/dist/cjs/index.js):
 ╰─▶   × Expected identifier.
 ╷
 1  ..foo {}
@@ -8,4 +8,4 @@ ERROR in × Module build failed (from <PNPM_INNER>/sass-loader/dist/cjs.js):
 
 ERROR in ./error/sass/index.scss
 × Module build failed (from ../../lib/rspack-loader.js):
-╰─▶   × Error: Module build failed (from <PNPM_INNER>/sass-loader/dist/cjs.js):
+╰─▶   × Error: Module build failed (from <PNPM_INNER>/sass-loader/dist/cjs/index.js):

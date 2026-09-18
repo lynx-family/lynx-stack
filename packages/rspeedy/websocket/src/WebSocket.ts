@@ -21,22 +21,22 @@ declare const NativeModules: {
  */
 export class WebSocket {
   /**
-   * {@inheritdoc @lynx-js/websocket#ReadyState.CONNECTING}
+   * {@inheritDoc @lynx-js/websocket#ReadyState.CONNECTING}
    */
   static CONNECTING: ReadyState = ReadyState.CONNECTING
 
   /**
-   * {@inheritdoc @lynx-js/websocket#ReadyState.OPEN}
+   * {@inheritDoc @lynx-js/websocket#ReadyState.OPEN}
    */
   static OPEN: ReadyState = ReadyState.OPEN
 
   /**
-   * {@inheritdoc @lynx-js/websocket#ReadyState.CLOSING}
+   * {@inheritDoc @lynx-js/websocket#ReadyState.CLOSING}
    */
   static CLOSING: ReadyState = ReadyState.CLOSING
 
   /**
-   * {@inheritdoc @lynx-js/websocket#ReadyState.CLOSED}
+   * {@inheritDoc @lynx-js/websocket#ReadyState.CLOSED}
    */
   static CLOSED: ReadyState = ReadyState.CLOSED
 
@@ -111,9 +111,7 @@ export class WebSocket {
    *
    * ```js
    * const socket = new WebSocket(url)
-   * socket.onopen = ({ data }) => {
-   *   // handle data
-   * }
+   * socket.onopen = () => {}
    * ```
    * @public
    */
@@ -131,9 +129,7 @@ export class WebSocket {
    *
    * ```js
    * const socket = new WebSocket(url)
-   * socket.onclose = ({ data }) => {
-   *   // handle data
-   * }
+   * socket.onclose = ({ code, reason }) => {}
    * ```
    * @public
    */
@@ -151,9 +147,7 @@ export class WebSocket {
    *
    * ```js
    * const socket = new WebSocket(url)
-   * socket.onerror = ({ data }) => {
-   *   // handle data
-   * }
+   * socket.onerror = ({ message }) => {}
    * ```
    * @public
    */
@@ -183,7 +177,7 @@ export class WebSocket {
    *
    * @remarks
    * This will be one of the strings specified in the protocols parameter when creating the WebSocket object,
-   * or the empty string if no connection is established.
+   * or `undefined` until the connection is open.
    */
   get protocol(): string | undefined {
     return this.#impl.protocol

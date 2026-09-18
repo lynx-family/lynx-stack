@@ -27,7 +27,7 @@ describe('hot update', () => {
     expect(config.entry).toMatchInlineSnapshot(`
       {
         "main": {
-          "filename": ".rspeedy/main/background.js",
+          "filename": ".lynx/main/background.js",
           "import": [
             "@lynx-js/webpack-dev-transport/client",
             "@lynx-js/react/refresh",
@@ -37,7 +37,7 @@ describe('hot update', () => {
           "layer": "react:background",
         },
         "main__main-thread": {
-          "filename": ".rspeedy/main/main-thread.js",
+          "filename": ".lynx/main/main-thread.js",
           "import": [
             "<ROOT>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
             "./src/index.js",
@@ -65,7 +65,7 @@ describe('hot update', () => {
     expect(config.entry).toMatchInlineSnapshot(`
       {
         "main": {
-          "filename": ".rspeedy/main/background.js",
+          "filename": ".lynx/main/background.js",
           "import": [
             "@lynx-js/webpack-dev-transport/client",
             "@lynx-js/react/refresh",
@@ -75,7 +75,7 @@ describe('hot update', () => {
           "layer": "react:background",
         },
         "main__main-thread": {
-          "filename": ".rspeedy/main/main-thread.js",
+          "filename": ".lynx/main/main-thread.js",
           "import": [
             "<ROOT>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
             "./src/index.js",
@@ -103,7 +103,7 @@ describe('hot update', () => {
     expect(config.entry).toMatchInlineSnapshot(`
       {
         "main": {
-          "filename": ".rspeedy/main/background.js",
+          "filename": ".lynx/main/background.js",
           "import": [
             "@lynx-js/webpack-dev-transport/client",
             "./src/index.js",
@@ -111,7 +111,7 @@ describe('hot update', () => {
           "layer": "react:background",
         },
         "main__main-thread": {
-          "filename": ".rspeedy/main/main-thread.js",
+          "filename": ".lynx/main/main-thread.js",
           "import": [
             "./src/index.js",
           ],
@@ -139,14 +139,14 @@ describe('hot update', () => {
     expect(config.entry).toMatchInlineSnapshot(`
       {
         "main": {
-          "filename": ".rspeedy/main/background.js",
+          "filename": ".lynx/main/background.js",
           "import": [
             "./src/index.js",
           ],
           "layer": "react:background",
         },
         "main__main-thread": {
-          "filename": ".rspeedy/main/main-thread.js",
+          "filename": ".lynx/main/main-thread.js",
           "import": [
             "./src/index.js",
           ],
@@ -213,8 +213,8 @@ describe('hot update', () => {
             background: 'main/background.js',
           }, // web
           {
-            mainThread: '.rspeedy/main/main-thread.js',
-            background: '.rspeedy/main/background.js',
+            mainThread: '.lynx/main/main-thread.js',
+            background: '.lynx/main/background.js',
           }, // lynx
         ]
 

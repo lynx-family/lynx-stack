@@ -22,13 +22,18 @@ declare module '@rstest/core' {
 }
 
 declare global {
-  // @rstest/core's internal `JestAssertion` extends `jest.Matchers` without
-  // declaring the namespace (masked by `skipLibCheck`); declaring it here
-  // types the `.not` chain, which resolves through that internal interface.
+  // Up to @rstest/core 0.11.3 the internal `JestAssertion` extended
+  // `jest.Matchers` without declaring the namespace (masked by
+  // `skipLibCheck`); declaring it here types the `.not` chain, which resolves
+  // through that internal interface. From 0.11.5 @rstest/core declares the
+  // namespace itself as `Matchers<R, T = {}>`, and TS2428 requires every
+  // declaration to carry an identical type parameter list — so the default for
+  // `T` has to match theirs. `T` is unused here, so this stays correct on both.
   // biome-ignore lint/style/noNamespace: must match the `jest.Matchers` reference
   namespace jest {
     // biome-ignore lint/correctness/noUnusedVariables: referenced as `jest.Matchers<void, T>`
-    interface Matchers<R, T = unknown> {
+    // biome-ignore lint/complexity/noBannedTypes: the default must match @rstest/core's `Matchers<R, T = {}>` verbatim
+    interface Matchers<R, T = {}> {
       toHaveLoader: (loader: string | RegExp) => R;
     }
   }

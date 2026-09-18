@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * {@inheritdoc CompatVisitorConfig.addComponentElement}
+ * {@inheritDoc CompatVisitorConfig.addComponentElement}
  * @public
  */
 export interface AddComponentElementConfig {
@@ -42,12 +42,12 @@ export interface DarkModeConfig {
 }
 
 /**
- * {@inheritdoc CompatVisitorConfig.addComponentElement}
+ * {@inheritDoc CompatVisitorConfig.addComponentElement}
  * @public
  */
 
 /**
- * {@inheritdoc PluginReactLynxOptions.compat}
+ * {@inheritDoc PluginReactLynxOptions.compat}
  * @public
  */
 export interface CompatVisitorConfig {
@@ -233,6 +233,17 @@ export interface CompatVisitorConfig {
    * ```
    */
   simplifyCtorLikeReactLynx2: boolean;
+  /**
+   * @public
+   * Whether to transform legacy event attribute names on Lynx elements.
+   *
+   * When enabled, legacy event attributes such as `onClick` and
+   * `onClickCatch` are transformed to `bindtap` and `catchtap`.
+   * Disable this when another transform owns event attribute-name conversion.
+   *
+   * @defaultValue `true`
+   */
+  transformLegacyEventAttributeNames?: boolean;
   /**
    * @public
    * Regular expression used to remove component attributes

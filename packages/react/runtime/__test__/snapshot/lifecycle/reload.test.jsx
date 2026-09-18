@@ -92,7 +92,7 @@ describe('reload', () => {
     {
       // LifecycleConstant.firstScreen
       const rLynxFirstScreen = globalThis.__OnLifecycleEvent.mock.calls[0];
-      lynxCoreInject.tt.OnLifecycleEvent(...rLynxFirstScreen);
+      lynx.getApp().OnLifecycleEvent(...rLynxFirstScreen);
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
@@ -291,7 +291,7 @@ describe('reload', () => {
     {
       globalEnvManager.switchToBackground();
       lynx.getNativeApp().callLepusMethod.mockClear();
-      lynxCoreInject.tt.onAppReload({ text: 'Enjoy' });
+      lynx.getApp().onAppReload({ text: 'Enjoy' });
       expect(lynx.getNativeApp().callLepusMethod).not.toBeCalled();
     }
 
@@ -312,7 +312,7 @@ describe('reload', () => {
         ]
       `);
       const rLynxFirstScreen = globalThis.__OnLifecycleEvent.mock.calls[0];
-      lynxCoreInject.tt.OnLifecycleEvent(...rLynxFirstScreen);
+      lynx.getApp().OnLifecycleEvent(...rLynxFirstScreen);
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
@@ -500,7 +500,7 @@ describe('reload', () => {
     {
       // LifecycleConstant.firstScreen
       const rLynxFirstScreen = globalThis.__OnLifecycleEvent.mock.calls[0];
-      lynxCoreInject.tt.OnLifecycleEvent(...rLynxFirstScreen);
+      lynx.getApp().OnLifecycleEvent(...rLynxFirstScreen);
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
@@ -709,7 +709,7 @@ describe('reload', () => {
     {
       globalEnvManager.switchToBackground();
       lynx.getNativeApp().callLepusMethod.mockClear();
-      lynxCoreInject.tt.onAppReload({ text: 'Enjoy' });
+      lynx.getApp().onAppReload({ text: 'Enjoy' });
       expect(lynx.getNativeApp().callLepusMethod).not.toBeCalled();
     }
 
@@ -730,7 +730,7 @@ describe('reload', () => {
         ]
       `);
       const rLynxFirstScreen = globalThis.__OnLifecycleEvent.mock.calls[0];
-      lynxCoreInject.tt.OnLifecycleEvent(...rLynxFirstScreen);
+      lynx.getApp().OnLifecycleEvent(...rLynxFirstScreen);
       expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledTimes(1);
       expect(lynx.getNativeApp().callLepusMethod.mock.calls[0][1]).toMatchInlineSnapshot(`
         {
@@ -917,7 +917,7 @@ describe('reload', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       globalThis.__OnLifecycleEvent.mockClear();
 
       // rLynxChange
@@ -1290,7 +1290,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
       globalEnvManager.switchToBackground();
       expect(globalThis.__OnLifecycleEvent).toHaveBeenCalledTimes(1);
       const rLynxFirstScreen = globalThis.__OnLifecycleEvent.mock.calls[0];
-      lynxCoreInject.tt.OnLifecycleEvent(...rLynxFirstScreen);
+      lynx.getApp().OnLifecycleEvent(...rLynxFirstScreen);
       expect(rLynxFirstScreen).toMatchInlineSnapshot(`
         [
           [
@@ -1499,7 +1499,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
       // LifecycleConstant.firstScreen
       globalEnvManager.switchToBackground();
       const rLynxFirstScreen = globalThis.__OnLifecycleEvent.mock.calls[0];
-      lynxCoreInject.tt.OnLifecycleEvent(...rLynxFirstScreen);
+      lynx.getApp().OnLifecycleEvent(...rLynxFirstScreen);
       expect(rLynxFirstScreen).toMatchInlineSnapshot(`
         [
           [
@@ -1664,7 +1664,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
       // LifecycleConstant.firstScreen
       globalEnvManager.switchToBackground();
       const rLynxFirstScreen = globalThis.__OnLifecycleEvent.mock.calls[0];
-      lynxCoreInject.tt.OnLifecycleEvent(...rLynxFirstScreen);
+      lynx.getApp().OnLifecycleEvent(...rLynxFirstScreen);
       expect(rLynxFirstScreen).toMatchInlineSnapshot(`
         [
           [
@@ -1861,7 +1861,7 @@ describe('firstScreenSyncTiming - jsReady', () => {
       globalEnvManager.switchToBackground();
       expect(globalThis.__OnLifecycleEvent).toHaveBeenCalledTimes(1);
       const rLynxFirstScreen = globalThis.__OnLifecycleEvent.mock.calls[0];
-      lynxCoreInject.tt.OnLifecycleEvent(...rLynxFirstScreen);
+      lynx.getApp().OnLifecycleEvent(...rLynxFirstScreen);
       expect(rLynxFirstScreen).toMatchInlineSnapshot(`
         [
           [

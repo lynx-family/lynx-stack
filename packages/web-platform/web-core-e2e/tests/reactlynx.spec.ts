@@ -95,6 +95,132 @@ const goto = async (
 };
 
 test.describe('reactlynx3 tests', () => {
+  test.describe('CSS inheritance', () => {
+    for (const setting of ['true', 'false', 'default']) {
+      test(`config-css-inheritance-${setting}`, async ({ page }, { title }) => {
+        await goto(page, title);
+        const enabled = setting === 'true';
+        const pageElement = page.locator('[part="page"]');
+        if (enabled) {
+          await expect(pageElement).toHaveAttribute(
+            'lynx-enable-css-inheritance',
+            'true',
+          );
+        } else {
+          await expect(pageElement).not.toHaveAttribute(
+            'lynx-enable-css-inheritance',
+          );
+        }
+        for (const id of ['solid-text', 'wrapped-text', 'nested-text']) {
+          await expect(page.locator(`#${id}`)).toHaveCSS(
+            'color',
+            enabled ? 'rgb(255, 0, 0)' : 'rgb(0, 0, 0)',
+          );
+        }
+        const gradient = page.locator('#gradient-text');
+        await expect(page.locator('#wrapped-gradient')).toHaveCSS(
+          'background-image',
+          enabled ? 'linear-gradient(rgb(255, 0, 0), rgb(0, 0, 255))' : 'none',
+        );
+        if (enabled) {
+          await expect(page.locator('#wrapped-gradient')).toHaveCSS(
+            'background-clip',
+            'text',
+          );
+          await expect(page.locator('#wrapped-text')).toHaveCSS(
+            'text-decoration-line',
+            'underline',
+          );
+        }
+        await expect(gradient).toHaveCSS(
+          'color',
+          enabled ? 'rgba(0, 0, 0, 0)' : 'rgb(0, 0, 0)',
+        );
+        await expect(gradient).toHaveCSS(
+          'background-image',
+          enabled ? 'linear-gradient(rgb(255, 0, 0), rgb(0, 0, 255))' : 'none',
+        );
+        if (enabled) {
+          await expect(gradient).toHaveCSS('background-clip', 'text');
+          await expect(gradient.locator('[part="inner-box"]')).toHaveCSS(
+            'background-clip',
+            'text',
+          );
+          for (
+            const [property, value] of Object.entries({
+              direction: 'rtl',
+              'font-family': 'monospace',
+              'font-size': '24px',
+              'font-style': 'italic',
+              'font-weight': '700',
+              'letter-spacing': '2px',
+              'line-height': '32px',
+              'text-align': 'right',
+              'text-decoration-line': 'underline',
+              'text-shadow': 'rgb(0, 0, 255) 1px 2px 3px',
+            })
+          ) {
+            await expect(page.locator('#solid-text')).toHaveCSS(
+              property,
+              value,
+            );
+          }
+        }
+        await expect(page.locator('#override-text')).toHaveCSS(
+          'color',
+          'rgb(0, 128, 0)',
+        );
+        await expect(page.locator('#override-text')).toHaveCSS(
+          'background-image',
+          'none',
+        );
+        await expect(page.locator('#override-text')).toHaveCSS(
+          'background-clip',
+          'border-box',
+        );
+        await expect(page.locator('#override-text')).toHaveCSS(
+          'font-size',
+          '18px',
+        );
+        await expect(page.locator('#override-text')).toHaveCSS(
+          'text-decoration-line',
+          'none',
+        );
+        await expect(page.locator('#own-gradient')).toHaveCSS(
+          'background-image',
+          'linear-gradient(rgb(255, 0, 0), rgb(0, 0, 255))',
+        );
+        await page.locator('#update').click();
+        if (enabled) {
+          await expect(page.locator('#solid-text')).toHaveCSS(
+            'font-size',
+            '30px',
+          );
+          await expect(page.locator('#solid-text')).toHaveCSS(
+            'color',
+            'rgba(0, 0, 0, 0)',
+          );
+          await expect(page.locator('#solid-text')).toHaveCSS(
+            'background-image',
+            'linear-gradient(rgb(0, 128, 0), rgb(0, 0, 255))',
+          );
+          await expect(page.locator('#solid-text')).toHaveCSS(
+            'background-clip',
+            'text',
+          );
+        } else {
+          await expect(page.locator('#solid-text')).toHaveCSS(
+            'color',
+            'rgb(0, 0, 0)',
+          );
+          await expect(page.locator('#solid-text')).toHaveCSS(
+            'background-image',
+            'none',
+          );
+        }
+      });
+    }
+  });
   test.describe('basic', () => {
     test('basic-pink-rect', async ({ page }, { title }) => {
       await goto(page, title);
@@ -2715,6 +2841,48 @@ test.describe('reactlynx3 tests', () => {
         });
       });
 
+      test(
+        'basic-element-text-bindselectionchange',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          const inlineText = page.locator('#inline-target');
+          await expect(inlineText).toBeAttached();
+          await wait(200);
+          const selectInlineText = (
+            anchorOffset: number,
+            focusOffset: number,
+          ) =>
+            inlineText.evaluate((inlineText, { anchorOffset, focusOffset }) => {
+              const textNode = inlineText.querySelector('raw-text')?.firstChild;
+              if (!textNode) throw new Error('Missing inline text node');
+              document.getSelection()?.setBaseAndExtent(
+                textNode,
+                anchorOffset,
+                textNode,
+                focusOffset,
+              );
+              document.dispatchEvent(new Event('selectionchange'));
+            }, { anchorOffset, focusOffset });
+
+          await selectInlineText(1, 4);
+
+          await expect(page.locator('.text-result')).toHaveText(
+            '7-10-forward',
+          );
+          await expect(page.locator('.inline-text-result')).toHaveText(
+            '1-4-forward',
+          );
+
+          await selectInlineText(4, 1);
+          await expect(page.locator('.text-result')).toHaveText(
+            '7-10-backward',
+          );
+          await expect(page.locator('.inline-text-result')).toHaveText(
+            '1-4-backward',
+          );
+        },
+      );
+
       test('basic-element-text-maxline', async ({ page }, { title }) => {
         await goto(page, title);
         await wait(100);
@@ -2979,6 +3147,31 @@ test.describe('reactlynx3 tests', () => {
             title,
             'should-be-scrolled-by-method',
           );
+        },
+      );
+      test(
+        'basic-element-x-foldview-ng-method-setFoldExpanded-overflow',
+        async ({ page }, {
+          title,
+        }) => {
+          await goto(page, title);
+          await page.locator('#tap').click();
+          await wait(100);
+          // the header is 400px and the toolbar is 200px, so the foldview can
+          // only be scrolled by 200px however large the requested offset is
+          const scrollTop = await page.locator('#foldview').evaluate((
+            element,
+          ) => element.scrollTop);
+          expect(scrollTop).toBe(200);
+        },
+      );
+      test(
+        'basic-element-x-foldview-ng-header-width',
+        async ({ page }, { title }) => {
+          await goto(page, title);
+          await wait(100);
+          // the header is out of flow, it still has to fill the foldview
+          await expect(page.locator('#header')).toHaveCSS('width', '300px');
         },
       );
     });

@@ -367,7 +367,7 @@ describe('componentWillUnmount', () => {
 
     expect(willUnmount).toHaveBeenCalledTimes(1);
 
-    lynxCoreInject.tt.callDestroyLifetimeFun();
+    lynx.getApp().callDestroyLifetimeFun();
     expect(willUnmount).toHaveBeenCalledTimes(2);
   });
 });
@@ -470,7 +470,7 @@ describe('useState', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       globalThis.__OnLifecycleEvent.mockClear();
 
       // rLynxChange
@@ -531,7 +531,7 @@ describe('useState', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       globalThis.__OnLifecycleEvent.mockClear();
 
       // rLynxChange

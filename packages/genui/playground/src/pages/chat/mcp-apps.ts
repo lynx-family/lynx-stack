@@ -23,7 +23,6 @@ import type {
 
 import {
   CHAT_PROVIDER_SETTINGS_ADAPTER,
-  filterProviderRequestOptionsForEndpoint,
   getChatEndpoint,
   parseTokenUsage,
   toProviderRequestOptions,
@@ -479,10 +478,25 @@ function hydrate(
       continue;
     }
     if (message.role !== 'assistant') continue;
+    if (message.generationError) {
+      messages.push({
+        kind: 'status',
+        tone: 'error',
+        text: message.generationError,
+        generationUsage: message.generationUsage,
+      });
+      continue;
+    }
     const parsed = parsePersistedOutput(message.content);
     if (!parsed) continue;
     output = parsed;
-    messages.push(...transcriptMessages(parsed));
+    messages.push(
+      ...transcriptMessages(parsed).map((result, index) =>
+        index === 0
+          ? { ...result, generationUsage: message.generationUsage }
+          : result
+      ),
+    );
   }
   for (let index = previewMessages.length - 1; index >= 0; index--) {
     const parsed = parseMcpAppsOutput(previewMessages[index]);
@@ -568,13 +582,9 @@ export const MCP_APPS_CHAT_ADAPTER = {
   suggestions: SUGGESTIONS,
   settings: CHAT_PROVIDER_SETTINGS_ADAPTER,
   async createRequest({ prompt, conversation, settings, host, signal }) {
-    const url = getChatEndpoint('mcp-apps', host);
+    const url = getChatEndpoint('mcp-apps', host, settings);
     const registration = await fetchRegistration(url, signal);
-    const provider = filterProviderRequestOptionsForEndpoint(
-      toProviderRequestOptions(settings),
-      url,
-      host,
-    );
+    const provider = toProviderRequestOptions(settings);
     return {
       url,
       method: 'POST',

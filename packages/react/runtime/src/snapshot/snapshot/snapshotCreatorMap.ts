@@ -29,3 +29,5 @@ export let snapshotCreatorRuntime: SnapshotCreatorRuntime | undefined;
 export function setSnapshotCreatorRuntime(runtime: SnapshotCreatorRuntime): void {
   snapshotCreatorRuntime = runtime;
 }
+
+export const devOnlySentSnapshots: Set<string> = new Set();

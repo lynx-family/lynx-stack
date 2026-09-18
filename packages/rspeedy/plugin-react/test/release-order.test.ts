@@ -67,7 +67,7 @@ async function build(): Promise<string> {
 }
 
 async function readBundle(tmp: string, name: string): Promise<string> {
-  for await (const file of glob(path.join(tmp, '.rspeedy', '**', name))) {
+  for await (const file of glob(path.join(tmp, '.lynx', '**', name))) {
     return await readFile(file, 'utf8')
   }
   throw new Error(`${name} not found`)

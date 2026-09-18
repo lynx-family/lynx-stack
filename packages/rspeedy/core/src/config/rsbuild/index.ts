@@ -2,31 +2,27 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { ConsoleType, RsbuildConfig, SourceMap } from '@rsbuild/core'
+import type { ConsoleType, RsbuildConfig } from '@rsbuild/core'
 import type { UndefinedOnPartialDeep } from 'type-fest'
 
 import { toRsbuildEntry } from './entry.js'
 import type { Config } from '../index.js'
-
-// This is the default value from lynx-speedy.
-// We may change it based on new benchmarks.
-const defaultDataUriLimit = 2 * 1024
 
 export function toRsbuildConfig(
   config: Config,
 ): UndefinedOnPartialDeep<RsbuildConfig> {
   return {
     dev: {
-      hmr: config.dev?.hmr ?? true,
-      lazyCompilation: false,
-      liveReload: config.dev?.liveReload ?? true,
+      assetPrefix: config.dev?.assetPrefix,
+
+      hmr: config.dev?.hmr,
+      liveReload: config.dev?.liveReload,
       watchFiles: config.dev?.watchFiles,
-      // We expect to use different default writeToDisk with Rsbuild
-      writeToDisk: config.dev?.writeToDisk ?? true,
+      writeToDisk: config.dev?.writeToDisk,
 
       progressBar: config.dev?.progressBar ?? true,
     },
-    environments: config.environments ?? { lynx: {} },
+    environments: config.environments,
     mode: config.mode,
     output: {
       assetPrefix: config.output?.assetPrefix,
@@ -39,29 +35,25 @@ export function toRsbuildConfig(
 
       cssModules: config.output?.cssModules,
 
-      // We expect to use different default dataUriLimit with Rsbuild
-      dataUriLimit: config.output?.dataUriLimit ?? defaultDataUriLimit,
+      dataUriLimit: config.output?.dataUriLimit,
 
       distPath: config.output?.distPath,
 
-      filename: typeof config.output?.filename === 'object'
-        ? config.output.filename
-        : undefined,
+      filename: typeof config.output?.filename === 'string'
+        ? undefined
+        : config.output?.filename,
 
       filenameHash: config.output?.filenameHash,
 
       inlineScripts: config.output?.inlineScripts,
 
-      // TODO(OSS): change the default value to `linked`(or `undefined`) when OSS.
-      // We expect to use different default legalComments with Rsbuild
-      legalComments: config.output?.legalComments ?? 'none',
+      legalComments: config.output?.legalComments,
 
       minify: config.output?.minify,
 
       polyfill: 'off',
 
-      // TODO: update the Rsbuild type to allow `sourceMap.js` to be `*-debugids`
-      sourceMap: config.output?.sourceMap as SourceMap,
+      sourceMap: config.output?.sourceMap,
     },
     resolve: {
       alias: toRsbuildAlias(config),
@@ -100,8 +92,8 @@ export function toRsbuildConfig(
       cors: config.server?.cors,
 
       headers: config.server?.headers,
-      // rsbuild default value is `localhost`.
-      host: config.server?.host ?? '0.0.0.0',
+
+      host: config.server?.host,
 
       port: config.server?.port,
 
@@ -120,7 +112,7 @@ export function toRsbuildConfig(
         | false
         | undefined,
 
-      printFileSize: config.performance?.printFileSize ?? true,
+      printFileSize: config.performance?.printFileSize,
     },
     tools: {
       bundlerChain: config.tools?.bundlerChain,
@@ -128,8 +120,6 @@ export function toRsbuildConfig(
       cssExtract: config.tools?.cssExtract,
 
       cssLoader: config.tools?.cssLoader,
-
-      htmlPlugin: false,
 
       rspack: config.tools?.rspack,
 

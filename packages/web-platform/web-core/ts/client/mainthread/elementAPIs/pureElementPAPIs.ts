@@ -16,6 +16,7 @@ import type {
   ElementIsEqualPAPI,
   FirstElementPAPI,
   GetAttributeByNamePAPI,
+  GetAttributeNamesPAPI,
   GetAttributesPAPI,
   GetChildrenPAPI,
   GetClassesPAPI,
@@ -120,6 +121,10 @@ export const __GetAttributes: GetAttributesPAPI = /*#__PURE__*/ (
       ) => value) as [string, string][],
   );
 };
+
+export const __GetAttributeNames: GetAttributeNamesPAPI = /*#__PURE__*/ (
+  element,
+) => element.getAttributeNames();
 
 export const __GetAttributeByName: GetAttributeByNamePAPI = /*#__PURE__*/ (
   element,

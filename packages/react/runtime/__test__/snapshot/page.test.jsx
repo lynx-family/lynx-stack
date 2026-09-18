@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { __page } from '../../src/snapshot';
 import { globalEnvManager } from './utils/envManager';
@@ -9,8 +9,11 @@ import { render } from 'preact';
 import { replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
 import { deinitGlobalSnapshotPatch } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
 
-beforeEach(() => {
+beforeAll(() => {
   replaceCommitHook();
+});
+
+beforeEach(() => {
   globalEnvManager.resetEnv();
   elementTree.clear();
 });
@@ -137,7 +140,11 @@ describe('support <page /> element attributes', () => {
       globalEnvManager.switchToBackground();
       render(<Comp />, __root);
     }
-    expect(errors).toMatchInlineSnapshot(`[]`);
+    expect(errors).toMatchInlineSnapshot(`
+      [
+        [Error: Attempt to render more than one \`<page />\`, which is not supported.],
+      ]
+    `);
     vi.clearAllMocks();
   });
 
@@ -203,7 +210,7 @@ describe('support <page /> element attributes', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
     // rLynxChange
@@ -361,7 +368,7 @@ describe('support <page /> element attributes', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
     }
 
     // rLynxChange

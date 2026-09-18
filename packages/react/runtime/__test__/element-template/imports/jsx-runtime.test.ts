@@ -14,7 +14,6 @@ describe('element-template jsx-runtime', () => {
       __: null,
       __b: 0,
       __e: null,
-      __d: undefined,
       __c: null,
       __i: -1,
       __u: 0,
@@ -28,7 +27,7 @@ describe('element-template jsx-runtime', () => {
     expect(vnode?.props).toEqual({});
   });
 
-  it('strips ref and applies defaultProps for function components', () => {
+  it('keeps ref and applies defaultProps for function components', () => {
     function Foo() {
       return null;
     }
@@ -38,8 +37,21 @@ describe('element-template jsx-runtime', () => {
 
     expect(vnode.props).toEqual({
       foo: 'bar',
+      ref: 'ref',
       extra: 1,
     });
+  });
+
+  it('strips ref for class components', () => {
+    class Foo {
+      render() {
+        return null;
+      }
+    }
+
+    const vnode = jsx(Foo, { ref: 'ref', extra: 1 });
+
+    expect(vnode.props).toEqual({ extra: 1 });
   });
 
   it('returns undefined for unsupported vnode types', () => {
@@ -56,7 +68,6 @@ describe('element-template jsx-runtime', () => {
       __: null,
       __b: 0,
       __e: null,
-      __d: undefined,
       __c: null,
       __i: -1,
       __u: 0,

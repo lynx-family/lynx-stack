@@ -45,7 +45,9 @@ Core pieces:
     out on `pending → error`.
   - One per surface root + per component instance.
 - `SignalStore` (`src/store/SignalStore.ts`)
-  - `@preact/signals` wrapper used as the per-surface data model
+  - `@lynx-js/react-signals` wrapper used as the per-surface data model
+  - Creates a signal with its first written value so main-thread first-screen
+    rendering does not depend on the intentionally inactive signal setter.
     (JSON-pointer-style paths).
 - `<A2UI>` (`src/react/A2UI.tsx`)
   - All-in-one renderer. Per-mount `MessageProcessor`. Subscribes to
@@ -77,7 +79,7 @@ Core pieces:
   `Surface.store` (a `SignalStore`).
 - `useResolvedProps` (`src/react/useDataBinding.ts`) resolves bound
   props into concrete values and keeps them up to date via
-  `@preact/signals`.
+  `@lynx-js/react-signals`.
 - Relative paths resolve against the component's `dataContextPath`
   (used heavily for templates / repeated structures).
 

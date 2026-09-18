@@ -122,6 +122,21 @@ describe('Plugins - Output', () => {
     rstest.unstubAllEnvs()
   })
 
+  test('output.dataUriLimit defaults to 2 KiB', async () => {
+    const rsbuild = await createStubRspeedy({})
+
+    const config = await rsbuild.unwrapConfig()
+
+    const conditions = getAssetRules(config)
+      ?.filter(rule => rule.parser)
+      .map(rule => rule.parser?.['dataUrlCondition'] as unknown)
+
+    expect(conditions?.length).toBeGreaterThan(0)
+    for (const condition of conditions ?? []) {
+      expect(condition).toEqual({ maxSize: 2 * 1024 })
+    }
+  })
+
   test('output.dataUriLimit', async () => {
     const rsbuild = await createStubRspeedy({
       output: {
@@ -253,7 +268,7 @@ describe('Plugins - Output', () => {
           "auto": true,
           "exportGlobals": false,
           "exportLocalsConvention": "camelCase",
-          "localIdentName": "[local]-[hash:base64:6]",
+          "localIdentName": "[path][name]__[local]-[hash:base64:6]",
           "namedExport": false,
         },
         "sourceMap": false,
@@ -276,7 +291,7 @@ describe('Plugins - Output', () => {
             "auto": true,
             "exportGlobals": false,
             "exportLocalsConvention": "camelCase",
-            "localIdentName": "[local]-[hash:base64:6]",
+            "localIdentName": "[path][name]__[local]-[hash:base64:6]",
             "namedExport": false,
           },
           "sourceMap": true,
@@ -304,7 +319,7 @@ describe('Plugins - Output', () => {
             "auto": true,
             "exportGlobals": false,
             "exportLocalsConvention": "camelCase",
-            "localIdentName": "[local]-[hash:base64:6]",
+            "localIdentName": "[path][name]__[local]-[hash:base64:6]",
             "namedExport": false,
           },
           "sourceMap": true,
@@ -332,7 +347,7 @@ describe('Plugins - Output', () => {
             "auto": false,
             "exportGlobals": false,
             "exportLocalsConvention": "camelCase",
-            "localIdentName": "[local]-[hash:base64:6]",
+            "localIdentName": "[path][name]__[local]-[hash:base64:6]",
             "namedExport": false,
           },
           "sourceMap": true,
@@ -360,7 +375,7 @@ describe('Plugins - Output', () => {
             "auto": /module/,
             "exportGlobals": false,
             "exportLocalsConvention": "camelCase",
-            "localIdentName": "[local]-[hash:base64:6]",
+            "localIdentName": "[path][name]__[local]-[hash:base64:6]",
             "namedExport": false,
           },
           "sourceMap": true,
@@ -390,7 +405,7 @@ describe('Plugins - Output', () => {
             "auto": [Function],
             "exportGlobals": false,
             "exportLocalsConvention": "camelCase",
-            "localIdentName": "[local]-[hash:base64:6]",
+            "localIdentName": "[path][name]__[local]-[hash:base64:6]",
             "namedExport": false,
           },
           "sourceMap": true,
@@ -417,7 +432,7 @@ describe('Plugins - Output', () => {
             "auto": true,
             "exportGlobals": true,
             "exportLocalsConvention": "camelCase",
-            "localIdentName": "[local]-[hash:base64:6]",
+            "localIdentName": "[path][name]__[local]-[hash:base64:6]",
             "namedExport": false,
           },
           "sourceMap": true,
@@ -445,7 +460,7 @@ describe('Plugins - Output', () => {
             "auto": true,
             "exportGlobals": false,
             "exportLocalsConvention": "asIs",
-            "localIdentName": "[local]-[hash:base64:6]",
+            "localIdentName": "[path][name]__[local]-[hash:base64:6]",
             "namedExport": false,
           },
           "sourceMap": true,
@@ -473,7 +488,7 @@ describe('Plugins - Output', () => {
             "auto": true,
             "exportGlobals": false,
             "exportLocalsConvention": "dashesOnly",
-            "localIdentName": "[local]-[hash:base64:6]",
+            "localIdentName": "[path][name]__[local]-[hash:base64:6]",
             "namedExport": false,
           },
           "sourceMap": true,
@@ -526,7 +541,7 @@ describe('Plugins - Output', () => {
             "auto": true,
             "exportGlobals": false,
             "exportLocalsConvention": "camelCase",
-            "localIdentName": "[local]-[hash:base64:6]",
+            "localIdentName": "[path][name]__[local]-[hash:base64:6]",
             "namedExport": false,
           },
           "sourceMap": true,
@@ -575,7 +590,7 @@ describe('Plugins - Output', () => {
             "auto": true,
             "exportGlobals": false,
             "exportLocalsConvention": "camelCase",
-            "localIdentName": "[local]-[hash:base64:6]",
+            "localIdentName": "[path][name]__[local]-[hash:base64:6]",
             "namedExport": false,
           },
           "sourceMap": true,
@@ -638,10 +653,10 @@ describe('Plugins - Output', () => {
         !!plugin && plugin.constructor.name === 'CssExtractRspackPlugin'
       )
       expect(cssExtractPlugin?.options.filename).toMatchInlineSnapshot(
-        `".rspeedy/[name]/[name].css"`,
+        `".lynx/[name]/[name].css"`,
       )
       expect(cssExtractPlugin?.options.chunkFilename).toMatchInlineSnapshot(
-        `".rspeedy/async/[name]/[name].css"`,
+        `".lynx/async/[name]/[name].css"`,
       )
     })
 
@@ -712,7 +727,7 @@ describe('Plugins - Output', () => {
         !!plugin && plugin.constructor.name === 'CssExtractRspackPlugin'
       )
       expect(cssExtractPlugin?.options.filename).toMatchInlineSnapshot(
-        `".rspeedy/[name]/[name].css"`,
+        `".lynx/[name]/[name].css"`,
       )
       expect(cssExtractPlugin?.options.chunkFilename).toMatchInlineSnapshot(
         `"css_chunks/[name]/[name].css"`,
@@ -941,8 +956,8 @@ describe('Plugins - Output', () => {
       ).toHaveProperty(
         'options',
         expect.objectContaining({
-          filename: '.rspeedy/static/css/foo.[fullhash].css',
-          chunkFilename: '.rspeedy/async/static/css/foo.[fullhash].css',
+          filename: '.lynx/static/css/foo.[fullhash].css',
+          chunkFilename: '.lynx/async/static/css/foo.[fullhash].css',
         }),
       )
     })

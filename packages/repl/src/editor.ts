@@ -3,12 +3,15 @@ import lynxElementApi from '@lynx-js/type-element-api/types/element-api.d.ts?raw
 import lynxTypesMap from './generated/lynx-types-map.json';
 
 // Configure Monaco workers
+// monaco-editor 0.56 added an `exports` map whose `./*` entry already
+// resolves under `esm/vs`, so the worker specifiers must drop that prefix
+// or they resolve to `esm/vs/esm/vs/...` and fail.
 self.MonacoEnvironment = {
   getWorker(_workerId: string, label: string) {
     if (label === 'typescript' || label === 'javascript') {
       return new Worker(
         new URL(
-          'monaco-editor/esm/vs/language/typescript/ts.worker.js',
+          'monaco-editor/language/typescript/ts.worker.js',
           import.meta.url,
         ),
         { type: 'module' },
@@ -17,14 +20,14 @@ self.MonacoEnvironment = {
     if (label === 'css') {
       return new Worker(
         new URL(
-          'monaco-editor/esm/vs/language/css/css.worker.js',
+          'monaco-editor/language/css/css.worker.js',
           import.meta.url,
         ),
         { type: 'module' },
       );
     }
     return new Worker(
-      new URL('monaco-editor/esm/vs/editor/editor.worker.js', import.meta.url),
+      new URL('monaco-editor/editor/editor.worker.js', import.meta.url),
       { type: 'module' },
     );
   },

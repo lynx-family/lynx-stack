@@ -1,0 +1,435 @@
+.publishedReportPage {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  background: var(--geist-background);
+  color: var(--geist-foreground);
+  font-family: var(--geist-font);
+}
+
+.publishedReportContent {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 20px clamp(16px, 3vw, 32px) 32px;
+}
+
+.publishedReportScreenshotGroup {
+  min-width: 0;
+  margin: 0 0 16px;
+}
+
+.publishedReportScreenshotGroup h3 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.publishedReportScreenshotGroup h3 span {
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.publishedReportScreenshots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 12px;
+}
+
+.publishedReportScreenshots figure {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--geist-border);
+  border-radius: 8px;
+}
+
+.publishedReportScreenshots img {
+  display: block;
+  width: 100%;
+  height: 320px;
+  object-fit: contain;
+  object-position: top;
+}
+
+.publishedReportScreenshots figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--geist-border);
+  color: var(--geist-secondary);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.publishedReportScreenshots figcaption strong {
+  color: var(--geist-foreground);
+}
+
+.publishedReportShareBar,
+.publishedReportShareActions,
+.publishedReportTitleRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.publishedReportShareBar {
+  justify-content: space-between;
+}
+
+.publishedReportShareBar {
+  margin-bottom: 20px;
+  font-size: 12px;
+}
+
+.publishedReportShareBar a {
+  color: var(--geist-secondary);
+  text-decoration: none;
+}
+
+.publishedReportShareBar a:hover {
+  color: var(--geist-foreground);
+  text-decoration: underline;
+}
+
+.publishedReportPage a:focus-visible,
+.publishedReportDisclosure > summary:focus-visible {
+  outline: 2px solid var(--geist-foreground);
+  outline-offset: 3px;
+}
+
+.publishedReportEyebrow {
+  margin-bottom: 8px;
+  color: var(--geist-secondary);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.publishedReportTitleRow h1 {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 32px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.05em;
+}
+
+.publishedReportStatus {
+  padding: 3px 8px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  text-transform: capitalize;
+}
+
+.publishedReportDescription {
+  margin: 8px 0;
+  color: var(--geist-secondary);
+  font-size: 13px;
+}
+
+.publishedReportRecordDate {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 6px 0;
+  color: var(--geist-secondary);
+  font-family: var(--geist-mono);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.publishedReportShareNote {
+  margin: 10px 0 0;
+  color: var(--geist-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.publishedReportSection {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--geist-border);
+}
+
+.publishedReportSection h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.publishedReportSection h2 > span {
+  color: var(--geist-secondary);
+  font-family: var(--geist-mono);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.publishedReportStats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 16px;
+}
+
+.publishedReportStats > div {
+  padding: 12px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+}
+
+.publishedReportStats dt {
+  color: var(--geist-secondary);
+  font-size: 12px;
+}
+
+.publishedReportStats dd {
+  margin: 6px 0 0;
+  font-size: 22px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.publishedReportTableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+}
+
+.publishedReportTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+}
+
+.publishedReportTable caption {
+  padding: 10px 12px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.publishedReportTable th,
+.publishedReportTable td {
+  padding: 8px 12px;
+  border-top: 1px solid var(--geist-border);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.publishedReportTable thead th {
+  background: var(--geist-surface);
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.publishedReportTable th > small {
+  display: block;
+  margin-top: 3px;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.publishedReportPlan {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.publishedReportPlan h3,
+.publishedReportWarnings h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.publishedReportDisclosure {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--geist-border);
+  font-size: 12px;
+}
+
+.publishedReportDisclosure > summary {
+  color: var(--geist-foreground);
+  cursor: pointer;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.publishedReportDisclosure > summary > span {
+  margin-left: 8px;
+  color: var(--geist-secondary);
+  font-size: 11px;
+}
+
+.publishedReportRunStatus {
+  padding: 2px 6px;
+  border: 1px solid var(--geist-border);
+  border-radius: 999px;
+}
+
+.publishedReportRunStatus[data-failed="true"] {
+  color: var(--geist-error, #e00);
+}
+
+.publishedReportArtifactAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  vertical-align: middle;
+}
+
+.publishedReportDisclosure p,
+.publishedReportGroupConfig dd {
+  color: var(--geist-secondary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.publishedReportDisclosure p,
+.publishedReportGroupConfig {
+  margin: 8px 0;
+}
+
+.publishedReportGroupConfig > div {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.publishedReportGroupConfig dt {
+  color: var(--geist-secondary);
+}
+
+.publishedReportGroupConfig dd {
+  margin: 0;
+}
+
+.publishedReportWarnings,
+.publishedReportEmpty {
+  margin-top: 12px;
+  padding: 12px;
+  color: var(--geist-secondary);
+  background: var(--geist-surface);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.publishedReportLoadState {
+  max-width: 680px;
+  margin: 48px auto;
+  padding: 24px;
+}
+
+.publishedReportLoadState h1 {
+  font-size: 28px;
+  letter-spacing: -0.04em;
+}
+
+.publishedReportLoadState > p {
+  margin-bottom: 24px;
+  color: var(--geist-secondary);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.publishedReportImageDialog {
+  width: min(960px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-background);
+  color: var(--geist-foreground);
+  font-family: var(--geist-font);
+}
+
+.publishedReportImageDialog[open] {
+  display: grid;
+  grid-template-rows: auto minmax(120px, 1fr) auto;
+}
+
+.publishedReportImageDialog::backdrop {
+  background: rgb(0 0 0 / 50%);
+}
+
+.publishedReportImageDialog > header,
+.publishedReportImageDialog > footer {
+  padding: 20px;
+}
+
+.publishedReportImageDialog h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.publishedReportImageDialog p,
+.publishedReportImageDialog footer > span {
+  margin: 0;
+  color: var(--geist-secondary);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.publishedReportImagePreview {
+  min-height: 0;
+  padding: 16px;
+  overflow: auto;
+  border-block: 1px solid var(--geist-border);
+  background: var(--geist-surface);
+}
+
+.publishedReportImagePreview img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.publishedReportImageDialog > footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.publishedReportImageDialog footer > span {
+  flex: 1 1 180px;
+}
+
+@media (width <= 640px) {
+  .publishedReportStats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .publishedReportPlan {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .publishedReportShareBar {
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+}

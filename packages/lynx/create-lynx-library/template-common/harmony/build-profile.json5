@@ -3,7 +3,7 @@
   "buildOption": {
     "arkOptions": {
       "byteCodeHar": false
-    }
+    }__HARMONY_NATIVE_BUILD_OPTION__
   },
   "targets": [
     {

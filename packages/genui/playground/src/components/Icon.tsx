@@ -9,9 +9,13 @@
 import {
   ArrowRight,
   ArrowUpRight,
+  ChevronDown,
   ChevronLeft,
   Copy,
+  EllipsisVertical,
+  FileText,
   History,
+  Info,
   Maximize2,
   MessageSquarePlus,
   Minimize2,
@@ -26,6 +30,7 @@ import {
   Sparkles,
   Sun,
   Trash2,
+  TriangleAlert,
   X,
   Zap,
 } from 'lucide-react';
@@ -34,9 +39,13 @@ import type { LucideProps } from 'lucide-react';
 export {
   ArrowRight,
   ArrowUpRight,
+  ChevronDown,
   ChevronLeft,
   Copy,
+  EllipsisVertical,
+  FileText,
   History,
+  Info,
   Maximize2,
   MessageSquarePlus,
   Minimize2,
@@ -51,6 +60,7 @@ export {
   Sparkles,
   Sun,
   Trash2,
+  TriangleAlert,
   X,
   Zap,
 };

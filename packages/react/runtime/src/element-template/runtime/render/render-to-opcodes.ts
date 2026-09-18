@@ -13,19 +13,24 @@
 import { Fragment, h, options } from 'preact';
 
 import {
+  BITS,
   CHILDREN,
   COMMIT,
   COMPONENT,
+  COMPONENT_DIRTY,
   DIFF,
   DIFF2,
   DIFFED,
-  DIRTY,
+  GLOBAL_CONTEXT,
   NEXT_STATE,
   PARENT,
   RENDER,
   SKIP_EFFECTS,
   VNODE,
 } from '../../../shared/render-constants.js';
+import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID } from '../../protocol/page.js';
+import { __ElementTemplatePage } from '../page/authored-page.js';
+import { prepareTypedElementAttributes } from '../template/typed-attributes.js';
 
 /** @typedef {import('preact').VNode} VNode */
 
@@ -83,7 +88,7 @@ export function renderToString(vnode: any, context: any): any[] {
 // Installed as setState/forceUpdate for function components
 /* v8 ignore start */
 function markAsDirty() {
-  this.__d = true;
+  this[BITS] |= COMPONENT_DIRTY;
 }
 /* v8 ignore stop */
 
@@ -96,12 +101,14 @@ export const __OpEnd = 1;
 export const __OpAttr = 2;
 export const __OpText = 3;
 export const __OpSlot = 4;
+export const __OpPageStart = 5;
+export const __OpPageEnd = 6;
 
 /**
  * @param {VNode} vnode
  * @param {Record<string, unknown>} context
  */
-function renderClassComponent(vnode, context) {
+function renderClassComponent(vnode, context, globalContext) {
   const type = /** @type {import("preact").ComponentClass<typeof vnode.props>} */ (vnode.type);
 
   let c;
@@ -117,8 +124,9 @@ function renderClassComponent(vnode, context) {
 
   c.props = vnode.props;
   c.context = context;
+  c[GLOBAL_CONTEXT] = globalContext;
   // turn off stateful re-rendering:
-  c[DIRTY] = true;
+  c[BITS] |= COMPONENT_DIRTY;
 
   if (c.state == null) c.state = EMPTY_OBJ;
 
@@ -187,17 +195,18 @@ function renderComponentVNode(
     }
 
     if (type.prototype && typeof type.prototype.render === 'function') {
-      rendered = /**#__NOINLINE__**/ renderClassComponent(vnode, cctx);
+      rendered = /**#__NOINLINE__**/ renderClassComponent(vnode, cctx, context);
       component = vnode[COMPONENT];
     } else {
       component = {
         __v: vnode,
         props,
         context: cctx,
+        [GLOBAL_CONTEXT]: context,
         // silently drop state updates
         setState: markAsDirty,
         forceUpdate: markAsDirty,
-        __d: true,
+        __g: COMPONENT_DIRTY,
         // hooks
         __h: [],
       };
@@ -206,14 +215,14 @@ function renderComponentVNode(
       component.render = doRender;
 
       let count = 0;
-      while (component[DIRTY] && count++ < 25) {
-        component[DIRTY] = false;
+      while (component[BITS] & COMPONENT_DIRTY && count++ < 25) {
+        component[BITS] &= ~COMPONENT_DIRTY;
 
         if (renderHook) renderHook(vnode);
 
         rendered = component.render(props, component.state, cctx);
       }
-      component[DIRTY] = true;
+      component[BITS] |= COMPONENT_DIRTY;
     }
 
     if (component.getChildContext != null) {
@@ -231,8 +240,8 @@ function renderComponentVNode(
     if (e && typeof e === 'object' && e.then && component && /* _childDidSuspend */ component.__c) {
       component.setState({ /* _suspended */ __a: true });
 
-      if (component[DIRTY]) {
-        rendered = renderClassComponent(vnode, context);
+      if (component[BITS] & COMPONENT_DIRTY) {
+        rendered = renderClassComponent(vnode, context, context);
         component = vnode[COMPONENT];
 
         opcodes.length = opcodesLength;
@@ -251,20 +260,20 @@ function renderCompiledEtHostVNode(vnode, props, context, opcodes) {
 
   const attributeSlots = props.attributeSlots;
   if (attributeSlots !== undefined) {
-    opcodes.push(__OpAttr, 'attributeSlots', attributeSlots);
+    opcodes.push(__OpAttr, attributeSlots);
   }
 
   // ET host nodes are compiler-generated; `swc_plugin_element_template`
   // (lowering.rs) emits dynamic children as `$N` named props only — no
   // `children` prop is produced — so the renderer only consumes `$N`.
-  let elementSlots: unknown[] | undefined;
+  let childSlots: unknown[] | undefined;
   for (const name in props) {
     if (name.startsWith('$')) {
-      (elementSlots ??= [])[+name.slice(1)] = props[name];
+      (childSlots ??= [])[+name.slice(1)] = props[name];
     }
   }
-  if (elementSlots !== undefined) {
-    renderEtSlotArray(elementSlots, context, vnode, opcodes);
+  if (childSlots !== undefined) {
+    renderEtSlotArray(childSlots, context, vnode, opcodes);
   }
 
   cleanupVNode(vnode);
@@ -285,7 +294,7 @@ function renderTypedListHostVNode(vnode, props, context, opcodes) {
 
     const attributes = props.attributes;
     if (attributes !== undefined) {
-      opcodes.push(__OpAttr, 'typedAttributes', attributes);
+      opcodes.push(__OpAttr, attributes);
     }
 
     const listChildren = props[TYPED_LIST_LOGICAL_SLOT_PROP];
@@ -366,6 +375,17 @@ function _renderToString(
 
   // Invoke rendering on Components
   if (typeof type === 'function') {
+    if (type === __ElementTemplatePage) {
+      opcodes.push(
+        __OpPageStart,
+        prepareTypedElementAttributes(ELEMENT_TEMPLATE_PAGE_HANDLE_ID, props.attributes),
+      );
+      renderComponentVNode(vnode, type, props, context, opcodes);
+      if (__DEV__) {
+        opcodes.push(__OpPageEnd);
+      }
+      return;
+    }
     renderComponentVNode(vnode, type, props, context, opcodes);
     return;
   }

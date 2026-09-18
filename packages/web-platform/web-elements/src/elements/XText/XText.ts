@@ -12,10 +12,16 @@ import {
   layoutChangeTarget,
 } from '../common/CommonEventsAndMethods.js';
 import { templateXText } from '../htmlTemplates.js';
+import { XTextSelectionEvents } from './XTextSelectionEvents.js';
 
 @Component<typeof XText>(
   'x-text',
-  [CommonEventsAndMethods, XTextTruncation, RawTextAttributes],
+  [
+    CommonEventsAndMethods,
+    XTextSelectionEvents,
+    XTextTruncation,
+    RawTextAttributes,
+  ],
   templateXText,
 )
 export class XText extends HTMLElement {

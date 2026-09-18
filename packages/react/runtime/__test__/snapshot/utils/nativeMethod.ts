@@ -404,7 +404,7 @@ export const elementTree = new (class {
     const eventHandler = e.props?.event?.[`${eventType}:${eventName}`];
     if (eventHandler) {
       // @ts-ignore
-      globalThis.lynxCoreInject.tt.publishEvent(eventHandler, data);
+      globalThis.lynx.getApp().publishEvent(eventHandler, data);
     }
   }
 

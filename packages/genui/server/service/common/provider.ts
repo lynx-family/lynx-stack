@@ -4,7 +4,9 @@
 
 import { createHash } from 'node:crypto';
 
-import type { ChatOptions, OpenAIReasoningEffort } from './types';
+import { readModelConfig } from './model-config.js';
+import type { ChatOptions, OpenAIReasoningEffort } from './types.js';
+import { isOfficialOpenAIBaseURL } from '../../agent/common/openai-utils.js';
 
 const REASONING_EFFORTS = new Set<OpenAIReasoningEffort>([
   'none',
@@ -64,6 +66,13 @@ function createProviderCacheKey(
     opts.model ?? 'default',
     hashApiKey(opts.apiKey),
     opts.api ?? 'default',
+    opts.enableWebSearch === false ? 'search-disabled' : 'search-enabled',
+    opts.enableImageGeneration === false
+      ? 'image-generation-disabled'
+      : 'image-generation-enabled',
+    opts.enableDesignGuidance === false
+      ? 'design-guidance-disabled'
+      : 'design-guidance-enabled',
   ].join(':');
   return variant === undefined ? baseKey : `${baseKey}:${variant}`;
 }
@@ -128,33 +137,113 @@ function parseReasoningEffort(
     : undefined;
 }
 
+function hasCustomProvider(opts: ChatOptions): boolean {
+  return [opts.model, opts.apiKey, opts.baseURL].every(value =>
+    typeof value === 'string' && value.trim().length > 0
+  );
+}
+
+function configuredRunModel(opts: ChatOptions) {
+  if (hasCustomProvider(opts)) return undefined;
+  const config = readModelConfig();
+  if (!config.ok) return undefined;
+  const modelName = opts.model && config.config.models[opts.model]
+    ? opts.model
+    : config.config.defaultModel;
+  return config.config.models[modelName];
+}
+
 export function resolveReasoningEffort(
   opts: ChatOptions,
 ): OpenAIReasoningEffort | undefined {
   const explicit = parseReasoningEffort(opts.reasoningEffort);
   if (explicit !== undefined) return explicit;
-  return opts.inheritReasoningEffort === false
-    ? undefined
-    : parseReasoningEffort(process.env.OPENAI_REASONING_EFFORT);
+  if (opts.inheritReasoningEffort === false) return undefined;
+  return configuredRunModel(opts)?.reasoningEffort;
 }
 
-export function buildResourceRunOptions(
+/** Shared per-call generation target, further bounded by the selected model. */
+export const DEFAULT_AGENT_MAX_OUTPUT_TOKENS = 16_384;
+
+export function resolveModelOutputTokenBudget(
   opts: ChatOptions,
-  abortSignal?: AbortSignal,
-) {
-  return pickDefined({ resourceId: opts.resourceId, abortSignal });
+  desiredMaxOutputTokens = DEFAULT_AGENT_MAX_OUTPUT_TOKENS,
+): number {
+  if (
+    !Number.isSafeInteger(desiredMaxOutputTokens) || desiredMaxOutputTokens <= 0
+  ) {
+    throw new RangeError('maxOutputTokens must be a positive safe integer');
+  }
+  const configuredLimit = configuredRunModel(opts)?.maxOutputTokens;
+  return configuredLimit === undefined
+    ? desiredMaxOutputTokens
+    : Math.min(desiredMaxOutputTokens, configuredLimit);
+}
+
+export interface ReasoningRecoverySettings {
+  maxOutputTokens: number;
+  reasoningEffort: OpenAIReasoningEffort;
+}
+
+/** Adapt one fresh attempt after reasoning consumed the entire output budget. */
+export function resolveReasoningRecoverySettings(
+  opts: ChatOptions,
+  currentMaxOutputTokens: number,
+): ReasoningRecoverySettings | undefined {
+  if (opts.inheritReasoningEffort === false) return undefined;
+  const currentEffort = resolveReasoningEffort(opts);
+  const reasoningEffort = currentEffort === 'none'
+      || currentEffort === 'minimal' || currentEffort === 'low'
+    ? currentEffort
+    : 'low';
+  const ceiling = configuredRunModel(opts)?.maxOutputTokens;
+  // Never assume a provider without a configured ceiling supports more tokens.
+  const maxOutputTokens = ceiling === undefined
+    ? currentMaxOutputTokens
+    : Math.min(currentMaxOutputTokens * 2, ceiling);
+  return reasoningEffort === currentEffort
+      && maxOutputTokens <= currentMaxOutputTokens
+    ? undefined
+    : { maxOutputTokens, reasoningEffort };
 }
 
 export function buildOpenAIRunOptions(
   opts: ChatOptions,
   abortSignal?: AbortSignal,
+  desiredMaxOutputTokens = DEFAULT_AGENT_MAX_OUTPUT_TOKENS,
 ) {
   const reasoningEffort = resolveReasoningEffort(opts);
-  return pickDefined({
-    resourceId: opts.resourceId,
-    abortSignal,
-    providerOptions: reasoningEffort
-      ? { openai: { reasoningEffort } }
-      : undefined,
-  });
+  const baseURL = hasCustomProvider(opts)
+    ? opts.baseURL
+    : configuredRunModel(opts)?.baseURL;
+  const compatibleProvider = baseURL !== undefined
+    && !isOfficialOpenAIBaseURL(baseURL);
+  return {
+    ...pickDefined({
+      resourceId: opts.resourceId,
+      abortSignal,
+      providerOptions: reasoningEffort
+        ? {
+          openai: {
+            reasoningEffort,
+            ...(compatibleProvider
+              ? {
+                // Configured effort also applies to model aliases unknown to the SDK.
+                forceReasoning: true,
+                systemMessageMode: 'system' as const,
+                reasoningSummary: null,
+              }
+              : {}),
+          },
+        }
+        : undefined,
+    }),
+    modelSettings: {
+      ...pickDefined({ maxRetries: opts.maxRetries }),
+      maxOutputTokens: resolveModelOutputTokenBudget(
+        opts,
+        desiredMaxOutputTokens,
+      ),
+    },
+  };
 }

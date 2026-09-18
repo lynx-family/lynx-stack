@@ -23,6 +23,7 @@ struct DisplayLinkState {
   tick_scheduled: bool,
   timer: CFRunLoopTimerRef,
   timer_context: *mut TickContext,
+  run_loop: CFRunLoopRef,
   timestamp: f64,
   target_timestamp: f64,
 }
@@ -81,6 +82,10 @@ unsafe extern "C" fn fake_screen_display_link(
   debug("created fake display link");
   let display_link = send_id(display_link_class(), sel("new"));
   let now = CACurrentMediaTime();
+  let run_loop = CFRunLoopGetCurrent();
+  if !run_loop.is_null() {
+    CFRetain(run_loop.cast());
+  }
   let state = Box::new(DisplayLinkState {
     target,
     selector,
@@ -89,6 +94,7 @@ unsafe extern "C" fn fake_screen_display_link(
     tick_scheduled: false,
     timer: ptr::null_mut(),
     timer_context: ptr::null_mut(),
+    run_loop,
     timestamp: now,
     target_timestamp: now + (1.0 / 60.0),
   });
@@ -101,11 +107,40 @@ unsafe extern "C" fn fake_screen_maximum_frames_per_second(_screen: Id, _cmd: Se
 }
 
 unsafe extern "C" fn fake_display_link_add_to_run_loop(
-  _display_link: Id,
+  display_link: Id,
   _cmd: Sel,
-  _run_loop: Id,
+  run_loop: Id,
   _mode: Id,
 ) {
+  let requested_run_loop = if run_loop.is_null() {
+    CFRunLoopGetCurrent()
+  } else {
+    send_id(run_loop, sel("getCFRunLoop")).cast()
+  };
+  if requested_run_loop.is_null() {
+    return;
+  }
+
+  let should_reschedule = {
+    let Some(state) = state_mut(display_link) else {
+      return;
+    };
+    if state.run_loop == requested_run_loop {
+      return;
+    }
+
+    cancel_timer(state);
+    CFRetain(requested_run_loop.cast());
+    if !state.run_loop.is_null() {
+      CFRelease(state.run_loop.cast());
+    }
+    state.run_loop = requested_run_loop;
+    !state.paused && !state.invalidated
+  };
+
+  if should_reschedule {
+    schedule_timer(display_link);
+  }
 }
 
 unsafe extern "C" fn fake_display_link_set_paused(display_link: Id, _cmd: Sel, paused: bool) {
@@ -141,14 +176,10 @@ unsafe extern "C" fn fake_display_link_invalidate(display_link: Id, _cmd: Sel) {
   let state = take_state(display_link);
   if let Some(mut state) = state {
     state.invalidated = true;
-    if !state.timer.is_null() {
-      CFRunLoopTimerInvalidate(state.timer);
-      CFRelease(state.timer.cast());
-      state.timer = ptr::null_mut();
-    }
-    if !state.timer_context.is_null() {
-      let _ = Box::from_raw(state.timer_context);
-      state.timer_context = ptr::null_mut();
+    cancel_timer(&mut state);
+    if !state.run_loop.is_null() {
+      CFRelease(state.run_loop.cast());
+      state.run_loop = ptr::null_mut();
     }
   }
 }
@@ -199,9 +230,31 @@ unsafe fn schedule_timer(display_link: Id) {
   }
   state.timer = timer;
 
-  let run_loop = CFRunLoopGetMain();
+  let run_loop = state.run_loop;
+  if run_loop.is_null() {
+    CFRunLoopTimerInvalidate(timer);
+    CFRelease(timer.cast());
+    let _ = Box::from_raw(context);
+    state.timer = ptr::null_mut();
+    state.timer_context = ptr::null_mut();
+    state.tick_scheduled = false;
+    return;
+  }
   CFRunLoopAddTimer(run_loop, timer, kCFRunLoopCommonModes);
   CFRunLoopWakeUp(run_loop);
+}
+
+unsafe fn cancel_timer(state: &mut DisplayLinkState) {
+  if !state.timer.is_null() {
+    CFRunLoopTimerInvalidate(state.timer);
+    CFRelease(state.timer.cast());
+    state.timer = ptr::null_mut();
+  }
+  if !state.timer_context.is_null() {
+    let _ = Box::from_raw(state.timer_context);
+    state.timer_context = ptr::null_mut();
+  }
+  state.tick_scheduled = false;
 }
 
 unsafe extern "C" fn fake_display_link_timer_fired(_timer: CFRunLoopTimerRef, info: *mut c_void) {
@@ -428,7 +481,7 @@ unsafe extern "C" {
 unsafe extern "C" {
   static kCFRunLoopCommonModes: CFStringRef;
   fn CFAbsoluteTimeGetCurrent() -> CFAbsoluteTime;
-  fn CFRunLoopGetMain() -> CFRunLoopRef;
+  fn CFRunLoopGetCurrent() -> CFRunLoopRef;
   fn CFRunLoopWakeUp(run_loop: CFRunLoopRef);
   fn CFRunLoopAddTimer(run_loop: CFRunLoopRef, timer: CFRunLoopTimerRef, mode: CFStringRef);
   fn CFRunLoopTimerInvalidate(timer: CFRunLoopTimerRef);
@@ -441,6 +494,7 @@ unsafe extern "C" {
     callout: unsafe extern "C" fn(CFRunLoopTimerRef, *mut c_void),
     context: *mut CFRunLoopTimerContext,
   ) -> CFRunLoopTimerRef;
+  fn CFRetain(value: *const c_void) -> *const c_void;
   fn CFRelease(value: *const c_void);
 }
 

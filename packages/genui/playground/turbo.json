@@ -10,6 +10,7 @@
         "lynx-src/**",
         "examples/**",
         "lynx.config.ts",
+        "scripts/build-bench-zips.mjs",
         "tsconfig.json",
         "package.json"
       ],

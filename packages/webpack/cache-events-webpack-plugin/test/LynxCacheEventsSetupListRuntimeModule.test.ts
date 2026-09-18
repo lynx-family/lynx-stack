@@ -47,9 +47,7 @@ interface RuntimeSandbox {
   __webpack_require__: {
     lynx_ce?: RuntimeCache;
   };
-  lynxCoreInject: {
-    tt: TtMethods;
-  };
+  lynx: { getApp: () => TtMethods };
   loadDynamicComponent?: (...args: unknown[]) => unknown;
   renderPage?: (...args: unknown[]) => unknown;
   processData?: (data: unknown) => unknown;
@@ -82,11 +80,10 @@ function createRuntimeSandbox(options: {
     throw new Error('Expected generated runtime code');
   }
 
+  const app = options.tt ?? {};
   const sandbox: RuntimeSandbox = {
     __webpack_require__: {},
-    lynxCoreInject: {
-      tt: options.tt ?? {},
-    },
+    lynx: { getApp: () => app },
   };
   if (options.loadDynamicComponent) {
     sandbox.loadDynamicComponent = options.loadDynamicComponent;
@@ -133,7 +130,7 @@ describe('LynxCacheEventsSetupListRuntimeModule', () => {
     runtimeCache.cachedActions = [];
 
     const cleanup = getSetupItem(runtimeCache, 'ttMethod').setup();
-    sandbox.lynxCoreInject.tt.publishEvent?.('event-name', { foo: 'bar' });
+    sandbox.lynx.getApp().publishEvent?.('event-name', { foo: 'bar' });
 
     expect(originalPublishEvent).not.toHaveBeenCalled();
     expect(runtimeCache.cachedActions).toEqual([
@@ -154,7 +151,7 @@ describe('LynxCacheEventsSetupListRuntimeModule', () => {
       foo: 'bar',
     });
 
-    sandbox.lynxCoreInject.tt.publishEvent?.('event-name-2');
+    sandbox.lynx.getApp().publishEvent?.('event-name-2');
 
     expect(originalPublishEvent).toHaveBeenCalledTimes(2);
     expect(originalPublishEvent).toHaveBeenLastCalledWith('event-name-2');

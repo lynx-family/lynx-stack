@@ -7,7 +7,7 @@ use swc_core::{
   common::{errors::HANDLER, iter::IdentifyLast, Spanned, DUMMY_SP},
   ecma::{
     ast::{JSXExpr, *},
-    atoms::{atom, Atom},
+    atoms::{atom, Atom, Wtf8Atom},
   },
 };
 
@@ -147,11 +147,12 @@ pub fn jsx_props_to_obj(jsx: &JSXElement) -> Option<ObjectLit> {
   Some(obj)
 }
 
-pub fn jsx_text_to_str(t: &Atom) -> Atom {
+// `JSXText::value` is a `Wtf8Atom` from swc_core 77 on.
+pub fn jsx_text_to_str(t: &Wtf8Atom) -> Atom {
   static SPACE_START: Lazy<Regex> = Lazy::new(|| Regex::new("^[ ]+").unwrap());
   static SPACE_END: Lazy<Regex> = Lazy::new(|| Regex::new("[ ]+$").unwrap());
   let mut buf = String::new();
-  let replaced = t.replace('\t', " ");
+  let replaced = t.to_string_lossy().replace('\t', " ");
 
   for (is_last, (i, line)) in replaced.lines().enumerate().identify_last() {
     if line.is_empty() {
@@ -276,16 +277,20 @@ pub fn jsx_is_list_item(jsx: &JSXElement) -> bool {
   }
 }
 
-// SDK >= 3.1 optimization: For <text>static content</text>, set text as an attribute
-// instead of creating a separate raw text child node. This reduces element count
-// and improves performance for simple static text elements.
-pub fn jsx_is_single_static_text(n: &JSXElement) -> bool {
+// SDK >= 3.1 optimization: Set a single text child as an attribute instead of
+// creating a separate raw text node. Only accept expressions whose syntax
+// guarantees a string result; arbitrary expressions can produce React nodes.
+pub fn jsx_is_single_text(n: &JSXElement) -> bool {
   match &n.opening.name {
     JSXElementName::Ident(ident) => {
       ident.sym == "text"
         && n.children.len() == 1
         && match &n.children[0] {
           JSXElementChild::JSXText(text) => !jsx_text_to_str(&text.value).is_empty(),
+          JSXElementChild::JSXExprContainer(JSXExprContainer {
+            expr: JSXExpr::Expr(expr),
+            ..
+          }) => matches!(&**expr, Expr::Lit(Lit::Str(_)) | Expr::Tpl(_)),
           _ => false,
         }
     }
