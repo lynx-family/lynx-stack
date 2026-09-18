@@ -47,6 +47,7 @@ export function sections(packages: WorkspacePackage[]): Section[] {
       out: 'api/react/testing-library',
       router: 'module',
       packages: [join(REACT, 'testing-library')],
+      readme: join(REACT, 'testing-library/README.md'),
       flatten: true,
     },
     { out: 'api/react', router: 'group', packages: [REACT] },
