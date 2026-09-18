@@ -57,7 +57,6 @@ export function pluginApiSection(
       app.options.setValue('expandParameters', true);
       app.options.setValue('parametersFormat', 'table');
       app.options.setValue('excludeScopesInPaths', true);
-      if (section.flatten) app.options.setValue('flattenOutputFiles', true);
       if (section.readme) {
         app.options.setValue('readme', section.readme);
         app.options.setValue('mergeReadme', true);

@@ -21,8 +21,6 @@ export interface Section {
   name?: string;
   /** The Markdown file shown on the section index page. */
   readme?: string;
-  /** Whether to write the pages of the section into one directory. */
-  flatten?: boolean;
 }
 
 const REACT = join(ROOT, 'packages/react');
@@ -45,10 +43,9 @@ export function sections(packages: WorkspacePackage[]): Section[] {
   return [
     {
       out: 'api/react/testing-library',
-      router: 'module',
+      router: 'group',
       packages: [join(REACT, 'testing-library')],
       readme: join(REACT, 'testing-library/README.md'),
-      flatten: true,
     },
     { out: 'api/react', router: 'group', packages: [REACT] },
     genui(),
