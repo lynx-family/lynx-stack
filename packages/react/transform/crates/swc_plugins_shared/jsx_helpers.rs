@@ -277,16 +277,20 @@ pub fn jsx_is_list_item(jsx: &JSXElement) -> bool {
   }
 }
 
-// SDK >= 3.1 optimization: For <text>static content</text>, set text as an attribute
-// instead of creating a separate raw text child node. This reduces element count
-// and improves performance for simple static text elements.
-pub fn jsx_is_single_static_text(n: &JSXElement) -> bool {
+// SDK >= 3.1 optimization: Set a single text child as an attribute instead of
+// creating a separate raw text node. Only accept expressions whose syntax
+// guarantees a string result; arbitrary expressions can produce React nodes.
+pub fn jsx_is_single_text(n: &JSXElement) -> bool {
   match &n.opening.name {
     JSXElementName::Ident(ident) => {
       ident.sym == "text"
         && n.children.len() == 1
         && match &n.children[0] {
           JSXElementChild::JSXText(text) => !jsx_text_to_str(&text.value).is_empty(),
+          JSXElementChild::JSXExprContainer(JSXExprContainer {
+            expr: JSXExpr::Expr(expr),
+            ..
+          }) => matches!(&**expr, Expr::Lit(Lit::Str(_)) | Expr::Tpl(_)),
           _ => false,
         }
     }
