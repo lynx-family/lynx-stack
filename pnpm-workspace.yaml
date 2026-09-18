@@ -179,9 +179,6 @@ packageExtensions:
 patchedDependencies:
   "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"
   "@rollup/plugin-typescript": "patches/@rollup__plugin-typescript.patch"
-  # 4.13.0 put the defaults and constraints of a type parameter in the page
-  # title, whose escaped braces a sidebar label renders as markup.
-  "typedoc-plugin-markdown@4.13.1": "patches/typedoc-plugin-markdown@4.13.1.patch"
 
 strictDepBuilds: true
 
