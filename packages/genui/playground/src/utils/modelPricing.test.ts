@@ -6,12 +6,85 @@ import { expect, test } from '@rstest/core';
 import {
   estimateTokenCost,
   formatEstimatedCost,
+  readGenerationAttempts,
   readModelPrices,
   readResponseUsage,
   sumEstimatedCosts,
 } from './modelPricing.js';
 
 const prices = { input_price: 2, cached_price: 0.5, output_price: 8 };
+
+test('normalizes per-attempt usage without retaining arbitrary provider metadata', () => {
+  const attempts = readGenerationAttempts({
+    metadata: {
+      generationAttempts: [
+        {
+          mode: 'initial',
+          outputChars: 0,
+          finishReason: 'length',
+          usage: {
+            prompt_tokens: 100,
+            completion_tokens: 16000,
+            completion_tokens_details: { reasoning_tokens: 16000 },
+          },
+          error: { upstreamRequestId: 'private-id' },
+        },
+        {
+          mode: 'regenerate',
+          outputChars: 3200,
+          finishReason: 'stop',
+          tokenUsage: { outputTokens: 1300, reasoningTokens: 0 },
+          usage: { outputTokens: 9999, reasoningTokens: 9999 },
+          providerMetadata: { secret: 'private-value' },
+        },
+      ],
+    },
+  });
+  expect(attempts).toEqual([
+    {
+      mode: 'initial',
+      outputChars: 0,
+      finishReason: 'length',
+      usage: {
+        inputTokens: 100,
+        outputTokens: 16000,
+        totalTokens: 16100,
+        reasoningTokens: 16000,
+      },
+    },
+    {
+      mode: 'regenerate',
+      outputChars: 3200,
+      finishReason: 'stop',
+      usage: { outputTokens: 1300, reasoningTokens: 0 },
+    },
+  ]);
+});
+
+test('keeps missing or invalid attempt details unknown without inventing a count', () => {
+  for (const generationAttempts of [undefined, null, {}, [], [null], [[]]]) {
+    expect(readGenerationAttempts({ metadata: { generationAttempts } }))
+      .toBeUndefined();
+  }
+  expect(readGenerationAttempts({ tokenUsage: { outputTokens: 1300 } }))
+    .toBeUndefined();
+  expect(readGenerationAttempts({
+    metadata: {
+      generationAttempts: [{
+        mode: 'other',
+        outputChars: -1,
+        finishReason: {},
+        tokenUsage: { reasoningTokens: null },
+        usage: { reasoningTokens: 0 },
+      }],
+    },
+  })).toEqual([{
+    mode: undefined,
+    outputChars: undefined,
+    finishReason: undefined,
+    usage: {},
+  }]);
+});
 
 test('uses CNY prices per thousand tokens without double-counting cache writes or reasoning', () => {
   const usage = readResponseUsage({

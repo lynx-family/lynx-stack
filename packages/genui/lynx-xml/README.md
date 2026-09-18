@@ -180,6 +180,8 @@ The prompt combines selected guidance from the pinned
 [`src/prompt.ts`](./src/prompt.ts). Shared guidance covers Element PAPI,
 lifecycle, event routing, background state, and styling. It is inlined at build
 time, so consumers need no skill files or filesystem reads at runtime.
+Code examples are omitted, while plain-text constraint lists, including allowed
+and forbidden CSS properties, are retained without Markdown fences.
 
 The local prompt adapts that guidance to single-file `.lynxml` artifacts and
 takes precedence over imported guidance. Its key constraints are:

@@ -419,6 +419,19 @@
   font-weight: 600;
 }
 
+.chatRetryPrompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  color: var(--geist-secondary);
+  font-size: 12px;
+}
+
 .chatHeaderSub {
   margin: 4px 0 0;
   font-size: 12px;
@@ -634,13 +647,25 @@
   white-space: nowrap;
 }
 
-.chatAgentInteractionEvent pre {
+.chatAgentInteractionEvent pre,
+.chatAgentReasoning pre {
   margin: 6px 0 0;
   max-height: 180px;
   overflow: auto;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   font: inherit;
+}
+
+.chatAgentReasoning {
+  margin: 8px 0;
+  padding: 8px 0;
+  border-block: 1px solid var(--geist-border);
+}
+
+.chatAgentReasoning > summary {
+  color: var(--geist-foreground);
+  cursor: pointer;
 }
 
 .chatAgentInteractionRaw {
@@ -715,17 +740,22 @@
   overflow: hidden;
 }
 
-.chatMessageStatus {
+.chatMessageStatus,
+.chatGeneratedJson {
   align-self: stretch;
-  display: flex;
-  align-items: flex-start;
-  flex-direction: column;
-  gap: 6px;
+  min-width: 0;
   max-width: 100%;
   padding: 6px 10px;
   border: none;
   border-radius: var(--geist-radius-md);
   background: transparent;
+}
+
+.chatMessageStatus {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 6px;
   color: var(--geist-secondary);
   font-size: 12px;
   font-family: var(--geist-mono);
@@ -982,13 +1012,7 @@
 }
 
 .chatGeneratedJson {
-  width: 100%;
-  max-width: 80%;
-  align-self: flex-start;
-  border: 1px solid var(--geist-border);
-  border-radius: var(--geist-radius-md);
   overflow: hidden;
-  background: var(--geist-surface);
   flex-shrink: 0;
 }
 
@@ -1660,7 +1684,6 @@
 @media (max-width: 720px) {
   .chatMessage,
   .chatMessageJson,
-  .chatGeneratedJson,
   .chatMessageAction.chatMessageActionExpanded {
     max-width: 100%;
   }
@@ -1869,13 +1892,12 @@
   color: var(--geist-foreground);
 }
 
-.chatArtifact {
-  max-width: 80%;
-}
-
 .chatArtifactHeader {
   align-items: center;
   gap: 8px;
+  padding: 4px 10px 8px;
+  border-bottom: 0;
+  background: transparent;
 }
 
 .chatArtifactTitle {
@@ -1884,6 +1906,7 @@
   min-width: 0;
   flex-direction: column;
   gap: 4px;
+  overflow-wrap: anywhere;
 }
 
 .chatArtifactMeta {
@@ -1891,44 +1914,36 @@
   font-size: 11px;
   font-weight: 500;
   line-height: 1.4;
-}
-
-.chatArtifactActions {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 8px;
-}
-
-.chatArtifactSwitch {
-  height: 26px;
-}
-
-.chatArtifactSwitch .previewModeBtn {
-  height: 24px;
-  padding: 0 8px;
-  font-size: 11px;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .chatArtifactCodeToolbar {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 0 10px;
-  min-height: 36px;
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--geist-border) 55%, transparent);
-  background: var(--geist-surface);
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.chatArtifactCodeControls {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  align-self: stretch;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .chatArtifactFormatSwitch {
   display: flex;
   align-self: stretch;
+  flex-wrap: wrap;
   gap: 14px;
 }
 
 .chatArtifactFormatButton {
+  min-height: 32px;
   padding: 0 2px;
   border: 0;
   border-bottom: 2px solid transparent;
@@ -1961,14 +1976,7 @@
 }
 
 .chatArtifactCopyButton {
-  border-color: transparent;
-  background: transparent;
-  color: var(--geist-secondary);
-  font-weight: 500;
-}
-
-.chatArtifactCopyButton:hover {
-  color: var(--geist-foreground);
+  flex-shrink: 0;
 }
 
 .chatArtifactCodeBlock {
@@ -1982,27 +1990,4 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
-}
-
-@media (max-width: 720px) {
-  .chatArtifact {
-    max-width: 100%;
-  }
-
-  .chatArtifactHeader {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .chatArtifactActions {
-    justify-content: space-between;
-  }
-
-  .chatArtifactSwitch {
-    flex: 1;
-  }
-
-  .chatArtifactSwitch .previewModeBtn {
-    flex: 1;
-  }
 }

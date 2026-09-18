@@ -19,6 +19,7 @@ import {
 } from '../../common/chat-validation';
 import { jsonWithCors } from '../../common/cors';
 import { errorMessage } from '../../common/errors';
+import { createFailureReasoning } from '../../common/failure-reasoning.js';
 import { pickProviderOptions } from '../../common/provider-options';
 import { checkRateLimit, rateLimitSseResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
@@ -74,7 +75,14 @@ async function postMcpAppsStream(req: Request) {
   }
 
   const registry = validatedRegistry.registry;
-  const opts = pickProviderOptions(parsed.body);
+  const reasoning = createFailureReasoning([
+    parsed.body.apiKey,
+    parsed.body.baseURL,
+  ]);
+  const opts = {
+    ...pickProviderOptions(parsed.body),
+    onReasoning: reasoning.append,
+  };
   const errorOptions = { secrets: [parsed.body.apiKey, opts.apiKey] };
   const service = getMcpAppsAgentService();
   const modelMessages = [
@@ -162,7 +170,10 @@ async function postMcpAppsStream(req: Request) {
           });
         } catch (error) {
           if (!closed && !generationController.signal.aborted) {
-            enqueue('error', errorMessage(error, errorOptions));
+            enqueue('error', {
+              ...errorMessage(error, errorOptions),
+              ...reasoning.payload(),
+            });
           }
         } finally {
           req.signal.removeEventListener('abort', onRequestAbort);

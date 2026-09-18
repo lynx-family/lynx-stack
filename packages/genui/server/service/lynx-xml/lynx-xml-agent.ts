@@ -54,7 +54,7 @@ export interface LynxXmlGenerationMetadata extends Record<string, unknown> {
   xmlFragment?: string;
 }
 
-const LYNX_XML_MAX_GENERATION_ATTEMPTS = 3;
+const LYNX_XML_MAX_GENERATION_ATTEMPTS = 1;
 
 /** Initialize capability budgets once for all attempts in one request. */
 function createLynxXmlRunScope(): SearchRunScope {

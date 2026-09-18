@@ -446,7 +446,7 @@ export default class A2UIAgentService {
   ): Promise<A2UIResponse> {
     abortSignal?.throwIfAborted();
     const catalog = opts.catalog ?? await loadBasicCatalog();
-    const maxAttempts = Math.max(1, opts.maxRepairAttempts ?? 2) + 1;
+    const maxAttempts = Math.max(0, opts.maxRepairAttempts ?? 0) + 1;
     const agent = await this.getAgent({ ...opts, catalog });
     abortSignal?.throwIfAborted();
 

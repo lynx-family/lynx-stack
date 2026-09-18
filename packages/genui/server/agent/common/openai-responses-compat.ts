@@ -2,6 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import {
+  createResponsesReasoningStream,
+  normalizeReasoningItem,
+} from './openai-responses-reasoning.js';
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
@@ -41,7 +46,7 @@ function normalizeInputMessages(text: string): string {
   return changed ? JSON.stringify(value) : text;
 }
 
-function normalizeAnnotations(text: string): string {
+function normalizeOutput(text: string): string {
   let value: unknown;
   try {
     value = JSON.parse(text);
@@ -53,6 +58,7 @@ function normalizeAnnotations(text: string): string {
 
   let changed = false;
   for (const item of value.output) {
+    if (isRecord(item)) changed = normalizeReasoningItem(item) || changed;
     if (
       !isRecord(item) || item.type !== 'message' || !Array.isArray(item.content)
     ) continue;
@@ -71,7 +77,7 @@ function normalizeAnnotations(text: string): string {
   return changed ? JSON.stringify(value) : text;
 }
 
-/** Normalize replayed messages and successful JSON replies from compatible providers. */
+/** Normalize compatible Responses replies without buffering entire SSE streams. */
 export function createResponsesCompatFetch(
   fetchImpl: typeof fetch = fetch,
 ): typeof fetch {
@@ -88,14 +94,25 @@ export function createResponsesCompatFetch(
       }
     }
     const response = await fetchImpl(input, init);
-    if (
-      !response.ok || !response.body
-      || response.headers.get('content-type')?.split(';')[0]?.trim()
-          .toLowerCase() !== 'application/json'
-    ) return response;
+    if (!response.ok || !response.body) return response;
+    const contentType = response.headers.get('content-type')?.split(';')[0]
+      ?.trim()
+      .toLowerCase();
+    if (contentType === 'text/event-stream') {
+      const headers = new Headers(response.headers);
+      headers.delete('content-length');
+      headers.delete('content-encoding');
+      return new Response(
+        response.body.pipeThrough(new TextDecoderStream())
+          .pipeThrough(createResponsesReasoningStream())
+          .pipeThrough(new TextEncoderStream()),
+        { status: response.status, statusText: response.statusText, headers },
+      );
+    }
+    if (contentType !== 'application/json') return response;
 
     const text = await response.text();
-    const body = normalizeAnnotations(text);
+    const body = normalizeOutput(text);
     const headers = new Headers(response.headers);
     if (body !== text) {
       // fetch already decoded compressed bodies; the rewritten bytes have a

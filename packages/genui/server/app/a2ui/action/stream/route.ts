@@ -40,6 +40,7 @@ import {
 } from '../../../common/chat-validation';
 import { jsonWithCors } from '../../../common/cors';
 import { errorMessage } from '../../../common/errors';
+import { createFailureReasoning } from '../../../common/failure-reasoning.js';
 import {
   checkRateLimit,
   rateLimitSseResponse,
@@ -173,8 +174,10 @@ async function postA2UIActionStream(req: Request) {
     content: userContent,
   };
 
+  const reasoning = createFailureReasoning([body.apiKey, body.baseURL]);
   const opts = {
     ...pickA2UIChatOptions(body),
+    onReasoning: reasoning.append,
     onPerformanceEvent: (event: string, details = {}) => {
       log(event, details);
     },
@@ -378,7 +381,7 @@ async function postA2UIActionStream(req: Request) {
             warnings: v.warnings,
             messages: validatedMessages,
           };
-          if (!v.ok) {
+          if (!v.ok && (opts.maxRepairAttempts ?? 0) > 0) {
             try {
               log('repair.started', {
                 sourceErrors: v.errors,
@@ -477,6 +480,7 @@ async function postA2UIActionStream(req: Request) {
             cachedTokens,
             finishReason,
             validation,
+            ...(validation.ok ? {} : reasoning.payload()),
             preview,
             repair,
           });
@@ -484,7 +488,7 @@ async function postA2UIActionStream(req: Request) {
           if (!closed && !generationController.signal.aborted) {
             const error = errorMessage(err, errorOptions);
             log('error.enqueued', error);
-            enqueue('error', error);
+            enqueue('error', { ...error, ...reasoning.payload() });
           }
         } finally {
           req.signal.removeEventListener('abort', onRequestAbort);

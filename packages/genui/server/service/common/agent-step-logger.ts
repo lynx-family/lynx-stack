@@ -5,6 +5,7 @@
 import { randomUUID } from 'node:crypto';
 
 import type {
+  ChunkType,
   LLMStepResult,
   MastraOnFinishCallbackArgs,
 } from '@mastra/core/stream';
@@ -152,6 +153,7 @@ export function createAgentStepLogger<OUTPUT = undefined>(
   const startedAt = performance.now();
   let previousStepAt = startedAt;
   const usages: BenchTokenUsage[] = [];
+  let streamedReasoning = false;
   const emit = (event: string, details: Record<string, unknown>) => {
     const payload = {
       agent,
@@ -167,6 +169,14 @@ export function createAgentStepLogger<OUTPUT = undefined>(
   };
   emit('agent.model.started', {});
   return {
+    // Collect deltas as they arrive so an upstream failure can retain partial
+    // reasoning even when the SDK never finishes the step. Never log this text.
+    onChunk(chunk: ChunkType<OUTPUT>) {
+      if (chunk.type === 'reasoning-delta' && chunk.payload.text) {
+        streamedReasoning = true;
+        opts.onReasoning?.(chunk.payload.text);
+      }
+    },
     // A direct SDK failure can throw before Mastra invokes onFinish.
     onError({ error }: { error: unknown }) {
       emit('agent.model.error', {
@@ -178,6 +188,11 @@ export function createAgentStepLogger<OUTPUT = undefined>(
       });
     },
     onStepFinish(step: LLMStepResult<OUTPUT> & { runId?: string }) {
+      if (!streamedReasoning && step.reasoningText) {
+        opts.onReasoning?.(step.reasoningText);
+      }
+      if (streamedReasoning || step.reasoningText) opts.onReasoning?.('\n\n');
+      streamedReasoning = false;
       const now = performance.now();
       const usage = readUsage(step.usage);
       usages.push(usage);

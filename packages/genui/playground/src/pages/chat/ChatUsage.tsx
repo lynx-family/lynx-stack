@@ -18,7 +18,7 @@ export function ChatUsage({ record }: { record: GenerationUsageRecord }) {
     ? `${model}: input ¥${modelPrices.input_price}, cached ¥${modelPrices.cached_price}, output ¥${modelPrices.output_price} per 1K tokens`
     : `${model}: prices not recorded`;
   return (
-    <span className='chatTokenUsageBadge' aria-label='Generation usage'>
+    <div className='chatTokenUsageBadge' aria-label='Generation usage'>
       <span className='chatTokenUsageItem chatTokenUsageModel' title={model}>
         Model {model}
       </span>
@@ -44,6 +44,12 @@ export function ChatUsage({ record }: { record: GenerationUsageRecord }) {
       <span className='chatTokenUsageItem'>
         Output {count(usage.outputTokens)}
       </span>
+      <span
+        className='chatTokenUsageItem'
+        title='Reasoning tokens are included in Output and Total, not added to them.'
+      >
+        Reasoning {count(usage.reasoningTokens)}
+      </span>
       <span className='chatTokenUsageItem chatTokenUsageTotal'>
         Total {count(usage.totalTokens)}
       </span>
@@ -59,6 +65,6 @@ export function ChatUsage({ record }: { record: GenerationUsageRecord }) {
       >
         Est. cost {formatEstimatedCost(cost)}
       </span>
-    </span>
+    </div>
   );
 }

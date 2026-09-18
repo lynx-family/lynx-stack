@@ -126,7 +126,10 @@ function clonePreviewPerformanceMetrics(
 function truncateConversationHistory(
   history: ModelChatMessage[],
 ): ModelChatMessage[] {
-  const byTurns = history.filter(message => !message.generationError).slice(
+  const byTurns = history.filter((message, index) =>
+    !message.generationError
+    && !(message.role === 'user' && history[index + 1]?.generationError)
+  ).slice(
     -MAX_CONVERSATION_TURNS * 2,
   );
   let totalChars = 0;

@@ -60,6 +60,21 @@ export function ChatAgentInteraction(props: {
               Copy details
             </button>
           </div>
+          {tone === 'error' && log.reasoning
+            ? (
+              <details className='chatAgentReasoning'>
+                <summary>Reasoning</summary>
+                <pre>{log.reasoning.text}</pre>
+                {log.reasoning.truncated
+                  ? (
+                    <p className='chatAgentInteractionNotice'>
+                      Reasoning truncated.
+                    </p>
+                  )
+                  : null}
+              </details>
+            )
+            : null}
           {log.omittedEntries > 0
             ? (
               <p className='chatAgentInteractionNotice'>

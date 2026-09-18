@@ -52,7 +52,7 @@ export GENUI_MODEL_CONFIG_JSON='{
     "baseURL": "https://api.openai.com/v1",
     "api": "responses",
     "default": true,
-    "maxOutputTokens": 16384,
+    "maxOutputTokens": 32768,
     "input_price": 2,
     "cached_price": 0.5,
     "output_price": 8
@@ -66,9 +66,11 @@ export GENUI_MODEL_CONFIG_JSON='{
 - `api` is optional and accepts `chat` or `responses`.
 - `default: true` is optional. When omitted, the first entry is the default.
 - `maxOutputTokens` is an optional positive integer describing the provider's
-  supported output ceiling. All generation agents share a 16384-token per-call
+  supported output ceiling. All generation agents share a 32768-token per-call
   target through `buildOpenAIRunOptions`, clamped to the effective model ceiling.
-  This includes raw generation, streaming, continuations, and repairs. Judge
+  A configured ceiling below 32768 still lowers the request budget; a larger
+  ceiling does not raise the default target. This includes raw generation,
+  streaming, continuations, and repairs. Judge
   requests score all five dimensions together using the same resolver with a
   4096-token target. Reasoning-only
   recovery may increase the requested budget, within that same ceiling.
@@ -272,26 +274,14 @@ as a missing XML tag. The final artifact must start with lowercase
 thread script, and end with `</lynx>`. Keep generated UI on Element PAPI; do
 not route it through ReactLynx, JSX, OpenUI, or A2UI.
 
-The streaming service allows at most three generation attempts to recover an
-invalid response ending in `length`. It tries one continuation with an exact
-source-boundary echo, then falls back to requesting a shorter complete artifact.
-Empty or oversized prefixes go straight to compact regeneration. Keep the model,
-abort signal, and capability scope unchanged. Ordinary artifact recovery also
-keeps the per-call token budget. Recovery
-responses are buffered; only the validated final document replaces the initial
-streamed prefix in `done`. Sum all attempt usage and expose recovery modes in
-`metadata.generationAttempts`. Raw generation remains single-call so Bench owns
-its configured repair budget. Upstream failures normally stop recovery.
-
-The shared recovery helper also supports one fresh attempt after reasoning-only
-exhaustion: no text or tool output, positive input usage, and all output tokens
-used by reasoning at the exact request budget. Require `length` or the observed
-400 `input` / `<nil>` error. Keep that original error and finish reason, lower
-reasoning effort to `low` unless already none/minimal/low, and increase output
-tokens only within a known configured ceiling, at most 2x. Never append an empty
-assistant reply or replay hidden reasoning. Count this within the same three
-attempts and aggregate usage; keep the override request-scoped and skip it when
-settings would be unchanged or `inheritReasoningEffort` is false.
+Create performs one generation attempt. SDK `maxRetries` defaults to zero
+(additional retries), A2UI `maxRepairAttempts` defaults to zero, and Lynx XML
+streaming does not continue or regenerate after truncation or reasoning-only
+exhaustion. Preserve the original sanitized failure, usage, and finish reason;
+the Playground asks the user before starting another request. Do not add a
+separate retry switch to Create requests. Raw generation remains single-call,
+so Bench retains its configured repair budget. The shared recovery helper is
+still bounded by its caller's explicit attempt budget.
 
 `enableHtmlFragment` defaults to false. When enabled, the model outputs one
 intermediate document with one root-child `<template>` plus styles and scripts in any order;

@@ -35,6 +35,33 @@ const reduceA2UIStream = A2UI_CHAT_ADAPTER.stream.reduce.bind(
   A2UI_CHAT_ADAPTER.stream,
 );
 
+test('does not accept invalid A2UI text as a successful response', () => {
+  const payload = {
+    text: JSON.stringify([{ version: 'v0.9', invalid: true }]),
+    validation: { ok: false, errors: ['Invalid component'], messages: [] },
+  };
+  expect(() => A2UI_CHAT_ADAPTER.stream.fromJson(payload)).toThrow(
+    'Invalid component',
+  );
+  expect(() =>
+    reduceA2UIStream(A2UI_CHAT_ADAPTER.stream.initial(), {
+      event: 'done',
+      data: payload,
+    })
+  ).toThrow('Invalid component');
+});
+
+test('restores the exact saved A2UI action for an explicit retry', () => {
+  const action = {
+    surfaceId: 'main',
+    action: { name: 'refresh', context: { item: 1 } },
+  };
+  expect(A2UI_CHAT_ADAPTER.action.parseUserText(
+    A2UI_CHAT_ADAPTER.action.userText(action),
+  )).toEqual(action);
+  expect(A2UI_CHAT_ADAPTER.action.parseUserText('Build a counter')).toBeNull();
+});
+
 test('Lynx XML starts all options on without inheriting another record’s preferences', () => {
   const adapter = LYNX_XML_CHAT_ADAPTER.settings;
   const defaults = {

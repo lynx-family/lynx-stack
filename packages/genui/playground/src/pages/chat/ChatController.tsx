@@ -31,6 +31,7 @@ import {
 } from './shared.js';
 import type {
   ChatArtifact,
+  ChatInteractionLog,
   ChatMessageIcon,
   ChatMessageModel,
   ChatProtocolAdapter,
@@ -48,6 +49,7 @@ import type {
   PreviewPanelMetricItem,
 } from '../../components/PreviewPanel.js';
 import { PreviewViewport } from '../../components/PreviewViewport.js';
+import { SourceTokenCount } from '../../components/SourceTokenCount.js';
 import { useConversation } from '../../hooks/useConversation.js';
 import type { ModelChatMessage } from '../../hooks/useConversation.js';
 import { useResizablePanels } from '../../hooks/useResizablePanels.js';
@@ -65,7 +67,10 @@ import type {
   PreviewPerformanceMetrics,
 } from '../../storage/types.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
-import { readResponseUsage } from '../../utils/modelPricing.js';
+import {
+  readGenerationAttempts,
+  readResponseUsage,
+} from '../../utils/modelPricing.js';
 import type { GenerationUsageRecord } from '../../utils/modelPricing.js';
 import type { Protocol } from '../../utils/protocol.js';
 import {
@@ -350,6 +355,14 @@ function MessageList(props: {
                 )
                 : null}
             </span>
+            {message.kind === 'output' && message.payload !== undefined
+              ? (
+                <SourceTokenCount
+                  source={payloadText}
+                  className='chatArtifactMeta'
+                />
+              )
+              : null}
             {message.payload === undefined
               ? null
               : (
@@ -452,69 +465,79 @@ function ArtifactViewer(props: {
       <div className='chatGeneratedJsonTitle chatArtifactHeader'>
         <div className='chatArtifactTitle'>
           <span>{artifact.title}</span>
-          {artifact.meta
-            ? <span className='chatArtifactMeta'>{artifact.meta}</span>
-            : null}
+          <span className='chatArtifactMeta'>
+            {artifact.meta ? `${artifact.meta} · ` : ''}
+            <SourceTokenCount source={displayedText} />
+          </span>
         </div>
-        <div className='chatArtifactActions'>
-          {artifact.views.length > 1
-            ? (
-              <div className='previewModeSwitch chatArtifactSwitch'>
-                {artifact.views.map((view) => (
-                  <button
-                    key={view.id}
-                    type='button'
-                    className={view.id === activeView.id
-                      ? 'previewModeBtn active'
-                      : 'previewModeBtn'}
-                    onClick={() => setActiveViewId(view.id)}
-                  >
-                    {view.label}
-                  </button>
-                ))}
+      </div>
+      <div className='chatMessageChunk chatArtifactCode'>
+        <div className='chatMessageChunkHeader chatArtifactCodeToolbar'>
+          <div className='chatArtifactCodeControls'>
+            {artifact.views.length > 1
+              ? (
+                <div
+                  className='chatArtifactFormatSwitch'
+                  role='group'
+                  aria-label='Artifact view'
+                >
+                  {artifact.views.map(view => (
+                    <button
+                      key={view.id}
+                      type='button'
+                      className='chatArtifactFormatButton'
+                      aria-pressed={view.id === activeView.id}
+                      onClick={() => setActiveViewId(view.id)}
+                    >
+                      {view.label}
+                    </button>
+                  ))}
+                </div>
+              )
+              : (activeView.formattedText === undefined
+                ? (
+                  <span className='chatArtifactCodeLabel'>
+                    {activeView.label}
+                  </span>
+                )
+                : null)}
+            {activeView.formattedText === undefined ? null : (
+              <div
+                className='chatArtifactFormatSwitch'
+                role='group'
+                aria-label={`${activeView.label} formatting`}
+              >
+                <button
+                  type='button'
+                  className='chatArtifactFormatButton'
+                  aria-pressed={!showFormatted}
+                  onClick={() => setShowFormatted(false)}
+                >
+                  Raw
+                </button>
+                <button
+                  type='button'
+                  className='chatArtifactFormatButton'
+                  aria-pressed={showFormatted}
+                  onClick={() => setShowFormatted(true)}
+                >
+                  Formatted
+                </button>
               </div>
-            )
-            : null}
+            )}
+          </div>
+          <button
+            type='button'
+            className='chatJsonCopyButton chatArtifactCopyButton'
+            onClick={() => onCopy(displayedText)}
+          >
+            Copy
+          </button>
         </div>
+        <pre className='chatMessageChunkJson chatArtifactCodeBlock'>
+          {displayedText}
+        </pre>
       </div>
-      <div className='chatArtifactCodeToolbar'>
-        {activeView.formattedText === undefined
-          ? <span className='chatArtifactCodeLabel'>{activeView.label}</span>
-          : (
-            <div
-              className='chatArtifactFormatSwitch'
-              role='group'
-              aria-label={`${activeView.label} formatting`}
-            >
-              <button
-                type='button'
-                className='chatArtifactFormatButton'
-                aria-pressed={!showFormatted}
-                onClick={() => setShowFormatted(false)}
-              >
-                Raw
-              </button>
-              <button
-                type='button'
-                className='chatArtifactFormatButton'
-                aria-pressed={showFormatted}
-                onClick={() => setShowFormatted(true)}
-              >
-                Formatted
-              </button>
-            </div>
-          )}
-        <button
-          type='button'
-          className='chatJsonCopyButton chatArtifactCopyButton'
-          onClick={() => onCopy(displayedText)}
-        >
-          Copy
-        </button>
-      </div>
-      <pre className='chatMessageChunkJson chatArtifactCodeBlock'>
-        {displayedText}
-      </pre>
     </div>
   );
 }
@@ -1067,8 +1090,13 @@ export function ChatController<
         current: () => record,
         observe(payload: unknown) {
           const usage = readResponseUsage(payload);
-          if (!usage) return;
-          record = { ...record, usage };
+          const generationAttempts = readGenerationAttempts(payload);
+          if (!usage && !generationAttempts) return;
+          record = {
+            ...record,
+            ...(usage ? { usage } : {}),
+            ...(generationAttempts ? { generationAttempts } : {}),
+          };
           setMessages(current =>
             current.map(message =>
               message.id === pendingId
@@ -1139,13 +1167,14 @@ export function ChatController<
     setCurrentPreviewPayloadUrls,
   ]);
 
-  const handleSend = useCallback(() => {
-    const prompt = inputValue.trim();
+  const handleSend = useCallback((retryPrompt?: string) => {
+    const prompt = (retryPrompt ?? inputValue).trim();
     const validationError = adapter.settings?.validate?.(
       settingsRef.current,
     );
     if (
-      !isReady || !prompt || busy
+      !isReady || !prompt || busy || generationAbortRef.current !== null
+      || actionAbortRef.current !== null
       || validationError !== undefined
     ) return;
     abortOperations();
@@ -1226,6 +1255,7 @@ export function ChatController<
         if (!response.ok) {
           const payload: unknown = await response.json().catch(() => ({}));
           turnUsage.observe(payload);
+          recordInteraction('error', payload);
           throw new Error(adapter.stream.error(payload));
         }
         const finalOutput = await consumeResponse(
@@ -1495,214 +1525,217 @@ export function ChatController<
     }
   }, [updateLastAssistantPreviewMetrics]);
 
-  useEffect(() => {
+  const handleAction = useCallback((action: TAction) => {
     const actionAdapter = adapter.action;
-    if (!actionAdapter) return;
-    const handleMessage = (event: MessageEvent<unknown>) => {
-      const frame = previewFrameRef.current;
-      if (!frame?.contentWindow || event.source !== frame.contentWindow) return;
-      if (event.origin !== targetOriginForUrl(frame.src, host)) return;
-      if (generationAbortRef.current !== null) return;
-      const action = actionAdapter.parseWindowMessage(event.data);
-      if (action === null) return;
-      const validationError = adapter.settings?.validate?.(
-        settingsRef.current,
-      );
-      if (validationError !== undefined) {
-        setMessages((current) => [
-          ...current,
-          {
-            kind: 'status',
-            tone: 'error',
-            icon: 'error',
-            text: validationError,
-          },
-        ]);
-        return;
-      }
-
-      actionAbortRef.current?.abort();
-      const controller = new AbortController();
-      actionAbortRef.current = controller;
-      const runId = ++runIdRef.current;
-      const currentOutput = outputRef.current;
-      const requestConversation = buildConversationContext();
-      const label = actionAdapter.label(action);
-      const pendingId = createMessageId(`${adapter.id}-action`);
-      const userMessage: ModelChatMessage = {
-        role: 'user',
-        content: actionAdapter.userText(action),
-      };
-      const startedAt = performance.now();
-      let actionPreviewPayloadUrls: PreviewPayloadUrls | null = null;
-      let streamedResponseOutput: TOutput | null = null;
-      metricsPersistenceReadyRef.current = false;
-      setIsActionRunning(true);
+    if (
+      !actionAdapter || !isReady || generationAbortRef.current !== null
+      || actionAbortRef.current !== null
+    ) return;
+    const validationError = adapter.settings?.validate?.(
+      settingsRef.current,
+    );
+    if (validationError !== undefined) {
       setMessages((current) => [
         ...current,
         {
-          kind: 'action',
-          text: `Action: ${label}`,
-          payload: action,
-          payloadLayout: 'single',
-        },
-        {
-          id: pendingId,
-          kind: 'output',
-          tone: 'pending',
-          icon: 'spinner',
-          text: 'LLM Response',
+          kind: 'status',
+          tone: 'error',
+          icon: 'error',
+          text: validationError,
         },
       ]);
+      return;
+    }
 
-      const requestSettings = settingsRef.current;
-      const turnUsage = trackTurnUsage(pendingId, requestSettings);
-      void (async () => {
-        try {
-          const generationSettings = adapter.settings?.conversation?.snapshot(
-            requestSettings,
-          );
-          if (generationSettings) {
-            await recordGenerationSettings(generationSettings);
-          }
-          controller.signal.throwIfAborted();
-          const request = actionAdapter.request({
-            action,
-            conversation: requestConversation,
-            settings: requestSettings,
-            host,
-          });
-          adapter.settings?.validateRequest?.(requestSettings, request.url);
-          const response = await window.fetch(
-            request.url,
-            createChatRequestInit(request, controller.signal),
-          );
-          if (!response.ok) {
-            const payload: unknown = await response.json().catch(() => ({}));
-            turnUsage.observe(payload);
-            throw new Error(actionAdapter.stream.error(payload));
-          }
-          const responseOutput = await consumeResponse(
-            response,
-            actionAdapter.stream,
-            {
-              signal: controller.signal,
-              onEvent: (event) => {
-                if (runIdRef.current === runId) turnUsage.observe(event.data);
-              },
-              onEmission: (emission) => {
-                if (runIdRef.current !== runId) return;
-                if (emission.type === 'previewPayload') {
-                  actionPreviewPayloadUrls = emission.value;
-                } else if (emission.type === 'partial') {
-                  streamedResponseOutput = actionAdapter.merge(
-                    streamedResponseOutput,
+    const controller = new AbortController();
+    actionAbortRef.current = controller;
+    const runId = ++runIdRef.current;
+    const currentOutput = outputRef.current;
+    const requestConversation = buildConversationContext();
+    const label = actionAdapter.label(action);
+    const pendingId = createMessageId(`${adapter.id}-action`);
+    const userMessage: ModelChatMessage = {
+      role: 'user',
+      content: actionAdapter.userText(action),
+    };
+    const startedAt = performance.now();
+    let actionPreviewPayloadUrls: PreviewPayloadUrls | null = null;
+    let interaction: ChatInteractionLog = { entries: [], omittedEntries: 0 };
+    const recordInteraction = (event: string, data: unknown) => {
+      interaction = appendChatInteraction(
+        interaction,
+        event,
+        performance.now() - startedAt,
+        data,
+      );
+    };
+    let streamedResponseOutput: TOutput | null = null;
+    metricsPersistenceReadyRef.current = false;
+    setIsActionRunning(true);
+    setMessages((current) => [
+      ...current,
+      {
+        kind: 'action',
+        text: `Action: ${label}`,
+        payload: action,
+        payloadLayout: 'single',
+      },
+      {
+        id: pendingId,
+        kind: 'output',
+        tone: 'pending',
+        icon: 'spinner',
+        text: 'LLM Response',
+      },
+    ]);
+
+    const requestSettings = settingsRef.current;
+    const turnUsage = trackTurnUsage(pendingId, requestSettings);
+    void (async () => {
+      try {
+        const generationSettings = adapter.settings?.conversation?.snapshot(
+          requestSettings,
+        );
+        if (generationSettings) {
+          await recordGenerationSettings(generationSettings);
+        }
+        controller.signal.throwIfAborted();
+        const request = actionAdapter.request({
+          action,
+          conversation: requestConversation,
+          settings: requestSettings,
+          host,
+        });
+        adapter.settings?.validateRequest?.(requestSettings, request.url);
+        const response = await window.fetch(
+          request.url,
+          createChatRequestInit(request, controller.signal),
+        );
+        if (!response.ok) {
+          const payload: unknown = await response.json().catch(() => ({}));
+          turnUsage.observe(payload);
+          recordInteraction('error', payload);
+          throw new Error(actionAdapter.stream.error(payload));
+        }
+        const responseOutput = await consumeResponse(
+          response,
+          actionAdapter.stream,
+          {
+            signal: controller.signal,
+            onEvent: (event) => {
+              recordInteraction(event.event, event.data);
+              if (runIdRef.current === runId) turnUsage.observe(event.data);
+            },
+            onEmission: (emission) => {
+              if (runIdRef.current !== runId) return;
+              if (emission.type === 'previewPayload') {
+                actionPreviewPayloadUrls = emission.value;
+              } else if (emission.type === 'partial') {
+                streamedResponseOutput = actionAdapter.merge(
+                  streamedResponseOutput,
+                  emission.output,
+                );
+                setMessages((current) =>
+                  current.map((message) =>
+                    message.id === pendingId
+                      ? {
+                        ...message,
+                        payload: streamedResponseOutput,
+                        payloadLayout: 'chunks',
+                      }
+                      : message
+                  )
+                );
+                if (adapter.preview.delivery === 'live-message') {
+                  queueOrPostLiveOutput(
+                    'A2UI_ACTION_RESPONSE',
                     emission.output,
                   );
-                  setMessages((current) =>
-                    current.map((message) =>
-                      message.id === pendingId
-                        ? {
-                          ...message,
-                          payload: streamedResponseOutput,
-                          payloadLayout: 'chunks',
-                        }
-                        : message
-                    )
-                  );
-                  if (adapter.preview.delivery === 'live-message') {
-                    queueOrPostLiveOutput(
-                      'A2UI_ACTION_RESPONSE',
-                      emission.output,
-                    );
-                  }
                 }
-              },
+              }
             },
-          );
-          if (controller.signal.aborted || runIdRef.current !== runId) return;
-          const mergedOutput = actionAdapter.merge(
-            currentOutput,
-            responseOutput,
-          );
-          setCurrentPreviewPayloadUrls(null);
-          setCurrentOutput(mergedOutput);
-          setCurrentPreviewOutput(mergedOutput);
-          if (adapter.preview.delivery === 'live-message') {
-            queueOrPostLiveOutput('A2UI_REPLAY_MESSAGES', mergedOutput);
-          } else {
-            resetLivePreviewDelivery();
-            setPreviewRevision((value) => value + 1);
-          }
-          const nextMetrics = mergeMetrics(metricsRef.current, {
-            agentOutputMs: performance.now() - startedAt,
-          });
-          metricsRef.current = nextMetrics;
-          setMetrics(nextMetrics);
-          const persistence = adapter.persist(responseOutput, {
-            kind: 'action',
-            current: currentOutput,
-            previewPayloadUrls: actionPreviewPayloadUrls,
-          });
-          await recordTurn({
-            userMessage,
-            ...persistence,
-            previewMetrics: nextMetrics,
-            generationUsage: turnUsage.current(),
-          });
-          metricsPersistenceReadyRef.current = true;
-          void updateLastAssistantPreviewMetrics(metricsRef.current);
-          setMessages((current) =>
-            current.flatMap((message) =>
-              message.id === pendingId
-                ? [{
-                  id: pendingId,
-                  kind: 'output' as const,
-                  text: 'LLM Response',
-                  generationUsage: turnUsage.current(),
-                  payload: responseOutput,
-                  payloadLayout: 'chunks' as const,
-                }]
-                : [message]
-            )
-          );
-        } catch (error) {
-          if (controller.signal.aborted || runIdRef.current !== runId) return;
-          metricsPersistenceReadyRef.current = true;
-          await recordTurn({
-            userMessage,
-            assistantContent: '',
-            generationError: `Action failed: ${getErrorMessage(error)}`,
-            generationUsage: turnUsage.current(),
-            a2uiMessages: [],
-            previewMessages: persistedPreviewMessages,
-            snapshotPreviewPayloadUrls: persistedPreviewPayloadUrls,
-          });
-          setMessages((current) =>
-            current.map((message) =>
-              message.id === pendingId
-                ? {
-                  id: pendingId,
-                  kind: 'status',
-                  tone: 'error',
-                  icon: 'error',
-                  text: `Action failed: ${getErrorMessage(error)}`,
-                  generationUsage: turnUsage.current(),
-                }
-                : message
-            )
-          );
-        } finally {
-          if (actionAbortRef.current === controller) {
-            actionAbortRef.current = null;
-          }
-          if (runIdRef.current === runId) setIsActionRunning(false);
+          },
+        );
+        if (controller.signal.aborted || runIdRef.current !== runId) return;
+        const mergedOutput = actionAdapter.merge(
+          currentOutput,
+          responseOutput,
+        );
+        setCurrentPreviewPayloadUrls(null);
+        setCurrentOutput(mergedOutput);
+        setCurrentPreviewOutput(mergedOutput);
+        if (adapter.preview.delivery === 'live-message') {
+          queueOrPostLiveOutput('A2UI_REPLAY_MESSAGES', mergedOutput);
+        } else {
+          resetLivePreviewDelivery();
+          setPreviewRevision((value) => value + 1);
         }
-      })();
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+        const nextMetrics = mergeMetrics(metricsRef.current, {
+          agentOutputMs: performance.now() - startedAt,
+        });
+        metricsRef.current = nextMetrics;
+        setMetrics(nextMetrics);
+        const persistence = adapter.persist(responseOutput, {
+          kind: 'action',
+          current: currentOutput,
+          previewPayloadUrls: actionPreviewPayloadUrls,
+        });
+        await recordTurn({
+          userMessage,
+          ...persistence,
+          previewMetrics: nextMetrics,
+          generationUsage: turnUsage.current(),
+        });
+        metricsPersistenceReadyRef.current = true;
+        void updateLastAssistantPreviewMetrics(metricsRef.current);
+        setMessages((current) =>
+          current.flatMap((message) =>
+            message.id === pendingId
+              ? [{
+                id: pendingId,
+                kind: 'output' as const,
+                text: 'LLM Response',
+                generationUsage: turnUsage.current(),
+                payload: responseOutput,
+                payloadLayout: 'chunks' as const,
+              }]
+              : [message]
+          )
+        );
+      } catch (error) {
+        if (controller.signal.aborted || runIdRef.current !== runId) return;
+        metricsPersistenceReadyRef.current = true;
+        await recordTurn({
+          userMessage,
+          assistantContent: '',
+          generationError: `Action failed: ${getErrorMessage(error)}`,
+          generationUsage: turnUsage.current(),
+          a2uiMessages: [],
+          previewMessages: persistedPreviewMessages,
+          snapshotPreviewPayloadUrls: persistedPreviewPayloadUrls,
+        });
+        setMessages((current) =>
+          current.map((message) =>
+            message.id === pendingId
+              ? {
+                id: pendingId,
+                kind: 'status',
+                tone: 'error',
+                icon: 'error',
+                text: `Action failed: ${getErrorMessage(error)}`,
+                generationUsage: turnUsage.current(),
+                interaction,
+              }
+              : message
+          )
+        );
+      } finally {
+        if (actionAbortRef.current === controller) {
+          actionAbortRef.current = null;
+        }
+        if (runIdRef.current === runId) setIsActionRunning(false);
+      }
+    })();
   }, [
     adapter,
     buildConversationContext,
@@ -1710,6 +1743,7 @@ export function ChatController<
     persistedPreviewMessages,
     persistedPreviewPayloadUrls,
     host,
+    isReady,
     queueOrPostLiveOutput,
     recordGenerationSettings,
     recordTurn,
@@ -1719,6 +1753,27 @@ export function ChatController<
     setCurrentPreviewPayloadUrls,
     updateLastAssistantPreviewMetrics,
   ]);
+
+  useEffect(() => {
+    const actionAdapter = adapter.action;
+    if (!actionAdapter) return;
+    const handleMessage = (event: MessageEvent<unknown>) => {
+      const frame = previewFrameRef.current;
+      if (!frame?.contentWindow || event.source !== frame.contentWindow) return;
+      if (event.origin !== targetOriginForUrl(frame.src, host)) return;
+      const action = actionAdapter.parseWindowMessage(event.data);
+      if (action !== null) handleAction(action);
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [adapter.action, handleAction, host]);
+
+  const lastUserMessage = persistedMessages[persistedMessages.length - 2];
+  const retryMessage = !busy && messages[messages.length - 1]?.tone === 'error'
+      && persistedMessages[persistedMessages.length - 1]?.generationError
+      && lastUserMessage?.role === 'user'
+    ? lastUserMessage
+    : undefined;
 
   const settingsControls = adapter.settings?.controls(settings) ?? [];
   const selectControls = settingsControls.filter((item) =>
@@ -1856,6 +1911,30 @@ export function ChatController<
       messages={
         <>
           <MessageList messages={messages} onCopy={handleCopyText} />
+          {retryMessage
+            ? (
+              <div
+                className='chatRetryPrompt'
+                role='group'
+                aria-label='Retry failed request'
+              >
+                <span>Retry this request?</span>
+                <Button
+                  variant='secondary'
+                  disabled={settingsValidationError !== undefined}
+                  onClick={() => {
+                    const action = adapter.action?.parseUserText?.(
+                      retryMessage.content,
+                    );
+                    if (action == null) handleSend(retryMessage.content);
+                    else handleAction(action);
+                  }}
+                >
+                  Retry
+                </Button>
+              </div>
+            )
+            : null}
           {artifact
             ? <ArtifactViewer artifact={artifact} onCopy={handleCopyText} />
             : null}
@@ -2065,7 +2144,7 @@ export function ChatController<
                 disabled={!isReady || busy || inputValue.trim().length === 0
                   || settingsValidationError !== undefined}
                 title={settingsValidationError}
-                onClick={handleSend}
+                onClick={() => handleSend()}
               >
                 {isGenerating ? 'Generating' : 'Send'}
               </Button>

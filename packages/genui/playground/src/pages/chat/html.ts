@@ -180,18 +180,13 @@ export const HTML_STREAM = {
   error: normalizeError,
 };
 
-function formatCharacterCount(source: string): string {
-  return `${source.length.toLocaleString()} chars`;
-}
-
-function generatedStatus(output: HtmlOutput): ChatMessageModel {
+function generatedStatus(): ChatMessageModel {
   return {
     kind: 'status',
     tone: 'success',
     icon: 'sparkles',
-    text: `Generated a complete HTML document (${
-      formatCharacterCount(output.source)
-    }). Web Preview is rendering it now.`,
+    text:
+      'Generated a complete HTML document. Web Preview is rendering it now.',
   };
 }
 
@@ -233,7 +228,7 @@ function hydrate(
     if (!isCompleteHtmlSource(source)) continue;
     output = { source };
     messages.push({
-      ...generatedStatus(output),
+      ...generatedStatus(),
       generationUsage: message.generationUsage,
     });
   }
@@ -249,7 +244,7 @@ function hydrate(
 function createArtifact(output: HtmlOutput): ChatArtifact {
   return {
     title: 'Generated HTML Document',
-    meta: `.html · ${formatCharacterCount(output.source)}`,
+    meta: '.html',
     views: [{
       id: 'source',
       label: 'Source',
@@ -313,18 +308,16 @@ export const HTML_CHAT_ADAPTER = {
         text: 'Streaming HTML from the GenUI server...',
       };
     },
-    progress(text) {
+    progress(_text: string) {
       return {
         kind: 'status',
         tone: 'pending',
         icon: 'spinner',
-        text: `Streaming HTML from the GenUI server... ${
-          formatCharacterCount(text)
-        }`,
+        text: 'Streaming HTML from the GenUI server...',
       };
     },
-    success(output) {
-      return [generatedStatus(output)];
+    success(_output: HtmlOutput) {
+      return [generatedStatus()];
     },
     failure(error) {
       return {

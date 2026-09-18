@@ -7,6 +7,7 @@ import { Hono } from 'hono';
 import { validateConversation, validateMessages } from './chat-validation.js';
 import { jsonWithCors } from './cors.js';
 import { errorMessage } from './errors.js';
+import { createFailureReasoning } from './failure-reasoning.js';
 import { pickProviderOptions } from './provider-options.js';
 import { checkRateLimit, rateLimitSseResponse } from './rate-limit.js';
 import { readJsonBodyWithLimit } from './request.js';
@@ -128,9 +129,14 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
       status: 400,
     });
   }
+  const reasoning = createFailureReasoning([
+    parsed.body.apiKey,
+    parsed.body.baseURL,
+  ]);
   const opts = {
     ...pickProviderOptions(parsed.body),
     ...(protocolOptions?.ok ? protocolOptions.options : {}),
+    onReasoning: reasoning.append,
     onPerformanceEvent: (event: string, details = {}) => {
       log(event, details);
     },
@@ -285,7 +291,7 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
               tokenUsage: extractTokenUsage(resultMetadata?.usage),
             };
             log('error.enqueued', payload);
-            enqueue('error', payload);
+            enqueue('error', { ...payload, ...reasoning.payload() });
           }
         } finally {
           req.signal.removeEventListener('abort', onRequestAbort);
