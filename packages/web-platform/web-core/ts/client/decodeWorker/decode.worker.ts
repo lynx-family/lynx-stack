@@ -19,10 +19,9 @@ const wasmModuleLoadedPromise: Promise<void> = new Promise((resolve) => {
 });
 
 import { loadStyleFromJSON } from './cssLoader.js';
+import { createLepusCodeBlob } from './createLepusCodeBlob.js';
+import { getCSSScopeEntry } from './getCSSScopeEntry.js';
 import { decodeBinaryMap } from '../../common/decodeUtils.js';
-
-const MTS_CODE_WRAPPER_PREFIX =
-  '//# allFunctionsCalledOnLoad\n(function(){ "use strict"; const navigator=void 0,postMessage=void 0; let window=void 0; ';
 
 /**
  * The bundle compiler, loaded only when a markup (buildless Lynx XML) card
@@ -160,6 +159,24 @@ function scheduleHeartbreak() {
   unrefTimer(heartbreakTimer);
 }
 
+function mergeConfigWithRuntimeFallback(
+  config: Partial<PageConfig>,
+  overrideConfig?: Partial<PageConfig>,
+): Partial<PageConfig> {
+  if (!overrideConfig) {
+    return config;
+  }
+
+  const merged = { ...config, ...overrideConfig };
+  if (config.isExternalBundle !== undefined) {
+    merged.isExternalBundle = config.isExternalBundle;
+    if (config.isLazy !== undefined) {
+      merged.isLazy = config.isLazy;
+    }
+  }
+  return merged;
+}
+
 self.onmessage = async (
   event:
     | MessageEvent<LoadTemplateMessage>
@@ -182,6 +199,9 @@ self.onmessage = async (
       transformVH,
       transformREM,
     } = data;
+    const send = (message: MainMessage, transfer?: Transferable[]) => {
+      postMessage({ ...message, decodeKey: data.decodeKey }, transfer ?? []);
+    };
     try {
       const response = await fetch(fetchUrl, {
         headers: {
@@ -199,10 +219,11 @@ self.onmessage = async (
         transformVH,
         transformREM,
         overrideConfig,
+        send,
       );
-      postMessage({ type: 'done', url } as MainMessage);
+      send({ type: 'done', url } as MainMessage);
     } catch (error) {
-      postMessage(
+      send(
         { type: 'error', url, error: (error as Error).message } as MainMessage,
       );
     }
@@ -214,7 +235,8 @@ async function handleStream(
   transformVW: boolean,
   transformVH: boolean,
   transformREM: boolean,
-  overrideConfig?: Partial<PageConfig>,
+  overrideConfig: Partial<PageConfig> | undefined,
+  send: (message: MainMessage, transfer?: Transferable[]) => void,
 ) {
   const streamReader = new StreamReader(reader);
   let config: Partial<PageConfig> = {};
@@ -238,6 +260,7 @@ async function handleStream(
       transformVH,
       transformREM,
       overrideConfig,
+      send,
     );
     return;
   }
@@ -264,6 +287,7 @@ async function handleStream(
       transformVH,
       transformREM,
       overrideConfig,
+      send,
     );
     return;
   }
@@ -316,10 +340,11 @@ async function handleStream(
 
     switch (label) {
       case TemplateSectionLabel.Configurations: {
-        config = overrideConfig
-          ? { ...decodeJSONMap<string>(content), ...overrideConfig }
-          : decodeJSONMap<string>(content);
-        postMessage(
+        config = mergeConfigWithRuntimeFallback(
+          decodeJSONMap<string>(content),
+          overrideConfig,
+        );
+        send(
           { type: 'section', label, url, data: config } as MainMessage,
         );
         break;
@@ -328,13 +353,13 @@ async function handleStream(
         await wasmModuleLoadedPromise;
         const buffer = wasmInstance.decode_style_info(
           content,
-          config['isLazy'] === 'true' ? url : undefined,
+          getCSSScopeEntry(config, url),
           config['enableCSSSelector'] === 'true',
           transformVW,
           transformVH,
           transformREM,
         );
-        postMessage(
+        send(
           {
             type: 'section',
             label,
@@ -342,58 +367,40 @@ async function handleStream(
             data: buffer.buffer,
             config,
           } as MainMessage,
-          {
-            transfer: [buffer.buffer],
-          },
+          [buffer.buffer],
         );
         break;
       }
       case TemplateSectionLabel.LepusCode: {
         const codeMap = decodeBinaryMap(content);
         const isLazy = config['isLazy'] === 'true';
-        // An external bundle's mts chunk is CommonJS-style (it writes to
-        // `exports`), so give it a `module.exports`/`exports` env. A card's own
-        // lepus chunk is either side-effecting (non-lazy) or an expression
-        // assigned to `module.exports` (lazy component root).
-        const prefix = config['isExternalBundle'] === 'true'
-          ? 'var exports=(module.exports={}); '
-          : isLazy
-          ? 'module.exports='
-          : '';
+        const isExternalBundle = config['isExternalBundle'] === 'true';
         const blobMap: Record<string, string> = {};
         for (const [key, code] of Object.entries(codeMap)) {
-          const blob = new Blob([
-            MTS_CODE_WRAPPER_PREFIX,
-            prefix,
-            code as unknown as BlobPart,
-            ' \n })()\n//# sourceURL=',
-            url,
-            '/',
-            key,
-            '\n',
-          ], {
-            type: 'text/javascript; charset=utf-8',
-          });
+          const blob = createLepusCodeBlob(
+            code,
+            `${url}/${key}`,
+            isLazy,
+            isExternalBundle,
+          );
           blobMap[key] = URL.createObjectURL(blob);
         }
-        postMessage(
+        send(
           { type: 'section', label, url, data: blobMap, config } as MainMessage,
         );
         break;
       }
       case TemplateSectionLabel.ElementTemplates: {
-        postMessage(
+        send(
           { type: 'section', label, url, data: content } as MainMessage,
           [content.buffer],
         );
         break;
       }
       case TemplateSectionLabel.CustomSections: {
-        postMessage(
+        send(
           { type: 'section', label, url, data: content.buffer } as MainMessage,
-          {
-            transfer: [content.buffer],
-          },
+          [content.buffer],
         );
         break;
       }
@@ -412,8 +419,8 @@ async function handleStream(
           });
           blobMap[key] = URL.createObjectURL(blob);
         }
-        postMessage(
-          { type: 'section', label, url, data: blobMap } as MainMessage,
+        send(
+          { type: 'section', label, url, data: blobMap, config } as MainMessage,
         );
         break;
       }
@@ -490,7 +497,8 @@ async function handleMarkup(
   transformVW: boolean,
   transformVH: boolean,
   transformREM: boolean,
-  overrideConfig?: Partial<PageConfig>,
+  overrideConfig: Partial<PageConfig> | undefined,
+  send: (message: MainMessage, transfer?: Transferable[]) => void,
 ) {
   const bytes = new Uint8Array(head.length + rest.length);
   bytes.set(head);
@@ -531,6 +539,7 @@ async function handleMarkup(
     transformVH,
     transformREM,
     overrideConfig,
+    send,
   );
 }
 
@@ -540,7 +549,8 @@ async function handleJSON(
   transformVW: boolean,
   transformVH: boolean,
   transformREM: boolean,
-  overrideConfig?: Partial<PageConfig>,
+  overrideConfig: Partial<PageConfig> | undefined,
+  send: (message: MainMessage, transfer?: Transferable[]) => void,
 ) {
   // Configurations
   let config: Partial<PageConfig> = {};
@@ -557,13 +567,11 @@ async function handleJSON(
     config.isLazy = (appType === 'card') ? 'false' : 'true';
   }
 
-  if (overrideConfig) {
-    config = { ...config, ...overrideConfig };
-  }
+  config = mergeConfigWithRuntimeFallback(config, overrideConfig);
   config = Object.fromEntries(
     Object.entries(config).map(([key, value]) => [key, value.toString()]),
   );
-  postMessage({
+  send({
     type: 'section',
     label: TemplateSectionLabel.Configurations,
     url,
@@ -579,9 +587,9 @@ async function handleJSON(
       transformVW,
       transformVH,
       transformREM,
-      config['isLazy'] === 'true' ? url : undefined,
+      getCSSScopeEntry(config, url),
     );
-    postMessage(
+    send(
       {
         type: 'section',
         label: TemplateSectionLabel.StyleInfo,
@@ -589,9 +597,7 @@ async function handleJSON(
         data: buffer.buffer,
         config,
       } as MainMessage,
-      {
-        transfer: [buffer.buffer],
-      },
+      [buffer.buffer],
     );
   }
 
@@ -602,16 +608,15 @@ async function handleJSON(
     const blobMap: Record<string, string> = {};
     for (const [key, code] of Object.entries(json.lepusCode)) {
       if (typeof code !== 'string') continue;
-      const prefix = `${MTS_CODE_WRAPPER_PREFIX}${
-        isLazy ? 'module.exports=' : ''
-      } `;
-      const suffix = ` \n })()\n//# sourceURL=${url}/${key}\n`;
-      const blob = new Blob([prefix, code, suffix], {
-        type: 'text/javascript; charset=utf-8',
-      });
+      const blob = createLepusCodeBlob(
+        code,
+        `${url}/${key}`,
+        isLazy,
+        config['isExternalBundle'] === 'true',
+      );
       blobMap[key] = URL.createObjectURL(blob);
     }
-    postMessage({
+    send({
       type: 'section',
       label: TemplateSectionLabel.LepusCode,
       url,
@@ -630,11 +635,12 @@ async function handleJSON(
       });
       blobMap[key] = URL.createObjectURL(blob);
     }
-    postMessage({
+    send({
       type: 'section',
       label: TemplateSectionLabel.Manifest,
       url,
       data: blobMap,
+      config,
     } as MainMessage);
   }
 
@@ -645,7 +651,7 @@ async function handleJSON(
     // But TemplateManager expects buffer?
     // TemplateManager: case CustomSections: #setCustomSection(url, data). data: any.
     // So passing object is fine!
-    postMessage({
+    send({
       type: 'section',
       label: TemplateSectionLabel.CustomSections,
       url,
