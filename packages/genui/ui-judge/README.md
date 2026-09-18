@@ -27,7 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```
 
 `CapturePageRequest` accepts `url`, `screenshot_settle`, `timeout`,
-`global_props_json`, and `initial_data_json`. The defaults are 16 ms of screenshot
+`global_props_json`, and `initial_data_json`. The defaults are 100 ms of screenshot
 settling and a 60-second operation timeout. URLs must use `file://`, `http://`,
 or `https://`; bare paths are rejected before runtime initialization. Compiled
 Lynx bundles and UTF-8 `.lynxml` documents use the existing headless runner.
@@ -142,18 +142,19 @@ download and private staging path; XML source is staged locally. Both return BMP
 
 In addition to the shared fields above, these two endpoints accept:
 
-| Field                | Required | Description                                                 |
-| -------------------- | -------- | ----------------------------------------------------------- |
-| `screenshotSettleMs` | No       | Non-negative integer wait before capture; defaults to 16 ms |
-| `timeoutMs`          | No       | Positive integer capture timeout; defaults to 60,000 ms     |
+| Field                | Required | Description                                                  |
+| -------------------- | -------- | ------------------------------------------------------------ |
+| `screenshotSettleMs` | No       | Non-negative integer wait before capture; defaults to 100 ms |
+| `timeoutMs`          | No       | Positive integer capture timeout; defaults to 60,000 ms      |
 
 Width and height default to `DEFAULT_SCREENSHOT_WIDTH` and
 `DEFAULT_SCREENSHOT_HEIGHT` (800 × 600). Bench explicitly sends its mobile
 viewport defaults (390 × 844), with per-dimension overrides when configured.
 `initData` and `globalProps` are JSON objects encoded as text fields;
-XML supports `initData` but rejects `globalProps`. The ZIP endpoints and the
-legacy `/screenshot/template/url` endpoint retain their existing fields and
-capture defaults; they do not accept the two new timing fields.
+XML supports `initData` but rejects `globalProps`. All screenshot endpoints share
+the Rust API's default 100 ms settling period. The ZIP endpoints and the legacy
+`/screenshot/template/url` endpoint retain their existing fields; they do not
+accept `screenshotSettleMs` or `timeoutMs`.
 
 ```bash
 curl --request POST http://127.0.0.1:8080/screenshot/template \
