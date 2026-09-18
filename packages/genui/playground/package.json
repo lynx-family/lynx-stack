@@ -29,7 +29,7 @@
     "gpt-tokenizer": "^4.0.0",
     "html-to-image": "1.11.13",
     "idb": "^8.0.3",
-    "lucide-react": "^1.38.0",
+    "lucide-react": "^1.46.0",
     "qrcode": "^1.5.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
