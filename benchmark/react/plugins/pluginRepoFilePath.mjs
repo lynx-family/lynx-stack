@@ -16,7 +16,7 @@ export const pluginRepoFilePath = () => ({
    * @param {import("@lynx-js/rspeedy").RsbuildPluginAPI} api
    */
   setup(api) {
-    let repoRoot = find.dir('.git', { cwd: api.context.rootPath });
+    let repoRoot = find.up('.git', { cwd: api.context.rootPath });
     if (!repoRoot) {
       return;
     }
