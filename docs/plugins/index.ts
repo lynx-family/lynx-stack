@@ -1,7 +1,13 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { basename, extname, join } from 'node:path';
 
 import type { RspressPlugin } from '@rspress/core';
@@ -52,6 +58,45 @@ function sidebarItems(item: SidebarItem, dir: string): SidebarItem[] {
 function isDocument(item: SidebarItem): boolean {
   return typeof item !== 'string'
     && (item.name?.startsWith(`${DOCUMENTS}/`) ?? false);
+}
+
+/** The directories the `member` router writes, in the order they are listed. */
+const KINDS: Record<string, string> = {
+  classes: 'Classes',
+  interfaces: 'Interfaces',
+  'type-aliases': 'Type Aliases',
+  enumerations: 'Enumerations',
+  functions: 'Functions',
+  variables: 'Variables',
+  namespaces: 'Namespaces',
+};
+
+/**
+ * Names the directories of a module the way the generated pages read: a
+ * subpath keeps its name, a kind gets its plural title.
+ */
+function writeKindMeta(dir: string): void {
+  if (!statSync(dir).isDirectory()) return;
+  const names = readdirSync(dir).filter(name =>
+    statSync(join(dir, name)).isDirectory()
+  );
+  if (names.length === 0) return;
+  const kinds = Object.keys(KINDS);
+  const order = (name: string) =>
+    kinds.includes(name) ? kinds.indexOf(name) + 1 : 0;
+  writeFileSync(
+    join(dir, '_meta.json'),
+    `${
+      JSON.stringify(
+        names
+          .sort((a, b) => order(a) - order(b) || a.localeCompare(b))
+          .map(name => ({ type: 'dir', name, label: KINDS[name] ?? name })),
+        null,
+        2,
+      )
+    }\n`,
+  );
+  for (const name of names) writeKindMeta(join(dir, name));
 }
 
 /**
@@ -106,23 +151,23 @@ export function pluginApiReference(): RspressPlugin[] {
       config(config) {
         for (const locale of LOCALES) {
           for (const section of all) {
-            const meta = join(CONTENT, locale, section.out, '_meta.json');
-            if (section.router === 'module' && section.out !== 'api/packages') {
-              rmSync(meta);
-            } else if (section.router === 'group') {
+            const dir = join(CONTENT, locale, section.out);
+            const meta = join(dir, '_meta.json');
+            if (section.router === 'group') {
               const items = JSON.parse(
                 readFileSync(meta, 'utf8'),
               ) as SidebarItem[];
               writeFileSync(
                 meta,
-                `${
-                  JSON.stringify(
-                    sidebar(items, join(CONTENT, locale, section.out)),
-                    null,
-                    2,
-                  )
-                }\n`,
+                `${JSON.stringify(sidebar(items, dir), null, 2)}\n`,
               );
+            } else if (section.out === 'api/packages') {
+              // The sidebar of the section itself lists the packages.
+              for (const name of readdirSync(dir)) {
+                writeKindMeta(join(dir, name));
+              }
+            } else {
+              writeKindMeta(dir);
             }
           }
           writeFileSync(

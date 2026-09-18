@@ -6,8 +6,8 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "build": "rspress build",
-    "dev": "rspress dev",
+    "build": "node --max-old-space-size=8192 ./node_modules/@rspress/core/bin/rspress.js build",
+    "dev": "node --max-old-space-size=8192 ./node_modules/@rspress/core/bin/rspress.js dev",
     "i18n:check": "node -e \"const d = require('./i18n/zh.json'); const missing = Object.keys(d).filter(k => !d[k]); if (missing.length) { console.error(missing.join('\\n\\n')); process.exit(1) }\"",
     "preview": "rspress preview"
   },

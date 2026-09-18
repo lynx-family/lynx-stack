@@ -14,7 +14,7 @@ export interface Section {
   /** The output directory under `content/<locale>`. */
   out: string;
   /** The typedoc-plugin-markdown router. */
-  router: 'group' | 'module';
+  router: 'group' | 'member';
   /** The package directories, converted with TypeDoc's `packages` strategy. */
   packages: string[];
   /** The project name shown on the section index page. */
@@ -32,7 +32,7 @@ function genui(): Section {
   ) as { name: string; entryPoints: string[]; readme: string };
   return {
     out: 'api/genui',
-    router: 'module',
+    router: 'member',
     packages: config.entryPoints.map(entry => join(GENUI, entry)),
     name: config.name,
     readme: join(GENUI, config.readme),
@@ -51,7 +51,7 @@ export function sections(packages: WorkspacePackage[]): Section[] {
     genui(),
     {
       out: 'api/packages',
-      router: 'module',
+      router: 'member',
       packages: packages
         .filter(pkg =>
           pkg.name !== '@lynx-js/react' && pkg.name !== '@lynx-js/genui'
