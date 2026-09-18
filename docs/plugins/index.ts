@@ -285,6 +285,14 @@ export function pluginApiReference(): RspressPlugin[] {
           );
         }
         translations.save();
+        const missing = translations.missing;
+        if (missing.length > 0) {
+          throw new Error(
+            `${missing.length} strings are not translated in docs/i18n/zh.json:\n${
+              missing.map(text => `  ${text}`).join('\n')
+            }`,
+          );
+        }
         return config;
       },
     },

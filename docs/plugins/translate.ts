@@ -7,6 +7,25 @@ export type Dictionary = Record<string, string>;
 
 const FENCE = /^(?:```|~~~)/;
 
+/** The target of a Markdown link, which a localized page spells its own way. */
+const TARGET = /(\]\()([^)\s]*)(\))/g;
+
+/** The text a dictionary entry is keyed by: the prose without its links. */
+function key(text: string): string {
+  return text.replace(TARGET, '$1$3');
+}
+
+/** Puts the links of the page back into the translation, in their order. */
+function withTargets(value: string, source: string): string {
+  const targets = [...source.matchAll(TARGET)].map(match => match[2]);
+  let index = 0;
+  return value.replace(
+    TARGET,
+    (match, open: string, _: string, close: string) =>
+      index < targets.length ? `${open}${targets[index++]}${close}` : match,
+  );
+}
+
 /** The line TypeDoc writes for the source of a reflection. */
 const SOURCE = 'Defined in: ';
 
@@ -25,27 +44,34 @@ function translateText(
   text: string,
   dictionary: Dictionary | undefined,
   used: Set<string>,
+  missing?: Set<string>,
 ): string {
-  const key = text.trim();
-  if (!hasProse(key)) return text;
+  const source = text.trim();
+  if (!hasProse(source)) return text;
+  const entry = key(source);
   if (!dictionary) {
-    used.add(key);
+    used.add(entry);
     return text;
   }
-  const value = dictionary[key];
-  return value ? text.replace(key, value) : text;
+  const value = dictionary[entry];
+  if (!value) {
+    missing?.add(entry);
+    return text;
+  }
+  return text.replace(source, withTargets(value, source));
 }
 
 function translateRow(
   row: string,
   dictionary: Dictionary | undefined,
   used: Set<string>,
+  missing?: Set<string>,
 ): string {
   const cells = row.split(/(?<!\\)\|/);
   return cells.map((cell, i) =>
     i === 0 || i === cells.length - 1 || /^\s*`/.test(cell)
       ? cell
-      : translateText(cell, dictionary, used)
+      : translateText(cell, dictionary, used, missing)
   ).join('|');
 }
 
@@ -58,6 +84,7 @@ export function translate(
   markdown: string,
   dictionary: Dictionary | undefined,
   used: Set<string>,
+  missing?: Set<string>,
 ): string {
   const out: string[] = [];
   let block: string[] = [];
@@ -69,13 +96,13 @@ export function translate(
     if (/^\s*\|/.test(text)) {
       out.push(
         text.split('\n').map((row, i) =>
-          i < 2 ? row : translateRow(row, dictionary, used)
+          i < 2 ? row : translateRow(row, dictionary, used, missing)
         ).join('\n'),
       );
     } else if (/^#{1,6} /.test(text) || /^\*\*\*$/.test(text)) {
       out.push(text);
     } else {
-      out.push(translateText(text, dictionary, used));
+      out.push(translateText(text, dictionary, used, missing));
     }
   };
   for (const line of markdown.split('\n')) {
@@ -107,6 +134,7 @@ export class Translations {
   readonly #file: string;
   readonly #dictionary: Dictionary;
   readonly #used = new Set<string>();
+  readonly #missing = new Set<string>();
 
   constructor(file: string) {
     this.#file = file;
@@ -116,11 +144,15 @@ export class Translations {
   }
 
   translate(markdown: string, locale: string): string {
-    return translate(
-      markdown.replaceAll('\r\n', '\n'),
-      locale === 'zh' ? this.#dictionary : undefined,
-      this.#used,
-    );
+    const text = markdown.replaceAll('\r\n', '\n');
+    return locale === 'en'
+      ? translate(text, undefined, this.#used)
+      : translate(text, this.#dictionary, this.#used, this.#missing);
+  }
+
+  /** The strings of a localized page that the dictionary does not translate. */
+  get missing(): string[] {
+    return [...this.#missing].sort();
   }
 
   save(): void {
