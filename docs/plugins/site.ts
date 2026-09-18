@@ -1,8 +1,11 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { join } from 'node:path';
+
 import { lynxStackSections } from './sections.ts';
 import type { Section } from './sections.ts';
+import { DOCS, ROOT } from './workspace.ts';
 import type { WorkspacePackage } from './workspace.ts';
 
 /**
@@ -11,6 +14,10 @@ import type { WorkspacePackage } from './workspace.ts';
  * {@link pluginApiReference}.
  */
 export interface Site {
+  /** The package the pages, the dictionary and the manifest are written to. */
+  docs: string;
+  /** The root of the workspace the packages are read from. */
+  root: string;
   /** Where the source of a package is browsed. */
   repository: string;
   /** The branch the source and changelog links point at. */
@@ -27,6 +34,8 @@ export interface Site {
 
 /** The reference this repository generates for itself. */
 export const LYNX_STACK: Site = {
+  docs: DOCS,
+  root: ROOT,
   repository: 'https://github.com/lynx-family/lynx-stack',
   branch: 'main',
   packagePage: name => `https://www.npmjs.com/package/${name}`,
@@ -41,3 +50,8 @@ export const LYNX_STACK: Site = {
   ],
   sections: lynxStackSections,
 };
+
+/** Where the pages of a site are written. */
+export function contentDir(site: Site): string {
+  return join(site.docs, 'content');
+}

@@ -18,7 +18,7 @@ import type { MarkdownTheme } from 'typedoc-plugin-markdown';
 import ts from 'typescript';
 
 import type { Translations } from './translate.ts';
-import { CONTENT, json, write } from './workspace.ts';
+import { DOCS, json, write } from './workspace.ts';
 import type { Locale } from './workspace.ts';
 
 type Category = 'Lynx' | 'Default changed' | 'Rspeedy' | 'Rsbuild';
@@ -325,7 +325,7 @@ export function renderConfigReference(
     MarkdownRendererEvent.END,
     (event: MarkdownRendererEvent) => {
       const prefix = locale === 'en' ? '' : `/${locale}`;
-      const out = join(CONTENT, locale, 'api/config');
+      const out = join(DOCS, 'content', locale, 'api/config');
       const text = (en: string) => translations.translate(en, locale);
       const options = collectOptions(event.project, inRsbuild!);
       const theme = app.renderer.theme as MarkdownTheme;

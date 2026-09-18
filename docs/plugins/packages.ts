@@ -6,16 +6,10 @@ import { join, relative, sep } from 'node:path';
 
 import type { RspressPlugin } from '@rspress/core';
 
+import { contentDir } from './site.ts';
 import type { Site } from './site.ts';
 import type { Translations } from './translate.ts';
-import {
-  CONTENT,
-  LOCALES,
-  ROOT,
-  hasEntryPoint,
-  json,
-  write,
-} from './workspace.ts';
+import { LOCALES, hasEntryPoint, json, write } from './workspace.ts';
 import type { Locale, WorkspacePackage } from './workspace.ts';
 
 /**
@@ -32,7 +26,7 @@ function packageRoute(pkg: WorkspacePackage, site: Site): string {
  * The registry, source and changelog links shown under the title of a package.
  */
 function packageLinks(pkg: WorkspacePackage, site: Site): string {
-  const dir = relative(ROOT, pkg.dir).replaceAll(sep, '/');
+  const dir = relative(site.root, pkg.dir).replaceAll(sep, '/');
   const { repository, branch } = site;
   const links = [
     `[npm](${site.packagePage(pkg.name)})`,
@@ -71,7 +65,7 @@ export function packageGroups(
 }
 
 function groupOf(pkg: WorkspacePackage, site: Site): string {
-  const dir = relative(ROOT, pkg.dir).replaceAll(sep, '/');
+  const dir = relative(site.root, pkg.dir).replaceAll(sep, '/');
   return site.groups.find(group =>
     group.dirs.some(prefix => dir.startsWith(prefix))
   )!
@@ -104,7 +98,8 @@ function writePackagePages(
   translations: Translations,
   site: Site,
 ): void {
-  const out = join(CONTENT, locale, 'api/packages');
+  const content = contentDir(site);
+  const out = join(content, locale, 'api/packages');
   const text = (en: string) => translations.translate(en, locale);
 
   for (const pkg of packages) {
@@ -113,7 +108,7 @@ function writePackagePages(
     const page = [`# ${pkg.name}`, '', packageLinks(pkg, site), ''];
     if (pkg.description) page.push(pkg.description, '');
     write(
-      join(CONTENT, locale, 'api', `${packageRoute(pkg, site)}.mdx`),
+      join(content, locale, 'api', `${packageRoute(pkg, site)}.mdx`),
       text(page.join('\n')),
     );
   }

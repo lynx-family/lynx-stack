@@ -16,18 +16,11 @@ import type { RspressPlugin } from '@rspress/core';
 import { renderConfigReference } from './config.ts';
 import { packageGroups, pluginPackagePages } from './packages.ts';
 import { packagesSection } from './sections.ts';
-import { LYNX_STACK } from './site.ts';
+import { LYNX_STACK, contentDir } from './site.ts';
 import type { Site } from './site.ts';
 import { Translations } from './translate.ts';
 import { pluginApiSection } from './typedoc.ts';
-import {
-  CONTENT,
-  DOCS,
-  LOCALES,
-  json,
-  publicPackages,
-  write,
-} from './workspace.ts';
+import { LOCALES, json, publicPackages, write } from './workspace.ts';
 import type { Locale, WorkspacePackage } from './workspace.ts';
 
 /**
@@ -44,10 +37,10 @@ const NAV = [
 ];
 
 /** Writes the navigation bar of a locale next to its pages. */
-function writeNav(locale: Locale): void {
+function writeNav(locale: Locale, content: string): void {
   const prefix = locale === 'en' ? '' : `/${locale}`;
   write(
-    join(CONTENT, locale, '_nav.json'),
+    join(content, locale, '_nav.json'),
     json(
       NAV.map(item => ({
         text: item.text[locale],
@@ -64,11 +57,12 @@ function writeNav(locale: Locale): void {
  * knowing the layout of the package.
  */
 function writeManifest(packages: WorkspacePackage[], site: Site): void {
-  const routes = readdirSync(join(CONTENT, 'en/api'))
-    .filter(name => statSync(join(CONTENT, 'en/api', name)).isDirectory())
+  const content = contentDir(site);
+  const routes = readdirSync(join(content, 'en/api'))
+    .filter(name => statSync(join(content, 'en/api', name)).isDirectory())
     .sort();
   writeFileSync(
-    join(DOCS, 'manifest.json'),
+    join(site.docs, 'manifest.json'),
     `${
       JSON.stringify(
         {
@@ -81,7 +75,7 @@ function writeManifest(packages: WorkspacePackage[], site: Site): void {
           // Every package, for a site that groups the pages it does not show.
           packages: packageGroups(packages, site),
           shownPackages: JSON.parse(
-            readFileSync(join(DOCS, 'shown-packages.json'), 'utf8'),
+            readFileSync(join(site.docs, 'shown-packages.json'), 'utf8'),
           ) as unknown,
         },
         null,
@@ -290,8 +284,9 @@ function sidebar(items: SidebarItem[], dir: string): SidebarItem[] {
  * the strings it records.
  */
 export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
-  const translations = new Translations(join(DOCS, 'i18n/zh.json'));
-  const packages = publicPackages();
+  const content = contentDir(site);
+  const translations = new Translations(join(site.docs, 'i18n/zh.json'));
+  const packages = publicPackages(site.root);
   const all = [
     ...site.sections(packages),
     packagesSection(packages, site.ownSections),
@@ -301,7 +296,7 @@ export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
       name: 'lynx:api-reference-clean',
       config(config) {
         for (const locale of LOCALES) {
-          rmSync(join(CONTENT, locale, 'api'), {
+          rmSync(join(content, locale, 'api'), {
             recursive: true,
             force: true,
           });
@@ -329,7 +324,7 @@ export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
       config(config, _utils, isProd) {
         for (const locale of LOCALES) {
           for (const section of all) {
-            const dir = join(CONTENT, locale, section.out);
+            const dir = join(content, locale, section.out);
             const meta = join(dir, '_meta.json');
             if (section.router === 'group') {
               writeGroupMeta(dir);
@@ -350,9 +345,9 @@ export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
               writeMemberMeta(dir);
             }
           }
-          writeNav(locale);
+          writeNav(locale, content);
           writeFileSync(
-            join(CONTENT, locale, 'api/_meta.json'),
+            join(content, locale, 'api/_meta.json'),
             `${
               JSON.stringify(
                 SIDEBAR.map(item => ({

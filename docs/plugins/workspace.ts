@@ -6,9 +6,9 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+/** This package, which is the reference lynx-stack generates for itself. */
 export const DOCS = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const ROOT = join(DOCS, '..');
-export const CONTENT = join(DOCS, 'content');
 export const LOCALES = ['en', 'zh'] as const;
 
 export type Locale = typeof LOCALES[number];
@@ -28,10 +28,10 @@ interface PnpmProject {
 /**
  * The packages this repository publishes, read from the pnpm workspace.
  */
-export function publicPackages(): WorkspacePackage[] {
+export function publicPackages(root: string): WorkspacePackage[] {
   const projects = JSON.parse(
     execSync('pnpm list --recursive --depth -1 --json', {
-      cwd: ROOT,
+      cwd: root,
       encoding: 'utf8',
     }),
   ) as PnpmProject[];
