@@ -50,6 +50,9 @@ minimumReleaseAge: 4320
 # would otherwise be blocked by `minimumReleaseAge`.
 minimumReleaseAgeExclude:
   - "@lynx-js/*"
+  # 4.13.1 carries the fix for the Windows page URLs we patched 4.12.0 for,
+  # published the day we take it: https://github.com/typedoc2md/typedoc-plugin-markdown/issues/903
+  - "typedoc-plugin-markdown"
   # typia-rspack-plugin uses trusted publish + staged publish
   - "typia-rspack-plugin"
   # First-party Rstack toolchain — trusted, upgraded deliberately.
@@ -153,6 +156,11 @@ overrides:
   # singletons, which breaks ReactLynx snapshot registration ("BackgroundSnapshot not
   # found"). Force every @lynx-js/react to the single workspace copy.
   "@lynx-js/react": "workspace:*"
+  # @rspress/plugin-typedoc pins 4.12.0, whose `excludeScopesInPaths` writes
+  # Windows path separators into page URLs. 4.13.1 fixes it, and the renderer
+  # has to be the copy the plugin loads.
+  # https://github.com/typedoc2md/typedoc-plugin-markdown/issues/903
+  "typedoc-plugin-markdown": "4.13.1"
 
   "@rspack/core": "catalog:rspack"
 
@@ -172,8 +180,6 @@ packageExtensions:
 patchedDependencies:
   "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"
   "@rollup/plugin-typescript": "patches/@rollup__plugin-typescript.patch"
-  # https://github.com/typedoc2md/typedoc-plugin-markdown/issues/903
-  "typedoc-plugin-markdown@4.12.0": "patches/typedoc-plugin-markdown@4.12.0.patch"
 
 strictDepBuilds: true
 
