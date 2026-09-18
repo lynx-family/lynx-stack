@@ -1,0 +1,15 @@
+diff --git a/dist/theme/context/partials/page.pageTitle.js b/dist/theme/context/partials/page.pageTitle.js
+index 91cf0fec90979546a5d6bd321f77b99b5912f5d3..2d08ea2a2a5adeb6e660bdb2268b568212abeb55 100644
+--- a/dist/theme/context/partials/page.pageTitle.js
++++ b/dist/theme/context/partials/page.pageTitle.js
+@@ -25,7 +25,9 @@ export function pageTitle() {
+             version: page?.project?.packageVersion,
+         });
+     }
+-    const typeParameters = this.helpers.getTypeParameters(page.model.typeParameters, { includeBackticks: false });
++    const typeParameters = page.model.typeParameters
++        ?.map((typeParameter) => typeParameter.name)
++        .join(', ');
+     const rawTypeParameters = unEscapeChars(typeParameters ?? '');
+     const modelName = `${page.model.name}${this.helpers.hasSignatures(page.model) ? '()' : ''}`;
+     const rawName = `${modelName}${rawTypeParameters?.length ? `<${rawTypeParameters}>` : ''}`;

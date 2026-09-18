@@ -248,9 +248,18 @@ function writeGroupMeta(dir: string): void {
       kind: pageKind(join(group, file)),
     }));
     pages.sort((a, b) => a.kind - b.kind || a.name.localeCompare(b.name));
+    // The label is the name of the member. Without it Rspress reads the
+    // title of the page, which carries the type parameters of a generic and
+    // renders their braces and angle brackets as markup.
     writeFileSync(
       join(group, '_meta.json'),
-      `${JSON.stringify(pages.map(page => page.name), null, 2)}\n`,
+      json(
+        pages.map(page => ({
+          type: 'file',
+          name: page.name,
+          label: page.name,
+        })),
+      ),
     );
   }
 }

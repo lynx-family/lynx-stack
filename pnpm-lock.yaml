@@ -220,6 +220,7 @@ packageExtensionsChecksum: sha256-Y9ZLHWMP51V1VaeUicx/UxFRX96fq7QFLXtege8aEOA=
 patchedDependencies:
   '@napi-rs/cli@2.18.4': ba947eb1c48b2a85834e99f92cbbae896722ce61fd5ae67507a3be9041959ebd
   '@rollup/plugin-typescript': 926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d
+  typedoc-plugin-markdown@4.13.1: d26e466390de574ef3c1476b83b2665a582a5a7028a3d54ec50886d3c351628b
 
 importers:
 
@@ -426,7 +427,7 @@ importers:
         version: 0.28.20(typescript@6.0.3)
       typedoc-plugin-markdown:
         specifier: 4.13.1
-        version: 4.13.1(typedoc@0.28.20(typescript@6.0.3))
+        version: 4.13.1(patch_hash=d26e466390de574ef3c1476b83b2665a582a5a7028a3d54ec50886d3c351628b)(typedoc@0.28.20(typescript@6.0.3))
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -16362,7 +16363,7 @@ snapshots:
     dependencies:
       '@rspress/core': 2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
       typedoc: 0.28.20(typescript@6.0.3)
-      typedoc-plugin-markdown: 4.13.1(typedoc@0.28.20(typescript@6.0.3))
+      typedoc-plugin-markdown: 4.13.1(patch_hash=d26e466390de574ef3c1476b83b2665a582a5a7028a3d54ec50886d3c351628b)(typedoc@0.28.20(typescript@6.0.3))
     transitivePeerDependencies:
       - typescript
 
@@ -23149,7 +23150,7 @@ snapshots:
     dependencies:
       is-typedarray: 1.0.0
 
-  typedoc-plugin-markdown@4.13.1(typedoc@0.28.20(typescript@6.0.3)):
+  typedoc-plugin-markdown@4.13.1(patch_hash=d26e466390de574ef3c1476b83b2665a582a5a7028a3d54ec50886d3c351628b)(typedoc@0.28.20(typescript@6.0.3)):
     dependencies:
       typedoc: 0.28.20(typescript@6.0.3)
 
