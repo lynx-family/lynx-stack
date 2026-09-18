@@ -1,8 +1,8 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { basename, extname, join } from 'node:path';
 
 import type { RspressPlugin } from '@rspress/core';
 
@@ -27,6 +27,27 @@ const SIDEBAR = [
 
 /** The sections listed by {@link SIDEBAR} instead of by their parent. */
 const OWN_SIDEBAR_ENTRY = ['testing-library'];
+
+/** The group TypeDoc puts the `@document` pages of a package in. */
+const DOCUMENTS = 'Documents';
+
+/**
+ * Rewrites an entry of a generated sidebar: the index page is the link of the
+ * section itself, a section with its own entry is not listed by its parent,
+ * and the `@document` pages are listed one by one instead of as a group.
+ */
+function sidebarItems(
+  item: string | { name?: string },
+  dir: string,
+): (string | { type: string; name: string })[] {
+  if (typeof item === 'string') return item === 'index' ? [] : [item];
+  if (OWN_SIDEBAR_ENTRY.includes(item.name ?? '')) return [];
+  if (item.name !== DOCUMENTS) return [item as { type: string; name: string }];
+  return readdirSync(join(dir, DOCUMENTS)).sort().map(file => ({
+    type: 'file',
+    name: `${DOCUMENTS}/${basename(file, extname(file))}`,
+  }));
+}
 
 /**
  * Generates the API reference under `content/<locale>/api` from the TSDoc of
@@ -81,10 +102,8 @@ export function pluginApiReference(): RspressPlugin[] {
                 meta,
                 `${
                   JSON.stringify(
-                    items.filter(item =>
-                      typeof item === 'string'
-                        ? item !== 'index'
-                        : !OWN_SIDEBAR_ENTRY.includes(item.name ?? '')
+                    items.flatMap(item =>
+                      sidebarItems(item, join(CONTENT, locale, section.out))
                     ),
                     null,
                     2,
