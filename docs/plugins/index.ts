@@ -302,7 +302,7 @@ export function pluginApiReference(): RspressPlugin[] {
     pluginPackagePages(packages, translations),
     {
       name: 'lynx:api-reference-sidebar',
-      config(config) {
+      config(config, _utils, isProd) {
         for (const locale of LOCALES) {
           for (const section of all) {
             const dir = join(CONTENT, locale, section.out);
@@ -343,7 +343,9 @@ export function pluginApiReference(): RspressPlugin[] {
         }
         writeManifest();
         translations.save();
-        const missing = translations.missing;
+        // `dev` shows the English text of a string the dictionary is missing;
+        // a build stops, so it cannot ship.
+        const missing = isProd ? translations.missing : [];
         if (missing.length > 0) {
           throw new Error(
             `${missing.length} strings are not translated in docs/i18n/zh.json:\n${
