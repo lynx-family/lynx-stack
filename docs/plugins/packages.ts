@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 
 import type { RspressPlugin } from '@rspress/core';
@@ -95,7 +95,6 @@ function writePackagePages(
   translations: Translations,
 ): void {
   const out = join(CONTENT, locale, 'api/packages');
-  const prefix = locale === 'en' ? '' : `/${locale}`;
   const text = (en: string) => translations.translate(en, locale);
 
   for (const pkg of packages) {
@@ -111,31 +110,13 @@ function writePackagePages(
     );
   }
 
+  // The index TypeDoc writes lists every package; the sidebar does that.
+  rmSync(join(out, 'index.mdx'));
+
   const groups = GROUPS.map(group => ({
     name: text(group.name),
     packages: packages.filter(pkg => groupOf(pkg) === group.name),
   }));
-
-  write(
-    join(out, 'index.mdx'),
-    [
-      `# ${text('Packages overview')}`,
-      '',
-      'import { OverviewGroup } from \'@rspress/core/theme\';',
-      '',
-      ...groups.map(group =>
-        `<OverviewGroup group={${
-          JSON.stringify({
-            name: group.name,
-            items: group.packages.map(pkg => ({
-              text: pkg.name,
-              link: `${prefix}/api/${packageRoute(pkg)}`,
-            })),
-          })
-        }} />\n`
-      ),
-    ].join('\n'),
-  );
 
   write(
     join(out, '_meta.json'),

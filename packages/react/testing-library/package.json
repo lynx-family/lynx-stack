@@ -23,6 +23,7 @@
     "@rstest/core": "catalog:rstest",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^7.0.0",
-    "preact": "catalog:lynxjs"
+    "preact": "catalog:lynxjs",
+    "pretty-format": "^29.7.0"
   }
 }
