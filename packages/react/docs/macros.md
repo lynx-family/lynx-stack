@@ -244,14 +244,18 @@ class Conversations extends Component<Props, State> {
 - Type: `boolean`
 - Purpose: Alias of [`__BACKGROUND__`](#__background__).
 
+:::warning Deprecated
 Use `__BACKGROUND__` instead.
+:::
 
 ## `__LEPUS__`
 
 - Type: `boolean`
 - Purpose: Alias of [`__MAIN_THREAD__`](#__main_thread__).
 
+:::warning Deprecated
 Use `__MAIN_THREAD__` instead.
+:::
 
 ## `__DEV__`
 
