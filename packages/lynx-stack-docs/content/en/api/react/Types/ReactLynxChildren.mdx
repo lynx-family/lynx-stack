@@ -1,0 +1,75 @@
+# Type Alias: ReactLynxChildren
+
+```ts
+type ReactLynxChildren = Omit<typeof PreactChildren, "map" | "forEach" | "toArray"> & object;
+```
+
+Type of ReactLynx children utilities.
+
+## Type Declaration
+
+### forEach()
+
+```ts
+forEach<T extends ComponentChild, R>(children: T | T[], fn: (child: T, index: number) => R): readonly R[] | null;
+```
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `T` *extends* `ComponentChild` |
+| `R` |
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `children` | `T` \| `T`[] |
+| `fn` | (`child`: `T`, `index`: `number`) => `R` |
+
+#### Returns
+
+readonly `R`[] \| `null`
+
+### map()
+
+```ts
+map<T extends ComponentChild, R>(children: T | T[], fn: (child: T, index: number) => R): readonly R[] | null;
+```
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `T` *extends* `ComponentChild` |
+| `R` |
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `children` | `T` \| `T`[] |
+| `fn` | (`child`: `T`, `index`: `number`) => `R` |
+
+#### Returns
+
+readonly `R`[] \| `null`
+
+### toArray()
+
+```ts
+toArray(children: ComponentChildren): readonly VNode<{
+}>[];
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `children` | `ComponentChildren` |
+
+#### Returns
+
+readonly `VNode`\<\{
+\}\>[]

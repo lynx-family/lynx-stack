@@ -1,0 +1,20 @@
+# 函数: findArtifact()
+
+```ts
+function findArtifact(metadata: DebugMetadataAsset, query: object): Artifact | undefined;
+```
+
+按 `filename`（例如 `main-thread.js`、
+`background.fd311de1.js`、`main.css`）查找一个 [Artifact](../interfaces/Artifact.mdx)。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `metadata` | [`DebugMetadataAsset`](../interfaces/DebugMetadataAsset.mdx) |
+| `query` | \{ `filename`: `string`; \} |
+| `query.filename` | `string` |
+
+## 返回
+
+[`Artifact`](../interfaces/Artifact.mdx) \| `undefined`

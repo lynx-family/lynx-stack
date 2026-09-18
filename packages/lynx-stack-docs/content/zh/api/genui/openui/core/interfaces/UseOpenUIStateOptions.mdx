@@ -1,0 +1,111 @@
+# 接口: UseOpenUIStateOptions
+
+用于解析 OpenUI 文本并构建渲染器状态的输入。
+
+## 属性
+
+### initialQueryResults?
+
+```ts
+optional initialQueryResults?: Readonly<Record<string, unknown>>;
+```
+
+预取的 Query 结果，以 Query 赋值名称（statement ID）为键。它们在首次渲染时即可使用，并在可选的 tool provider 于 commit 后重新校验期间作为兜底值。
+
+***
+
+### initialState?
+
+```ts
+optional initialState?: Record<string, unknown>;
+```
+
+***
+
+### isStreaming
+
+```ts
+isStreaming: boolean;
+```
+
+***
+
+### library
+
+```ts
+library: Library;
+```
+
+***
+
+### onAction?
+
+```ts
+optional onAction?: (event: ActionEvent) => void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `event` | [`ActionEvent`](ActionEvent.mdx) |
+
+#### 返回
+
+`void`
+
+***
+
+### onError?
+
+```ts
+optional onError?: (errors: OpenUIError[]) => void;
+```
+
+结构化、便于 LLM 理解的错误回调。参见 OpenUIError 类型。
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `errors` | [`OpenUIError`](OpenUIError.mdx)[] |
+
+#### 返回
+
+`void`
+
+***
+
+### onStateUpdate?
+
+```ts
+optional onStateUpdate?: (state: Record<string, unknown>) => void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `state` | `Record`\<`string`, `unknown`\> |
+
+#### 返回
+
+`void`
+
+***
+
+### response
+
+```ts
+response: string | null;
+```
+
+***
+
+### toolProvider?
+
+```ts
+optional toolProvider?: ToolProvider | null;
+```
+
+用于 Query 数据获取的 ToolProvider——MCP、REST、GraphQL 或任意后端。

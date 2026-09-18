@@ -1,0 +1,25 @@
+# 函数: createParser()
+
+```ts
+function createParser(schema: LibraryJSONSchema, rootName?: string): Parser;
+```
+
+根据组件库的 JSON Schema 文档创建解析器。传入 `library.toJSONSchema()` 获取 schema。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `schema` | [`LibraryJSONSchema`](../interfaces/LibraryJSONSchema.mdx) |
+| `rootName?` | `string` |
+
+## 返回
+
+`Parser`
+
+## 示例
+
+```ts
+const parser = createParser(library.toJSONSchema());
+const result = parser.parse(openuiLangString);
+```

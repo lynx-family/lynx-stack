@@ -1,0 +1,93 @@
+# Interface: DataProcessors
+
+The data processors that registered with [Lynx.registerDataProcessors](Lynx.mdx#registerdataprocessors).
+
+## Example
+
+Extending `dataProcessors` interface
+
+```ts
+import type { DataProcessors as WellKnownDataProcessors } from '@lynx-js/react';
+
+declare module '@lynx-js/react' {
+  interface DataProcessors extends WellKnownDataProcessors {
+    foo(bar: string): number;
+  }
+}
+```
+
+Then you can use `lynx.registerDataProcessors` with types.
+
+```js
+lynx.registerDataProcessors({
+  dataProcessors: {
+    foo(bar) {
+      return 1;
+    }
+  }
+})
+```
+
+## Indexable
+
+```ts
+[processorName: string]: (...args: any[]) => any
+```
+
+Custom unknown data processors.
+
+### Remarks
+
+You may extends the `DataProcessors` interface for better TypeScript types. See DataProcessors.
+
+## Methods
+
+### getScreenMetricsOverride()?
+
+```ts
+optional getScreenMetricsOverride(metrics: object): object;
+```
+
+Optional processor to override screen metrics used by the app
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `metrics` | \{ `height`: `number`; `width`: `number`; \} | The physical screen dimensions in pixels |
+| `metrics.height` | `number` | The physical pixel height of the screen |
+| `metrics.width` | `number` | The physical pixel width of the screen |
+
+#### Returns
+
+`object`
+
+New screen dimensions to be used by the app
+
+##### height
+
+```ts
+height: number;
+```
+
+##### width
+
+```ts
+width: number;
+```
+
+#### Example
+
+```ts
+lynx.registerDataProcessors({
+  dataProcessors: {
+    getScreenMetricsOverride: (metrics) => {
+      // Force a specific aspect ratio
+      return {
+        width: metrics.width,
+        height: metrics.width * (16/9)
+      };
+    }
+  }
+});
+```

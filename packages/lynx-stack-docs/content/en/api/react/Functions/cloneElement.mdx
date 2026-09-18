@@ -1,0 +1,29 @@
+# Function: cloneElement()
+
+```ts
+function cloneElement<Props>(
+   element: ReactElement<Props>, 
+   props?: Partial<Props> & Attributes | null, 
+   ...children: ReactNode[]
+): ReactElement<Props>;
+```
+
+Clones an element with optional replacement props and children.
+
+## Type Parameters
+
+| Type Parameter |
+| ------ |
+| `Props` |
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `element` | `ReactElement`\<`Props`\> |
+| `props?` | `Partial`\<`Props`\> & `Attributes` \| `null` |
+| ...`children?` | `ReactNode`[] |
+
+## Returns
+
+`ReactElement`\<`Props`\>

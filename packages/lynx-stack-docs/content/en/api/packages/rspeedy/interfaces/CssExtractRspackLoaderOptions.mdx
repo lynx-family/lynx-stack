@@ -1,0 +1,49 @@
+# Interface: CssExtractRspackLoaderOptions
+
+The options of CSS extract loader.
+
+## Properties
+
+### esModule?
+
+```ts
+optional esModule?: boolean;
+```
+
+The same as [https://github.com/webpack-contrib/mini-css-extract-plugin#esModule](https://github.com/webpack-contrib/mini-css-extract-plugin#esModule).
+By default, `@lynx-js/css-extract-webpack-plugin` generates JS modules that use the ES modules syntax.
+There are some cases in which using ES modules is beneficial,
+like in the case of module concatenation and tree shaking.
+
+#### Example
+
+You can enable a CommonJS syntax using:
+
+```js
+import {CssExtractRspackPlugin} from "@lynx-js/css-extract-webpack-plugin";
+export default {
+  plugins: [new CssExtractRspackPlugin()],
+  module: {
+    rules: [
+      {
+        test: /\.css$/i,
+        use: [
+          {
+            loader: CssExtractRspackPlugin.loader,
+            options: {
+              esModule: false,
+            },
+          },
+          "css-loader",
+        ],
+      },
+    ],
+  },
+};
+```
+
+#### Default Value
+
+```ts
+true
+```

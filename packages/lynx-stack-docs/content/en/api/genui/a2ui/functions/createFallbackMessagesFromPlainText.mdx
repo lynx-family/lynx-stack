@@ -1,0 +1,19 @@
+# Function: createFallbackMessagesFromPlainText()
+
+```ts
+function createFallbackMessagesFromPlainText(text: string): ServerToClientMessage[];
+```
+
+Build a single-Text fallback message stream from a plain string. Used by
+transports / `Session.ingest` callers that receive free-form text from
+the agent instead of structured protocol messages.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `text` | `string` |
+
+## Returns
+
+[`ServerToClientMessage`](../type-aliases/ServerToClientMessage.mdx)[]

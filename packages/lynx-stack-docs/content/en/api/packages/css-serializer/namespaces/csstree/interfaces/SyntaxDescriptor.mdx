@@ -1,0 +1,57 @@
+# Interface: SyntaxDescriptor
+
+## Properties
+
+### match
+
+```ts
+match: ((...args: unknown[]) => unknown) | null;
+```
+
+***
+
+### matchRef?
+
+```ts
+optional matchRef?: ((...args: unknown[]) => unknown) | null;
+```
+
+***
+
+### name
+
+```ts
+name: string;
+```
+
+***
+
+### parent
+
+```ts
+parent: SyntaxDescriptor | null;
+```
+
+***
+
+### serializable
+
+```ts
+serializable: boolean;
+```
+
+***
+
+### syntax
+
+```ts
+syntax: DSNode | null;
+```
+
+***
+
+### type
+
+```ts
+type: "AtrulePrelude" | "Property" | "Type" | "AtruleDescriptor";
+```

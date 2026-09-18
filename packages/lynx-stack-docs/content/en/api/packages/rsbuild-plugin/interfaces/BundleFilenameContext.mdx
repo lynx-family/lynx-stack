@@ -1,0 +1,39 @@
+# Interface: BundleFilenameContext
+
+The context passed to the [LynxFilename.bundle](LynxFilename.mdx#bundle) function.
+
+## Properties
+
+### entryName?
+
+```ts
+optional entryName?: string;
+```
+
+The name of the entry.
+
+#### Remarks
+
+It is `undefined` for lazy bundles, since a lazy bundle name is resolved
+per async chunk instead of per entry.
+
+***
+
+### lazyBundle
+
+```ts
+lazyBundle: boolean;
+```
+
+Whether the filename is being resolved for a lazy bundle (async chunk)
+instead of the main bundle of an entry.
+
+***
+
+### platform
+
+```ts
+platform: string;
+```
+
+The name of the Rsbuild environment.

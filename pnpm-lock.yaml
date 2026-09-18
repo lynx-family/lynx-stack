@@ -402,13 +402,6 @@ importers:
         version: 19.2.18
 
   docs:
-    dependencies:
-      react:
-        specifier: 19.2.8
-        version: 19.2.8
-      react-dom:
-        specifier: 19.2.8
-        version: 19.2.8(react@19.2.8)
     devDependencies:
       '@rspress/core':
         specifier: 2.0.21
@@ -422,6 +415,12 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.4
         version: 19.2.4(@types/react@19.2.18)
+      react:
+        specifier: 19.2.8
+        version: 19.2.8
+      react-dom:
+        specifier: 19.2.8
+        version: 19.2.8(react@19.2.8)
       typedoc:
         specifier: ^0.28.20
         version: 0.28.20(typescript@6.0.3)
@@ -1520,8 +1519,6 @@ importers:
         specifier: 0.2.1
         version: 0.2.1(@rsbuild/core@2.2.4(core-js@3.50.0))(i18next-cli@1.67.7(@swc/helpers@0.5.23)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(typescript@6.0.3))(rollup@4.62.2)
 
-  packages/lynx-stack-docs: {}
-
   packages/lynx/autolink-codegen:
     devDependencies:
       typescript:
@@ -2397,7 +2394,7 @@ importers:
         version: link:../lynx-bundle-rslib-config
       '@lynx-js/lynx-stack-docs':
         specifier: workspace:*
-        version: link:../../lynx-stack-docs
+        version: link:../../../docs
       '@lynx-js/motion':
         specifier: workspace:*
         version: link:../../motion

@@ -1,0 +1,176 @@
+# Function: animate()
+
+## Call Signature
+
+```ts
+function animate(sequence: AnimationSequence, options?: SequenceOptions): AnimationPlaybackControlsWithThen;
+```
+
+Animate a sequence
+
+### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `sequence` | `AnimationSequence` |
+| `options?` | `SequenceOptions` |
+
+### Returns
+
+`AnimationPlaybackControlsWithThen`
+
+## Call Signature
+
+```ts
+function animate(
+   value: string, 
+   keyframes: DOMKeyframesDefinition, 
+   options?: AnimationOptions
+): AnimationPlaybackControlsWithThen;
+```
+
+Animate a string
+
+### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `value` | `string` |
+| `keyframes` | `DOMKeyframesDefinition` |
+| `options?` | `AnimationOptions` |
+
+### Returns
+
+`AnimationPlaybackControlsWithThen`
+
+## Call Signature
+
+```ts
+function animate(
+   value: string | MotionValue<string>, 
+   keyframes: string | UnresolvedValueKeyframe<string>[], 
+   options?: ValueAnimationTransition<string>
+): AnimationPlaybackControlsWithThen;
+```
+
+Animate a string
+
+### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `value` | `string` \| [`MotionValue`](../interfaces/MotionValue.mdx)\<`string`\> |
+| `keyframes` | `string` \| `UnresolvedValueKeyframe`\<`string`\>[] |
+| `options?` | `ValueAnimationTransition`\<`string`\> |
+
+### Returns
+
+`AnimationPlaybackControlsWithThen`
+
+## Call Signature
+
+```ts
+function animate(
+   value: number | MotionValue<number>, 
+   keyframes: number | UnresolvedValueKeyframe<number>[], 
+   options?: ValueAnimationTransition<number>
+): AnimationPlaybackControlsWithThen;
+```
+
+Animate a number
+
+### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `value` | `number` \| [`MotionValue`](../interfaces/MotionValue.mdx)\<`number`\> |
+| `keyframes` | `number` \| `UnresolvedValueKeyframe`\<`number`\>[] |
+| `options?` | `ValueAnimationTransition`\<`number`\> |
+
+### Returns
+
+`AnimationPlaybackControlsWithThen`
+
+## Call Signature
+
+```ts
+function animate<V extends string | number>(
+   value: V | MotionValue<V>, 
+   keyframes: V | UnresolvedValueKeyframe<V>[], 
+   options?: ValueAnimationTransition<V>
+): AnimationPlaybackControlsWithThen;
+```
+
+Animate a generic motion value
+
+### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `V` *extends* `string` \| `number` |
+
+### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `value` | `V` \| [`MotionValue`](../interfaces/MotionValue.mdx)\<`V`\> |
+| `keyframes` | `V` \| `UnresolvedValueKeyframe`\<`V`\>[] |
+| `options?` | `ValueAnimationTransition`\<`V`\> |
+
+### Returns
+
+`AnimationPlaybackControlsWithThen`
+
+## Call Signature
+
+```ts
+function animate<O extends object>(
+   object: O | O[], 
+   keyframes: ObjectTarget<O>, 
+   options?: AnimationOptions
+): AnimationPlaybackControlsWithThen;
+```
+
+Animate an object
+
+### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `O` *extends* `object` |
+
+### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `object` | `O` \| `O`[] |
+| `keyframes` | `ObjectTarget`\<`O`\> |
+| `options?` | `AnimationOptions` |
+
+### Returns
+
+`AnimationPlaybackControlsWithThen`
+
+## Call Signature
+
+```ts
+function animate(
+   value: ElementOrElements, 
+   keyframes: DOMKeyframesDefinition, 
+   options?: AnimationOptions
+): AnimationPlaybackControlsWithThen;
+```
+
+Animate a main thread element
+
+### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `value` | `ElementOrElements` |
+| `keyframes` | `DOMKeyframesDefinition` |
+| `options?` | `AnimationOptions` |
+
+### Returns
+
+`AnimationPlaybackControlsWithThen`

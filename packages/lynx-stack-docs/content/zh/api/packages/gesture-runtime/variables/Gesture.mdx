@@ -1,0 +1,55 @@
+# 变量: Gesture
+
+```ts
+const Gesture: object;
+```
+
+## 类型声明
+
+### Exclusive()
+
+```ts
+Exclusive(...gestures: GestureKind[]): GestureKind;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| ...`gestures` | [`GestureKind`](../interfaces/GestureKind.mdx)[] |
+
+#### 返回
+
+[`GestureKind`](../interfaces/GestureKind.mdx)
+
+### Race()
+
+```ts
+Race(...gestures: GestureKind[]): GestureKind;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| ...`gestures` | [`GestureKind`](../interfaces/GestureKind.mdx)[] |
+
+#### 返回
+
+[`GestureKind`](../interfaces/GestureKind.mdx)
+
+### Simultaneous()
+
+```ts
+Simultaneous(...gestures: GestureKind[]): GestureKind;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| ...`gestures` | [`GestureKind`](../interfaces/GestureKind.mdx)[] |
+
+#### 返回
+
+[`GestureKind`](../interfaces/GestureKind.mdx)

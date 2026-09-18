@@ -1,0 +1,37 @@
+# output.filename.css
+
+```ts
+optional css?: Filename;
+```
+
+**`Lynx Default Changed`**
+
+CSS 文件的名称。
+
+## 默认值
+
+`'[name]/[name].css'`
+
+## 示例
+
+- 使用函数根据文件信息动态设置文件名：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      css: (pathData, assetInfo) => {
+        console.log(pathData); // You can check the contents of pathData here
+
+        if (pathData.chunk?.name === 'index') {
+          return isProd ? '[name].[contenthash:8].css' : '[name].css';
+        }
+        return '/some-path/[name].css';
+      },
+    },
+  },
+})
+```
+

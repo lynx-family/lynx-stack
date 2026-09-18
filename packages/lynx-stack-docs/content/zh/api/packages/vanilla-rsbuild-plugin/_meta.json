@@ -1,0 +1,12 @@
+[
+  {
+    "type": "file",
+    "name": "functions/pluginVanillaLynx",
+    "label": "pluginVanillaLynx"
+  },
+  {
+    "type": "file",
+    "name": "variables/LAYERS",
+    "label": "LAYERS"
+  }
+]

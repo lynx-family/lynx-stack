@@ -1,0 +1,57 @@
+# Type Alias: RenderResult\<Q *extends* [`Queries`](../Interfaces/Queries.mdx) = *typeof* [`queries`](../Namespaces/queries.mdx)\>
+
+```ts
+type RenderResult<Q extends Queries = typeof queries> = object & { [P in keyof Q]: BoundFunction<Q[P]> };
+```
+
+The result of [render](../Functions/render.mdx)
+
+## Type Declaration
+
+### asFragment
+
+```ts
+asFragment: () => DocumentFragment;
+```
+
+#### Returns
+
+`DocumentFragment`
+
+### container
+
+```ts
+container: LynxElement;
+```
+
+### rerender
+
+```ts
+rerender: (ui: React.ReactNode) => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `ui` | `React.ReactNode` |
+
+#### Returns
+
+`void`
+
+### unmount
+
+```ts
+unmount: () => void;
+```
+
+#### Returns
+
+`void`
+
+## Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `Q` *extends* [`Queries`](../Interfaces/Queries.mdx) | *typeof* [`queries`](../Namespaces/queries.mdx) |

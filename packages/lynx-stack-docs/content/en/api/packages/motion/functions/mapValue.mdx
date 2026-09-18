@@ -1,0 +1,29 @@
+# Function: mapValue()
+
+```ts
+function mapValue<O>(
+   inputValue: MotionValue<number>, 
+   inputRange: MapInputRange, 
+   outputRange: O[], 
+   options?: TransformOptions<O>
+): MotionValue<O>;
+```
+
+## Type Parameters
+
+| Type Parameter |
+| ------ |
+| `O` |
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `inputValue` | [`MotionValue`](../interfaces/MotionValue.mdx)\<`number`\> |
+| `inputRange` | `MapInputRange` |
+| `outputRange` | `O`[] |
+| `options?` | `TransformOptions`\<`O`\> |
+
+## Returns
+
+[`MotionValue`](../interfaces/MotionValue.mdx)\<`O`\>

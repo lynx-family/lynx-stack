@@ -1,0 +1,36 @@
+# Interface: ExternalObject
+
+Object form of an external mapping.
+
+Use this instead of the plain global-name form when the external library is
+mounted asynchronously (as a Promise) by the consuming application, i.e. the
+matching `pluginExternalBundle` external is configured with `async: true`.
+
+## Properties
+
+### async?
+
+```ts
+optional async?: boolean;
+```
+
+Whether the library is mounted as a Promise resolving to the library
+namespace. When enabled, the external is emitted as a `promise` external
+so importing modules await the mounted value instead of reading it
+synchronously.
+
+#### Default Value
+
+```ts
+false
+```
+
+***
+
+### libraryName
+
+```ts
+libraryName: string | string[];
+```
+
+The global name (with optional subpath) of the external library.

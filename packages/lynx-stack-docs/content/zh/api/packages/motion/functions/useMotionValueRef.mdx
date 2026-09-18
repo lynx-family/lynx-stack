@@ -1,0 +1,25 @@
+# 函数: useMotionValueRef()
+
+```ts
+function useMotionValueRef<T>(value: T): MainThreadRef<MotionValue<T>>;
+```
+
+**`Experimental`**
+
+类似 useMotionValue，但采用 MainThreadRef 格式，高度实验性，可能会发生变化
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `value` | `T` |
+
+## 返回
+
+`MainThreadRef`\<[`MotionValue`](../interfaces/MotionValue.mdx)\<`T`\>\>

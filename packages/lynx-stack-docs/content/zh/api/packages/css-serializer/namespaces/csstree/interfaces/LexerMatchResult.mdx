@@ -1,0 +1,103 @@
+# 接口: LexerMatchResult
+
+## 属性
+
+### error
+
+```ts
+error: 
+  | Error
+  | SyntaxMatchError
+  | SyntaxReferenceError
+  | null;
+```
+
+***
+
+### iterations
+
+```ts
+iterations: number;
+```
+
+***
+
+### matched
+
+```ts
+matched: SyntaxMatchNode | null;
+```
+
+## 方法
+
+### getTrace()
+
+```ts
+getTrace(node: CssNode): SyntaxMatchNode[] | null;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `node` | [`CssNode`](../type-aliases/CssNode.mdx) |
+
+#### 返回
+
+[`SyntaxMatchNode`](SyntaxMatchNode.mdx)[] \| `null`
+
+***
+
+### isKeyword()
+
+```ts
+isKeyword(node: CssNode): boolean;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `node` | [`CssNode`](../type-aliases/CssNode.mdx) |
+
+#### 返回
+
+`boolean`
+
+***
+
+### isProperty()
+
+```ts
+isProperty(node: CssNode, property: string): boolean;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `node` | [`CssNode`](../type-aliases/CssNode.mdx) |
+| `property` | `string` |
+
+#### 返回
+
+`boolean`
+
+***
+
+### isType()
+
+```ts
+isType(node: CssNode, type: string): boolean;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `node` | [`CssNode`](../type-aliases/CssNode.mdx) |
+| `type` | `string` |
+
+#### 返回
+
+`boolean`

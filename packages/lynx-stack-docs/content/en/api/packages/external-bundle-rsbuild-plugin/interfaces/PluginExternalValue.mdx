@@ -1,0 +1,250 @@
+# Interface: PluginExternalValue
+
+External bundle reference accepted by `pluginExternalBundle`.
+
+## Extends
+
+- `Omit`\<`ExternalValue`, `"url"`\>
+
+## Properties
+
+### async?
+
+```ts
+optional async?: boolean;
+```
+
+Whether the source should be loaded asynchronously or not.
+
+#### Default Value
+
+`true`
+
+#### Inherited from
+
+```ts
+Omit.async
+```
+
+***
+
+### background?
+
+```ts
+optional background?: LayerOptions;
+```
+
+The options of the background layer.
+
+#### Default Value
+
+`undefined`
+
+#### Inherited from
+
+```ts
+Omit.background
+```
+
+***
+
+### bundlePath?
+
+```ts
+optional bundlePath?: string;
+```
+
+Bundle path resolved against the runtime public path.
+
+Prefer this over `url` when the external bundle should be emitted or served
+as part of the current project. `pluginExternalBundle` can use this
+information to manage local bundle files, while the runtime keeps the final
+URL aligned with the active `publicPath`.
+
+#### Overrides
+
+```ts
+Omit.bundlePath
+```
+
+***
+
+### libraryName?
+
+```ts
+optional libraryName?: string | string[];
+```
+
+The name of the library. Same as https://webpack.js.org/configuration/externals/#string.
+
+By default, the library name is the same as the externals key. For example:
+
+The config
+
+```js
+ExternalsLoadingPlugin({
+  externals: {
+    lodash: {
+      url: '……',
+    }
+  }
+})
+```
+
+Will generate the following webpack externals config:
+
+```js
+externals: {
+  lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].lodash',
+}
+```
+
+If one external bundle contains multiple modules, should set the same library name to ensure it's loaded only once. For example:
+
+```js
+ExternalsLoadingPlugin({
+  externals: {
+    lodash: {
+      libraryName: 'Lodash',
+      url: '……',
+    },
+    'lodash-es': {
+      libraryName: 'Lodash',
+      url: '……',
+    }
+  }
+})
+```
+Will generate the following webpack externals config:
+
+```js
+externals: {
+  lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash',
+  'lodash-es': 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash',
+}
+```
+
+You can pass an array to specify subpath of the external. Same as https://webpack.js.org/configuration/externals/#string-1. For example:
+
+```js
+ExternalsLoadingPlugin({
+  externals: {
+    preact: {
+      libraryName: ['ReactLynx', 'Preact'],
+      url: '……',
+      async: false,
+    },
+  }
+})
+```
+
+Will generate the following webpack externals config:
+
+```js
+externals: {
+  preact: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.Preact',
+}
+```
+
+With the default `async: true`, a `promise` external is generated instead,
+which picks the subpath after the library promise resolves:
+
+```js
+externals: {
+  preact: 'promise Promise.resolve(lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]["ReactLynx"]).then(function (m) { return m["Preact"]; })',
+}
+```
+
+#### Default Value
+
+`undefined`
+
+#### Example
+
+```ts
+`Lodash`
+```
+
+#### Inherited from
+
+```ts
+Omit.libraryName
+```
+
+***
+
+### mainThread?
+
+```ts
+optional mainThread?: LayerOptions;
+```
+
+The options of the main-thread layer.
+
+#### Default Value
+
+`undefined`
+
+#### Inherited from
+
+```ts
+Omit.mainThread
+```
+
+***
+
+### retries?
+
+```ts
+optional retries?: number;
+```
+
+The number of additional attempts when fetching the external bundle times out (`response.code === -2`).
+
+#### Default Value
+
+`0`
+
+#### Inherited from
+
+```ts
+Omit.retries
+```
+
+***
+
+### timeout?
+
+```ts
+optional timeout?: number;
+```
+
+The wait time in milliseconds.
+
+#### Default Value
+
+`2000`
+
+#### Inherited from
+
+```ts
+Omit.timeout
+```
+
+***
+
+### ~~url?~~
+
+```ts
+optional url?: string;
+```
+
+Bundle URL.
+
+Use this only when the external bundle lives outside the current build
+output and should not be emitted or served by `pluginExternalBundle`.
+
+#### Deprecated
+
+Prefer `bundlePath`, which resolves through the runtime public
+path and lets higher-level tooling manage asset emission.

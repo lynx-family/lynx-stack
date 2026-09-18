@@ -1,0 +1,22 @@
+[
+  {
+    "type": "file",
+    "name": "classes/CDPChannel",
+    "label": "CDPChannel"
+  },
+  {
+    "type": "file",
+    "name": "classes/ElementNode",
+    "label": "ElementNode"
+  },
+  {
+    "type": "file",
+    "name": "classes/KittenLynxView",
+    "label": "KittenLynxView"
+  },
+  {
+    "type": "file",
+    "name": "classes/Lynx",
+    "label": "Lynx"
+  }
+]

@@ -1,0 +1,126 @@
+# 接口: ReactLoaderOptions
+
+ReactLynx 插件的选项。
+
+## 属性
+
+### compat?
+
+```ts
+optional compat?: CompatVisitorConfig;
+```
+
+`compat` 选项用于控制与旧版 ReactLynx 的兼容性。
+
+#### 备注
+
+这些选项仅应在从 ReactLynx2.0 迁移或面向旧版 ReactLynx3 运行时时使用。
+
+***
+
+### defineDCE?
+
+```ts
+optional defineDCE?: DefineDceVisitorConfig;
+```
+
+类似各类打包工具中的 `define`，但它在转换阶段执行，并会执行一次死代码消除（DCE）。
+
+***
+
+### enableRemoveCSSScope?
+
+```ts
+optional enableRemoveCSSScope?: boolean;
+```
+
+enableRemoveCSSScope 控制是否将 CSS 限制在组件作用域内使用。
+
+`true`：所有 CSS 文件都被视为全局 CSS。
+
+`false`：所有 CSS 文件都被视为作用域 CSS，仅在显式导入它的组件中生效。
+
+`undefined`：仅对 CSS Modules 使用作用域 CSS，其他 CSS 文件视为全局 CSS。作用域 CSS 比全局 CSS 更快，因此如果遇到性能问题，可以使用 CSS Modules 来加速 CSS。
+
+***
+
+### enableUiSourceMap?
+
+```ts
+optional enableUiSourceMap?: boolean;
+```
+
+在主线程转换中生成 UI source map。
+
+***
+
+### engineVersion?
+
+```ts
+optional engineVersion?: string;
+```
+
+引擎版本。
+
+***
+
+### experimental\_transformBuiltinAttributeNames?
+
+```ts
+optional experimental_transformBuiltinAttributeNames?: 
+  | boolean
+  | TransformBuiltinAttributeNamesOptions;
+```
+
+转换 Lynx 内置元素上的属性名。
+
+#### 备注
+
+`false` 表示禁用转换。`true` 表示应用默认规则：
+`onClick` 变为 `bindtap`，`onCatchTap` 变为 `catchtap`，其他
+`onXXX` 名称变为 `bindxxx`，其余 camelCase 名称变为
+dash-case。传入对象时可提供可序列化的自定义规则。`rename` 中的精确条目优先于 `preserve`，其次是由 `mode` 选择的兜底行为。
+
+显式的 JSX 属性会在编译时转换。通过 JSX spread 传入的属性会在运行时按照相同的规则转换。
+
+***
+
+### experimental\_useElementTemplate?
+
+```ts
+optional experimental_useElementTemplate?: boolean;
+```
+
+**`Experimental`**
+
+是否启用 Element Template 编译。
+
+***
+
+### inlineSourcesContent?
+
+```ts
+optional inlineSourcesContent?: boolean;
+```
+
+在 source-map 中生成内联的源码内容。
+
+***
+
+### refresh?
+
+```ts
+optional refresh?: boolean;
+```
+
+为 ReactLynx 启用 Fast Refresh。
+
+***
+
+### shake?
+
+```ts
+optional shake?: ShakeVisitorConfig;
+```
+
+主线程代码的 shake 方式。

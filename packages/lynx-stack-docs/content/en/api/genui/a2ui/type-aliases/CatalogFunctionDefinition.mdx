@@ -1,0 +1,11 @@
+# Type Alias: CatalogFunctionDefinition
+
+```ts
+type CatalogFunctionDefinition = FunctionDefinition;
+```
+
+The structured function definition that flows from the extractor (or the
+upstream basic-catalog manifests) into the catalog and out to the agent
+during the handshake. Aliased onto the store's `FunctionDefinition` so
+`functionRegistry.register({ definition })` accepts catalog entries
+directly without re-shaping.

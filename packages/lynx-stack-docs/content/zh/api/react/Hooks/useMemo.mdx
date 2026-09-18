@@ -1,0 +1,32 @@
+# 函数: useMemo()
+
+```ts
+function useMemo<T>(factory: () => T, deps: DependencyList): T;
+```
+
+只有当某个 `deps` 发生变化时，`useMemo` 才会重新计算 memoized 的值。
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `factory` | () => `T` |
+| `deps` | `DependencyList` |
+
+## 返回
+
+`T`
+
+## Version
+
+16.8.0
+
+## 参阅
+
+[https://react.dev/reference/react/useMemo](https://react.dev/reference/react/useMemo)

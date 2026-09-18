@@ -1,0 +1,386 @@
+# 接口: CompatVisitorConfig
+
+`compat` 选项用于控制与旧版 ReactLynx 的兼容性。
+
+## 备注
+
+这些选项仅应在从 ReactLynx2.0 迁移或面向旧版 ReactLynx3 运行时时使用。
+
+## 属性
+
+### addComponentElement
+
+```ts
+addComponentElement: boolean | AddComponentElementConfig;
+```
+
+控制是否为组件添加包裹元素
+
+#### 默认值
+
+`false`
+
+#### 示例
+
+在运行时为所有组件添加 `<view>` 包裹元素。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        addComponentElement: true
+      },
+    })
+  ],
+})
+```
+
+仅在编译期添加组件元素。注意，这仅对从 [CompatVisitorConfig.oldRuntimePkg](#oldruntimepkg) 导入的 `Component` 生效。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        addComponentElement: { compilerOnly: true }
+      },
+    })
+  ],
+})
+```
+
+***
+
+### additionalComponentAttributes
+
+```ts
+additionalComponentAttributes: string[];
+```
+
+指定额外的组件属性列表，这些属性会传递给包裹的 `<view>`，而不是组件本身。
+
+#### 默认值
+
+`[]`
+
+#### 备注
+
+仅在启用 [CompatVisitorConfig.addComponentElement](#addcomponentelement) 时生效。
+
+#### 示例
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        additionalComponentAttributes: ['custom-attr', 'data-special']
+      },
+    })
+  ],
+})
+```
+
+***
+
+### componentsPkg
+
+```ts
+componentsPkg: string[];
+```
+
+指定需要进行兼容处理的组件包名列表
+
+#### 默认值
+
+`['@lynx-js/react-components']`
+
+#### 示例
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        componentsPkg: ['@my-org/components', '@legacy/ui-kit']
+      },
+    })
+  ],
+})
+```
+
+***
+
+### ~~darkMode?~~
+
+```ts
+optional darkMode?: boolean | DarkModeConfig;
+```
+
+深色模式配置
+
+#### 已被弃用
+
+#### 默认值
+
+`undefined`
+
+#### 示例
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        darkMode: true
+      },
+    })
+  ],
+})
+```
+
+***
+
+### disableDeprecatedWarning
+
+```ts
+disableDeprecatedWarning: boolean;
+```
+
+是否禁用废弃警告
+
+#### 默认值
+
+`false`
+
+#### 示例
+
+禁用所有 `DEPRECATED:` 警告。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        disableDeprecatedWarning: true
+      },
+    })
+  ],
+})
+```
+
+***
+
+### legacySlot?
+
+```ts
+optional legacySlot?: boolean;
+```
+
+将动态子节点编译为 children + wrapper（SlotV2 之前的 slot
+代码生成：`Slot`/`Children` 动态部分通过 wrapper
+元素渲染），而不是默认的 SlotV2 代码生成（`$N` slot props）。
+
+#### 备注
+
+当编译产物需要运行在不支持 `SlotV2` 的旧版
+`@lynx-js/react` 运行时（`< 0.120.0`）上时启用此选项，例如由搭载旧版运行时的宿主 App 消费的独立 lazy bundle。它只改变编译产物；运行时同时支持两种形式。
+
+#### 示例
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        legacySlot: true,
+      },
+    })
+  ],
+})
+```
+
+#### 默认值
+
+`false`
+
+***
+
+### newRuntimePkg
+
+```ts
+newRuntimePkg: string;
+```
+
+指定新运行时的包名
+
+#### 默认值
+
+`'@lynx-js/react'`
+
+#### 示例
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        newRuntimePkg: '@my-org/react'
+      },
+    })
+  ],
+})
+```
+
+***
+
+### oldRuntimePkg
+
+```ts
+oldRuntimePkg: string[];
+```
+
+指定需要进行兼容处理的旧运行时包名列表
+
+#### 默认值
+
+`['@lynx-js/react-runtime']`
+
+#### 示例
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        oldRuntimePkg: ['@my-org/runtime', '@legacy/runtime']
+      },
+    })
+  ],
+})
+```
+
+***
+
+### ~~removeComponentAttrRegex?~~
+
+```ts
+optional removeComponentAttrRegex?: string;
+```
+
+用于移除组件属性的正则表达式
+
+#### 已被弃用
+
+推荐使用 `background-only`。
+
+如果你的代码依赖此开关，那么通过 npm 包或其他方式将其分发给其他项目时，这些项目也需要开启此开关。这会导致开关泛滥，不利于在不同项目之间复用代码。
+
+#### 默认值
+
+`undefined`
+
+#### 示例
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        removeComponentAttrRegex: '^data-test-'
+      },
+    })
+  ],
+})
+```
+
+***
+
+### ~~simplifyCtorLikeReactLynx2~~
+
+```ts
+simplifyCtorLikeReactLynx2: boolean;
+```
+
+是否像 ReactLynx 2 一样简化构造函数调用
+
+#### 已被弃用
+
+不推荐使用 `simplifyCtorLikeReactLynx2`，因为它会引入隐式行为，可能会：
+
+- 使代码更难理解和维护
+
+- 在组件之间产生隐藏的依赖
+
+- 使调试和测试过程复杂化
+
+请改为在类方法上使用 `background-only`，以获得显式且易于维护的行为
+
+#### 默认值
+
+`false`
+
+#### 示例
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      compat: {
+        simplifyCtorLikeReactLynx2: true
+      },
+    })
+  ],
+})
+```
+
+***
+
+### transformLegacyEventAttributeNames?
+
+```ts
+optional transformLegacyEventAttributeNames?: boolean;
+```
+
+是否转换 Lynx 元素上的旧版事件属性名。
+
+启用后，`onClick` 和
+`onClickCatch` 等旧版事件属性会被转换为 `bindtap` 和 `catchtap`。当有其他转换负责事件属性名的转换时，请禁用此选项。
+
+#### 默认值
+
+`true`

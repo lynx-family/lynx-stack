@@ -1,0 +1,17 @@
+[
+  {
+    "type": "file",
+    "name": "functions/generate",
+    "label": "generate"
+  },
+  {
+    "type": "file",
+    "name": "functions/parseNativeModules",
+    "label": "parseNativeModules"
+  },
+  {
+    "type": "file",
+    "name": "functions/runCodegen",
+    "label": "runCodegen"
+  }
+]

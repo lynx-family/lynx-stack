@@ -1,0 +1,32 @@
+# Interface: RspeedyMeta
+
+Rspeedy-emitted build context for a single template / entry.
+
+## Properties
+
+### bundlePath
+
+```ts
+bundlePath: string;
+```
+
+The template filename pattern this metadata corresponds to (e.g.
+`main/template.js`). Lets multi-entry projects identify which page
+each metadata file belongs to without relying on storage-key
+conventions.
+
+***
+
+### entryFiles
+
+```ts
+entryFiles: string[];
+```
+
+Source files of the webpack entry/entries this debug-metadata
+corresponds to, expressed as paths relative to the git rootDir
+(falls back to the compiler context when not in a git repo).
+
+Typically a single file, but webpack allows array-form entries and
+Lynx splits each user entry into multiple webpack entries
+internally — both cases produce multiple paths here.

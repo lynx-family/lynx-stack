@@ -1,0 +1,22 @@
+# 函数: findBytecodeDebugInfo()
+
+```ts
+function findBytecodeDebugInfo(metadata: DebugMetadataAsset, query: object): 
+  | BytecodeDebugInfoSource
+  | undefined;
+```
+
+查找附加在名为 `filename` 的 artifact 上的 `bytecode-debug-info` 源。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `metadata` | [`DebugMetadataAsset`](../interfaces/DebugMetadataAsset.mdx) |
+| `query` | \{ `filename`: `string`; \} |
+| `query.filename` | `string` |
+
+## 返回
+
+  \| [`BytecodeDebugInfoSource`](../interfaces/BytecodeDebugInfoSource.mdx)
+  \| `undefined`

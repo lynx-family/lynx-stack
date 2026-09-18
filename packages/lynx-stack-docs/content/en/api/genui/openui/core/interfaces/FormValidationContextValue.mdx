@@ -1,0 +1,117 @@
+# Interface: FormValidationContextValue
+
+Validation state and helpers for OpenUI form fields.
+
+## Properties
+
+### clearFieldError
+
+```ts
+clearFieldError: (name: string) => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `name` | `string` |
+
+#### Returns
+
+`void`
+
+***
+
+### errors
+
+```ts
+errors: Record<string, string | undefined>;
+```
+
+***
+
+### getFieldError
+
+```ts
+getFieldError: (name: string) => string | undefined;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `name` | `string` |
+
+#### Returns
+
+`string` \| `undefined`
+
+***
+
+### registerField
+
+```ts
+registerField: (name: string, rules: ParsedRule[], getValue: () => unknown) => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `name` | `string` |
+| `rules` | [`ParsedRule`](ParsedRule.mdx)[] |
+| `getValue` | () => `unknown` |
+
+#### Returns
+
+`void`
+
+***
+
+### unregisterField
+
+```ts
+unregisterField: (name: string) => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `name` | `string` |
+
+#### Returns
+
+`void`
+
+***
+
+### validateField
+
+```ts
+validateField: (name: string, value: unknown, rules: ParsedRule[]) => boolean;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `name` | `string` |
+| `value` | `unknown` |
+| `rules` | [`ParsedRule`](ParsedRule.mdx)[] |
+
+#### Returns
+
+`boolean`
+
+***
+
+### validateForm
+
+```ts
+validateForm: () => boolean;
+```
+
+#### Returns
+
+`boolean`

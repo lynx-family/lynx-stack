@@ -1,0 +1,19 @@
+# Function: normalizePayloadToMessages()
+
+```ts
+function normalizePayloadToMessages(payload: unknown): ServerToClientMessage[];
+```
+
+Normalize an arbitrary payload (string, array, object) into a flat list of
+`ServerToClientMessage` records. Pass-through for already-structured
+messages; falls back to wrapping plain text in a Text/Card surface.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `payload` | `unknown` |
+
+## Returns
+
+[`ServerToClientMessage`](../type-aliases/ServerToClientMessage.mdx)[]

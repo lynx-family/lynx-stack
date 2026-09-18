@@ -1,0 +1,24 @@
+# Function: validate()
+
+```ts
+function validate(
+   value: unknown, 
+   rules: ParsedRule[], 
+   customValidators?: Record<string, ValidatorFn>
+): string | undefined;
+```
+
+Run all rules against a value. Stop on first error.
+Custom validators are checked first, then built-in ones.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `value` | `unknown` |
+| `rules` | [`ParsedRule`](../interfaces/ParsedRule.mdx)[] |
+| `customValidators?` | `Record`\<`string`, [`ValidatorFn`](../type-aliases/ValidatorFn.mdx)\> |
+
+## Returns
+
+`string` \| `undefined`

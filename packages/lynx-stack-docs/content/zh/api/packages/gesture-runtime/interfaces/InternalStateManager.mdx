@@ -1,0 +1,116 @@
+# 接口: InternalStateManager
+
+内部使用，并非公开 API
+
+## 属性
+
+### \_\_ConsumeGesture
+
+```ts
+__ConsumeGesture: (dom: FiberElement, id: number, params: ConsumeGestureParams) => void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `dom` | `FiberElement` |
+| `id` | `number` |
+| `params` | [`ConsumeGestureParams`](ConsumeGestureParams.mdx) |
+
+#### 返回
+
+`void`
+
+***
+
+### \_\_SetGestureState
+
+```ts
+__SetGestureState: (dom: FiberElement, id: number, type: SetGestureStateType) => void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `dom` | `FiberElement` |
+| `id` | `number` |
+| `type` | [`SetGestureStateType`](../enumerations/SetGestureStateType.mdx) |
+
+#### 返回
+
+`void`
+
+***
+
+### active
+
+```ts
+active: (id: number) => void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `id` | `number` |
+
+#### 返回
+
+`void`
+
+***
+
+### end
+
+```ts
+end: (id: number) => void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `id` | `number` |
+
+#### 返回
+
+`void`
+
+***
+
+### fail
+
+```ts
+fail: (id: number) => void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `id` | `number` |
+
+#### 返回
+
+`void`
+
+***
+
+### scrollBy
+
+```ts
+scrollBy: (deltaX: number, deltaY: number) => number[];
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `deltaX` | `number` |
+| `deltaY` | `number` |
+
+#### 返回
+
+`number`[]

@@ -1,0 +1,40 @@
+# Function: runOnBackground()
+
+```ts
+function runOnBackground<R, Fn extends (...args: any[]) => R>(f: Fn): (...args: Parameters<Fn>) => Promise<R>;
+```
+
+`runOnBackground` allows triggering js functions on the background thread asynchronously.
+
+## Type Parameters
+
+| Type Parameter |
+| ------ |
+| `R` |
+| `Fn` *extends* (...`args`: `any`[]) => `R` |
+
+## Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `f` | `Fn` | The js function to be called. |
+
+## Returns
+
+A function. Calling which with the arguments to be passed to the js function to trigger it on the background thread. This function returns a promise that resolves to the return value of the js function.
+
+(...`args`: `Parameters`\<`Fn`\>) => `Promise`\<`R`\>
+
+## Example
+
+```ts
+import { runOnBackground } from '@lynx-js/react';
+
+async function someMainthreadFunction() {
+  'main thread';
+  const fn = runOnBackground(() => {
+    return 'hello';
+  });
+  const result = await fn();
+}
+```

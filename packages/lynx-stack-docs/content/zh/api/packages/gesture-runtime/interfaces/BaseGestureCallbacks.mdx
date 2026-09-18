@@ -1,0 +1,65 @@
+# 接口: BaseGestureCallbacks\<TEvent *extends* [`GestureChangeEvent`](GestureChangeEvent.mdx) = [`GestureChangeEvent`](GestureChangeEvent.mdx)\>
+
+通用的基础手势回调接口。
+
+## 类型参数
+
+| 类型参数 | 默认类型 | 描述 |
+| ------ | ------ | ------ |
+| `TEvent` *extends* [`GestureChangeEvent`](GestureChangeEvent.mdx) | [`GestureChangeEvent`](GestureChangeEvent.mdx) | 具体的手势事件类型 |
+
+## 属性
+
+### onBegin?
+
+```ts
+optional onBegin?: GestureCallback<TEvent>;
+```
+
+***
+
+### onEnd?
+
+```ts
+optional onEnd?: GestureCallback<TEvent>;
+```
+
+***
+
+### onStart?
+
+```ts
+optional onStart?: GestureCallback<TEvent>;
+```
+
+***
+
+### onTouchesCancel?
+
+```ts
+optional onTouchesCancel?: GestureCallback<TEvent>;
+```
+
+***
+
+### onTouchesDown?
+
+```ts
+optional onTouchesDown?: GestureCallback<TEvent>;
+```
+
+***
+
+### onTouchesMove?
+
+```ts
+optional onTouchesMove?: GestureCallback<TEvent>;
+```
+
+***
+
+### onTouchesUp?
+
+```ts
+optional onTouchesUp?: GestureCallback<TEvent>;
+```

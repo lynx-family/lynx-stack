@@ -1,0 +1,27 @@
+# Function: useInitDataChanged()
+
+```ts
+function useInitDataChanged(callback: (data: InitData) => void): void;
+```
+
+A React Hooks for you to get notified when `initData` changed.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `callback` | (`data`: [`InitData`](../Types/InitData.mdx)) => `void` |
+
+## Returns
+
+`void`
+
+## Example
+
+```ts
+function App() {
+  useInitDataChanged((data) => {
+    data.someProperty // can use it
+  })
+}
+```

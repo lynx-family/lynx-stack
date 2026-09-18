@@ -1,0 +1,39 @@
+# 接口: WalkOptionsVisit\<NodeType *extends* [`CssNode`](../type-aliases/CssNode.mdx) = [`CssNode`](../type-aliases/CssNode.mdx)\>
+
+## 类型参数
+
+| 类型参数 | 默认类型 |
+| ------ | ------ |
+| `NodeType` *extends* [`CssNode`](../type-aliases/CssNode.mdx) | [`CssNode`](../type-aliases/CssNode.mdx) |
+
+## 属性
+
+### enter?
+
+```ts
+optional enter?: EnterOrLeaveFn<NodeType>;
+```
+
+***
+
+### leave?
+
+```ts
+optional leave?: EnterOrLeaveFn<NodeType>;
+```
+
+***
+
+### reverse?
+
+```ts
+optional reverse?: boolean;
+```
+
+***
+
+### visit
+
+```ts
+visit: NodeType["type"];
+```

@@ -1,0 +1,25 @@
+# Function: useMotionValueRef()
+
+```ts
+function useMotionValueRef<T>(value: T): MainThreadRef<MotionValue<T>>;
+```
+
+**`Experimental`**
+
+useMotionValue, but in MainThreadRef format, highly experimental, subject to change
+
+## Type Parameters
+
+| Type Parameter |
+| ------ |
+| `T` |
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `value` | `T` |
+
+## Returns
+
+`MainThreadRef`\<[`MotionValue`](../interfaces/MotionValue.mdx)\<`T`\>\>

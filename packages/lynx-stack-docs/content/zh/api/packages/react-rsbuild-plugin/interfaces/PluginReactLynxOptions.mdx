@@ -1,0 +1,489 @@
+# 接口: PluginReactLynxOptions
+
+[pluginReactLynx](../functions/pluginReactLynx.mdx) 的选项
+
+## 属性
+
+### compat?
+
+```ts
+optional compat?: Partial<CompatVisitorConfig> & object;
+```
+
+`compat` 选项用于控制与旧版 ReactLynx 的兼容性。
+
+#### 类型声明
+
+##### disableCreateSelectorQueryIncompatibleWarning?
+
+```ts
+optional disableCreateSelectorQueryIncompatibleWarning?: boolean;
+```
+
+是否关闭使用与 ReactLynx2.0 不兼容的 `SelectorQuery` API 时的运行时警告。
+
+###### 示例
+
+默认情况下，使用以下 API 会产生运行时警告：
+
+```ts
+this.createSelectorQuery()
+this.getElementById()
+this.getNodeRef()
+this.getNodeRefFromRoot()
+```
+
+###### 默认值
+
+`false`
+
+#### 备注
+
+这些选项仅应在从 ReactLynx2.0 迁移或面向旧版 ReactLynx3 运行时时使用。
+
+#### 默认值
+
+`undefined`
+
+***
+
+### customCSSInheritanceList?
+
+```ts
+optional customCSSInheritanceList?: string[];
+```
+
+启用 [PluginReactLynxOptions.enableCSSInheritance](#enablecssinheritance) 后，可以通过 `customCSSInheritanceList` 控制哪些属性可继承，而不仅限于默认属性。
+
+#### 示例
+
+设置 `customCSSInheritanceList: ['direction', 'overflow']` 后，只有 `direction` 和 `overflow` 属性可继承。
+
+```js
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
+
+export default defineConfig({
+ plugins: [
+   pluginReactLynx({
+     enableCSSInheritance: true,
+     customCSSInheritanceList: ['direction', 'overflow']
+   }),
+ ],
+})
+```
+
+#### 默认值
+
+`undefined`
+
+***
+
+### debugInfoOutside?
+
+```ts
+optional debugInfoOutside?: boolean;
+```
+
+debugInfoOutside 控制调试信息是否放在模板之外。
+
+#### 备注
+
+推荐设置为 true 以减小模板体积。
+
+#### 默认值
+
+`true`
+
+***
+
+### defaultDisplayLinear?
+
+```ts
+optional defaultDisplayLinear?: boolean;
+```
+
+defaultDisplayLinear 控制 CSS 中 `display` 的默认值是否为 `linear`。
+
+如果 `defaultDisplayLinear === false`，`display` 的默认值将为 `flex` 而非 `linear`。
+
+#### 默认值
+
+`true`
+
+***
+
+### defineDCE?
+
+```ts
+optional defineDCE?: Partial<DefineDceVisitorConfig>;
+```
+
+类似各类打包工具中的 `define`，但它在转换阶段执行，并会执行一次死代码消除（DCE）。
+
+#### 默认值
+
+`undefined`
+
+***
+
+### enableAccessibilityElement?
+
+```ts
+optional enableAccessibilityElement?: boolean;
+```
+
+enableAccessibilityElement 用于设置所有 `<view />` 元素的 `accessibility-element` 默认值。
+
+#### 默认值
+
+`false`
+
+***
+
+### enableCSSInheritance?
+
+```ts
+optional enableCSSInheritance?: boolean;
+```
+
+enableCSSInheritance 用于启用默认的继承属性。
+
+#### 备注
+
+以下属性默认可继承：
+
+- `direction`
+
+- `color`
+
+- `font-family`
+
+- `font-size`
+
+- `font-style`
+
+- `font-weight`
+
+- `letter-spacing`
+
+- `line-height`
+
+- `line-spacing`
+
+- `text-align`
+
+- `text-decoration`
+
+- `text-shadow`
+
+推荐与 [PluginReactLynxOptions.customCSSInheritanceList](#customcssinheritancelist) 一起使用，以避免性能问题。
+
+#### 默认值
+
+`false`
+
+***
+
+### enableCSSInvalidation?
+
+```ts
+optional enableCSSInvalidation?: boolean;
+```
+
+CSS Invalidation 是指在 DOM 更新时，确定哪些元素需要重新计算样式的过程。
+
+#### 示例
+
+```ts
+If a descendant selector `.a .b` is defined in a CSS file, then when an element's class changes to `.a`, all nodes in its subtree with the className `.b` need to have their styles recalculated.
+```
+
+#### 备注
+
+当使用组合器（combinator）确定各元素的样式（包括后代、相邻兄弟等）时，推荐启用此功能。否则只有初始设置的 class 能匹配对应的组合器，后续更新不会重新计算相关样式。
+
+我们发现收集 invalidation 节点并进行更新是一个相对耗时的过程。如果没有此类用法，且需要更好的样式匹配性能，可以选择性地关闭此功能。
+
+#### 默认值
+
+`true`
+
+***
+
+### enableCSSSelector?
+
+```ts
+optional enableCSSSelector?: boolean;
+```
+
+enableCSSSelector 控制是否启用新的 CSS 实现。
+
+#### 默认值
+
+`true`
+
+***
+
+### enableNewGesture?
+
+```ts
+optional enableNewGesture?: boolean;
+```
+
+enableNewGesture 用于启用新的手势系统。
+
+#### 默认值
+
+`false`
+
+***
+
+### enableRemoveCSSScope?
+
+```ts
+optional enableRemoveCSSScope?: boolean;
+```
+
+enableRemoveCSSScope 控制是否将 CSS 限制在组件作用域内使用。
+
+`true`：所有 CSS 文件都被视为全局 CSS。
+
+`false`：所有 CSS 文件都被视为作用域 CSS，仅在显式导入它的组件中生效。
+
+`undefined`：仅对 CSS Modules 使用作用域 CSS，其他 CSS 文件视为全局 CSS。作用域 CSS 比全局 CSS 更快，因此如果遇到性能问题，可以使用 CSS Modules 来加速 CSS。
+
+#### 默认值
+
+`true`
+
+***
+
+### enableSSR?
+
+```ts
+optional enableSSR?: boolean;
+```
+
+`enableSSR` 为本次构建启用 Lynx SSR 功能。
+
+#### 默认值
+
+`false`
+
+***
+
+### enableUiSourceMap?
+
+```ts
+optional enableUiSourceMap?: boolean;
+```
+
+在主线程转换中生成 UI source map。
+
+#### 默认值
+
+`false`
+
+***
+
+### engineVersion?
+
+```ts
+optional engineVersion?: string;
+```
+
+`engineVersion` 指定 App bundle 正常运行所需的最低 Lynx Engine 版本。
+
+#### 默认值
+
+`'3.2'`
+
+***
+
+### experimental\_isLazyBundle?
+
+```ts
+optional experimental_isLazyBundle?: boolean;
+```
+
+**`Alpha`**
+
+生成独立的 lazy bundle。
+
+#### 默认值
+
+`false`
+
+***
+
+### experimental\_transformBuiltinAttributeNames?
+
+```ts
+optional experimental_transformBuiltinAttributeNames?: 
+  | boolean
+  | TransformBuiltinAttributeNamesOptions;
+```
+
+**`Experimental`**
+
+转换 Lynx 内置元素上的属性名。
+
+#### 备注
+
+`false` 表示禁用转换。`true` 表示应用默认规则：
+`onClick` 变为 `bindtap`，`onCatchTap` 变为 `catchtap`，其他
+`onXXX` 名称变为 `bindxxx`，其余 camelCase 名称变为
+dash-case。传入对象时可提供可序列化的自定义规则。`rename` 中的精确条目优先于 `preserve`，其次是由 `mode` 选择的兜底行为。
+
+显式的 JSX 属性会在编译时转换。通过 JSX spread 传入的属性会在运行时按照相同的规则转换。
+
+#### 默认值
+
+`false`
+
+***
+
+### experimental\_useElementTemplate?
+
+```ts
+optional experimental_useElementTemplate?: boolean;
+```
+
+**`Experimental`**
+
+启用 Element Template 的编译与运行时入口。
+
+#### 默认值
+
+`false`
+
+***
+
+### extractStr?
+
+```ts
+optional extractStr?: boolean | Partial<ExtractStrConfig>;
+```
+
+合并 JS 和 Lepus 中相同的字符串字面量，以减小输出 bundle 的体积。
+设为 `false` 可关闭此功能。
+
+#### 默认值
+
+```ts
+false
+```
+
+***
+
+### firstScreenSyncTiming?
+
+```ts
+optional firstScreenSyncTiming?: "immediately" | "jsReady" | "manual";
+```
+
+此标志控制首屏之后主线程（Lepus）何时将控制权移交给后台线程
+
+此标志有三个选项：
+
+`"immediately"`：立即移交
+
+`"jsReady"`：在后台线程（JS Runtime）就绪时移交
+
+`"manual"`：在业务调用 `@lynx-js/react` 导出的 `markFirstScreenSyncReady()` API 时移交，移交时机完全由用户控制
+
+移交控制权后，主线程（Lepus）运行时将无法再响应数据更新，数据更新会被转发到后台线程（JS Runtime）并 __异步__ 处理
+
+#### 默认值
+
+```ts
+"immediately"
+```
+
+***
+
+### globalPropsMode?
+
+```ts
+optional globalPropsMode?: "reactive" | "event";
+```
+
+配置 `lynx.__globalProps` 的更新模式。
+
+此标志有两个选项：
+
+`'reactive'`：`UpdateGlobalProps` 会自动触发更新。
+
+`'event'`：`UpdateGlobalProps` 会触发全局事件，用户需要在事件处理函数中触发更新。
+
+#### 默认值
+
+`'reactive'`
+
+***
+
+### optimizeBundleSize?
+
+```ts
+optional optimizeBundleSize?: 
+  | boolean
+  | {
+  background?: boolean;
+  mainThread?: boolean;
+};
+```
+
+通过 Minify.mainThreadOptions 和 Minify.backgroundOptions 移除未使用的代码，以优化 bundle 体积。
+
+当 optimizeBundleSize 或 optimizeBundleSize.mainThread 为 true 时，会优化主线程代码。当 optimizeBundleSize 或 optimizeBundleSize.background 为 true 时，会优化后台线程代码。
+
+#### 默认值
+
+`false`
+
+***
+
+### removeDescendantSelectorScope?
+
+```ts
+optional removeDescendantSelectorScope?: boolean;
+```
+
+removeDescendantSelectorScope 用于移除后代选择器的作用域。
+
+#### 默认值
+
+`true`
+
+***
+
+### shake?
+
+```ts
+optional shake?: Partial<ShakeVisitorConfig>;
+```
+
+主线程代码的 shake 方式。
+
+#### 默认值
+
+`undefined`
+
+***
+
+### ~~targetSdkVersion?~~
+
+```ts
+optional targetSdkVersion?: string;
+```
+
+targetSdkVersion 用于指定 App bundle 可运行的最低 Lynx Engine 版本。
+
+#### 默认值
+
+`'3.2'`
+
+#### 已被弃用
+
+`targetSdkVersion` 现在是 [PluginReactLynxOptions.engineVersion](#engineversion) 的别名，请改用 [PluginReactLynxOptions.engineVersion](#engineversion)。

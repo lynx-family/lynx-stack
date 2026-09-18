@@ -1,0 +1,37 @@
+# 函数: lazy()
+
+```ts
+function lazy<T extends ComponentType<any>>(load: () => Promise<{
+  default: T;
+}>): LazyExoticComponent<T>;
+```
+
+让你延迟加载组件的代码，直到它首次被渲染。
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` *extends* `ComponentType`\<`any`\> |
+
+## 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `load` | () => `Promise`\<\{ `default`: `T`; \}\> | 一个返回 `Promise` 或其他 thenable（带 then 方法的类 `Promise` 对象）的函数。在你第一次尝试渲染返回的组件之前，React 不会调用 `load`。React 首次调用 load 之后，会等待它 resolve，然后把 resolve 结果的 `.default` 作为 React 组件渲染。返回的 `Promise` 和它 resolve 的值都会被缓存，因此 React 不会多次调用 load。如果 `Promise` 被 reject，React 会抛出 reject 的原因，交给最近的错误边界处理。 |
+
+## 返回
+
+`LazyExoticComponent`\<`T`\>
+
+## 参阅
+
+[React Docs](https://react.dev/reference/react/lazy)
+
+## 示例
+
+```tsx
+import { lazy } from 'react';
+
+const MarkdownPreview = lazy(() => import('./MarkdownPreview.js'));
+```

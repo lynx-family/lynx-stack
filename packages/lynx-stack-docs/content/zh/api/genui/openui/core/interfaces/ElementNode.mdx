@@ -1,0 +1,64 @@
+# 接口: ElementNode
+
+解析器输出的、已完全解析的组件节点。
+
+解析器会把 openui-lang 文本转换成由这些节点组成的树。
+每个节点代表一次组件调用，其位置参数会按照组件库 Zod schema 的键顺序映射为具名的 `props`。
+
+## 属性
+
+### hasDynamicProps?
+
+```ts
+optional hasDynamicProps?: boolean;
+```
+
+所有 props 都是静态字面量时为 false，可以跳过求值。为了向后兼容，undefined 视为 true（动态）。
+
+***
+
+### partial
+
+```ts
+partial: boolean;
+```
+
+解析器还没有收到这个节点的全部 token 时为 true（仍在流式传输中）。
+
+***
+
+### props
+
+```ts
+props: Record<string, unknown>;
+```
+
+解析器把位置参数映射为具名参数后得到的 props。
+
+***
+
+### statementId?
+
+```ts
+optional statementId?: string;
+```
+
+源变量名（例如 `header = TextContent(...)` 中的 "header"）。内联组件为 undefined。
+
+***
+
+### type
+
+```ts
+type: "element";
+```
+
+***
+
+### typeName
+
+```ts
+typeName: string;
+```
+
+组件在组件库中定义的名称（例如 "Table"、"BarChart"）。

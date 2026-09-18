@@ -1,0 +1,182 @@
+# 接口: ReactWebpackPluginOptions
+
+ReactWebpackPlugin 的选项
+
+## 属性
+
+### disableCreateSelectorQueryIncompatibleWarning?
+
+```ts
+optional disableCreateSelectorQueryIncompatibleWarning?: boolean;
+```
+
+是否关闭使用与 ReactLynx2.0 不兼容的 `SelectorQuery` API 时的运行时警告。
+
+***
+
+### enableSSR?
+
+```ts
+optional enableSSR?: boolean;
+```
+
+`enableSSR` 为本次构建启用 Lynx SSR 功能。
+
+***
+
+### entryPairs?
+
+```ts
+optional entryPairs?: object[];
+```
+
+需要合并主线程定义的主线程入口与后台入口对。
+
+#### background
+
+```ts
+background: string;
+```
+
+#### mainThread
+
+```ts
+mainThread: string;
+```
+
+***
+
+### experimental\_isLazyBundle?
+
+```ts
+optional experimental_isLazyBundle?: boolean;
+```
+
+**`Alpha`**
+
+是否启用 lazy bundle。
+
+***
+
+### experimental\_transformBuiltinAttributeNames?
+
+```ts
+optional experimental_transformBuiltinAttributeNames?: 
+  | boolean
+  | TransformBuiltinAttributeNamesOptions;
+```
+
+**`Experimental`**
+
+运行时展开属性所使用的内置属性名转换配置。
+
+***
+
+### experimental\_useElementTemplate?
+
+```ts
+optional experimental_useElementTemplate?: boolean;
+```
+
+**`Experimental`**
+
+是否启用 Element Template 编译。
+
+***
+
+### extractStr?
+
+```ts
+optional extractStr?: boolean | Partial<ExtractStrConfig>;
+```
+
+合并 JS 和 Lepus 中相同的字符串字面量，以减小输出 bundle 的体积。
+设为 `false` 可关闭此功能。
+
+#### 默认值
+
+```ts
+false
+```
+
+***
+
+### firstScreenSyncTiming?
+
+```ts
+optional firstScreenSyncTiming?: "immediately" | "jsReady" | "manual";
+```
+
+此标志控制首屏之后主线程（Lepus）何时将控制权移交给后台线程
+
+此标志有三个选项：
+
+`"immediately"`：立即移交
+
+`"jsReady"`：在后台线程（JS Runtime）就绪时移交
+
+`"manual"`：在业务调用 `@lynx-js/react` 导出的 `markFirstScreenSyncReady()` API 时移交，移交时机完全由用户控制
+
+移交控制权后，主线程（Lepus）运行时将无法再响应数据更新，数据更新会被转发到后台线程（JS Runtime）并 __异步__ 处理
+
+***
+
+### globalPropsMode?
+
+```ts
+optional globalPropsMode?: "reactive" | "event";
+```
+
+配置 `lynx.__globalProps` 的更新模式。
+
+此标志有两个选项：
+
+`'reactive'`：`UpdateGlobalProps` 会自动触发更新。
+
+`'event'`：`UpdateGlobalProps` 会触发全局事件，用户需要在事件处理函数中触发更新。
+
+***
+
+### lazyBundleFetcher?
+
+```ts
+optional lazyBundleFetcher?: "FetchBundle" | "QueryComponent";
+```
+
+解析出的 lazy-bundle 获取模式。由调用方（例如
+`pluginReactLynx`）根据宿主引擎版本以及任何
+`REACT_LAZY_BUNDLE_FETCHER` 环境变量覆盖值来决定。
+
+***
+
+### mainThreadChunks?
+
+```ts
+optional mainThreadChunks?: string[];
+```
+
+被视为主线程 chunk 的 chunk 名称。
+
+***
+
+### profile?
+
+```ts
+optional profile?: boolean;
+```
+
+是否启用 profile。
+
+#### 默认值
+
+生产环境下为 `false`，开发环境下为 `true`
+
+***
+
+### workletRuntimePath
+
+```ts
+workletRuntimePath: string;
+```
+
+`@lynx-js/react/worklet-runtime` 的文件路径。

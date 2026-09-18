@@ -1,0 +1,41 @@
+# Function: GlobalPropsProvider()
+
+```ts
+function GlobalPropsProvider(props: object): ReactNode | Promise<ReactNode>;
+```
+
+The [Provider](https://react.dev/reference/react/createContext#provider) Component that provide `lynx.__globalProps`.
+Only needed with `globalPropsMode: 'event'`; in the default `'reactive'` mode it renders its children directly
+and updates come from a full re-render.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `props` | \{ `children?`: `ReactNode`; \} |
+| `props.children?` | `ReactNode` |
+
+## Returns
+
+`ReactNode` \| `Promise`\<`ReactNode`\>
+
+## Example
+
+With `globalPropsMode: 'event'`:
+
+```ts
+import { root } from "@lynx-js/react"
+
+function App() {
+  return (
+    <GlobalPropsConsumer children={(globalProps) => <view>...</view>}/>
+  )
+}
+
+root.render(
+  <GlobalPropsProvider>
+     <App/>
+  </GlobalPropsProvider>
+);
+
+```

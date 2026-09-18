@@ -1,0 +1,112 @@
+# 类: LynxEncodePlugin
+
+LynxEncodePlugin
+
+## 构造函数
+
+### 构造函数
+
+```ts
+new LynxEncodePlugin(options?: LynxEncodePluginOptions): LynxEncodePlugin;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `options?` | [`LynxEncodePluginOptions`](../interfaces/LynxEncodePluginOptions.mdx) |
+
+#### 返回
+
+`LynxEncodePlugin`
+
+## 属性
+
+### BEFORE\_EMIT\_STAGE
+
+```ts
+static BEFORE_EMIT_STAGE: number = 256;
+```
+
+beforeEmit hook 的 stage。
+
+***
+
+### BEFORE\_ENCODE\_STAGE
+
+```ts
+static BEFORE_ENCODE_STAGE: number = 256;
+```
+
+beforeEncode hook 的 stage。
+
+***
+
+### defaultOptions
+
+```ts
+static defaultOptions: Readonly<Required<LynxEncodePluginOptions>>;
+```
+
+`defaultOptions` 是 LynxEncodePlugin 使用的默认选项。
+
+#### 示例
+
+`defaultOptions` 可用于修改部分选项，同时保留其余选项为默认值。
+
+```js
+// webpack.config.js
+import { LynxEncodePlugin } from '@lynx-js/template-webpack-plugin'
+export default {
+  plugins: [
+    new LynxEncodePlugin({
+      ...LynxEncodePlugin.defaultOptions,
+      inlineScripts: false,
+    }),
+  ],
+}
+```
+
+***
+
+### ENCODE\_STAGE
+
+```ts
+static ENCODE_STAGE: number = 256;
+```
+
+encode hook 的 stage。
+
+***
+
+### encodePool
+
+```ts
+static encodePool: Tinypool;
+```
+
+共享的 TASM 编码 worker 池：同一进程中的多个入口（以及多个
+`LynxEncodePlugin` 实例）会共享其 worker
+槽位以并行编码；watch 模式下的重新构建会保持这些 worker
+处于热启动状态。`availableParallelism()` 会考虑 cgroup 的 CPU 限制（容器、
+CI runner 等），因此我们无需自行减去一个核心。
+
+## 方法
+
+### apply()
+
+```ts
+apply(compiler: Compiler): void;
+```
+
+webpack 插件的入口点。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `compiler` | `Compiler` | webpack 编译器 |
+
+#### 返回
+
+`void`

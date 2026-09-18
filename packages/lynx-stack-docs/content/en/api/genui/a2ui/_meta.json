@@ -1,0 +1,227 @@
+[
+  {
+    "type": "file",
+    "name": "classes/FunctionRegistry",
+    "label": "FunctionRegistry"
+  },
+  {
+    "type": "file",
+    "name": "classes/MessageProcessor",
+    "label": "MessageProcessor"
+  },
+  {
+    "type": "file",
+    "name": "functions/Button",
+    "label": "Button"
+  },
+  {
+    "type": "file",
+    "name": "functions/Card",
+    "label": "Card"
+  },
+  {
+    "type": "file",
+    "name": "functions/CheckBox",
+    "label": "CheckBox"
+  },
+  {
+    "type": "file",
+    "name": "functions/ChoicePicker",
+    "label": "ChoicePicker"
+  },
+  {
+    "type": "file",
+    "name": "functions/Column",
+    "label": "Column"
+  },
+  {
+    "type": "file",
+    "name": "functions/DateTimeInput",
+    "label": "DateTimeInput"
+  },
+  {
+    "type": "file",
+    "name": "functions/Divider",
+    "label": "Divider"
+  },
+  {
+    "type": "file",
+    "name": "functions/Icon",
+    "label": "Icon"
+  },
+  {
+    "type": "file",
+    "name": "functions/Image",
+    "label": "Image"
+  },
+  {
+    "type": "file",
+    "name": "functions/LazyComponent",
+    "label": "LazyComponent"
+  },
+  {
+    "type": "file",
+    "name": "functions/LineChart",
+    "label": "LineChart"
+  },
+  {
+    "type": "file",
+    "name": "functions/List",
+    "label": "List"
+  },
+  {
+    "type": "file",
+    "name": "functions/Loading",
+    "label": "Loading"
+  },
+  {
+    "type": "file",
+    "name": "functions/McpApp",
+    "label": "McpApp"
+  },
+  {
+    "type": "file",
+    "name": "functions/Modal",
+    "label": "Modal"
+  },
+  {
+    "type": "file",
+    "name": "functions/PieChart",
+    "label": "PieChart"
+  },
+  {
+    "type": "file",
+    "name": "functions/RadioGroup",
+    "label": "RadioGroup"
+  },
+  {
+    "type": "file",
+    "name": "functions/Row",
+    "label": "Row"
+  },
+  {
+    "type": "file",
+    "name": "functions/Slider",
+    "label": "Slider"
+  },
+  {
+    "type": "file",
+    "name": "functions/Tabs",
+    "label": "Tabs"
+  },
+  {
+    "type": "file",
+    "name": "functions/Text",
+    "label": "Text"
+  },
+  {
+    "type": "file",
+    "name": "functions/TextField",
+    "label": "TextField"
+  },
+  {
+    "type": "file",
+    "name": "functions/createFallbackMessagesFromPlainText",
+    "label": "createFallbackMessagesFromPlainText"
+  },
+  {
+    "type": "file",
+    "name": "functions/createMessageStore",
+    "label": "createMessageStore"
+  },
+  {
+    "type": "file",
+    "name": "functions/createTextCardMessages",
+    "label": "createTextCardMessages"
+  },
+  {
+    "type": "file",
+    "name": "functions/defineCatalog",
+    "label": "defineCatalog"
+  },
+  {
+    "type": "file",
+    "name": "functions/defineFunction",
+    "label": "defineFunction"
+  },
+  {
+    "type": "file",
+    "name": "functions/executeFunctionCall",
+    "label": "executeFunctionCall"
+  },
+  {
+    "type": "file",
+    "name": "functions/mergeCatalogs",
+    "label": "mergeCatalogs"
+  },
+  {
+    "type": "file",
+    "name": "functions/normalizePayloadToMessages",
+    "label": "normalizePayloadToMessages"
+  },
+  {
+    "type": "file",
+    "name": "functions/prepareMessagesForProcessing",
+    "label": "prepareMessagesForProcessing"
+  },
+  {
+    "type": "file",
+    "name": "functions/registerBasicFunctions",
+    "label": "registerBasicFunctions"
+  },
+  {
+    "type": "file",
+    "name": "functions/resolveCatalog",
+    "label": "resolveCatalog"
+  },
+  {
+    "type": "file",
+    "name": "functions/resolveDynamicValue",
+    "label": "resolveDynamicValue"
+  },
+  {
+    "type": "file",
+    "name": "functions/serializeCatalog",
+    "label": "serializeCatalog"
+  },
+  {
+    "type": "file",
+    "name": "functions/useAction",
+    "label": "useAction"
+  },
+  {
+    "type": "file",
+    "name": "functions/useChecks",
+    "label": "useChecks"
+  },
+  {
+    "type": "file",
+    "name": "functions/useDataBinding",
+    "label": "useDataBinding"
+  },
+  {
+    "type": "file",
+    "name": "functions/useResolvedProps",
+    "label": "useResolvedProps"
+  },
+  {
+    "type": "file",
+    "name": "variables/A2UI",
+    "label": "A2UI"
+  },
+  {
+    "type": "file",
+    "name": "variables/NodeRenderer",
+    "label": "NodeRenderer"
+  },
+  {
+    "type": "file",
+    "name": "variables/basicFunctions",
+    "label": "basicFunctions"
+  },
+  {
+    "type": "file",
+    "name": "variables/functionRegistry",
+    "label": "functionRegistry"
+  }
+]

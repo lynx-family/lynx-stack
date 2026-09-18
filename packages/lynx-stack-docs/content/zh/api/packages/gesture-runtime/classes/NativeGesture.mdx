@@ -1,0 +1,577 @@
+# 类: NativeGesture
+
+**`Experimental`**
+
+目前处于高度实验性阶段，未来可能会发生变化。
+NativeGesture 是一种代表 native 平台手势的手势。
+它可以用于与 native 手势处理机制集成。
+
+## 继承
+
+- [`ContinuousGesture`](ContinuousGesture.mdx)\<[`NativeGestureConfig`](../interfaces/NativeGestureConfig.mdx), [`NativeGestureChangeEvent`](../interfaces/NativeGestureChangeEvent.mdx)\>
+
+## 构造函数
+
+### 构造函数
+
+```ts
+new NativeGesture(gesture?: BaseGesture<NativeGestureConfig, NativeGestureChangeEvent>): NativeGesture;
+```
+
+**`Experimental`**
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `gesture?` | [`BaseGesture`](BaseGesture.mdx)\<[`NativeGestureConfig`](../interfaces/NativeGestureConfig.mdx), [`NativeGestureChangeEvent`](../interfaces/NativeGestureChangeEvent.mdx)\> |
+
+#### 返回
+
+`NativeGesture`
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`constructor`](ContinuousGesture.mdx#constructor)
+
+## 属性
+
+### \_\_isGesture
+
+```ts
+__isGesture: true = true;
+```
+
+**`Experimental`**
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`__isGesture`](ContinuousGesture.mdx#__isgesture)
+
+***
+
+### callbacks
+
+```ts
+callbacks: BaseGestureCallbacks<NativeGestureChangeEvent> & ContinuousGestureCallbacks<NativeGestureChangeEvent> = {};
+```
+
+**`Experimental`**
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`callbacks`](ContinuousGesture.mdx#callbacks)
+
+***
+
+### config
+
+```ts
+config: NativeGestureConfig;
+```
+
+**`Experimental`**
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`config`](ContinuousGesture.mdx#config)
+
+***
+
+### continueWith
+
+```ts
+continueWith: BaseGesture<BaseGestureConfig, GestureChangeEvent>[] = [];
+```
+
+**`Experimental`**
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`continueWith`](ContinuousGesture.mdx#continuewith)
+
+***
+
+### execId
+
+```ts
+execId: number;
+```
+
+**`Experimental`**
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`execId`](ContinuousGesture.mdx#execid)
+
+***
+
+### id
+
+```ts
+id: number;
+```
+
+**`Experimental`**
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`id`](ContinuousGesture.mdx#id)
+
+***
+
+### simultaneousWith
+
+```ts
+simultaneousWith: BaseGesture<BaseGestureConfig, GestureChangeEvent>[] = [];
+```
+
+**`Experimental`**
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`simultaneousWith`](ContinuousGesture.mdx#simultaneouswith)
+
+***
+
+### toJSON
+
+```ts
+toJSON: (this: BaseGesture) => Record<string, unknown>;
+```
+
+**`Experimental`**
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `this` | [`BaseGesture`](BaseGesture.mdx) |
+
+#### 返回
+
+`Record`\<`string`, `unknown`\>
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`toJSON`](ContinuousGesture.mdx#tojson)
+
+***
+
+### type
+
+```ts
+type: GestureTypeInner = GestureTypeInner.NATIVE;
+```
+
+**`Experimental`**
+
+#### 重写了
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`type`](ContinuousGesture.mdx#type)
+
+***
+
+### waitFor
+
+```ts
+waitFor: BaseGesture<BaseGestureConfig, GestureChangeEvent>[] = [];
+```
+
+**`Experimental`**
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`waitFor`](ContinuousGesture.mdx#waitfor)
+
+## 方法
+
+### clone()
+
+```ts
+clone(): this;
+```
+
+**`Experimental`**
+
+#### 返回
+
+`this`
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`clone`](ContinuousGesture.mdx#clone)
+
+***
+
+### enabled()
+
+```ts
+enabled(enabled: boolean): this;
+```
+
+**`Experimental`**
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `enabled` | `boolean` |
+
+#### 返回
+
+`this`
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`enabled`](ContinuousGesture.mdx#enabled)
+
+***
+
+### externalContinueWith()
+
+```ts
+externalContinueWith(gesture: GestureKind): this;
+```
+
+**`Experimental`**
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `gesture` | [`GestureKind`](../interfaces/GestureKind.mdx) |
+
+#### 返回
+
+`this`
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`externalContinueWith`](ContinuousGesture.mdx#externalcontinuewith)
+
+***
+
+### externalSimultaneous()
+
+```ts
+externalSimultaneous(gesture: GestureKind): this;
+```
+
+**`Experimental`**
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `gesture` | [`GestureKind`](../interfaces/GestureKind.mdx) |
+
+#### 返回
+
+`this`
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`externalSimultaneous`](ContinuousGesture.mdx#externalsimultaneous)
+
+***
+
+### externalWaitFor()
+
+```ts
+externalWaitFor(gesture: GestureKind): this;
+```
+
+**`Experimental`**
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `gesture` | [`GestureKind`](../interfaces/GestureKind.mdx) |
+
+#### 返回
+
+`this`
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`externalWaitFor`](ContinuousGesture.mdx#externalwaitfor)
+
+***
+
+### onBegin()
+
+```ts
+onBegin(cb: GestureCallback<NativeGestureChangeEvent>): this;
+```
+
+**`Experimental`**
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<[`NativeGestureChangeEvent`](../interfaces/NativeGestureChangeEvent.mdx)\> |
+
+#### 返回
+
+`this`
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`onBegin`](ContinuousGesture.mdx#onbegin)
+
+***
+
+### onEnd()
+
+```ts
+onEnd(cb: GestureCallback<NativeGestureChangeEvent>): this;
+```
+
+**`Experimental`**
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<[`NativeGestureChangeEvent`](../interfaces/NativeGestureChangeEvent.mdx)\> |
+
+#### 返回
+
+`this`
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`onEnd`](ContinuousGesture.mdx#onend)
+
+***
+
+### onStart()
+
+```ts
+onStart(cb: GestureCallback<NativeGestureChangeEvent>): this;
+```
+
+**`Experimental`**
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<[`NativeGestureChangeEvent`](../interfaces/NativeGestureChangeEvent.mdx)\> |
+
+#### 返回
+
+`this`
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`onStart`](ContinuousGesture.mdx#onstart)
+
+***
+
+### onTouchesCancel()
+
+```ts
+onTouchesCancel(cb: GestureCallback<NativeGestureChangeEvent>): this;
+```
+
+**`Experimental`**
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<[`NativeGestureChangeEvent`](../interfaces/NativeGestureChangeEvent.mdx)\> |
+
+#### 返回
+
+`this`
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`onTouchesCancel`](ContinuousGesture.mdx#ontouchescancel)
+
+***
+
+### onTouchesDown()
+
+```ts
+onTouchesDown(cb: GestureCallback<NativeGestureChangeEvent>): this;
+```
+
+**`Experimental`**
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<[`NativeGestureChangeEvent`](../interfaces/NativeGestureChangeEvent.mdx)\> |
+
+#### 返回
+
+`this`
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`onTouchesDown`](ContinuousGesture.mdx#ontouchesdown)
+
+***
+
+### onTouchesMove()
+
+```ts
+onTouchesMove(cb: GestureCallback<NativeGestureChangeEvent>): this;
+```
+
+**`Experimental`**
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<[`NativeGestureChangeEvent`](../interfaces/NativeGestureChangeEvent.mdx)\> |
+
+#### 返回
+
+`this`
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`onTouchesMove`](ContinuousGesture.mdx#ontouchesmove)
+
+***
+
+### onTouchesUp()
+
+```ts
+onTouchesUp(cb: GestureCallback<NativeGestureChangeEvent>): this;
+```
+
+**`Experimental`**
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<[`NativeGestureChangeEvent`](../interfaces/NativeGestureChangeEvent.mdx)\> |
+
+#### 返回
+
+`this`
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`onTouchesUp`](ContinuousGesture.mdx#ontouchesup)
+
+***
+
+### onUpdate()
+
+```ts
+onUpdate(cb: GestureCallback<NativeGestureChangeEvent>): this;
+```
+
+**`Experimental`**
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<[`NativeGestureChangeEvent`](../interfaces/NativeGestureChangeEvent.mdx)\> |
+
+#### 返回
+
+`this`
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`onUpdate`](ContinuousGesture.mdx#onupdate)
+
+***
+
+### serialize()
+
+```ts
+serialize(): Record<string, unknown>;
+```
+
+**`Experimental`**
+
+#### 返回
+
+`Record`\<`string`, `unknown`\>
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`serialize`](ContinuousGesture.mdx#serialize)
+
+***
+
+### toGestureArray()
+
+```ts
+toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[];
+```
+
+**`Experimental`**
+
+#### 返回
+
+[`BaseGesture`](BaseGesture.mdx)\<[`BaseGestureConfig`](../interfaces/BaseGestureConfig.mdx), [`GestureChangeEvent`](../interfaces/GestureChangeEvent.mdx)\>[]
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`toGestureArray`](ContinuousGesture.mdx#togesturearray)
+
+***
+
+### updateCallback()
+
+```ts
+updateCallback(k: keyof BaseGestureCallbacks<TEvent> | "onUpdate", cb: GestureCallback<NativeGestureChangeEvent>): this;
+```
+
+**`Experimental`**
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `k` | keyof BaseGestureCallbacks\<TEvent\> \| `"onUpdate"` |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<[`NativeGestureChangeEvent`](../interfaces/NativeGestureChangeEvent.mdx)\> |
+
+#### 返回
+
+`this`
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`updateCallback`](ContinuousGesture.mdx#updatecallback)
+
+***
+
+### updateConfig()
+
+```ts
+updateConfig(k: string, v: unknown): this;
+```
+
+**`Experimental`**
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `k` | `string` |
+| `v` | `unknown` |
+
+#### 返回
+
+`this`
+
+#### 继承自
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`updateConfig`](ContinuousGesture.mdx#updateconfig)

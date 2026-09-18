@@ -1,0 +1,153 @@
+# Interface: CssExtractRspackPluginOptions
+
+The options for [@lynx-js/css-extract-webpack-plugin!CssExtractRspackPlugin](../classes/CssExtractRspackPlugin.mdx)
+
+## Extends
+
+- `CssExtractRspackPluginOptions`
+
+## Properties
+
+### attributes?
+
+```ts
+optional attributes?: Record<string, string>;
+```
+
+#### Inherited from
+
+```ts
+ExternalCssExtractRspackPluginOptions.attributes
+```
+
+***
+
+### chunkFilename?
+
+```ts
+optional chunkFilename?: string;
+```
+
+The name of non-initial CSS chunk files
+
+#### Remarks
+
+When set, CSS chunks of lazy bundles still go to
+`.lynx/lazy-bundle/<name>/<layer>.css` (or `.lynx/lazy-bundle/<name>.css`
+when the chunk has no layer); this template applies to the other chunks.
+
+#### Overrides
+
+```ts
+ExternalCssExtractRspackPluginOptions.chunkFilename
+```
+
+***
+
+### cssPlugins?
+
+```ts
+optional cssPlugins?: Plugin[];
+```
+
+plugins passed to parser
+
+***
+
+### enforceRelative?
+
+```ts
+optional enforceRelative?: boolean;
+```
+
+#### Inherited from
+
+```ts
+ExternalCssExtractRspackPluginOptions.enforceRelative
+```
+
+***
+
+### filename?
+
+```ts
+optional filename?: string;
+```
+
+The name of each output bundle.
+
+#### Overrides
+
+```ts
+ExternalCssExtractRspackPluginOptions.filename
+```
+
+***
+
+### ignoreOrder?
+
+```ts
+optional ignoreOrder?: boolean;
+```
+
+#### Inherited from
+
+```ts
+ExternalCssExtractRspackPluginOptions.ignoreOrder
+```
+
+***
+
+### insert?
+
+```ts
+optional insert?: string | ((linkTag: HTMLLinkElement) => void);
+```
+
+#### Inherited from
+
+```ts
+ExternalCssExtractRspackPluginOptions.insert
+```
+
+***
+
+### linkType?
+
+```ts
+optional linkType?: false | LiteralUnion<"text/css", string>;
+```
+
+#### Inherited from
+
+```ts
+ExternalCssExtractRspackPluginOptions.linkType
+```
+
+***
+
+### pathinfo?
+
+```ts
+optional pathinfo?: boolean;
+```
+
+#### Inherited from
+
+```ts
+ExternalCssExtractRspackPluginOptions.pathinfo
+```
+
+***
+
+### runtime?
+
+```ts
+optional runtime?: boolean;
+```
+
+#### Inherited from
+
+```ts
+ExternalCssExtractRspackPluginOptions.runtime
+```

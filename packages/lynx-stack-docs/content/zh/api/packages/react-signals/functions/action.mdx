@@ -1,0 +1,22 @@
+# 函数: action()
+
+```ts
+function action<TArgs extends unknown[], TReturn>(fn: (...args: TArgs) => TReturn): (...args: TArgs) => TReturn;
+```
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `TArgs` *extends* `unknown`[] |
+| `TReturn` |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `fn` | (...`args`: `TArgs`) => `TReturn` |
+
+## 返回
+
+(...`args`: `TArgs`) => `TReturn`

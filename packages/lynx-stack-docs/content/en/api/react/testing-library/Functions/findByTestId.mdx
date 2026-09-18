@@ -1,0 +1,21 @@
+# Function: findByTestId()
+
+```ts
+function findByTestId<T extends HTMLElement = HTMLElement>(...args: [HTMLElement, Matcher, MatcherOptions, waitForOptions]): Promise<T>;
+```
+
+## Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `T` *extends* `HTMLElement` | `HTMLElement` |
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| ...`args` | \[`HTMLElement`, [`Matcher`](../Type_Aliases/Matcher.mdx), [`MatcherOptions`](../Interfaces/MatcherOptions.mdx), [`waitForOptions`](../Interfaces/waitForOptions.mdx)\] |
+
+## Returns
+
+`Promise`\<`T`\>

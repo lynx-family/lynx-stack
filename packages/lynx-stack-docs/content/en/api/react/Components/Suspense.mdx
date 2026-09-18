@@ -1,0 +1,33 @@
+# Function: Suspense()
+
+```ts
+function Suspense(props: SuspenseProps): ReactNode;
+```
+
+Lets you display a fallback until its children have finished loading.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `props` | `SuspenseProps` |
+
+## Returns
+
+`ReactNode`
+
+## See
+
+[React Docs](https://react.dev/reference/react/Suspense)
+
+## Example
+
+```tsx
+import { Suspense, lazy } from '@lynx-js/react';
+
+const ProfileDetails = lazy(() => import('./ProfileDetails.jsx'));
+
+<Suspense fallback={<Loading />}>
+  <ProfileDetails />
+</Suspense>
+```

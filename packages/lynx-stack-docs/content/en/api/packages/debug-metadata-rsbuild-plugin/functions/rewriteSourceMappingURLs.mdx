@@ -1,0 +1,30 @@
+# Function: rewriteSourceMappingURLs()
+
+```ts
+function rewriteSourceMappingURLs(
+   compilation: Compilation, 
+   args: object, 
+   options?: RewriteSourceMappingURLsOptions
+): void;
+```
+
+Rewrite the `//# sourceMappingURL=...` directive of every JS asset in the
+current template to an absolute URL. No-op when `debugMetadataUrl`
+(`args.encodeData.sourceContent.config['debugMetadataUrl']`) is unset.
+
+## Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `compilation` | `Compilation` | - |
+| `args` | \{ `chunkGroups`: `ChunkGroup`[]; `encodeData`: `EncodeRawData`; `filenameTemplate`: `string`; `intermediate`: `string`; `intermediateAssets`: `string`[]; \} | - |
+| `args.chunkGroups` | `ChunkGroup`[] | The chunk groups covered by this template. |
+| `args.encodeData?` | `EncodeRawData` | - |
+| `args.filenameTemplate?` | `string` | - |
+| `args.intermediate?` | `string` | - |
+| `args.intermediateAssets?` | `string`[] | - |
+| `options?` | [`RewriteSourceMappingURLsOptions`](../interfaces/RewriteSourceMappingURLsOptions.mdx) | - |
+
+## Returns
+
+`void`

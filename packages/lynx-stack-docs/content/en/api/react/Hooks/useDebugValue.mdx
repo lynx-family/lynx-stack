@@ -1,0 +1,35 @@
+# Function: useDebugValue()
+
+```ts
+function useDebugValue<T>(value: T, format?: (value: T) => any): void;
+```
+
+`useDebugValue` can be used to display a label for custom hooks in React DevTools.
+
+NOTE: We don’t recommend adding debug values to every custom hook.
+It’s most valuable for custom hooks that are part of shared libraries.
+
+## Type Parameters
+
+| Type Parameter |
+| ------ |
+| `T` |
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `value` | `T` |
+| `format?` | (`value`: `T`) => `any` |
+
+## Returns
+
+`void`
+
+## Version
+
+16.8.0
+
+## See
+
+[https://react.dev/reference/react/useDebugValue](https://react.dev/reference/react/useDebugValue)

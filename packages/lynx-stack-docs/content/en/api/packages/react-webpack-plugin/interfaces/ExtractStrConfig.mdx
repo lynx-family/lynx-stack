@@ -1,0 +1,35 @@
+# Interface: ExtractStrConfig
+
+Merge same string literals in JS and Lepus to reduce output bundle size.
+Set to `false` to disable.
+
+## Properties
+
+### strLength
+
+```ts
+strLength: number;
+```
+
+The minimum length of string literals to be extracted.
+
+#### Default Value
+
+`20`
+
+#### Example
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      extractStr: {
+        strLength: 10,
+      },
+    })
+  ],
+})
+```

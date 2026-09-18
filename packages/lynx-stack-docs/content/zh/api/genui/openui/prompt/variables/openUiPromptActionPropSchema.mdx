@@ -1,0 +1,16 @@
+# 变量: openUiPromptActionPropSchema
+
+```ts
+const openUiPromptActionPropSchema: ZodUnion<readonly [ZodObject<{
+  steps: ZodArray<ZodObject<{
+     type: ZodString;
+  }, $loose>>;
+}, $strip>, ZodObject<{
+  context: ZodOptional<ZodString>;
+  params: ZodOptional<ZodRecord<ZodString, ZodAny>>;
+  type: ZodOptional<ZodString>;
+  url: ZodOptional<ZodString>;
+}, $strip>]>;
+```
+
+共享的 action prop schema，在 prompt 签名中以 `ActionExpression` 的形式暴露。

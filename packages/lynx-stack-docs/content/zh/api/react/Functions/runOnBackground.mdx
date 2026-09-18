@@ -1,0 +1,40 @@
+# 函数: runOnBackground()
+
+```ts
+function runOnBackground<R, Fn extends (...args: any[]) => R>(f: Fn): (...args: Parameters<Fn>) => Promise<R>;
+```
+
+`runOnBackground` 用于在后台线程上异步触发 JS 函数。
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `R` |
+| `Fn` *extends* (...`args`: `any`[]) => `R` |
+
+## 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `f` | `Fn` | 要调用的 JS 函数。 |
+
+## 返回
+
+一个函数。以要传给该 JS 函数的参数调用它，即可在后台线程上触发该 JS 函数。该函数返回一个 Promise，其 resolve 值为该 JS 函数的返回值。
+
+(...`args`: `Parameters`\<`Fn`\>) => `Promise`\<`R`\>
+
+## 示例
+
+```ts
+import { runOnBackground } from '@lynx-js/react';
+
+async function someMainthreadFunction() {
+  'main thread';
+  const fn = runOnBackground(() => {
+    return 'hello';
+  });
+  const result = await fn();
+}
+```

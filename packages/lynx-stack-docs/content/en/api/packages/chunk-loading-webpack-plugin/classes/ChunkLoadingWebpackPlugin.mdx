@@ -1,0 +1,66 @@
+# Class: ChunkLoadingWebpackPlugin
+
+The ChunkLoadingWebpackPlugin enables chunk loading for Rspack in Lynx.
+It only takes effect when `output.chunkLoading` is `'lynx'`.
+
+## Example
+
+```js
+// rspack.config.js
+import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'
+export default {
+  output: {
+    chunkLoading: 'lynx',
+    chunkFormat: 'commonjs',
+  },
+  plugins: [new ChunkLoadingWebpackPlugin()],
+}
+```
+
+## Constructors
+
+### Constructor
+
+```ts
+new ChunkLoadingWebpackPlugin(options?: Partial<ChunkLoadingWebpackPluginOptions>): ChunkLoadingWebpackPlugin;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `options` | `Partial`\<[`ChunkLoadingWebpackPluginOptions`](../interfaces/ChunkLoadingWebpackPluginOptions.mdx)\> |
+
+#### Returns
+
+`ChunkLoadingWebpackPlugin`
+
+## Properties
+
+### defaultOptions
+
+```ts
+static defaultOptions: Readonly<Required<ChunkLoadingWebpackPluginOptions>>;
+```
+
+`defaultOptions` is the default options that the ChunkLoadingWebpackPlugin uses.
+
+## Methods
+
+### apply()
+
+```ts
+apply(compiler: Compiler): void;
+```
+
+The entry point of a webpack plugin.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `compiler` | `Compiler` | the webpack compiler |
+
+#### Returns
+
+`void`

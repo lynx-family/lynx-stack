@@ -1,0 +1,26 @@
+# 函数: assertUiNode()
+
+```ts
+function assertUiNode(value: unknown, path?: string): asserts value is UiNode;
+```
+
+断言解析后的值是一个 [UiNode](../interfaces/UiNode.mdx) 树。在信任
+边界处使用它——例如在对 engine dump 执行 `JSON.parse` 之后——这样
+格式错误的输入会以带定位信息的 error（形如 `$.children[1]` 的
+路径）快速失败，而不是在解析深处才崩溃。
+
+`nodeIndex`、`debugMetadataUrl` 和 `children` 都是可选的（
+引擎会生成没有源码映射的节点，例如纯文本节点）；只有当这些字段
+存在但类型错误时才会被拒绝。非对象，或者
+`children` 不是数组时，则始终会被拒绝。
+
+## 参数
+
+| 参数 | 类型 | 默认值 |
+| ------ | ------ | ------ |
+| `value` | `unknown` | `undefined` |
+| `path` | `string` | `'$'` |
+
+## 返回
+
+`asserts value is UiNode`

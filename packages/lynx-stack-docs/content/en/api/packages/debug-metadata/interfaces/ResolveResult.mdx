@@ -1,0 +1,25 @@
+# Interface: ResolveResult
+
+Result of [resolveField](../functions/resolveField.mdx).
+
+## Properties
+
+### found
+
+```ts
+found: boolean;
+```
+
+`true` when the resolver matched; `false` when the field is known
+but no value matched (HTTP layer → 404).
+
+***
+
+### payload?
+
+```ts
+optional payload?: unknown;
+```
+
+Present only when `found`. The value to JSON-serialize back to the
+client (already unwrapped via `FieldResolver.payload`).

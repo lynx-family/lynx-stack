@@ -1,0 +1,26 @@
+# Function: assertUiNode()
+
+```ts
+function assertUiNode(value: unknown, path?: string): asserts value is UiNode;
+```
+
+Assert that a parsed value is a [UiNode](../interfaces/UiNode.mdx) tree. Use it at trust
+boundaries — e.g. right after `JSON.parse`-ing an engine dump — so
+malformed input fails fast with a located error (`$.children[1]`-style
+path) instead of crashing deep inside resolution.
+
+`nodeIndex`, `debugMetadataUrl` and `children` are all optional (the
+engine emits nodes with no source mapping, such as raw text); they are
+only rejected when present with the wrong type. A non-object, or a
+`children` that is not an array, is always rejected.
+
+## Parameters
+
+| Parameter | Type | Default value |
+| ------ | ------ | ------ |
+| `value` | `unknown` | `undefined` |
+| `path` | `string` | `'$'` |
+
+## Returns
+
+`asserts value is UiNode`

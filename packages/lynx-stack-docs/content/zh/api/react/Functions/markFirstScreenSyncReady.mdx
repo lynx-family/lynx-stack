@@ -1,0 +1,21 @@
+# 函数: markFirstScreenSyncReady()
+
+```ts
+function markFirstScreenSyncReady(): void;
+```
+
+当 `firstScreenSyncTiming` 为 `'manual'` 时，将首屏标记为可同步。
+
+在调用此方法之前，主线程会一直持有 UI 控制权，因此向后台线程移交（用于 hydration）的时机完全由用户控制。它可以在两个线程中调用（后台线程的调用会被转发到主线程），仅在 `firstScreenSyncTiming` 为 `'manual'` 时生效，且首次调用之后再次调用不会产生任何效果。
+
+## 返回
+
+`void`
+
+## 示例
+
+```ts
+import { markFirstScreenSyncReady } from "@lynx-js/react"
+
+markFirstScreenSyncReady();
+```

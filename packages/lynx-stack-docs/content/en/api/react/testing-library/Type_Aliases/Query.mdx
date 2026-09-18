@@ -1,0 +1,27 @@
+# Type Alias: Query
+
+```ts
+type Query = (container: HTMLElement, ...args: any[]) => 
+  | Error
+  | HTMLElement
+  | HTMLElement[]
+  | Promise<HTMLElement[]>
+  | Promise<HTMLElement>
+  | null;
+```
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `container` | `HTMLElement` |
+| ...`args` | `any`[] |
+
+## Returns
+
+  \| `Error`
+  \| `HTMLElement`
+  \| `HTMLElement`[]
+  \| `Promise`\<`HTMLElement`[]\>
+  \| `Promise`\<`HTMLElement`\>
+  \| `null`

@@ -1,0 +1,102 @@
+# Interface: SourceMap
+
+The SourceMap configures whether and how to generate source-map for outputs.
+
+## Properties
+
+### css?
+
+```ts
+optional css?: boolean;
+```
+
+Whether to generate CSS source maps.
+
+#### Default Value
+
+`true` in Lynx environments, `false` otherwise.
+
+#### Remarks
+
+Lynx environments enable CSS source maps so that CSS diagnostics can be
+mapped back to the source; all `.map` assets are removed before emit.
+
+#### Example
+
+Disable CSS sourcemap.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    sourceMap: {
+      css: false,
+    },
+  },
+})
+```
+
+***
+
+### js?
+
+```ts
+optional js?: DevTool;
+```
+
+How the source map should be generated. Setting it to `false` will disable the source map.
+
+#### Default Value
+
+When `output.sourceMap` is an object and `js` is unset, it defaults to `'cheap-module-source-map'` in development. In production, it defaults to `'source-map'` for Lynx environments and `false` otherwise.
+
+#### Remarks
+
+See [Rspack - Devtool](https://rspack.rs/config/devtool) for details.
+
+#### Examples
+
+- Enable high-quality source-maps for production:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    sourceMap: {
+      js: process.env['NODE_ENV'] === 'production'
+        ? 'source-map'
+        : 'cheap-module-source-map',
+    },
+  },
+})
+```
+
+- Disable source-map generation:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    sourceMap: {
+      js: false,
+    },
+  },
+})
+```
+
+- Use high-quality source-maps for all environments:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    sourceMap: {
+      js: 'source-map',
+    },
+  },
+})
+```

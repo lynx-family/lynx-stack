@@ -1,0 +1,61 @@
+# Interface: ConfigParams
+
+Parameters for the function exported from `lynx.config.js`.
+
+## Properties
+
+### command
+
+```ts
+command: 
+  | string & Record<never, never>
+  | "build"
+  | "dev"
+  | "inspect"
+  | "preview";
+```
+
+The CLI command of Rspeedy.
+
+#### Default Value
+
+When `loadConfig` evaluates a config function, this value is `process.argv[2] ?? 'build'`
+
+#### Remarks
+
+Possible values:
+
+- `'build'`
+
+- `'dev'`
+
+- `'inspect'`
+
+- `'preview'`
+
+***
+
+### env
+
+```ts
+env: 
+  | "production"
+  | "development"
+  | "test"
+| string & Record<never, never>;
+```
+
+The value of `process.env['NODE_ENV']`
+
+#### Default Value
+
+When `loadConfig` evaluates a config function, this value is `process.env.NODE_ENV ?? 'production'`
+
+#### Remarks
+
+Common values include (non-exhaustive):
+- `'production'`
+
+- `'development'`
+
+- `'test'`

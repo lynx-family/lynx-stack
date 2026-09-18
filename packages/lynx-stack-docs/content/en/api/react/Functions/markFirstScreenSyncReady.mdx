@@ -1,0 +1,24 @@
+# Function: markFirstScreenSyncReady()
+
+```ts
+function markFirstScreenSyncReady(): void;
+```
+
+Mark the first screen as ready to sync when `firstScreenSyncTiming` is `'manual'`.
+
+The main thread holds the UI control until this is called, so the handover timing to
+the background thread (for hydration) is fully controlled by the user. It can be called
+from both threads (a background-thread call is forwarded to the main thread), is a no-op
+unless `firstScreenSyncTiming` is `'manual'`, and has no further effect once called.
+
+## Returns
+
+`void`
+
+## Example
+
+```ts
+import { markFirstScreenSyncReady } from "@lynx-js/react"
+
+markFirstScreenSyncReady();
+```

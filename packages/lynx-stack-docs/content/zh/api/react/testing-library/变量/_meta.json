@@ -1,0 +1,10 @@
+[
+  "createEvent",
+  "fireEvent",
+  "prettyFormat.DEFAULT_OPTIONS",
+  "prettyFormat.plugins",
+  "queryAllByAttribute",
+  "queryByAttribute",
+  "screen",
+  "within"
+]

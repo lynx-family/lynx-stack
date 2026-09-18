@@ -1,0 +1,42 @@
+# Variable: walk
+
+```ts
+const walk: {
+(ast: CssNode, options: 
+  | EnterOrLeaveFn<CssNode>
+  | WalkOptions): void;
+  break: symbol;
+  skip: symbol;
+};
+```
+
+## Type Declaration
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `ast` | [`CssNode`](../type-aliases/CssNode.mdx) |
+| `options` | \| [`EnterOrLeaveFn`](../type-aliases/EnterOrLeaveFn.mdx)\<[`CssNode`](../type-aliases/CssNode.mdx)\> \| [`WalkOptions`](../type-aliases/WalkOptions.mdx) |
+
+## Returns
+
+`void`
+
+### break
+
+```ts
+readonly break: symbol;
+```
+
+Stops traversal. No visitor function will be invoked once this value is returned by a visitor.
+
+### skip
+
+```ts
+readonly skip: symbol;
+```
+
+Prevent the current node from being iterated. No visitor function will be invoked for its properties or children
+nodes; note that this value only has an effect for enter visitor as leave visitor invokes after iterating over
+all node's properties and children.

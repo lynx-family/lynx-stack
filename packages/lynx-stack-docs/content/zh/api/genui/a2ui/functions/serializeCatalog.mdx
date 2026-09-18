@@ -1,0 +1,17 @@
+# 函数: serializeCatalog()
+
+```ts
+function serializeCatalog(catalog: Catalog): SerializedCatalog;
+```
+
+生成客户端在通道握手时向 agent 声明的 JSON manifest。没有附带 schema 的组件条目只序列化为 `{ name }`，这样至少能让 agent 知道哪些组件可以渲染。函数条目在有参数 schema 时会一并序列化。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `catalog` | [`Catalog`](../interfaces/Catalog.mdx) |
+
+## 返回
+
+[`SerializedCatalog`](../interfaces/SerializedCatalog.mdx)

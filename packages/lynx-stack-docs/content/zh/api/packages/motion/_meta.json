@@ -1,0 +1,67 @@
+[
+  {
+    "type": "file",
+    "name": "functions/animate",
+    "label": "animate"
+  },
+  {
+    "type": "file",
+    "name": "functions/clamp",
+    "label": "clamp"
+  },
+  {
+    "type": "file",
+    "name": "functions/mapValue",
+    "label": "mapValue"
+  },
+  {
+    "type": "file",
+    "name": "functions/mix",
+    "label": "mix"
+  },
+  {
+    "type": "file",
+    "name": "functions/motionValue",
+    "label": "motionValue"
+  },
+  {
+    "type": "file",
+    "name": "functions/progress",
+    "label": "progress"
+  },
+  {
+    "type": "file",
+    "name": "functions/spring",
+    "label": "spring"
+  },
+  {
+    "type": "file",
+    "name": "functions/springValue",
+    "label": "springValue"
+  },
+  {
+    "type": "file",
+    "name": "functions/stagger",
+    "label": "stagger"
+  },
+  {
+    "type": "file",
+    "name": "functions/styleEffect",
+    "label": "styleEffect"
+  },
+  {
+    "type": "file",
+    "name": "functions/transformValue",
+    "label": "transformValue"
+  },
+  {
+    "type": "file",
+    "name": "functions/useMotionValueRef",
+    "label": "useMotionValueRef"
+  },
+  {
+    "type": "file",
+    "name": "functions/useMotionValueRefEvent",
+    "label": "useMotionValueRefEvent"
+  }
+]

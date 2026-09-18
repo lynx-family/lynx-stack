@@ -1,0 +1,17 @@
+# Type Alias: RpcEndpoint\<Parameters *extends* `any`[], Return\>
+
+```ts
+type RpcEndpoint<Parameters extends any[], Return> = 
+  | RpcEndpointSyncVoid<Parameters>
+  | RpcEndpointSync<Parameters, Return>
+  | RpcEndpointAsync<Parameters, Return>
+  | RpcEndpointAsyncVoid<Parameters>
+| RpcEndpointAsyncWithTransfer<Parameters, Return>;
+```
+
+## Type Parameters
+
+| Type Parameter |
+| ------ |
+| `Parameters` *extends* `any`[] |
+| `Return` |

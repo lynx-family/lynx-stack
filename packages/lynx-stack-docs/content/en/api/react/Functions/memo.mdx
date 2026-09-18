@@ -1,0 +1,79 @@
+# Function: memo()
+
+## Call Signature
+
+```ts
+function memo<P extends object>(Component: FunctionComponent<P>, propsAreEqual?: (prevProps: Readonly<P>, nextProps: Readonly<P>) => boolean): NamedExoticComponent<P>;
+```
+
+Lets you skip re-rendering a component when its props are unchanged.
+
+### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `P` *extends* `object` |
+
+### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `Component` | `FunctionComponent`\<`P`\> | The component to memoize. |
+| `propsAreEqual?` | (`prevProps`: `Readonly`\<`P`\>, `nextProps`: `Readonly`\<`P`\>) => `boolean` | A function that will be used to determine if the props have changed. |
+
+### Returns
+
+`NamedExoticComponent`\<`P`\>
+
+### See
+
+[React Docs](https://react.dev/reference/react/memo)
+
+### Example
+
+```tsx
+import { memo } from 'react';
+
+const SomeComponent = memo(function SomeComponent(props: { foo: string }) {
+  // ...
+});
+```
+
+## Call Signature
+
+```ts
+function memo<T extends ComponentType<any>>(Component: T, propsAreEqual?: (prevProps: Readonly<ComponentProps<T>>, nextProps: Readonly<ComponentProps<T>>) => boolean): MemoExoticComponent<T>;
+```
+
+Lets you skip re-rendering a component when its props are unchanged.
+
+### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `T` *extends* `ComponentType`\<`any`\> |
+
+### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `Component` | `T` | The component to memoize. |
+| `propsAreEqual?` | (`prevProps`: `Readonly`\<`ComponentProps`\<`T`\>\>, `nextProps`: `Readonly`\<`ComponentProps`\<`T`\>\>) => `boolean` | A function that will be used to determine if the props have changed. |
+
+### Returns
+
+`MemoExoticComponent`\<`T`\>
+
+### See
+
+[React Docs](https://react.dev/reference/react/memo)
+
+### Example
+
+```tsx
+import { memo } from 'react';
+
+const SomeComponent = memo(function SomeComponent(props: { foo: string }) {
+  // ...
+});
+```

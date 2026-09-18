@@ -1,0 +1,935 @@
+# 类: List\<TData\>
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `TData` |
+
+## 构造函数
+
+### 构造函数
+
+```ts
+new List<TData>(): List<TData>;
+```
+
+#### 返回
+
+`List`\<`TData`\>
+
+## 访问器
+
+### first
+
+#### Getter 签名
+
+```ts
+get first(): TData | null;
+```
+
+##### 返回
+
+`TData` \| `null`
+
+***
+
+### isEmpty
+
+#### Getter 签名
+
+```ts
+get isEmpty(): boolean;
+```
+
+##### 返回
+
+`boolean`
+
+***
+
+### last
+
+#### Getter 签名
+
+```ts
+get last(): TData | null;
+```
+
+##### 返回
+
+`TData` \| `null`
+
+***
+
+### size
+
+#### Getter 签名
+
+```ts
+get size(): number;
+```
+
+##### 返回
+
+`number`
+
+## 方法
+
+### \[iterator\]()
+
+```ts
+iterator: IterableIterator<TData>;
+```
+
+#### 返回
+
+`IterableIterator`\<`TData`\>
+
+***
+
+### append()
+
+```ts
+append(item: ListItem<TData>): List<TData>;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `item` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+
+#### 返回
+
+`List`\<`TData`\>
+
+***
+
+### appendData()
+
+```ts
+appendData(data: TData): List<TData>;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `data` | `TData` |
+
+#### 返回
+
+`List`\<`TData`\>
+
+***
+
+### appendList()
+
+```ts
+appendList(list: List<TData>): List<TData>;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `list` | `List`\<`TData`\> |
+
+#### 返回
+
+`List`\<`TData`\>
+
+***
+
+### clear()
+
+```ts
+clear(): void;
+```
+
+#### 返回
+
+`void`
+
+***
+
+### copy()
+
+```ts
+copy(): List<TData>;
+```
+
+#### 返回
+
+`List`\<`TData`\>
+
+***
+
+### createItem()
+
+```ts
+createItem(data: TData): ListItem<TData>;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `data` | `TData` |
+
+#### 返回
+
+[`ListItem`](../interfaces/ListItem.mdx)\<`TData`\>
+
+***
+
+### filter()
+
+#### 调用签名
+
+```ts
+filter<TContext, TResult>(fn: FilterFn<TData, TResult, TContext>, context: TContext): List<TResult>;
+```
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `TContext` |
+| `TResult` |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `fn` | [`FilterFn`](../type-aliases/FilterFn.mdx)\<`TData`, `TResult`, `TContext`\> |
+| `context` | `TContext` |
+
+##### 返回
+
+`List`\<`TResult`\>
+
+#### 调用签名
+
+```ts
+filter<TResult>(fn: FilterFn<TData, TResult>): List<TResult>;
+```
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `TResult` |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `fn` | [`FilterFn`](../type-aliases/FilterFn.mdx)\<`TData`, `TResult`\> |
+
+##### 返回
+
+`List`\<`TResult`\>
+
+#### 调用签名
+
+```ts
+filter<TContext>(fn: IteratorFn<TData, boolean, TContext>, context: TContext): List<TData>;
+```
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `TContext` |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `boolean`, `TContext`\> |
+| `context` | `TContext` |
+
+##### 返回
+
+`List`\<`TData`\>
+
+#### 调用签名
+
+```ts
+filter(fn: IteratorFn<TData, boolean>): List<TData>;
+```
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `boolean`\> |
+
+##### 返回
+
+`List`\<`TData`\>
+
+***
+
+### forEach()
+
+#### 调用签名
+
+```ts
+forEach<TContext>(fn: IteratorFn<TData, void, TContext>, context: TContext): void;
+```
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `TContext` |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `void`, `TContext`\> |
+| `context` | `TContext` |
+
+##### 返回
+
+`void`
+
+#### 调用签名
+
+```ts
+forEach(fn: IteratorFn<TData, void>): void;
+```
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `void`\> |
+
+##### 返回
+
+`void`
+
+***
+
+### forEachRight()
+
+#### 调用签名
+
+```ts
+forEachRight<TContext>(fn: IteratorFn<TData, void, TContext>, context: TContext): void;
+```
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `TContext` |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `void`, `TContext`\> |
+| `context` | `TContext` |
+
+##### 返回
+
+`void`
+
+#### 调用签名
+
+```ts
+forEachRight(fn: IteratorFn<TData, void>): void;
+```
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `void`\> |
+
+##### 返回
+
+`void`
+
+***
+
+### fromArray()
+
+```ts
+fromArray(array: TData[]): List<TData>;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `array` | `TData`[] |
+
+#### 返回
+
+`List`\<`TData`\>
+
+***
+
+### insert()
+
+```ts
+insert(item: ListItem<TData>, before?: ListItem<TData> | null): List<TData>;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `item` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+| `before?` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> \| `null` |
+
+#### 返回
+
+`List`\<`TData`\>
+
+***
+
+### insertData()
+
+```ts
+insertData(data: TData, before: ListItem<TData>): List<TData>;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `data` | `TData` |
+| `before` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+
+#### 返回
+
+`List`\<`TData`\>
+
+***
+
+### insertList()
+
+```ts
+insertList(list: List<TData>, before: ListItem<TData>): List<TData>;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `list` | `List`\<`TData`\> |
+| `before` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+
+#### 返回
+
+`List`\<`TData`\>
+
+***
+
+### map()
+
+#### 调用签名
+
+```ts
+map<TContext, TResult>(fn: IteratorFn<TData, TResult, TContext>, context: TContext): List<TResult>;
+```
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `TContext` |
+| `TResult` |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `TResult`, `TContext`\> |
+| `context` | `TContext` |
+
+##### 返回
+
+`List`\<`TResult`\>
+
+#### 调用签名
+
+```ts
+map<TResult>(fn: IteratorFn<TData, TResult>): List<TResult>;
+```
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `TResult` |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `TResult`\> |
+
+##### 返回
+
+`List`\<`TResult`\>
+
+***
+
+### nextUntil()
+
+#### 调用签名
+
+```ts
+nextUntil<TContext>(
+   start: ListItem<TData>, 
+   fn: IteratorFn<TData, boolean, TContext>, 
+   context: TContext
+): void;
+```
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `TContext` |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `start` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `boolean`, `TContext`\> |
+| `context` | `TContext` |
+
+##### 返回
+
+`void`
+
+#### 调用签名
+
+```ts
+nextUntil(start: ListItem<TData>, fn: IteratorFn<TData, boolean>): void;
+```
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `start` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `boolean`\> |
+
+##### 返回
+
+`void`
+
+***
+
+### pop()
+
+```ts
+pop(): ListItem<TData> | null;
+```
+
+#### 返回
+
+[`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> \| `null`
+
+***
+
+### prepend()
+
+```ts
+prepend(item: ListItem<TData>): List<TData>;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `item` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+
+#### 返回
+
+`List`\<`TData`\>
+
+***
+
+### prependData()
+
+```ts
+prependData(data: TData): List<TData>;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `data` | `TData` |
+
+#### 返回
+
+`List`\<`TData`\>
+
+***
+
+### prependList()
+
+```ts
+prependList(list: List<TData>): List<TData>;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `list` | `List`\<`TData`\> |
+
+#### 返回
+
+`List`\<`TData`\>
+
+***
+
+### prevUntil()
+
+#### 调用签名
+
+```ts
+prevUntil<TContext>(
+   start: ListItem<TData>, 
+   fn: IteratorFn<TData, boolean, TContext>, 
+   context: TContext
+): void;
+```
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `TContext` |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `start` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `boolean`, `TContext`\> |
+| `context` | `TContext` |
+
+##### 返回
+
+`void`
+
+#### 调用签名
+
+```ts
+prevUntil(start: ListItem<TData>, fn: IteratorFn<TData, boolean>): void;
+```
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `start` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `boolean`\> |
+
+##### 返回
+
+`void`
+
+***
+
+### push()
+
+```ts
+push(item: TData): void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `item` | `TData` |
+
+#### 返回
+
+`void`
+
+***
+
+### reduce()
+
+#### 调用签名
+
+```ts
+reduce<TValue, TContext>(
+   fn: ReduceFn<TData, TValue, TContext>, 
+   initialValue: TValue, 
+   context: TContext
+): TValue;
+```
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `TValue` |
+| `TContext` |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `fn` | [`ReduceFn`](../type-aliases/ReduceFn.mdx)\<`TData`, `TValue`, `TContext`\> |
+| `initialValue` | `TValue` |
+| `context` | `TContext` |
+
+##### 返回
+
+`TValue`
+
+#### 调用签名
+
+```ts
+reduce<TValue>(fn: ReduceFn<TData, TValue>, initialValue: TValue): TValue;
+```
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `TValue` |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `fn` | [`ReduceFn`](../type-aliases/ReduceFn.mdx)\<`TData`, `TValue`\> |
+| `initialValue` | `TValue` |
+
+##### 返回
+
+`TValue`
+
+***
+
+### reduceRight()
+
+#### 调用签名
+
+```ts
+reduceRight<TValue, TContext>(
+   fn: ReduceFn<TData, TValue, TContext>, 
+   initialValue: TValue, 
+   context: TContext
+): TValue;
+```
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `TValue` |
+| `TContext` |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `fn` | [`ReduceFn`](../type-aliases/ReduceFn.mdx)\<`TData`, `TValue`, `TContext`\> |
+| `initialValue` | `TValue` |
+| `context` | `TContext` |
+
+##### 返回
+
+`TValue`
+
+#### 调用签名
+
+```ts
+reduceRight<TValue>(fn: ReduceFn<TData, TValue>, initialValue: TValue): TValue;
+```
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `TValue` |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `fn` | [`ReduceFn`](../type-aliases/ReduceFn.mdx)\<`TData`, `TValue`\> |
+| `initialValue` | `TValue` |
+
+##### 返回
+
+`TValue`
+
+***
+
+### remove()
+
+```ts
+remove(item: ListItem<TData>): ListItem<TData>;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `item` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+
+#### 返回
+
+[`ListItem`](../interfaces/ListItem.mdx)\<`TData`\>
+
+***
+
+### replace()
+
+```ts
+replace(oldItem: ListItem<TData>, newItemOrList: List<TData> | ListItem<TData>): void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `oldItem` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+| `newItemOrList` | `List`\<`TData`\> \| [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+
+#### 返回
+
+`void`
+
+***
+
+### shift()
+
+```ts
+shift(): ListItem<TData> | null;
+```
+
+#### 返回
+
+[`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> \| `null`
+
+***
+
+### some()
+
+#### 调用签名
+
+```ts
+some<TContext>(fn: IteratorFn<TData, boolean, TContext>, context: TContext): boolean;
+```
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `TContext` |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `boolean`, `TContext`\> |
+| `context` | `TContext` |
+
+##### 返回
+
+`boolean`
+
+#### 调用签名
+
+```ts
+some(fn: IteratorFn<TData, boolean>): boolean;
+```
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `boolean`\> |
+
+##### 返回
+
+`boolean`
+
+***
+
+### toArray()
+
+```ts
+toArray(): TData[];
+```
+
+#### 返回
+
+`TData`[]
+
+***
+
+### toJSON()
+
+```ts
+toJSON(): TData[];
+```
+
+#### 返回
+
+`TData`[]
+
+***
+
+### unshift()
+
+```ts
+unshift(data: TData): void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `data` | `TData` |
+
+#### 返回
+
+`void`
+
+***
+
+### createItem()
+
+```ts
+static createItem<T>(data: T): ListItem<T>;
+```
+
+#### 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` |
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `data` | `T` |
+
+#### 返回
+
+[`ListItem`](../interfaces/ListItem.mdx)\<`T`\>

@@ -1,0 +1,82 @@
+# 接口: FunctionCallContext
+
+传给客户端函数实现的运行时上下文。它与上游 A2UI 基础函数所用的 DataContext 子集保持一致，同时绑定到本渲染器的 `MessageProcessor` + `SignalStore`。
+
+## 属性
+
+### dataContextPath?
+
+```ts
+optional dataContextPath?: string;
+```
+
+***
+
+### processor
+
+```ts
+processor: MessageProcessor;
+```
+
+***
+
+### surfaceId
+
+```ts
+surfaceId: string;
+```
+
+## 方法
+
+### resolveDynamicValue()
+
+```ts
+resolveDynamicValue(value: unknown): unknown;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `value` | `unknown` |
+
+#### 返回
+
+`unknown`
+
+***
+
+### resolveSignal()
+
+```ts
+resolveSignal(value: unknown): Signal<unknown>;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `value` | `unknown` |
+
+#### 返回
+
+`Signal`\<`unknown`\>
+
+***
+
+### set()
+
+```ts
+set(path: string, value: unknown): void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `path` | `string` |
+| `value` | `unknown` |
+
+#### 返回
+
+`void`

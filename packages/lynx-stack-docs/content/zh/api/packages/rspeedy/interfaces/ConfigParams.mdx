@@ -1,0 +1,61 @@
+# 接口: ConfigParams
+
+`lynx.config.js` 导出的函数的参数。
+
+## 属性
+
+### command
+
+```ts
+command: 
+  | string & Record<never, never>
+  | "build"
+  | "dev"
+  | "inspect"
+  | "preview";
+```
+
+Rspeedy 的 CLI 命令。
+
+#### 默认值
+
+当 `loadConfig` 执行配置函数时，该值为 `process.argv[2] ?? 'build'`
+
+#### 备注
+
+可选值：
+
+- `'build'`
+
+- `'dev'`
+
+- `'inspect'`
+
+- `'preview'`
+
+***
+
+### env
+
+```ts
+env: 
+  | "production"
+  | "development"
+  | "test"
+| string & Record<never, never>;
+```
+
+`process.env['NODE_ENV']` 的值
+
+#### 默认值
+
+当 `loadConfig` 执行配置函数时，该值为 `process.env.NODE_ENV ?? 'production'`
+
+#### 备注
+
+常见的值包括（不限于）：
+- `'production'`
+
+- `'development'`
+
+- `'test'`

@@ -1,0 +1,109 @@
+# Class: Lynx
+
+Main entry point for the kitten-lynx testing framework.
+
+Provides Puppeteer-like APIs for connecting to a Lynx app running on an
+Android device (physical or emulator) via ADB and the Chrome DevTools Protocol.
+
+## Example
+
+```typescript
+const lynx = await Lynx.connect({ deviceId: 'localhost:5555' });
+const page = await lynx.newPage();
+await page.goto('http://example.com/bundle.lynx.bundle');
+const content = await page.content();
+await lynx.close();
+```
+
+## Constructors
+
+### Constructor
+
+```ts
+new Lynx(): Lynx;
+```
+
+#### Returns
+
+`Lynx`
+
+## Methods
+
+### close()
+
+```ts
+close(): Promise<void>;
+```
+
+Closes the active ADB/CDP connection and releases associated resources.
+
+**Agent Usage:**
+Ensure this is called in your test's teardown block (e.g., in `afterAll()`) to prevent
+floating Node.js processes or hanging ADB connections that can ruin subsequent test runs.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+A Promise resolving when the cleanup operation is fully processed.
+
+***
+
+### newPage()
+
+```ts
+newPage(): Promise<KittenLynxView>;
+```
+
+Spawns a new page representation for the connected Lynx environment.
+
+**Agent Usage:**
+Similar to Puppeteer's `browser.newPage()`. Once you have a `Lynx` connection instance safely created
+via `Lynx.connect()`, call this method to obtain a `KittenLynxView`. You can then call `post.goto(url)`
+on the view to navigate to a Lynx Bundle.
+
+#### Returns
+
+`Promise`\<[`KittenLynxView`](KittenLynxView.mdx)\>
+
+A Promise resolving to a new `KittenLynxView` instance bound to the active ADB client.
+
+#### Throws
+
+Error if the Lynx connection isn't properly initialized first.
+
+***
+
+### connect()
+
+```ts
+static connect(options?: ConnectOptions): Promise<Lynx>;
+```
+
+Main setup method. Connects to the Lynx app devtool server over ADB.
+
+**Agent Guide on the Connection Flow:**
+1. Discovers the target ADB device (physical Android or emulator).
+2. Force-stops the target app to ensure a clean state (`adb shell am force-stop`).
+3. Launches the application (usually Lynx Explorer) on the device.
+4. Queries the `Connector` for available clients and matches by device ID and package name.
+5. Enables the master devtool switch (`enable_devtool`).
+
+**When to use:**
+This should be the first method invoked in any test script or interaction flow.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `options?` | `ConnectOptions` | Configure connection variables, such as `appPackage` and `deviceId` (useful if multiple devices are attached). |
+
+#### Returns
+
+`Promise`\<`Lynx`\>
+
+A Promise resolving to a connected `Lynx` instance ready to spawn new pages.
+
+#### Throws
+
+Errors if devices aren't found, the app is missing, or the target client fails to initialize.

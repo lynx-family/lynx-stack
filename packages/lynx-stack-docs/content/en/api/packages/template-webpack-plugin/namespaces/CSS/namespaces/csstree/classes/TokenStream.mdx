@@ -1,0 +1,460 @@
+# Class: TokenStream
+
+## Constructors
+
+### Constructor
+
+```ts
+new TokenStream(source: string, tokenize: TokenizeHandler): TokenStream;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `source` | `string` |
+| `tokenize` | [`TokenizeHandler`](../type-aliases/TokenizeHandler.mdx) |
+
+#### Returns
+
+`TokenStream`
+
+## Properties
+
+### eof
+
+```ts
+eof: boolean;
+```
+
+***
+
+### firstCharOffset
+
+```ts
+firstCharOffset: number;
+```
+
+***
+
+### source
+
+```ts
+source: string;
+```
+
+***
+
+### tokenCount
+
+```ts
+tokenCount: number;
+```
+
+***
+
+### tokenEnd
+
+```ts
+tokenEnd: number;
+```
+
+***
+
+### tokenIndex
+
+```ts
+tokenIndex: number;
+```
+
+***
+
+### tokenStart
+
+```ts
+tokenStart: number;
+```
+
+***
+
+### tokenType
+
+```ts
+tokenType: number;
+```
+
+## Methods
+
+### dump()
+
+```ts
+dump(): object[];
+```
+
+#### Returns
+
+`object`[]
+
+***
+
+### forEachToken()
+
+```ts
+forEachToken(fn: (type: number, start: number, end: number, index: number) => void): void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | (`type`: `number`, `start`: `number`, `end`: `number`, `index`: `number`) => `void` |
+
+#### Returns
+
+`void`
+
+***
+
+### getBlockTokenPairIndex()
+
+```ts
+getBlockTokenPairIndex(tokenIndex: number): number;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `tokenIndex` | `number` |
+
+#### Returns
+
+`number`
+
+***
+
+### getTokenEnd()
+
+```ts
+getTokenEnd(tokenIndex: number): number;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `tokenIndex` | `number` |
+
+#### Returns
+
+`number`
+
+***
+
+### getTokenStart()
+
+```ts
+getTokenStart(tokenIndex: number): number;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `tokenIndex` | `number` |
+
+#### Returns
+
+`number`
+
+***
+
+### getTokenType()
+
+```ts
+getTokenType(tokenIndex: number): number;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `tokenIndex` | `number` |
+
+#### Returns
+
+`number`
+
+***
+
+### isBalanceEdge()
+
+```ts
+isBalanceEdge(tokenIndex: number): boolean;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `tokenIndex` | `number` |
+
+#### Returns
+
+`boolean`
+
+***
+
+### isBlockCloserTokenType()
+
+```ts
+isBlockCloserTokenType(tokenType: number): boolean;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `tokenType` | `number` |
+
+#### Returns
+
+`boolean`
+
+***
+
+### isBlockOpenerTokenType()
+
+```ts
+isBlockOpenerTokenType(tokenType: number): boolean;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `tokenType` | `number` |
+
+#### Returns
+
+`boolean`
+
+***
+
+### isDelim()
+
+```ts
+isDelim(code: number, offset?: number): boolean;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `code` | `number` |
+| `offset?` | `number` |
+
+#### Returns
+
+`boolean`
+
+***
+
+### lookupOffset()
+
+```ts
+lookupOffset(offset: number): number;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `offset` | `number` |
+
+#### Returns
+
+`number`
+
+***
+
+### lookupOffsetNonSC()
+
+```ts
+lookupOffsetNonSC(idx: number): number;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `idx` | `number` |
+
+#### Returns
+
+`number`
+
+***
+
+### lookupType()
+
+```ts
+lookupType(offset: number): number;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `offset` | `number` |
+
+#### Returns
+
+`number`
+
+***
+
+### lookupTypeNonSC()
+
+```ts
+lookupTypeNonSC(idx: number): number;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `idx` | `number` |
+
+#### Returns
+
+`number`
+
+***
+
+### lookupValue()
+
+```ts
+lookupValue(offset: number, referenceStr: string): boolean;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `offset` | `number` |
+| `referenceStr` | `string` |
+
+#### Returns
+
+`boolean`
+
+***
+
+### next()
+
+```ts
+next(): void;
+```
+
+#### Returns
+
+`void`
+
+***
+
+### reset()
+
+```ts
+reset(): void;
+```
+
+#### Returns
+
+`void`
+
+***
+
+### setSource()
+
+```ts
+setSource(source?: string, tokenize?: TokenizeHandler): void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `source?` | `string` |
+| `tokenize?` | [`TokenizeHandler`](../type-aliases/TokenizeHandler.mdx) |
+
+#### Returns
+
+`void`
+
+***
+
+### skip()
+
+```ts
+skip(tokenCount: number): void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `tokenCount` | `number` |
+
+#### Returns
+
+`void`
+
+***
+
+### skipSC()
+
+```ts
+skipSC(): void;
+```
+
+#### Returns
+
+`void`
+
+***
+
+### skipUntilBalanced()
+
+```ts
+skipUntilBalanced(startToken: number, stopConsume: (code: number) => number): void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `startToken` | `number` |
+| `stopConsume` | (`code`: `number`) => `number` |
+
+#### Returns
+
+`void`
+
+***
+
+### substrToCursor()
+
+```ts
+substrToCursor(start: number): string;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `start` | `number` |
+
+#### Returns
+
+`string`

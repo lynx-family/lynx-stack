@@ -27,6 +27,7 @@
       "outputs": [
         "doc_build/**",
         "content/*/api/**",
+        "manifest.json",
         "i18n/**"
       ]
     },

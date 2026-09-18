@@ -1,0 +1,14 @@
+# output.minify.backgroundOptions
+
+```ts
+optional backgroundOptions?: SwcJsMinimizerRspackPluginOptions;
+```
+
+
+
+为后台线程 bundle 覆盖 Rsbuild 的 `output.minify.jsOptions`。
+
+## 备注
+
+该选项会被深度合并到 `output.minify.jsOptions` 中。它主要与 ReactLynx 的双线程产物配合使用，使主线程和后台线程的 bundle 可以使用不同的压缩规则。
+

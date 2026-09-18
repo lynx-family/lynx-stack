@@ -1,0 +1,88 @@
+# 模块: @lynx-js/rsbuild-plugin
+
+[npm](https://www.npmjs.com/package/@lynx-js/rsbuild-plugin) · [Source](https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-lynx) · [Changelog](https://github.com/lynx-family/lynx-stack/blob/main/packages/rspeedy/plugin-lynx/CHANGELOG.md)
+
+作为 Rsbuild 插件的 Lynx 构建引擎。它直接使用
+Rsbuild CLI 构建 Lynx 应用，而无需使用 Rspeedy CLI。
+
+像 [pluginReactLynx](../react-rsbuild-plugin/functions/pluginReactLynx.mdx) 这样的 DSL 插件，
+会在引擎缺失时自动注册，因此你只需要自行添加
+`pluginLynx` 来传入下面这些选项。Rspeedy 也会为你注册该引擎，
+并从 `lynx.config.ts` 转发 `output.filename` 和 `performance.profile`。
+
+## 示例
+
+在 `rsbuild.config.ts` 中将该插件注册在某个 DSL 插件旁边。
+环境名（下面的 `lynx`）会成为 bundle 文件名中的 `[platform]` 占位符，
+因此该配置的默认输出为
+`dist/main.lynx.bundle`。
+
+```ts title="rsbuild.config.ts"
+import { defineConfig } from '@rsbuild/core'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+
+export default defineConfig({
+  source: {
+    entry: { main: './src/index.tsx' },
+  },
+  environments: {
+    lynx: {},
+  },
+  plugins: [
+    pluginLynx({
+      performance: { profile: false },
+    }),
+    pluginReactLynx(),
+  ],
+})
+```
+
+然后使用 Rsbuild CLI：
+
+```bash
+rsbuild dev
+rsbuild build
+```
+
+## 备注
+
+要从 Rspeedy 迁移，请将 `rspeedy dev` / `rspeedy build` 替换为
+`rsbuild dev` / `rsbuild build`，将 `lynx.config.ts` 重命名为
+`rsbuild.config.ts`，并从 `@rsbuild/core` 导入 `defineConfig`。Rspeedy 用来转发给引擎的两个
+选项，现在直接传给 `pluginLynx`：
+
+| `lynx.config.ts` (Rspeedy) | `pluginLynx()` (Rsbuild) |
+| --- | --- |
+| `output.filename` as a string | `output.filename.bundle` |
+| `output.filename.bundle` | `output.filename.bundle` |
+| `output.filename.template` (deprecated) | `output.filename.bundle` |
+| `performance.profile` | `performance.profile` |
+
+`output`、`source`、`dev` 和 `server` 中的其他所有内容都保持 Rsbuild
+的形态，留在 `rsbuild.config.ts` 中。引擎会在 Rsbuild 默认值之上应用
+Lynx 特有的默认值（bundle target、chunk loading、CSS
+提取、source map），并且只在其他插件尚未设置某项配置时才会覆盖它。
+
+## 接口
+
+- [BundleFilenameContext](interfaces/BundleFilenameContext.mdx)
+- [LynxConfig](interfaces/LynxConfig.mdx)
+- [LynxFilename](interfaces/LynxFilename.mdx)
+- [LynxMinify](interfaces/LynxMinify.mdx)
+- [LynxOutput](interfaces/LynxOutput.mdx)
+- [LynxPerformance](interfaces/LynxPerformance.mdx)
+- [LynxPluginOptions](interfaces/LynxPluginOptions.mdx)
+
+## 类型别名
+
+- [BundleFilename](type-aliases/BundleFilename.mdx)
+
+## 变量
+
+- [PLUGIN\_LYNX\_NAME](variables/PLUGIN_LYNX_NAME.mdx)
+
+## 函数
+
+- [isPluginLynxRegistered](functions/isPluginLynxRegistered.mdx)
+- [pluginLynx](functions/pluginLynx.mdx)

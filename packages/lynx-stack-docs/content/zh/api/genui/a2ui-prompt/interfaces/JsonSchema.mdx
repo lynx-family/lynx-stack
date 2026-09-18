@@ -1,0 +1,83 @@
+# 接口: JsonSchema
+
+面向 prompt 的 catalog 描述中使用的 JSON Schema 子集。
+
+## 属性
+
+### additionalProperties?
+
+```ts
+optional additionalProperties?: unknown;
+```
+
+***
+
+### const?
+
+```ts
+optional const?: unknown;
+```
+
+***
+
+### description?
+
+```ts
+optional description?: string;
+```
+
+***
+
+### enum?
+
+```ts
+optional enum?: unknown;
+```
+
+***
+
+### items?
+
+```ts
+optional items?: JsonSchema;
+```
+
+***
+
+### oneOf?
+
+```ts
+optional oneOf?: JsonSchema[];
+```
+
+***
+
+### properties?
+
+```ts
+optional properties?: Record<string, JsonSchema>;
+```
+
+***
+
+### required?
+
+```ts
+optional required?: string[];
+```
+
+***
+
+### type?
+
+```ts
+optional type?: string;
+```
+
+***
+
+### unevaluatedProperties?
+
+```ts
+optional unevaluatedProperties?: unknown;
+```

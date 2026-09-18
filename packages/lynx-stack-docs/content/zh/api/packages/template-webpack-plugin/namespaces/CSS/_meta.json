@@ -1,0 +1,31 @@
+[
+  {
+    "type": "file",
+    "name": "functions/cssChunksToMap",
+    "label": "cssChunksToMap"
+  },
+  {
+    "type": "file",
+    "name": "functions/parse",
+    "label": "parse"
+  },
+  {
+    "type": "file",
+    "name": "enumerations/Severity",
+    "label": "Severity"
+  },
+  {
+    "type": "dir",
+    "name": "namespaces/Plugins",
+    "label": "Plugins",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "namespaces/csstree",
+    "label": "csstree",
+    "collapsible": true,
+    "collapsed": true
+  }
+]

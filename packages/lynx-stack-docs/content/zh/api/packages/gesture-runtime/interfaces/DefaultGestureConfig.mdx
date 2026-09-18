@@ -1,0 +1,38 @@
+# 接口: DefaultGestureConfig
+
+DefaultGesture 的配置接口。
+Default gesture 是一种基础手势处理器。
+
+## 继承
+
+- [`BaseGestureConfig`](BaseGestureConfig.mdx)
+
+## 可索引
+
+```ts
+[key: string]: unknown
+```
+
+## 属性
+
+### enabled?
+
+```ts
+optional enabled?: boolean;
+```
+
+该手势是否启用。默认为 true。
+
+#### 继承自
+
+[`BaseGestureConfig`](BaseGestureConfig.mdx).[`enabled`](BaseGestureConfig.mdx#enabled)
+
+***
+
+### tapSlop?
+
+```ts
+optional tapSlop?: number;
+```
+
+点按容差值（以 points 为单位）。默认为 3。

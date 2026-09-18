@@ -1,0 +1,31 @@
+# Function: batch()
+
+```ts
+function batch<T>(fn: () => T): T;
+```
+
+Combine multiple value updates into one "commit" at the end of the provided callback.
+
+Batches can be nested and changes are only flushed once the outermost batch callback
+completes.
+
+Accessing a signal that has been modified within a batch will reflect its updated
+value.
+
+## Type Parameters
+
+| Type Parameter |
+| ------ |
+| `T` |
+
+## Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `fn` | () => `T` | The callback function. |
+
+## Returns
+
+`T`
+
+The value returned by the callback.

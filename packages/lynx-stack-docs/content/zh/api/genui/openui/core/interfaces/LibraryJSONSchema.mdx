@@ -1,0 +1,11 @@
+# 接口: LibraryJSONSchema
+
+`library.toJSONSchema()` 生成的 JSON Schema 文档。所有组件的 schema 都放在 `$defs` 中，以组件名为 key。
+
+## 属性
+
+### $defs?
+
+```ts
+optional $defs?: Record<string, JSONSchemaDef>;
+```

@@ -1,0 +1,18 @@
+# Function: runCodegen()
+
+```ts
+function runCodegen(options?: CodegenOptions): GeneratedFile[];
+```
+
+Writes generated files to disk, skipping existing files marked `overwrite: false`,
+and returns the generated file descriptors.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `options` | [`CodegenOptions`](../interfaces/CodegenOptions.mdx) |
+
+## Returns
+
+[`GeneratedFile`](../interfaces/GeneratedFile.mdx)[]

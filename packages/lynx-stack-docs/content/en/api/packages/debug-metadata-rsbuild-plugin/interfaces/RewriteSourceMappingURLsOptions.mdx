@@ -1,0 +1,26 @@
+# Interface: RewriteSourceMappingURLsOptions
+
+Options for [rewriteSourceMappingURLs](../functions/rewriteSourceMappingURLs.mdx).
+
+## Properties
+
+### getSourceMappingURL?
+
+```ts
+optional getSourceMappingURL?: (info: object) => string;
+```
+
+Override the URL written into each rewritten sourceMappingURL. Defaults
+to `${debugMetadataUrl}?field=source-map&path=<encoded mapPath>`.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `info` | \{ `debugMetadataUrl`: `string`; `mapPath`: `string`; \} |
+| `info.debugMetadataUrl` | `string` |
+| `info.mapPath` | `string` |
+
+#### Returns
+
+`string`

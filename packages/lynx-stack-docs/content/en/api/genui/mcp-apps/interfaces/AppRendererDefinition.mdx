@@ -1,0 +1,51 @@
+# Interface: AppRendererDefinition\<TResult\>
+
+Strongly typed definition accepted by [defineAppRenderer](../functions/defineAppRenderer.mdx).
+
+## Type Parameters
+
+| Type Parameter |
+| ------ |
+| `TResult` |
+
+## Properties
+
+### component
+
+```ts
+component: ComponentType<AppRendererProps<TResult>>;
+```
+
+***
+
+### id
+
+```ts
+id: string;
+```
+
+***
+
+### invalidResultMessage
+
+```ts
+invalidResultMessage: string;
+```
+
+***
+
+### parseResult
+
+```ts
+parseResult: (value: unknown) => TResult | null;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `value` | `unknown` |
+
+#### Returns
+
+`TResult` \| `null`

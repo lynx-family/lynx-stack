@@ -1,0 +1,74 @@
+# 接口: LynxFilename
+
+Lynx 构建引擎输出的文件名称。
+
+## 属性
+
+### bundle?
+
+```ts
+optional bundle?: BundleFilename;
+```
+
+bundle 文件的名称。
+
+#### 默认值
+
+`'[name].[platform].bundle'`
+
+#### 备注
+
+支持以下占位符：
+
+- `[name]`：入口名称。
+- `[platform]`：Rsbuild environment 的名称。
+- `[contenthash]`：bundle 内容的 hash。
+
+#### 示例
+
+- 在 bundle 文件名中使用指定长度的 content hash：
+
+```js
+import { defineConfig } from '@rsbuild/core'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginLynx({
+      output: {
+        filename: {
+          bundle: '[name].[contenthash:8].bundle',
+        },
+      },
+    }),
+  ],
+})
+```
+
+- 使用函数分别控制主 bundle 和 lazy bundle
+  （例如将 lazy bundle 输出到另一个目录，并附加 git
+  commit hash）：
+
+```js
+import { execSync } from 'node:child_process'
+
+import { defineConfig } from '@rsbuild/core'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+
+const gitHash = execSync('git rev-parse --short HEAD').toString().trim()
+
+export default defineConfig({
+  plugins: [
+    pluginLynx({
+      output: {
+        filename: {
+          bundle: ({ lazyBundle, platform }) =>
+            lazyBundle
+              ? `my-lazy-bundles/[name].[fullhash]-${gitHash}.bundle`
+              : `[name].${platform}.bundle`,
+        },
+      },
+    }),
+  ],
+})
+```

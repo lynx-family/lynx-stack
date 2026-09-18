@@ -1,0 +1,28 @@
+# Function: useResolvedProps()
+
+```ts
+function useResolvedProps(
+   properties: Record<string, unknown>, 
+   surface: Surface | undefined, 
+   dataContextPath?: string, 
+   processor?: MessageProcessor, 
+   functions?: readonly CatalogFunctionEntry[]
+): readonly [Record<string, unknown>, (key: string, value: unknown) => void];
+```
+
+Resolve a component's dynamic props and keep the result in sync with
+signal-backed data model changes.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `properties` | `Record`\<`string`, `unknown`\> |
+| `surface` | [`Surface`](../interfaces/Surface.mdx) \| `undefined` |
+| `dataContextPath?` | `string` |
+| `processor?` | [`MessageProcessor`](../classes/MessageProcessor.mdx) |
+| `functions?` | readonly [`CatalogFunctionEntry`](../interfaces/CatalogFunctionEntry.mdx)[] |
+
+## Returns
+
+readonly \[`Record`\<`string`, `unknown`\>, (`key`: `string`, `value`: `unknown`) => `void`\]

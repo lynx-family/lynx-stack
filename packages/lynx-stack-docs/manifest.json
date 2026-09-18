@@ -1,0 +1,46 @@
+{
+  "sections": [
+    {
+      "route": "api/config",
+      "content": {
+        "en": "content/en/api/config",
+        "zh": "content/zh/api/config"
+      }
+    },
+    {
+      "route": "api/genui",
+      "content": {
+        "en": "content/en/api/genui",
+        "zh": "content/zh/api/genui"
+      }
+    },
+    {
+      "route": "api/packages",
+      "content": {
+        "en": "content/en/api/packages",
+        "zh": "content/zh/api/packages"
+      }
+    },
+    {
+      "route": "api/react",
+      "content": {
+        "en": "content/en/api/react",
+        "zh": "content/zh/api/react"
+      }
+    }
+  ],
+  "shownPackages": [
+    {
+      "group": "Build tools",
+      "packages": [
+        "@lynx-js/rsbuild-plugin",
+        "@lynx-js/react-rsbuild-plugin",
+        "@lynx-js/qrcode-rsbuild-plugin",
+        "@lynx-js/external-bundle-rsbuild-plugin",
+        "@lynx-js/config-rsbuild-plugin",
+        "@lynx-js/lynx-bundle-rslib-config",
+        "@lynx-js/rspeedy"
+      ]
+    }
+  ]
+}

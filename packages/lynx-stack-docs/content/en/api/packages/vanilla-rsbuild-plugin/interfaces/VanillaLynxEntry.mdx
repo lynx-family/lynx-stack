@@ -1,0 +1,49 @@
+# Interface: VanillaLynxEntry
+
+The two thread source files of a logical Vanilla Lynx entry.
+
+## Properties
+
+### background?
+
+```ts
+optional background?: string | false;
+```
+
+Source executed in the background JavaScript thread.
+
+#### Remarks
+
+When omitted, a sibling `background.ts` is used when it exists. Set this
+to `false` to explicitly create a main-thread-only bundle.
+
+***
+
+### css?
+
+```ts
+optional css?: string | false;
+```
+
+CSS source encoded into the Lynx template.
+
+#### Remarks
+
+When omitted, a sibling `style.css` is used when it exists. Set this to
+`false` to disable the convention.
+
+***
+
+### mainThread
+
+```ts
+mainThread: string;
+```
+
+Module request executed on the Lynx main thread with Element PAPI globals.
+
+#### Remarks
+
+The request is resolved by Rspeedy or Rsbuild. When it names an existing
+local file, optional sibling `background.ts` and `style.css` files are
+discovered by convention.

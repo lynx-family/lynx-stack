@@ -1,0 +1,160 @@
+# 接口: ByRoleOptions
+
+## 属性
+
+### busy?
+
+```ts
+optional busy?: boolean;
+```
+
+为 true 时，查询结果只包含在无障碍树中被标记为 busy 的元素，即 `aria-busy="true"`
+
+***
+
+### checked?
+
+```ts
+optional checked?: boolean;
+```
+
+为 true 时，查询结果只包含在无障碍树中被标记为 checked 的元素，即 `aria-checked="true"`
+
+***
+
+### current?
+
+```ts
+optional current?: string | boolean;
+```
+
+按元素的 `aria-current` 状态进行过滤。`true` 和 `false` 分别匹配 `aria-current="true"` 和 `aria-current="false"`（以及缺少 `aria-current` 属性的情况）。
+
+***
+
+### description?
+
+```ts
+optional description?: 
+  | string
+  | RegExp
+  | ((accessibleDescription: string, element: Element) => boolean);
+```
+
+仅考虑具有指定无障碍描述（accessible description）的元素。
+
+***
+
+### expanded?
+
+```ts
+optional expanded?: boolean;
+```
+
+为 true 时，查询结果只包含在无障碍树中被标记为 expanded 的元素，即 `aria-expanded="true"`
+
+***
+
+### hidden?
+
+```ts
+optional hidden?: boolean;
+```
+
+为 true 时，查询结果会包含通常被排除在无障碍树之外的元素。无论如何都会包含 `role="none"` 或 `role="presentation"` 的元素。
+
+***
+
+### level?
+
+```ts
+optional level?: number;
+```
+
+包含 `"heading"` 角色且级别匹配的元素，可以是语义化的 HTML 标题元素 `<h1>-<h6>`，也可以是匹配 `aria-level` 属性的元素。
+
+***
+
+### name?
+
+```ts
+optional name?: 
+  | string
+  | RegExp
+  | ((accessibleName: string, element: Element) => boolean);
+```
+
+仅考虑具有指定无障碍名称（accessible name）的元素。
+
+***
+
+### pressed?
+
+```ts
+optional pressed?: boolean;
+```
+
+为 true 时，查询结果只包含在无障碍树中被标记为 pressed 的元素，即 `aria-pressed="true"`
+
+***
+
+### queryFallbacks?
+
+```ts
+optional queryFallbacks?: boolean;
+```
+
+包含 `role` 属性中使用的每一个 role。
+例如 *ByRole('progressbar', \{queryFallbacks: true\})` will find <div role="meter progressbar">`。
+
+***
+
+### selected?
+
+```ts
+optional selected?: boolean;
+```
+
+为 true 时，查询结果只包含在无障碍树中被标记为 selected 的元素，即 `aria-selected="true"`
+
+***
+
+### suggest?
+
+```ts
+optional suggest?: boolean;
+```
+
+为特定查询禁用建议
+
+***
+
+### value?
+
+```ts
+optional value?: object;
+```
+
+#### max?
+
+```ts
+optional max?: number;
+```
+
+#### min?
+
+```ts
+optional min?: number;
+```
+
+#### now?
+
+```ts
+optional now?: number;
+```
+
+#### text?
+
+```ts
+optional text?: Matcher;
+```

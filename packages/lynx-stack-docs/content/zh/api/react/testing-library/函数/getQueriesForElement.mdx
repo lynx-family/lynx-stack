@@ -1,0 +1,23 @@
+# 函数: getQueriesForElement()
+
+```ts
+function getQueriesForElement<QueriesToBind extends Queries = typeof queries, T extends Queries = QueriesToBind>(element: HTMLElement, queriesToBind?: T): BoundFunctions<T>;
+```
+
+## 类型参数
+
+| 类型参数 | 默认类型 |
+| ------ | ------ |
+| `QueriesToBind` *extends* [`Queries`](../接口/Queries.mdx) | *typeof* [`queries`](../命名空间/queries.mdx) |
+| `T` *extends* [`Queries`](../接口/Queries.mdx) | `QueriesToBind` |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `element` | `HTMLElement` |
+| `queriesToBind?` | `T` |
+
+## 返回
+
+[`BoundFunctions`](../类型别名/BoundFunctions.mdx)\<`T`\>

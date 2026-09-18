@@ -1,0 +1,19 @@
+# 函数: generate()
+
+```ts
+function generate(options?: CodegenOptions): GeneratedFile[];
+```
+
+为库（library）包构建生成的文件内容：JS facade 和平台 spec，
+以及共享的 C++ 源码、注册代码、CMake target、iOS wrapper，
+以及 Node-API 和 Lynxtron 模块的 Lynxtron 注册代码。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `options` | [`CodegenOptions`](../interfaces/CodegenOptions.mdx) |
+
+## 返回
+
+[`GeneratedFile`](../interfaces/GeneratedFile.mdx)[]

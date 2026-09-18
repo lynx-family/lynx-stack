@@ -1,0 +1,109 @@
+# ~~接口: ChunkSplit~~
+
+[Performance.chunkSplit](Performance.mdx#chunksplit) 用于配置 chunk 拆分策略。
+
+## 已被弃用
+
+请使用顶层的 [Config.splitChunks](Config.mdx#splitchunks) 选项代替。
+
+## 属性
+
+### ~~override?~~
+
+```ts
+optional override?: false | OptimizationSplitChunksOptions;
+```
+
+可以指定自定义的 Rspack chunk 拆分配置。
+
+#### 默认值
+
+```ts
+undefined
+```
+
+#### 示例
+
+- 将 `@lynx-js/react` 和 `react-router` 拆分到 `lib-react` chunk 中。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    chunkSplit: {
+      strategy: 'split-by-experience',
+      override: {
+        cacheGroups: {
+          react: {
+            test: /node_modules[\\/](@lynx-js[\\/]react|react-router)[\\/]/,
+            name: 'lib-react',
+          },
+        },
+      },
+    },
+  },
+})
+```
+
+***
+
+### ~~strategy?~~
+
+```ts
+optional strategy?: 
+  | "all-in-one"
+  | "split-by-module"
+  | "split-by-experience"
+  | "single-vendor";
+```
+
+chunk 拆分策略。
+
+#### 默认值
+
+未设置，此时会将所有内容打包到一个 chunk 中（与 `'all-in-one'` 相同）。
+
+#### 备注
+
+- `split-by-experience`（Rsbuild 默认）：根据经验制定的拆分策略，自动将一些常用的 npm 包拆分为体积适中的 chunk。
+
+- `split-by-module`：按 NPM 包的粒度拆分，每个 NPM 包对应一个 chunk。
+
+- `split-by-size`：根据模块大小自动拆分。
+
+- `all-in-one`：将所有代码打包到一个 chunk 中。
+
+- `single-vendor`：将所有 NPM 包打包到单个 chunk 中。
+
+- `custom`：自定义 chunk 拆分策略。
+
+#### 示例
+
+- 使用 `all-in-one` 将所有模块放到一个 chunk 中。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    chunkSplit: {
+      strategy: 'all-in-one',
+    },
+  },
+})
+```
+
+- 使用 `single-vendor` 将所有第三方依赖放到一个 chunk 中，源代码放到另一个 chunk 中。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    chunkSplit: {
+      strategy: 'single-vendor',
+    },
+  },
+})
+```

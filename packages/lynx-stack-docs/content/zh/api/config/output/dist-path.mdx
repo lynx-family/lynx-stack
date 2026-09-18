@@ -1,0 +1,33 @@
+# output.distPath
+
+```ts
+optional distPath?: DistPathConfig;
+```
+
+**`Lynx Default Changed`**
+
+设置产物文件的目录。
+
+## 默认值
+
+使用 Rsbuild 默认的 distPath 配置，并设置 `root: 'dist'`。
+
+## 备注
+
+更多选项请参考 [Rsbuild - distPath](https://rsbuild.rs/config/output/dist-path)。
+
+## 示例
+
+使用 `output` 代替 `dist`（默认值）：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  output: {
+    distPath: {
+      root: './output',
+    },
+  },
+})
+```
+

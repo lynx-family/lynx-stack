@@ -1,0 +1,17 @@
+# 函数: isUiSourceMapData()
+
+```ts
+function isUiSourceMapData(value: unknown): value is UiSourceMapData;
+```
+
+运行时检查，判断解析出的值是否符合 [UiSourceMapData](../interfaces/UiSourceMapData.mdx) 的关键结构——一个包含 `sources`、`mappings` 和 `uiMaps` 数组的对象。用于防范那些解析出不同（或旧）格式 JSON 的 `debugMetadataUrl`。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `value` | `unknown` |
+
+## 返回
+
+`value is UiSourceMapData`

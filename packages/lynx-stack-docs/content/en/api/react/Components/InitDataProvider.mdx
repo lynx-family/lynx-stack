@@ -1,0 +1,38 @@
+# Function: InitDataProvider()
+
+```ts
+function InitDataProvider(props: object): ReactNode | Promise<ReactNode>;
+```
+
+The [Provider](https://react.dev/reference/react/createContext#provider) Component that provide `initData`,
+you must wrap your JSX inside it
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `props` | \{ `children?`: `ReactNode`; \} |
+| `props.children?` | `ReactNode` |
+
+## Returns
+
+`ReactNode` \| `Promise`\<`ReactNode`\>
+
+## Example
+
+```ts
+import { root } from "@lynx-js/react"
+
+function App() {
+  return (
+    <InitDataConsumer children={(initData) => <view>...</view>}/>
+  )
+}
+
+root.render(
+  <InitDataProvider>
+     <App/>
+  </InitDataProvider>
+);
+
+```

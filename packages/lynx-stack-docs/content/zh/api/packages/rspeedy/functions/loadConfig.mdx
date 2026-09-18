@@ -1,0 +1,30 @@
+# 函数: loadConfig()
+
+```ts
+function loadConfig(loadConfigOptions: LoadConfigOptions): Promise<LoadConfigResult>;
+```
+
+通过配置文件路径加载构建配置。
+
+## 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `loadConfigOptions` | [`LoadConfigOptions`](../interfaces/LoadConfigOptions.mdx) | `loadConfig` 方法的选项。 |
+
+## 返回
+
+`Promise`\<[`LoadConfigResult`](../interfaces/LoadConfigResult.mdx)\>
+
+构建配置。
+
+## 示例
+
+```ts
+import { loadConfig } from '@lynx-js/rspeedy'
+
+void async function () {
+  const config = await loadConfig({ configPath: './lynx.config.js' })
+  console.log(config);
+}()
+```

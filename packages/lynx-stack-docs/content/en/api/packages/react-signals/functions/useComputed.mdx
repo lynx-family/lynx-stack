@@ -1,0 +1,22 @@
+# Function: useComputed()
+
+```ts
+function useComputed<T>(compute: () => T, options?: SignalOptions<T>): ReadonlySignal<T>;
+```
+
+## Type Parameters
+
+| Type Parameter |
+| ------ |
+| `T` |
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `compute` | () => `T` |
+| `options?` | [`SignalOptions`](../interfaces/SignalOptions.mdx)\<`T`\> |
+
+## Returns
+
+[`ReadonlySignal`](../interfaces/ReadonlySignal.mdx)\<`T`\>

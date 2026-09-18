@@ -1,0 +1,63 @@
+# 接口: EncodeOptions
+
+编码 external bundle 的选项。
+
+## 属性
+
+### enableJsBytecode?
+
+```ts
+optional enableJsBytecode?: boolean;
+```
+
+是否在产出的 bundle 中将主线程 chunk 编译为 JsBytecode。
+
+#### 备注
+
+禁用后，主线程 chunk 会以普通 JavaScript 源码的形式编码，既便于调试时阅读，也能加快编码速度。
+
+仅对 `'lynx'` 目标生效。对于 `'web'` 目标，
+`JsBytecode` 标签仅用于将主线程 chunk 路由到正确的 bundle
+槽位（chunk 不会被编译为字节码），因此始终保留。
+
+#### 默认值
+
+`NODE_ENV` 为 `'development'` 时为 `false`，否则为 `true`
+
+***
+
+### engineVersion?
+
+```ts
+optional engineVersion?: string;
+```
+
+external bundle 的引擎版本。
+
+#### 默认值
+
+```ts
+'3.5'
+```
+
+***
+
+### target?
+
+```ts
+optional target?: "web" | "lynx";
+```
+
+编码后 bundle 的输出格式。
+
+- `'lynx'`：Lynx 引擎加载的原生 bundle，通过 `@lynx-js/tasm` 生成。
+- `'web'`：通过 `@lynx-js/web-core/encode` 生成的 web 二进制 bundle，可被
+  web 平台解码。各 section 以原始 JS 形式产出（web 运行时会在
+  `lynx.loadScript` 时对其进行包装），CSS 会被合并到 StyleInfo
+  section 中。
+
+#### 默认值
+
+```ts
+'lynx'
+```

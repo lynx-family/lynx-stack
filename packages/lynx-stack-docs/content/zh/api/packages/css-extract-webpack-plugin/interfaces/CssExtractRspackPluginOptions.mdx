@@ -1,0 +1,153 @@
+# 接口: CssExtractRspackPluginOptions
+
+[@lynx-js/css-extract-webpack-plugin!CssExtractRspackPlugin](../classes/CssExtractRspackPlugin.mdx) 的选项
+
+## 继承
+
+- `CssExtractRspackPluginOptions`
+
+## 属性
+
+### attributes?
+
+```ts
+optional attributes?: Record<string, string>;
+```
+
+#### 继承自
+
+```ts
+ExternalCssExtractRspackPluginOptions.attributes
+```
+
+***
+
+### chunkFilename?
+
+```ts
+optional chunkFilename?: string;
+```
+
+非初始 CSS chunk 文件的名称
+
+#### 备注
+
+设置后，lazy bundle 的 CSS chunk 仍会输出到
+`.lynx/lazy-bundle/<name>/<layer>.css`（如果该 chunk 没有 layer，
+则输出到 `.lynx/lazy-bundle/<name>.css`）；此模板适用于其他 chunk。
+
+#### 重写了
+
+```ts
+ExternalCssExtractRspackPluginOptions.chunkFilename
+```
+
+***
+
+### cssPlugins?
+
+```ts
+optional cssPlugins?: Plugin[];
+```
+
+传递给 parser 的插件
+
+***
+
+### enforceRelative?
+
+```ts
+optional enforceRelative?: boolean;
+```
+
+#### 继承自
+
+```ts
+ExternalCssExtractRspackPluginOptions.enforceRelative
+```
+
+***
+
+### filename?
+
+```ts
+optional filename?: string;
+```
+
+每个输出 bundle 的名称。
+
+#### 重写了
+
+```ts
+ExternalCssExtractRspackPluginOptions.filename
+```
+
+***
+
+### ignoreOrder?
+
+```ts
+optional ignoreOrder?: boolean;
+```
+
+#### 继承自
+
+```ts
+ExternalCssExtractRspackPluginOptions.ignoreOrder
+```
+
+***
+
+### insert?
+
+```ts
+optional insert?: string | ((linkTag: HTMLLinkElement) => void);
+```
+
+#### 继承自
+
+```ts
+ExternalCssExtractRspackPluginOptions.insert
+```
+
+***
+
+### linkType?
+
+```ts
+optional linkType?: false | LiteralUnion<"text/css", string>;
+```
+
+#### 继承自
+
+```ts
+ExternalCssExtractRspackPluginOptions.linkType
+```
+
+***
+
+### pathinfo?
+
+```ts
+optional pathinfo?: boolean;
+```
+
+#### 继承自
+
+```ts
+ExternalCssExtractRspackPluginOptions.pathinfo
+```
+
+***
+
+### runtime?
+
+```ts
+optional runtime?: boolean;
+```
+
+#### 继承自
+
+```ts
+ExternalCssExtractRspackPluginOptions.runtime
+```

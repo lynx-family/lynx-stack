@@ -1,0 +1,40 @@
+# 函数: GlobalPropsProvider()
+
+```ts
+function GlobalPropsProvider(props: object): ReactNode | Promise<ReactNode>;
+```
+
+提供 `lynx.__globalProps` 的 [Provider](https://react.dev/reference/react/createContext#provider) 组件。
+只有在 `globalPropsMode: 'event'` 时才需要；在默认的 `'reactive'` 模式下，它会直接渲染 children，更新通过整体重新渲染生效。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `props` | \{ `children?`: `ReactNode`; \} |
+| `props.children?` | `ReactNode` |
+
+## 返回
+
+`ReactNode` \| `Promise`\<`ReactNode`\>
+
+## 示例
+
+With `globalPropsMode: 'event'`:
+
+```ts
+import { root } from "@lynx-js/react"
+
+function App() {
+  return (
+    <GlobalPropsConsumer children={(globalProps) => <view>...</view>}/>
+  )
+}
+
+root.render(
+  <GlobalPropsProvider>
+     <App/>
+  </GlobalPropsProvider>
+);
+
+```

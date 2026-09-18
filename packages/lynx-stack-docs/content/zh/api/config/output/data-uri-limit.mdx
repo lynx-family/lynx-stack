@@ -1,0 +1,66 @@
+# output.dataUriLimit
+
+```ts
+optional dataUriLimit?: number | DataUriLimit;
+```
+
+**`Lynx Default Changed`**
+
+[Output.dataUriLimit](/zh/api/packages/rspeedy/interfaces/Output.mdx#dataurilimit) 选项用于设置图片、字体等静态资源内联的体积阈值。
+
+## 默认值
+
+```ts
+2048
+```
+
+## 示例
+
+内联所有小于 4kB 的静态资源：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  output: {
+    dataUriLimit: 4 * 1024,
+  },
+})
+```
+
+禁用静态资源内联：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  output: {
+    dataUriLimit: 0,
+  },
+})
+```
+
+内联所有静态资源：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  output: {
+    dataUriLimit: Number.MAX_SAFE_INTEGER,
+  },
+})
+```
+
+禁用所有媒体资源的内联，但不包括图片。
+
+```ts title="lynx.config.ts"
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    dataUriLimit: {
+      image: 5000,
+      media: 0,
+    },
+  },
+})
+```
+

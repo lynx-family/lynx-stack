@@ -86,7 +86,7 @@ The API reference in `docs/` (the pages synced to lynxjs.org) is generated from 
 
 ```bash
 # Generate the pages and build the site (fails on any TypeDoc warning or dead link; ALWAYS commit docs/i18n/zh.json)
-pnpm turbo build --filter docs
+pnpm turbo build --filter @lynx-js/lynx-stack-docs
 
 # Update the API reports (ALWAYS commit changes)
 pnpm turbo api-extractor -- --local
@@ -129,7 +129,7 @@ git add packages/**/*.api.md
 **Solution**: Build the API reference, translate the new strings and commit them:
 
 ```bash
-pnpm turbo build --filter docs
+pnpm turbo build --filter @lynx-js/lynx-stack-docs
 git add docs/i18n
 ```
 
@@ -188,7 +188,7 @@ export NODE_OPTIONS="--max-old-space-size=32768"
 The CI runs these checks (replicate locally for confidence):
 
 1. **Code style**: `pnpm dprint check && pnpm biome check`
-2. **API consistency**: `pnpm turbo api-extractor`, and `pnpm turbo build --filter docs` leaves no changes in `docs/i18n`
+2. **API consistency**: `pnpm turbo api-extractor`, and `pnpm turbo build --filter @lynx-js/lynx-stack-docs` leaves no changes in `docs/i18n`
 3. **Changeset validation**: `pnpm changeset status --since=origin/main`
 4. **Linting**: `pnpm eslint .` (allow 5+ minutes)
 5. **TypeScript compilation**: Part of `pnpm turbo build`

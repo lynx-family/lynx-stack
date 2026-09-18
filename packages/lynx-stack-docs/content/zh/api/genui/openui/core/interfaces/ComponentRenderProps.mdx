@@ -1,0 +1,85 @@
+# 接口: ComponentRenderProps\<P = `Record`\<`string`, `unknown`\>\>
+
+传给 OpenUI ReactLynx 组件渲染器的 props。
+
+## 继承
+
+- `ComponentRenderProps`\<`P`, `ReactNode`\>
+
+## 类型参数
+
+| 类型参数 | 默认类型 |
+| ------ | ------ |
+| `P` | `Record`\<`string`, `unknown`\> |
+
+## 属性
+
+### onAction?
+
+```ts
+optional onAction?: (event: ActionEvent) => void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `event` | [`ActionEvent`](ActionEvent.mdx) |
+
+#### 返回
+
+`void`
+
+***
+
+### props
+
+```ts
+props: P;
+```
+
+#### 继承自
+
+```ts
+CoreRenderProps.props
+```
+
+***
+
+### renderNode
+
+```ts
+renderNode: (value: unknown) => ReactNode;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `value` | `unknown` |
+
+#### 返回
+
+`ReactNode`
+
+#### 继承自
+
+```ts
+CoreRenderProps.renderNode
+```
+
+***
+
+### statementId?
+
+```ts
+optional statementId?: string;
+```
+
+解析后程序中的语句 ID（例如 "header"、"prose1"）。内联组件为 undefined。
+
+#### 继承自
+
+```ts
+CoreRenderProps.statementId
+```

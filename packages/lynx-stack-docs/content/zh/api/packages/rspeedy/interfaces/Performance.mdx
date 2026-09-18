@@ -1,0 +1,266 @@
+# 接口: Performance
+
+Performance 选项用于优化构建时和运行时的性能。
+
+## 属性
+
+### buildCache?
+
+```ts
+optional buildCache?: boolean | BuildCache;
+```
+
+**`Beta`**
+
+启用或配置持久化构建缓存。
+
+#### 默认值
+
+```ts
+false
+```
+
+#### 备注
+
+该功能目前为实验性功能，未来可能会发生变化。
+
+#### 示例
+
+启用持久化构建缓存。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    buildCache: true,
+  },
+})
+```
+
+自定义构建缓存。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    buildCache: {
+      cacheDigest: [process.env.SOME_ENV],
+      buildDependencies: ['postcss.config.js'],
+    },
+  },
+})
+```
+
+***
+
+### ~~chunkSplit?~~
+
+```ts
+optional chunkSplit?: 
+  | ChunkSplit
+  | ChunkSplitBySize
+  | ChunkSplitCustom;
+```
+
+[Performance.chunkSplit](#chunksplit) 用于配置 chunk 拆分策略。
+
+#### 默认值
+
+未设置，此时会将所有内容打包到一个 chunk 中（与 `'all-in-one'` 相同）。
+
+#### 已被弃用
+
+请使用顶层的 [Config.splitChunks](Config.mdx#splitchunks) 选项代替。
+
+***
+
+### printFileSize?
+
+```ts
+optional printFileSize?: boolean | PrintFileSizeOptions;
+```
+
+是否在生产环境构建后打印文件大小。
+
+#### 默认值
+
+```ts
+true
+```
+
+#### 备注
+
+详见 [Rsbuild - performance.printFileSize](https://rsbuild.rs/config/performance/print-file-size)。
+
+#### 示例
+
+如果不想打印任何信息，可以将 printFileSize 设置为 false 来禁用：
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    printFileSize: false
+  },
+})
+```
+
+将 total 设置为 false 以禁用总大小的输出。
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    printFileSize: {
+      total: false,
+    },
+  },
+})
+```
+
+将 detail 设置为 false 以禁用每个资源大小的输出。
+
+如果不需要查看每个静态资源的大小，可以将 detail 设置为 false，此时只会输出总大小：
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    printFileSize: {
+      detail: false,
+    },
+  },
+})
+```
+
+如果不需要查看 gzip 压缩后的大小，可以将 compressed 设置为 false，这可以为大型项目节省一些 gzip 计算时间：
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    printFileSize: {
+      compressed: false,
+    },
+  },
+})
+```
+
+如果只需包含满足特定条件的静态资源，可以通过 include 传入过滤函数。
+
+如果返回 false，该静态资源将被排除，不会计入总大小或详细大小。
+
+仅输出大于 10kB 的静态资源：
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    printFileSize: {
+      include: (asset) => asset.size > 10 * 1000,
+    }
+  },
+})
+```
+
+如果需要排除满足特定条件的静态资源，可以通过 exclude 传入过滤函数。如果同时设置了 include 和 exclude，exclude 的优先级更高。
+
+Rspeedy 默认会排除 source map、license 文件和 .d.ts 类型文件，因为这些文件不会影响页面加载性能。
+
+在默认规则之外额外排除 .html 文件：
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    printFileSize: {
+      exclude: (asset) =>
+        /\.(?:map|LICENSE\.txt)$/.test(asset.name) ||
+        /\.html$/.test(asset.name),
+    }
+  },
+})
+```
+
+***
+
+### profile?
+
+```ts
+optional profile?: boolean;
+```
+
+是否在 ReactLynx 等 Lynx 运行时集成中采集耗时信息。
+
+#### 备注
+
+开启后，框架会通过 `console.profile` 输出运行时信息。
+
+#### 默认值
+
+当 `DEBUG=lynx` 时为 `true`，否则为 `undefined`
+
+#### 示例
+
+启用 profile。
+
+- ReactLynx 等框架会通过 `console.profile` 输出运行时信息。
+- Rspeedy 会在构建后输出 `dist/stats.json`，以兼容 bundle 分析工具。
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: { profile: true },
+})
+```
+
+***
+
+### removeConsole?
+
+```ts
+optional removeConsole?: boolean | ConsoleType[];
+```
+
+是否在生产环境构建中移除 `console.[methodName]`。
+
+#### 默认值
+
+```ts
+false
+```
+
+#### 示例
+
+- 移除所有 `console` 方法
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    removeConsole: true,
+  },
+})
+```
+
+- 移除指定的 `console` 方法
+
+```ts
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    removeConsole: ['log', 'warn']
+  },
+})
+```

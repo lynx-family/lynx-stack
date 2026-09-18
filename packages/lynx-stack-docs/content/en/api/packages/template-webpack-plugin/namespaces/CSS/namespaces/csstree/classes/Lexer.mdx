@@ -1,0 +1,453 @@
+# Class: Lexer
+
+## Constructors
+
+### Constructor
+
+```ts
+new Lexer(): Lexer;
+```
+
+#### Returns
+
+`Lexer`
+
+## Methods
+
+### checkAtruleDescriptorName()
+
+```ts
+checkAtruleDescriptorName(atruleName: string, descriptorName: string): 
+  | SyntaxError
+  | SyntaxReferenceError
+  | undefined;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `atruleName` | `string` |
+| `descriptorName` | `string` |
+
+#### Returns
+
+  \| `SyntaxError`
+  \| [`SyntaxReferenceError`](../interfaces/SyntaxReferenceError.mdx)
+  \| `undefined`
+
+***
+
+### checkAtruleName()
+
+```ts
+checkAtruleName(atruleName: string): 
+  | SyntaxReferenceError
+  | undefined;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `atruleName` | `string` |
+
+#### Returns
+
+  \| [`SyntaxReferenceError`](../interfaces/SyntaxReferenceError.mdx)
+  \| `undefined`
+
+***
+
+### checkAtrulePrelude()
+
+```ts
+checkAtrulePrelude(atruleName: string, prelude: string | CssNode): 
+  | Error
+  | SyntaxReferenceError
+  | undefined;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `atruleName` | `string` |
+| `prelude` | `string` \| [`CssNode`](../type-aliases/CssNode.mdx) |
+
+#### Returns
+
+  \| `Error`
+  \| [`SyntaxReferenceError`](../interfaces/SyntaxReferenceError.mdx)
+  \| `undefined`
+
+***
+
+### checkPropertyName()
+
+```ts
+checkPropertyName(propertyName: string): 
+  | SyntaxReferenceError
+  | undefined;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `propertyName` | `string` |
+
+#### Returns
+
+  \| [`SyntaxReferenceError`](../interfaces/SyntaxReferenceError.mdx)
+  \| `undefined`
+
+***
+
+### checkStructure()
+
+```ts
+checkStructure(ast: CssNode): false | StructureWarning[];
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `ast` | [`CssNode`](../type-aliases/CssNode.mdx) |
+
+#### Returns
+
+`false` \| [`StructureWarning`](../interfaces/StructureWarning.mdx)[]
+
+***
+
+### dump()
+
+```ts
+dump(syntaxAsAst?: boolean, pretty?: boolean): unknown;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `syntaxAsAst?` | `boolean` |
+| `pretty?` | `boolean` |
+
+#### Returns
+
+`unknown`
+
+***
+
+### findAllFragments()
+
+```ts
+findAllFragments(
+   ast: CssNode, 
+   type: string, 
+   name: string
+): LexerValueFragment[];
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `ast` | [`CssNode`](../type-aliases/CssNode.mdx) |
+| `type` | `string` |
+| `name` | `string` |
+
+#### Returns
+
+[`LexerValueFragment`](../interfaces/LexerValueFragment.mdx)[]
+
+***
+
+### findDeclarationValueFragments()
+
+```ts
+findDeclarationValueFragments(
+   declaration: Declaration, 
+   type: string, 
+   name: string
+): LexerValueFragment[];
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `declaration` | [`Declaration`](../interfaces/Declaration.mdx) |
+| `type` | `string` |
+| `name` | `string` |
+
+#### Returns
+
+[`LexerValueFragment`](../interfaces/LexerValueFragment.mdx)[]
+
+***
+
+### findValueFragments()
+
+```ts
+findValueFragments(
+   propertyName: string, 
+   value: CssNode, 
+   type: string, 
+   name: string
+): LexerValueFragment[];
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `propertyName` | `string` |
+| `value` | [`CssNode`](../type-aliases/CssNode.mdx) |
+| `type` | `string` |
+| `name` | `string` |
+
+#### Returns
+
+[`LexerValueFragment`](../interfaces/LexerValueFragment.mdx)[]
+
+***
+
+### getAtrule()
+
+```ts
+getAtrule(atruleName: string, fallbackBasename?: boolean): AtruleDescriptor | null;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `atruleName` | `string` |
+| `fallbackBasename?` | `boolean` |
+
+#### Returns
+
+[`AtruleDescriptor`](../interfaces/AtruleDescriptor.mdx) \| `null`
+
+***
+
+### getAtruleDescriptor()
+
+```ts
+getAtruleDescriptor(atruleName: string, name: string): SyntaxDescriptor | null;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `atruleName` | `string` |
+| `name` | `string` |
+
+#### Returns
+
+[`SyntaxDescriptor`](../interfaces/SyntaxDescriptor.mdx) \| `null`
+
+***
+
+### getAtrulePrelude()
+
+```ts
+getAtrulePrelude(atruleName: string, fallbackBasename?: boolean): SyntaxDescriptor | null;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `atruleName` | `string` |
+| `fallbackBasename?` | `boolean` |
+
+#### Returns
+
+[`SyntaxDescriptor`](../interfaces/SyntaxDescriptor.mdx) \| `null`
+
+***
+
+### getProperty()
+
+```ts
+getProperty(propertyName: string, fallbackBasename?: boolean): SyntaxDescriptor | null;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `propertyName` | `string` |
+| `fallbackBasename?` | `boolean` |
+
+#### Returns
+
+[`SyntaxDescriptor`](../interfaces/SyntaxDescriptor.mdx) \| `null`
+
+***
+
+### getType()
+
+```ts
+getType(name: string): SyntaxDescriptor | null;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `name` | `string` |
+
+#### Returns
+
+[`SyntaxDescriptor`](../interfaces/SyntaxDescriptor.mdx) \| `null`
+
+***
+
+### match()
+
+```ts
+match(syntax: string | DSNode, value: string | CssNode): LexerMatchResult;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `syntax` | `string` \| [`DSNode`](../type-aliases/DSNode.mdx) |
+| `value` | `string` \| [`CssNode`](../type-aliases/CssNode.mdx) |
+
+#### Returns
+
+[`LexerMatchResult`](../interfaces/LexerMatchResult.mdx)
+
+***
+
+### matchAtruleDescriptor()
+
+```ts
+matchAtruleDescriptor(
+   atruleName: string, 
+   descriptorName: string, 
+   value: string | CssNode
+): LexerMatchResult;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `atruleName` | `string` |
+| `descriptorName` | `string` |
+| `value` | `string` \| [`CssNode`](../type-aliases/CssNode.mdx) |
+
+#### Returns
+
+[`LexerMatchResult`](../interfaces/LexerMatchResult.mdx)
+
+***
+
+### matchAtrulePrelude()
+
+```ts
+matchAtrulePrelude(atruleName: string, prelude: string | CssNode): LexerMatchResult;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `atruleName` | `string` |
+| `prelude` | `string` \| [`CssNode`](../type-aliases/CssNode.mdx) |
+
+#### Returns
+
+[`LexerMatchResult`](../interfaces/LexerMatchResult.mdx)
+
+***
+
+### matchDeclaration()
+
+```ts
+matchDeclaration(node: CssNode): LexerMatchResult;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `node` | [`CssNode`](../type-aliases/CssNode.mdx) |
+
+#### Returns
+
+[`LexerMatchResult`](../interfaces/LexerMatchResult.mdx)
+
+***
+
+### matchProperty()
+
+```ts
+matchProperty(propertyName: string, value: string | CssNode): LexerMatchResult;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `propertyName` | `string` |
+| `value` | `string` \| [`CssNode`](../type-aliases/CssNode.mdx) |
+
+#### Returns
+
+[`LexerMatchResult`](../interfaces/LexerMatchResult.mdx)
+
+***
+
+### matchType()
+
+```ts
+matchType(typeName: string, value: string | CssNode): LexerMatchResult;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `typeName` | `string` |
+| `value` | `string` \| [`CssNode`](../type-aliases/CssNode.mdx) |
+
+#### Returns
+
+[`LexerMatchResult`](../interfaces/LexerMatchResult.mdx)
+
+***
+
+### toString()
+
+```ts
+toString(): string;
+```
+
+#### Returns
+
+`string`
+
+***
+
+### validate()
+
+```ts
+validate(): 
+  | LexerValidationResult
+  | null;
+```
+
+#### Returns
+
+  \| [`LexerValidationResult`](../interfaces/LexerValidationResult.mdx)
+  \| `null`

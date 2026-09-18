@@ -1,0 +1,33 @@
+# 函数: Suspense()
+
+```ts
+function Suspense(props: SuspenseProps): ReactNode;
+```
+
+让你在子组件加载完成之前显示一个后备内容。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `props` | `SuspenseProps` |
+
+## 返回
+
+`ReactNode`
+
+## 参阅
+
+[React Docs](https://react.dev/reference/react/Suspense)
+
+## 示例
+
+```tsx
+import { Suspense, lazy } from '@lynx-js/react';
+
+const ProfileDetails = lazy(() => import('./ProfileDetails.jsx'));
+
+<Suspense fallback={<Loading />}>
+  <ProfileDetails />
+</Suspense>
+```

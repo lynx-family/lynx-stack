@@ -1,0 +1,27 @@
+# 函数: pluginQRCode()
+
+```ts
+function pluginQRCode(options?: PluginQRCodeOptions): RsbuildPlugin;
+```
+
+创建一个用于打印二维码的 Rsbuild 插件。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `options?` | [`PluginQRCodeOptions`](../interfaces/PluginQRCodeOptions.mdx) |
+
+## 返回
+
+`RsbuildPlugin`
+
+## 示例
+
+```ts
+// rsbuild.config.ts
+import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
+export default {
+  plugins: [pluginQRCode()],
+}
+```

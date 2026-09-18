@@ -1,0 +1,21 @@
+# Function: serializeCatalog()
+
+```ts
+function serializeCatalog(catalog: Catalog): SerializedCatalog;
+```
+
+Produce the JSON manifest the client should announce to the agent during
+channel handshake. Component entries without an attached schema serialize
+to `{ name }` only — useful for letting the agent at least know what's
+renderable. Function entries serialize with their parameter schema when
+available.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `catalog` | [`Catalog`](../interfaces/Catalog.mdx) |
+
+## Returns
+
+[`SerializedCatalog`](../interfaces/SerializedCatalog.mdx)

@@ -1,0 +1,37 @@
+# Function: prepareMessagesForProcessing()
+
+```ts
+function prepareMessagesForProcessing(
+   rawMessages: ServerToClientMessage[], 
+   messageId: string, 
+   activeSurfaceIds: Set<string>
+): object;
+```
+
+Tag messages with the given messageId and report whether any of them
+carries a non-empty `updateComponents`. Also dedupes `createSurface`
+messages against the set of currently-active surfaces.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `rawMessages` | [`ServerToClientMessage`](../type-aliases/ServerToClientMessage.mdx)[] |
+| `messageId` | `string` |
+| `activeSurfaceIds` | `Set`\<`string`\> |
+
+## Returns
+
+`object`
+
+### hasComponentUpdate
+
+```ts
+hasComponentUpdate: boolean;
+```
+
+### messages
+
+```ts
+messages: ServerToClientMessage[];
+```

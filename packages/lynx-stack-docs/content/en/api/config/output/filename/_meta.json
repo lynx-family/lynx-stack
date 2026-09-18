@@ -1,0 +1,20 @@
+[
+  {
+    "type": "file",
+    "name": "bundle",
+    "label": "bundle",
+    "tag": "Lynx"
+  },
+  {
+    "type": "file",
+    "name": "css",
+    "label": "css",
+    "tag": "Default changed"
+  },
+  {
+    "type": "file",
+    "name": "template",
+    "label": "template",
+    "tag": "Rspeedy"
+  }
+]

@@ -1,0 +1,44 @@
+# Interface: LepusNGDebugInfoBody
+
+Inner body of [LepusNGDebugInfo](LepusNGDebugInfo.mdx). Carries the function-level
+debug data the lepusNG encoder produces for one compilation unit.
+
+## Properties
+
+### end\_line\_num
+
+```ts
+end_line_num: number;
+```
+
+Last source line covered by the compilation unit.
+
+***
+
+### function\_info
+
+```ts
+function_info: LepusNGFunctionInfo[];
+```
+
+Per-function debug data.
+
+***
+
+### function\_number
+
+```ts
+function_number: number;
+```
+
+Number of compiled functions; equals `function_info.length`.
+
+***
+
+### function\_source
+
+```ts
+function_source: string;
+```
+
+Full JS source that was fed to the bytecode compiler.

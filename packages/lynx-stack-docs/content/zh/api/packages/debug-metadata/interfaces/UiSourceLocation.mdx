@@ -1,0 +1,44 @@
+# 接口: UiSourceLocation
+
+为单个 UI 节点恢复出的源码位置，以反向解析后的树
+在其原始字段之外新增的形式呈现。
+
+## 属性
+
+### column
+
+```ts
+column: number;
+```
+
+从 1 开始计数的源码列号。
+
+***
+
+### line
+
+```ts
+line: number;
+```
+
+从 1 开始计数的源码行号。
+
+***
+
+### repo
+
+```ts
+repo: string | null;
+```
+
+根据构建的 git remote 推导出的 `owner/repo`，或者为 `null`。
+
+***
+
+### source
+
+```ts
+source: string | null;
+```
+
+编写时的源码路径（相对于项目根目录），或为 `null`。

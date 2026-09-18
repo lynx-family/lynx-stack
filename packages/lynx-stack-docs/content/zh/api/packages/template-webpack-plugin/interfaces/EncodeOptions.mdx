@@ -1,0 +1,61 @@
+# 接口: EncodeOptions
+
+用于编码 Lynx bundle 的选项。
+
+## 可索引
+
+```ts
+[k: string]: unknown
+```
+
+## 属性
+
+### compilerOptions
+
+```ts
+compilerOptions: Record<string, string | boolean>;
+```
+
+***
+
+### customSections
+
+```ts
+customSections: Record<string, {
+  content: string | Record<string, unknown> | undefined;
+  encoding?: "JsBytecode" | "CSS";
+  type?: "lazy";
+}>;
+```
+
+***
+
+### elementTemplate?
+
+```ts
+optional elementTemplate?: Record<string, unknown>;
+```
+
+供支持 element template 输出的编码器使用的 element template 数据。
+
+***
+
+### lepusCode
+
+```ts
+lepusCode: 
+  | {
+  filename: string | undefined;
+  lepusChunk: Record<string, string>;
+  root: string | undefined;
+}
+  | undefined;
+```
+
+***
+
+### manifest?
+
+```ts
+optional manifest?: Record<string, string | undefined>;
+```

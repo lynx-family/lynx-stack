@@ -1,0 +1,39 @@
+# Interface: AppRendererRegistry
+
+A local renderer lookup used by the protocol-agnostic MCP Apps host.
+
+## Properties
+
+### getRenderer
+
+```ts
+getRenderer: (id: string) => AppRenderer | null;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+
+#### Returns
+
+[`AppRenderer`](AppRenderer.mdx) \| `null`
+
+***
+
+### resolveRenderData
+
+```ts
+resolveRenderData: (value: unknown) => ResolvedAppRenderData | null;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `value` | `unknown` |
+
+#### Returns
+
+[`ResolvedAppRenderData`](ResolvedAppRenderData.mdx) \| `null`

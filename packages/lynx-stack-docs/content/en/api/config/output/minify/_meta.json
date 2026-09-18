@@ -1,0 +1,14 @@
+[
+  {
+    "type": "file",
+    "name": "background-options",
+    "label": "backgroundOptions",
+    "tag": "Lynx"
+  },
+  {
+    "type": "file",
+    "name": "main-thread-options",
+    "label": "mainThreadOptions",
+    "tag": "Lynx"
+  }
+]

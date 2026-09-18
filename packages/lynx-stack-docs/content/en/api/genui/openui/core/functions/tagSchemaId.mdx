@@ -1,0 +1,20 @@
+# Function: tagSchemaId()
+
+```ts
+function tagSchemaId(schema: object, id: string): void;
+```
+
+Tag a schema with an ID for prompt signatures.
+Use for non-component schemas that need friendly type names (e.g. ActionExpression).
+This affects prompt output only, not JSON Schema $defs.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `schema` | `object` |
+| `id` | `string` |
+
+## Returns
+
+`void`

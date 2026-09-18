@@ -1,0 +1,481 @@
+# Interface: Output
+
+The Output option is used to set how and where should the bundles and assets output.
+
+## Properties
+
+### assetPrefix?
+
+```ts
+optional assetPrefix?: string;
+```
+
+The [Output.assetPrefix](#assetprefix) is used to set the URL prefix for static assets.
+
+#### Default Value
+
+```ts
+undefined
+```
+
+#### Remarks
+
+The functionality of [Output.assetPrefix](#assetprefix) is basically the same as the [output.publicPath](https://rspack.rs/config/output#outputpublicpath)
+config in Rspack. With the following differences:
+
+- `output.assetPrefix` only takes effect in the production build.
+
+- `output.assetPrefix` automatically appends a trailing `/` by default.
+
+- The value of `output.assetPrefix` is written to the `process.env.ASSET_PREFIX` environment variable.
+
+#### Example
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  output: {
+    assetPrefix: 'https://cdn.example.com/assets/',
+  },
+})
+```
+
+***
+
+### cleanDistPath?
+
+```ts
+optional cleanDistPath?: boolean;
+```
+
+The [Output.cleanDistPath](#cleandistpath) option determines whether all files in the output directory (default: `dist`) are removed before the build starts.
+
+#### Remarks
+
+By default, if the output directory is a subdirectory of the project root path, Rspeedy will automatically clean all files in the build directory.
+
+When [output.distPath.root](https://rsbuild.rs/config/output/dist-path#root-directory) is an external directory or the same as the project root directory, `cleanDistPath` is not enabled by default to prevent accidental deletion of files from other directories.
+
+#### Default Value
+
+Automatically enabled when `output.distPath.root` is a subdirectory of the project root; otherwise disabled.
+
+#### Examples
+
+- Disable cleaning files:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  output: {
+    cleanDistPath: false,
+  },
+})
+```
+
+- Only clean files before the production build:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  output: {
+    cleanDistPath: process.env.NODE_ENV === 'production',
+  },
+})
+```
+
+***
+
+### copy?
+
+```ts
+optional copy?: 
+  | CopyRspackPluginOptions
+  | (
+  | string
+  | Pick<RawCopyPattern, "from"> & Partial<Omit<RawCopyPattern, "from">>)[];
+```
+
+The [Output.copy](#copy) option is used for copying files to the dist directory.
+
+#### Default Value
+
+```ts
+undefined
+```
+
+#### Remarks
+
+For more options, see [Rspack.CopyRspackPlugin](https://rspack.rs/plugins/rspack/copy-rspack-plugin).
+
+#### Examples
+
+- Copy files from `./src/assets` to the `./dist` directory:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    copy: [
+      // `./src/assets/image.png` -> `./dist/image.png`
+      { from: './src/assets' },
+    ],
+  },
+})
+```
+
+- Copy files from ./src/assets to the ./dist/assets directory:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    copy: [
+      // `./src/assets/image.png` -> `./dist/assets/image.png`
+      { from: './src/assets', to: 'assets' },
+    ],
+  },
+})
+```
+
+***
+
+### cssModules?
+
+```ts
+optional cssModules?: CssModules;
+```
+
+The [CssModules](CssModules.mdx) option is used for the customization of CSS Modules configurations.
+
+#### Default Value
+
+```ts
+undefined
+```
+
+#### Remarks
+
+The CSS module is enabled for `*.module.css`, `*.module.scss` and `*.module.less`.
+Use [CssModules.auto](CssModules.mdx#auto) to customize the filtering behavior.
+
+#### Examples
+
+Disable CSS modules:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  output: {
+    cssModules: {
+      auto: false,
+    },
+  },
+})
+```
+
+Enable CSS modules for all CSS files:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  output: {
+    cssModules: {
+      auto: () => true,
+    },
+  },
+})
+```
+
+***
+
+### dataUriLimit?
+
+```ts
+optional dataUriLimit?: number | DataUriLimit;
+```
+
+**`Lynx Default Changed`**
+
+The [Output.dataUriLimit](#dataurilimit) option is used to set the size threshold to inline static assets such as images and fonts.
+
+#### Default Value
+
+```ts
+2048
+```
+
+#### Examples
+
+Inline all static assets less than 4kB:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  output: {
+    dataUriLimit: 4 * 1024,
+  },
+})
+```
+
+Disable inlining of static assets:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  output: {
+    dataUriLimit: 0,
+  },
+})
+```
+
+Inline all static assets:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  output: {
+    dataUriLimit: Number.MAX_SAFE_INTEGER,
+  },
+})
+```
+
+Disable inlining of all media but not images.
+
+```ts title="lynx.config.ts"
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    dataUriLimit: {
+      image: 5000,
+      media: 0,
+    },
+  },
+})
+```
+
+***
+
+### distPath?
+
+```ts
+optional distPath?: DistPathConfig;
+```
+
+**`Lynx Default Changed`**
+
+Set the directory of the dist files.
+
+#### Default Value
+
+Uses Rsbuild's default distPath configuration with `root: 'dist'`.
+
+#### Remarks
+
+More options can be found at [Rsbuild - distPath](https://rsbuild.rs/config/output/dist-path).
+
+#### Example
+
+Use `output` instead of `dist`(the default value):
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  output: {
+    distPath: {
+      root: './output',
+    },
+  },
+})
+```
+
+***
+
+### filename?
+
+```ts
+optional filename?: string | Filename;
+```
+
+The [Filename](Filename.mdx) determines the name of the Lynx bundle files emitted under [Output.distPath](#distpath).
+
+#### Default Value
+
+`{ bundle: '[name].[platform].bundle', template: '[name].[platform].bundle' }`
+
+#### Remarks
+
+If a string is provided, it will be used as [Filename.bundle](Filename.mdx#bundle).
+
+#### Example
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  output: {
+    filename: '[name]/[name].lynx.bundle',
+  },
+})
+```
+
+***
+
+### filenameHash?
+
+```ts
+optional filenameHash?: string | boolean;
+```
+
+The [Output.filenameHash](#filenamehash) option controls whether to add a hash value to the filename after the production build.
+
+#### Default Value
+
+In production web builds, Rsbuild defaults this option to `true`; development builds and non-web outputs omit hashes by default.
+
+#### Remarks
+
+[Output.filename](#filename) has a higher priority than [Output.filenameHash](#filenamehash).
+
+#### Examples
+
+- Disable hash
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filenameHash: false,
+  },
+})
+```
+
+- Change hash format
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filenameHash: 'fullhash:16',
+  },
+})
+```
+
+The available hash formats are:
+
+- `fullhash`: The hash value of the entire compilation. If any file changes, the hash values of all output files in the entire project will change.
+
+- `chunkhash`: The hash value of the chunk. The hash value will only change when the content of the chunk (and its included modules) changes.
+
+- `contenthash`: The hash value of the file content. The hash value will only change when the content of the file itself changes.
+
+***
+
+### inlineScripts?
+
+```ts
+optional inlineScripts?: InlineChunkConfig;
+```
+
+The [Output.inlineScripts](#inlinescripts) option controls whether to inline scripts into Lynx bundle (`.lynx.bundle`).
+
+#### Default Value
+
+Rspeedy defaults this to `true` and only switches it to `false` when the user explicitly enables the top-level `splitChunks` option.
+
+#### Remarks
+
+This is different with [output.inlineScripts](https://rsbuild.rs/config/output/inline-scripts) since we normally want to inline scripts in Lynx bundle (`.lynx.bundle`).
+
+There are two points that need to be especially noted:
+
+1. Only background thread scripts can remain non-inlined, whereas the main thread script is always inlined.
+
+2. Currently, when `experimental_isLazyBundle` is enabled, `inlineScripts` will always be `true`.
+
+#### Example
+
+Disable inlining background thread scripts.
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    inlineScripts: false,
+  },
+})
+```
+
+***
+
+### legalComments?
+
+```ts
+optional legalComments?: "none" | "inline" | "linked";
+```
+
+**`Lynx Default Changed`**
+
+The [Output.legalComments](#legalcomments) controls how to handle the legal comment.
+
+#### Default Value
+
+`'none'`
+
+#### Remarks
+
+This is different with Rsbuild since we normally do not want a `.LEGAL.txt` file in Lynx outputs.
+
+This behavior can be configured by using one of the following options:
+
+- `linked`: Extract all legal comments to a `.LEGAL.txt` file and link to them with a comment.
+
+- `inline`: Preserve all legal comments in original position.
+
+- `none`: Remove all legal comments.
+
+***
+
+### minify?
+
+```ts
+optional minify?: boolean | Minify;
+```
+
+The [Minify](Minify.mdx) configures whether to enable code minification in the production build, or to configure minimizer options.
+
+#### Default Value
+
+`true` in production builds and `false` otherwise
+
+#### Example
+
+Disable minification.
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  output: {
+    minify: false,
+  },
+})
+```
+
+***
+
+### sourceMap?
+
+```ts
+optional sourceMap?: boolean | SourceMap;
+```
+
+**`Lynx Default Changed`**
+
+The [SourceMap](SourceMap.mdx) configures whether and how to generate source-map for outputs.
+
+#### Default Value
+
+When this option is unset in Lynx builds, JavaScript source maps use `'cheap-module-source-map'` in development and `'source-map'` in production; CSS source maps are also generated. All `.map` assets are removed before emit.

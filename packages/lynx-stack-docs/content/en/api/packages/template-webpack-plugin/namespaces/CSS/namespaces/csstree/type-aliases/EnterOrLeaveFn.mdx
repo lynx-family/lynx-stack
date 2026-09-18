@@ -1,0 +1,24 @@
+# Type Alias: EnterOrLeaveFn\<NodeType = [`CssNode`](CssNode.mdx)\>
+
+```ts
+type EnterOrLeaveFn<NodeType = CssNode> = (this: WalkContext, node: NodeType, item: ListItem<CssNode>, list: List<CssNode>) => void;
+```
+
+## Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `NodeType` | [`CssNode`](CssNode.mdx) |
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `this` | [`WalkContext`](../interfaces/WalkContext.mdx) |
+| `node` | `NodeType` |
+| `item` | [`ListItem`](../interfaces/ListItem.mdx)\<[`CssNode`](CssNode.mdx)\> |
+| `list` | [`List`](../classes/List.mdx)\<[`CssNode`](CssNode.mdx)\> |
+
+## Returns
+
+`void`

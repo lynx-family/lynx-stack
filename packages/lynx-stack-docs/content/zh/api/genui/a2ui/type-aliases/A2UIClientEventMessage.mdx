@@ -1,0 +1,14 @@
+# 类型别名: A2UIClientEventMessage
+
+```ts
+type A2UIClientEventMessage = 
+  | string
+  | {
+  sessionId?: string;
+  text?: string;
+}
+  | {
+  sessionId?: string;
+  userAction: UserActionPayload;
+};
+```

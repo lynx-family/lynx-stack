@@ -1,0 +1,22 @@
+# Interface: CheckLike
+
+A v0.9 `CheckRule` is `{ condition, message }` where `condition` is a
+boolean, a `DataBinding`, or a `FunctionCall`. We accept the loose
+`unknown` shape so component props don't have to import the v0_9
+types just to pass them through.
+
+## Properties
+
+### condition
+
+```ts
+condition: unknown;
+```
+
+***
+
+### message
+
+```ts
+message: string;
+```

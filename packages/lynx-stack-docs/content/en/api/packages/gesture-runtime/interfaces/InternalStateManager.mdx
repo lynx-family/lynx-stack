@@ -1,0 +1,116 @@
+# Interface: InternalStateManager
+
+Used internally, not meant to be public
+
+## Properties
+
+### \_\_ConsumeGesture
+
+```ts
+__ConsumeGesture: (dom: FiberElement, id: number, params: ConsumeGestureParams) => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `dom` | `FiberElement` |
+| `id` | `number` |
+| `params` | [`ConsumeGestureParams`](ConsumeGestureParams.mdx) |
+
+#### Returns
+
+`void`
+
+***
+
+### \_\_SetGestureState
+
+```ts
+__SetGestureState: (dom: FiberElement, id: number, type: SetGestureStateType) => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `dom` | `FiberElement` |
+| `id` | `number` |
+| `type` | [`SetGestureStateType`](../enumerations/SetGestureStateType.mdx) |
+
+#### Returns
+
+`void`
+
+***
+
+### active
+
+```ts
+active: (id: number) => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `number` |
+
+#### Returns
+
+`void`
+
+***
+
+### end
+
+```ts
+end: (id: number) => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `number` |
+
+#### Returns
+
+`void`
+
+***
+
+### fail
+
+```ts
+fail: (id: number) => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `number` |
+
+#### Returns
+
+`void`
+
+***
+
+### scrollBy
+
+```ts
+scrollBy: (deltaX: number, deltaY: number) => number[];
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `deltaX` | `number` |
+| `deltaY` | `number` |
+
+#### Returns
+
+`number`[]

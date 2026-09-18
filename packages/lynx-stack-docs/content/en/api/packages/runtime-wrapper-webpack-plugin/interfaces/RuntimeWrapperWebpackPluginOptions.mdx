@@ -1,0 +1,72 @@
+# Interface: RuntimeWrapperWebpackPluginOptions
+
+The options for RuntimeWrapperWebpackPluginOptions
+
+## Properties
+
+### bannerType
+
+```ts
+bannerType: (filename: string) => "script" | "bundle";
+```
+
+There are two types of banners: script(for app-service) and bundle(for js-render). You can decide to use which banner by the filename.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `filename` | `string` |
+
+#### Returns
+
+`"script"` \| `"bundle"`
+
+#### Default Value
+
+`() => 'script'`
+
+***
+
+### experimental\_isLazyBundle?
+
+```ts
+optional experimental_isLazyBundle?: boolean;
+```
+
+Generate standalone lazy bundle.
+
+***
+
+### injectVars?
+
+```ts
+optional injectVars?: ((vars: string[]) => string[]) | string[];
+```
+
+A function that receives the default variable list and returns the list to inject.
+
+***
+
+### targetSdkVersion
+
+```ts
+targetSdkVersion: string;
+```
+
+targetSdkVersion is used to specify the minimal Lynx Engine version that a App bundle can run on.
+
+***
+
+### test
+
+```ts
+test: Rules | undefined;
+```
+
+Wrap the emitted JS assets whose filenames match this condition.
+Assets marked as main thread are never wrapped.
+
+#### Default Value
+
+`/\.js$/`

@@ -1,0 +1,52 @@
+[
+  {
+    "type": "file",
+    "name": "functions/applyLynxXmlStylePreset",
+    "label": "applyLynxXmlStylePreset"
+  },
+  {
+    "type": "file",
+    "name": "functions/buildLynxXmlSystemPrompt",
+    "label": "buildLynxXmlSystemPrompt"
+  },
+  {
+    "type": "file",
+    "name": "functions/compileLynxXmlFragment",
+    "label": "compileLynxXmlFragment"
+  },
+  {
+    "type": "file",
+    "name": "functions/generateMainThreadScript",
+    "label": "generateMainThreadScript"
+  },
+  {
+    "type": "file",
+    "name": "functions/generateMainThreadScriptResult",
+    "label": "generateMainThreadScriptResult"
+  },
+  {
+    "type": "file",
+    "name": "variables/LYNX_XML_ENGINE_VERSION",
+    "label": "LYNX_XML_ENGINE_VERSION"
+  },
+  {
+    "type": "file",
+    "name": "variables/LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS",
+    "label": "LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS"
+  },
+  {
+    "type": "file",
+    "name": "variables/LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT",
+    "label": "LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT"
+  },
+  {
+    "type": "file",
+    "name": "variables/LYNX_XML_SYSTEM_PROMPT",
+    "label": "LYNX_XML_SYSTEM_PROMPT"
+  },
+  {
+    "type": "file",
+    "name": "variables/MAX_XML_FRAGMENT_LENGTH",
+    "label": "MAX_XML_FRAGMENT_LENGTH"
+  }
+]

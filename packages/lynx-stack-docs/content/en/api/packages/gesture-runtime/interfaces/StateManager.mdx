@@ -1,0 +1,73 @@
+# Interface: StateManager
+
+## Properties
+
+### active
+
+```ts
+active: () => void;
+```
+
+#### Returns
+
+`void`
+
+***
+
+### consumeGesture
+
+```ts
+consumeGesture: (shouldConsume: boolean) => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `shouldConsume` | `boolean` |
+
+#### Returns
+
+`void`
+
+***
+
+### end
+
+```ts
+end: () => void;
+```
+
+#### Returns
+
+`void`
+
+***
+
+### fail
+
+```ts
+fail: () => void;
+```
+
+#### Returns
+
+`void`
+
+***
+
+### interceptGesture
+
+```ts
+interceptGesture: (shouldIntercept: boolean) => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `shouldIntercept` | `boolean` |
+
+#### Returns
+
+`void`

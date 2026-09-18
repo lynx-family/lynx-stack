@@ -1,0 +1,69 @@
+# 接口: Surface
+
+单个协议 surface 的内存状态。
+
+## 属性
+
+### catalogId?
+
+```ts
+optional catalogId?: string;
+```
+
+***
+
+### components
+
+```ts
+components: Map<string, ComponentInstance>;
+```
+
+***
+
+### resources
+
+```ts
+resources: Map<string, Resource>;
+```
+
+***
+
+### rootComponentId?
+
+```ts
+optional rootComponentId?: string | null;
+```
+
+该 surface 根组件的 id（必须为 'root'）。
+
+***
+
+### sendDataModel?
+
+```ts
+optional sendDataModel?: boolean;
+```
+
+***
+
+### store
+
+```ts
+store: SignalStore;
+```
+
+***
+
+### surfaceId
+
+```ts
+surfaceId: string;
+```
+
+***
+
+### theme?
+
+```ts
+optional theme?: Readonly<Record<string, unknown>>;
+```

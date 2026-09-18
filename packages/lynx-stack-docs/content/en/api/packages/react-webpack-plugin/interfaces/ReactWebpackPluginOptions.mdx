@@ -1,0 +1,186 @@
+# Interface: ReactWebpackPluginOptions
+
+The options for ReactWebpackPlugin
+
+## Properties
+
+### disableCreateSelectorQueryIncompatibleWarning?
+
+```ts
+optional disableCreateSelectorQueryIncompatibleWarning?: boolean;
+```
+
+Whether disable runtime warnings about using ReactLynx2.0-incompatible `SelectorQuery` APIs.
+
+***
+
+### enableSSR?
+
+```ts
+optional enableSSR?: boolean;
+```
+
+`enableSSR` enable Lynx SSR feature for this build.
+
+***
+
+### entryPairs?
+
+```ts
+optional entryPairs?: object[];
+```
+
+The main-thread and background entry pairs to merge the main-thread
+definitions across.
+
+#### background
+
+```ts
+background: string;
+```
+
+#### mainThread
+
+```ts
+mainThread: string;
+```
+
+***
+
+### experimental\_isLazyBundle?
+
+```ts
+optional experimental_isLazyBundle?: boolean;
+```
+
+**`Alpha`**
+
+Whether to enable lazy bundle.
+
+***
+
+### experimental\_transformBuiltinAttributeNames?
+
+```ts
+optional experimental_transformBuiltinAttributeNames?: 
+  | boolean
+  | TransformBuiltinAttributeNamesOptions;
+```
+
+**`Experimental`**
+
+The builtin attribute-name transform configuration used by runtime spread
+attributes.
+
+***
+
+### experimental\_useElementTemplate?
+
+```ts
+optional experimental_useElementTemplate?: boolean;
+```
+
+**`Experimental`**
+
+Whether to enable Element Template compilation.
+
+***
+
+### extractStr?
+
+```ts
+optional extractStr?: boolean | Partial<ExtractStrConfig>;
+```
+
+Merge same string literals in JS and Lepus to reduce output bundle size.
+Set to `false` to disable.
+
+#### Default Value
+
+```ts
+false
+```
+
+***
+
+### firstScreenSyncTiming?
+
+```ts
+optional firstScreenSyncTiming?: "immediately" | "jsReady" | "manual";
+```
+
+This flag controls when MainThread (Lepus) transfers control to Background after the first screen
+
+This flag has three options:
+
+`"immediately"`: Transfer immediately
+
+`"jsReady"`: Transfer when background (JS Runtime) is ready
+
+`"manual"`: Transfer when the business calls the `markFirstScreenSyncReady()` API exported
+by `@lynx-js/react`, so the handover timing is fully controlled by the user
+
+After handing over control, MainThread (Lepus) runtime can no longer respond to data updates,
+and data updates will be forwarded to background (JS Runtime) and processed __asynchronously__
+
+***
+
+### globalPropsMode?
+
+```ts
+optional globalPropsMode?: "reactive" | "event";
+```
+
+Configure the update mode of `lynx.__globalProps`.
+
+This flag has two options:
+
+`'reactive'`: `UpdateGlobalProps` will trigger update automatically.
+
+`'event'`: `UpdateGlobalProps` will trigger global event and users need to trigger update in the event handler.
+
+***
+
+### lazyBundleFetcher?
+
+```ts
+optional lazyBundleFetcher?: "FetchBundle" | "QueryComponent";
+```
+
+Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.
+`pluginReactLynx`) from the host engine version and any
+`REACT_LAZY_BUNDLE_FETCHER` env override.
+
+***
+
+### mainThreadChunks?
+
+```ts
+optional mainThreadChunks?: string[];
+```
+
+The chunk names to be considered as main thread chunks.
+
+***
+
+### profile?
+
+```ts
+optional profile?: boolean;
+```
+
+Whether to enable profile.
+
+#### Default Value
+
+`false` when production, `true` when development
+
+***
+
+### workletRuntimePath
+
+```ts
+workletRuntimePath: string;
+```
+
+The file path of `@lynx-js/react/worklet-runtime`.

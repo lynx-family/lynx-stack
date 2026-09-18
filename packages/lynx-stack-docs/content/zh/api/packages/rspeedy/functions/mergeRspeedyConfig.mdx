@@ -1,0 +1,44 @@
+# 函数: mergeRspeedyConfig()
+
+```ts
+function mergeRspeedyConfig(...configs: Config[]): Config;
+```
+
+合并多个 Rspeedy 配置对象。
+
+## 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| ...`configs` | [`Config`](../interfaces/Config.mdx)[] | 要合并的 Rspeedy 配置对象。 |
+
+## 返回
+
+[`Config`](../interfaces/Config.mdx)
+
+合并后的 Rspeedy 配置对象。
+
+## 示例
+
+```ts
+import { mergeRspeedyConfig } from '@lynx-js/rspeedy';
+
+const config1 = {
+  dev: {
+    writeToDisk: false,
+  },
+};
+const config2 = {
+  dev: {
+    writeToDisk: true,
+  },
+};
+
+const mergedConfig = mergeRspeedyConfig(config1, config2);
+
+console.log(mergedConfig); // { dev: { writeToDisk: true } }
+```
+
+## 备注
+
+它实际上是 [mergeRsbuildConfig](https://rsbuild.rs/api/javascript-api/core#mergersbuildconfig) 的别名。

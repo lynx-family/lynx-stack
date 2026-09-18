@@ -1,0 +1,23 @@
+# 接口: BytecodeDebugInfoSource
+
+主线程 artifact 编译为 lepusNG（未来也可能是
+其他字节码 target）后的字节码调试信息。
+
+## 属性
+
+### debugInfo
+
+```ts
+debugInfo: LepusNGDebugInfo;
+```
+
+字节码调试 payload。目前始终是 lepusNG 形状；如果/当其他
+编码器（`quickjs` 等）需要共存时，将会添加一个 `target` 判别字段。
+
+***
+
+### kind
+
+```ts
+kind: "bytecode-debug-info";
+```

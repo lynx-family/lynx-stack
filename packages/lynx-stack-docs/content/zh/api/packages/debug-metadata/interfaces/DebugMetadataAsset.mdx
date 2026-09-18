@@ -1,0 +1,63 @@
+# 接口: DebugMetadataAsset
+
+每个 Lynx template 入口输出的完整 `debug-metadata.json` 数据。
+
+不对称说明：`artifacts[]` 是**按 artifact** 组织的（每个 JS /
+CSS / bytecode bundle 一条记录），而 `uiSourceMap` 是**按 entry** 组织的（每个
+entry 的运行时 UI 树恰好对应一份 UI sourcemap）。强行把
+`uiSourceMap` 塞进 `artifacts[]` 需要虚构一个合成的
+artifact，这会把运行时概念和构建产物混为一谈。
+
+不同的消费方会读取不同的字段：
+  - JS 错误反向符号化会遍历 `artifacts[]`，查找
+    `kind: 'source-map'` 的调试源。
+  - 主线程字节码反向符号化会遍历 `artifacts[]`，
+    查找 `kind: 'bytecode-debug-info'` 及其匹配的 `source-map`。
+  - UI 元素检查器直接读取 `uiSourceMap`。
+
+## 属性
+
+### artifacts
+
+```ts
+artifacts: Artifact[];
+```
+
+每个携带调试数据的构建产物对应一条记录。当
+emitter 尚未接入以填充它时为空；消费方应
+将空数组视为“没有源码级调试数据可用”，
+而不是当作错误处理。
+
+***
+
+### buildInfo
+
+```ts
+buildInfo: object;
+```
+
+构建期 / 上下文信息。目前是封闭形状（closed-shape）——请通过
+为该接口添加具名字段（并升级 schema）来扩展，
+而不是在运行时塞入任意键。
+
+#### git?
+
+```ts
+optional git?: GitMetadata;
+```
+
+#### rspeedy?
+
+```ts
+optional rspeedy?: RspeedyMeta;
+```
+
+***
+
+### uiSourceMap
+
+```ts
+uiSourceMap: UiSourceMapData;
+```
+
+该 entry 运行时 UI 树的紧凑型 UI source map。

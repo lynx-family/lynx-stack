@@ -1,0 +1,29 @@
+# 函数: resolveField()
+
+```ts
+function resolveField(
+   metadata: DebugMetadataAsset, 
+   field: string, 
+   params?: QueryParams
+): ResolveResult | undefined;
+```
+
+根据解析后的元数据解析一个 `?field=…` 查询。
+
+- 当字段未注册时返回 `undefined` —— HTTP 层会
+  响应 `400 invalid_field` 并列出 `knownFields()`。
+- 当字段有效但没有匹配到值时返回 `{found: false}` —— HTTP 层响应 `404`。
+- 匹配成功时返回 `{found: true, payload}`。`payload` 是
+  已经解包过的值（应用了 resolver 的 `payload` hook）。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `metadata` | [`DebugMetadataAsset`](../interfaces/DebugMetadataAsset.mdx) |
+| `field` | `string` |
+| `params` | [`QueryParams`](../interfaces/QueryParams.mdx) |
+
+## 返回
+
+[`ResolveResult`](../interfaces/ResolveResult.mdx) \| `undefined`

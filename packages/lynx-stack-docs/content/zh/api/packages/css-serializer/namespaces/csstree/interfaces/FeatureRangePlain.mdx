@@ -1,0 +1,93 @@
+# 接口: FeatureRangePlain
+
+## 继承
+
+- [`CssNodeCommon`](CssNodeCommon.mdx)
+
+## 属性
+
+### kind
+
+```ts
+kind: string;
+```
+
+***
+
+### left
+
+```ts
+left: 
+  | Dimension
+  | FunctionNodePlain
+  | Identifier
+  | NumberNode
+  | RatioPlain;
+```
+
+***
+
+### leftComparison
+
+```ts
+leftComparison: string;
+```
+
+***
+
+### loc?
+
+```ts
+optional loc?: CssLocation;
+```
+
+#### 继承自
+
+[`CssNodeCommon`](CssNodeCommon.mdx).[`loc`](CssNodeCommon.mdx#loc)
+
+***
+
+### middle
+
+```ts
+middle: 
+  | Dimension
+  | FunctionNodePlain
+  | Identifier
+  | NumberNode
+  | RatioPlain;
+```
+
+***
+
+### right
+
+```ts
+right: 
+  | Dimension
+  | FunctionNodePlain
+  | Identifier
+  | NumberNode
+  | RatioPlain
+  | null;
+```
+
+***
+
+### rightComparison
+
+```ts
+rightComparison: string | null;
+```
+
+***
+
+### type
+
+```ts
+type: "FeatureRange";
+```
+
+#### 重写了
+
+[`CssNodeCommon`](CssNodeCommon.mdx).[`type`](CssNodeCommon.mdx#type)

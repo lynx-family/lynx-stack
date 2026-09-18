@@ -1,0 +1,107 @@
+# ~~接口: ChunkSplitBySize~~
+
+[Performance.chunkSplit](Performance.mdx#chunksplit) 用于配置 chunk 拆分策略。
+
+## 已被弃用
+
+请使用顶层的 [Config.splitChunks](Config.mdx#splitchunks) 选项代替。
+
+## 属性
+
+### ~~maxSize?~~
+
+```ts
+optional maxSize?: number;
+```
+
+chunk 的最大体积，单位为字节。
+
+#### 默认值
+
+`Number.POSITIVE_INFINITY`
+
+#### 示例
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    chunkSplit: {
+      strategy: 'split-by-size',
+      maxSize: 50000,
+    },
+  },
+})
+```
+
+***
+
+### ~~minSize?~~
+
+```ts
+optional minSize?: number;
+```
+
+chunk 的最小体积，单位为字节。
+
+#### 默认值
+
+```ts
+10000
+```
+
+#### 示例
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    chunkSplit: {
+      strategy: 'split-by-size',
+      minSize: 20000,
+    },
+  },
+})
+```
+
+***
+
+### ~~override?~~
+
+```ts
+optional override?: false | OptimizationSplitChunksOptions;
+```
+
+可以指定自定义的 Rspack chunk 拆分配置。
+
+#### 默认值
+
+```ts
+undefined
+```
+
+***
+
+### ~~strategy~~
+
+```ts
+strategy: "split-by-size";
+```
+
+chunk 拆分策略。
+
+#### 备注
+
+- `split-by-experience`（Rsbuild 默认）：根据经验制定的拆分策略，自动将一些常用的 npm 包拆分为体积适中的 chunk。
+
+- `split-by-module`：按 NPM 包的粒度拆分，每个 NPM 包对应一个 chunk。
+
+- `split-by-size`：根据模块大小自动拆分。
+
+- `all-in-one`：将所有代码打包到一个 chunk 中。
+
+- `single-vendor`：将所有 NPM 包打包到单个 chunk 中。
+
+- `custom`：自定义 chunk 拆分策略。

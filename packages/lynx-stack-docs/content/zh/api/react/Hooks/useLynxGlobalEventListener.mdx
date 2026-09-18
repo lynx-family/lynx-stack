@@ -1,0 +1,45 @@
+# 函数: useLynxGlobalEventListener()
+
+```ts
+function useLynxGlobalEventListener<T extends (...args: any[]) => void>(eventName: string, listener: T): void;
+```
+
+`useLynxGlobalEventListener` 帮助你尽早地 `addListener`。
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` *extends* (...`args`: `any`[]) => `void` |
+
+## 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `eventName` | `string` | 要监听的事件名 |
+| `listener` | `T` | 事件处理函数 |
+
+## 返回
+
+`void`
+
+## 示例
+
+使用此 Hook 监听 'exposure' 事件和 'disexposure' 事件
+
+```jsx
+function App() {
+  useLynxGlobalEventListener('exposure', (e) => {
+    console.log("exposure", e)
+  })
+  useLynxGlobalEventListener('disexposure', (e) => {
+    console.log("disexposure", e)
+  })
+  return (
+    <view
+      style='width: 100px; height: 100px; background-color: red;'
+      exposure-id='a'
+    />
+  )
+}
+```

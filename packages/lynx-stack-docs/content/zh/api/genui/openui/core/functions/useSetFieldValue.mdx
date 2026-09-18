@@ -1,0 +1,18 @@
+# 函数: useSetFieldValue()
+
+```ts
+function useSetFieldValue(): (formName: string | undefined, componentType: string | undefined, name: string, value: unknown, shouldTriggerSaveCallback?: boolean) => void;
+```
+
+获取用于更新表单字段值的 setFieldValue 函数。
+
+## 返回
+
+(`formName`: `string` \| `undefined`, `componentType`: `string` \| `undefined`, `name`: `string`, `value`: `unknown`, `shouldTriggerSaveCallback?`: `boolean`) => `void`
+
+## 示例
+
+```tsx
+const setFieldValue = useSetFieldValue();
+<input onChange={(e) => setFieldValue("contactForm", "Input", "name", e.target.value, false)} />
+```

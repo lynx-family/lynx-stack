@@ -1,0 +1,47 @@
+# Enumeration: ReadyState
+
+The `ReadyState` describe the state of a `WebSocket` connection.
+
+## See
+
+https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState
+
+## Enumeration Members
+
+### CLOSED
+
+```ts
+CLOSED: 3;
+```
+
+The connection is closed or couldn't be opened.
+
+***
+
+### CLOSING
+
+```ts
+CLOSING: 2;
+```
+
+The connection is in the process of closing.
+
+***
+
+### CONNECTING
+
+```ts
+CONNECTING: 0;
+```
+
+Socket has been created. The connection is not yet open.
+
+***
+
+### OPEN
+
+```ts
+OPEN: 1;
+```
+
+The connection is open and ready to communicate.

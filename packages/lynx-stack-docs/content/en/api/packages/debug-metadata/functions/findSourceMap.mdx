@@ -1,0 +1,27 @@
+# Function: findSourceMap()
+
+```ts
+function findSourceMap(metadata: DebugMetadataAsset, query: object): 
+  | SourceMapDebugSource
+  | undefined;
+```
+
+Find a `source-map` [SourceMapDebugSource](../interfaces/SourceMapDebugSource.mdx) by `path`,
+`filename`, or `key`. At least one of the three should be set;
+every comparison is an exact equality on the field of the same
+name on [SourceMapDebugSource](../interfaces/SourceMapDebugSource.mdx).
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `metadata` | [`DebugMetadataAsset`](../interfaces/DebugMetadataAsset.mdx) |
+| `query` | \{ `filename?`: `string`; `key?`: `string`; `path?`: `string`; \} |
+| `query.filename?` | `string` |
+| `query.key?` | `string` |
+| `query.path?` | `string` |
+
+## Returns
+
+  \| [`SourceMapDebugSource`](../interfaces/SourceMapDebugSource.mdx)
+  \| `undefined`

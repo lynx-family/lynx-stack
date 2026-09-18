@@ -1,0 +1,92 @@
+# Module: @lynx-js/rsbuild-plugin
+
+[npm](https://www.npmjs.com/package/@lynx-js/rsbuild-plugin) · [Source](https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-lynx) · [Changelog](https://github.com/lynx-family/lynx-stack/blob/main/packages/rspeedy/plugin-lynx/CHANGELOG.md)
+
+The Lynx build engine as an Rsbuild plugin. It builds a Lynx app with the
+Rsbuild CLI directly, without the Rspeedy CLI.
+
+DSL plugins such as
+[pluginReactLynx](../react-rsbuild-plugin/functions/pluginReactLynx.mdx)
+register the engine automatically when it is missing, so you only add
+`pluginLynx` yourself to pass the options below. Rspeedy registers it for
+you as well and forwards `output.filename` and `performance.profile` from
+`lynx.config.ts`.
+
+## Example
+
+Register the plugin next to a DSL plugin in `rsbuild.config.ts`. The
+environment name (`lynx` below) becomes the `[platform]` placeholder of the
+bundle filename, so the default output of this config is
+`dist/main.lynx.bundle`.
+
+```ts title="rsbuild.config.ts"
+import { defineConfig } from '@rsbuild/core'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+
+export default defineConfig({
+  source: {
+    entry: { main: './src/index.tsx' },
+  },
+  environments: {
+    lynx: {},
+  },
+  plugins: [
+    pluginLynx({
+      performance: { profile: false },
+    }),
+    pluginReactLynx(),
+  ],
+})
+```
+
+Then use the Rsbuild CLI:
+
+```bash
+rsbuild dev
+rsbuild build
+```
+
+## Remarks
+
+To migrate from Rspeedy, replace `rspeedy dev` / `rspeedy build` with
+`rsbuild dev` / `rsbuild build`, rename `lynx.config.ts` to
+`rsbuild.config.ts` and import `defineConfig` from `@rsbuild/core`. The two
+options Rspeedy used to forward to the engine are now passed to
+`pluginLynx` directly:
+
+| `lynx.config.ts` (Rspeedy) | `pluginLynx()` (Rsbuild) |
+| --- | --- |
+| `output.filename` as a string | `output.filename.bundle` |
+| `output.filename.bundle` | `output.filename.bundle` |
+| `output.filename.template` (deprecated) | `output.filename.bundle` |
+| `performance.profile` | `performance.profile` |
+
+Everything else in `output`, `source`, `dev` and `server` keeps the Rsbuild
+shape and stays in `rsbuild.config.ts`. The engine applies Lynx-specific
+defaults on top of the Rsbuild ones (bundle target, chunk loading, CSS
+extraction, source maps) and only overrides a setting when another plugin
+has not already set it.
+
+## Interfaces
+
+- [BundleFilenameContext](interfaces/BundleFilenameContext.mdx)
+- [LynxConfig](interfaces/LynxConfig.mdx)
+- [LynxFilename](interfaces/LynxFilename.mdx)
+- [LynxMinify](interfaces/LynxMinify.mdx)
+- [LynxOutput](interfaces/LynxOutput.mdx)
+- [LynxPerformance](interfaces/LynxPerformance.mdx)
+- [LynxPluginOptions](interfaces/LynxPluginOptions.mdx)
+
+## Type Aliases
+
+- [BundleFilename](type-aliases/BundleFilename.mdx)
+
+## Variables
+
+- [PLUGIN\_LYNX\_NAME](variables/PLUGIN_LYNX_NAME.mdx)
+
+## Functions
+
+- [isPluginLynxRegistered](functions/isPluginLynxRegistered.mdx)
+- [pluginLynx](functions/pluginLynx.mdx)

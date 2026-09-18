@@ -1,0 +1,109 @@
+# 函数: useRef()
+
+## 调用签名
+
+```ts
+function useRef<T>(initialValue: T): RefObject<T>;
+```
+
+`useRef` 返回一个可变的 ref 对象，其 `.current` 属性会被初始化为传入的参数
+（`initialValue`）。返回的对象会在组件的整个生命周期内持续存在。
+
+请注意，`useRef()` 的用途不止 `ref` 属性。它也很适合用来保存任意可变
+值，类似于在 class 中使用实例字段的方式。
+
+### 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` |
+
+### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `initialValue` | `T` |
+
+### 返回
+
+`RefObject`\<`T`\>
+
+### Version
+
+16.8.0
+
+### 参阅
+
+[https://react.dev/reference/react/useRef](https://react.dev/reference/react/useRef)
+
+## 调用签名
+
+```ts
+function useRef<T>(initialValue: T | null): RefObject<T | null>;
+```
+
+`useRef` 返回一个可变的 ref 对象，其 `.current` 属性会被初始化为传入的参数
+（`initialValue`）。返回的对象会在组件的整个生命周期内持续存在。
+
+请注意，`useRef()` 的用途不止 `ref` 属性。它也很适合用来保存任意可变
+值，类似于在 class 中使用实例字段的方式。
+
+### 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` |
+
+### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `initialValue` | `T` \| `null` |
+
+### 返回
+
+`RefObject`\<`T` \| `null`\>
+
+### Version
+
+16.8.0
+
+### 参阅
+
+[https://react.dev/reference/react/useRef](https://react.dev/reference/react/useRef)
+
+## 调用签名
+
+```ts
+function useRef<T>(initialValue: T | undefined): RefObject<T | undefined>;
+```
+
+`useRef` 返回一个可变的 ref 对象，其 `.current` 属性会被初始化为传入的参数
+（`initialValue`）。返回的对象会在组件的整个生命周期内持续存在。
+
+请注意，`useRef()` 的用途不止 `ref` 属性。它也很适合用来保存任意可变
+值，类似于在 class 中使用实例字段的方式。
+
+### 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` |
+
+### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `initialValue` | `T` \| `undefined` |
+
+### 返回
+
+`RefObject`\<`T` \| `undefined`\>
+
+### Version
+
+16.8.0
+
+### 参阅
+
+[https://react.dev/reference/react/useRef](https://react.dev/reference/react/useRef)

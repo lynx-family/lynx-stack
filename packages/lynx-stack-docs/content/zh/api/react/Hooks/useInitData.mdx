@@ -1,0 +1,22 @@
+# 函数: useInitData()
+
+```ts
+function useInitData(): InitData;
+```
+
+用于获取 `initData` 的 React Hook。
+`initData` 变化时会自动触发重新渲染。
+
+## 返回
+
+[`InitData`](../Types/InitData.mdx)
+
+## 示例
+
+```ts
+function App() {
+  const initData = useInitData();
+
+  initData.someProperty // use it
+}
+```

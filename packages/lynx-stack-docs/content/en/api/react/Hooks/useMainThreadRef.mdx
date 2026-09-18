@@ -1,0 +1,160 @@
+# Function: useMainThreadRef()
+
+## Call Signature
+
+```ts
+function useMainThreadRef<T>(initValue: T): MainThreadRef<T>;
+```
+
+Create A `MainThreadRef`.
+
+A `MainThreadRef` is a ref that can only be accessed on the main thread. It is used to preserve
+states between main thread function calls.
+The data saved in `current` property of the `MainThreadRef` can be read and written in
+multiple main thread functions.
+
+It is a hook and it should only be called at the top level of your component.
+
+### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `T` |
+
+### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `initValue` | `T` | The init value of the `MainThreadRef`. |
+
+### Returns
+
+[`MainThreadRef`](../Types/MainThreadRef.mdx)\<`T`\>
+
+### Example
+
+```ts
+import { useMainThreadRef } from '@lynx-js/react'
+import type { MainThread } from '@lynx-js/types'
+
+export function App() {
+  const ref = useMainThreadRef<MainThread.Element>(null)
+
+  const handleTap = () => {
+    'main thread'
+    ref.current?.setStyleProperty('background-color', 'blue')
+  }
+
+  return (
+    <view
+      main-thread:ref={ref}
+      main-thread:bindtap={handleTap}
+      style={{ width: '300px', height: '300px' }}
+    />
+  )
+}
+```
+
+## Call Signature
+
+```ts
+function useMainThreadRef<T>(initValue: T | null): RefObject<T>;
+```
+
+Create A `MainThreadRef`.
+
+A `MainThreadRef` is a ref that can only be accessed on the main thread. It is used to preserve
+states between main thread function calls.
+The data saved in `current` property of the `MainThreadRef` can be read and written in
+multiple main thread functions.
+
+It is a hook and it should only be called at the top level of your component.
+
+### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `T` |
+
+### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `initValue` | `T` \| `null` | The init value of the `MainThreadRef`. |
+
+### Returns
+
+`RefObject`\<`T`\>
+
+### Example
+
+```ts
+import { useMainThreadRef } from '@lynx-js/react'
+import type { MainThread } from '@lynx-js/types'
+
+export function App() {
+  const ref = useMainThreadRef<MainThread.Element>(null)
+
+  const handleTap = () => {
+    'main thread'
+    ref.current?.setStyleProperty('background-color', 'blue')
+  }
+
+  return (
+    <view
+      main-thread:ref={ref}
+      main-thread:bindtap={handleTap}
+      style={{ width: '300px', height: '300px' }}
+    />
+  )
+}
+```
+
+## Call Signature
+
+```ts
+function useMainThreadRef<T = undefined>(): MainThreadRef<T | undefined>;
+```
+
+Create A `MainThreadRef`.
+
+A `MainThreadRef` is a ref that can only be accessed on the main thread. It is used to preserve
+states between main thread function calls.
+The data saved in `current` property of the `MainThreadRef` can be read and written in
+multiple main thread functions.
+
+It is a hook and it should only be called at the top level of your component.
+
+### Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `T` | `undefined` |
+
+### Returns
+
+[`MainThreadRef`](../Types/MainThreadRef.mdx)\<`T` \| `undefined`\>
+
+### Example
+
+```ts
+import { useMainThreadRef } from '@lynx-js/react'
+import type { MainThread } from '@lynx-js/types'
+
+export function App() {
+  const ref = useMainThreadRef<MainThread.Element>(null)
+
+  const handleTap = () => {
+    'main thread'
+    ref.current?.setStyleProperty('background-color', 'blue')
+  }
+
+  return (
+    <view
+      main-thread:ref={ref}
+      main-thread:bindtap={handleTap}
+      style={{ width: '300px', height: '300px' }}
+    />
+  )
+}
+```

@@ -1,0 +1,71 @@
+# output.filename.bundle
+
+```ts
+optional bundle?: BundleFilename;
+```
+
+
+
+The name of the bundle files.
+
+## Default Value
+
+`'[name].[platform].bundle'`
+
+## Remarks
+
+The following placeholders are supported:
+
+- `[name]`: the name of the entry.
+- `[platform]`: the name of the Rsbuild environment.
+- `[contenthash]`: the hash of the bundle content.
+
+## Examples
+
+- Using content hash with length in bundle filename:
+
+```js
+import { defineConfig } from '@rsbuild/core'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginLynx({
+      output: {
+        filename: {
+          bundle: '[name].[contenthash:8].bundle',
+        },
+      },
+    }),
+  ],
+})
+```
+
+- Using a function to control the main bundle and the lazy bundles
+  separately (e.g. emit lazy bundles into another directory with a git
+  commit hash appended):
+
+```js
+import { execSync } from 'node:child_process'
+
+import { defineConfig } from '@rsbuild/core'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+
+const gitHash = execSync('git rev-parse --short HEAD').toString().trim()
+
+export default defineConfig({
+  plugins: [
+    pluginLynx({
+      output: {
+        filename: {
+          bundle: ({ lazyBundle, platform }) =>
+            lazyBundle
+              ? `my-lazy-bundles/[name].[fullhash]-${gitHash}.bundle`
+              : `[name].${platform}.bundle`,
+        },
+      },
+    }),
+  ],
+})
+```
+

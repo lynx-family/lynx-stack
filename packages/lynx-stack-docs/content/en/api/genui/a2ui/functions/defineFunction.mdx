@@ -1,0 +1,27 @@
+# Function: defineFunction()
+
+```ts
+function defineFunction(impl: FunctionImpl, manifest?: FunctionManifest): CatalogFunctionEntry;
+```
+
+Build a function entry for `defineCatalog`. Either pair the impl with the
+extracted manifest, or pass just the impl (the registry still routes
+calls; the agent just won't see the parameter schema).
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `impl` | [`FunctionImpl`](../type-aliases/FunctionImpl.mdx) |
+| `manifest?` | [`FunctionManifest`](../type-aliases/FunctionManifest.mdx) |
+
+## Returns
+
+[`CatalogFunctionEntry`](../interfaces/CatalogFunctionEntry.mdx)
+
+## Example
+
+```ts
+const requiredEntry = defineFunction(required, requiredManifest);
+const catalog = defineCatalog([Text, Button, requiredEntry]);
+```

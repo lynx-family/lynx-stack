@@ -1,0 +1,55 @@
+# Variable: Gesture
+
+```ts
+const Gesture: object;
+```
+
+## Type Declaration
+
+### Exclusive()
+
+```ts
+Exclusive(...gestures: GestureKind[]): GestureKind;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| ...`gestures` | [`GestureKind`](../interfaces/GestureKind.mdx)[] |
+
+#### Returns
+
+[`GestureKind`](../interfaces/GestureKind.mdx)
+
+### Race()
+
+```ts
+Race(...gestures: GestureKind[]): GestureKind;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| ...`gestures` | [`GestureKind`](../interfaces/GestureKind.mdx)[] |
+
+#### Returns
+
+[`GestureKind`](../interfaces/GestureKind.mdx)
+
+### Simultaneous()
+
+```ts
+Simultaneous(...gestures: GestureKind[]): GestureKind;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| ...`gestures` | [`GestureKind`](../interfaces/GestureKind.mdx)[] |
+
+#### Returns
+
+[`GestureKind`](../interfaces/GestureKind.mdx)

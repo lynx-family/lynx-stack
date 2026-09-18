@@ -1,0 +1,57 @@
+# 模块: @lynx-js/debug-metadata
+
+[npm](https://www.npmjs.com/package/@lynx-js/debug-metadata) · [Source](https://github.com/lynx-family/lynx-stack/tree/main/packages/tools/debug-metadata) · [Changelog](https://github.com/lynx-family/lynx-stack/blob/main/packages/tools/debug-metadata/CHANGELOG.md)
+
+Lynx `debug-metadata.json` 格式的 schema 类型。
+
+零运行时依赖。可以安全地在任意 Node.js 上下文中使用——
+rsbuild 插件、dev-server 中间件、反向符号化服务、
+CLI 工具等。使用 `JSON.parse` 读取 JSON，并转换为
+[DebugMetadataAsset](interfaces/DebugMetadataAsset.mdx)；对于按字段查询（`?field=…`
+风格的查询），使用 `FIELDS` 注册表和 `resolveField`
+分发器。
+
+## 接口
+
+- [Artifact](interfaces/Artifact.mdx)
+- [BytecodeDebugInfoSource](interfaces/BytecodeDebugInfoSource.mdx)
+- [DebugMetadataAsset](interfaces/DebugMetadataAsset.mdx)
+- [FieldResolver](interfaces/FieldResolver.mdx)
+- [GitMetadata](interfaces/GitMetadata.mdx)
+- [LepusNGDebugInfo](interfaces/LepusNGDebugInfo.mdx)
+- [LepusNGDebugInfoBody](interfaces/LepusNGDebugInfoBody.mdx)
+- [LepusNGFunctionInfo](interfaces/LepusNGFunctionInfo.mdx)
+- [QueryParams](interfaces/QueryParams.mdx)
+- [RemappedUiNode](interfaces/RemappedUiNode.mdx)
+- [ResolveResult](interfaces/ResolveResult.mdx)
+- [RspeedyMeta](interfaces/RspeedyMeta.mdx)
+- [SourceMap](interfaces/SourceMap.mdx)
+- [SourceMapDebugSource](interfaces/SourceMapDebugSource.mdx)
+- [SourceMapSection](interfaces/SourceMapSection.mdx)
+- [UiNode](interfaces/UiNode.mdx)
+- [UiSourceLocation](interfaces/UiSourceLocation.mdx)
+- [UiSourceMapData](interfaces/UiSourceMapData.mdx)
+- [UiSourceMapRecord](interfaces/UiSourceMapRecord.mdx)
+
+## 类型别名
+
+- [DebugMetadataLoader](type-aliases/DebugMetadataLoader.mdx)
+- [DebugSource](type-aliases/DebugSource.mdx)
+
+## 变量
+
+- [FIELDS](variables/FIELDS.mdx)
+- [UI\_SOURCE\_MAP\_RECORDS\_BUILD\_INFO](variables/UI_SOURCE_MAP_RECORDS_BUILD_INFO.mdx)
+
+## 函数
+
+- [assertUiNode](functions/assertUiNode.mdx)
+- [buildUiSourceMapLookup](functions/buildUiSourceMapLookup.mdx)
+- [findArtifact](functions/findArtifact.mdx)
+- [findBytecodeDebugInfo](functions/findBytecodeDebugInfo.mdx)
+- [findSourceMap](functions/findSourceMap.mdx)
+- [isUiSourceMapData](functions/isUiSourceMapData.mdx)
+- [knownFields](functions/knownFields.mdx)
+- [normalizeRepo](functions/normalizeRepo.mdx)
+- [remapUiTree](functions/remapUiTree.mdx)
+- [resolveField](functions/resolveField.mdx)

@@ -1,0 +1,32 @@
+# Function: executeFunctionCall()
+
+```ts
+function executeFunctionCall(
+   processor: MessageProcessor, 
+   fn: object, 
+   surfaceId: string, 
+   dataContextPath?: string, 
+   options?: ResolveFunctionOptions
+): unknown;
+```
+
+Resolve arguments, look the function up in the registry, and invoke it.
+When no impl is registered, log once and return `undefined` so callers
+(checks, dynamic-property bindings) can degrade gracefully.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `processor` | [`MessageProcessor`](../classes/MessageProcessor.mdx) |
+| `fn` | \{ `args`: `Record`\<`string`, `any`\>; `call`: `string`; `returnType`: `"string"` \| `"number"` \| `"boolean"` \| `"object"` \| `"array"` \| `"void"` \| `"any"`; \} |
+| `fn.args` | `Record`\<`string`, `any`\> |
+| `fn.call` | `string` |
+| `fn.returnType?` | `"string"` \| `"number"` \| `"boolean"` \| `"object"` \| `"array"` \| `"void"` \| `"any"` |
+| `surfaceId?` | `string` |
+| `dataContextPath?` | `string` |
+| `options?` | [`ResolveFunctionOptions`](../interfaces/ResolveFunctionOptions.mdx) |
+
+## Returns
+
+`unknown`

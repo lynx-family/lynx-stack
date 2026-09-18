@@ -1,0 +1,80 @@
+# Class: WebEncodePlugin
+
+## Constructors
+
+### Constructor
+
+```ts
+new WebEncodePlugin(): WebEncodePlugin;
+```
+
+#### Returns
+
+`WebEncodePlugin`
+
+## Properties
+
+### BEFORE\_ENCODE\_HOOK\_STAGE
+
+```ts
+static BEFORE_ENCODE_HOOK_STAGE: number = 100;
+```
+
+***
+
+### ENCODE\_HOOK\_STAGE
+
+```ts
+static ENCODE_HOOK_STAGE: number = 100;
+```
+
+***
+
+### name
+
+```ts
+static name: string = 'WebEncodePlugin';
+```
+
+## Methods
+
+### apply()
+
+```ts
+apply(compiler: Compiler): void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `compiler` | `Compiler` |
+
+#### Returns
+
+`void`
+
+***
+
+### deleteDebuggingAssets()
+
+```ts
+deleteDebuggingAssets(compilation: Compilation, assets: (
+  | {
+  name: string;
+}
+  | undefined)[]): void;
+```
+
+The deleteDebuggingAssets delete all the assets that are inlined into the template.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `compilation` | `Compilation` |
+| `assets` | ( \| \{ `name`: `string`; \} \| `undefined`)[] |
+
+#### Returns
+
+`void`

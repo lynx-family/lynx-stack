@@ -1,0 +1,37 @@
+# Type Alias: ComponentInstance
+
+```ts
+type ComponentInstance = v0_9.AnyComponent & object;
+```
+
+## Type Declaration
+
+### \_\_template?
+
+```ts
+optional __template?: object;
+```
+
+Internal metadata for templated containers so we can re-expand on
+data model updates.
+
+#### \_\_template.componentId
+
+```ts
+componentId: v0_9.ComponentId;
+```
+
+#### \_\_template.path
+
+```ts
+path: string;
+```
+
+### dataContextPath?
+
+```ts
+optional dataContextPath?: string;
+```
+
+Absolute data context path for this component when created via a template.
+Used for resolving relative bindings inside the component tree.

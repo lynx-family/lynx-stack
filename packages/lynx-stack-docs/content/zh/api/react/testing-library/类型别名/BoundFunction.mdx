@@ -1,0 +1,11 @@
+# 类型别名: BoundFunction\<T\>
+
+```ts
+type BoundFunction<T> = T extends (container: HTMLElement, ...args: infer P) => infer R ? (...args: P) => R : never;
+```
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` |

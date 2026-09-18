@@ -1,10 +1,10 @@
-# docs
+# @lynx-js/lynx-stack-docs
 
 The API reference site of Lynx Stack, built with [Rspress](https://rspress.rs). Every page under `content/*/api` is generated from the TSDoc of the public packages by [TypeDoc](https://typedoc.org) and [typedoc-plugin-markdown](https://typedoc-plugin-markdown.org), when the site builds. The generated pages are not committed.
 
 ```sh
-pnpm turbo build --filter docs    # build the packages, generate the pages and build the site
-pnpm turbo dev --filter docs      # http://localhost:3000
+pnpm turbo build --filter @lynx-js/lynx-stack-docs    # build the packages, generate the pages and build the site
+pnpm turbo dev --filter @lynx-js/lynx-stack-docs      # http://localhost:3000
 ```
 
 ## How the pages are produced
@@ -29,4 +29,4 @@ The Chinese pages are rendered again with TypeDoc's `lang: 'zh'`. Their prose is
 
 ## Sync to lynxjs.org
 
-`@lynx-js/lynx-stack-docs` (`packages/lynx-stack-docs`) publishes `content/*/api` and `manifest.json` with every Lynx Stack release. `manifest.json` says which sections the package contains and which packages to show in navigation; lynx-website reads it and copies the pages.
+This directory is also the `@lynx-js/lynx-stack-docs` package: it publishes `content/*/api` and `manifest.json` with every Lynx Stack release, and nothing else. `manifest.json` names the sections, where their pages are, and the packages to show in navigation, in order and by group; lynx-website reads it and copies the pages. Copy `content/<locale>/api` to the same path under your docs root: each directory carries its Rspress `_meta.json`, and the links between the pages assume that layout.

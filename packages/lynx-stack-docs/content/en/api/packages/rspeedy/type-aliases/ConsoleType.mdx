@@ -1,0 +1,15 @@
+# Type Alias: ConsoleType
+
+```ts
+type ConsoleType = 
+  | "log"
+  | "warn"
+  | "error"
+  | "info"
+  | "debug"
+  | "profile"
+  | "profileEnd"
+| string & Record<never, never>;
+```
+
+The type of the console method.

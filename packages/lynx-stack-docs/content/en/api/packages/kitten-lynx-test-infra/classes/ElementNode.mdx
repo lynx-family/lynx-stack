@@ -1,0 +1,146 @@
+# Class: ElementNode
+
+Represents a DOM element in a Lynx page.
+
+Wraps a CDP `nodeId` and provides methods for inspecting attributes,
+computed styles, and simulating user interactions like taps.
+
+## Constructors
+
+### Constructor
+
+```ts
+new ElementNode(nodeId: number, _lynxView: KittenLynxView): ElementNode;
+```
+
+Initializes a new `ElementNode` instance to represent a Lynx Component or Tag.
+
+**Note for Agents:**
+Similar to `KittenLynxView`, you should rarely call this directly.
+Rely on `KittenLynxView.locator()` or `ElementNode.fromId()` for instantiations.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `nodeId` | `number` | The unique CDP numeric ID denoting this element in the Lynx renderer. |
+| `_lynxView` | [`KittenLynxView`](KittenLynxView.mdx) | The parent `KittenLynxView` instance used to dispatch subsequent CDP queries. |
+
+#### Returns
+
+`ElementNode`
+
+## Properties
+
+### nodeId
+
+```ts
+readonly nodeId: number;
+```
+
+The unique CDP numeric ID denoting this element in the Lynx renderer.
+
+## Methods
+
+### computedStyleMap()
+
+```ts
+computedStyleMap(): Promise<Map<string, string>>;
+```
+
+Fetches all actively computed CSS properties for this specific element.
+
+**Agent Usage:**
+This relies on `CSS.getComputedStyleForNode`. It returns the fully resolved style values
+post-layout calculation (e.g., resolving `100%` into absolute `px` values).
+It is highly recommended to use this for visual assertions (e.g., verifying a box is indeed `display: none`
+or has a specific `background-color`).
+
+#### Returns
+
+`Promise`\<`Map`\<`string`, `string`\>\>
+
+A promise resolving to a native JS `Map`, where keys are CSS property names and values are their computed string expressions.
+
+***
+
+### getAttribute()
+
+```ts
+getAttribute(name: string): Promise<string | null>;
+```
+
+Retrieves the string value of a specified attribute on this element.
+
+**Agent Quirk / Gotcha:**
+In Lynx, standard web `id="foo"` attributes are actually stored as `idSelector="foo"` internally.
+This library provides a seamless shim: if you query `getAttribute('id')`, it automatically
+queries `idSelector` instead. No manual handling of `idSelector` is required on your part.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `name` | `string` | The name of the attribute to fetch. |
+
+#### Returns
+
+`Promise`\<`string` \| `null`\>
+
+A promise resolving to the string value of the attribute, or `null` if the attribute does not exist.
+
+***
+
+### tap()
+
+```ts
+tap(): Promise<void>;
+```
+
+Simulates a native user tap (touch press followed by touch release) directly on the center of this element.
+
+**Internal Mechanics (For Agents):**
+This is not a simulated DOM event (like `element.click()` in Web). It is a highly accurate native-layer
+gesture dispatch:
+1. Fetches the exact boundary coordinates via `DOM.getBoxModel`.
+2. Calculates the absolute center `(x, y)` of the content box.
+3. Dispatches an `Input.emulateTouchFromMouseEvent` (`'mousePressed'`) over the ADB bridge.
+4. Waits 50ms, then dispatches the corresponding `'mouseReleased'`.
+
+**Crucial:** Ensure the element is visible on the screen before calling this, or the coordinate calculation might fail or hit nothing.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Throws
+
+Error if the layout box model cannot be computed natively.
+
+***
+
+### fromId()
+
+```ts
+static fromId(id: number, lynxView: KittenLynxView): ElementNode;
+```
+
+Retrieves or creates an `ElementNode` instance corresponding to a specific Lynx DOM node ID.
+
+**Agent Caching Strategy:**
+Nodes are aggressively cached per `KittenLynxView` instance using `WeakRef`.
+This means if an Agent queries the same DOM node twice before garbage collection,
+it returns the same `ElementNode` reference, reducing memory overhead during extensive DOM crawling.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `id` | `number` | The numeric CDP node ID to wrap. |
+| `lynxView` | [`KittenLynxView`](KittenLynxView.mdx) | The `KittenLynxView` instance this node belongs to. |
+
+#### Returns
+
+`ElementNode`
+
+An `ElementNode` bound to the provided node ID and view.

@@ -1,0 +1,12 @@
+[
+  {
+    "type": "file",
+    "name": "classes/Rpc",
+    "label": "Rpc"
+  },
+  {
+    "type": "file",
+    "name": "functions/createRpcEndpoint",
+    "label": "createRpcEndpoint"
+  }
+]

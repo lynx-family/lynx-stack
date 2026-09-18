@@ -1,0 +1,93 @@
+# Interface: FeatureRangePlain
+
+## Extends
+
+- [`CssNodeCommon`](CssNodeCommon.mdx)
+
+## Properties
+
+### kind
+
+```ts
+kind: string;
+```
+
+***
+
+### left
+
+```ts
+left: 
+  | Dimension
+  | FunctionNodePlain
+  | Identifier
+  | NumberNode
+  | RatioPlain;
+```
+
+***
+
+### leftComparison
+
+```ts
+leftComparison: string;
+```
+
+***
+
+### loc?
+
+```ts
+optional loc?: CssLocation;
+```
+
+#### Inherited from
+
+[`CssNodeCommon`](CssNodeCommon.mdx).[`loc`](CssNodeCommon.mdx#loc)
+
+***
+
+### middle
+
+```ts
+middle: 
+  | Dimension
+  | FunctionNodePlain
+  | Identifier
+  | NumberNode
+  | RatioPlain;
+```
+
+***
+
+### right
+
+```ts
+right: 
+  | Dimension
+  | FunctionNodePlain
+  | Identifier
+  | NumberNode
+  | RatioPlain
+  | null;
+```
+
+***
+
+### rightComparison
+
+```ts
+rightComparison: string | null;
+```
+
+***
+
+### type
+
+```ts
+type: "FeatureRange";
+```
+
+#### Overrides
+
+[`CssNodeCommon`](CssNodeCommon.mdx).[`type`](CssNodeCommon.mdx#type)

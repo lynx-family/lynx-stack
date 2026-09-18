@@ -1,0 +1,13 @@
+# 类型别名: BundleFilename
+
+```ts
+type BundleFilename = 
+  | string
+  | ((context: BundleFilenameContext) => string);
+```
+
+bundle 文件的名称。
+
+可以是包含占位符（`[name]`、`[contenthash]`、
+`[platform]`）的字符串，也可以是一个根据
+[BundleFilenameContext](../interfaces/BundleFilenameContext.mdx) 返回字符串的函数。

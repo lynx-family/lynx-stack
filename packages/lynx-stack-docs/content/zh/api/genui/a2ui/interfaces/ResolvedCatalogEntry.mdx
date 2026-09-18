@@ -1,0 +1,27 @@
+# 接口: ResolvedCatalogEntry
+
+解析后的 catalog 条目。这是内部表示，使用者通常不直接构造它，而是把 `CatalogInput` 传给 `defineCatalog`。
+
+## 属性
+
+### component
+
+```ts
+component: CatalogComponent;
+```
+
+***
+
+### name
+
+```ts
+name: string;
+```
+
+***
+
+### schema?
+
+```ts
+optional schema?: CatalogSchema;
+```

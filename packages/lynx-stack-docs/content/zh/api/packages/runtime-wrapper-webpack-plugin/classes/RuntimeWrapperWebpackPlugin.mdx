@@ -1,0 +1,51 @@
+# 类: RuntimeWrapperWebpackPlugin
+
+RuntimeWrapperWebpackPlugin 为 JavaScript 添加运行时包装，使其可以被 Lynx 加载。
+
+## 构造函数
+
+### 构造函数
+
+```ts
+new RuntimeWrapperWebpackPlugin(options?: Partial<RuntimeWrapperWebpackPluginOptions>): RuntimeWrapperWebpackPlugin;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `options` | `Partial`\<[`RuntimeWrapperWebpackPluginOptions`](../interfaces/RuntimeWrapperWebpackPluginOptions.mdx)\> |
+
+#### 返回
+
+`RuntimeWrapperWebpackPlugin`
+
+## 属性
+
+### defaultOptions
+
+```ts
+static defaultOptions: Readonly<Required<RuntimeWrapperWebpackPluginOptions>>;
+```
+
+`defaultOptions` 是 RuntimeWrapperWebpackPlugin 使用的默认选项。
+
+## 方法
+
+### apply()
+
+```ts
+apply(compiler: Compiler): void;
+```
+
+webpack 插件的入口点。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `compiler` | `Compiler` | webpack 编译器 |
+
+#### 返回
+
+`void`

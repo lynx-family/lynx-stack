@@ -1,0 +1,7 @@
+# 类型别名: CatalogFunctionDefinition
+
+```ts
+type CatalogFunctionDefinition = FunctionDefinition;
+```
+
+结构化的函数定义，由提取器（或上游 basic catalog 的 manifest）产出，进入 catalog，并在握手时发给 agent。它是 store 中 `FunctionDefinition` 的别名，因此 `functionRegistry.register({ definition })` 可以直接接收 catalog 条目，无需转换。

@@ -1,0 +1,79 @@
+# Interface: BuildOpenUiSystemPromptOptions
+
+Options used to customize the generated OpenUI system prompt.
+
+## Extends
+
+- [`CreateOpenUiPromptLibraryOptions`](CreateOpenUiPromptLibraryOptions.mdx)
+
+## Properties
+
+### appendix?
+
+```ts
+optional appendix?: string;
+```
+
+***
+
+### componentGroups?
+
+```ts
+optional componentGroups?: ComponentGroup[];
+```
+
+Replace or extend the built-in component groups.
+
+#### Inherited from
+
+[`CreateOpenUiPromptLibraryOptions`](CreateOpenUiPromptLibraryOptions.mdx).[`componentGroups`](CreateOpenUiPromptLibraryOptions.mdx#componentgroups)
+
+***
+
+### componentNames?
+
+```ts
+optional componentNames?: readonly string[];
+```
+
+Limit built-ins to these names. Custom `components` are still appended.
+
+#### Inherited from
+
+[`CreateOpenUiPromptLibraryOptions`](CreateOpenUiPromptLibraryOptions.mdx).[`componentNames`](CreateOpenUiPromptLibraryOptions.mdx#componentnames)
+
+***
+
+### components?
+
+```ts
+optional components?: OpenUiPromptComponent[];
+```
+
+Replace or extend the built-in component set.
+
+#### Inherited from
+
+[`CreateOpenUiPromptLibraryOptions`](CreateOpenUiPromptLibraryOptions.mdx).[`components`](CreateOpenUiPromptLibraryOptions.mdx#components)
+
+***
+
+### promptOptions?
+
+```ts
+optional promptOptions?: PromptOptions;
+```
+
+***
+
+### root?
+
+```ts
+optional root?: string;
+```
+
+Override the root component name. Defaults to `'Stack'`.
+
+#### Inherited from
+
+[`CreateOpenUiPromptLibraryOptions`](CreateOpenUiPromptLibraryOptions.mdx).[`root`](CreateOpenUiPromptLibraryOptions.mdx#root)

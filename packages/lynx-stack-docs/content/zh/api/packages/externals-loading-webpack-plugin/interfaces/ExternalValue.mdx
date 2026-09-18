@@ -1,0 +1,199 @@
+# 接口: ExternalValue
+
+externals 中的 value 项。
+
+## 属性
+
+### async?
+
+```ts
+optional async?: boolean;
+```
+
+是否异步加载资源。
+
+#### 默认值
+
+`true`
+
+***
+
+### background?
+
+```ts
+optional background?: LayerOptions;
+```
+
+后台 layer 的选项。
+
+#### 默认值
+
+`undefined`
+
+***
+
+### bundlePath?
+
+```ts
+optional bundlePath?: string;
+```
+
+相对于运行时 public path 解析得到的 bundle 路径。
+
+当 bundle 应跟随当前生效的
+`publicPath` 时，优先使用它而不是 `url`。运行时会通过 `publicPath + bundlePath`
+加载它，这样可以让外部 bundle 的解析与当前构建
+产物保持一致，而不必在生成的运行时代码中硬编码绝对 URL。
+
+***
+
+### libraryName?
+
+```ts
+optional libraryName?: string | string[];
+```
+
+库的名称。与 https://webpack.js.org/configuration/externals/#string 相同。
+
+默认情况下，库名称与 externals 的 key 相同。例如：
+
+配置
+
+```js
+ExternalsLoadingPlugin({
+  externals: {
+    lodash: {
+      url: '……',
+    }
+  }
+})
+```
+
+将生成以下 webpack externals 配置：
+
+```js
+externals: {
+  lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].lodash',
+}
+```
+
+如果一个 external bundle 包含多个模块，应设置相同的库名称，以确保它只被加载一次。例如：
+
+```js
+ExternalsLoadingPlugin({
+  externals: {
+    lodash: {
+      libraryName: 'Lodash',
+      url: '……',
+    },
+    'lodash-es': {
+      libraryName: 'Lodash',
+      url: '……',
+    }
+  }
+})
+```
+将生成以下 webpack externals 配置：
+
+```js
+externals: {
+  lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash',
+  'lodash-es': 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash',
+}
+```
+
+可以传入数组来指定 external 的子路径。与 https://webpack.js.org/configuration/externals/#string-1 相同。例如：
+
+```js
+ExternalsLoadingPlugin({
+  externals: {
+    preact: {
+      libraryName: ['ReactLynx', 'Preact'],
+      url: '……',
+      async: false,
+    },
+  }
+})
+```
+
+将生成以下 webpack externals 配置：
+
+```js
+externals: {
+  preact: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.Preact',
+}
+```
+
+在默认的 `async: true` 下，会改为生成一个 `promise` external，它会在库的 promise resolve 之后再取出子路径：
+
+```js
+externals: {
+  preact: 'promise Promise.resolve(lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]["ReactLynx"]).then(function (m) { return m["Preact"]; })',
+}
+```
+
+#### 默认值
+
+`undefined`
+
+#### 示例
+
+```ts
+`Lodash`
+```
+
+***
+
+### mainThread?
+
+```ts
+optional mainThread?: LayerOptions;
+```
+
+主线程 layer 的选项。
+
+#### 默认值
+
+`undefined`
+
+***
+
+### retries?
+
+```ts
+optional retries?: number;
+```
+
+获取外部 bundle 超时（`response.code === -2`）时的额外重试次数。
+
+#### 默认值
+
+`0`
+
+***
+
+### timeout?
+
+```ts
+optional timeout?: number;
+```
+
+等待时间，单位为毫秒。
+
+#### 默认值
+
+`2000`
+
+***
+
+### url?
+
+```ts
+optional url?: string;
+```
+
+在运行时直接获取的最终 bundle URL。
+
+当外部 bundle 托管在当前构建产物之外时使用此项，
+例如托管在 CDN 上。如果同时提供了 `url` 和 `bundlePath`，
+`url` 优先，因为它已经是完全解析后的地址。

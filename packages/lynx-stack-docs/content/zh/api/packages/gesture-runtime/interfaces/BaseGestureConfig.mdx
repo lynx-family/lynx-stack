@@ -1,0 +1,33 @@
+# 接口: BaseGestureConfig
+
+所有手势（gesture）的基础配置接口。
+所有特定手势的配置都继承自该接口。
+
+## 继承
+
+- `Record`\<`string`, `unknown`\>
+
+## 继承于
+
+- [`PanGestureConfig`](PanGestureConfig.mdx)
+- [`TapGestureConfig`](TapGestureConfig.mdx)
+- [`LongPressGestureConfig`](LongPressGestureConfig.mdx)
+- [`FlingGestureConfig`](FlingGestureConfig.mdx)
+- [`DefaultGestureConfig`](DefaultGestureConfig.mdx)
+- [`NativeGestureConfig`](NativeGestureConfig.mdx)
+
+## 可索引
+
+```ts
+[key: string]: unknown
+```
+
+## 属性
+
+### enabled?
+
+```ts
+optional enabled?: boolean;
+```
+
+该手势是否启用。默认为 true。

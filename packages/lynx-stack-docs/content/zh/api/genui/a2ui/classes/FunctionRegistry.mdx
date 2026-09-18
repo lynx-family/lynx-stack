@@ -1,0 +1,99 @@
+# 类: FunctionRegistry
+
+查找表，将协议中 `FunctionCall.call` 的名称路由到本地 JavaScript 实现。
+
+## 构造函数
+
+### 构造函数
+
+```ts
+new FunctionRegistry(): FunctionRegistry;
+```
+
+#### 返回
+
+`FunctionRegistry`
+
+## 方法
+
+### has()
+
+```ts
+has(name: string): boolean;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `name` | `string` |
+
+#### 返回
+
+`boolean`
+
+***
+
+### list()
+
+```ts
+list(): FunctionEntry[];
+```
+
+#### 返回
+
+[`FunctionEntry`](../interfaces/FunctionEntry.mdx)[]
+
+***
+
+### register()
+
+```ts
+register(entry: FunctionEntry): void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `entry` | [`FunctionEntry`](../interfaces/FunctionEntry.mdx) |
+
+#### 返回
+
+`void`
+
+***
+
+### resolve()
+
+```ts
+resolve(name: string): FunctionImpl | undefined;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `name` | `string` |
+
+#### 返回
+
+[`FunctionImpl`](../type-aliases/FunctionImpl.mdx) \| `undefined`
+
+***
+
+### unregister()
+
+```ts
+unregister(name: string): void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `name` | `string` |
+
+#### 返回
+
+`void`

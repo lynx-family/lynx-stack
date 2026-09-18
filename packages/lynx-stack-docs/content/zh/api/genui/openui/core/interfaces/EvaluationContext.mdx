@@ -1,0 +1,51 @@
+# 接口: EvaluationContext
+
+## 属性
+
+### extraScope?
+
+```ts
+optional extraScope?: Record<string, unknown>;
+```
+
+响应式 prop 求值时用于注入 $value 的额外作用域
+
+## 方法
+
+### getState()
+
+```ts
+getState(name: string): unknown;
+```
+
+从 store 中读取 $variable
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `name` | `string` |
+
+#### 返回
+
+`unknown`
+
+***
+
+### resolveRef()
+
+```ts
+resolveRef(name: string): unknown;
+```
+
+解析对另一个声明求值结果的引用
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `name` | `string` |
+
+#### 返回
+
+`unknown`

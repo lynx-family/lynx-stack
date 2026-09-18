@@ -1,0 +1,23 @@
+# Module: @lynx-js/debug-metadata-rsbuild-plugin
+
+[npm](https://www.npmjs.com/package/@lynx-js/debug-metadata-rsbuild-plugin) · [Source](https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-debug-metadata) · [Changelog](https://github.com/lynx-family/lynx-stack/blob/main/packages/rspeedy/plugin-debug-metadata/CHANGELOG.md)
+
+Rsbuild plugin that emits `debug-metadata.json` alongside each Lynx
+bundle build, plus the underlying webpack plugin class for direct
+webpack/rspack use.
+
+`pluginLynx` from `@lynx-js/rsbuild-plugin` registers this plugin, so apps
+do not need to add it themselves.
+
+## Interfaces
+
+- [RewriteSourceMappingURLsOptions](interfaces/RewriteSourceMappingURLsOptions.mdx)
+
+## Variables
+
+- [DEBUG\_METADATA\_ASSET\_NAME](variables/DEBUG_METADATA_ASSET_NAME.mdx)
+
+## Functions
+
+- [pluginLynxDebugMetadata](functions/pluginLynxDebugMetadata.mdx)
+- [rewriteSourceMappingURLs](functions/rewriteSourceMappingURLs.mdx)

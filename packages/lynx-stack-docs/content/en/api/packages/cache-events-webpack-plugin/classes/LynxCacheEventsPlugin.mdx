@@ -1,0 +1,84 @@
+# Class: LynxCacheEventsPlugin
+
+A webpack plugin that caches Lynx native calls that arrive before an entry
+finishes starting up, and replays them once startup settles.
+
+## Remarks
+
+Only takes effect when `output.chunkLoading` is `'lynx'`.
+
+- Background chunks: always cached. Covers the `lynx.getApp()` methods
+  (`OnLifecycleEvent`, `publishEvent`, `publicComponentEvent`,
+  `callDestroyLifetimeFun`, `updateGlobalProps`, `updateCardData`,
+  `onAppReload`, `processCardConfig`), the `lynx.performance` events, and
+  `globalThis.loadDynamicComponent`.
+
+- Main-thread chunks: cached only for entries whose startup is async, such
+  as an entry that depends on an async external ReactLynx. `renderPage` is
+  cached and replayed, and `processData` is shimmed as a passthrough until
+  the real one is installed.
+
+## Constructors
+
+### Constructor
+
+```ts
+new LynxCacheEventsPlugin(options?: LynxCacheEventsPluginOptions): LynxCacheEventsPlugin;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `options?` | [`LynxCacheEventsPluginOptions`](../interfaces/LynxCacheEventsPluginOptions.mdx) |
+
+#### Returns
+
+`LynxCacheEventsPlugin`
+
+## Properties
+
+### defaultOptions
+
+```ts
+static defaultOptions: Readonly<Required<LynxCacheEventsPluginOptions>>;
+```
+
+`defaultOptions` is the default options that the LynxCacheEventsPlugin uses.
+
+#### Example
+
+`defaultOptions` can be used to change part of the option and keep others as the default value.
+
+```js
+// webpack.config.js
+import { LynxCacheEventsPlugin } from '@lynx-js/cache-events-webpack-plugin'
+export default {
+  plugins: [
+    new LynxCacheEventsPlugin({
+      ...LynxCacheEventsPlugin.defaultOptions,
+      setupListTransformer: (setupList) => setupList,
+    }),
+  ],
+}
+```
+
+## Methods
+
+### apply()
+
+```ts
+apply(compiler: Compiler): void;
+```
+
+The entry point of a webpack plugin.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `compiler` | `Compiler` | the webpack compiler |
+
+#### Returns
+
+`void`

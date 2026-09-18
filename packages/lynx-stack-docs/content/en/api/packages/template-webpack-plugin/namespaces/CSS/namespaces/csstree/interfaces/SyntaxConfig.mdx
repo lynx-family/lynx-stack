@@ -1,0 +1,62 @@
+# Interface: SyntaxConfig
+
+## Properties
+
+### atrules?
+
+```ts
+optional atrules?: Record<string, 
+  | string
+  | {
+  descriptors?: Record<string, string> | null;
+  prelude?: string | null;
+}>;
+```
+
+***
+
+### cssWideKeywords?
+
+```ts
+optional cssWideKeywords?: string[];
+```
+
+***
+
+### generic?
+
+```ts
+optional generic?: boolean;
+```
+
+***
+
+### node?
+
+```ts
+optional node?: Record<string, unknown>;
+```
+
+***
+
+### properties?
+
+```ts
+optional properties?: Record<string, string>;
+```
+
+***
+
+### types?
+
+```ts
+optional types?: Record<string, string>;
+```
+
+***
+
+### units?
+
+```ts
+optional units?: Record<string, string[]>;
+```

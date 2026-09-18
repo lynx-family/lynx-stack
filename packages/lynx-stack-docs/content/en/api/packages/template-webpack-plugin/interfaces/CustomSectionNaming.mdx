@@ -1,0 +1,66 @@
+# Interface: CustomSectionNaming
+
+Names the custom section a chunk is emitted as.
+
+## Remarks
+
+Returning `undefined` keeps a chunk out of the custom sections. A background
+chunk left out stays in the manifest, which is where the runtime looks for
+it.
+
+## Methods
+
+### background()
+
+```ts
+background(manifestKey: string, index: number): string | undefined;
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `manifestKey` | `string` | The key the chunk has in the manifest. A lazy bundle keys it by path (`/.rspeedy/lazy-bundle/…/background.js`), an external bundle by asset name. |
+| `index` | `number` | - |
+
+#### Returns
+
+`string` \| `undefined`
+
+***
+
+### css()
+
+```ts
+css(assetName: string, index: number): string | undefined;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `assetName` | `string` |
+| `index` | `number` |
+
+#### Returns
+
+`string` \| `undefined`
+
+***
+
+### mainThread()
+
+```ts
+mainThread(assetName: string, index: number): string | undefined;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `assetName` | `string` |
+| `index` | `number` |
+
+#### Returns
+
+`string` \| `undefined`

@@ -1,0 +1,107 @@
+# 接口: JsonSchema
+
+为 A2UI 组件 props 和函数参数输出的 JSON Schema 子集。
+
+## 属性
+
+### $ref?
+
+```ts
+optional $ref?: string;
+```
+
+***
+
+### additionalProperties?
+
+```ts
+optional additionalProperties?: boolean | JsonSchema;
+```
+
+***
+
+### const?
+
+```ts
+optional const?: unknown;
+```
+
+***
+
+### default?
+
+```ts
+optional default?: unknown;
+```
+
+***
+
+### deprecated?
+
+```ts
+optional deprecated?: boolean;
+```
+
+***
+
+### description?
+
+```ts
+optional description?: string;
+```
+
+***
+
+### enum?
+
+```ts
+optional enum?: (string | number | boolean)[];
+```
+
+***
+
+### items?
+
+```ts
+optional items?: JsonSchema;
+```
+
+***
+
+### oneOf?
+
+```ts
+optional oneOf?: JsonSchema[];
+```
+
+***
+
+### properties?
+
+```ts
+optional properties?: Record<string, JsonSchema>;
+```
+
+***
+
+### required?
+
+```ts
+optional required?: string[];
+```
+
+***
+
+### type?
+
+```ts
+optional type?: string;
+```
+
+***
+
+### unevaluatedProperties?
+
+```ts
+optional unevaluatedProperties?: boolean | JsonSchema;
+```

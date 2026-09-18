@@ -1,0 +1,21 @@
+# 模块: @lynx-js/debug-metadata-rsbuild-plugin
+
+[npm](https://www.npmjs.com/package/@lynx-js/debug-metadata-rsbuild-plugin) · [Source](https://github.com/lynx-family/lynx-stack/tree/main/packages/rspeedy/plugin-debug-metadata) · [Changelog](https://github.com/lynx-family/lynx-stack/blob/main/packages/rspeedy/plugin-debug-metadata/CHANGELOG.md)
+
+在每次 Lynx bundle 构建时同步生成 `debug-metadata.json` 的 Rsbuild 插件，并提供底层的 webpack 插件类，供直接在 webpack/rspack 中使用。
+
+来自 `@lynx-js/rsbuild-plugin` 的 `pluginLynx` 会注册此插件，因此应用
+不需要自行添加它。
+
+## 接口
+
+- [RewriteSourceMappingURLsOptions](interfaces/RewriteSourceMappingURLsOptions.mdx)
+
+## 变量
+
+- [DEBUG\_METADATA\_ASSET\_NAME](variables/DEBUG_METADATA_ASSET_NAME.mdx)
+
+## 函数
+
+- [pluginLynxDebugMetadata](functions/pluginLynxDebugMetadata.mdx)
+- [rewriteSourceMappingURLs](functions/rewriteSourceMappingURLs.mdx)

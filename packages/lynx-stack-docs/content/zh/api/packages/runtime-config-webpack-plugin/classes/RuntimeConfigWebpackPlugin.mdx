@@ -1,0 +1,45 @@
+# 类: RuntimeConfigWebpackPlugin
+
+将该 bundle 的运行时配置合并到
+`lynx.__runtime_configs__` 中，然后对其进行浅冻结。
+
+仅将其应用于 host bundle。lazy bundle 和 external bundle 会
+使用 host 注入的配置。
+
+## 构造函数
+
+### 构造函数
+
+```ts
+new RuntimeConfigWebpackPlugin(options: Readonly<RuntimeConfigWebpackPluginOptions>): RuntimeConfigWebpackPlugin;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `options` | `Readonly`\<[`RuntimeConfigWebpackPluginOptions`](../type-aliases/RuntimeConfigWebpackPluginOptions.mdx)\> |
+
+#### 返回
+
+`RuntimeConfigWebpackPlugin`
+
+## 方法
+
+### apply()
+
+```ts
+apply(compiler: Compiler): void;
+```
+
+webpack 插件的入口点。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `compiler` | `Compiler` | webpack 编译器 |
+
+#### 返回
+
+`void`

@@ -1,0 +1,62 @@
+# Interface: PluginVanillaLynxOptions
+
+Options for [pluginVanillaLynx](../functions/pluginVanillaLynx.mdx).
+
+## Properties
+
+### bundleFilename?
+
+```ts
+optional bundleFilename?: VanillaBundleFilename;
+```
+
+Override the final `.bundle` filename.
+
+#### Remarks
+
+When omitted, `pluginLynx`'s `output.filename.bundle` is used (default
+`'[name].[platform].bundle'`).
+
+***
+
+### engineVersion?
+
+```ts
+optional engineVersion?: string;
+```
+
+The minimum Lynx Engine version required by the emitted bundle.
+
+#### Default Value
+
+`'3.5'`
+
+***
+
+### entries?
+
+```ts
+optional entries?: Record<string, VanillaLynxEntry>;
+```
+
+Explicit two-thread entries.
+
+#### Remarks
+
+When omitted, every Rsbuild `source.entry` is treated as a main-thread
+entry and optional sibling `background.ts` and `style.css` files are
+discovered by convention.
+
+***
+
+### ~~targetSdkVersion?~~
+
+```ts
+optional targetSdkVersion?: string;
+```
+
+Alias of [PluginVanillaLynxOptions.engineVersion](#engineversion).
+
+#### Deprecated
+
+Use `engineVersion` instead.

@@ -1,0 +1,234 @@
+# Class: KittenLynxView
+
+Represents a Lynx page instance, similar to Puppeteer's `Page`.
+
+Provides methods for navigating to Lynx bundle URLs, querying the DOM,
+and reading page content. Created via [Lynx.newPage](Lynx.mdx#newpage).
+
+## Constructors
+
+### Constructor
+
+```ts
+new KittenLynxView(
+   _connector: Connector, 
+   _clientId: string, 
+   _client?: any
+): KittenLynxView;
+```
+
+Initializes a new `KittenLynxView` instance.
+
+**Note for Agents:**
+You generally should avoid calling this constructor directly. Instead, use `Lynx.newPage()` to properly
+initialize a `KittenLynxView` instance bound to the active ADB connection and client.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `_connector` | `Connector` | The low-level `Connector` instance used to dispatch CDP messages over ADB/USB. |
+| `_clientId` | `string` | The unique client identifier (typically `<deviceId>:<port>`). |
+| `_client?` | `any` | Optional client metadata object containing internal app states. |
+
+#### Returns
+
+`KittenLynxView`
+
+## Properties
+
+### \_channel
+
+```ts
+_channel: CDPChannel;
+```
+
+***
+
+### id
+
+```ts
+readonly id: number;
+```
+
+## Methods
+
+### content()
+
+```ts
+content(): Promise<string>;
+```
+
+Serializes the current page's entire DOM tree into an HTML-like string format.
+
+**Agent Usage:**
+This is highly useful for debugging and logging the current state of the Lynx App DOM.
+It forces a fresh `DOM.getDocument` snapshot from the CDP server and recursively walks the tree
+to build a string containing tags and attributes (e.g., `<view id="main"><text>...</text></view>`).
+
+#### Returns
+
+`Promise`\<`string`\>
+
+A promise resolving to a string representing the serialized DOM content of the page.
+
+***
+
+### goto()
+
+```ts
+goto(url: string, options?: object): Promise<void>;
+```
+
+Navigates the Lynx App to a specific Lynx bundle URL and attaches to the corresponding CDP session.
+
+**How it works (Crucial for Agents to understand):**
+Unlike standard web browsers, calling `Page.navigate` in Lynx creates a **new** debugging session
+instead of reusing the current one. This method abstracts away that complexity by:
+1. Waiting for the devtool server to boot.
+2. Sending an `App.openPage` (or a fallback message) to trigger the navigation.
+3. **Polling the session list** over ADB to find a new session whose URL matches the target bundle URL.
+4. Automatically re-attaching to the matched session and fetching the initial DOM tree (`DOM.getDocument`).
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `url` | `string` | The absolute URL of the Lynx bundle to navigate to (e.g., `'http://localhost:8080/dist/main.lynx.bundle'`). |
+| `options?` | \{ `timeout?`: `number`; \} | Optional settings. `options.timeout` is how long to poll for the matching session, in milliseconds (default 30000). |
+| `options.timeout?` | `number` | - |
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Throws
+
+An error if it times out waiting for the devtool server to boot (60s limit).
+
+#### Throws
+
+An error if the specific session for the URL cannot be found within `options.timeout` or cannot be attached.
+
+***
+
+### locator()
+
+```ts
+locator(selector: string): Promise<ElementNode | undefined>;
+```
+
+Locates the first DOM element matching the provided CSS selector in the current page.
+
+**Agent Usage:**
+This operates identically to `document.querySelector` or Playwright's `page.locator()`.
+It relies on the `DOM` CDP domain. Always ensure that `goto()` has completed successfully before calling this,
+otherwise the DOM tree will not exist.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `selector` | `string` | A valid CSS selector string targeting the desired element (e.g., `'view'`, `'#submit-btn'`, `'.container > text'`). |
+
+#### Returns
+
+`Promise`\<[`ElementNode`](ElementNode.mdx) \| `undefined`\>
+
+A promise resolving to an `ElementNode` containing methods to interact with the element, or `undefined` if no node matched.
+
+#### Throws
+
+Error if the method is called before a page is loaded via `goto()`.
+
+***
+
+### onAttachedToTarget()
+
+```ts
+onAttachedToTarget(sessionId: number): Promise<void>;
+```
+
+Attaches the LynxView to a specific Lynx devtool session and initializes the CDP channel.
+
+**Internal Mechanics:**
+This method creates a `CDPChannel` for the specific `sessionId` and immediately fires
+a `DOM.getDocument` request to cache the root document node. This must succeed for the page to be interactable.
+
+**Note for Agents:**
+This is generally marked as internal, but it is not `private`. You normally do not need to call this manually,
+as `goto()` handles session attachment automatically.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `sessionId` | `number` | The numeric Lynx devtool session ID to attach to, discovered via `sendListSessionMessage`. |
+
+#### Returns
+
+`Promise`\<`void`\>
+
+***
+
+### screenshot()
+
+```ts
+screenshot(options?: object): Promise<Buffer<ArrayBufferLike>>;
+```
+
+Captures a screenshot of the page.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `options?` | \{ `format?`: `"jpeg"` \| `"png"` \| `"webp"`; `path?`: `string`; `quality?`: `number`; \} | Screenshot options, such as path, format, and quality. |
+| `options.format?` | `"jpeg"` \| `"png"` \| `"webp"` | - |
+| `options.path?` | `string` | - |
+| `options.quality?` | `number` | - |
+
+#### Returns
+
+`Promise`\<`Buffer`\<`ArrayBufferLike`\>\>
+
+A Buffer with the image data.
+
+***
+
+### url()
+
+```ts
+url(): string;
+```
+
+Returns the last URL successfully loaded by [goto](#goto).
+
+#### Returns
+
+`string`
+
+***
+
+### getKittenLynxViewById()
+
+```ts
+static getKittenLynxViewById(id: string): KittenLynxView | undefined;
+```
+
+Retrieves a previously created `KittenLynxView` instance using its stringified numeric ID.
+
+**Why this is useful for Agents:**
+This is primarily used for cross-referencing or finding an existing view without passing the object reference around.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `id` | `string` | The string representation of the LynxView's numeric ID (e.g., `'1'`, `'2'`). |
+
+#### Returns
+
+`KittenLynxView` \| `undefined`
+
+The `KittenLynxView` instance if it is still alive in memory, or `undefined` if it has been garbage-collected.

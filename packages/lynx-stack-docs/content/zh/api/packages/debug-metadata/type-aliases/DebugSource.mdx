@@ -1,0 +1,12 @@
+# 类型别名: DebugSource
+
+```ts
+type DebugSource = 
+  | SourceMapDebugSource
+  | BytecodeDebugInfoSource;
+```
+
+附加在一个 [Artifact](../interfaces/Artifact.mdx) 上的一个调试数据源。
+
+带标签的联合类型，使得未来新增调试数据类型（例如 WASM 调试信息、
+R-source-map）时无需重构 `artifacts[]`。

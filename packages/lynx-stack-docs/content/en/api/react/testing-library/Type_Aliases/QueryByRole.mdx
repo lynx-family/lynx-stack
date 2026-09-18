@@ -1,0 +1,23 @@
+# Type Alias: QueryByRole\<T *extends* `HTMLElement` = `HTMLElement`\>
+
+```ts
+type QueryByRole<T extends HTMLElement = HTMLElement> = (container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions) => T | null;
+```
+
+## Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `T` *extends* `HTMLElement` | `HTMLElement` |
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `container` | `HTMLElement` |
+| `role` | [`ByRoleMatcher`](ByRoleMatcher.mdx) |
+| `options?` | [`ByRoleOptions`](../Interfaces/ByRoleOptions.mdx) |
+
+## Returns
+
+`T` \| `null`

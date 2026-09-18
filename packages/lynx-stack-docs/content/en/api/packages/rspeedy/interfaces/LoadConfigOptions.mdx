@@ -1,0 +1,31 @@
+# Interface: LoadConfigOptions
+
+The options of loadConfig.
+
+## Properties
+
+### configPath?
+
+```ts
+optional configPath?: string;
+```
+
+The config file path to load.
+
+#### Default Value
+
+Automatically resolves `lynx.config.ts`, `lynx.config.js`, `lynx.config.mts`, or `lynx.config.mjs` from `cwd`
+
+***
+
+### cwd?
+
+```ts
+optional cwd?: string;
+```
+
+The working directory used to resolve the config path.
+
+#### Default Value
+
+`process.cwd()`

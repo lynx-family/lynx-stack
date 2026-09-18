@@ -1,0 +1,10 @@
+[
+  "Component",
+  "PureComponent",
+  "Fragment",
+  "GlobalPropsConsumer",
+  "GlobalPropsProvider",
+  "InitDataConsumer",
+  "InitDataProvider",
+  "Suspense"
+]

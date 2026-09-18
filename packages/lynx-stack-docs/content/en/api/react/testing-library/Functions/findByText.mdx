@@ -1,0 +1,21 @@
+# Function: findByText()
+
+```ts
+function findByText<T extends HTMLElement = HTMLElement>(...args: [HTMLElement, Matcher, SelectorMatcherOptions, waitForOptions]): Promise<T>;
+```
+
+## Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `T` *extends* `HTMLElement` | `HTMLElement` |
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| ...`args` | \[`HTMLElement`, [`Matcher`](../Type_Aliases/Matcher.mdx), [`SelectorMatcherOptions`](../Interfaces/SelectorMatcherOptions.mdx), [`waitForOptions`](../Interfaces/waitForOptions.mdx)\] |
+
+## Returns
+
+`Promise`\<`T`\>

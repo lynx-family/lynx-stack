@@ -1,0 +1,453 @@
+# 类: Lexer
+
+## 构造函数
+
+### 构造函数
+
+```ts
+new Lexer(): Lexer;
+```
+
+#### 返回
+
+`Lexer`
+
+## 方法
+
+### checkAtruleDescriptorName()
+
+```ts
+checkAtruleDescriptorName(atruleName: string, descriptorName: string): 
+  | SyntaxError
+  | SyntaxReferenceError
+  | undefined;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `atruleName` | `string` |
+| `descriptorName` | `string` |
+
+#### 返回
+
+  \| `SyntaxError`
+  \| [`SyntaxReferenceError`](../interfaces/SyntaxReferenceError.mdx)
+  \| `undefined`
+
+***
+
+### checkAtruleName()
+
+```ts
+checkAtruleName(atruleName: string): 
+  | SyntaxReferenceError
+  | undefined;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `atruleName` | `string` |
+
+#### 返回
+
+  \| [`SyntaxReferenceError`](../interfaces/SyntaxReferenceError.mdx)
+  \| `undefined`
+
+***
+
+### checkAtrulePrelude()
+
+```ts
+checkAtrulePrelude(atruleName: string, prelude: string | CssNode): 
+  | Error
+  | SyntaxReferenceError
+  | undefined;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `atruleName` | `string` |
+| `prelude` | `string` \| [`CssNode`](../type-aliases/CssNode.mdx) |
+
+#### 返回
+
+  \| `Error`
+  \| [`SyntaxReferenceError`](../interfaces/SyntaxReferenceError.mdx)
+  \| `undefined`
+
+***
+
+### checkPropertyName()
+
+```ts
+checkPropertyName(propertyName: string): 
+  | SyntaxReferenceError
+  | undefined;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `propertyName` | `string` |
+
+#### 返回
+
+  \| [`SyntaxReferenceError`](../interfaces/SyntaxReferenceError.mdx)
+  \| `undefined`
+
+***
+
+### checkStructure()
+
+```ts
+checkStructure(ast: CssNode): false | StructureWarning[];
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `ast` | [`CssNode`](../type-aliases/CssNode.mdx) |
+
+#### 返回
+
+`false` \| [`StructureWarning`](../interfaces/StructureWarning.mdx)[]
+
+***
+
+### dump()
+
+```ts
+dump(syntaxAsAst?: boolean, pretty?: boolean): unknown;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `syntaxAsAst?` | `boolean` |
+| `pretty?` | `boolean` |
+
+#### 返回
+
+`unknown`
+
+***
+
+### findAllFragments()
+
+```ts
+findAllFragments(
+   ast: CssNode, 
+   type: string, 
+   name: string
+): LexerValueFragment[];
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `ast` | [`CssNode`](../type-aliases/CssNode.mdx) |
+| `type` | `string` |
+| `name` | `string` |
+
+#### 返回
+
+[`LexerValueFragment`](../interfaces/LexerValueFragment.mdx)[]
+
+***
+
+### findDeclarationValueFragments()
+
+```ts
+findDeclarationValueFragments(
+   declaration: Declaration, 
+   type: string, 
+   name: string
+): LexerValueFragment[];
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `declaration` | [`Declaration`](../interfaces/Declaration.mdx) |
+| `type` | `string` |
+| `name` | `string` |
+
+#### 返回
+
+[`LexerValueFragment`](../interfaces/LexerValueFragment.mdx)[]
+
+***
+
+### findValueFragments()
+
+```ts
+findValueFragments(
+   propertyName: string, 
+   value: CssNode, 
+   type: string, 
+   name: string
+): LexerValueFragment[];
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `propertyName` | `string` |
+| `value` | [`CssNode`](../type-aliases/CssNode.mdx) |
+| `type` | `string` |
+| `name` | `string` |
+
+#### 返回
+
+[`LexerValueFragment`](../interfaces/LexerValueFragment.mdx)[]
+
+***
+
+### getAtrule()
+
+```ts
+getAtrule(atruleName: string, fallbackBasename?: boolean): AtruleDescriptor | null;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `atruleName` | `string` |
+| `fallbackBasename?` | `boolean` |
+
+#### 返回
+
+[`AtruleDescriptor`](../interfaces/AtruleDescriptor.mdx) \| `null`
+
+***
+
+### getAtruleDescriptor()
+
+```ts
+getAtruleDescriptor(atruleName: string, name: string): SyntaxDescriptor | null;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `atruleName` | `string` |
+| `name` | `string` |
+
+#### 返回
+
+[`SyntaxDescriptor`](../interfaces/SyntaxDescriptor.mdx) \| `null`
+
+***
+
+### getAtrulePrelude()
+
+```ts
+getAtrulePrelude(atruleName: string, fallbackBasename?: boolean): SyntaxDescriptor | null;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `atruleName` | `string` |
+| `fallbackBasename?` | `boolean` |
+
+#### 返回
+
+[`SyntaxDescriptor`](../interfaces/SyntaxDescriptor.mdx) \| `null`
+
+***
+
+### getProperty()
+
+```ts
+getProperty(propertyName: string, fallbackBasename?: boolean): SyntaxDescriptor | null;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `propertyName` | `string` |
+| `fallbackBasename?` | `boolean` |
+
+#### 返回
+
+[`SyntaxDescriptor`](../interfaces/SyntaxDescriptor.mdx) \| `null`
+
+***
+
+### getType()
+
+```ts
+getType(name: string): SyntaxDescriptor | null;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `name` | `string` |
+
+#### 返回
+
+[`SyntaxDescriptor`](../interfaces/SyntaxDescriptor.mdx) \| `null`
+
+***
+
+### match()
+
+```ts
+match(syntax: string | DSNode, value: string | CssNode): LexerMatchResult;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `syntax` | `string` \| [`DSNode`](../type-aliases/DSNode.mdx) |
+| `value` | `string` \| [`CssNode`](../type-aliases/CssNode.mdx) |
+
+#### 返回
+
+[`LexerMatchResult`](../interfaces/LexerMatchResult.mdx)
+
+***
+
+### matchAtruleDescriptor()
+
+```ts
+matchAtruleDescriptor(
+   atruleName: string, 
+   descriptorName: string, 
+   value: string | CssNode
+): LexerMatchResult;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `atruleName` | `string` |
+| `descriptorName` | `string` |
+| `value` | `string` \| [`CssNode`](../type-aliases/CssNode.mdx) |
+
+#### 返回
+
+[`LexerMatchResult`](../interfaces/LexerMatchResult.mdx)
+
+***
+
+### matchAtrulePrelude()
+
+```ts
+matchAtrulePrelude(atruleName: string, prelude: string | CssNode): LexerMatchResult;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `atruleName` | `string` |
+| `prelude` | `string` \| [`CssNode`](../type-aliases/CssNode.mdx) |
+
+#### 返回
+
+[`LexerMatchResult`](../interfaces/LexerMatchResult.mdx)
+
+***
+
+### matchDeclaration()
+
+```ts
+matchDeclaration(node: CssNode): LexerMatchResult;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `node` | [`CssNode`](../type-aliases/CssNode.mdx) |
+
+#### 返回
+
+[`LexerMatchResult`](../interfaces/LexerMatchResult.mdx)
+
+***
+
+### matchProperty()
+
+```ts
+matchProperty(propertyName: string, value: string | CssNode): LexerMatchResult;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `propertyName` | `string` |
+| `value` | `string` \| [`CssNode`](../type-aliases/CssNode.mdx) |
+
+#### 返回
+
+[`LexerMatchResult`](../interfaces/LexerMatchResult.mdx)
+
+***
+
+### matchType()
+
+```ts
+matchType(typeName: string, value: string | CssNode): LexerMatchResult;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `typeName` | `string` |
+| `value` | `string` \| [`CssNode`](../type-aliases/CssNode.mdx) |
+
+#### 返回
+
+[`LexerMatchResult`](../interfaces/LexerMatchResult.mdx)
+
+***
+
+### toString()
+
+```ts
+toString(): string;
+```
+
+#### 返回
+
+`string`
+
+***
+
+### validate()
+
+```ts
+validate(): 
+  | LexerValidationResult
+  | null;
+```
+
+#### 返回
+
+  \| [`LexerValidationResult`](../interfaces/LexerValidationResult.mdx)
+  \| `null`

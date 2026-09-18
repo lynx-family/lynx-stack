@@ -1,0 +1,32 @@
+[
+  {
+    "type": "file",
+    "name": "functions/createRspeedy",
+    "label": "createRspeedy"
+  },
+  {
+    "type": "file",
+    "name": "functions/defineConfig",
+    "label": "defineConfig"
+  },
+  {
+    "type": "file",
+    "name": "functions/loadConfig",
+    "label": "loadConfig"
+  },
+  {
+    "type": "file",
+    "name": "functions/mergeRspeedyConfig",
+    "label": "mergeRspeedyConfig"
+  },
+  {
+    "type": "file",
+    "name": "variables/rspackVersion",
+    "label": "rspackVersion"
+  },
+  {
+    "type": "file",
+    "name": "variables/version",
+    "label": "version"
+  }
+]

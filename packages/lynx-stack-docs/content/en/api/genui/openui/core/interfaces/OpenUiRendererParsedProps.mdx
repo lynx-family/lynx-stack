@@ -1,0 +1,47 @@
+# Interface: OpenUiRendererParsedProps
+
+Props for rendering an already parsed OpenUI result.
+
+## Properties
+
+### isStreaming?
+
+```ts
+optional isStreaming?: boolean;
+```
+
+***
+
+### library
+
+```ts
+library: Library;
+```
+
+***
+
+### onAction?
+
+```ts
+optional onAction?: (event: ActionEvent) => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `event` | [`ActionEvent`](ActionEvent.mdx) |
+
+#### Returns
+
+`void`
+
+***
+
+### result
+
+```ts
+result: ParseResult | null;
+```
+
+Pre-parsed result. Kept for v0.1/static-render compatibility.

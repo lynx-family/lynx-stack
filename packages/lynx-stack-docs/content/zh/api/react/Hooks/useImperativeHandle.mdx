@@ -1,0 +1,39 @@
+# 函数: useImperativeHandle()
+
+```ts
+function useImperativeHandle<T, R>(
+   ref: Ref<T> | undefined, 
+   init: () => R, 
+   deps?: DependencyList
+): void;
+```
+
+`useImperativeHandle` 用于自定义在使用
+`ref` 时暴露给父组件的实例值。一如既往，大多数情况下应避免使用 ref 编写命令式代码。
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` |
+| `R` |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `ref` | `Ref`\<`T`\> \| `undefined` |
+| `init` | () => `R` |
+| `deps?` | `DependencyList` |
+
+## 返回
+
+`void`
+
+## Version
+
+16.8.0
+
+## 参阅
+
+[https://react.dev/reference/react/useImperativeHandle](https://react.dev/reference/react/useImperativeHandle)

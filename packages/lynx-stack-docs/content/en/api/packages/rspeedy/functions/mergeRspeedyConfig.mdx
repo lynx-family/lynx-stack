@@ -1,0 +1,44 @@
+# Function: mergeRspeedyConfig()
+
+```ts
+function mergeRspeedyConfig(...configs: Config[]): Config;
+```
+
+Merge multiple Rspeedy configuration objects.
+
+## Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| ...`configs` | [`Config`](../interfaces/Config.mdx)[] | The Rspeedy configuration objects to merge. |
+
+## Returns
+
+[`Config`](../interfaces/Config.mdx)
+
+The merged Rspeedy configuration object.
+
+## Example
+
+```ts
+import { mergeRspeedyConfig } from '@lynx-js/rspeedy';
+
+const config1 = {
+  dev: {
+    writeToDisk: false,
+  },
+};
+const config2 = {
+  dev: {
+    writeToDisk: true,
+  },
+};
+
+const mergedConfig = mergeRspeedyConfig(config1, config2);
+
+console.log(mergedConfig); // { dev: { writeToDisk: true } }
+```
+
+## Remarks
+
+This is actually an alias of [mergeRsbuildConfig](https://rsbuild.rs/api/javascript-api/core#mergersbuildconfig).

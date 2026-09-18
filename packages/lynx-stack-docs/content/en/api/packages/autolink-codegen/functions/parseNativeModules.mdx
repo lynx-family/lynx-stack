@@ -1,0 +1,18 @@
+# Function: parseNativeModules()
+
+```ts
+function parseNativeModules(source: string, filename?: string): NativeModuleSpec[];
+```
+
+Parses native module declarations marked with `@lynxmodule` from a TypeScript declaration source.
+
+## Parameters
+
+| Parameter | Type | Default value |
+| ------ | ------ | ------ |
+| `source` | `string` | `undefined` |
+| `filename` | `string` | `'<inline>'` |
+
+## Returns
+
+[`NativeModuleSpec`](../interfaces/NativeModuleSpec.mdx)[]

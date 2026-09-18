@@ -1,0 +1,148 @@
+# 接口: Lynx
+
+ReactLynx 在全局变量 `lynx` 上添加的 API。
+
+## 示例
+
+```ts
+lynx.registerDataProcessors(...);
+lynx.querySelector(...);
+lynx.querySelectorAll(...);
+```
+
+## 属性
+
+### registerDataProcessors
+
+```ts
+registerDataProcessors: (dataProcessorDefinition?: DataProcessorDefinition) => void;
+```
+
+注册 DataProcessor。必须在 `root.render()` 之前调用。
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `dataProcessorDefinition?` | [`DataProcessorDefinition`](DataProcessorDefinition.mdx) |
+
+#### 返回
+
+`void`
+
+#### 示例
+
+必须在调用 `root.render()` 之前调用 `lynx.registerDataProcessors`。
+
+```ts
+import { root } from "@lynx-js/react"
+
+// You MUST call this before `root.render()`
+lynx.registerDataProcessors({
+  defaultDataProcessor: () => {...} // default DataProcessor
+  dataProcessors: {
+    getScreenMetricsOverride: () => {...} // named DataProcessor
+  }
+})
+
+root.render(<App/>);
+```
+
+如果你有一个带有 `static defaultDataProcessor`
+或 `static dataProcessors` 的类组件，可以用它来注册 DataProcessor。
+
+```ts
+import { root, Component } from "@lynx-js/react"
+
+class App extends Component {
+  static defaultDataProcessor() {
+     ...
+  }
+
+  static dataProcessors = {
+    getScreenMetricsOverride() {
+      ...
+    }
+  }
+}
+
+lynx.registerDataProcessors(App); // You can pass `App` because it has the required shape
+root.render(<App/>);
+```
+
+希望 `defaultDataProcessor` 拥有完整类型的开发者，可以通过扩展 `InitDataRaw` 和 `InitData` 接口来实现。
+
+```ts
+import { root } from "@lynx-js/react"
+
+interface ExistingInterface {
+  somePropertyFromExistingInterface: number
+}
+
+declare module '@lynx-js/react' {
+  interface InitDataRaw extends ExistingInterface {
+    someAnotherCustomProperty: string
+  }
+}
+
+lynx.registerDataProcessors({
+  defaultDataProcessor: (initDataRaw) => {
+    initDataRaw.somePropertyFromExistingInterface // will be typed
+  }
+})
+
+```
+
+希望 `defaultDataProcessor` 拥有完整类型的开发者，可以通过扩展 `InitDataRaw` 和 `InitData` 接口来实现。
+
+```ts
+import { useInitData } from "@lynx-js/react"
+
+interface AnotherExistingInterface {
+  someAnotherPropertyFromExistingInterface: number
+}
+
+declare module '@lynx-js/react' {
+  interface InitData extends AnotherExistingInterface {
+    someCustomProperty: string
+  }
+}
+
+lynx.registerDataProcessors({
+  defaultDataProcessor: () => {
+    return {
+      someCustomProperty: 'value', // will be typed
+      someAnotherPropertyFromExistingInterface: 1, // will be typed
+    }
+  }
+})
+
+function App() {
+  const initData = useInitData();
+
+  initData.someCustomProperty // will be typed
+  initData.someAnotherPropertyFromExistingInterface // will be typed
+}
+
+```
+
+***
+
+### triggerGlobalEventFromLepus
+
+```ts
+triggerGlobalEventFromLepus: (eventName: string, params: any) => void;
+```
+
+仅在 Lepus 中可用，是 `lynx.getJSModule("GlobalEventEmitter").trigger(eventName, params)` 的别名
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `eventName` | `string` |
+| `params` | `any` |
+
+#### 返回
+
+`void`

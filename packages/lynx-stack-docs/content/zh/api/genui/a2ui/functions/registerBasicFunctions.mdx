@@ -1,0 +1,11 @@
+# 函数: registerBasicFunctions()
+
+```ts
+function registerBasicFunctions(): void;
+```
+
+为自行构建渲染器、不经过 `defineCatalog` 的使用方提供的手动兜底方案。将所有适配后的 basic catalog 实现注册到共享的 `functionRegistry` 中。多次调用不会有问题——后注册的会覆盖先注册的，这正是预期的覆盖方式。
+
+## 返回
+
+`void`

@@ -1,0 +1,162 @@
+# 接口: CssModules
+
+CssModules 选项用于自定义 CSS Modules 配置。
+
+## 备注
+
+默认会为 `*.module.css`、`*.module.scss` 和 `*.module.less` 启用 CSS Modules。使用 [CssModules.auto](#auto) 自定义过滤行为。
+
+## 属性
+
+### auto?
+
+```ts
+optional auto?: boolean | RegExp | ((filename: string) => boolean);
+```
+
+`auto` 选项允许根据文件名自动启用 CSS Modules。
+
+#### 默认值
+
+```ts
+true
+```
+
+#### 备注
+
+不同的 `auto` 值对应的行为如下：
+
+- `true`：为所有匹配 `/\.module\.\w+$/i.test(filename)` 正则的文件启用 CSS Modules。
+
+- `false`：禁用 CSS Modules。
+
+- `RegExp`：为所有匹配 `auto.test(filename)` 正则的文件启用 CSS Modules。
+
+- `function`：根据过滤函数启用 CSS Modules。
+
+详见 [css-loader#auto](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#auto)。
+
+#### 示例
+
+为 `*.module.css` 和 `shared/*.css` 启用 CSS Modules：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  output: {
+    cssModules: {
+      auto: (filename) => {
+        return filename.includes('.module.') || filename.includes('shared/')
+      },
+    },
+  },
+})
+```
+
+***
+
+### exportGlobals?
+
+```ts
+optional exportGlobals?: boolean;
+```
+
+允许从全局类名中导出名称，以便通过 import 使用。
+
+#### 默认值
+
+```ts
+false
+```
+
+#### 备注
+
+详见 [css-loader#exportGlobals](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#exportglobals)。
+
+***
+
+### exportLocalsConvention?
+
+```ts
+optional exportLocalsConvention?: CssModuleLocalsConvention;
+```
+
+导出类名的风格。
+
+#### 默认值
+
+`'camelCase'`
+
+#### 备注
+
+不同的 `exportLocalsConvention` 值对应的行为如下：
+
+- `'asIs'`：类名将按原样导出。
+
+- `'camelCase'`：类名将转换为驼峰形式，原始类名不会从 locals 中移除
+
+- `'camelCaseOnly'`：类名将转换为驼峰形式，原始类名将从 locals 中移除
+
+- `'dashes'`：仅将类名中的短横线转换为驼峰形式
+
+- `'dashesOnly'`：将类名中的短横线转换为驼峰形式，原始类名将从 locals 中移除
+
+详见 [css-loader#exportLocalsConvention](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#exportlocalsconvention)。
+
+***
+
+### localIdentName?
+
+```ts
+optional localIdentName?: string;
+```
+
+设置 CSS Modules 编译后生成的 className 格式。
+
+#### 默认值
+
+开发环境下为 `'[path][name]__[local]-[hash:base64:6]'`，否则为 `'[local]-[hash:base64:6]'`
+
+#### 备注
+
+可用的占位符：
+
+- `[local]`：原始类名
+
+- `[hash]`：类名的 hash
+
+- `[path]`：文件路径
+
+- `[name]`：文件名
+
+- `[ext]`：文件扩展名
+
+详见 [css-loader#localIdentName](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#localIdentName)。
+
+#### 示例
+
+仅使用 hash，以缩短类名：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  output: {
+    cssModules: {
+      localIdentName: '[hash:base64:8]',
+    },
+  },
+})
+```
+
+包含文件名，便于调试：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  output: {
+    cssModules: {
+      localIdentName: '[name]__[local]--[hash:base64:5]',
+    },
+  },
+})
+```

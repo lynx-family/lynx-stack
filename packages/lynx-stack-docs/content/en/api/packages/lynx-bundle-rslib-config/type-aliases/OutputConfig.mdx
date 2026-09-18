@@ -1,0 +1,52 @@
+# Type Alias: OutputConfig
+
+```ts
+type OutputConfig = Required<LibConfig>["output"] & object;
+```
+
+Output config accepted by Lynx external bundle builds.
+
+## Type Declaration
+
+### externals?
+
+```ts
+optional externals?: Externals;
+```
+
+### externalsPresetDefinitions?
+
+```ts
+optional externalsPresetDefinitions?: ExternalsPresetDefinitions;
+```
+
+Definitions for custom externals presets enabled by `externalsPresets`.
+
+Use this to add business-specific presets such as `@lynx-js/lynx-ui`, or to extend a
+built-in preset through `extends`.
+
+### externalsPresets?
+
+```ts
+optional externalsPresets?: ExternalsPresets;
+```
+
+Presets for external libraries.
+
+Same as https://rspack.rs/config/externals#externalspresets but for Lynx.
+
+### globalObject?
+
+```ts
+optional globalObject?: "lynx" | "globalThis";
+```
+
+This option indicates what global object will be used to mount the library.
+
+In Lynx, the library will be mounted to `lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]` by default.
+
+If you have enabled share js context and want to reuse the library by mounting to the global object, you can set this option to `'globalThis'`.
+
+#### Default Value
+
+`'lynx'`

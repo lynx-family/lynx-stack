@@ -1,0 +1,70 @@
+# Interface: GenericComponentProps
+
+Common runtime props passed to every catalog component by the renderer.
+
+## Indexable
+
+```ts
+[key: string]: unknown
+```
+
+## Properties
+
+### dataContextPath?
+
+```ts
+optional dataContextPath?: string;
+```
+
+***
+
+### id?
+
+```ts
+optional id?: string;
+```
+
+***
+
+### sendAction?
+
+```ts
+optional sendAction?: (action: Record<string, unknown>) => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `action` | `Record`\<`string`, `unknown`\> |
+
+#### Returns
+
+`void`
+
+***
+
+### setValue?
+
+```ts
+optional setValue?: (key: string, value: unknown) => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `key` | `string` |
+| `value` | `unknown` |
+
+#### Returns
+
+`void`
+
+***
+
+### surface
+
+```ts
+surface: Surface;
+```

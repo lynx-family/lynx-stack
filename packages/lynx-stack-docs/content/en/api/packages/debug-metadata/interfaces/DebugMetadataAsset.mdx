@@ -1,0 +1,63 @@
+# Interface: DebugMetadataAsset
+
+Full `debug-metadata.json` payload emitted per Lynx template entry.
+
+Asymmetry note: `artifacts[]` is **per-artifact** (one entry per JS /
+CSS / bytecode bundle) while `uiSourceMap` is **per-entry** (there is
+exactly one UI sourcemap for the entry's runtime UI tree). Forcing
+`uiSourceMap` into `artifacts[]` would require inventing a synthetic
+artifact, conflating runtime concepts with build products.
+
+Different consumers read different fields:
+  - JS error reverse-symbolication walks `artifacts[]` for
+    `kind: 'source-map'` debug sources.
+  - Main-thread bytecode reverse-symbolication walks `artifacts[]`
+    for `kind: 'bytecode-debug-info'` + the matching `source-map`.
+  - UI element inspectors read `uiSourceMap` directly.
+
+## Properties
+
+### artifacts
+
+```ts
+artifacts: Artifact[];
+```
+
+One entry per build artifact that ships debug data. Empty when the
+emitter has not yet been wired to populate it; consumers should
+treat an empty array as "no source-level debug data available"
+rather than an error.
+
+***
+
+### buildInfo
+
+```ts
+buildInfo: object;
+```
+
+Build-time / context info. Closed-shape today — extend by adding
+named fields to this interface (and bumping the schema) rather than
+by stuffing arbitrary keys at runtime.
+
+#### git?
+
+```ts
+optional git?: GitMetadata;
+```
+
+#### rspeedy?
+
+```ts
+optional rspeedy?: RspeedyMeta;
+```
+
+***
+
+### uiSourceMap
+
+```ts
+uiSourceMap: UiSourceMapData;
+```
+
+Compact UI source map for the entry's runtime UI tree.

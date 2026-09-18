@@ -1,0 +1,15 @@
+# 类型别名: ExternalsPresetValue
+
+```ts
+type ExternalsPresetValue = 
+  | boolean
+  | {
+  async?: boolean;
+};
+```
+
+externals 预设的启用方式。
+
+`true` 会同步挂载该预设的库。`{ async: true }`
+对象形式会异步（以 Promise 形式）挂载它们，适用于 web 目标，该目标下 external bundle 通过 `fetchBundle().then` 加载，参见
+[ExternalObject.async](../interfaces/ExternalObject.mdx#async)。

@@ -1,0 +1,45 @@
+# 接口: AppRenderer
+
+存放在 MCP Apps 渲染器注册表中、已擦除类型的渲染器。
+
+## 属性
+
+### component
+
+```ts
+component: ComponentType<AppRendererProps<unknown>>;
+```
+
+***
+
+### id
+
+```ts
+id: string;
+```
+
+***
+
+### invalidResultMessage
+
+```ts
+invalidResultMessage: string;
+```
+
+***
+
+### parseResult
+
+```ts
+parseResult: (value: unknown) => unknown;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `value` | `unknown` |
+
+#### 返回
+
+`unknown`

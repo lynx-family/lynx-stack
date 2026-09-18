@@ -1,0 +1,36 @@
+# 函数: pluginLynxDebugMetadata()
+
+```ts
+function pluginLynxDebugMetadata(): RsbuildPlugin;
+```
+
+为 Lynx 模板构建注册 `debug-metadata.json` 的产出（针对 `lynx`
+和 `lynx-*` 环境；在本地生产构建中会跳过，且在非开发环境的输出中
+会被移除，除非设置了 `DEBUG=lynx`），并通过 connect 风格的
+dev-server 中间件提供子字段查询服务。
+
+由 `@lynx-js/rsbuild-plugin` 中的 `pluginLynx` 注册。
+
+dev-server 中间件暴露了以下端点（相对于每个
+入口的中间目录）：
+
+```text
+GET .../debug-metadata.json
+GET .../debug-metadata.json?field=source-map&path=…
+GET .../debug-metadata.json?field=source-map&filename=…
+GET .../debug-metadata.json?field=source-map&key=…
+GET .../debug-metadata.json?field=bytecode-debug-info&filename=…
+GET .../debug-metadata.json?field=artifact&filename=…
+GET .../debug-metadata.json?field=artifacts
+GET .../debug-metadata.json?field=ui-source-map
+GET .../debug-metadata.json?field=buildInfo
+GET .../debug-metadata.json?field=git
+GET .../debug-metadata.json?field=rspeedy
+
+GET .../*.js.map    → transparently forwarded to ?field=source-map
+GET .../*.css.map   → transparently forwarded to ?field=source-map
+```
+
+## 返回
+
+`RsbuildPlugin`

@@ -1,0 +1,11 @@
+# 变量: FIELDS
+
+```ts
+const FIELDS: Map<string, FieldResolver>;
+```
+
+字段名 → resolver 的映射。**HTTP 层会直接读取它。** 对它的修改
+会在下一次请求中生效——导出的是一个活的 `Map`，因此插件可以
+在启动时注册自己的字段。
+
+添加一个新字段只需一行 `FIELDS.set('your-name', { ... })`。

@@ -1,0 +1,27 @@
+# 函数: buildQueries()
+
+```ts
+function buildQueries<Arguments extends any[]>(
+   queryAllBy: GetAllBy<Arguments>, 
+   getMultipleError: GetErrorFunction<Arguments>, 
+   getMissingError: GetErrorFunction<Arguments>
+): BuiltQueryMethods<Arguments>;
+```
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `Arguments` *extends* `any`[] |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `queryAllBy` | [`GetAllBy`](../类型别名/GetAllBy.mdx)\<`Arguments`\> |
+| `getMultipleError` | [`GetErrorFunction`](../类型别名/GetErrorFunction.mdx)\<`Arguments`\> |
+| `getMissingError` | [`GetErrorFunction`](../类型别名/GetErrorFunction.mdx)\<`Arguments`\> |
+
+## 返回
+
+[`BuiltQueryMethods`](../类型别名/BuiltQueryMethods.mdx)\<`Arguments`\>

@@ -1,0 +1,63 @@
+# Interface: ProcessTasmCSSDiagnosticsOptions
+
+Options for [processTasmCSSDiagnostics](../functions/processTasmCSSDiagnostics.mdx).
+
+## Properties
+
+### context
+
+```ts
+context: string;
+```
+
+The webpack compiler context used to resolve relative source paths.
+
+***
+
+### cssDiagnostics
+
+```ts
+cssDiagnostics: unknown;
+```
+
+The raw `css_diagnostics` value returned by TASM.
+
+***
+
+### cssSourceMaps
+
+```ts
+cssSourceMaps: string[];
+```
+
+CSS source map contents from the CSS chunks for the current template.
+
+***
+
+### emittedWarnings?
+
+```ts
+optional emittedWarnings?: Set<string>;
+```
+
+A mutable set used to skip diagnostics that were already emitted.
+
+***
+
+### fileExists?
+
+```ts
+optional fileExists?: (path: string) => boolean;
+```
+
+A file existence check used before attaching a mapped source location.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `path` | `string` |
+
+#### Returns
+
+`boolean`

@@ -1,0 +1,19 @@
+# Type Alias: DebugMetadataLoader
+
+```ts
+type DebugMetadataLoader = (debugMetadataUrl: string) => Promise<DebugMetadataAsset>;
+```
+
+Loads the [DebugMetadataAsset](../interfaces/DebugMetadataAsset.mdx) a node's `debugMetadataUrl` points
+at. Supplied by the caller so the core stays free of I/O (the CLI wires
+up `fetch` / `fs`); only called once per distinct URL.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `debugMetadataUrl` | `string` |
+
+## Returns
+
+`Promise`\<[`DebugMetadataAsset`](../interfaces/DebugMetadataAsset.mdx)\>

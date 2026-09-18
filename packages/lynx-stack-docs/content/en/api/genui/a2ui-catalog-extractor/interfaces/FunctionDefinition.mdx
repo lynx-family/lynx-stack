@@ -1,0 +1,39 @@
+# Interface: FunctionDefinition
+
+Serializable definition for a client-side function exposed to an agent.
+
+## Extended by
+
+- [`CatalogFunction`](CatalogFunction.mdx)
+
+## Properties
+
+### description?
+
+```ts
+optional description?: string;
+```
+
+***
+
+### name
+
+```ts
+name: string;
+```
+
+***
+
+### parameters
+
+```ts
+parameters: JsonSchema;
+```
+
+***
+
+### returnType
+
+```ts
+returnType: "string" | "number" | "boolean" | "object" | "array" | "any" | "void";
+```

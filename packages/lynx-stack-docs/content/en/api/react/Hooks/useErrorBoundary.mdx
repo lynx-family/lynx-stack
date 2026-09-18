@@ -1,0 +1,22 @@
+# Function: useErrorBoundary()
+
+```ts
+function useErrorBoundary(callback?: (error: any, errorInfo: ErrorInfo) => void | Promise<void>): [any, () => void];
+```
+
+Catches errors thrown by the components below and lets the component
+render a fallback.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `callback?` | (`error`: `any`, `errorInfo`: `ErrorInfo`) => `void` \| `Promise`\<`void`\> |
+
+## Returns
+
+\[`any`, () => `void`\]
+
+## See
+
+https://preactjs.com/guide/v10/hooks/#useerrorboundary

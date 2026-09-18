@@ -1,0 +1,118 @@
+# Interface: DefinitionSyntax
+
+DefinitionSyntax
+
+## Properties
+
+### SyntaxError
+
+```ts
+SyntaxError: (message: string, input: string, offset?: number) => DefinitionSyntaxError;
+```
+
+Wrapper for syntax errors
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `message` | `string` |
+| `input` | `string` |
+| `offset?` | `number` |
+
+#### Returns
+
+[`DefinitionSyntaxError`](DefinitionSyntaxError.mdx)
+
+## Methods
+
+### generate()
+
+```ts
+generate(node: DSNode, options?: 
+  | DSGenerateDecorateFn
+  | DSGenerateOptions): string;
+```
+
+Generates CSS value definition syntax from an AST
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `node` | [`DSNode`](../type-aliases/DSNode.mdx) | The AST |
+| `options?` | \| [`DSGenerateDecorateFn`](../type-aliases/DSGenerateDecorateFn.mdx) \| [`DSGenerateOptions`](DSGenerateOptions.mdx) | Options that affect generation |
+
+#### Returns
+
+`string`
+
+#### Example
+
+```ts
+generate({type: 'Keyword', name: 'foo'}) => 'foo'
+```
+
+***
+
+### parse()
+
+```ts
+parse(source: string): DSNodeGroup;
+```
+
+Generates an AST from a CSS value syntax
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `source` | `string` | The CSS value syntax to parse |
+
+#### Returns
+
+[`DSNodeGroup`](DSNodeGroup.mdx)
+
+#### Example
+
+```ts
+parse('foo | bar') =>
+   {
+     type: 'Group',
+     terms: [
+       { type: 'Keyword', name: 'foo' },
+       { type: 'Keyword', name: 'bar' }
+     ],
+     combinator: '|',
+     disallowEmpty: false,
+     explicit: false
+   }
+```
+
+***
+
+### walk()
+
+```ts
+walk(
+   node: DSNode, 
+   options: 
+  | DSWalkOptions
+  | DSWalkEnterOrLeaveFn, 
+   context?: any
+): void;
+```
+
+Walks definition syntax AST
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `node` | [`DSNode`](../type-aliases/DSNode.mdx) |
+| `options` | \| [`DSWalkOptions`](DSWalkOptions.mdx) \| [`DSWalkEnterOrLeaveFn`](../type-aliases/DSWalkEnterOrLeaveFn.mdx) |
+| `context?` | `any` |
+
+#### Returns
+
+`void`

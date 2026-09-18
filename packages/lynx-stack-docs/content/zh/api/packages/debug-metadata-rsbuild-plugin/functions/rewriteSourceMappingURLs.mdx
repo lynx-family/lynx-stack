@@ -1,0 +1,29 @@
+# 函数: rewriteSourceMappingURLs()
+
+```ts
+function rewriteSourceMappingURLs(
+   compilation: Compilation, 
+   args: object, 
+   options?: RewriteSourceMappingURLsOptions
+): void;
+```
+
+将当前模板中每个 JS 资源的 `//# sourceMappingURL=...` 指令重写为绝对 URL。当 `debugMetadataUrl`
+（`args.encodeData.sourceContent.config['debugMetadataUrl']`）未设置时不做任何处理。
+
+## 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `compilation` | `Compilation` | - |
+| `args` | \{ `chunkGroups`: `ChunkGroup`[]; `encodeData`: `EncodeRawData`; `filenameTemplate`: `string`; `intermediate`: `string`; `intermediateAssets`: `string`[]; \} | - |
+| `args.chunkGroups` | `ChunkGroup`[] | 该模板所覆盖的 chunk group。 |
+| `args.encodeData?` | `EncodeRawData` | - |
+| `args.filenameTemplate?` | `string` | - |
+| `args.intermediate?` | `string` | - |
+| `args.intermediateAssets?` | `string`[] | - |
+| `options?` | [`RewriteSourceMappingURLsOptions`](../interfaces/RewriteSourceMappingURLsOptions.mdx) | - |
+
+## 返回
+
+`void`

@@ -1,0 +1,22 @@
+[
+  {
+    "type": "file",
+    "name": "functions/loadI18nextTranslations",
+    "label": "loadI18nextTranslations"
+  },
+  {
+    "type": "file",
+    "name": "functions/pluginLynxI18nextTranslationDedupe",
+    "label": "pluginLynxI18nextTranslationDedupe"
+  },
+  {
+    "type": "file",
+    "name": "functions/toI18nextTranslations",
+    "label": "toI18nextTranslations"
+  },
+  {
+    "type": "file",
+    "name": "variables/I18N_TRANSLATIONS_SECTION_KEY",
+    "label": "I18N_TRANSLATIONS_SECTION_KEY"
+  }
+]

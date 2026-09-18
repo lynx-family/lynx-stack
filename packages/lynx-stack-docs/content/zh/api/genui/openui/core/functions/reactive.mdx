@@ -1,0 +1,23 @@
+# 函数: reactive()
+
+```ts
+function reactive<T extends ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>>(schema: T): ZodType<StateField<output<T>>>;
+```
+
+将 schema prop 标记为响应式，使运行时求值能够保留 $bindings。
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` *extends* `ZodType`\<`unknown`, `unknown`, `$ZodTypeInternals`\<`unknown`, `unknown`\>\> |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `schema` | `T` |
+
+## 返回
+
+`ZodType`\<[`StateField`](../interfaces/StateField.mdx)\<`output`\<`T`\>\>\>

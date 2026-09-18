@@ -1,0 +1,32 @@
+# 函数: useMotionValueRefEvent()
+
+```ts
+function useMotionValueRefEvent<V, EventName extends keyof MotionValueEventCallbacks<V>>(
+   valueRef: MainThreadRef<Listenable<V>>, 
+   event: "change", 
+   callback: MotionValueEventCallbacks<V>[EventName]
+): void;
+```
+
+**`Experimental`**
+
+类似 useMotionValueEvent，但只接受 motionValueRef 格式，高度实验性，可能会发生变化
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `V` |
+| `EventName` *extends* keyof `MotionValueEventCallbacks`\<`V`\> |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `valueRef` | `MainThreadRef`\<`Listenable`\<`V`\>\> |
+| `event` | `"change"` |
+| `callback` | `MotionValueEventCallbacks`\<`V`\>\[`EventName`\] |
+
+## 返回
+
+`void`

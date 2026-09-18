@@ -223,11 +223,11 @@ jobs:
     with:
       runs-on: lynx-ubuntu-26.04-medium
       run: |
-        pnpm turbo build --filter docs
+        pnpm turbo build --filter @lynx-js/lynx-stack-docs
         if test "$(git status --porcelain -- docs/i18n | wc -l)" -gt 0 ; then
           echo "::error::API Docs Translations Changed"
           git diff -- docs/i18n
-          echo "::error::Please run 'pnpm turbo build --filter docs' and commit docs/i18n."
+          echo "::error::Please run 'pnpm turbo build --filter @lynx-js/lynx-stack-docs' and commit docs/i18n."
           exit 1;
         fi
   test-publish:

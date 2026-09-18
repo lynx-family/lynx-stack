@@ -1,0 +1,62 @@
+# 接口: RenderHookResult\<Result, Props\>
+
+[renderHook](../函数/renderHook.mdx) 的返回结果
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `Result` |
+| `Props` |
+
+## 属性
+
+### rerender
+
+```ts
+rerender: (props?: Props) => void;
+```
+
+触发一次重新渲染。props 会被传递给你的 renderHook 回调。
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `props?` | `Props` |
+
+#### 返回
+
+`void`
+
+***
+
+### result
+
+```ts
+result: object;
+```
+
+renderHook 回调最新返回值的稳定引用
+
+#### current
+
+```ts
+current: Result;
+```
+
+renderHook 回调的返回值
+
+***
+
+### unmount
+
+```ts
+unmount: () => void;
+```
+
+卸载测试组件。需要测试 useEffect 的清理逻辑时很有用。
+
+#### 返回
+
+`void`

@@ -1,0 +1,17 @@
+[
+  {
+    "type": "file",
+    "name": "functions/isPluginLynxRegistered",
+    "label": "isPluginLynxRegistered"
+  },
+  {
+    "type": "file",
+    "name": "functions/pluginLynx",
+    "label": "pluginLynx"
+  },
+  {
+    "type": "file",
+    "name": "variables/PLUGIN_LYNX_NAME",
+    "label": "PLUGIN_LYNX_NAME"
+  }
+]

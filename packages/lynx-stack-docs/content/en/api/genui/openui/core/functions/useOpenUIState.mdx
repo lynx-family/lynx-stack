@@ -1,0 +1,22 @@
+# Function: useOpenUIState()
+
+```ts
+function useOpenUIState(__namedParameters: UseOpenUIStateOptions, renderDeep: (value: unknown) => ReactNode): OpenUIState;
+```
+
+Core state hook — extracts all form state, action handling, parser
+management, and context assembly out of the Renderer component.
+
+Store holds everything: $bindings as top-level keys, form fields nested
+under formName as plain values.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `__namedParameters` | [`UseOpenUIStateOptions`](../interfaces/UseOpenUIStateOptions.mdx) |
+| `renderDeep` | (`value`: `unknown`) => `ReactNode` |
+
+## Returns
+
+[`OpenUIState`](../interfaces/OpenUIState.mdx)

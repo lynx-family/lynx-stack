@@ -1,0 +1,93 @@
+# 接口: DataProcessors
+
+通过 [Lynx.registerDataProcessors](Lynx.mdx#registerdataprocessors) 注册的数据处理器。
+
+## 示例
+
+扩展 `dataProcessors` 接口
+
+```ts
+import type { DataProcessors as WellKnownDataProcessors } from '@lynx-js/react';
+
+declare module '@lynx-js/react' {
+  interface DataProcessors extends WellKnownDataProcessors {
+    foo(bar: string): number;
+  }
+}
+```
+
+之后即可带类型地使用 `lynx.registerDataProcessors`。
+
+```js
+lynx.registerDataProcessors({
+  dataProcessors: {
+    foo(bar) {
+      return 1;
+    }
+  }
+})
+```
+
+## 可索引
+
+```ts
+[processorName: string]: (...args: any[]) => any
+```
+
+自定义的其他数据处理器。
+
+### 备注
+
+可以扩展 `DataProcessors` 接口以获得更好的 TypeScript 类型，参见 DataProcessors。
+
+## 方法
+
+### getScreenMetricsOverride()?
+
+```ts
+optional getScreenMetricsOverride(metrics: object): object;
+```
+
+可选的处理器，用于覆盖应用所使用的屏幕度量信息
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `metrics` | \{ `height`: `number`; `width`: `number`; \} | 以像素为单位的物理屏幕尺寸 |
+| `metrics.height` | `number` | 屏幕的物理像素高度 |
+| `metrics.width` | `number` | 屏幕的物理像素宽度 |
+
+#### 返回
+
+`object`
+
+应用要使用的新屏幕尺寸
+
+##### height
+
+```ts
+height: number;
+```
+
+##### width
+
+```ts
+width: number;
+```
+
+#### 示例
+
+```ts
+lynx.registerDataProcessors({
+  dataProcessors: {
+    getScreenMetricsOverride: (metrics) => {
+      // Force a specific aspect ratio
+      return {
+        width: metrics.width,
+        height: metrics.width * (16/9)
+      };
+    }
+  }
+});
+```

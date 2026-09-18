@@ -1,0 +1,55 @@
+# 接口: ExternalsPresetDefinition
+
+具名 externals 预设的定义。
+
+## 属性
+
+### extends?
+
+```ts
+optional extends?: string | string[];
+```
+
+在当前预设之前应用的其他预设名称。
+
+***
+
+### resolveExternals?
+
+```ts
+optional resolveExternals?: (value: boolean | object, context: ExternalsPresetContext) => Record<string, ExternalValue>;
+```
+
+解析该预设提供的 external 请求映射。
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `value` | `boolean` \| `object` |
+| `context` | [`ExternalsPresetContext`](ExternalsPresetContext.mdx) |
+
+#### 返回
+
+`Record`\<`string`, `ExternalValue`\>
+
+***
+
+### resolveManagedAssets?
+
+```ts
+optional resolveManagedAssets?: (value: boolean | object, context: ExternalsPresetContext) => Map<string, string> | Record<string, string>;
+```
+
+解析该预设提供的托管 bundle 资源。
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `value` | `boolean` \| `object` |
+| `context` | [`ExternalsPresetContext`](ExternalsPresetContext.mdx) |
+
+#### 返回
+
+`Map`\<`string`, `string`\> \| `Record`\<`string`, `string`\>

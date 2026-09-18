@@ -1,0 +1,109 @@
+# 类: Lynx
+
+kitten-lynx 测试框架的主入口。
+
+提供类似 Puppeteer 的 API，用于通过 ADB 和 Chrome DevTools Protocol
+连接到运行在 Android 设备（真机或模拟器）上的 Lynx 应用。
+
+## 示例
+
+```typescript
+const lynx = await Lynx.connect({ deviceId: 'localhost:5555' });
+const page = await lynx.newPage();
+await page.goto('http://example.com/bundle.lynx.bundle');
+const content = await page.content();
+await lynx.close();
+```
+
+## 构造函数
+
+### 构造函数
+
+```ts
+new Lynx(): Lynx;
+```
+
+#### 返回
+
+`Lynx`
+
+## 方法
+
+### close()
+
+```ts
+close(): Promise<void>;
+```
+
+关闭当前活动的 ADB/CDP 连接，并释放相关资源。
+
+**Agent 用法：**
+请确保在测试的 teardown 代码块中调用它（例如在 `afterAll()` 中），以避免
+出现悬空的 Node.js 进程或挂起的 ADB 连接，从而影响后续测试的运行。
+
+#### 返回
+
+`Promise`\<`void`\>
+
+一个 Promise，在清理操作完全处理完成后 resolve。
+
+***
+
+### newPage()
+
+```ts
+newPage(): Promise<KittenLynxView>;
+```
+
+为已连接的 Lynx 环境生成一个新的页面表示。
+
+**Agent 用法：**
+类似于 Puppeteer 的 `browser.newPage()`。当你通过 `Lynx.connect()` 安全地创建了一个
+`Lynx` 连接实例后，调用此方法即可获得一个 `KittenLynxView`。之后可以在该视图上调用
+`post.goto(url)` 来导航到某个 Lynx Bundle。
+
+#### 返回
+
+`Promise`\<[`KittenLynxView`](KittenLynxView.mdx)\>
+
+一个 Promise，解析为绑定到当前 ADB 客户端的新 `KittenLynxView` 实例。
+
+#### 抛出
+
+如果 Lynx 连接未先正确初始化，则报错。
+
+***
+
+### connect()
+
+```ts
+static connect(options?: ConnectOptions): Promise<Lynx>;
+```
+
+主要的初始化方法。通过 ADB 连接到 Lynx 应用的 devtool 服务器。
+
+**Agent 连接流程指南：**
+1. 发现目标 ADB 设备（真机 Android 或模拟器）。
+2. 强制停止目标应用以确保干净的初始状态（`adb shell am force-stop`）。
+3. 在设备上启动应用（通常是 Lynx Explorer）。
+4. 向 `Connector` 查询可用客户端，并按设备 ID 和包名进行匹配。
+5. 开启总的 devtool 开关（`enable_devtool`）。
+
+**何时使用：**
+这应该是任何测试脚本或交互流程中第一个被调用的方法。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `options?` | `ConnectOptions` | 配置连接变量，例如 `appPackage` 和 `deviceId`（在连接了多台设备时很有用）。 |
+
+#### 返回
+
+`Promise`\<`Lynx`\>
+
+一个 Promise，解析为已连接、可用于创建新页面的 `Lynx` 实例。
+
+#### 抛出
+
+如果找不到设备、应用缺失，或目标客户端初始化失败，则报错。

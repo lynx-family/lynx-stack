@@ -1,0 +1,33 @@
+# output.distPath
+
+```ts
+optional distPath?: DistPathConfig;
+```
+
+**`Lynx Default Changed`**
+
+Set the directory of the dist files.
+
+## Default Value
+
+Uses Rsbuild's default distPath configuration with `root: 'dist'`.
+
+## Remarks
+
+More options can be found at [Rsbuild - distPath](https://rsbuild.rs/config/output/dist-path).
+
+## Example
+
+Use `output` instead of `dist`(the default value):
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  output: {
+    distPath: {
+      root: './output',
+    },
+  },
+})
+```
+

@@ -1,0 +1,67 @@
+# 类: ExternalsLoadingPlugin
+
+用于加载 lynx external bundle 的 webpack 插件。
+
+## 示例
+
+```js
+// webpack.config.js
+import { ExternalsLoadingPlugin } from '@lynx-js/externals-loading-webpack-plugin';
+
+export default {
+  plugins: [
+    new ExternalsLoadingPlugin({
+      mainThreadLayer: 'main-thread',
+      backgroundLayer: 'background',
+      externals: {
+       'lodash': {
+         url: 'http://lodash.lynx.bundle',
+         async: true,
+         background: {
+           sectionPath: 'background',
+         },
+         mainThread: {
+           sectionPath: 'mainThread',
+         },
+       },
+      }
+    })
+  ]
+}
+```
+
+## 构造函数
+
+### 构造函数
+
+```ts
+new ExternalsLoadingPlugin(options: ExternalsLoadingPluginOptions): ExternalsLoadingPlugin;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `options` | [`ExternalsLoadingPluginOptions`](../interfaces/ExternalsLoadingPluginOptions.mdx) |
+
+#### 返回
+
+`ExternalsLoadingPlugin`
+
+## 方法
+
+### apply()
+
+```ts
+apply(compiler: Compiler): void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `compiler` | `Compiler` |
+
+#### 返回
+
+`void`

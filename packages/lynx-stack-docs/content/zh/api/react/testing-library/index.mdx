@@ -1,0 +1,266 @@
+# @lynx-js/react/testing-library
+
+ReactLynx Testing Library 是一个简单而完备的 ReactLynx 单元测试库，鼓励良好的测试实践。
+
+> 完全受 [react-testing-library](https://github.com/testing-library/react-testing-library) 启发
+
+和 [react-testing-library](https://github.com/testing-library/react-testing-library) 一样，这个库的设计目标是让你用测试 React 组件的方式来测试 ReactLynx 组件。
+
+## Setup
+
+### Rstest
+
+用 `@lynx-js/react/testing-library/rstest-config` 配置 rstest。
+
+推荐库项目使用：
+
+```ts
+import { defineConfig } from '@rstest/core';
+import { withDefaultConfig } from '@lynx-js/react/testing-library/rstest-config';
+
+export default defineConfig({
+  extends: withDefaultConfig(),
+});
+```
+
+想复用应用的 `lynx.config.ts` 时，使用 `withLynxConfig`：
+
+```ts
+// rstest.config.ts
+import { defineConfig } from '@rstest/core';
+import { withLynxConfig } from '@lynx-js/react/testing-library/rstest-config';
+
+export default defineConfig({
+  extends: withLynxConfig(),
+});
+```
+
+`withLynxConfig` 和 `withDefaultConfig` 的区别：
+
+- `withLynxConfig`：面向应用。读取你的 `lynx.config.ts` 并转换成 rstest 配置，让 rspeedy/lynx 的设置在测试中同样生效。
+- `withDefaultConfig`：面向库。只应用 testing-library 的默认配置（`jsdom`、setup 文件、全局变量），其余部分由你通过 `modifyRstestConfig` 提供。
+
+然后就可以开始写测试，并用 rstest 运行它们了！
+
+更多用法详见 https://rstest.rs/
+
+### Vitest
+
+配置 vitest：
+
+```js
+import { defineConfig } from 'vitest/config';
+import { vitestTestingLibraryPlugin } from '@lynx-js/react/testing-library/plugins';
+
+export default defineConfig({
+  plugins: [
+    vitestTestingLibraryPlugin(),
+  ],
+  test: {
+    // ...
+  },
+});
+```
+
+然后就可以开始写测试，并用 vitest 运行它们了！
+
+`createVitestConfig` 仍然可用以保持向后兼容，但已废弃。
+
+## Usage
+
+```jsx
+import '@testing-library/jest-dom';
+import { test, expect } from 'vitest'; // or '@rstest/core'
+import { render } from '@lynx-js/react/testing-library';
+
+test('renders options.wrapper around node', async () => {
+  const WrapperComponent = ({ children }) => (
+    <view data-testid='wrapper'>{children}</view>
+  );
+  const Comp = () => {
+    return <view data-testid='inner' style='background-color: yellow;' />;
+  };
+  const { container, getByTestId } = render(<Comp />, {
+    wrapper: WrapperComponent,
+  });
+  expect(getByTestId('wrapper')).toBeInTheDocument();
+  expect(container.firstChild).toMatchInlineSnapshot(`
+    <view
+      data-testid="wrapper"
+    >
+      <view
+        data-testid="inner"
+        style="background-color: yellow;"
+      />
+    </view>
+  `);
+});
+```
+
+💡 由于我们的测试环境（`@lynx-js/testing-environment`）基于 jsdom，你可能还想安装 `@testing-library/jest-dom`，以便使用[这些自定义 jest matcher](https://github.com/testing-library/jest-dom)。
+
+## Examples
+
+更多用法参见我们的[示例](https://github.com/lynx-family/lynx-stack/tree/main/packages/react/testing-library/src/__tests__)。
+
+## Credits
+
+- [Testing Library](https://testing-library.com/)，提供了测试工具和 React 测试的良好实践。
+
+## 命名空间
+
+- [prettyFormat](命名空间/prettyFormat.mdx)
+- [queries](命名空间/queries.mdx)
+- [queryHelpers](命名空间/queryHelpers.mdx)
+
+## 类
+
+- [LynxTestingEnv](类/LynxTestingEnv.mdx)
+
+## 接口
+
+- [ByRoleOptions](接口/ByRoleOptions.mdx)
+- [Config](接口/Config.mdx)
+- [ConfigFn](接口/ConfigFn.mdx)
+- [DefaultNormalizerOptions](接口/DefaultNormalizerOptions.mdx)
+- [LogRolesOptions](接口/LogRolesOptions.mdx)
+- [MatcherOptions](接口/MatcherOptions.mdx)
+- [NormalizerOptions](接口/NormalizerOptions.mdx)
+- [PrettyDOMOptions](接口/PrettyDOMOptions.mdx)
+- [Queries](接口/Queries.mdx)
+- [QueryOptions](接口/QueryOptions.mdx)
+- [RenderHookOptions](接口/RenderHookOptions.mdx)
+- [RenderHookResult](接口/RenderHookResult.mdx)
+- [RenderOptions](接口/RenderOptions.mdx)
+- [SelectorMatcherOptions](接口/SelectorMatcherOptions.mdx)
+- [Suggestion](接口/Suggestion.mdx)
+- [waitForOptions](接口/waitForOptions.mdx)
+
+## 类型别名
+
+- [AllByAttribute](类型别名/AllByAttribute.mdx)
+- [AllByBoundAttribute](类型别名/AllByBoundAttribute.mdx)
+- [AllByRole](类型别名/AllByRole.mdx)
+- [AllByText](类型别名/AllByText.mdx)
+- [BoundFunction](类型别名/BoundFunction.mdx)
+- [BoundFunctions](类型别名/BoundFunctions.mdx)
+- [BuiltQueryMethods](类型别名/BuiltQueryMethods.mdx)
+- [ByRoleMatcher](类型别名/ByRoleMatcher.mdx)
+- [CreateFunction](类型别名/CreateFunction.mdx)
+- [CreateObject](类型别名/CreateObject.mdx)
+- [ElementTree](类型别名/ElementTree.mdx)
+- [EventType](类型别名/EventType.mdx)
+- [FindAllBy](类型别名/FindAllBy.mdx)
+- [FindAllByBoundAttribute](类型别名/FindAllByBoundAttribute.mdx)
+- [FindAllByRole](类型别名/FindAllByRole.mdx)
+- [FindAllByText](类型别名/FindAllByText.mdx)
+- [FindBy](类型别名/FindBy.mdx)
+- [FindByBoundAttribute](类型别名/FindByBoundAttribute.mdx)
+- [FindByRole](类型别名/FindByRole.mdx)
+- [FindByText](类型别名/FindByText.mdx)
+- [FireFunction](类型别名/FireFunction.mdx)
+- [FireObject](类型别名/FireObject.mdx)
+- [GetAllBy](类型别名/GetAllBy.mdx)
+- [GetBy](类型别名/GetBy.mdx)
+- [GetByBoundAttribute](类型别名/GetByBoundAttribute.mdx)
+- [GetByRole](类型别名/GetByRole.mdx)
+- [GetByText](类型别名/GetByText.mdx)
+- [GetErrorFunction](类型别名/GetErrorFunction.mdx)
+- [Match](类型别名/Match.mdx)
+- [Matcher](类型别名/Matcher.mdx)
+- [MatcherFunction](类型别名/MatcherFunction.mdx)
+- [Method](类型别名/Method.mdx)
+- [NormalizerFn](类型别名/NormalizerFn.mdx)
+- [Query](类型别名/Query.mdx)
+- [QueryArgs](类型别名/QueryArgs.mdx)
+- [QueryBy](类型别名/QueryBy.mdx)
+- [QueryByAttribute](类型别名/QueryByAttribute.mdx)
+- [QueryByBoundAttribute](类型别名/QueryByBoundAttribute.mdx)
+- [QueryByRole](类型别名/QueryByRole.mdx)
+- [QueryByText](类型别名/QueryByText.mdx)
+- [QueryMethod](类型别名/QueryMethod.mdx)
+- [RenderResult](类型别名/RenderResult.mdx)
+- [Screen](类型别名/Screen.mdx)
+- [Variant](类型别名/Variant.mdx)
+- [WithSuggest](类型别名/WithSuggest.mdx)
+
+## 变量
+
+- [createEvent](变量/createEvent.mdx)
+- [fireEvent](变量/fireEvent.mdx)
+- [queryAllByAttribute](变量/queryAllByAttribute.mdx)
+- [queryByAttribute](变量/queryByAttribute.mdx)
+- [screen](变量/screen.mdx)
+- [within](变量/within.mdx)
+
+## 函数
+
+- [act](函数/act.mdx)
+- [buildQueries](函数/buildQueries.mdx)
+- [cleanup](函数/cleanup.mdx)
+- [computeHeadingLevel](函数/computeHeadingLevel.mdx)
+- [configure](函数/configure.mdx)
+- [findAllByAltText](函数/findAllByAltText.mdx)
+- [findAllByDisplayValue](函数/findAllByDisplayValue.mdx)
+- [findAllByLabelText](函数/findAllByLabelText.mdx)
+- [findAllByPlaceholderText](函数/findAllByPlaceholderText.mdx)
+- [findAllByRole](函数/findAllByRole.mdx)
+- [findAllByTestId](函数/findAllByTestId.mdx)
+- [findAllByText](函数/findAllByText.mdx)
+- [findAllByTitle](函数/findAllByTitle.mdx)
+- [findByAltText](函数/findByAltText.mdx)
+- [findByDisplayValue](函数/findByDisplayValue.mdx)
+- [findByLabelText](函数/findByLabelText.mdx)
+- [findByPlaceholderText](函数/findByPlaceholderText.mdx)
+- [findByRole](函数/findByRole.mdx)
+- [findByTestId](函数/findByTestId.mdx)
+- [findByText](函数/findByText.mdx)
+- [findByTitle](函数/findByTitle.mdx)
+- [getAllByAltText](函数/getAllByAltText.mdx)
+- [getAllByDisplayValue](函数/getAllByDisplayValue.mdx)
+- [getAllByLabelText](函数/getAllByLabelText.mdx)
+- [getAllByPlaceholderText](函数/getAllByPlaceholderText.mdx)
+- [getAllByRole](函数/getAllByRole.mdx)
+- [getAllByTestId](函数/getAllByTestId.mdx)
+- [getAllByText](函数/getAllByText.mdx)
+- [getAllByTitle](函数/getAllByTitle.mdx)
+- [getByAltText](函数/getByAltText.mdx)
+- [getByDisplayValue](函数/getByDisplayValue.mdx)
+- [getByLabelText](函数/getByLabelText.mdx)
+- [getByPlaceholderText](函数/getByPlaceholderText.mdx)
+- [getByRole](函数/getByRole.mdx)
+- [getByTestId](函数/getByTestId.mdx)
+- [getByText](函数/getByText.mdx)
+- [getByTitle](函数/getByTitle.mdx)
+- [getConfig](函数/getConfig.mdx)
+- [getDefaultNormalizer](函数/getDefaultNormalizer.mdx)
+- [getElementError](函数/getElementError.mdx)
+- [getNodeText](函数/getNodeText.mdx)
+- [getQueriesForElement](函数/getQueriesForElement.mdx)
+- [getRoles](函数/getRoles.mdx)
+- [getSuggestedQuery](函数/getSuggestedQuery.mdx)
+- [isInaccessible](函数/isInaccessible.mdx)
+- [logDOM](函数/logDOM.mdx)
+- [logRoles](函数/logRoles.mdx)
+- [prettyDOM](函数/prettyDOM.mdx)
+- [queryAllByAltText](函数/queryAllByAltText.mdx)
+- [queryAllByDisplayValue](函数/queryAllByDisplayValue.mdx)
+- [queryAllByLabelText](函数/queryAllByLabelText.mdx)
+- [queryAllByPlaceholderText](函数/queryAllByPlaceholderText.mdx)
+- [queryAllByRole](函数/queryAllByRole.mdx)
+- [queryAllByTestId](函数/queryAllByTestId.mdx)
+- [queryAllByText](函数/queryAllByText.mdx)
+- [queryAllByTitle](函数/queryAllByTitle.mdx)
+- [queryByAltText](函数/queryByAltText.mdx)
+- [queryByDisplayValue](函数/queryByDisplayValue.mdx)
+- [queryByLabelText](函数/queryByLabelText.mdx)
+- [queryByPlaceholderText](函数/queryByPlaceholderText.mdx)
+- [queryByRole](函数/queryByRole.mdx)
+- [queryByTestId](函数/queryByTestId.mdx)
+- [queryByText](函数/queryByText.mdx)
+- [queryByTitle](函数/queryByTitle.mdx)
+- [render](函数/render.mdx)
+- [renderHook](函数/renderHook.mdx)
+- [waitFor](函数/waitFor.mdx)
+- [waitForElementToBeRemoved](函数/waitForElementToBeRemoved.mdx)
+- [~~waitSchedule~~](函数/waitSchedule.mdx)

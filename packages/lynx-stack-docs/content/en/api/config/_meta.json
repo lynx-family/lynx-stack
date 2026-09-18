@@ -1,0 +1,57 @@
+[
+  {
+    "type": "file",
+    "name": "environments",
+    "label": "environments",
+    "tag": "Default changed"
+  },
+  {
+    "type": "dir",
+    "name": "dev",
+    "label": "Dev options",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "output",
+    "label": "Output options",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "performance",
+    "label": "Performance options",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "resolve",
+    "label": "Resolve options",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "server",
+    "label": "Server options",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "source",
+    "label": "Source options",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "tools",
+    "label": "Tools options",
+    "collapsible": true,
+    "collapsed": true
+  }
+]

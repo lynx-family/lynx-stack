@@ -1,0 +1,85 @@
+# 接口: OpenUIError
+
+openui-lang 流水线产生的结构化、适合 LLM 处理的错误。
+
+用于自动纠错循环：把这些错误发给 LLM，让它生成修复补丁。只包含可以通过修改 openui-lang 代码修复的错误；流式传输中的临时错误、网络故障和工具执行错误不会包含在内。
+
+## 属性
+
+### code
+
+```ts
+code: OpenUIErrorCode;
+```
+
+机器可读的错误码。
+
+***
+
+### component?
+
+```ts
+optional component?: string;
+```
+
+组件类型名称（例如 "BarChart"、"Query"）。
+
+***
+
+### hint?
+
+```ts
+optional hint?: string;
+```
+
+给 LLM 的可操作修复信息（例如可用的组件、正确的签名）。
+
+***
+
+### message
+
+```ts
+message: string;
+```
+
+人或 LLM 可读的错误描述。
+
+***
+
+### path?
+
+```ts
+optional path?: string;
+```
+
+prop 路径（例如 "/title"）。
+
+***
+
+### source
+
+```ts
+source: OpenUIErrorSource;
+```
+
+错误的来源。
+
+***
+
+### statementId?
+
+```ts
+optional statementId?: string;
+```
+
+语句名称（例如 "header"、"metrics"），告诉 LLM 需要修补哪条语句。
+
+***
+
+### toolName?
+
+```ts
+optional toolName?: string;
+```
+
+query/mutation 错误对应的工具名称（例如 "get_users"、"create_item"）。

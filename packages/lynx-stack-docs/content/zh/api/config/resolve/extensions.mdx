@@ -1,0 +1,48 @@
+# resolve.extensions
+
+```ts
+optional extensions?: string[];
+```
+
+**`Lynx Default Changed`**
+
+导入模块时自动解析文件扩展名。这意味着你可以在导入文件时省略扩展名。
+
+## 默认值
+
+`['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json', '.cjs']`
+
+## 备注
+
+例如，导入 './index' 时，Rsbuild 会按以下顺序尝试解析：
+
+- `./index.ts`
+
+- `./index.tsx`
+
+- `./index.mjs`
+
+- `./index.js`
+
+- `./index.jsx`
+
+- `./index.json`
+
+- `./index.cjs`
+
+`resolve.extensions` 与 `tools.rspack.resolve.extensions` 的区别：
+
+`resolve.extensions`：替换默认列表；`pluginLynx` 仍会追加 `.cjs`。
+
+`tools.rspack.resolve.extensions`：通过 [`webpack-merge`](https://github.com/survivejs/webpack-merge) 与默认配置合并。
+
+## 示例
+
+```js
+export default {
+  resolve: {
+    extensions: ['.ts', '.tsx', '.js'],
+  },
+}
+```
+

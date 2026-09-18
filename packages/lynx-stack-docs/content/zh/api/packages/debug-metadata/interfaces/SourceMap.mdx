@@ -1,0 +1,86 @@
+# 接口: SourceMap
+
+Source Map v3 数据，遵循 [Source Map Revision 3 proposal](https://sourcemaps.info/spec.html)。
+
+在此处声明（而不是从 `source-map` 导入），是为了保持该包零依赖，
+避免下游消费者仅为了一个 TypeScript 类型
+就引入约 200 kB 的 `source-map` 运行时。
+
+## 属性
+
+### file?
+
+```ts
+optional file?: string;
+```
+
+该 map 所描述的生成输出文件名。
+
+***
+
+### mappings
+
+```ts
+mappings: string;
+```
+
+VLQ 编码的映射数据。
+
+***
+
+### names
+
+```ts
+names: string[];
+```
+
+`mappings` 中引用的符号名称。
+
+***
+
+### sections?
+
+```ts
+optional sections?: SourceMapSection[];
+```
+
+index-map 的 section，与 simple-map 形态互斥。生产方要么
+设置 `sections`（index map），要么设置其他字段，二者不能同时设置。
+
+***
+
+### sourceRoot?
+
+```ts
+optional sourceRoot?: string;
+```
+
+添加到 `sources` 中每个条目前的可选前缀。
+
+***
+
+### sources
+
+```ts
+sources: string[];
+```
+
+原始源文件的 URL / 标识符。
+
+***
+
+### sourcesContent?
+
+```ts
+optional sourcesContent?: (string | null)[];
+```
+
+内联的源码内容，与 `sources` 一一对应。
+
+***
+
+### version
+
+```ts
+version: 3;
+```

@@ -1,0 +1,72 @@
+# 接口: LynxMinify
+
+Lynx 各线程的压缩器选项。
+
+## 备注
+
+Lynx 为每个线程输出一个 bundle，且各线程可能需要不同的压缩器配置。这些选项会合并到 Rsbuild
+`output.minify.jsOptions` 之上，并仅应用于对应线程。
+
+## 属性
+
+### backgroundOptions?
+
+```ts
+optional backgroundOptions?: SwcJsMinimizerRspackPluginOptions;
+```
+
+为后台线程 bundle 覆盖 Rsbuild 的 `output.minify.jsOptions`。
+
+#### 备注
+
+该选项会被深度合并到 `output.minify.jsOptions` 中。它主要与 ReactLynx 的双线程产物配合使用，使主线程和后台线程的 bundle 可以使用不同的压缩规则。
+
+***
+
+### mainThreadOptions?
+
+```ts
+optional mainThreadOptions?: SwcJsMinimizerRspackPluginOptions;
+```
+
+为主线程 bundle 覆盖 Rsbuild 的 `output.minify.jsOptions`。
+
+#### 备注
+
+该选项会被深度合并到 `output.minify.jsOptions` 中。它主要与 ReactLynx 的双线程产物配合使用，使主线程和后台线程的 bundle 可以使用不同的压缩规则。
+
+#### 示例
+
+```ts
+import { defineConfig } from '@rsbuild/core'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+
+export default defineConfig({
+  output: {
+    minify: {
+      jsOptions: {
+        minimizerOptions: {
+          compress: {
+            pure_funcs: ['console.log'],
+          },
+        },
+      },
+    },
+  },
+  plugins: [
+    pluginLynx({
+      output: {
+        minify: {
+          mainThreadOptions: {
+            minimizerOptions: {
+              compress: {
+                pure_funcs: ['NativeModules.call', 'lynx.getJSModule'],
+              },
+            },
+          },
+        },
+      },
+    }),
+  ],
+})
+```

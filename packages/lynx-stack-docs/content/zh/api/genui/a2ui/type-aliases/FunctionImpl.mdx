@@ -1,0 +1,18 @@
+# 类型别名: FunctionImpl
+
+```ts
+type FunctionImpl = (args: Record<string, unknown>, context?: FunctionCallContext) => unknown;
+```
+
+函数实现位于客户端，agent 只通过名称引用函数。registry 是连接协议层 `FunctionCall.call` 字符串与本地实际运行代码的桥梁。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `args` | `Record`\<`string`, `unknown`\> |
+| `context?` | [`FunctionCallContext`](../interfaces/FunctionCallContext.mdx) |
+
+## 返回
+
+`unknown`

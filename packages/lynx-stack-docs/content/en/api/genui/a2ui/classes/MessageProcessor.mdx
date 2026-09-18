@@ -1,0 +1,162 @@
+# Class: MessageProcessor
+
+Stateful A2UI protocol processor that turns raw v0.9 messages into
+renderable surfaces, resources, data-model signals, and user-action events.
+
+## Constructors
+
+### Constructor
+
+```ts
+new MessageProcessor(): MessageProcessor;
+```
+
+#### Returns
+
+`MessageProcessor`
+
+## Properties
+
+### surfaces
+
+```ts
+surfaces: Map<string, Surface>;
+```
+
+## Methods
+
+### clearSurfaces()
+
+```ts
+clearSurfaces(): void;
+```
+
+#### Returns
+
+`void`
+
+***
+
+### dispatch()
+
+```ts
+dispatch(message: Record<string, unknown>): Promise<unknown>;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `message` | `Record`\<`string`, `unknown`\> |
+
+#### Returns
+
+`Promise`\<`unknown`\>
+
+***
+
+### getOrCreateSurface()
+
+```ts
+getOrCreateSurface(surfaceId: string): Surface;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `surfaceId` | `string` |
+
+#### Returns
+
+[`Surface`](../interfaces/Surface.mdx)
+
+***
+
+### getSurfaces()
+
+```ts
+getSurfaces(): ReadonlyMap<string, Surface>;
+```
+
+#### Returns
+
+`ReadonlyMap`\<`string`, [`Surface`](../interfaces/Surface.mdx)\>
+
+***
+
+### onEvent()
+
+```ts
+onEvent(callback: (event: A2UIEvent) => void): () => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `callback` | (`event`: `A2UIEvent`) => `void` |
+
+#### Returns
+
+() => `void`
+
+***
+
+### onUpdate()
+
+```ts
+onUpdate(callback: (data: Record<string, unknown>) => void): () => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `callback` | (`data`: `Record`\<`string`, `unknown`\>) => `void` |
+
+#### Returns
+
+() => `void`
+
+***
+
+### processMessages()
+
+```ts
+processMessages(messages: ServerToClientMessage[]): void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `messages` | [`ServerToClientMessage`](../type-aliases/ServerToClientMessage.mdx)[] |
+
+#### Returns
+
+`void`
+
+***
+
+### resolvePath()
+
+```ts
+resolvePath(path: string, dataContextPath?: string): string;
+```
+
+Resolve a JSON Pointer taking into account the current data context.
+
+- Absolute paths (starting with '/') are returned as-is.
+- Relative paths are resolved against the provided dataContextPath.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `path` | `string` |
+| `dataContextPath?` | `string` |
+
+#### Returns
+
+`string`

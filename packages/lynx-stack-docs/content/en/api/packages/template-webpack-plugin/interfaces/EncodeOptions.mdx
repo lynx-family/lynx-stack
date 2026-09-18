@@ -1,0 +1,61 @@
+# Interface: EncodeOptions
+
+The options for encoding a Lynx bundle.
+
+## Indexable
+
+```ts
+[k: string]: unknown
+```
+
+## Properties
+
+### compilerOptions
+
+```ts
+compilerOptions: Record<string, string | boolean>;
+```
+
+***
+
+### customSections
+
+```ts
+customSections: Record<string, {
+  content: string | Record<string, unknown> | undefined;
+  encoding?: "JsBytecode" | "CSS";
+  type?: "lazy";
+}>;
+```
+
+***
+
+### elementTemplate?
+
+```ts
+optional elementTemplate?: Record<string, unknown>;
+```
+
+Element template data used by encoders that support element template output.
+
+***
+
+### lepusCode
+
+```ts
+lepusCode: 
+  | {
+  filename: string | undefined;
+  lepusChunk: Record<string, string>;
+  root: string | undefined;
+}
+  | undefined;
+```
+
+***
+
+### manifest?
+
+```ts
+optional manifest?: Record<string, string | undefined>;
+```

@@ -1,0 +1,14 @@
+# Interface: MessageStoreOptions
+
+Options used when creating a raw A2UI message buffer.
+
+## Properties
+
+### initialMessages?
+
+```ts
+optional initialMessages?: readonly ServerToClientMessage[];
+```
+
+Optional initial buffer contents. Useful when rehydrating a previous
+agent response or replaying a fixture stream.

@@ -1,0 +1,12 @@
+[
+  {
+    "type": "file",
+    "name": "functions/createLazyResolver",
+    "label": "createLazyResolver"
+  },
+  {
+    "type": "file",
+    "name": "functions/pluginReactAlias",
+    "label": "pluginReactAlias"
+  }
+]

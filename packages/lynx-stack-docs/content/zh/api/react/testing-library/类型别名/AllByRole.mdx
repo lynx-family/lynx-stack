@@ -1,0 +1,23 @@
+# 类型别名: AllByRole\<T *extends* `HTMLElement` = `HTMLElement`\>
+
+```ts
+type AllByRole<T extends HTMLElement = HTMLElement> = (container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions) => T[];
+```
+
+## 类型参数
+
+| 类型参数 | 默认类型 |
+| ------ | ------ |
+| `T` *extends* `HTMLElement` | `HTMLElement` |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `container` | `HTMLElement` |
+| `role` | [`ByRoleMatcher`](ByRoleMatcher.mdx) |
+| `options?` | [`ByRoleOptions`](../接口/ByRoleOptions.mdx) |
+
+## 返回
+
+`T`[]

@@ -1,0 +1,35 @@
+# 函数: useDebugValue()
+
+```ts
+function useDebugValue<T>(value: T, format?: (value: T) => any): void;
+```
+
+`useDebugValue` 可用于在 React DevTools 中为自定义 Hook 显示一个标签。
+
+注意：我们不建议为每一个自定义 Hook 都添加调试值。
+它对属于共享库一部分的自定义 Hook 最有价值。
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `value` | `T` |
+| `format?` | (`value`: `T`) => `any` |
+
+## 返回
+
+`void`
+
+## Version
+
+16.8.0
+
+## 参阅
+
+[https://react.dev/reference/react/useDebugValue](https://react.dev/reference/react/useDebugValue)

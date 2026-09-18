@@ -1,0 +1,140 @@
+# 接口: CssLoaderModules
+
+cssLoader.modules 选项用于启用/禁用 CSS Modules 规范，并设置基本行为。
+
+## 属性
+
+### auto?
+
+```ts
+optional auto?: boolean | RegExp | ((filename: string) => boolean);
+```
+
+`auto` 选项允许根据文件名自动启用 CSS Modules。
+
+#### 备注
+
+不同的 `auto` 值对应的行为如下：
+
+- `true`：为所有匹配 `/\.module\.\w+$/i.test(filename)` 正则的文件启用 CSS Modules。
+
+- `false`：禁用 CSS Modules。
+
+- `RegExp`：为所有匹配 `auto.test(filename)` 正则的文件启用 CSS Modules。
+
+- `function`：根据过滤函数启用 CSS Modules。
+
+详见 [css-loader#auto](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#auto)。
+
+#### 默认值
+
+```ts
+true
+```
+
+***
+
+### exportLocalsConvention?
+
+```ts
+optional exportLocalsConvention?: CssModuleLocalsConvention;
+```
+
+导出类名的风格。
+
+#### 备注
+
+不同的 `exportLocalsConvention` 值对应的行为如下：
+
+- `'asIs'`：类名将按原样导出。
+
+- `'camelCase'`：类名将转换为驼峰形式，原始类名不会从 locals 中移除
+
+- `'camelCaseOnly'`：类名将转换为驼峰形式，原始类名将从 locals 中移除
+
+- `'dashes'`：仅将类名中的短横线转换为驼峰形式
+
+- `'dashesOnly'`：将类名中的短横线转换为驼峰形式，原始类名将从 locals 中移除
+
+详见 [css-loader#exportLocalsConvention](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#exportlocalsconvention)。
+
+#### 默认值
+
+`'camelCase'`
+
+***
+
+### localIdentName?
+
+```ts
+optional localIdentName?: string;
+```
+
+设置 CSS Modules 编译后生成的 className 格式。
+
+#### 备注
+
+可用的占位符：
+
+- `[local]`：原始类名
+
+- `[hash]`：类名的 hash
+
+- `[path]`：文件路径
+
+- `[name]`：文件名
+
+- `[ext]`：文件扩展名
+
+详见 [css-loader#localIdentName](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#localIdentName)。
+
+#### 默认值
+
+`'[local]-[hash:base64:6]'`
+
+***
+
+### namedExport?
+
+```ts
+optional namedExport?: boolean;
+```
+
+启用/禁用 locals 的 ES modules 具名导出。
+
+#### 默认值
+
+```ts
+false
+```
+
+#### 示例
+
+- `style.css`
+
+```css
+.foo-baz {
+  color: red;
+}
+.bar {
+  color: blue;
+}
+.default {
+  color: green;
+}
+```
+
+- `index.js`
+
+```js
+import * as styles from "./styles.css";
+
+// If using `exportLocalsConvention: "asIs"`:
+console.log(styles["foo-baz"], styles.bar);
+
+// If using `exportLocalsConvention: "camelCaseOnly"`:
+console.log(styles.fooBaz, styles.bar);
+
+// For the `default` class name
+console.log(styles["_default"]);
+```

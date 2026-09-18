@@ -1,0 +1,27 @@
+# Interface: LoadConfigResult
+
+The result of [loadConfig](../functions/loadConfig.mdx).
+
+## Properties
+
+### configPath
+
+```ts
+configPath: string;
+```
+
+The configuration path that has been loaded.
+
+***
+
+### content
+
+```ts
+content: Config;
+```
+
+The configuration object that exported from the configuration file.
+
+#### Remarks
+
+The returned object has already been validated.

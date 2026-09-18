@@ -1,0 +1,85 @@
+# Interface: Root
+
+The default root exported by `@lynx-js/react` for you to render a JSX
+
+## Properties
+
+### ~~registerDataProcessors~~
+
+```ts
+registerDataProcessors: (dataProcessorDefinition: DataProcessorDefinition) => void;
+```
+
+Register DataProcessors. You MUST call this before `root.render()`.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `dataProcessorDefinition` | [`DataProcessorDefinition`](DataProcessorDefinition.mdx) |
+
+#### Returns
+
+`void`
+
+#### Deprecated
+
+use [lynx.registerDataProcessors](Lynx.mdx#registerdataprocessors) instead
+
+***
+
+### render
+
+```ts
+render: (jsx: ReactNode) => void;
+```
+
+Use this API to pass in your JSX to render
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `jsx` | `ReactNode` |
+
+#### Returns
+
+`void`
+
+#### Examples
+
+```ts
+import { root } from "@lynx-js/react"
+
+function App() {
+  // Your app
+  return <view>...</view>
+}
+
+root.render(<App/>);
+```
+
+```tsx
+import { root } from "@lynx-js/react"
+
+function App() {
+  // Your app
+  return <view>...</view>
+}
+
+if (__MAIN_THREAD__) {
+  root.render(
+    <DataProvider data={DEFAULT_DATA}>
+       <App/>
+    </DataProvider>
+  );
+} else if (__BACKGROUND__) {
+  fetchData().then((data) => {
+    root.render(
+      <DataProvider data={data}>
+         <App/>
+      </DataProvider>
+    ); // You can render later after your data is ready
+  })
+}
+```

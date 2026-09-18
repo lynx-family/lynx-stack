@@ -1,0 +1,22 @@
+# Type Alias: ModelConstructor\<TModel, TFactoryArgs *extends* `any`[] = \[\]\>
+
+```ts
+type ModelConstructor<TModel, TFactoryArgs extends any[] = []> = (...args: TFactoryArgs) => Model<TModel>;
+```
+
+## Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `TModel` | - |
+| `TFactoryArgs` *extends* `any`[] | \[\] |
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| ...`args` | `TFactoryArgs` |
+
+## Returns
+
+[`Model`](Model.mdx)\<`TModel`\>

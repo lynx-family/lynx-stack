@@ -1,0 +1,20 @@
+# 类型别名: CreateFunction
+
+```ts
+type CreateFunction = (eventName: string, node: Document | Element | Window | Node, init?: object, options?: object) => Event;
+```
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `eventName` | `string` |
+| `node` | `Document` \| `Element` \| `Window` \| `Node` |
+| `init?` | \{ \} |
+| `options?` | \{ `defaultInit?`: \{ \}; `EventType?`: `string`; \} |
+| `options.defaultInit?` | \{ \} |
+| `options.EventType?` | `string` |
+
+## 返回
+
+`Event`

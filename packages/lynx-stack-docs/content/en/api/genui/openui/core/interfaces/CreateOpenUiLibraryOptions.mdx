@@ -1,0 +1,44 @@
+# Interface: CreateOpenUiLibraryOptions
+
+Options for creating a ReactLynx OpenUI component library.
+
+## Properties
+
+### componentGroups?
+
+```ts
+optional componentGroups?: ComponentGroup[];
+```
+
+Additional groups, or the complete set when defaults are disabled.
+
+***
+
+### components?
+
+```ts
+optional components?: DefinedComponent<any>[];
+```
+
+Additional components, or the complete set when defaults are disabled.
+
+***
+
+### includeDefaultComponents?
+
+```ts
+optional includeDefaultComponents?: boolean;
+```
+
+Whether to include the built-in components and component groups.
+Defaults to `true`.
+
+***
+
+### root?
+
+```ts
+optional root?: string;
+```
+
+Override the root component name. Defaults to `'Stack'`.

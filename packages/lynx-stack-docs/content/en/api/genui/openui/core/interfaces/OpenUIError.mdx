@@ -1,0 +1,88 @@
+# Interface: OpenUIError
+
+Structured, LLM-friendly error from the openui-lang pipeline.
+
+Designed for an automated correction loop: send these to the LLM so it can
+generate patches. Only includes errors that are fixable by changing the
+openui-lang code — transient streaming errors, network failures, and tool
+execution errors are excluded.
+
+## Properties
+
+### code
+
+```ts
+code: OpenUIErrorCode;
+```
+
+Machine-readable error code.
+
+***
+
+### component?
+
+```ts
+optional component?: string;
+```
+
+Component type name (e.g. "BarChart", "Query").
+
+***
+
+### hint?
+
+```ts
+optional hint?: string;
+```
+
+Actionable fix context for the LLM (e.g. available components, correct signature).
+
+***
+
+### message
+
+```ts
+message: string;
+```
+
+Human/LLM-readable description of what went wrong.
+
+***
+
+### path?
+
+```ts
+optional path?: string;
+```
+
+Prop path (e.g. "/title").
+
+***
+
+### source
+
+```ts
+source: OpenUIErrorSource;
+```
+
+Where the error originated.
+
+***
+
+### statementId?
+
+```ts
+optional statementId?: string;
+```
+
+Statement name (e.g. "header", "metrics") — tells the LLM which statement to patch.
+
+***
+
+### toolName?
+
+```ts
+optional toolName?: string;
+```
+
+Tool name for query/mutation errors (e.g. "get_users", "create_item").

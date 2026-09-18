@@ -1,0 +1,28 @@
+# 函数: useGlobalPropsChanged()
+
+```ts
+function useGlobalPropsChanged(callback: (data: GlobalProps) => void): void;
+```
+
+用于在 `__globalProps` 变化时获得通知的 React Hook。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `callback` | (`data`: [`GlobalProps`](../Types/GlobalProps.mdx)) => `void` |
+
+## 返回
+
+`void`
+
+## 示例
+
+```ts
+function App() {
+  useGlobalPropsChanged((data) => {
+    lynx.__globalProps.someProperty // can use lynx.__globalProps
+    data.someProperty // can use data
+  })
+}
+```

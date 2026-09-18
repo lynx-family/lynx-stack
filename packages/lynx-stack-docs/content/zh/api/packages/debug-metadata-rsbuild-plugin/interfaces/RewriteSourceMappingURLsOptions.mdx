@@ -1,0 +1,26 @@
+# 接口: RewriteSourceMappingURLsOptions
+
+[rewriteSourceMappingURLs](../functions/rewriteSourceMappingURLs.mdx) 的选项。
+
+## 属性
+
+### getSourceMappingURL?
+
+```ts
+optional getSourceMappingURL?: (info: object) => string;
+```
+
+覆盖写入每个重写后的 sourceMappingURL 的 URL。默认为
+`${debugMetadataUrl}?field=source-map&path=<encoded mapPath>`。
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `info` | \{ `debugMetadataUrl`: `string`; `mapPath`: `string`; \} |
+| `info.debugMetadataUrl` | `string` |
+| `info.mapPath` | `string` |
+
+#### 返回
+
+`string`

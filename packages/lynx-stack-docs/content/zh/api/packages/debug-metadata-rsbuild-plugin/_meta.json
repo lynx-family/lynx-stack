@@ -1,0 +1,17 @@
+[
+  {
+    "type": "file",
+    "name": "functions/pluginLynxDebugMetadata",
+    "label": "pluginLynxDebugMetadata"
+  },
+  {
+    "type": "file",
+    "name": "functions/rewriteSourceMappingURLs",
+    "label": "rewriteSourceMappingURLs"
+  },
+  {
+    "type": "file",
+    "name": "variables/DEBUG_METADATA_ASSET_NAME",
+    "label": "DEBUG_METADATA_ASSET_NAME"
+  }
+]

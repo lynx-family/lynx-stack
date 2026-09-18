@@ -1,0 +1,32 @@
+[
+  {
+    "type": "file",
+    "name": "classes/MainThreadRuntimeWrapperWebpackPlugin",
+    "label": "MainThreadRuntimeWrapperWebpackPlugin"
+  },
+  {
+    "type": "file",
+    "name": "functions/defineExternalBundleRslibConfig",
+    "label": "defineExternalBundleRslibConfig"
+  },
+  {
+    "type": "file",
+    "name": "variables/LAYERS",
+    "label": "LAYERS"
+  },
+  {
+    "type": "file",
+    "name": "variables/builtInExternalsPresetDefinitions",
+    "label": "builtInExternalsPresetDefinitions"
+  },
+  {
+    "type": "file",
+    "name": "variables/defaultExternalBundleLibConfig",
+    "label": "defaultExternalBundleLibConfig"
+  },
+  {
+    "type": "file",
+    "name": "variables/reactLynxExternalsPreset",
+    "label": "reactLynxExternalsPreset"
+  }
+]

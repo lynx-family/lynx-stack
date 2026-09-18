@@ -1,0 +1,9 @@
+# Type Alias: CatalogManifest
+
+```ts
+type CatalogManifest = Record<string, CatalogSchema>;
+```
+
+The shape produced by the extractor as `dist/catalog/<Name>/catalog.json`.
+The single top-level key is the component's protocol name; the value is
+its schema. Importing the JSON gives you both, in one declaration.

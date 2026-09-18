@@ -1,0 +1,13 @@
+# 类型别名: PluginExternalConfig
+
+```ts
+type PluginExternalConfig = PluginExternalValue | string;
+```
+
+`pluginExternalBundle` 接受的 external bundle 简写形式。
+
+当提供字符串时，它会被当作 `bundlePath`，插件将据此
+推断：
+- `libraryName`：外部 request key
+- `background.sectionPath`：外部 request key
+- `mainThread.sectionPath`：`${request}__main-thread`

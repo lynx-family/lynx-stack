@@ -1,0 +1,377 @@
+# Interface: LynxTemplatePluginOptions
+
+The options for LynxTemplatePlugin
+
+## Properties
+
+### appType?
+
+```ts
+optional appType?: "card" | "DynamicComponent";
+```
+
+The kind of bundle to encode.
+
+#### Default Value
+
+`'DynamicComponent'` for a lazy bundle, `'card'` otherwise.
+
+***
+
+### chunks?
+
+```ts
+optional chunks?: "all" | string[];
+```
+
+List all entries which should be injected
+
+#### Default Value
+
+`'all'`
+
+***
+
+### cssPlugins
+
+```ts
+cssPlugins: Plugin[];
+```
+
+plugins passed to parser
+
+***
+
+### customCSSInheritanceList
+
+```ts
+customCSSInheritanceList: string[] | undefined;
+```
+
+When [PluginReactLynxOptions.enableCSSInheritance](../../react-rsbuild-plugin/interfaces/PluginReactLynxOptions.mdx#enablecssinheritance) is enabled, `customCSSInheritanceList` can control which properties are inheritable, not just the default ones.
+
+#### Example
+
+By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+ plugins: [
+   pluginReactLynx({
+     enableCSSInheritance: true,
+     customCSSInheritanceList: ['direction', 'overflow']
+   }),
+ ],
+})
+```
+
+***
+
+### customSectionNaming?
+
+```ts
+optional customSectionNaming?: (compilation: Compilation) => CustomSectionNaming;
+```
+
+Assemble every chunk into a custom section, named by this strategy.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `compilation` | `Compilation` |
+
+#### Returns
+
+[`CustomSectionNaming`](CustomSectionNaming.mdx)
+
+#### Remarks
+
+A bundle assembled this way carries no `lepusCode`, and only the chunks
+left unnamed stay in the manifest. A `FetchBundle` lazy bundle is assembled
+this way by default, under the three section names its runtime resolves.
+
+***
+
+### debugInfoOutside
+
+```ts
+debugInfoOutside: boolean;
+```
+
+debugInfoOutside controls whether the debug info is placed outside the template.
+
+#### Remarks
+
+This is recommended to be set to true to reduce template size.
+
+***
+
+### defaultDisplayLinear
+
+```ts
+defaultDisplayLinear: boolean;
+```
+
+defaultDisplayLinear controls whether the default value of `display` in CSS is `linear`.
+
+If `defaultDisplayLinear === false`, the default `display` would be `flex` instead of `linear`.
+
+***
+
+### defaultOverflowVisible?
+
+```ts
+optional defaultOverflowVisible?: boolean;
+```
+
+When enabled, the default overflow CSS property for views and components will be `'visible'`. Otherwise, it will be `'hidden'`.
+
+#### Default Value
+
+`true`
+
+***
+
+### dsl?
+
+```ts
+optional dsl?: "tt" | "react" | "react_nodiff";
+```
+
+Declare the current dsl to the encoder.
+
+***
+
+### enableA11y
+
+```ts
+enableA11y: boolean;
+```
+
+Use Android View level APIs and system implementations.
+
+***
+
+### enableAccessibilityElement
+
+```ts
+enableAccessibilityElement: boolean;
+```
+
+enableAccessibilityElement set the default value of `accessibility-element` for all `<view />` elements.
+
+***
+
+### enableCSSInheritance
+
+```ts
+enableCSSInheritance: boolean;
+```
+
+enableCSSInheritance enables the default inheritance properties.
+
+#### Remarks
+
+The following properties are inherited by default:
+
+- `direction`
+
+- `color`
+
+- `font-family`
+
+- `font-size`
+
+- `font-style`
+
+- `font-weight`
+
+- `letter-spacing`
+
+- `line-height`
+
+- `line-spacing`
+
+- `text-align`
+
+- `text-decoration`
+
+- `text-shadow`
+
+It is recommended to use with [PluginReactLynxOptions.customCSSInheritanceList](../../react-rsbuild-plugin/interfaces/PluginReactLynxOptions.mdx#customcssinheritancelist) to avoid performance issues.
+
+***
+
+### enableCSSInvalidation
+
+```ts
+enableCSSInvalidation: boolean;
+```
+
+CSS Invalidation refers to the process of determining which elements need to have their styles recalculated when the DOM is updated.
+
+#### Remarks
+
+When using combinator to determine the styles of various elements (including descendants, adjacent siblings, etc.), it is recommended to enable this feature. Otherwise, only the initial class setting can match the corresponding combinator, and subsequent updates will not recalculate the related styles.
+
+We find that collecting invalidation nodes and updating them is a relatively time-consuming process.
+If there is no such usage and better style matching performance is needed, this feature can be selectively disabled.
+
+***
+
+### enableCSSSelector
+
+```ts
+enableCSSSelector: boolean;
+```
+
+enableCSSSelector controls whether enabling the new CSS implementation.
+
+***
+
+### enableNewGesture
+
+```ts
+enableNewGesture: boolean;
+```
+
+enableNewGesture enables the new gesture system.
+
+***
+
+### enableRemoveCSSScope
+
+```ts
+enableRemoveCSSScope: boolean;
+```
+
+enableRemoveCSSScope controls whether CSS is restrict to use in the component scope.
+
+`true`: All CSS files are treated as global CSS.
+
+`false`: All CSS files are treated as scoped CSS, and only take effect in the component that explicitly imports it.
+
+`undefined`: Only use scoped CSS for CSS Modules, and treat other CSS files as global CSS. Scoped CSS is faster than global CSS, thus you can use CSS Modules to speedy up your CSS if there are performance issues.
+
+***
+
+### enableSectionBytecode?
+
+```ts
+optional enableSectionBytecode?: boolean;
+```
+
+Whether to compile the main thread sections to `JsBytecode`.
+
+#### Default Value
+
+```ts
+Enabled outside of development and debug builds, which keeps
+the sections readable while debugging.
+```
+
+***
+
+### excludeChunks?
+
+```ts
+optional excludeChunks?: string[];
+```
+
+List all entries which should not be injected
+
+#### Default Value
+
+`[]`
+
+***
+
+### experimental\_isLazyBundle?
+
+```ts
+optional experimental_isLazyBundle?: boolean;
+```
+
+**`Alpha`**
+
+Generate standalone lazy bundle.
+
+***
+
+### filename?
+
+```ts
+optional filename?: string | ((entryName: string) => string);
+```
+
+The file to write the template to.
+Supports subdirectories eg: `assets/template.js`.
+[name] will be replaced by the entry name.
+Supports a function to generate the name.
+
+#### Default Value
+
+`'[name].bundle'`
+
+***
+
+### intermediate?
+
+```ts
+optional intermediate?: string;
+```
+
+The directory of the intermediate files of a bundle.
+
+#### Default Value
+
+`'.lynx'`
+
+***
+
+### lazyBundleFetcher?
+
+```ts
+optional lazyBundleFetcher?: "FetchBundle" | "QueryComponent";
+```
+
+Resolved lazy-bundle fetcher mode. Decided by the caller (e.g.
+`pluginReactLynx`) from the host engine version and any
+`REACT_LAZY_BUNDLE_FETCHER` env override.
+
+***
+
+### lazyBundleFilename?
+
+```ts
+optional lazyBundleFilename?: string;
+```
+
+The filename of the lazy bundle.
+
+#### Default Value
+
+`'lazy-bundle/[name].[fullhash].bundle'`
+
+***
+
+### removeDescendantSelectorScope
+
+```ts
+removeDescendantSelectorScope: boolean;
+```
+
+removeDescendantSelectorScope is used to remove the scope of descendant selectors.
+
+***
+
+### targetSdkVersion
+
+```ts
+targetSdkVersion: string;
+```
+
+targetSdkVersion is used to specify the minimal Lynx Engine version that a App bundle can run on.

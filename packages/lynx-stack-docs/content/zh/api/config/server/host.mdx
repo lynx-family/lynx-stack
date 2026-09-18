@@ -1,0 +1,33 @@
+# server.host
+
+```ts
+optional host?: string;
+```
+
+**`Lynx Default Changed`**
+
+指定 Rspeedy Server 监听的 host。
+
+## 默认值
+
+```ts
+"0.0.0.0"
+```
+
+## 备注
+
+在 `rspeedy dev` 期间，如果未设置 `server.host`，dev 插件会让服务器保持绑定在 IPv4 通配地址上，同时使用检测到的非回环 IPv4 地址（例如 `192.168.1.50`）来解析 dev server 相关的 URL 和客户端 host 设置。如果没有可用的 IPv4 地址，会绑定到 IPv6 通配地址，并使用检测到的 IPv6 地址生成 URL。如果没有可用的非回环 IP，则会回退到 IPv4 回环地址的 URL。如果你有多个网络接口，请显式设置 `server.host` 来选择所需的地址。
+
+## 示例
+
+将 host 设置为自定义值：
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+export default defineConfig({
+  server: {
+    host: "192.168.1.50",
+  },
+})
+```
+

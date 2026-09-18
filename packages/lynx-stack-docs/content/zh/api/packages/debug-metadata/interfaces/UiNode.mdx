@@ -1,0 +1,47 @@
+# 接口: UiNode
+
+Lynx 引擎导出的树中的一个 UI 节点 —— 也就是
+[remapUiTree](../functions/remapUiTree.mdx) 的输入。会读取三个字段：`nodeIndex` 和
+`debugMetadataUrl` 用于驱动反向解析，`children` 会被递归遍历。这三个
+字段都是可选的，因为引擎产生的部分节点不携带源码映射（例如
+纯文本节点没有 `nodeIndex`）；这类节点会原样透传。其余字段均视为不透明数据。
+
+## 继承于
+
+- [`RemappedUiNode`](RemappedUiNode.mdx)
+
+## 可索引
+
+```ts
+[field: string]: unknown
+```
+
+## 属性
+
+### children?
+
+```ts
+optional children?: UiNode[];
+```
+
+子节点，递归遍历。
+
+***
+
+### debugMetadataUrl?
+
+```ts
+optional debugMetadataUrl?: string;
+```
+
+该节点对应的 `debug-metadata.json` 的 URL/路径。
+
+***
+
+### nodeIndex?
+
+```ts
+optional nodeIndex?: number;
+```
+
+编译期节点标识，在 UI source map 中查找得到。

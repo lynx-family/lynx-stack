@@ -1,0 +1,39 @@
+# Function: getNativeModulesPathRule()
+
+```ts
+function getNativeModulesPathRule(nativeModulesPath: string): object;
+```
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `nativeModulesPath` | `string` |
+
+## Returns
+
+`object`
+
+### loader
+
+```ts
+loader: string;
+```
+
+### options
+
+```ts
+options: object;
+```
+
+#### options.nativeModulesPath
+
+```ts
+nativeModulesPath: string;
+```
+
+### test
+
+```ts
+test: RegExp;
+```

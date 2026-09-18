@@ -1,0 +1,32 @@
+# Function: pluginWebPlatform()
+
+```ts
+function pluginWebPlatform(userOptions?: PluginWebPlatformOptions): RsbuildPlugin;
+```
+
+Create a rsbuild plugin for Lynx Web Platform.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `userOptions?` | `PluginWebPlatformOptions` |
+
+## Returns
+
+`RsbuildPlugin`
+
+## Example
+
+```ts
+// rsbuild.config.ts
+import { pluginWebPlatform } from '@lynx-js/web-platform-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core';
+
+export default defineConfig({
+  plugins: [pluginWebPlatform({
+    // replace with your actual native-modules file path
+    nativeModulesPath: path.resolve(__dirname, './index.native-modules.ts'),
+  })],
+})
+```

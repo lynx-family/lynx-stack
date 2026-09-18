@@ -1,0 +1,21 @@
+# Interface: LynxTemplatePlugin
+
+## Properties
+
+### getLynxTemplatePluginHooks
+
+```ts
+getLynxTemplatePluginHooks: (compilation: Compilation) => TemplateHooks;
+```
+
+Returns all public hooks of the Lynx template webpack plugin for the given compilation
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `compilation` | `Compilation` |
+
+#### Returns
+
+[`TemplateHooks`](TemplateHooks.mdx)

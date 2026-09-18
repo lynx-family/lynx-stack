@@ -1,0 +1,20 @@
+# 函数: buildUiSourceMapLookup()
+
+```ts
+function buildUiSourceMapLookup(uiSourceMap: UiSourceMapData): Map<number, Omit<UiSourceLocation, "repo">>;
+```
+
+根据 [UiSourceMapData](../interfaces/UiSourceMapData.mdx) 构建一个 `nodeIndex -> {source, line, column}` 的
+查找表。该 payload 是按列组织的：`uiMaps[i]`
+是 nodeIndex，与之对应的 `mappings[i]` 项保存的是
+`[sourceIndex, line, column]`，其中 `sourceIndex` 用于索引 `sources`。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `uiSourceMap` | [`UiSourceMapData`](../interfaces/UiSourceMapData.mdx) |
+
+## 返回
+
+`Map`\<`number`, `Omit`\<[`UiSourceLocation`](../interfaces/UiSourceLocation.mdx), `"repo"`\>\>

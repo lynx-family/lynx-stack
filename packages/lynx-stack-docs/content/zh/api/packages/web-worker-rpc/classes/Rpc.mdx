@@ -1,0 +1,603 @@
+# 类: Rpc
+
+用于处理 MessagePort 远程过程调用（Remote Process Call）的实例
+
+## 构造函数
+
+### 构造函数
+
+```ts
+new Rpc(port: MessagePort | undefined, name: string): Rpc;
+```
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `port` | `MessagePort` \| `undefined` | message channel 的一种大小 |
+| `name` | `string` | 实例名称 |
+
+#### 返回
+
+`Rpc`
+
+## 访问器
+
+### nextRetId
+
+#### Getter 签名
+
+```ts
+get nextRetId(): string;
+```
+
+##### 返回
+
+`string`
+
+## 方法
+
+### createCall()
+
+#### 调用签名
+
+```ts
+createCall<E extends RpcEndpointSync<unknown[], unknown>>(endpoint: E): (...args: E["_TypeParameters"]) => E["_TypeReturn"];
+```
+
+将一个 endpoint 初始化为一个函数
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `E` *extends* [`RpcEndpointSync`](../interfaces/RpcEndpointSync.mdx)\<`unknown`[], `unknown`\> |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `endpoint` | `E` |
+
+##### 返回
+
+(...`args`: `E`\[`"_TypeParameters"`\]) => `E`\[`"_TypeReturn"`\]
+
+#### 调用签名
+
+```ts
+createCall<E extends RpcEndpointSyncVoid<unknown[]>>(endpoint: E): (...args: E["_TypeParameters"]) => void;
+```
+
+将一个 endpoint 初始化为一个函数
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `E` *extends* [`RpcEndpointSyncVoid`](../type-aliases/RpcEndpointSyncVoid.mdx)\<`unknown`[]\> |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `endpoint` | `E` |
+
+##### 返回
+
+(...`args`: `E`\[`"_TypeParameters"`\]) => `void`
+
+#### 调用签名
+
+```ts
+createCall<E extends RpcEndpointAsync<unknown[], unknown>>(endpoint: E): (...args: E["_TypeParameters"]) => Promise<E["_TypeReturn"]>;
+```
+
+将一个 endpoint 初始化为一个函数
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `E` *extends* [`RpcEndpointAsync`](../interfaces/RpcEndpointAsync.mdx)\<`unknown`[], `unknown`\> |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `endpoint` | `E` |
+
+##### 返回
+
+(...`args`: `E`\[`"_TypeParameters"`\]) => `Promise`\<`E`\[`"_TypeReturn"`\]\>
+
+#### 调用签名
+
+```ts
+createCall<E extends RpcEndpointAsyncVoid<unknown[]>>(endpoint: E): (...args: E["_TypeParameters"]) => void;
+```
+
+将一个 endpoint 初始化为一个函数
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `E` *extends* [`RpcEndpointAsyncVoid`](../type-aliases/RpcEndpointAsyncVoid.mdx)\<`unknown`[]\> |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `endpoint` | `E` |
+
+##### 返回
+
+(...`args`: `E`\[`"_TypeParameters"`\]) => `void`
+
+***
+
+### createCallbackify()
+
+```ts
+createCallbackify<E extends RpcEndpointAsync<unknown[], unknown>>(endpoint: E, callbackAt: number): (...params: [...E["_TypeParameters"][], (param: E["_TypeReturn"]) => void]) => void;
+```
+
+使用 callbackify 参数创建一个 call
+
+#### 类型参数
+
+| 类型参数 |
+| ------ |
+| `E` *extends* [`RpcEndpointAsync`](../interfaces/RpcEndpointAsync.mdx)\<`unknown`[], `unknown`\> |
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `endpoint` | `E` |
+| `callbackAt` | `number` |
+
+#### 返回
+
+(...`params`: \[`...E["_TypeParameters"][]`, (`param`: `E`\[`"_TypeReturn"`\]) => `void`\]) => `void`
+
+***
+
+### invoke()
+
+#### 调用签名
+
+```ts
+invoke<T extends RetEndpoint<unknown>>(endpoint: T, parameters: T["_TypeParameters"]): void;
+```
+
+用于发送 rpc 消息的底层 API
+建议使用 `createCall`
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` *extends* `RetEndpoint`\<`unknown`\> |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `endpoint` | `T` |
+| `parameters` | `T`\[`"_TypeParameters"`\] |
+
+##### 返回
+
+`void`
+
+#### 调用签名
+
+```ts
+invoke<E extends 
+  | RpcEndpointSync<unknown[], unknown>
+  | RpcEndpointSyncVoid<unknown[]>>(
+   endpoint: E, 
+   parameters: E["_TypeParameters"], 
+   transfer?: Transferable[]
+): E["_TypeReturn"];
+```
+
+用于发送 rpc 消息的底层 API
+建议使用 `createCall`
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `E` *extends* \| [`RpcEndpointSync`](../interfaces/RpcEndpointSync.mdx)\<`unknown`[], `unknown`\> \| [`RpcEndpointSyncVoid`](../type-aliases/RpcEndpointSyncVoid.mdx)\<`unknown`[]\> |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `endpoint` | `E` |
+| `parameters` | `E`\[`"_TypeParameters"`\] |
+| `transfer?` | `Transferable`[] |
+
+##### 返回
+
+`E`\[`"_TypeReturn"`\]
+
+#### 调用签名
+
+```ts
+invoke<E extends RpcEndpointAsyncVoid<unknown[]>>(
+   endpoint: E, 
+   parameters: E["_TypeParameters"], 
+   transfer?: Transferable[]
+): void;
+```
+
+用于发送 rpc 消息的底层 API
+建议使用 `createCall`
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `E` *extends* [`RpcEndpointAsyncVoid`](../type-aliases/RpcEndpointAsyncVoid.mdx)\<`unknown`[]\> |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `endpoint` | `E` |
+| `parameters` | `E`\[`"_TypeParameters"`\] |
+| `transfer?` | `Transferable`[] |
+
+##### 返回
+
+`void`
+
+#### 调用签名
+
+```ts
+invoke<E extends RpcEndpointAsync<unknown[], unknown>>(
+   endpoint: E, 
+   parameters: E["_TypeParameters"], 
+   transfer?: Transferable[]
+): Promise<E["_TypeReturn"]>;
+```
+
+用于发送 rpc 消息的底层 API
+建议使用 `createCall`
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `E` *extends* [`RpcEndpointAsync`](../interfaces/RpcEndpointAsync.mdx)\<`unknown`[], `unknown`\> |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `endpoint` | `E` |
+| `parameters` | `E`\[`"_TypeParameters"`\] |
+| `transfer?` | `Transferable`[] |
+
+##### 返回
+
+`Promise`\<`E`\[`"_TypeReturn"`\]\>
+
+#### 调用签名
+
+```ts
+invoke<E extends RpcEndpoint<unknown[], unknown>>(
+   endpoint: E, 
+   parameters: E["_TypeParameters"], 
+   transfer?: Transferable[]
+): E["_TypeReturn"] | Promise<E["_TypeReturn"]>;
+```
+
+用于发送 rpc 消息的底层 API
+建议使用 `createCall`
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `E` *extends* [`RpcEndpoint`](../type-aliases/RpcEndpoint.mdx)\<`unknown`[], `unknown`\> |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `endpoint` | `E` |
+| `parameters` | `E`\[`"_TypeParameters"`\] |
+| `transfer?` | `Transferable`[] |
+
+##### 返回
+
+`E`\[`"_TypeReturn"`\] \| `Promise`\<`E`\[`"_TypeReturn"`\]\>
+
+***
+
+### postMessage()
+
+```ts
+postMessage(message: unknown, detail?: object): void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `message` | `unknown` |
+| `detail?` | \{ `transfer`: `Transferable`[]; \} |
+| `detail.transfer?` | `Transferable`[] |
+
+#### 返回
+
+`void`
+
+***
+
+### registerHandler()
+
+#### 调用签名
+
+```ts
+registerHandler<T extends RetEndpoint<any>>(endpoint: T, handler: (...args: T["_TypeParameters"]) => void): void;
+```
+
+为一个 endpoint 注册一个 handler
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` *extends* `RetEndpoint`\<`any`\> |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `endpoint` | `T` |
+| `handler` | (...`args`: `T`\[`"_TypeParameters"`\]) => `void` |
+
+##### 返回
+
+`void`
+
+#### 调用签名
+
+```ts
+registerHandler<T extends RpcEndpoint<any[], any>>(endpoint: T, handler: 
+  | ((...args: T["_TypeParameters"]) => T["_TypeReturn"])
+  | ((...args: T["_TypeParameters"]) => Promise<T["_TypeReturn"]>)): void;
+```
+
+为一个 endpoint 注册一个 handler
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` *extends* [`RpcEndpoint`](../type-aliases/RpcEndpoint.mdx)\<`any`[], `any`\> |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `endpoint` | `T` |
+| `handler` | \| ((...`args`: `T`\[`"_TypeParameters"`\]) => `T`\[`"_TypeReturn"`\]) \| ((...`args`: `T`\[`"_TypeParameters"`\]) => `Promise`\<`T`\[`"_TypeReturn"`\]\>) |
+
+##### 返回
+
+`void`
+
+#### 调用签名
+
+```ts
+registerHandler<T extends RpcEndpointAsyncWithTransfer<any[], any>>(endpoint: T, handler: 
+  | ((...args: T["_TypeParameters"]) => object)
+  | ((...args: T["_TypeParameters"]) => Promise<{
+  data: T["_TypeReturn"];
+  transfer?: Transferable[];
+}>)): void;
+```
+
+为一个 endpoint 注册一个 handler
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` *extends* [`RpcEndpointAsyncWithTransfer`](../interfaces/RpcEndpointAsyncWithTransfer.mdx)\<`any`[], `any`\> |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `endpoint` | `T` |
+| `handler` | \| ((...`args`: `T`\[`"_TypeParameters"`\]) => `object`) \| ((...`args`: `T`\[`"_TypeParameters"`\]) => `Promise`\<\{ `data`: `T`\[`"_TypeReturn"`\]; `transfer?`: `Transferable`[]; \}\>) |
+
+##### 返回
+
+`void`
+
+***
+
+### registerHandlerLazy()
+
+#### 调用签名
+
+```ts
+registerHandlerLazy<T extends RetEndpoint<any>, PropertyName extends string, Handler extends (...args: T["_TypeParameters"]) => T["_TypeReturn"]>(
+   endpoint: T, 
+   target: { [key in string]: Handler | undefined }, 
+   propertyName: PropertyName
+): void;
+```
+
+为 endpoint 注册一个 "lazy" handler。
+它会为目标属性名添加一个 setter，
+一旦该值被设置，我们就会将其添加为一个 handler。
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` *extends* `RetEndpoint`\<`any`\> |
+| `PropertyName` *extends* `string` |
+| `Handler` *extends* (...`args`: `T`\[`"_TypeParameters"`\]) => `T`\[`"_TypeReturn"`\] |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `endpoint` | `T` |
+| `target` | \{ \[key in string\]: Handler \| undefined \} |
+| `propertyName` | `PropertyName` |
+
+##### 返回
+
+`void`
+
+#### 调用签名
+
+```ts
+registerHandlerLazy<T extends RpcEndpoint<any[], any>, PropertyName extends string, Handler extends (...args: T["_TypeParameters"]) => T["_TypeReturn"]>(
+   endpoint: T, 
+   target: { [key in string]: Handler | undefined }, 
+   propertyName: PropertyName
+): void;
+```
+
+为 endpoint 注册一个 "lazy" handler。
+它会为目标属性名添加一个 setter，
+一旦该值被设置，我们就会将其添加为一个 handler。
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` *extends* [`RpcEndpoint`](../type-aliases/RpcEndpoint.mdx)\<`any`[], `any`\> |
+| `PropertyName` *extends* `string` |
+| `Handler` *extends* (...`args`: `T`\[`"_TypeParameters"`\]) => `T`\[`"_TypeReturn"`\] |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `endpoint` | `T` |
+| `target` | \{ \[key in string\]: Handler \| undefined \} |
+| `propertyName` | `PropertyName` |
+
+##### 返回
+
+`void`
+
+***
+
+### registerHandlerRef()
+
+#### 调用签名
+
+```ts
+registerHandlerRef<T extends RetEndpoint<any>, PropertyName extends string, Handler extends (...args: T["_TypeParameters"]) => T["_TypeReturn"]>(
+   endpoint: T, 
+   target: { [key in string]: Handler | undefined }, 
+   propertyName: PropertyName
+): void;
+```
+
+将一个对象的属性注册为一个 handler
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` *extends* `RetEndpoint`\<`any`\> |
+| `PropertyName` *extends* `string` |
+| `Handler` *extends* (...`args`: `T`\[`"_TypeParameters"`\]) => `T`\[`"_TypeReturn"`\] |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `endpoint` | `T` |
+| `target` | \{ \[key in string\]: Handler \| undefined \} |
+| `propertyName` | `PropertyName` |
+
+##### 返回
+
+`void`
+
+#### 调用签名
+
+```ts
+registerHandlerRef<T extends RpcEndpoint<any[], any>, PropertyName extends string, Handler extends (...args: T["_TypeParameters"]) => T["_TypeReturn"]>(
+   endpoint: T, 
+   target: { [key in string]: Handler | undefined }, 
+   propertyName: PropertyName
+): void;
+```
+
+将一个对象的属性注册为一个 handler
+
+##### 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` *extends* [`RpcEndpoint`](../type-aliases/RpcEndpoint.mdx)\<`any`[], `any`\> |
+| `PropertyName` *extends* `string` |
+| `Handler` *extends* (...`args`: `T`\[`"_TypeParameters"`\]) => `T`\[`"_TypeReturn"`\] |
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `endpoint` | `T` |
+| `target` | \{ \[key in string\]: Handler \| undefined \} |
+| `propertyName` | `PropertyName` |
+
+##### 返回
+
+`void`
+
+***
+
+### removeHandler()
+
+```ts
+removeHandler(rpc: RpcEndpoint<unknown[], unknown>): void;
+```
+
+移除该端点的处理函数
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `rpc` | [`RpcEndpoint`](../type-aliases/RpcEndpoint.mdx)\<`unknown`[], `unknown`\> |
+
+#### 返回
+
+`void`
+
+***
+
+### setMessagePort()
+
+```ts
+setMessagePort(port: MessagePort): void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `port` | `MessagePort` |
+
+#### 返回
+
+`void`

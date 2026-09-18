@@ -1,0 +1,73 @@
+# 接口: Options
+
+Lynx Config Rsbuild 插件的选项。
+
+## 属性
+
+### compilerOptionsKeys?
+
+```ts
+optional compilerOptionsKeys?: string[];
+```
+
+要设置的编译器选项的 key。
+
+***
+
+### configKeys?
+
+```ts
+optional configKeys?: string[];
+```
+
+要设置的配置选项的 key。
+
+***
+
+### dslPluginName2PkgName?
+
+```ts
+optional dslPluginName2PkgName?: Record<string, string>;
+```
+
+DSL 插件名到其包名的映射。
+
+#### 示例
+
+```ts
+{
+  'lynx:react': '@lynx-js/react-rsbuild-plugin',
+}
+```
+
+***
+
+### upgradeRspeedyLink?
+
+```ts
+optional upgradeRspeedyLink?: string;
+```
+
+升级 Rspeedy 的链接。
+
+***
+
+### validate?
+
+```ts
+optional validate?: (input: unknown) => Config;
+```
+
+Lynx 配置的自定义校验函数。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `input` | `unknown` | 要校验的输入。 |
+
+#### 返回
+
+[`Config`](Config.mdx)
+
+校验后的 Lynx 配置。

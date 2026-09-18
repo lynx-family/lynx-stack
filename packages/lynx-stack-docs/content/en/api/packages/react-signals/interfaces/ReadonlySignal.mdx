@@ -1,0 +1,91 @@
+# Interface: ReadonlySignal\<T = `any`\>
+
+An interface for read-only signals.
+
+## Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `T` | `any` |
+
+## Properties
+
+### brand
+
+```ts
+brand: typeof BRAND_SYMBOL;
+```
+
+***
+
+### value
+
+```ts
+readonly value: T;
+```
+
+## Methods
+
+### peek()
+
+```ts
+peek(): T;
+```
+
+#### Returns
+
+`T`
+
+***
+
+### subscribe()
+
+```ts
+subscribe(fn: (value: T) => void): () => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | (`value`: `T`) => `void` |
+
+#### Returns
+
+() => `void`
+
+***
+
+### toJSON()
+
+```ts
+toJSON(): T;
+```
+
+#### Returns
+
+`T`
+
+***
+
+### toString()
+
+```ts
+toString(): string;
+```
+
+#### Returns
+
+`string`
+
+***
+
+### valueOf()
+
+```ts
+valueOf(): T;
+```
+
+#### Returns
+
+`T`

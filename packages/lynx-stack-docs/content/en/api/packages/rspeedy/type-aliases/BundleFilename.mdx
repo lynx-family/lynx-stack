@@ -1,0 +1,13 @@
+# Type Alias: BundleFilename
+
+```ts
+type BundleFilename = 
+  | string
+  | ((context: BundleFilenameContext) => string);
+```
+
+The name of the bundle files.
+
+It can be a string with placeholders (`[name]`, `[contenthash]`,
+`[platform]`), or a function that returns a string based on the
+[BundleFilenameContext](../interfaces/BundleFilenameContext.mdx).

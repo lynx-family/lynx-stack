@@ -1,0 +1,24 @@
+# 类型别名: FindByRole\<T *extends* `HTMLElement` = `HTMLElement`\>
+
+```ts
+type FindByRole<T extends HTMLElement = HTMLElement> = (container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions, waitForElementOptions?: waitForOptions) => Promise<T>;
+```
+
+## 类型参数
+
+| 类型参数 | 默认类型 |
+| ------ | ------ |
+| `T` *extends* `HTMLElement` | `HTMLElement` |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `container` | `HTMLElement` |
+| `role` | [`ByRoleMatcher`](ByRoleMatcher.mdx) |
+| `options?` | [`ByRoleOptions`](../接口/ByRoleOptions.mdx) |
+| `waitForElementOptions?` | [`waitForOptions`](../接口/waitForOptions.mdx) |
+
+## 返回
+
+`Promise`\<`T`\>

@@ -1,0 +1,176 @@
+# 函数: animate()
+
+## 调用签名
+
+```ts
+function animate(sequence: AnimationSequence, options?: SequenceOptions): AnimationPlaybackControlsWithThen;
+```
+
+Animate a sequence
+
+### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `sequence` | `AnimationSequence` |
+| `options?` | `SequenceOptions` |
+
+### 返回
+
+`AnimationPlaybackControlsWithThen`
+
+## 调用签名
+
+```ts
+function animate(
+   value: string, 
+   keyframes: DOMKeyframesDefinition, 
+   options?: AnimationOptions
+): AnimationPlaybackControlsWithThen;
+```
+
+Animate a string
+
+### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `value` | `string` |
+| `keyframes` | `DOMKeyframesDefinition` |
+| `options?` | `AnimationOptions` |
+
+### 返回
+
+`AnimationPlaybackControlsWithThen`
+
+## 调用签名
+
+```ts
+function animate(
+   value: string | MotionValue<string>, 
+   keyframes: string | UnresolvedValueKeyframe<string>[], 
+   options?: ValueAnimationTransition<string>
+): AnimationPlaybackControlsWithThen;
+```
+
+Animate a string
+
+### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `value` | `string` \| [`MotionValue`](../interfaces/MotionValue.mdx)\<`string`\> |
+| `keyframes` | `string` \| `UnresolvedValueKeyframe`\<`string`\>[] |
+| `options?` | `ValueAnimationTransition`\<`string`\> |
+
+### 返回
+
+`AnimationPlaybackControlsWithThen`
+
+## 调用签名
+
+```ts
+function animate(
+   value: number | MotionValue<number>, 
+   keyframes: number | UnresolvedValueKeyframe<number>[], 
+   options?: ValueAnimationTransition<number>
+): AnimationPlaybackControlsWithThen;
+```
+
+Animate a number
+
+### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `value` | `number` \| [`MotionValue`](../interfaces/MotionValue.mdx)\<`number`\> |
+| `keyframes` | `number` \| `UnresolvedValueKeyframe`\<`number`\>[] |
+| `options?` | `ValueAnimationTransition`\<`number`\> |
+
+### 返回
+
+`AnimationPlaybackControlsWithThen`
+
+## 调用签名
+
+```ts
+function animate<V extends string | number>(
+   value: V | MotionValue<V>, 
+   keyframes: V | UnresolvedValueKeyframe<V>[], 
+   options?: ValueAnimationTransition<V>
+): AnimationPlaybackControlsWithThen;
+```
+
+对通用 motion value 进行动画
+
+### 类型参数
+
+| 类型参数 |
+| ------ |
+| `V` *extends* `string` \| `number` |
+
+### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `value` | `V` \| [`MotionValue`](../interfaces/MotionValue.mdx)\<`V`\> |
+| `keyframes` | `V` \| `UnresolvedValueKeyframe`\<`V`\>[] |
+| `options?` | `ValueAnimationTransition`\<`V`\> |
+
+### 返回
+
+`AnimationPlaybackControlsWithThen`
+
+## 调用签名
+
+```ts
+function animate<O extends object>(
+   object: O | O[], 
+   keyframes: ObjectTarget<O>, 
+   options?: AnimationOptions
+): AnimationPlaybackControlsWithThen;
+```
+
+对一个对象进行动画
+
+### 类型参数
+
+| 类型参数 |
+| ------ |
+| `O` *extends* `object` |
+
+### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `object` | `O` \| `O`[] |
+| `keyframes` | `ObjectTarget`\<`O`\> |
+| `options?` | `AnimationOptions` |
+
+### 返回
+
+`AnimationPlaybackControlsWithThen`
+
+## 调用签名
+
+```ts
+function animate(
+   value: ElementOrElements, 
+   keyframes: DOMKeyframesDefinition, 
+   options?: AnimationOptions
+): AnimationPlaybackControlsWithThen;
+```
+
+对主线程元素进行动画
+
+### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `value` | `ElementOrElements` |
+| `keyframes` | `DOMKeyframesDefinition` |
+| `options?` | `AnimationOptions` |
+
+### 返回
+
+`AnimationPlaybackControlsWithThen`

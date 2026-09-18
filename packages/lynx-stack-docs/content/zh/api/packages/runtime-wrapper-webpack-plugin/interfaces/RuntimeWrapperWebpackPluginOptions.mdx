@@ -1,0 +1,72 @@
+# 接口: RuntimeWrapperWebpackPluginOptions
+
+RuntimeWrapperWebpackPluginOptions 的选项
+
+## 属性
+
+### bannerType
+
+```ts
+bannerType: (filename: string) => "script" | "bundle";
+```
+
+有两种 banner 类型：script（用于 app-service）和 bundle（用于 js-render）。你可以通过文件名决定使用哪种 banner。
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `filename` | `string` |
+
+#### 返回
+
+`"script"` \| `"bundle"`
+
+#### 默认值
+
+`() => 'script'`
+
+***
+
+### experimental\_isLazyBundle?
+
+```ts
+optional experimental_isLazyBundle?: boolean;
+```
+
+生成独立的 lazy bundle。
+
+***
+
+### injectVars?
+
+```ts
+optional injectVars?: ((vars: string[]) => string[]) | string[];
+```
+
+接收默认变量列表并返回要注入的列表的函数。
+
+***
+
+### targetSdkVersion
+
+```ts
+targetSdkVersion: string;
+```
+
+targetSdkVersion 用于指定 App bundle 可运行的最低 Lynx Engine 版本。
+
+***
+
+### test
+
+```ts
+test: Rules | undefined;
+```
+
+对文件名匹配该条件的已生成 JS 资源进行包装。
+标记为主线程的资源永远不会被包装。
+
+#### 默认值
+
+`/\.js$/`

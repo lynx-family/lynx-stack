@@ -1,0 +1,53 @@
+# 接口: LoaderOptions
+
+CSS extract loader 的选项。
+
+## 属性
+
+### emit?
+
+```ts
+optional emit?: boolean;
+```
+
+与 [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin/tree/master?tab=readme-ov-file#emit) 相同。
+用于控制是否将 CSS 输出到文件系统。
+
+- 如果为 `true`（默认值），会输出一个文件（将文件写入文件系统）。
+
+- 如果为 `false`，插件会提取 CSS，但不会输出该文件。
+
+对于服务端包，禁用该选项通常会很有用。
+
+#### 默认值
+
+```ts
+true
+@public
+```
+
+***
+
+### esModule?
+
+```ts
+optional esModule?: boolean;
+```
+
+与 [https://github.com/webpack-contrib/mini-css-extract-plugin#esModule](https://github.com/webpack-contrib/mini-css-extract-plugin#esModule) 相同。
+默认情况下，`@lynx-js/css-extract-webpack-plugin` 生成使用 ES modules 语法的 JS 模块。
+在某些场景下使用 ES modules 更有利，例如模块合并（module concatenation）和 tree shaking。
+
+***
+
+### layer?
+
+```ts
+optional layer?: string;
+```
+
+CSS 执行所在的 layer。
+
+#### 备注
+
+该选项应与 `experiments.layers` 配合使用。

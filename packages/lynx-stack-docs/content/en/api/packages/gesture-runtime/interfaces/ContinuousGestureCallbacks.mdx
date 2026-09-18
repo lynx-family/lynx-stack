@@ -1,0 +1,17 @@
+# Interface: ContinuousGestureCallbacks\<TEvent *extends* [`GestureChangeEvent`](GestureChangeEvent.mdx) = [`GestureChangeEvent`](GestureChangeEvent.mdx)\>
+
+Generic continuous gesture callbacks interface.
+
+## Type Parameters
+
+| Type Parameter | Default type | Description |
+| ------ | ------ | ------ |
+| `TEvent` *extends* [`GestureChangeEvent`](GestureChangeEvent.mdx) | [`GestureChangeEvent`](GestureChangeEvent.mdx) | The specific gesture event type |
+
+## Properties
+
+### onUpdate?
+
+```ts
+optional onUpdate?: GestureCallback<TEvent>;
+```

@@ -1,0 +1,7 @@
+# 类型别名: CatalogSchema
+
+```ts
+type CatalogSchema = Record<string, unknown>;
+```
+
+描述组件 props 的 JSON Schema 片段，由 `@lynx-js/genui/a2ui-catalog-extractor` 在构建时根据标注了 `@a2uiCatalog <Name>` 的组件 TypeScript 接口生成。运行时可以没有：不带 schema 的条目序列化后只有 `{ name }`。

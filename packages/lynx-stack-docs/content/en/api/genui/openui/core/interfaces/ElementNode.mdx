@@ -1,0 +1,67 @@
+# Interface: ElementNode
+
+A fully resolved component node from the parser.
+
+The parser converts openui-lang text into a tree of these nodes.
+Each node represents one component invocation with its positional
+arguments mapped into named `props` via the library's Zod key order.
+
+## Properties
+
+### hasDynamicProps?
+
+```ts
+optional hasDynamicProps?: boolean;
+```
+
+False when all props are static literals — evaluation can be skipped.
+Undefined is treated as true (dynamic) for backward compatibility.
+
+***
+
+### partial
+
+```ts
+partial: boolean;
+```
+
+True when the parser hasn't received all tokens for this node yet
+(streaming in progress).
+
+***
+
+### props
+
+```ts
+props: Record<string, unknown>;
+```
+
+Named props produced by positional-to-named mapping in the parser.
+
+***
+
+### statementId?
+
+```ts
+optional statementId?: string;
+```
+
+Source variable name (e.g. "header" from `header = TextContent(...)`). Undefined for inline components.
+
+***
+
+### type
+
+```ts
+type: "element";
+```
+
+***
+
+### typeName
+
+```ts
+typeName: string;
+```
+
+Component name as defined in the library (e.g. "Table", "BarChart").

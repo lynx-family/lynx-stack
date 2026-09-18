@@ -1,0 +1,25 @@
+# 类型别名: QueryMethod\<Arguments *extends* `any`[], Return\>
+
+```ts
+type QueryMethod<Arguments extends any[], Return> = (container: HTMLElement, ...args: Arguments) => Return;
+```
+
+查询方法具有相同的调用签名，仅返回类型不同。
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `Arguments` *extends* `any`[] |
+| `Return` |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `container` | `HTMLElement` |
+| ...`args` | `Arguments` |
+
+## 返回
+
+`Return`

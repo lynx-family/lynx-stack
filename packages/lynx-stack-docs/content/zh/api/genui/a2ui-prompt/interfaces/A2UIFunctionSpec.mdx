@@ -1,0 +1,35 @@
+# 接口: A2UIFunctionSpec
+
+面向 prompt 的 schema，描述 agent 可以调用的客户端函数。
+
+## 属性
+
+### description?
+
+```ts
+optional description?: string;
+```
+
+***
+
+### name
+
+```ts
+name: string;
+```
+
+***
+
+### parameters
+
+```ts
+parameters: JsonSchema;
+```
+
+***
+
+### returnType
+
+```ts
+returnType: "string" | "number" | "boolean" | "object" | "array" | "any" | "void";
+```

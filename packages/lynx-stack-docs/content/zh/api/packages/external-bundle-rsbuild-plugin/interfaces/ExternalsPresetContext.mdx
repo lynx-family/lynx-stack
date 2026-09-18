@@ -1,0 +1,27 @@
+# 接口: ExternalsPresetContext
+
+传递给 externals 预设解析器的上下文。
+
+## 属性
+
+### environmentName?
+
+```ts
+optional environmentName?: string;
+```
+
+正在解析的 Rsbuild environment（例如 `'lynx'`、`'web'`）。
+
+#### 备注
+
+预设通过它选择特定于 environment 的产物，例如内置的 `reactlynx` 预设在 `web` environment 下解析 web 编码的 `react.web.bundle`，在其他 environment 下解析 `react.lynx.bundle`。
+
+***
+
+### rootPath
+
+```ts
+rootPath: string;
+```
+
+当前 Rsbuild 项目的根路径。

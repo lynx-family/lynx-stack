@@ -1,0 +1,37 @@
+# 接口: ResourceInfo
+
+当 surface 或组件发生变化时，渲染器 resource 携带的数据。
+
+## 属性
+
+### component?
+
+```ts
+optional component?: ComponentInstance;
+```
+
+***
+
+### surface
+
+```ts
+surface: Surface;
+```
+
+***
+
+### surfaceId
+
+```ts
+surfaceId: string;
+```
+
+***
+
+### type
+
+```ts
+type: "beginRendering" | "surfaceUpdate" | "deleteSurface";
+```
+
+处理器发出的内部事件类型。

@@ -1,0 +1,111 @@
+# @lynx-js/react
+
+[npm](https://www.npmjs.com/package/@lynx-js/react) · [Source](https://github.com/lynx-family/lynx-stack/tree/main/packages/react) · [Changelog](https://github.com/lynx-family/lynx-stack/blob/main/packages/react/CHANGELOG.md)
+
+`@lynx-js/react` is React for Lynx. It keeps the React 17 API surface,
+re-exporting the standard hooks and APIs, and adds what the dual-thread
+model needs: main-thread functions, the data a page receives from native,
+and a few compile-time directives and macros.
+
+## Remarks
+
+The React APIs below behave as the
+[official React reference](https://react.dev/reference/react)
+describes them, unless a page says otherwise. They are compatible with
+React 17 and [Preact](https://preactjs.com/guide/v10/switching-to-preact/).
+
+React entered its "concurrent" era with
+[React 18](https://react.dev/blog/2022/03/29/react-v18). Concurrent
+features such as `useTransition` and `useDeferredValue` make strict demands
+on how the host schedules work — they depend on browser Web APIs or on the
+React Native architecture. Lynx evolves its own architecture, so ReactLynx
+builds on React 17 and keeps the React programming model. The parts of
+[React 19](https://react.dev/blog/2024/04/25/react-19) and the
+[React Compiler](https://react.dev/learn/react-compiler) that do not
+depend on the concurrent architecture are still on the table.
+
+For an introduction to ReactLynx, see the
+[ReactLynx guides](https://lynxjs.org/react/).
+
+## Documents
+
+- [Directives](Documents/Directives.mdx)
+- [Built-in macros](Documents/Built-in_macros.mdx)
+- [Global events](Documents/Global_events.mdx)
+- [Import attributes](Documents/Import_attributes.mdx)
+
+## Functions
+
+Functions for crossing the thread boundary, creating elements outside JSX
+and mounting the root.
+
+- [Children](Functions/Children.mdx)
+- [root](Functions/root.mdx)
+- [cloneElement](Functions/cloneElement.mdx)
+- [createContext](Functions/createContext.mdx)
+- [createElement](Functions/createElement.mdx)
+- [createPortal](Functions/createPortal.mdx)
+- [createRef](Functions/createRef.mdx)
+- [forwardRef](Functions/forwardRef.mdx)
+- [isValidElement](Functions/isValidElement.mdx)
+- [lazy](Functions/lazy.mdx)
+- [markFirstScreenSyncReady](Functions/markFirstScreenSyncReady.mdx)
+- [memo](Functions/memo.mdx)
+- [runOnBackground](Functions/runOnBackground.mdx)
+- [runOnMainThread](Functions/runOnMainThread.mdx)
+- [withInitDataInState](Functions/withInitDataInState.mdx)
+
+## Components
+
+Provider and consumer components for the data a Lynx page receives from
+the native side, and the components re-exported from React.
+
+- [Component](Components/Component.mdx)
+- [PureComponent](Components/PureComponent.mdx)
+- [Fragment](Components/Fragment.mdx)
+- [GlobalPropsConsumer](Components/GlobalPropsConsumer.mdx)
+- [GlobalPropsProvider](Components/GlobalPropsProvider.mdx)
+- [InitDataConsumer](Components/InitDataConsumer.mdx)
+- [InitDataProvider](Components/InitDataProvider.mdx)
+- [Suspense](Components/Suspense.mdx)
+
+## Hooks
+
+Hooks that ReactLynx adds on top of React, plus the React hooks it
+re-exports or re-implements for the dual-thread model.
+
+- [useCallback](Hooks/useCallback.mdx)
+- [useContext](Hooks/useContext.mdx)
+- [useDebugValue](Hooks/useDebugValue.mdx)
+- [useEffect](Hooks/useEffect.mdx)
+- [useErrorBoundary](Hooks/useErrorBoundary.mdx)
+- [useGlobalProps](Hooks/useGlobalProps.mdx)
+- [useGlobalPropsChanged](Hooks/useGlobalPropsChanged.mdx)
+- [useImperativeHandle](Hooks/useImperativeHandle.mdx)
+- [useInitData](Hooks/useInitData.mdx)
+- [useInitDataChanged](Hooks/useInitDataChanged.mdx)
+- [~~useLayoutEffect~~](Hooks/useLayoutEffect.mdx)
+- [useLynxGlobalEventListener](Hooks/useLynxGlobalEventListener.mdx)
+- [useMainThreadRef](Hooks/useMainThreadRef.mdx)
+- [useMemo](Hooks/useMemo.mdx)
+- [useReducer](Hooks/useReducer.mdx)
+- [useRef](Hooks/useRef.mdx)
+- [useState](Hooks/useState.mdx)
+- [useSyncExternalStore](Hooks/useSyncExternalStore.mdx)
+
+## Types
+
+The types and classes exported by `@lynx-js/react`. Augment `InitData` and
+`GlobalProps` in your project to type the data your page receives.
+
+- [MainThreadRef](Types/MainThreadRef.mdx)
+- [CloneElement](Types/CloneElement.mdx)
+- [CreateElement](Types/CreateElement.mdx)
+- [DataProcessorDefinition](Types/DataProcessorDefinition.mdx)
+- [DataProcessors](Types/DataProcessors.mdx)
+- [GlobalProps](Types/GlobalProps.mdx)
+- [InitData](Types/InitData.mdx)
+- [InitDataRaw](Types/InitDataRaw.mdx)
+- [Lynx](Types/Lynx.mdx)
+- [Root](Types/Root.mdx)
+- [ReactLynxChildren](Types/ReactLynxChildren.mdx)

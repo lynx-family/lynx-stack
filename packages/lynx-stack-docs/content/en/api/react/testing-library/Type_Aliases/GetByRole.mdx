@@ -1,0 +1,23 @@
+# Type Alias: GetByRole\<T *extends* `HTMLElement` = `HTMLElement`\>
+
+```ts
+type GetByRole<T extends HTMLElement = HTMLElement> = (container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions) => T;
+```
+
+## Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `T` *extends* `HTMLElement` | `HTMLElement` |
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `container` | `HTMLElement` |
+| `role` | [`ByRoleMatcher`](ByRoleMatcher.mdx) |
+| `options?` | [`ByRoleOptions`](../Interfaces/ByRoleOptions.mdx) |
+
+## Returns
+
+`T`

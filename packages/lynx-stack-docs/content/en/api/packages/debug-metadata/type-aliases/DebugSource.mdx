@@ -1,0 +1,12 @@
+# Type Alias: DebugSource
+
+```ts
+type DebugSource = 
+  | SourceMapDebugSource
+  | BytecodeDebugInfoSource;
+```
+
+One debug data source attached to an [Artifact](../interfaces/Artifact.mdx).
+
+Tagged union so future debug data kinds (e.g. WASM debug info,
+R-source-map) can be added without restructuring `artifacts[]`.

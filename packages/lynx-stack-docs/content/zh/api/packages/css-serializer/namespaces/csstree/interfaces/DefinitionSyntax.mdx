@@ -1,0 +1,118 @@
+# 接口: DefinitionSyntax
+
+DefinitionSyntax
+
+## 属性
+
+### SyntaxError
+
+```ts
+SyntaxError: (message: string, input: string, offset?: number) => DefinitionSyntaxError;
+```
+
+语法错误的包装器
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `message` | `string` |
+| `input` | `string` |
+| `offset?` | `number` |
+
+#### 返回
+
+[`DefinitionSyntaxError`](DefinitionSyntaxError.mdx)
+
+## 方法
+
+### generate()
+
+```ts
+generate(node: DSNode, options?: 
+  | DSGenerateDecorateFn
+  | DSGenerateOptions): string;
+```
+
+从 AST 生成 CSS 值的 definition syntax
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `node` | [`DSNode`](../type-aliases/DSNode.mdx) | 该 AST |
+| `options?` | \| [`DSGenerateDecorateFn`](../type-aliases/DSGenerateDecorateFn.mdx) \| [`DSGenerateOptions`](DSGenerateOptions.mdx) | 影响生成过程的选项 |
+
+#### 返回
+
+`string`
+
+#### 示例
+
+```ts
+generate({type: 'Keyword', name: 'foo'}) => 'foo'
+```
+
+***
+
+### parse()
+
+```ts
+parse(source: string): DSNodeGroup;
+```
+
+从 CSS 值语法生成 AST
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `source` | `string` | 要解析的 CSS 值语法 |
+
+#### 返回
+
+[`DSNodeGroup`](DSNodeGroup.mdx)
+
+#### 示例
+
+```ts
+parse('foo | bar') =>
+   {
+     type: 'Group',
+     terms: [
+       { type: 'Keyword', name: 'foo' },
+       { type: 'Keyword', name: 'bar' }
+     ],
+     combinator: '|',
+     disallowEmpty: false,
+     explicit: false
+   }
+```
+
+***
+
+### walk()
+
+```ts
+walk(
+   node: DSNode, 
+   options: 
+  | DSWalkOptions
+  | DSWalkEnterOrLeaveFn, 
+   context?: any
+): void;
+```
+
+遍历 definition 语法的 AST
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `node` | [`DSNode`](../type-aliases/DSNode.mdx) |
+| `options` | \| [`DSWalkOptions`](DSWalkOptions.mdx) \| [`DSWalkEnterOrLeaveFn`](../type-aliases/DSWalkEnterOrLeaveFn.mdx) |
+| `context?` | `any` |
+
+#### 返回
+
+`void`

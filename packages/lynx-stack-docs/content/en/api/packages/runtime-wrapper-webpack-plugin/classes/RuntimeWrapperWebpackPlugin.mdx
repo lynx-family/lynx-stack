@@ -1,0 +1,51 @@
+# Class: RuntimeWrapperWebpackPlugin
+
+RuntimeWrapperWebpackPlugin adds runtime wrappers to JavaScript and allow to be loaded by Lynx.
+
+## Constructors
+
+### Constructor
+
+```ts
+new RuntimeWrapperWebpackPlugin(options?: Partial<RuntimeWrapperWebpackPluginOptions>): RuntimeWrapperWebpackPlugin;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `options` | `Partial`\<[`RuntimeWrapperWebpackPluginOptions`](../interfaces/RuntimeWrapperWebpackPluginOptions.mdx)\> |
+
+#### Returns
+
+`RuntimeWrapperWebpackPlugin`
+
+## Properties
+
+### defaultOptions
+
+```ts
+static defaultOptions: Readonly<Required<RuntimeWrapperWebpackPluginOptions>>;
+```
+
+`defaultOptions` is the default options that the RuntimeWrapperWebpackPlugin uses.
+
+## Methods
+
+### apply()
+
+```ts
+apply(compiler: Compiler): void;
+```
+
+The entry point of a webpack plugin.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `compiler` | `Compiler` | the webpack compiler |
+
+#### Returns
+
+`void`

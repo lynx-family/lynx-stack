@@ -1,0 +1,21 @@
+# Function: extractToolResult()
+
+```ts
+function extractToolResult(result: object): unknown;
+```
+
+Extract the actual data from an MCP callTool result.
+Prefers structuredContent (machine-readable JSON), falls back to parsing text content.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `result` | \{ `content`: `object`[]; `isError?`: `boolean`; `structuredContent?`: `unknown`; \} |
+| `result.content` | `object`[] |
+| `result.isError?` | `boolean` |
+| `result.structuredContent?` | `unknown` |
+
+## Returns
+
+`unknown`

@@ -1,0 +1,40 @@
+# 函数: runOnMainThread()
+
+```ts
+function runOnMainThread<R, Fn extends (...args: any[]) => R>(fn: Fn): (...args: Parameters<Fn>) => Promise<R>;
+```
+
+`runOnMainThread` 用于在主线程上异步触发主线程函数。
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `R` |
+| `Fn` *extends* (...`args`: `any`[]) => `R` |
+
+## 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `fn` | `Fn` | 要调用的主线程函数。 |
+
+## 返回
+
+一个函数。以要传给该主线程函数的参数调用它，即可在主线程上触发该主线程函数。该函数返回一个 Promise，其 resolve 值为该主线程函数的返回值。
+
+(...`args`: `Parameters`\<`Fn`\>) => `Promise`\<`R`\>
+
+## 示例
+
+```ts
+import { runOnMainThread } from '@lynx-js/react';
+
+async function someFunction() {
+  const fn = runOnMainThread(() => {
+    'main thread';
+    return 'hello';
+  });
+  const result = await fn();
+}
+```

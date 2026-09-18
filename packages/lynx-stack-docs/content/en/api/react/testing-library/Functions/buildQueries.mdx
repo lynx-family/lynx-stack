@@ -1,0 +1,27 @@
+# Function: buildQueries()
+
+```ts
+function buildQueries<Arguments extends any[]>(
+   queryAllBy: GetAllBy<Arguments>, 
+   getMultipleError: GetErrorFunction<Arguments>, 
+   getMissingError: GetErrorFunction<Arguments>
+): BuiltQueryMethods<Arguments>;
+```
+
+## Type Parameters
+
+| Type Parameter |
+| ------ |
+| `Arguments` *extends* `any`[] |
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `queryAllBy` | [`GetAllBy`](../Type_Aliases/GetAllBy.mdx)\<`Arguments`\> |
+| `getMultipleError` | [`GetErrorFunction`](../Type_Aliases/GetErrorFunction.mdx)\<`Arguments`\> |
+| `getMissingError` | [`GetErrorFunction`](../Type_Aliases/GetErrorFunction.mdx)\<`Arguments`\> |
+
+## Returns
+
+[`BuiltQueryMethods`](../Type_Aliases/BuiltQueryMethods.mdx)\<`Arguments`\>

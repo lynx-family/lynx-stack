@@ -1,0 +1,22 @@
+# 函数: springValue()
+
+```ts
+function springValue<T extends AnyResolvedKeyframe>(source: T | MotionValue<T>, options?: SpringOptions): MotionValue<T>;
+```
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` *extends* `AnyResolvedKeyframe` |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `source` | `T` \| [`MotionValue`](../interfaces/MotionValue.mdx)\<`T`\> |
+| `options?` | `SpringOptions` |
+
+## 返回
+
+[`MotionValue`](../interfaces/MotionValue.mdx)\<`T`\>

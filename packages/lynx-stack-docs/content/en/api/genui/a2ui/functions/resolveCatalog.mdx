@@ -1,0 +1,18 @@
+# Function: resolveCatalog()
+
+```ts
+function resolveCatalog(catalog: Catalog): ReadonlyMap<string, CatalogComponent>;
+```
+
+Build a name → component lookup map from a catalog. The renderer uses
+this to resolve `{ component: 'Text', ... }` from the protocol stream.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `catalog` | [`Catalog`](../interfaces/Catalog.mdx) |
+
+## Returns
+
+`ReadonlyMap`\<`string`, [`CatalogComponent`](../type-aliases/CatalogComponent.mdx)\>

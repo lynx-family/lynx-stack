@@ -1,0 +1,86 @@
+# 接口: ExposedAPI
+
+Rspeedy 暴露的 API。可以在 Rsbuild 插件中通过 [api.useExposed](https://rsbuild.rs/plugins/dev/core#apiuseexposed) 使用。
+
+## 示例
+
+```ts
+import type { ExposedAPI } from '@lynx-js/rspeedy'
+const RsbuildPlugin = {
+  name: 'my-rsbuild-plugin',
+  pre: ['lynx:rsbuild:plugin-api'],
+  setup(api) {
+    const rspeedyAPI = api.useExposed<ExposedAPI>(Symbol.for('rspeedy.api'))
+  },
+}
+```
+
+## 属性
+
+### config
+
+```ts
+config: Config;
+```
+
+用户配置。
+
+***
+
+### debug
+
+```ts
+debug: (message: string | (() => string)) => void;
+```
+
+打印调试日志。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `message` | `string` \| (() => `string`) | 打印的消息。 |
+
+#### 返回
+
+`void`
+
+***
+
+### exit
+
+```ts
+exit: (code?: number) => void | Promise<void>;
+```
+
+退出进程。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `code?` | `number` | 退出码。 |
+
+#### 返回
+
+`void` \| `Promise`\<`void`\>
+
+***
+
+### logger
+
+```ts
+logger: Logger;
+```
+
+获取 Rspeedy 的 logger。
+
+***
+
+### version
+
+```ts
+version: string;
+```
+
+Rspeedy 的版本。

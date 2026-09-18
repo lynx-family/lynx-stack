@@ -1,0 +1,23 @@
+# Type Alias: GetByBoundAttribute\<T *extends* `HTMLElement` = `HTMLElement`\>
+
+```ts
+type GetByBoundAttribute<T extends HTMLElement = HTMLElement> = (container: HTMLElement, id: Matcher, options?: MatcherOptions) => T;
+```
+
+## Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `T` *extends* `HTMLElement` | `HTMLElement` |
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `container` | `HTMLElement` |
+| `id` | [`Matcher`](Matcher.mdx) |
+| `options?` | [`MatcherOptions`](../Interfaces/MatcherOptions.mdx) |
+
+## Returns
+
+`T`

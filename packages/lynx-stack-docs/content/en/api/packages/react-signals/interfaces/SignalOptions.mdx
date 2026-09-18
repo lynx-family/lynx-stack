@@ -1,0 +1,51 @@
+# Interface: SignalOptions\<T = `any`\>
+
+## Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `T` | `any` |
+
+## Properties
+
+### name?
+
+```ts
+optional name?: string;
+```
+
+***
+
+### unwatched?
+
+```ts
+optional unwatched?: (this: Signal<T>) => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `this` | [`Signal`](../classes/Signal.mdx)\<`T`\> |
+
+#### Returns
+
+`void`
+
+***
+
+### watched?
+
+```ts
+optional watched?: (this: Signal<T>) => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `this` | [`Signal`](../classes/Signal.mdx)\<`T`\> |
+
+#### Returns
+
+`void`

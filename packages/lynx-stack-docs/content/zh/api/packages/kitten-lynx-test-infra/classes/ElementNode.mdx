@@ -1,0 +1,146 @@
+# 类: ElementNode
+
+表示 Lynx 页面中的一个 DOM 元素。
+
+对 CDP 的 `nodeId` 进行封装，并提供用于检查属性、
+计算样式，以及模拟点击等用户交互的方法。
+
+## 构造函数
+
+### 构造函数
+
+```ts
+new ElementNode(nodeId: number, _lynxView: KittenLynxView): ElementNode;
+```
+
+初始化一个新的 `ElementNode` 实例，用于表示一个 Lynx Component 或 Tag。
+
+**给 Agent 的提示：**
+与 `KittenLynxView` 类似，你应该很少直接调用它。
+请依赖 `KittenLynxView.locator()` 或 `ElementNode.fromId()` 来进行实例化。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `nodeId` | `number` | 在 Lynx renderer 中表示该元素的唯一数字型 CDP ID。 |
+| `_lynxView` | [`KittenLynxView`](KittenLynxView.mdx) | 用于派发后续 CDP 查询的父级 `KittenLynxView` 实例。 |
+
+#### 返回
+
+`ElementNode`
+
+## 属性
+
+### nodeId
+
+```ts
+readonly nodeId: number;
+```
+
+在 Lynx renderer 中表示该元素的唯一数字型 CDP ID。
+
+## 方法
+
+### computedStyleMap()
+
+```ts
+computedStyleMap(): Promise<Map<string, string>>;
+```
+
+获取该特定元素当前所有实际计算出的 CSS 属性。
+
+**Agent 用法：**
+它依赖于 `CSS.getComputedStyleForNode`。返回的是布局计算完成后
+完全解析出的样式值（例如将 `100%` 解析为绝对的 `px` 值）。
+强烈建议将其用于视觉断言（例如验证某个盒子确实是 `display: none`
+或具有特定的 `background-color`）。
+
+#### 返回
+
+`Promise`\<`Map`\<`string`, `string`\>\>
+
+一个 promise，解析为原生 JS `Map`，其中键为 CSS 属性名，值为其计算后的字符串表达式。
+
+***
+
+### getAttribute()
+
+```ts
+getAttribute(name: string): Promise<string | null>;
+```
+
+获取该元素上指定属性的字符串值。
+
+**Agent 特性 / 注意事项：**
+在 Lynx 中，标准 Web 的 `id="foo"` 属性实际上在内部存储为 `idSelector="foo"`。
+这个库提供了无缝的 shim：如果你查询 `getAttribute('id')`，它会自动
+改为查询 `idSelector`。你无需手动处理 `idSelector`。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `name` | `string` | 要获取的属性名称。 |
+
+#### 返回
+
+`Promise`\<`string` \| `null`\>
+
+一个 promise，解析为该属性的字符串值；如果该属性不存在，则为 `null`。
+
+***
+
+### tap()
+
+```ts
+tap(): Promise<void>;
+```
+
+在该元素的中心位置直接模拟一次原生用户点击（先触摸按下，再触摸释放）。
+
+**内部机制（面向 Agent）：**
+这并不是一个模拟的 DOM 事件（如 Web 中的 `element.click()`），而是一次高精度的
+native 层手势派发：
+1. 通过 `DOM.getBoxModel` 获取精确的边界坐标。
+2. 计算内容盒的绝对中心点 `(x, y)`。
+3. 通过 ADB bridge 派发一个 `Input.emulateTouchFromMouseEvent`（`'mousePressed'`）。
+4. 等待 50ms，再派发对应的 `'mouseReleased'`。
+
+**关键提示：** 请确保元素在调用前在屏幕上可见，否则坐标计算可能会失败或无法命中任何内容。
+
+#### 返回
+
+`Promise`\<`void`\>
+
+#### 抛出
+
+如果无法在 native 侧计算出布局盒模型，则报错。
+
+***
+
+### fromId()
+
+```ts
+static fromId(id: number, lynxView: KittenLynxView): ElementNode;
+```
+
+获取或创建与指定 Lynx DOM 节点 ID 对应的 `ElementNode` 实例。
+
+**Agent 缓存策略：**
+节点会通过 `WeakRef` 按每个 `KittenLynxView` 实例进行积极缓存。
+这意味着如果 Agent 在垃圾回收前两次查询同一个 DOM 节点，
+就会返回相同的 `ElementNode` 引用，从而在大规模 DOM 遍历时降低内存开销。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `id` | `number` | 要包装的数字型 CDP 节点 ID。 |
+| `lynxView` | [`KittenLynxView`](KittenLynxView.mdx) | 该节点所属的 `KittenLynxView` 实例。 |
+
+#### 返回
+
+`ElementNode`
+
+绑定到给定节点 ID 和 view 的 `ElementNode`。

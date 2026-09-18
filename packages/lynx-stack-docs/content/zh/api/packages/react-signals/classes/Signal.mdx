@@ -1,0 +1,140 @@
+# 类: Signal\<T = `any`\>
+
+普通 signal 和计算 signal 的基类。
+
+## 类型参数
+
+| 类型参数 | 默认类型 |
+| ------ | ------ |
+| `T` | `any` |
+
+## 构造函数
+
+### 构造函数
+
+```ts
+new Signal<T = any>(value?: T, options?: SignalOptions<T>): Signal<T>;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `value?` | `T` |
+| `options?` | [`SignalOptions`](../interfaces/SignalOptions.mdx)\<`T`\> |
+
+#### 返回
+
+`Signal`\<`T`\>
+
+## 属性
+
+### brand
+
+```ts
+brand: typeof BRAND_SYMBOL;
+```
+
+***
+
+### name?
+
+```ts
+optional name?: string;
+```
+
+## 访问器
+
+### value
+
+#### Getter 签名
+
+```ts
+get value(): T;
+```
+
+##### 返回
+
+`T`
+
+#### Setter 签名
+
+```ts
+set value(value: T): void;
+```
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `value` | `T` |
+
+##### 返回
+
+`void`
+
+## 方法
+
+### peek()
+
+```ts
+peek(): T;
+```
+
+#### 返回
+
+`T`
+
+***
+
+### subscribe()
+
+```ts
+subscribe(fn: (value: T) => void): () => void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `fn` | (`value`: `T`) => `void` |
+
+#### 返回
+
+() => `void`
+
+***
+
+### toJSON()
+
+```ts
+toJSON(): T;
+```
+
+#### 返回
+
+`T`
+
+***
+
+### toString()
+
+```ts
+toString(): string;
+```
+
+#### 返回
+
+`string`
+
+***
+
+### valueOf()
+
+```ts
+valueOf(): T;
+```
+
+#### 返回
+
+`T`

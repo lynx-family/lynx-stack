@@ -1,0 +1,229 @@
+# Interface: Tools
+
+The Tools options changes the behavior of various building tools.
+
+## Properties
+
+### bundlerChain?
+
+```ts
+optional bundlerChain?: ToolsBundlerChainConfig;
+```
+
+The [Tools.bundlerChain](#bundlerchain) changes the options of [Rspack](https://rspack.rs) using [rspack-chain](https://github.com/rspack-contrib/rspack-chain).
+
+#### Default Value
+
+```ts
+undefined
+```
+
+#### Example
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  tools: {
+    bundlerChain(chain) {
+      chain.resolve.fullySpecified(true)
+    },
+  },
+})
+```
+
+See [rspack-chain](https://github.com/rspack-contrib/rspack-chain) for details.
+
+***
+
+### cssExtract?
+
+```ts
+optional cssExtract?: CssExtract;
+```
+
+The [CssExtract](CssExtract.mdx) controls the options of [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin)
+
+#### Default Value
+
+```ts
+undefined
+```
+
+***
+
+### cssLoader?
+
+```ts
+optional cssLoader?: CssLoader;
+```
+
+The [CssLoader](CssLoader.mdx) controls the options of [css-loader](https://github.com/webpack-contrib/css-loader).
+
+#### Default Value
+
+Uses defaults derived from `output.cssModules` and `output.sourceMap`, with `importLoaders` set to `1` for CSS files and `2` for Sass/Less files.
+
+#### Remarks
+
+The default option is as follow:
+
+```js
+const defaultOptions = {
+  modules: {
+    auto: true,
+    namedExport: false,
+    exportLocalsConvention: 'camelCase',
+    localIdentName: output.cssModules.localIdentName,
+  },
+  sourceMap: output.sourceMap,
+  // importLoaders is `1` when compiling css files, and is `2` when compiling sass/less files
+  importLoaders: 1 || 2,
+};
+```
+
+***
+
+### rsdoctor?
+
+```ts
+optional rsdoctor?: RsdoctorRspackPluginOptions;
+```
+
+The [Tools.rsdoctor](#rsdoctor) controls the options of [Rsdoctor](https://rsdoctor.dev/).
+
+#### Default Value
+
+```ts
+undefined
+```
+
+#### Remarks
+
+Setting `RSDOCTOR=true` enables Rsdoctor. When it is enabled, Rspeedy merges additional plugin defaults during config normalization.
+
+#### Example
+
+- Use the built-in Rsdoctor.
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  tools: {
+    rsdoctor: {
+      disableClientServer: true,
+    },
+  },
+})
+```
+
+See [Rsdoctor - Configuration](https://rsdoctor.dev/config/options/options) for details.
+
+***
+
+### rspack?
+
+```ts
+optional rspack?: ToolsRspackConfig;
+```
+
+The [Tools.rspack](#rspack) controls the options of [Rspack](https://rspack.rs/).
+
+#### Default Value
+
+```ts
+undefined
+```
+
+#### Examples
+
+- Use object config
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  tools: {
+    rspack: {
+      resolve: {
+        fullySpecified: true,
+      },
+    },
+  },
+})
+```
+
+See [Rspack - Configuration](https://rspack.rs/config/index) for details.
+
+- Use function with `env` utils
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  tools: {
+    rspack(config, { env }) {
+      if (env === 'development') {
+        config.devtool = 'cheap-source-map'
+      }
+      return config
+    },
+  },
+})
+```
+
+See [Rsbuild - tools.rspack](https://rsbuild.rs/config/tools/rspack#env) for details.
+
+- Use function with `mergeConfig` utils
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  tools: {
+    rspack(config, { mergeConfig }) {
+      return mergeConfig(config, {
+        resolve: {
+          fullySpecified: true,
+        },
+      })
+    },
+  },
+})
+```
+
+See [Rsbuild - tools.rspack](https://rsbuild.rs/config/tools/rspack#mergeconfig) for details.
+
+- Use function with `appendPlugins` utils
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  tools: {
+    rspack(config, { appendPlugins, rspack }) {
+      appendPlugins(new rspack.BannerPlugin({ banner: 'Hello, World!' }))
+      return config
+    },
+  },
+})
+```
+
+See [Rsbuild - tools.rspack](https://rsbuild.rs/config/tools/rspack#appendplugins) for details.
+
+***
+
+### swc?
+
+```ts
+optional swc?: ToolsSwcConfig;
+```
+
+The [Tools.swc](#swc) controls the options of [builtin:swc-loader](https://rspack.rs/guide/features/builtin-swc-loader).
+
+#### Default Value
+
+```ts
+undefined
+```

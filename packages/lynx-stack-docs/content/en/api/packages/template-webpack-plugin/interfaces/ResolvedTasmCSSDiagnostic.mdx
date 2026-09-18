@@ -1,0 +1,104 @@
+# Interface: ResolvedTasmCSSDiagnostic
+
+A TASM CSS diagnostic with a formatted message and optional source map
+location.
+
+## Extends
+
+- [`TasmCSSDiagnostic`](TasmCSSDiagnostic.mdx)
+
+## Properties
+
+### column
+
+```ts
+column: number;
+```
+
+The generated CSS column reported by TASM.
+
+#### Inherited from
+
+[`TasmCSSDiagnostic`](TasmCSSDiagnostic.mdx).[`column`](TasmCSSDiagnostic.mdx#column)
+
+***
+
+### line
+
+```ts
+line: number;
+```
+
+The generated CSS line reported by TASM.
+
+#### Inherited from
+
+[`TasmCSSDiagnostic`](TasmCSSDiagnostic.mdx).[`line`](TasmCSSDiagnostic.mdx#line)
+
+***
+
+### message
+
+```ts
+message: string;
+```
+
+The warning message suitable for webpack diagnostics.
+
+***
+
+### name?
+
+```ts
+optional name?: string;
+```
+
+The unsupported CSS syntax name, when TASM reports one.
+
+#### Inherited from
+
+[`TasmCSSDiagnostic`](TasmCSSDiagnostic.mdx).[`name`](TasmCSSDiagnostic.mdx#name)
+
+***
+
+### sourceColumn?
+
+```ts
+optional sourceColumn?: number;
+```
+
+The original source column resolved from the CSS source map.
+
+***
+
+### sourceFile?
+
+```ts
+optional sourceFile?: string;
+```
+
+The original source file resolved from the CSS source map.
+
+***
+
+### sourceLine?
+
+```ts
+optional sourceLine?: number;
+```
+
+The original source line resolved from the CSS source map.
+
+***
+
+### type?
+
+```ts
+optional type?: string;
+```
+
+The diagnostic category, such as `property`.
+
+#### Inherited from
+
+[`TasmCSSDiagnostic`](TasmCSSDiagnostic.mdx).[`type`](TasmCSSDiagnostic.mdx#type)

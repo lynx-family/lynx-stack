@@ -1,0 +1,41 @@
+# Function: Fragment()
+
+```ts
+function Fragment(props: FragmentProps): ReactNode;
+```
+
+Lets you group elements without a wrapper node.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `props` | `FragmentProps` |
+
+## Returns
+
+`ReactNode`
+
+## See
+
+[React Docs](https://react.dev/reference/react/Fragment)
+
+## Examples
+
+```tsx
+import { Fragment } from '@lynx-js/react';
+
+<Fragment>
+  <text>Hello</text>
+  <text>World</text>
+</Fragment>
+```
+
+```tsx
+// Using the <></> shorthand syntax:
+
+<>
+  <text>Hello</text>
+  <text>World</text>
+</>
+```

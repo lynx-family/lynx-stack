@@ -1,0 +1,22 @@
+[
+  {
+    "type": "file",
+    "name": "functions/createA2UICatalog",
+    "label": "createA2UICatalog"
+  },
+  {
+    "type": "file",
+    "name": "functions/extractCatalogComponents",
+    "label": "extractCatalogComponents"
+  },
+  {
+    "type": "file",
+    "name": "functions/extractCatalogFunctions",
+    "label": "extractCatalogFunctions"
+  },
+  {
+    "type": "file",
+    "name": "functions/findCatalogSourceFiles",
+    "label": "findCatalogSourceFiles"
+  }
+]

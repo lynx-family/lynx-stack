@@ -1,0 +1,22 @@
+# Function: pluginVanillaLynx()
+
+```ts
+function pluginVanillaLynx(options?: PluginVanillaLynxOptions): RsbuildPlugin;
+```
+
+Create the Vanilla Lynx DSL integration for Rsbuild or Rspeedy.
+
+A logical entry can explicitly declare its main-thread and background-thread
+sources. As a shorthand, an Rsbuild entry is treated as the main-thread
+source and optional sibling `background.ts` and `style.css` files are
+discovered by convention.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `options` | [`PluginVanillaLynxOptions`](../interfaces/PluginVanillaLynxOptions.mdx) |
+
+## Returns
+
+`RsbuildPlugin`

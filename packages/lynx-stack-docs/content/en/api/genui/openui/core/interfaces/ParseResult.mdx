@@ -1,0 +1,90 @@
+# Interface: ParseResult
+
+The output of a single `parser.parse(text)` call.
+
+During streaming, each chunk produces a new ParseResult as the
+accumulated text is re-parsed. The `root` progressively resolves
+from null → partial tree → complete tree.
+
+## Properties
+
+### meta
+
+```ts
+meta: object;
+```
+
+#### errors
+
+```ts
+errors: ValidationError[];
+```
+
+Prop validation errors. Components with missing required props are
+redacted (dropped as null) and listed here.
+
+#### incomplete
+
+```ts
+incomplete: boolean;
+```
+
+True if the parser detected truncated/incomplete input.
+
+#### orphaned
+
+```ts
+orphaned: string[];
+```
+
+#### statementCount
+
+```ts
+statementCount: number;
+```
+
+#### unresolved
+
+```ts
+unresolved: string[];
+```
+
+***
+
+### mutationStatements
+
+```ts
+mutationStatements: MutationStatementInfo[];
+```
+
+Extracted Mutation() calls with their positional args as AST nodes.
+
+***
+
+### queryStatements
+
+```ts
+queryStatements: QueryStatementInfo[];
+```
+
+Extracted Query() calls with their positional args as AST nodes.
+
+***
+
+### root
+
+```ts
+root: ElementNode | null;
+```
+
+The root ElementNode (typically a Root component), or null if parsing hasn't produced one yet.
+
+***
+
+### stateDeclarations
+
+```ts
+stateDeclarations: Record<string, unknown>;
+```
+
+$variable declarations — maps "$varName" to its materialized default value.

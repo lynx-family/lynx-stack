@@ -1,0 +1,14 @@
+# Variable: UI\_SOURCE\_MAP\_RECORDS\_BUILD\_INFO
+
+```ts
+const UI_SOURCE_MAP_RECORDS_BUILD_INFO: "lynxUiSourceMapRecords" = 'lynxUiSourceMapRecords';
+```
+
+`module.buildInfo[UI_SOURCE_MAP_RECORDS_BUILD_INFO]` is where the
+main-thread loader stashes the [UiSourceMapRecord](../interfaces/UiSourceMapRecord.mdx) array it
+extracts from a module, for `LynxDebugMetadataPlugin` to collect.
+
+Lives in this zero-dependency schema package so producer
+(`@lynx-js/react-webpack-plugin`'s loader) and consumer
+(`@lynx-js/debug-metadata-rsbuild-plugin`) can both read the same
+constant without taking a runtime dep on each other.

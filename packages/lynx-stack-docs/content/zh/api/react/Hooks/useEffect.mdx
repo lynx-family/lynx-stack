@@ -1,0 +1,18 @@
+# 函数: useEffect()
+
+```ts
+function useEffect(effect: EffectCallback, deps?: DependencyList): void;
+```
+
+接收一个包含命令式、可能带有副作用代码的函数。副作用会在主线程 DOM 更新后执行，且不会阻塞更新。
+
+## 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `effect` | `EffectCallback` | 命令式函数，可以返回一个清理函数 |
+| `deps?` | `DependencyList` | 如果提供，只有列表中的值发生变化（使用 === 比较）时 effect 才会执行。 |
+
+## 返回
+
+`void`

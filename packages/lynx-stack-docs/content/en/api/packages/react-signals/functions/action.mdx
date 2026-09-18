@@ -1,0 +1,22 @@
+# Function: action()
+
+```ts
+function action<TArgs extends unknown[], TReturn>(fn: (...args: TArgs) => TReturn): (...args: TArgs) => TReturn;
+```
+
+## Type Parameters
+
+| Type Parameter |
+| ------ |
+| `TArgs` *extends* `unknown`[] |
+| `TReturn` |
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | (...`args`: `TArgs`) => `TReturn` |
+
+## Returns
+
+(...`args`: `TArgs`) => `TReturn`

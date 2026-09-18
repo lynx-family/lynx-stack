@@ -1,0 +1,57 @@
+[
+  {
+    "type": "file",
+    "name": "environments",
+    "label": "environments",
+    "tag": "默认值已变更"
+  },
+  {
+    "type": "dir",
+    "name": "dev",
+    "label": "Dev 选项",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "output",
+    "label": "Output 选项",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "performance",
+    "label": "Performance 选项",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "resolve",
+    "label": "Resolve 选项",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "server",
+    "label": "Server 选项",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "source",
+    "label": "Source 选项",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "tools",
+    "label": "Tools 选项",
+    "collapsible": true,
+    "collapsed": true
+  }
+]

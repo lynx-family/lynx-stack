@@ -1,0 +1,59 @@
+# Interface: FeaturePlain
+
+## Extends
+
+- [`CssNodeCommon`](CssNodeCommon.mdx)
+
+## Properties
+
+### kind
+
+```ts
+kind: string;
+```
+
+***
+
+### loc?
+
+```ts
+optional loc?: CssLocation;
+```
+
+#### Inherited from
+
+[`CssNodeCommon`](CssNodeCommon.mdx).[`loc`](CssNodeCommon.mdx#loc)
+
+***
+
+### name
+
+```ts
+name: string;
+```
+
+***
+
+### type
+
+```ts
+type: "Feature";
+```
+
+#### Overrides
+
+[`CssNodeCommon`](CssNodeCommon.mdx).[`type`](CssNodeCommon.mdx#type)
+
+***
+
+### value
+
+```ts
+value: 
+  | Dimension
+  | FunctionNodePlain
+  | Identifier
+  | NumberNode
+  | RatioPlain
+  | null;
+```

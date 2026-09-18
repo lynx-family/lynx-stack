@@ -1,0 +1,31 @@
+# Type Alias: ActionStep
+
+```ts
+type ActionStep = 
+  | {
+  refType: "query" | "mutation";
+  statementId: string;
+  type: "run";
+}
+  | {
+  context?: string;
+  message: string;
+  type: "continue_conversation";
+}
+  | {
+  type: "open_url";
+  url: string;
+}
+  | {
+  target: string;
+  type: "set";
+  valueAST: ASTNode;
+}
+  | {
+  targets: string[];
+  type: "reset";
+};
+```
+
+A single step in an ActionPlan.
+Step type values match ACTION_STEPS in builtins.ts (single source of truth).

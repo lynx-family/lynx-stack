@@ -1,0 +1,24 @@
+# Type Alias: FindByText\<T *extends* `HTMLElement` = `HTMLElement`\>
+
+```ts
+type FindByText<T extends HTMLElement = HTMLElement> = (container: HTMLElement, id: Matcher, options?: SelectorMatcherOptions, waitForElementOptions?: waitForOptions) => Promise<T>;
+```
+
+## Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `T` *extends* `HTMLElement` | `HTMLElement` |
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `container` | `HTMLElement` |
+| `id` | [`Matcher`](Matcher.mdx) |
+| `options?` | [`SelectorMatcherOptions`](../Interfaces/SelectorMatcherOptions.mdx) |
+| `waitForElementOptions?` | [`waitForOptions`](../Interfaces/waitForOptions.mdx) |
+
+## Returns
+
+`Promise`\<`T`\>

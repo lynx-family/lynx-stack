@@ -1,0 +1,27 @@
+[
+  {
+    "type": "file",
+    "name": "functions/McpApps",
+    "label": "McpApps"
+  },
+  {
+    "type": "file",
+    "name": "functions/createAppRendererRegistry",
+    "label": "createAppRendererRegistry"
+  },
+  {
+    "type": "file",
+    "name": "functions/defineAppRenderer",
+    "label": "defineAppRenderer"
+  },
+  {
+    "type": "file",
+    "name": "functions/readAppMarkdown",
+    "label": "readAppMarkdown"
+  },
+  {
+    "type": "file",
+    "name": "functions/readAppRenderData",
+    "label": "readAppRenderData"
+  }
+]

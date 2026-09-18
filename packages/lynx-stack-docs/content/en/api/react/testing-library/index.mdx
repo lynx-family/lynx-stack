@@ -1,0 +1,267 @@
+# @lynx-js/react/testing-library
+
+ReactLynx Testing Library is a simple and complete ReactLynx unit testing library that encourages good testing practices.
+
+> Inspired completely by [react-testing-library](https://github.com/testing-library/react-testing-library)
+
+Similar to [react-testing-library](https://github.com/testing-library/react-testing-library), this library is designed to test your ReactLynx components in the same way you would test React components using react-testing-library.
+
+## Setup
+
+### Rstest
+
+Setup rstest with `@lynx-js/react/testing-library/rstest-config`.
+
+Recommended for library projects:
+
+```ts
+import { defineConfig } from '@rstest/core';
+import { withDefaultConfig } from '@lynx-js/react/testing-library/rstest-config';
+
+export default defineConfig({
+  extends: withDefaultConfig(),
+});
+```
+
+Use `withLynxConfig` when you want to reuse your app's `lynx.config.ts`:
+
+```ts
+// rstest.config.ts
+import { defineConfig } from '@rstest/core';
+import { withLynxConfig } from '@lynx-js/react/testing-library/rstest-config';
+
+export default defineConfig({
+  extends: withLynxConfig(),
+});
+```
+
+Difference between `withLynxConfig` and `withDefaultConfig`:
+
+- `withLynxConfig`: app-oriented. Loads your `lynx.config.ts` and converts it to rstest config, so rspeedy/lynx settings are reused in tests.
+- `withDefaultConfig`: library-oriented. Only applies testing-library defaults (`jsdom`, setup files, globals) and lets you provide the rest via `modifyRstestConfig`.
+
+Then you can start writing tests and run them with rstest!
+
+For more usage detail, see https://rstest.rs/
+
+### Vitest
+
+Setup vitest:
+
+```js
+import { defineConfig } from 'vitest/config';
+import { vitestTestingLibraryPlugin } from '@lynx-js/react/testing-library/plugins';
+
+export default defineConfig({
+  plugins: [
+    vitestTestingLibraryPlugin(),
+  ],
+  test: {
+    // ...
+  },
+});
+```
+
+Then you can start writing tests and run them with vitest!
+
+`createVitestConfig` is still supported for backward compatibility, but is deprecated.
+
+## Usage
+
+```jsx
+import '@testing-library/jest-dom';
+import { test, expect } from 'vitest'; // or '@rstest/core'
+import { render } from '@lynx-js/react/testing-library';
+
+test('renders options.wrapper around node', async () => {
+  const WrapperComponent = ({ children }) => (
+    <view data-testid='wrapper'>{children}</view>
+  );
+  const Comp = () => {
+    return <view data-testid='inner' style='background-color: yellow;' />;
+  };
+  const { container, getByTestId } = render(<Comp />, {
+    wrapper: WrapperComponent,
+  });
+  expect(getByTestId('wrapper')).toBeInTheDocument();
+  expect(container.firstChild).toMatchInlineSnapshot(`
+    <view
+      data-testid="wrapper"
+    >
+      <view
+        data-testid="inner"
+        style="background-color: yellow;"
+      />
+    </view>
+  `);
+});
+```
+
+💡 Since our testing environment (`@lynx-js/testing-environment`) is based on jsdom, You may also be interested in installing `@testing-library/jest-dom` so you can use
+[the custom jest matchers](https://github.com/testing-library/jest-dom).
+
+## Examples
+
+See our [examples](https://github.com/lynx-family/lynx-stack/tree/main/packages/react/testing-library/src/__tests__) for more usage.
+
+## Credits
+
+- [Testing Library](https://testing-library.com/) for the testing utilities and good practices for React testing.
+
+## Namespaces
+
+- [prettyFormat](Namespaces/prettyFormat.mdx)
+- [queries](Namespaces/queries.mdx)
+- [queryHelpers](Namespaces/queryHelpers.mdx)
+
+## Classes
+
+- [LynxTestingEnv](Classes/LynxTestingEnv.mdx)
+
+## Interfaces
+
+- [ByRoleOptions](Interfaces/ByRoleOptions.mdx)
+- [Config](Interfaces/Config.mdx)
+- [ConfigFn](Interfaces/ConfigFn.mdx)
+- [DefaultNormalizerOptions](Interfaces/DefaultNormalizerOptions.mdx)
+- [LogRolesOptions](Interfaces/LogRolesOptions.mdx)
+- [MatcherOptions](Interfaces/MatcherOptions.mdx)
+- [NormalizerOptions](Interfaces/NormalizerOptions.mdx)
+- [PrettyDOMOptions](Interfaces/PrettyDOMOptions.mdx)
+- [Queries](Interfaces/Queries.mdx)
+- [QueryOptions](Interfaces/QueryOptions.mdx)
+- [RenderHookOptions](Interfaces/RenderHookOptions.mdx)
+- [RenderHookResult](Interfaces/RenderHookResult.mdx)
+- [RenderOptions](Interfaces/RenderOptions.mdx)
+- [SelectorMatcherOptions](Interfaces/SelectorMatcherOptions.mdx)
+- [Suggestion](Interfaces/Suggestion.mdx)
+- [waitForOptions](Interfaces/waitForOptions.mdx)
+
+## Type Aliases
+
+- [AllByAttribute](Type_Aliases/AllByAttribute.mdx)
+- [AllByBoundAttribute](Type_Aliases/AllByBoundAttribute.mdx)
+- [AllByRole](Type_Aliases/AllByRole.mdx)
+- [AllByText](Type_Aliases/AllByText.mdx)
+- [BoundFunction](Type_Aliases/BoundFunction.mdx)
+- [BoundFunctions](Type_Aliases/BoundFunctions.mdx)
+- [BuiltQueryMethods](Type_Aliases/BuiltQueryMethods.mdx)
+- [ByRoleMatcher](Type_Aliases/ByRoleMatcher.mdx)
+- [CreateFunction](Type_Aliases/CreateFunction.mdx)
+- [CreateObject](Type_Aliases/CreateObject.mdx)
+- [ElementTree](Type_Aliases/ElementTree.mdx)
+- [EventType](Type_Aliases/EventType.mdx)
+- [FindAllBy](Type_Aliases/FindAllBy.mdx)
+- [FindAllByBoundAttribute](Type_Aliases/FindAllByBoundAttribute.mdx)
+- [FindAllByRole](Type_Aliases/FindAllByRole.mdx)
+- [FindAllByText](Type_Aliases/FindAllByText.mdx)
+- [FindBy](Type_Aliases/FindBy.mdx)
+- [FindByBoundAttribute](Type_Aliases/FindByBoundAttribute.mdx)
+- [FindByRole](Type_Aliases/FindByRole.mdx)
+- [FindByText](Type_Aliases/FindByText.mdx)
+- [FireFunction](Type_Aliases/FireFunction.mdx)
+- [FireObject](Type_Aliases/FireObject.mdx)
+- [GetAllBy](Type_Aliases/GetAllBy.mdx)
+- [GetBy](Type_Aliases/GetBy.mdx)
+- [GetByBoundAttribute](Type_Aliases/GetByBoundAttribute.mdx)
+- [GetByRole](Type_Aliases/GetByRole.mdx)
+- [GetByText](Type_Aliases/GetByText.mdx)
+- [GetErrorFunction](Type_Aliases/GetErrorFunction.mdx)
+- [Match](Type_Aliases/Match.mdx)
+- [Matcher](Type_Aliases/Matcher.mdx)
+- [MatcherFunction](Type_Aliases/MatcherFunction.mdx)
+- [Method](Type_Aliases/Method.mdx)
+- [NormalizerFn](Type_Aliases/NormalizerFn.mdx)
+- [Query](Type_Aliases/Query.mdx)
+- [QueryArgs](Type_Aliases/QueryArgs.mdx)
+- [QueryBy](Type_Aliases/QueryBy.mdx)
+- [QueryByAttribute](Type_Aliases/QueryByAttribute.mdx)
+- [QueryByBoundAttribute](Type_Aliases/QueryByBoundAttribute.mdx)
+- [QueryByRole](Type_Aliases/QueryByRole.mdx)
+- [QueryByText](Type_Aliases/QueryByText.mdx)
+- [QueryMethod](Type_Aliases/QueryMethod.mdx)
+- [RenderResult](Type_Aliases/RenderResult.mdx)
+- [Screen](Type_Aliases/Screen.mdx)
+- [Variant](Type_Aliases/Variant.mdx)
+- [WithSuggest](Type_Aliases/WithSuggest.mdx)
+
+## Variables
+
+- [createEvent](Variables/createEvent.mdx)
+- [fireEvent](Variables/fireEvent.mdx)
+- [queryAllByAttribute](Variables/queryAllByAttribute.mdx)
+- [queryByAttribute](Variables/queryByAttribute.mdx)
+- [screen](Variables/screen.mdx)
+- [within](Variables/within.mdx)
+
+## Functions
+
+- [act](Functions/act.mdx)
+- [buildQueries](Functions/buildQueries.mdx)
+- [cleanup](Functions/cleanup.mdx)
+- [computeHeadingLevel](Functions/computeHeadingLevel.mdx)
+- [configure](Functions/configure.mdx)
+- [findAllByAltText](Functions/findAllByAltText.mdx)
+- [findAllByDisplayValue](Functions/findAllByDisplayValue.mdx)
+- [findAllByLabelText](Functions/findAllByLabelText.mdx)
+- [findAllByPlaceholderText](Functions/findAllByPlaceholderText.mdx)
+- [findAllByRole](Functions/findAllByRole.mdx)
+- [findAllByTestId](Functions/findAllByTestId.mdx)
+- [findAllByText](Functions/findAllByText.mdx)
+- [findAllByTitle](Functions/findAllByTitle.mdx)
+- [findByAltText](Functions/findByAltText.mdx)
+- [findByDisplayValue](Functions/findByDisplayValue.mdx)
+- [findByLabelText](Functions/findByLabelText.mdx)
+- [findByPlaceholderText](Functions/findByPlaceholderText.mdx)
+- [findByRole](Functions/findByRole.mdx)
+- [findByTestId](Functions/findByTestId.mdx)
+- [findByText](Functions/findByText.mdx)
+- [findByTitle](Functions/findByTitle.mdx)
+- [getAllByAltText](Functions/getAllByAltText.mdx)
+- [getAllByDisplayValue](Functions/getAllByDisplayValue.mdx)
+- [getAllByLabelText](Functions/getAllByLabelText.mdx)
+- [getAllByPlaceholderText](Functions/getAllByPlaceholderText.mdx)
+- [getAllByRole](Functions/getAllByRole.mdx)
+- [getAllByTestId](Functions/getAllByTestId.mdx)
+- [getAllByText](Functions/getAllByText.mdx)
+- [getAllByTitle](Functions/getAllByTitle.mdx)
+- [getByAltText](Functions/getByAltText.mdx)
+- [getByDisplayValue](Functions/getByDisplayValue.mdx)
+- [getByLabelText](Functions/getByLabelText.mdx)
+- [getByPlaceholderText](Functions/getByPlaceholderText.mdx)
+- [getByRole](Functions/getByRole.mdx)
+- [getByTestId](Functions/getByTestId.mdx)
+- [getByText](Functions/getByText.mdx)
+- [getByTitle](Functions/getByTitle.mdx)
+- [getConfig](Functions/getConfig.mdx)
+- [getDefaultNormalizer](Functions/getDefaultNormalizer.mdx)
+- [getElementError](Functions/getElementError.mdx)
+- [getNodeText](Functions/getNodeText.mdx)
+- [getQueriesForElement](Functions/getQueriesForElement.mdx)
+- [getRoles](Functions/getRoles.mdx)
+- [getSuggestedQuery](Functions/getSuggestedQuery.mdx)
+- [isInaccessible](Functions/isInaccessible.mdx)
+- [logDOM](Functions/logDOM.mdx)
+- [logRoles](Functions/logRoles.mdx)
+- [prettyDOM](Functions/prettyDOM.mdx)
+- [queryAllByAltText](Functions/queryAllByAltText.mdx)
+- [queryAllByDisplayValue](Functions/queryAllByDisplayValue.mdx)
+- [queryAllByLabelText](Functions/queryAllByLabelText.mdx)
+- [queryAllByPlaceholderText](Functions/queryAllByPlaceholderText.mdx)
+- [queryAllByRole](Functions/queryAllByRole.mdx)
+- [queryAllByTestId](Functions/queryAllByTestId.mdx)
+- [queryAllByText](Functions/queryAllByText.mdx)
+- [queryAllByTitle](Functions/queryAllByTitle.mdx)
+- [queryByAltText](Functions/queryByAltText.mdx)
+- [queryByDisplayValue](Functions/queryByDisplayValue.mdx)
+- [queryByLabelText](Functions/queryByLabelText.mdx)
+- [queryByPlaceholderText](Functions/queryByPlaceholderText.mdx)
+- [queryByRole](Functions/queryByRole.mdx)
+- [queryByTestId](Functions/queryByTestId.mdx)
+- [queryByText](Functions/queryByText.mdx)
+- [queryByTitle](Functions/queryByTitle.mdx)
+- [render](Functions/render.mdx)
+- [renderHook](Functions/renderHook.mdx)
+- [waitFor](Functions/waitFor.mdx)
+- [waitForElementToBeRemoved](Functions/waitForElementToBeRemoved.mdx)
+- [~~waitSchedule~~](Functions/waitSchedule.mdx)

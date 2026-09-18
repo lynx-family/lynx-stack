@@ -1,0 +1,26 @@
+# Function: createParser()
+
+```ts
+function createParser(schema: LibraryJSONSchema, rootName?: string): Parser;
+```
+
+Create a parser from a library JSON Schema document.
+Pass `library.toJSONSchema()` to get the schema.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `schema` | [`LibraryJSONSchema`](../interfaces/LibraryJSONSchema.mdx) |
+| `rootName?` | `string` |
+
+## Returns
+
+`Parser`
+
+## Example
+
+```ts
+const parser = createParser(library.toJSONSchema());
+const result = parser.parse(openuiLangString);
+```

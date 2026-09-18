@@ -1,0 +1,41 @@
+# Interface: BundleFilenameContext
+
+The context passed to the [Filename.bundle](Filename.mdx#bundle) function.
+
+## Properties
+
+### entryName?
+
+```ts
+optional entryName?: string;
+```
+
+The name of the entry.
+
+It is `undefined` for lazy bundles, since a lazy bundle name is resolved
+per async chunk (use the `[name]` placeholder in the returned string
+instead).
+
+***
+
+### lazyBundle
+
+```ts
+lazyBundle: boolean;
+```
+
+Whether the filename is being resolved for a lazy bundle (async chunk)
+instead of the main bundle of an entry.
+
+This allows you to control the main bundle and the lazy bundles with a
+single function, without needing a dedicated `lazyBundle` field.
+
+***
+
+### platform
+
+```ts
+platform: string;
+```
+
+The environment (platform) name, e.g. `'lynx'` or `'web'`.

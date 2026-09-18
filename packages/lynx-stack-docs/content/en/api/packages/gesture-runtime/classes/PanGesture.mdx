@@ -1,0 +1,553 @@
+# Class: PanGesture
+
+## Extends
+
+- [`ContinuousGesture`](ContinuousGesture.mdx)\<[`PanGestureConfig`](../interfaces/PanGestureConfig.mdx), [`PanGestureChangeEvent`](../interfaces/PanGestureChangeEvent.mdx)\>
+
+## Constructors
+
+### Constructor
+
+```ts
+new PanGesture(gesture?: BaseGesture<PanGestureConfig, PanGestureChangeEvent>): PanGesture;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `gesture?` | [`BaseGesture`](BaseGesture.mdx)\<[`PanGestureConfig`](../interfaces/PanGestureConfig.mdx), [`PanGestureChangeEvent`](../interfaces/PanGestureChangeEvent.mdx)\> |
+
+#### Returns
+
+`PanGesture`
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`constructor`](ContinuousGesture.mdx#constructor)
+
+## Properties
+
+### \_\_isGesture
+
+```ts
+__isGesture: true = true;
+```
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`__isGesture`](ContinuousGesture.mdx#__isgesture)
+
+***
+
+### callbacks
+
+```ts
+callbacks: BaseGestureCallbacks<PanGestureChangeEvent> & ContinuousGestureCallbacks<PanGestureChangeEvent> = {};
+```
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`callbacks`](ContinuousGesture.mdx#callbacks)
+
+***
+
+### config
+
+```ts
+config: PanGestureConfig;
+```
+
+#### Overrides
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`config`](ContinuousGesture.mdx#config)
+
+***
+
+### continueWith
+
+```ts
+continueWith: BaseGesture<BaseGestureConfig, GestureChangeEvent>[] = [];
+```
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`continueWith`](ContinuousGesture.mdx#continuewith)
+
+***
+
+### distanceSet
+
+```ts
+distanceSet: boolean = false;
+```
+
+***
+
+### execId
+
+```ts
+execId: number;
+```
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`execId`](ContinuousGesture.mdx#execid)
+
+***
+
+### id
+
+```ts
+id: number;
+```
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`id`](ContinuousGesture.mdx#id)
+
+***
+
+### simultaneousWith
+
+```ts
+simultaneousWith: BaseGesture<BaseGestureConfig, GestureChangeEvent>[] = [];
+```
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`simultaneousWith`](ContinuousGesture.mdx#simultaneouswith)
+
+***
+
+### toJSON
+
+```ts
+toJSON: (this: BaseGesture) => Record<string, unknown>;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `this` | [`BaseGesture`](BaseGesture.mdx) |
+
+#### Returns
+
+`Record`\<`string`, `unknown`\>
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`toJSON`](ContinuousGesture.mdx#tojson)
+
+***
+
+### type
+
+```ts
+type: GestureTypeInner = GestureTypeInner.PAN;
+```
+
+#### Overrides
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`type`](ContinuousGesture.mdx#type)
+
+***
+
+### waitFor
+
+```ts
+waitFor: BaseGesture<BaseGestureConfig, GestureChangeEvent>[] = [];
+```
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`waitFor`](ContinuousGesture.mdx#waitfor)
+
+## Methods
+
+### clone()
+
+```ts
+clone(): this;
+```
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`clone`](ContinuousGesture.mdx#clone)
+
+***
+
+### enabled()
+
+```ts
+enabled(enabled: boolean): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `enabled` | `boolean` |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`enabled`](ContinuousGesture.mdx#enabled)
+
+***
+
+### externalContinueWith()
+
+```ts
+externalContinueWith(gesture: GestureKind): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `gesture` | [`GestureKind`](../interfaces/GestureKind.mdx) |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`externalContinueWith`](ContinuousGesture.mdx#externalcontinuewith)
+
+***
+
+### externalSimultaneous()
+
+```ts
+externalSimultaneous(gesture: GestureKind): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `gesture` | [`GestureKind`](../interfaces/GestureKind.mdx) |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`externalSimultaneous`](ContinuousGesture.mdx#externalsimultaneous)
+
+***
+
+### externalWaitFor()
+
+```ts
+externalWaitFor(gesture: GestureKind): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `gesture` | [`GestureKind`](../interfaces/GestureKind.mdx) |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`externalWaitFor`](ContinuousGesture.mdx#externalwaitfor)
+
+***
+
+### minDistance()
+
+```ts
+minDistance(distance: number): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `distance` | `number` |
+
+#### Returns
+
+`this`
+
+***
+
+### onBegin()
+
+```ts
+onBegin(cb: GestureCallback<PanGestureChangeEvent>): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<[`PanGestureChangeEvent`](../interfaces/PanGestureChangeEvent.mdx)\> |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`onBegin`](ContinuousGesture.mdx#onbegin)
+
+***
+
+### onEnd()
+
+```ts
+onEnd(cb: GestureCallback<PanGestureChangeEvent>): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<[`PanGestureChangeEvent`](../interfaces/PanGestureChangeEvent.mdx)\> |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`onEnd`](ContinuousGesture.mdx#onend)
+
+***
+
+### onStart()
+
+```ts
+onStart(cb: GestureCallback<PanGestureChangeEvent>): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<[`PanGestureChangeEvent`](../interfaces/PanGestureChangeEvent.mdx)\> |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`onStart`](ContinuousGesture.mdx#onstart)
+
+***
+
+### onTouchesCancel()
+
+```ts
+onTouchesCancel(cb: GestureCallback<PanGestureChangeEvent>): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<[`PanGestureChangeEvent`](../interfaces/PanGestureChangeEvent.mdx)\> |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`onTouchesCancel`](ContinuousGesture.mdx#ontouchescancel)
+
+***
+
+### onTouchesDown()
+
+```ts
+onTouchesDown(cb: GestureCallback<PanGestureChangeEvent>): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<[`PanGestureChangeEvent`](../interfaces/PanGestureChangeEvent.mdx)\> |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`onTouchesDown`](ContinuousGesture.mdx#ontouchesdown)
+
+***
+
+### onTouchesMove()
+
+```ts
+onTouchesMove(cb: GestureCallback<PanGestureChangeEvent>): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<[`PanGestureChangeEvent`](../interfaces/PanGestureChangeEvent.mdx)\> |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`onTouchesMove`](ContinuousGesture.mdx#ontouchesmove)
+
+***
+
+### onTouchesUp()
+
+```ts
+onTouchesUp(cb: GestureCallback<PanGestureChangeEvent>): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<[`PanGestureChangeEvent`](../interfaces/PanGestureChangeEvent.mdx)\> |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`onTouchesUp`](ContinuousGesture.mdx#ontouchesup)
+
+***
+
+### onUpdate()
+
+```ts
+onUpdate(cb: GestureCallback<PanGestureChangeEvent>): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<[`PanGestureChangeEvent`](../interfaces/PanGestureChangeEvent.mdx)\> |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`onUpdate`](ContinuousGesture.mdx#onupdate)
+
+***
+
+### overrideDefaultMinDistance()
+
+```ts
+overrideDefaultMinDistance(): this;
+```
+
+#### Returns
+
+`this`
+
+***
+
+### serialize()
+
+```ts
+serialize(): Record<string, unknown>;
+```
+
+#### Returns
+
+`Record`\<`string`, `unknown`\>
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`serialize`](ContinuousGesture.mdx#serialize)
+
+***
+
+### toGestureArray()
+
+```ts
+toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[];
+```
+
+#### Returns
+
+[`BaseGesture`](BaseGesture.mdx)\<[`BaseGestureConfig`](../interfaces/BaseGestureConfig.mdx), [`GestureChangeEvent`](../interfaces/GestureChangeEvent.mdx)\>[]
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`toGestureArray`](ContinuousGesture.mdx#togesturearray)
+
+***
+
+### updateCallback()
+
+```ts
+updateCallback(k: keyof BaseGestureCallbacks<TEvent> | "onUpdate", cb: GestureCallback<PanGestureChangeEvent>): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `k` | keyof BaseGestureCallbacks\<TEvent\> \| `"onUpdate"` |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<[`PanGestureChangeEvent`](../interfaces/PanGestureChangeEvent.mdx)\> |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`updateCallback`](ContinuousGesture.mdx#updatecallback)
+
+***
+
+### updateConfig()
+
+```ts
+updateConfig(k: string, v: unknown): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `k` | `string` |
+| `v` | `unknown` |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`ContinuousGesture`](ContinuousGesture.mdx).[`updateConfig`](ContinuousGesture.mdx#updateconfig)

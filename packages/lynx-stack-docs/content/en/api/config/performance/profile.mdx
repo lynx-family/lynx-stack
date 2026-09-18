@@ -1,0 +1,35 @@
+# performance.profile
+
+```ts
+optional profile?: boolean;
+```
+
+
+
+Whether to capture timing information in Lynx runtime integrations such as
+ReactLynx.
+
+## Remarks
+
+A framework includes runtime information using `console.profile` when this
+is enabled.
+
+## Default Value
+
+`true` when `DEBUG=lynx`, otherwise `undefined`
+
+## Example
+
+```ts
+import { defineConfig } from '@rsbuild/core'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginLynx({
+      performance: { profile: true },
+    }),
+  ],
+})
+```
+

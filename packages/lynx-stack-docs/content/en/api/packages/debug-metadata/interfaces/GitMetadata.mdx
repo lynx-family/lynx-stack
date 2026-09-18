@@ -1,0 +1,40 @@
+# Interface: GitMetadata
+
+Git metadata captured at build time.
+
+## Properties
+
+### commit
+
+```ts
+commit: string;
+```
+
+***
+
+### commitUrl
+
+```ts
+commitUrl: string | null;
+```
+
+***
+
+### remoteUrl
+
+```ts
+remoteUrl: string | null;
+```
+
+***
+
+### rootDir
+
+```ts
+rootDir: string | null;
+```
+
+Absolute path of the git worktree root
+(`git rev-parse --show-toplevel`). Consumers use this to resolve
+source-relative paths inside source maps back to filesystem
+locations during reverse symbolication.

@@ -1,0 +1,23 @@
+# Interface: ExternalsPresets
+
+Presets for external bundle dependencies.
+
+## Indexable
+
+```ts
+[presetName: string]: boolean | object | undefined
+```
+
+Additional custom preset flags.
+
+## Properties
+
+### reactlynx?
+
+```ts
+optional reactlynx?: 
+  | boolean
+  | ReactLynxExternalsPresetOptions;
+```
+
+Load the ReactLynx runtime bundle and wire its standard module globals.

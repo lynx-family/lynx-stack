@@ -1,0 +1,17 @@
+[
+  {
+    "type": "file",
+    "name": "functions/normalizeBundlePath",
+    "label": "normalizeBundlePath"
+  },
+  {
+    "type": "file",
+    "name": "functions/pluginExternalBundle",
+    "label": "pluginExternalBundle"
+  },
+  {
+    "type": "file",
+    "name": "variables/builtInExternalsPresetDefinitions",
+    "label": "builtInExternalsPresetDefinitions"
+  }
+]

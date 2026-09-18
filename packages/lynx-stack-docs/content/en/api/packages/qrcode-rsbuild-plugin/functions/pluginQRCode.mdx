@@ -1,0 +1,27 @@
+# Function: pluginQRCode()
+
+```ts
+function pluginQRCode(options?: PluginQRCodeOptions): RsbuildPlugin;
+```
+
+Create a rsbuild plugin for printing QRCode.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `options?` | [`PluginQRCodeOptions`](../interfaces/PluginQRCodeOptions.mdx) |
+
+## Returns
+
+`RsbuildPlugin`
+
+## Example
+
+```ts
+// rsbuild.config.ts
+import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin'
+export default {
+  plugins: [pluginQRCode()],
+}
+```

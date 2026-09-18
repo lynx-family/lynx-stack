@@ -1,0 +1,204 @@
+# Class: ComposedGesture
+
+## Extended by
+
+- [`SimultaneousGesture`](SimultaneousGesture.mdx)
+- [`ExclusiveGesture`](ExclusiveGesture.mdx)
+
+## Implements
+
+- [`GestureKind`](../interfaces/GestureKind.mdx)
+
+## Constructors
+
+### Constructor
+
+```ts
+new ComposedGesture(...gestures: GestureKind[]): ComposedGesture;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| ...`gestures` | [`GestureKind`](../interfaces/GestureKind.mdx)[] |
+
+#### Returns
+
+`ComposedGesture`
+
+## Properties
+
+### \_\_isGesture
+
+```ts
+__isGesture: true = true;
+```
+
+#### Implementation of
+
+[`GestureKind`](../interfaces/GestureKind.mdx).[`__isGesture`](../interfaces/GestureKind.mdx#__isgesture)
+
+***
+
+### continueWith
+
+```ts
+continueWith: BaseGesture<BaseGestureConfig, GestureChangeEvent>[] = [];
+```
+
+#### Implementation of
+
+[`GestureKind`](../interfaces/GestureKind.mdx).[`continueWith`](../interfaces/GestureKind.mdx#continuewith)
+
+***
+
+### gestures
+
+```ts
+gestures: GestureKind[] = [];
+```
+
+***
+
+### panProcessed
+
+```ts
+panProcessed: boolean = false;
+```
+
+***
+
+### simultaneousWith
+
+```ts
+simultaneousWith: BaseGesture<BaseGestureConfig, GestureChangeEvent>[] = [];
+```
+
+#### Implementation of
+
+[`GestureKind`](../interfaces/GestureKind.mdx).[`simultaneousWith`](../interfaces/GestureKind.mdx#simultaneouswith)
+
+***
+
+### toJSON
+
+```ts
+toJSON: (this: ComposedGesture) => Record<string, unknown>;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `this` | `ComposedGesture` |
+
+#### Returns
+
+`Record`\<`string`, `unknown`\>
+
+***
+
+### type
+
+```ts
+type: GestureTypeInner = GestureTypeInner.COMPOSED;
+```
+
+#### Implementation of
+
+[`GestureKind`](../interfaces/GestureKind.mdx).[`type`](../interfaces/GestureKind.mdx#type)
+
+***
+
+### waitFor
+
+```ts
+waitFor: BaseGesture<BaseGestureConfig, GestureChangeEvent>[] = [];
+```
+
+#### Implementation of
+
+[`GestureKind`](../interfaces/GestureKind.mdx).[`waitFor`](../interfaces/GestureKind.mdx#waitfor)
+
+## Methods
+
+### prepare()
+
+```ts
+prepare(): void;
+```
+
+#### Returns
+
+`void`
+
+***
+
+### prepareSingleGesture()
+
+```ts
+prepareSingleGesture(
+   gesture: GestureKind, 
+   simultaneousGestures: BaseGesture<BaseGestureConfig, GestureChangeEvent>[], 
+   waitFor: BaseGesture<BaseGestureConfig, GestureChangeEvent>[]
+): void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `gesture` | [`GestureKind`](../interfaces/GestureKind.mdx) |
+| `simultaneousGestures` | [`BaseGesture`](BaseGesture.mdx)\<[`BaseGestureConfig`](../interfaces/BaseGestureConfig.mdx), [`GestureChangeEvent`](../interfaces/GestureChangeEvent.mdx)\>[] |
+| `waitFor` | [`BaseGesture`](BaseGesture.mdx)\<[`BaseGestureConfig`](../interfaces/BaseGestureConfig.mdx), [`GestureChangeEvent`](../interfaces/GestureChangeEvent.mdx)\>[] |
+
+#### Returns
+
+`void`
+
+***
+
+### processPanDistance()
+
+```ts
+processPanDistance(): void;
+```
+
+If pan gesture has relationship with tap or longPress, its default minDistance should be overridden
+
+#### Returns
+
+`void`
+
+***
+
+### serialize()
+
+```ts
+serialize(): Record<string, unknown>;
+```
+
+#### Returns
+
+`Record`\<`string`, `unknown`\>
+
+#### Implementation of
+
+[`GestureKind`](../interfaces/GestureKind.mdx).[`serialize`](../interfaces/GestureKind.mdx#serialize)
+
+***
+
+### toGestureArray()
+
+```ts
+toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[];
+```
+
+#### Returns
+
+[`BaseGesture`](BaseGesture.mdx)\<[`BaseGestureConfig`](../interfaces/BaseGestureConfig.mdx), [`GestureChangeEvent`](../interfaces/GestureChangeEvent.mdx)\>[]
+
+#### Implementation of
+
+[`GestureKind`](../interfaces/GestureKind.mdx).[`toGestureArray`](../interfaces/GestureKind.mdx#togesturearray)

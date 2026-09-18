@@ -1,0 +1,13 @@
+# 接口: MessageStoreOptions
+
+创建原始 A2UI 消息缓冲区时使用的选项。
+
+## 属性
+
+### initialMessages?
+
+```ts
+optional initialMessages?: readonly ServerToClientMessage[];
+```
+
+可选的初始缓冲区内容。适用于恢复之前的 agent 响应或回放 fixture 消息流。

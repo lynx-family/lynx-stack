@@ -1,0 +1,45 @@
+# 接口: TransformBuiltinAttributeNamesOptions
+
+用于转换内置元素属性名的可序列化规则。
+
+`rename` 中的精确条目优先于 `preserve`，其次是由
+`mode` 选择的兜底行为。
+
+## 属性
+
+### mode?
+
+```ts
+optional mode?: "dash-case" | "mapping-only";
+```
+
+未在 `rename` 或
+`preserve` 中列出的属性名的兜底行为。
+
+`'dash-case'` 还会应用默认的 React 风格事件映射。
+`'mapping-only'` 会保持其余名称不变。
+
+#### 默认值
+
+`'dash-case'`
+
+***
+
+### preserve?
+
+```ts
+optional preserve?: readonly string[];
+```
+
+应保持不变的属性名，除非同时存在精确的 `rename`
+条目。
+
+***
+
+### rename?
+
+```ts
+optional rename?: Readonly<Record<string, string>>;
+```
+
+从源属性名到转换后属性名的精确映射。

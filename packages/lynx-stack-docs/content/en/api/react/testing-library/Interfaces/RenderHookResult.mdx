@@ -1,0 +1,64 @@
+# Interface: RenderHookResult\<Result, Props\>
+
+The result of [renderHook](../Functions/renderHook.mdx)
+
+## Type Parameters
+
+| Type Parameter |
+| ------ |
+| `Result` |
+| `Props` |
+
+## Properties
+
+### rerender
+
+```ts
+rerender: (props?: Props) => void;
+```
+
+Triggers a re-render. The props will be passed to your renderHook callback.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `props?` | `Props` |
+
+#### Returns
+
+`void`
+
+***
+
+### result
+
+```ts
+result: object;
+```
+
+This is a stable reference to the latest value returned by your renderHook
+callback
+
+#### current
+
+```ts
+current: Result;
+```
+
+The value returned by your renderHook callback
+
+***
+
+### unmount
+
+```ts
+unmount: () => void;
+```
+
+Unmounts the test component. This is useful for when you need to test
+any cleanup your useEffects have.
+
+#### Returns
+
+`void`

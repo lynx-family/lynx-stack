@@ -1,0 +1,63 @@
+# Function: createElement()
+
+Creates a ReactLynx element using the snapshot runtime.
+
+## Call Signature
+
+```ts
+function createElement<Type extends keyof IntrinsicElements>(
+   type: Type, 
+   props?: IntrinsicElements[Type] | null, 
+   ...children: ReactNode[]
+): ReactElement<IntrinsicElements[Type], Type>;
+```
+
+Creates an element for a Lynx intrinsic element.
+
+### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `Type` *extends* keyof `IntrinsicElements` |
+
+### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `type` | `Type` |
+| `props?` | `IntrinsicElements`\[`Type`\] \| `null` |
+| ...`children?` | `ReactNode`[] |
+
+### Returns
+
+`ReactElement`\<`IntrinsicElements`\[`Type`\], `Type`\>
+
+## Call Signature
+
+```ts
+function createElement<Props extends object>(
+   type: string | ComponentType<Props>, 
+   props?: Attributes & Props | null, 
+   ...children: ReactNode[]
+): ReactElement<Props>;
+```
+
+Creates an element for a component.
+
+### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `Props` *extends* `object` |
+
+### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `type` | `string` \| `ComponentType`\<`Props`\> |
+| `props?` | `Attributes` & `Props` \| `null` |
+| ...`children?` | `ReactNode`[] |
+
+### Returns
+
+`ReactElement`\<`Props`\>

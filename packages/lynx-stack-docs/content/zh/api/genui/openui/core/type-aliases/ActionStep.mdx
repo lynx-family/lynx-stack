@@ -1,0 +1,30 @@
+# 类型别名: ActionStep
+
+```ts
+type ActionStep = 
+  | {
+  refType: "query" | "mutation";
+  statementId: string;
+  type: "run";
+}
+  | {
+  context?: string;
+  message: string;
+  type: "continue_conversation";
+}
+  | {
+  type: "open_url";
+  url: string;
+}
+  | {
+  target: string;
+  type: "set";
+  valueAST: ASTNode;
+}
+  | {
+  targets: string[];
+  type: "reset";
+};
+```
+
+ActionPlan 中的单个步骤。步骤类型的值与 builtins.ts 中的 ACTION_STEPS 一致（唯一的数据源）。

@@ -1,0 +1,31 @@
+# 函数: useSyncExternalStore()
+
+```ts
+function useSyncExternalStore<Snapshot>(
+   subscribe: (onStoreChange: () => void) => () => void, 
+   getSnapshot: () => Snapshot, 
+   getServerSnapshot?: () => Snapshot
+): Snapshot;
+```
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `Snapshot` |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `subscribe` | (`onStoreChange`: () => `void`) => () => `void` |
+| `getSnapshot` | () => `Snapshot` |
+| `getServerSnapshot?` | () => `Snapshot` |
+
+## 返回
+
+`Snapshot`
+
+## 参阅
+
+[https://github.com/reactwg/react-18/discussions/86](https://github.com/reactwg/react-18/discussions/86)

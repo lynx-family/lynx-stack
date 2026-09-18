@@ -1,0 +1,55 @@
+# 接口: ToolSpec
+
+用于生成提示词的工具 schema，描述 LLM 可以通过 Query()/Mutation() 使用的工具。结构参考了 MCP 的工具 schema（name、description、inputSchema、annotations）。
+
+## 属性
+
+### annotations?
+
+```ts
+optional annotations?: object;
+```
+
+#### destructiveHint?
+
+```ts
+optional destructiveHint?: boolean;
+```
+
+#### readOnlyHint?
+
+```ts
+optional readOnlyHint?: boolean;
+```
+
+***
+
+### description?
+
+```ts
+optional description?: string;
+```
+
+***
+
+### inputSchema
+
+```ts
+inputSchema: Record<string, unknown>;
+```
+
+***
+
+### name
+
+```ts
+name: string;
+```
+
+***
+
+### outputSchema
+
+```ts
+outputSchema: Record<string, unknown>;
+```

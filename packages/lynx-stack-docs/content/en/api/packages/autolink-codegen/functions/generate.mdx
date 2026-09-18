@@ -1,0 +1,19 @@
+# Function: generate()
+
+```ts
+function generate(options?: CodegenOptions): GeneratedFile[];
+```
+
+Builds the generated file contents for a library package: JS facades and platform specs,
+plus the shared C++ sources, registrations, CMake target, iOS wrapper and Lynxtron
+registrations for Node-API and Lynxtron modules.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `options` | [`CodegenOptions`](../interfaces/CodegenOptions.mdx) |
+
+## Returns
+
+[`GeneratedFile`](../interfaces/GeneratedFile.mdx)[]

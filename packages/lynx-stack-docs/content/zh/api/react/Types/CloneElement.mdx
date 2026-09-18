@@ -1,0 +1,31 @@
+# 接口: CloneElement()
+
+ReactLynx `cloneElement` 的调用签名。
+
+```ts
+CloneElement<Props>(
+   element: ReactElement<Props>, 
+   props?: Partial<Props> & Attributes | null, 
+   ...children: ReactNode[]
+): ReactElement<Props>;
+```
+
+克隆一个元素，可以选择替换 props 和 children。
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `Props` |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `element` | `ReactElement`\<`Props`\> |
+| `props?` | `Partial`\<`Props`\> & `Attributes` \| `null` |
+| ...`children?` | `ReactNode`[] |
+
+## 返回
+
+`ReactElement`\<`Props`\>

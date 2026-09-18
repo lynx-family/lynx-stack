@@ -1,0 +1,153 @@
+# 接口: OpenUiRendererRuntimeProps
+
+用于渲染原始 OpenUI 响应文本的 props，包含解析、运行时状态、action 和 query 执行。
+
+## 属性
+
+### initialQueryResults?
+
+```ts
+optional initialQueryResults?: Readonly<Record<string, unknown>>;
+```
+
+预取的 Query 结果，以 Query 赋值名称（statement ID）为键。结果会同步渲染，之后由可选的 toolProvider 重新校验。
+
+***
+
+### initialState?
+
+```ts
+optional initialState?: Record<string, unknown>;
+```
+
+初始的持久化状态。以 $ 开头的键会用于初始化响应式绑定。
+
+***
+
+### isStreaming?
+
+```ts
+optional isStreaming?: boolean;
+```
+
+LLM 是否仍在流式输出；为 true 时禁用交互。
+
+***
+
+### library
+
+```ts
+library: Library;
+```
+
+由 createOpenUiLibrary() 创建的组件库。
+
+***
+
+### onAction?
+
+```ts
+optional onAction?: (event: ActionEvent) => void;
+```
+
+组件触发宿主 action 时的回调。
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `event` | [`ActionEvent`](ActionEvent.mdx) |
+
+#### 返回
+
+`void`
+
+***
+
+### onError?
+
+```ts
+optional onError?: (errors: OpenUIError[]) => void;
+```
+
+结构化的解析器/运行时/query 错误，用于纠错循环。
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `errors` | [`OpenUIError`](OpenUIError.mdx)[] |
+
+#### 返回
+
+`void`
+
+***
+
+### onParseResult?
+
+```ts
+optional onParseResult?: (result: ParseResult | null) => void;
+```
+
+原始解析结果每次变化时调用。
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `result` | [`ParseResult`](ParseResult.mdx) \| `null` |
+
+#### 返回
+
+`void`
+
+***
+
+### onStateUpdate?
+
+```ts
+optional onStateUpdate?: (state: Record<string, unknown>) => void;
+```
+
+$variables 或表单状态每次变化时调用。
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `state` | `Record`\<`string`, `unknown`\> |
+
+#### 返回
+
+`void`
+
+***
+
+### queryLoader?
+
+```ts
+optional queryLoader?: ReactNode;
+```
+
+Query() 调用进行中时显示的自定义加载节点。
+
+***
+
+### response
+
+```ts
+response: string | null;
+```
+
+原始 openui-lang 响应文本。传入后启用 v0.5 运行时特性。
+
+***
+
+### toolProvider?
+
+```ts
+optional toolProvider?: ToolProviderInput;
+```
+
+用于 Query()/Mutation() 的工具提供者：函数映射或 MCP 客户端。

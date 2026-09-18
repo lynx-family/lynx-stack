@@ -1,0 +1,17 @@
+# 类型别名: RpcEndpoint\<Parameters *extends* `any`[], Return\>
+
+```ts
+type RpcEndpoint<Parameters extends any[], Return> = 
+  | RpcEndpointSyncVoid<Parameters>
+  | RpcEndpointSync<Parameters, Return>
+  | RpcEndpointAsync<Parameters, Return>
+  | RpcEndpointAsyncVoid<Parameters>
+| RpcEndpointAsyncWithTransfer<Parameters, Return>;
+```
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `Parameters` *extends* `any`[] |
+| `Return` |

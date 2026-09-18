@@ -1,0 +1,935 @@
+# Class: List\<TData\>
+
+## Type Parameters
+
+| Type Parameter |
+| ------ |
+| `TData` |
+
+## Constructors
+
+### Constructor
+
+```ts
+new List<TData>(): List<TData>;
+```
+
+#### Returns
+
+`List`\<`TData`\>
+
+## Accessors
+
+### first
+
+#### Get Signature
+
+```ts
+get first(): TData | null;
+```
+
+##### Returns
+
+`TData` \| `null`
+
+***
+
+### isEmpty
+
+#### Get Signature
+
+```ts
+get isEmpty(): boolean;
+```
+
+##### Returns
+
+`boolean`
+
+***
+
+### last
+
+#### Get Signature
+
+```ts
+get last(): TData | null;
+```
+
+##### Returns
+
+`TData` \| `null`
+
+***
+
+### size
+
+#### Get Signature
+
+```ts
+get size(): number;
+```
+
+##### Returns
+
+`number`
+
+## Methods
+
+### \[iterator\]()
+
+```ts
+iterator: IterableIterator<TData>;
+```
+
+#### Returns
+
+`IterableIterator`\<`TData`\>
+
+***
+
+### append()
+
+```ts
+append(item: ListItem<TData>): List<TData>;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `item` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+
+#### Returns
+
+`List`\<`TData`\>
+
+***
+
+### appendData()
+
+```ts
+appendData(data: TData): List<TData>;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `data` | `TData` |
+
+#### Returns
+
+`List`\<`TData`\>
+
+***
+
+### appendList()
+
+```ts
+appendList(list: List<TData>): List<TData>;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `list` | `List`\<`TData`\> |
+
+#### Returns
+
+`List`\<`TData`\>
+
+***
+
+### clear()
+
+```ts
+clear(): void;
+```
+
+#### Returns
+
+`void`
+
+***
+
+### copy()
+
+```ts
+copy(): List<TData>;
+```
+
+#### Returns
+
+`List`\<`TData`\>
+
+***
+
+### createItem()
+
+```ts
+createItem(data: TData): ListItem<TData>;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `data` | `TData` |
+
+#### Returns
+
+[`ListItem`](../interfaces/ListItem.mdx)\<`TData`\>
+
+***
+
+### filter()
+
+#### Call Signature
+
+```ts
+filter<TContext, TResult>(fn: FilterFn<TData, TResult, TContext>, context: TContext): List<TResult>;
+```
+
+##### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `TContext` |
+| `TResult` |
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | [`FilterFn`](../type-aliases/FilterFn.mdx)\<`TData`, `TResult`, `TContext`\> |
+| `context` | `TContext` |
+
+##### Returns
+
+`List`\<`TResult`\>
+
+#### Call Signature
+
+```ts
+filter<TResult>(fn: FilterFn<TData, TResult>): List<TResult>;
+```
+
+##### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `TResult` |
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | [`FilterFn`](../type-aliases/FilterFn.mdx)\<`TData`, `TResult`\> |
+
+##### Returns
+
+`List`\<`TResult`\>
+
+#### Call Signature
+
+```ts
+filter<TContext>(fn: IteratorFn<TData, boolean, TContext>, context: TContext): List<TData>;
+```
+
+##### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `TContext` |
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `boolean`, `TContext`\> |
+| `context` | `TContext` |
+
+##### Returns
+
+`List`\<`TData`\>
+
+#### Call Signature
+
+```ts
+filter(fn: IteratorFn<TData, boolean>): List<TData>;
+```
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `boolean`\> |
+
+##### Returns
+
+`List`\<`TData`\>
+
+***
+
+### forEach()
+
+#### Call Signature
+
+```ts
+forEach<TContext>(fn: IteratorFn<TData, void, TContext>, context: TContext): void;
+```
+
+##### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `TContext` |
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `void`, `TContext`\> |
+| `context` | `TContext` |
+
+##### Returns
+
+`void`
+
+#### Call Signature
+
+```ts
+forEach(fn: IteratorFn<TData, void>): void;
+```
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `void`\> |
+
+##### Returns
+
+`void`
+
+***
+
+### forEachRight()
+
+#### Call Signature
+
+```ts
+forEachRight<TContext>(fn: IteratorFn<TData, void, TContext>, context: TContext): void;
+```
+
+##### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `TContext` |
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `void`, `TContext`\> |
+| `context` | `TContext` |
+
+##### Returns
+
+`void`
+
+#### Call Signature
+
+```ts
+forEachRight(fn: IteratorFn<TData, void>): void;
+```
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `void`\> |
+
+##### Returns
+
+`void`
+
+***
+
+### fromArray()
+
+```ts
+fromArray(array: TData[]): List<TData>;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `array` | `TData`[] |
+
+#### Returns
+
+`List`\<`TData`\>
+
+***
+
+### insert()
+
+```ts
+insert(item: ListItem<TData>, before?: ListItem<TData> | null): List<TData>;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `item` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+| `before?` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> \| `null` |
+
+#### Returns
+
+`List`\<`TData`\>
+
+***
+
+### insertData()
+
+```ts
+insertData(data: TData, before: ListItem<TData>): List<TData>;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `data` | `TData` |
+| `before` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+
+#### Returns
+
+`List`\<`TData`\>
+
+***
+
+### insertList()
+
+```ts
+insertList(list: List<TData>, before: ListItem<TData>): List<TData>;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `list` | `List`\<`TData`\> |
+| `before` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+
+#### Returns
+
+`List`\<`TData`\>
+
+***
+
+### map()
+
+#### Call Signature
+
+```ts
+map<TContext, TResult>(fn: IteratorFn<TData, TResult, TContext>, context: TContext): List<TResult>;
+```
+
+##### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `TContext` |
+| `TResult` |
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `TResult`, `TContext`\> |
+| `context` | `TContext` |
+
+##### Returns
+
+`List`\<`TResult`\>
+
+#### Call Signature
+
+```ts
+map<TResult>(fn: IteratorFn<TData, TResult>): List<TResult>;
+```
+
+##### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `TResult` |
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `TResult`\> |
+
+##### Returns
+
+`List`\<`TResult`\>
+
+***
+
+### nextUntil()
+
+#### Call Signature
+
+```ts
+nextUntil<TContext>(
+   start: ListItem<TData>, 
+   fn: IteratorFn<TData, boolean, TContext>, 
+   context: TContext
+): void;
+```
+
+##### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `TContext` |
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `start` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `boolean`, `TContext`\> |
+| `context` | `TContext` |
+
+##### Returns
+
+`void`
+
+#### Call Signature
+
+```ts
+nextUntil(start: ListItem<TData>, fn: IteratorFn<TData, boolean>): void;
+```
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `start` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `boolean`\> |
+
+##### Returns
+
+`void`
+
+***
+
+### pop()
+
+```ts
+pop(): ListItem<TData> | null;
+```
+
+#### Returns
+
+[`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> \| `null`
+
+***
+
+### prepend()
+
+```ts
+prepend(item: ListItem<TData>): List<TData>;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `item` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+
+#### Returns
+
+`List`\<`TData`\>
+
+***
+
+### prependData()
+
+```ts
+prependData(data: TData): List<TData>;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `data` | `TData` |
+
+#### Returns
+
+`List`\<`TData`\>
+
+***
+
+### prependList()
+
+```ts
+prependList(list: List<TData>): List<TData>;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `list` | `List`\<`TData`\> |
+
+#### Returns
+
+`List`\<`TData`\>
+
+***
+
+### prevUntil()
+
+#### Call Signature
+
+```ts
+prevUntil<TContext>(
+   start: ListItem<TData>, 
+   fn: IteratorFn<TData, boolean, TContext>, 
+   context: TContext
+): void;
+```
+
+##### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `TContext` |
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `start` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `boolean`, `TContext`\> |
+| `context` | `TContext` |
+
+##### Returns
+
+`void`
+
+#### Call Signature
+
+```ts
+prevUntil(start: ListItem<TData>, fn: IteratorFn<TData, boolean>): void;
+```
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `start` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `boolean`\> |
+
+##### Returns
+
+`void`
+
+***
+
+### push()
+
+```ts
+push(item: TData): void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `item` | `TData` |
+
+#### Returns
+
+`void`
+
+***
+
+### reduce()
+
+#### Call Signature
+
+```ts
+reduce<TValue, TContext>(
+   fn: ReduceFn<TData, TValue, TContext>, 
+   initialValue: TValue, 
+   context: TContext
+): TValue;
+```
+
+##### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `TValue` |
+| `TContext` |
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | [`ReduceFn`](../type-aliases/ReduceFn.mdx)\<`TData`, `TValue`, `TContext`\> |
+| `initialValue` | `TValue` |
+| `context` | `TContext` |
+
+##### Returns
+
+`TValue`
+
+#### Call Signature
+
+```ts
+reduce<TValue>(fn: ReduceFn<TData, TValue>, initialValue: TValue): TValue;
+```
+
+##### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `TValue` |
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | [`ReduceFn`](../type-aliases/ReduceFn.mdx)\<`TData`, `TValue`\> |
+| `initialValue` | `TValue` |
+
+##### Returns
+
+`TValue`
+
+***
+
+### reduceRight()
+
+#### Call Signature
+
+```ts
+reduceRight<TValue, TContext>(
+   fn: ReduceFn<TData, TValue, TContext>, 
+   initialValue: TValue, 
+   context: TContext
+): TValue;
+```
+
+##### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `TValue` |
+| `TContext` |
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | [`ReduceFn`](../type-aliases/ReduceFn.mdx)\<`TData`, `TValue`, `TContext`\> |
+| `initialValue` | `TValue` |
+| `context` | `TContext` |
+
+##### Returns
+
+`TValue`
+
+#### Call Signature
+
+```ts
+reduceRight<TValue>(fn: ReduceFn<TData, TValue>, initialValue: TValue): TValue;
+```
+
+##### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `TValue` |
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | [`ReduceFn`](../type-aliases/ReduceFn.mdx)\<`TData`, `TValue`\> |
+| `initialValue` | `TValue` |
+
+##### Returns
+
+`TValue`
+
+***
+
+### remove()
+
+```ts
+remove(item: ListItem<TData>): ListItem<TData>;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `item` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+
+#### Returns
+
+[`ListItem`](../interfaces/ListItem.mdx)\<`TData`\>
+
+***
+
+### replace()
+
+```ts
+replace(oldItem: ListItem<TData>, newItemOrList: List<TData> | ListItem<TData>): void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `oldItem` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+| `newItemOrList` | `List`\<`TData`\> \| [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+
+#### Returns
+
+`void`
+
+***
+
+### shift()
+
+```ts
+shift(): ListItem<TData> | null;
+```
+
+#### Returns
+
+[`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> \| `null`
+
+***
+
+### some()
+
+#### Call Signature
+
+```ts
+some<TContext>(fn: IteratorFn<TData, boolean, TContext>, context: TContext): boolean;
+```
+
+##### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `TContext` |
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `boolean`, `TContext`\> |
+| `context` | `TContext` |
+
+##### Returns
+
+`boolean`
+
+#### Call Signature
+
+```ts
+some(fn: IteratorFn<TData, boolean>): boolean;
+```
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `fn` | [`IteratorFn`](../type-aliases/IteratorFn.mdx)\<`TData`, `boolean`\> |
+
+##### Returns
+
+`boolean`
+
+***
+
+### toArray()
+
+```ts
+toArray(): TData[];
+```
+
+#### Returns
+
+`TData`[]
+
+***
+
+### toJSON()
+
+```ts
+toJSON(): TData[];
+```
+
+#### Returns
+
+`TData`[]
+
+***
+
+### unshift()
+
+```ts
+unshift(data: TData): void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `data` | `TData` |
+
+#### Returns
+
+`void`
+
+***
+
+### createItem()
+
+```ts
+static createItem<T>(data: T): ListItem<T>;
+```
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `T` |
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `data` | `T` |
+
+#### Returns
+
+[`ListItem`](../interfaces/ListItem.mdx)\<`T`\>

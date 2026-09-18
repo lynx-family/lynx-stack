@@ -1,0 +1,11 @@
+# Type Alias: DefinedComponent\<T *extends* `$ZodObject` = `$ZodObject`\>
+
+```ts
+type DefinedComponent<T extends $ZodObject = $ZodObject> = CoreDefinedComponent<T, ComponentRenderer<z.infer<T>>>;
+```
+
+## Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `T` *extends* `$ZodObject` | `$ZodObject` |

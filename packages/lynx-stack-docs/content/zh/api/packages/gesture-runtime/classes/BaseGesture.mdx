@@ -1,0 +1,426 @@
+# 抽象 类: BaseGesture\<TConfig *extends* [`BaseGestureConfig`](../interfaces/BaseGestureConfig.mdx) = [`BaseGestureConfig`](../interfaces/BaseGestureConfig.mdx), TEvent *extends* [`GestureChangeEvent`](../interfaces/GestureChangeEvent.mdx) = [`GestureChangeEvent`](../interfaces/GestureChangeEvent.mdx)\>
+
+## 继承于
+
+- [`ContinuousGesture`](ContinuousGesture.mdx)
+- [`TapGesture`](TapGesture.mdx)
+- [`LongPressGesture`](LongPressGesture.mdx)
+
+## 类型参数
+
+| 类型参数 | 默认类型 |
+| ------ | ------ |
+| `TConfig` *extends* [`BaseGestureConfig`](../interfaces/BaseGestureConfig.mdx) | [`BaseGestureConfig`](../interfaces/BaseGestureConfig.mdx) |
+| `TEvent` *extends* [`GestureChangeEvent`](../interfaces/GestureChangeEvent.mdx) | [`GestureChangeEvent`](../interfaces/GestureChangeEvent.mdx) |
+
+## 实现
+
+- [`GestureKind`](../interfaces/GestureKind.mdx)
+
+## 构造函数
+
+### 构造函数
+
+```ts
+new BaseGesture<TConfig extends BaseGestureConfig = BaseGestureConfig, TEvent extends GestureChangeEvent = GestureChangeEvent>(gesture?: BaseGesture<TConfig, TEvent>): BaseGesture<TConfig, TEvent>;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `gesture?` | `BaseGesture`\<`TConfig`, `TEvent`\> |
+
+#### 返回
+
+`BaseGesture`\<`TConfig`, `TEvent`\>
+
+## 属性
+
+### \_\_isGesture
+
+```ts
+__isGesture: true = true;
+```
+
+#### 实现了
+
+[`GestureKind`](../interfaces/GestureKind.mdx).[`__isGesture`](../interfaces/GestureKind.mdx#__isgesture)
+
+***
+
+### callbacks
+
+```ts
+callbacks: BaseGestureCallbacks<TEvent> = {};
+```
+
+***
+
+### config
+
+```ts
+config: TConfig;
+```
+
+***
+
+### continueWith
+
+```ts
+continueWith: BaseGesture<BaseGestureConfig, GestureChangeEvent>[] = [];
+```
+
+#### 实现了
+
+[`GestureKind`](../interfaces/GestureKind.mdx).[`continueWith`](../interfaces/GestureKind.mdx#continuewith)
+
+***
+
+### execId
+
+```ts
+execId: number;
+```
+
+***
+
+### id
+
+```ts
+id: number;
+```
+
+***
+
+### simultaneousWith
+
+```ts
+simultaneousWith: BaseGesture<BaseGestureConfig, GestureChangeEvent>[] = [];
+```
+
+#### 实现了
+
+[`GestureKind`](../interfaces/GestureKind.mdx).[`simultaneousWith`](../interfaces/GestureKind.mdx#simultaneouswith)
+
+***
+
+### toJSON
+
+```ts
+toJSON: (this: BaseGesture) => Record<string, unknown>;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `this` | `BaseGesture` |
+
+#### 返回
+
+`Record`\<`string`, `unknown`\>
+
+***
+
+### type
+
+```ts
+abstract type: GestureTypeInner;
+```
+
+#### 实现了
+
+[`GestureKind`](../interfaces/GestureKind.mdx).[`type`](../interfaces/GestureKind.mdx#type)
+
+***
+
+### waitFor
+
+```ts
+waitFor: BaseGesture<BaseGestureConfig, GestureChangeEvent>[] = [];
+```
+
+#### 实现了
+
+[`GestureKind`](../interfaces/GestureKind.mdx).[`waitFor`](../interfaces/GestureKind.mdx#waitfor)
+
+## 方法
+
+### clone()
+
+```ts
+clone(): this;
+```
+
+#### 返回
+
+`this`
+
+***
+
+### enabled()
+
+```ts
+enabled(enabled: boolean): this;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `enabled` | `boolean` |
+
+#### 返回
+
+`this`
+
+***
+
+### externalContinueWith()
+
+```ts
+externalContinueWith(gesture: GestureKind): this;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `gesture` | [`GestureKind`](../interfaces/GestureKind.mdx) |
+
+#### 返回
+
+`this`
+
+***
+
+### externalSimultaneous()
+
+```ts
+externalSimultaneous(gesture: GestureKind): this;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `gesture` | [`GestureKind`](../interfaces/GestureKind.mdx) |
+
+#### 返回
+
+`this`
+
+***
+
+### externalWaitFor()
+
+```ts
+externalWaitFor(gesture: GestureKind): this;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `gesture` | [`GestureKind`](../interfaces/GestureKind.mdx) |
+
+#### 返回
+
+`this`
+
+***
+
+### onBegin()
+
+```ts
+onBegin(cb: GestureCallback<TEvent>): this;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<`TEvent`\> |
+
+#### 返回
+
+`this`
+
+***
+
+### onEnd()
+
+```ts
+onEnd(cb: GestureCallback<TEvent>): this;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<`TEvent`\> |
+
+#### 返回
+
+`this`
+
+***
+
+### onStart()
+
+```ts
+onStart(cb: GestureCallback<TEvent>): this;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<`TEvent`\> |
+
+#### 返回
+
+`this`
+
+***
+
+### onTouchesCancel()
+
+```ts
+onTouchesCancel(cb: GestureCallback<TEvent>): this;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<`TEvent`\> |
+
+#### 返回
+
+`this`
+
+***
+
+### onTouchesDown()
+
+```ts
+onTouchesDown(cb: GestureCallback<TEvent>): this;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<`TEvent`\> |
+
+#### 返回
+
+`this`
+
+***
+
+### onTouchesMove()
+
+```ts
+onTouchesMove(cb: GestureCallback<TEvent>): this;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<`TEvent`\> |
+
+#### 返回
+
+`this`
+
+***
+
+### onTouchesUp()
+
+```ts
+onTouchesUp(cb: GestureCallback<TEvent>): this;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<`TEvent`\> |
+
+#### 返回
+
+`this`
+
+***
+
+### serialize()
+
+```ts
+serialize(): Record<string, unknown>;
+```
+
+#### 返回
+
+`Record`\<`string`, `unknown`\>
+
+#### 实现了
+
+[`GestureKind`](../interfaces/GestureKind.mdx).[`serialize`](../interfaces/GestureKind.mdx#serialize)
+
+***
+
+### toGestureArray()
+
+```ts
+toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[];
+```
+
+#### 返回
+
+`BaseGesture`\<[`BaseGestureConfig`](../interfaces/BaseGestureConfig.mdx), [`GestureChangeEvent`](../interfaces/GestureChangeEvent.mdx)\>[]
+
+#### 实现了
+
+[`GestureKind`](../interfaces/GestureKind.mdx).[`toGestureArray`](../interfaces/GestureKind.mdx#togesturearray)
+
+***
+
+### updateCallback()
+
+```ts
+updateCallback(k: keyof BaseGestureCallbacks<TEvent>, cb: GestureCallback<TEvent>): this;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `k` | keyof [`BaseGestureCallbacks`](../interfaces/BaseGestureCallbacks.mdx)\<`TEvent`\> |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<`TEvent`\> |
+
+#### 返回
+
+`this`
+
+***
+
+### updateConfig()
+
+```ts
+updateConfig(k: string, v: unknown): this;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `k` | `string` |
+| `v` | `unknown` |
+
+#### 返回
+
+`this`

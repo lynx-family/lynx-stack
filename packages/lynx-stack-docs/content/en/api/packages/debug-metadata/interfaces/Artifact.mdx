@@ -1,0 +1,87 @@
+# Interface: Artifact
+
+One artifact produced by the build that carries at least one debug
+data source.
+
+Identity is `(filename, tasmSection)`:
+  - `filename` is the asset basename (e.g. `main-thread.js`,
+    `background.fd311de1.js`, `main.css`).
+  - `tasmSection` is the artifact's location inside `tasm.json` and
+    disambiguates artifacts that share a filename pattern but live in
+    different sections.
+
+`tasmSection` is a path array of nested-object segments because raw
+keys (especially under `customSections`) may themselves contain dots
+and cannot be safely collapsed into a dotted string. Examples:
+
+  - `['lepusCode', 'root']`        main-thread.js
+  - `['lepusCode', 'chunks', '0']` async main-thread chunk
+  - `['manifest', '/<asset-name>']` background JS bundle
+  - `['customSections', 'data.v2']` custom section whose key has a dot
+  - `['css']`                      a CSS artifact
+
+## Properties
+
+### debugSources
+
+```ts
+debugSources: DebugSource[];
+```
+
+Debug sources for this artifact, ordered to match the
+reverse-symbolication decode chain. A consumer that starts with a
+runtime location and wants to recover the original source iterates
+this list left-to-right:
+
+1. `bytecode-debug-info` (if present) maps the bytecode PC offset
+   back to the encoded JS source's `(line, column)`.
+2. `source-map` then maps that `(line, column)` back to the
+   original authored file.
+
+***
+
+### filename
+
+```ts
+filename: string;
+```
+
+The name this artifact is addressed by: the emitted file's basename, or
+the section name when the bundle carries it as a custom section.
+
+***
+
+### kind
+
+```ts
+kind: "main-thread" | "background" | "css";
+```
+
+Which encoder bucket this asset belongs to in `tasm.json`:
+
+- `main-thread` — JS that runs on the lepusNG main thread (compiled
+  into the `lepusCode` section).
+- `background` — JS that runs on the background JS engine (lives in
+  the `manifest` section).
+- `css` — extracted CSS chunk (lives in the `css` section).
+
+***
+
+### path
+
+```ts
+path: string;
+```
+
+Bundler-relative path of the emitted asset itself (e.g.
+`.lynx/main/main-thread.js`). Distinct from
+[SourceMapDebugSource.path](SourceMapDebugSource.mdx#path), which points at the
+sibling `.map` file.
+
+***
+
+### tasmSection?
+
+```ts
+optional tasmSection?: string[];
+```

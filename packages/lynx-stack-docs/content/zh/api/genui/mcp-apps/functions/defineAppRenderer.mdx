@@ -1,0 +1,23 @@
+# 函数: defineAppRenderer()
+
+```ts
+function defineAppRenderer<TResult>(definition: AppRendererDefinition<TResult>): AppRenderer;
+```
+
+定义一个渲染器，并在声明处保留其结果类型。
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `TResult` |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `definition` | [`AppRendererDefinition`](../interfaces/AppRendererDefinition.mdx)\<`TResult`\> |
+
+## 返回
+
+[`AppRenderer`](../interfaces/AppRenderer.mdx)

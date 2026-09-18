@@ -1,0 +1,23 @@
+[
+  {
+    "type": "dir",
+    "name": "core",
+    "label": "core",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "explicit",
+    "label": "explicit",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "prompt",
+    "label": "prompt",
+    "collapsible": true,
+    "collapsed": true
+  }
+]

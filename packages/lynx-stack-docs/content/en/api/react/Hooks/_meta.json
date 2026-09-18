@@ -1,0 +1,20 @@
+[
+  "useCallback",
+  "useContext",
+  "useDebugValue",
+  "useEffect",
+  "useErrorBoundary",
+  "useGlobalProps",
+  "useGlobalPropsChanged",
+  "useImperativeHandle",
+  "useInitData",
+  "useInitDataChanged",
+  "useLynxGlobalEventListener",
+  "useMainThreadRef",
+  "useMemo",
+  "useReducer",
+  "useRef",
+  "useState",
+  "useSyncExternalStore",
+  "useLayoutEffect"
+]

@@ -1,0 +1,12 @@
+# Interface: LibraryJSONSchema
+
+The JSON Schema document produced by `library.toJSONSchema()`.
+All component schemas live in `$defs`, keyed by component name.
+
+## Properties
+
+### $defs?
+
+```ts
+optional $defs?: Record<string, JSONSchemaDef>;
+```

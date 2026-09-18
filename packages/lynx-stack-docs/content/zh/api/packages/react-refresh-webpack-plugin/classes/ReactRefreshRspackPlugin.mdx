@@ -1,0 +1,106 @@
+# 类: ReactRefreshRspackPlugin
+
+ReactRefreshRspackPlugin 使 ReactLynx 中可以使用 fast refresh。
+
+## 示例
+
+```js
+// rspack.config.js
+import { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'
+export default {
+  module: {
+    rules: [
+      {
+        test: /\.[jt]sx?$/,
+        exclude: [
+          /node_modules/,
+          /@lynx-js/,
+          /react-refresh/,
+          /compiler-nodiff-runtime3/,
+          ReactRefreshRspackPlugin.loader,
+        ],
+        use: [ReactRefreshRspackPlugin.loader],
+      },
+    ],
+  },
+  plugins: [new ReactRefreshRspackPlugin()],
+}
+```
+
+## 构造函数
+
+### 构造函数
+
+```ts
+new ReactRefreshRspackPlugin(options?: ReactRefreshRspackPluginOptions): ReactRefreshRspackPlugin;
+```
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `options` | [`ReactRefreshRspackPluginOptions`](../interfaces/ReactRefreshRspackPluginOptions.mdx) | react refresh 的选项。 |
+
+#### 返回
+
+`ReactRefreshRspackPlugin`
+
+## 属性
+
+### loader
+
+```ts
+static loader: string;
+```
+
+react refresh 所用的 loader。
+
+#### 备注
+
+请注意应忽略 react 的运行时部分。参见下方示例：
+
+#### 示例
+
+```js
+// rspack.config.js
+import { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'
+import { LAYERS } from '@lynx-js/react-webpack-plugin'
+
+export default {
+  module: {
+    rules: [
+      {
+        issuerLayer: LAYERS.BACKGROUND,
+        test: /\.[jt]sx?$/,
+        exclude: [
+          /node_modules/,
+          /@lynx-js/react/,
+          ReactRefreshRspackPlugin.loader,
+        ],
+        use: [ReactRefreshRspackPlugin.loader],
+      },
+    ],
+  },
+  plugins: [new ReactRefreshRspackPlugin()],
+}
+```
+
+## 方法
+
+### apply()
+
+```ts
+apply(compiler: Compiler): void;
+```
+
+rspack 插件的入口点。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `compiler` | `Compiler` | rspack 编译器 |
+
+#### 返回
+
+`void`

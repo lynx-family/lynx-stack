@@ -1,0 +1,169 @@
+# Interface: ByRoleOptions
+
+## Properties
+
+### busy?
+
+```ts
+optional busy?: boolean;
+```
+
+If true only includes elements in the query set that are marked as
+busy in the accessibility tree, i.e., `aria-busy="true"`
+
+***
+
+### checked?
+
+```ts
+optional checked?: boolean;
+```
+
+If true only includes elements in the query set that are marked as
+checked in the accessibility tree, i.e., `aria-checked="true"`
+
+***
+
+### current?
+
+```ts
+optional current?: string | boolean;
+```
+
+Filters elements by their `aria-current` state. `true` and `false` match `aria-current="true"` and `aria-current="false"` (as well as a missing `aria-current` attribute) respectively.
+
+***
+
+### description?
+
+```ts
+optional description?: 
+  | string
+  | RegExp
+  | ((accessibleDescription: string, element: Element) => boolean);
+```
+
+Only considers elements with the specified accessible description.
+
+***
+
+### expanded?
+
+```ts
+optional expanded?: boolean;
+```
+
+If true only includes elements in the query set that are marked as
+expanded in the accessibility tree, i.e., `aria-expanded="true"`
+
+***
+
+### hidden?
+
+```ts
+optional hidden?: boolean;
+```
+
+If true includes elements in the query set that are usually excluded from
+the accessibility tree. `role="none"` or `role="presentation"` are included
+in either case.
+
+***
+
+### level?
+
+```ts
+optional level?: number;
+```
+
+Includes elements with the `"heading"` role matching the indicated level,
+either by the semantic HTML heading elements `<h1>-<h6>` or matching
+the `aria-level` attribute.
+
+***
+
+### name?
+
+```ts
+optional name?: 
+  | string
+  | RegExp
+  | ((accessibleName: string, element: Element) => boolean);
+```
+
+Only considers elements with the specified accessible name.
+
+***
+
+### pressed?
+
+```ts
+optional pressed?: boolean;
+```
+
+If true only includes elements in the query set that are marked as
+pressed in the accessibility tree, i.e., `aria-pressed="true"`
+
+***
+
+### queryFallbacks?
+
+```ts
+optional queryFallbacks?: boolean;
+```
+
+Includes every role used in the `role` attribute
+For example *ByRole('progressbar', \{queryFallbacks: true\})` will find <div role="meter progressbar">`.
+
+***
+
+### selected?
+
+```ts
+optional selected?: boolean;
+```
+
+If true only includes elements in the query set that are marked as
+selected in the accessibility tree, i.e., `aria-selected="true"`
+
+***
+
+### suggest?
+
+```ts
+optional suggest?: boolean;
+```
+
+suppress suggestions for a specific query
+
+***
+
+### value?
+
+```ts
+optional value?: object;
+```
+
+#### max?
+
+```ts
+optional max?: number;
+```
+
+#### min?
+
+```ts
+optional min?: number;
+```
+
+#### now?
+
+```ts
+optional now?: number;
+```
+
+#### text?
+
+```ts
+optional text?: Matcher;
+```

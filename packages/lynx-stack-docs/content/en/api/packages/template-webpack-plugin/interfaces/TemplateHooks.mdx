@@ -1,0 +1,110 @@
+# Interface: TemplateHooks
+
+To allow other plugins to alter the Template, this plugin executes
+[tapable](https://github.com/webpack/tapable) hooks.
+
+## Example
+
+```js
+class MyPlugin {
+  apply(compiler) {
+    compiler.hooks.compilation.tap("MyPlugin", (compilation) => {
+      console.log("The compiler is starting a new compilation...");
+
+      LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(
+        "MyPlugin", // <-- Set a meaningful name here for stacktraces
+        (data, cb) => {
+          // Manipulate the content
+          modifyTemplate(data.template)
+          // Tell webpack to move on
+          cb(null, data);
+        },
+      );
+    });
+  }
+}
+```
+
+## Properties
+
+### afterEmit
+
+```ts
+afterEmit: AsyncSeriesWaterfallHook<{
+  outputName: string;
+}>;
+```
+
+**`Alpha`**
+
+Called after the template is emitted.
+
+***
+
+### asyncChunkName
+
+```ts
+asyncChunkName: SyncWaterfallHook<string>;
+```
+
+**`Alpha`**
+
+Get the real name of an async chunk. The files with the same `asyncChunkName` will be placed in the same template.
+
+***
+
+### beforeEmit
+
+```ts
+beforeEmit: AsyncSeriesWaterfallHook<{
+  chunkGroups: ChunkGroup[];
+  cssChunks: Asset[];
+  cssDiagnostics?: string;
+  debugInfo: string;
+  finalEncodeOptions: EncodeOptions;
+  mainThreadAssets: Asset[];
+  outputName: string;
+  template: Buffer;
+}>;
+```
+
+**`Alpha`**
+
+Called before the template is emitted. Can be used to modify the template.
+
+***
+
+### beforeEncode
+
+```ts
+beforeEncode: AsyncSeriesWaterfallHook<{
+  chunkGroups: ChunkGroup[];
+  encodeData: EncodeRawData;
+  filenameTemplate: string;
+  intermediate: string;
+  intermediateAssets: string[];
+}>;
+```
+
+**`Alpha`**
+
+Called before the encode process. Can be used to modify the encode options.
+
+***
+
+### encode
+
+```ts
+encode: AsyncSeriesBailHook<{
+  encodeOptions: EncodeOptions;
+  intermediate?: string;
+}, {
+  buffer: Buffer;
+  cssDiagnostics?: string;
+  debugInfo: string;
+}>;
+```
+
+**`Alpha`**
+
+Call the encode process.

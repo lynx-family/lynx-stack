@@ -1,0 +1,237 @@
+# Interface: Syntax
+
+## Properties
+
+### lexer
+
+```ts
+lexer: Lexer;
+```
+
+## Methods
+
+### createLexer()
+
+```ts
+createLexer(config?: SyntaxConfig): Lexer;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `config?` | [`SyntaxConfig`](SyntaxConfig.mdx) |
+
+#### Returns
+
+[`Lexer`](../classes/Lexer.mdx)
+
+***
+
+### find()
+
+```ts
+find(ast: CssNode, fn: FindFn): CssNode | null;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `ast` | [`CssNode`](../type-aliases/CssNode.mdx) |
+| `fn` | [`FindFn`](../type-aliases/FindFn.mdx) |
+
+#### Returns
+
+[`CssNode`](../type-aliases/CssNode.mdx) \| `null`
+
+***
+
+### findAll()
+
+```ts
+findAll(ast: CssNode, fn: FindFn): CssNode[];
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `ast` | [`CssNode`](../type-aliases/CssNode.mdx) |
+| `fn` | [`FindFn`](../type-aliases/FindFn.mdx) |
+
+#### Returns
+
+[`CssNode`](../type-aliases/CssNode.mdx)[]
+
+***
+
+### findLast()
+
+```ts
+findLast(ast: CssNode, fn: FindFn): CssNode | null;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `ast` | [`CssNode`](../type-aliases/CssNode.mdx) |
+| `fn` | [`FindFn`](../type-aliases/FindFn.mdx) |
+
+#### Returns
+
+[`CssNode`](../type-aliases/CssNode.mdx) \| `null`
+
+***
+
+### fork()
+
+```ts
+fork(extension: 
+  | SyntaxConfig
+  | ((config: SyntaxConfig) => SyntaxConfig)): Syntax;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `extension` | \| [`SyntaxConfig`](SyntaxConfig.mdx) \| ((`config`: [`SyntaxConfig`](SyntaxConfig.mdx)) => [`SyntaxConfig`](SyntaxConfig.mdx)) |
+
+#### Returns
+
+`Syntax`
+
+***
+
+### fromPlainObject()
+
+```ts
+fromPlainObject(node: CssNodePlain): CssNode;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `node` | [`CssNodePlain`](../type-aliases/CssNodePlain.mdx) |
+
+#### Returns
+
+[`CssNode`](../type-aliases/CssNode.mdx)
+
+***
+
+### generate()
+
+```ts
+generate(ast: CssNode, options?: GenerateOptions): string;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `ast` | [`CssNode`](../type-aliases/CssNode.mdx) |
+| `options?` | [`GenerateOptions`](GenerateOptions.mdx) |
+
+#### Returns
+
+`string`
+
+***
+
+### parse()
+
+#### Call Signature
+
+```ts
+parse(text: string, options: ParseOptions & object): CssNodePlain;
+```
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `text` | `string` |
+| `options` | [`ParseOptions`](ParseOptions.mdx) & `object` |
+
+##### Returns
+
+[`CssNodePlain`](../type-aliases/CssNodePlain.mdx)
+
+#### Call Signature
+
+```ts
+parse(text: string, options?: ParseOptions): CssNode;
+```
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `text` | `string` |
+| `options?` | [`ParseOptions`](ParseOptions.mdx) |
+
+##### Returns
+
+[`CssNode`](../type-aliases/CssNode.mdx)
+
+***
+
+### tokenize()
+
+```ts
+tokenize(source: string, onToken?: (type: number, start: number, end: number) => void): void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `source` | `string` |
+| `onToken?` | (`type`: `number`, `start`: `number`, `end`: `number`) => `void` |
+
+#### Returns
+
+`void`
+
+***
+
+### toPlainObject()
+
+```ts
+toPlainObject(node: CssNode): CssNodePlain;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `node` | [`CssNode`](../type-aliases/CssNode.mdx) |
+
+#### Returns
+
+[`CssNodePlain`](../type-aliases/CssNodePlain.mdx)
+
+***
+
+### walk()
+
+```ts
+walk(ast: CssNode, options: 
+  | EnterOrLeaveFn<CssNode>
+  | WalkOptions): void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `ast` | [`CssNode`](../type-aliases/CssNode.mdx) |
+| `options` | \| [`EnterOrLeaveFn`](../type-aliases/EnterOrLeaveFn.mdx)\<[`CssNode`](../type-aliases/CssNode.mdx)\> \| [`WalkOptions`](../type-aliases/WalkOptions.mdx) |
+
+#### Returns
+
+`void`

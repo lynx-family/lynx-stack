@@ -1,0 +1,13 @@
+# Type Alias: PluginExternalConfig
+
+```ts
+type PluginExternalConfig = PluginExternalValue | string;
+```
+
+External bundle shorthand accepted by `pluginExternalBundle`.
+
+When a string is provided, it is treated as `bundlePath` and the plugin will
+infer:
+- `libraryName`: the external request key
+- `background.sectionPath`: the external request key
+- `mainThread.sectionPath`: `${request}__main-thread`

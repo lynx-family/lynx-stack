@@ -1,0 +1,96 @@
+# 接口: RpcEndpointAsync\<Parameters *extends* `any`[], Return\>
+
+## 继承
+
+- `RpcEndpointBase`\<`Parameters`, `Return`, `false`, `true`\>
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `Parameters` *extends* `any`[] |
+| `Return` |
+
+## 属性
+
+### bufferSize
+
+```ts
+readonly bufferSize: number;
+```
+
+返回值缓冲区的字节大小。
+返回值会以 UTF-8 编码为 JSON 字符串，
+因此你应确保该大小足以容纳你的字符串化返回值。
+
+#### 继承自
+
+[`RpcEndpointAsyncWithTransfer`](RpcEndpointAsyncWithTransfer.mdx).[`bufferSize`](RpcEndpointAsyncWithTransfer.mdx#buffersize)
+
+***
+
+### hasReturn
+
+```ts
+readonly hasReturn: true;
+```
+
+该 endpoint 是否返回值。
+仅用于异步 endpoint；同步 endpoint 在设置了 `bufferSize` 时才会返回值。
+
+#### 继承自
+
+```ts
+RpcEndpointBase.hasReturn
+```
+
+***
+
+### hasReturnTransfer
+
+```ts
+readonly hasReturnTransfer: false;
+```
+
+使由 hasReturn 创建的消息调用支持 transfer。
+仅对 async 和 hasReturn 类型的端点有效
+
+#### 重写了
+
+```ts
+RpcEndpointBase.hasReturnTransfer
+```
+
+***
+
+### isSync
+
+```ts
+readonly isSync: false;
+```
+
+该调用是否为同步（通过 `Atomics.wait` 阻塞）。
+
+#### 继承自
+
+```ts
+RpcEndpointBase.isSync
+```
+
+***
+
+### name
+
+```ts
+readonly name: string;
+```
+
+此 rpc endpoint 的名称。
+Rpc 实例使用这个名称来识别应该调用哪个回调。
+请注意：这个名称应当是唯一的。
+
+#### 继承自
+
+```ts
+RpcEndpointBase.name
+```

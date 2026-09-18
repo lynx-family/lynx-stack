@@ -1,0 +1,59 @@
+# Function: useState()
+
+## Call Signature
+
+```ts
+function useState<S>(initialState: S | (() => S)): [S, Dispatch<SetStateAction<S>>];
+```
+
+Returns a stateful value, and a function to update it.
+
+### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `S` |
+
+### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `initialState` | `S` \| (() => `S`) |
+
+### Returns
+
+\[`S`, `Dispatch`\<`SetStateAction`\<`S`\>\>\]
+
+### Version
+
+16.8.0
+
+### See
+
+[https://react.dev/reference/react/useState](https://react.dev/reference/react/useState)
+
+## Call Signature
+
+```ts
+function useState<S = undefined>(): [S | undefined, Dispatch<SetStateAction<S | undefined>>];
+```
+
+Returns a stateful value, and a function to update it.
+
+### Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `S` | `undefined` |
+
+### Returns
+
+\[`S` \| `undefined`, `Dispatch`\<`SetStateAction`\<`S` \| `undefined`\>\>\]
+
+### Version
+
+16.8.0
+
+### See
+
+[https://react.dev/reference/react/useState](https://react.dev/reference/react/useState)

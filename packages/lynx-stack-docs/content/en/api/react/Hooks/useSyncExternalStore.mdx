@@ -1,0 +1,31 @@
+# Function: useSyncExternalStore()
+
+```ts
+function useSyncExternalStore<Snapshot>(
+   subscribe: (onStoreChange: () => void) => () => void, 
+   getSnapshot: () => Snapshot, 
+   getServerSnapshot?: () => Snapshot
+): Snapshot;
+```
+
+## Type Parameters
+
+| Type Parameter |
+| ------ |
+| `Snapshot` |
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `subscribe` | (`onStoreChange`: () => `void`) => () => `void` |
+| `getSnapshot` | () => `Snapshot` |
+| `getServerSnapshot?` | () => `Snapshot` |
+
+## Returns
+
+`Snapshot`
+
+## See
+
+[https://github.com/reactwg/react-18/discussions/86](https://github.com/reactwg/react-18/discussions/86)

@@ -1,0 +1,234 @@
+# 类: KittenLynxView
+
+表示一个 Lynx 页面实例，类似于 Puppeteer 的 `Page`。
+
+提供用于导航到 Lynx bundle URL、查询 DOM
+以及读取页面内容的方法。通过 [Lynx.newPage](Lynx.mdx#newpage) 创建。
+
+## 构造函数
+
+### 构造函数
+
+```ts
+new KittenLynxView(
+   _connector: Connector, 
+   _clientId: string, 
+   _client?: any
+): KittenLynxView;
+```
+
+初始化一个新的 `KittenLynxView` 实例。
+
+**给 Agent 的提示：**
+通常应避免直接调用这个构造函数，而应使用 `Lynx.newPage()` 来正确地
+初始化一个绑定到当前 ADB 连接和客户端的 `KittenLynxView` 实例。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `_connector` | `Connector` | 用于通过 ADB/USB 派发 CDP 消息的底层 `Connector` 实例。 |
+| `_clientId` | `string` | 唯一的客户端标识符（通常为 `<deviceId>:<port>`）。 |
+| `_client?` | `any` | 包含内部应用状态的可选客户端元数据对象。 |
+
+#### 返回
+
+`KittenLynxView`
+
+## 属性
+
+### \_channel
+
+```ts
+_channel: CDPChannel;
+```
+
+***
+
+### id
+
+```ts
+readonly id: number;
+```
+
+## 方法
+
+### content()
+
+```ts
+content(): Promise<string>;
+```
+
+将当前页面的整个 DOM 树序列化为类似 HTML 的字符串格式。
+
+**Agent 用法：**
+这对于调试和记录 Lynx App 当前 DOM 状态非常有用。
+它会强制从 CDP 服务器获取一份最新的 `DOM.getDocument` 快照，并递归遍历该树，
+构建出一个包含标签和属性的字符串（例如 `<view id="main"><text>...</text></view>`）。
+
+#### 返回
+
+`Promise`\<`string`\>
+
+一个 promise，解析为表示页面序列化 DOM 内容的字符串。
+
+***
+
+### goto()
+
+```ts
+goto(url: string, options?: object): Promise<void>;
+```
+
+将 Lynx App 导航到指定的 Lynx bundle URL，并附加到相应的 CDP session。
+
+**工作原理（Agent 必须理解的关键点）：**
+与标准的 Web 浏览器不同，在 Lynx 中调用 `Page.navigate` 会创建一个**新的**调试会话，
+而不是复用当前会话。此方法通过以下步骤屏蔽了这种复杂性：
+1. 等待 devtool 服务器启动。
+2. 发送 `App.openPage`（或一条回退消息）以触发导航。
+3. 通过 ADB **轮询会话列表**，查找 URL 与目标 bundle URL 匹配的新会话。
+4. 自动重新附加到匹配到的会话，并获取初始 DOM 树（`DOM.getDocument`）。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `url` | `string` | 要导航到的 Lynx bundle 的绝对 URL (例如 `'http://localhost:8080/dist/main.lynx.bundle'`)。 |
+| `options?` | \{ `timeout?`: `number`; \} | 可选设置。`options.timeout` 表示轮询匹配 session 的时长（单位：毫秒，默认 30000）。 |
+| `options.timeout?` | `number` | - |
+
+#### 返回
+
+`Promise`\<`void`\>
+
+#### 抛出
+
+如果等待 devtool 服务器启动超时（60 秒上限），则返回一个 error。
+
+#### 抛出
+
+如果在 `options.timeout` 内找不到该 URL 对应的特定 session，或无法附加该 session，则返回一个 error。
+
+***
+
+### locator()
+
+```ts
+locator(selector: string): Promise<ElementNode | undefined>;
+```
+
+在当前页面中定位第一个匹配所提供 CSS 选择器的 DOM 元素。
+
+**Agent 用法：**
+它的行为与 `document.querySelector` 或 Playwright 的 `page.locator()` 完全一致。
+它依赖于 `DOM` 这个 CDP domain。调用前请务必确保 `goto()` 已成功完成，
+否则 DOM 树将不存在。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `selector` | `string` | 指向目标元素的有效 CSS 选择器字符串（例如 `'view'`、`'#submit-btn'`、`'.container > text'`）。 |
+
+#### 返回
+
+`Promise`\<[`ElementNode`](ElementNode.mdx) \| `undefined`\>
+
+一个 promise，解析为包含用于与元素交互的方法的 `ElementNode`；如果没有匹配到节点，则为 `undefined`。
+
+#### 抛出
+
+如果在通过 `goto()` 加载页面之前调用该方法，则报错。
+
+***
+
+### onAttachedToTarget()
+
+```ts
+onAttachedToTarget(sessionId: number): Promise<void>;
+```
+
+将 LynxView 附加到指定的 Lynx devtool session，并初始化 CDP 通道。
+
+**内部机制：**
+此方法会为指定的 `sessionId` 创建一个 `CDPChannel`，并立即发起
+一次 `DOM.getDocument` 请求以缓存根文档节点。只有这一步成功，页面才能进行交互。
+
+**给 Agent 的提示：**
+它通常被标记为 internal，但并非 `private`。通常你不需要手动调用它，
+因为 `goto()` 会自动处理会话附加。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `sessionId` | `number` | 要附加到的数字型 Lynx devtool session ID，通过 `sendListSessionMessage` 发现。 |
+
+#### 返回
+
+`Promise`\<`void`\>
+
+***
+
+### screenshot()
+
+```ts
+screenshot(options?: object): Promise<Buffer<ArrayBufferLike>>;
+```
+
+捕获页面的截图。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `options?` | \{ `format?`: `"jpeg"` \| `"png"` \| `"webp"`; `path?`: `string`; `quality?`: `number`; \} | 截图选项，例如路径、格式和质量。 |
+| `options.format?` | `"jpeg"` \| `"png"` \| `"webp"` | - |
+| `options.path?` | `string` | - |
+| `options.quality?` | `number` | - |
+
+#### 返回
+
+`Promise`\<`Buffer`\<`ArrayBufferLike`\>\>
+
+包含图片数据的 Buffer。
+
+***
+
+### url()
+
+```ts
+url(): string;
+```
+
+返回 [goto](#goto) 最近一次成功加载的 URL。
+
+#### 返回
+
+`string`
+
+***
+
+### getKittenLynxViewById()
+
+```ts
+static getKittenLynxViewById(id: string): KittenLynxView | undefined;
+```
+
+通过字符串化的数字 ID 获取之前创建的 `KittenLynxView` 实例。
+
+**为什么这对 Agent 有用：**
+它主要用于交叉引用，或在不传递对象引用的情况下查找已有的视图。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `id` | `string` | LynxView 数字型 ID 的字符串表示（例如 `'1'`、`'2'`）。 |
+
+#### 返回
+
+`KittenLynxView` \| `undefined`
+
+如果 `KittenLynxView` 实例在内存中仍然存活，则为该实例；如果已被垃圾回收，则为 `undefined`。

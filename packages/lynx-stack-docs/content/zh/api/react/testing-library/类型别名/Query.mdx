@@ -1,0 +1,27 @@
+# 类型别名: Query
+
+```ts
+type Query = (container: HTMLElement, ...args: any[]) => 
+  | Error
+  | HTMLElement
+  | HTMLElement[]
+  | Promise<HTMLElement[]>
+  | Promise<HTMLElement>
+  | null;
+```
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `container` | `HTMLElement` |
+| ...`args` | `any`[] |
+
+## 返回
+
+  \| `Error`
+  \| `HTMLElement`
+  \| `HTMLElement`[]
+  \| `Promise`\<`HTMLElement`[]\>
+  \| `Promise`\<`HTMLElement`\>
+  \| `null`

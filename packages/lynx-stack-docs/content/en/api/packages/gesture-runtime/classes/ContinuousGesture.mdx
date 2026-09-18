@@ -1,0 +1,525 @@
+# Abstract Class: ContinuousGesture\<TConfig *extends* [`BaseGestureConfig`](../interfaces/BaseGestureConfig.mdx) = [`BaseGestureConfig`](../interfaces/BaseGestureConfig.mdx), TEvent *extends* [`GestureChangeEvent`](../interfaces/GestureChangeEvent.mdx) = [`GestureChangeEvent`](../interfaces/GestureChangeEvent.mdx)\>
+
+## Extends
+
+- [`BaseGesture`](BaseGesture.mdx)\<`TConfig`, `TEvent`\>
+
+## Extended by
+
+- [`DefaultScrollGesture`](DefaultScrollGesture.mdx)
+- [`FlingGesture`](FlingGesture.mdx)
+- [`PanGesture`](PanGesture.mdx)
+- [`NativeGesture`](NativeGesture.mdx)
+
+## Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `TConfig` *extends* [`BaseGestureConfig`](../interfaces/BaseGestureConfig.mdx) | [`BaseGestureConfig`](../interfaces/BaseGestureConfig.mdx) |
+| `TEvent` *extends* [`GestureChangeEvent`](../interfaces/GestureChangeEvent.mdx) | [`GestureChangeEvent`](../interfaces/GestureChangeEvent.mdx) |
+
+## Constructors
+
+### Constructor
+
+```ts
+new ContinuousGesture<TConfig extends BaseGestureConfig = BaseGestureConfig, TEvent extends GestureChangeEvent = GestureChangeEvent>(gesture?: BaseGesture<TConfig, TEvent>): ContinuousGesture<TConfig, TEvent>;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `gesture?` | [`BaseGesture`](BaseGesture.mdx)\<`TConfig`, `TEvent`\> |
+
+#### Returns
+
+`ContinuousGesture`\<`TConfig`, `TEvent`\>
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`constructor`](BaseGesture.mdx#constructor)
+
+## Properties
+
+### \_\_isGesture
+
+```ts
+__isGesture: true = true;
+```
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`__isGesture`](BaseGesture.mdx#__isgesture)
+
+***
+
+### callbacks
+
+```ts
+callbacks: BaseGestureCallbacks<TEvent> & ContinuousGestureCallbacks<TEvent> = {};
+```
+
+#### Overrides
+
+[`BaseGesture`](BaseGesture.mdx).[`callbacks`](BaseGesture.mdx#callbacks)
+
+***
+
+### config
+
+```ts
+config: TConfig;
+```
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`config`](BaseGesture.mdx#config)
+
+***
+
+### continueWith
+
+```ts
+continueWith: BaseGesture<BaseGestureConfig, GestureChangeEvent>[] = [];
+```
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`continueWith`](BaseGesture.mdx#continuewith)
+
+***
+
+### execId
+
+```ts
+execId: number;
+```
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`execId`](BaseGesture.mdx#execid)
+
+***
+
+### id
+
+```ts
+id: number;
+```
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`id`](BaseGesture.mdx#id)
+
+***
+
+### simultaneousWith
+
+```ts
+simultaneousWith: BaseGesture<BaseGestureConfig, GestureChangeEvent>[] = [];
+```
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`simultaneousWith`](BaseGesture.mdx#simultaneouswith)
+
+***
+
+### toJSON
+
+```ts
+toJSON: (this: BaseGesture) => Record<string, unknown>;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `this` | [`BaseGesture`](BaseGesture.mdx) |
+
+#### Returns
+
+`Record`\<`string`, `unknown`\>
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`toJSON`](BaseGesture.mdx#tojson)
+
+***
+
+### type
+
+```ts
+abstract type: GestureTypeInner;
+```
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`type`](BaseGesture.mdx#type)
+
+***
+
+### waitFor
+
+```ts
+waitFor: BaseGesture<BaseGestureConfig, GestureChangeEvent>[] = [];
+```
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`waitFor`](BaseGesture.mdx#waitfor)
+
+## Methods
+
+### clone()
+
+```ts
+clone(): this;
+```
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`clone`](BaseGesture.mdx#clone)
+
+***
+
+### enabled()
+
+```ts
+enabled(enabled: boolean): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `enabled` | `boolean` |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`enabled`](BaseGesture.mdx#enabled)
+
+***
+
+### externalContinueWith()
+
+```ts
+externalContinueWith(gesture: GestureKind): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `gesture` | [`GestureKind`](../interfaces/GestureKind.mdx) |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`externalContinueWith`](BaseGesture.mdx#externalcontinuewith)
+
+***
+
+### externalSimultaneous()
+
+```ts
+externalSimultaneous(gesture: GestureKind): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `gesture` | [`GestureKind`](../interfaces/GestureKind.mdx) |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`externalSimultaneous`](BaseGesture.mdx#externalsimultaneous)
+
+***
+
+### externalWaitFor()
+
+```ts
+externalWaitFor(gesture: GestureKind): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `gesture` | [`GestureKind`](../interfaces/GestureKind.mdx) |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`externalWaitFor`](BaseGesture.mdx#externalwaitfor)
+
+***
+
+### onBegin()
+
+```ts
+onBegin(cb: GestureCallback<TEvent>): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<`TEvent`\> |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`onBegin`](BaseGesture.mdx#onbegin)
+
+***
+
+### onEnd()
+
+```ts
+onEnd(cb: GestureCallback<TEvent>): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<`TEvent`\> |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`onEnd`](BaseGesture.mdx#onend)
+
+***
+
+### onStart()
+
+```ts
+onStart(cb: GestureCallback<TEvent>): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<`TEvent`\> |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`onStart`](BaseGesture.mdx#onstart)
+
+***
+
+### onTouchesCancel()
+
+```ts
+onTouchesCancel(cb: GestureCallback<TEvent>): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<`TEvent`\> |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`onTouchesCancel`](BaseGesture.mdx#ontouchescancel)
+
+***
+
+### onTouchesDown()
+
+```ts
+onTouchesDown(cb: GestureCallback<TEvent>): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<`TEvent`\> |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`onTouchesDown`](BaseGesture.mdx#ontouchesdown)
+
+***
+
+### onTouchesMove()
+
+```ts
+onTouchesMove(cb: GestureCallback<TEvent>): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<`TEvent`\> |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`onTouchesMove`](BaseGesture.mdx#ontouchesmove)
+
+***
+
+### onTouchesUp()
+
+```ts
+onTouchesUp(cb: GestureCallback<TEvent>): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<`TEvent`\> |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`onTouchesUp`](BaseGesture.mdx#ontouchesup)
+
+***
+
+### onUpdate()
+
+```ts
+onUpdate(cb: GestureCallback<TEvent>): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<`TEvent`\> |
+
+#### Returns
+
+`this`
+
+***
+
+### serialize()
+
+```ts
+serialize(): Record<string, unknown>;
+```
+
+#### Returns
+
+`Record`\<`string`, `unknown`\>
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`serialize`](BaseGesture.mdx#serialize)
+
+***
+
+### toGestureArray()
+
+```ts
+toGestureArray(): BaseGesture<BaseGestureConfig, GestureChangeEvent>[];
+```
+
+#### Returns
+
+[`BaseGesture`](BaseGesture.mdx)\<[`BaseGestureConfig`](../interfaces/BaseGestureConfig.mdx), [`GestureChangeEvent`](../interfaces/GestureChangeEvent.mdx)\>[]
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`toGestureArray`](BaseGesture.mdx#togesturearray)
+
+***
+
+### updateCallback()
+
+```ts
+updateCallback(k: keyof BaseGestureCallbacks<TEvent> | "onUpdate", cb: GestureCallback<TEvent>): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `k` | keyof BaseGestureCallbacks\<TEvent\> \| `"onUpdate"` |
+| `cb` | [`GestureCallback`](../type-aliases/GestureCallback.mdx)\<`TEvent`\> |
+
+#### Returns
+
+`this`
+
+#### Overrides
+
+[`BaseGesture`](BaseGesture.mdx).[`updateCallback`](BaseGesture.mdx#updatecallback)
+
+***
+
+### updateConfig()
+
+```ts
+updateConfig(k: string, v: unknown): this;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `k` | `string` |
+| `v` | `unknown` |
+
+#### Returns
+
+`this`
+
+#### Inherited from
+
+[`BaseGesture`](BaseGesture.mdx).[`updateConfig`](BaseGesture.mdx#updateconfig)

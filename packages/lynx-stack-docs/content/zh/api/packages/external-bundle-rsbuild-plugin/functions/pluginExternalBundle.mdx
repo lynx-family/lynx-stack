@@ -1,0 +1,42 @@
+# 函数: pluginExternalBundle()
+
+```ts
+function pluginExternalBundle(options: PluginExternalBundleOptions): RsbuildPlugin;
+```
+
+创建一个用于加载 external bundle 的 Rsbuild 插件。
+
+该插件封装了 externals-loading-webpack-plugin，并通过 api.useExposed 自动从 react-rsbuild-plugin 获取 layer 名称。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `options` | [`PluginExternalBundleOptions`](../interfaces/PluginExternalBundleOptions.mdx) |
+
+## 返回
+
+`RsbuildPlugin`
+
+## 示例
+
+```ts
+// rsbuild.config.ts
+import { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default {
+  plugins: [
+    pluginReactLynx(),
+    pluginExternalBundle({
+      externals: {
+        lodash: {
+          bundlePath: 'lodash.lynx.bundle',
+          background: { sectionPath: 'background' },
+          mainThread: { sectionPath: 'mainThread' },
+        },
+      },
+    }),
+  ],
+}
+```

@@ -1,0 +1,26 @@
+# 类型别名: FilterFn\<TData, TResult *extends* `TData`, TContext = [`List`](../classes/List.mdx)\<`TData`\>\>
+
+```ts
+type FilterFn<TData, TResult extends TData, TContext = List<TData>> = (this: TContext, item: TData, node: ListItem<TData>, list: List<TData>) => item is TResult;
+```
+
+## 类型参数
+
+| 类型参数 | 默认类型 |
+| ------ | ------ |
+| `TData` | - |
+| `TResult` *extends* `TData` | - |
+| `TContext` | [`List`](../classes/List.mdx)\<`TData`\> |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `this` | `TContext` |
+| `item` | `TData` |
+| `node` | [`ListItem`](../interfaces/ListItem.mdx)\<`TData`\> |
+| `list` | [`List`](../classes/List.mdx)\<`TData`\> |
+
+## 返回
+
+`item is TResult`

@@ -1,0 +1,32 @@
+[
+  {
+    "type": "file",
+    "name": "functions/createLynxLibrary",
+    "label": "createLynxLibrary"
+  },
+  {
+    "type": "file",
+    "name": "functions/parseLibraryFeatures",
+    "label": "parseLibraryFeatures"
+  },
+  {
+    "type": "file",
+    "name": "functions/parseLibraryPlatforms",
+    "label": "parseLibraryPlatforms"
+  },
+  {
+    "type": "file",
+    "name": "variables/DEFAULT_LIBRARY_PLATFORMS",
+    "label": "DEFAULT_LIBRARY_PLATFORMS"
+  },
+  {
+    "type": "file",
+    "name": "variables/LIBRARY_FEATURES",
+    "label": "LIBRARY_FEATURES"
+  },
+  {
+    "type": "file",
+    "name": "variables/LIBRARY_PLATFORMS",
+    "label": "LIBRARY_PLATFORMS"
+  }
+]

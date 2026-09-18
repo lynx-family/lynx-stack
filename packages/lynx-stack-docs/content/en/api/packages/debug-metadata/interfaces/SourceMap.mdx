@@ -1,0 +1,86 @@
+# Interface: SourceMap
+
+Source Map v3 payload, per the [Source Map Revision 3 proposal](https://sourcemaps.info/spec.html).
+
+Declared here (instead of imported from `source-map`) to keep this
+package zero-dependency and prevent transitive consumers from pulling
+the ~200 kB `source-map` runtime just for a TypeScript type.
+
+## Properties
+
+### file?
+
+```ts
+optional file?: string;
+```
+
+Generated output filename this map describes.
+
+***
+
+### mappings
+
+```ts
+mappings: string;
+```
+
+VLQ-encoded mapping data.
+
+***
+
+### names
+
+```ts
+names: string[];
+```
+
+Symbol names referenced from `mappings`.
+
+***
+
+### sections?
+
+```ts
+optional sections?: SourceMapSection[];
+```
+
+Index-map sections, exclusive with the simple-map shape. Producers
+either set `sections` (index map) or the other fields, not both.
+
+***
+
+### sourceRoot?
+
+```ts
+optional sourceRoot?: string;
+```
+
+Optional prefix prepended to every entry in `sources`.
+
+***
+
+### sources
+
+```ts
+sources: string[];
+```
+
+Original source file URLs / identifiers.
+
+***
+
+### sourcesContent?
+
+```ts
+optional sourcesContent?: (string | null)[];
+```
+
+Inline source contents, parallel to `sources`.
+
+***
+
+### version
+
+```ts
+version: 3;
+```

@@ -1,0 +1,297 @@
+# Interface: Filename
+
+The Filename determines the name of the Lynx bundle files emitted under [Output.distPath](Output.mdx#distpath).
+
+## Remarks
+
+If a string is provided, it will be used as [Filename.bundle](#bundle).
+
+## Properties
+
+### assets?
+
+```ts
+optional assets?: Filename;
+```
+
+The name of other assets, except for above (image, svg, font, html, wasm...)
+
+#### Default Value
+
+`'[name].[contenthash:8][ext]'`
+
+***
+
+### bundle?
+
+```ts
+optional bundle?: BundleFilename;
+```
+
+The name of the bundle files.
+
+#### Remarks
+
+The following placeholders are supported:
+
+- `[name]`: the name of the entry.
+- `[platform]`: the name of the Rsbuild environment.
+- `[contenthash]`: the hash of the bundle content.
+
+#### Default Value
+
+`'[name].[platform].bundle'`
+
+#### Examples
+
+- Using content hash in bundle filename:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      bundle: '[name].[contenthash].bundle',
+    },
+  },
+})
+```
+
+- Using content hash with length in bundle filename:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      bundle: '[name].[contenthash:8].bundle',
+    },
+  },
+})
+```
+
+- Using a function to control the main bundle and the lazy bundles
+  separately (e.g. emit lazy bundles into another directory with a git
+  commit hash appended):
+
+```js
+import { execSync } from 'node:child_process'
+
+import { defineConfig } from '@lynx-js/rspeedy'
+
+const gitHash = execSync('git rev-parse --short HEAD').toString().trim()
+
+export default defineConfig({
+  output: {
+    filename: {
+      bundle: ({ lazyBundle, platform }) =>
+        lazyBundle
+          ? `my-lazy-bundles/[name].[fullhash]-${gitHash}.bundle`
+          : `[name].${platform}.bundle`,
+    },
+  },
+})
+```
+
+***
+
+### css?
+
+```ts
+optional css?: Filename;
+```
+
+**`Lynx Default Changed`**
+
+The name of the CSS files.
+
+#### Default Value
+
+`'[name]/[name].css'`
+
+#### Example
+
+- Using a function to dynamically set the filename based on the file information:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      css: (pathData, assetInfo) => {
+        console.log(pathData); // You can check the contents of pathData here
+
+        if (pathData.chunk?.name === 'index') {
+          return isProd ? '[name].[contenthash:8].css' : '[name].css';
+        }
+        return '/some-path/[name].css';
+      },
+    },
+  },
+})
+```
+
+***
+
+### font?
+
+```ts
+optional font?: Filename;
+```
+
+The name of the font files.
+
+#### Default Value
+
+`'[name].[contenthash:8][ext]'`
+
+***
+
+### image?
+
+```ts
+optional image?: Filename;
+```
+
+The name of non-SVG images.
+
+#### Default Value
+
+`'[name].[contenthash:8][ext]'`
+
+***
+
+### js?
+
+```ts
+optional js?: Filename;
+```
+
+The name of the JavaScript files.
+
+#### Default Value
+
+`'[name].js'` in development, `'[name].[contenthash:8].js'` in production web builds, and `'[name].js'` in production node builds
+
+#### Example
+
+- Using a function to dynamically set the filename based on the file information:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      js: (pathData, assetInfo) => {
+        console.log(pathData); // You can check the contents of pathData here
+
+        if (pathData.chunk?.name === 'index') {
+          return isProd ? '[name].[contenthash:8].js' : '[name].js';
+        }
+        return '/some-path/[name].js';
+      },
+    },
+  },
+})
+```
+
+***
+
+### media?
+
+```ts
+optional media?: Filename;
+```
+
+The name of media assets, such as video.
+
+#### Default Value
+
+`'[name].[contenthash:8][ext]'`
+
+***
+
+### svg?
+
+```ts
+optional svg?: Filename;
+```
+
+The name of the SVG images.
+
+#### Default Value
+
+`'[name].[contenthash:8].svg'`
+
+***
+
+### ~~template?~~
+
+```ts
+optional template?: string;
+```
+
+The name of the template files.
+
+#### Deprecated
+
+Use [Filename.bundle](#bundle) instead.
+
+#### Default Value
+
+`'[name].[platform].bundle'`
+
+#### Remarks
+
+The following placeholder is supported:
+
+- `[name]`: the name of the entry.
+- `[contenthash]`: the contenthash of the template.
+
+#### Examples
+
+- Using content hash in bundle filename:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      template: '[name].[contenthash].bundle',
+    },
+  },
+})
+```
+
+- Using content hash with length in bundle filename:
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  output: {
+    filename: {
+      template: '[name].[contenthash:8].bundle',
+    },
+  },
+})
+```
+
+***
+
+### wasm?
+
+```ts
+optional wasm?: string;
+```
+
+The name of WebAssembly files.
+
+#### Default Value
+
+`'[contenthash:8].module.wasm'`

@@ -1,0 +1,425 @@
+# Class: WebSocket
+
+The implementation of [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
+for Lynx.
+
+## Remarks
+
+This only works in environment that has `NativeModules.LynxWebSocketModule`.
+
+## Constructors
+
+### Constructor
+
+```ts
+new WebSocket(
+   url: string, 
+   protocols?: string | string[], 
+   options?: object
+): WebSocket;
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `url` | `string` | The URL to which to connect; this should be the URL to which the WebSocket server will respond. |
+| `protocols?` | `string` \| `string`[] | Either a single protocol string or an array of protocol strings. If it is omitted, an empty array is used by default, i.e. `[]`. |
+| `options?` | \{ `headers?`: `Record`\<`string`, `string`\>; \} | Extra options for Lynx only. |
+| `options.headers?` | `Record`\<`string`, `string`\> | - |
+
+#### Returns
+
+`WebSocket`
+
+## Properties
+
+### CLOSED
+
+```ts
+static CLOSED: ReadyState = ReadyState.CLOSED;
+```
+
+The connection is closed or couldn't be opened.
+
+***
+
+### CLOSING
+
+```ts
+static CLOSING: ReadyState = ReadyState.CLOSING;
+```
+
+The connection is in the process of closing.
+
+***
+
+### CONNECTING
+
+```ts
+static CONNECTING: ReadyState = ReadyState.CONNECTING;
+```
+
+Socket has been created. The connection is not yet open.
+
+***
+
+### OPEN
+
+```ts
+static OPEN: ReadyState = ReadyState.OPEN;
+```
+
+The connection is open and ready to communicate.
+
+## Accessors
+
+### onclose
+
+#### Get Signature
+
+```ts
+get onclose(): 
+  | ((event: Event<"close"> & object) => void)
+  | null;
+```
+
+onclose is the Web-style callback of WebSocket.
+
+##### Example
+
+```js
+const socket = new WebSocket(url)
+socket.onclose = ({ code, reason }) => {}
+```
+
+##### Returns
+
+  \| ((`event`: [`Event`](../interfaces/Event.mdx)\<`"close"`\> & `object`) => `void`)
+  \| `null`
+
+#### Set Signature
+
+```ts
+set onclose(callback: 
+  | ((event: Event<"close"> & object) => void)
+  | null): void;
+```
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `callback` | \| ((`event`: [`Event`](../interfaces/Event.mdx)\<`"close"`\> & `object`) => `void`) \| `null` |
+
+##### Returns
+
+`void`
+
+***
+
+### onerror
+
+#### Get Signature
+
+```ts
+get onerror(): 
+  | ((event: Event<"error"> & object) => void)
+  | null;
+```
+
+onerror is the Web-style callback of WebSocket.
+
+##### Example
+
+```js
+const socket = new WebSocket(url)
+socket.onerror = ({ message }) => {}
+```
+
+##### Returns
+
+  \| ((`event`: [`Event`](../interfaces/Event.mdx)\<`"error"`\> & `object`) => `void`)
+  \| `null`
+
+#### Set Signature
+
+```ts
+set onerror(callback: 
+  | ((event: Event<"error"> & object) => void)
+  | null): void;
+```
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `callback` | \| ((`event`: [`Event`](../interfaces/Event.mdx)\<`"error"`\> & `object`) => `void`) \| `null` |
+
+##### Returns
+
+`void`
+
+***
+
+### onmessage
+
+#### Get Signature
+
+```ts
+get onmessage(): 
+  | ((event: Event<"message"> & object) => void)
+  | null;
+```
+
+onmessage is the Web-style callback of WebSocket.
+
+##### Example
+
+```js
+const socket = new WebSocket(url)
+socket.onmessage = ({ data }) => {
+  // handle data
+}
+```
+
+##### Returns
+
+  \| ((`event`: [`Event`](../interfaces/Event.mdx)\<`"message"`\> & `object`) => `void`)
+  \| `null`
+
+#### Set Signature
+
+```ts
+set onmessage(callback: 
+  | ((event: Event<"message"> & object) => void)
+  | null): void;
+```
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `callback` | \| ((`event`: [`Event`](../interfaces/Event.mdx)\<`"message"`\> & `object`) => `void`) \| `null` |
+
+##### Returns
+
+`void`
+
+***
+
+### onopen
+
+#### Get Signature
+
+```ts
+get onopen(): 
+  | ((event: Event<"open">) => void)
+  | null;
+```
+
+onopen is the Web-style callback of WebSocket.
+
+##### Example
+
+```js
+const socket = new WebSocket(url)
+socket.onopen = () => {}
+```
+
+##### Returns
+
+  \| ((`event`: [`Event`](../interfaces/Event.mdx)\<`"open"`\>) => `void`)
+  \| `null`
+
+#### Set Signature
+
+```ts
+set onopen(callback: 
+  | ((event: Event<"open">) => void)
+  | null): void;
+```
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `callback` | \| ((`event`: [`Event`](../interfaces/Event.mdx)\<`"open"`\>) => `void`) \| `null` |
+
+##### Returns
+
+`void`
+
+***
+
+### protocol
+
+#### Get Signature
+
+```ts
+get protocol(): string | undefined;
+```
+
+The WebSocket.protocol read-only property returns the name of the sub-protocol the server selected.
+
+##### Remarks
+
+This will be one of the strings specified in the protocols parameter when creating the WebSocket object,
+or `undefined` until the connection is open.
+
+##### Returns
+
+`string` \| `undefined`
+
+***
+
+### readyState
+
+#### Get Signature
+
+```ts
+get readyState(): ReadyState;
+```
+
+The `readyState` read-only property returns the current state of the WebSocket connection.
+
+##### Returns
+
+[`ReadyState`](../enumerations/ReadyState.mdx)
+
+***
+
+### url
+
+#### Get Signature
+
+```ts
+get url(): string;
+```
+
+The `url` read-only property returns the URL of the WebSocket passed by the constructor.
+
+##### Returns
+
+`string`
+
+## Methods
+
+### addEventListener()
+
+```ts
+addEventListener<T extends keyof EventMap>(type: T, callback?: (event: EventMap[T]) => void): void;
+```
+
+The `addEventListener()` method of the `EventTarget` interface sets up a function that will be called whenever the specified event is delivered to the target.
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `T` *extends* keyof [`EventMap`](../type-aliases/EventMap.mdx) |
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `type` | `T` | A case-sensitive string representing the event type to listen for. |
+| `callback?` | (`event`: [`EventMap`](../type-aliases/EventMap.mdx)\[`T`\]) => `void` | The function that receives a notification. See [@lynx-js/websocket!EventMap](../type-aliases/EventMap.mdx) for details of events. |
+
+#### Returns
+
+`void`
+
+***
+
+### close()
+
+```ts
+close(code?: number, reason?: string): void;
+```
+
+The `close()` method closes the WebSocket connection or connection attempt, if any.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `code?` | `number` |
+| `reason?` | `string` |
+
+#### Returns
+
+`void`
+
+#### Remarks
+
+If the connection is already [CLOSED](#closed), this method does nothing.
+
+***
+
+### ping()
+
+```ts
+ping(): void;
+```
+
+The `ping` method send an empty message to the server over the WebSocket connection.
+
+#### Returns
+
+`void`
+
+#### Remarks
+
+It will throw an exception if you call `ping()` when the connection is in the [CONNECTING](#connecting) state. If you call `ping()` when the connection is in the [CLOSING](#closing) or [CLOSED](#closed) states, it will silently discard the data.
+
+***
+
+### removeEventListener()
+
+```ts
+removeEventListener<T extends keyof EventMap>(type: T, callback: (event: EventMap[T]) => void): void;
+```
+
+The `removeEventListener()` method of the `EventTarget` interface removes an event listener from the WebSocket.
+
+#### Type Parameters
+
+| Type Parameter |
+| ------ |
+| `T` *extends* keyof [`EventMap`](../type-aliases/EventMap.mdx) |
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `type` | `T` | The type of event to stop listening for. |
+| `callback` | (`event`: [`EventMap`](../type-aliases/EventMap.mdx)\[`T`\]) => `void` | The function to remove as an event listener. |
+
+#### Returns
+
+`void`
+
+***
+
+### send()
+
+```ts
+send(data: string): void;
+```
+
+The `send` method send the specified data to be transmitted to the server over the WebSocket connection.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `data` | `string` | The specified data to be transmitted. |
+
+#### Returns
+
+`void`
+
+#### Remarks
+
+It will throw an exception if you call `send()` when the connection is in the [CONNECTING](#connecting) state. If you call `send()` when the connection is in the [CLOSING](#closing) or [CLOSED](#closed) states, it will silently discard the data.

@@ -1,0 +1,78 @@
+# 接口: PanGestureConfig
+
+PanGesture 的配置接口。
+Pan gesture 用于识别拖拽（pan/dragging）手势。
+
+## 继承
+
+- [`BaseGestureConfig`](BaseGestureConfig.mdx)
+
+## 可索引
+
+```ts
+[key: string]: unknown
+```
+
+## 属性
+
+### activeOffsetX?
+
+```ts
+optional activeOffsetX?: number;
+```
+
+X 轴的活动偏移量
+
+***
+
+### activeOffsetY?
+
+```ts
+optional activeOffsetY?: number;
+```
+
+Y 轴的活动偏移量
+
+***
+
+### enabled?
+
+```ts
+optional enabled?: boolean;
+```
+
+该手势是否启用。默认为 true。
+
+#### 继承自
+
+[`BaseGestureConfig`](BaseGestureConfig.mdx).[`enabled`](BaseGestureConfig.mdx#enabled)
+
+***
+
+### failOffsetX?
+
+```ts
+optional failOffsetX?: number;
+```
+
+X 轴的失败偏移量
+
+***
+
+### failOffsetY?
+
+```ts
+optional failOffsetY?: number;
+```
+
+Y 轴的失败偏移量
+
+***
+
+### minDistance?
+
+```ts
+optional minDistance?: number;
+```
+
+手势被激活前必须经过的最小距离（单位：point）。默认为 0。

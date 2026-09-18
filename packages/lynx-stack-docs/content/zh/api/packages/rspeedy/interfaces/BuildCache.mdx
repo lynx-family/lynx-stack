@@ -1,0 +1,94 @@
+# 接口: BuildCache
+
+**`Beta`**
+
+启用或配置持久化构建缓存。
+
+## 备注
+
+该功能目前为实验性功能，未来可能会发生变化。
+
+## 属性
+
+### buildDependencies?
+
+```ts
+optional buildDependencies?: string[];
+```
+
+**`Beta`**
+
+包含构建依赖的文件数组。
+Rspack 会使用其中每个文件的 hash 来使持久化缓存失效。
+
+#### 默认值
+
+`['package.json', 'tsconfig.json' (or source.tsconfigPath), '.env', '.env.*', 'tailwindcss.config.*']`；使用 Rspeedy CLI 且启用了 `performance.buildCache` 时，还会添加当前加载的 `lynx.config.*` 文件。
+
+#### 示例
+
+将 `postcss.config.js` 添加到构建依赖中。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    buildCache: {
+      buildDependencies: ['postcss.config.js'],
+    },
+  },
+})
+```
+
+***
+
+### cacheDigest?
+
+```ts
+optional cacheDigest?: (string | undefined)[];
+```
+
+**`Beta`**
+
+添加额外的缓存摘要，当数组中的任意值发生变化时，之前的构建缓存将会失效。
+
+#### 默认值
+
+```ts
+undefined
+```
+
+#### 示例
+
+将 `process.env.SOME_ENV` 添加到缓存摘要中。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  performance: {
+    buildCache: {
+      cacheDigest: [process.env.SOME_ENV],
+    },
+  },
+})
+```
+
+***
+
+### cacheDirectory?
+
+```ts
+optional cacheDirectory?: string;
+```
+
+**`Beta`**
+
+缓存文件的输出目录。
+
+#### 默认值
+
+```ts
+'node_modules/.cache'
+```

@@ -1,0 +1,51 @@
+# 函数: render()
+
+```ts
+function render<Q extends Queries = typeof queries>(ui: ReactNode, options?: RenderOptions<Q>): RenderResult<Q>;
+```
+
+渲染到页面中。应与 cleanup 配合使用。
+
+## 类型参数
+
+| 类型参数 | 默认类型 |
+| ------ | ------ |
+| `Q` *extends* [`Queries`](../接口/Queries.mdx) | *typeof* [`queries`](../命名空间/queries.mdx) |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `ui` | `ReactNode` |
+| `options?` | [`RenderOptions`](../接口/RenderOptions.mdx)\<`Q`\> |
+
+## 返回
+
+[`RenderResult`](../类型别名/RenderResult.mdx)\<`Q`\>
+
+## 示例
+
+```ts
+import { render} from '@lynx-js/react/testing-library'
+
+const WrapperComponent = ({ children }) => (
+    <view data-testid='wrapper'>{children}</view>
+);
+const Comp = () => {
+  return <view data-testid='inner' style="background-color: yellow;" />;
+};
+const { container, getByTestId } = render(<Comp />, {
+  wrapper: WrapperComponent,
+});
+expect(getByTestId('wrapper')).toBeInTheDocument();
+expect(container.firstChild).toMatchInlineSnapshot(`
+  <view
+    data-testid="wrapper"
+  >
+    <view
+      data-testid="inner"
+      style="background-color: yellow;"
+    />
+  </view>
+`);
+```

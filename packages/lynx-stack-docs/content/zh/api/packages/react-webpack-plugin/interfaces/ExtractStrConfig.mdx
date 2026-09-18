@@ -1,0 +1,35 @@
+# 接口: ExtractStrConfig
+
+合并 JS 和 Lepus 中相同的字符串字面量，以减小输出 bundle 的体积。
+设为 `false` 可关闭此功能。
+
+## 属性
+
+### strLength
+
+```ts
+strLength: number;
+```
+
+被提取的字符串字面量的最小长度。
+
+#### 默认值
+
+`20`
+
+#### 示例
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx({
+      extractStr: {
+        strLength: 10,
+      },
+    })
+  ],
+})
+```

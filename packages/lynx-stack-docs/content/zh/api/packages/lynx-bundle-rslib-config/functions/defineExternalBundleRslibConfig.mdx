@@ -1,0 +1,85 @@
+# 函数: defineExternalBundleRslibConfig()
+
+```ts
+function defineExternalBundleRslibConfig(userLibConfig: ExternalBundleLibConfig, encodeOptions?: EncodeOptions): RslibConfig;
+```
+
+获取用于构建 Lynx external bundle 的 Rslib 配置。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `userLibConfig` | [`ExternalBundleLibConfig`](../interfaces/ExternalBundleLibConfig.mdx) |
+| `encodeOptions` | [`EncodeOptions`](../interfaces/EncodeOptions.mdx) |
+
+## 返回
+
+`RslibConfig`
+
+## 示例
+
+如果要构建在 Lynx 后台线程中使用的 external bundle，可以使用以下代码：
+
+```js
+// rslib.config.js
+import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'
+import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineExternalBundleRslibConfig({
+  id: 'utils-lib',
+  source: {
+    entry: {
+      utils: {
+        import: './src/utils.ts',
+        layer: LAYERS.BACKGROUND,
+      }
+    }
+  },
+  plugins: [pluginReactLynx()],
+})
+```
+
+然后即可在后台线程中使用 `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })`。
+
+如果要构建在 Lynx 主线程中使用的 external bundle，可以使用以下代码：
+
+```js
+// rslib.config.js
+import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'
+import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineExternalBundleRslibConfig({
+  id: 'utils-lib',
+  source: {
+    entry: {
+      utils: {
+        import: './src/utils.ts',
+        layer: LAYERS.MAIN_THREAD,
+      }
+    }
+  },
+  plugins: [pluginReactLynx()],
+})
+```
+然后即可在主线程中使用 `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })`。
+
+如果要构建同时在 Lynx 主线程和后台线程中使用的 external bundle，无需设置 layer。
+
+```js
+// rslib.config.js
+import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+
+export default defineExternalBundleRslibConfig({
+  id: 'utils-lib',
+  source: {
+    entry: {
+      utils: './src/utils.ts',
+    },
+  },
+  plugins: [pluginReactLynx()],
+})
+```
+
+然后即可在后台线程中使用 `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })`，在主线程中使用 `lynx.loadScript('utils__main-thread', { bundleName: 'utils-lib-bundle-url' })`。

@@ -1,0 +1,37 @@
+[
+  {
+    "type": "dir",
+    "name": "react",
+    "label": "@lynx-js/react",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "react/testing-library",
+    "label": "@lynx-js/react/testing-library",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "genui",
+    "label": "@lynx-js/genui",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "config",
+    "label": "Build configuration",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "packages",
+    "label": "All packages",
+    "collapsible": true,
+    "collapsed": true
+  }
+]

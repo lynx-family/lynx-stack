@@ -1,0 +1,31 @@
+# 接口: ExternalObject
+
+external 映射的对象形式。
+
+当外部库由使用方应用异步（以 Promise 形式）挂载时，即对应的 `pluginExternalBundle` external 配置了 `async: true` 时，使用该形式替代普通的全局名称形式。
+
+## 属性
+
+### async?
+
+```ts
+optional async?: boolean;
+```
+
+库是否以 Promise 的形式挂载，该 Promise resolve 为库的命名空间。启用后，该 external 会作为 `promise` external 产出，导入它的模块会 await 挂载的值，而不是同步读取。
+
+#### 默认值
+
+```ts
+false
+```
+
+***
+
+### libraryName
+
+```ts
+libraryName: string | string[];
+```
+
+外部库的全局名称（可包含子路径）。

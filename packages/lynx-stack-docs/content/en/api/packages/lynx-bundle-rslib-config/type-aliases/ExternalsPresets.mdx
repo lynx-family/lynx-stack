@@ -1,0 +1,18 @@
+# Type Alias: ExternalsPresets
+
+```ts
+type ExternalsPresets = object & Record<string, ExternalsPresetValue>;
+```
+
+Enabled externals presets.
+
+Preset names are resolved from the built-in preset definitions plus any
+custom definitions passed to [defineExternalBundleRslibConfig](../functions/defineExternalBundleRslibConfig.mdx).
+
+## Type Declaration
+
+### reactlynx?
+
+```ts
+optional reactlynx?: ExternalsPresetValue;
+```

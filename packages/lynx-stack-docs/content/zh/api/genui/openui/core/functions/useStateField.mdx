@@ -1,0 +1,24 @@
+# 函数: useStateField()
+
+```ts
+function useStateField<T = unknown>(name: string, value?: T): StateField<InferStateFieldValue<T>>;
+```
+
+基于表单状态和响应式绑定解析具名的 OpenUI 状态字段。
+
+## 类型参数
+
+| 类型参数 | 默认类型 |
+| ------ | ------ |
+| `T` | `unknown` |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `name` | `string` |
+| `value?` | `T` |
+
+## 返回
+
+[`StateField`](../interfaces/StateField.mdx)\<`InferStateFieldValue`\<`T`\>\>

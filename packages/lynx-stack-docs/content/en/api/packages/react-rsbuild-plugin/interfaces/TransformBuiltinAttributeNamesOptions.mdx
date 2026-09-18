@@ -1,0 +1,45 @@
+# Interface: TransformBuiltinAttributeNamesOptions
+
+Serializable rules for transforming builtin element attribute names.
+
+Exact entries in `rename` take precedence over `preserve`, followed by the
+fallback behavior selected by `mode`.
+
+## Properties
+
+### mode?
+
+```ts
+optional mode?: "dash-case" | "mapping-only";
+```
+
+The fallback behavior for attribute names not listed in `rename` or
+`preserve`.
+
+`'dash-case'` also applies the default React-style event mappings.
+`'mapping-only'` leaves all remaining names unchanged.
+
+#### Default Value
+
+`'dash-case'`
+
+***
+
+### preserve?
+
+```ts
+optional preserve?: readonly string[];
+```
+
+Attribute names that should remain unchanged unless an exact `rename`
+entry is also present.
+
+***
+
+### rename?
+
+```ts
+optional rename?: Readonly<Record<string, string>>;
+```
+
+Exact mappings from source attribute names to transformed attribute names.

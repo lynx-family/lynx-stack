@@ -1,0 +1,42 @@
+# 变量: walk
+
+```ts
+const walk: {
+(ast: CssNode, options: 
+  | EnterOrLeaveFn<CssNode>
+  | WalkOptions): void;
+  break: symbol;
+  skip: symbol;
+};
+```
+
+## 类型声明
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `ast` | [`CssNode`](../type-aliases/CssNode.mdx) |
+| `options` | \| [`EnterOrLeaveFn`](../type-aliases/EnterOrLeaveFn.mdx)\<[`CssNode`](../type-aliases/CssNode.mdx)\> \| [`WalkOptions`](../type-aliases/WalkOptions.mdx) |
+
+## 返回
+
+`void`
+
+### break
+
+```ts
+readonly break: symbol;
+```
+
+停止遍历。一旦某个 visitor 函数返回该值，就不会再调用其他 visitor 函数。
+
+### skip
+
+```ts
+readonly skip: symbol;
+```
+
+阻止当前节点被继续遍历。不会为它的属性或子
+节点调用任何访问函数；请注意该值只对 enter visitor 有效，因为 leave visitor 是在遍历完
+节点的所有属性和子节点之后才被调用的。

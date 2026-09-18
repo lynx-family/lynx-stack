@@ -1,0 +1,44 @@
+# 接口: LepusNGDebugInfoBody
+
+[LepusNGDebugInfo](LepusNGDebugInfo.mdx) 的内部主体。
+携带 lepusNG 编码器为某个编译单元生成的函数级调试数据。
+
+## 属性
+
+### end\_line\_num
+
+```ts
+end_line_num: number;
+```
+
+该编译单元覆盖到的最后一行源码。
+
+***
+
+### function\_info
+
+```ts
+function_info: LepusNGFunctionInfo[];
+```
+
+按函数划分的调试数据。
+
+***
+
+### function\_number
+
+```ts
+function_number: number;
+```
+
+已编译函数的数量；等于 `function_info.length`。
+
+***
+
+### function\_source
+
+```ts
+function_source: string;
+```
+
+输入给字节码编译器的完整 JS 源码。

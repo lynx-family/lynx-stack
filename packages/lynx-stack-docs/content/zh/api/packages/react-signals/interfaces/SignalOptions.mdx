@@ -1,0 +1,51 @@
+# 接口: SignalOptions\<T = `any`\>
+
+## 类型参数
+
+| 类型参数 | 默认类型 |
+| ------ | ------ |
+| `T` | `any` |
+
+## 属性
+
+### name?
+
+```ts
+optional name?: string;
+```
+
+***
+
+### unwatched?
+
+```ts
+optional unwatched?: (this: Signal<T>) => void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `this` | [`Signal`](../classes/Signal.mdx)\<`T`\> |
+
+#### 返回
+
+`void`
+
+***
+
+### watched?
+
+```ts
+optional watched?: (this: Signal<T>) => void;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `this` | [`Signal`](../classes/Signal.mdx)\<`T`\> |
+
+#### 返回
+
+`void`

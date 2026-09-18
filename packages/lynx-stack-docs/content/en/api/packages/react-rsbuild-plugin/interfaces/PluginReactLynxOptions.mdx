@@ -1,0 +1,498 @@
+# Interface: PluginReactLynxOptions
+
+Options of [pluginReactLynx](../functions/pluginReactLynx.mdx)
+
+## Properties
+
+### compat?
+
+```ts
+optional compat?: Partial<CompatVisitorConfig> & object;
+```
+
+The `compat` option controls compatibilities with legacy ReactLynx.
+
+#### Type Declaration
+
+##### disableCreateSelectorQueryIncompatibleWarning?
+
+```ts
+optional disableCreateSelectorQueryIncompatibleWarning?: boolean;
+```
+
+Whether disable runtime warnings about using ReactLynx2.0-incompatible `SelectorQuery` APIs.
+
+###### Example
+
+Using the following APIs will have a runtime warning by default:
+
+```ts
+this.createSelectorQuery()
+this.getElementById()
+this.getNodeRef()
+this.getNodeRefFromRoot()
+```
+
+###### Default Value
+
+`false`
+
+#### Remarks
+
+These options should only be used for migrating from ReactLynx2.0 or
+targeting legacy ReactLynx3 runtimes.
+
+#### Default Value
+
+`undefined`
+
+***
+
+### customCSSInheritanceList?
+
+```ts
+optional customCSSInheritanceList?: string[];
+```
+
+When [PluginReactLynxOptions.enableCSSInheritance](#enablecssinheritance) is enabled, `customCSSInheritanceList` can control which properties are inheritable, not just the default ones.
+
+#### Example
+
+By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.
+
+```js
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
+
+export default defineConfig({
+ plugins: [
+   pluginReactLynx({
+     enableCSSInheritance: true,
+     customCSSInheritanceList: ['direction', 'overflow']
+   }),
+ ],
+})
+```
+
+#### Default Value
+
+`undefined`
+
+***
+
+### debugInfoOutside?
+
+```ts
+optional debugInfoOutside?: boolean;
+```
+
+debugInfoOutside controls whether the debug info is placed outside the template.
+
+#### Remarks
+
+This is recommended to be set to true to reduce template size.
+
+#### Default Value
+
+`true`
+
+***
+
+### defaultDisplayLinear?
+
+```ts
+optional defaultDisplayLinear?: boolean;
+```
+
+defaultDisplayLinear controls whether the default value of `display` in CSS is `linear`.
+
+If `defaultDisplayLinear === false`, the default `display` would be `flex` instead of `linear`.
+
+#### Default Value
+
+`true`
+
+***
+
+### defineDCE?
+
+```ts
+optional defineDCE?: Partial<DefineDceVisitorConfig>;
+```
+
+Like `define` in various bundlers, but this one happens at transform time, and a DCE pass will be performed.
+
+#### Default Value
+
+`undefined`
+
+***
+
+### enableAccessibilityElement?
+
+```ts
+optional enableAccessibilityElement?: boolean;
+```
+
+enableAccessibilityElement set the default value of `accessibility-element` for all `<view />` elements.
+
+#### Default Value
+
+`false`
+
+***
+
+### enableCSSInheritance?
+
+```ts
+optional enableCSSInheritance?: boolean;
+```
+
+enableCSSInheritance enables the default inheritance properties.
+
+#### Remarks
+
+The following properties are inherited by default:
+
+- `direction`
+
+- `color`
+
+- `font-family`
+
+- `font-size`
+
+- `font-style`
+
+- `font-weight`
+
+- `letter-spacing`
+
+- `line-height`
+
+- `line-spacing`
+
+- `text-align`
+
+- `text-decoration`
+
+- `text-shadow`
+
+It is recommended to use with [PluginReactLynxOptions.customCSSInheritanceList](#customcssinheritancelist) to avoid performance issues.
+
+#### Default Value
+
+`false`
+
+***
+
+### enableCSSInvalidation?
+
+```ts
+optional enableCSSInvalidation?: boolean;
+```
+
+CSS Invalidation refers to the process of determining which elements need to have their styles recalculated when the DOM is updated.
+
+#### Example
+
+```ts
+If a descendant selector `.a .b` is defined in a CSS file, then when an element's class changes to `.a`, all nodes in its subtree with the className `.b` need to have their styles recalculated.
+```
+
+#### Remarks
+
+When using combinator to determine the styles of various elements (including descendants, adjacent siblings, etc.), it is recommended to enable this feature. Otherwise, only the initial class setting can match the corresponding combinator, and subsequent updates will not recalculate the related styles.
+
+We find that collecting invalidation nodes and updating them is a relatively time-consuming process.
+If there is no such usage and better style matching performance is needed, this feature can be selectively disabled.
+
+#### Default Value
+
+`true`
+
+***
+
+### enableCSSSelector?
+
+```ts
+optional enableCSSSelector?: boolean;
+```
+
+enableCSSSelector controls whether enabling the new CSS implementation.
+
+#### Default Value
+
+`true`
+
+***
+
+### enableNewGesture?
+
+```ts
+optional enableNewGesture?: boolean;
+```
+
+enableNewGesture enables the new gesture system.
+
+#### Default Value
+
+`false`
+
+***
+
+### enableRemoveCSSScope?
+
+```ts
+optional enableRemoveCSSScope?: boolean;
+```
+
+enableRemoveCSSScope controls whether CSS is restrict to use in the component scope.
+
+`true`: All CSS files are treated as global CSS.
+
+`false`: All CSS files are treated as scoped CSS, and only take effect in the component that explicitly imports it.
+
+`undefined`: Only use scoped CSS for CSS Modules, and treat other CSS files as global CSS. Scoped CSS is faster than global CSS, thus you can use CSS Modules to speedy up your CSS if there are performance issues.
+
+#### Default Value
+
+`true`
+
+***
+
+### enableSSR?
+
+```ts
+optional enableSSR?: boolean;
+```
+
+`enableSSR` enable Lynx SSR feature for this build.
+
+#### Default Value
+
+`false`
+
+***
+
+### enableUiSourceMap?
+
+```ts
+optional enableUiSourceMap?: boolean;
+```
+
+Generate UI source maps in the main-thread transform.
+
+#### Default Value
+
+`false`
+
+***
+
+### engineVersion?
+
+```ts
+optional engineVersion?: string;
+```
+
+`engineVersion` specifies the minimum Lynx Engine version required for an App bundle to function properly.
+
+#### Default Value
+
+`'3.2'`
+
+***
+
+### experimental\_isLazyBundle?
+
+```ts
+optional experimental_isLazyBundle?: boolean;
+```
+
+**`Alpha`**
+
+Generate standalone lazy bundle.
+
+#### Default Value
+
+`false`
+
+***
+
+### experimental\_transformBuiltinAttributeNames?
+
+```ts
+optional experimental_transformBuiltinAttributeNames?: 
+  | boolean
+  | TransformBuiltinAttributeNamesOptions;
+```
+
+**`Experimental`**
+
+Transform attribute names on Lynx builtin elements.
+
+#### Remarks
+
+`false` disables the conversion. `true` applies the default rule:
+`onClick` becomes `bindtap`, `onCatchTap` becomes `catchtap`, other
+`onXXX` names become `bindxxx`, and remaining camelCase names become
+dash-case. An object provides serializable custom rules. Exact entries in
+`rename` take precedence over `preserve`, followed by the fallback behavior
+selected by `mode`.
+
+Explicit JSX attributes are transformed at compile time. Attributes
+supplied through JSX spreads are transformed at runtime with the same
+rules.
+
+#### Default Value
+
+`false`
+
+***
+
+### experimental\_useElementTemplate?
+
+```ts
+optional experimental_useElementTemplate?: boolean;
+```
+
+**`Experimental`**
+
+Enable Element Template compile and runtime entries.
+
+#### Default Value
+
+`false`
+
+***
+
+### extractStr?
+
+```ts
+optional extractStr?: boolean | Partial<ExtractStrConfig>;
+```
+
+Merge same string literals in JS and Lepus to reduce output bundle size.
+Set to `false` to disable.
+
+#### Default Value
+
+```ts
+false
+```
+
+***
+
+### firstScreenSyncTiming?
+
+```ts
+optional firstScreenSyncTiming?: "immediately" | "jsReady" | "manual";
+```
+
+This flag controls when MainThread (Lepus) transfers control to Background after the first screen
+
+This flag has three options:
+
+`"immediately"`: Transfer immediately
+
+`"jsReady"`: Transfer when background (JS Runtime) is ready
+
+`"manual"`: Transfer when the business calls the `markFirstScreenSyncReady()` API exported
+by `@lynx-js/react`, so the handover timing is fully controlled by the user
+
+After handing over control, MainThread (Lepus) runtime can no longer respond to data updates,
+and data updates will be forwarded to background (JS Runtime) and processed __asynchronously__
+
+#### Default Value
+
+```ts
+"immediately"
+```
+
+***
+
+### globalPropsMode?
+
+```ts
+optional globalPropsMode?: "reactive" | "event";
+```
+
+Configure the update mode of `lynx.__globalProps`.
+
+This flag has two options:
+
+`'reactive'`: `UpdateGlobalProps` will trigger update automatically.
+
+`'event'`: `UpdateGlobalProps` will trigger global event and users need to trigger update in the event handler.
+
+#### Default Value
+
+`'reactive'`
+
+***
+
+### optimizeBundleSize?
+
+```ts
+optional optimizeBundleSize?: 
+  | boolean
+  | {
+  background?: boolean;
+  mainThread?: boolean;
+};
+```
+
+Optimize bundle size by removing unused code by Minify.mainThreadOptions and Minify.backgroundOptions.
+
+When optimizeBundleSize or optimizeBundleSize.mainThread is true, main-thread code will be optimized.
+When optimizeBundleSize or optimizeBundleSize.background is true, background code will be optimized.
+
+#### Default Value
+
+`false`
+
+***
+
+### removeDescendantSelectorScope?
+
+```ts
+optional removeDescendantSelectorScope?: boolean;
+```
+
+removeDescendantSelectorScope is used to remove the scope of descendant selectors.
+
+#### Default Value
+
+`true`
+
+***
+
+### shake?
+
+```ts
+optional shake?: Partial<ShakeVisitorConfig>;
+```
+
+How main-thread code will be shaken.
+
+#### Default Value
+
+`undefined`
+
+***
+
+### ~~targetSdkVersion?~~
+
+```ts
+optional targetSdkVersion?: string;
+```
+
+targetSdkVersion is used to specify the minimal Lynx Engine version that a App bundle can run on.
+
+#### Default Value
+
+`'3.2'`
+
+#### Deprecated
+
+`targetSdkVersion` is now an alias of [PluginReactLynxOptions.engineVersion](#engineversion). Use [PluginReactLynxOptions.engineVersion](#engineversion) instead.

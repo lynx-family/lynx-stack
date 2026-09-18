@@ -1,0 +1,46 @@
+# 函数: cssChunksToMap()
+
+```ts
+function cssChunksToMap(
+   cssChunks: (string | CSSChunkAsset)[], 
+   plugins: Plugin[], 
+   enableCSSSelector: boolean
+): object;
+```
+
+将 CSS chunk 转换为 `cssMap` / `cssSource`。
+
+`loc` 字段保留 bundle CSS 坐标，以便之后可以
+通过 `main.css.map` 解析。
+
+`cssSource` 有意保留了历史上的 `/cssId/<id>.css` 形式。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `cssChunks` | (`string` \| `CSSChunkAsset`)[] |
+| `plugins` | [`Plugin`](../interfaces/Plugin.mdx)[] |
+| `enableCSSSelector` | `boolean` |
+
+## 返回
+
+`object`
+
+### contentMap
+
+```ts
+contentMap: Map<number, string[]>;
+```
+
+### cssMap
+
+```ts
+cssMap: Record<string, LynxStyleNode[]>;
+```
+
+### cssSource
+
+```ts
+cssSource: Record<string, string>;
+```

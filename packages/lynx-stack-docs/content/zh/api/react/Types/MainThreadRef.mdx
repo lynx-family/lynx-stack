@@ -1,0 +1,57 @@
+# 类: MainThreadRef\<T\>
+
+`MainThreadRef` 是一种只能在主线程访问的 ref，用于在主线程函数调用之间保存状态。保存在 `MainThreadRef` 的 `current` 属性中的数据，可以在多个主线程函数中读写。
+
+## 类型参数
+
+| 类型参数 |
+| ------ |
+| `T` |
+
+## 构造函数
+
+### 构造函数
+
+```ts
+new MainThreadRef<T>(initValue: T): MainThreadRef<T>;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `initValue` | `T` |
+
+#### 返回
+
+`MainThreadRef`\<`T`\>
+
+## 访问器
+
+### current
+
+#### Getter 签名
+
+```ts
+get current(): T;
+```
+
+##### 返回
+
+`T`
+
+#### Setter 签名
+
+```ts
+set current(_: T): void;
+```
+
+##### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `_` | `T` |
+
+##### 返回
+
+`void`

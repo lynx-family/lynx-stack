@@ -1,0 +1,128 @@
+# Interface: PluginExternalBundleOptions
+
+Options for the external-bundle-rsbuild-plugin.
+
+## Extends
+
+- `Pick`\<`ExternalsLoadingPluginOptions`, `"globalObject"` \| `"timeout"` \| `"retries"`\>
+
+## Properties
+
+### externalBundleRoot?
+
+```ts
+optional externalBundleRoot?: string;
+```
+
+Root directory that stores project-owned external bundles referenced by
+`bundlePath`.
+
+`pluginExternalBundle` uses this directory for both development serving
+and build-time asset emission. Prefer setting this explicitly when
+external bundles are built into a separate output folder, such as
+`dist-external-bundle`.
+
+***
+
+### externals?
+
+```ts
+optional externals?: Record<string, PluginExternalConfig>;
+```
+
+Additional explicit externals to load.
+
+***
+
+### externalsPresetDefinitions?
+
+```ts
+optional externalsPresetDefinitions?: ExternalsPresetDefinitions;
+```
+
+Definitions for custom externals presets enabled by `externalsPresets`.
+
+Use this to add business-specific presets such as `lynxUi`, or to extend a
+built-in preset through `extends`.
+
+***
+
+### externalsPresets?
+
+```ts
+optional externalsPresets?: ExternalsPresets;
+```
+
+Presets for external libraries.
+
+Same as https://rspack.rs/config/externals#externalspresets but for Lynx.
+
+***
+
+### globalObject?
+
+```ts
+optional globalObject?: "lynx" | "globalThis";
+```
+
+This option indicates what global object will be used to mount the library.
+
+In Lynx, the library will be mounted to `lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]` by default.
+
+If you have enabled share js context and want to reuse the library by mounting to the global object, you can set this option to `'globalThis'`.
+
+#### Default
+
+```ts
+'lynx'
+```
+
+#### Inherited from
+
+```ts
+Pick.globalObject
+```
+
+***
+
+### retries?
+
+```ts
+optional retries?: number;
+```
+
+The number of additional attempts when fetching the external bundle times out (`response.code === -2`).
+
+#### Default Value
+
+```ts
+0
+```
+
+#### Inherited from
+
+```ts
+Pick.retries
+```
+
+***
+
+### timeout?
+
+```ts
+optional timeout?: number;
+```
+
+The timeout in milliseconds for loading the externals.
+
+#### Default Value
+
+```ts
+2000
+```
+
+#### Inherited from
+
+```ts
+Pick.timeout
+```

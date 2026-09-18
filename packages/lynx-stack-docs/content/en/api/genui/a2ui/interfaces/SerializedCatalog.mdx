@@ -1,0 +1,39 @@
+# Interface: SerializedCatalog
+
+The serialized payload sent to the agent during channel handshake.
+
+## Properties
+
+### components
+
+```ts
+components: object[];
+```
+
+#### name
+
+```ts
+name: string;
+```
+
+#### schema?
+
+```ts
+optional schema?: CatalogSchema;
+```
+
+***
+
+### functions?
+
+```ts
+optional functions?: FunctionDefinition[];
+```
+
+***
+
+### version
+
+```ts
+version: "0.9";
+```

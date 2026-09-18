@@ -1,0 +1,246 @@
+# 接口: PluginExternalValue
+
+`pluginExternalBundle` 接受的 external bundle 引用。
+
+## 继承
+
+- `Omit`\<`ExternalValue`, `"url"`\>
+
+## 属性
+
+### async?
+
+```ts
+optional async?: boolean;
+```
+
+是否异步加载资源。
+
+#### 默认值
+
+`true`
+
+#### 继承自
+
+```ts
+Omit.async
+```
+
+***
+
+### background?
+
+```ts
+optional background?: LayerOptions;
+```
+
+后台 layer 的选项。
+
+#### 默认值
+
+`undefined`
+
+#### 继承自
+
+```ts
+Omit.background
+```
+
+***
+
+### bundlePath?
+
+```ts
+optional bundlePath?: string;
+```
+
+基于运行时 public path 解析的 bundle 路径。
+
+当 external bundle 需要作为当前项目的一部分被产出或提供服务时，优先使用该选项而非 `url`。`pluginExternalBundle` 可以利用这些信息管理本地 bundle 文件，同时运行时会使最终
+URL 与当前生效的 `publicPath` 保持一致。
+
+#### 重写了
+
+```ts
+Omit.bundlePath
+```
+
+***
+
+### libraryName?
+
+```ts
+optional libraryName?: string | string[];
+```
+
+库的名称。与 https://webpack.js.org/configuration/externals/#string 相同。
+
+默认情况下，库名称与 externals 的 key 相同。例如：
+
+配置
+
+```js
+ExternalsLoadingPlugin({
+  externals: {
+    lodash: {
+      url: '……',
+    }
+  }
+})
+```
+
+将生成以下 webpack externals 配置：
+
+```js
+externals: {
+  lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].lodash',
+}
+```
+
+如果一个 external bundle 包含多个模块，应设置相同的库名称，以确保它只被加载一次。例如：
+
+```js
+ExternalsLoadingPlugin({
+  externals: {
+    lodash: {
+      libraryName: 'Lodash',
+      url: '……',
+    },
+    'lodash-es': {
+      libraryName: 'Lodash',
+      url: '……',
+    }
+  }
+})
+```
+将生成以下 webpack externals 配置：
+
+```js
+externals: {
+  lodash: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash',
+  'lodash-es': 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].Lodash',
+}
+```
+
+可以传入数组来指定 external 的子路径。与 https://webpack.js.org/configuration/externals/#string-1 相同。例如：
+
+```js
+ExternalsLoadingPlugin({
+  externals: {
+    preact: {
+      libraryName: ['ReactLynx', 'Preact'],
+      url: '……',
+      async: false,
+    },
+  }
+})
+```
+
+将生成以下 webpack externals 配置：
+
+```js
+externals: {
+  preact: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.Preact',
+}
+```
+
+在默认的 `async: true` 下，会改为生成一个 `promise` external，它会在库的 promise resolve 之后再取出子路径：
+
+```js
+externals: {
+  preact: 'promise Promise.resolve(lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]["ReactLynx"]).then(function (m) { return m["Preact"]; })',
+}
+```
+
+#### 默认值
+
+`undefined`
+
+#### 示例
+
+```ts
+`Lodash`
+```
+
+#### 继承自
+
+```ts
+Omit.libraryName
+```
+
+***
+
+### mainThread?
+
+```ts
+optional mainThread?: LayerOptions;
+```
+
+主线程 layer 的选项。
+
+#### 默认值
+
+`undefined`
+
+#### 继承自
+
+```ts
+Omit.mainThread
+```
+
+***
+
+### retries?
+
+```ts
+optional retries?: number;
+```
+
+获取外部 bundle 超时（`response.code === -2`）时的额外重试次数。
+
+#### 默认值
+
+`0`
+
+#### 继承自
+
+```ts
+Omit.retries
+```
+
+***
+
+### timeout?
+
+```ts
+optional timeout?: number;
+```
+
+等待时间，单位为毫秒。
+
+#### 默认值
+
+`2000`
+
+#### 继承自
+
+```ts
+Omit.timeout
+```
+
+***
+
+### ~~url?~~
+
+```ts
+optional url?: string;
+```
+
+Bundle 的 URL。
+
+仅当 external bundle 位于当前构建产物之外、且不应由 `pluginExternalBundle` 产出或提供服务时才使用该选项。
+
+#### 已被弃用
+
+建议优先使用 `bundlePath`，它通过运行时 public
+path 解析，并允许上层工具管理资源产出。

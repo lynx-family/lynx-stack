@@ -1,0 +1,51 @@
+# 接口: MatcherOptions
+
+## 继承于
+
+- [`SelectorMatcherOptions`](SelectorMatcherOptions.mdx)
+
+## 属性
+
+### collapseWhitespace?
+
+```ts
+optional collapseWhitespace?: boolean;
+```
+
+请改为使用 normalizer 配合 getDefaultNormalizer
+
+***
+
+### exact?
+
+```ts
+optional exact?: boolean;
+```
+
+***
+
+### normalizer?
+
+```ts
+optional normalizer?: NormalizerFn;
+```
+
+***
+
+### suggest?
+
+```ts
+optional suggest?: boolean;
+```
+
+为特定查询禁用建议
+
+***
+
+### trim?
+
+```ts
+optional trim?: boolean;
+```
+
+请改为使用 normalizer 配合 getDefaultNormalizer

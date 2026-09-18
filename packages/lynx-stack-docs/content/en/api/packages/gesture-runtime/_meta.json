@@ -1,0 +1,82 @@
+[
+  {
+    "type": "file",
+    "name": "classes/BaseGesture",
+    "label": "BaseGesture"
+  },
+  {
+    "type": "file",
+    "name": "classes/ComposedGesture",
+    "label": "ComposedGesture"
+  },
+  {
+    "type": "file",
+    "name": "classes/ContinuousGesture",
+    "label": "ContinuousGesture"
+  },
+  {
+    "type": "file",
+    "name": "classes/DefaultScrollGesture",
+    "label": "DefaultScrollGesture"
+  },
+  {
+    "type": "file",
+    "name": "classes/ExclusiveGesture",
+    "label": "ExclusiveGesture"
+  },
+  {
+    "type": "file",
+    "name": "classes/FlingGesture",
+    "label": "FlingGesture"
+  },
+  {
+    "type": "file",
+    "name": "classes/LongPressGesture",
+    "label": "LongPressGesture"
+  },
+  {
+    "type": "file",
+    "name": "classes/NativeGesture",
+    "label": "NativeGesture"
+  },
+  {
+    "type": "file",
+    "name": "classes/PanGesture",
+    "label": "PanGesture"
+  },
+  {
+    "type": "file",
+    "name": "classes/SimultaneousGesture",
+    "label": "SimultaneousGesture"
+  },
+  {
+    "type": "file",
+    "name": "classes/TapGesture",
+    "label": "TapGesture"
+  },
+  {
+    "type": "file",
+    "name": "functions/useGesture",
+    "label": "useGesture"
+  },
+  {
+    "type": "file",
+    "name": "variables/Gesture",
+    "label": "Gesture"
+  },
+  {
+    "type": "file",
+    "name": "enumerations/GestureTypeInner",
+    "label": "GestureTypeInner"
+  },
+  {
+    "type": "file",
+    "name": "enumerations/LynxNativeIOSGestureRecognizer",
+    "label": "LynxNativeIOSGestureRecognizer"
+  },
+  {
+    "type": "file",
+    "name": "enumerations/SetGestureStateType",
+    "label": "SetGestureStateType"
+  }
+]

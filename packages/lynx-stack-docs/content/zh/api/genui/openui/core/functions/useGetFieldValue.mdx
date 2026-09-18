@@ -1,0 +1,18 @@
+# 函数: useGetFieldValue()
+
+```ts
+function useGetFieldValue(): (formName: string | undefined, name: string) => any;
+```
+
+从表单状态上下文中获取表单字段值。
+
+## 返回
+
+(`formName`: `string` \| `undefined`, `name`: `string`) => `any`
+
+## 示例
+
+```tsx
+const getFieldValue = useGetFieldValue();
+const name = getFieldValue("contactForm", "name");
+```

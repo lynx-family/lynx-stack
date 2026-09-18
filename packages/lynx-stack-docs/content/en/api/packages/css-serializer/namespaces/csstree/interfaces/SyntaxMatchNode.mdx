@@ -1,0 +1,30 @@
+# Interface: SyntaxMatchNode
+
+## Properties
+
+### match?
+
+```ts
+optional match?: SyntaxMatchNode[];
+```
+
+***
+
+### node?
+
+```ts
+optional node?: CssNode;
+```
+
+***
+
+### syntax
+
+```ts
+syntax: 
+  | {
+  name: string;
+  type: string;
+}
+  | null;
+```

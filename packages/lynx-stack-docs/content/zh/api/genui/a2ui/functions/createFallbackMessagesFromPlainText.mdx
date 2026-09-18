@@ -1,0 +1,19 @@
+# 函数: createFallbackMessagesFromPlainText()
+
+```ts
+function createFallbackMessagesFromPlainText(text: string): ServerToClientMessage[];
+```
+
+从一个普通字符串构建单个 Text 的回退消息流。供
+transport / `Session.ingest` 的调用方使用，用于处理来自
+agent 的自由格式文本，而不是结构化的协议消息。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `text` | `string` |
+
+## 返回
+
+[`ServerToClientMessage`](../type-aliases/ServerToClientMessage.mdx)[]

@@ -1,0 +1,43 @@
+# 接口: BuildLynxXmlSystemPromptOptions
+
+用于自定义 Lynx XML 生成系统提示词的选项。
+
+## 属性
+
+### appendix?
+
+```ts
+optional appendix?: string;
+```
+
+在内置约定之后追加调用方特定的指令。
+
+***
+
+### enableHtmlFragment?
+
+```ts
+optional enableHtmlFragment?: boolean;
+```
+
+生成一份中间文档，用于确定性的片段编译。
+
+***
+
+### engineVersion?
+
+```ts
+optional engineVersion?: string;
+```
+
+覆盖生成产物的 Lynx 引擎版本。
+
+***
+
+### stylePreset?
+
+```ts
+optional stylePreset?: false | "default";
+```
+
+独立于 Template 复用预设的工具类 CSS。省略或设为 false 时关闭。

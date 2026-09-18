@@ -1,0 +1,19 @@
+[
+  "ByRoleOptions",
+  "Config",
+  "ConfigFn",
+  "DefaultNormalizerOptions",
+  "LogRolesOptions",
+  "MatcherOptions",
+  "NormalizerOptions",
+  "PrettyDOMOptions",
+  "prettyFormat.PrettyFormatOptions",
+  "Queries",
+  "QueryOptions",
+  "RenderHookOptions",
+  "RenderHookResult",
+  "RenderOptions",
+  "SelectorMatcherOptions",
+  "Suggestion",
+  "waitForOptions"
+]

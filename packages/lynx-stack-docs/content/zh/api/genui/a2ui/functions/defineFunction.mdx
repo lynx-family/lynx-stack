@@ -1,0 +1,25 @@
+# 函数: defineFunction()
+
+```ts
+function defineFunction(impl: FunctionImpl, manifest?: FunctionManifest): CatalogFunctionEntry;
+```
+
+为 `defineCatalog` 构建函数条目。可以把实现与提取出的 manifest 配对，也可以只传实现（注册表仍会路由调用，只是 agent 看不到参数 schema）。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `impl` | [`FunctionImpl`](../type-aliases/FunctionImpl.mdx) |
+| `manifest?` | [`FunctionManifest`](../type-aliases/FunctionManifest.mdx) |
+
+## 返回
+
+[`CatalogFunctionEntry`](../interfaces/CatalogFunctionEntry.mdx)
+
+## 示例
+
+```ts
+const requiredEntry = defineFunction(required, requiredManifest);
+const catalog = defineCatalog([Text, Button, requiredEntry]);
+```

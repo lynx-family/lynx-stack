@@ -1,0 +1,48 @@
+# 接口: FlingGestureConfig
+
+FlingGesture 的配置接口。
+Fling gesture 用于识别快速滑动（fling/swipe）手势。
+
+## 继承
+
+- [`BaseGestureConfig`](BaseGestureConfig.mdx)
+
+## 可索引
+
+```ts
+[key: string]: unknown
+```
+
+## 属性
+
+### direction?
+
+```ts
+optional direction?: "up" | "down" | "left" | "right";
+```
+
+fling 手势的方向
+
+***
+
+### enabled?
+
+```ts
+optional enabled?: boolean;
+```
+
+该手势是否启用。默认为 true。
+
+#### 继承自
+
+[`BaseGestureConfig`](BaseGestureConfig.mdx).[`enabled`](BaseGestureConfig.mdx#enabled)
+
+***
+
+### numberOfPointers?
+
+```ts
+optional numberOfPointers?: number;
+```
+
+所需的指针（手指）数量。默认为 1。

@@ -1,0 +1,24 @@
+# Type Alias: GestureCallback\<TEvent *extends* [`GestureChangeEvent`](../interfaces/GestureChangeEvent.mdx) = [`GestureChangeEvent`](../interfaces/GestureChangeEvent.mdx)\>
+
+```ts
+type GestureCallback<TEvent extends GestureChangeEvent = GestureChangeEvent> = (event: TEvent, stateManager: StateManager) => void;
+```
+
+Generic gesture callback type that receives typed events.
+
+## Type Parameters
+
+| Type Parameter | Default type | Description |
+| ------ | ------ | ------ |
+| `TEvent` *extends* [`GestureChangeEvent`](../interfaces/GestureChangeEvent.mdx) | [`GestureChangeEvent`](../interfaces/GestureChangeEvent.mdx) | The specific gesture event type |
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `event` | `TEvent` |
+| `stateManager` | [`StateManager`](../interfaces/StateManager.mdx) |
+
+## Returns
+
+`void`

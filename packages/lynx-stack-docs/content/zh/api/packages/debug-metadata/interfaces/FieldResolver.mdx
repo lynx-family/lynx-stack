@@ -1,0 +1,53 @@
+# 接口: FieldResolver\<T = `unknown`\>
+
+描述如何查找某个可查询字段，以及（可选地）
+匹配值的哪个子字段应返回给调用方。
+
+`resolve` 执行查找。`payload` 是一个可选的解包器：对于
+`source-map` 查询，resolver 会返回完整的
+[SourceMapDebugSource](SourceMapDebugSource.mdx) 包装对象，但 HTTP 消费方通常需要的是
+原始的 Source Map v3 JSON——`payload: sm => sm.map` 就是用来执行这种
+解包的。
+
+## 类型参数
+
+| 类型参数 | 默认类型 |
+| ------ | ------ |
+| `T` | `unknown` |
+
+## 方法
+
+### payload()?
+
+```ts
+optional payload(value: T): unknown;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `value` | `T` |
+
+#### 返回
+
+`unknown`
+
+***
+
+### resolve()
+
+```ts
+resolve(metadata: DebugMetadataAsset, params: QueryParams): T | undefined;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `metadata` | [`DebugMetadataAsset`](DebugMetadataAsset.mdx) |
+| `params` | [`QueryParams`](QueryParams.mdx) |
+
+#### 返回
+
+`T` \| `undefined`

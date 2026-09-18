@@ -1,0 +1,100 @@
+# 类: CssExtractRspackPlugin
+
+CssExtractRspackPlugin 是 Lynx 的 CSS 提取插件。
+其工作方式与 Web 中的 [CssExtractRspackPlugin](https://rspack.rs/plugins/rspack/css-extract-rspack-plugin.html) 相同。
+
+## 示例
+
+```js
+import { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'
+export default {
+  plugins: [new CssExtractRspackPlugin()],
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [CssExtractRspackPlugin.loader, 'css-loader'],
+      },
+    ],
+  },
+}
+```
+
+## 构造函数
+
+### 构造函数
+
+```ts
+new CssExtractRspackPlugin(options?: CssExtractRspackPluginOptions): CssExtractRspackPlugin;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `options?` | [`CssExtractRspackPluginOptions`](../interfaces/CssExtractRspackPluginOptions.mdx) |
+
+#### 返回
+
+`CssExtractRspackPlugin`
+
+## 属性
+
+### defaultOptions
+
+```ts
+static defaultOptions: Readonly<CssExtractRspackPluginOptions & Pick<Required<CssExtractRspackPluginOptions>, "cssPlugins">>;
+```
+
+`defaultOptions` 是 CssExtractRspackPlugin 使用的默认选项。
+
+***
+
+### loader
+
+```ts
+static loader: string;
+```
+
+用于提取 CSS 的 loader。
+
+#### 备注
+
+应与 ['css-loader'](https://github.com/webpack-contrib/css-loader) 搭配使用。
+
+#### 示例
+
+```js
+import { CssExtractRspackPlugin } from '@lynx-js/css-extract-webpack-plugin'
+export default {
+  plugins: [new CssExtractRspackPlugin()],
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [CssExtractRspackPlugin.loader, 'css-loader'],
+      },
+    ],
+  },
+}
+```
+
+## 方法
+
+### apply()
+
+```ts
+apply(compiler: Compiler): void;
+```
+
+webpack 插件的入口点。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `compiler` | `Compiler` | webpack 编译器 |
+
+#### 返回
+
+`void`

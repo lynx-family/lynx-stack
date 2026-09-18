@@ -1,0 +1,24 @@
+# Type Alias: FindByRole\<T *extends* `HTMLElement` = `HTMLElement`\>
+
+```ts
+type FindByRole<T extends HTMLElement = HTMLElement> = (container: HTMLElement, role: ByRoleMatcher, options?: ByRoleOptions, waitForElementOptions?: waitForOptions) => Promise<T>;
+```
+
+## Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `T` *extends* `HTMLElement` | `HTMLElement` |
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `container` | `HTMLElement` |
+| `role` | [`ByRoleMatcher`](ByRoleMatcher.mdx) |
+| `options?` | [`ByRoleOptions`](../Interfaces/ByRoleOptions.mdx) |
+| `waitForElementOptions?` | [`waitForOptions`](../Interfaces/waitForOptions.mdx) |
+
+## Returns
+
+`Promise`\<`T`\>

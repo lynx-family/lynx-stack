@@ -1,0 +1,32 @@
+# Function: useContext()
+
+```ts
+function useContext<T>(context: Context<T>): T;
+```
+
+Accepts a context object (the value returned from `React.createContext`) and returns the current
+context value, as given by the nearest context provider for the given context.
+
+## Type Parameters
+
+| Type Parameter |
+| ------ |
+| `T` |
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `context` | `Context`\<`T`\> |
+
+## Returns
+
+`T`
+
+## Version
+
+16.8.0
+
+## See
+
+[https://react.dev/reference/react/useContext](https://react.dev/reference/react/useContext)

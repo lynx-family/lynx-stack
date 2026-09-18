@@ -1,0 +1,15 @@
+# Function: registerBasicFunctions()
+
+```ts
+function registerBasicFunctions(): void;
+```
+
+Manual escape hatch for consumers who build their own renderer and don't
+go through `defineCatalog`. Registers every adapted basic-catalog impl
+into the shared `functionRegistry`. Calling more than once is harmless —
+later registrations override earlier ones, which is the intended override
+path.
+
+## Returns
+
+`void`

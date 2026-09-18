@@ -1,0 +1,59 @@
+# 接口: Feature
+
+## 继承
+
+- [`CssNodeCommon`](CssNodeCommon.mdx)
+
+## 属性
+
+### kind
+
+```ts
+kind: string;
+```
+
+***
+
+### loc?
+
+```ts
+optional loc?: CssLocation;
+```
+
+#### 继承自
+
+[`CssNodeCommon`](CssNodeCommon.mdx).[`loc`](CssNodeCommon.mdx#loc)
+
+***
+
+### name
+
+```ts
+name: string;
+```
+
+***
+
+### type
+
+```ts
+type: "Feature";
+```
+
+#### 重写了
+
+[`CssNodeCommon`](CssNodeCommon.mdx).[`type`](CssNodeCommon.mdx#type)
+
+***
+
+### value
+
+```ts
+value: 
+  | Dimension
+  | Identifier
+  | NumberNode
+  | FunctionNode
+  | Ratio
+  | null;
+```

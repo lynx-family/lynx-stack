@@ -1,0 +1,148 @@
+# 接口: A2UIProps
+
+一体化 A2UI ReactLynx 渲染器的 props。
+
+## 属性
+
+### catalogs
+
+```ts
+catalogs: readonly CatalogInput[];
+```
+
+renderer 允许实例化的组件。每一项要么是
+一个裸组件（名称从 `displayName ?? name` 读取），要么是一个元组
+`[component, manifest]`，其中 manifest 是 extractor 在
+`dist/catalog/<Name>/catalog.json` 处生成的 JSON。
+
+***
+
+### className?
+
+```ts
+optional className?: string;
+```
+
+可选的 class 名，应用于当前活动 surface 的顶层 `surface-${surfaceId}` view。当主题切换通过 surface 级别的 class 表达时使用。
+
+***
+
+### messageStore
+
+```ts
+messageStore: MessageStore;
+```
+
+开发者推送协议消息的原始消息缓冲区。`<A2UI>` 通过 `useSyncExternalStore` 订阅它，并增量处理新消息。
+
+内部的 `MessageProcessor`（surface、signal、resource）在每次挂载时只创建一次，之后即使 `messageStore` 被替换为另一个实例也**不会重置**。如需开启新的会话，请传入一个由 store 标识派生的 `key` prop，例如 `<A2UI key={turnId} messageStore={turnStore} ... />`。
+
+***
+
+### onAction?
+
+```ts
+optional onAction?: (action: UserActionPayload) => void;
+```
+
+在渲染树内触发用户操作（如按钮点击等）时调用。将其转发给你的 agent，并把响应消息推回同一个 `messageStore` 以更新 UI。该回调为 fire-and-forget 方式，渲染器不会等待它完成。
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `action` | [`UserActionPayload`](UserActionPayload.mdx) |
+
+#### 返回
+
+`void`
+
+***
+
+### renderEmpty?
+
+```ts
+optional renderEmpty?: () => ReactNode;
+```
+
+在缓冲区中收到第一条 `beginRendering` 之前渲染。
+
+#### 返回
+
+`ReactNode`
+
+***
+
+### renderError?
+
+```ts
+optional renderError?: (err: unknown) => ReactNode;
+```
+
+当前活动 resource 失败时渲染。
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `err` | `unknown` |
+
+#### 返回
+
+`ReactNode`
+
+***
+
+### renderFallback?
+
+```ts
+optional renderFallback?: () => ReactNode;
+```
+
+当前活动 resource 处于 pending 状态时渲染。
+
+#### 返回
+
+`ReactNode`
+
+***
+
+### renderUnsupported?
+
+```ts
+optional renderUnsupported?: (info: UnsupportedInfo) => ReactNode;
+```
+
+遇到不支持的数据语法或不支持的组件时渲染。
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `info` | `UnsupportedInfo` |
+
+#### 返回
+
+`ReactNode`
+
+***
+
+### wrapSurface?
+
+```ts
+optional wrapSurface?: (children: ReactNode, ctx: object) => ReactNode;
+```
+
+包裹每个顶层 surface，便于使用方应用外层主题外壳、包裹 className 或额外样式。
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `children` | `ReactNode` |
+| `ctx` | \{ `surfaceId`: `string`; \} |
+| `ctx.surfaceId` | `string` |
+
+#### 返回
+
+`ReactNode`

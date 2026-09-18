@@ -1,0 +1,110 @@
+# 接口: TemplateHooks
+
+为了让其他插件能够修改 template，此插件会执行
+[tapable](https://github.com/webpack/tapable) 钩子。
+
+## 示例
+
+```js
+class MyPlugin {
+  apply(compiler) {
+    compiler.hooks.compilation.tap("MyPlugin", (compilation) => {
+      console.log("The compiler is starting a new compilation...");
+
+      LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation).beforeEmit.tapAsync(
+        "MyPlugin", // <-- Set a meaningful name here for stacktraces
+        (data, cb) => {
+          // Manipulate the content
+          modifyTemplate(data.template)
+          // Tell webpack to move on
+          cb(null, data);
+        },
+      );
+    });
+  }
+}
+```
+
+## 属性
+
+### afterEmit
+
+```ts
+afterEmit: AsyncSeriesWaterfallHook<{
+  outputName: string;
+}>;
+```
+
+**`Alpha`**
+
+在 template 输出后调用。
+
+***
+
+### asyncChunkName
+
+```ts
+asyncChunkName: SyncWaterfallHook<string>;
+```
+
+**`Alpha`**
+
+获取异步 chunk 的真实名称。具有相同 `asyncChunkName` 的文件会被放入同一个 template。
+
+***
+
+### beforeEmit
+
+```ts
+beforeEmit: AsyncSeriesWaterfallHook<{
+  chunkGroups: ChunkGroup[];
+  cssChunks: Asset[];
+  cssDiagnostics?: string;
+  debugInfo: string;
+  finalEncodeOptions: EncodeOptions;
+  mainThreadAssets: Asset[];
+  outputName: string;
+  template: Buffer;
+}>;
+```
+
+**`Alpha`**
+
+在 template 输出前调用，可用于修改 template。
+
+***
+
+### beforeEncode
+
+```ts
+beforeEncode: AsyncSeriesWaterfallHook<{
+  chunkGroups: ChunkGroup[];
+  encodeData: EncodeRawData;
+  filenameTemplate: string;
+  intermediate: string;
+  intermediateAssets: string[];
+}>;
+```
+
+**`Alpha`**
+
+在编码流程开始前调用，可用于修改编码选项。
+
+***
+
+### encode
+
+```ts
+encode: AsyncSeriesBailHook<{
+  encodeOptions: EncodeOptions;
+  intermediate?: string;
+}, {
+  buffer: Buffer;
+  cssDiagnostics?: string;
+  debugInfo: string;
+}>;
+```
+
+**`Alpha`**
+
+调用编码流程。

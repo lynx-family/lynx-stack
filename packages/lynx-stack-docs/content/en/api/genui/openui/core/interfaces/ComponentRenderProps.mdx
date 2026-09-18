@@ -1,0 +1,85 @@
+# Interface: ComponentRenderProps\<P = `Record`\<`string`, `unknown`\>\>
+
+Props passed to an OpenUI ReactLynx component renderer.
+
+## Extends
+
+- `ComponentRenderProps`\<`P`, `ReactNode`\>
+
+## Type Parameters
+
+| Type Parameter | Default type |
+| ------ | ------ |
+| `P` | `Record`\<`string`, `unknown`\> |
+
+## Properties
+
+### onAction?
+
+```ts
+optional onAction?: (event: ActionEvent) => void;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `event` | [`ActionEvent`](ActionEvent.mdx) |
+
+#### Returns
+
+`void`
+
+***
+
+### props
+
+```ts
+props: P;
+```
+
+#### Inherited from
+
+```ts
+CoreRenderProps.props
+```
+
+***
+
+### renderNode
+
+```ts
+renderNode: (value: unknown) => ReactNode;
+```
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `value` | `unknown` |
+
+#### Returns
+
+`ReactNode`
+
+#### Inherited from
+
+```ts
+CoreRenderProps.renderNode
+```
+
+***
+
+### statementId?
+
+```ts
+optional statementId?: string;
+```
+
+The statement ID from the parsed program (e.g., "header", "prose1"). Undefined for inline components.
+
+#### Inherited from
+
+```ts
+CoreRenderProps.statementId
+```

@@ -1,0 +1,20 @@
+# 类型别名: Printer
+
+```ts
+type Printer = (val: unknown, config: Config, indentation: string, depth: number, refs: Refs, hasCalledToJSON?: boolean) => string;
+```
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `val` | `unknown` |
+| `config` | [`Config`](prettyFormat.Config.mdx) |
+| `indentation` | `string` |
+| `depth` | `number` |
+| `refs` | [`Refs`](prettyFormat.Refs.mdx) |
+| `hasCalledToJSON?` | `boolean` |
+
+## 返回
+
+`string`

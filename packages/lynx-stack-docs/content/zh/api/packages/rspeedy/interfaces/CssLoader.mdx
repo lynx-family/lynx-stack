@@ -1,0 +1,105 @@
+# 接口: CssLoader
+
+CssLoader 用于控制 [css-loader](https://github.com/webpack-contrib/css-loader) 的选项。
+
+## 备注
+
+默认选项如下：
+
+```js
+const defaultOptions = {
+  modules: {
+    auto: true,
+    namedExport: false,
+    exportLocalsConvention: 'camelCase',
+    localIdentName: output.cssModules.localIdentName,
+  },
+  sourceMap: output.sourceMap,
+  // importLoaders is `1` when compiling css files, and is `2` when compiling sass/less files
+  importLoaders: 1 || 2,
+};
+```
+
+## 属性
+
+### importLoaders?
+
+```ts
+optional importLoaders?: 0 | 1 | 2;
+```
+
+`importLoaders` 选项用于配置在 `css-loader` 之前，有多少个 loader 应用于 `@imported` 资源和 CSS Modules 导入。
+
+#### 默认值
+
+编译 CSS 文件时为 `1`，编译 Sass 或 Less 文件时为 `2`
+
+#### 备注
+
+详见 [css-loader#import-loaders](https://github.com/webpack-contrib/css-loader?tab=readme-ov-file#importloaders)。
+
+***
+
+### modules?
+
+```ts
+optional modules?: 
+  | boolean
+  | "local"
+  | "global"
+  | "pure"
+  | "icss"
+  | CssLoaderModules;
+```
+
+[cssLoader.modules](CssLoaderModules.mdx) 选项用于启用/禁用 CSS Modules 规范，并设置基本行为。
+
+#### 默认值
+
+启用 CSS Modules，自动识别 `*.module.*` 文件，使用 camelCase 导出、`namedExport: false`，`localIdentName` 继承自 `output.cssModules.localIdentName`。
+
+#### 示例
+
+使用 `false` 值可以提升性能，因为这样会跳过对 CSS Modules 特性的解析，适用于使用原生 CSS 或其他技术的开发者。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  tools: {
+    cssLoader: {
+      modules: false,
+    },
+  },
+})
+```
+
+使用 `() => true` 值为所有文件启用 CSS Modules。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  tools: {
+    cssLoader: {
+      modules: () => true,
+    },
+  },
+})
+```
+
+使用对象值，基于 [CssLoaderModules.auto](CssLoaderModules.mdx#auto) 选项启用 CSS Modules，并对 CSS Modules 进行更多配置。
+
+```js
+import { defineConfig } from '@lynx-js/rspeedy'
+
+export default defineConfig({
+  tools: {
+    cssLoader: {
+      modules: {
+        namedExport: true,
+      },
+    },
+  },
+})
+```

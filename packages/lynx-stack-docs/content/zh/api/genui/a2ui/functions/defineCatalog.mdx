@@ -1,0 +1,33 @@
+# 函数: defineCatalog()
+
+```ts
+function defineCatalog(inputs: readonly CatalogInput[]): Catalog;
+```
+
+用组件、`[component, manifest]` 对和/或函数条目构建 catalog。同一类别中重复的名称会被拒绝。函数条目会立即把实现注册到 `functionRegistry`，因此 `defineCatalog` 之后的任何 `executeFunctionCall` 都能路由到它们。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `inputs` | readonly [`CatalogInput`](../type-aliases/CatalogInput.mdx)[] |
+
+## 返回
+
+[`Catalog`](../interfaces/Catalog.mdx)
+
+## 示例
+
+```ts
+import { Text, Button } from '@lynx-js/genui/a2ui';
+import { defineCatalog, defineFunction } from '@lynx-js/genui/a2ui';
+import { required } from '@lynx-js/genui/a2ui/functions';
+import textManifest from '@lynx-js/genui/a2ui/catalog/Text/catalog.json'
+  with { type: 'json' };
+
+const catalog = defineCatalog([
+  [Text, textManifest],
+  Button,
+  defineFunction(required),
+]);
+```

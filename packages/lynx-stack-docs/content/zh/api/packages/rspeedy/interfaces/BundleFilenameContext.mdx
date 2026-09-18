@@ -1,0 +1,38 @@
+# 接口: BundleFilenameContext
+
+传递给 [Filename.bundle](Filename.mdx#bundle) 函数的上下文。
+
+## 属性
+
+### entryName?
+
+```ts
+optional entryName?: string;
+```
+
+入口名称。
+
+对于 lazy bundle，该值为 `undefined`，因为 lazy bundle 的名称是按每个异步 chunk 解析的（请改为在返回的字符串中使用
+`[name]` 占位符）。
+
+***
+
+### lazyBundle
+
+```ts
+lazyBundle: boolean;
+```
+
+是否正在为 lazy bundle（异步 chunk）解析文件名，而非为入口的主 bundle 解析。
+
+这样你可以用单个函数同时控制主 bundle 和 lazy bundle，而无需专门的 `lazyBundle` 字段。
+
+***
+
+### platform
+
+```ts
+platform: string;
+```
+
+environment（平台）名称，例如 `'lynx'` 或 `'web'`。

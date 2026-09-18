@@ -1,0 +1,26 @@
+# 函数: findSourceMap()
+
+```ts
+function findSourceMap(metadata: DebugMetadataAsset, query: object): 
+  | SourceMapDebugSource
+  | undefined;
+```
+
+按 `path`、`filename` 或 `key` 查找 `source-map`
+[SourceMapDebugSource](../interfaces/SourceMapDebugSource.mdx)。三者中至少应设置一个；
+每次比较都是与 [SourceMapDebugSource](../interfaces/SourceMapDebugSource.mdx) 上同名字段的精确相等比较。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `metadata` | [`DebugMetadataAsset`](../interfaces/DebugMetadataAsset.mdx) |
+| `query` | \{ `filename?`: `string`; `key?`: `string`; `path?`: `string`; \} |
+| `query.filename?` | `string` |
+| `query.key?` | `string` |
+| `query.path?` | `string` |
+
+## 返回
+
+  \| [`SourceMapDebugSource`](../interfaces/SourceMapDebugSource.mdx)
+  \| `undefined`

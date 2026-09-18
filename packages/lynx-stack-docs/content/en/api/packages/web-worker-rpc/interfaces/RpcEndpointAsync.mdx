@@ -1,0 +1,96 @@
+# Interface: RpcEndpointAsync\<Parameters *extends* `any`[], Return\>
+
+## Extends
+
+- `RpcEndpointBase`\<`Parameters`, `Return`, `false`, `true`\>
+
+## Type Parameters
+
+| Type Parameter |
+| ------ |
+| `Parameters` *extends* `any`[] |
+| `Return` |
+
+## Properties
+
+### bufferSize
+
+```ts
+readonly bufferSize: number;
+```
+
+The byte size for return value buffer.
+The return value will be encoded to json string in utf-8
+So you should ensure this size is enough for your stringified return value.
+
+#### Inherited from
+
+[`RpcEndpointAsyncWithTransfer`](RpcEndpointAsyncWithTransfer.mdx).[`bufferSize`](RpcEndpointAsyncWithTransfer.mdx#buffersize)
+
+***
+
+### hasReturn
+
+```ts
+readonly hasReturn: true;
+```
+
+Whether the endpoint returns a value.
+Only used by async endpoints; sync endpoints return a value when `bufferSize` is set.
+
+#### Inherited from
+
+```ts
+RpcEndpointBase.hasReturn
+```
+
+***
+
+### hasReturnTransfer
+
+```ts
+readonly hasReturnTransfer: false;
+```
+
+Make the message invoke created by hasReturn support transfer.
+Only valid for async and hasReturn endpoints
+
+#### Overrides
+
+```ts
+RpcEndpointBase.hasReturnTransfer
+```
+
+***
+
+### isSync
+
+```ts
+readonly isSync: false;
+```
+
+Whether the call is synchronous (blocks via `Atomics.wait`).
+
+#### Inherited from
+
+```ts
+RpcEndpointBase.isSync
+```
+
+***
+
+### name
+
+```ts
+readonly name: string;
+```
+
+The name of this rpc endpoint.
+Rpc instance use this name to recognize which callback to call.
+Keep in mind: this should be unique.
+
+#### Inherited from
+
+```ts
+RpcEndpointBase.name
+```

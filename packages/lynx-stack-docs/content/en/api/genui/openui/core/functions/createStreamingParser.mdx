@@ -1,0 +1,19 @@
+# Function: createStreamingParser()
+
+```ts
+function createStreamingParser(schema: LibraryJSONSchema, rootName?: string): StreamParser;
+```
+
+Create a streaming parser from a library JSON Schema document.
+Pass `library.toJSONSchema()` to get the schema.
+
+## Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `schema` | [`LibraryJSONSchema`](../interfaces/LibraryJSONSchema.mdx) |
+| `rootName?` | `string` |
+
+## Returns
+
+[`StreamParser`](../interfaces/StreamParser.mdx)

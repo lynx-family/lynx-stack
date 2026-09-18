@@ -1,0 +1,81 @@
+# Variable: RuntimeGlobals
+
+```ts
+const RuntimeGlobals: object;
+```
+
+All the runtime requirements that Lynx uses.
+
+## Type Declaration
+
+### lynxAsyncChunkIds
+
+```ts
+readonly lynxAsyncChunkIds: "__webpack_require__.lynx_aci" = '__webpack_require__.lynx_aci';
+```
+
+A map from async `chunk.id` to the lazy-bundle URL it loads from.
+
+### lynxAsyncChunkMode
+
+```ts
+readonly lynxAsyncChunkMode: "__webpack_require__.lynx_acm" = '__webpack_require__.lynx_acm';
+```
+
+A map from `chunk.id` to the lazy-bundle loading mode (`'sync'` | `'async'`)
+derived from the `import(..., { with: { mode } })` import attribute.
+Only async chunks carrying a `mode` attribute appear here.
+
+### lynxCacheEvents
+
+```ts
+readonly lynxCacheEvents: "__webpack_require__.lynx_ce" = '__webpack_require__.lynx_ce';
+```
+
+A cache layer to cache the events until the chunk is fully loaded.
+
+### lynxCacheEventsSetupList
+
+```ts
+readonly lynxCacheEventsSetupList: "__webpack_require__.lynx_ce.setupList" = '__webpack_require__.lynx_ce.setupList';
+```
+
+A list of functions to setup the cache layer.
+
+### lynxChunkEntries
+
+```ts
+readonly lynxChunkEntries: "lynx.__chunk_entries__" = 'lynx.__chunk_entries__';
+```
+
+A map from `chunk.id` to entryName of the chunk.
+
+### ~~lynxProcessEvalResult~~
+
+```ts
+readonly lynxProcessEvalResult: "globalThis.processEvalResult" = 'globalThis.processEvalResult';
+```
+
+A function to process the eval result of a lazy bundle.
+
+#### Deprecated
+
+Unreliable when multiple lazy bundles load — each overwrites it.
+Prefer [RuntimeGlobals.lynxProcessEvalResultByHost](#lynxprocessevalresultbyhost).
+
+### lynxProcessEvalResultByHost
+
+```ts
+readonly lynxProcessEvalResultByHost: "globalThis.processEvalResultByHost" = 'globalThis.processEvalResultByHost';
+```
+
+A map from a lazy bundle's own url to the function that processes its eval
+result, closing over that bundle's `__webpack_require__`.
+
+### lynxRuntimeConfig
+
+```ts
+readonly lynxRuntimeConfig: "lynx.__runtime_configs__" = 'lynx.__runtime_configs__';
+```
+
+Runtime-readable build configuration.

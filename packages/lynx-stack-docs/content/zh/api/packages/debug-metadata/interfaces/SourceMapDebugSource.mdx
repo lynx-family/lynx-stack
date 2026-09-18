@@ -1,0 +1,53 @@
+# 接口: SourceMapDebugSource
+
+附加在 JS / CSS 产物上的 Source Map v3 调试数据。
+
+## 属性
+
+### filename
+
+```ts
+filename: string;
+```
+
+`.map` 文件的 basename，例如 `main-thread.js.map`。
+
+***
+
+### key
+
+```ts
+key: string;
+```
+
+平台侧反向符号化用来匹配该 map 的标识符。默认值为
+生成该 chunk 的 hash，与运行时 `__DEBUG_METADATA_RELEASE__` banner
+上报的 `release` 一致。
+
+***
+
+### kind
+
+```ts
+kind: "source-map";
+```
+
+***
+
+### map
+
+```ts
+map: SourceMap;
+```
+
+完整的 Source Map v3 数据。
+
+***
+
+### path
+
+```ts
+path: string;
+```
+
+相对于 bundler 的 `.map` 文件路径，例如 `.lynx/main/main-thread.js.map`。

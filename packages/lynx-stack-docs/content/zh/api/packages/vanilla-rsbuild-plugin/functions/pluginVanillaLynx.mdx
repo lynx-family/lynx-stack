@@ -1,0 +1,22 @@
+# 函数: pluginVanillaLynx()
+
+```ts
+function pluginVanillaLynx(options?: PluginVanillaLynxOptions): RsbuildPlugin;
+```
+
+为 Rsbuild 或 Rspeedy 创建 Vanilla Lynx DSL 集成。
+
+一个逻辑入口可以显式声明它的 main-thread 和 background-thread
+源文件。作为简写形式，一个 Rsbuild 入口会被当作 main-thread
+源文件，并按约定发现可选的同级 `background.ts` 和 `style.css`
+文件。
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `options` | [`PluginVanillaLynxOptions`](../interfaces/PluginVanillaLynxOptions.mdx) |
+
+## 返回
+
+`RsbuildPlugin`

@@ -1,0 +1,35 @@
+# Interface: A2UIFunctionSpec
+
+Prompt-facing schema for a client-side function the agent may call.
+
+## Properties
+
+### description?
+
+```ts
+optional description?: string;
+```
+
+***
+
+### name
+
+```ts
+name: string;
+```
+
+***
+
+### parameters
+
+```ts
+parameters: JsonSchema;
+```
+
+***
+
+### returnType
+
+```ts
+returnType: "string" | "number" | "boolean" | "object" | "array" | "any" | "void";
+```

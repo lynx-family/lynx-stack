@@ -1,0 +1,173 @@
+# 类: LynxTemplatePlugin
+
+LynxTemplatePlugin
+
+## 构造函数
+
+### 构造函数
+
+```ts
+new LynxTemplatePlugin(options?: LynxTemplatePluginOptions): LynxTemplatePlugin;
+```
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `options?` | [`LynxTemplatePluginOptions`](../interfaces/LynxTemplatePluginOptions.mdx) |
+
+#### 返回
+
+`LynxTemplatePlugin`
+
+## 属性
+
+### defaultOptions
+
+```ts
+static defaultOptions: Readonly<Required<LynxTemplatePluginOptions>>;
+```
+
+`defaultOptions` 是 LynxTemplatePlugin 使用的默认选项。
+
+#### 示例
+
+`defaultOptions` 可用于修改部分选项，同时保留其余选项为默认值。
+
+```js
+// webpack.config.js
+import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
+export default {
+  plugins: [
+    new LynxTemplatePlugin({
+      ...LynxTemplatePlugin.defaultOptions,
+      enableRemoveCSSScope: true,
+    }),
+  ],
+}
+```
+
+## 方法
+
+### apply()
+
+```ts
+apply(compiler: Compiler): void;
+```
+
+webpack 插件的入口点。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `compiler` | `Compiler` | webpack 编译器 |
+
+#### 返回
+
+`void`
+
+***
+
+### convertCSSChunksToMap()
+
+```ts
+static convertCSSChunksToMap(
+   cssChunks: (
+  | string
+  | {
+  content: string;
+})[], 
+   plugins: Plugin[], 
+   enableCSSSelector: boolean
+): object;
+```
+
+将 css chunk 转换为 css map。
+
+#### 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `cssChunks` | ( \| `string` \| \{ `content`: `string`; \})[] | CSS chunk 的内容。 |
+| `plugins` | [`Plugin`](../namespaces/CSS/interfaces/Plugin.mdx)[] | 传递给解析器的 CSS 插件。 |
+| `enableCSSSelector` | `boolean` | 是否启用 CSS 选择器。 |
+
+#### 返回
+
+`object`
+
+CSS map 和 CSS source。
+
+##### cssMap
+
+```ts
+cssMap: Record<string, LynxStyleNode[]>;
+```
+
+##### cssSource
+
+```ts
+cssSource: Record<string, string>;
+```
+
+#### 备注
+
+该辅助函数目前会转发到 `cssChunksToMap`。
+
+返回的 `cssSource` 以 `cssId` 为 key，并使用合成的文件名格式 `/cssId/<id>.css`。
+
+该辅助函数不会将生成的 `loc` 字段重新映射到原始源码坐标。
+
+#### 示例
+
+```
+(console.log(LynxTemplatePlugin.convertCSSChunksToMap(
+  ['.red { color: red; }'],
+  [],
+  true,
+)));
+```
+
+***
+
+### getAsyncChunkLayoutName()
+
+```ts
+static getAsyncChunkLayoutName(compilation: Compilation, chunkId: string | number): string | undefined;
+```
+
+将异步 chunk id 映射为 `<lazy bundle name>/<layer>`，用于将 lazy
+bundle 的中间 js/css/hmr 产物路由到同一个 per-bundle 目录中。
+对非 lazy 的 chunk 返回 undefined。
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `compilation` | `Compilation` |
+| `chunkId` | `string` \| `number` |
+
+#### 返回
+
+`string` \| `undefined`
+
+***
+
+### getLynxTemplatePluginHooks()
+
+```ts
+static getLynxTemplatePluginHooks(compilation: Compilation): TemplateHooks;
+```
+
+返回 Lynx template webpack 插件在给定 compilation 下的所有公开钩子
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `compilation` | `Compilation` |
+
+#### 返回
+
+[`TemplateHooks`](../interfaces/TemplateHooks.mdx)

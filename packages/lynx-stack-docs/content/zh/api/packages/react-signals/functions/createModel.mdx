@@ -1,0 +1,22 @@
+# 函数: createModel()
+
+```ts
+function createModel<TModel, TFactoryArgs extends any[] = []>(modelFactory: ModelFactory<TModel, TFactoryArgs>): ModelConstructor<TModel, TFactoryArgs>;
+```
+
+## 类型参数
+
+| 类型参数 | 默认类型 |
+| ------ | ------ |
+| `TModel` | - |
+| `TFactoryArgs` *extends* `any`[] | \[\] |
+
+## 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `modelFactory` | `ModelFactory`\<`TModel`, `TFactoryArgs`\> |
+
+## 返回
+
+[`ModelConstructor`](../type-aliases/ModelConstructor.mdx)\<`TModel`, `TFactoryArgs`\>

@@ -1,0 +1,77 @@
+# Interface: LynxMinify
+
+The minifier options of the Lynx threads.
+
+## Remarks
+
+Lynx emits one bundle per thread, and each thread may need different
+minifier settings. These are merged on top of the Rsbuild
+`output.minify.jsOptions` and applied to that thread only.
+
+## Properties
+
+### backgroundOptions?
+
+```ts
+optional backgroundOptions?: SwcJsMinimizerRspackPluginOptions;
+```
+
+Overrides the Rsbuild `output.minify.jsOptions` for background-thread bundles.
+
+#### Remarks
+
+This option is deep-merged into `output.minify.jsOptions`.
+It is mainly used together with ReactLynx dual-thread outputs so that
+main-thread and background-thread bundles can use different compress rules.
+
+***
+
+### mainThreadOptions?
+
+```ts
+optional mainThreadOptions?: SwcJsMinimizerRspackPluginOptions;
+```
+
+Overrides the Rsbuild `output.minify.jsOptions` for main-thread bundles.
+
+#### Remarks
+
+This option is deep-merged into `output.minify.jsOptions`.
+It is mainly used together with ReactLynx dual-thread outputs so that
+main-thread and background-thread bundles can use different compress rules.
+
+#### Example
+
+```ts
+import { defineConfig } from '@rsbuild/core'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+
+export default defineConfig({
+  output: {
+    minify: {
+      jsOptions: {
+        minimizerOptions: {
+          compress: {
+            pure_funcs: ['console.log'],
+          },
+        },
+      },
+    },
+  },
+  plugins: [
+    pluginLynx({
+      output: {
+        minify: {
+          mainThreadOptions: {
+            minimizerOptions: {
+              compress: {
+                pure_funcs: ['NativeModules.call', 'lynx.getJSModule'],
+              },
+            },
+          },
+        },
+      },
+    }),
+  ],
+})
+```

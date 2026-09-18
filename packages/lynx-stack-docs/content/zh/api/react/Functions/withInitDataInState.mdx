@@ -1,0 +1,39 @@
+# 函数: withInitDataInState()
+
+```ts
+function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentClass<P, S>;
+```
+
+高阶组件（HOC），将 `initData` 注入到给定类组件的 state 中。
+
+该 HOC 会检查传入的组件是否为类组件。如果是，则包装该组件，并将 `initData` 注入其 state。同时它会添加一个监听器，在数据变化时更新 state，并在组件卸载时移除该监听器。
+
+## 类型参数
+
+| 类型参数 | 描述 |
+| ------ | ------ |
+| `P` | 被包裹组件的 props 类型。 |
+| `S` | 被包裹组件的 state 类型。 |
+
+## 参数
+
+| 参数 | 类型 | 描述 |
+| ------ | ------ | ------ |
+| `App` | `ComponentClass`\<`P`, `S`\> | 被该高阶组件包裹的类组件。 |
+
+## 返回
+
+`ComponentClass`\<`P`, `S`\>
+
+若传入的不是类组件，则返回原组件；否则返回一个新的类组件，
+         该组件具备 `initData` 注入和 state 更新功能。
+
+## 示例
+
+```typescript
+class App extends React.Component<MyProps, MyState> {
+  // component implementation
+}
+
+export default withInitDataInState(App);
+```

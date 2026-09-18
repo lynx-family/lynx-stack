@@ -1,0 +1,63 @@
+# 接口: ProcessTasmCSSDiagnosticsOptions
+
+[processTasmCSSDiagnostics](../functions/processTasmCSSDiagnostics.mdx) 的选项。
+
+## 属性
+
+### context
+
+```ts
+context: string;
+```
+
+用于解析相对源码路径的 webpack compiler context。
+
+***
+
+### cssDiagnostics
+
+```ts
+cssDiagnostics: unknown;
+```
+
+TASM 返回的原始 `css_diagnostics` 值。
+
+***
+
+### cssSourceMaps
+
+```ts
+cssSourceMaps: string[];
+```
+
+来自当前模板 CSS chunk 的 CSS source map 内容。
+
+***
+
+### emittedWarnings?
+
+```ts
+optional emittedWarnings?: Set<string>;
+```
+
+一个可变集合，用于跳过已经发出过的诊断信息。
+
+***
+
+### fileExists?
+
+```ts
+optional fileExists?: (path: string) => boolean;
+```
+
+在附加映射后的源码位置之前进行的文件存在性检查。
+
+#### 参数
+
+| 参数 | 类型 |
+| ------ | ------ |
+| `path` | `string` |
+
+#### 返回
+
+`boolean`

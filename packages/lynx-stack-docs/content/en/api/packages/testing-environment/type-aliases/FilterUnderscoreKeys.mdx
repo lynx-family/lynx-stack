@@ -1,0 +1,11 @@
+# Type Alias: FilterUnderscoreKeys\<T\>
+
+```ts
+type FilterUnderscoreKeys<T> = { [K in keyof T]: K extends `__${string}` ? K : never }[keyof T];
+```
+
+## Type Parameters
+
+| Type Parameter |
+| ------ |
+| `T` |
