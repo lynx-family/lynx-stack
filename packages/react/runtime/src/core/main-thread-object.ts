@@ -11,7 +11,7 @@ import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bin
 
 import { useMemo } from './hooks/react.js';
 import {
-  getMainThreadObjectHandleMetadata,
+  getMainThreadObjectHandleType,
   isMainThreadObjectHandle as isRegisteredMainThreadObjectHandle,
   registerMainThreadObjectHandle,
 } from './main-thread-object-handle-registry.js';
@@ -99,7 +99,7 @@ export abstract class MainThreadObjectHandle<I, O extends object> {
     this._initValue = initialValue;
     this._type = type;
     this._mtoVersion = MAIN_THREAD_OBJECT_PROTOCOL_VERSION;
-    registerMainThreadObjectHandle(this, type, initialValue);
+    registerMainThreadObjectHandle(this, type);
 
     if (__JS__) {
       addMainThreadRefInitValue(
@@ -186,8 +186,7 @@ export function defineMainThreadObjectType<I, O extends object>(
   const objectType = Object.freeze({
     type,
     downcast(value: unknown): MainThreadObjectHandle<I, O> | undefined {
-      const metadata = getMainThreadObjectHandleMetadata(value);
-      return metadata?.type === type
+      return getMainThreadObjectHandleType(value) === type
         ? value as MainThreadObjectHandle<I, O>
         : undefined;
     },
@@ -340,14 +339,7 @@ function guardBackgroundMainThreadObjectAccess<I, O extends object>(
       );
     },
   });
-  const metadata = getMainThreadObjectHandleMetadata(handle);
-  if (metadata !== undefined) {
-    registerMainThreadObjectHandle(
-      guardedHandle,
-      metadata.type,
-      metadata.initialValue,
-    );
-  }
+  registerMainThreadObjectHandle(guardedHandle, type);
   return guardedHandle;
 }
 
