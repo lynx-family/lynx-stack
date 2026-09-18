@@ -47,7 +47,8 @@ export function ssrHydrateByOpcodes(
         delete top.__pendingElements;
 
         if (top.__snapshot_def.isListHolder) {
-          const listElement = top.__element_root!;
+          const [, elementIndex] = top.__snapshot_def.slot[0]!;
+          const listElement = top.__elements[elementIndex]!;
           const listElementUniqueID = __GetElementUniqueID(listElement);
           const signMap = gSignMap[listElementUniqueID] = new Map();
           gRecycleMap[listElementUniqueID] = new Map();
