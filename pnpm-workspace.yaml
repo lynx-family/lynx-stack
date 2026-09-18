@@ -47,6 +47,8 @@ minimumReleaseAge: 4320
 # and `@lynx-js/preact-devtools` builds) are trusted and publish fresh releases that
 # would otherwise be blocked by `minimumReleaseAge`.
 minimumReleaseAgeExclude:
+  # Explicit Rsdoctor 2.0 beta upgrade.
+  - "@rsdoctor/*"
   - "@lynx-js/*"
   # typia-rspack-plugin uses trusted publish + staged publish
   - "typia-rspack-plugin"

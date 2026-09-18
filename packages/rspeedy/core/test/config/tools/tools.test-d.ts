@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+
 import type { Rspack } from '@rsbuild/core'
 import { describe, test } from '@rstest/core'
 import { expectTypeOf } from 'expect-type'
@@ -187,23 +188,12 @@ describe('Config - Tools', () => {
   })
 
   test('tools.rsdoctor', () => {
-    assertType<Tools>({
-      rsdoctor: {},
-    })
-
+    assertType<Tools>({ rsdoctor: {} })
     assertType<Tools>({
       rsdoctor: {
-        experiments: {
-          enableNativePlugin: true,
-        },
-      },
-    })
-
-    assertType<Tools>({
-      rsdoctor: {
-        experiments: {
-          enableNativePlugin: false,
-        },
+        server: { port: 3300 },
+        supports: { brotli: { brotliLevel: 4 } },
+        output: { mode: 'brief' },
       },
     })
   })
