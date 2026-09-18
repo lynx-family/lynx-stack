@@ -105,7 +105,8 @@ impl VisitMut for WorkletVisitor {
     });
     method.visit_mut_with(&mut collector);
 
-    let should_use_getter = collector.has_extracted_this_props();
+    let should_use_getter =
+      collector.has_extracted_this_props() || collector.has_extracted_js_fns();
 
     let hash = self.hasher.gen(&self.cfg.filename, &self.content_hash);
     let collect_main_thread = self.defines_collector.is_some();
@@ -1084,11 +1085,12 @@ const valueType = defineMainThreadObjectType({
     should_not_capture_computed_object_method_key_lepus,
     r#"
 const name = 'create';
+const nestedName = 'read';
 const valueType = defineMainThreadObjectType({
   type: '@test/value',
   [name](initialValue) {
     "main thread";
-    return { value: initialValue };
+    return { value: initialValue, [nestedName](nestedName) { return nestedName; } };
   },
 });
     "#
@@ -1118,6 +1120,11 @@ const callback = () => {};
 const valueType = defineMainThreadObjectType({
   type: '@test/capturing-value',
   helper: 1,
+  callback,
+  callbackOnly() {
+    "main thread";
+    runOnBackground(this.callback)();
+  },
   create(initialValue: number) {
     "main thread";
     runOnBackground(callback)();
@@ -1151,6 +1158,11 @@ const callback = () => {};
 const valueType = defineMainThreadObjectType({
   type: '@test/capturing-value',
   helper: 1,
+  callback,
+  callbackOnly() {
+    "main thread";
+    runOnBackground(this.callback)();
+  },
   create(initialValue: number) {
     "main thread";
     runOnBackground(callback)();
