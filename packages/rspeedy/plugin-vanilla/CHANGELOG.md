@@ -1,5 +1,11 @@
 # `@lynx-js/vanilla-rsbuild-plugin`
 
+## 0.1.2
+
+### Patch Changes
+
+- Add `@lynx-js/rspeedy` `^0.18.0` to the peer dependency range. ([#3971](https://github.com/lynx-family/lynx-stack/pull/3971))
+
 ## 0.1.1
 
 ### Patch Changes

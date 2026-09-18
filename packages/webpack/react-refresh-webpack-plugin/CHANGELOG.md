@@ -1,5 +1,11 @@
 # @lynx-js/react-refresh-webpack-plugin
 
+## 0.4.3
+
+### Patch Changes
+
+- Add `@lynx-js/react-webpack-plugin` `^0.12.0` to the peer dependency range. ([#3979](https://github.com/lynx-family/lynx-stack/pull/3979))
+
 ## 0.4.2
 
 ### Patch Changes

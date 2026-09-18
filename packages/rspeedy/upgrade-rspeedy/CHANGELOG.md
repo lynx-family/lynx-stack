@@ -1,5 +1,13 @@
 # upgrade-rspeedy
 
+## 0.18.0
+
+### Patch Changes
+
+- Stop managing `@lynx-js/docs-mcp-server` in `upgrade-rspeedy` after the docs MCP server moves to `lynx-community/skills`. ([#3955](https://github.com/lynx-family/lynx-stack/pull/3955))
+
+- Upgrade every published `@lynx-js/` package, not just the ones a scaffolded project starts with. A project using an external bundle no longer has `@lynx-js/lynx-bundle-rslib-config` left behind while `@lynx-js/rspeedy` moves on. ([#3815](https://github.com/lynx-family/lynx-stack/pull/3815))
+
 ## 0.17.2
 
 ## 0.17.1

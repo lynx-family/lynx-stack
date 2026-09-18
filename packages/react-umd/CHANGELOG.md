@@ -1,5 +1,11 @@
 # @lynx-js/react-umd
 
+## 0.126.2
+
+### Patch Changes
+
+- Stop publishing the intermediate files of the development External Bundle in `dist/.lynx`. ([#3923](https://github.com/lynx-family/lynx-stack/pull/3923))
+
 ## 0.126.1
 
 ## 0.126.0
