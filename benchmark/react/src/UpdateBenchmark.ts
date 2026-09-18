@@ -15,7 +15,9 @@ export function startUpdateBenchmark(): void {
 function getUpdateBenchmarkName(caseFilePath: string): string {
   const pathSegments = caseFilePath.split('/');
   const caseName = pathSegments[pathSegments.length - 2] ?? caseFilePath;
-  return `${PREFIX}::${caseName}_Update`;
+  return `${PREFIX}::${
+    __BENCHMARK_ELEMENT_TEMPLATE__ ? 'et-' : ''
+  }${caseName}_Update`;
 }
 
 export function useUpdateBenchmarkCompletion(
