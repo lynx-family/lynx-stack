@@ -14,7 +14,7 @@ import { basename, extname, join } from 'node:path';
 import type { RspressPlugin } from '@rspress/core';
 
 import { renderConfigReference } from './config.ts';
-import { pluginPackagePages } from './packages.ts';
+import { packageGroups, pluginPackagePages } from './packages.ts';
 import { sections } from './sections.ts';
 import { Translations } from './translate.ts';
 import { pluginApiSection } from './typedoc.ts';
@@ -26,7 +26,7 @@ import {
   publicPackages,
   write,
 } from './workspace.ts';
-import type { Locale } from './workspace.ts';
+import type { Locale, WorkspacePackage } from './workspace.ts';
 
 /**
  * The top navigation of this site, by the section each entry opens. The
@@ -61,7 +61,7 @@ function writeNav(locale: Locale): void {
  * pages reads the sections and the packages to show from one file instead of
  * knowing the layout of the package.
  */
-function writeManifest(): void {
+function writeManifest(packages: WorkspacePackage[]): void {
   const routes = readdirSync(join(CONTENT, 'en/api'))
     .filter(name => statSync(join(CONTENT, 'en/api', name)).isDirectory())
     .sort();
@@ -76,6 +76,8 @@ function writeManifest(): void {
               LOCALES.map(locale => [locale, `content/${locale}/api/${name}`]),
             ),
           })),
+          // Every package, for a site that groups the pages it does not show.
+          packages: packageGroups(packages),
           shownPackages: JSON.parse(
             readFileSync(join(DOCS, 'shown-packages.json'), 'utf8'),
           ) as unknown,
@@ -341,7 +343,7 @@ export function pluginApiReference(): RspressPlugin[] {
             }\n`,
           );
         }
-        writeManifest();
+        writeManifest(packages);
         translations.save();
         // `dev` shows the English text of a string the dictionary is missing;
         // a build stops, so it cannot ship.

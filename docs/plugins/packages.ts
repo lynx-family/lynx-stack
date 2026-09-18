@@ -64,6 +64,17 @@ export function withPackageLinks(
   );
 }
 
+/** The group a package is listed under, for every public package. */
+export function packageGroups(
+  packages: WorkspacePackage[],
+): { name: string; route: string; group: string }[] {
+  return packages.map(pkg => ({
+    name: pkg.name,
+    route: `api/${packageRoute(pkg).replace(/\/$/, '')}`,
+    group: groupOf(pkg),
+  }));
+}
+
 function groupOf(pkg: WorkspacePackage): string {
   const dir = relative(ROOT, pkg.dir).replaceAll(sep, '/');
   return GROUPS.find(group =>
