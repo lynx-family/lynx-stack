@@ -11,12 +11,13 @@ import {
   MCP_PROTOCOL_VERSION,
 } from '@lynx-js/genui-mcp-apps/protocol';
 
+import type { ChatOptions } from '../service/common/types.js';
 import app from '../src/app.js';
 
 interface MockMcpAppsService {
   generateRaw(
     messages: unknown,
-    options: unknown,
+    options: ChatOptions,
     conversation: unknown,
     abortSignal?: AbortSignal,
   ): Promise<unknown>;
@@ -55,6 +56,34 @@ function requestBody() {
 }
 
 describe('MCP Apps stream', () => {
+  test('includes returned reasoning when the model fails', async () => {
+    const global = globalThis as GlobalWithMcpAppsService;
+    const previousService = global.__MCP_APPS_AGENT_SERVICE__;
+    global.__MCP_APPS_AGENT_SERVICE__ = {
+      generateRaw(_messages, opts) {
+        opts.onReasoning?.('Routing reasoning');
+        return Promise.reject(new Error('Model failed'));
+      },
+    };
+    try {
+      const response = await app.request('/mcp-apps/stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '203.0.113.214',
+        },
+        body: JSON.stringify(requestBody()),
+      });
+      const body = await response.text();
+      expect(body).toContain('event: error');
+      expect(body).toContain(
+        '"reasoning":{"text":"Routing reasoning","truncated":false}',
+      );
+    } finally {
+      global.__MCP_APPS_AGENT_SERVICE__ = previousService;
+    }
+  });
+
   test.each([
     { type: 'message', text: 'Hello' },
     { type: 'tool_call', name: 'weather.current', arguments: {} },

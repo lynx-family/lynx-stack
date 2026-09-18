@@ -15,6 +15,14 @@ export interface GenerationUsageRecord {
   model: string;
   modelPrices?: ModelPrices;
   usage: TokenUsage;
+  generationAttempts?: GenerationAttemptUsage[];
+}
+
+export interface GenerationAttemptUsage {
+  mode?: 'initial' | 'continue' | 'regenerate';
+  outputChars?: number;
+  finishReason?: string;
+  usage: TokenUsage;
 }
 
 export function readModelPrices(value: unknown): ModelPrices | undefined {
@@ -76,4 +84,34 @@ export function readResponseUsage(payload: unknown): TokenUsage | undefined {
   if ('tokenUsage' in data) return readTokenUsage(data.tokenUsage);
   if ('usage' in data) return readTokenUsage(data.usage);
   return undefined;
+}
+
+/** Keep only the public attempt breakdown, not arbitrary provider metadata. */
+export function readGenerationAttempts(
+  payload: unknown,
+): GenerationAttemptUsage[] | undefined {
+  if (!payload || typeof payload !== 'object') return undefined;
+  const { metadata } = payload as Record<string, unknown>;
+  if (!metadata || typeof metadata !== 'object') return undefined;
+  const { generationAttempts } = metadata as Record<string, unknown>;
+  if (
+    !Array.isArray(generationAttempts) || generationAttempts.length === 0
+    || !generationAttempts.every(attempt =>
+      attempt !== null && typeof attempt === 'object' && !Array.isArray(attempt)
+    )
+  ) return undefined;
+  return generationAttempts.map((attempt: Record<string, unknown>) => ({
+    mode: attempt.mode === 'initial' || attempt.mode === 'continue'
+        || attempt.mode === 'regenerate'
+      ? attempt.mode
+      : undefined,
+    outputChars: typeof attempt.outputChars === 'number'
+        && Number.isSafeInteger(attempt.outputChars) && attempt.outputChars >= 0
+      ? attempt.outputChars
+      : undefined,
+    finishReason: typeof attempt.finishReason === 'string'
+      ? attempt.finishReason.slice(0, 80)
+      : undefined,
+    usage: readResponseUsage(attempt) ?? {},
+  }));
 }

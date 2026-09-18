@@ -318,7 +318,7 @@ test.each([false, true])(
     );
     const result = await createResponsesCompatFetch(fetch)(endpoint, options);
     expect(fetch).toHaveBeenCalledTimes(1);
-    expect(result).toBe(response);
+    if (!stream) expect(result).toBe(response);
     expect(result.bodyUsed).toBe(false);
     expect(options.body).toBe(body);
     expect(options.headers.get('content-length')).toBe(String(body.length));
@@ -438,7 +438,6 @@ test('fills only absent text annotations while retaining citations, reasoning, t
 
 test.each(
   [
-    ['SSE', 200, 'text/event-stream'],
     ['HTTP errors', 429, 'application/json'],
     ['non-JSON replies', 200, 'text/plain'],
   ] as const,

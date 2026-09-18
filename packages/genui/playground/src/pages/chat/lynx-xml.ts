@@ -201,18 +201,13 @@ export const LYNX_XML_STREAM = {
   error: normalizeError,
 };
 
-function formatCharacterCount(source: string): string {
-  return `${source.length.toLocaleString()} chars`;
-}
-
-function generatedStatus(output: LynxXmlOutput): ChatMessageModel {
+function generatedStatus(): ChatMessageModel {
   return {
     kind: 'status',
     tone: 'success',
     icon: 'sparkles',
-    text: `Generated a complete Lynx XML artifact (${
-      formatCharacterCount(output.source)
-    }). Lynx Preview is rendering it now.`,
+    text:
+      'Generated a complete Lynx XML artifact. Lynx Preview is rendering it now.',
   };
 }
 
@@ -282,7 +277,7 @@ function hydrate(
       {
         ...(pendingLocalTitle
           ? localExampleStatus(pendingLocalTitle)
-          : generatedStatus(output)),
+          : generatedStatus()),
         generationUsage: message.generationUsage,
       },
     );
@@ -302,7 +297,7 @@ function createArtifact(output: LynxXmlOutput): ChatArtifact {
     || Boolean(output.modelOutput && output.modelOutput !== output.source);
   return {
     title: 'Generated Lynx XML Artifact',
-    meta: `.lynxml · ${formatCharacterCount(output.source)}`,
+    meta: '.lynxml',
     views: [
       ...(hasConversion && output.modelOutput
         ? [{
@@ -471,18 +466,16 @@ export const LYNX_XML_CHAT_ADAPTER = {
         text: 'Streaming Lynx XML from the GenUI server...',
       };
     },
-    progress(text) {
+    progress(_text: string) {
       return {
         kind: 'status',
         tone: 'pending',
         icon: 'spinner',
-        text: `Streaming Lynx XML from the GenUI server... ${
-          formatCharacterCount(text)
-        }`,
+        text: 'Streaming Lynx XML from the GenUI server...',
       };
     },
-    success(output) {
-      return [generatedStatus(output)];
+    success(_output: LynxXmlOutput) {
+      return [generatedStatus()];
     },
     failure(error) {
       return {

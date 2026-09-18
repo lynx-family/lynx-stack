@@ -180,20 +180,74 @@ describe('runGenuiBenchUiJudge', () => {
     );
   });
 
-  test('rejects external XML resources before calling the screenshot service', async () => {
-    const capture = rstest.fn();
+  test.each([
+    'data: { task: "refreshWeather" }',
+    'data:{temp:26,humidity:"54%"}',
+    'data: snapshot',
+    'data:snapshot',
+    'data: []',
+    'data:null',
+    'data:0',
+    'data:"Updated just now"',
+    '"data": { task: "refreshWeather" }',
+  ])('allows Lynx XML event payload fields (%s)', async field => {
+    const rawText = `<!doctype lynx>
+<lynx engine-version="4.2">
+<script thread="main">
+const backgroundBridge = lynx.getJSContext();
+backgroundBridge.dispatchEvent({ type: "DispatchEventToBackground", ${field}, source: "weather" });
+</script>
+<script thread="background">
+const mainThreadBridge = lynx.getCoreContext();
+mainThreadBridge.dispatchEvent({ type: "PatchFromBackground", data: { temp: 26, forecast: [] } });
+</script>
+</lynx>`;
+    const capture = rstest.fn(() =>
+      Promise.resolve(evaluationResponse(geqiResponse(4)))
+    );
     const result = await runGenuiBenchUiJudge({
-      artifact: {
-        protocol: 'lynx-xml',
-        rawText:
-          '<style>.hero { background-image: url("https://assets.test/image.png"); }</style>',
-      },
-      scenario: { prompt: 'Build a card' },
+      artifact: { protocol: 'lynx-xml', rawText },
+      scenario: { prompt: 'Build a weather card' },
       session: { screenshotPath: 'screenshot/zip/upload' },
     }, capture);
-    expect(capture).not.toHaveBeenCalled();
-    expect(result.status).toBe('failed');
+    expect(capture).toHaveBeenCalledTimes(1);
+    expect(capture).toHaveBeenCalledWith(
+      expect.objectContaining({ source: rawText }),
+      expect.any(AbortSignal),
+    );
+    expect(result.status).toBe('complete');
+    expect(result.errors).toEqual([]);
   });
+
+  test.each([
+    '<style>.hero { background-image: url("https://assets.test/image.png"); }</style>',
+    '<style>.hero { background-image: url(http://assets.test/image.png); }</style>',
+    '<script thread="main">const source = "file:///etc/passwd";</script>',
+    '<script thread="main">const source = "data:image/png;base64,AAAA";</script>',
+    '<script thread="main">const source = `data:${mime};base64,${image}`;</script>',
+    '<script thread="main">const source = "data:" + encoded;</script>',
+    '<script thread="main">const event = { data: {} }; const source = "data:image/png;base64,AAAA";</script>',
+    '<script thread="main">const event = { data: {} }; openUrl(target);</script>',
+    '<style>.hero { background-image: url(data:image/png;base64,AAAA); }</style>',
+    '<style>.hero { background-image: url(DATA:image/svg+xml;charset=utf-8,%3Csvg%3E); }</style>',
+    '<style>.hero { background-image: url(data:;base64,AAAA); }</style>',
+    '<style>.hero { background-image: url(data:,payload); }</style>',
+  ])(
+    'rejects XML resource URLs and host calls before screenshot capture (%s)',
+    async rawText => {
+      const capture = rstest.fn();
+      const result = await runGenuiBenchUiJudge({
+        artifact: {
+          protocol: 'lynx-xml',
+          rawText,
+        },
+        scenario: { prompt: 'Build a card' },
+        session: { screenshotPath: 'screenshot/zip/upload' },
+      }, capture);
+      expect(capture).not.toHaveBeenCalled();
+      expect(result.status).toBe('failed');
+    },
+  );
 
   test('injects OpenUI source into the OpenUI bundle', async () => {
     let body: unknown;

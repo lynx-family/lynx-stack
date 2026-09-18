@@ -5,6 +5,7 @@ import type { ChatHttpRequest, ChatInteractionLog } from './type.js';
 
 const MAX_ENTRIES = 80;
 const MAX_DETAIL_LENGTH = 12_000;
+const MAX_REASONING_LENGTH = 64_000;
 const MAX_MESSAGE_SUMMARIES = 4;
 const MAX_COMPONENT_NAMES = 5;
 
@@ -134,6 +135,24 @@ export function appendChatInteraction(
   elapsedMs: number,
   data?: unknown,
 ): ChatInteractionLog {
+  if (['error', 'done', 'json'].includes(event) && isRecord(data)) {
+    const { reasoning, ...details } = data;
+    if (
+      isRecord(reasoning) && typeof reasoning.text === 'string'
+      && reasoning.text.trim()
+    ) {
+      log = {
+        ...log,
+        reasoning: {
+          text: reasoning.text.slice(0, MAX_REASONING_LENGTH),
+          truncated: reasoning.truncated === true
+            || reasoning.text.length > MAX_REASONING_LENGTH,
+        },
+      };
+    }
+    // Keep reasoning out of the compact event timeline and its copy payload.
+    data = details;
+  }
   if (event === 'done' || event === 'json') {
     const payload = isRecord(data) ? data : {};
     let messages: unknown[] | undefined;

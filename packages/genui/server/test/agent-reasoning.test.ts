@@ -166,10 +166,10 @@ for (const api of ['chat', 'responses'] as const) {
         expect(body.model).toBe(model);
         if (api === 'chat') {
           expect(body.reasoning_effort).toBe('low');
-          expect(body.max_completion_tokens).toBe(16384);
+          expect(body.max_completion_tokens).toBe(32768);
         } else {
           expect(body.reasoning).toEqual({ effort: 'low' });
-          expect(body.max_output_tokens).toBe(16384);
+          expect(body.max_output_tokens).toBe(32768);
         }
         const input = api === 'chat' ? body.messages : body.input;
         expect(input).toEqual(expect.arrayContaining([

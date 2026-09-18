@@ -11,14 +11,20 @@ const BASE_URL = 'https://reasoning-provider.example/v1';
 const MODEL = 'same-upstream-model';
 const DOCUMENT =
   '<!doctype lynx><lynx engine-version="4.2"><template><view><text><raw-text text="Hello"/></text></view></template><script thread="main">const page = __CreatePage("0", 0); const pageId = __GetElementUniqueID(page); createFragment(page, pageId);</script></lynx>';
+const REASONING = 'Plan the greeting layout.';
 
-function modelResponse(api: 'chat' | 'responses', exhausted: boolean) {
+function modelResponse(
+  api: 'chat' | 'responses',
+  exhausted: boolean,
+  incompleteReason: string,
+  streaming: boolean,
+) {
   const text = exhausted ? '' : DOCUMENT;
   const usage = {
     input_tokens: exhausted ? 8010 : 8020,
-    output_tokens: exhausted ? 16384 : 200,
+    output_tokens: exhausted ? 32768 : 200,
     input_tokens_details: { cached_tokens: exhausted ? 6144 : 0 },
-    output_tokens_details: { reasoning_tokens: exhausted ? 16384 : 20 },
+    output_tokens_details: { reasoning_tokens: exhausted ? 32768 : 20 },
   };
   let chunks: unknown[];
   if (api === 'chat') {
@@ -53,6 +59,12 @@ function modelResponse(api: 'chat' | 'responses', exhausted: boolean) {
       },
     ];
   } else {
+    const reasoningItem = {
+      id: 'reasoning-1',
+      type: 'reasoning',
+      summary: [],
+      content: [{ type: 'reasoning_text', text: REASONING }],
+    };
     const item = {
       id: 'message-1',
       type: 'message',
@@ -65,24 +77,45 @@ function modelResponse(api: 'chat' | 'responses', exhausted: boolean) {
       model: MODEL,
       created_at: 1,
       status: exhausted ? 'incomplete' : 'completed',
-      output: exhausted ? [] : [item],
+      output: exhausted ? [reasoningItem] : [item],
       usage,
       ...(exhausted
-        ? { incomplete_details: { reason: 'max_output_tokens' } }
+        ? { incomplete_details: { reason: incompleteReason } }
         : {}),
     };
+    if (!streaming) return Response.json(response);
     chunks = [
       { type: 'response.created', response },
-      ...(exhausted ? [] : [
-        { type: 'response.output_item.added', output_index: 0, item },
-        {
-          type: 'response.output_text.delta',
-          output_index: 0,
-          item_id: item.id,
-          delta: text,
-        },
-        { type: 'response.output_item.done', output_index: 0, item },
-      ]),
+      ...(exhausted
+        ? [
+          {
+            type: 'response.output_item.added',
+            output_index: 0,
+            item: reasoningItem,
+          },
+          {
+            type: 'response.reasoning_text.delta',
+            output_index: 0,
+            item_id: reasoningItem.id,
+            content_index: 0,
+            delta: REASONING,
+          },
+          {
+            type: 'response.output_item.done',
+            output_index: 0,
+            item: reasoningItem,
+          },
+        ]
+        : [
+          { type: 'response.output_item.added', output_index: 0, item },
+          {
+            type: 'response.output_text.delta',
+            output_index: 0,
+            item_id: item.id,
+            delta: text,
+          },
+          { type: 'response.output_item.done', output_index: 0, item },
+        ]),
       {
         type: exhausted ? 'response.incomplete' : 'response.completed',
         response,
@@ -102,9 +135,17 @@ afterEach(() => {
   rstest.unstubAllEnvs();
 });
 
-test.each(['chat', 'responses'] as const)(
-  'recovers reasoning exhaustion through real Mastra and %s requests without changing the model',
-  async api => {
+test.each(
+  [
+    ['chat', 'length', 'stream'],
+    ['responses', 'max_output_tokens', 'stream'],
+    // An arbitrary provider reason maps to `other`; do not assume Ark's raw value.
+    ['responses', 'provider_limit', 'stream'],
+    ['responses', 'provider_limit', 'generate'],
+  ] as const,
+)(
+  'stops after reasoning-only output until another request is made (%s, %s, %s)',
+  async (api, incompleteReason, method) => {
     rstest.stubEnv(
       GENUI_MODEL_CONFIG_ENV,
       JSON.stringify({
@@ -125,81 +166,90 @@ test.each(['chat', 'responses'] as const)(
       }
       const body = JSON.parse(init.body) as Record<string, unknown>;
       requests.push(body);
-      return Promise.resolve(modelResponse(api, requests.length === 1));
+      return Promise.resolve(
+        modelResponse(
+          api,
+          requests.length === 1,
+          incompleteReason,
+          body.stream === true,
+        ),
+      );
     });
     const log = rstest.fn();
+    const onReasoning = rstest.fn<(text: string) => void>();
     const options = {
       model: 'Selected',
       enableWebSearch: false,
       enableImageGeneration: false,
       enableHtmlFragment: true,
       onPerformanceEvent: log,
+      onReasoning,
     };
     const service = new LynxXmlAgentService();
-    const result = await service.streamAsAsyncIterable([
-      { role: 'user', content: 'Generate a greeting.' },
-    ], options);
-    let streamed = '';
-    for await (const chunk of result.textStream) streamed += chunk;
-    expect(streamed).toBe('');
-    const final = await result.finalize();
+    const generate = async () => {
+      const messages = [{
+        role: 'user' as const,
+        content: 'Generate a greeting.',
+      }];
+      if (method === 'generate') return service.generateRaw(messages, options);
+      const result = await service.streamAsAsyncIterable(messages, options);
+      let streamed = '';
+      for await (const chunk of result.textStream) streamed += chunk;
+      if (requests.length === 1) expect(streamed).toBe('');
+      return result.finalize();
+    };
+    const finishReason = incompleteReason === 'provider_limit'
+      ? 'other'
+      : 'length';
+    const generation = generate();
+    await expect(generation).rejects.toThrow(
+      finishReason === 'other'
+        ? 'Model returned reasoning but no final artifact'
+        : 'Model output reached its token limit',
+    );
+    await expect(generation).rejects.toMatchObject({
+      name: 'GenerationPostprocessError',
+      result: {
+        text: '',
+        finishReason,
+        usage: {
+          inputTokens: 8010,
+          outputTokens: 32768,
+          reasoningTokens: 32768,
+        },
+      },
+    });
+    expect(requests).toHaveLength(1);
+    const steps = log.mock.calls.filter(([event]) =>
+      event === 'agent.model.step.completed'
+    );
+    expect(steps).toHaveLength(1);
+    expect(steps[0]?.[1]).toMatchObject({
+      finishReason,
+      toolCalls: [],
+      outputTextChars: 0,
+      ...(api === 'responses' ? { reasoningTextChars: REASONING.length } : {}),
+    });
+    if (api === 'responses') {
+      expect(onReasoning.mock.calls.map(([text]) => text).join('').trim())
+        .toBe(REASONING);
+    }
+    expect(log.mock.calls.some(([event]) => event === 'agent.recovery.started'))
+      .toBe(false);
+
+    // A new explicit request can succeed without changing its budget or effort.
+    const final = await generate();
     expect(final.text).toContain('__CreateView(pageId)');
-    expect(final.text).toMatch(/<\/lynx>$/);
     expect(final.metadata.modelOutput).toBe(DOCUMENT);
-    expect(final.metadata).toMatchObject({
-      generationAttempts: [
-        { mode: 'initial', finishReason: 'length' },
-        { mode: 'regenerate', finishReason: 'stop' },
-      ],
-    });
-    expect(final.usage).toMatchObject({
-      inputTokens: 16030,
-      outputTokens: 16584,
-      reasoningTokens: 16404,
-    });
     expect(requests).toHaveLength(2);
     const budgetKey = api === 'responses'
       ? 'max_output_tokens'
       : 'max_completion_tokens';
-    expect(requests.map(request => request[budgetKey])).toEqual([16384, 32768]);
-    const efforts = requests.map(request =>
+    expect(requests.map(request => request[budgetKey])).toEqual([32768, 32768]);
+    expect(requests.map(request =>
       api === 'responses'
         ? (request.reasoning as { effort: string }).effort
         : request.reasoning_effort
-    );
-    expect(efforts).toEqual(['high', 'low']);
-    for (const request of requests) {
-      expect(request.model).toBe(MODEL);
-      const messages =
-        (api === 'responses' ? request.input : request.messages) as {
-          role: string;
-          content: unknown;
-        }[];
-      expect(messages.some(message => message.role === 'assistant')).toBe(
-        false,
-      );
-      expect(JSON.stringify(messages)).toContain('Generate a greeting.');
-    }
-    expect(log).toHaveBeenCalledWith(
-      'agent.recovery.started',
-      expect.objectContaining({
-        reason: 'reasoning-only-output',
-        maxOutputTokens: 32768,
-        reasoningEffort: 'low',
-      }),
-    );
-    // Cached agents must not retain the recovery override on the next request.
-    const next = await service.streamAsAsyncIterable([
-      { role: 'user', content: 'Generate another greeting.' },
-    ], options);
-    for await (const _chunk of next.textStream) { /* drain */ }
-    await next.finalize();
-    expect(requests[2]?.[budgetKey]).toBe(16384);
-    expect(
-      api === 'responses'
-        ? requests[2]?.reasoning
-        : requests[2]?.reasoning_effort,
-    )
-      .toEqual(api === 'responses' ? { effort: 'high' } : 'high');
+    )).toEqual(['high', 'high']);
   },
 );

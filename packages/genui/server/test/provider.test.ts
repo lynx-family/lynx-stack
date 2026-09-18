@@ -197,6 +197,12 @@ describe('buildOpenAIRunOptions', () => {
           model: 'long-upstream',
           maxOutputTokens: 32768,
         },
+        Larger: {
+          apiKey: 'test-secret',
+          baseURL: 'https://example.com/v1',
+          model: 'larger-upstream',
+          maxOutputTokens: 65536,
+        },
         Unspecified: {
           apiKey: 'test-secret',
           baseURL: 'https://example.com/v1',
@@ -204,25 +210,26 @@ describe('buildOpenAIRunOptions', () => {
         },
       }),
     );
-    expect(DEFAULT_AGENT_MAX_OUTPUT_TOKENS).toBe(16384);
+    expect(DEFAULT_AGENT_MAX_OUTPUT_TOKENS).toBe(32768);
     const budget = (model?: string, desired?: number) =>
       buildOpenAIRunOptions({ model }, undefined, desired).modelSettings
         .maxOutputTokens;
     expect(budget()).toBe(8192);
     expect(budget('unknown')).toBe(8192);
-    expect(budget('Long')).toBe(16384);
-    expect(budget('Unspecified')).toBe(16384);
+    expect(budget('Long')).toBe(32768);
+    expect(budget('Larger')).toBe(32768);
+    expect(budget('Unspecified')).toBe(32768);
     expect(budget('Short', 2048)).toBe(2048);
     expect(budget('Short', 65536)).toBe(8192);
     expect(budget('Long', 65536)).toBe(32768);
-    expect(budget('Long')).toBe(16384);
+    expect(budget('Long')).toBe(32768);
     expect(
       buildOpenAIRunOptions({
         model: 'Short',
         apiKey: 'custom-secret',
         baseURL: 'https://custom.example/v1',
       }).modelSettings.maxOutputTokens,
-    ).toBe(16384);
+    ).toBe(32768);
   });
 
   test('rejects invalid per-call budgets', () => {
@@ -237,10 +244,15 @@ describe('buildOpenAIRunOptions', () => {
     rstest.stubEnv(GENUI_MODEL_CONFIG_ENV, undefined);
     expect(buildOpenAIRunOptions({ maxRetries: 0 }).modelSettings).toEqual({
       maxRetries: 0,
-      maxOutputTokens: 16384,
+      maxOutputTokens: 32768,
     });
+    expect(
+      buildOpenAIRunOptions({ maxRetries: 1 }).modelSettings,
+    )
+      .toEqual({ maxRetries: 1, maxOutputTokens: 32768 });
     expect(buildOpenAIRunOptions({}).modelSettings).toEqual({
-      maxOutputTokens: 16384,
+      maxRetries: 0,
+      maxOutputTokens: 32768,
     });
   });
   test('resolves effort per selected model while preserving explicit overrides', () => {

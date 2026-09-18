@@ -83,10 +83,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function formatCharacterCount(value: string): string {
-  return `${value.length.toLocaleString()} chars`;
-}
-
 function stringifyValue(value: unknown): string {
   if (typeof value === 'string') return value;
   try {
@@ -372,7 +368,7 @@ function createArtifact(output: OpenUIOutput): ChatArtifact {
 
   return {
     title: 'Generated OpenUI Output',
-    meta: `${output.scenarioTitle} - ${formatCharacterCount(output.rawText)}`,
+    meta: output.scenarioTitle,
     views: [
       {
         id: 'raw',
@@ -433,14 +429,12 @@ export const OPENUI_CHAT_ADAPTER = {
         text: 'Streaming OpenUI Lang from the GenUI server...',
       };
     },
-    progress(text) {
+    progress(_text: string) {
       return {
         kind: 'status',
         tone: 'pending',
         icon: 'spinner',
-        text: `Streaming OpenUI Lang from the GenUI server... ${
-          formatCharacterCount(text)
-        }`,
+        text: 'Streaming OpenUI Lang from the GenUI server...',
       };
     },
     success() {

@@ -621,12 +621,12 @@ export const MCP_APPS_CHAT_ADAPTER = {
         text: 'Routing request to a registered MCP Apps...',
       };
     },
-    progress(text) {
+    progress(_text: string) {
       return {
         kind: 'status',
         tone: 'pending',
         icon: 'spinner',
-        text: `Selecting a registered MCP Apps (${text.length} chars)...`,
+        text: 'Selecting a registered MCP Apps...',
       };
     },
     success(output) {

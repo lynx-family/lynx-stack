@@ -61,6 +61,7 @@ export interface ChatInteractionLog {
   entries: readonly ChatInteractionEntry[];
   omittedEntries: number;
   rawOutput?: ChatInteractionEntry;
+  reasoning?: { text: string; truncated: boolean };
 }
 
 export interface ChatMessageModel {
@@ -248,6 +249,7 @@ export interface ChatActionAdapter<
   TSettings,
   TStreamState,
 > {
+  parseUserText?: (text: string) => TAction | null;
   parseWindowMessage: (data: unknown) => TAction | null;
   userText: (action: TAction) => string;
   label: (action: TAction) => string;

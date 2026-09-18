@@ -55,6 +55,12 @@ it through Rslib and Rstest. Do not duplicate shared guidance or add runtime
 filesystem reads, Rspeedy, external bundles, or a required `globalThis.processData`
 contract. Keep local prompt overrides deterministic and tested.
 
+When removing fenced examples from imported skill guidance, preserve the content
+of `text` fences as plain text. These blocks contain normative allowed and
+forbidden CSS property lists, not code examples. Test that both complete lists
+survive in the assembled prompt with Template and StylePreset on and off; do not
+duplicate the shared lists in local prompt source.
+
 Keep fragment parsing bounded by length and nesting depth. Preserve source
 order, XML entities and nonempty text whitespace, reject duplicate ids and
 unsupported source elements, and never execute model JavaScript on the server.

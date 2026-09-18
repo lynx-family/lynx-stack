@@ -25,8 +25,18 @@ const DEFAULT_UI_JUDGE_RETRY_DELAY_MS = 5_000;
 const UNSAFE_OPENUI_HOST_CALL = /\bopenUrl\s*\(/u;
 
 function findUnsafeResourceMarker(rawText: string): string | null {
-  const match = /\b(?:data|file|https?):/iu.exec(rawText);
-  return match?.[0] ?? null;
+  for (const match of rawText.matchAll(/\b(?:data|file|https?):/giu)) {
+    if (match[0].toLowerCase() !== 'data:') return match[0];
+    // A quoted URI prefix may be completed dynamically. Unquoted data URIs
+    // (for example CSS url(data:...)) need a media/parameter header and comma.
+    // Bare JavaScript fields such as data: {}, data: snapshot, or data: 0 are
+    // event payloads, not resource URLs.
+    const quoted = /["'`]/u.test(rawText[match.index - 1] ?? '');
+    const hasDataHeader = /^(?:[\w.+-]+\/[\w.+-]+)?(?:;[^,\s"'`<>{}]*)?,/u
+      .test(rawText.slice(match.index + match[0].length));
+    if (quoted || hasDataHeader) return match[0];
+  }
+  return null;
 }
 
 export type GenuiBenchProtocol = BenchProtocol;

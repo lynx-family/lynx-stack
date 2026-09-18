@@ -34,7 +34,7 @@ export interface ChatOptions
   model?: string | undefined;
   api?: 'chat' | 'responses' | undefined;
   reasoningEffort?: OpenAIReasoningEffort | undefined;
-  /** SDK retries per model call; Bench owns retries and explicitly sets zero. */
+  /** Extra SDK retries per model call; defaults to zero. Bench owns retries. */
   maxRetries?: number | undefined;
   /** Do not retain request-scoped provider credentials in the shared cache. */
   disableAgentCache?: boolean | undefined;
@@ -43,6 +43,8 @@ export interface ChatOptions
    * reasoningEffort from the selected GENUI_MODEL_CONFIG_JSON entry.
    */
   inheritReasoningEffort?: boolean | undefined;
+  /** Provider-returned reasoning text for request-scoped failure details, not logs. */
+  onReasoning?: (text: string) => void;
   onPerformanceEvent?: (
     event: string,
     details?: Record<string, unknown>,

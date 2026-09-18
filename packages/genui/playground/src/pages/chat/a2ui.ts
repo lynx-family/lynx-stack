@@ -39,6 +39,7 @@ interface A2UIDonePayload {
   text?: unknown;
   errors?: unknown;
   validation?: {
+    ok?: boolean;
     messages?: unknown;
     errors?: unknown;
   };
@@ -54,6 +55,7 @@ interface A2UIDonePayload {
 
 interface PersistedA2UIAction {
   action: Record<string, unknown>;
+  surfaceId?: string;
   name: string;
 }
 
@@ -110,21 +112,10 @@ function safeStringify(value: unknown): string {
   }
 }
 
-function formatCharacterCount(count: number): string {
-  return `${count.toLocaleString()} char${count === 1 ? '' : 's'}`;
-}
-
-function generatedCharacterCount(value: unknown): number {
-  return safeStringify(value).length;
-}
-
-function renderedPreviewText(
-  messageCount: number,
-  characterCount: number,
-): string {
+function renderedPreviewText(messageCount: number): string {
   return `✅ Rendered ${messageCount} A2UI message${
     messageCount === 1 ? '' : 's'
-  } (${formatCharacterCount(characterCount)}) to Lynx Preview`;
+  } to Lynx Preview`;
 }
 
 function generatedOutputMessage(payload: unknown): ChatMessageModel {
@@ -169,6 +160,7 @@ function normalizeMessages(payload: unknown): A2UIOutput {
   if (!isRecord(payload)) return [];
 
   const record = payload as A2UIDonePayload;
+  if (record.validation?.ok === false) return [];
   if (Array.isArray(record.messages) && record.messages.length > 0) {
     return record.messages;
   }
@@ -310,6 +302,9 @@ function parsePersistedAction(content: string): PersistedA2UIAction | null {
     const event = isRecord(action.event) ? action.event : null;
     return {
       action,
+      ...(typeof parsed.surfaceId === 'string'
+        ? { surfaceId: parsed.surfaceId }
+        : {}),
       name: typeof action.name === 'string'
         ? action.name
         : (event && typeof event.name === 'string' ? event.name : 'unknown'),
@@ -427,10 +422,7 @@ function hydrateMessages(
         kind: 'status',
         tone: 'success',
         generationUsage: message.generationUsage,
-        text: renderedPreviewText(
-          output.length,
-          generatedCharacterCount(message.content),
-        ),
+        text: renderedPreviewText(output.length),
       });
       if (hasMetrics(message.previewMetrics)) {
         messages.push({
@@ -524,14 +516,12 @@ export const A2UI_CHAT_ADAPTER = {
         text: 'Connecting to A2UI agent...',
       };
     },
-    progress(text) {
+    progress(_text: string) {
       return {
         kind: 'assistant',
         tone: 'pending',
         icon: 'spinner',
-        text: `Streaming A2UI messages (${
-          formatCharacterCount(text.length)
-        })...`,
+        text: 'Streaming A2UI messages...',
       };
     },
     success(output) {
@@ -539,10 +529,7 @@ export const A2UI_CHAT_ADAPTER = {
         {
           kind: 'status',
           tone: 'success',
-          text: renderedPreviewText(
-            output.length,
-            generatedCharacterCount(output),
-          ),
+          text: renderedPreviewText(output.length),
         },
         generatedOutputMessage(output),
       ];
@@ -625,6 +612,12 @@ export const A2UI_CHAT_ADAPTER = {
       'No A2UI data has been received yet. Send a message to generate Web Preview and Native Preview links.',
   },
   action: {
+    parseUserText(text) {
+      const parsed = parsePersistedAction(text);
+      return parsed
+        ? { action: parsed.action, surfaceId: parsed.surfaceId }
+        : null;
+    },
     parseWindowMessage(data) {
       if (!isRecord(data) || data.type !== 'A2UI_USER_ACTION') return null;
       if (!isRecord(data.action)) return null;

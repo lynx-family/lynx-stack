@@ -10,6 +10,42 @@ import {
 } from './chatInteraction.js';
 import type { ChatInteractionLog } from './type.js';
 
+test.each(['error', 'done', 'json'])(
+  'keeps %s reasoning separate from the timeline and compact copy payload',
+  event => {
+    const payload = {
+      message: 'Generation failed',
+      validation: { ok: false },
+      reasoning: { text: 'Returned reasoning', truncated: true },
+    };
+    const log = appendChatInteraction(
+      { entries: [], omittedEntries: 0 },
+      event,
+      5,
+      payload,
+    );
+    expect(log.reasoning).toEqual(payload.reasoning);
+    expect(serializeChatInteraction(log)).not.toContain('Returned reasoning');
+    expect(payload.reasoning.text).toBe('Returned reasoning');
+    const next = appendChatInteraction(log, 'error', 6, 'Generation failed');
+    expect(next.reasoning).toEqual(payload.reasoning);
+  },
+);
+
+test('bounds reasoning independently and does not fabricate text from token counts', () => {
+  const empty = { entries: [], omittedEntries: 0 };
+  expect(
+    appendChatInteraction(empty, 'error', 0, {
+      tokenUsage: { reasoningTokens: 100 },
+    }).reasoning,
+  ).toBeUndefined();
+  const log = appendChatInteraction(empty, 'error', 0, {
+    reasoning: { text: 'x'.repeat(65_000) },
+  });
+  expect(log.reasoning?.text).toHaveLength(64_000);
+  expect(log.reasoning?.truncated).toBe(true);
+});
+
 test('collects interleaved deltas in one raw output without duplicating timeline entries', () => {
   const start = appendChatInteraction(
     { entries: [], omittedEntries: 0 },
