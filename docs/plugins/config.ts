@@ -60,10 +60,7 @@ function kebab(name: string): string {
 }
 
 function slug(path: string[]): string {
-  const [first, ...rest] = path;
-  return rest.length === 0
-    ? kebab(first!)
-    : `${first}/${rest.map(name => kebab(name)).join('-')}`;
+  return path.map(name => kebab(name)).join('/');
 }
 
 function interfacesOf(type: SomeType | undefined): DeclarationReflection[] {
@@ -224,47 +221,78 @@ function writeOverview(
   write(join(out, 'index.mdx'), page.join('\n'));
 }
 
+interface Group {
+  option?: ConfigOption;
+  children: Map<string, Group>;
+}
+
+function group(options: ConfigOption[]): Map<string, Group> {
+  const root = new Map<string, Group>();
+  for (const option of options) {
+    let level = root;
+    for (const [index, name] of option.path.entries()) {
+      const node = level.get(name)
+        ?? { children: new Map<string, Group>() };
+      level.set(name, node);
+      if (index === option.path.length - 1) node.option = option;
+      level = node.children;
+    }
+  }
+  return root;
+}
+
+/** The section the options of a namespace are listed under. */
+function section(namespace: string): string {
+  return `${namespace[0]!.toUpperCase()}${namespace.slice(1)} options`;
+}
+
+function writeGroupMeta(
+  dir: string,
+  level: Map<string, Group>,
+  text: (en: string) => string,
+): void {
+  const meta = [...level].map(([name, node]) => {
+    if (node.children.size > 0) {
+      writeGroupMeta(join(dir, kebab(name)), node.children, text);
+      return { type: 'dir', name: kebab(name), label: name };
+    }
+    return {
+      type: 'file',
+      name: kebab(name),
+      label: name,
+      tag: text(node.option!.category),
+    };
+  });
+  write(join(dir, '_meta.json'), json(meta));
+}
+
 function writeSidebar(
   options: ConfigOption[],
   out: string,
   text: (en: string) => string,
 ): void {
-  const pages = options.filter(option => option.category !== 'Rsbuild');
-  const item = (option: ConfigOption) => ({
-    type: 'file',
-    name: slug(option.path).split('/').pop(),
-    label: option.path.join('.'),
-    tag: text(option.category),
-  });
-  const namespaces = [
-    ...new Set(
-      pages.filter(option => option.path.length > 1).map(option =>
-        option.path[0]!
-      ),
-    ),
-  ];
+  const root = group(options.filter(option => option.category !== 'Rsbuild'));
+  const names = [...root].filter(([, node]) => node.children.size === 0);
+  const namespaces = [...root].filter(([, node]) => node.children.size > 0);
   write(
     join(out, '_meta.json'),
     json([
-      ...pages.filter(option => option.path.length === 1).map(option =>
-        item(option)
-      ),
-      ...namespaces.map(namespace => ({
+      { type: 'section-header', label: text('Base options') },
+      ...names.map(([name, node]) => ({
+        type: 'file',
+        name: kebab(name),
+        label: name,
+        tag: text(node.option!.category),
+      })),
+      ...namespaces.map(([name]) => ({
         type: 'dir-section-header',
-        name: namespace,
-        label: namespace,
+        name: kebab(name),
+        label: text(section(name)),
       })),
     ]),
   );
-  for (const namespace of namespaces) {
-    write(
-      join(out, namespace, '_meta.json'),
-      json(
-        pages.filter(option =>
-          option.path.length > 1 && option.path[0] === namespace
-        ).map(option => item(option)),
-      ),
-    );
+  for (const [name, node] of namespaces) {
+    writeGroupMeta(join(out, kebab(name)), node.children, text);
   }
 }
 
