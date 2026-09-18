@@ -62,7 +62,6 @@ function isSerializedTypedListNode(serialized: SerializedEtNode): serialized is 
 }
 
 interface HydrateChildListDiff {
-  hasChanges: boolean;
   // Background child at a new slot index that has no matching serialized child.
   insertions: Record<number, BackgroundElementTemplateInstance>;
   insertionCount: number;
@@ -78,7 +77,6 @@ function hydrateMatchingChildrenAndDiffSlot(
 ): HydrateChildListDiff | null {
   let lastPlacedIndex = 0;
   const result: HydrateChildListDiff = {
-    hasChanges: false,
     insertions: {},
     insertionCount: 0,
     removals: [],
@@ -111,14 +109,12 @@ function hydrateMatchingChildrenAndDiffSlot(
       }
       if (oldIndex < lastPlacedIndex) {
         result.moves[oldIndex] = { toIndex: i, instance: backgroundChild };
-        result.hasChanges = true;
       } else {
         lastPlacedIndex = oldIndex;
       }
     } else {
       result.insertions[i] = backgroundChild;
       result.insertionCount += 1;
-      result.hasChanges = true;
     }
   }
 
@@ -127,7 +123,6 @@ function hydrateMatchingChildrenAndDiffSlot(
     const candidateCursor = serializedCursorByNodeKey[key] ?? 0;
     for (let i = candidateCursor; i < candidates.length; i += 1) {
       result.removals.push(candidates[i]![1]);
-      result.hasChanges = true;
     }
   }
 
@@ -339,10 +334,6 @@ function hydrateChildListIntoContext(
   const listDiff = hydrateMatchingChildrenAndDiffSlot(serializedChildren, backgroundChildren);
   if (listDiff === null) {
     return false;
-  }
-
-  if (!listDiff.hasChanges) {
-    return true;
   }
 
   // Hydrate emits patches directly here. Replaying against serialized order
