@@ -286,8 +286,9 @@ function sidebar(items: SidebarItem[], dir: string): SidebarItem[] {
 export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
   const content = contentDir(site);
   const translations = new Translations(join(site.docs, 'i18n/zh.json'));
-  const packages = publicPackages(site.root);
-  const all = [
+  const all = publicPackages(site.root);
+  const packages = site.packages?.(all) ?? all;
+  const rendered = [
     ...site.sections(packages),
     packagesSection(packages, site.ownSections),
   ];
@@ -305,7 +306,7 @@ export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
       },
     },
     ...LOCALES.flatMap(locale =>
-      all.map(section =>
+      rendered.map(section =>
         pluginApiSection(
           section,
           locale,
@@ -323,7 +324,7 @@ export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
       name: 'lynx:api-reference-sidebar',
       config(config, _utils, isProd) {
         for (const locale of LOCALES) {
-          for (const section of all) {
+          for (const section of rendered) {
             const dir = join(content, locale, section.out);
             const meta = join(dir, '_meta.json');
             if (section.router === 'group') {
@@ -377,3 +378,7 @@ export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
     },
   ];
 }
+
+export type { Section } from './sections.ts';
+export type { Site } from './site.ts';
+export type { WorkspacePackage } from './workspace.ts';

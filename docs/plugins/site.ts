@@ -28,6 +28,8 @@ export interface Site {
   ownSections: Record<string, string>;
   /** The groups the packages are listed under, by directory prefix. */
   groups: { name: string; dirs: string[] }[];
+  /** The packages to document, out of the ones the workspace publishes. */
+  packages?: (all: WorkspacePackage[]) => WorkspacePackage[];
   /** The sections rendered before the one that lists every package. */
   sections: (packages: WorkspacePackage[]) => Section[];
 }
