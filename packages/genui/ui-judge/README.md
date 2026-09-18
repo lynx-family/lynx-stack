@@ -300,7 +300,18 @@ service without unwinding the staging guard after a fixed five-second reap grace
 so its supervisor can restart it. This fail-closed exit does not request a core
 dump. The same absolute deadline also covers output reading.
 
-If a started child fails, its JSON error response includes separate `stdout`
+The child writes its BMP to a temporary file, closes it, and atomically publishes
+the completed file before native page teardown. If it subsequently exits with
+`SIGSEGV`, the server can still return `200` with that BMP after reaping the child
+and validating the screenshot format, requested dimensions, and complete pixel
+data. Validation checks the runner's fixed BMP layout without decoding pixels.
+Missing, unpublished, or invalid output still returns `422`. Other abnormal exits,
+timeouts, and cancellations remain errors, even if a completed file exists.
+Recovered captures emit a server log with `outcome=recovered-sigsegv`, `signal=11`,
+the job identity, and output byte count. This preserves completed screenshots;
+it does not fix the native crash.
+
+If a started child fails and its capture cannot be recovered, its JSON error response includes separate `stdout`
 and `stderr` strings alongside `message`. Each stream retains its last 64 KiB
 of bytes; `stdoutTruncated` and `stderrTruncated` indicate discarded earlier
 output. Invalid UTF-8 bytes use replacement characters. Both pipes continue to
