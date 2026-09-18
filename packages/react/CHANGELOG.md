@@ -1,5 +1,17 @@
 # @lynx-js/react
 
+## 0.126.2
+
+### Patch Changes
+
+- Preserve first-screen MainThreadRef values and delayed `runOnBackground` calls when a nested main-thread function's original context is garbage-collected before hydration. Hydration now reads the context already owned by the bound function without retaining the original context. ([#3958](https://github.com/lynx-family/lynx-stack/pull/3958))
+
+- Preserve component owners in development error stacks after scheduled state updates, and enable background component stacks for Element Template. ([#3919](https://github.com/lynx-family/lynx-stack/pull/3919))
+
+- Fix SSR hydration of list snapshots with surrounding elements so list callbacks and recycling state are restored on the list element while preserving the snapshot root. ([#3983](https://github.com/lynx-family/lynx-stack/pull/3983))
+
+- Type `RenderResult.unmount` from `@lynx-js/react/testing-library` as returning `void`, matching the runtime. ([#3960](https://github.com/lynx-family/lynx-stack/pull/3960))
+
 ## 0.126.1
 
 ### Patch Changes

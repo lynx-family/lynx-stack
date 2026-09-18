@@ -1,5 +1,17 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.12.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Remove the unused `jsx` option from `ReactLoaderOptions`. `pluginReactLynx` dropped its `jsx` option in #903, and the loader never read this one. ([#3979](https://github.com/lynx-family/lynx-stack/pull/3979))
+
+### Patch Changes
+
+- Fix `RangeError: Maximum call stack size exceeded` when lazy chunks import each other. ([#3930](https://github.com/lynx-family/lynx-stack/pull/3930))
+
+- Optimize single string literal and template literal children of `<text>` into `text` attributes when `engineVersion` is at least 3.1, avoiding separate raw text nodes while preserving expression values and updates. ([#3984](https://github.com/lynx-family/lynx-stack/pull/3984))
+
 ## 0.11.4
 
 ### Patch Changes

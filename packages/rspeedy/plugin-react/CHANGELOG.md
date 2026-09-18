@@ -1,5 +1,19 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.20.3
+
+### Patch Changes
+
+- Default `performance.profile` to `true` in `pluginLynx` when `DEBUG` includes `lynx`, `rsbuild`, `rspeedy` or `*`, to align with Rspeedy. ([#3973](https://github.com/lynx-family/lynx-stack/pull/3973))
+
+- Add `@lynx-js/rspeedy` `^0.18.0` to the peer dependency range. ([#3971](https://github.com/lynx-family/lynx-stack/pull/3971))
+- Updated dependencies [[`388e50e`](https://github.com/lynx-family/lynx-stack/commit/388e50e42106e5f11751b317b82c0313089b29b2), [`4ccff90`](https://github.com/lynx-family/lynx-stack/commit/4ccff90024f05d12eb48d1a8b6303a2a8618270c), [`4ccff90`](https://github.com/lynx-family/lynx-stack/commit/4ccff90024f05d12eb48d1a8b6303a2a8618270c), [`f5779c6`](https://github.com/lynx-family/lynx-stack/commit/f5779c6364caba15152181baf7205a33b2037870), [`0cea2a3`](https://github.com/lynx-family/lynx-stack/commit/0cea2a3d34cb4dee019f0bc82ba07ef3a664ef23), [`c8a6aaf`](https://github.com/lynx-family/lynx-stack/commit/c8a6aafdde20972252898eae32da0aa385f31d6e), [`8eb5c3a`](https://github.com/lynx-family/lynx-stack/commit/8eb5c3aab2c99fa306313cd2382ec7369e97408e), [`10a10bc`](https://github.com/lynx-family/lynx-stack/commit/10a10bcd73f207482fec3bb79a2f04d7c26086d9)]:
+  - @lynx-js/react-webpack-plugin@0.12.0
+  - @lynx-js/react-refresh-webpack-plugin@0.4.3
+  - @lynx-js/rsbuild-plugin@0.1.3
+  - @lynx-js/react-alias-rsbuild-plugin@0.20.3
+  - @lynx-js/use-sync-external-store@1.5.0
+
 ## 0.20.2
 
 ### Patch Changes
