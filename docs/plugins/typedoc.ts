@@ -40,7 +40,6 @@ export function pluginApiSection(
         excludePrivate: true,
         excludeProtected: true,
         excludeInternal: true,
-        excludeReferences: true,
         skipErrorChecking: true,
         readme: 'none',
       });

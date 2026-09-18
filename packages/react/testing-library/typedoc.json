@@ -9,9 +9,14 @@
     "ElementTreeGlobals",
     "EventType_2",
     "FireObject_2",
+    "Indent",
     "LynxElement",
     "LynxEnv",
     "LynxGlobalThis",
+    "PluginOptions",
+    "Print",
+    "Test",
+    "ThemeReceived",
     "initElementTree"
   ]
 }

@@ -8,6 +8,26 @@
  * model needs: main-thread functions, the data a page receives from native,
  * and a few compile-time directives and macros.
  *
+ * @remarks
+ *
+ * The React APIs below behave as the
+ * {@link https://react.dev/reference/react | official React reference}
+ * describes them, unless a page says otherwise. They are compatible with
+ * React 17 and {@link https://preactjs.com/guide/v10/switching-to-preact/ | Preact}.
+ *
+ * React entered its "concurrent" era with
+ * {@link https://react.dev/blog/2022/03/29/react-v18 | React 18}. Concurrent
+ * features such as `useTransition` and `useDeferredValue` make strict demands
+ * on how the host schedules work — they depend on browser Web APIs or on the
+ * React Native architecture. Lynx evolves its own architecture, so ReactLynx
+ * builds on React 17 and keeps the React programming model. The parts of
+ * {@link https://react.dev/blog/2024/04/25/react-19 | React 19} and the
+ * {@link https://react.dev/learn/react-compiler | React Compiler} that do not
+ * depend on the concurrent architecture are still on the table.
+ *
+ * For an introduction to ReactLynx, see the
+ * {@link https://lynxjs.org/react/ | ReactLynx guides}.
+ *
  * @groupDescription Hooks
  * Hooks that ReactLynx adds on top of React, plus the React hooks it
  * re-exports or re-implements for the dual-thread model.
