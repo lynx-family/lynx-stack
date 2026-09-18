@@ -1,43 +1,35 @@
 # Lynx XML
 
-`@lynx-js/genui-lynx-xml` owns the system prompt used to generate complete,
+`@lynx-js/genui/lynx-xml` provides system prompts for generating complete,
 zero-build `.lynxml` artifacts with Vanilla Lynx and Element PAPI. It also
-provides headless utilities for converting well-formed XML fragments into
-deterministic Element PAPI JavaScript.
+compiles XML fragments into deterministic Element PAPI JavaScript.
 
-The built-in prompt is composed from selected guidance in the direct,
-version-pinned `@lynx-js/skill-vanilla-lynx` dependency plus a small Lynx XML
-adaptation layer. The dependency provides shared Element PAPI, lifecycle,
-event-routing, background-state, and styling rules. The local layer defines the
-single-file XML contract, removes project and external-bundle workflows, and
-requires the page root and every container that lays out Element children to
-explicitly apply `display: flex` and a `flex-direction`. It also supplies
-mobile-first defaults for narrow portrait layouts, responsive sizing, safe
-areas, scrolling, spacing, typography, visual hierarchy, and touch targets.
-When content can exceed one viewport, the first business node below the Page is
-required to be the definite-height vertical `scroll-view`; it is not wrapped in
-an additional business `view`. The provider-neutral design intent lives in
-the shared GenUI server design contract; the concrete Element PAPI and
-`scroll-view` contract lives in `src/prompt.ts`. That API contract also keeps numeric component ids
-separate from Element PAPI node references: both `__AppendElement` arguments
-must be nodes, while `pageId` is used only by page-owned element creation APIs.
+The package is headless. Consumers provide model calls, streaming, artifact
+extraction, and rendering.
 
-The selected Markdown is imported and inlined at build time. Consumers do not
-need the source skill files at runtime, and the prompt implementation does not
-perform filesystem reads.
+## Generation modes
 
-## Usage
+| Mode             | Model output                                                        | Consumer action                                              |
+| ---------------- | ------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Direct (default) | A complete `.lynxml` document with model-authored Element PAPI code | Pass the document to the renderer                            |
+| XML fragment     | An intermediate `.lynxml` document containing a `<template>`        | Call `compileLynxXmlFragment`, then render its `text` result |
 
-Use the default prompt:
+Both modes keep styles, state, lifecycle, and interactions model-authored.
+Fragment mode generates the static element tree deterministically, without an
+additional model round trip.
+
+## Build a system prompt
+
+Use the default prompt for direct generation:
 
 ```ts
-import { LYNX_XML_SYSTEM_PROMPT } from '@lynx-js/genui-lynx-xml';
+import { LYNX_XML_SYSTEM_PROMPT } from '@lynx-js/genui/lynx-xml';
 ```
 
 Customize the engine version or append integration-specific instructions:
 
 ```ts
-import { buildLynxXmlSystemPrompt } from '@lynx-js/genui-lynx-xml';
+import { buildLynxXmlSystemPrompt } from '@lynx-js/genui/lynx-xml';
 
 const prompt = buildLynxXmlSystemPrompt({
   engineVersion: '4.2',
@@ -45,31 +37,96 @@ const prompt = buildLynxXmlSystemPrompt({
 });
 ```
 
-Convert an XML fragment into main-thread script and stable bindings for its
-`id` attributes:
+`engineVersion` defaults to `4.2`. Set `enableHtmlFragment: true` to select
+fragment mode; it defaults to `false`. `appendix` is appended after the built-in
+instructions.
+
+## Compile an XML fragment document
+
+Use `LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT` for fragment generation, or build a
+custom prompt with `enableHtmlFragment: true`:
 
 ```ts
-import { generateMainThreadScriptResult } from '@lynx-js/genui-lynx-xml';
+import {
+  compileLynxXmlFragment,
+  LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT,
+} from '@lynx-js/genui/lynx-xml';
+
+const prompt = LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT;
+
+// Call this with the complete intermediate document returned by the model.
+function compileModelOutput(source: string) {
+  const { text, xmlFragment } = compileLynxXmlFragment(source);
+  return { text, xmlFragment };
+}
+```
+
+The intermediate document must follow these rules:
+
+- Include exactly one `<template>` directly inside `<lynx>`, alongside normal
+  style and script blocks in any order, with exactly one main-thread script.
+- Assign unique ids only to nodes needed by handlers, updates, or cleanup.
+  Static nodes do not need ids.
+- Call `createFragment(page, pageId)` exactly once during rendering. Keep its
+  returned id-to-node map in script-scoped `nodes` for later use, such as
+  `nodes["root"]`. The compiler supplies the helper; the model must not declare
+  or shadow it.
+
+Compilation removes the template and injects `createFragment`, which creates
+and appends the tree and returns only nodes with explicit ids. The result has
+two fields:
+
+- `text`: the complete `.lynxml` document to render.
+- `xmlFragment`: the original XML inside the template.
+
+Compilation validates the document and fragment without executing JavaScript.
+It preserves source order and whitespace within nonempty text, rejects duplicate
+ids, and bounds fragment length and nesting. Rendering remains the consumer's
+responsibility.
+
+### Convert a standalone fragment
+
+For custom compilation pipelines, convert an XML fragment directly into
+main-thread JavaScript:
+
+```ts
+import { generateMainThreadScriptResult } from '@lynx-js/genui/lynx-xml';
 
 const { bindings, javascript } = generateMainThreadScriptResult(
   '<view id="root"><text>Hello</text></view>',
 );
 ```
 
-Generate an intermediate document with `LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT`
-and pass it to `compileLynxXmlFragment(source)`. It requires one `<template>` directly inside `<lynx>`, in any order alongside
-normal style and script blocks. Static nodes do not need ids; only nodes used by
-handlers, updates, or cleanup need unique ids. The model
-calls the server-provided `createFragment(page, pageId)` once during rendering
-and retains its return value for handlers, for example `nodes["root"]`.
+The generated `javascript` expects `page` and `pageId` in scope and creates a
+`nodeMap`. `bindings` maps explicit XML ids to JavaScript expression strings,
+for example `{ root: 'nodeMap["root"]' }`; it does not contain live nodes.
+Use `generateMainThreadScript` when only the JavaScript string is needed.
 
-Compilation removes the template and injects a deterministic helper that
-creates and appends the tree, then returns the id-to-node map. The helper reuses one temporary element reference and a parent stack,
-retaining only nodes with explicit ids in its returned map. No per-element
-nodeN variables are generated; the model keeps the map in script-scoped `nodes`. Styles, state, lifecycle, and interactions
-remain model-authored. No generated script or bindings need a model round trip.
-The result contains the complete `text` and the original `xmlFragment`.
+## Prompt composition and constraints
 
-The converter preserves nonempty text whitespace and source order, checks XML,
-rejects duplicate ids, and bounds fragment length and nesting. Compilation does
-not execute JavaScript. Final rendering remains the consumer's responsibility.
+The prompt combines selected guidance from the pinned
+`@lynx-js/skill-vanilla-lynx` dependency with local rules in
+[`src/prompt.ts`](./src/prompt.ts). Shared guidance covers Element PAPI,
+lifecycle, event routing, background state, and styling. It is inlined at build
+time, so consumers need no skill files or filesystem reads at runtime.
+
+The local prompt adapts that guidance to single-file `.lynxml` artifacts and
+takes precedence over imported guidance. Its key constraints are:
+
+- **Node references:** `__AppendElement` and append helpers receive nodes,
+  not numeric ids. `pageId` is reserved for page-owned element creation APIs.
+- **Layout:** the Page and every container that lays out Element children use
+  applied classes with explicit `display: flex` and `flex-direction`.
+- **Scrolling:** content that can exceed one viewport uses a definite-height
+  vertical `scroll-view` as the first business node directly below the Page,
+  without a business `view` wrapper. Fixed bars reserve scroll content space,
+  including safe-area insets.
+- **Artifact boundaries:** all code stays in the document, without imports,
+  packages, dynamic code execution, external scripts, analytics, or tracking.
+  Asset and link URLs come from the user, host, or enabled search/image tools.
+  Runtime fetching is limited to explicitly requested integrations on the
+  background thread.
+
+Product and mobile design defaults are composed separately by GenUI Server in
+[`design-guidance.ts`](../server/design/design-guidance.ts). The local prompt
+owns the concrete Lynx runtime, layout, and artifact constraints.
