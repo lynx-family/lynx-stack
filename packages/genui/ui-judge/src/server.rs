@@ -34,7 +34,7 @@ use tokio::process::{Child, Command};
 use tokio::sync::{oneshot, watch, Notify, OwnedSemaphorePermit, Semaphore};
 
 use crate::capture::{shared_workers, CaptureError, CaptureWorkers, WorkerPanicked};
-use crate::headless::PageLoadOptions;
+use crate::headless::{PageLoadOptions, DEFAULT_SCREENSHOT_SETTLE_MS};
 use crate::ssrf::{fetch_http_resource, HttpFetchError};
 use crate::visual::{
   compare_uploaded_images, ReferenceImageComparison, VisualEvaluationError, MAX_IMAGE_BYTES,
@@ -44,7 +44,6 @@ use crate::CapturePageRequest;
 #[path = "zip/mod.rs"]
 pub mod zip;
 
-const DEFAULT_SCREENSHOT_SETTLE_MS: u64 = 16;
 const DEFAULT_SCREENSHOT_WIDTH: usize = 800;
 const DEFAULT_SCREENSHOT_HEIGHT: usize = 600;
 const MAX_SCREENSHOT_DIMENSION: usize = 8_192;
@@ -71,7 +70,6 @@ const ZIP_CAPTURE_PROCESS_GRACE: Duration = Duration::from_secs(5);
 const ZIP_CAPTURE_FATAL_EXIT_CODE: i32 = 75;
 const MAX_CONCURRENT_ZIP_RENDERERS: usize = 8;
 const MAX_CAPTURE_LOG_BYTES: usize = 64 * 1024;
-const ZIP_SCREENSHOT_SETTLE_MS: u64 = 500;
 static NEXT_ZIP_JOB_ID: AtomicU64 = AtomicU64::new(1);
 
 #[derive(Clone, Copy)]
@@ -95,7 +93,7 @@ impl Default for IsolatedCaptureConfig {
     Self {
       global_props_json: None,
       initial_data_json: None,
-      screenshot_settle_ms: ZIP_SCREENSHOT_SETTLE_MS,
+      screenshot_settle_ms: DEFAULT_SCREENSHOT_SETTLE_MS,
       timeout_ms: DEFAULT_TIMEOUT_MS,
     }
   }
@@ -1466,7 +1464,7 @@ async fn capture_staged_source(
 
 fn staged_screenshot_request(url: &str) -> CapturePageRequest {
   CapturePageRequest {
-    screenshot_settle: Duration::from_millis(ZIP_SCREENSHOT_SETTLE_MS),
+    screenshot_settle: Duration::from_millis(DEFAULT_SCREENSHOT_SETTLE_MS),
 
     timeout: Duration::from_millis(DEFAULT_TIMEOUT_MS),
     url: url.to_string(),
