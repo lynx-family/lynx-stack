@@ -1,3 +1,4 @@
 doc_build
 .rspress
 content/*/api/
+manifest.json

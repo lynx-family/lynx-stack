@@ -20,6 +20,37 @@ import { Translations } from './translate.ts';
 import { pluginApiSection } from './typedoc.ts';
 import { CONTENT, DOCS, LOCALES, publicPackages } from './workspace.ts';
 
+/**
+ * Writes what the generated reference contains, so a site that installs the
+ * pages reads the sections and the packages to show from one file instead of
+ * knowing the layout of the package.
+ */
+function writeManifest(): void {
+  const routes = readdirSync(join(CONTENT, 'en/api'))
+    .filter(name => statSync(join(CONTENT, 'en/api', name)).isDirectory())
+    .sort();
+  writeFileSync(
+    join(DOCS, 'manifest.json'),
+    `${
+      JSON.stringify(
+        {
+          sections: routes.map(name => ({
+            route: `api/${name}`,
+            content: Object.fromEntries(
+              LOCALES.map(locale => [locale, `content/${locale}/api/${name}`]),
+            ),
+          })),
+          shownPackages: JSON.parse(
+            readFileSync(join(DOCS, 'shown-packages.json'), 'utf8'),
+          ) as unknown,
+        },
+        null,
+        2,
+      )
+    }\n`,
+  );
+}
+
 const SIDEBAR = [
   { name: 'react', label: '@lynx-js/react' },
   {
@@ -284,6 +315,7 @@ export function pluginApiReference(): RspressPlugin[] {
             }\n`,
           );
         }
+        writeManifest();
         translations.save();
         const missing = translations.missing;
         if (missing.length > 0) {

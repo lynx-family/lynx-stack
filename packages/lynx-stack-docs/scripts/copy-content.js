@@ -33,7 +33,5 @@ for (const locale of ['en', 'zh']) {
   if (!existsSync(from)) throw new Error(`${from} does not exist`);
   copyDir(from, join(TARGET, locale, 'api'));
 }
-copyFileSync(
-  join(DOCS, 'shown-packages.json'),
-  join(PACKAGE, 'shown-packages.json'),
-);
+// What the package contains, for a site that installs it.
+copyFileSync(join(DOCS, 'manifest.json'), join(PACKAGE, 'manifest.json'));
