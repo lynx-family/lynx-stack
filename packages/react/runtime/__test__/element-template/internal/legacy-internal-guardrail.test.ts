@@ -22,6 +22,9 @@ describe('legacy internal guardrail', () => {
     expect(ElementTemplateInternal.loadWorkletRuntime).toBeTypeOf('function');
     expect('loadWorkletRuntime' in ElementTemplateRuntime).toBe(false);
 
+    expect(ElementTemplateInternal.captureMainThreadObject({ value: 1 })).toBeUndefined();
+    expect('captureMainThreadObject' in ElementTemplateRuntime).toBe(false);
+
     expect(ElementTemplateInternal.registerWorkletOnBackground).toBeTypeOf('function');
     expect(() => ElementTemplateInternal.registerWorkletOnBackground('main-thread', 'hash', () => {})).not.toThrow();
     expect('registerWorkletOnBackground' in ElementTemplateRuntime).toBe(false);
