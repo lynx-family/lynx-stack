@@ -4,9 +4,18 @@ const callback = ()=>{};
 const valueType = defineMainThreadObjectType({
     type: '@test/capturing-value',
     helper: 1,
-    get create () {
+    callback,
+    get callbackOnly () {
         return {
             _wkltId: "a77b:test:1",
+            _jsFn: {
+                _jsFn1: transformToWorklet(this.callback)
+            }
+        };
+    },
+    get create () {
+        return {
+            _wkltId: "a77b:test:2",
             _jsFn: {
                 _jsFn1: transformToWorklet(callback)
             },
