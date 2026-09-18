@@ -45,6 +45,11 @@ export function pluginApiSection(
       });
       if (section.name) app.options.setValue('name', section.name);
       app.options.setValue('router', section.router);
+      // A package page nests group > member > section > property, which is one
+      // level deeper than the page outline of Rspress shows.
+      if (section.router === 'module') {
+        app.options.setValue('hideGroupHeadings', true);
+      }
       app.options.setValue('fileExtension', '.mdx');
       app.options.setValue('sanitizeComments', true);
       app.options.setValue('disableSources', false);
