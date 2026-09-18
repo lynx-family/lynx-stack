@@ -693,6 +693,7 @@ export function ChatController<
   });
 
   const busy = isGenerating || isActionRunning;
+  const generationSettingsLocked = persistedMessages.length > 0;
   const settingsValidationError = adapter.settings?.validate?.(settings);
 
   const setCurrentOutput = useCallback((next: TOutput | null) => {
@@ -836,9 +837,11 @@ export function ChatController<
     if (hydratedActiveIdRef.current === activeId) return;
     hydratedActiveIdRef.current = activeId;
     const historySettings = adapter.settings?.conversation;
-    if (historySettings && savedGenerationSettings) {
+    const generationSettings = savedGenerationSettings
+      ?? historySettings?.defaults;
+    if (historySettings && generationSettings) {
       setSettings((current) =>
-        historySettings.restore(current, savedGenerationSettings)
+        historySettings.restore(current, generationSettings)
       );
     }
     const hydrated = adapter.hydrate({
@@ -1729,8 +1732,19 @@ export function ChatController<
   );
   const updateSetting = (id: string, value: string) => {
     const settingsAdapter = adapter.settings;
-    if (!settingsAdapter) return;
-    setSettings((current) => settingsAdapter.update(current, id, value));
+    if (!settingsAdapter || !isReady || busy) return;
+    if (
+      generationSettingsLocked
+      && checkboxControls.some(control => control.id === id)
+    ) return;
+    const next = settingsAdapter.update(settingsRef.current, id, value);
+    settingsRef.current = next;
+    setSettings(next);
+    if (isReady && settingsAdapter.conversation) {
+      void recordGenerationSettings(
+        settingsAdapter.conversation.snapshot(next),
+      );
+    }
   };
   const artifact = output === null
     ? null
@@ -1981,44 +1995,68 @@ export function ChatController<
               )
               : null}
             <div className='chatComposerFooter'>
-              <div
-                className={checkboxControls.length > 1
-                  ? 'chatProviderControl chatProviderControlWrap'
-                  : 'chatProviderControl'}
-              >
-                {selectControls.map((control) => (
-                  <select
-                    key={control.id}
-                    className='chatProviderSelect'
-                    title={control.label}
-                    aria-label={control.label}
-                    value={control.value}
-                    disabled={busy || control.disabled}
-                    onChange={(event) =>
-                      updateSetting(control.id, event.target.value)}
-                  >
-                    {control.options?.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                ))}
-                {checkboxControls.map((control) => (
-                  <label key={control.id} className='chatProviderCheckbox'>
-                    <input
-                      type='checkbox'
-                      checked={control.value === 'on'}
-                      disabled={busy || control.disabled}
-                      onChange={(event) =>
-                        updateSetting(
-                          control.id,
-                          event.target.checked ? 'on' : 'off',
-                        )}
-                    />
-                    <span>{control.label}</span>
-                  </label>
-                ))}
+              <div className='chatProviderControl'>
+                {selectControls.length > 0
+                  ? (
+                    <div className='chatProviderSelectGroup'>
+                      {selectControls.map((control) => (
+                        <label
+                          key={control.id}
+                          className='chatProviderSelectField'
+                        >
+                          <span className='chatProviderSelectLabel'>
+                            {control.label}
+                          </span>
+                          <select
+                            className='chatProviderSelect'
+                            title={control.options?.find((option) =>
+                              option.value === control.value
+                            )?.label ?? control.label}
+                            aria-label={control.label}
+                            value={control.value}
+                            disabled={busy || control.disabled}
+                            onChange={(event) =>
+                              updateSetting(control.id, event.target.value)}
+                          >
+                            {control.options?.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      ))}
+                    </div>
+                  )
+                  : null}
+                {checkboxControls.length > 0
+                  ? (
+                    <div className='chatProviderOptions'>
+                      {checkboxControls.map((control) => (
+                        <label
+                          key={control.id}
+                          className='chatProviderCheckbox'
+                          title={generationSettingsLocked
+                            ? 'Saved generation options. Start a new chat to change them.'
+                            : control.description}
+                        >
+                          <input
+                            type='checkbox'
+                            checked={control.value === 'on'}
+                            disabled={!isReady || busy
+                              || generationSettingsLocked || control.disabled}
+                            onChange={(event) =>
+                              updateSetting(
+                                control.id,
+                                event.target.checked ? 'on' : 'off',
+                              )}
+                          />
+                          <span>{control.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )
+                  : null}
               </div>
               <Button
                 variant='primary'

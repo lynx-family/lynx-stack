@@ -14,6 +14,7 @@ import {
 import { PROTOCOLS } from '../../utils/protocol.js';
 
 const FLEX_LAYOUT_CLASSES: Readonly<Record<string, readonly string[]>> = {
+  'style-preset-counter': ['flex'],
   'template-counter': [
     'counter-card',
     'value-panel',
@@ -90,6 +91,7 @@ const FLEX_LAYOUT_CLASSES: Readonly<Record<string, readonly string[]>> = {
 };
 
 const ROW_LAYOUT_CLASSES: Readonly<Record<string, readonly string[]>> = {
+  'style-preset-counter': ['flex-row'],
   'template-counter': ['stats', 'stepper'],
   counter: ['stepper'],
   'travel-plan': ['hero-stats', 'day-tabs', 'route-header', 'stop'],
@@ -126,6 +128,7 @@ describe('Lynx XML showcase', () => {
       'weather-card',
       'todo-list',
       'template-counter',
+      'style-preset-counter',
     ]);
     for (const scenario of LYNX_XML_SCENARIOS) {
       expect(scenario.source).toMatch(/^<!doctype lynx>/u);
@@ -292,78 +295,121 @@ describe('Lynx XML showcase', () => {
     );
   });
 
-  test('renders once, handles counter events from the embedded script, and cleans up', () => {
+  test('preserves the example style preset when compiling editor changes', () => {
     const scenario = LYNX_XML_DEMOS_PAGE_SOURCE.findScenario(
-      'template-counter',
+      'style-preset-counter',
     )!;
-    interface Element {
-      tag: string;
-      children: (Element | string)[];
-    }
-    const create = (tag: string): Element => ({ tag, children: [] });
-    const page = create('page');
-    const byId = new Map<string, Element>();
-    const taps = new Map<Element, () => void>();
-    const lifecycle = new Map<string, () => void>();
-    const flush = rstest.fn();
-    const context = {
-      lynx: {
-        getEngine: () => ({
-          addEventListener: (name: string, handler: () => void) =>
-            lifecycle.set(name, handler),
-          removeEventListener: (name: string) => lifecycle.delete(name),
-        }),
-      },
-      __CreatePage: () => page,
-      __GetElementUniqueID: () => 0,
-      __CreateScrollView: () => create('scroll-view'),
-      __CreateView: () => create('view'),
-      __CreateText: () => create('text'),
-      __CreateRawText: (text: string) => text,
-      __SetClasses: rstest.fn(),
-      __SetAttribute: rstest.fn(),
-      __SetID: (node: Element, id: string) => byId.set(id, node),
-      __AppendElement: (parent: Element, child: Element | string) =>
-        parent.children.push(child),
-      __GetChildren: (node: Element) => node.children,
-      __ReplaceElements: (node: Element, children: Element['children']) => {
-        node.children = children;
-      },
-      __AddEventListener: (node: Element, _name: string, handler: () => void) =>
-        taps.set(node, handler),
-      __RemoveEventListener: (node: Element) => taps.delete(node),
-      __FlushElementTree: flush,
-    };
-    const script = scenario.source.split('<script thread="main">')[1]!.split(
-      '</script>',
-    )[0]!;
-    runInNewContext(script, context);
-    lifecycle.get('__RenderPage')!();
-    lifecycle.get('__RenderPage')!();
-    expect(page.children).toHaveLength(1);
-    expect(page.children[0]).toMatchObject({ tag: 'scroll-view' });
-    expect(JSON.stringify(page)).toContain('Daily counter');
-    expect(JSON.stringify(page)).toContain('Steps to go');
-    expect(flush).not.toHaveBeenCalled();
-    expect(byId.get('count')?.children).toEqual(['8']);
-    expect(taps.size).toBe(3);
-    const tap = (id: string) => taps.get(byId.get(id)!)!();
-    tap('increment');
-    expect(byId.get('count')?.children).toEqual(['9']);
-    expect(byId.get('remaining')?.children).toEqual(['3']);
-    tap('decrement');
-    expect(byId.get('count')?.children).toEqual(['8']);
-    for (let step = 0; step < 4; step++) tap('increment');
-    expect(byId.get('count')?.children).toEqual(['12']);
-    expect(byId.get('note')?.children).toEqual(['Daily goal reached!']);
-    expect(byId.get('remaining')?.children).toEqual(['0']);
-    tap('reset');
-    tap('decrement');
-    expect(byId.get('count')?.children).toEqual(['0']);
-    expect(byId.get('remaining')?.children).toEqual(['12']);
-    expect(flush).toHaveBeenCalledTimes(8);
-    lifecycle.get('__DestroyLifetime')!();
-    expect(taps.size).toBe(0);
-    expect(lifecycle.size).toBe(0);
+    const original = LYNX_XML_DEMOS_PAGE_SOURCE.getEditorValue(scenario);
+    expect(original).toContain('<template>');
+    expect(original).not.toContain('display: flex;');
+    expectCssDeclaration(
+      scenario.source,
+      'bg-white',
+      'background-color: #ffffff;',
+    );
+
+    const editorValue = original.replace('bg-white', 'bg-indigo-50');
+    const edited = LYNX_XML_DEMOS_PAGE_SOURCE.commit({
+      scenario,
+      editorValue,
+      editorEdited: true,
+    });
+    if (!('value' in edited)) throw new Error(edited.error);
+    const { source, sourcePath } = edited.value.previewInput;
+    expect(sourcePath).toBeUndefined();
+    expect(source).not.toContain('<template>');
+    expectCssDeclaration(source, 'bg-indigo-50', 'background-color: #eef2ff;');
+    expect(LYNX_XML_DEMOS_PAGE_SOURCE.editor.views[1]!.getValue({
+      editorValue,
+      scenario,
+    })).toBe(source);
+    const previewUrl = new URL(LYNX_XML_DEMOS_LIST_SOURCE.createPreviewUrl({
+      baseUrl: 'https://lynx-stack.dev/genui/',
+      protocol: PROTOCOLS['lynx-xml'],
+      scenario,
+      theme: 'light',
+    }));
+    expect(previewUrl.searchParams.get('exampleId')).toBe(scenario.id);
   });
+
+  test.each(['template-counter', 'style-preset-counter'])(
+    'renders %s once, handles counter events, and cleans up',
+    (id) => {
+      const scenario = LYNX_XML_DEMOS_PAGE_SOURCE.findScenario(
+        id,
+      )!;
+      interface Element {
+        tag: string;
+        children: (Element | string)[];
+      }
+      const create = (tag: string): Element => ({ tag, children: [] });
+      const page = create('page');
+      const byId = new Map<string, Element>();
+      const taps = new Map<Element, () => void>();
+      const lifecycle = new Map<string, () => void>();
+      const flush = rstest.fn();
+      const context = {
+        lynx: {
+          getEngine: () => ({
+            addEventListener: (name: string, handler: () => void) =>
+              lifecycle.set(name, handler),
+            removeEventListener: (name: string) => lifecycle.delete(name),
+          }),
+        },
+        __CreatePage: () => page,
+        __GetElementUniqueID: () => 0,
+        __CreateScrollView: () => create('scroll-view'),
+        __CreateView: () => create('view'),
+        __CreateText: () => create('text'),
+        __CreateRawText: (text: string) => text,
+        __SetClasses: rstest.fn(),
+        __SetAttribute: rstest.fn(),
+        __SetID: (node: Element, id: string) => byId.set(id, node),
+        __AppendElement: (parent: Element, child: Element | string) =>
+          parent.children.push(child),
+        __GetChildren: (node: Element) => node.children,
+        __ReplaceElements: (node: Element, children: Element['children']) => {
+          node.children = children;
+        },
+        __AddEventListener: (
+          node: Element,
+          _name: string,
+          handler: () => void,
+        ) => taps.set(node, handler),
+        __RemoveEventListener: (node: Element) => taps.delete(node),
+        __FlushElementTree: flush,
+      };
+      const script = scenario.source.split('<script thread="main">')[1]!.split(
+        '</script>',
+      )[0]!;
+      runInNewContext(script, context);
+      lifecycle.get('__RenderPage')!();
+      lifecycle.get('__RenderPage')!();
+      expect(page.children).toHaveLength(1);
+      expect(page.children[0]).toMatchObject({ tag: 'scroll-view' });
+      expect(JSON.stringify(page)).toContain('Daily counter');
+      expect(JSON.stringify(page)).toContain('Steps to go');
+      expect(flush).not.toHaveBeenCalled();
+      expect(byId.get('count')?.children).toEqual(['8']);
+      expect(taps.size).toBe(3);
+      const tap = (id: string) => taps.get(byId.get(id)!)!();
+      tap('increment');
+      expect(byId.get('count')?.children).toEqual(['9']);
+      expect(byId.get('remaining')?.children).toEqual(['3']);
+      tap('decrement');
+      expect(byId.get('count')?.children).toEqual(['8']);
+      for (let step = 0; step < 4; step++) tap('increment');
+      expect(byId.get('count')?.children).toEqual(['12']);
+      expect(byId.get('note')?.children).toEqual(['Daily goal reached!']);
+      expect(byId.get('remaining')?.children).toEqual(['0']);
+      tap('reset');
+      tap('decrement');
+      expect(byId.get('count')?.children).toEqual(['0']);
+      expect(byId.get('remaining')?.children).toEqual(['12']);
+      expect(flush).toHaveBeenCalledTimes(8);
+      lifecycle.get('__DestroyLifetime')!();
+      expect(taps.size).toBe(0);
+      expect(lifecycle.size).toBe(0);
+    },
+  );
 });

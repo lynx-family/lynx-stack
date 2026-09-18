@@ -8,10 +8,8 @@ import type {
   MastraOnFinishCallbackArgs,
 } from '@mastra/core/stream';
 
-import {
-  LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT,
-  LYNX_XML_SYSTEM_PROMPT,
-} from '@lynx-js/genui-lynx-xml';
+import { buildLynxXmlSystemPrompt } from '@lynx-js/genui-lynx-xml';
+import type { LynxXmlStylePreset } from '@lynx-js/genui-lynx-xml';
 
 import { GENUI_DESIGN_GUIDANCE } from '../../design/design-guidance.js';
 import { createAgentCapabilities } from '../common/agent-capabilities.js';
@@ -22,6 +20,8 @@ import { createLLMProvider } from '../common/openai-provider.js';
 export interface LynxXmlFragmentOptions {
   /** Generate an XML fragment for deterministic postprocessing; defaults to false. */
   enableHtmlFragment?: boolean | undefined;
+  /** Optional utility CSS, independent of Template; disabled by default. */
+  stylePreset?: LynxXmlStylePreset | false | undefined;
 }
 
 export interface LynxXmlAgentOptions
@@ -58,9 +58,10 @@ export function createLynxXmlAgent(opts: LynxXmlAgentOptions = {}) {
     id: 'lynx-xml-agent',
     name: 'LynxXmlAgent',
     instructions: [
-      opts.enableHtmlFragment === true
-        ? LYNX_XML_HTML_FRAGMENT_SYSTEM_PROMPT
-        : LYNX_XML_SYSTEM_PROMPT,
+      buildLynxXmlSystemPrompt({
+        enableHtmlFragment: opts.enableHtmlFragment === true,
+        stylePreset: opts.stylePreset ?? false,
+      }),
       opts.enableDesignGuidance === false ? undefined : GENUI_DESIGN_GUIDANCE,
       capabilities.instructions,
     ].filter(Boolean).join('\n\n'),

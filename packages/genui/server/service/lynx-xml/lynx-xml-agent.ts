@@ -2,7 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { compileLynxXmlFragment } from '@lynx-js/genui-lynx-xml';
+import {
+  applyLynxXmlStylePreset,
+  compileLynxXmlFragment,
+} from '@lynx-js/genui-lynx-xml';
 
 import { initializeArkImageGenerationRunScope } from '../../agent/common/ark-image-generation-tool.js';
 import { createSearchRunScope } from '../../agent/common/doubao-search-tool.js';
@@ -71,6 +74,7 @@ function buildLynxXmlScopedRunOptions(
     ...buildOpenAIRunOptions(opts, abortSignal, maxOutputTokens),
     ...createAgentStepLogger(opts, 'lynx-xml', {
       enableHtmlFragment: opts.enableHtmlFragment === true,
+      enableStylePreset: opts.stylePreset === 'default',
     }),
     requestContext: scope.requestContext,
   };
@@ -82,8 +86,17 @@ function compileGeneration(
 ): { text: string; metadata: LynxXmlGenerationMetadata } {
   try {
     const compiled = opts.enableHtmlFragment === true
-      ? compileLynxXmlFragment(extractLynxXmlArtifact(result.text))
-      : { text: result.text };
+      ? compileLynxXmlFragment(extractLynxXmlArtifact(result.text), {
+        stylePreset: opts.stylePreset ?? false,
+      })
+      : {
+        text: opts.stylePreset
+          ? applyLynxXmlStylePreset(
+            extractLynxXmlArtifact(result.text),
+            opts.stylePreset,
+          )
+          : result.text,
+      };
     return {
       text: compiled.text,
       metadata: {
@@ -91,6 +104,7 @@ function compileGeneration(
           ? { xmlFragment: compiled.xmlFragment }
           : {}),
         modelOutput: result.text,
+        ...(opts.stylePreset ? { stylePreset: opts.stylePreset } : {}),
       },
     };
   } catch (error) {
@@ -106,15 +120,17 @@ export default class LynxXmlAgentService {
       createLynxXmlAgent({
         ...pickAgentCapabilityConfig(opts),
         enableHtmlFragment: opts.enableHtmlFragment,
+        stylePreset: opts.stylePreset,
         enableDesignGuidance: opts.enableDesignGuidance,
       }).agent;
     if (opts.disableAgentCache) return Promise.resolve().then(createAgent);
     return this.agentCache.get(
       opts,
       createAgent,
-      opts.enableHtmlFragment === true
+      (opts.enableHtmlFragment === true
         ? 'html-fragment-enabled'
-        : 'html-fragment-disabled',
+        : 'html-fragment-disabled')
+        + `:style-${opts.stylePreset === 'default' ? 'default' : 'off'}`,
     );
   }
 

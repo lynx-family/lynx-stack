@@ -482,7 +482,12 @@ function createBenchRequestGroups(
       ? { enableDesignGuidance: false }
       : {}),
     ...(group.protocol === 'lynx-xml'
-      ? { enableHtmlFragment: group.enableHtmlFragment === true }
+      ? {
+        enableHtmlFragment: group.enableHtmlFragment === true,
+        ...(group.stylePreset === 'default'
+          ? { stylePreset: group.stylePreset }
+          : {}),
+      }
       : {}),
     extraInstruction: group.extraInstruction,
     enabled: group.enabled,
@@ -522,7 +527,12 @@ function createBenchPlanSignature(
       catalog: usesCatalog(group) ? group.catalog : undefined,
       enableDesignGuidance: group.enableDesignGuidance !== false,
       ...(group.protocol === 'lynx-xml'
-        ? { enableHtmlFragment: group.enableHtmlFragment === true }
+        ? {
+          enableHtmlFragment: group.enableHtmlFragment === true,
+          ...(group.stylePreset === 'default'
+            ? { stylePreset: group.stylePreset }
+            : {}),
+        }
         : {}),
       extraInstruction: group.extraInstruction,
       enabled: group.enabled,
@@ -2047,6 +2057,8 @@ export function BenchPage({ sharedPlan }: { sharedPlan?: string }) {
                   )}
                 onDesignGuidanceChange={(id, enabled) =>
                   updateGroup(id, groupPatch('enableDesignGuidance', enabled))}
+                onStylePresetChange={(id, preset) =>
+                  updateGroup(id, groupPatch('stylePreset', preset))}
                 onCatalogChange={(id, catalog) =>
                   updateGroup(id, groupPatch('catalog', catalog))}
                 onEnabledChange={(id, enabled) =>

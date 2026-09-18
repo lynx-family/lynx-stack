@@ -61,6 +61,7 @@ export interface ProviderModel extends Partial<ModelPrices> {
 export interface ProviderSettings {
   enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
+  stylePreset?: 'default' | false;
   provider: string;
   apiKey: string;
   baseURL: string;
@@ -80,6 +81,7 @@ export interface ProviderRequestOptions {
 export interface PersistedProviderSettings {
   enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
+  stylePreset?: 'default' | false;
   provider: string;
 }
 
@@ -125,6 +127,9 @@ export function parseProviderSettings(value: unknown): ProviderSettings {
   return {
     ...createDefaultProviderSettings(),
     provider,
+    ...(record.stylePreset === 'default' || record.stylePreset === false
+      ? { stylePreset: record.stylePreset }
+      : {}),
     ...(typeof enableHtmlFragment === 'boolean'
       ? { enableHtmlFragment }
       : {}),
@@ -155,6 +160,9 @@ export function serializeProviderSettings(
 ): PersistedProviderSettings {
   return {
     provider: settings.provider,
+    ...(settings.stylePreset === undefined
+      ? {}
+      : { stylePreset: settings.stylePreset }),
     ...(settings.enableDesignGuidance === false
       ? { enableDesignGuidance: false }
       : {}),
@@ -378,7 +386,7 @@ export const CHAT_PROVIDER_SETTINGS_ADAPTER = {
     };
     const designControl = {
       id: 'enableDesignGuidance',
-      label: 'Extra Design Skill',
+      label: 'Design',
       value: settings.enableDesignGuidance === false ? 'off' : 'on',
       kind: 'checkbox' as const,
     };

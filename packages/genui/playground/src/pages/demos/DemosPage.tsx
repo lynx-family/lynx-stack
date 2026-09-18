@@ -778,7 +778,7 @@ function DemosPageContent<
               theme='dark'
               basicSetup={source.editor.basicSetup}
             />
-            <ExampleTokenCount source={editorValue} />
+            <ExampleTokenCount source={displayedEditorValue} />
             {error ? <div className='codeError'>{error}</div> : null}
           </div>
         </div>

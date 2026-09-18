@@ -313,7 +313,17 @@ export function PublishedReportPage(
                     </div>
                     {group.protocol === 'lynx-xml' && (
                       <div>
-                        <dt>XML fragment</dt>
+                        <dt>StylePreset</dt>
+                        <dd>
+                          {group.stylePreset === 'default'
+                            ? 'On'
+                            : 'Off'}
+                        </dd>
+                      </div>
+                    )}
+                    {group.protocol === 'lynx-xml' && (
+                      <div>
+                        <dt>Template</dt>
                         <dd>
                           {group.enableHtmlFragment === true ? 'On' : 'Off'}
                         </dd>

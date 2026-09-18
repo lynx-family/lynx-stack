@@ -84,6 +84,7 @@ export interface BenchSettings {
 export interface BenchGroupRequest {
   enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
+  stylePreset?: 'default' | false;
   id: string;
   role: BenchRole;
   name: string;

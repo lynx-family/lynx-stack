@@ -115,6 +115,10 @@ function readPlan(value: unknown): BenchSharedPlan {
         ...(group.enableHtmlFragment === undefined ? {} : {
           enableHtmlFragment: boolean(group.enableHtmlFragment),
         }),
+        ...(group.protocol === 'lynx-xml'
+            && (group.stylePreset === 'default' || group.stylePreset === false)
+          ? { stylePreset: group.stylePreset }
+          : {}),
       };
     }),
     scenarios: items(plan.scenarios, 20, value => {
