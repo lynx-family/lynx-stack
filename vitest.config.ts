@@ -69,6 +69,7 @@ export default defineConfig({
 
     projects: [
       'examples/*/vitest.config.ts',
+      'packages/genui/*/vitest.config.ts',
       'packages/react/*/vitest.config.ts',
       'packages/react/*/vitest.**.config.ts',
       'packages/react/runtime/__test__/element-template/vitest.config.ts',
