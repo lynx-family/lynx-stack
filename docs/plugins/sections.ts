@@ -39,7 +39,8 @@ function genui(): Section {
   };
 }
 
-export function sections(packages: WorkspacePackage[]): Section[] {
+/** The sections lynx-stack renders for the packages it documents on its own. */
+export function lynxStackSections(): Section[] {
   return [
     {
       out: 'api/react/testing-library',
@@ -49,15 +50,19 @@ export function sections(packages: WorkspacePackage[]): Section[] {
     },
     { out: 'api/react', router: 'group', packages: [REACT] },
     genui(),
-    {
-      out: 'api/packages',
-      router: 'member',
-      packages: packages
-        .filter(pkg =>
-          pkg.name !== '@lynx-js/react' && pkg.name !== '@lynx-js/genui'
-          && hasEntryPoint(pkg.dir)
-        )
-        .map(pkg => pkg.dir),
-    },
   ];
+}
+
+/** The section that documents every package without a section of its own. */
+export function packagesSection(
+  packages: WorkspacePackage[],
+  ownSections: Record<string, string>,
+): Section {
+  return {
+    out: 'api/packages',
+    router: 'member',
+    packages: packages
+      .filter(pkg => !(pkg.name in ownSections) && hasEntryPoint(pkg.dir))
+      .map(pkg => pkg.dir),
+  };
 }

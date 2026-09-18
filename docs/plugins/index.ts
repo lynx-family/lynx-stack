@@ -15,7 +15,9 @@ import type { RspressPlugin } from '@rspress/core';
 
 import { renderConfigReference } from './config.ts';
 import { packageGroups, pluginPackagePages } from './packages.ts';
-import { sections } from './sections.ts';
+import { packagesSection } from './sections.ts';
+import { LYNX_STACK } from './site.ts';
+import type { Site } from './site.ts';
 import { Translations } from './translate.ts';
 import { pluginApiSection } from './typedoc.ts';
 import {
@@ -61,7 +63,7 @@ function writeNav(locale: Locale): void {
  * pages reads the sections and the packages to show from one file instead of
  * knowing the layout of the package.
  */
-function writeManifest(packages: WorkspacePackage[]): void {
+function writeManifest(packages: WorkspacePackage[], site: Site): void {
   const routes = readdirSync(join(CONTENT, 'en/api'))
     .filter(name => statSync(join(CONTENT, 'en/api', name)).isDirectory())
     .sort();
@@ -77,7 +79,7 @@ function writeManifest(packages: WorkspacePackage[]): void {
             ),
           })),
           // Every package, for a site that groups the pages it does not show.
-          packages: packageGroups(packages),
+          packages: packageGroups(packages, site),
           shownPackages: JSON.parse(
             readFileSync(join(DOCS, 'shown-packages.json'), 'utf8'),
           ) as unknown,
@@ -135,7 +137,7 @@ function sidebarItems(item: SidebarItem, dir: string): SidebarItem[] {
         ? {
           ...item,
           // A group directory is its name with the spaces written as `_`.
-          label: item.label?.replaceAll('_', ' '),
+          ...item.label ? { label: item.label.replaceAll('_', ' ') } : {},
           collapsible: true,
           collapsed: true,
         }
@@ -287,10 +289,13 @@ function sidebar(items: SidebarItem[], dir: string): SidebarItem[] {
  * the workspace packages. English runs first so the Chinese pages can reuse
  * the strings it records.
  */
-export function pluginApiReference(): RspressPlugin[] {
+export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
   const translations = new Translations(join(DOCS, 'i18n/zh.json'));
   const packages = publicPackages();
-  const all = sections(packages);
+  const all = [
+    ...site.sections(packages),
+    packagesSection(packages, site.ownSections),
+  ];
   return [
     {
       name: 'lynx:api-reference-clean',
@@ -311,13 +316,14 @@ export function pluginApiReference(): RspressPlugin[] {
           locale,
           packages,
           translations,
+          site,
           section.out === 'api/packages'
             ? app => renderConfigReference(app, locale, translations)
             : undefined,
         )
       )
     ),
-    pluginPackagePages(packages, translations),
+    pluginPackagePages(packages, translations, site),
     {
       name: 'lynx:api-reference-sidebar',
       config(config, _utils, isProd) {
@@ -359,7 +365,7 @@ export function pluginApiReference(): RspressPlugin[] {
             }\n`,
           );
         }
-        writeManifest(packages);
+        writeManifest(packages, site);
         translations.save();
         // `dev` shows the English text of a string the dictionary is missing;
         // a build stops, so it cannot ship.

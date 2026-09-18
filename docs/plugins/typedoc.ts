@@ -10,6 +10,7 @@ import { MarkdownPageEvent } from 'typedoc-plugin-markdown';
 import { withPackageLinks } from './packages.ts';
 import { rewritePackageReferences } from './references.ts';
 import type { Section } from './sections.ts';
+import type { Site } from './site.ts';
 import { hidePlatformTags } from './tags.ts';
 import type { Translations } from './translate.ts';
 import { assertNoWarnings } from './warnings.ts';
@@ -25,6 +26,7 @@ export function pluginApiSection(
   locale: Locale,
   packages: WorkspacePackage[],
   translations: Translations,
+  site: Site,
   extend?: (app: Application) => void,
 ): RspressPlugin {
   const name = `${locale}/${section.out}`;
@@ -72,7 +74,7 @@ export function pluginApiSection(
             || (model.kindOf(ReflectionKind.Project)
               && page.url === 'index.mdx'))
         ) {
-          contents = withPackageLinks(contents, pkg);
+          contents = withPackageLinks(contents, pkg, site);
         }
         page.contents = translations.translate(contents, locale);
       });

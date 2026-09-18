@@ -6,6 +6,7 @@ import { join, relative, sep } from 'node:path';
 
 import type { RspressPlugin } from '@rspress/core';
 
+import type { Site } from './site.ts';
 import type { Translations } from './translate.ts';
 import {
   CONTENT,
@@ -17,36 +18,28 @@ import {
 } from './workspace.ts';
 import type { Locale, WorkspacePackage } from './workspace.ts';
 
-const REPOSITORY = 'https://github.com/lynx-family/lynx-stack';
-
-const GROUPS = [
-  { name: 'Build tools', dirs: ['packages/rspeedy/', 'packages/webpack/'] },
-  { name: 'Web platform', dirs: ['packages/web-platform/'] },
-  { name: 'Libraries and tools', dirs: [''] },
-];
-
 /**
- * The route of a package under `/api`: its own section for `@lynx-js/react`
- * and `@lynx-js/genui`, `packages/<name without scope>` otherwise.
+ * The route of a package under `/api`: the section of its own when it has
+ * one, `packages/<name without scope>` otherwise.
  */
-function packageRoute(pkg: WorkspacePackage): string {
-  if (pkg.name === '@lynx-js/react' || pkg.name === '@lynx-js/genui') {
-    return `${pkg.name.slice('@lynx-js/'.length)}/`;
-  }
+function packageRoute(pkg: WorkspacePackage, site: Site): string {
+  const own = site.ownSections[pkg.name];
+  if (own) return `${own}/`;
   return `packages/${pkg.name.replace(/^@[^/]+\//, '')}`;
 }
 
 /**
- * The npm, source and changelog links shown under the title of a package.
+ * The registry, source and changelog links shown under the title of a package.
  */
-function packageLinks(pkg: WorkspacePackage): string {
+function packageLinks(pkg: WorkspacePackage, site: Site): string {
   const dir = relative(ROOT, pkg.dir).replaceAll(sep, '/');
+  const { repository, branch } = site;
   const links = [
-    `[npm](https://www.npmjs.com/package/${pkg.name})`,
-    `[Source](${REPOSITORY}/tree/main/${dir})`,
+    `[npm](${site.packagePage(pkg.name)})`,
+    `[Source](${repository}/tree/${branch}/${dir})`,
   ];
   if (existsSync(join(pkg.dir, 'CHANGELOG.md'))) {
-    links.push(`[Changelog](${REPOSITORY}/blob/main/${dir}/CHANGELOG.md)`);
+    links.push(`[Changelog](${repository}/blob/${branch}/${dir}/CHANGELOG.md)`);
   }
   return links.join(' · ');
 }
@@ -57,27 +50,29 @@ function packageLinks(pkg: WorkspacePackage): string {
 export function withPackageLinks(
   markdown: string,
   pkg: WorkspacePackage,
+  site: Site,
 ): string {
   return markdown.replace(
     /^# .*\n/m,
-    heading => `${heading}\n${packageLinks(pkg)}\n`,
+    heading => `${heading}\n${packageLinks(pkg, site)}\n`,
   );
 }
 
 /** The group a package is listed under, for every public package. */
 export function packageGroups(
   packages: WorkspacePackage[],
+  site: Site,
 ): { name: string; route: string; group: string }[] {
   return packages.map(pkg => ({
     name: pkg.name,
-    route: `api/${packageRoute(pkg).replace(/\/$/, '')}`,
-    group: groupOf(pkg),
+    route: `api/${packageRoute(pkg, site).replace(/\/$/, '')}`,
+    group: groupOf(pkg, site),
   }));
 }
 
-function groupOf(pkg: WorkspacePackage): string {
+function groupOf(pkg: WorkspacePackage, site: Site): string {
   const dir = relative(ROOT, pkg.dir).replaceAll(sep, '/');
-  return GROUPS.find(group =>
+  return site.groups.find(group =>
     group.dirs.some(prefix => dir.startsWith(prefix))
   )!
     .name;
@@ -90,12 +85,13 @@ function groupOf(pkg: WorkspacePackage): string {
 export function pluginPackagePages(
   packages: WorkspacePackage[],
   translations: Translations,
+  site: Site,
 ): RspressPlugin {
   return {
     name: 'lynx:api-reference-packages',
     config(config) {
       for (const locale of LOCALES) {
-        writePackagePages(packages, locale, translations);
+        writePackagePages(packages, locale, translations, site);
       }
       return config;
     },
@@ -106,19 +102,18 @@ function writePackagePages(
   packages: WorkspacePackage[],
   locale: Locale,
   translations: Translations,
+  site: Site,
 ): void {
   const out = join(CONTENT, locale, 'api/packages');
   const text = (en: string) => translations.translate(en, locale);
 
   for (const pkg of packages) {
-    if (pkg.name === '@lynx-js/react' || pkg.name === '@lynx-js/genui') {
-      continue;
-    }
+    if (pkg.name in site.ownSections) continue;
     if (hasEntryPoint(pkg.dir)) continue;
-    const page = [`# ${pkg.name}`, '', packageLinks(pkg), ''];
+    const page = [`# ${pkg.name}`, '', packageLinks(pkg, site), ''];
     if (pkg.description) page.push(pkg.description, '');
     write(
-      join(CONTENT, locale, 'api', `${packageRoute(pkg)}.mdx`),
+      join(CONTENT, locale, 'api', `${packageRoute(pkg, site)}.mdx`),
       text(page.join('\n')),
     );
   }
@@ -126,9 +121,9 @@ function writePackagePages(
   // The index TypeDoc writes lists every package; the sidebar does that.
   rmSync(join(out, 'index.mdx'));
 
-  const groups = GROUPS.map(group => ({
+  const groups = site.groups.map(group => ({
     name: text(group.name),
-    packages: packages.filter(pkg => groupOf(pkg) === group.name),
+    packages: packages.filter(pkg => groupOf(pkg, site) === group.name),
   }));
 
   write(
@@ -137,9 +132,9 @@ function writePackagePages(
       ...groups.flatMap(group => [
         { type: 'section-header', label: group.name },
         ...group.packages
-          .filter(pkg => packageRoute(pkg).startsWith('packages/'))
+          .filter(pkg => packageRoute(pkg, site).startsWith('packages/'))
           .map(pkg => {
-            const name = packageRoute(pkg).slice('packages/'.length);
+            const name = packageRoute(pkg, site).slice('packages/'.length);
             const dir = existsSync(join(out, name));
             return {
               type: dir ? 'dir' : 'file',
