@@ -25,7 +25,10 @@ rstest.mock('@rsdoctor/core', () => ({
   },
 }))
 
-async function register(configs: Rspack.Configuration[]) {
+async function register(
+  configs: Rspack.Configuration[],
+  options?: Parameters<typeof pluginRsdoctor>[0],
+) {
   const onBeforeCreateCompiler = rstest.fn<
     (
       callback: (
@@ -33,7 +36,7 @@ async function register(configs: Rspack.Configuration[]) {
       ) => Promise<void>,
     ) => void
   >()
-  await pluginRsdoctor().setup(
+  await pluginRsdoctor(options).setup(
     { onBeforeCreateCompiler } as unknown as RsbuildPluginAPI,
   )
   await onBeforeCreateCompiler.mock.calls[0]?.[0]({ bundlerConfigs: configs })
@@ -49,6 +52,52 @@ afterEach(() => {
 })
 
 describe('Rsdoctor 2 registration', () => {
+  test('recognizes a custom plugin by class name without a marker', async () => {
+    class RsdoctorRspackPlugin {
+      apply = rstest.fn()
+    }
+    const plugin = new RsdoctorRspackPlugin()
+    const config = { plugins: [plugin] }
+    await register([config])
+    expect(config.plugins).toEqual([plugin])
+    expect(createPlugin).not.toHaveBeenCalled()
+  })
+
+  test('preserves other plugins and fills every unconfigured compiler', async () => {
+    const plugin = { apply: rstest.fn() }
+    const configs: Rspack.Configuration[] = [{ plugins: [plugin] }, {}]
+    await register(configs)
+    expect(configs[0]?.plugins).toHaveLength(2)
+    expect(configs[0]?.plugins?.[0]).toBe(plugin)
+    expect(configs[1]?.plugins).toHaveLength(1)
+    expect(createPlugin).toHaveBeenCalledTimes(2)
+    expect(configs[0]?.plugins?.[1]).not.toBe(configs[1]?.plugins?.[0])
+  })
+
+  test.each([
+    { ci: 'true', override: undefined, expected: true },
+    { ci: 'false', override: undefined, expected: false },
+    { ci: 'true', override: false, expected: false },
+    { ci: 'false', override: true, expected: true },
+  ])('client server with CI=$ci and override=$override', async ({
+    ci,
+    override,
+    expected,
+  }) => {
+    rstest.stubEnv('CI', ci)
+    await register(
+      [{}],
+      override === undefined ? {} : { disableClientServer: override },
+    )
+    expect(createPlugin).toHaveBeenCalledWith(expect.objectContaining({
+      disableClientServer: expected,
+      supports: { banner: true },
+      linter: {
+        rules: { 'ecma-version-check': ['Warn', { ecmaVersion: 2019 }] },
+      },
+    }))
+  })
+
   test('does not register when analysis is disabled', async () => {
     rstest.stubEnv('RSDOCTOR', 'false')
     await register([{}])

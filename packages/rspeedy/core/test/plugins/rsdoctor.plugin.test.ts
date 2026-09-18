@@ -105,6 +105,33 @@ describe('Plugins - Rsdoctor', () => {
     expect(options.supports).not.toHaveProperty('generateTileGraph')
   })
 
+  test('prefers current options over legacy options and preserves defaults', async () => {
+    rstest.stubEnv('RSDOCTOR', 'true')
+    const { createStubRspeedy } = await import('../createStubRspeedy.js')
+    const rsdoctor = {
+      port: 3300,
+      server: { port: 4400 },
+      mode: 'brief' as const,
+      output: { mode: 'normal' as const },
+    }
+    const original = structuredClone(rsdoctor)
+    const rsbuild = await createStubRspeedy({ tools: { rsdoctor } })
+    const compiler = await rsbuild.createCompiler() as Rspack.Compiler
+    const plugin = compiler.options.plugins.find(
+      plugin =>
+        typeof plugin === 'object' && plugin?.['isRsdoctorPlugin'] === true,
+    ) as RsdoctorRspackPlugin<[]>
+
+    expect(plugin.options.server.port).toBe(4400)
+    expect(plugin.options.output.mode).toBe('normal')
+    expect(plugin.options.supports.banner).toBe(true)
+    expect(plugin.options.linter.rules['ecma-version-check']).toEqual([
+      'Warn',
+      { ecmaVersion: 2019 },
+    ])
+    expect(rsdoctor).toEqual(original)
+  })
+
   test('linter.rules.ecma-version-check', async () => {
     rstest.stubEnv('RSDOCTOR', 'true')
 
