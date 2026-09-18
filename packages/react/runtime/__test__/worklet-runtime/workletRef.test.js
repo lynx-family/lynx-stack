@@ -3,9 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { isHydratedWorkletValue } from '../../src/worklet-runtime/mainThreadObject';
 import {
   getFromWorkletRefMap,
-  isHydratedWorkletValue,
   removeValueFromWorkletRefMap,
   updateWorkletRefInitValueChanges,
 } from '../../src/worklet-runtime/workletRef';
@@ -44,10 +44,7 @@ describe('WorkletRef', () => {
   it('lazily resolves and caches Main Thread Function factory descriptors', () => {
     const create = vi.fn(value => ({ value }));
     const createDescriptor = { _wkltId: 'create-test-value' };
-    const resolveWorklet = vi.spyOn(
-      globalThis.lynxWorkletImpl,
-      '_resolveWorklet',
-    );
+    const bindFactory = vi.spyOn(create, 'bind');
 
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/lazy-factory',
@@ -66,28 +63,11 @@ describe('WorkletRef', () => {
     expect(getFromWorkletRefMap({ _wvid: 71 })).toMatchObject({ value: 'first' });
     expect(getFromWorkletRefMap({ _wvid: 72 })).toMatchObject({ value: 'second' });
     expect(create).toHaveBeenCalledTimes(2);
-    expect(resolveWorklet).toHaveBeenCalledOnce();
+    expect(bindFactory).toHaveBeenCalledOnce();
 
     removeValueFromWorkletRefMap(71);
     removeValueFromWorkletRefMap(72);
-    expect(resolveWorklet).toHaveBeenCalledOnce();
-  });
-
-  it('diagnoses a runtime without factory worklet resolution', () => {
-    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
-      '@test/missing-resolver',
-      { _wkltId: 'missing-resolver' },
-      1,
-    );
-    delete globalThis.lynxWorkletImpl._resolveWorklet;
-
-    expect(() => {
-      updateWorkletRefInitValueChanges([
-        [73, 'value', '@test/missing-resolver', 1],
-      ]);
-    }).toThrow(
-      'MainThreadObject factory functions require a newer ReactLynx main-thread runtime. Rebuild the main template with a compatible @lynx-js/react version.',
-    );
+    expect(bindFactory).toHaveBeenCalledOnce();
   });
 
   it('rejects an unregistered main-thread object type', () => {

@@ -10,8 +10,9 @@ import type {
   WorkletRefId,
   WorkletRefImpl,
 } from './bindings/index.js';
+import { isHydratedWorkletValue } from './mainThreadObject.js';
 import { profile } from './utils/profile.js';
-import { hydrateWorkletValue, isHydratedWorkletValue } from './workletRef.js';
+import { hydrateWorkletValue } from './workletRef.js';
 
 /**
  * Hydrates a Worklet context with data from a first-screen Worklet context.
@@ -115,7 +116,7 @@ function hydrateWorkletValueHandle(
     // The handle was not accessed during first-screen rendering.
     return;
   }
-  hydrateWorkletValue(handle, value as WorkletRef<unknown>);
+  hydrateWorkletValue(handle, value);
 }
 
 /**

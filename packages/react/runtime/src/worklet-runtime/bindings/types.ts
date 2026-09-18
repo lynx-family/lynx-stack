@@ -32,6 +32,7 @@ export type ClosureValueType =
   | string
   | boolean
   | number
+  | object
   | Worklet
   | WorkletRef<unknown>
   | Element
