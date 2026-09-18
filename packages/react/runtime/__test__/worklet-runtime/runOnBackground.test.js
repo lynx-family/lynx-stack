@@ -17,7 +17,7 @@ afterEach(() => {
 });
 
 describe('runOnBackground', () => {
-  it('should not keep transformed worklet ctx through a strong ctx property', () => {
+  it('should expose the bound copy without retaining the original nested context', () => {
     const childCtx = {
       _wkltId: 'child',
     };
@@ -29,15 +29,17 @@ describe('runOnBackground', () => {
     globalThis.registerWorklet('main-thread', 'parent', function() {
       return this.child;
     });
-    globalThis.registerWorklet('main-thread', 'child', function() {});
+    globalThis.registerWorklet('main-thread', 'child', function() {
+      return this;
+    });
 
     const childWorklet = globalThis.runWorklet(parentCtx, []);
-    expect(childWorklet).toHaveProperty('ctxRef');
+    expect(childWorklet.boundCtx).toBe(childWorklet());
+    expect(childWorklet.boundCtx).not.toBe(childCtx);
     expect(childWorklet).not.toHaveProperty('ctx');
-    expect(childWorklet.ctxRef.deref()).toBe(childCtx);
   });
 
-  it('should hydrate nested worklet ctx from a weak ctx ref', () => {
+  it('should hydrate nested worklet ctx from its bound context', () => {
     const firstScreenChildCtx = {
       _wkltId: 'child',
       _jsFn: {
@@ -47,7 +49,7 @@ describe('runOnBackground', () => {
     const firstScreenWorklet = {
       _wkltId: 'parent',
       child: Object.assign(function() {}, {
-        ctxRef: new WeakRef(firstScreenChildCtx),
+        boundCtx: firstScreenChildCtx,
       }),
     };
     const worklet = {

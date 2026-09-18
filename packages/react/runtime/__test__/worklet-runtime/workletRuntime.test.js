@@ -171,7 +171,7 @@ describe('Worklet', () => {
     }
   });
 
-  it('skips ctxRef when a nested worklet ctx cannot be weakly referenced', () => {
+  it('supports nested worklet contexts that cannot be weakly referenced', () => {
     initWorklet();
 
     const NativeWeakRef = globalThis.WeakRef;
@@ -201,7 +201,8 @@ describe('Worklet', () => {
       const childWorklet = globalThis.runWorklet(parentCtx, []);
 
       expect(childWorklet()).toBe(2);
-      expect(childWorklet).not.toHaveProperty('ctxRef');
+      expect(childWorklet.boundCtx).not.toBe(childCtx);
+      expect(childWorklet.boundCtx.token).toBe(2);
     } finally {
       globalThis.WeakRef = NativeWeakRef;
     }
