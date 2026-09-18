@@ -85,6 +85,22 @@ describe('Plugins - Dev', () => {
     }
   })
 
+  test('dev.progressBar is off by default', async () => {
+    const rsbuild = await createStubRspeedy({})
+
+    await rsbuild.initConfigs()
+
+    expect(rsbuild.getNormalizedConfig().dev.progressBar).toBeFalsy()
+  })
+
+  test('dev.progressBar: true', async () => {
+    const rsbuild = await createStubRspeedy({ dev: { progressBar: true } })
+
+    await rsbuild.initConfigs()
+
+    expect(rsbuild.getNormalizedConfig().dev.progressBar).toBe(true)
+  })
+
   test('defaults', async () => {
     const rsbuild = await createStubRspeedy({})
 

@@ -20,7 +20,7 @@ export function toRsbuildConfig(
       watchFiles: config.dev?.watchFiles,
       writeToDisk: config.dev?.writeToDisk,
 
-      progressBar: config.dev?.progressBar ?? true,
+      progressBar: config.dev?.progressBar,
     },
     environments: config.environments,
     mode: config.mode,
