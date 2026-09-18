@@ -20,6 +20,11 @@ export default defineConfig({
   route: {
     cleanUrls: true,
   },
+  builderConfig: {
+    server: {
+      open: '/api/react/',
+    },
+  },
   plugins: pluginApiReference(),
   themeConfig: {
     socialLinks: [
