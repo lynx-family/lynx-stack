@@ -10,16 +10,16 @@ import { initEomImpl } from './eomImpl.js';
 import { addEventMethodsIfNeeded } from './eventPropagation.js';
 import { hydrateCtx } from './hydrate.js';
 import { JsFunctionLifecycleManager, isRunOnBackgroundEnabled } from './jsFunctionLifecycle.js';
+import { isRealizedMainThreadObject } from './mainThreadObject.js';
 import { runRunOnMainThreadTask } from './runOnMainThread.js';
 import { mainThreadFlushLoopMark } from './utils/mainThreadFlushLoopGuard.js';
 import { profile } from './utils/profile.js';
-import { getFromWorkletRefMap, initWorkletRef, isRealizedMainThreadObject } from './workletRef.js';
+import { getFromWorkletRefMap, initWorkletRef } from './workletRef.js';
 
 function initWorklet(): void {
   globalThis.lynxWorkletImpl = {
     _workletMap: {},
-    _resolveWorklet: resolveWorklet,
-    _refImpl: initWorkletRef(),
+    _refImpl: initWorkletRef(resolveWorklet),
     _runOnBackgroundDelayImpl: initRunOnBackgroundDelay(),
     _hydrateCtx: hydrateCtx,
     _eventDelayImpl: initEventDelay(),
@@ -137,8 +137,7 @@ function transformWorklet(
     }
   }
 
-  const worklet = { main: ctx };
-  transformWorkletInner(worklet, 0, ctx);
+  const worklet = transformWorkletInner({ main: ctx }, 0, ctx) as { main: ClosureValueType };
 
   if (isWorklet) {
     workletCache.set(ctx, worklet.main);
@@ -151,16 +150,16 @@ const transformWorkletInner = (
   value: ClosureValueType,
   depth: number,
   ctx: unknown,
-) => {
+): ClosureValueType => {
   const limit = 1000;
   if (++depth >= limit) {
     throw new Error('Depth of value exceeds limit of ' + limit + '.');
   }
   /* v8 ignore next 3 */
   if (typeof value !== 'object' || value === null) {
-    return;
+    return value;
   }
-  const obj = value as Record<string, ClosureValueType>;
+  let obj = value as Record<string, ClosureValueType>;
 
   for (const key in obj) {
     const subObj: ClosureValueType = obj[key];
@@ -189,7 +188,7 @@ const transformWorkletInner = (
       continue;
     }
 
-    transformWorkletInner(subObj, depth, ctx);
+    const transformedSubObj = transformWorkletInner(subObj, depth, ctx) as Record<string, ClosureValueType>;
 
     const isWorkletRef = '_wvid' in (subObj as object);
     if (isWorkletRef) {
@@ -201,17 +200,38 @@ const transformWorkletInner = (
     const isWorklet = '_wkltId' in subObj;
     if (isWorklet) {
       const isRootWorklet = subObj === ctx;
-      const boundCtx = { ...subObj };
+      const boundCtx = { ...transformedSubObj };
       // Keep the original context collectible. PrimJS traces WeakMap values even
       // when their keys are otherwise unreachable, so the cached function must not point back to its key.
-      obj[key] = lynxWorkletImpl._workletMap[(subObj as Worklet)._wkltId]!
+      const boundWorklet: ((...args: unknown[]) => unknown) & { boundCtx?: object } = lynxWorkletImpl
+        ._workletMap[(subObj as Worklet)._wkltId]!
         .bind(boundCtx);
+      const descriptor = Object.getOwnPropertyDescriptor(obj, key);
+      if (transformedSubObj !== subObj && obj === value && obj !== ctx) obj = copyAccessorCapture(obj);
+      if (descriptor?.get) {
+        // Generated method getters create a fresh receiver snapshot on each capture.
+        // Materialize only the captured copy; the source must keep its getter.
+        if (obj === value) obj = copyAccessorCapture(obj);
+        Object.defineProperty(obj, key, {
+          value: boundWorklet,
+          writable: true,
+          enumerable: descriptor.enumerable!,
+          configurable: descriptor.configurable!,
+        });
+      } else {
+        obj[key] = boundWorklet;
+      }
       if (!isRootWorklet) {
         // Hydration needs the same context that the function already owns through bind().
         // The original nested context can disappear after its parent replaces it with this function.
-        obj[key].boundCtx = boundCtx;
+        boundWorklet.boundCtx = boundCtx;
       }
       continue;
+    }
+    if (transformedSubObj !== subObj) {
+      // The root context is runtime-owned: hydration must see its captured copy.
+      if (obj === value && obj !== ctx) obj = copyAccessorCapture(obj);
+      obj[key] = transformedSubObj;
     }
     const isJsFn = '_jsFnId' in subObj;
     if (isJsFn) {
@@ -223,7 +243,19 @@ const transformWorkletInner = (
       continue;
     }
   }
+  return obj;
 };
+
+function copyAccessorCapture(obj: Record<string, ClosureValueType>): Record<string, ClosureValueType> {
+  // Copy descriptors without evaluating getters a second time. Array ancestors
+  // retain their array identity when a nested accessor requires a captured copy.
+  return Object.defineProperties(
+    Array.isArray(obj)
+      ? []
+      : Object.create(Object.getPrototypeOf(obj) as object | null) as Record<string, ClosureValueType>,
+    Object.getOwnPropertyDescriptors(obj),
+  ) as Record<string, ClosureValueType>;
+}
 
 function isMainThreadObjectDescriptor(
   value: ClosureValueType,
