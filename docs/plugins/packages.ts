@@ -1,13 +1,20 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, rmSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 
 import type { RspressPlugin } from '@rspress/core';
 
 import type { Translations } from './translate.ts';
-import { CONTENT, LOCALES, ROOT, hasEntryPoint } from './workspace.ts';
+import {
+  CONTENT,
+  LOCALES,
+  ROOT,
+  hasEntryPoint,
+  json,
+  write,
+} from './workspace.ts';
 import type { Locale, WorkspacePackage } from './workspace.ts';
 
 const REPOSITORY = 'https://github.com/lynx-family/lynx-stack';
@@ -22,7 +29,7 @@ const GROUPS = [
  * The route of a package under `/api`: its own section for `@lynx-js/react`
  * and `@lynx-js/genui`, `packages/<name without scope>` otherwise.
  */
-export function packageRoute(pkg: WorkspacePackage): string {
+function packageRoute(pkg: WorkspacePackage): string {
   if (pkg.name === '@lynx-js/react' || pkg.name === '@lynx-js/genui') {
     return `${pkg.name.slice('@lynx-js/'.length)}/`;
   }
@@ -32,7 +39,7 @@ export function packageRoute(pkg: WorkspacePackage): string {
 /**
  * The npm, source and changelog links shown under the title of a package.
  */
-export function packageLinks(pkg: WorkspacePackage): string {
+function packageLinks(pkg: WorkspacePackage): string {
   const dir = relative(ROOT, pkg.dir).replaceAll(sep, '/');
   const links = [
     `[npm](https://www.npmjs.com/package/${pkg.name})`,
@@ -63,11 +70,6 @@ function groupOf(pkg: WorkspacePackage): string {
     group.dirs.some(prefix => dir.startsWith(prefix))
   )!
     .name;
-}
-
-function write(file: string, content: string): void {
-  mkdirSync(join(file, '..'), { recursive: true });
-  writeFileSync(file, content);
 }
 
 /**
@@ -120,28 +122,22 @@ function writePackagePages(
 
   write(
     join(out, '_meta.json'),
-    `${
-      JSON.stringify(
-        [
-          ...groups.flatMap(group => [
-            { type: 'section-header', label: group.name },
-            ...group.packages
-              .filter(pkg => packageRoute(pkg).startsWith('packages/'))
-              .map(pkg => {
-                const name = packageRoute(pkg).slice('packages/'.length);
-                const dir = existsSync(join(out, name));
-                return {
-                  type: dir ? 'dir' : 'file',
-                  name,
-                  label: pkg.name,
-                  ...dir ? { collapsible: true, collapsed: true } : {},
-                };
-              }),
-          ]),
-        ],
-        null,
-        2,
-      )
-    }\n`,
+    json([
+      ...groups.flatMap(group => [
+        { type: 'section-header', label: group.name },
+        ...group.packages
+          .filter(pkg => packageRoute(pkg).startsWith('packages/'))
+          .map(pkg => {
+            const name = packageRoute(pkg).slice('packages/'.length);
+            const dir = existsSync(join(out, name));
+            return {
+              type: dir ? 'dir' : 'file',
+              name,
+              label: pkg.name,
+              ...dir ? { collapsible: true, collapsed: true } : {},
+            };
+          }),
+      ]),
+    ]),
   );
 }

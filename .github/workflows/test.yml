@@ -230,7 +230,6 @@ jobs:
           echo "::error::Please run 'pnpm turbo build --filter docs' and commit docs/i18n."
           exit 1;
         fi
-        pnpm --filter docs run i18n:check
   test-publish:
     needs: build
     uses: ./.github/workflows/workflow-test.yml

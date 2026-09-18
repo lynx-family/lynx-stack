@@ -14,9 +14,9 @@ content/
     genui/       @lynx-js/genui
     packages/    every other package
   zh/            the same pages in Chinese
-shown-packages.json
+manifest.json
 ```
 
 Each directory carries its Rspress `_meta.json`. Copy `content/<locale>/api` to the same path under your docs root. Links between the pages are absolute (`/api/config/output/filename-bundle`) or relative to the page, so keep the layout.
 
-Every package has a page, so links stay valid. `shown-packages.json` lists the packages to show in navigation, in order and by group.
+Every package has a page, so links stay valid. `manifest.json` names the sections, where their pages are, and the packages to show in navigation, in order and by group.

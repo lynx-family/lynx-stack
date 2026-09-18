@@ -88,9 +88,6 @@ The API reference in `docs/` (the pages synced to lynxjs.org) is generated from 
 # Generate the pages and build the site (fails on any TypeDoc warning or dead link; ALWAYS commit docs/i18n/zh.json)
 pnpm turbo build --filter docs
 
-# Translate the strings that the build left empty in docs/i18n/zh.json (CI fails while a string is untranslated)
-pnpm --filter docs i18n:check
-
 # Update the API reports (ALWAYS commit changes)
 pnpm turbo api-extractor -- --local
 ```

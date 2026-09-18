@@ -1,7 +1,6 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { Converter, DeclarationReflection, ReflectionKind } from 'typedoc';
@@ -19,7 +18,7 @@ import type { MarkdownTheme } from 'typedoc-plugin-markdown';
 import ts from 'typescript';
 
 import type { Translations } from './translate.ts';
-import { CONTENT } from './workspace.ts';
+import { CONTENT, json, write } from './workspace.ts';
 import type { Locale } from './workspace.ts';
 
 type Category = 'Lynx' | 'Default changed' | 'Rspeedy' | 'Rsbuild';
@@ -161,15 +160,6 @@ function linkOf(option: ConfigOption, prefix: string): string {
   return option.category === 'Rsbuild'
     ? `https://rsbuild.rs/config/${slug(option.path)}`
     : `${prefix}/api/config/${slug(option.path)}`;
-}
-
-function write(file: string, content: string): void {
-  mkdirSync(join(file, '..'), { recursive: true });
-  writeFileSync(file, content);
-}
-
-function json(value: unknown): string {
-  return `${JSON.stringify(value, null, 2)}\n`;
 }
 
 function writeOverview(

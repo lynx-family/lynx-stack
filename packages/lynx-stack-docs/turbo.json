@@ -11,11 +11,11 @@
       "inputs": [
         "scripts/**",
         "../../docs/content/*/api/**",
-        "../../docs/shown-packages.json"
+        "../../docs/manifest.json"
       ],
       "outputs": [
         "content/**",
-        "shown-packages.json"
+        "manifest.json"
       ]
     }
   }

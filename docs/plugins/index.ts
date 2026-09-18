@@ -18,7 +18,43 @@ import { pluginPackagePages } from './packages.ts';
 import { sections } from './sections.ts';
 import { Translations } from './translate.ts';
 import { pluginApiSection } from './typedoc.ts';
-import { CONTENT, DOCS, LOCALES, publicPackages } from './workspace.ts';
+import {
+  CONTENT,
+  DOCS,
+  LOCALES,
+  json,
+  publicPackages,
+  write,
+} from './workspace.ts';
+import type { Locale } from './workspace.ts';
+
+/**
+ * The top navigation of this site, by the section each entry opens. The
+ * labels are single words, which the dictionary does not carry.
+ */
+const NAV = [
+  { text: { en: 'Frameworks', zh: '框架' }, route: 'api/react' },
+  {
+    text: { en: 'Build', zh: '构建' },
+    route: 'api/config',
+    active: 'api/(config|packages)',
+  },
+];
+
+/** Writes the navigation bar of a locale next to its pages. */
+function writeNav(locale: Locale): void {
+  const prefix = locale === 'en' ? '' : `/${locale}`;
+  write(
+    join(CONTENT, locale, '_nav.json'),
+    json(
+      NAV.map(item => ({
+        text: item.text[locale],
+        link: `${prefix}/${item.route}/`,
+        activeMatch: `^${prefix}/${item.active ?? item.route}/`,
+      })),
+    ),
+  );
+}
 
 /**
  * Writes what the generated reference contains, so a site that installs the
@@ -166,18 +202,7 @@ function writeMemberMeta(dir: string): void {
       }))
       : [],
   ];
-  writeFileSync(
-    join(dir, '_meta.json'),
-    `${
-      JSON.stringify(
-        items.length > 0
-          ? items
-          : TYPE_KINDS.flatMap(kind => kindItems(dir, kind)),
-        null,
-        2,
-      )
-    }\n`,
-  );
+  writeFileSync(join(dir, '_meta.json'), json(items));
   for (const name of modules) writeMemberMeta(join(dir, name));
   if (existsSync(namespaces)) {
     for (const name of readdirSync(namespaces)) {
@@ -301,6 +326,7 @@ export function pluginApiReference(): RspressPlugin[] {
               writeMemberMeta(dir);
             }
           }
+          writeNav(locale);
           writeFileSync(
             join(CONTENT, locale, 'api/_meta.json'),
             `${

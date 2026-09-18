@@ -5,7 +5,6 @@ The API reference site of Lynx Stack, built with [Rspress](https://rspress.rs). 
 ```sh
 pnpm turbo build --filter docs    # build the packages, generate the pages and build the site
 pnpm turbo dev --filter docs      # http://localhost:3000
-pnpm --filter docs i18n:check     # fail while a Chinese string is missing
 ```
 
 ## How the pages are produced
@@ -30,4 +29,4 @@ The Chinese pages are rendered again with TypeDoc's `lang: 'zh'`. Their prose is
 
 ## Sync to lynxjs.org
 
-`@lynx-js/lynx-stack-docs` (`packages/lynx-stack-docs`) publishes `content/*/api` and `shown-packages.json` with every Lynx Stack release. lynx-website copies the pages and lists only the packages in `shown-packages.json` in its navigation.
+`@lynx-js/lynx-stack-docs` (`packages/lynx-stack-docs`) publishes `content/*/api` and `manifest.json` with every Lynx Stack release. `manifest.json` says which sections the package contains and which packages to show in navigation; lynx-website reads it and copies the pages.

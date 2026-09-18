@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-export type Dictionary = Record<string, string>;
+type Dictionary = Record<string, string>;
 
 const FENCE = /^(?:```|~~~)/;
 
@@ -80,7 +80,7 @@ function translateRow(
  * with prose outside inline code is a string in `i18n/zh.json`; code blocks,
  * headings and table headers are left to TypeDoc's own `lang` option.
  */
-export function translate(
+function translate(
   markdown: string,
   dictionary: Dictionary | undefined,
   used: Set<string>,
@@ -99,7 +99,7 @@ export function translate(
           i < 2 ? row : translateRow(row, dictionary, used, missing)
         ).join('\n'),
       );
-    } else if (/^#{1,6} /.test(text) || /^\*\*\*$/.test(text)) {
+    } else if (/^#{1,6} /.test(text)) {
       out.push(text);
     } else {
       out.push(translateText(text, dictionary, used, missing));

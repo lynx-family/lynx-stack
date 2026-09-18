@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { execSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -63,4 +63,15 @@ export function hasEntryPoint(dir: string): boolean {
     && Boolean(
       types ?? typings ?? JSON.stringify(exports ?? {}).includes('"types"'),
     );
+}
+
+/** Writes a generated file, creating the directory it sits in. */
+export function write(file: string, content: string): void {
+  mkdirSync(join(file, '..'), { recursive: true });
+  writeFileSync(file, content);
+}
+
+/** A generated JSON file, as the repository formats it. */
+export function json(value: unknown): string {
+  return `${JSON.stringify(value, null, 2)}\n`;
 }
