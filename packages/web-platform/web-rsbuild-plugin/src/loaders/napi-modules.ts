@@ -22,8 +22,7 @@ export default function(
     };`,
   ).replace(
     /\/\* LYNX_NAPI_MODULES_ADD \*\//g,
-    `console.log('CUSTOM_NAPI_MODULES', CUSTOM_NAPI_MODULES);
-Object.entries(CUSTOM_NAPI_MODULES).map(([moduleName, moduleFunc]) => {
+    `Object.entries(CUSTOM_NAPI_MODULES).map(([moduleName, moduleFunc]) => {
   napiModules[moduleName] = moduleFunc(
     napiModules,
     (name, data) => napiModulesCall(name, data, moduleName),
