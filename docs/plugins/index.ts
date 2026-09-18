@@ -116,6 +116,7 @@ type SidebarItem =
   | {
     type?: string;
     name?: string;
+    label?: string;
     collapsible?: boolean;
     collapsed?: boolean;
   };
@@ -131,7 +132,13 @@ function sidebarItems(item: SidebarItem, dir: string): SidebarItem[] {
   if (item.name !== DOCUMENTS) {
     return [
       item.type === 'dir'
-        ? { ...item, collapsible: true, collapsed: true }
+        ? {
+          ...item,
+          // A group directory is its name with the spaces written as `_`.
+          label: item.label?.replaceAll('_', ' '),
+          collapsible: true,
+          collapsed: true,
+        }
         : item,
     ];
   }
