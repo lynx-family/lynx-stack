@@ -79,9 +79,6 @@ declare global {
 }
 
 /**
- * Built-in React Hooks
- * @see https://react.dev/reference/react/hooks
- *
  * @group Hooks
  */
 export {
@@ -108,9 +105,6 @@ export { useEffect, useLayoutEffect } from '../runtime/lib/core/hooks/react.js';
 export { useErrorBoundary } from '../runtime/lib/core/hooks/react.js';
 
 /**
- * Built-in React APIs
- * @see https://react.dev/reference/react/apis
- *
  * @group Functions
  */
 export { createContext, forwardRef, lazy, memo } from 'react';
@@ -176,17 +170,11 @@ export const Fragment: typeof import('react').Fragment;
 export const Suspense: typeof import('react').Suspense;
 
 /**
- * Legacy React APIs
- * @see https://react.dev/reference/react/legacy
- *
  * @group Components
  */
 export { Component, PureComponent } from 'react';
 
 /**
- * Legacy React APIs
- * @see https://react.dev/reference/react/legacy
- *
  * @group Functions
  */
 export { createRef, isValidElement } from 'react';

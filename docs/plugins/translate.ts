@@ -7,7 +7,11 @@ export type Dictionary = Record<string, string>;
 
 const FENCE = /^(?:```|~~~)/;
 
+/** The line TypeDoc writes for the source of a reflection. */
+const SOURCE = 'Defined in: ';
+
 function hasProse(text: string): boolean {
+  if (text.startsWith(SOURCE)) return false;
   return /\p{L}{2,}[\s,]+\p{L}{2,}/u.test(
     text
       .replace(/`[^`\n]*`/g, '')
