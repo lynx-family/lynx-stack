@@ -50,7 +50,7 @@ describe('React - alias', () => {
     expect(config.resolve.alias).toHaveProperty(
       'react$',
       expect.stringContaining(
-        '/packages/react/runtime/lib/index.js'.replaceAll('/', path.sep),
+        '/packages/react/runtime/compat/index.js'.replaceAll('/', path.sep),
       ),
     )
 
@@ -164,7 +164,7 @@ describe('React - alias', () => {
     expect(config.resolve.alias).toHaveProperty(
       'react$',
       expect.stringContaining(
-        '/packages/react/runtime/lib/index.js'.replaceAll('/', path.sep),
+        '/packages/react/runtime/compat/index.js'.replaceAll('/', path.sep),
       ),
     )
 

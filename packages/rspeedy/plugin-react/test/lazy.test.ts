@@ -83,7 +83,7 @@ describe('Lazy', () => {
     )
     expect(config?.resolve?.alias).toHaveProperty(
       'react$',
-      expect.stringContaining('lazy/react'.replaceAll('/', path.sep)),
+      expect.stringContaining('lazy/compat'.replaceAll('/', path.sep)),
     )
 
     expect(config?.resolve?.alias).not.toHaveProperty(
