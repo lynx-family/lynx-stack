@@ -142,7 +142,7 @@ describe('alog', () => {
           "[MainThread Component Render] name: App",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #28: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"{\\"id\\":-1,\\"type\\":\\"root\\",\\"children\\":[{\\"id\\":-2,\\"type\\":\\"__snapshot_d6fb6_test_1\\",\\"values\\":[\\"-2:0:\\",\\"-2:1:\\"],\\"children\\":[{\\"id\\":-3,\\"type\\":null,\\"values\\":[0]},{\\"id\\":-4,\\"type\\":\\"__snapshot_d6fb6_test_2\\",\\"slotIndex\\":1},{\\"id\\":-5,\\"type\\":\\"__snapshot_d6fb6_test_3\\",\\"slotIndex\\":1}]}]}","firstScreenEventIdSwap":{}}])",
+          "[ReactLynxDebug] FiberElement API call #28: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"[1,[\\"root\\",\\"__snapshot_d6fb6_test_1\\",null,\\"__snapshot_d6fb6_test_2\\",\\"__snapshot_d6fb6_test_3\\"],[-1,0,8,[[-2,1,9,[\\"-2:0:\\",\\"-2:1:\\"],[[-3,2,1,[0]],[-4,3,16,1],[-5,4,16,1]]]]]]","firstScreenEventIdSwap":{}}])",
         ],
         [
           "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: 4",
@@ -162,39 +162,54 @@ describe('alog', () => {
         [
           "[ReactLynxDebug] MTS -> BTS OnLifecycleEvent:
       {
-        "root": {
-          "id": -1,
-          "type": "root",
-          "children": [
-            {
-              "id": -2,
-              "type": "__snapshot_d6fb6_test_1",
-              "values": [
-                "-2:0:",
-                "-2:1:"
-              ],
-              "children": [
-                {
-                  "id": -3,
-                  "type": null,
-                  "values": [
-                    0
+        "root": [
+          1,
+          [
+            "root",
+            "__snapshot_d6fb6_test_1",
+            null,
+            "__snapshot_d6fb6_test_2",
+            "__snapshot_d6fb6_test_3"
+          ],
+          [
+            -1,
+            0,
+            8,
+            [
+              [
+                -2,
+                1,
+                9,
+                [
+                  "-2:0:",
+                  "-2:1:"
+                ],
+                [
+                  [
+                    -3,
+                    2,
+                    1,
+                    [
+                      0
+                    ]
+                  ],
+                  [
+                    -4,
+                    3,
+                    16,
+                    1
+                  ],
+                  [
+                    -5,
+                    4,
+                    16,
+                    1
                   ]
-                },
-                {
-                  "id": -4,
-                  "type": "__snapshot_d6fb6_test_2",
-                  "slotIndex": 1
-                },
-                {
-                  "id": -5,
-                  "type": "__snapshot_d6fb6_test_3",
-                  "slotIndex": 1
-                }
+                ]
               ]
-            }
+            ]
           ]
-        },
+        ],
         "firstScreenEventIdSwap": {}
       }",
         ],
@@ -410,7 +425,7 @@ describe('alog', () => {
           "[MainThread Component Render] name: App",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #28: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"{\\"id\\":-1,\\"type\\":\\"root\\",\\"children\\":[{\\"id\\":-2,\\"type\\":\\"__snapshot_d6fb6_test_1\\",\\"values\\":[\\"-2:0:\\",\\"-2:1:\\"],\\"children\\":[{\\"id\\":-3,\\"type\\":null,\\"values\\":[0]},{\\"id\\":-4,\\"type\\":\\"__snapshot_d6fb6_test_2\\",\\"slotIndex\\":1},{\\"id\\":-5,\\"type\\":\\"__snapshot_d6fb6_test_3\\",\\"slotIndex\\":1}]}]}","firstScreenEventIdSwap":{}}])",
+          "[ReactLynxDebug] FiberElement API call #28: __OnLifecycleEvent(["rLynxFirstScreen", {"root":"[1,[\\"root\\",\\"__snapshot_d6fb6_test_1\\",null,\\"__snapshot_d6fb6_test_2\\",\\"__snapshot_d6fb6_test_3\\"],[-1,0,8,[[-2,1,9,[\\"-2:0:\\",\\"-2:1:\\"],[[-3,2,1,[0]],[-4,3,16,1],[-5,4,16,1]]]]]]","firstScreenEventIdSwap":{}}])",
         ],
         [
           "[BackgroundThread Component Render] name: ClassComponent, uniqID: __snapshot_d6fb6_test_2, __id: 4",
@@ -430,39 +445,54 @@ describe('alog', () => {
         [
           "[ReactLynxDebug] MTS -> BTS OnLifecycleEvent:
       {
-        "root": {
-          "id": -1,
-          "type": "root",
-          "children": [
-            {
-              "id": -2,
-              "type": "__snapshot_d6fb6_test_1",
-              "values": [
-                "-2:0:",
-                "-2:1:"
-              ],
-              "children": [
-                {
-                  "id": -3,
-                  "type": null,
-                  "values": [
-                    0
+        "root": [
+          1,
+          [
+            "root",
+            "__snapshot_d6fb6_test_1",
+            null,
+            "__snapshot_d6fb6_test_2",
+            "__snapshot_d6fb6_test_3"
+          ],
+          [
+            -1,
+            0,
+            8,
+            [
+              [
+                -2,
+                1,
+                9,
+                [
+                  "-2:0:",
+                  "-2:1:"
+                ],
+                [
+                  [
+                    -3,
+                    2,
+                    1,
+                    [
+                      0
+                    ]
+                  ],
+                  [
+                    -4,
+                    3,
+                    16,
+                    1
+                  ],
+                  [
+                    -5,
+                    4,
+                    16,
+                    1
                   ]
-                },
-                {
-                  "id": -4,
-                  "type": "__snapshot_d6fb6_test_2",
-                  "slotIndex": 1
-                },
-                {
-                  "id": -5,
-                  "type": "__snapshot_d6fb6_test_3",
-                  "slotIndex": 1
-                }
+                ]
               ]
-            }
+            ]
           ]
-        },
+        ],
         "firstScreenEventIdSwap": {}
       }",
         ],

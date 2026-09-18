@@ -5,6 +5,7 @@ import { isProcessingDefaultData } from '../../../core/lynx-data-processors.js';
 import { __root } from '../../../root.js';
 import { profileEnd, profileStart } from '../../../shared/profile.js';
 import { LifecycleConstant } from '../../lifecycle/constant.js';
+import { stringifyCompactSnapshot } from '../../snapshot/compactSnapshot.js';
 
 // Initialized once at module load (`renderPage` runs once per runtime and does
 // not reset), so a ready mark set before `renderPage` (e.g. in `defaultDataProcessor`)
@@ -20,7 +21,7 @@ function syncFirstScreen(): void {
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::serializeRoot');
   }
-  const root = JSON.stringify(__root);
+  const root = stringifyCompactSnapshot(__root);
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
