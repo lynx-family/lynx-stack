@@ -10,6 +10,7 @@ import { MarkdownPageEvent } from 'typedoc-plugin-markdown';
 import { withPackageLinks } from './packages.ts';
 import { rewritePackageReferences } from './references.ts';
 import type { Section } from './sections.ts';
+import { hidePlatformTags } from './tags.ts';
 import type { Translations } from './translate.ts';
 import { assertNoWarnings } from './warnings.ts';
 import type { Locale, WorkspacePackage } from './workspace.ts';
@@ -59,6 +60,7 @@ export function pluginApiSection(
       app.options.setValue('lang', locale);
       app.internationalization.setLocale(locale);
       rewritePackageReferences(app);
+      hidePlatformTags(app);
       app.renderer.on(RendererEvent.BEGIN, (event: RendererEvent) => {
         app.validate(event.project);
       });

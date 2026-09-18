@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import {
+  existsSync,
   readFileSync,
   readdirSync,
   rmSync,
@@ -48,10 +49,11 @@ function sidebarItems(item: SidebarItem, dir: string): SidebarItem[] {
   if (typeof item === 'string') return item === 'index' ? [] : [item];
   if (OWN_SIDEBAR_ENTRY.includes(item.name ?? '')) return [];
   if (item.name !== DOCUMENTS) return [item];
-  return readdirSync(join(dir, DOCUMENTS)).sort().map(file => ({
-    type: 'file',
-    name: `${DOCUMENTS}/${basename(file, extname(file))}`,
-  }));
+  return readdirSync(join(dir, DOCUMENTS)).filter(file => file !== '_meta.json')
+    .sort().map(file => ({
+      type: 'file',
+      name: `${DOCUMENTS}/${basename(file, extname(file))}`,
+    }));
 }
 
 /** Whether a sidebar entry is a `@document` page, which comes first. */
@@ -97,6 +99,47 @@ function writeKindMeta(dir: string): void {
     }\n`,
   );
   for (const name of names) writeKindMeta(join(dir, name));
+}
+
+/** The kinds a page can document, in the order {@link KINDS} lists them. */
+const KIND_TITLES = [
+  'Class',
+  'Interface',
+  'Type Alias',
+  'Enumeration',
+  'Function',
+  'Variable',
+  'Namespace',
+];
+
+/** The kind a generated page documents, read from its title. */
+function pageKind(file: string): number {
+  const title = /^# ([^:\n]+):/m.exec(readFileSync(file, 'utf8'))?.[1] ?? '';
+  const index = KIND_TITLES.indexOf(title);
+  return index === -1 ? KIND_TITLES.length : index;
+}
+
+/**
+ * Lists the pages of a group by kind instead of by name, the way the kind
+ * directories of the `member` router are listed. A group of a single kind, as
+ * the packages without `@group` tags have, is left to the file order.
+ */
+function writeGroupMeta(dir: string): void {
+  for (const name of readdirSync(dir)) {
+    const group = join(dir, name);
+    if (
+      !statSync(group).isDirectory() || existsSync(join(group, '_meta.json'))
+    ) continue;
+    const pages = readdirSync(group).map(file => ({
+      name: basename(file, extname(file)),
+      kind: pageKind(join(group, file)),
+    }));
+    pages.sort((a, b) => a.kind - b.kind || a.name.localeCompare(b.name));
+    writeFileSync(
+      join(group, '_meta.json'),
+      `${JSON.stringify(pages.map(page => page.name), null, 2)}\n`,
+    );
+  }
 }
 
 /**
@@ -154,6 +197,7 @@ export function pluginApiReference(): RspressPlugin[] {
             const dir = join(CONTENT, locale, section.out);
             const meta = join(dir, '_meta.json');
             if (section.router === 'group') {
+              writeGroupMeta(dir);
               const items = JSON.parse(
                 readFileSync(meta, 'utf8'),
               ) as SidebarItem[];
