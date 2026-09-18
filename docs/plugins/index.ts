@@ -31,22 +31,38 @@ const OWN_SIDEBAR_ENTRY = ['testing-library'];
 /** The group TypeDoc puts the `@document` pages of a package in. */
 const DOCUMENTS = 'Documents';
 
+type SidebarItem = string | { type?: string; name?: string };
+
 /**
  * Rewrites an entry of a generated sidebar: the index page is the link of the
  * section itself, a section with its own entry is not listed by its parent,
  * and the `@document` pages are listed one by one instead of as a group.
  */
-function sidebarItems(
-  item: string | { name?: string },
-  dir: string,
-): (string | { type: string; name: string })[] {
+function sidebarItems(item: SidebarItem, dir: string): SidebarItem[] {
   if (typeof item === 'string') return item === 'index' ? [] : [item];
   if (OWN_SIDEBAR_ENTRY.includes(item.name ?? '')) return [];
-  if (item.name !== DOCUMENTS) return [item as { type: string; name: string }];
+  if (item.name !== DOCUMENTS) return [item];
   return readdirSync(join(dir, DOCUMENTS)).sort().map(file => ({
     type: 'file',
     name: `${DOCUMENTS}/${basename(file, extname(file))}`,
   }));
+}
+
+/** Whether a sidebar entry is a `@document` page, which comes first. */
+function isDocument(item: SidebarItem): boolean {
+  return typeof item !== 'string'
+    && (item.name?.startsWith(`${DOCUMENTS}/`) ?? false);
+}
+
+/**
+ * The sidebar of a section, with the `@document` pages before the API groups.
+ */
+function sidebar(items: SidebarItem[], dir: string): SidebarItem[] {
+  const entries = items.flatMap(item => sidebarItems(item, dir));
+  return [
+    ...entries.filter(item => isDocument(item)),
+    ...entries.filter(item => !isDocument(item)),
+  ];
 }
 
 /**
@@ -94,17 +110,14 @@ export function pluginApiReference(): RspressPlugin[] {
             if (section.router === 'module' && section.out !== 'api/packages') {
               rmSync(meta);
             } else if (section.router === 'group') {
-              const items = JSON.parse(readFileSync(meta, 'utf8')) as (
-                | string
-                | { name?: string }
-              )[];
+              const items = JSON.parse(
+                readFileSync(meta, 'utf8'),
+              ) as SidebarItem[];
               writeFileSync(
                 meta,
                 `${
                   JSON.stringify(
-                    items.flatMap(item =>
-                      sidebarItems(item, join(CONTENT, locale, section.out))
-                    ),
+                    sidebar(items, join(CONTENT, locale, section.out)),
                     null,
                     2,
                   )
