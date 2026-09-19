@@ -20,7 +20,7 @@ You can directly import static assets in JavaScript:
 // Import the logo.png image in the static directory
 import logo from './static/logo.png';
 
-export function App() {
+function App() {
   return <image src={logo} />; // Can be directly used in ReactLynx
 }
 ```
@@ -39,8 +39,8 @@ You can also use static assets in CSS:
 
 The URL returned after importing a asset will automatically include the path prefix:
 
-- In development, using [`dev.assetPrefix`](../api/rspeedy.dev.assetprefix.md) to set the path prefix.
-- In production, using [`output.assetPrefix`](../api/rspeedy.output.assetprefix.md) to set the path prefix.
+- In development, using [`dev.assetPrefix`] to set the path prefix.
+- In production, using [`output.assetPrefix`] to set the path prefix.
 
 For example, you can set `output.assetPrefix` to `https://example.com`:
 
@@ -49,7 +49,7 @@ For example, you can set `output.assetPrefix` to `https://example.com`:
 ```js
 import logo from './static/logo.png';
 
-console.log(logo); // "https://example.com/static/logo.6c12aba3.png"
+console.log(logo); // "https://example.com/assets/logo.6c12aba3.png"
 ```
 
 ### Public Folder
@@ -62,7 +62,7 @@ The `public` folder at the project root can be used to place some static assets.
 In JavaScript code, you can splice the URL via `process.env.ASSET_PREFIX`:
 
 ```js
-export const logoURL = `${process.env.ASSET_PREFIX}/logo.png`;
+const logoURL = `${process.env.ASSET_PREFIX}/logo.png`;
 ```
 
 :::warning
@@ -81,14 +81,18 @@ When you import static assets in TypeScript code, TypeScript may prompt that the
 TS2307: Cannot find module './static/logo.png' or its corresponding type declarations.
 ```
 
-To fix this, you need to add a type declaration file for the static assets, please create a `src/rspeedy-env.d.ts` file, and add the corresponding type declaration.
+To fix this, add `@lynx-js/rspeedy/client`, which declares the types of static assets, to the `types` array in `tsconfig.json`, keeping the entries already there:
 
-```typescript title=src/rspeedy-env.d.ts
-/// <reference types="@lynx-js/rspeedy/client" />
+```json title=tsconfig.json
+{
+  "compilerOptions": {
+    "types": ["@lynx-js/rspeedy/client"]
+  }
+}
 ```
 
 :::tip
-[`create-rspeedy-app`](./installation.mdx#create-rspeedy-app) will automatically create this file for you.
+[`create-lynx`](https://www.npmjs.com/package/@lynx-js/create-lynx) will automatically include this for you.
 :::
 
 ## Inline Assets
@@ -101,7 +105,7 @@ However, static assets inlining also has some disadvantages, such as increasing 
 
 Rspeedy will inline assets when the file size of is less than a threshold (the default is 2KiB). When inlined, the asset will be converted to a base64-encoded string and will no longer send a separate HTTP request. When the file size is greater than this threshold, it is loaded as a separate file with a separate HTTP request.
 
-The threshold can be modified with the [`output.dataUriLimit`](../api/rspeedy.output.dataurilimit.md) config.
+The threshold can be modified with the [`output.dataUriLimit`] config.
 
 For example, set the threshold of images to 5000 bytes, and set media assets not to be inlined:
 
@@ -148,13 +152,26 @@ In the above example, the `foo.png` image will always be loaded as a separate fi
 
 ## Extend Asset Types
 
-If the built-in asset types in Rsbuild cannot meet your requirements, you can modify the built-in Rspack configuration and extend the asset types you need using [`tools.rspack`](../api/rspeedy.tools.rspack.md).
+If the built-in asset types in Rsbuild cannot meet your requirements, you can:
+
+- Use the [`source.assetsInclude`] configuration option to specify additional file types to be treated as static assets.
+- Modify the built-in Rspack configuration and extend the asset types you need using [`tools.rspack`].
 
 For example, if you want to treat `*.pdf` files as assets and directly output them to the dist directory, you can add the following configuration:
+
+<!-- eslint-disable import/export -->
 
 ```ts title="lynx.config.ts"
 import { defineConfig } from '@lynx-js/rspeedy';
 
+// planA: source.assetsInclude
+export default defineConfig({
+  source: {
+    assetsInclude: /\.pdf$/,
+  },
+});
+
+// planB: tools.rspack
 export default defineConfig({
   tools: {
     rspack(config, { addRules }) {
@@ -182,3 +199,9 @@ console.log(myFile); // "/static/myFile.6c12aba3.pdf"
 ```
 
 For more information about asset modules, please refer to [Rspack - Asset modules](https://rspack.rs/guide/features/asset-module).
+
+[`dev.assetPrefix`]: ../api/rspeedy.dev.assetprefix.md
+[`output.assetPrefix`]: ../api/rspeedy.output.assetprefix.md
+[`output.dataUriLimit`]: ../api/rspeedy.output.dataurilimit.md
+[`tools.rspack`]: ../api/rspeedy.tools.rspack.md
+[`source.assetsInclude`]: ../api/rspeedy.source.assetsinclude.md

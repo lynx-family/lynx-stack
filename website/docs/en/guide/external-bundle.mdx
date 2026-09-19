@@ -1,0 +1,287 @@
+---
+description: 'Build and load shared Lynx bundles for cross-application reuse.'
+---
+
+import { PackageManagerTabs } from '@theme';
+
+# External Bundle
+
+> Requires Lynx 3.5 or later.
+
+External Bundle lets you build a Lynx bundle once and load it from multiple Lynx apps at runtime. Use it when you want to share ReactLynx components or common business bundles across apps.
+
+Compared with [Chunk Splitting](../api/rspeedy.performance.chunksplit.md), External Bundle is for cross-application reuse, while Chunk Splitting is for splitting code inside one app.
+
+This workflow has two parts:
+
+1. Use [`@lynx-js/lynx-bundle-rslib-config`](../api/lynx-bundle-rslib-config.md) to build the external bundle.
+2. Use [`@lynx-js/external-bundle-rsbuild-plugin`](../api/external-bundle-rsbuild-plugin.md) to load it in the host app.
+
+The responsibilities are equally simple:
+
+- the library build emits the `.lynx.bundle`
+- the host app declares where the bundle is loaded from and which section the runtime should request
+
+## Install
+
+<PackageManagerTabs command="install @lynx-js/lynx-bundle-rslib-config @lynx-js/external-bundle-rsbuild-plugin @lynx-js/react-umd @rslib/core -D" />
+
+:::note Why `@lynx-js/react-umd` is needed
+`@lynx-js/react-umd` provides the ReactLynx runtime bundles required by the built-in `reactlynx` preset.
+
+When you enable `externalsPresets.reactlynx`, the plugin resolves `@lynx-js/react-umd/dev` or `@lynx-js/react-umd/prod` based on `NODE_ENV`, emits `react.lynx.bundle`, and loads it through the current runtime public path.
+
+For most projects, installing `@lynx-js/react-umd` and enabling the `reactlynx` preset is enough.
+:::
+
+## Build An External Bundle
+
+For a ReactLynx component bundle, the recommended setup is:
+
+```ts title="rslib-comp-lib.config.ts"
+import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config';
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
+
+export default defineExternalBundleRslibConfig({
+  id: 'comp-lib',
+  source: {
+    entry: {
+      './App.js': './external-bundle/CompLib.tsx',
+    },
+  },
+  plugins: [pluginReactLynx()],
+  output: {
+    externalsPresets: {
+      reactlynx: true,
+    },
+  },
+});
+```
+
+`externalsPresets.reactlynx` maps the standard ReactLynx requests for you, so a ReactLynx component bundle can depend on the shared runtime directly.
+
+Run the build with:
+
+<PackageManagerTabs command="exec rslib build --config rslib-comp-lib.config.ts" />
+
+After a successful build, you will get an output directory like this:
+
+```text
+├── dist-external-bundle
+│   └── comp-lib.template.js
+```
+
+### Bundle CSS
+
+> Requires Lynx 3.7 or later.
+
+If you need to run CSS from the External Bundle, set `engineVersion: '3.7'` when building that bundle:
+
+```ts title="rslib-comp-lib.config.ts"
+export default defineExternalBundleRslibConfig({
+  plugins: [
+    pluginReactLynx({
+      engineVersion: '3.7',
+    }),
+  ],
+});
+```
+
+Pure JS / TS External Bundles do not need this.
+
+## Load It In The Host App
+
+Use the same request key in the app:
+
+```ts title="lynx.config.ts"
+import { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin';
+import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin';
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
+import { defineConfig } from '@lynx-js/rspeedy';
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx(),
+    pluginQRCode(),
+    pluginExternalBundle({
+      externalsPresets: {
+        reactlynx: true,
+      },
+      externals: {
+        './App.js': 'comp-lib.lynx.bundle',
+      },
+    }),
+  ],
+});
+```
+
+This shorthand is equivalent to the following expanded config:
+
+```ts
+externals: {
+  './App.js': {
+    bundlePath: 'comp-lib.lynx.bundle',
+    libraryName: './App.js',
+    background: { sectionPath: './App.js' },
+    mainThread: { sectionPath: './App.js__main-thread' },
+    async: true,
+  },
+}
+```
+
+If your section names already match the request key, this is the smallest recommended setup.
+
+## Verify It Works
+
+After the configuration above, use these signals to confirm that the External Bundle is wired up correctly:
+
+- the host app successfully requests `comp-lib.lynx.bundle` at runtime
+- when `externalsPresets.reactlynx` is enabled, the runtime also loads `react.lynx.bundle` automatically
+- components from the External Bundle render normally, without section mismatch or bundle loading failures
+
+If it still does not run, check whether the request key, bundle path, and section names in `externals` are aligned.
+
+## Advanced: When To Set `globalObject`
+
+In most projects, you can omit `globalObject`.
+
+Set `globalObject: 'globalThis'` only when your app enables a shared `globalThis` across background-thread runtimes and you want later bundles to reuse externals that have already been loaded there.
+
+Use it on both sides when needed:
+
+```ts title="rslib-comp-lib.config.ts"
+output: {
+  externalsPresets: {
+    reactlynx: true,
+  },
+  globalObject: 'globalThis',
+}
+```
+
+```ts title="lynx.config.ts"
+pluginExternalBundle({
+  externalsPresets: {
+    reactlynx: true,
+  },
+  externals: {
+    './App.js': 'comp-lib.lynx.bundle',
+  },
+  globalObject: 'globalThis',
+});
+```
+
+## Extend Presets
+
+Use the same preset name on both sides so the bundle build and the host app stay aligned.
+
+### From The Library Side
+
+On the external bundle build side, presets live in `output.externalsPresets` and `output.externalsPresetDefinitions`:
+
+```ts title="rslib-comp-lib.config.ts"
+import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config';
+
+export default defineExternalBundleRslibConfig({
+  output: {
+    externalsPresets: {
+      reactlynxPlus: true,
+    },
+    externalsPresetDefinitions: {
+      reactlynxPlus: {
+        extends: 'reactlynx',
+        externals: {
+          '@lynx-js/lynx-ui': ['LynxUI', 'UI'],
+        },
+      },
+    },
+  },
+});
+```
+
+This side decides how imports are mapped to external globals when the bundle is built.
+
+### From The Lynx Page Side
+
+On the host app side, presets live in `pluginExternalBundle({ externalsPresets, externalsPresetDefinitions })`:
+
+```ts title="lynx.config.ts"
+import { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin';
+
+pluginExternalBundle({
+  externalsPresets: {
+    reactlynxPlus: true,
+  },
+  externalsPresetDefinitions: {
+    reactlynxPlus: {
+      extends: 'reactlynx',
+      resolveExternals() {
+        return {
+          '@lynx-js/lynx-ui': {
+            libraryName: ['LynxUI', 'UI'],
+            bundlePath: 'lynx-ui.lynx.bundle',
+            background: { sectionPath: 'LynxUI' },
+            mainThread: { sectionPath: 'LynxUI__main-thread' },
+            async: false,
+          },
+        };
+      },
+    },
+  },
+});
+```
+
+This side decides where the bundle is loaded from and which section names the runtime should request.
+
+Explicit `externals` still override mappings provided by presets. Use that when a single app needs a different bundle path or section name.
+
+## Advanced: When To Use The Object Form
+
+Use the full object form when you need custom section names, custom exported library names, timeouts, or a dedicated local bundle directory.
+
+The `external-bundle` example in `lynx-examples` uses that style:
+
+```ts title="lynx.config.mjs"
+pluginExternalBundle({
+  externalBundleRoot: 'dist-external-bundle',
+  externalsPresets: {
+    reactlynx: true,
+  },
+  externals: {
+    'lodash-es': {
+      bundlePath: 'lodash-es.lynx.bundle',
+      background: { sectionPath: 'lodash-es' },
+      mainThread: { sectionPath: 'lodash-es__main-thread' },
+      async: false,
+      timeout: 10000,
+    },
+    './components': {
+      bundlePath: 'comp.lynx.bundle',
+      background: { sectionPath: 'component' },
+      mainThread: { sectionPath: 'component__main-thread' },
+      async: true,
+      timeout: 5000,
+    },
+  },
+  timeout: 10000,
+});
+```
+
+Use this form when:
+
+- one bundle contains multiple business modules
+- section names do not match the request key
+- bundles are built into `dist-external-bundle`
+- you want per-bundle timeout or loading behavior
+
+## Example
+
+The `lynx-examples` external-bundle example is available directly in the docs:
+
+See the [`external-bundle` example](https://github.com/lynx-family/lynx-examples/tree/main/examples/external-bundle).
+
+## API Reference
+
+- [`defineExternalBundleRslibConfig()`](../api/lynx-bundle-rslib-config.defineexternalbundlerslibconfig.md)
+- [`pluginExternalBundle()`](../api/external-bundle-rsbuild-plugin.pluginexternalbundle.md)
+- [`@lynx-js/lynx-bundle-rslib-config`](../api/lynx-bundle-rslib-config.md)
+- [`@lynx-js/external-bundle-rsbuild-plugin`](../api/external-bundle-rsbuild-plugin.md)

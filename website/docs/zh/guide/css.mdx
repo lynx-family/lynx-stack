@@ -1,3 +1,7 @@
+---
+description: 'CSS Modules、预处理器、Tailwind 等样式方案。'
+---
+
 import { PackageManagerTabs } from '@theme';
 
 # 样式
@@ -11,6 +15,8 @@ Rspeedy 支持多种方式来对你的应用程序进行样式设计，包括：
 - [**CSS pre-processors**](#using-css-pre-processors): 使用常见的 CSS 预处理器，如 [`sass`](https://sass-lang.com/) 或者 [`less`](https://lesscss.org/) 通过变量、嵌套规则等特性扩展了 CSS。
 
 - [**PostCSS**](#using-postcss): 用于转换 CSS 的工具。
+
+- [**Tailwind CSS**](#using-tailwind-css): 一个 CSS 框架，通过组合工具类（utility classes）快速进行自定义设计。
 
 ## 使用 CSS Modules \{#using-css-modules}
 
@@ -75,7 +81,7 @@ E.g.: 下面这些文件都将会被认为是 CSS Modules
 
 默认情况下，只有以 `*.module.{css,scss,less}` 结尾的文件才会被识别为 CSS Modules。
 
-如果你想将其他 CSS 文件也视为 CSS Modules，可以通过在 Rspeedy 中配置 [output.cssModules.auto](/api/rspeedy.cssmodules.auto) 来实现。
+如果你想将其他 CSS 文件也视为 CSS Modules，可以通过在 Rspeedy 中配置 [output.cssModules.auto](../api/rspeedy.cssmodules.auto.md) 来实现。
 
 如下面的例子所示：
 
@@ -108,14 +114,18 @@ import * as bar from './shared/bar.css';
 TS2307: Cannot find module './index.module.css' or its corresponding type declarations.
 ```
 
-要解决这个问题，你需要为 CSS 模块添加一个类型声明文件，请创建一个 `src/rspeedy-env.d.ts` 文件，并添加相应的类型声明。
+要解决这个问题，请在 `tsconfig.json` 的 `types` 数组中追加声明了 CSS 模块类型的 `@lynx-js/rspeedy/client`，保留已有的项：
 
-```ts
-/// <reference types="@lynx-js/rspeedy/client" />
+```json title=tsconfig.json
+{
+  "compilerOptions": {
+    "types": ["@lynx-js/rspeedy/client"]
+  }
+}
 ```
 
 :::tip
-[`create-rspeedy`](https://npmjs.com/create-rspeedy) 会自动为你创建这个文件。
+[`create-lynx`](https://www.npmjs.com/package/@lynx-js/create-lynx) 在创建项目时会自动包含该配置。
 :::
 
 如果在添加类型声明后仍然存在类型错误，你可以尝试重启当前的 IDE，以确保 TypeScript 能正确识别类型定义。
@@ -136,7 +146,7 @@ declare module '*.module.css' {
 
 它对于每个 CSS Modules 中含有的类名不够精确。
 
-使用 [Typed CSS Modules Plugin](https://rsbuild.rs/plugins/list/plugin-typed-css-modules) 将为所有 CSS Modules 生成具有精确类型声明的类型声明文件。
+使用 [Typed CSS Modules Plugin](https://v0.rsbuild.rs/plugins/list/plugin-typed-css-modules) 将为所有 CSS Modules 生成具有精确类型声明的类型声明文件。
 
 1. 安装 `@rsbuild/plugin-typed-css-modules`
 
@@ -317,3 +327,55 @@ export default {
   },
 };
 ```
+
+## 使用 Tailwind CSS \{#using-tailwind-css}
+
+:::tip Tailwind CSS v3
+Lynx 目前需要 **Tailwind CSS v3**。请安装 `tailwindcss@^3` 并将其用作 PostCSS 插件。注意 v4 的包如 `@tailwindcss/postcss`、`@tailwindcss/vite` 和 `@tailwindcss/cli` 与 `@lynx-js/tailwind-preset` 不兼容。
+:::
+
+1. 安装 Tailwind CSS
+
+   Rspeedy 内置支持 PostCSS，你可以安装 tailwindcss 包来接入 Tailwind CSS：
+
+   <PackageManagerTabs command="install -D tailwindcss@^3" />
+
+2. 配置 PostCSS
+
+   你可以通过 [`postcss.config.js`](https://www.npmjs.com/package/postcss-loader#config) 或 [`tools.postcss`](https://rsbuild.rs/zh/config/tools/postcss) 来注册 `tailwindcss` 的 PostCSS 插件。
+
+   ```js title=postcss.config.js
+   export default {
+     plugins: {
+       tailwindcss: {},
+     },
+   };
+   ```
+
+3. 安装 `@lynx-js/tailwind-preset` 包：
+
+   <PackageManagerTabs command="install -D @lynx-js/tailwind-preset" />
+
+4. 配置 `tailwind.config.js` 并添加 `@lynx-js/tailwind-preset`：
+
+   您必须使用 [`@lynx-js/tailwind-preset`](https://github.com/lynx-family/lynx-stack/tree/main/packages/tailwind-preset) 删除 Lynx 中不支持的所有 tailwindcss 工具类或替换至特定于 Lynx 的替代方案。
+
+   ```js title=tailwind.config.js
+   import lynxPreset from '@lynx-js/tailwind-preset';
+
+   export default {
+     content: ['./src/**/*.{js,ts,jsx,tsx}'],
+     presets: [lynxPreset],
+   };
+   ```
+
+   :::warning
+
+   `@lynx-js/tailwind-preset` 仍不稳定，请谨慎使用。如果您发现任何 tailwindcss 功能无法使用且应予以支持，请在 https://github.com/lynx-family/lynx-stack/issues 上提出 issue。
+
+   :::
+
+### 使用示例
+
+
+参考 [`tailwindcss` 示例](https://github.com/lynx-family/lynx-examples/tree/main/examples/tailwindcss)。

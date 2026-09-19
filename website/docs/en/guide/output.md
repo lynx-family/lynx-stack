@@ -10,23 +10,28 @@ The following is a basic directory for output files. By default, the compiled fi
 
 In production, the `dist/` directory contains all the files that need to be deployed.
 
-```
+```txt
 dist/
 ├── [name].lynx.bundle
-├── lazy-bundle
-│   └── [name].[fullhash].bundle
+├── async
+│   └── [name].lynx.bundle
 └── static
     ├── image
     │   └── [name].[hash].png
-    └── svg
-        └── [name].[hash].svg
+    ├── svg
+    │   └── [name].[hash].svg
+    └── js
+        ├── [id].[hash].js
+        │   └── async
+        │       └── [id].[hash].js
+        └── lib-preact.[hash].js
 ```
 
 The most common output files are Bundle files, JS files and static assets:
 
 - Bundle files(`[name].lynx.bundle`), which can be configured with [`output.filename.bundle`].
-- Lazy bundle files(`lazy-bundle/[name].[fullhash].bundle`).
-- JS files(`static/js/*.js`), only emitted when [`output.inlineScripts`] is disabled, which can be configured with [`output.distPath.js`] and [`output.filename.js`].
+- Async(lazy) bundle files(`async/[name].lynx.bundle`).
+- JS files(`static/js/*.js`), which can be configured with [`output.distPath.js`] and [`output.filename.js`].
 - Static assets(`static/{font,image,media,svg}`) directory.
 
 In the filename, `[name]` is the entry name corresponding to this file, such as `index`, `main`. `[hash]` is the hash value generated based on the content of the file. `[id]` is the internal chunk ID of Rspack.
@@ -35,39 +40,38 @@ In the filename, `[name]` is the entry name corresponding to this file, such as 
 
 In development, an `dist/.lynx` directory is emitted which contains the resources for debugging.
 
-```
+```txt
 dist/
 ├── .lynx
-│   ├── lazy-bundle
+│   ├── async
 │   │   └── [name]
-│   │       ├── background.js
-│   │       ├── background.css
-│   │       ├── background.css.hot-update.json
 │   │       ├── debug-metadata.json
-│   │       ├── main-thread.js
-│   │       └── tasm.json
-│   └── [name]
-│       ├── background.js
-│       ├── debug-metadata.json
-│       ├── main-thread.js
-│       ├── [name].css
-│       ├── [name].css.hot-update.json
-│       └── tasm.json
+│   │       ├── tasm.json
+│   │       └── [name].css
+│   ├── [name]
+│   │   ├── background.js
+│   │   ├── debug-metadata.json
+│   │   ├── [name].css
+│   │   ├── main-thread.js
+│   │   └── tasm.json
+│   └── rspeedy.config.js
 ├── [name].lynx.bundle
-├── lazy-bundle
-│   └── [name].[fullhash].bundle
 └── static
     ├── image
-    │   └── [name].[hash].png
-    └── svg
-        └── [name].[hash].svg
+    │   ├── [name].[hash].png
+    │   └── [name].[hash].svg
+    └── js
+        ├── [id].[hash].js
+        │   └── async
+        │       └── [id].[hash].js
+        └── lib-preact.[hash].js
 ```
 
 In addition, Rspeedy generates some extra files in development:
 
 - Background Thread Script(BTS): The background script file that is inlined into the bundle, default output to `.lynx/[name]/background.js`.
 - MainThread Thread Script(MTS): The main-thread script file that is inlined into the bundle, default output to `.lynx/[name]/main-thread.js`.
-- Source Map files: contains the source code mappings, which is output to the same level directory of JS files and adds a `.map` suffix when [`output.sourceMap`] is enabled.
+- Debug Metadata: the metadata needed to map production errors back to source (source map, bytecode debug info, UI source map, and build info), default output to `.lynx/[name]/debug-metadata.json`. See [Map Production Errors to Source](https://lynxjs.org/build/map-errors-to-source).
 
 ## Modify the Directory
 
@@ -108,11 +112,10 @@ dist
 └── [name].lynx.bundle
 ```
 
-[`output.filename`]: /api/rspeedy.output.filename
-[`output.inlineScripts`]: /api/rspeedy.output.inlinescripts
-[`output.filename.js`]: /api/rspeedy.filename.js
-[`output.filename.bundle`]: /api/rspeedy.filename.bundle
-[`output.distPath`]: /api/rspeedy.output.distpath
-[`output.distPath.js`]: https://rsbuild.rs/config/output/dist-path
-[`output.legalComments`]: /api/rspeedy.output.legalcomments
-[`output.sourceMap`]: /api/rspeedy.output.sourcemap
+[`output.filename`]: ../api/rspeedy.output.filename.md
+[`output.filename.js`]: ../api/rspeedy.filename.js.md
+[`output.filename.bundle`]: ../api/rspeedy.filename.bundle.md
+[`output.distPath`]: ../api/rspeedy.output.distpath.md
+[`output.distPath.js`]: ../api/rspeedy.output.distpath.md
+[`output.legalComments`]: ../api/rspeedy.output.legalcomments.md
+[`output.sourceMap`]: ../api/rspeedy.output.sourcemap.md

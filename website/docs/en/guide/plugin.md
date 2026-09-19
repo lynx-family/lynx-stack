@@ -1,3 +1,7 @@
+---
+description: 'Extend Rspeedy with Rsbuild and Rspack plugins.'
+---
+
 # Plugin
 
 Rsbuild provides a powerful plugin system that allows for user extension.
@@ -12,17 +16,7 @@ Plugins written by developers can modify the default behavior of Rspeedy/Rsbuild
 
 ## Find Plugins
 
-Before finding plugin, you may want to check if the feature you want is already included in [Rspeedy Configuration](/api/rspeedy).
-
-### Official Plugins
-
-The following official plugins are maintained by Lynx team.
-
-- [QR code Plugin](/api/qrcode-rsbuild-plugin): Use QR code with Rspeedy.
-
-:::tip
-You can find the source code of all official plugins in [lynx-stack](https://github.com/lynx-family/lynx-stack/packages/rspeedy).
-:::
+Before finding plugin, you may want to check if the feature you want is already included in [Rspeedy Configuration](../api/rspeedy.md).
 
 ### Rsbuild Plugins
 
@@ -34,7 +28,7 @@ The following Rsbuild plugins can be used in Rspeedy.
 - [Type Check Plugin](https://github.com/rspack-contrib/rsbuild-plugin-type-check): Run TypeScript type checker on a separate process.
 - [Image Compress Plugin](https://github.com/rspack-contrib/rsbuild-plugin-image-compress): Compress the image assets.
 - [Typed CSS Modules Plugin](https://github.com/rspack-contrib/rsbuild-plugin-typed-css-modules): Generate TypeScript declaration file for CSS Modules.
-- [Tailwind CSS Plugin](https://github.com/rstackjs/rsbuild-plugin-tailwindcss): Integration with Tailwind CSS V3.
+- [Tailwind CSS Plugin](https://github.com/rspack-contrib/rsbuild-plugin-tailwindcss): Integrate with Tailwind CSS V3
 
 ### Rspack/Webpack Plugins
 
@@ -54,13 +48,13 @@ If none of the existing ecosystem plugins meet your requirements, you might cons
 
 ### Rsbuild Plugin API
 
-See [Rsbuild - Plugin Hooks](https://rsbuild.rs/plugins/dev/hooks) for more details.
+See [Rsbuild - Plugin Hooks](https://rsbuild.dev/plugins/dev/hooks) for more details.
 
 ### Rspack Plugin API
 
 See [Rspack - Compiler Hooks](https://rspack.rs/api/plugin-api/compiler-hooks) and [Rspack - Compilation Hooks](https://rspack.rs/api/plugin-api/compilation-hooks) for more details.
 
-[`tools.rspack.plugins`]: /api/rspeedy.tools.rspack#example-4
+[`tools.rspack.plugins`]: ../api/rspeedy.tools.rspack.md#example-4
 [BannerPlugin]: https://rspack.rs/plugins/webpack/banner-plugin
 [DefinePlugin]: https://rspack.rs/plugins/webpack/define-plugin
 [EnvironmentPlugin]: https://rspack.rs/plugins/webpack/environment-plugin

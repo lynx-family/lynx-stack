@@ -1,3 +1,7 @@
+---
+description: '使用 Rsbuild 插件扩展 Rspeedy。'
+---
+
 # 插件
 
 Rsbuild 提供了一套强大的插件系统，允许用户进行功能扩展。Rspeedy 直接继承了这套插件系统。
@@ -11,7 +15,7 @@ Rsbuild 提供了一套强大的插件系统，允许用户进行功能扩展。
 
 ## 查找插件
 
-在寻找插件之前，建议先查看所需功能是否已包含在 [Rspeedy 配置](../../api/rspeedy.md)中。
+在寻找插件之前，建议先查看所需功能是否已包含在 [Rspeedy 配置](../api/rspeedy.md)中。
 
 ### Rsbuild 插件
 
@@ -23,7 +27,7 @@ Rsbuild 提供了一套强大的插件系统，允许用户进行功能扩展。
 - [TypeScript 类型检查插件](https://github.com/rspack-contrib/rsbuild-plugin-type-check): 在独立进程中进行 TypeScript 类型检查
 - [图片压缩插件](https://github.com/rspack-contrib/rsbuild-plugin-image-compress): 压缩图片资源
 - [Typed CSS Module 插件](https://github.com/rspack-contrib/rsbuild-plugin-typed-css-modules): 为 CSS Modules 生成 TypeScript 声明文件
-- [Tailwind CSS 插件](https://github.com/rstackjs/rsbuild-plugin-tailwindcss): 接入 Tailwind CSS V3
+- [Tailwind CSS 插件](https://github.com/rspack-contrib/rsbuild-plugin-tailwindcss): 接入 Tailwind CSS V3
 
 ### Rspack/Webpack 插件
 
@@ -43,13 +47,13 @@ Rspack/Webpack 插件需要配置在 [`tools.rspack.plugins`] 中
 
 ### Rsbuild 插件 API
 
-详见 [Rsbuild - 插件钩子](https://rsbuild.rs/plugins/dev/hooks)
+详见 [Rsbuild - 插件钩子](https://rsbuild.dev/plugins/dev/hooks)
 
 ### Rspack 插件 API
 
 详见 [Rspack - Compiler 钩子](https://rspack.rs/api/plugin-api/compiler-hooks)和 [Rspack - Compilation 钩子](https://rspack.rs/api/plugin-api/compilation-hooks)
 
-[`tools.rspack.plugins`]: ../../api/rspeedy.tools.rspack#example-4
+[`tools.rspack.plugins`]: ../api/rspeedy.tools.rspack.md#example-4
 [Banner 插件]: https://rspack.rs/plugins/webpack/banner-plugin
 [Define 插件]: https://rspack.rs/plugins/webpack/define-plugin
 [Environment 插件]: https://rspack.rs/plugins/webpack/environment-plugin

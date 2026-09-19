@@ -1,3 +1,7 @@
+---
+description: '使用 Rsdoctor 分析和诊断构建。'
+---
+
 import { PackageManagerTabs } from '@theme';
 
 # 使用 Rsdoctor
@@ -16,7 +20,6 @@ import { PackageManagerTabs } from '@theme';
 - **编译可视化**: Rsdoctor 可视化编译行为和时间消耗，使查看构建问题变得容易。
 
 - **多种分析能力**: Rsdoctor 支持构建产物、构建时间分析和防退化能力：
-
   - 构建产物支持资源列表和模块依赖等。
   - 构建时间分析支持加载器、插件和解析器的构建过程分析，包括：**Rspack 的内置 swc-loader**。
   - 构建规则支持重复包检测和 ES 版本检查等。
@@ -39,7 +42,7 @@ RSDOCTOR=true rspeedy build
 
 ## 选项
 
-如果你需要配置[选项](https://rsdoctor.dev/config/options/options#options) provided by the Rsdoctor plugin, use [`tools.rsdoctor`](../../api/rspeedy.tools.rsdoctor).
+如果你需要配置[选项](https://rsdoctor.dev/config/options/options#options) provided by the Rsdoctor plugin, use [`tools.rsdoctor`](../api/rspeedy.tools.rsdoctor.md).
 
 ```ts title="lynx.config.ts"
 import { defineConfig } from '@lynx-js/rspeedy';

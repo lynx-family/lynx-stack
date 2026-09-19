@@ -2,6 +2,20 @@
 
 Rspeedy 提供了一个轻量级的命令行界面（CLI），包含 `dev` 和 `build` 等常用命令。
 
+## 使用全局安装的 Rspeedy
+
+你可以通过 `npx rspeedy` 调用 Rspeedy，但更方便的做法是全局安装以便在 shell 的 `PATH` 中随时可用：
+
+```bash
+# 全局安装 Rspeedy
+npm install --global @lynx-js/rspeedy
+```
+
+:::info 如果全局安装的 Rspeedy 版本不正确怎么办？
+
+与 [Rush](https://rushstack.io/) 类似，Rspeedy 实现了 "版本选择器" 功能，会自动发现本地的 `node_modules` 目录并调用 `./node_modules/.bin/rspeedy`，确保使用正确的版本。
+:::
+
 ## 使用 Node.js 的 TypeScript 支持
 
 如果你使用的 Node.js 版本支持 TypeScript：
@@ -35,6 +49,7 @@ Usage: rspeedy <command> [options]
 
 Options:
   -V, --version      output the version number
+  --unmanaged        Force to use the unmanaged version of Rspeedy, instead of the locally installed.
   -h, --help         display help for command
 
 Commands:
@@ -63,7 +78,6 @@ Options:
   --env-mode <mode>        specify the env mode to load the .env.[mode] file
   --no-env                 disable loading `.env` files"
   -m --mode <mode>         specify the build mode, can be `development`, `production` or `none`
-  -r --root <root>         set the project root directory (absolute path or relative to cwd)
   -h, --help               display help for command
 ```
 
@@ -87,7 +101,6 @@ Options:
   --env-mode <mode>        specify the env mode to load the .env.[mode] file
   --no-env                 disable loading `.env` files"
   -m --mode <mode>         specify the build mode, can be `development`, `production` or `none`
-  -r --root <root>         set the project root directory (absolute path or relative to cwd)
   -h, --help               display help for command
 ```
 
@@ -108,7 +121,6 @@ Options:
   --env-mode <mode>     specify the env mode to load the .env.[mode] file
   --no-env              disable loading `.env` files"
   -m --mode <mode>      specify the build mode, can be `development`, `production` or `none`
-  -r --root <root>      set the project root directory (absolute path or relative to cwd)
   -h, --help            display help for command
 ```
 
@@ -134,11 +146,10 @@ Options:
   --env-mode <mode>     specify the env mode to load the .env.[mode] file
   --no-env              disable loading `.env` files"
   -m --mode <mode>      specify the build mode, can be `development`, `production` or `none`
-  -r --root <root>      set the project root directory (absolute path or relative to cwd)
   -h, --help            display help for command
 ```
 
-在项目根目录执行 `rspeedy inspect` 命令后，会在项目的 `dist/.lynx` 目录下生成以下文件：
+在项目根目录执行 `rspeedy inspect` 命令后，会在项目的 `dist/.rsbuild` 目录下生成以下文件：
 
 - `rspeedy.config.js`: 表示构建时使用的 Rspeedy 配置
 - `rsbuild.config.mjs`: 表示构建时使用的 Rsbuild 配置
@@ -147,14 +158,11 @@ Options:
 ```text
 ➜ rspeedy inspect
 
-Inspect config succeed, open following files to view the content:
-
-  - Rspeedy Config: /project/dist/.rsbuild/rspeedy.config.mjs
+success config inspection completed, generated files:
+  - Rsbuild config: /project/dist/.rsbuild/rsbuild.config.mjs
   - Rspack Config (lynx): /project/dist/.rsbuild/rspack.config.lynx.mjs
-
-Inspect Rspeedy config succeed, open following files to view the content:
-
-  - Rspeedy: /Users/colin/rspeedy/examples/react/dist/rspeedy-rspack/.rsbuild/rspeedy.config.js
+success Inspect Rspeedy config succeed, open following files to view the content:
+  - Rspeedy: /project/dist/.rsbuild/rspeedy.config.js
 ```
 
 ### 指定模式
