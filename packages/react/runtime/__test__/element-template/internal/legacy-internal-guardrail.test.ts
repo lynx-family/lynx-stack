@@ -18,6 +18,14 @@ describe('legacy internal guardrail', () => {
     expect('adaptMTRefAttrSlot' in ElementTemplateRuntime).toBe(false);
   });
 
+  it('exposes the page binding preact devtools imports from the internal entry', () => {
+    // `@lynx-js/preact-devtools` imports `__page` from `@lynx-js/react/internal`,
+    // which resolves here under Element Template; a missing export fails the
+    // development build with an ESModulesLinkingError.
+    expect('__page' in ElementTemplateInternal).toBe(true);
+    expect('__page' in ElementTemplateRuntime).toBe(false);
+  });
+
   it('keeps the ET main-thread event loader surface minimal', () => {
     expect(ElementTemplateInternal.loadWorkletRuntime).toBeTypeOf('function');
     expect('loadWorkletRuntime' in ElementTemplateRuntime).toBe(false);
