@@ -12,7 +12,6 @@ import {
   resetElementTemplateHydrationListener,
 } from '../../../../../src/element-template/background/hydration-listener.js';
 import {
-  collectElementTemplateSubtreeHandleIds,
   collectMainThreadRefSubtreeHandleIds,
   BackgroundElementTemplateInstance,
 } from '../../../../../src/element-template/background/instance.js';
@@ -37,7 +36,7 @@ import {
 } from '../../../test-utils/debug/compiledThreadRunner.js';
 import { ElementTemplateEnvManager } from '../../../test-utils/debug/envManager.js';
 import { runFixtureTests } from '../../../test-utils/debug/fixtureRunner.js';
-import { serializeBackgroundTree } from '../../../test-utils/debug/serializer.js';
+import { collectBackgroundSubtreeHandleIds, serializeBackgroundTree } from '../../../test-utils/debug/serializer.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -191,7 +190,7 @@ describe('Compiled background Preact updates', () => {
         const host = renderCompiledOnBackground(backgroundModule, ['keep', 'remove']);
         hydrateFromMainThread(mainModule, ['keep', 'remove']);
         const removed = getSlotChildAt(1, host);
-        const removedSubtreeHandleIds = collectElementTemplateSubtreeHandleIds(removed);
+        const removedSubtreeHandleIds = collectBackgroundSubtreeHandleIds(removed);
         updateEvents = [];
 
         vi.useFakeTimers();
@@ -231,7 +230,7 @@ describe('Compiled background Preact updates', () => {
         hydrateFromMainThread(mainModule, ['keep', 'again']);
         const keep = getSlotChildAt(0, host);
         const removed = getSlotChildAt(1, host);
-        const removedSubtreeHandleIds = collectElementTemplateSubtreeHandleIds(removed);
+        const removedSubtreeHandleIds = collectBackgroundSubtreeHandleIds(removed);
         updateEvents = [];
 
         vi.useFakeTimers();

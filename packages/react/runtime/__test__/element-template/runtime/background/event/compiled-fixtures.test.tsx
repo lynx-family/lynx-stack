@@ -12,7 +12,6 @@ import {
   resetElementTemplateHydrationListener,
 } from '../../../../../src/element-template/background/hydration-listener.js';
 import {
-  collectElementTemplateSubtreeHandleIds,
   collectMainThreadRefSubtreeHandleIds,
   BackgroundElementTemplateInstance,
 } from '../../../../../src/element-template/background/instance.js';
@@ -53,7 +52,7 @@ import {
   renderCompiledFixtureOnMainThread,
 } from '../../../test-utils/debug/compiledThreadRunner.js';
 import { ElementTemplateEnvManager } from '../../../test-utils/debug/envManager.js';
-import { serializeBackgroundTree } from '../../../test-utils/debug/serializer.js';
+import { collectBackgroundSubtreeHandleIds, serializeBackgroundTree } from '../../../test-utils/debug/serializer.js';
 import { initWorklet } from '../../../../../src/worklet-runtime/workletRuntime.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -834,7 +833,7 @@ describe('Compiled direct event background updates', () => {
     const host = renderConditionalDirectEventOnBackground(backgroundModule, true, handler);
     hydrateConditionalDirectEventFromMainThread(mainModule, true, handler);
     const removed = getSlotChildAt(0, host);
-    const removedSubtreeHandleIds = collectElementTemplateSubtreeHandleIds(removed);
+    const removedSubtreeHandleIds = collectBackgroundSubtreeHandleIds(removed);
     const eventValue = `${removed.instanceId}:0:`;
     expect(getEventHandlerForEventValue(eventValue)).toBe(handler);
     updateEvents = [];
