@@ -21,8 +21,8 @@
     "@rsbuild/core": "catalog:rsbuild",
     "@rstest/adapter-rsbuild": "catalog:rstest",
     "@rstest/core": "catalog:rstest",
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^7.0.1",
     "preact": "catalog:lynxjs"
   }
 }
