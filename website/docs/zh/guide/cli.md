@@ -154,7 +154,7 @@ Inspect config succeed, open following files to view the content:
 
 Inspect Rspeedy config succeed, open following files to view the content:
 
-  - Rspeedy: /Users/colin/rspeedy/examples/react/dist/rspeedy-rspack/.rsbuild/rspeedy.config.js
+  - Rspeedy: /Users/colin/rspeedy/examples/react/dist/rspeedy-rspack/.rsbuild/rspeedy.config.mjs
 ```
 
 ### 指定模式
