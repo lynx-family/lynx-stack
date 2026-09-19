@@ -35,6 +35,11 @@ export interface Site {
   groups: { name: string; dirs: string[] }[];
   /** The packages the configuration reference is read from, when there is one. */
   configReference?: ConfigReference;
+  /**
+   * The package that re-exports another one, by the name of the one it
+   * wraps. The reference names and links the wrapper instead.
+   */
+  wrappers?: Record<string, string>;
   /** The packages to document, out of the ones the workspace publishes. */
   packages?: (all: WorkspacePackage[]) => WorkspacePackage[];
   /** The sections rendered before the one that lists every package. */

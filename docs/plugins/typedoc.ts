@@ -16,6 +16,7 @@ import { hidePlatformTags } from './tags.ts';
 import type { Translations } from './translate.ts';
 import { assertNoWarnings } from './warnings.ts';
 import type { Locale, WorkspacePackage } from './workspace.ts';
+import { renameWrappedPackages } from './wrappers.ts';
 
 /**
  * Renders a section of the API reference with `@rspress/plugin-typedoc`.
@@ -62,6 +63,7 @@ export function pluginApiSection(
       app.internationalization.setLocale(locale);
       rewritePackageReferences(app);
       hidePlatformTags(app);
+      if (site.wrappers) renameWrappedPackages(app, site.wrappers);
       app.renderer.on(RendererEvent.BEGIN, (event: RendererEvent) => {
         app.validate(event.project);
       });
