@@ -1206,41 +1206,51 @@ describe('hydrate', () => {
     (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
   });
 
-  it('drops the hydrate stream when a matched child fails to hydrate', () => {
-    const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
-    lynx.reportError = reportError;
+  it.each(['matching', 'reordered'])(
+    'drops the hydrate stream when a matched child fails with %s siblings',
+    (order) => {
+      const oldReportError = lynx.reportError;
+      const reportError = vi.fn();
+      lynx.reportError = reportError;
 
-    try {
-      const root = new BackgroundElementTemplateInstance('root', ['after-root']);
-      const child = new BackgroundElementTemplateInstance('child');
-      root.appendChild(child);
-      const oldRootId = root.instanceId;
-      const oldChildId = child.instanceId;
+      try {
+        const root = new BackgroundElementTemplateInstance('root', ['after-root']);
+        const child = new BackgroundElementTemplateInstance('child');
+        const sibling = new BackgroundElementTemplateInstance('sibling');
+        root.appendChild(child);
+        root.appendChild(sibling);
+        const serializedChildren = [
+          createHydrationChild(-1, 'child'),
+          createHydrationChild(-10, 'sibling'),
+        ];
+        if (order === 'reordered') {
+          serializedChildren.reverse();
+        }
+        const oldRootId = root.instanceId;
+        const oldChildId = child.instanceId;
 
-      const stream = hydrate(
-        createHydrationTemplate(-1, 'root', {
-          attributeSlots: ['before-root'],
-          childSlots: [[
-            createHydrationChild(-1, 'child'),
-          ]],
-        }),
-        root,
-      );
+        const stream = hydrate(
+          createHydrationTemplate(-1, 'root', {
+            attributeSlots: ['before-root'],
+            childSlots: [serializedChildren],
+          }),
+          root,
+        );
 
-      expect(stream).toEqual([]);
-      expect(reportError).toHaveBeenCalledTimes(1);
-      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-        'invalid uid -1 for \'child\'',
-      );
-      expect(backgroundElementTemplateInstanceManager.get(oldRootId)).toBeUndefined();
-      expect(backgroundElementTemplateInstanceManager.get(-1)).toBe(root);
-      expect(backgroundElementTemplateInstanceManager.get(oldChildId)).toBe(child);
-    } finally {
-      lynx.reportError = oldReportError;
-      (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
-    }
-  });
+        expect(stream).toEqual([]);
+        expect(reportError).toHaveBeenCalledTimes(1);
+        expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
+          'invalid uid -1 for \'child\'',
+        );
+        expect(backgroundElementTemplateInstanceManager.get(oldRootId)).toBeUndefined();
+        expect(backgroundElementTemplateInstanceManager.get(-1)).toBe(root);
+        expect(backgroundElementTemplateInstanceManager.get(oldChildId)).toBe(child);
+      } finally {
+        lynx.reportError = oldReportError;
+        (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
+      }
+    },
+  );
 
   it('treats missing serialized slot arrays as empty', () => {
     const root = new BackgroundElementTemplateInstance('root');

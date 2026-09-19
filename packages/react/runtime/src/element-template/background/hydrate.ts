@@ -40,12 +40,17 @@ export function hydrateRootChildrenIntoContext(
   serializedChildren: SerializedEtNode[],
   root: BackgroundElementTemplateInstance,
 ): boolean {
-  return hydrateChildListIntoContext(
-    ELEMENT_TEMPLATE_PAGE_HANDLE_ID,
-    ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX,
-    serializedChildren,
-    root.childNodes,
-  );
+  try {
+    return hydrateChildListIntoContext(
+      ELEMENT_TEMPLATE_PAGE_HANDLE_ID,
+      ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX,
+      serializedChildren,
+      root.childNodes,
+    );
+  } finally {
+    // Template identities only need caching for this synchronous hydration pass.
+    backgroundHydrateKeys.clear();
+  }
 }
 
 function isSerializedCompiledNode(serialized: SerializedEtNode): serialized is SerializedCompiledNode {
@@ -57,7 +62,6 @@ function isSerializedTypedListNode(serialized: SerializedEtNode): serialized is 
 }
 
 interface HydrateChildListDiff {
-  hasChanges: boolean;
   // Background child at a new slot index that has no matching serialized child.
   insertions: Record<number, BackgroundElementTemplateInstance>;
   insertionCount: number;
@@ -73,7 +77,6 @@ function hydrateMatchingChildrenAndDiffSlot(
 ): HydrateChildListDiff | null {
   let lastPlacedIndex = 0;
   const result: HydrateChildListDiff = {
-    hasChanges: false,
     insertions: {},
     insertionCount: 0,
     removals: [],
@@ -93,11 +96,7 @@ function hydrateMatchingChildrenAndDiffSlot(
     // Normalize the background instance's full `${entry}:${key}` type tag to the
     // same native identity the serialized side uses (sentinel folded to the main
     // card), so main-card nodes match regardless of the `__Card__` prefix.
-    const parsedBackgroundType = parseElementTemplateType(backgroundChild.type);
-    const backgroundKey = elementTemplateIdentityKey(
-      parsedBackgroundType.templateKey,
-      parsedBackgroundType.bundleUrl,
-    );
+    const backgroundKey = getBackgroundNodeHydrateKey(backgroundChild.type);
     const serializedCandidates = serializedByNodeKey[backgroundKey];
     const candidateCursor = serializedCursorByNodeKey[backgroundKey] ?? 0;
     const matchedSerialized = serializedCandidates?.[candidateCursor];
@@ -110,14 +109,12 @@ function hydrateMatchingChildrenAndDiffSlot(
       }
       if (oldIndex < lastPlacedIndex) {
         result.moves[oldIndex] = { toIndex: i, instance: backgroundChild };
-        result.hasChanges = true;
       } else {
         lastPlacedIndex = oldIndex;
       }
     } else {
       result.insertions[i] = backgroundChild;
       result.insertionCount += 1;
-      result.hasChanges = true;
     }
   }
 
@@ -126,7 +123,6 @@ function hydrateMatchingChildrenAndDiffSlot(
     const candidateCursor = serializedCursorByNodeKey[key] ?? 0;
     for (let i = candidateCursor; i < candidates.length; i += 1) {
       result.removals.push(candidates[i]![1]);
-      result.hasChanges = true;
     }
   }
 
@@ -191,6 +187,19 @@ function hydrateCompiledInstance(
     }
   }
   return true;
+}
+
+const backgroundHydrateKeys = new Map<string, string>();
+
+function getBackgroundNodeHydrateKey(type: string): string {
+  const cached = backgroundHydrateKeys.get(type);
+  if (cached !== undefined) {
+    return cached;
+  }
+  const parsed = parseElementTemplateType(type);
+  const key = elementTemplateIdentityKey(parsed.templateKey, parsed.bundleUrl);
+  backgroundHydrateKeys.set(type, key);
+  return key;
 }
 
 function getSerializedNodeHydrateKey(serialized: SerializedEtNode): string {
@@ -298,13 +307,33 @@ function hydrateChildListIntoContext(
     return true;
   }
 
+  // Preserve the full matcher’s FIFO pairing while avoiding its temporary
+  // structures when every child already occupies the matching slot position.
+  const length = serializedChildren.length;
+  if (length === backgroundChildren.length) {
+    let samePairwise = true;
+    for (let i = 0; i < length; i += 1) {
+      if (
+        getSerializedNodeHydrateKey(serializedChildren[i]!)
+          !== getBackgroundNodeHydrateKey(backgroundChildren[i]!.type)
+      ) {
+        samePairwise = false;
+        break;
+      }
+    }
+    if (samePairwise) {
+      for (let i = 0; i < length; i += 1) {
+        if (!hydrateInstance(serializedChildren[i]!, backgroundChildren[i]!)) {
+          return false;
+        }
+      }
+      return true;
+    }
+  }
+
   const listDiff = hydrateMatchingChildrenAndDiffSlot(serializedChildren, backgroundChildren);
   if (listDiff === null) {
     return false;
-  }
-
-  if (!listDiff.hasChanges) {
-    return true;
   }
 
   // Hydrate emits patches directly here. Replaying against serialized order
