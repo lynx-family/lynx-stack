@@ -24,25 +24,15 @@ import { LOCALES, json, publicPackages, write } from './workspace.ts';
 import type { Locale, WorkspacePackage } from './workspace.ts';
 
 /**
- * The top navigation of this site, by the section each entry opens. The
- * labels are single words, which the dictionary does not carry.
+ * Writes the navigation bar of a locale next to its pages. The labels are
+ * single words, which the dictionary does not carry.
  */
-const NAV = [
-  { text: { en: 'Frameworks', zh: '框架' }, route: 'api/react' },
-  {
-    text: { en: 'Build', zh: '构建' },
-    route: 'api/config',
-    active: 'api/(config|packages)',
-  },
-];
-
-/** Writes the navigation bar of a locale next to its pages. */
-function writeNav(locale: Locale, content: string): void {
+function writeNav(locale: Locale, content: string, site: Site): void {
   const prefix = locale === 'en' ? '' : `/${locale}`;
   write(
     join(content, locale, '_nav.json'),
     json(
-      NAV.map(item => ({
+      site.nav.map(item => ({
         text: item.text[locale],
         link: `${prefix}/${item.route}/`,
         activeMatch: `^${prefix}/${item.active ?? item.route}/`,
@@ -85,23 +75,7 @@ function writeManifest(packages: WorkspacePackage[], site: Site): void {
   );
 }
 
-const SIDEBAR = [
-  { name: 'react', label: '@lynx-js/react' },
-  {
-    name: 'react/testing-library',
-    label: '@lynx-js/react/testing-library',
-  },
-  { name: 'genui', label: '@lynx-js/genui' },
-  { name: 'config', label: 'Build configuration' },
-  { name: 'packages', label: 'All packages' },
-].map(item => ({
-  type: 'dir',
-  ...item,
-  collapsible: true,
-  collapsed: true,
-}));
-
-/** The sections listed by {@link SIDEBAR} instead of by their parent. */
+/** The sections listed by the sidebar of `/api` instead of by their parent. */
 const OWN_SIDEBAR_ENTRY = ['testing-library'];
 
 /** The group TypeDoc puts the `@document` pages of a package in. */
@@ -352,14 +326,17 @@ export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
               writeMemberMeta(dir);
             }
           }
-          writeNav(locale, content);
+          writeNav(locale, content, site);
           writeFileSync(
             join(content, locale, 'api/_meta.json'),
             `${
               JSON.stringify(
-                SIDEBAR.map(item => ({
+                site.sidebar.map(item => ({
+                  type: 'dir',
                   ...item,
                   label: translations.translate(item.label, locale),
+                  collapsible: true,
+                  collapsed: true,
                 })),
                 null,
                 2,

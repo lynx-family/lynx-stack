@@ -7,7 +7,7 @@ import type { ConfigReference } from './config.ts';
 import { lynxStackSections } from './sections.ts';
 import type { Section } from './sections.ts';
 import { DOCS, ROOT } from './workspace.ts';
-import type { WorkspacePackage } from './workspace.ts';
+import type { Locale, WorkspacePackage } from './workspace.ts';
 
 /**
  * What the reference takes from the repository it is generated for. Another
@@ -27,6 +27,10 @@ export interface Site {
   packagePage: (name: string) => string;
   /** The route of every package that has a section of its own, by name. */
   ownSections: Record<string, string>;
+  /** The top navigation, by the section each entry opens. */
+  nav: { text: Record<Locale, string>; route: string; active?: string }[];
+  /** The sidebar of `/api`, one entry per section, in order. */
+  sidebar: { name: string; label: string }[];
   /** The groups the packages are listed under, by directory prefix. */
   groups: { name: string; dirs: string[] }[];
   /** The packages the configuration reference is read from, when there is one. */
@@ -53,6 +57,24 @@ export const LYNX_STACK: Site = {
     config: '@lynx-js/rspeedy',
     source: 'packages/rspeedy/core/src/config/index.ts',
   },
+  nav: [
+    { text: { en: 'Frameworks', zh: '框架' }, route: 'api/react' },
+    {
+      text: { en: 'Build', zh: '构建' },
+      route: 'api/config',
+      active: 'api/(config|packages)',
+    },
+  ],
+  sidebar: [
+    { name: 'react', label: '@lynx-js/react' },
+    {
+      name: 'react/testing-library',
+      label: '@lynx-js/react/testing-library',
+    },
+    { name: 'genui', label: '@lynx-js/genui' },
+    { name: 'config', label: 'Build configuration' },
+    { name: 'packages', label: 'All packages' },
+  ],
   groups: [
     { name: 'Build tools', dirs: ['packages/rspeedy/', 'packages/webpack/'] },
     { name: 'Web platform', dirs: ['packages/web-platform/'] },
