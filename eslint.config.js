@@ -53,7 +53,6 @@ export default tseslint.config(
       'website/docs/zh/api/**',
       'website/docs/en/changelog/**',
       'website/docs/zh/changelog/**',
-      'packages/lynx-stack-docs/content/**',
       'docs/content/*/api/**',
       'packages/react/docs/**',
 
