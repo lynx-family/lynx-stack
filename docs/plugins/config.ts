@@ -52,7 +52,15 @@ const CATEGORIES: { category: Category; description: string }[] = [
   },
 ];
 
-const RSPEEDY_CONFIG = 'packages/rspeedy/core/src/config/index.ts';
+/** Where the configuration reference reads the options it documents. */
+export interface ConfigReference {
+  /** The package whose `LynxPluginOptions` adds the Lynx options. */
+  plugin: string;
+  /** The package whose `Config` the reference is built from. */
+  config: string;
+  /** The source file of that `Config`, to read the Rsbuild options from. */
+  source: string;
+}
 
 function kebab(name: string): string {
   return name.replace(/[A-Z]/g, char => `-${char.toLowerCase()}`);
@@ -125,10 +133,11 @@ function rsbuildPaths(context: Context, file: ts.SourceFile) {
 function collectOptions(
   project: ProjectReflection,
   inRsbuild: (path: string[]) => boolean,
+  reference: ConfigReference,
 ): ConfigOption[] {
   const options = new Map<string, ConfigOption>();
   const lynx = project.getChildByName([
-    '@lynx-js/rsbuild-plugin',
+    reference.plugin,
     'LynxPluginOptions',
   ]) as DeclarationReflection;
   for (const { path, reflection } of properties(lynx, [], () => true)) {
@@ -136,7 +145,7 @@ function collectOptions(
     options.set(path.join('.'), { path, category: 'Lynx', reflection });
   }
   const rspeedy = project.getChildByName([
-    '@lynx-js/rspeedy',
+    reference.config,
     'Config',
   ]) as DeclarationReflection;
   for (const { path, reflection } of properties(rspeedy, [], inRsbuild)) {
@@ -308,6 +317,7 @@ export function renderConfigReference(
   app: Application,
   locale: Locale,
   translations: Translations,
+  reference: ConfigReference,
 ): void {
   let inRsbuild: ((path: string[]) => boolean) | undefined;
   app.converter.on(
@@ -316,7 +326,7 @@ export function renderConfigReference(
       if (inRsbuild || !reflection.kindOf(ReflectionKind.Interface)) return;
       const file = context.getSymbolFromReflection(reflection)?.declarations
         ?.[0]?.getSourceFile();
-      if (file?.fileName.endsWith(RSPEEDY_CONFIG)) {
+      if (file?.fileName.endsWith(reference.source)) {
         inRsbuild = rsbuildPaths(context, file);
       }
     },
@@ -327,7 +337,7 @@ export function renderConfigReference(
       const prefix = locale === 'en' ? '' : `/${locale}`;
       const out = join(DOCS, 'content', locale, 'api/config');
       const text = (en: string) => translations.translate(en, locale);
-      const options = collectOptions(event.project, inRsbuild!);
+      const options = collectOptions(event.project, inRsbuild!, reference);
       const theme = app.renderer.theme as MarkdownTheme;
       app.options.setValue('publicPath', `${prefix}/api/packages`);
       for (const option of options) {

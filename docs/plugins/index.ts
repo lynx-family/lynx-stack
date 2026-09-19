@@ -313,8 +313,14 @@ export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
           packages,
           translations,
           site,
-          section.out === 'api/packages'
-            ? app => renderConfigReference(app, locale, translations)
+          section.out === 'api/packages' && site.configReference
+            ? app =>
+              renderConfigReference(
+                app,
+                locale,
+                translations,
+                site.configReference!,
+              )
             : undefined,
         )
       )

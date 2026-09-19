@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { join } from 'node:path';
 
+import type { ConfigReference } from './config.ts';
 import { lynxStackSections } from './sections.ts';
 import type { Section } from './sections.ts';
 import { DOCS, ROOT } from './workspace.ts';
@@ -28,6 +29,8 @@ export interface Site {
   ownSections: Record<string, string>;
   /** The groups the packages are listed under, by directory prefix. */
   groups: { name: string; dirs: string[] }[];
+  /** The packages the configuration reference is read from, when there is one. */
+  configReference?: ConfigReference;
   /** The packages to document, out of the ones the workspace publishes. */
   packages?: (all: WorkspacePackage[]) => WorkspacePackage[];
   /** The sections rendered before the one that lists every package. */
@@ -44,6 +47,11 @@ export const LYNX_STACK: Site = {
   ownSections: {
     '@lynx-js/react': 'react',
     '@lynx-js/genui': 'genui',
+  },
+  configReference: {
+    plugin: '@lynx-js/rsbuild-plugin',
+    config: '@lynx-js/rspeedy',
+    source: 'packages/rspeedy/core/src/config/index.ts',
   },
   groups: [
     { name: 'Build tools', dirs: ['packages/rspeedy/', 'packages/webpack/'] },
