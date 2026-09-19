@@ -1,7 +1,0 @@
-# 类型别名: CatalogManifest
-
-```ts
-type CatalogManifest = Record<string, CatalogSchema>;
-```
-
-提取器生成的 `dist/catalog/<Name>/catalog.json` 的结构。唯一的顶层 key 是组件的协议名称，值是它的 schema。引入这个 JSON，一次就能同时拿到两者。
