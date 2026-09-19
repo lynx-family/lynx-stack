@@ -67,7 +67,7 @@
     "@lynx-js/tailwind-preset": "workspace:*",
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/testing-environment": "workspace:*",
-    "@lynx-js/types": "4.1.0",
+    "@lynx-js/types": "4.2.1",
     "@lynx-js/use-sync-external-store": "workspace:*",
     "@lynx-js/vanilla-rsbuild-plugin": "workspace:*",
     "@lynx-js/web-core": "workspace:*",
@@ -83,12 +83,12 @@
     "@rsbuild/plugin-sass": "2.0.1",
     "commander": "^15.0.0",
     "detect-indent": "^7.0.2",
-    "memfs": "^4.67.0",
+    "memfs": "^4.78.0",
     "picocolors": "^1.1.1",
     "rsbuild-plugin-tailwindcss": "0.2.4",
     "rslog": "^2.3.0",
-    "type-fest": "^5.8.0",
-    "yaml": "^2.9.0"
+    "type-fest": "^5.9.0",
+    "yaml": "^2.9.1"
   },
   "engines": {
     "node": ">=18"
