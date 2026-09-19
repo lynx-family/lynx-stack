@@ -7,6 +7,7 @@ import { Reflection, ReflectionKind, RendererEvent } from 'typedoc';
 import type { Application } from 'typedoc';
 import { MarkdownPageEvent } from 'typedoc-plugin-markdown';
 
+import { escapeEsmLines } from './mdx.ts';
 import { withPackageLinks } from './packages.ts';
 import { rewritePackageReferences } from './references.ts';
 import type { Section } from './sections.ts';
@@ -76,7 +77,9 @@ export function pluginApiSection(
         ) {
           contents = withPackageLinks(contents, pkg, site);
         }
-        page.contents = translations.translate(contents, locale);
+        page.contents = escapeEsmLines(
+          translations.translate(contents, locale),
+        );
       });
       extend?.(app);
     },
