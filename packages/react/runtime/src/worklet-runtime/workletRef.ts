@@ -2,24 +2,41 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
-import type { WorkletRef, WorkletRefId, WorkletRefImpl } from './bindings/types.js';
+import type { Worklet, WorkletRef, WorkletRefId, WorkletRefImpl } from './bindings/types.js';
+import {
+  assertCompatibleWorkletValue,
+  clearFirstScreenMainThreadObjects,
+  createMainThreadObject,
+  initMainThreadObjects,
+  registerMainThreadObjectType,
+  releaseMainThreadObject,
+  retainHydratedMainThreadObject,
+} from './mainThreadObject.js';
+import type { MainThreadObjectFactory, WorkletResolver } from './mainThreadObject.js';
 import { mainThreadFlushLoopMark } from './utils/mainThreadFlushLoopGuard.js';
 import { profile } from './utils/profile.js';
 
 interface RefImpl {
-  _workletRefMap: Record<WorkletRefId, WorkletRef<unknown>>;
-  _firstScreenWorkletRefMap: Record<WorkletRefId, WorkletRef<unknown>>;
+  _workletRefMap: Record<WorkletRefId, object>;
+  _firstScreenWorkletRefMap: Record<WorkletRefId, object>;
   updateWorkletRef(
     refImpl: WorkletRefImpl<Element | null>,
     element: ElementNode | null,
   ): void;
-  updateWorkletRefInitValueChanges(patch: [number, unknown][]): void;
+  updateWorkletRefInitValueChanges(
+    patch: ([number, unknown] | [number, unknown, string, number])[],
+  ): void;
+  registerMainThreadObjectType(
+    type: string,
+    create: MainThreadObjectFactory | Worklet,
+    protocolVersion: number,
+  ): void;
   clearFirstScreenWorkletRefMap(): void;
 }
 
 let impl: RefImpl | undefined;
-
-function initWorkletRef(): RefImpl {
+function initWorkletRef(resolveWorklet: WorkletResolver): RefImpl {
+  initMainThreadObjects(resolveWorklet);
   return (impl = {
     _workletRefMap: {},
     /**
@@ -31,6 +48,7 @@ function initWorkletRef(): RefImpl {
     _firstScreenWorkletRefMap: {},
     updateWorkletRef,
     updateWorkletRefInitValueChanges,
+    registerMainThreadObjectType,
     clearFirstScreenWorkletRefMap,
   });
 }
@@ -39,15 +57,22 @@ const createWorkletRef = <T>(
   id: WorkletRefId,
   value: T,
 ): WorkletRef<T> => {
-  return {
+  const ref = {
     current: value,
     _wvid: id,
   };
+  return ref;
 };
 
-const getFromWorkletRefMap = <T>(
-  refImpl: WorkletRefImpl<T>,
-): WorkletRef<T> => {
+function createWorkletValue(refImpl: WorkletRefImpl<unknown>): object {
+  return !refImpl._type || refImpl._type === 'main-thread'
+    ? createWorkletRef(refImpl._wvid, refImpl._initValue)
+    : createMainThreadObject(refImpl);
+}
+
+const getFromWorkletRefMap = (
+  refImpl: WorkletRefImpl<unknown>,
+): object | undefined => {
   const id = refImpl._wvid;
   /* v8 ignore next 3 */
   if (__DEV__) {
@@ -59,12 +84,9 @@ const getFromWorkletRefMap = <T>(
     // Might be called in two scenarios:
     // 1. In MTS events
     // 2. In `main-thread:ref`
-    value = impl!._firstScreenWorkletRefMap[id] as WorkletRef<T>;
-    if (!value) {
-      value = impl!._firstScreenWorkletRefMap[id] = createWorkletRef(id, refImpl._initValue);
-    }
+    value = impl!._firstScreenWorkletRefMap[id] ??= createWorkletValue(refImpl);
   } else {
-    value = impl!._workletRefMap[id] as WorkletRef<T>;
+    value = impl!._workletRefMap[id];
   }
 
   /* v8 ignore next 3 */
@@ -75,7 +97,21 @@ const getFromWorkletRefMap = <T>(
 };
 
 function removeValueFromWorkletRefMap(id: WorkletRefId): void {
+  releaseMainThreadObject(impl!._workletRefMap[id]);
   delete impl!._workletRefMap[id];
+}
+
+function hydrateWorkletValue(
+  handle: WorkletRefImpl<unknown>,
+  value: object,
+): void {
+  assertCompatibleWorkletValue(handle, value, 'hydration');
+  const previous = impl!._workletRefMap[handle._wvid];
+  if (previous !== value) {
+    releaseMainThreadObject(previous);
+  }
+  impl!._workletRefMap[handle._wvid] = value;
+  retainHydratedMainThreadObject(value);
 }
 
 /**
@@ -88,24 +124,50 @@ function updateWorkletRef(
   handle: WorkletRefImpl<Element | null>,
   element: ElementNode | null,
 ): void {
-  getFromWorkletRefMap(handle).current = element
+  (getFromWorkletRefMap(handle) as WorkletRef<Element | null>).current = element
     ? new Element(element)
     : null;
 }
 
 function updateWorkletRefInitValueChanges(
-  patch: [WorkletRefId, unknown][],
+  patch: ([WorkletRefId, unknown] | [WorkletRefId, unknown, string, number])[],
 ): void {
   profile('updateWorkletRefInitValueChanges', () => {
-    patch.forEach(([id, value]) => {
-      if (!impl!._workletRefMap[id]) {
-        impl!._workletRefMap[id] = createWorkletRef(id, value);
+    let firstError: unknown;
+    let hasError = false;
+    patch.forEach(([id, value, type, protocolVersion]) => {
+      try {
+        const handle = {
+          _wvid: id,
+          _initValue: value,
+          _type: type,
+          _mtoVersion: protocolVersion,
+        } as WorkletRefImpl<unknown>;
+        const existing = impl!._workletRefMap[id];
+        if (existing) {
+          assertCompatibleWorkletValue(
+            handle,
+            existing,
+            'initialization patch',
+          );
+        } else {
+          impl!._workletRefMap[id] = createWorkletValue(handle);
+        }
+      } catch (error) {
+        if (!hasError) {
+          firstError = error;
+          hasError = true;
+        }
       }
     });
+    if (hasError) {
+      throw firstError;
+    }
   });
 }
 
 function clearFirstScreenWorkletRefMap(): void {
+  clearFirstScreenMainThreadObjects();
   impl!._firstScreenWorkletRefMap = {};
 }
 
@@ -115,5 +177,6 @@ export {
   initWorkletRef,
   getFromWorkletRefMap,
   removeValueFromWorkletRefMap,
+  hydrateWorkletValue,
   updateWorkletRefInitValueChanges,
 };

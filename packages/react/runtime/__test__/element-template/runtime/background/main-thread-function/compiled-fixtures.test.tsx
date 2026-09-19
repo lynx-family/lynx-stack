@@ -174,12 +174,15 @@ describe('Compiled runOnMainThread background fixtures', () => {
     });
 
     expect(backgroundArtifact.code).toContain('runOnMainThread');
+    expect(backgroundArtifact.code).toContain('defineMainThreadObjectType');
+    expect(backgroundArtifact.code).toContain('useMainThreadObject');
     expect(backgroundArtifact.code).toContain('from \'@lynx-js/react\'');
     expect(backgroundArtifact.code).not.toContain('snapshot/');
     expect(backgroundArtifact.code).not.toContain('__globalSnapshotPatch');
     expect(backgroundArtifact.code).not.toContain('PatchList');
     expect(backgroundArtifact.code).not.toContain('isRendering');
     expect(mainArtifact.code).toContain('loadWorkletRuntime');
+    expect(mainArtifact.code).toContain('element-template-formatter');
     expect(mainArtifact.code).toContain('registerWorkletInternal("main-thread"');
     expect(mainArtifact.code).not.toContain('snapshot/');
   });

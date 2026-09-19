@@ -11,7 +11,8 @@ export type WorkletRefId = number;
 export interface WorkletRefImpl<T> {
   _wvid: WorkletRefId;
   _initValue: T;
-  _type: string;
+  _type?: string;
+  _mtoVersion?: number;
   _lifecycleObserver?: unknown;
   current?: T;
 }
@@ -31,6 +32,7 @@ export type ClosureValueType =
   | string
   | boolean
   | number
+  | object
   | Worklet
   | WorkletRef<unknown>
   | Element

@@ -6,6 +6,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Element } from '../../src/worklet-runtime/api/element';
 import { initApiEnv } from '../../src/worklet-runtime/api/lynxApi';
 import { RunWorkletSource } from '../../src/worklet-runtime/bindings/types';
+import { hydrateCtx } from '../../src/worklet-runtime/hydrate';
 import { updateWorkletRefInitValueChanges } from '../../src/worklet-runtime/workletRef';
 import { initWorklet } from '../../src/worklet-runtime/workletRuntime';
 
@@ -27,6 +28,29 @@ describe('Worklet', () => {
     consoleMock.mockReset();
   });
 
+  it.each(['cycle', 'metadata', 'proxy'])('preserves realized %s targets in shared captures', (kind) => {
+    initWorklet();
+    const value = kind === 'proxy'
+      ? new Proxy({}, {
+        get() {
+          throw new Error('target must remain opaque');
+        },
+      })
+      : kind === 'metadata'
+      ? { nested: { _wvid: 999 }, _wkltId: 'user-data' }
+      : {};
+    if (kind === 'cycle') value.self = value;
+    lynxWorkletImpl._refImpl.registerMainThreadObjectType('@test/shared', () => value, 1);
+    updateWorkletRefInitValueChanges([[1, null, '@test/shared', 1]]);
+    registerWorklet('main-thread', 'shared', function() {
+      return this._c.holder.value;
+    });
+    const holder = { value: { _wvid: 1, _type: '@test/shared', _mtoVersion: 1, _initValue: null } };
+    expect(runWorklet({ _wkltId: 'shared', _c: { holder } }, [])).toBe(value);
+    expect(runWorklet({ _wkltId: 'shared', _c: { holder } }, [])).toBe(value);
+    if (kind === 'metadata') expect(value.nested).toEqual({ _wvid: 999 });
+  });
+
   it('worklet should be called', () => {
     initWorklet();
 
@@ -37,6 +61,101 @@ describe('Worklet', () => {
     };
     globalThis.runWorklet(worklet);
     expect(fn).toBeCalled();
+  });
+
+  it.each(['direct', 'nested', 'array'])('snapshots a %s method getter without consuming the source', (kind) => {
+    initWorklet();
+    const getter = vi.fn(function() {
+      return { _wkltId: 'method', value: this.value };
+    });
+    const source = { value: 1 };
+    Object.defineProperty(source, 'method', { get: getter, enumerable: true, configurable: true });
+    const holder = kind === 'direct' ? source : kind === 'array' ? [source] : { source };
+    registerWorklet('main-thread', 'method', function() {
+      return this.value;
+    });
+    registerWorklet('main-thread', 'parent', function() {
+      return this._c.holder;
+    });
+    const capture = () => runWorklet({ _wkltId: 'parent', _c: { holder } }, []);
+    const method = captured =>
+      kind === 'direct' ? captured.method : kind === 'array' ? captured[0].method : captured.source.method;
+    const first = capture();
+    expect(getter).toHaveBeenCalledTimes(1);
+    expect(method(first)()).toBe(1);
+    source.value = 2;
+    const second = capture();
+    expect(getter).toHaveBeenCalledTimes(2);
+    expect(method(second)()).toBe(2);
+    expect(method(first)()).toBe(1);
+    expect(Object.getOwnPropertyDescriptor(source, 'method').get).toBe(getter);
+    if (kind === 'nested') expect(holder.source).toBe(source);
+    if (kind === 'array') expect(Array.isArray(first)).toBe(true);
+  });
+
+  it.each(['root', 'captured'])('copies sibling nested worklet captures on the %s context', (placement) => {
+    initWorklet();
+    const getter = vi.fn(function() {
+      return { _wkltId: 'method', value: this.value };
+    });
+    const source = { value: 1 };
+    Object.defineProperty(source, 'method', { get: getter, enumerable: true, configurable: true });
+    const nested = { _wkltId: 'nested', _c: { source } };
+    const siblings = { first: nested, second: nested };
+    registerWorklet('main-thread', 'method', function() {
+      return this.value;
+    });
+    registerWorklet('main-thread', 'nested', function() {
+      return this._c.source.method();
+    });
+    registerWorklet('main-thread', 'parent', function() {
+      return this._c ? this._c.siblings : this;
+    });
+    const capture = () =>
+      runWorklet(
+        placement === 'root'
+          ? { _wkltId: 'parent', ...siblings }
+          : { _wkltId: 'parent', _c: { siblings } },
+        [],
+      );
+    const first = capture();
+    expect(first.first()).toBe(1);
+    expect(first.second()).toBe(1);
+    expect(getter).toHaveBeenCalledTimes(2);
+    expect(siblings.first).toBe(nested);
+    expect(siblings.second).toBe(nested);
+    expect(nested._c.source).toBe(source);
+    source.value = 2;
+    const second = capture();
+    expect(second.first()).toBe(2);
+    expect(second.second()).toBe(2);
+    expect(first.first()).toBe(1);
+    expect(first.second()).toBe(1);
+    expect(getter).toHaveBeenCalledTimes(4);
+  });
+
+  it('hydrates the executed method getter context without reading the source again', () => {
+    initWorklet();
+    const getter = vi.fn(() => ({ _wkltId: 'method', _jsFn: { callback: { _isFirstScreen: true } } }));
+    const source = {};
+    Object.defineProperty(source, 'method', { get: getter, enumerable: true, configurable: true });
+    registerWorklet('main-thread', 'method', function() {
+      return this._jsFn.callback;
+    });
+    registerWorklet('main-thread', 'parent', function() {
+      return this._c.source.method;
+    });
+    const firstScreen = { _wkltId: 'parent', _c: { source } };
+    const method = runWorklet(firstScreen, []);
+    const executedHandle = method();
+    expect(method.boundCtx._jsFn.callback).toBe(executedHandle);
+    hydrateCtx({
+      _wkltId: 'parent',
+      _execId: 8,
+      _c: { source: { method: { _wkltId: 'method', _jsFn: { callback: { _jsFnId: 3 } } } } },
+    }, firstScreen);
+    expect(executedHandle).toMatchObject({ _isFirstScreen: false, _jsFnId: 3, _execId: 8 });
+    expect(getter).toHaveBeenCalledTimes(1);
   });
 
   it('latest registration should win when the same worklet id is reused', () => {
@@ -53,6 +172,13 @@ describe('Worklet', () => {
 
     expect(first).not.toBeCalled();
     expect(second).toBeCalled();
+  });
+
+  it.each([{}, { _lepusWorkletHash: 'legacy' }])('rejects invalid factory descriptors %j', (descriptor) => {
+    initWorklet();
+    lynxWorkletImpl._refImpl.registerMainThreadObjectType('@test/invalid-factory', descriptor, 1);
+    expect(() => updateWorkletRefInitValueChanges([[1, null, '@test/invalid-factory', 1]]))
+      .toThrow('Cannot resolve an invalid Main Thread Function.');
   });
 
   it('worklet should be called with arguments', async () => {
@@ -261,6 +387,79 @@ describe('Worklet', () => {
     globalThis.runWorklet(worklet, []);
     globalThis.runWorklet(worklet, []);
     expect(value).toBe(5);
+  });
+
+  it('treats MainThreadObject descriptors as atomic user payloads', () => {
+    initWorklet();
+
+    const initialValue = {
+      workletRefLike: { _wvid: 999 },
+      workletLike: { _wkltId: 'payload-worklet' },
+      jsFunctionLike: { _jsFnId: 999 },
+      elementLike: { elementRefptr: 'payload-element' },
+    };
+    let deepValue = initialValue;
+    for (let index = 0; index < 1000; index++) {
+      deepValue.next = {};
+      deepValue = deepValue.next;
+    }
+
+    const create = vi.fn(value => ({ initialValue: value }));
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/atomic-payload',
+      create,
+      1,
+    );
+    globalThis.registerWorklet('main-thread', 'atomic-payload', function(value) {
+      return value;
+    });
+
+    const value = globalThis.runWorklet({ _wkltId: 'atomic-payload' }, [{
+      _wvid: -1,
+      _initValue: initialValue,
+      _type: '@test/atomic-payload',
+      _mtoVersion: 1,
+    }]);
+
+    expect(create).toHaveBeenCalledOnce();
+    expect(create).toHaveBeenCalledWith(initialValue);
+    expect(value.initialValue).toBe(initialValue);
+    expect(initialValue.workletRefLike).toEqual({ _wvid: 999 });
+    expect(initialValue.workletLike).toEqual({ _wkltId: 'payload-worklet' });
+    expect(initialValue.jsFunctionLike).toEqual({ _jsFnId: 999 });
+    expect(initialValue.elementLike).toEqual({ elementRefptr: 'payload-element' });
+  });
+
+  it('reuses one realized MainThreadObject for repeated parameter descriptors', () => {
+    initWorklet();
+
+    const create = vi.fn(value => ({ value }));
+    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+      '@test/repeated-parameter',
+      create,
+      1,
+    );
+    globalThis.registerWorklet('main-thread', 'repeated-parameter', function(value) {
+      return value;
+    });
+    const descriptor = {
+      _wvid: -2,
+      _initValue: 42,
+      _type: '@test/repeated-parameter',
+      _mtoVersion: 1,
+    };
+
+    const first = globalThis.runWorklet(
+      { _wkltId: 'repeated-parameter' },
+      [descriptor],
+    );
+    const second = globalThis.runWorklet(
+      { _wkltId: 'repeated-parameter' },
+      [descriptor],
+    );
+
+    expect(second).toBe(first);
+    expect(create).toHaveBeenCalledOnce();
   });
 
   it('should support various types of parameters', async () => {
