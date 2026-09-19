@@ -1,0 +1,44 @@
+{
+  "name": "@lynx-js/lynx-stack-docs",
+  "version": "0.0.0",
+  "description": "The Lynx Stack API reference as MDX pages: the build configuration, the Rsbuild plugins, ReactLynx and every @lynx-js package.",
+  "keywords": [
+    "Lynx",
+    "documentation",
+    "API reference"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "docs"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    "./package.json": "./package.json",
+    "./manifest.json": "./manifest.json"
+  },
+  "files": [
+    "content/*/api",
+    "manifest.json"
+  ],
+  "scripts": {
+    "build": "node --max-old-space-size=8192 ./node_modules/@rspress/core/bin/rspress.js build",
+    "dev": "node --max-old-space-size=8192 ./node_modules/@rspress/core/bin/rspress.js dev",
+    "preview": "rspress preview"
+  },
+  "devDependencies": {
+    "@rspress/core": "2.0.21",
+    "@rspress/plugin-typedoc": "2.0.21",
+    "@types/react": "npm:@types/react@^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "typedoc": "^0.28.20",
+    "typedoc-plugin-markdown": "4.13.1",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": "^22 || ^24"
+  }
+}

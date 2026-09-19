@@ -1,0 +1,14 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "@lynx-js/genui",
+  "entryPointStrategy": "packages",
+  "entryPoints": [
+    "a2ui",
+    "openui",
+    "a2ui-prompt",
+    "a2ui-catalog-extractor",
+    "lynx-xml",
+    "mcp-apps"
+  ],
+  "readme": "README.md"
+}

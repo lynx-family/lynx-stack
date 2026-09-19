@@ -45,6 +45,7 @@ export default tseslint.config(
       'examples/*/dist-producer/**',
       'examples/*/dist-consumer/**',
       'website/doc_build/**',
+      'docs/doc_build/**',
       '.changeset/*',
       '**/CHANGELOG.md',
       '**/etc/*.md',
@@ -52,6 +53,8 @@ export default tseslint.config(
       'website/docs/zh/api/**',
       'website/docs/en/changelog/**',
       'website/docs/zh/changelog/**',
+      'docs/content/*/api/**',
+      'packages/react/docs/**',
 
       // Test snapshots
       '**/expected/**',
@@ -489,6 +492,14 @@ export default tseslint.config(
     rules: {
       'n/file-extension-in-import': 'off',
       'n/no-unsupported-features/node-builtins': 'off',
+    },
+  },
+  {
+    files: [
+      'docs/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'n/file-extension-in-import': 'off',
     },
   },
 );

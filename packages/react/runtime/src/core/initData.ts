@@ -123,6 +123,8 @@ export const RESET_WITH_INIT_DATA_IN_STATE_ERROR =
  * export default withInitDataInState(App);
  * ```
  * @public
+ *
+ * @group Functions
  */
 export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentClass<P, S> {
   const isClassComponent = 'prototype' in App && 'render' in App.prototype;
