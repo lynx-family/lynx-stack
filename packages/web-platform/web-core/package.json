@@ -82,7 +82,7 @@
     "@lynx-js/lynx-core": "0.1.4",
     "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-eslint": "1.3.0",
-    "@rsbuild/plugin-source-build": "1.0.6",
+    "@rsbuild/plugin-source-build": "1.0.7",
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
     "@types/node": "^24.13.3",
