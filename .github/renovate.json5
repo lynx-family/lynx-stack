@@ -96,49 +96,26 @@
       "groupName": null,
     },
     {
-      "groupName": "Rspack",
-      "groupSlug": "Rspack",
+      // Rslib and Rstest depend on Rsbuild, which in turn pins a compatible
+      // Rspack range. Upgrade the complete toolchain in one PR so a newer
+      // transitive Rsbuild is never paired with an older Rspack override.
+      "groupName": "Rstack toolchain",
+      "groupSlug": "rstack-toolchain",
       "addLabels": ["upstream:rspack"],
       "matchDepTypes": [
         "devDependencies",
         "dependencies",
         "pnpm.catalog.rspack",
-      ],
-      "matchPackageNames": [
-        "/@rspack/*/",
-      ],
-      "rangeStrategy": "pin",
-    },
-    {
-      "groupName": "Rsbuild",
-      "groupSlug": "Rsbuild",
-      "addLabels": ["upstream:rspack"],
-      "matchDepTypes": [
-        "devDependencies",
-        "dependencies",
         "pnpm.catalog.rsbuild",
-      ],
-      "matchPackageNames": [
-        "/@rsbuild/*/",
-        "/rsbuild-plugin-*/",
-      ],
-      "rangeStrategy": "pin",
-    },
-    {
-      // `@rstest/adapter-rsbuild` and `@rstest/coverage-istanbul` both peer on
-      // `@rstest/core`, so bumping one without the others fails
-      // `strictPeerDependencies` and Renovate cannot write the lock file —
-      // the PR then carries a catalog bump with no matching `pnpm-lock.yaml`.
-      "groupName": "Rstest",
-      "groupSlug": "Rstest",
-      "addLabels": ["upstream:rspack"],
-      "matchDepTypes": [
-        "devDependencies",
-        "dependencies",
+        "pnpm.catalog.rslib",
         "pnpm.catalog.rstest",
       ],
       "matchPackageNames": [
-        "/@rstest/*/",
+        "/^@rspack\\//",
+        "/^@rsbuild\\//",
+        "/^@rslib\\//",
+        "/^@rstest\\//",
+        "/^rsbuild-plugin-/",
       ],
       "rangeStrategy": "pin",
     },
