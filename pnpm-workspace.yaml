@@ -139,10 +139,10 @@ catalogs:
 
   # Rstest monorepo packages
   rstest:
-    "@rstest/adapter-rsbuild": "0.11.12"
-    "@rstest/adapter-rslib": "0.11.12"
-    "@rstest/coverage-istanbul": "0.11.12"
-    "@rstest/core": "0.11.12"
+    "@rstest/adapter-rsbuild": "0.12.0"
+    "@rstest/adapter-rslib": "0.12.0"
+    "@rstest/coverage-istanbul": "0.12.0"
+    "@rstest/core": "0.12.0"
 
 overrides:
   # Published @lynx-js/lynx-ui-* (pulled in by packages/genui/a2ui) peer-depend on
