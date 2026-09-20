@@ -55,6 +55,9 @@ function translateText(
   }
   const value = dictionary[entry];
   if (!value) {
+    // The entry is kept in the dictionary, empty, so the string a locale needs
+    // survives `save()` and the build that follows reports it as missing.
+    used.add(entry);
     missing?.add(entry);
     return text;
   }
@@ -156,8 +159,16 @@ export class Translations {
   }
 
   save(): void {
+    // A translated string is kept even when this run did not render it: which
+    // options a section renders depends on what the workspace has built, and a
+    // dictionary that drops them would differ between two builds of the same
+    // commit. An entry left untranslated is dropped, so it stops being listed.
+    const entries = new Set([
+      ...this.#used,
+      ...Object.keys(this.#dictionary).filter(en => this.#dictionary[en]),
+    ]);
     const next: Dictionary = {};
-    for (const en of [...this.#used].sort()) {
+    for (const en of [...entries].sort()) {
       next[en] = this.#dictionary[en] ?? '';
     }
     writeFileSync(this.#file, `${JSON.stringify(next, null, 2)}\n`);
