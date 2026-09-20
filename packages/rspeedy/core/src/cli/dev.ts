@@ -24,6 +24,10 @@ export async function dev(
   cwd: string,
   devOptions: DevOptions,
 ): Promise<void> {
+  if (devOptions.logLevel) {
+    logger.level = devOptions.logLevel
+  }
+
   let onBeforeRestart: (() => Promise<void>)[] = []
   try {
     const { rspeedyConfig, configPath, createRspeedyOptions } = await init(
