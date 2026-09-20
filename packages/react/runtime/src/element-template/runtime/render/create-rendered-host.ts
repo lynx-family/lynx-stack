@@ -7,6 +7,7 @@ import type { RuntimeTypedElementAttributes, SerializableValue } from '../../pro
 import {
   composeElementTemplateListAttributes,
   createElementTemplateListState,
+  markElementTemplateListDestroyed,
   registerElementTemplateListItem,
   registerElementTemplateListState,
 } from '../list/list.js';
@@ -16,6 +17,8 @@ import type { EtAttrAdapter } from '../template/attr-slot-plan.js';
 import {
   createElementTemplateWithReservedHandle,
   createTypedElementTemplateWithReservedHandle,
+  destroyElementTemplateId,
+  getNextElementTemplateId,
 } from '../template/handle.js';
 import type { MainThreadDynamicAttrSubtreeHandle } from '../template/main-thread-dynamic-attr-state.js';
 import { prepareTypedElementAttributes } from '../template/typed-attributes.js';
@@ -24,6 +27,16 @@ const TYPED_LIST_HOST_TYPE = 'list';
 const EMPTY_LIST_ITEM_UIDS: readonly number[] = [];
 
 export type RenderAttributes = SerializableValue[] | RuntimeTypedElementAttributes | undefined;
+
+export function discardRenderedHostsSince(checkpoint: number): void {
+  const end = getNextElementTemplateId();
+  // Synchronous first-screen creation allocates consecutive negative IDs.
+  // Release abandoned native refs and side tables without reusing those IDs.
+  for (let uid = checkpoint; uid > end; uid--) {
+    markElementTemplateListDestroyed(uid);
+    destroyElementTemplateId(uid);
+  }
+}
 
 export function createRenderedHost(
   handleId: number,

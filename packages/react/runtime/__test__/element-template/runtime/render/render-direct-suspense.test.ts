@@ -18,11 +18,15 @@ import { renderToElementTemplate } from '../../../../src/element-template/runtim
 import { renderMainThread } from '../../../../src/element-template/runtime/render/render-main-thread.js';
 import {
   __etAttrPlanMap,
+  adaptMTEventAttrSlot,
   adaptMTRefAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
-import { clearMainThreadDynamicAttrState } from '../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
+import {
+  clearMainThreadDynamicAttrState,
+  getMainThreadDynamicAttrState,
+} from '../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import { registerBuiltinRawTextTemplate, registerTemplates } from '../../test-utils/debug/registry.js';
 
@@ -110,7 +114,8 @@ describe('direct renderer Suspense', () => {
   it.each([false, true])('attaches only surviving MTRefs with an enclosing host: %s', (enclosed) => {
     const abandoned = { _wvid: 101 };
     const surviving = { _wvid: 102 };
-    __etAttrPlanMap['__Card__:_et_suspense_leaf'] = [1, adaptMTRefAttrSlot];
+    __etAttrPlanMap['__Card__:_et_suspense_leaf'] = [1, adaptMTRefAttrSlot, 2, adaptMTEventAttrSlot];
+    const create = vi.spyOn(globalThis, '__CreateElementTemplate');
     const attached: unknown[] = [];
     const previousWorkletImpl = globalThis.lynxWorkletImpl;
     globalThis.lynxWorkletImpl = {
@@ -120,7 +125,7 @@ describe('direct renderer Suspense', () => {
     const boundary = h(
       Suspense,
       { fallback: leaf('fallback', surviving) },
-      leaf('abandoned', abandoned),
+      h('__Card__:_et_suspense_leaf', { attributeSlots: ['abandoned', abandoned, { _wkltId: 'abandoned-event' }] }),
       h(Pending, null),
     );
     const root = enclosed ? h('_et_suspense_root', { $0: boundary }) : boundary;
@@ -129,6 +134,14 @@ describe('direct renderer Suspense', () => {
     try {
       renderMainThread();
       expect(attached).toEqual([surviving]);
+      const abandonedUid = create.mock.calls[0]![4];
+      const fallbackUid = create.mock.calls[1]![4];
+      expect(elementTemplateRegistry.has(abandonedUid)).toBe(false);
+      expect(getMainThreadDynamicAttrState(abandonedUid, 1)).toBeUndefined();
+      expect(getMainThreadDynamicAttrState(abandonedUid, 2)).toBeUndefined();
+      expect(elementTemplateRegistry.get(fallbackUid)).toBe(create.mock.results[1]!.value);
+      expect(getMainThreadDynamicAttrState(fallbackUid, 1)).toMatchObject({ kind: 'mt-ref', value: surviving });
+      expect(fallbackUid).toBeLessThan(abandonedUid);
     } finally {
       globalThis.lynxWorkletImpl = previousWorkletImpl;
     }
@@ -235,5 +248,131 @@ describe('direct renderer Suspense', () => {
 
     expect(result.pageAttributes).toBeNull();
     expect(result.rootRefs.map(ref => __SerializeElementTemplate(ref).attributeSlots)).toEqual([['loading']]);
+  });
+  it.each(['component', 'parent native create', 'parent adapter', 'fallback'])(
+    'releases the failed render allocations after %s failure and preserves an earlier render',
+    (failure) => {
+      __etAttrPlanMap['__Card__:_et_suspense_leaf'] = [1, adaptMTRefAttrSlot, 2, adaptMTEventAttrSlot];
+      const statefulLeaf = (id: string, ref: { _wvid: number } | { _wkltId: string }) =>
+        h('__Card__:_et_suspense_leaf', { attributeSlots: [id, ref, { _wkltId: `${id}-event` }] });
+      const previous = renderToElementTemplate([
+        statefulLeaf('previous', { _wvid: 201 }),
+        h('list', { attributes: { id: 'live-list' } }),
+      ]);
+      const previousUid = __SerializeElementTemplate(previous.rootRefs[0]!).uid;
+      const liveListUid = __SerializeElementTemplate(previous.rootRefs[1]!).uid;
+      expect(getMainThreadDynamicAttrState(previousUid, 1)).toMatchObject({ kind: 'mt-ref' });
+      expect(getMainThreadDynamicAttrState(previousUid, 2)).toMatchObject({ kind: 'mt-event' });
+      const createNative = globalThis.__CreateElementTemplate;
+      const create = vi.spyOn(globalThis, '__CreateElementTemplate').mockImplementation((...args) => {
+        if (failure === 'parent native create' && args[0] === '_et_suspense_root') {
+          throw new Error('render failed');
+        }
+        return createNative(...args);
+      });
+      const createList = vi.spyOn(globalThis, '__CreateTypedElementTemplate');
+      const failParentAdapter = vi.fn((_uid: number) => {
+        throw new Error('render failed');
+      });
+      if (failure === 'parent adapter') {
+        __etAttrPlanMap['_et_suspense_root'] = [0, failParentAdapter];
+      }
+      function Failure(): never {
+        throw new Error('render failed');
+      }
+      const children = [
+        statefulLeaf('abandoned-object', { _wvid: 202 }),
+        statefulLeaf('abandoned-callback', { _wkltId: 'abandoned-ref' }),
+        h('list', { attributes: { id: 'abandoned-list' } }),
+      ];
+      const root = failure === 'fallback'
+        ? h(
+          Suspense,
+          {
+            fallback: [statefulLeaf('failed-fallback', { _wvid: 203 }), h(Failure, null)],
+          },
+          ...children,
+          h(Pending, null),
+        )
+        : h('_et_suspense_root', { $0: failure === 'component' ? [...children, h(Failure, null)] : children });
+      const previousWorkletImpl = globalThis.lynxWorkletImpl;
+      const previousRunWorklet = globalThis.runWorklet;
+      const updateWorkletRef = vi.fn();
+      globalThis.lynxWorkletImpl = {
+        ...previousWorkletImpl,
+        _refImpl: { updateWorkletRef },
+      } as typeof globalThis.lynxWorkletImpl;
+      globalThis.runWorklet = vi.fn();
+      try {
+        expect(() => renderToElementTemplate(root)).toThrow('render failed');
+        // These refs never attached, so abandoning them must not invoke a null
+        // ref callback or a callback cleanup while releasing the stored state.
+        expect(updateWorkletRef).not.toHaveBeenCalled();
+        expect(globalThis.runWorklet).not.toHaveBeenCalled();
+        const abandonedUids = [
+          ...create.mock.calls.map(call => call[4]),
+          ...createList.mock.calls.map(call => call[3]),
+          ...failParentAdapter.mock.calls.map(call => call[0]),
+        ];
+        for (const uid of abandonedUids) {
+          expect(elementTemplateRegistry.has(uid)).toBe(false);
+          expect(getMainThreadDynamicAttrState(uid, 1)).toBeUndefined();
+          expect(getMainThreadDynamicAttrState(uid, 2)).toBeUndefined();
+        }
+        expect(elementTemplateRegistry.get(previousUid)).toBe(previous.rootRefs[0]);
+        expect(elementTemplateRegistry.get(liveListUid)).toBe(previous.rootRefs[1]);
+        expect(getMainThreadDynamicAttrState(previousUid, 1)).toMatchObject({ kind: 'mt-ref' });
+        expect(getMainThreadDynamicAttrState(previousUid, 2)).toMatchObject({ kind: 'mt-event' });
+        expect(flushInitialElementTemplateListUpdates().map(update => update.uid)).toEqual([liveListUid]);
+        const retry = renderToElementTemplate(leaf('retry'));
+        expect(__SerializeElementTemplate(retry.rootRefs[0]!).uid).toBeLessThan(Math.min(...abandonedUids));
+      } finally {
+        globalThis.lynxWorkletImpl = previousWorkletImpl;
+        globalThis.runWorklet = previousRunWorklet;
+      }
+    },
+  );
+
+  it('releases both abandoned content and a suspending inner fallback while preserving outer siblings', () => {
+    __etAttrPlanMap['__Card__:_et_suspense_leaf'] = [1, adaptMTRefAttrSlot, 2, adaptMTEventAttrSlot];
+    const statefulLeaf = (id: string) =>
+      h('__Card__:_et_suspense_leaf', { attributeSlots: [id, { _wkltId: `${id}-ref` }, { _wkltId: `${id}-event` }] });
+    const create = vi.spyOn(globalThis, '__CreateElementTemplate');
+    const result = renderToElementTemplate([
+      statefulLeaf('outside'),
+      h('list', { attributes: { id: 'live-list' } }),
+      h(
+        Suspense,
+        { fallback: statefulLeaf('outer-fallback') },
+        h(
+          Suspense,
+          { fallback: [statefulLeaf('inner-fallback'), h(Pending, null)] },
+          statefulLeaf('abandoned'),
+          h(Pending, null),
+        ),
+      ),
+      statefulLeaf('after'),
+    ]);
+    const liveIds = result.rootRefs.map(ref => __SerializeElementTemplate(ref).uid);
+    expect(result.rootRefs.map(ref => __SerializeElementTemplate(ref).attributeSlots?.[0])).toEqual([
+      'outside',
+      undefined,
+      'outer-fallback',
+      'after',
+    ]);
+    for (const call of create.mock.calls) {
+      const uid = call[4];
+      if (liveIds.includes(uid)) {
+        expect(elementTemplateRegistry.has(uid)).toBe(true);
+        expect(getMainThreadDynamicAttrState(uid, 1)).toMatchObject({ kind: 'mt-ref' });
+        expect(getMainThreadDynamicAttrState(uid, 2)).toMatchObject({ kind: 'mt-event' });
+      } else {
+        expect(elementTemplateRegistry.has(uid)).toBe(false);
+        expect(getMainThreadDynamicAttrState(uid, 1)).toBeUndefined();
+        expect(getMainThreadDynamicAttrState(uid, 2)).toBeUndefined();
+      }
+    }
+    expect(new Set(create.mock.calls.map(call => call[4])).size).toBe(create.mock.calls.length);
+    expect(flushInitialElementTemplateListUpdates().map(update => update.uid)).toEqual([liveIds[1]]);
   });
 });

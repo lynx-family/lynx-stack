@@ -12,7 +12,8 @@
 
 import { Fragment, h, options } from 'preact';
 
-import { markElementTemplateListDestroyed } from '../list/list.js';
+import { discardRenderedHostsSince } from './create-rendered-host.js';
+import { getNextElementTemplateId } from '../template/handle.js';
 
 import {
   BITS,
@@ -209,14 +210,14 @@ export function renderComponentVNode(
     && rendered.key == null;
   rendered = isTopLevelFragment ? rendered.props.children : rendered;
 
-  // Only a Suspense boundary needs a checkpoint. Native creation is immediate,
-  // but abandoned children must not leak into the fallback's commit collectors.
+  // A Suspense boundary owns the IDs allocated while rendering its children,
+  // as well as the entries added to the enclosing commit collectors.
   const checkpoint = component && component.__c
     ? {
       rootSubtreeHandlesLength: result.rootSubtreeHandles.length,
       subtreeHandlesLength: subtreeHandles?.length,
       listItemUidsLength: listItemUids?.length,
-      createdListUidsLength: result.createdListUids.length,
+      nextId: getNextElementTemplateId(),
       pageAttributes: result.pageAttributes,
       isInsideAuthoredPage: result.isInsideAuthoredPage,
     }
@@ -239,10 +240,7 @@ export function renderComponentVNode(
           result.rootSubtreeHandles.length = checkpoint.rootSubtreeHandlesLength;
           if (subtreeHandles) subtreeHandles.length = checkpoint.subtreeHandlesLength;
           if (listItemUids) listItemUids.length = checkpoint.listItemUidsLength;
-          for (let index = checkpoint.createdListUidsLength; index < result.createdListUids.length; index++) {
-            markElementTemplateListDestroyed(result.createdListUids[index]);
-          }
-          result.createdListUids.length = checkpoint.createdListUidsLength;
+          discardRenderedHostsSince(checkpoint.nextId);
           result.pageAttributes = checkpoint.pageAttributes;
           if (__DEV__) result.isInsideAuthoredPage = checkpoint.isInsideAuthoredPage;
         }

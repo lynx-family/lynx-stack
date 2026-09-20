@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { createRenderedHost } from './create-rendered-host.js';
+import { createRenderedHost, discardRenderedHostsSince } from './create-rendered-host.js';
 import type { RenderAttributes } from './create-rendered-host.js';
 import {
   EMPTY_OBJ,
@@ -15,10 +15,14 @@ import {
 import { CHILDREN, PARENT } from '../../../shared/render-constants.js';
 import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID } from '../../protocol/page.js';
 import type { RuntimeTypedElementAttributes, TypedElementAttributesCommand } from '../../protocol/types.js';
-import { clearPendingElementTemplateListItems, markElementTemplateListDestroyed } from '../list/list.js';
+import { clearPendingElementTemplateListItems } from '../list/list.js';
 import type { ETListItemPlatformInfo } from '../list/list.js';
 import { __ElementTemplatePage } from '../page/authored-page.js';
-import { createElementTemplateWithReservedHandle, reserveElementTemplateId } from '../template/handle.js';
+import {
+  createElementTemplateWithReservedHandle,
+  getNextElementTemplateId,
+  reserveElementTemplateId,
+} from '../template/handle.js';
 import type { MainThreadDynamicAttrSubtreeHandle } from '../template/main-thread-dynamic-attr-state.js';
 import { prepareTypedElementAttributes } from '../template/typed-attributes.js';
 
@@ -31,7 +35,6 @@ export interface MainThreadCreateResult {
 interface DirectRenderState extends Omit<MainThreadCreateResult, 'pageAttributes'> {
   pageAttributes: TypedElementAttributesCommand | null | undefined;
   isInsideAuthoredPage?: boolean;
-  createdListUids: number[];
 }
 
 interface RenderVNode {
@@ -46,11 +49,11 @@ type RenderContext = Record<string, unknown>;
 const isArray = /* @__PURE__ */ Array.isArray;
 
 export function renderToElementTemplate(vnode: unknown, context?: RenderContext | null): MainThreadCreateResult {
+  const checkpoint = getNextElementTemplateId();
   const result: DirectRenderState = {
     pageAttributes: undefined,
     rootRefs: [],
     rootSubtreeHandles: [],
-    createdListUids: [],
   };
   if (__DEV__) {
     result.isInsideAuthoredPage = false;
@@ -58,8 +61,7 @@ export function renderToElementTemplate(vnode: unknown, context?: RenderContext 
   try {
     /* #__NOINLINE__ */ renderWithHooks(vnode, context, result.rootRefs, renderDirect, result);
   } catch (error) {
-    // Abandoned lists must not receive initial updates during the empty-root commit.
-    for (const uid of result.createdListUids) markElementTemplateListDestroyed(uid);
+    discardRenderedHostsSince(checkpoint);
     throw error;
   } finally {
     // Completed lists consume their item records. Anything left belongs to
@@ -168,7 +170,6 @@ function renderHost(
     subtreeHandles,
     listItemPlatformInfo,
   );
-  if (isList) result.createdListUids.push(uid);
   output.push(ref);
   if (parentType === undefined) {
     result.rootSubtreeHandles.push(isList ? [] : subtreeHandles);
