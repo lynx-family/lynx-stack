@@ -139,22 +139,6 @@ function createPlaceholderComponent(id: string): ComponentRecord {
   return { id, component: 'Loading', variant: 'block' };
 }
 
-function createSurfaceLoadingMessage(surfaceId: string): A2UIMessage {
-  return {
-    version: 'v0.9',
-    updateComponents: {
-      surfaceId,
-      components: [
-        {
-          id: ROOT_COMPONENT_ID,
-          component: 'Loading',
-          variant: 'block',
-        },
-      ],
-    },
-  };
-}
-
 function collectChildRefs(component: ComponentRecord): string[] {
   const refs: string[] = [];
   const child = component.child;
@@ -228,6 +212,7 @@ interface SurfaceComponents {
   dirty: Set<string>;
   reachable: Set<string>;
   yielded: Map<string, string>;
+  needsPlaceholders: boolean;
 }
 
 export class A2UIProtocolMessageStreamParser {
@@ -298,7 +283,10 @@ export class A2UIProtocolMessageStreamParser {
         }
       }
     }
-    this.flushComponents(messages);
+    this.flushComponents(messages, true);
+    // A chunk may already contain the root and all referenced children, even
+    // across several messages. Only fill gaps after processing the whole batch.
+    this.flushPlaceholders(messages);
 
     // Retain only the unfinished message. Completed messages and tool phases
     // must not make later component parsing repeatedly scan the full response.
@@ -351,9 +339,10 @@ export class A2UIProtocolMessageStreamParser {
     this.flushComponents(messages);
     if ('createSurface' in value && value.createSurface) {
       const id = value.createSurface.surfaceId;
-      this.surfaces.delete(id);
       this.createdSurfaceIds.add(id);
-      messages.push(value, createSurfaceLoadingMessage(id));
+      // Repeated createSurface updates metadata; only deleteSurface resets UI.
+      this.getSurface(id).needsPlaceholders = true;
+      messages.push(value);
     } else {
       if ('deleteSurface' in value && value.deleteSurface) {
         const id = value.deleteSurface.surfaceId;
@@ -371,6 +360,12 @@ export class A2UIProtocolMessageStreamParser {
       this.options.isImageSourceAllowed,
       this.options.isOpenUrlAllowed,
     ) as ComponentRecord;
+    const state = this.getSurface(surfaceId);
+    state.seen.set(component.id, component);
+    state.dirty.add(component.id);
+  }
+
+  private getSurface(surfaceId: string): SurfaceComponents {
     let state = this.surfaces.get(surfaceId);
     if (!state) {
       state = {
@@ -378,16 +373,35 @@ export class A2UIProtocolMessageStreamParser {
         dirty: new Set(),
         reachable: new Set(),
         yielded: new Map(),
+        needsPlaceholders: false,
       };
       this.surfaces.set(surfaceId, state);
     }
-    state.seen.set(component.id, component);
-    state.dirty.add(component.id);
+    return state;
   }
 
-  private flushComponents(messages: A2UIMessage[]): void {
+  private flushComponents(
+    messages: A2UIMessage[],
+    batchComplete = false,
+  ): void {
     for (const [surfaceId, state] of this.surfaces) {
       if (state.dirty.size === 0) continue;
+      if (
+        this.createdSurfaceIds.has(surfaceId)
+        && !state.seen.has(ROOT_COMPONENT_ID)
+        && !state.yielded.has(ROOT_COMPONENT_ID)
+      ) {
+        // The renderer chooses its root from the first component update.
+        // Hold unattached children until the real root or this batch's fallback
+        // is available, so child-first output cannot become the page root.
+        if (!batchComplete) continue;
+        this.emitComponents(
+          surfaceId,
+          state,
+          [createPlaceholderComponent(ROOT_COMPONENT_ID)],
+          messages,
+        );
+      }
       const reachable = new Set<string>();
       const pending = state.seen.has(ROOT_COMPONENT_ID)
         ? [ROOT_COMPONENT_ID]
@@ -404,37 +418,60 @@ export class A2UIProtocolMessageStreamParser {
         if (!state.reachable.has(id)) state.dirty.add(id);
       }
       state.reachable = reachable;
-      const placeholders = new Map<string, ComponentRecord>();
       const candidates: ComponentRecord[] = [];
       for (const id of state.dirty) {
         if (!reachable.has(id)) continue;
         const component = state.seen.get(id)!;
         candidates.push(component);
-        if (this.createdSurfaceIds.has(surfaceId)) {
-          for (const child of collectChildRefs(component)) {
-            if (!state.seen.has(child)) {
-              // Keep the real child id: its eventual definition replaces the
-              // Loading resource without rewriting/resending its parent.
-              placeholders.set(child, createPlaceholderComponent(child));
-            }
-          }
-        }
       }
       state.dirty.clear();
-      candidates.push(...placeholders.values());
-      const changed: ComponentRecord[] = [];
-      for (const component of candidates) {
-        const content = stableStringify(component);
-        if (state.yielded.get(component.id) === content) continue;
-        state.yielded.set(component.id, content);
-        changed.push(component);
+      state.needsPlaceholders = true;
+      this.emitComponents(surfaceId, state, candidates, messages);
+    }
+  }
+
+  private flushPlaceholders(messages: A2UIMessage[]): void {
+    for (const [surfaceId, state] of this.surfaces) {
+      if (!state.needsPlaceholders) continue;
+      state.needsPlaceholders = false;
+      // An action patch can reference existing nodes that this parser has never
+      // seen. Only infer missing nodes for surfaces created in this stream.
+      if (!this.createdSurfaceIds.has(surfaceId)) continue;
+      const missing = new Set<string>();
+      if (!state.seen.has(ROOT_COMPONENT_ID)) missing.add(ROOT_COMPONENT_ID);
+      for (const id of state.reachable) {
+        for (const child of collectChildRefs(state.seen.get(id)!)) {
+          if (!state.seen.has(child)) missing.add(child);
+        }
       }
-      if (changed.length > 0) {
-        messages.push({
-          version: 'v0.9',
-          updateComponents: { surfaceId, components: changed },
-        });
-      }
+      // Stable ids let subsequent definitions replace placeholders in place.
+      this.emitComponents(
+        surfaceId,
+        state,
+        [...missing].map(id => createPlaceholderComponent(id)),
+        messages,
+      );
+    }
+  }
+
+  private emitComponents(
+    surfaceId: string,
+    state: SurfaceComponents,
+    candidates: ComponentRecord[],
+    messages: A2UIMessage[],
+  ): void {
+    const changed: ComponentRecord[] = [];
+    for (const component of candidates) {
+      const content = stableStringify(component);
+      if (state.yielded.get(component.id) === content) continue;
+      state.yielded.set(component.id, content);
+      changed.push(component);
+    }
+    if (changed.length > 0) {
+      messages.push({
+        version: 'v0.9',
+        updateComponents: { surfaceId, components: changed },
+      });
     }
   }
 }

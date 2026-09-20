@@ -6,11 +6,37 @@ import { describe, expect, test } from '@rstest/core';
 
 import {
   ALLOWED_CUSTOM_PROVIDER_BASE_URLS,
+  CUSTOM_JEV_BASE_URL,
   assertAllowedCustomProviderBaseURL,
   createCustomProviderFetch,
+  isCustomJevBaseURL,
 } from '../agent/common/custom-provider-security.js';
 
 describe('custom provider allow-list', () => {
+  test('recognizes the official Jev evaluation endpoint without allowing it as a chat provider', () => {
+    expect(isCustomJevBaseURL(CUSTOM_JEV_BASE_URL)).toBe(true);
+    expect(isCustomJevBaseURL(`${CUSTOM_JEV_BASE_URL}/`)).toBe(true);
+    expect(() => assertAllowedCustomProviderBaseURL(CUSTOM_JEV_BASE_URL))
+      .toThrow('supported provider URLs');
+    for (
+      const url of [
+        'http://api.typesafe.ai/v1',
+        'https://api.typesafe.ai:443/v1',
+        'https://key@api.typesafe.ai/v1',
+        'https://api.typesafe.ai.evil.example/v1',
+        'https://api.typesafe.ai/v1?url=http://127.0.0.1',
+        'https://api.typesafe.ai/v1#fragment',
+        'https://api.typesafe.ai/v1//',
+        'https://api.typesafe.ai/v1/../v1',
+        'https://127.0.0.1/v1',
+      ]
+    ) {
+      expect(isCustomJevBaseURL(url)).toBe(false);
+      expect(() => assertAllowedCustomProviderBaseURL(url)).toThrow(
+        'supported provider URLs',
+      );
+    }
+  });
   test.each(ALLOWED_CUSTOM_PROVIDER_BASE_URLS)(
     'accepts supported provider URL %s',
     (baseURL) => {

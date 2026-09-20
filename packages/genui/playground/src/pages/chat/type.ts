@@ -60,6 +60,8 @@ export interface ChatInteractionEntry {
 export interface ChatInteractionLog {
   entries: readonly ChatInteractionEntry[];
   omittedEntries: number;
+  /** Actual upstream requests, independent of timeline retention and SSE chunks. */
+  modelRequestCount?: number;
   rawOutput?: ChatInteractionEntry;
   reasoning?: { text: string; truncated: boolean };
 }
@@ -222,6 +224,8 @@ export interface ChatPreviewAdapter<TOutput> {
   artifact?: (output: TOutput) => ChatArtifact;
   livePayload?: (output: TOutput) => unknown[];
   merge?: (current: TOutput | null, next: TOutput) => TOutput;
+  /** Compare rendered states, including streams with temporary loading messages. */
+  isEquivalent?: (current: TOutput, next: TOutput) => boolean;
   emptyTitle: string;
   emptySubtitle: string;
   generatingHint: string;

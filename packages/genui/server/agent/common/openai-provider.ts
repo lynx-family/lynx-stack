@@ -83,6 +83,9 @@ export function createLLMProvider(
     : undefined;
   const providerOptions = directOverride ?? (() => {
     const resolved = resolveModelConfig(opts.model);
+    if (resolved.config.provider === 'typesafe') {
+      throw new Error('This model supports A2UI component composition only.');
+    }
     return {
       apiKey: resolved.config.apiKey,
       baseURL: resolved.config.baseURL,

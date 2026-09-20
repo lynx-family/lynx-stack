@@ -25,6 +25,7 @@ interface A2UIActionBody {
   model?: string;
   apiKey?: string;
   baseURL?: string;
+  enableDesignGuidance?: boolean;
   catalog?: A2UICatalog;
   maxRepairAttempts?: number;
 }
