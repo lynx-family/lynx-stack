@@ -3,14 +3,24 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { render, options, Component } from 'preact';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { render, options, Component, createElement } from 'preact';
+import { beforeAll, beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { setupDocument } from '../../../src/document';
 import { setupPage, snapshotInstanceManager } from '../../../src/snapshot';
 import { initProfileHook } from '../../../src/snapshot/debug/profileHooks';
 import { useState } from '../../../src/index';
-import { COMPONENT, DIFF, DIFF2, DIFFED, HOOKS, LIST, RENDER, VNODE } from '../../../src/shared/render-constants';
+import {
+  COMMIT,
+  COMPONENT,
+  DIFF,
+  DIFF2,
+  DIFFED,
+  HOOKS,
+  LIST,
+  RENDER,
+  VNODE,
+} from '../../../src/shared/render-constants';
 
 describe('profile', () => {
   let scratch;
@@ -23,6 +33,72 @@ describe('profile', () => {
     snapshotInstanceManager.clear();
     scratch = document.createElement('root');
     lynx.performance.profileMark.mockClear();
+  });
+
+  test.each(['main', 'background'])('preserves profiling callback contracts on %s', target => {
+    vi.stubGlobal('__MAIN_THREAD__', target === 'main');
+    vi.stubGlobal('__BACKGROUND__', target === 'background');
+    const previousHooks = {
+      [COMMIT]: options[COMMIT],
+      [DIFF]: options[DIFF],
+      [DIFF2]: options[DIFF2],
+      [DIFFED]: options[DIFFED],
+      [RENDER]: options[RENDER],
+    };
+    const previousSetState = Component.prototype.setState;
+    onTestFinished(() => {
+      Object.assign(options, previousHooks);
+      Component.prototype.setState = previousSetState;
+      vi.unstubAllGlobals();
+    });
+    const events = [];
+    const performance = lynx.performance;
+    const oldDiff2 = options[DIFF2] = vi.fn(() => {
+      expect(performance.profileStart).toHaveBeenLastCalledWith('ReactLynx::diff::Example', {});
+      events.push('old diff');
+    });
+    const oldDiffed = options[DIFFED] = vi.fn(() => {
+      expect(performance.profileEnd).toHaveBeenCalledTimes(2);
+      events.push('old diffed');
+    });
+    const oldRender = options[RENDER] = vi.fn(() => {
+      expect(instance.render).not.toBe(originalRender);
+      events.push('old render');
+    });
+    initProfileHook();
+
+    const failure = new Error('render failed');
+    class Example extends Component {
+      render() {
+        expect(this).toBe(instance);
+        expect(performance.profileStart).toHaveBeenLastCalledWith('ReactLynx::render::Example');
+        events.push('render');
+        throw failure;
+      }
+    }
+    const vnode = createElement(Example, {});
+    const oldVNode = createElement(Example, {});
+    const instance = vnode[COMPONENT] = new Example({});
+    const originalRender = instance.render;
+
+    options[DIFF2]?.(vnode, oldVNode);
+    options[RENDER]?.(vnode);
+    expect(() => instance.render()).toThrow(failure);
+    expect(instance.render).toBe(originalRender);
+    options[DIFFED]?.(vnode);
+
+    expect(oldDiff2.mock.calls).toEqual([[vnode, oldVNode]]);
+    expect(oldRender.mock.calls).toEqual([[vnode]]);
+    expect(oldDiffed.mock.calls).toEqual([[vnode]]);
+    expect(oldDiff2.mock.contexts).toEqual([undefined]);
+    expect(oldRender.mock.contexts).toEqual([undefined]);
+    expect(oldDiffed.mock.contexts).toEqual([undefined]);
+    expect(events).toEqual([
+      'old diff',
+      'old render',
+      'render',
+      'old diffed',
+    ]);
   });
 
   test('original options hooks should be called', async () => {

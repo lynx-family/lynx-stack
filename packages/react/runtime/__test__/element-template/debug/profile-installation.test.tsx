@@ -18,13 +18,19 @@ describe('initProfileHook installation', () => {
   it.each(['main', 'background'] as const)('preserves profiling callback contracts on %s', async target => {
     envManager.resetEnv(target);
     const { Component, createElement, options } = await import('preact');
-    const { COMPONENT, DIFF2, DIFFED, RENDER } = await import('../../../src/shared/render-constants.js');
+    const { COMMIT, COMPONENT, DIFF, DIFF2, DIFFED, RENDER } = await import('../../../src/shared/render-constants.js');
     const previousHooks = {
+      [COMMIT]: options[COMMIT],
+      [DIFF]: options[DIFF],
       [DIFF2]: options[DIFF2],
       [DIFFED]: options[DIFFED],
       [RENDER]: options[RENDER],
     };
-    onTestFinished(() => Object.assign(options, previousHooks));
+    const previousSetState = Component.prototype.setState;
+    onTestFinished(() => {
+      Object.assign(options, previousHooks);
+      Component.prototype.setState = previousSetState;
+    });
     const events: string[] = [];
     const performance = lynx.performance;
     const oldDiff2 = options[DIFF2] = vi.fn(() => {
