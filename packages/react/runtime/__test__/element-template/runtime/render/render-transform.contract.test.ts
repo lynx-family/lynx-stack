@@ -21,6 +21,7 @@ import { backgroundElementTemplateInstanceManager } from '../../../../src/elemen
 import { applyElementTemplateUpdateCommands } from '../../../../src/element-template/runtime/patch.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import { renderToElementTemplate } from '../../../../src/element-template/runtime/render/render-direct.js';
+import { resetElementTemplatePatchListener } from '../../../../src/element-template/native/patch-listener.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import type {
@@ -179,6 +180,7 @@ async function compileAndRender(
       code: transformedCode,
     };
   } finally {
+    resetElementTemplatePatchListener();
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
 }
@@ -420,7 +422,8 @@ describe('render transform contract', () => {
 
     expect(result.code).toContain('DeferredListItem');
     expect(result.code).toContain('unmountRecycled');
-    expect(result.code).toContain('__listItemPlatformInfo');
+    expect(result.code).toContain('__etHost');
+    expect(result.code).toContain('"item-key": "late"');
   });
 
   it('chains create, serialize, update, and callbacks', async () => {

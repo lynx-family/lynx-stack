@@ -3,7 +3,7 @@ source: packages/react/transform/crates/swc_plugin_element_template/tests/elemen
 expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_snapshot_json(&templates),\n})"
 ---
 {
-  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_b2f62f2ab913 = `${globDynamicComponentEntry}:${\"_et_b2f62f2ab913\"}`;\nconst _et_955a06fee137 = `${globDynamicComponentEntry}:${\"_et_955a06fee137\"}`;\n<_et_955a06fee137 slotChildren={[\n    <Component id={1}>\n        <_et_b2f62f2ab913/>\n      </Component>\n]}/>;\n",
+  "code": "import * as ReactLynxInternal from \"@lynx-js/react/internal\";\nimport * as ReactLynx from \"@lynx-js/react\";\nconst _et_b2f62f2ab913_bundle = globDynamicComponentEntry;\nconst _et_b2f62f2ab913 = `${_et_b2f62f2ab913_bundle}:${\"_et_b2f62f2ab913\"}`;\nconst _et_955a06fee137_bundle = globDynamicComponentEntry;\nconst _et_955a06fee137 = `${_et_955a06fee137_bundle}:${\"_et_955a06fee137\"}`;\nReactLynxInternal.__etHost(_et_955a06fee137, \"_et_955a06fee137\", _et_955a06fee137_bundle, void 0, void 0, [\n    <Component id={1}>\n        {ReactLynxInternal.__etHost(_et_b2f62f2ab913, \"_et_b2f62f2ab913\", _et_b2f62f2ab913_bundle, void 0, void 0, void 0, void 0)}\n      </Component>\n], void 0);\n",
   "templates": [
     {
       "template_id": "_et_b2f62f2ab913",

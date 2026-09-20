@@ -1,18 +1,17 @@
-import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
-const _et_01c4a5c2b24f = `${globDynamicComponentEntry}:${"_et_01c4a5c2b24f"}`;
-const _et_895419ad7379 = `${globDynamicComponentEntry}:${"_et_895419ad7379"}`;
-const _et_06d9ec2f2156 = `${globDynamicComponentEntry}:${"_et_06d9ec2f2156"}`;
+import * as ReactLynxInternal from "@lynx-js/react/element-template/internal";
+const _et_01c4a5c2b24f_bundle = globDynamicComponentEntry;
+const _et_01c4a5c2b24f = `${_et_01c4a5c2b24f_bundle}:${"_et_01c4a5c2b24f"}`;
+const _et_895419ad7379_bundle = globDynamicComponentEntry;
+const _et_895419ad7379 = `${_et_895419ad7379_bundle}:${"_et_895419ad7379"}`;
+const _et_06d9ec2f2156_bundle = globDynamicComponentEntry;
+const _et_06d9ec2f2156 = `${_et_06d9ec2f2156_bundle}:${"_et_06d9ec2f2156"}`;
 export function App({ showHeader = false, items = [
     'body'
 ] }) {
-    return /*#__PURE__*/ _jsx(_et_06d9ec2f2156, {
-        slotChildren: [
-            showHeader && /*#__PURE__*/ _jsx(_et_01c4a5c2b24f, {}),
-            items.map((item)=>/*#__PURE__*/ _jsx(_et_895419ad7379, {
-                    slotChildren: [
-                        item
-                    ]
-                }, item))
-        ]
-    });
+    return /*#__PURE__*/ ReactLynxInternal.__etHost(_et_06d9ec2f2156, "_et_06d9ec2f2156", _et_06d9ec2f2156_bundle, void 0, void 0, [
+        showHeader && /*#__PURE__*/ ReactLynxInternal.__etHost(_et_01c4a5c2b24f, "_et_01c4a5c2b24f", _et_01c4a5c2b24f_bundle, void 0, void 0, void 0, void 0),
+        items.map((item)=>/*#__PURE__*/ ReactLynxInternal.__etHost(_et_895419ad7379, "_et_895419ad7379", _et_895419ad7379_bundle, item, void 0, [
+                item
+            ], void 0))
+    ], void 0);
 }

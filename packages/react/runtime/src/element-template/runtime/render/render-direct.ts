@@ -4,6 +4,7 @@
 
 import { createRenderedHost, discardRenderedHostsSince } from './create-rendered-host.js';
 import type { RenderAttributes } from './create-rendered-host.js';
+import type { ElementTemplateHost } from './host.js';
 import {
   EMPTY_OBJ,
   beforeDiff,
@@ -40,6 +41,7 @@ interface DirectRenderState extends Omit<MainThreadCreateResult, 'pageAttributes
 interface RenderVNode {
   type: unknown;
   props: Record<string, unknown>;
+  templateKey?: string;
   [PARENT]?: RenderVNode | undefined;
   [CHILDREN]?: unknown[];
 }
@@ -91,7 +93,7 @@ function renderHost(
   parentListItemUids: number[] | undefined,
 ): void {
   const type = vnode.type as string;
-  const props = vnode.props;
+  const props = vnode.templateKey === undefined ? vnode.props : vnode as unknown as Record<string, unknown>;
   const isList = type === 'list';
   const attributes = (isList ? props['attributes'] : props['attributeSlots']) as RenderAttributes;
   const listItemPlatformInfo = props['__listItemPlatformInfo'] as ETListItemPlatformInfo | undefined;
@@ -171,6 +173,7 @@ function renderHost(
     listItemUids,
     subtreeHandles,
     listItemPlatformInfo,
+    vnode.templateKey === undefined ? undefined : vnode as unknown as ElementTemplateHost,
   );
   output.push(ref);
   if (parentType === undefined) {

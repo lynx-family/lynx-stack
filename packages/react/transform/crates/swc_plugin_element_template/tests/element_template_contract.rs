@@ -232,7 +232,7 @@ fn should_emit_direct_event_attr_plan_for_lepus_target() {
     "direct event slots should register a sparse ET attr plan",
   );
   assert!(
-    code.contains("attributeSlots={[1,1]}"),
+    code.contains(",void0,[1,1],void0,void0)"),
     "LEPUS target should keep event markers in attributeSlots before runtime preparation, got: {code}"
   );
 }
@@ -304,7 +304,7 @@ fn should_emit_direct_main_thread_ref_attr_plan_for_lepus_target() {
     "direct main-thread ref slots should register an ET MTRef attr plan",
   );
   assert!(
-    code.contains("attributeSlots={[mainThreadRef]}"),
+    code.contains(",void0,[mainThreadRef],void0,void0)"),
     "LEPUS target should keep raw main-thread refs in attributeSlots before runtime preparation, got: {code}"
   );
 }
@@ -608,7 +608,7 @@ fn should_keep_static_attribute_values_out_of_et_attribute_slots() {
   assert_eq!(attr_by_key("class")["attrSlotIndex"].as_f64(), Some(1.0));
   let code = without_whitespace(&code);
   assert!(
-    code.contains("attributeSlots={[1e400,cls]}"),
+    code.contains(",void0,[1e400,cls],void0,"),
     "overflowed numeric literals should stay observable via ET attribute slots, got: {code}"
   );
 }
@@ -642,11 +642,11 @@ fn should_not_consume_hidden_et_slots_for_list_item_platform_attrs() {
   assert_eq!(recyclable["value"].as_bool(), Some(true));
   let code = without_whitespace(&code);
   assert!(
-    code.contains("attributeSlots={[itemKey]}"),
+    code.contains(",void0,[itemKey],void0,"),
     "legacy list platform info must not consume ET attribute slots, got: {code}"
   );
   assert!(
-    code.contains("__listItemPlatformInfo={{\"item-key\":itemKey,\"recyclable\":true}}"),
+    code.contains(",{\"item-key\":itemKey,\"recyclable\":true})"),
     "list item platform info should be available as an ET runtime-only carrier, got: {code}"
   );
 }
@@ -688,8 +688,8 @@ fn should_lower_exact_list_as_typed_runtime_host() {
     "ET list output should expose exact list, attributes, and $0 logical children, got: {code}"
   );
   assert!(
-    code.contains("__listItemPlatformInfo={{\"item-key\":firstKey,\"full-span\":true}}")
-      && code.contains("__listItemPlatformInfo={{\"item-key\":secondKey,\"recyclable\":true}}"),
+    code.contains(",{\"item-key\":firstKey,\"full-span\":true})")
+      && code.contains(",{\"item-key\":secondKey,\"recyclable\":true})"),
     "list item roots should carry platform info beside compiled ET roots, got: {code}"
   );
 }
@@ -756,7 +756,7 @@ fn should_keep_main_thread_attr_descriptor_keys_for_namespaced_attrs() {
     "main-thread:ref must use the ET MTRef adapter, got: {code}"
   );
   assert!(
-    code.contains("attributeSlots={[handleTap,viewRef]}"),
+    code.contains(",void0,[handleTap,viewRef],void0,"),
     "default LEPUS target should keep raw main-thread refs in attributeSlots before runtime preparation, got: {code}"
   );
 
@@ -963,11 +963,12 @@ fn ordered_child_slots_are_lepus_only_and_preserve_template_identity() {
     }
     let code = without_whitespace(&code);
     if target == TransformTarget::LEPUS {
-      assert!(code.contains("slotChildren={[first(),second()]}"), "{code}");
+      assert!(code.contains(",[first(),second()],void0)"), "{code}");
       assert!(!code.contains("$0="), "{code}");
     } else {
       assert!(code.contains("$0={first()}$1={second()}"), "{code}");
       assert!(!code.contains("slotChildren="), "{code}");
+      assert!(!code.contains(".__etHost("), "{code}");
     }
     let positions = ["key()", "attr()", "first()", "second()"].map(|expr| {
       assert_eq!(code.matches(expr).count(), 1, "{code}");

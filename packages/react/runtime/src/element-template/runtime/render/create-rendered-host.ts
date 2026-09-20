@@ -2,7 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { elementTemplateIdentityKey, parseElementTemplateType } from '../../protocol/template-type.js';
+import type { ElementTemplateHost } from './host.js';
+import {
+  MAIN_BUNDLE_URL_SENTINEL,
+  elementTemplateIdentityKey,
+  parseElementTemplateType,
+} from '../../protocol/template-type.js';
 import type { RuntimeTypedElementAttributes, SerializableValue } from '../../protocol/types.js';
 import {
   composeElementTemplateListAttributes,
@@ -46,6 +51,7 @@ export function createRenderedHost(
   listItemUids: number[] | undefined,
   materializationHandles: MainThreadDynamicAttrSubtreeHandle[],
   listItemPlatformInfo: ETListItemPlatformInfo | undefined,
+  host?: ElementTemplateHost,
 ): ElementTemplateHandle {
   if (type === TYPED_LIST_HOST_TYPE) {
     const listChildren = childSlots?.[0] ?? [];
@@ -87,7 +93,10 @@ export function createRenderedHost(
       );
     }
   }
-  const { templateKey, bundleUrl } = parseElementTemplateType(type);
+  // Compact hosts carry bundle identity captured when their template is defined.
+  const identity = host ?? parseElementTemplateType(type);
+  const templateKey = identity.templateKey;
+  const bundleUrl = identity.bundleUrl === MAIN_BUNDLE_URL_SENTINEL ? null : identity.bundleUrl;
   const hasMainThreadRef = /* #__NOINLINE__ */ hasMainThreadRefAttrSlot(type);
   const elementRef = createElementTemplateWithReservedHandle(
     handleId,

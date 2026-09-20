@@ -3,7 +3,7 @@ source: packages/react/transform/crates/swc_plugin_element_template/tests/elemen
 expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_snapshot_json(&templates),\n})"
 ---
 {
-  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_4f3247135c8b = `${globDynamicComponentEntry}:${\"_et_4f3247135c8b\"}`;\n<_et_4f3247135c8b slotChildren={[\n    [\n        \"a\",\n        \"b\"\n    ],\n    [\n        \"c\",\n        \"d\"\n    ]\n]}/>;\n",
+  "code": "import * as ReactLynxInternal from \"@lynx-js/react/internal\";\nimport * as ReactLynx from \"@lynx-js/react\";\nconst _et_4f3247135c8b_bundle = globDynamicComponentEntry;\nconst _et_4f3247135c8b = `${_et_4f3247135c8b_bundle}:${\"_et_4f3247135c8b\"}`;\nReactLynxInternal.__etHost(_et_4f3247135c8b, \"_et_4f3247135c8b\", _et_4f3247135c8b_bundle, void 0, void 0, [\n    [\n        \"a\",\n        \"b\"\n    ],\n    [\n        \"c\",\n        \"d\"\n    ]\n], void 0);\n",
   "templates": [
     {
       "template_id": "_et_4f3247135c8b",
