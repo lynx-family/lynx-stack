@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { useState } from 'preact/hooks';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
@@ -33,6 +33,35 @@ afterEach(() => {
 });
 
 describe('isRendering in background', () => {
+  it.each(['renderComponent', '__'])('forwards %s before entering the render scope', async key => {
+    vi.resetModules();
+    const { Component, createElement, options } = await import('preact');
+    const previousHooks = { __: options.__, renderComponent: options.renderComponent };
+    onTestFinished(() => {
+      Object.assign(options, previousHooks);
+      vi.resetModules();
+    });
+    const failure = new Error('predecessor failed');
+    const oldHook = vi.fn(() => {
+      expect(scope.isRendering.value).toBe(false);
+    });
+    options[key] = oldHook;
+    const scope = await import('../../../src/snapshot/lifecycle/isRendering');
+    const vnode = createElement('view', {});
+    const second = key === 'renderComponent' ? new Component({}) : document.createElement('root');
+    options[key](vnode, second);
+    expect(oldHook.mock.calls).toEqual([[vnode, second]]);
+    expect(oldHook.mock.contexts).toEqual([undefined]);
+    expect(scope.isRendering.value).toBe(true);
+    await Promise.resolve();
+    expect(scope.isRendering.value).toBe(false);
+    oldHook.mockImplementationOnce(() => {
+      throw failure;
+    });
+    expect(() => options[key](vnode, second)).toThrow(failure);
+    expect(scope.isRendering.value).toBe(false);
+  });
+
   it('should set isRendering to true during initial rendering and false after', async () => {
     let isRenderingValue = false;
 

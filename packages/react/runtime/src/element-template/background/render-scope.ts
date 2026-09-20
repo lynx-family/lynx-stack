@@ -5,7 +5,7 @@
 import { options } from 'preact';
 
 import { RENDER_COMPONENT, ROOT } from '../../shared/render-constants.js';
-import { hook, lynxQueueMicrotask } from '../../utils.js';
+import { lynxQueueMicrotask } from '../../utils.js';
 
 let installed = false;
 let elementTemplateRendering = false;
@@ -30,15 +30,23 @@ export function installElementTemplateRenderScopeHooks(): void {
   }
   installed = true;
 
-  hook(options, RENDER_COMPONENT, onPreactRenderHook);
-  hook(options, ROOT, onPreactRenderHook);
-}
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  const oldRenderComponent = options[RENDER_COMPONENT];
+  options[RENDER_COMPONENT] = (vnode, component) => {
+    oldRenderComponent?.(vnode, component);
+    if (__BACKGROUND__) {
+      markPreactRenderInProgress();
+    }
+  };
 
-function onPreactRenderHook<T extends unknown[]>(old: ((...args: T) => void) | undefined, ...args: T): void {
-  old?.(...args);
-  if (__BACKGROUND__) {
-    markPreactRenderInProgress();
-  }
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  const oldRoot = options[ROOT];
+  options[ROOT] = (vnode, parent) => {
+    oldRoot?.(vnode, parent);
+    if (__BACKGROUND__) {
+      markPreactRenderInProgress();
+    }
+  };
 }
 
 function markPreactRenderInProgress(): void {

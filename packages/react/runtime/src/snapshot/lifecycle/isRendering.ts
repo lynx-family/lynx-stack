@@ -5,7 +5,7 @@
 import { options } from 'preact';
 
 import { RENDER_COMPONENT, ROOT } from '../../shared/render-constants.js';
-import { hook, lynxQueueMicrotask } from '../../utils.js';
+import { lynxQueueMicrotask } from '../../utils.js';
 
 export const isRendering = /* @__PURE__ */ { value: false };
 
@@ -17,11 +17,18 @@ const setIsRendering = () => {
   });
 };
 
-const onRenderHook = <T extends unknown[]>(old: ((...args: T) => void) | undefined, ...args: T) => {
+// eslint-disable-next-line @typescript-eslint/unbound-method
+const oldRenderComponent = options[RENDER_COMPONENT];
+options[RENDER_COMPONENT] = (vnode, component) => {
   /* v8 ignore next */
-  if (old) old(...args);
+  oldRenderComponent?.(vnode, component);
   setIsRendering();
 };
 
-hook(options, RENDER_COMPONENT, onRenderHook);
-hook(options, ROOT, onRenderHook);
+// eslint-disable-next-line @typescript-eslint/unbound-method
+const oldRoot = options[ROOT];
+options[ROOT] = (vnode, parent) => {
+  /* v8 ignore next */
+  oldRoot?.(vnode, parent);
+  setIsRendering();
+};

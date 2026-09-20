@@ -4,7 +4,7 @@
 import { options } from 'preact';
 
 import { RENDER_COMPONENT, ROOT } from '../shared/render-constants.js';
-import { hook, isSdkVersionGt } from '../utils.js';
+import { isSdkVersionGt } from '../utils.js';
 
 const PerformanceTimingKeys = [
   'updateSetStateTrigger',
@@ -160,15 +160,23 @@ function initTimingAPI(timingAPIOptions: TimingAPIOptions): void {
     }
   };
 
-  const onHook = <T extends unknown[]>(old: ((...args: T) => void) | undefined, ...args: T) => {
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  const oldRenderComponent = options[RENDER_COMPONENT];
+  options[RENDER_COMPONENT] = (vnode, component) => {
     helper();
     /* v8 ignore start */
-    if (old) old(...args);
+    oldRenderComponent?.(vnode, component);
     /* v8 ignore stop */
   };
 
-  hook(options, RENDER_COMPONENT, onHook);
-  hook(options, ROOT, onHook);
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  const oldRoot = options[ROOT];
+  options[ROOT] = (vnode, parent) => {
+    helper();
+    /* v8 ignore start */
+    oldRoot?.(vnode, parent);
+    /* v8 ignore stop */
+  };
 }
 
 export {

@@ -752,6 +752,37 @@ describe('ElementTemplate commit hook', () => {
     }
   });
 
+  it('preserves the captured commit callback across reinstall', () => {
+    uninstallElementTemplateCommitHookForTesting();
+    const original = options.__c;
+    const predecessor = vi.fn();
+    const replacement = vi.fn();
+    try {
+      envManager.switchToBackground();
+      options.__c = predecessor;
+      installElementTemplateCommitHook();
+      const wrapped = options.__c!;
+      uninstallElementTemplateCommitHookForTesting();
+      expect(options.__c).toBe(predecessor);
+      options.__c = replacement;
+      installElementTemplateCommitHook();
+
+      const vnode = createElement('view', {});
+      const commitQueue: Component[] = [];
+      wrapped(vnode, commitQueue);
+      expect(predecessor.mock.calls).toEqual([[vnode, commitQueue]]);
+      expect(predecessor.mock.contexts).toEqual([undefined]);
+      expect(replacement).not.toHaveBeenCalled();
+      options.__c!(vnode, commitQueue);
+      expect(replacement.mock.calls).toEqual([[vnode, commitQueue]]);
+      expect(replacement.mock.contexts).toEqual([undefined]);
+    } finally {
+      uninstallElementTemplateCommitHookForTesting();
+      options.__c = original;
+      installElementTemplateCommitHook();
+    }
+  });
+
   it('is idempotent', () => {
     installElementTemplateCommitHook();
     const wrapped = options.__c;

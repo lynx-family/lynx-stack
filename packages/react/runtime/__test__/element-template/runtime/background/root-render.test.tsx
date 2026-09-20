@@ -1,5 +1,5 @@
 import { options } from 'preact';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { resetElementTemplateCommitState } from '../../../../src/element-template/background/commit-hook.js';
 import { globalCommitContext } from '../../../../src/element-template/background/commit-context.js';
@@ -112,6 +112,41 @@ describe('ElementTemplate root render timing', () => {
 
     await Promise.resolve();
     expect(cleanup).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(['renderComponent', '__'] as const)('forwards %s before entering the render scope', async key => {
+    vi.resetModules();
+    const { Component, createElement, options } = await import('preact');
+    const previousHooks = { __: options.__, renderComponent: options.renderComponent };
+    onTestFinished(() => {
+      Object.assign(options, previousHooks);
+      vi.resetModules();
+    });
+    const failure = new Error('predecessor failed');
+    const oldHook = vi.fn(() => {
+      expect(scope.isElementTemplateRendering()).toBe(false);
+    });
+    options[key] = oldHook;
+    const scope = await import('../../../../src/element-template/background/render-scope.js');
+    scope.installElementTemplateRenderScopeHooks();
+    const vnode = createElement('view', {});
+    const component = new Component({});
+    const parent = {} as Parameters<NonNullable<typeof options.__>>[1];
+    const invoke = () =>
+      key === 'renderComponent'
+        ? options.renderComponent!(vnode, component)
+        : options.__!(vnode, parent);
+    invoke();
+    expect(oldHook.mock.calls).toEqual([[vnode, key === 'renderComponent' ? component : parent]]);
+    expect(oldHook.mock.contexts).toEqual([undefined]);
+    expect(scope.isElementTemplateRendering()).toBe(true);
+    await Promise.resolve();
+    expect(scope.isElementTemplateRendering()).toBe(false);
+    oldHook.mockImplementationOnce(() => {
+      throw failure;
+    });
+    expect(invoke).toThrow(failure);
+    expect(scope.isElementTemplateRendering()).toBe(false);
   });
 
   it('keeps render scope hook installation idempotent', () => {

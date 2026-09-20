@@ -21,7 +21,7 @@ import {
 } from '../../core/thread-function-call/main-thread.js';
 import { dropFunctionCallReturnIds } from '../../core/thread-function-call/return-value.js';
 import { COMMIT } from '../../shared/render-constants.js';
-import { hook, isEmptyObject } from '../../utils.js';
+import { isEmptyObject } from '../../utils.js';
 import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { clearPendingRefs, flushPendingRefs, hasPendingRefs } from '../prop-adapters/ref.js';
@@ -163,7 +163,8 @@ export function installElementTemplateCommitHook(): void {
   // eslint-disable-next-line @typescript-eslint/unbound-method
   previousCommit = options[COMMIT];
 
-  hook(options, COMMIT, (originalCommit, vnode, commitQueue) => {
+  const originalCommit = previousCommit;
+  options[COMMIT] = (vnode, commitQueue) => {
     if (__BACKGROUND__) {
       clearElementTemplateRenderScope();
     }
@@ -186,7 +187,7 @@ export function installElementTemplateCommitHook(): void {
     }
 
     originalCommit?.(vnode, commitQueue);
-  });
+  };
 }
 
 /**

@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { options, render } from 'preact';
+import { createElement, options, render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useState } from '../../../src/index';
@@ -46,6 +46,36 @@ function mountAndHydrate(jsx) {
 }
 
 describe('replaceCommitHook', () => {
+  it('preserves the captured commit callback across reinstall', () => {
+    removeCommitHookForTesting();
+    const original = options.__c;
+    const predecessor = vi.fn();
+    const replacement = vi.fn();
+    try {
+      globalEnvManager.switchToBackground();
+      options.__c = predecessor;
+      replaceCommitHook();
+      const wrapped = options.__c;
+      removeCommitHookForTesting();
+      expect(options.__c).toBe(predecessor);
+      options.__c = replacement;
+      replaceCommitHook();
+
+      const vnode = createElement('view', {});
+      const commitQueue = [];
+      wrapped(vnode, commitQueue);
+      expect(predecessor.mock.calls).toEqual([[vnode, commitQueue]]);
+      expect(predecessor.mock.contexts).toEqual([undefined]);
+      expect(replacement).not.toHaveBeenCalled();
+      options.__c(vnode, commitQueue);
+      expect(replacement.mock.calls).toEqual([[vnode, commitQueue]]);
+      expect(replacement.mock.contexts).toEqual([undefined]);
+    } finally {
+      removeCommitHookForTesting();
+      options.__c = original;
+    }
+  });
+
   it('is idempotent', () => {
     replaceCommitHook();
     const wrapped = options.__c;
