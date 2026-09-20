@@ -129,6 +129,10 @@ export function registerElementTemplateListItem(
   });
 }
 
+export function clearPendingElementTemplateListItems(): void {
+  listItemByUid.clear();
+}
+
 export function createElementTemplateListState(
   listItemUids: readonly number[],
   attributes?: RuntimeTypedElementAttributes | null,

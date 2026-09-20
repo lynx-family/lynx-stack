@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * Shared synchronous Preact component traversal.
+ * Synchronous component traversal for Element Template rendering.
  * This module is modified from preact-render-to-string@6.0.3 to generate
  * host output instead of HTML strings for Lynx.
  */
@@ -12,9 +12,6 @@
 
 import { Fragment, h, options } from 'preact';
 
-import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID } from '../../protocol/page.js';
-import { __ElementTemplatePage } from '../page/authored-page.js';
-import { prepareTypedElementAttributes } from '../template/typed-attributes.js';
 import { markElementTemplateListDestroyed } from '../list/list.js';
 
 import {
@@ -49,9 +46,9 @@ export function renderWithHooks(
   context: unknown,
   output: unknown[],
   renderVNode: Function,
-  result?: unknown,
+  result: unknown,
 ): unknown[] {
-  // Performance optimization: `renderToString` is synchronous and we
+  // Performance optimization: main-thread rendering is synchronous and we
   // therefore don't execute any effects. To do that we pass an empty
   // array to `options._commit` (`__c`). But we can go one step further
   // and avoid a lot of dirty checks and allocations by setting
@@ -153,7 +150,7 @@ export function renderComponentVNode(
   context: unknown,
   output: unknown[],
   renderVNode: Function,
-  result?: unknown,
+  result: unknown,
   parentType?: string,
   subtreeHandles?: unknown[],
   listItemUids?: number[],
@@ -214,7 +211,7 @@ export function renderComponentVNode(
 
   // Only a Suspense boundary needs a checkpoint. Native creation is immediate,
   // but abandoned children must not leak into the fallback's commit collectors.
-  const checkpoint = result !== undefined && component && component.__c
+  const checkpoint = component && component.__c
     ? {
       rootSubtreeHandlesLength: result.rootSubtreeHandles.length,
       subtreeHandlesLength: subtreeHandles?.length,
@@ -263,189 +260,3 @@ export function renderComponentVNode(
 function doRender(props, state, context) {
   return this.constructor(props, context);
 }
-
-const isArray = /* @__PURE__ */ Array.isArray;
-const TYPED_LIST_HOST_TYPE = 'list';
-const TYPED_LIST_LOGICAL_SLOT_PROP = '$0';
-
-export const __OpBegin = 0;
-export const __OpEnd = 1;
-export const __OpAttr = 2;
-export const __OpText = 3;
-export const __OpSlot = 4;
-export const __OpPageStart = 5;
-export const __OpPageEnd = 6;
-
-export function renderToString(vnode: any, context?: any): any[] {
-  return renderWithHooks(vnode, context, [], _renderToString, undefined);
-}
-
-function shouldRenderEtChild(child) {
-  return child != null && child !== false && child !== true;
-}
-
-function isCompiledEtHostType(type) {
-  return type.startsWith('_et_')
-    || type.includes(':_et_');
-}
-
-function renderEtSlotArray(slotChildrenById, context, vnode, opcodes) {
-  for (let slotId = 0; slotId < slotChildrenById.length; slotId += 1) {
-    const slotChildren = slotChildrenById[slotId];
-    if (!shouldRenderEtChild(slotChildren)) {
-      continue;
-    }
-    opcodes.push(__OpSlot, slotId);
-    _renderToString(slotChildren, context, vnode, opcodes);
-  }
-}
-
-function renderCompiledEtHostVNode(vnode, props, context, opcodes) {
-  opcodes.push(__OpBegin, vnode);
-
-  const attributeSlots = props.attributeSlots;
-  if (attributeSlots !== undefined) {
-    opcodes.push(__OpAttr, attributeSlots);
-  }
-
-  // ET host nodes are compiler-generated; `swc_plugin_element_template`
-  // (lowering.rs) emits dynamic children as `$N` named props only — no
-  // `children` prop is produced — so the renderer only consumes `$N`.
-  let childSlots: unknown[] | undefined;
-  for (const name in props) {
-    if (name.startsWith('$')) {
-      (childSlots ??= [])[+name.slice(1)] = props[name];
-    }
-  }
-  if (childSlots !== undefined) {
-    renderEtSlotArray(childSlots, context, vnode, opcodes);
-  }
-
-  cleanupVNode(vnode);
-  opcodes.push(__OpEnd);
-}
-
-function renderTypedListHostVNode(vnode, props, context, opcodes) {
-  opcodes.push(__OpBegin, vnode);
-
-  try {
-    if (__DEV__) {
-      for (const name in props) {
-        if (name.startsWith('$') && name !== TYPED_LIST_LOGICAL_SLOT_PROP) {
-          throw new Error('Element Template typed list only supports logical slot $0.');
-        }
-      }
-    }
-
-    const attributes = props.attributes;
-    if (attributes !== undefined) {
-      opcodes.push(__OpAttr, attributes);
-    }
-
-    const listChildren = props[TYPED_LIST_LOGICAL_SLOT_PROP];
-    if (shouldRenderEtChild(listChildren)) {
-      opcodes.push(__OpSlot, 0);
-      _renderToString(listChildren, context, vnode, opcodes);
-    }
-  } finally {
-    cleanupVNode(vnode);
-  }
-
-  opcodes.push(__OpEnd);
-}
-
-function renderStringHostVNode(type, vnode, props, context, opcodes) {
-  if (type === TYPED_LIST_HOST_TYPE) {
-    renderTypedListHostVNode(vnode, props, context, opcodes);
-    return;
-  }
-
-  if (!isCompiledEtHostType(type)) {
-    cleanupVNode(vnode);
-    throw new Error(
-      `Element Template main-thread renderer received an uncompiled host vnode: ${type}`,
-    );
-  }
-
-  renderCompiledEtHostVNode(vnode, props, context, opcodes);
-}
-
-/**
- * Recursively render VNodes to HTML.
- * @param {VNode|any} vnode
- * @param {any} context
- * @param {VNode} parent
- * @param opcodes
- */
-function _renderToString(
-  vnode,
-  context,
-  parent,
-  opcodes,
-) {
-  // Ignore non-rendered VNodes/values
-  if (vnode == null || vnode === true || vnode === false || vnode === '') {
-    return;
-  }
-
-  // Text VNodes: escape as HTML
-  if (typeof vnode !== 'object') {
-    if (typeof vnode === 'function') return;
-
-    opcodes.push(__OpText, vnode + '');
-    return;
-  }
-
-  // Recurse into children / Arrays
-  if (isArray(vnode)) {
-    parent[CHILDREN] = vnode;
-    for (let i = 0; i < vnode.length; i++) {
-      const child = vnode[i];
-      if (child == null || typeof child === 'boolean') continue;
-
-      _renderToString(child, context, parent, opcodes);
-    }
-    return;
-  }
-
-  // VNodes have {constructor:undefined} to prevent JSON injection:
-  // if (vnode.constructor !== undefined) return;
-
-  vnode[PARENT] = parent;
-  if (beforeDiff) beforeDiff(vnode);
-  if (beforeDiff2) beforeDiff2(vnode, EMPTY_OBJ);
-
-  let type = vnode.type,
-    props = vnode.props;
-
-  // Invoke rendering on Components
-  if (typeof type === 'function') {
-    if (type === __ElementTemplatePage) {
-      opcodes.push(
-        __OpPageStart,
-        prepareTypedElementAttributes(ELEMENT_TEMPLATE_PAGE_HANDLE_ID, props.attributes),
-      );
-      renderComponentVNode(vnode, type, props, context, opcodes, _renderToString);
-      if (__DEV__) {
-        opcodes.push(__OpPageEnd);
-      }
-      return;
-    }
-    renderComponentVNode(vnode, type, props, context, opcodes, _renderToString);
-    return;
-  }
-
-  if (typeof type === 'string') {
-    renderStringHostVNode(type, vnode, props, context, opcodes);
-    return;
-  }
-
-  if (__DEV__) {
-    cleanupVNode(vnode);
-    throw new Error('Element Template main-thread renderer received an invalid vnode.');
-  }
-}
-
-export default renderToString;
-export const render: typeof renderToString = renderToString;
-export const renderToStaticMarkup: typeof renderToString = renderToString;

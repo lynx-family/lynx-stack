@@ -7,6 +7,7 @@ import { Suspense } from 'preact/compat';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  createElementTemplateListState,
   destroyAllElementTemplateListStates,
   flushInitialElementTemplateListUpdates,
 } from '../../../../src/element-template/runtime/list/list.js';
@@ -139,11 +140,14 @@ describe('direct renderer Suspense', () => {
         attributeSlots: [key],
         __listItemPlatformInfo: { 'item-key': key },
       });
+    const createItem = vi.spyOn(globalThis, '__CreateElementTemplate');
     const createList = vi.spyOn(globalThis, '__CreateTypedElementTemplate');
     renderToElementTemplate(h('list', {
       $0: h(Suspense, { fallback: item('fallback') }, item('abandoned'), h(Pending, null)),
     }));
 
+    const abandonedUid = __SerializeElementTemplate(createItem.mock.results[0]!.value).uid;
+    expect(() => createElementTemplateListState([abandonedUid])).toThrow('non-list-item root');
     expect(createList).toHaveBeenCalledTimes(1);
     const children = createList.mock.calls[0]![4]!.listChildren!;
     expect(children.map(ref => __SerializeElementTemplate(ref).attributeSlots)).toEqual([['fallback']]);
@@ -152,6 +156,28 @@ describe('direct renderer Suspense', () => {
     expect(updates[0]!.attributes['update-list-info']).toMatchObject({
       insertAction: [{ 'item-key': 'fallback' }],
     });
+  });
+
+  it('discards pending list items when a later child fails before its list is created', () => {
+    function Failure(): never {
+      throw new Error('list child failed');
+    }
+    const createItem = vi.spyOn(globalThis, '__CreateElementTemplate');
+    expect(() =>
+      renderToElementTemplate(h('list', {
+        $0: [
+          h('__Card__:_et_suspense_leaf', {
+            attributeSlots: ['abandoned'],
+            __listItemPlatformInfo: { 'item-key': 'abandoned' },
+          }),
+          h(Failure, null),
+        ],
+      }))
+    ).toThrow('list child failed');
+
+    const abandonedUid = __SerializeElementTemplate(createItem.mock.results[0]!.value).uid;
+    expect(() => createElementTemplateListState([abandonedUid])).toThrow('non-list-item root');
+    expect(flushInitialElementTemplateListUpdates()).toEqual([]);
   });
 
   it('does not flush a completed list discarded by Suspense', () => {

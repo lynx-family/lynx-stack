@@ -8,7 +8,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DIFF2 } from '../../../../src/shared/render-constants.js';
 import { destroyAllElementTemplateListStates } from '../../../../src/element-template/runtime/list/list.js';
-import { renderToString } from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
 import { __ElementTemplatePage } from '../../../../src/element-template/runtime/page/authored-page.js';
 import { createElementTemplatePage, setupPage } from '../../../../src/element-template/runtime/page/page.js';
 import { setRoot } from '../../../../src/element-template/runtime/page/root-instance.js';
@@ -269,18 +268,16 @@ describe('direct first-screen materialization', () => {
     expect(create.mock.calls[0]?.[2]?.[1]).not.toEqual(create.mock.calls[1]?.[2]?.[1]);
   });
 
-  it('runs the shared second diff hook in both direct and opcode traversals', () => {
+  it('runs the second diff hook during direct traversal', () => {
     const hooks = options as typeof options & { [DIFF2]?: (vnode: unknown, context: unknown) => void };
     const previous = hooks[DIFF2];
     const diff = vi.fn();
     hooks[DIFF2] = diff;
     const vnode = h('_et_direct_leaf', { attributeSlots: ['hook'] });
     try {
-      renderToString(vnode);
       renderToElementTemplate(vnode);
-      expect(diff).toHaveBeenCalledTimes(2);
+      expect(diff).toHaveBeenCalledTimes(1);
       expect(diff).toHaveBeenNthCalledWith(1, vnode, {});
-      expect(diff).toHaveBeenNthCalledWith(2, vnode, {});
     } finally {
       hooks[DIFF2] = previous;
     }
@@ -373,7 +370,21 @@ describe('direct first-screen materialization', () => {
       'does not support deferred list items',
     ],
   ])('rejects unsupported typed-list children', (props, message) => {
-    expect(() => renderToElementTemplate(h('list', props))).toThrow(message as string);
+    const create = vi.spyOn(globalThis, '__CreateElementTemplate');
+    const createTyped = vi.spyOn(globalThis, '__CreateTypedElementTemplate');
+    const flush = vi.spyOn(globalThis, '__FlushElementTree');
+    const lifecycle = vi.fn();
+    vi.stubGlobal('__OnLifecycleEvent', lifecycle);
+
+    try {
+      expect(() => renderToElementTemplate(h('list', props))).toThrow(message as string);
+      expect(create).not.toHaveBeenCalled();
+      expect(createTyped).not.toHaveBeenCalled();
+      expect(flush).not.toHaveBeenCalled();
+      expect(lifecycle).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('reports native creation failures at the lifecycle boundary and serializes an empty page', () => {

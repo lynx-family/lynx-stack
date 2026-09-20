@@ -11,11 +11,11 @@ import {
   cleanupVNode,
   renderComponentVNode,
   renderWithHooks,
-} from './render-to-opcodes.js';
+} from './render-components.js';
 import { CHILDREN, PARENT } from '../../../shared/render-constants.js';
 import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID } from '../../protocol/page.js';
 import type { RuntimeTypedElementAttributes, TypedElementAttributesCommand } from '../../protocol/types.js';
-import { markElementTemplateListDestroyed } from '../list/list.js';
+import { clearPendingElementTemplateListItems, markElementTemplateListDestroyed } from '../list/list.js';
 import type { ETListItemPlatformInfo } from '../list/list.js';
 import { __ElementTemplatePage } from '../page/authored-page.js';
 import { createElementTemplateWithReservedHandle, reserveElementTemplateId } from '../template/handle.js';
@@ -61,6 +61,10 @@ export function renderToElementTemplate(vnode: unknown, context?: RenderContext 
     // Abandoned lists must not receive initial updates during the empty-root commit.
     for (const uid of result.createdListUids) markElementTemplateListDestroyed(uid);
     throw error;
+  } finally {
+    // Completed lists consume their item records. Anything left belongs to
+    // abandoned content, including children discarded by Suspense.
+    clearPendingElementTemplateListItems();
   }
   result.pageAttributes ??= null;
   return result as MainThreadCreateResult;
