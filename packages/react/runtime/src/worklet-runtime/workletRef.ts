@@ -3,11 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
 import type { Worklet, WorkletRef, WorkletRefId, WorkletRefImpl } from './bindings/types.js';
+import type { MainThreadRefInitValuePatch } from './bindings/workletValue.js';
 import {
-  assertCompatibleWorkletValue,
+  assertCompatibleMainThreadObject,
   clearFirstScreenMainThreadObjects,
   createMainThreadObject,
   initMainThreadObjects,
+  isRealizedMainThreadObject,
   registerMainThreadObjectType,
   releaseMainThreadObject,
   retainHydratedMainThreadObject,
@@ -24,7 +26,7 @@ interface RefImpl {
     element: ElementNode | null,
   ): void;
   updateWorkletRefInitValueChanges(
-    patch: ([number, unknown] | [number, unknown, string, number])[],
+    patch: MainThreadRefInitValuePatch,
   ): void;
   registerMainThreadObjectType(
     type: string,
@@ -68,6 +70,48 @@ function createWorkletValue(refImpl: WorkletRefImpl<unknown>): object {
   return !refImpl._type || refImpl._type === 'main-thread'
     ? createWorkletRef(refImpl._wvid, refImpl._initValue)
     : createMainThreadObject(refImpl);
+}
+
+function isMutableCell(value: unknown): value is WorkletRef<unknown> {
+  return typeof value === 'object' && value !== null
+    && typeof (value as Partial<WorkletRef<unknown>>)._wvid === 'number'
+    && Object.prototype.hasOwnProperty.call(value, 'current');
+}
+
+function isHydratedWorkletValue(value: unknown): value is object {
+  return typeof value === 'object' && value !== null
+    && (isRealizedMainThreadObject(value) || isMutableCell(value));
+}
+
+function assertCompatibleWorkletValue(
+  handle: WorkletRefImpl<unknown>,
+  value: object,
+  operation: 'hydration' | 'initialization patch',
+): void {
+  let actualKind: 'typed-object' | 'mutable-cell' | undefined;
+  if (isRealizedMainThreadObject(value)) {
+    actualKind = 'typed-object';
+  } else if (isMutableCell(value)) {
+    actualKind = 'mutable-cell';
+  }
+  if (!actualKind) {
+    throw new Error(
+      `Cannot apply MainThreadObject ${operation} for handle ${handle._wvid}: the existing target has no worklet-value metadata.`,
+    );
+  }
+
+  const expectedType = handle._type;
+  const expectedKind = !expectedType || expectedType === 'main-thread'
+    ? 'mutable-cell'
+    : 'typed-object';
+  if (actualKind !== expectedKind) {
+    throw new Error(
+      `Worklet value kind mismatch during ${operation} for handle ${handle._wvid}: background handle expects ${expectedKind}, but the main-thread target is ${actualKind}.`,
+    );
+  }
+  if (actualKind === 'typed-object') {
+    assertCompatibleMainThreadObject(handle, value, operation);
+  }
 }
 
 const getFromWorkletRefMap = (
@@ -130,7 +174,7 @@ function updateWorkletRef(
 }
 
 function updateWorkletRefInitValueChanges(
-  patch: ([WorkletRefId, unknown] | [WorkletRefId, unknown, string, number])[],
+  patch: MainThreadRefInitValuePatch,
 ): void {
   profile('updateWorkletRefInitValueChanges', () => {
     let firstError: unknown;
@@ -178,5 +222,6 @@ export {
   getFromWorkletRefMap,
   removeValueFromWorkletRefMap,
   hydrateWorkletValue,
+  isHydratedWorkletValue,
   updateWorkletRefInitValueChanges,
 };

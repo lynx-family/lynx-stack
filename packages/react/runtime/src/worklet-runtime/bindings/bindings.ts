@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { ClosureValueType, JsFnHandle, Worklet, WorkletRefImpl } from './types.js';
+import type { MainThreadRefInitValuePatch } from './workletValue.js';
 import type { Element } from '../api/element.js';
 
 /**
@@ -31,7 +32,7 @@ function updateWorkletRef(workletRef: WorkletRefImpl<Element>, element: ElementN
  * @param patch - An array containing the index and new value of the worklet value.
  */
 function updateWorkletRefInitValueChanges(
-  patch?: ([number, unknown] | [number, unknown, string, number])[],
+  patch?: MainThreadRefInitValuePatch,
 ): void {
   if (patch) {
     globalThis.lynxWorkletImpl?._refImpl.updateWorkletRefInitValueChanges(patch);
