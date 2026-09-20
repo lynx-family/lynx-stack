@@ -5,11 +5,10 @@ import { pathToFileURL } from 'node:url';
 import { vi } from 'vitest';
 
 import { resetElementTemplateHydrationListener } from '../../../../src/element-template/background/hydration-listener.js';
-import { renderOpcodesIntoElementTemplate } from '../../../../src/element-template/runtime/render/render-opcodes.js';
 import { clearEtAttrPlanMap } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
-import { renderToString } from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
+import { renderToElementTemplate } from '../../../../src/element-template/runtime/render/render-direct.js';
 import {
   assertMissingFile,
   assertOrUpdateTextFile,
@@ -238,8 +237,7 @@ async function runCompiledRenderFixture(options: {
     try {
       const module = (await import(`${pathToFileURL(tempImportPath).href}?t=${Date.now()}`)) as { App: unknown };
       const vnode = { type: module.App, props: {}, key: null, ref: null };
-      const opcodes = renderToString(vnode, null);
-      const { rootRefs } = renderOpcodesIntoElementTemplate(opcodes);
+      const { rootRefs } = renderToElementTemplate(vnode, null);
       for (const rootRef of rootRefs) {
         __InsertNodeToElementTemplate(root, 0, rootRef, null);
       }

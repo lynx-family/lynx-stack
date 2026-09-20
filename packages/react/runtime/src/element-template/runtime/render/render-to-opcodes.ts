@@ -3,14 +3,19 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * Implements rendering to opcodes.
+ * Shared synchronous Preact component traversal.
  * This module is modified from preact-render-to-string@6.0.3 to generate
- * opcodes instead of HTML strings for Lynx.
+ * host output instead of HTML strings for Lynx.
  */
 
 // @ts-nocheck
 
 import { Fragment, h, options } from 'preact';
+
+import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID } from '../../protocol/page.js';
+import { __ElementTemplatePage } from '../page/authored-page.js';
+import { prepareTypedElementAttributes } from '../template/typed-attributes.js';
+import { markElementTemplateListDestroyed } from '../list/list.js';
 
 import {
   BITS,
@@ -28,25 +33,24 @@ import {
   SKIP_EFFECTS,
   VNODE,
 } from '../../../shared/render-constants.js';
-import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID } from '../../protocol/page.js';
-import { __ElementTemplatePage } from '../page/authored-page.js';
-import { prepareTypedElementAttributes } from '../template/typed-attributes.js';
 
 /** @typedef {import('preact').VNode} VNode */
 
 const EMPTY_ARR = [];
-const isArray = /* @__PURE__ */ Array.isArray;
 const assign = /* @__PURE__ */ Object.assign;
 
 // Global state for the current render pass
-let beforeDiff, beforeDiff2, afterDiff, renderHook, ummountHook;
+export let beforeDiff: ((vnode: unknown) => void) | undefined;
+export let beforeDiff2: ((vnode: unknown, context: Record<string, unknown>) => void) | undefined;
+let afterDiff, renderHook, ummountHook;
 
-/**
- * Render Preact JSX + Components to an HTML string.
- * @param {VNode} vnode	JSX Element / VNode to render
- * @param {object} [context] Initial root context object
- */
-export function renderToString(vnode: any, context: any): any[] {
+export function renderWithHooks(
+  vnode: unknown,
+  context: unknown,
+  output: unknown[],
+  renderVNode: Function,
+  result?: unknown,
+): unknown[] {
   // Performance optimization: `renderToString` is synchronous and we
   // therefore don't execute any effects. To do that we pass an empty
   // array to `options._commit` (`__c`). But we can go one step further
@@ -65,14 +69,13 @@ export function renderToString(vnode: any, context: any): any[] {
   const parent = h(Fragment, null);
   parent[CHILDREN] = [vnode];
 
-  const opcodes = [];
-
   try {
-    _renderToString(
+    renderVNode(
       vnode,
       context || EMPTY_OBJ,
       parent,
-      opcodes,
+      output,
+      result,
     );
   } finally {
     // options._commit, we don't schedule any effects in this library right now,
@@ -82,7 +85,7 @@ export function renderToString(vnode: any, context: any): any[] {
     EMPTY_ARR.length = 0;
   }
 
-  return opcodes;
+  return output;
 }
 
 // Installed as setState/forceUpdate for function components
@@ -92,17 +95,7 @@ function markAsDirty() {
 }
 /* v8 ignore stop */
 
-const EMPTY_OBJ = {};
-const TYPED_LIST_HOST_TYPE = 'list';
-const TYPED_LIST_LOGICAL_SLOT_PROP = '$0';
-
-export const __OpBegin = 0;
-export const __OpEnd = 1;
-export const __OpAttr = 2;
-export const __OpText = 3;
-export const __OpSlot = 4;
-export const __OpPageStart = 5;
-export const __OpPageEnd = 6;
+export const EMPTY_OBJ: Record<string, unknown> = {};
 
 /**
  * @param {VNode} vnode
@@ -147,43 +140,28 @@ function renderClassComponent(vnode, context, globalContext) {
   return c.render(c.props, c.state, context);
 }
 
-function cleanupVNode(vnode) {
+export function cleanupVNode(vnode: unknown): void {
   if (afterDiff) afterDiff(vnode);
   vnode[PARENT] = undefined;
   if (ummountHook) ummountHook(vnode);
 }
 
-function shouldRenderEtChild(child) {
-  return child != null && child !== false && child !== true;
-}
-
-function isCompiledEtHostType(type) {
-  return type.startsWith('_et_')
-    || type.includes(':_et_');
-}
-
-function renderEtSlotArray(slotChildrenById, context, vnode, opcodes) {
-  for (let slotId = 0; slotId < slotChildrenById.length; slotId += 1) {
-    const slotChildren = slotChildrenById[slotId];
-    if (!shouldRenderEtChild(slotChildren)) {
-      continue;
-    }
-    opcodes.push(__OpSlot, slotId);
-    _renderToString(slotChildren, context, vnode, opcodes);
-  }
-}
-
-function renderComponentVNode(
-  vnode,
-  type,
-  props,
-  context,
-  opcodes,
-) {
+export function renderComponentVNode(
+  vnode: unknown,
+  type: unknown,
+  props: unknown,
+  context: unknown,
+  output: unknown[],
+  renderVNode: Function,
+  result?: unknown,
+  parentType?: string,
+  subtreeHandles?: unknown[],
+  listItemUids?: number[],
+): void {
   let cctx = context;
   let rendered;
   let component;
-  const opcodesLength = opcodes.length;
+  const outputLength = output.length;
 
   if (type === Fragment) {
     rendered = props.children;
@@ -234,24 +212,91 @@ function renderComponentVNode(
     && rendered.key == null;
   rendered = isTopLevelFragment ? rendered.props.children : rendered;
 
+  // Only a Suspense boundary needs a checkpoint. Native creation is immediate,
+  // but abandoned children must not leak into the fallback's commit collectors.
+  const checkpoint = result !== undefined && component && component.__c
+    ? {
+      rootSubtreeHandlesLength: result.rootSubtreeHandles.length,
+      subtreeHandlesLength: subtreeHandles?.length,
+      listItemUidsLength: listItemUids?.length,
+      createdListUidsLength: result.createdListUids.length,
+      pageAttributes: result.pageAttributes,
+      isInsideAuthoredPage: result.isInsideAuthoredPage,
+    }
+    : undefined;
+
   try {
-    _renderToString(rendered, context, vnode, opcodes);
+    renderVNode(rendered, context, vnode, output, result, parentType, subtreeHandles, listItemUids);
   } catch (e) {
-    if (e && typeof e === 'object' && e.then && component && /* _childDidSuspend */ component.__c) {
+    if (
+      e && typeof e === 'object' && e.then && component && /* _childDidSuspend */ component.__c
+    ) {
       component.setState({ /* _suspended */ __a: true });
 
       if (component[BITS] & COMPONENT_DIRTY) {
         rendered = renderClassComponent(vnode, context, context);
         component = vnode[COMPONENT];
 
-        opcodes.length = opcodesLength;
-        _renderToString(rendered, context, vnode, opcodes);
+        output.length = outputLength;
+        if (checkpoint) {
+          result.rootSubtreeHandles.length = checkpoint.rootSubtreeHandlesLength;
+          if (subtreeHandles) subtreeHandles.length = checkpoint.subtreeHandlesLength;
+          if (listItemUids) listItemUids.length = checkpoint.listItemUidsLength;
+          for (let index = checkpoint.createdListUidsLength; index < result.createdListUids.length; index++) {
+            markElementTemplateListDestroyed(result.createdListUids[index]);
+          }
+          result.createdListUids.length = checkpoint.createdListUidsLength;
+          result.pageAttributes = checkpoint.pageAttributes;
+          if (__DEV__) result.isInsideAuthoredPage = checkpoint.isInsideAuthoredPage;
+        }
+        renderVNode(rendered, context, vnode, output, result, parentType, subtreeHandles, listItemUids);
       }
     } else {
       throw e;
     }
   } finally {
     cleanupVNode(vnode);
+  }
+}
+
+/** The `.render()` method for a PFC backing instance. */
+function doRender(props, state, context) {
+  return this.constructor(props, context);
+}
+
+const isArray = /* @__PURE__ */ Array.isArray;
+const TYPED_LIST_HOST_TYPE = 'list';
+const TYPED_LIST_LOGICAL_SLOT_PROP = '$0';
+
+export const __OpBegin = 0;
+export const __OpEnd = 1;
+export const __OpAttr = 2;
+export const __OpText = 3;
+export const __OpSlot = 4;
+export const __OpPageStart = 5;
+export const __OpPageEnd = 6;
+
+export function renderToString(vnode: any, context?: any): any[] {
+  return renderWithHooks(vnode, context, [], _renderToString, undefined);
+}
+
+function shouldRenderEtChild(child) {
+  return child != null && child !== false && child !== true;
+}
+
+function isCompiledEtHostType(type) {
+  return type.startsWith('_et_')
+    || type.includes(':_et_');
+}
+
+function renderEtSlotArray(slotChildrenById, context, vnode, opcodes) {
+  for (let slotId = 0; slotId < slotChildrenById.length; slotId += 1) {
+    const slotChildren = slotChildrenById[slotId];
+    if (!shouldRenderEtChild(slotChildren)) {
+      continue;
+    }
+    opcodes.push(__OpSlot, slotId);
+    _renderToString(slotChildren, context, vnode, opcodes);
   }
 }
 
@@ -380,13 +425,13 @@ function _renderToString(
         __OpPageStart,
         prepareTypedElementAttributes(ELEMENT_TEMPLATE_PAGE_HANDLE_ID, props.attributes),
       );
-      renderComponentVNode(vnode, type, props, context, opcodes);
+      renderComponentVNode(vnode, type, props, context, opcodes, _renderToString);
       if (__DEV__) {
         opcodes.push(__OpPageEnd);
       }
       return;
     }
-    renderComponentVNode(vnode, type, props, context, opcodes);
+    renderComponentVNode(vnode, type, props, context, opcodes, _renderToString);
     return;
   }
 
@@ -399,11 +444,6 @@ function _renderToString(
     cleanupVNode(vnode);
     throw new Error('Element Template main-thread renderer received an invalid vnode.');
   }
-}
-
-/** The `.render()` method for a PFC backing instance. */
-function doRender(props, state, context) {
-  return this.constructor(props, context);
 }
 
 export default renderToString;
