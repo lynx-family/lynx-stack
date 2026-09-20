@@ -25,15 +25,17 @@ export function App() {
             1,
             arrow
         ],
-        $0: alterLogo ? /*#__PURE__*/ _jsx(_et_b89c02b1874f, {
-            attributeSlots: [
-                reactLynxLogo
-            ]
-        }) : /*#__PURE__*/ _jsx(_et_a51110b9901e, {
-            attributeSlots: [
-                lynxLogo
-            ]
-        }),
-        $1: ' src/App.tsx '
+        slotChildren: [
+            alterLogo ? /*#__PURE__*/ _jsx(_et_b89c02b1874f, {
+                attributeSlots: [
+                    reactLynxLogo
+                ]
+            }) : /*#__PURE__*/ _jsx(_et_a51110b9901e, {
+                attributeSlots: [
+                    lynxLogo
+                ]
+            }),
+            ' src/App.tsx '
+        ]
     });
 }

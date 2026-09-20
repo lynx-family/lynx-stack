@@ -6,9 +6,13 @@ export function App({ showHeader = false, items = [
     'body'
 ] }) {
     return /*#__PURE__*/ _jsx(_et_06d9ec2f2156, {
-        $0: showHeader && /*#__PURE__*/ _jsx(_et_01c4a5c2b24f, {}),
-        $1: items.map((item)=>/*#__PURE__*/ _jsx(_et_895419ad7379, {
-                $0: item
-            }, item))
+        slotChildren: [
+            showHeader && /*#__PURE__*/ _jsx(_et_01c4a5c2b24f, {}),
+            items.map((item)=>/*#__PURE__*/ _jsx(_et_895419ad7379, {
+                    slotChildren: [
+                        item
+                    ]
+                }, item))
+        ]
     });
 }

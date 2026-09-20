@@ -10,14 +10,20 @@ export class App extends Component {
             'C'
         ];
         return /*#__PURE__*/ _jsx(_et_66e1ae2ed39b, {
-            $0: items,
-            $1: items.map((item)=>/*#__PURE__*/ _jsx(_et_895419ad7379, {
-                    $0: item
-                })),
-            $2: items,
-            $3: items.map((item)=>/*#__PURE__*/ _jsx(_et_895419ad7379, {
-                    $0: item
-                }))
+            slotChildren: [
+                items,
+                items.map((item)=>/*#__PURE__*/ _jsx(_et_895419ad7379, {
+                        slotChildren: [
+                            item
+                        ]
+                    })),
+                items,
+                items.map((item)=>/*#__PURE__*/ _jsx(_et_895419ad7379, {
+                        slotChildren: [
+                            item
+                        ]
+                    }))
+            ]
         });
     }
 }

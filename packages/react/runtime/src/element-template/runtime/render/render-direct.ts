@@ -130,22 +130,24 @@ function renderHost(
       cleanupVNode(vnode);
     }
   } else {
-    // Named slot inputs belong to the caller. Only this staging array is
-    // renderer-owned, so it can become the native refs array after traversal.
-    let childrenBySlot: unknown[] | undefined;
-    for (const name in props) {
-      if (name.startsWith('$')) {
-        const children = props[name];
-        if (children == null || children === true || children === false) continue;
-        (childrenBySlot ??= [])[+name.slice(1)] = children;
+    // Ordered inputs belong to the caller. Named inputs are collected into a
+    // renderer-owned array that can also hold the resulting native refs.
+    let childrenBySlot = props['slotChildren'] as unknown[] | undefined;
+    if (childrenBySlot === undefined) {
+      for (const name in props) {
+        if (name.startsWith('$')) {
+          const children = props[name];
+          if (children == null || children === true || children === false) continue;
+          (childrenBySlot ??= [])[+name.slice(1)] = children;
+        }
       }
+      childSlots = childrenBySlot as ElementTemplateHandle[][] | undefined;
     }
-    childSlots = childrenBySlot as ElementTemplateHandle[][] | undefined;
     if (childrenBySlot !== undefined) {
       for (let slotId = 0; slotId < childrenBySlot.length; slotId++) {
         const children = childrenBySlot[slotId];
-        if (children === undefined) continue;
-        const refs = childSlots![slotId] = [];
+        if (children == null || children === true || children === false) continue;
+        const refs = (childSlots ??= [])[slotId] = [];
         renderDirect(children, context, vnode, refs, result, type, subtreeHandles, undefined);
       }
     }

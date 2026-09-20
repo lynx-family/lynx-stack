@@ -3,25 +3,31 @@ import { Component } from '@lynx-js/react';
 const _et_244555d10b38 = `${globDynamicComponentEntry}:${"_et_244555d10b38"}`;
 function PrimaryRow({ label }) {
     return /*#__PURE__*/ _jsx(_et_244555d10b38, {
-        $0: label
+        slotChildren: [
+            label
+        ]
     });
 }
 function SecondaryRow({ label }) {
     return /*#__PURE__*/ _jsx(_et_244555d10b38, {
-        $0: label
+        slotChildren: [
+            label
+        ]
     });
 }
 const _et_955a06fee137 = `${globDynamicComponentEntry}:${"_et_955a06fee137"}`;
 export class App extends Component {
     render() {
         return /*#__PURE__*/ _jsx(_et_955a06fee137, {
-            $0: [
-                /*#__PURE__*/ _jsx(PrimaryRow, {
-                    label: "Alpha"
-                }),
-                /*#__PURE__*/ _jsx(SecondaryRow, {
-                    label: "Beta"
-                })
+            slotChildren: [
+                [
+                    /*#__PURE__*/ _jsx(PrimaryRow, {
+                        label: "Alpha"
+                    }),
+                    /*#__PURE__*/ _jsx(SecondaryRow, {
+                        label: "Beta"
+                    })
+                ]
             ]
         });
     }

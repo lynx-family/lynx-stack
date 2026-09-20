@@ -928,3 +928,51 @@ fn should_preserve_user_wrapper_elements_as_template_nodes() {
   assert_eq!(children[1]["kind"], "childSlot");
   assert_eq!(children[1]["elementSlotIndex"].as_f64(), Some(0.0));
 }
+
+#[test]
+fn ordered_child_slots_are_lepus_only_and_preserve_template_identity() {
+  use swc_plugins_shared::target::TransformTarget;
+
+  let input = r#"<view key={key()} id={attr()}><view>{first()}</view><text>static</text><view>{second()}</view></view>"#;
+  let mut expected_templates = None;
+  for target in [
+    TransformTarget::LEPUS,
+    TransformTarget::JS,
+    TransformTarget::MIXED,
+  ] {
+    let (templates, code) = transform_fixture(
+      input,
+      JSXTransformerConfig {
+        target,
+        ..element_template_config()
+      },
+    );
+    let templates = templates
+      .into_iter()
+      .map(|template| {
+        (
+          template.template_id,
+          serde_json::to_value(template.compiled_template).unwrap(),
+        )
+      })
+      .collect::<Vec<_>>();
+    if let Some(expected) = &expected_templates {
+      assert_eq!(&templates, expected);
+    } else {
+      expected_templates = Some(templates);
+    }
+    let code = without_whitespace(&code);
+    if target == TransformTarget::LEPUS {
+      assert!(code.contains("slotChildren={[first(),second()]}"), "{code}");
+      assert!(!code.contains("$0="), "{code}");
+    } else {
+      assert!(code.contains("$0={first()}$1={second()}"), "{code}");
+      assert!(!code.contains("slotChildren="), "{code}");
+    }
+    let positions = ["key()", "attr()", "first()", "second()"].map(|expr| {
+      assert_eq!(code.matches(expr).count(), 1, "{code}");
+      code.find(expr).unwrap()
+    });
+    assert!(positions.windows(2).all(|pair| pair[0] < pair[1]), "{code}");
+  }
+}
