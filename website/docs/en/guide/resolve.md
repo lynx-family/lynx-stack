@@ -1,3 +1,7 @@
+---
+description: 'Configure path aliases and module resolution in Rspeedy.'
+---
+
 # Module Resolution
 
 In modern front-end development, modularity has become a key approach to managing code effectively:
@@ -36,15 +40,15 @@ After configuring, if you reference `@common/Foo.tsx` in your code, it will be m
 You can refer to the [TypeScript - paths](https://typescriptlang.org/tsconfig#paths) documentation for more details.
 :::
 
-### Use `resolve.alias` Configuration
+### Use `source.alias` Configuration
 
-Rsbuild provides the [resolve.alias](/api/rspeedy.resolve.alias) configuration option, which corresponds to the webpack/Rspack native [resolve.alias](https://rspack.rs/config/resolve#resolvealias) configuration. You can configure this option using an object or a function.
+Rsbuild provides the [source.alias](../api/rspeedy.source.alias.md) configuration option, which corresponds to the webpack/Rspack native [resolve.alias](https://rspack.rs/config/resolve#resolvealias) configuration. You can configure this option using an object or a function.
 
 #### Use Cases
 
-The `paths` configuration in `tsconfig.json` is static and lacks dynamism. Furthermore, `paths` only takes effect when the module is included in [`source.include`](/api/rspeedy.source.include).
+The `paths` configuration in `tsconfig.json` is static and lacks dynamism. Furthermore, `paths` only takes effect when the module is included in [`source.include`](../api/rspeedy.source.include.md).
 
-The `resolve.alias` configuration can overcome this limitation by enabling you to dynamically set `resolve.alias` using JavaScript code.
+The `source.alias` configuration can overcome this limitation by enabling you to dynamically set `source.alias` using JavaScript code.
 
 For example, use the workspace version of `lodash-es` for all dependencies:
 
@@ -56,7 +60,7 @@ import { defineConfig } from '@lynx-js/rspeedy';
 const require = createRequire(import.meta.url);
 
 export default defineConfig({
-  resolve: {
+  source: {
     alias: {
       'lodash-es': require.resolve('lodash-es'),
     },
@@ -210,4 +214,4 @@ export default defineConfig({
 });
 ```
 
-[`tools.rspack`]: /api/rspeedy.tools.rspack
+[`tools.rspack`]: ../api/rspeedy.tools.rspack.md
