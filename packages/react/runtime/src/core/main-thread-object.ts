@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
+  MAIN_THREAD_OBJECT_PROTOCOL_VERSION,
   WorkletEvents,
   loadWorkletRuntime,
   registerMainThreadObjectType,
@@ -10,16 +11,9 @@ import {
 import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { useMemo } from './hooks/react.js';
-import {
-  getMainThreadObjectHandleType,
-  isMainThreadObjectHandle as isRegisteredMainThreadObjectHandle,
-  registerMainThreadObjectHandle,
-} from './main-thread-object-handle-registry.js';
+import { getMainThreadObjectHandleType, registerMainThreadObjectHandle } from './main-thread-object-handle-registry.js';
 import { allocateMainThreadRefId } from './main-thread-ref-id.js';
 import { addMainThreadRefInitValue } from './main-thread-ref-init-value.js';
-
-/** @internal */
-export const MAIN_THREAD_OBJECT_PROTOCOL_VERSION = 1;
 
 const mainThreadObjectTypeDefinitions = new WeakMap<
   object,
@@ -233,8 +227,7 @@ export function useMainThreadObject<I, O extends object>(
   }, []);
 }
 
-/** @internal */
-export function registerMainThreadObjectDefinition<I, O extends object>(
+function registerMainThreadObjectDefinition<I, O extends object>(
   definition: MainThreadObjectTypeDefinition<I, O>,
 ): void {
   if (__JS__) {
@@ -249,13 +242,6 @@ export function registerMainThreadObjectDefinition<I, O extends object>(
     definition.create as ((initialValue: unknown) => object) | Worklet,
     MAIN_THREAD_OBJECT_PROTOCOL_VERSION,
   );
-}
-
-/** @internal */
-export function isMainThreadObjectHandle(
-  value: unknown,
-): value is MainThreadObjectHandle<unknown, object> {
-  return isRegisteredMainThreadObjectHandle(value);
 }
 
 function isMainThreadLifecycleFunction(

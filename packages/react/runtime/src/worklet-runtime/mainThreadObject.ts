@@ -1,9 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { Worklet, WorkletRef, WorkletRefImpl } from './bindings/types.js';
-
-const MAIN_THREAD_OBJECT_PROTOCOL_VERSION = 1;
+import type { Worklet, WorkletRefImpl } from './bindings/types.js';
+import { MAIN_THREAD_OBJECT_PROTOCOL_VERSION } from './bindings/workletValue.js';
 
 type MainThreadObjectFactory = (initialValue: unknown) => object;
 interface MainThreadObjectDefinition {
@@ -96,53 +95,18 @@ function assertMainThreadObjectProtocolVersion(type: string, protocolVersion: nu
   }
 }
 
-function isHydratedWorkletValue(value: unknown): value is object {
-  return typeof value === 'object' && value !== null
-    && (realizedMainThreadObjectTypes.has(value) || isMutableCell(value));
-}
-
 function isRealizedMainThreadObject(value: object): boolean {
   return realizedMainThreadObjectTypes.has(value);
 }
 
-function isMutableCell(value: unknown): value is WorkletRef<unknown> {
-  return typeof value === 'object' && value !== null
-    && typeof (value as Partial<WorkletRef<unknown>>)._wvid === 'number'
-    && Object.prototype.hasOwnProperty.call(value, 'current');
-}
-
-function assertCompatibleWorkletValue(
+function assertCompatibleMainThreadObject(
   handle: WorkletRefImpl<unknown>,
   value: object,
   operation: 'hydration' | 'initialization patch',
 ): void {
   const actualType = realizedMainThreadObjectTypes.get(value);
-  let actualKind: 'typed-object' | 'mutable-cell' | undefined;
-  if (actualType !== undefined) {
-    actualKind = 'typed-object';
-  } else if (isMutableCell(value)) {
-    actualKind = 'mutable-cell';
-  }
-  if (!actualKind) {
-    throw new Error(
-      `Cannot apply MainThreadObject ${operation} for handle ${handle._wvid}: the existing target has no worklet-value metadata.`,
-    );
-  }
-
-  const expectedType = handle._type;
-  const expectedKind = !expectedType || expectedType === 'main-thread'
-    ? 'mutable-cell'
-    : 'typed-object';
-  if (actualKind !== expectedKind) {
-    throw new Error(
-      `Worklet value kind mismatch during ${operation} for handle ${handle._wvid}: background handle expects ${expectedKind}, but the main-thread target is ${actualKind}.`,
-    );
-  }
-  if (actualKind === 'mutable-cell') {
-    return;
-  }
-
-  assertMainThreadObjectProtocolVersion(expectedType!, handle._mtoVersion);
+  const expectedType = handle._type!;
+  assertMainThreadObjectProtocolVersion(expectedType, handle._mtoVersion);
   if (actualType !== expectedType) {
     throw new Error(
       `MainThreadObject type mismatch during ${operation} for handle ${handle._wvid}: background handle expects type "${expectedType}" with protocol ${
@@ -188,8 +152,7 @@ export {
   initMainThreadObjects,
   registerMainThreadObjectType,
   createMainThreadObject,
-  assertCompatibleWorkletValue,
-  isHydratedWorkletValue,
+  assertCompatibleMainThreadObject,
   isRealizedMainThreadObject,
   releaseMainThreadObject,
   retainHydratedMainThreadObject,
