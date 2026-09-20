@@ -168,7 +168,7 @@ function collectOptions(
 function linkOf(option: ConfigOption, prefix: string): string {
   return option.category === 'Rsbuild'
     ? `https://rsbuild.rs/config/${slug(option.path)}`
-    : `${prefix}/api/config/${slug(option.path)}`;
+    : `${prefix}/api/build/${slug(option.path)}`;
 }
 
 function writeOverview(
@@ -303,7 +303,7 @@ function writeSidebar(
 }
 
 /**
- * Renders the configuration reference under `api/config` from the TSDoc of
+ * Renders the configuration reference under `api/build` from the TSDoc of
  * the Rspeedy `Config` and the `pluginLynx` options.
  *
  * @remarks
@@ -335,7 +335,7 @@ export function renderConfigReference(
     MarkdownRendererEvent.END,
     (event: MarkdownRendererEvent) => {
       const prefix = locale === 'en' ? '' : `/${locale}`;
-      const out = join(DOCS, 'content', locale, 'api/config');
+      const out = join(DOCS, 'content', locale, 'api/build');
       const text = (en: string) => translations.translate(en, locale);
       const options = collectOptions(event.project, inRsbuild!, reference);
       const theme = app.renderer.theme as MarkdownTheme;

@@ -66,8 +66,8 @@ export const LYNX_STACK: Site = {
     { text: { en: 'Frameworks', zh: '框架' }, route: 'api/react' },
     {
       text: { en: 'Build', zh: '构建' },
-      route: 'api/config',
-      active: 'api/(config|packages)',
+      route: 'api/build',
+      active: 'api/(build|packages)',
     },
   ],
   sidebar: [
@@ -77,7 +77,7 @@ export const LYNX_STACK: Site = {
       label: '@lynx-js/react/testing-library',
     },
     { name: 'genui', label: '@lynx-js/genui' },
-    { name: 'config', label: 'Build configuration' },
+    { name: 'build', label: 'Build configuration' },
     { name: 'packages', label: 'All packages' },
   ],
   groups: [

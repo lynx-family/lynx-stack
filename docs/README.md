@@ -17,7 +17,7 @@ pnpm turbo dev --filter @lynx-js/lynx-stack-docs      # http://localhost:3000
 | `api/react/testing-library` | `@lynx-js/react/testing-library`                         |
 | `api/genui`                 | the entry points listed in `packages/genui/typedoc.json` |
 | `api/packages`              | every other public package of the workspace              |
-| `api/config`                | the Rspeedy `Config` and the `pluginLynx` options        |
+| `api/build`                 | the Rspeedy `Config` and the `pluginLynx` options        |
 
 Each package is converted with TypeDoc's `packages` strategy, from `src/index.ts` unless its own `typedoc.json` says otherwise. A package without an API gets a page with its links and `package.json` description. The build fails on any TypeDoc warning.
 
