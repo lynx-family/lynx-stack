@@ -97,7 +97,11 @@ export function initProfileHook(): void {
       );
     }
 
-    hook(options, DIFF2, (old, vnode, oldVNode) => {
+    // These hot callbacks have fixed signatures; avoid collecting and spreading
+    // an argument array for every host and component visited.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const oldDiff2 = options[DIFF2];
+    options[DIFF2] = (vnode, oldVNode) => {
       // We only add profiling trace for Component
       if (typeof vnode.type === 'function') {
         const profileOptions: TraceOption = {};
@@ -122,15 +126,17 @@ export function initProfileHook(): void {
         );
       }
       /* v8 ignore next */
-      old?.(vnode, oldVNode);
-    });
+      oldDiff2?.(vnode, oldVNode);
+    };
 
-    hook(options, DIFFED, (old, vnode) => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const oldDiffed = options[DIFFED];
+    options[DIFFED] = vnode => {
       if (typeof vnode.type === 'function') {
         profileEnd(); // for options[DIFF]
       }
-      old?.(vnode);
-    });
+      oldDiffed?.(vnode);
+    };
 
     if (__BACKGROUND__) {
       hook(options, COMMIT, (old, vnode, commitQueue) => {
@@ -149,7 +155,9 @@ export function initProfileHook(): void {
   }
 
   // Profile the user-provided `render`.
-  hook(options, RENDER, (old, vnode: VNode) => {
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  const oldRender = options[RENDER];
+  options[RENDER] = (vnode: VNode) => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     const originalRender = vnode[COMPONENT]!.render;
     vnode[COMPONENT]!.render = function render(this, props, state, context) {
@@ -161,8 +169,8 @@ export function initProfileHook(): void {
         vnode[COMPONENT]!.render = originalRender;
       }
     };
-    old?.(vnode);
-  });
+    oldRender?.(vnode);
+  };
 
   if (__BACKGROUND__) {
     const sPatchLength = Symbol('PATCH_LENGTH');
