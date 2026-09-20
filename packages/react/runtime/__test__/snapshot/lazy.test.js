@@ -139,20 +139,22 @@ describe('Lazy Exports', () => {
     );
   });
 
-  test('forwards MainThreadObject lazy exports to a compatible runtime', () => {
+  test('forwards MainThreadObject lazy exports to a compatible runtime', async () => {
+    const useMainThreadObject = vi.spyOn(target[sExportsReact], 'useMainThreadObject');
+    onTestFinished(() => useMainThreadObject.mockRestore());
+    const compatibleReact = await import('../../lazy/react.js?compatible-main-thread-object');
     const definition = {
       type: '@test/lazy-compatible',
       create: value => ({ value }),
     };
 
-    const objectType = ReactExports.defineMainThreadObjectType(definition);
+    const objectType = compatibleReact.defineMainThreadObjectType(definition);
     expect(objectType).toMatchObject({ type: definition.type });
     expect(objectType).not.toHaveProperty('create');
     expect(objectType.downcast).toBeTypeOf('function');
     expect(objectType.downcast({})).toBeUndefined();
-    expect(() => ReactExports.useMainThreadObject(objectType, 1)).toThrow(
-      'Cannot read properties of undefined (reading \'__H\')',
-    );
+    expect(() => compatibleReact.useMainThreadObject(objectType, 1)).toThrow();
+    expect(useMainThreadObject).toHaveBeenCalledExactlyOnceWith(objectType, 1);
 
     expect(ReactInternalExports.captureMainThreadObject({})).toBeUndefined();
   });
