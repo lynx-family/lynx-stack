@@ -569,6 +569,7 @@
   "Enable persistent build cache.": "启用持久化构建缓存。",
   "Enable profile.": "启用 profile。",
   "Enable the Fast Refresh for ReactLynx.": "为 ReactLynx 启用 Fast Refresh。",
+  "Enable the progress bar.": "启用进度条。",
   "Enable this when the compiled output needs to run on legacy\n`@lynx-js/react` runtimes without `SlotV2` support (`< 0.120.0`),\ne.g. a standalone lazy bundle consumed by a host App that ships an\nolder runtime. It only changes the compile output; the runtime\nsupports both forms.": "当编译产物需要运行在不支持 `SlotV2` 的旧版\n`@lynx-js/react` 运行时（`< 0.120.0`）上时启用此选项，例如由搭载旧版运行时的宿主 App 消费的独立 lazy bundle。它只改变编译产物；运行时同时支持两种形式。",
   "Enabled externals presets.": "已启用的 externals 预设。",
   "Enables CSS Modules with automatic `*.module.*` detection, camelCase exports, `namedExport: false`, and `localIdentName` inherited from `output.cssModules.localIdentName`.": "启用 CSS Modules，自动识别 `*.module.*` 文件，使用 camelCase 导出、`namedExport: false`，`localIdentName` 继承自 `output.cssModules.localIdentName`。",
