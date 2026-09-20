@@ -23,11 +23,6 @@ import type { ChatMessage, ConversationContext } from '../common/types.js';
 export function resolveJevModel(opts: A2UIChatOptions) {
   if ([opts.model, opts.apiKey, opts.baseURL].every(value => value?.trim())) {
     if (!isCustomJevBaseURL(opts.baseURL!.trim())) return undefined;
-    if (opts.api !== undefined || opts.reasoningEffort !== undefined) {
-      throw new Error(
-        'TypeSafe composition does not accept language model options',
-      );
-    }
     return {
       apiKey: opts.apiKey!.trim(),
       baseURL: CUSTOM_JEV_BASE_URL,

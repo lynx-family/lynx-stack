@@ -17,7 +17,7 @@ describe('custom provider allow-list', () => {
     expect(isCustomJevBaseURL(CUSTOM_JEV_BASE_URL)).toBe(true);
     expect(isCustomJevBaseURL(`${CUSTOM_JEV_BASE_URL}/`)).toBe(true);
     expect(() => assertAllowedCustomProviderBaseURL(CUSTOM_JEV_BASE_URL))
-      .toThrow('supported provider URLs');
+      .toThrow('available only in A2UI Create');
     for (
       const url of [
         'http://api.typesafe.ai/v1',

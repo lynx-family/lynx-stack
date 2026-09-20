@@ -234,7 +234,7 @@ describe('Jev A2UI composition', () => {
     },
   );
 
-  test('keeps partial custom credentials separate from server connections and rejects language-model options', () => {
+  test('keeps partial custom credentials separate and ignores language-model options for Jev', () => {
     const partial = pickProviderOptions({
       model: 'Jev',
       baseURL: 'https://api.typesafe.ai/v1',
@@ -249,11 +249,12 @@ describe('Jev A2UI composition', () => {
       apiKey: 'client-secret',
       baseURL: 'https://api.typesafe.ai/v1',
     };
-    expect(() => resolveJevModel({ ...complete, api: 'chat' })).toThrow(
-      'does not accept language model options',
-    );
+    expect(resolveJevModel({ ...complete, api: 'chat' })).toMatchObject({
+      requestScoped: true,
+      model: 'jev-latest',
+    });
     expect(() => createLLMProvider(complete)).toThrow(
-      'supported provider URLs',
+      'available only in A2UI Create',
     );
     expect(
       resolveJevModel({ ...complete, baseURL: 'https://api.openai.com/v1' }),
@@ -280,10 +281,16 @@ describe('Jev A2UI composition', () => {
     expect(() => createLLMProvider({ model: 'Jev' })).toThrow(
       'A2UI component composition only',
     );
-    expect(() =>
-      parseModelConfig(JSON.stringify({ Jev: { ...config.Jev, api: 'chat' } }))
-    )
-      .toThrow('does not accept language model options');
+    expect(
+      parseModelConfig(JSON.stringify({
+        Jev: {
+          ...config.Jev,
+          api: 'chat',
+          reasoningEffort: 'high',
+          maxOutputTokens: 1024,
+        },
+      })).models.Jev,
+    ).toMatchObject({ provider: 'typesafe', model: 'jev-latest' });
   });
 
   test.each([false, true])(

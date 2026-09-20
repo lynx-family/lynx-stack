@@ -29,13 +29,33 @@ function providerPolicyError(): NodeJS.ErrnoException {
   return error;
 }
 
+export function customProviderURLPolicyError(
+  value: string,
+): NodeJS.ErrnoException {
+  // `value` has already had one trailing slash removed by the caller. Keep
+  // this comparison exact so malformed values such as `/v1//` do not become
+  // indistinguishable from the approved Jev base URL.
+  const isExactJevBaseURL = value === CUSTOM_JEV_BASE_URL;
+  const error = (isExactJevBaseURL
+    ? new Error(
+      'TypeSafe Jev uses the evaluation API and is available only in A2UI Create. '
+        + 'Select the TypeSafe Jev endpoint with model jev-latest, or configure '
+        + 'a server-owned provider: "typesafe".',
+    )
+    : providerPolicyError()) as NodeJS.ErrnoException;
+  error.code = isExactJevBaseURL
+    ? 'ERR_GENUI_JEV_REQUIRES_A2UI'
+    : 'ERR_GENUI_UNSUPPORTED_CUSTOM_PROVIDER_URL';
+  return error;
+}
+
 export function assertAllowedCustomProviderBaseURL(
   value: string | URL,
 ): string {
   const serialized = typeof value === 'string' ? value : value.href;
   const normalized = serialized.replace(/\/$/u, '');
   if (!ALLOWED_CUSTOM_PROVIDER_BASE_URL_SET.has(normalized)) {
-    throw providerPolicyError();
+    throw customProviderURLPolicyError(normalized);
   }
   return normalized;
 }
