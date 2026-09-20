@@ -135,7 +135,7 @@ function renderHost(
     // Ordered inputs belong to the caller. Named inputs are collected into a
     // renderer-owned array that can also hold the resulting native refs.
     let childrenBySlot = props['slotChildren'] as unknown[] | undefined;
-    if (childrenBySlot === undefined) {
+    if (vnode.templateKey === undefined && childrenBySlot === undefined) {
       for (const name in props) {
         if (name.startsWith('$')) {
           const children = props[name];
