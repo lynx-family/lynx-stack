@@ -22,6 +22,10 @@ import type {
 // Main-thread IFR allocates ids as consecutive negative integers.
 let nextId = -1;
 
+export function getNextElementTemplateId(): number {
+  return nextId;
+}
+
 export function reserveElementTemplateId(): number {
   const id = nextId--;
   return id;

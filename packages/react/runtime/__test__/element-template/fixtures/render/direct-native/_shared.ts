@@ -1,15 +1,8 @@
 import { vi } from 'vitest';
 
-import { renderOpcodesIntoElementTemplate } from '../../../../../src/element-template/runtime/render/render-opcodes.js';
+import { renderToElementTemplate } from '../../../../../src/element-template/runtime/render/render-direct.js';
 import { resetTemplateId } from '../../../../../src/element-template/runtime/template/handle.js';
 import { elementTemplateRegistry } from '../../../../../src/element-template/runtime/template/registry.js';
-import {
-  __OpAttr,
-  __OpBegin,
-  __OpEnd,
-  __OpSlot,
-  __OpText,
-} from '../../../../../src/element-template/runtime/render/render-to-opcodes.js';
 import { installMockNativePapi } from '../../../test-utils/mock/mockNativePapi.js';
 import { registerBuiltinRawTextTemplate, registerTemplates } from '../../../test-utils/debug/registry.js';
 
@@ -128,4 +121,4 @@ export function runCase<T>(runner: (context: CaseContext) => T): T {
   }
 }
 
-export { elementTemplateRegistry, renderOpcodesIntoElementTemplate, __OpAttr, __OpBegin, __OpEnd, __OpSlot, __OpText };
+export { elementTemplateRegistry, renderToElementTemplate };
