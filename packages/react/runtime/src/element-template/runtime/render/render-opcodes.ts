@@ -2,36 +2,16 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { createRenderedHost } from './create-rendered-host.js';
+import type { RenderAttributes } from './create-rendered-host.js';
 import { __OpAttr, __OpBegin, __OpEnd, __OpPageEnd, __OpPageStart, __OpSlot, __OpText } from './render-to-opcodes.js';
-import { elementTemplateIdentityKey, parseElementTemplateType } from '../../protocol/template-type.js';
-import type {
-  RuntimeTypedElementAttributes,
-  SerializableValue,
-  TypedElementAttributesCommand,
-} from '../../protocol/types.js';
-import {
-  composeElementTemplateListAttributes,
-  createElementTemplateListState,
-  registerElementTemplateListItem,
-  registerElementTemplateListState,
-} from '../list/list.js';
+import type { TypedElementAttributesCommand } from '../../protocol/types.js';
 import type { ETListItemPlatformInfo } from '../list/list.js';
-import { __etAttrPlanMap, hasMainThreadRefAttrSlot } from '../template/attr-slot-plan.js';
-import type { EtAttrAdapter } from '../template/attr-slot-plan.js';
-import {
-  createElementTemplateWithReservedHandle,
-  createTypedElementTemplateWithReservedHandle,
-  reserveElementTemplateId,
-} from '../template/handle.js';
+import { createElementTemplateWithReservedHandle, reserveElementTemplateId } from '../template/handle.js';
 import type { MainThreadDynamicAttrSubtreeHandle } from '../template/main-thread-dynamic-attr-state.js';
-import { prepareTypedElementAttributes } from '../template/typed-attributes.js';
 
 const BUILTIN_RAW_TEXT_TEMPLATE_KEY = '_et_builtin_raw_text';
 const TYPED_LIST_HOST_TYPE = 'list';
-const EMPTY_LIST_ITEM_UIDS: readonly number[] = [];
-
-type RenderAttributes = SerializableValue[] | RuntimeTypedElementAttributes | undefined;
-
 export interface MainThreadCreateResult {
   pageAttributes: TypedElementAttributesCommand | null;
   rootRefs: ElementTemplateHandle[];
@@ -126,45 +106,7 @@ export function renderOpcodesIntoElementTemplate(
         const parentActiveChildSlot = activeChildSlotStack[stackTop];
         const parentListItemUids = activeListItemUidsStack[stackTop];
 
-        if (concreteType === TYPED_LIST_HOST_TYPE) {
-          const listChildren = childSlots?.[0] ?? [];
-          const handleId = reserveElementTemplateId();
-          const preparedTypedAttributes = prepareTypedElementAttributes(
-            handleId,
-            attributes as RuntimeTypedElementAttributes | undefined,
-          );
-          const listState = createElementTemplateListState(
-            listItemUids ?? EMPTY_LIST_ITEM_UIDS,
-            preparedTypedAttributes,
-          );
-          const attrsWithCallbacks = composeElementTemplateListAttributes(
-            undefined,
-            listState,
-          );
-          const elementRef = createTypedElementTemplateWithReservedHandle(
-            handleId,
-            TYPED_LIST_HOST_TYPE,
-            attrsWithCallbacks,
-            null,
-            { listChildren },
-          );
-          registerElementTemplateListState(handleId, listState, true, elementRef);
-          appendChildToParent(
-            parentTemplateKey,
-            parentActiveChildSlot,
-            parentListItemUids,
-            rootRefs,
-            rootSubtreeHandles,
-            elementRef,
-            handleId,
-            [],
-          );
-
-          i += 1;
-          break;
-        }
-
-        if (__DEV__ && parentTemplateKey === TYPED_LIST_HOST_TYPE) {
+        if (__DEV__ && concreteType !== TYPED_LIST_HOST_TYPE && parentTemplateKey === TYPED_LIST_HOST_TYPE) {
           if (deferredListItemMarker) {
             throw new Error('Element Template typed list does not support deferred list items.');
           }
@@ -173,46 +115,16 @@ export function renderOpcodesIntoElementTemplate(
           }
         }
 
-        const attrPlan = __etAttrPlanMap[concreteType];
         const handleId = reserveElementTemplateId();
-        const attributeSlots = attributes as SerializableValue[] | undefined;
-        let preparedAttributeSlots = attributeSlots ?? null;
-        if (attrPlan !== undefined) {
-          preparedAttributeSlots = attributeSlots?.slice() ?? [];
-          for (let planIndex = 0; planIndex < attrPlan.length; planIndex += 2) {
-            const attrSlotIndex = attrPlan[planIndex] as number;
-            const adapter = attrPlan[planIndex + 1] as EtAttrAdapter;
-            preparedAttributeSlots[attrSlotIndex] = adapter(
-              handleId,
-              attrSlotIndex,
-              preparedAttributeSlots[attrSlotIndex],
-            );
-          }
-        }
-        const nativeTemplate = parseElementTemplateType(concreteType);
-        const hasMainThreadRef = hasMainThreadRefAttrSlot(concreteType);
-        const elementRef = createElementTemplateWithReservedHandle(
+        const elementRef = createRenderedHost(
           handleId,
-          nativeTemplate.templateKey,
-          nativeTemplate.bundleUrl,
-          preparedAttributeSlots,
-          childSlots ?? null,
+          concreteType,
+          attributes,
+          childSlots,
+          listItemUids,
+          materializationHandles,
+          listItemPlatformInfo,
         );
-        if (hasMainThreadRef) {
-          materializationHandles.push({
-            uid: handleId,
-            ref: elementRef,
-          });
-        }
-        if (listItemPlatformInfo !== undefined) {
-          registerElementTemplateListItem(handleId, elementRef, {
-            // The native list identifies items by the same identity the template
-            // was registered under (sentinel stripped for the main card), so the
-            // update path (`resolveTypedListItem`) stays consistent with it.
-            templateKey: elementTemplateIdentityKey(nativeTemplate.templateKey, nativeTemplate.bundleUrl),
-            platformInfo: listItemPlatformInfo,
-          });
-        }
         appendChildToParent(
           parentTemplateKey,
           parentActiveChildSlot,
@@ -221,7 +133,7 @@ export function renderOpcodesIntoElementTemplate(
           rootSubtreeHandles,
           elementRef,
           handleId,
-          materializationHandles,
+          concreteType === TYPED_LIST_HOST_TYPE ? [] : materializationHandles,
         );
 
         i += 1;
