@@ -33,6 +33,17 @@ describe('initProfileHook installation', () => {
     });
     const events: string[] = [];
     const performance = lynx.performance;
+    const oldSetState = Component.prototype.setState = vi.fn(function(state, callback) {
+      expect(this).toBe(instance);
+      expect(state).toBe(nextState);
+      expect(callback).toBe(setStateCallback);
+      events.push('old setState');
+    });
+    const oldDiff = options[DIFF] = vi.fn(() => events.push('old before diff'));
+    const oldCommit = options[COMMIT] = vi.fn(() => {
+      expect(performance.profileStart).toHaveBeenLastCalledWith('ReactLynx::commit', {});
+      events.push('old commit');
+    });
     const oldDiff2 = options[DIFF2] = vi.fn(() => {
       expect(performance.profileStart).toHaveBeenLastCalledWith('ReactLynx::diff::Example', {});
       events.push('old diff');
@@ -62,12 +73,27 @@ describe('initProfileHook installation', () => {
     const instance = vnode[COMPONENT] = new Example({});
     const originalRender = instance.render;
 
+    const nextState = { count: 1 };
+    const setStateCallback = () => {};
+    const commitQueue = [instance];
+    instance.setState(nextState, setStateCallback);
+    options[DIFF]?.(vnode);
     options[DIFF2]?.(vnode, oldVNode);
     options[RENDER]?.(vnode);
     expect(() => instance.render()).toThrow(failure);
     expect(instance.render).toBe(originalRender);
     options[DIFFED]?.(vnode);
 
+    if (target === 'background') {
+      options[COMMIT]?.(vnode, commitQueue);
+      expect(oldCommit.mock.calls).toEqual([[vnode, commitQueue]]);
+      expect(oldCommit.mock.contexts).toEqual([undefined]);
+      expect(performance.profileEnd).toHaveBeenCalledTimes(3);
+      expect(oldDiff.mock.contexts).toEqual([undefined]);
+    }
+    expect(oldSetState.mock.calls).toEqual([[nextState, setStateCallback]]);
+    expect(oldSetState.mock.contexts).toEqual([instance]);
+    expect(oldDiff.mock.calls).toEqual([[vnode]]);
     expect(oldDiff2.mock.calls).toEqual([[vnode, oldVNode]]);
     expect(oldRender.mock.calls).toEqual([[vnode]]);
     expect(oldDiffed.mock.calls).toEqual([[vnode]]);
@@ -75,10 +101,13 @@ describe('initProfileHook installation', () => {
     expect(oldRender.mock.contexts).toEqual([undefined]);
     expect(oldDiffed.mock.contexts).toEqual([undefined]);
     expect(events).toEqual([
+      'old setState',
+      'old before diff',
       'old diff',
       'old render',
       'render',
       'old diffed',
+      ...(target === 'background' ? ['old commit'] : []),
     ]);
   });
 

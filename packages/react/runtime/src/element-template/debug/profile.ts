@@ -18,7 +18,7 @@ import {
   NEXT_STATE,
   RENDER,
 } from '../../shared/render-constants.js';
-import { getDisplayName, hook } from '../../utils.js';
+import { getDisplayName } from '../../utils.js';
 import { globalCommitContext } from '../background/commit-context.js';
 
 let installed = false;
@@ -78,23 +78,21 @@ export function initProfileHook(): void {
         };
       }
 
-      hook(
-        Component.prototype,
-        'setState',
-        function(this: PatchedComponent & { [NEXT_STATE]: unknown }, old, state, callback) {
-          old?.call(this, state, callback);
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const oldSetState = Component.prototype.setState;
+      Component.prototype.setState = function(this: PatchedComponent & { [NEXT_STATE]: unknown }, state, callback) {
+        oldSetState?.call(this, state, callback);
 
-          if (this[BITS] & COMPONENT_DIRTY) {
-            profileMark('ReactLynx::setState', {
-              flowId: this[sFlowID] ??= profileFlowId(),
-              args: buildSetStateProfileMarkArgs(
-                this.state as Record<string, unknown>,
-                this[NEXT_STATE] as Record<string, unknown>,
-              ),
-            });
-          }
-        },
-      );
+        if (this[BITS] & COMPONENT_DIRTY) {
+          profileMark('ReactLynx::setState', {
+            flowId: this[sFlowID] ??= profileFlowId(),
+            args: buildSetStateProfileMarkArgs(
+              this.state as Record<string, unknown>,
+              this[NEXT_STATE] as Record<string, unknown>,
+            ),
+          });
+        }
+      };
     }
 
     // These hot callbacks have fixed signatures; avoid collecting and spreading
@@ -139,7 +137,9 @@ export function initProfileHook(): void {
     };
 
     if (__BACKGROUND__) {
-      hook(options, COMMIT, (old, vnode, commitQueue) => {
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const oldCommit = options[COMMIT];
+      options[COMMIT] = (vnode, commitQueue) => {
         const globalFlowIds = globalCommitContext.flowIds;
         const commitProfileOptions = globalFlowIds && globalFlowIds.length > 0
           ? { flowId: globalFlowIds[0], flowIds: [...globalFlowIds] }
@@ -147,10 +147,10 @@ export function initProfileHook(): void {
 
         profileStart('ReactLynx::commit', commitProfileOptions);
         /* v8 ignore next */
-        old?.(vnode, commitQueue);
+        oldCommit?.(vnode, commitQueue);
         profileEnd();
         delete globalCommitContext.flowIds;
-      });
+      };
     }
   }
 
@@ -177,14 +177,18 @@ export function initProfileHook(): void {
 
     type PatchedVNode = VNode & { [sPatchLength]?: number };
 
-    hook(options, DIFF, (old, vnode: PatchedVNode) => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const oldDiff = options[DIFF];
+    options[DIFF] = (vnode: PatchedVNode) => {
       if (typeof vnode.type === 'function') {
         vnode[sPatchLength] = globalCommitContext.ops.length;
       }
-      old?.(vnode);
-    });
+      oldDiff?.(vnode);
+    };
 
-    hook(options, DIFFED, (old, vnode: PatchedVNode) => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const oldPatchDiffed = options[DIFFED];
+    options[DIFFED] = (vnode: PatchedVNode) => {
       if (typeof vnode.type === 'function') {
         if (vnode[sPatchLength] === globalCommitContext.ops.length) {
           // "NoPatch" is a conventional name in Lynx
@@ -196,7 +200,7 @@ export function initProfileHook(): void {
         }
         delete vnode[sPatchLength];
       }
-      old?.(vnode);
-    });
+      oldPatchDiffed?.(vnode);
+    };
   }
 }
