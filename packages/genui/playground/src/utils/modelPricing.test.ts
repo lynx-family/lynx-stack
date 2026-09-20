@@ -102,12 +102,13 @@ test('uses CNY prices per thousand tokens without double-counting cache writes o
   );
 });
 
-test('prefers canonical unknown counts and retains missing data across repair attempts', () => {
+test('prices missing cache usage without changing canonical counts or repair usage', () => {
   const usage = readResponseUsage({
     tokenUsage: { inputTokens: 10, cachedTokens: null, outputTokens: 5 },
     usage: { inputTokens: 10, cachedTokens: 0, outputTokens: 5 },
   })!;
-  expect(estimateTokenCost(usage, prices)).toBeUndefined();
+  expect(usage.cachedTokens).toBeUndefined();
+  expect(estimateTokenCost(usage, prices)).toBeCloseTo(0.06);
   const attempts = readResponseUsage({
     usage: [
       { inputTokens: 10, cachedTokens: 0, outputTokens: 5 },
@@ -115,9 +116,47 @@ test('prefers canonical unknown counts and retains missing data across repair at
     ],
   })!;
   expect(attempts).toMatchObject({ inputTokens: 20, outputTokens: 10 });
-  expect(estimateTokenCost(attempts, prices)).toBeUndefined();
+  expect(attempts.cachedTokens).toBeUndefined();
+  expect(estimateTokenCost(attempts, prices)).toBeCloseTo(0.12);
   expect(sumEstimatedCosts([0.1, undefined])).toBeUndefined();
 });
+
+test('prices aggregated Jev calls with no cache breakdown and free output', () => {
+  const usage = readResponseUsage({
+    usage: [
+      { inputTokens: 20000, outputTokens: 8000 },
+      { inputTokens: 5482, outputTokens: 2579 },
+    ],
+  })!;
+  // Illustrative configured CNY rate per 1K tokens, not a provider price lookup.
+  const jevPrices = { input_price: 0.0003, cached_price: 0, output_price: 0 };
+  expect(estimateTokenCost(usage, jevPrices)).toBeCloseTo(0.0076446, 7);
+  expect(formatEstimatedCost(estimateTokenCost(usage, jevPrices))).toBe(
+    '¥0.0076',
+  );
+  expect(usage.cachedTokens).toBeUndefined();
+});
+
+test('still requires input, output and configured prices', () => {
+  for (const usage of [{}, { inputTokens: 10 }, { outputTokens: 5 }]) {
+    expect(estimateTokenCost(usage, prices)).toBeUndefined();
+  }
+  expect(estimateTokenCost({ inputTokens: 10, outputTokens: 5 }, undefined))
+    .toBeUndefined();
+});
+
+test.each([-1, Number.NaN, Number.POSITIVE_INFINITY, 11])(
+  'rejects explicitly invalid cache usage %s',
+  cachedTokens => {
+    expect(
+      estimateTokenCost(
+        { inputTokens: 10, outputTokens: 5, cachedTokens },
+        prices,
+      ),
+    )
+      .toBeUndefined();
+  },
+);
 
 test('distinguishes zero, small, and unavailable costs without inventing prices', () => {
   expect(

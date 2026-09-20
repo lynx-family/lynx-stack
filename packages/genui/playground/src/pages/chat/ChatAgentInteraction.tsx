@@ -51,7 +51,14 @@ export function ChatAgentInteraction(props: {
         </summary>
         <div className='chatAgentInteractionDetails'>
           <div className='chatAgentInteractionHeader'>
-            <span>Agent interaction</span>
+            <span>
+              Agent interaction
+              {log.modelRequestCount === undefined
+                ? ''
+                : ` · ${log.modelRequestCount} model ${
+                  log.modelRequestCount === 1 ? 'request' : 'requests'
+                }`}
+            </span>
             <button
               type='button'
               className='chatJsonCopyButton'

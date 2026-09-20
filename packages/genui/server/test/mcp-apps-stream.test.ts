@@ -75,6 +75,7 @@ describe('MCP Apps stream', () => {
         body: JSON.stringify(requestBody()),
       });
       const body = await response.text();
+      expect(body).toMatch(/"metrics":\{"generationMs":\d/u);
       expect(body).toContain('event: error');
       expect(body).toContain(
         '"reasoning":{"text":"Routing reasoning","truncated":false}',
@@ -113,6 +114,7 @@ describe('MCP Apps stream', () => {
         body: JSON.stringify(requestBody()),
       });
       const body = await response.text();
+      expect(body).toMatch(/"metrics":\{"generationMs":\d/u);
       const frame = body.split('\n\n').find(frame =>
         frame.startsWith('event: done\n')
       );

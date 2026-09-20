@@ -14,6 +14,7 @@ import {
 import { OPENUI_CHAT_ADAPTER } from './openui.js';
 import {
   CHAT_PROVIDER_SETTINGS_ADAPTER,
+  CUSTOM_JEV_PROVIDER_OPTION,
   CUSTOM_PROVIDER_BASE_URL,
   CUSTOM_PROVIDER_BASE_URL_OPTIONS,
   CUSTOM_PROVIDER_ID,
@@ -1337,6 +1338,48 @@ test('A2UI can boot an empty live preview before any model output', () => {
   })).toMatchObject({ kind: 'a2ui', messages: [], liveAction: true });
 });
 
+test('A2UI final preview comparison ignores streaming placeholders but keeps real corrections', () => {
+  const create = {
+    version: 'v0.9',
+    createSurface: { surfaceId: 'main', catalogId: 'catalog' },
+  };
+  const data = {
+    version: 'v0.9',
+    updateDataModel: { surfaceId: 'main', value: { private: 'kept' } },
+  };
+  const update = (components: unknown[]) => ({
+    version: 'v0.9',
+    updateComponents: { surfaceId: create.createSurface.surfaceId, components },
+  });
+  const root = { id: 'root', component: 'Column', children: ['title'] };
+  const title = { id: 'title', component: 'Text', text: 'Shanghai' };
+  const streamed = [
+    create,
+    update([{ id: 'root', component: 'Loading' }]),
+    data,
+    update([root, { id: 'title', component: 'Loading' }]),
+    update([title]),
+  ];
+  const final = [create, data, update([root, title])];
+  const equal = A2UI_CHAT_ADAPTER.preview.isEquivalent;
+  expect(equal(streamed, final)).toBe(true);
+  expect(
+    equal(streamed, [
+      create,
+      data,
+      update([root, { ...title, text: 'Beijing' }]),
+    ]),
+  ).toBe(false);
+  expect(
+    equal(streamed, [create, {
+      ...data,
+      updateDataModel: { surfaceId: 'main', value: { private: 'changed' } },
+    }, update([root, title])]),
+  ).toBe(false);
+  expect(equal(streamed, [])).toBe(false);
+  expect(equal([], final)).toBe(false);
+});
+
 test.each([
   A2UI_CHAT_ADAPTER,
   OPENUI_CHAT_ADAPTER,
@@ -1374,3 +1417,146 @@ test.each([
     ).toBe(true);
   },
 );
+test('A2UI Create loads composition models without changing demo prompts', async () => {
+  const suggestions = A2UI_CHAT_ADAPTER.suggestions;
+  const originalWindow = globalThis.window;
+  const fetch = rs.fn(async (_url: string, _init?: RequestInit) => ({
+    ok: true,
+    json: async () => ({
+      defaultModel: 'Jev',
+      models: [{ id: 'Jev', label: 'Jev', composition: true }],
+    }),
+  }));
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: { fetch },
+  });
+  try {
+    const settings = await A2UI_CHAT_ADAPTER.settings!.load!(
+      createDefaultProviderSettings(),
+      {
+        origin: 'http://localhost:3000',
+        hostname: 'localhost',
+        protocol: 'http:',
+        search: '',
+        baseUrl: 'http://localhost:3000/',
+      },
+      new AbortController().signal,
+    );
+    expect(fetch.mock.calls[0]?.[0]).toBe(
+      'http://localhost:3060/models?protocol=a2ui',
+    );
+    expect(settings.provider).toBe('Jev');
+    expect(A2UI_CHAT_ADAPTER.settings!.controls(settings)).toEqual(
+      CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings),
+    );
+    expect(A2UI_CHAT_ADAPTER.suggestions).toBe(suggestions);
+    expect(toProviderRequestOptions(settings)).toEqual({ model: 'Jev' });
+  } finally {
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: originalWindow,
+    });
+  }
+});
+
+test('offers custom Jev only in A2UI and forwards its connection to generation and actions without persisting it', () => {
+  const adapter = A2UI_CHAT_ADAPTER.settings;
+  let settings = adapter.update(
+    createDefaultProviderSettings(),
+    'provider',
+    CUSTOM_PROVIDER_ID,
+  );
+  settings = adapter.update(
+    settings,
+    'baseURL',
+    CUSTOM_JEV_PROVIDER_OPTION.value,
+  );
+  expect(settings).toMatchObject({
+    baseURL: CUSTOM_JEV_PROVIDER_OPTION.value,
+    model: 'jev-latest',
+  });
+  expect(adapter.validate(settings)).toContain('API key');
+  settings = adapter.update(settings, 'apiKey', '  jev-user-secret  ');
+  settings = adapter.update(settings, 'model', '  jev-preview  ');
+  settings = adapter.update(settings, 'enableDesignGuidance', 'off');
+  expect(adapter.validate(settings)).toBeUndefined();
+  expect(adapter.controls(settings).find(control => control.id === 'baseURL'))
+    .toMatchObject({
+      options: [
+        ...CUSTOM_PROVIDER_BASE_URL_OPTIONS,
+        CUSTOM_JEV_PROVIDER_OPTION,
+      ],
+    });
+  expect(adapter.controls(settings).find(control => control.id === 'apiKey'))
+    .toMatchObject({ kind: 'password' });
+  const host = {
+    origin: 'http://localhost:3000',
+    hostname: 'localhost',
+    protocol: 'http:',
+    search: '',
+    baseUrl: 'http://localhost:3000/',
+  };
+  const conversation = { history: [], dataModel: {} };
+  const connection = {
+    apiKey: 'jev-user-secret',
+    baseURL: CUSTOM_JEV_PROVIDER_OPTION.value,
+    model: 'jev-preview',
+    enableDesignGuidance: false,
+  };
+  expect(toProviderRequestOptions(settings, 'a2ui')).toEqual(connection);
+  expect(
+    A2UI_CHAT_ADAPTER.createRequest({
+      prompt: 'Show a card',
+      conversation,
+      settings,
+      host,
+    }).body,
+  )
+    .toMatchObject(connection);
+  expect(
+    A2UI_CHAT_ADAPTER.action.request({
+      action: { surfaceId: 'main', action: { name: 'open' } },
+      conversation,
+      settings,
+      host,
+    }).body,
+  )
+    .toMatchObject(connection);
+  expect(adapter.serialize(settings)).toEqual({
+    provider: CUSTOM_PROVIDER_ID,
+    enableDesignGuidance: false,
+  });
+  expect(adapter.conversation.snapshot(settings)).toEqual({
+    provider: CUSTOM_PROVIDER_ID,
+    enableDesignGuidance: false,
+  });
+  expect(adapter.parseStored(JSON.stringify(settings))).toMatchObject({
+    apiKey: '',
+    baseURL: CUSTOM_PROVIDER_BASE_URL,
+    model: CUSTOM_PROVIDER_MODEL,
+  });
+  for (
+    const other of [
+      OPENUI_CHAT_ADAPTER,
+      HTML_CHAT_ADAPTER,
+      MCP_APPS_CHAT_ADAPTER,
+      LYNX_XML_CHAT_ADAPTER,
+    ]
+  ) {
+    expect(
+      other.settings.controls({
+        ...settings,
+        baseURL: CUSTOM_PROVIDER_BASE_URL,
+      })
+        .find(control => control.id === 'baseURL')?.options,
+    ).not.toContainEqual(CUSTOM_JEV_PROVIDER_OPTION);
+    expect(other.settings.validate(settings)).toContain('only in A2UI');
+  }
+  expect(() => toProviderRequestOptions(settings)).toThrow('only in A2UI');
+  expect(adapter.update(settings, 'baseURL', CUSTOM_PROVIDER_BASE_URL))
+    .toMatchObject({
+      baseURL: CUSTOM_PROVIDER_BASE_URL,
+      model: CUSTOM_PROVIDER_MODEL,
+    });
+});

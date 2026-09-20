@@ -8,6 +8,14 @@ export const ALLOWED_CUSTOM_PROVIDER_BASE_URLS = [
   'https://openrouter.ai/api/v1',
 ] as const;
 
+// TypeSafe uses evaluation rather than the OpenAI language-model protocol.
+// Official provider: https://ai-sdk.dev/providers/ai-sdk-providers/typesafe-ai
+export const CUSTOM_JEV_BASE_URL = 'https://api.typesafe.ai/v1';
+
+export function isCustomJevBaseURL(value: string): boolean {
+  return value.replace(/\/$/u, '') === CUSTOM_JEV_BASE_URL;
+}
+
 const ALLOWED_CUSTOM_PROVIDER_BASE_URL_SET = new Set<string>(
   ALLOWED_CUSTOM_PROVIDER_BASE_URLS,
 );

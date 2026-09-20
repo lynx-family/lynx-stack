@@ -2,6 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import {
+  generateJevComposition,
+  resolveJevModel,
+  streamJevComposition,
+} from './jev-composition.js';
 import { createA2UIAgent } from '../../agent/a2ui/a2ui-agent.js';
 import type { A2UIAgent } from '../../agent/a2ui/a2ui-agent.js';
 import type { A2UICatalog } from '../../agent/a2ui/a2ui-catalog.js';
@@ -20,6 +25,7 @@ import type {
   A2UIMessage,
   ValidationOptions,
 } from '../../agent/a2ui/a2ui-validator.js';
+import type { HostedMcpAppResource } from '../../agent/a2ui/jev-candidates.js';
 import type { ArkImageGenerationRunScope } from '../../agent/common/ark-image-generation-tool.js';
 import {
   createArkImageGenerationRunScope,
@@ -30,6 +36,7 @@ import {
   searchedDoubaoDocumentURLs,
   searchedDoubaoImageURLs,
 } from '../../agent/common/doubao-search-tool.js';
+import type { JevModelInteraction } from '../../agent/common/jev-evaluator.js';
 import { createAgentStepLogger } from '../common/agent-step-logger.js';
 import { readBenchTokenUsage } from '../common/bench/usage.js';
 import { buildGenerationRepairMessages } from '../common/generation-repair.js';
@@ -62,6 +69,10 @@ import type {
 export interface A2UIChatOptions extends ChatOptions {
   catalog?: A2UICatalog | undefined;
   maxRepairAttempts?: number | undefined;
+  /** Jev resources resolved and authorized by the host; never copied from HTTP request bodies. */
+  hostedMcpApps?: readonly HostedMcpAppResource[] | undefined;
+  /** Request-scoped, sanitized diagnostics for actual Jev provider calls. */
+  onModelInteraction?: (event: JevModelInteraction) => void;
 }
 
 export interface A2UIResponse {
@@ -212,6 +223,9 @@ export default class A2UIAgentService {
       finishReason: unknown;
     }>;
   }> {
+    if (resolveJevModel(opts)) {
+      return streamJevComposition(messages, opts, conversation, abortSignal);
+    }
     const buildConversationStartedAt = performance.now();
     const preparedMessages = buildConversationMessages(
       messages,
@@ -420,6 +434,9 @@ export default class A2UIAgentService {
     abortSignal?: AbortSignal,
     imageGenerationScope = createArkImageGenerationRunScope(),
   ): Promise<{ text: string; usage: unknown; finishReason: unknown }> {
+    if (resolveJevModel(opts)) {
+      return generateJevComposition(messages, opts, conversation, abortSignal);
+    }
     abortSignal?.throwIfAborted();
     const agent = await this.getAgent(opts);
     abortSignal?.throwIfAborted();
@@ -446,6 +463,20 @@ export default class A2UIAgentService {
   ): Promise<A2UIResponse> {
     abortSignal?.throwIfAborted();
     const catalog = opts.catalog ?? await loadBasicCatalog();
+    if (resolveJevModel(opts)) {
+      const result = await generateJevComposition(
+        messages,
+        { ...opts, catalog },
+        conversation,
+        abortSignal,
+      );
+      const validation = validateA2UIOutput(
+        result.text,
+        catalog,
+        validationOptions,
+      );
+      return { ...result, ...validation, attempts: 1 };
+    }
     const maxAttempts = Math.max(0, opts.maxRepairAttempts ?? 0) + 1;
     const agent = await this.getAgent({ ...opts, catalog });
     abortSignal?.throwIfAborted();

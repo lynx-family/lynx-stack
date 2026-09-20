@@ -1,8 +1,11 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { compactA2UIMessagesToSnapshot } from '@lynx-js/genui/a2ui/snapshot';
+import type { ServerToClientMessage } from '@lynx-js/genui/a2ui/store';
+
 import {
-  CHAT_PROVIDER_SETTINGS_ADAPTER,
+  createProviderSettingsAdapter,
   getA2UIActionEndpoint,
   getChatEndpoint,
   parseTokenUsage,
@@ -458,6 +461,40 @@ function mergeOutput(
   return [...(current ?? []), ...next];
 }
 
+function canonicalJson(value: unknown): string {
+  return JSON.stringify(value, (_key, item: unknown) =>
+    isRecord(item)
+      ? Object.fromEntries(
+        Object.entries(item).sort(([a], [b]) => a.localeCompare(b)),
+      )
+      : item);
+}
+
+function isEquivalentPreview(current: A2UIOutput, next: A2UIOutput): boolean {
+  // The streaming parser inserts Loading nodes and splits component batches.
+  // Compare resulting surfaces, not message arrays or object identities.
+  // Also retain unbound data: snapshot compaction only keeps referenced paths.
+  const dataMessages = (messages: A2UIOutput) =>
+    messages.filter(message =>
+      isRecord(message) && 'updateDataModel' in message
+    );
+  try {
+    return canonicalJson(dataMessages(current))
+        === canonicalJson(dataMessages(next))
+      && canonicalJson(
+          compactA2UIMessagesToSnapshot(current as ServerToClientMessage[])
+            .messages,
+        )
+        === canonicalJson(
+          compactA2UIMessagesToSnapshot(next as ServerToClientMessage[])
+            .messages,
+        );
+  } catch {
+    // Incomplete or repaired output still needs an authoritative replay.
+    return false;
+  }
+}
+
 function actionLabel(action: A2UIAction): string {
   const event = isRecord(action.action.event) ? action.action.event : null;
   return typeof action.action.name === 'string'
@@ -478,10 +515,10 @@ export const A2UI_CHAT_ADAPTER = {
     failurePrefix: 'Generation failed:',
   },
   suggestions: SUGGESTIONS,
-  settings: CHAT_PROVIDER_SETTINGS_ADAPTER,
+  settings: createProviderSettingsAdapter('a2ui'),
   createRequest({ prompt, conversation, settings, host }) {
     const url = getChatEndpoint('a2ui', host, settings);
-    const provider = toProviderRequestOptions(settings);
+    const provider = toProviderRequestOptions(settings, 'a2ui');
     return {
       url,
       method: 'POST',
@@ -604,6 +641,7 @@ export const A2UI_CHAT_ADAPTER = {
     // capability to accumulate them; a final emission always replaces the
     // accumulated output with the server's complete validated message array.
     merge: mergeOutput,
+    isEquivalent: isEquivalentPreview,
     emptyTitle: 'Send a message to generate UI',
     emptySubtitle: 'Generated components will be previewed here',
     generatingHint:
@@ -643,7 +681,7 @@ export const A2UI_CHAT_ADAPTER = {
     request({ action, conversation, settings, host }) {
       const chatEndpoint = getChatEndpoint('a2ui', host, settings);
       const url = getA2UIActionEndpoint(chatEndpoint);
-      const provider = toProviderRequestOptions(settings);
+      const provider = toProviderRequestOptions(settings, 'a2ui');
       return {
         url,
         method: 'POST',

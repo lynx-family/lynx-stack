@@ -8,6 +8,7 @@ import { validateConversation, validateMessages } from './chat-validation.js';
 import { jsonWithCors } from './cors.js';
 import { errorMessage } from './errors.js';
 import { createFailureReasoning } from './failure-reasoning.js';
+import { createGenerationTiming } from './generation-timing.js';
 import { pickProviderOptions } from './provider-options.js';
 import { checkRateLimit, rateLimitSseResponse } from './rate-limit.js';
 import { readJsonBodyWithLimit } from './request.js';
@@ -192,6 +193,7 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
       };
 
       const run = async () => {
+        const timing = createGenerationTiming();
         try {
           const connectStartedAt = performance.now();
           log('agent.connect.started');
@@ -267,6 +269,7 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
             requestId,
           });
           enqueue('done', {
+            metrics: timing.finish(),
             ok: true,
             text: finalText,
             ...(metadata ? { metadata } : {}),
@@ -286,6 +289,7 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
           }
           if (!closed && !generationController.signal.aborted) {
             const payload = {
+              metrics: timing.finish(),
               ...errorMessage(error, errorOptions),
               ...(resultMetadata ?? {}),
               tokenUsage: extractTokenUsage(resultMetadata?.usage),

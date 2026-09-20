@@ -33,6 +33,8 @@ export interface ModelPrices {
 }
 
 export interface ConfiguredModel extends ModelPrices {
+  /** TypeSafe models compose A2UI from choices instead of generating text. */
+  provider?: 'typesafe';
   apiKey: string;
   baseURL: string;
   model: string;
@@ -82,6 +84,19 @@ function parseConfiguredModel(
   const apiKey = requiredString(value, 'apiKey');
   const baseURL = requiredString(value, 'baseURL');
   const model = requiredString(value, 'model');
+  const provider = value.provider;
+  if (provider !== undefined && provider !== 'typesafe') {
+    throw new Error(`model ${JSON.stringify(name)} provider must be typesafe`);
+  }
+  if (
+    provider === 'typesafe'
+    && (value.api !== undefined || value.reasoningEffort !== undefined
+      || value.maxOutputTokens !== undefined)
+  ) {
+    throw new Error(
+      'TypeSafe composition does not accept language model options',
+    );
+  }
   const prices: ModelPrices = {
     input_price: 0,
     cached_price: 0,
@@ -151,6 +166,7 @@ function parseConfiguredModel(
   }
 
   return {
+    ...(provider === 'typesafe' ? { provider } : {}),
     apiKey,
     baseURL,
     model,

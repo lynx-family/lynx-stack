@@ -20,6 +20,7 @@ import {
 import { jsonWithCors } from '../../common/cors';
 import { errorMessage } from '../../common/errors';
 import { createFailureReasoning } from '../../common/failure-reasoning.js';
+import { createGenerationTiming } from '../../common/generation-timing.js';
 import { pickProviderOptions } from '../../common/provider-options';
 import { checkRateLimit, rateLimitSseResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
@@ -119,6 +120,7 @@ async function postMcpAppsStream(req: Request) {
         }
       };
       const run = async () => {
+        const timing = createGenerationTiming();
         try {
           const { text, usage, finishReason } = await service.generateRaw(
             modelMessages,
@@ -133,6 +135,7 @@ async function postMcpAppsStream(req: Request) {
           );
           if (selection.type === 'message') {
             enqueue('done', {
+              metrics: timing.finish(),
               ok: true,
               protocolVersion: MCP_APPS_PROTOCOL_VERSION,
               message: selection.text,
@@ -151,6 +154,7 @@ async function postMcpAppsStream(req: Request) {
           }
           const resource = resolveMcpAppsResource(tool, registry);
           enqueue('done', {
+            metrics: timing.finish(),
             ok: true,
             protocolVersion: MCP_APPS_PROTOCOL_VERSION,
             toolCall: {
@@ -171,6 +175,7 @@ async function postMcpAppsStream(req: Request) {
         } catch (error) {
           if (!closed && !generationController.signal.aborted) {
             enqueue('error', {
+              metrics: timing.finish(),
               ...errorMessage(error, errorOptions),
               ...reasoning.payload(),
             });
