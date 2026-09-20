@@ -4,16 +4,20 @@ const _et_955a06fee137 = `${globDynamicComponentEntry}:${"_et_955a06fee137"}`;
 class Inner extends Component {
     render() {
         return /*#__PURE__*/ _jsx(_et_955a06fee137, {
-            $0: this.props.message
+            slotChildren: [
+                this.props.message
+            ]
         });
     }
 }
 export class App extends Component {
     render() {
         return /*#__PURE__*/ _jsx(_et_955a06fee137, {
-            $0: /*#__PURE__*/ _jsx(Inner, {
-                message: "X"
-            })
+            slotChildren: [
+                /*#__PURE__*/ _jsx(Inner, {
+                    message: "X"
+                })
+            ]
         });
     }
 }

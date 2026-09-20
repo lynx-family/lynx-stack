@@ -7,9 +7,11 @@ export class App extends Component {
         const innerText = 'B';
         const trailing = 'C';
         return /*#__PURE__*/ _jsx(_et_5c988e5983da, {
-            $0: leading,
-            $1: innerText,
-            $2: trailing
+            slotChildren: [
+                leading,
+                innerText,
+                trailing
+            ]
         });
     }
 }

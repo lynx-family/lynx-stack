@@ -263,13 +263,13 @@ function renderCompiledEtHostVNode(vnode, props, context, opcodes) {
     opcodes.push(__OpAttr, attributeSlots);
   }
 
-  // ET host nodes are compiler-generated; `swc_plugin_element_template`
-  // (lowering.rs) emits dynamic children as `$N` named props only — no
-  // `children` prop is produced — so the renderer only consumes `$N`.
-  let childSlots: unknown[] | undefined;
-  for (const name in props) {
-    if (name.startsWith('$')) {
-      (childSlots ??= [])[+name.slice(1)] = props[name];
+  // LEPUS emits an ordered array; MIXED VNodes retain named slots for Preact.
+  let childSlots: unknown[] | undefined = props.slotChildren;
+  if (childSlots === undefined) {
+    for (const name in props) {
+      if (name.startsWith('$')) {
+        (childSlots ??= [])[+name.slice(1)] = props[name];
+      }
     }
   }
   if (childSlots !== undefined) {

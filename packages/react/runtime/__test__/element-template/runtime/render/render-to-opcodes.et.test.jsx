@@ -3,7 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { Component, Fragment, createContext, h, options } from 'preact';
 import { Suspense, use } from 'preact/compat';
-import { useState } from '@lynx-js/react/lepus/hooks';
+import { useContext, useId, useState } from '@lynx-js/react/lepus/hooks';
+import { jsx } from '@lynx-js/react/element-template/jsx-runtime';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -180,6 +181,85 @@ describe('Element Template renderToOpcodes', () => {
       'second',
       __OpEnd,
     ]);
+  });
+
+  it('keeps sparse compiled slot arrays ordered across empty children', () => {
+    const slots = [];
+    slots[1] = 'first';
+    slots[2] = false;
+    slots[4] = ['second', null, 'third'];
+    const opcodes = renderToString(jsx('_et_test_root', { slotChildren: slots }));
+
+    expect(opcodes.map(item => (typeof item === 'object' ? '<vnode>' : item))).toEqual([
+      __OpBegin,
+      '<vnode>',
+      __OpSlot,
+      1,
+      __OpText,
+      'first',
+      __OpSlot,
+      4,
+      __OpText,
+      'second',
+      __OpText,
+      'third',
+      __OpEnd,
+    ]);
+  });
+
+  it('preserves named-slot output and reusable ordered inputs including empty slots', () => {
+    const slots = [];
+    slots[1] = '';
+    slots[2] = 0;
+    slots[3] = false;
+    slots[4] = null;
+    slots[5] = Object.freeze(['first', Object.freeze([null, 'second'])]);
+    slots[6] = Object.freeze([]);
+    slots[8] = undefined;
+    Object.freeze(slots);
+    const namedProps = {};
+    for (const index of Object.keys(slots)) {
+      namedProps[`$${index}`] = slots[index];
+    }
+    const ordered = jsx('_et_test_root', { slotChildren: slots });
+    const normalize = opcodes => opcodes.map(item => typeof item === 'object' ? '<vnode>' : item);
+    const expected = normalize(renderToString(jsx('_et_test_root', namedProps)));
+
+    expect(normalize(renderToString(ordered))).toEqual(expected);
+    expect(normalize(renderToString(ordered))).toEqual(expected);
+    expect(ordered.props.slotChildren).toBe(slots);
+    expect(Object.keys(slots)).toEqual(['1', '2', '3', '4', '5', '6', '8']);
+  });
+
+  it('preserves context and unique hook IDs through ordered slot ancestors', () => {
+    const Context = createContext('default');
+    const seen = [];
+    function Reader() {
+      const id = useId();
+      const value = useContext(Context);
+      const [count] = useState(7);
+      seen.push({ id, value, count });
+      return id;
+    }
+    const makeTree = () =>
+      jsx(Context.Provider, {
+        value: 'provided',
+        children: jsx('_et_outer', {
+          slotChildren: [
+            jsx(Reader, {}),
+            jsx('_et_inner', { slotChildren: [jsx(Reader, {})] }),
+          ],
+        }),
+      });
+
+    renderToString(makeTree());
+    expect(seen).toEqual([
+      { id: 'P0-0', value: 'provided', count: 7 },
+      { id: 'P0-1', value: 'provided', count: 7 },
+    ]);
+    seen.length = 0;
+    renderToString(makeTree());
+    expect(seen.map(item => item.id)).toEqual(['P0-0', 'P0-1']);
   });
 
   it('ignores function values in render output', () => {

@@ -4,18 +4,22 @@ const _et_f4df0f2dba8f = `${globDynamicComponentEntry}:${"_et_f4df0f2dba8f"}`;
 const _et_955a06fee137 = `${globDynamicComponentEntry}:${"_et_955a06fee137"}`;
 export function App() {
     return /*#__PURE__*/ _jsx(_et_955a06fee137, {
-        $0: [
-            /*#__PURE__*/ _jsx(Sub, {
-                children: /*#__PURE__*/ _jsx(_et_1d658c77caa0, {})
-            }),
-            /*#__PURE__*/ _jsx(Sub, {
-                children: /*#__PURE__*/ _jsx(_et_f4df0f2dba8f, {})
-            })
+        slotChildren: [
+            [
+                /*#__PURE__*/ _jsx(Sub, {
+                    children: /*#__PURE__*/ _jsx(_et_1d658c77caa0, {})
+                }),
+                /*#__PURE__*/ _jsx(Sub, {
+                    children: /*#__PURE__*/ _jsx(_et_f4df0f2dba8f, {})
+                })
+            ]
         ]
     });
 }
 function Sub(props) {
     return /*#__PURE__*/ _jsx(_et_955a06fee137, {
-        $0: props.children
+        slotChildren: [
+            props.children
+        ]
     });
 }

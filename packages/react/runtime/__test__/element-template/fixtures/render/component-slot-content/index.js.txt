@@ -2,15 +2,19 @@ import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
 const _et_49c2d60c49a6 = `${globDynamicComponentEntry}:${"_et_49c2d60c49a6"}`;
 function CustomComponent(props) {
     return /*#__PURE__*/ _jsx(_et_49c2d60c49a6, {
-        $0: props.children
+        slotChildren: [
+            props.children
+        ]
     });
 }
 const _et_d33ba201dffe = `${globDynamicComponentEntry}:${"_et_d33ba201dffe"}`;
 const _et_955a06fee137 = `${globDynamicComponentEntry}:${"_et_955a06fee137"}`;
 export function App() {
     return /*#__PURE__*/ _jsx(_et_955a06fee137, {
-        $0: /*#__PURE__*/ _jsx(CustomComponent, {
-            children: /*#__PURE__*/ _jsx(_et_d33ba201dffe, {})
-        })
+        slotChildren: [
+            /*#__PURE__*/ _jsx(CustomComponent, {
+                children: /*#__PURE__*/ _jsx(_et_d33ba201dffe, {})
+            })
+        ]
     });
 }
