@@ -74,7 +74,7 @@ export function renderToElementTemplate(vnode: unknown, context?: RenderContext 
 
 function validateRoot(result: DirectRenderState, parentType: string | undefined): void {
   if (
-    __DEV__ && parentType === undefined && result.pageAttributes !== undefined
+    parentType === undefined && result.pageAttributes !== undefined
     && !result.isInsideAuthoredPage
   ) {
     throw new Error('Element Template authored <page /> must wrap all materialized roots.');
@@ -144,7 +144,7 @@ function renderHost(
     if (childrenBySlot !== undefined) {
       for (let slotId = 0; slotId < childrenBySlot.length; slotId++) {
         const children = childrenBySlot[slotId];
-        if (children == null || children === true || children === false) continue;
+        if (children === undefined) continue;
         const refs = childSlots![slotId] = [];
         renderDirect(children, context, vnode, refs, result, type, subtreeHandles, undefined);
       }

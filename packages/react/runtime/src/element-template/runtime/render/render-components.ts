@@ -227,25 +227,20 @@ export function renderComponentVNode(
     renderVNode(rendered, context, vnode, output, result, parentType, subtreeHandles, listItemUids);
   } catch (e) {
     if (
-      e && typeof e === 'object' && e.then && component && /* _childDidSuspend */ component.__c
+      checkpoint && e && typeof e === 'object' && e.then
     ) {
       component.setState({ /* _suspended */ __a: true });
 
-      if (component[BITS] & COMPONENT_DIRTY) {
-        rendered = renderClassComponent(vnode, context, context);
-        component = vnode[COMPONENT];
+      rendered = renderClassComponent(vnode, context, context);
 
-        output.length = outputLength;
-        if (checkpoint) {
-          result.rootSubtreeHandles.length = checkpoint.rootSubtreeHandlesLength;
-          if (subtreeHandles) subtreeHandles.length = checkpoint.subtreeHandlesLength;
-          if (listItemUids) listItemUids.length = checkpoint.listItemUidsLength;
-          discardRenderedHostsSince(checkpoint.nextId);
-          result.pageAttributes = checkpoint.pageAttributes;
-          if (__DEV__) result.isInsideAuthoredPage = checkpoint.isInsideAuthoredPage;
-        }
-        renderVNode(rendered, context, vnode, output, result, parentType, subtreeHandles, listItemUids);
-      }
+      output.length = outputLength;
+      result.rootSubtreeHandles.length = checkpoint.rootSubtreeHandlesLength;
+      if (subtreeHandles) subtreeHandles.length = checkpoint.subtreeHandlesLength;
+      if (listItemUids) listItemUids.length = checkpoint.listItemUidsLength;
+      discardRenderedHostsSince(checkpoint.nextId);
+      result.pageAttributes = checkpoint.pageAttributes;
+      if (__DEV__) result.isInsideAuthoredPage = checkpoint.isInsideAuthoredPage;
+      renderVNode(rendered, context, vnode, output, result, parentType, subtreeHandles, listItemUids);
     } else {
       throw e;
     }
