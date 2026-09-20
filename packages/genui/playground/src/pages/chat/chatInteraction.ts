@@ -135,6 +135,9 @@ export function appendChatInteraction(
   elapsedMs: number,
   data?: unknown,
 ): ChatInteractionLog {
+  if (event === 'model' && isRecord(data) && data.status === 'started') {
+    log = { ...log, modelRequestCount: (log.modelRequestCount ?? 0) + 1 };
+  }
   if (['error', 'done', 'json'].includes(event) && isRecord(data)) {
     const { reasoning, ...details } = data;
     if (
@@ -206,6 +209,9 @@ export function serializeChatInteraction(log: ChatInteractionLog): string {
     {
       entries: log.entries,
       omittedEntries: log.omittedEntries,
+      ...(log.modelRequestCount === undefined
+        ? {}
+        : { modelRequestCount: log.modelRequestCount }),
       ...(log.rawOutput
         ? {
           rawOutput: {
@@ -255,6 +261,8 @@ export function chatInteractionLabel(event: string): string {
       return 'Server response';
     case 'message':
       return 'Protocol messages';
+    case 'model':
+      return 'Model interaction';
     case 'done':
     case 'json':
       return 'Final response';

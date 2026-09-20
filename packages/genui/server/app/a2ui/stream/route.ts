@@ -24,11 +24,13 @@ import {
   searchedDoubaoImageURLs,
 } from '../../../agent/common/doubao-search-tool.js';
 import { getA2UIAgentService } from '../../../service/a2ui/a2ui-agent.js';
+import type { A2UIChatOptions } from '../../../service/a2ui/a2ui-agent.js';
 import { readBenchTokenUsage } from '../../../service/common/bench/usage.js';
 import {
   configuredApiStyle,
   defaultModelName,
 } from '../../../service/common/model-config.js';
+import { GenerationPostprocessError } from '../../../service/common/result.js';
 import {
   validateConversation,
   validateMessages,
@@ -36,6 +38,7 @@ import {
 import { jsonWithCors } from '../../common/cors';
 import { errorMessage } from '../../common/errors';
 import { createFailureReasoning } from '../../common/failure-reasoning.js';
+import { createGenerationTiming } from '../../common/generation-timing.js';
 import { checkRateLimit, rateLimitSseResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
 import { encodeSSE, sseHeaders } from '../../common/sse';
@@ -193,12 +196,19 @@ async function postA2UIStream(req: Request) {
         }
       };
       const run = async () => {
+        const timing = createGenerationTiming();
+        const streamOptions: A2UIChatOptions = {
+          ...optsWithCatalog,
+          onModelInteraction: event => {
+            enqueue('model', event);
+          },
+        };
         try {
           const connectStartedAt = performance.now();
           log('agent.connect.started');
           const { textStream, finalize } = await service.streamAsAsyncIterable(
             messages,
-            optsWithCatalog,
+            streamOptions,
             validatedConversation.conversation,
             generationController.signal,
             imageGenerationScope,
@@ -329,7 +339,7 @@ async function postA2UIStream(req: Request) {
               });
               const repaired = await service.generateValidated(
                 messages,
-                optsWithCatalog,
+                streamOptions,
                 validatedConversation.conversation,
                 validationOptions,
                 generationController.signal,
@@ -396,6 +406,8 @@ async function postA2UIStream(req: Request) {
           }
 
           generationController.signal.throwIfAborted();
+          const metrics = timing.finish();
+          enqueue('metrics', { metrics });
           const preview = validation.ok
             ? await publishA2UIPayload(validation.messages)
             : undefined;
@@ -415,6 +427,7 @@ async function postA2UIStream(req: Request) {
             requestId,
           });
           enqueue('done', {
+            metrics,
             text: finalText,
             usage,
             tokenUsage: extractTokenUsage(usage),
@@ -429,7 +442,18 @@ async function postA2UIStream(req: Request) {
           if (!closed && !generationController.signal.aborted) {
             const error = errorMessage(err, errorOptions);
             log('error.enqueued', error);
-            enqueue('error', { ...error, ...reasoning.payload() });
+            enqueue('error', {
+              metrics: timing.finish(),
+              ...error,
+              ...reasoning.payload(),
+              ...(err instanceof GenerationPostprocessError
+                ? {
+                  usage: err.result.usage,
+                  tokenUsage: extractTokenUsage(err.result.usage),
+                  finishReason: err.result.finishReason,
+                }
+                : {}),
+            });
           }
         } finally {
           req.signal.removeEventListener('abort', onRequestAbort);

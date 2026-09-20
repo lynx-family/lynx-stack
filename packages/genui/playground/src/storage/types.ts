@@ -37,6 +37,9 @@ export interface PreviewPerformanceMetrics {
   fcpMs?: number;
   fmpMs?: number;
   ttiMs?: number;
+  /** Server generation pipeline, including validation but excluding publishing. */
+  generationMs?: number;
+  /** Legacy request-to-response duration; never interpret as generationMs. */
   agentOutputMs?: number;
   renderMs?: number;
 }

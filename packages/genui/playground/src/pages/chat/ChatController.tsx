@@ -11,6 +11,7 @@ import {
 } from './chatInteraction.js';
 import { ChatUsage } from './ChatUsage.js';
 import { ChatWorkspace } from './ChatWorkspace.js';
+import { readGenerationMetrics } from './generationMetrics.js';
 import {
   isA2UIRuntimeReadyMessage,
   isMatchingLivePreviewFrame,
@@ -307,9 +308,9 @@ function MessageMetrics(props: { metrics: PreviewPerformanceMetrics }) {
     { key: 'fmpMs', label: 'FMP', value: props.metrics.fmpMs },
     { key: 'ttiMs', label: 'TTI', value: props.metrics.ttiMs },
     {
-      key: 'agentOutputMs',
-      label: 'Agent',
-      value: props.metrics.agentOutputMs,
+      key: 'generationMs',
+      label: 'Generation',
+      value: props.metrics.generationMs,
     },
     { key: 'renderMs', label: 'Render', value: props.metrics.renderMs },
   ].filter((item) => typeof item.value === 'number');
@@ -552,7 +553,7 @@ function mergeMetrics(
       'fcpMs',
       'fmpMs',
       'ttiMs',
-      'agentOutputMs',
+      'generationMs',
       'renderMs',
     ] as const
   ) {
@@ -1136,6 +1137,7 @@ export function ChatController<
     const nextOutput = emission.type === 'partial' && adapter.preview.merge
       ? adapter.preview.merge(outputRef.current, emission.output)
       : emission.output;
+    const previousOutput = outputRef.current;
     setCurrentOutput(nextOutput);
     if (emission.type === 'partial') {
       if (adapter.preview.delivery === 'live-message') {
@@ -1150,7 +1152,13 @@ export function ChatController<
     }
     if (adapter.preview.delivery === 'live-message') {
       setCurrentPreviewOutput(nextOutput);
-      queueOrPostLiveOutput('A2UI_REPLAY_MESSAGES', nextOutput);
+      if (
+        pendingLiveOutputsRef.current.length > 0
+        || previousOutput === null
+        || !adapter.preview.isEquivalent?.(previousOutput, nextOutput)
+      ) {
+        queueOrPostLiveOutput('A2UI_REPLAY_MESSAGES', nextOutput);
+      }
     } else {
       resetLivePreviewDelivery();
       setCurrentPreviewOutput(nextOutput);
@@ -1159,6 +1167,7 @@ export function ChatController<
   }, [
     adapter.preview.delivery,
     adapter.preview.merge,
+    adapter.preview.isEquivalent,
     adapter.transcript,
     queueOrPostLiveOutput,
     resetLivePreviewDelivery,
@@ -1166,6 +1175,15 @@ export function ChatController<
     setCurrentPreviewOutput,
     setCurrentPreviewPayloadUrls,
   ]);
+
+  const observeGenerationMetrics = useCallback((event: ChatSseEvent) => {
+    if (!['metrics', 'done', 'error', 'json'].includes(event.event)) return;
+    const patch = readGenerationMetrics(event.data);
+    if (!patch) return;
+    const next = mergeMetrics(metricsRef.current, patch);
+    metricsRef.current = next;
+    setMetrics(next);
+  }, []);
 
   const handleSend = useCallback((retryPrompt?: string) => {
     const prompt = (retryPrompt ?? inputValue).trim();
@@ -1218,6 +1236,10 @@ export function ChatController<
     resetLivePreviewDelivery();
     setCurrentOutput(null);
     setCurrentPreviewOutput(adapter.preview.initialOutput?.() ?? null);
+    // Start a new live session explicitly; finishing it keeps the same iframe.
+    if (adapter.preview.delivery === 'live-message') {
+      setPreviewRevision(value => value + 1);
+    }
     setCurrentPreviewPayloadUrls(null);
     metricsRef.current = {};
     setMetrics({});
@@ -1265,7 +1287,11 @@ export function ChatController<
             signal: controller.signal,
             onEvent: (event) => {
               recordInteraction(event.event, event.data);
-              if (runIdRef.current === runId) turnUsage.observe(event.data);
+              if (controller.signal.aborted || runIdRef.current !== runId) {
+                return;
+              }
+              turnUsage.observe(event.data);
+              observeGenerationMetrics(event);
             },
             onEmission: (emission) => {
               if (runIdRef.current !== runId) return;
@@ -1278,10 +1304,14 @@ export function ChatController<
         );
         if (controller.signal.aborted || runIdRef.current !== runId) return;
 
+        const streamedOutput = outputRef.current;
         setCurrentOutput(finalOutput);
         if (
           adapter.preview.delivery === 'live-message'
           && previewOutputRef.current !== finalOutput
+          && (pendingLiveOutputsRef.current.length > 0
+            || streamedOutput === null
+            || !adapter.preview.isEquivalent?.(streamedOutput, finalOutput))
         ) {
           queueOrPostLiveOutput('A2UI_REPLAY_MESSAGES', finalOutput);
         }
@@ -1289,11 +1319,7 @@ export function ChatController<
         if (adapter.preview.delivery === 'reload') {
           setPreviewRevision((value) => value + 1);
         }
-        const nextMetrics = mergeMetrics(metricsRef.current, {
-          agentOutputMs: performance.now() - startedAt,
-        });
-        metricsRef.current = nextMetrics;
-        setMetrics(nextMetrics);
+        const nextMetrics = metricsRef.current;
         const persistence = adapter.persist(finalOutput, {
           kind: 'create',
           current: previousOutput,
@@ -1318,6 +1344,7 @@ export function ChatController<
                     id: pendingId,
                     interaction,
                     generationUsage: turnUsage.current(),
+                    metrics: nextMetrics,
                   }
                   : result
               )
@@ -1330,6 +1357,7 @@ export function ChatController<
         await recordTurn({
           userMessage,
           assistantContent: '',
+          previewMetrics: metricsRef.current,
           generationError: getErrorMessage(error),
           generationUsage: turnUsage.current(),
           a2uiMessages: [],
@@ -1342,6 +1370,7 @@ export function ChatController<
               ? {
                 ...message,
                 ...adapter.transcript.failure(getErrorMessage(error)),
+                metrics: metricsRef.current,
                 generationUsage: turnUsage.current(),
                 id: pendingId,
               }
@@ -1362,6 +1391,7 @@ export function ChatController<
     busy,
     handleStreamEmission,
     trackTurnUsage,
+    observeGenerationMetrics,
     persistedPreviewMessages,
     persistedPreviewPayloadUrls,
     host,
@@ -1571,6 +1601,8 @@ export function ChatController<
     };
     let streamedResponseOutput: TOutput | null = null;
     metricsPersistenceReadyRef.current = false;
+    metricsRef.current = { ...metricsRef.current, generationMs: undefined };
+    setMetrics(metricsRef.current);
     setIsActionRunning(true);
     setMessages((current) => [
       ...current,
@@ -1624,7 +1656,11 @@ export function ChatController<
             signal: controller.signal,
             onEvent: (event) => {
               recordInteraction(event.event, event.data);
-              if (runIdRef.current === runId) turnUsage.observe(event.data);
+              if (controller.signal.aborted || runIdRef.current !== runId) {
+                return;
+              }
+              turnUsage.observe(event.data);
+              observeGenerationMetrics(event);
             },
             onEmission: (emission) => {
               if (runIdRef.current !== runId) return;
@@ -1665,16 +1701,22 @@ export function ChatController<
         setCurrentOutput(mergedOutput);
         setCurrentPreviewOutput(mergedOutput);
         if (adapter.preview.delivery === 'live-message') {
-          queueOrPostLiveOutput('A2UI_REPLAY_MESSAGES', mergedOutput);
+          const streamedOutput = actionAdapter.merge(
+            currentOutput,
+            streamedResponseOutput ?? responseOutput,
+          );
+          if (
+            pendingLiveOutputsRef.current.length > 0
+            || streamedResponseOutput === null
+            || !adapter.preview.isEquivalent?.(streamedOutput, mergedOutput)
+          ) {
+            queueOrPostLiveOutput('A2UI_REPLAY_MESSAGES', mergedOutput);
+          }
         } else {
           resetLivePreviewDelivery();
           setPreviewRevision((value) => value + 1);
         }
-        const nextMetrics = mergeMetrics(metricsRef.current, {
-          agentOutputMs: performance.now() - startedAt,
-        });
-        metricsRef.current = nextMetrics;
-        setMetrics(nextMetrics);
+        const nextMetrics = metricsRef.current;
         const persistence = adapter.persist(responseOutput, {
           kind: 'action',
           current: currentOutput,
@@ -1695,6 +1737,7 @@ export function ChatController<
                 id: pendingId,
                 kind: 'output' as const,
                 text: 'LLM Response',
+                metrics: nextMetrics,
                 generationUsage: turnUsage.current(),
                 payload: responseOutput,
                 payloadLayout: 'chunks' as const,
@@ -1708,6 +1751,7 @@ export function ChatController<
         await recordTurn({
           userMessage,
           assistantContent: '',
+          previewMetrics: metricsRef.current,
           generationError: `Action failed: ${getErrorMessage(error)}`,
           generationUsage: turnUsage.current(),
           a2uiMessages: [],
@@ -1723,6 +1767,7 @@ export function ChatController<
                 tone: 'error',
                 icon: 'error',
                 text: `Action failed: ${getErrorMessage(error)}`,
+                metrics: metricsRef.current,
                 generationUsage: turnUsage.current(),
                 interaction,
               }
@@ -1740,6 +1785,7 @@ export function ChatController<
     adapter,
     buildConversationContext,
     trackTurnUsage,
+    observeGenerationMetrics,
     persistedPreviewMessages,
     persistedPreviewPayloadUrls,
     host,
@@ -1826,18 +1872,21 @@ export function ChatController<
     : undefined;
   const extraMetrics = useMemo<PreviewPanelMetricItem[]>(
     () =>
-      isGenerating
+      busy
         || output !== null
-        || typeof metrics.agentOutputMs === 'number'
+        || typeof metrics.generationMs === 'number'
         || typeof metrics.renderMs === 'number'
         ? [
-          {
-            key: 'agentOutputMs',
-            label: 'Agent',
-            title: 'Agent output duration',
-            description: 'Time from request until final agent output.',
-            value: metrics.agentOutputMs,
-          },
+          ...(busy || typeof metrics.generationMs === 'number'
+            ? [{
+              key: 'generationMs',
+              label: 'Generation',
+              title: 'Generation duration',
+              description:
+                'Server generation time, including tools and validation; excludes artifact upload, client transport and rendering.',
+              value: metrics.generationMs,
+            }]
+            : []),
           {
             key: 'renderMs',
             label: 'Render',
@@ -1848,7 +1897,7 @@ export function ChatController<
           },
         ]
         : [],
-    [isGenerating, metrics.agentOutputMs, metrics.renderMs, output],
+    [busy, metrics.generationMs, metrics.renderMs, output],
   );
   const showStarterContent = messages.length <= 1;
 

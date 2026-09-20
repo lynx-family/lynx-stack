@@ -47,10 +47,11 @@ export function estimateTokenCost(
   prices: ModelPrices | undefined,
 ): number | undefined {
   const rates = readModelPrices(prices);
-  const { inputTokens, cachedTokens, outputTokens } = usage;
+  // Cache usage is optional (for example, Jev only reports input and output).
+  // Without a cache breakdown, price all input at the regular input rate.
+  const { inputTokens, cachedTokens = 0, outputTokens } = usage;
   if (
-    !rates || inputTokens === undefined || cachedTokens === undefined
-    || outputTokens === undefined
+    !rates || inputTokens === undefined || outputTokens === undefined
     || ![inputTokens, cachedTokens, outputTokens].every(value =>
       Number.isFinite(value) && value >= 0
     ) || cachedTokens > inputTokens

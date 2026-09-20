@@ -17,11 +17,27 @@ function getModels(req: Request) {
     );
   }
 
+  const allowComposition = new URL(req.url).searchParams.get('protocol')
+    === 'a2ui';
+  const names = Object.keys(result.config.models).filter(name =>
+    allowComposition || result.config.models[name]!.provider !== 'typesafe'
+  );
+  if (names.length === 0) {
+    return jsonWithCors(req, {
+      ok: false,
+      error: 'No generation models are configured for this page.',
+    }, { status: 503 });
+  }
   return jsonWithCors(req, {
-    defaultModel: result.config.defaultModel,
-    models: Object.keys(result.config.models).map((name) => ({
+    defaultModel: names.includes(result.config.defaultModel)
+      ? result.config.defaultModel
+      : names[0],
+    models: names.map((name) => ({
       id: name,
       label: name,
+      ...(result.config.models[name]!.provider === 'typesafe'
+        ? { composition: true }
+        : {}),
       input_price: result.config.models[name]!.input_price,
       cached_price: result.config.models[name]!.cached_price,
       output_price: result.config.models[name]!.output_price,
