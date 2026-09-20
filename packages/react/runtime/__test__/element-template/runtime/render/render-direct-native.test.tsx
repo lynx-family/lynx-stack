@@ -5,7 +5,8 @@
 import { h } from 'preact';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { renderOpcodesIntoElementTemplate } from '../../../../src/element-template/runtime/render/render-opcodes.js';
+import { renderToElementTemplate } from '../../../../src/element-template/runtime/render/render-direct.js';
+import { __ElementTemplatePage } from '../../../../src/element-template/runtime/page/authored-page.js';
 import {
   destroyAllElementTemplateListStates,
   flushInitialElementTemplateListUpdates,
@@ -19,18 +20,8 @@ import {
   adaptSpreadAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
-import {
-  __OpAttr,
-  __OpBegin,
-  __OpEnd,
-  __OpPageEnd,
-  __OpPageStart,
-  __OpSlot,
-  __OpText,
-  renderToString,
-} from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
 
-describe('renderOpcodesIntoElementTemplate', () => {
+describe('direct renderer native contracts', () => {
   const createElementTemplate = vi.fn();
   const createTypedElementTemplate = vi.fn();
   const getElementUniqueID = vi.fn();
@@ -38,7 +29,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
   const removeNodeFromElementTemplate = vi.fn();
   const flushElementTree = vi.fn();
   const addEvent = vi.fn();
-  const onLifecycleEvent = vi.fn();
 
   beforeEach(() => {
     createElementTemplate.mockReset();
@@ -48,7 +38,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
     removeNodeFromElementTemplate.mockReset();
     flushElementTree.mockReset();
     addEvent.mockReset();
-    onLifecycleEvent.mockReset();
     getElementUniqueID.mockImplementation((node: { __mockNativeId?: number }) => node.__mockNativeId);
     vi.stubGlobal('__CreateElementTemplate', createElementTemplate);
     vi.stubGlobal('__CreateTypedElementTemplate', createTypedElementTemplate);
@@ -57,7 +46,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
     vi.stubGlobal('__RemoveNodeFromElementTemplate', removeNodeFromElementTemplate);
     vi.stubGlobal('__FlushElementTree', flushElementTree);
     vi.stubGlobal('__AddEvent', addEvent);
-    vi.stubGlobal('__OnLifecycleEvent', onLifecycleEvent);
     elementTemplateRegistry.clear();
     destroyAllElementTemplateListStates();
     clearEtAttrPlanMap();
@@ -69,17 +57,11 @@ describe('renderOpcodesIntoElementTemplate', () => {
     clearEtAttrPlanMap();
   });
 
-  it('throws when popping the root frame', () => {
-    expect(() => renderOpcodesIntoElementTemplate([__OpEnd])).toThrow(
-      'Popped root frame',
-    );
-  });
-
   it('creates root text through the builtin raw-text template with a handle id', () => {
     const rootTextRef = { kind: 'text-ref' };
     createElementTemplate.mockReturnValue(rootTextRef);
 
-    const result = renderOpcodesIntoElementTemplate([__OpText, 'hello']);
+    const result = renderToElementTemplate('hello');
 
     expect(result.rootRefs).toEqual([rootTextRef]);
     expect(result.pageAttributes).toBeNull();
@@ -94,42 +76,16 @@ describe('renderOpcodesIntoElementTemplate', () => {
     expect(elementTemplateRegistry.get(-1)).toBe(rootTextRef);
   });
 
-  it('returns singleton page attrs from the synthetic root frame', () => {
+  it('returns singleton page attrs from the authored page', () => {
     const attributes = { id: 'screen' };
 
-    const result = renderOpcodesIntoElementTemplate([
-      __OpPageStart,
-      attributes,
-    ]);
+    const result = renderToElementTemplate(h(__ElementTemplatePage, { attributes }));
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       pageAttributes: attributes,
       rootRefs: [],
       rootSubtreeHandles: [],
     });
-  });
-
-  it('rejects page attrs inside a materialized host', () => {
-    expect(() =>
-      renderOpcodesIntoElementTemplate([
-        __OpBegin,
-        { type: '_et_parent' },
-        __OpPageStart,
-        { id: 'nested' },
-        __OpEnd,
-      ])
-    ).toThrow('must be the outermost element');
-  });
-
-  it('rejects more than one page attr instruction', () => {
-    expect(() =>
-      renderOpcodesIntoElementTemplate([
-        __OpPageStart,
-        { id: 'first' },
-        __OpPageStart,
-        { id: 'second' },
-      ])
-    ).toThrow('does not support multiple authored <page /> elements');
   });
 
   it('materializes multiple roots inside one outermost page', () => {
@@ -140,54 +96,15 @@ describe('renderOpcodesIntoElementTemplate', () => {
       .mockReturnValueOnce(firstRootRef)
       .mockReturnValueOnce(secondRootRef);
 
-    const result = renderOpcodesIntoElementTemplate([
-      __OpPageStart,
-      attributes,
-      __OpBegin,
-      { type: '_et_first_root' },
-      __OpEnd,
-      __OpBegin,
-      { type: '_et_second_root' },
-      __OpEnd,
-      __OpPageEnd,
-    ]);
+    const result = renderToElementTemplate(
+      h(__ElementTemplatePage, { attributes, $0: [h('_et_first_root', {}), h('_et_second_root', {})] }),
+    );
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       pageAttributes: attributes,
       rootRefs: [firstRootRef, secondRootRef],
       rootSubtreeHandles: [[], []],
     });
-  });
-
-  it.each([
-    [
-      __OpBegin,
-      { type: '_et_before_page' },
-      __OpEnd,
-      __OpPageStart,
-      { id: 'page' },
-    ],
-    [
-      __OpPageStart,
-      { id: 'page' },
-      __OpPageEnd,
-      __OpBegin,
-      { type: '_et_after_page' },
-      __OpEnd,
-    ],
-    [
-      __OpPageStart,
-      { id: 'page' },
-      __OpPageEnd,
-      __OpText,
-      'outside page',
-    ],
-  ])('rejects a materialized root sibling outside page', (...opcodes) => {
-    createElementTemplate.mockReturnValue({ kind: 'root-ref' });
-
-    expect(() => renderOpcodesIntoElementTemplate(opcodes)).toThrow(
-      'must wrap all materialized roots',
-    );
   });
 
   it('creates exact list through typed native create with slot-0 refs as listChildren', () => {
@@ -202,18 +119,9 @@ describe('renderOpcodesIntoElementTemplate', () => {
     createElementTemplate.mockReturnValueOnce(itemRef);
     createTypedElementTemplate.mockReturnValueOnce(listRef);
 
-    const result = renderOpcodesIntoElementTemplate([
-      __OpBegin,
-      { type: 'list' },
-      __OpAttr,
-      attributes,
-      __OpSlot,
-      0,
-      __OpBegin,
-      { type: '_et_item', props: { __listItemPlatformInfo: { 'item-key': 'a' } } },
-      __OpEnd,
-      __OpEnd,
-    ]);
+    const result = renderToElementTemplate(
+      h('list', { attributes, $0: h('_et_item', { __listItemPlatformInfo: { 'item-key': 'a' } }) }),
+    );
 
     expect(result.rootRefs).toEqual([listRef]);
     expect(result.rootSubtreeHandles).toEqual([[]]);
@@ -260,7 +168,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
     expect(elementTemplateRegistry.get(-2)).toBe(listRef);
   });
 
-  it('keeps compiled and typed attributes separate across nested frames', () => {
+  it('keeps compiled and typed attributes separate across nested hosts', () => {
     const itemRef = { kind: 'item-ref' };
     const listRef = { kind: 'list-ref' };
     const parentRef = { kind: 'parent-ref' };
@@ -272,7 +180,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
     createElementTemplate.mockReturnValueOnce(itemRef).mockReturnValueOnce(parentRef);
     createTypedElementTemplate.mockReturnValueOnce(listRef);
 
-    const result = renderOpcodesIntoElementTemplate(renderToString(
+    const result = renderToElementTemplate(
       h('_et_parent', {
         attributeSlots: parentAttributes,
         $0: h('list', {
@@ -283,8 +191,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
           }),
         }),
       }),
-      undefined,
-    ));
+    );
 
     expect(result.rootRefs).toEqual([parentRef]);
     expect(createElementTemplate).toHaveBeenNthCalledWith(1, '_et_item', null, itemAttributes, null, -1);
@@ -316,16 +223,16 @@ describe('renderOpcodesIntoElementTemplate', () => {
     expect(addEvent).not.toHaveBeenCalled();
   });
 
-  it('resets attribute payloads when sibling frames switch host types', () => {
+  it('resets attribute payloads when siblings switch host types', () => {
     createElementTemplate.mockImplementation(type => ({ type }));
     createTypedElementTemplate.mockImplementation(type => ({ type }));
 
-    renderOpcodesIntoElementTemplate(renderToString([
+    renderToElementTemplate([
       h('_et_with_attrs', { attributeSlots: ['compiled'] }),
       h('list', {}),
       h('list', { attributes: { id: 'typed' } }),
       h('_et_without_attrs', {}),
-    ], undefined));
+    ]);
 
     expect(createElementTemplate).toHaveBeenNthCalledWith(1, '_et_with_attrs', null, ['compiled'], null, -1);
     expect(createTypedElementTemplate).toHaveBeenNthCalledWith(
@@ -360,11 +267,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
     const listRef = { kind: 'list-ref' };
     createTypedElementTemplate.mockReturnValueOnce(listRef);
 
-    const result = renderOpcodesIntoElementTemplate([
-      __OpBegin,
-      { type: 'list' },
-      __OpEnd,
-    ]);
+    const result = renderToElementTemplate(h('list', {}));
 
     expect(result.rootRefs).toEqual([listRef]);
     expect(result.rootSubtreeHandles).toEqual([[]]);
@@ -404,21 +307,15 @@ describe('renderOpcodesIntoElementTemplate', () => {
       .mockReturnValueOnce(itemBRef);
     createTypedElementTemplate.mockReturnValueOnce(listRef);
 
-    renderOpcodesIntoElementTemplate([
-      __OpBegin,
-      { type: 'list' },
-      __OpAttr,
-      {},
-      __OpSlot,
-      0,
-      __OpBegin,
-      { type: '_et_item_a', props: { __listItemPlatformInfo: { 'item-key': 'a' } } },
-      __OpEnd,
-      __OpBegin,
-      { type: '_et_item_b', props: { __listItemPlatformInfo: { 'item-key': 'b' } } },
-      __OpEnd,
-      __OpEnd,
-    ]);
+    renderToElementTemplate(
+      h('list', {
+        attributes: {},
+        $0: [
+          h('_et_item_a', { __listItemPlatformInfo: { 'item-key': 'a' } }),
+          h('_et_item_b', { __listItemPlatformInfo: { 'item-key': 'b' } }),
+        ],
+      }),
+    );
 
     const attrs = createTypedElementTemplate.mock.calls[0]![1] as Record<string, (...args: unknown[]) => unknown>;
     const componentAtIndex = attrs['component-at-index']!;
@@ -495,81 +392,6 @@ describe('renderOpcodesIntoElementTemplate', () => {
     ]);
   });
 
-  it('rejects non-list-item roots in typed list logical children', () => {
-    expect(() =>
-      renderOpcodesIntoElementTemplate([
-        __OpBegin,
-        { type: 'list' },
-        __OpSlot,
-        0,
-        __OpBegin,
-        { type: '_et_view', props: {} },
-        __OpEnd,
-        __OpEnd,
-      ])
-    ).toThrow('Element Template typed list received a non-list-item root in logical slot $0.');
-    expect(createElementTemplate).not.toHaveBeenCalled();
-    expect(createTypedElementTemplate).not.toHaveBeenCalled();
-  });
-
-  it('rejects text roots in typed list logical children', () => {
-    expect(() =>
-      renderOpcodesIntoElementTemplate([
-        __OpBegin,
-        { type: 'list' },
-        __OpSlot,
-        0,
-        __OpText,
-        'row',
-        __OpEnd,
-      ])
-    ).toThrow('Element Template typed list received text logical child.');
-    expect(createElementTemplate).not.toHaveBeenCalled();
-    expect(createTypedElementTemplate).not.toHaveBeenCalled();
-  });
-
-  it('rejects non-zero typed list logical slot opcodes in development', () => {
-    expect(() =>
-      renderOpcodesIntoElementTemplate([
-        __OpBegin,
-        { type: 'list' },
-        __OpSlot,
-        1,
-        __OpBegin,
-        { type: '_et_item', props: { __listItemPlatformInfo: { 'item-key': 'a' } } },
-        __OpEnd,
-        __OpEnd,
-      ])
-    ).toThrow('Element Template typed list only supports logical slot $0.');
-    expect(createElementTemplate).not.toHaveBeenCalled();
-    expect(createTypedElementTemplate).not.toHaveBeenCalled();
-  });
-
-  it('rejects deferred list item markers instead of entering Snapshot deferred flow', () => {
-    expect(() =>
-      renderOpcodesIntoElementTemplate([
-        __OpBegin,
-        { type: 'list' },
-        __OpSlot,
-        0,
-        __OpBegin,
-        {
-          type: '_et_item',
-          props: {
-            __listItemPlatformInfo: { 'item-key': 'late' },
-            isReady: 0,
-          },
-        },
-        __OpEnd,
-        __OpEnd,
-      ])
-    ).toThrow('Element Template typed list does not support deferred list items.');
-    expect(createElementTemplate).not.toHaveBeenCalled();
-    expect(createTypedElementTemplate).not.toHaveBeenCalled();
-    expect(flushElementTree).not.toHaveBeenCalled();
-    expect(onLifecycleEvent).not.toHaveBeenCalled();
-  });
-
   it('prepares direct event slots before native create', () => {
     const rootRef = { kind: 'root-ref' };
     const handleTap = vi.fn();
@@ -581,13 +403,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
       adaptEventAttrSlot,
     ];
 
-    const result = renderOpcodesIntoElementTemplate([
-      __OpBegin,
-      { type: '_et_event' },
-      __OpAttr,
-      [handleTap, 'title', 1],
-      __OpEnd,
-    ]);
+    const result = renderToElementTemplate(h('_et_event', { attributeSlots: [handleTap, 'title', 1] }));
 
     expect(result.rootRefs).toEqual([rootRef]);
     expect(createElementTemplate).toHaveBeenCalledWith(
@@ -605,11 +421,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
     createElementTemplate.mockReturnValue(rootRef);
     __etAttrPlanMap._et_event = [0, adaptEventAttrSlot];
 
-    renderOpcodesIntoElementTemplate([
-      __OpBegin,
-      { type: '_et_event' },
-      __OpEnd,
-    ]);
+    renderToElementTemplate(h('_et_event', {}));
 
     expect(createElementTemplate).toHaveBeenCalledWith(
       '_et_event',
@@ -634,13 +446,7 @@ describe('renderOpcodesIntoElementTemplate', () => {
       adaptEventAttrSlot,
     ];
 
-    renderOpcodesIntoElementTemplate([
-      __OpBegin,
-      { type: '_et_event' },
-      __OpAttr,
-      [null, undefined, false, true],
-      __OpEnd,
-    ]);
+    renderToElementTemplate(h('_et_event', { attributeSlots: [null, undefined, false, true] }));
 
     expect(createElementTemplate).toHaveBeenCalledWith(
       '_et_event',
@@ -652,39 +458,13 @@ describe('renderOpcodesIntoElementTemplate', () => {
     expect(addEvent).not.toHaveBeenCalled();
   });
 
-  it('prepares attr plan slots when the opcode omits attributeSlots', () => {
-    const rootRef = { kind: 'root-ref' };
-    createElementTemplate.mockReturnValue(rootRef);
-    __etAttrPlanMap._et_event = [0, adaptEventAttrSlot];
-
-    renderOpcodesIntoElementTemplate([
-      __OpBegin,
-      { type: '_et_event' },
-      __OpEnd,
-    ]);
-
-    expect(createElementTemplate).toHaveBeenCalledWith(
-      '_et_event',
-      null,
-      [null],
-      null,
-      -1,
-    );
-  });
-
   it('prepares direct ref values before native create', () => {
     const rootRef = { kind: 'root-ref' };
     const ref = vi.fn();
     createElementTemplate.mockReturnValue(rootRef);
     __etAttrPlanMap._et_ref = [0, adaptRefAttrSlot];
 
-    renderOpcodesIntoElementTemplate([
-      __OpBegin,
-      { type: '_et_ref' },
-      __OpAttr,
-      [ref],
-      __OpEnd,
-    ]);
+    renderToElementTemplate(h('_et_ref', { attributeSlots: [ref] }));
 
     expect(createElementTemplate).toHaveBeenCalledWith(
       '_et_ref',
@@ -702,20 +482,18 @@ describe('renderOpcodesIntoElementTemplate', () => {
     createElementTemplate.mockReturnValue(rootRef);
     __etAttrPlanMap._et_spread = [0, adaptSpreadAttrSlot];
 
-    renderOpcodesIntoElementTemplate([
-      __OpBegin,
-      { type: '_et_spread' },
-      __OpAttr,
-      [{
-        id: 'cta',
-        className: 'primary',
-        __self: 'debug-self',
-        __source: { fileName: 'app.tsx' },
-        bindtap: handleTap,
-        catchtouchstart: false,
-      }],
-      __OpEnd,
-    ]);
+    renderToElementTemplate(
+      h('_et_spread', {
+        attributeSlots: [{
+          id: 'cta',
+          className: 'primary',
+          __self: 'debug-self',
+          __source: { fileName: 'app.tsx' },
+          bindtap: handleTap,
+          catchtouchstart: false,
+        }],
+      }),
+    );
 
     expect(createElementTemplate).toHaveBeenCalledWith(
       '_et_spread',
@@ -733,18 +511,9 @@ describe('renderOpcodesIntoElementTemplate', () => {
     createElementTemplate.mockReturnValue(rootRef);
     __etAttrPlanMap._et_spread = [0, adaptSpreadAttrSlot];
 
-    renderOpcodesIntoElementTemplate([
-      __OpBegin,
-      { type: '_et_spread' },
-      __OpAttr,
-      [{
-        id: 'cta',
-        ref,
-        'main-thread:ref': vi.fn(),
-        'worklet:ref': vi.fn(),
-      }],
-      __OpEnd,
-    ]);
+    renderToElementTemplate(
+      h('_et_spread', { attributeSlots: [{ id: 'cta', ref, 'main-thread:ref': vi.fn(), 'worklet:ref': vi.fn() }] }),
+    );
 
     expect(createElementTemplate).toHaveBeenCalledWith(
       '_et_spread',
@@ -754,38 +523,5 @@ describe('renderOpcodesIntoElementTemplate', () => {
       -1,
     );
     expect(ref).not.toHaveBeenCalled();
-  });
-
-  it('throws when text is emitted outside of a child slot', () => {
-    expect(() =>
-      renderOpcodesIntoElementTemplate([
-        __OpBegin,
-        { type: '_et_parent' },
-        __OpText,
-        'hello',
-        __OpEnd,
-      ])
-    ).toThrow('Template \'_et_parent\' received a text child outside of any child slot.');
-  });
-
-  it('throws when an element child is emitted outside of a child slot', () => {
-    expect(() =>
-      renderOpcodesIntoElementTemplate([
-        __OpBegin,
-        { type: '_et_parent' },
-        __OpBegin,
-        { type: '_et_child' },
-        __OpSlot,
-        0,
-        __OpEnd,
-        __OpEnd,
-      ])
-    ).toThrow('Template \'_et_parent\' received a child outside of any child slot.');
-  });
-
-  it('throws on unknown opcodes', () => {
-    expect(() => renderOpcodesIntoElementTemplate([999])).toThrow(
-      'Unknown opcode: 999',
-    );
   });
 });
