@@ -251,6 +251,7 @@ describe('A2UI Bench UI Judge integration', () => {
           protocol: 'html',
           generate: (input) => {
             expect(input.enableHtmlFragment).toBeUndefined();
+            expect(input.enableScriptReuse).toBeUndefined();
             return Promise.resolve({
               attempts: [{
                 index: 1,
@@ -327,6 +328,7 @@ describe('A2UI Bench UI Judge integration', () => {
       profile: 'native',
       model: 'xml-model',
       enableHtmlFragment: true,
+      enableScriptReuse: true,
     }];
     const store = getBenchJobStore();
     const job = store.createJob(benchRequest, 1);
@@ -336,6 +338,7 @@ describe('A2UI Bench UI Judge integration', () => {
           protocol: 'lynx-xml',
           generate: (input) => {
             expect(input.enableHtmlFragment).toBe(true);
+            expect(input.enableScriptReuse).toBe(true);
             return Promise.resolve({
               attempts: [{
                 index: 1,

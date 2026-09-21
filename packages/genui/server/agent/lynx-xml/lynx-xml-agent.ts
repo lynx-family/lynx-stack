@@ -18,6 +18,8 @@ import type { SearchRunScope } from '../common/doubao-search-tool.js';
 import { createLLMProvider } from '../common/openai-provider.js';
 
 export interface LynxXmlFragmentOptions {
+  /** Assemble shared lifecycle and event scripts; defaults to false. */
+  enableScriptReuse?: boolean | undefined;
   /** Generate an XML fragment for deterministic postprocessing; defaults to false. */
   enableHtmlFragment?: boolean | undefined;
   /** Optional utility CSS, independent of Template; disabled by default. */
@@ -59,6 +61,7 @@ export function createLynxXmlAgent(opts: LynxXmlAgentOptions = {}) {
     name: 'LynxXmlAgent',
     instructions: [
       buildLynxXmlSystemPrompt({
+        enableScriptReuse: opts.enableScriptReuse === true,
         enableHtmlFragment: opts.enableHtmlFragment === true,
         stylePreset: opts.stylePreset ?? false,
       }),

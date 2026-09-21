@@ -484,6 +484,7 @@ function createBenchRequestGroups(
     ...(group.protocol === 'lynx-xml'
       ? {
         enableHtmlFragment: group.enableHtmlFragment === true,
+        enableScriptReuse: group.enableScriptReuse === true,
         ...(group.stylePreset === 'default'
           ? { stylePreset: group.stylePreset }
           : {}),
@@ -529,6 +530,7 @@ function createBenchPlanSignature(
       ...(group.protocol === 'lynx-xml'
         ? {
           enableHtmlFragment: group.enableHtmlFragment === true,
+          enableScriptReuse: group.enableScriptReuse === true,
           ...(group.stylePreset === 'default'
             ? { stylePreset: group.stylePreset }
             : {}),
@@ -2050,6 +2052,8 @@ export function BenchPage({ sharedPlan }: { sharedPlan?: string }) {
                 modelOptions={env.models}
                 onAdd={addComparisonGroup}
                 onPresetChange={applyBenchPreset}
+                onScriptReuseChange={(id, enabled) =>
+                  updateGroup(id, groupPatch('enableScriptReuse', enabled))}
                 onFragmentChange={(id, enabled) =>
                   updateGroup(
                     id,

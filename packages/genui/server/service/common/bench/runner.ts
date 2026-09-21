@@ -485,6 +485,7 @@ async function runProtocolAdapterOne(
       ...(protocol === 'lynx-xml'
         ? {
           enableHtmlFragment: item.group.enableHtmlFragment === true,
+          enableScriptReuse: item.group.enableScriptReuse === true,
           ...(item.group.stylePreset
             ? { stylePreset: item.group.stylePreset }
             : {}),

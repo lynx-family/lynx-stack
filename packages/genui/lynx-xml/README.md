@@ -14,7 +14,8 @@ extraction, and rendering.
 | Direct (default) | A complete `.lynxml` document with model-authored Element PAPI code | Pass the document to the renderer                            |
 | Template         | An intermediate `.lynxml` document containing a `<template>`        | Call `compileLynxXmlFragment`, then render its `text` result |
 
-Both modes keep state, lifecycle, and interactions model-authored. Styles are
+Both modes keep state and interactions model-authored. Lifecycle is model-authored
+unless ScriptReuse is enabled. Styles are
 model-authored unless the optional StylePreset is enabled.
 Template mode generates the static element tree deterministically, without an
 additional model round trip.
@@ -153,6 +154,81 @@ The Template setting uses the existing `enableHtmlFragment` option.
 Server requests select Template with `enableHtmlFragment: true` and StylePreset
 with `stylePreset: 'default'` independently; both remain opt-in at the API level.
 Final metadata records the selected preset.
+
+### Optional ScriptReuse
+
+Set `enableScriptReuse: true` in both `buildLynxXmlSystemPrompt` and
+`assembleLynxXmlArtifact`. It defaults to `false` at the API level, independently of Template
+and StylePreset. The agent assembles page creation, lifecycle registration,
+render guarding, event cleanup, and text-update helpers locally. The model
+only writes business state and synchronous callbacks:
+
+```xml
+<!doctype lynx>
+<lynx engine-version="4.2">
+<template><text id="count">0</text></template>
+<script thread="main">
+let count = 0;
+definePage({
+  render(ctx) {
+    ctx.on(ctx.nodes.count, "tap", () => ctx.setText(ctx.nodes.count, ++count));
+  },
+  update(ctx, patch) {
+    if (typeof patch.count === "number") count = patch.count;
+    ctx.setText(ctx.nodes.count, count);
+  }
+});
+</script>
+</lynx>
+```
+
+This is an intermediate contract, not directly runnable XML. Assemble it before
+preview or delivery:
+
+```ts
+import {
+  assembleLynxXmlArtifact,
+  buildLynxXmlSystemPrompt,
+} from '@lynx-js/genui/lynx-xml';
+
+const options = { enableHtmlFragment: true, enableScriptReuse: true };
+const prompt = buildLynxXmlSystemPrompt(options);
+const { text } = assembleLynxXmlArtifact(modelOutput, options);
+```
+
+`definePage` must appear exactly once at top level with an object containing
+optional `render(ctx, data)`, `update(ctx, patch)`, and `destroy(ctx)` hooks.
+Without Template, `render` is required and creates the business tree with
+Element PAPI. `ctx.page`, `ctx.pageId`, and `ctx.nodes` exist before render.
+With Template, the initial tree and node map are already created.
+`ctx.on(node, name, handler, options?)` and
+`ctx.listen(context, name, handler)` return an unsubscribe function; call it
+before discarding dynamic nodes. Remaining listeners are removed on destroy.
+`ctx.setText(textNode, value)` replaces text children. Initial rendering uses
+the SDK flush; update and registered event callbacks flush automatically.
+Hooks receive the first object in engine `event.data`, defaulting to `{}`.
+Business state merging and optional background-thread logic remain model-owned.
+The `destroy` hook must forward an app-defined background cleanup event when needed.
+
+Create and Bench expose a **ScriptReuse** switch, on by default for new
+conversations and comparison groups, matching StylePreset. Explicit saved values
+are preserved; missing Create settings default on, while historical Bench plans
+and reports without the option keep it off. HTTP callers use
+`POST /lynx-xml/stream` with `"enableScriptReuse": true`.
+The final metadata retains `modelOutput` and records `enableScriptReuse: true`.
+Streaming still shows original deltas; preview and Judge receive the assembled
+standalone document. Invalid contracts retain model usage and use the existing
+repair policy; assembly never executes model code or adds a model call.
+Create sends the saved original assistant output in subsequent requests when
+ScriptReuse is enabled, avoiding resending injected helpers. Older records
+without original output fall back to their saved artifact.
+
+This removes repeated script generation and redundant lifecycle prompt sections.
+It does not reduce the final runtime artifact by the same amount: the shared
+implementation is inlined locally. Compare identical Bench groups with only
+ScriptReuse changed, checking input/output tokens, generation duration, validity,
+and Judge results. Provider token counts and real latency are required to quantify
+the savings; source character counts alone do not establish them.
 
 ### Convert a standalone fragment
 

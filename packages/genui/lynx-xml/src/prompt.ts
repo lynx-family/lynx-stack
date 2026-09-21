@@ -2,18 +2,28 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { scriptReuseInstructions } from './script-reuse.js';
 import {
   LYNX_XML_STYLE_PRESET_INSTRUCTIONS,
   validateStylePreset,
 } from './style-preset.js';
 import type { LynxXmlStylePreset } from './style-preset.js';
-import { VANILLA_LYNX_SKILL_GUIDANCE } from './vanilla-lynx-skill.js';
+import {
+  VANILLA_LYNX_REUSED_SCRIPT_GUIDANCE,
+  VANILLA_LYNX_SKILL_GUIDANCE,
+} from './vanilla-lynx-skill.js';
 
 /** The default Lynx engine version used by generated XML artifacts. */
 export const LYNX_XML_ENGINE_VERSION = '4.2';
 
 /** Options used to customize the Lynx XML generation system prompt. */
 export interface BuildLynxXmlSystemPromptOptions {
+  /**
+   * Generate business callbacks and let the agent assemble shared script logic.
+   * @defaultValue false
+   * @example { enableScriptReuse: true, enableHtmlFragment: true }
+   */
+  enableScriptReuse?: boolean;
   /** Generate an intermediate document for deterministic fragment compilation. */
   enableHtmlFragment?: boolean;
   /** Reuse preset utility CSS independently of Template. Disabled when omitted or false. */
@@ -47,6 +57,7 @@ export function buildLynxXmlSystemPrompt(
     engineVersion,
     options.enableHtmlFragment === true,
     options.stylePreset === 'default',
+    options.enableScriptReuse === true,
   );
   const appendix = options.appendix?.trim();
   return appendix ? `${prompt}\n\n${appendix}` : prompt;
@@ -68,12 +79,13 @@ function buildBasePrompt(
   engineVersion: string,
   enableHtmlFragment: boolean,
   enableStylePreset: boolean,
+  enableScriptReuse: boolean,
 ): string {
   return `
 You are the Lynx XML generation agent for Lynx GenUI. Turn the user's request
 into ${
-    enableHtmlFragment
-      ? 'one intermediate fragment document for server compilation'
+    enableHtmlFragment || enableScriptReuse
+      ? 'one intermediate document for server assembly'
       : 'one complete, runnable, zero-build .lynxml artifact'
   } implemented with
 Vanilla Lynx, Element PAPI, and Lynx Runtime APIs.
@@ -96,9 +108,21 @@ ${
           'Write all CSS,',
           'Write only custom CSS beyond the enabled preset,',
         )
-        : LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS) + '\n\n'
+        : LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS).split('\n').filter(line =>
+          !enableScriptReuse
+          || (!line.startsWith('- The server supplies createFragment')
+            && !line.startsWith('- createFragment creates')
+            && !line.startsWith('- Write all CSS,')
+            && !line.startsWith('- Write only custom CSS'))
+        ).join('\n') + '\n\n'
       : ''
-  }${VANILLA_LYNX_SKILL_GUIDANCE}
+  }${
+    enableScriptReuse
+      ? VANILLA_LYNX_REUSED_SCRIPT_GUIDANCE
+      : VANILLA_LYNX_SKILL_GUIDANCE
+  }
+
+${enableScriptReuse ? scriptReuseInstructions(enableHtmlFragment) : ''}
 
 ${
     enableStylePreset

@@ -252,6 +252,7 @@ test.each([false, true])(
         provider: 'test-model',
         enableDesignGuidance: false,
         enableHtmlFragment: false,
+        enableScriptReuse: false,
         stylePreset: 'default',
       });
       const payload = {
@@ -300,6 +301,7 @@ test.each([false, true])(
       const body = JSON.parse(init.body) as Record<string, unknown>;
       expect(body.enableDesignGuidance).toBe(false);
       expect(body.enableHtmlFragment).toBe(false);
+      expect(body.enableScriptReuse).toBe(false);
       expect(body.stylePreset).toBe('default');
       return generated();
     });
@@ -307,6 +309,7 @@ test.each([false, true])(
     await updateUI(() => {
       checkbox('Design').click();
       checkbox('Template').click();
+      checkbox('ScriptReuse').click();
     });
     await updateUI(() => {
       const textarea = container.querySelector('textarea')!;
@@ -373,11 +376,14 @@ test.each([false, true])(
     expect(checkbox('Design').checked).toBe(false);
     expect(checkbox('Template').checked).toBe(false);
     expect(checkbox('StylePreset').checked).toBe(true);
-    for (const label of ['Design', 'Template', 'StylePreset']) {
+    expect(checkbox('ScriptReuse').checked).toBe(false);
+    for (const label of ['Design', 'Template', 'StylePreset', 'ScriptReuse']) {
       expect(checkbox(label).disabled).toBe(true);
     }
     await updateUI(() => {
-      for (const label of ['Design', 'Template', 'StylePreset']) {
+      for (
+        const label of ['Design', 'Template', 'StylePreset', 'ScriptReuse']
+      ) {
         checkbox(label).click();
       }
     });
@@ -397,6 +403,8 @@ test.each([false, true])(
         expect(checkbox(label).checked).toBe(true);
         expect(checkbox(label).disabled).toBe(false);
       }
+      expect(checkbox('ScriptReuse').checked).toBe(true);
+      expect(checkbox('ScriptReuse').disabled).toBe(false);
     });
     await updateUI(() => {
       const item = [
@@ -414,7 +422,10 @@ test.each([false, true])(
       expect(checkbox('Design').checked).toBe(false);
       expect(checkbox('Template').checked).toBe(false);
       expect(checkbox('StylePreset').checked).toBe(true);
-      for (const label of ['Design', 'Template', 'StylePreset']) {
+      expect(checkbox('ScriptReuse').checked).toBe(false);
+      for (
+        const label of ['Design', 'Template', 'StylePreset', 'ScriptReuse']
+      ) {
         expect(checkbox(label).disabled).toBe(true);
       }
     });
@@ -493,7 +504,7 @@ test('restores each conversation independently and survives late model loading',
 test('saves checkbox edits before sending, reloads them, and defaults new records on', async () => {
   rstest.stubGlobal('fetch', () => Promise.resolve(jsonResponse(MODELS)));
   await mountPage();
-  const labels = ['Design', 'Template', 'StylePreset'];
+  const labels = ['Design', 'Template', 'StylePreset', 'ScriptReuse'];
   for (const label of labels) expect(checkbox(label).checked).toBe(true);
   await updateUI(() => {
     for (const label of labels) checkbox(label).click();
@@ -506,6 +517,7 @@ test('saves checkbox edits before sending, reloads them, and defaults new record
       provider: 'test-model',
       enableDesignGuidance: false,
       enableHtmlFragment: false,
+      enableScriptReuse: false,
       stylePreset: false,
     });
   });

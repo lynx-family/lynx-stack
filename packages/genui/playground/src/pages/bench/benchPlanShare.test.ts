@@ -26,7 +26,7 @@ function fixture() {
         enableDesignGuidance: false,
         enableHtmlFragment: true,
         ...(group.protocol === 'lynx-xml'
-          ? { stylePreset: 'default' as const }
+          ? { stylePreset: 'default' as const, enableScriptReuse: true }
           : {}),
       }),
     ),
