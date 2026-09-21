@@ -393,32 +393,29 @@ describe('element template', () => {
     expect(result.elementTemplates?.some(template => template.compiledTemplate.type === 'list-item')).toBe(true);
     expect(result.code).toMatchInlineSnapshot(`
       "import { jsx as _jsx } from "react/jsx-runtime";
-      const _et_4f796f70cdd7 = \`\${globDynamicComponentEntry}:\${"_et_4f796f70cdd7"}\`;
-      const _et_b8da8bac988e = \`\${globDynamicComponentEntry}:\${"_et_b8da8bac988e"}\`;
+      import * as ReactLynxInternal from "@lynx-js/react/internal";
+      const _et_4f796f70cdd7_bundle = globDynamicComponentEntry;
+      const _et_4f796f70cdd7 = \`\${_et_4f796f70cdd7_bundle}:\${"_et_4f796f70cdd7"}\`;
+      const _et_b8da8bac988e_bundle = globDynamicComponentEntry;
+      const _et_b8da8bac988e = \`\${_et_b8da8bac988e_bundle}:\${"_et_b8da8bac988e"}\`;
       /*#__PURE__*/ _jsx("list", {
           attributes: {
               "id": listId,
               "class": "feed"
           },
           $0: [
-              /*#__PURE__*/ _jsx(_et_4f796f70cdd7, {
-                  attributeSlots: [
-                      firstKey
-                  ],
-                  __listItemPlatformInfo: {
-                      "item-key": firstKey,
-                      "full-span": true
-                  }
-              }, "a"),
-              /*#__PURE__*/ _jsx(_et_b8da8bac988e, {
-                  attributeSlots: [
-                      secondKey
-                  ],
-                  __listItemPlatformInfo: {
-                      "item-key": secondKey,
-                      "recyclable": true
-                  }
-              }, "b")
+              /*#__PURE__*/ ReactLynxInternal.__etHost(_et_4f796f70cdd7, "_et_4f796f70cdd7", _et_4f796f70cdd7_bundle, "a", [
+                  firstKey
+              ], void 0, {
+                  "item-key": firstKey,
+                  "full-span": true
+              }),
+              /*#__PURE__*/ ReactLynxInternal.__etHost(_et_b8da8bac988e, "_et_b8da8bac988e", _et_b8da8bac988e_bundle, "b", [
+                  secondKey
+              ], void 0, {
+                  "item-key": secondKey,
+                  "recyclable": true
+              })
           ]
       });
       "

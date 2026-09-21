@@ -1,15 +1,16 @@
-import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+import * as ReactLynxInternal from "@lynx-js/react/element-template/internal";
 import { Component } from '@lynx-js/react';
-const _et_5c988e5983da = `${globDynamicComponentEntry}:${"_et_5c988e5983da"}`;
+const _et_5c988e5983da_bundle = globDynamicComponentEntry;
+const _et_5c988e5983da = `${_et_5c988e5983da_bundle}:${"_et_5c988e5983da"}`;
 export class App extends Component {
     render() {
         const leading = 'A';
         const innerText = 'B';
         const trailing = 'C';
-        return /*#__PURE__*/ _jsx(_et_5c988e5983da, {
-            $0: leading,
-            $1: innerText,
-            $2: trailing
-        });
+        return /*#__PURE__*/ ReactLynxInternal.__etHost(_et_5c988e5983da, "_et_5c988e5983da", _et_5c988e5983da_bundle, void 0, void 0, [
+            leading,
+            innerText,
+            trailing
+        ], void 0);
     }
 }
