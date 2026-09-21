@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 
 import { vi } from 'vitest';
 
+import { resetElementTemplatePatchListener } from '../../../../src/element-template/native/patch-listener.js';
 import { resetElementTemplateHydrationListener } from '../../../../src/element-template/background/hydration-listener.js';
 import { clearEtAttrPlanMap } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
@@ -265,6 +266,7 @@ async function runCompiledRenderFixture(options: {
     expectReportErrorCount(0);
   } finally {
     resetElementTemplateHydrationListener();
+    resetElementTemplatePatchListener();
     clearEtAttrPlanMap();
     cleanup();
     globalThis.__USE_ELEMENT_TEMPLATE__ = undefined;

@@ -4,6 +4,7 @@
 
 import { createRenderedHost, discardRenderedHostsSince } from './create-rendered-host.js';
 import type { RenderAttributes } from './create-rendered-host.js';
+import type { ElementTemplateHost } from './host.js';
 import {
   EMPTY_OBJ,
   beforeDiff,
@@ -40,6 +41,7 @@ interface DirectRenderState extends Omit<MainThreadCreateResult, 'pageAttributes
 interface RenderVNode {
   type: unknown;
   props: Record<string, unknown>;
+  templateKey?: string;
   [PARENT]?: RenderVNode | undefined;
   [CHILDREN]?: unknown[];
 }
@@ -91,7 +93,7 @@ function renderHost(
   parentListItemUids: number[] | undefined,
 ): void {
   const type = vnode.type as string;
-  const props = vnode.props;
+  const props = vnode.templateKey === undefined ? vnode.props : vnode as unknown as Record<string, unknown>;
   const isList = type === 'list';
   const attributes = (isList ? props['attributes'] : props['attributeSlots']) as RenderAttributes;
   const listItemPlatformInfo = props['__listItemPlatformInfo'] as ETListItemPlatformInfo | undefined;
@@ -130,22 +132,24 @@ function renderHost(
       cleanupVNode(vnode);
     }
   } else {
-    // Named slot inputs belong to the caller. Only this staging array is
-    // renderer-owned, so it can become the native refs array after traversal.
-    let childrenBySlot: unknown[] | undefined;
-    for (const name in props) {
-      if (name.startsWith('$')) {
-        const children = props[name];
-        if (children == null || children === true || children === false) continue;
-        (childrenBySlot ??= [])[+name.slice(1)] = children;
+    // Ordered inputs belong to the caller. Named inputs are collected into a
+    // renderer-owned array that can also hold the resulting native refs.
+    let childrenBySlot = props['slotChildren'] as unknown[] | undefined;
+    if (vnode.templateKey === undefined && childrenBySlot === undefined) {
+      for (const name in props) {
+        if (name.startsWith('$')) {
+          const children = props[name];
+          if (children == null || children === true || children === false) continue;
+          (childrenBySlot ??= [])[+name.slice(1)] = children;
+        }
       }
+      childSlots = childrenBySlot as ElementTemplateHandle[][] | undefined;
     }
-    childSlots = childrenBySlot as ElementTemplateHandle[][] | undefined;
     if (childrenBySlot !== undefined) {
       for (let slotId = 0; slotId < childrenBySlot.length; slotId++) {
         const children = childrenBySlot[slotId];
-        if (children === undefined) continue;
-        const refs = childSlots![slotId] = [];
+        if (children == null || children === true || children === false) continue;
+        const refs = (childSlots ??= [])[slotId] = [];
         renderDirect(children, context, vnode, refs, result, type, subtreeHandles, undefined);
       }
     }
@@ -169,6 +173,7 @@ function renderHost(
     listItemUids,
     subtreeHandles,
     listItemPlatformInfo,
+    vnode.templateKey === undefined ? undefined : vnode as unknown as ElementTemplateHost,
   );
   output.push(ref);
   if (parentType === undefined) {

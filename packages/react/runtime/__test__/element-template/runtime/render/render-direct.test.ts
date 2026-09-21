@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { Component, createContext, h, options } from 'preact';
-import { useContext, useState } from 'preact/hooks';
+import { useContext, useId, useState } from 'preact/hooks';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DIFF2 } from '../../../../src/shared/render-constants.js';
@@ -250,6 +250,71 @@ describe('direct first-screen materialization', () => {
         ]],
       });
     }
+  });
+
+  it('preserves sparse ordered inputs and named-slot native output across repeated renders', () => {
+    registerTemplates([{
+      templateId: '_et_ordered',
+      compiledTemplate: {
+        kind: 'element',
+        type: 'view',
+        children: Array.from(
+          { length: 9 },
+          (_, elementSlotIndex) => ({ kind: 'childSlot' as const, type: 'slot', elementSlotIndex }),
+        ),
+      },
+    }]);
+    const slots: unknown[] = [];
+    slots[1] = '';
+    slots[2] = 0;
+    slots[3] = false;
+    slots[4] = null;
+    slots[5] = Object.freeze(['first', Object.freeze([null, 'second'])]);
+    slots[6] = Object.freeze([]);
+    slots[8] = undefined;
+    Object.freeze(slots);
+    const named: Record<string, unknown> = {};
+    for (const index of Object.keys(slots)) named[`$${index}`] = slots[+index];
+    const create = vi.spyOn(globalThis, '__CreateElementTemplate');
+    const normalize = (input: Record<string, unknown>) => {
+      renderToElementTemplate(h('_et_ordered', input));
+      const call = create.mock.calls.findLast(args => args[0] === '_et_ordered')!;
+      return call[3]?.map(refs => refs.map(ref => __SerializeElementTemplate(ref).attributeSlots));
+    };
+    const expected = normalize(named);
+    expect(normalize({ slotChildren: slots })).toStrictEqual(expected);
+    expect(normalize({ slotChildren: slots })).toStrictEqual(expected);
+    expect(Object.keys(slots)).toEqual(['1', '2', '3', '4', '5', '6', '8']);
+  });
+
+  it('preserves context and unique hook IDs through ordered slot ancestors', () => {
+    const Context = createContext('default');
+    const seen: { id: string; value: string; count: number }[] = [];
+    function Reader() {
+      const id = useId();
+      const value = useContext(Context);
+      const [count] = useState(7);
+      seen.push({ id, value, count });
+      return id;
+    }
+    const makeTree = () =>
+      h(Context.Provider, {
+        value: 'provided',
+        children: h('_et_direct_root', {
+          slotChildren: [[
+            h(Reader, {}),
+            h('_et_direct_root', { slotChildren: [h(Reader, {})] }),
+          ]],
+        }),
+      });
+    renderToElementTemplate(makeTree());
+    expect(seen).toEqual([
+      { id: 'P0-0', value: 'provided', count: 7 },
+      { id: 'P0-1', value: 'provided', count: 7 },
+    ]);
+    seen.length = 0;
+    renderToElementTemplate(makeTree());
+    expect(seen.map(item => item.id)).toEqual(['P0-0', 'P0-1']);
   });
 
   it('keeps a reused vnode attribute array raw while preparing handle-specific event markers', () => {
