@@ -63,6 +63,13 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
 
   __FlushElementTree(__page, options);
 
+  // The replaced tree is a reference cycle holding live elements, which
+  // reference counting never frees. `unRenderElements` walks the sibling
+  // chain, so it runs before `tearDown` unlinks it.
+  const replaced = oldRoot as SnapshotInstance;
+  replaced.unRenderElements();
+  replaced.tearDown();
+
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
