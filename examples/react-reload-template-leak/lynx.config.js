@@ -14,10 +14,18 @@ export default defineConfig({
     // variant (`Lynx_LepusNG_RC`), the mode the leak was reported under.
     // `@lynx-js/type-config` does not export the key yet, so it is listed
     // explicitly to get past validation.
-    pluginLynxConfig({ disableQuickTracingGC: useRC }, {
-      configKeys: [...defaultConfigKeys, 'disableQuickTracingGC'],
-      validate: (input) => input,
-    }),
+    pluginLynxConfig(
+      // `disableQuickTracingGC` is not exported by `@lynx-js/type-config` yet.
+      /** @type {import('@lynx-js/config-rsbuild-plugin').Config} */ ({
+        disableQuickTracingGC: useRC,
+      }),
+      {
+        configKeys: [...defaultConfigKeys, 'disableQuickTracingGC'],
+        validate: (
+          input,
+        ) => /** @type {import('@lynx-js/config-rsbuild-plugin').Config} */ (input),
+      },
+    ),
     pluginQRCode({
       schema(url) {
         return `${url}?fullscreen=true`;

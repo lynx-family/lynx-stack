@@ -12,7 +12,7 @@ function testModule(): LynxTestModule | undefined {
     .LynxTestModule;
 }
 
-export function App(): JSX.Element {
+export function App() {
   const initData = useInitData() as { round?: number; target?: number };
   const round = Number(initData?.round ?? 0);
   const target = Number(initData?.target ?? 0);
@@ -93,7 +93,7 @@ export function App(): JSX.Element {
               height: '40px',
               border: '1px solid #ccc',
             }}
-            value={`round ${round}`}
+            default-value={`round ${round}`}
           />
         )
         : null}

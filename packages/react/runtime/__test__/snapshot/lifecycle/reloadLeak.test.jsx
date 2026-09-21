@@ -3,15 +3,18 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
+import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { BasicBG } from './reloadBG';
 import { BasicMT } from './reloadMT';
+import { destroyBackground } from '../../../src/snapshot/lifecycle/destroy';
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
 import { __root } from '../../../src/root';
 import { setupPage, traverseSnapshotInstance } from '../../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
-import { elementTree } from '../utils/nativeMethod';
+import { elementTree, waitSchedule } from '../utils/nativeMethod';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));
@@ -121,6 +124,25 @@ describe('reload does not retain the old tree', () => {
         </view>
       </page>
     `);
+  });
+
+  it('releases the background tree it destroys', async function() {
+    globalEnvManager.switchToBackground();
+    render(BasicBG, __root);
+    await waitSchedule();
+
+    const oldNodes = collect(__root).filter(node => node !== __root);
+    expect(oldNodes.length).toBeGreaterThan(0);
+
+    vi.useFakeTimers();
+    destroyBackground();
+    // `removeChild` only unlinks the subtree root; the rest is torn down on the
+    // delayed boundary the commit task schedules.
+    vi.advanceTimersByTime(20000);
+
+    const stillLinked = oldNodes.filter(node => node.parentNode !== null);
+    vi.useRealTimers();
+    expect(stillLinked).toHaveLength(0);
   });
 
   it('keeps the reloaded tree working', function() {
