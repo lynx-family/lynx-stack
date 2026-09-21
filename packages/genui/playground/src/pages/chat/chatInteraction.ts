@@ -135,7 +135,9 @@ export function appendChatInteraction(
   elapsedMs: number,
   data?: unknown,
 ): ChatInteractionLog {
-  if (event === 'model' && isRecord(data) && data.status === 'started') {
+  const isModelStart = event === 'model' && isRecord(data)
+    && data.status === 'started';
+  if (isModelStart) {
     log = { ...log, modelRequestCount: (log.modelRequestCount ?? 0) + 1 };
   }
   if (['error', 'done', 'json'].includes(event) && isRecord(data)) {
@@ -189,6 +191,7 @@ export function appendChatInteraction(
     count: previous ? previous.count + 1 : 1,
     truncated: (previous?.truncated ?? false)
       || text.length > MAX_DETAIL_LENGTH,
+    ...(isModelStart ? { modelStart: true } : {}),
   };
   if (event === 'delta') return { ...log, rawOutput: entry };
 

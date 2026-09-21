@@ -52,6 +52,32 @@ test('counts actual model starts independently of parallel responses and timelin
   expect(next.modelRequestCount).toBe(1);
 });
 
+test('marks the started event of each model interaction for timeline dividers', () => {
+  let log: ChatInteractionLog = { entries: [], omittedEntries: 0 };
+  log = appendChatInteraction(log, 'request', 0, { model: 'test-model' });
+  log = appendChatInteraction(log, 'model', 1, {
+    provider: 'jev',
+    requestIndex: 1,
+    status: 'started',
+  });
+  log = appendChatInteraction(log, 'model', 2, {
+    provider: 'jev',
+    requestIndex: 1,
+    status: 'completed',
+  });
+  log = appendChatInteraction(log, 'model', 3, {
+    provider: 'jev',
+    requestIndex: 2,
+    status: 'started',
+  });
+  expect(log.entries.map((entry) => entry.modelStart ?? false)).toEqual([
+    false,
+    true,
+    false,
+    true,
+  ]);
+});
+
 test.each(['error', 'done', 'json'])(
   'keeps %s reasoning separate from the timeline and compact copy payload',
   event => {
