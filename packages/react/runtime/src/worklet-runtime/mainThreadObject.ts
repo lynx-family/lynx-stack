@@ -66,7 +66,6 @@ function getMainThreadObjectFactory(
 
 function createMainThreadObject(refImpl: WorkletRefImpl<unknown>): object {
   const type = refImpl._type!;
-  assertMainThreadObjectProtocolVersion(type, refImpl._mtoVersion);
   const definition = mainThreadObjectDefinitions.get(type);
   if (!definition) {
     throw new Error(
@@ -85,10 +84,10 @@ function createMainThreadObject(refImpl: WorkletRefImpl<unknown>): object {
   return value;
 }
 
-function assertMainThreadObjectProtocolVersion(type: string, protocolVersion: number | undefined): void {
+function assertMainThreadObjectProtocolVersion(type: string, protocolVersion: number): void {
   if (protocolVersion !== MAIN_THREAD_OBJECT_PROTOCOL_VERSION) {
     throw new Error(
-      `MainThreadObject protocol mismatch for type "${type}": runtime supports version ${MAIN_THREAD_OBJECT_PROTOCOL_VERSION}, but the handle or bundle uses ${
+      `MainThreadObject protocol mismatch for type "${type}": runtime supports version ${MAIN_THREAD_OBJECT_PROTOCOL_VERSION}, but the bundle uses ${
         String(protocolVersion)
       }. Rebuild the main template and lazy bundle with compatible @lynx-js/react versions.`,
     );
@@ -106,12 +105,9 @@ function assertCompatibleMainThreadObject(
 ): void {
   const actualType = realizedMainThreadObjectTypes.get(value);
   const expectedType = handle._type!;
-  assertMainThreadObjectProtocolVersion(expectedType, handle._mtoVersion);
   if (actualType !== expectedType) {
     throw new Error(
-      `MainThreadObject type mismatch during ${operation} for handle ${handle._wvid}: background handle expects type "${expectedType}" with protocol ${
-        String(handle._mtoVersion)
-      }, but the main-thread target is type "${actualType}" with protocol ${MAIN_THREAD_OBJECT_PROTOCOL_VERSION}.`,
+      `MainThreadObject type mismatch during ${operation} for handle ${handle._wvid}: background handle expects type "${expectedType}", but the main-thread target is type "${actualType}".`,
     );
   }
 }

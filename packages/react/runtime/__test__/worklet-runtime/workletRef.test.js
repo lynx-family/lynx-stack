@@ -38,7 +38,7 @@ describe('MainThreadObject integration with the worklet ref map', () => {
 
     expect(() => {
       updateWorkletRefInitValueChanges([
-        [10, 42, '@test/throws', 1],
+        [10, 42, '@test/throws'],
         [11, 'unrelated MainThreadRef'],
       ]);
     }).toThrow('factory failed');
@@ -60,7 +60,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
           _wvid: -1,
           _initValue: 42,
           _type: '@test/value',
-          _mtoVersion: 1,
         },
       },
     };
@@ -71,7 +70,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
           _wvid: 1,
           _initValue: 42,
           _type: '@test/value',
-          _mtoVersion: 1,
         },
       },
     };
@@ -81,7 +79,7 @@ describe('MainThreadObject integration with the worklet ref map', () => {
 
     expect(globalThis.runWorklet(firstScreenWorklet, [])).toBe(42);
     const firstScreenValue = firstScreenWorklet._c.value;
-    updateWorkletRefInitValueChanges([[1, 42, '@test/value', 1]]);
+    updateWorkletRefInitValueChanges([[1, 42, '@test/value']]);
     const redundantValue = getFromWorkletRefMap({ _wvid: 1 });
     expect(isHydratedWorkletValue(redundantValue)).toBe(true);
     globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
@@ -108,7 +106,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
           _wvid: -1,
           _initValue: 42,
           _type: '@test/unused-value',
-          _mtoVersion: 1,
         },
       },
     };
@@ -119,7 +116,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
           _wvid: 1,
           _initValue: 42,
           _type: '@test/unused-value',
-          _mtoVersion: 1,
         },
       },
     };
@@ -135,7 +131,7 @@ describe('MainThreadObject integration with the worklet ref map', () => {
       _c: {
         value: {
           _wvid: -1,
-          _initValue: 42,
+          _initValue: { nested: { _wvid: -2, _initValue: 42, _type: 'main-thread' } },
           _type: 'main-thread',
         },
       },
@@ -156,6 +152,7 @@ describe('MainThreadObject integration with the worklet ref map', () => {
 
     globalThis.runWorklet(firstScreenWorklet, []);
     const firstScreenValue = firstScreenWorklet._c.value;
+    expect(firstScreenValue.current.nested.current).toBe(42);
     globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
 
     expect(getFromWorkletRefMap({ _wvid: 1 })).toBe(firstScreenValue);
@@ -174,7 +171,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
           _wvid: -1,
           _initValue: 42,
           _type: '@test/abandoned',
-          _mtoVersion: 1,
         },
       },
     };
@@ -196,7 +192,7 @@ describe('MainThreadObject integration with the worklet ref map', () => {
       1,
     );
     updateWorkletRefInitValueChanges([
-      [91, null, '@test/mutable-cell-shaped-object', 1],
+      [91, null, '@test/mutable-cell-shaped-object'],
     ]);
     const value = getFromWorkletRefMap({ _wvid: 91 });
     expect(isHydratedWorkletValue(value)).toBe(true);
@@ -208,7 +204,7 @@ describe('MainThreadObject integration with the worklet ref map', () => {
     // typed-object metadata is released. Reusing it as a mutable cell proves
     // that the authoritative typed-object metadata itself was removed.
     globalThis.lynxWorkletImpl._refImpl._workletRefMap[92] = value;
-    expect(() => updateWorkletRefInitValueChanges([[92, null, 'main-thread', undefined]])).not.toThrow();
+    expect(() => updateWorkletRefInitValueChanges([[92, null, 'main-thread']])).not.toThrow();
   });
 
   it('does not hydrate worklet metadata found inside object payloads', () => {
@@ -227,7 +223,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
           _wvid: 92,
           _initValue: payload,
           _type: '@test/atomic-hydration-payload',
-          _mtoVersion: 1,
         },
       },
     };
@@ -238,7 +233,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
           _wvid: -92,
           _initValue: payload,
           _type: '@test/atomic-hydration-payload',
-          _mtoVersion: 1,
         },
       },
     };
@@ -264,7 +258,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
           _wvid: -1,
           _initValue: 1,
           _type: '@test/main-type',
-          _mtoVersion: 1,
         },
       },
     };
@@ -275,7 +268,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
           _wvid: 1,
           _initValue: 2,
           _type: '@test/background-type',
-          _mtoVersion: 1,
         },
       },
     };
@@ -287,7 +279,7 @@ describe('MainThreadObject integration with the worklet ref map', () => {
     expect(() => {
       globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
     }).toThrow(
-      'MainThreadObject type mismatch during hydration for handle 1: background handle expects type "@test/background-type" with protocol 1, but the main-thread target is type "@test/main-type" with protocol 1.',
+      'MainThreadObject type mismatch during hydration for handle 1: background handle expects type "@test/background-type", but the main-thread target is type "@test/main-type".',
     );
     expect(getFromWorkletRefMap({ _wvid: 1 })).toBeUndefined();
   });
@@ -305,7 +297,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
           _wvid: -1,
           _initValue: 1,
           _type: '@test/value',
-          _mtoVersion: 1,
         },
       },
     };
@@ -331,46 +322,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
     );
   });
 
-  it('rejects protocol mismatches for an already-realized hydration target', () => {
-    globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
-      '@test/value',
-      value => ({ value }),
-      1,
-    );
-    const firstScreenWorklet = {
-      _wkltId: 'protocol-mismatch',
-      _c: {
-        value: {
-          _wvid: -1,
-          _initValue: 1,
-          _type: '@test/value',
-          _mtoVersion: 1,
-        },
-      },
-    };
-    const worklet = {
-      _wkltId: 'protocol-mismatch',
-      _c: {
-        value: {
-          _wvid: 1,
-          _initValue: 1,
-          _type: '@test/value',
-          _mtoVersion: 2,
-        },
-      },
-    };
-    globalThis.registerWorklet('main-thread', 'protocol-mismatch', function() {
-      return this._c.value.value;
-    });
-
-    globalThis.runWorklet(firstScreenWorklet, []);
-    expect(() => {
-      globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
-    }).toThrow(
-      'MainThreadObject protocol mismatch for type "@test/value": runtime supports version 1, but the handle or bundle uses 2.',
-    );
-  });
-
   it('validates an existing hydrated target when applying initialization patches', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/value',
@@ -384,7 +335,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
           _wvid: -1,
           _initValue: 1,
           _type: '@test/value',
-          _mtoVersion: 1,
         },
       },
     };
@@ -395,7 +345,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
           _wvid: 1,
           _initValue: 1,
           _type: '@test/value',
-          _mtoVersion: 1,
         },
       },
     };
@@ -406,10 +355,14 @@ describe('MainThreadObject integration with the worklet ref map', () => {
     globalThis.runWorklet(firstScreenWorklet, []);
     globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
     expect(() => {
-      updateWorkletRefInitValueChanges([[1, 1, '@test/value', 2]]);
+      updateWorkletRefInitValueChanges([[1, 1, '@test/other-value']]);
     }).toThrow(
-      'MainThreadObject protocol mismatch for type "@test/value": runtime supports version 1, but the handle or bundle uses 2.',
+      'MainThreadObject type mismatch during initialization patch for handle 1: background handle expects type "@test/other-value", but the main-thread target is type "@test/value".',
     );
+    const hydratedValue = getFromWorkletRefMap({ _wvid: 1 });
+    expect(hydratedValue).toBe(firstScreenWorklet._c.value);
+    updateWorkletRefInitValueChanges([[1, 1, '@test/value']]);
+    expect(getFromWorkletRefMap({ _wvid: 1 })).toBe(hydratedValue);
   });
 
   it('rejects an existing target without worklet-value metadata', () => {

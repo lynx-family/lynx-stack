@@ -41,11 +41,11 @@ describe('Worklet', () => {
       : {};
     if (kind === 'cycle') value.self = value;
     lynxWorkletImpl._refImpl.registerMainThreadObjectType('@test/shared', () => value, 1);
-    updateWorkletRefInitValueChanges([[1, null, '@test/shared', 1]]);
+    updateWorkletRefInitValueChanges([[1, null, '@test/shared']]);
     registerWorklet('main-thread', 'shared', function() {
       return this._c.holder.value;
     });
-    const holder = { value: { _wvid: 1, _type: '@test/shared', _mtoVersion: 1, _initValue: null } };
+    const holder = { value: { _wvid: 1, _type: '@test/shared', _initValue: null } };
     expect(runWorklet({ _wkltId: 'shared', _c: { holder } }, [])).toBe(value);
     expect(runWorklet({ _wkltId: 'shared', _c: { holder } }, [])).toBe(value);
     if (kind === 'metadata') expect(value.nested).toEqual({ _wvid: 999 });
@@ -177,7 +177,7 @@ describe('Worklet', () => {
   it.each([{}, { _lepusWorkletHash: 'legacy' }])('rejects invalid factory descriptors %j', (descriptor) => {
     initWorklet();
     lynxWorkletImpl._refImpl.registerMainThreadObjectType('@test/invalid-factory', descriptor, 1);
-    expect(() => updateWorkletRefInitValueChanges([[1, null, '@test/invalid-factory', 1]]))
+    expect(() => updateWorkletRefInitValueChanges([[1, null, '@test/invalid-factory']]))
       .toThrow('Cannot resolve an invalid Main Thread Function.');
   });
 
@@ -418,7 +418,6 @@ describe('Worklet', () => {
       _wvid: -1,
       _initValue: initialValue,
       _type: '@test/atomic-payload',
-      _mtoVersion: 1,
     }]);
 
     expect(create).toHaveBeenCalledOnce();
@@ -446,7 +445,6 @@ describe('Worklet', () => {
       _wvid: -2,
       _initValue: 42,
       _type: '@test/repeated-parameter',
-      _mtoVersion: 1,
     };
 
     const first = globalThis.runWorklet(

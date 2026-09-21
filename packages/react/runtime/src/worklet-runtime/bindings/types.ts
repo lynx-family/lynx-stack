@@ -12,7 +12,6 @@ export interface WorkletRefImpl<T> {
   _wvid: WorkletRefId;
   _initValue: T;
   _type?: string;
-  _mtoVersion?: number;
   _lifecycleObserver?: unknown;
   current?: T;
 }
