@@ -13,7 +13,7 @@ use swc_plugins_shared::jsx_helpers::jsx_attr_value;
 // Run after extraction so authored static trees and Template Definitions keep
 // their existing boundaries. Only identifiers owned by this transform qualify.
 pub(super) struct HostLowering<'a, C: Comments> {
-  pub identities: &'a HashMap<Id, (String, Ident)>,
+  pub identities: &'a HashMap<Id, (String, Ident, bool)>,
   pub runtime: Expr,
   pub comments: &'a Option<C>,
 }
@@ -23,7 +23,7 @@ impl<C: Comments> HostLowering<'_, C> {
     let JSXElementName::Ident(ident) = &node.opening.name else {
       return None;
     };
-    let (key, bundle) = self.identities.get(&ident.to_id())?;
+    let (key, bundle, has_no_adapters) = self.identities.get(&ident.to_id())?;
     let mut values = [None, None, None, None];
     for attr in &node.opening.attrs {
       let JSXAttrOrSpread::JSXAttr(attr) = attr else {
@@ -41,6 +41,7 @@ impl<C: Comments> HostLowering<'_, C> {
       };
       values[index] = Some(*jsx_attr_value(attr.value.clone()));
     }
+    let plain = *has_no_adapters && values[3].is_none();
     let mut args = vec![
       Expr::Ident(ident.clone()),
       Expr::Lit(Lit::Str(key.clone().into())),
@@ -52,13 +53,18 @@ impl<C: Comments> HostLowering<'_, C> {
         .into_iter()
         .map(|value| value.unwrap_or_else(|| quote!("void 0" as Expr))),
     );
+    if plain {
+      args.pop(); // Plain hosts have no list-item platform input.
+    }
     self.comments.add_pure_comment(node.span.lo);
     Some(Expr::Call(CallExpr {
       span: node.span,
       ctxt: Default::default(),
-      callee: Callee::Expr(Box::new(
-        quote!("$runtime.__etHost" as Expr, runtime: Expr = self.runtime.clone()),
-      )),
+      callee: Callee::Expr(Box::new(if plain {
+        quote!("$runtime.__etPlainHost" as Expr, runtime: Expr = self.runtime.clone())
+      } else {
+        quote!("$runtime.__etHost" as Expr, runtime: Expr = self.runtime.clone())
+      })),
       args: args
         .into_iter()
         .map(|expr| ExprOrSpread {

@@ -68,4 +68,4 @@ export {
 } from './runtime/template/attr-slot-plan.js';
 export { __ElementTemplatePage } from './runtime/page/authored-page.js';
 
-export { __etHost } from './runtime/render/host.js';
+export { __etHost, __etPlainHost } from './runtime/render/host.js';

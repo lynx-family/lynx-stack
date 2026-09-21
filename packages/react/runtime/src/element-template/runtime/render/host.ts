@@ -32,14 +32,31 @@ export function __etHost(
   return host;
 }
 
+/** The compiler proves that this host needs no attribute adapters or list item setup. */
+export function __etPlainHost(
+  type: string,
+  templateKey: string,
+  bundleUrl: string,
+  key: unknown,
+  attributeSlots: SerializableValue[] | undefined,
+  slotChildren: unknown[] | undefined,
+): ElementTemplateHost {
+  const host: ElementTemplateHost = { type, templateKey, bundleUrl, key, attributeSlots, slotChildren, plain: true };
+  if (__DEV__) {
+    host.props = { attributeSlots, children: slotChildren };
+  }
+  return host;
+}
+
 export interface ElementTemplateHost {
+  plain?: true;
   type: string;
   templateKey: string;
   bundleUrl: string;
   key: unknown;
   attributeSlots: SerializableValue[] | undefined;
   slotChildren: unknown[] | undefined;
-  __listItemPlatformInfo: ETListItemPlatformInfo | undefined;
+  __listItemPlatformInfo?: ETListItemPlatformInfo | undefined;
   props?: {
     attributeSlots: SerializableValue[] | undefined;
     children: unknown[] | undefined;

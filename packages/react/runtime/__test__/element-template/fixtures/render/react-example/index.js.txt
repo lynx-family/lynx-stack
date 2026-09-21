@@ -26,11 +26,11 @@ export function App() {
         1,
         arrow
     ], [
-        alterLogo ? /*#__PURE__*/ ReactLynxInternal.__etHost(_et_b89c02b1874f, "_et_b89c02b1874f", _et_b89c02b1874f_bundle, void 0, [
+        alterLogo ? /*#__PURE__*/ ReactLynxInternal.__etPlainHost(_et_b89c02b1874f, "_et_b89c02b1874f", _et_b89c02b1874f_bundle, void 0, [
             reactLynxLogo
-        ], void 0, void 0) : /*#__PURE__*/ ReactLynxInternal.__etHost(_et_a51110b9901e, "_et_a51110b9901e", _et_a51110b9901e_bundle, void 0, [
+        ], void 0) : /*#__PURE__*/ ReactLynxInternal.__etPlainHost(_et_a51110b9901e, "_et_a51110b9901e", _et_a51110b9901e_bundle, void 0, [
             lynxLogo
-        ], void 0, void 0),
+        ], void 0),
         ' src/App.tsx '
     ], void 0);
 }

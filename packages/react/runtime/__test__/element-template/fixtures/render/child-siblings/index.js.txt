@@ -7,19 +7,19 @@ const _et_f4df0f2dba8f = `${_et_f4df0f2dba8f_bundle}:${"_et_f4df0f2dba8f"}`;
 const _et_955a06fee137_bundle = globDynamicComponentEntry;
 const _et_955a06fee137 = `${_et_955a06fee137_bundle}:${"_et_955a06fee137"}`;
 export function App() {
-    return /*#__PURE__*/ ReactLynxInternal.__etHost(_et_955a06fee137, "_et_955a06fee137", _et_955a06fee137_bundle, void 0, void 0, [
+    return /*#__PURE__*/ ReactLynxInternal.__etPlainHost(_et_955a06fee137, "_et_955a06fee137", _et_955a06fee137_bundle, void 0, void 0, [
         [
             /*#__PURE__*/ _jsx(Sub, {
-                children: /*#__PURE__*/ ReactLynxInternal.__etHost(_et_1d658c77caa0, "_et_1d658c77caa0", _et_1d658c77caa0_bundle, void 0, void 0, void 0, void 0)
+                children: /*#__PURE__*/ ReactLynxInternal.__etPlainHost(_et_1d658c77caa0, "_et_1d658c77caa0", _et_1d658c77caa0_bundle, void 0, void 0, void 0)
             }),
             /*#__PURE__*/ _jsx(Sub, {
-                children: /*#__PURE__*/ ReactLynxInternal.__etHost(_et_f4df0f2dba8f, "_et_f4df0f2dba8f", _et_f4df0f2dba8f_bundle, void 0, void 0, void 0, void 0)
+                children: /*#__PURE__*/ ReactLynxInternal.__etPlainHost(_et_f4df0f2dba8f, "_et_f4df0f2dba8f", _et_f4df0f2dba8f_bundle, void 0, void 0, void 0)
             })
         ]
-    ], void 0);
+    ]);
 }
 function Sub(props) {
-    return /*#__PURE__*/ ReactLynxInternal.__etHost(_et_955a06fee137, "_et_955a06fee137", _et_955a06fee137_bundle, void 0, void 0, [
+    return /*#__PURE__*/ ReactLynxInternal.__etPlainHost(_et_955a06fee137, "_et_955a06fee137", _et_955a06fee137_bundle, void 0, void 0, [
         props.children
-    ], void 0);
+    ]);
 }
