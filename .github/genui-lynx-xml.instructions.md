@@ -6,6 +6,19 @@ Keep provider-neutral prompts and deterministic fragment compilation in
 `packages/genui/lynx-xml`; keep model providers, Agent wiring, streaming, and
 request options in GenUI Server.
 
+Keep `enableScriptReuse` opt-in at the API level and independent of Template and
+StylePreset. Like StylePreset, new Create records and Bench groups enable it by
+default, while explicit saved selections take precedence.
+Use one top-level `definePage({...})` business-callback contract; assemble its
+hoisted shared runtime only after model generation. The shared implementation
+owns Page creation, lifecycle registration, event unsubscription and flushing,
+and must never be sent in the generation prompt or executed on the server.
+Keep prompt selection, deterministic assembly, Create persistence, Bench plans
+and repairs, request validation, and Agent cache keys aligned. Preserve raw
+model output and provider usage. Test lifecycle and event behavior with
+deterministic runtime mocks and all eight option combinations; do not infer
+real token or latency savings from the size of the assembled artifact.
+
 Keep `stylePreset` opt-in and consistent across prompt construction, fragment
 conversion, Agent cache keys, and Bench repairs. StylePreset uses `default`
 for the built-in Lynx utility vocabulary: inject only referenced

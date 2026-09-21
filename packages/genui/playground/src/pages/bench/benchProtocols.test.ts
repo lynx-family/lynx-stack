@@ -75,6 +75,32 @@ describe('Bench preset group names', () => {
 });
 
 describe('Bench protocol selection', () => {
+  test('defaults ScriptReuse on for new XML groups and preserves historical selections', () => {
+    for (const preset of ['protocol', 'platform'] as const) {
+      expect(
+        createBenchPresetGroups(preset, 'model').find(group =>
+          group.protocol === 'lynx-xml'
+        ),
+      ).toMatchObject({ enableScriptReuse: true, stylePreset: 'default' });
+    }
+    const original = withBenchProtocol(
+      createDefaultBenchGroups('model')[0]!,
+      'lynx-xml',
+    );
+    expect(original.enableScriptReuse).toBe(true);
+    for (const enableScriptReuse of [undefined, false, true]) {
+      const saved = { ...original, enableScriptReuse };
+      const restored = createBenchGroupsFromReport({
+        groups: [saved],
+        env: { apiKeyConfigured: false, model: 'model' },
+      })[0]!;
+      expect(restored.enableScriptReuse).toBe(enableScriptReuse === true);
+      expect(withBenchProtocol(restored, 'lynx-xml').enableScriptReuse).toBe(
+        enableScriptReuse === true,
+      );
+    }
+  });
+
   test('restores enabled conversion and reports it as a comparison difference', () => {
     const baseline = {
       ...withBenchProtocol(

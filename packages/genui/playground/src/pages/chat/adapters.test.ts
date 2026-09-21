@@ -68,6 +68,7 @@ test('Lynx XML starts all options on without inheriting another record’s prefe
   const defaults = {
     enableDesignGuidance: true,
     enableHtmlFragment: true,
+    enableScriptReuse: true,
     stylePreset: 'default',
   };
   expect(adapter.initial()).toMatchObject(defaults);
@@ -81,6 +82,7 @@ test('Lynx XML starts all options on without inheriting another record’s prefe
         provider: 'test-model',
         enableDesignGuidance: false,
         enableHtmlFragment: false,
+        enableScriptReuse: false,
         stylePreset: false,
       }),
     ]
@@ -129,6 +131,7 @@ test.each([
     expect(saved).toEqual({
       enableDesignGuidance: design,
       enableHtmlFragment: template,
+      enableScriptReuse: true,
       stylePreset: preset ? 'default' : false,
     });
     expect(
@@ -157,6 +160,66 @@ test.each([
     expect(request.body.enableDesignGuidance !== false).toBe(design);
     expect(request.body.enableHtmlFragment).toBe(template);
     expect(request.body.stylePreset).toBe(preset ? 'default' : undefined);
+  },
+);
+
+test.each([undefined, false, true])(
+  'ScriptReuse defaults on and preserves explicit selection %s',
+  enableScriptReuse => {
+    const adapter = LYNX_XML_CHAT_ADAPTER;
+    const enabled = enableScriptReuse !== false;
+    expect(adapter.settings.initial().enableScriptReuse).toBe(true);
+    const settings = adapter.settings.update(
+      {
+        ...adapter.settings.initial(),
+        enableScriptReuse,
+      },
+      'enableHtmlFragment',
+      'off',
+    );
+    expect(
+      adapter.settings.controls(settings).find(control =>
+        control.id === 'enableScriptReuse'
+      )?.value,
+    ).toBe(enabled ? 'on' : 'off');
+    const saved = adapter.settings.conversation.snapshot(settings);
+    expect(saved.enableScriptReuse).toBe(enabled);
+    expect(
+      adapter.settings.conversation.restore(adapter.settings.initial(), saved)
+        .enableScriptReuse,
+    ).toBe(enabled);
+    expect(adapter.settings.serialize(settings)).not.toHaveProperty(
+      'enableScriptReuse',
+    );
+    const request = adapter.createRequest({
+      prompt: 'Counter',
+      settings,
+      conversation: {
+        history: [{
+          role: 'assistant',
+          content: 'assembled runtime',
+          lynxXmlModelOutput: 'business callbacks',
+        }],
+        dataModel: {},
+      },
+      host: {
+        origin: 'http://localhost:3000',
+        hostname: 'localhost',
+        protocol: 'http:',
+        search: '',
+        baseUrl: '/',
+      },
+      signal: new AbortController().signal,
+    });
+    expect(request.body.enableScriptReuse).toBe(enabled);
+    expect(request.body.enableHtmlFragment).toBe(false);
+    expect(request.body.conversation).toEqual({
+      history: [{
+        role: 'assistant',
+        content: enabled ? 'business callbacks' : 'assembled runtime',
+      }],
+      dataModel: {},
+    });
   },
 );
 

@@ -329,6 +329,14 @@ export function PublishedReportPage(
                         </dd>
                       </div>
                     )}
+                    {group.protocol === 'lynx-xml' && (
+                      <div>
+                        <dt>ScriptReuse</dt>
+                        <dd>
+                          {group.enableScriptReuse === true ? 'On' : 'Off'}
+                        </dd>
+                      </div>
+                    )}
                     <div>
                       <dt>Instruction</dt>
                       <dd>

@@ -18,6 +18,7 @@ export type BenchComparisonDirection = Extract<
 export interface BenchGroup {
   enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
+  enableScriptReuse?: boolean;
   stylePreset?: 'default' | false;
   catalog: string;
   enabled: boolean;
@@ -134,6 +135,7 @@ export function withBenchProtocol(
     ...(protocol === 'lynx-xml'
       ? {
         enableHtmlFragment: group.enableHtmlFragment ?? true,
+        enableScriptReuse: group.enableScriptReuse ?? true,
         stylePreset: group.stylePreset ?? 'default',
       }
       : {}),
@@ -253,6 +255,7 @@ export function createBenchPresetGroups(
         group('Lynx XML', 3, {
           protocol: 'lynx-xml',
           enableHtmlFragment: true,
+          enableScriptReuse: true,
           stylePreset: 'default',
           catalog: 'none',
           role: 'experiment',
@@ -310,6 +313,7 @@ export function createBenchPresetGroups(
         group('Lynx XML', 2, {
           protocol: 'lynx-xml',
           enableHtmlFragment: true,
+          enableScriptReuse: true,
           stylePreset: 'default',
           catalog: 'none',
           role: 'experiment',
@@ -368,6 +372,11 @@ export function getBenchGroupDifferences(
   if (!baseline || group.id === baseline.id) return [];
 
   const differences: string[] = [];
+  if (
+    group.protocol === 'lynx-xml' && baseline.protocol === 'lynx-xml'
+    && (group.enableScriptReuse === true)
+      !== (baseline.enableScriptReuse === true)
+  ) differences.push('ScriptReuse');
   if (group.protocol !== baseline.protocol) differences.push('Protocol');
   if (group.profile !== baseline.profile) differences.push('Profile');
   if (group.model !== baseline.model) differences.push('Model');

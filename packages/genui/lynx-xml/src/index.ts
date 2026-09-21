@@ -17,8 +17,12 @@ export {
 } from './html-fragment.js';
 export type { GeneratedMainThreadScript } from './html-fragment.js';
 export {
+  assembleLynxXmlArtifact,
   applyLynxXmlStylePreset,
   compileLynxXmlFragment,
 } from './fragment-artifact.js';
-export type { CompileLynxXmlFragmentOptions } from './fragment-artifact.js';
+export type {
+  AssembleLynxXmlArtifactOptions,
+  CompileLynxXmlFragmentOptions,
+} from './fragment-artifact.js';
 export type { LynxXmlStylePreset } from './style-preset.js';

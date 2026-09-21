@@ -96,6 +96,7 @@ describe('Lynx XML Bench adapter', () => {
       let calls = 0;
       const adapter = createLynxXmlBenchAdapter({
         generateRaw(_messages, options) {
+          expect(options.enableScriptReuse).toBe(enabled === true);
           expect(options.enableHtmlFragment).toBe(
             enabled === true || enabled === 'default',
           );
@@ -113,6 +114,7 @@ describe('Lynx XML Bench adapter', () => {
       });
       await adapter.generate({
         ...INPUT,
+        enableScriptReuse: enabled === true,
         ...(enabled === undefined
           ? {}
           : { enableHtmlFragment: enabled === true || enabled === 'default' }),

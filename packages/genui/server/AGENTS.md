@@ -444,6 +444,15 @@ the service compiles the template and injects an id-based `createFragment`
 helper before final validation. Conversion is deterministic postprocessing,
 not a Mastra tool. Keep shared search/image capability scopes independent of it.
 
+`enableScriptReuse` independently defaults to false. When enabled, the model
+provides one top-level `definePage({...})` call with business callbacks; the
+agent assembles shared lifecycle, event cleanup, and text helpers through
+`assembleLynxXmlArtifact`. Keep this setting in the prompt, Agent cache key,
+Create request, Bench group, and every repair attempt. Stream original model
+deltas, deliver assembled XML only at completion, and preserve original output
+and usage on both success and failure. Assembly must not execute model code
+or introduce another model round.
+
 Return the exact assembled model text in `metadata.modelOutput` and the successful
 original fragment in `metadata.xmlFragment`; omit fragment metadata when off.
 Stream model text for source inspection, but deliver only the compiled document

@@ -14,6 +14,7 @@ export interface ConversationGenerationSettings {
   provider?: string;
   enableDesignGuidance: boolean;
   enableHtmlFragment?: boolean;
+  enableScriptReuse?: boolean;
   stylePreset?: 'default' | false;
 }
 

@@ -7,13 +7,43 @@ import { simple } from 'acorn-walk';
 import { analyze } from 'eslint-scope';
 
 import { generateMainThreadScriptResult } from './html-fragment.js';
+import { generateSharedScript } from './script-reuse.js';
 import { generatePresetStyles, validateStylePreset } from './style-preset.js';
 import type { LynxXmlStylePreset } from './style-preset.js';
 
-/** Optional styling applied during runtime fragment conversion. */
+/** Optional script and styling assembly applied during fragment conversion. */
 export interface CompileLynxXmlFragmentOptions {
+  /**
+   * Assemble shared lifecycle and event helpers around definePage callbacks.
+   * @defaultValue false
+   * @example { enableScriptReuse: true }
+   */
+  enableScriptReuse?: boolean | undefined;
   /** Inject used Lynx utility styles. Disabled when omitted or false. */
   stylePreset?: LynxXmlStylePreset | false | undefined;
+}
+
+/** Options for deterministic assembly of a model-authored Lynx XML document. */
+export interface AssembleLynxXmlArtifactOptions
+  extends CompileLynxXmlFragmentOptions
+{
+  /**
+   * Compile a root-child template into Element PAPI.
+   * @defaultValue false
+   */
+  enableHtmlFragment?: boolean | undefined;
+}
+
+/** Assemble enabled template, script, and style features without executing model code. */
+export function assembleLynxXmlArtifact(
+  source: string,
+  options: AssembleLynxXmlArtifactOptions = {},
+): { text: string; xmlFragment?: string } {
+  return transformLynxXmlArtifact(
+    source,
+    options.enableHtmlFragment === true,
+    options,
+  );
 }
 
 /** Compile the model's intermediate document without executing model code. */
@@ -126,15 +156,77 @@ function transformLynxXmlArtifact(
     sourceType: 'script',
     ranges: true,
   });
-  if (enableTemplate) {
+  if (enableTemplate || options.enableScriptReuse) {
     const scopes = analyze(ast, { ecmaVersion: 2022, sourceType: 'script' });
-    if (scopes.scopes.some(scope => scope.set.has('createFragment'))) {
+    if (
+      enableTemplate
+      && scopes.scopes.some(scope => scope.set.has('createFragment'))
+    ) {
       throw new Error(
         'createFragment is provided by the server and must not be declared or shadowed',
       );
     }
+    if (
+      options.enableScriptReuse
+      && scopes.scopes.some(scope => scope.set.has('definePage'))
+    ) {
+      throw new Error(
+        'definePage is provided by the agent and must not be declared or shadowed',
+      );
+    }
+  }
+  if (options.enableScriptReuse) {
+    const registrations = ast.body.filter(node =>
+      node.type === 'ExpressionStatement'
+      && node.expression.type === 'CallExpression'
+      && node.expression.callee.type === 'Identifier'
+      && node.expression.callee.name === 'definePage'
+    );
+    const registration = registrations[0];
+    if (
+      registrations.length !== 1
+      || registration?.type !== 'ExpressionStatement'
+      || registration.expression.type !== 'CallExpression'
+      || registration.expression.arguments.length !== 1
+      || registration.expression.arguments[0]?.type !== 'ObjectExpression'
+    ) {
+      throw new Error(
+        'ScriptReuse requires one top-level definePage({...}) call',
+      );
+    }
+    const hooks = registration.expression.arguments[0].properties;
+    const hookNames = new Set<string>();
+    for (const hook of hooks) {
+      let name: unknown;
+      if (hook.type === 'Property' && !hook.computed) {
+        if (hook.key.type === 'Identifier') name = hook.key.name;
+        else if (hook.key.type === 'Literal') name = hook.key.value;
+      }
+      if (
+        typeof name !== 'string'
+        || !['render', 'update', 'destroy'].includes(name)
+        || hookNames.has(name) || hook.type !== 'Property'
+        || hook.kind !== 'init'
+        || !['FunctionExpression', 'ArrowFunctionExpression', 'Identifier']
+          .includes(hook.value.type)
+        || ((hook.value.type === 'FunctionExpression'
+          || hook.value.type === 'ArrowFunctionExpression')
+          && (hook.value.async || hook.value.generator))
+      ) {
+        throw new Error(
+          'definePage accepts unique synchronous render, update, and destroy hooks only',
+        );
+      }
+      hookNames.add(name);
+    }
+    if (
+      !enableTemplate && !hookNames.has('render')
+    ) {
+      throw new Error('ScriptReuse without Template requires a render hook');
+    }
   }
   let calls = 0;
+  let pageDefinitions = 0;
   simple(ast, {
     Literal(node) {
       if (options.stylePreset && typeof node.value === 'string') {
@@ -149,6 +241,26 @@ function transformLynxXmlArtifact(
       }
     },
     CallExpression(node) {
+      if (options.enableScriptReuse) {
+        if (
+          node.callee.type === 'Identifier' && node.callee.name === 'definePage'
+        ) pageDefinitions++;
+        if (
+          (node.callee.type === 'Identifier'
+            && ['__CreatePage', 'createFragment'].includes(node.callee.name))
+          || (node.callee.type === 'MemberExpression'
+            && node.callee.object.type === 'Identifier'
+            && node.callee.object.name === 'lynx'
+            && ((node.callee.property.type === 'Identifier'
+              && node.callee.property.name === 'getEngine')
+              || (node.callee.property.type === 'Literal'
+                && node.callee.property.value === 'getEngine')))
+        ) {
+          throw new Error(
+            'ScriptReuse owns page creation, createFragment, and engine lifecycle registration',
+          );
+        }
+      }
       if (
         enableTemplate && node.callee.type === 'Identifier'
         && node.callee.name === 'createFragment'
@@ -162,7 +274,10 @@ function transformLynxXmlArtifact(
       }
     },
   });
-  if (enableTemplate && calls !== 1) {
+  if (options.enableScriptReuse && pageDefinitions !== 1) {
+    throw new Error('ScriptReuse requires exactly one definePage call');
+  }
+  if (enableTemplate && !options.enableScriptReuse && calls !== 1) {
     throw new Error(
       'Fragment document must call createFragment(page, pageId) exactly once',
     );
@@ -176,10 +291,27 @@ function transformLynxXmlArtifact(
       `\nfunction createFragment(page, pageId) {\n${generated.javascript}\nreturn nodeMap;\n}\n`;
     edits.push(
       { start: templateStart, end: templateEnd, text: '' },
-      { start: mainEnd, end: mainEnd, text: factory },
+      {
+        start: mainEnd,
+        end: mainEnd,
+        text: factory + (options.enableScriptReuse
+          ? generateSharedScript(enableTemplate)
+          : ''),
+      },
     );
+  } else if (options.enableScriptReuse) {
+    edits.push({
+      start: mainEnd,
+      end: mainEnd,
+      text: generateSharedScript(false),
+    });
   }
-  const presetCss = options.stylePreset ? generatePresetStyles(classNames) : '';
+  const presetCss = [
+    options.enableScriptReuse
+      ? '.genui-page { display: flex; flex-direction: column; }'
+      : '',
+    options.stylePreset ? generatePresetStyles(classNames) : '',
+  ].filter(Boolean).join('\n');
   // TemplateBundle XML permits only one style section. Keep preset rules first
   // and authored rules in source order so their cascade remains intact.
   const firstStyle = styles[0];

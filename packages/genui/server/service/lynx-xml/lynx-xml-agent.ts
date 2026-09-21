@@ -2,10 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import {
-  applyLynxXmlStylePreset,
-  compileLynxXmlFragment,
-} from '@lynx-js/genui-lynx-xml';
+import { assembleLynxXmlArtifact } from '@lynx-js/genui-lynx-xml';
 
 import { initializeArkImageGenerationRunScope } from '../../agent/common/ark-image-generation-tool.js';
 import { createSearchRunScope } from '../../agent/common/doubao-search-tool.js';
@@ -75,6 +72,7 @@ function buildLynxXmlScopedRunOptions(
     ...buildOpenAIRunOptions(opts, abortSignal, maxOutputTokens),
     ...createAgentStepLogger(opts, 'lynx-xml', {
       enableHtmlFragment: opts.enableHtmlFragment === true,
+      enableScriptReuse: opts.enableScriptReuse === true,
       enableStylePreset: opts.stylePreset === 'default',
     }),
     requestContext: scope.requestContext,
@@ -86,18 +84,22 @@ function compileGeneration(
   opts: LynxXmlChatOptions,
 ): { text: string; metadata: LynxXmlGenerationMetadata } {
   try {
-    const compiled = opts.enableHtmlFragment === true
-      ? compileLynxXmlFragment(extractLynxXmlArtifact(result.text), {
-        stylePreset: opts.stylePreset ?? false,
-      })
-      : {
-        text: opts.stylePreset
-          ? applyLynxXmlStylePreset(
-            extractLynxXmlArtifact(result.text),
-            opts.stylePreset,
-          )
-          : result.text,
-      };
+    const startedAt = performance.now();
+    const compiled =
+      opts.enableHtmlFragment === true || opts.enableScriptReuse === true
+        || opts.stylePreset
+        ? assembleLynxXmlArtifact(extractLynxXmlArtifact(result.text), {
+          enableHtmlFragment: opts.enableHtmlFragment === true,
+          enableScriptReuse: opts.enableScriptReuse === true,
+          stylePreset: opts.stylePreset ?? false,
+        })
+        : { text: result.text };
+    opts.onPerformanceEvent?.('agent.artifact.assembled', {
+      durationMs: performance.now() - startedAt,
+      modelOutputChars: result.text.length,
+      artifactChars: compiled.text.length,
+      enableScriptReuse: opts.enableScriptReuse === true,
+    });
     return {
       text: compiled.text,
       metadata: {
@@ -105,6 +107,7 @@ function compileGeneration(
           ? { xmlFragment: compiled.xmlFragment }
           : {}),
         modelOutput: result.text,
+        ...(opts.enableScriptReuse ? { enableScriptReuse: true } : {}),
         ...(opts.stylePreset ? { stylePreset: opts.stylePreset } : {}),
       },
     };
@@ -121,6 +124,7 @@ export default class LynxXmlAgentService {
       createLynxXmlAgent({
         ...pickAgentCapabilityConfig(opts),
         enableHtmlFragment: opts.enableHtmlFragment,
+        enableScriptReuse: opts.enableScriptReuse,
         stylePreset: opts.stylePreset,
         enableDesignGuidance: opts.enableDesignGuidance,
       }).agent;
@@ -131,7 +135,8 @@ export default class LynxXmlAgentService {
       (opts.enableHtmlFragment === true
         ? 'html-fragment-enabled'
         : 'html-fragment-disabled')
-        + `:style-${opts.stylePreset === 'default' ? 'default' : 'off'}`,
+        + `:style-${opts.stylePreset === 'default' ? 'default' : 'off'}`
+        + `:script-${opts.enableScriptReuse === true ? 'on' : 'off'}`,
     );
   }
 

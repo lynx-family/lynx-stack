@@ -14,6 +14,7 @@ import {
 import { PROTOCOLS } from '../../utils/protocol.js';
 
 const FLEX_LAYOUT_CLASSES: Readonly<Record<string, readonly string[]>> = {
+  'script-reuse-counter': ['genui-page', 'flex'],
   'style-preset-counter': ['flex'],
   'template-counter': [
     'counter-card',
@@ -91,6 +92,7 @@ const FLEX_LAYOUT_CLASSES: Readonly<Record<string, readonly string[]>> = {
 };
 
 const ROW_LAYOUT_CLASSES: Readonly<Record<string, readonly string[]>> = {
+  'script-reuse-counter': ['flex-row'],
   'style-preset-counter': ['flex-row'],
   'template-counter': ['stats', 'stepper'],
   counter: ['stepper'],
@@ -129,6 +131,7 @@ describe('Lynx XML showcase', () => {
       'todo-list',
       'template-counter',
       'style-preset-counter',
+      'script-reuse-counter',
     ]);
     for (const scenario of LYNX_XML_SCENARIOS) {
       expect(scenario.source).toMatch(/^<!doctype lynx>/u);
@@ -332,7 +335,66 @@ describe('Lynx XML showcase', () => {
     expect(previewUrl.searchParams.get('exampleId')).toBe(scenario.id);
   });
 
-  test.each(['template-counter', 'style-preset-counter'])(
+  test('assembles ScriptReuse for list previews and edited source without exposing the intermediate artifact', () => {
+    const scenario = LYNX_XML_DEMOS_PAGE_SOURCE.findScenario(
+      'script-reuse-counter',
+    )!;
+    const original = LYNX_XML_DEMOS_PAGE_SOURCE.getEditorValue(scenario);
+    const baseline = LYNX_XML_DEMOS_PAGE_SOURCE.findScenario(
+      'style-preset-counter',
+    )!.templateSource!;
+    expect(original.split('<script thread="main">')[0]).toBe(
+      baseline.split('<script thread="main">')[0],
+    );
+    expect(original).toContain('definePage({');
+    expect(original).toContain('ctx.on(');
+    expect(original).toContain('ctx.setText(');
+    expect(original).not.toContain('function definePage(');
+    expect(original).not.toContain('lynx.getEngine()');
+    expect(original.length).toBeLessThan(baseline.length);
+    expect(
+      LYNX_XML_DEMOS_PAGE_SOURCE.createScenarioPreviewInput(scenario),
+    ).toEqual({ source: scenario.source, sourcePath: undefined });
+    const previewUrl = new URL(LYNX_XML_DEMOS_LIST_SOURCE.createPreviewUrl({
+      baseUrl: 'https://lynx-stack.dev/genui/',
+      protocol: PROTOCOLS['lynx-xml'],
+      scenario,
+      theme: 'light',
+    }));
+    expect(previewUrl.searchParams.get('exampleId')).toBe(scenario.id);
+
+    const editorValue = original.replace('count += 1;', 'count += 2;')
+      .replace('bg-white', 'bg-indigo-50');
+    const edited = LYNX_XML_DEMOS_PAGE_SOURCE.commit({
+      scenario,
+      editorValue,
+      editorEdited: true,
+    });
+    if (!('value' in edited)) throw new Error(edited.error);
+    const { source, sourcePath } = edited.value.previewInput;
+    expect(sourcePath).toBeUndefined();
+    expect(source).not.toContain('<template>');
+    expect(source).toContain('function definePage(');
+    expect(source).toContain('count += 2;');
+    expectCssDeclaration(source, 'bg-indigo-50', 'background-color: #eef2ff;');
+    expect(LYNX_XML_DEMOS_PAGE_SOURCE.editor.views[1]!.getValue({
+      editorValue,
+      scenario,
+    })).toBe(source);
+    expect(LYNX_XML_DEMOS_PAGE_SOURCE.commit({
+      scenario,
+      editorValue: original.replace('definePage({', 'missingHelper({'),
+      editorEdited: true,
+    })).toMatchObject({
+      error: 'ScriptReuse requires one top-level definePage({...}) call',
+    });
+  });
+
+  test.each([
+    'template-counter',
+    'style-preset-counter',
+    'script-reuse-counter',
+  ])(
     'renders %s once, handles counter events, and cleans up',
     (id) => {
       const scenario = LYNX_XML_DEMOS_PAGE_SOURCE.findScenario(

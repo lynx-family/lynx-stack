@@ -338,3 +338,64 @@ test('keeps token-limit failures actionable', () => {
   expect(error.message).toContain('token limit');
   expect(error.result.usage).toEqual(USAGE);
 });
+
+test.each(['generate', 'stream'] as const)(
+  '%s isolates all ScriptReuse/Template/StylePreset variants and retains raw evidence',
+  async mode => {
+    const service = new LynxXmlAgentService();
+    for (const enableHtmlFragment of [false, true]) {
+      for (const stylePreset of [false, 'default'] as const) {
+        for (const enableScriptReuse of [false, true, false, true]) {
+          override = enableScriptReuse
+            ? `<!doctype lynx><lynx engine-version="4.2">${
+              enableHtmlFragment ? `<template>${FRAGMENT}</template>` : ''
+            }<script thread="main">definePage({render(ctx) { __SetClasses(ctx.page, "flex flex-col p-4"); }});</script></lynx>`
+            : (enableHtmlFragment ? INTERMEDIATE : DIRECT);
+          const options = {
+            enableHtmlFragment,
+            stylePreset,
+            enableScriptReuse,
+            enableWebSearch: false,
+            enableImageGeneration: false,
+          };
+          let result;
+          if (mode === 'generate') {
+            result = await service.generateRaw([], options);
+          } else {
+            const stream = await service.streamAsAsyncIterable([], options);
+            let raw = '';
+            for await (const chunk of stream.textStream) raw += chunk;
+            expect(raw).toBe(override);
+            result = await stream.finalize();
+          }
+          expect(result.metadata.modelOutput).toBe(override);
+          expect(result.metadata.enableScriptReuse).toBe(
+            enableScriptReuse || undefined,
+          );
+          expect(result.text?.includes('function definePage')).toBe(
+            enableScriptReuse,
+          );
+          expect(calls.at(-1)?.includes('ScriptReuse is enabled')).toBe(
+            enableScriptReuse,
+          );
+          expect(result.usage).toMatchObject(USAGE);
+        }
+      }
+    }
+    expect(createLLMProvider).toHaveBeenCalledTimes(8);
+    expect(calls).toHaveLength(16);
+  },
+);
+
+test('ScriptReuse failure preserves usage without a hidden model retry', async () => {
+  override = DIRECT;
+  await expect(new LynxXmlAgentService().generateRaw([], {
+    enableScriptReuse: true,
+    enableWebSearch: false,
+    enableImageGeneration: false,
+  })).rejects.toMatchObject({
+    name: 'GenerationPostprocessError',
+    result: { text: DIRECT, usage: USAGE, finishReason: 'stop' },
+  });
+  expect(calls).toHaveLength(1);
+});

@@ -69,6 +69,7 @@ export interface ProviderModel extends Partial<ModelPrices> {
 }
 
 export interface ProviderSettings {
+  enableScriptReuse?: boolean;
   enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
   stylePreset?: 'default' | false;
@@ -89,6 +90,7 @@ export interface ProviderRequestOptions {
 }
 
 export interface PersistedProviderSettings {
+  enableScriptReuse?: boolean;
   enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
   stylePreset?: 'default' | false;
@@ -137,6 +139,9 @@ export function parseProviderSettings(value: unknown): ProviderSettings {
   return {
     ...createDefaultProviderSettings(),
     provider,
+    ...(typeof record.enableScriptReuse === 'boolean'
+      ? { enableScriptReuse: record.enableScriptReuse }
+      : {}),
     ...(record.stylePreset === 'default' || record.stylePreset === false
       ? { stylePreset: record.stylePreset }
       : {}),
@@ -170,6 +175,9 @@ export function serializeProviderSettings(
 ): PersistedProviderSettings {
   return {
     provider: settings.provider,
+    ...(settings.enableScriptReuse === undefined
+      ? {}
+      : { enableScriptReuse: settings.enableScriptReuse }),
     ...(settings.stylePreset === undefined
       ? {}
       : { stylePreset: settings.stylePreset }),
