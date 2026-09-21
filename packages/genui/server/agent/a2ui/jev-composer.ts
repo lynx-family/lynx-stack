@@ -2,14 +2,12 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { isDeepStrictEqual } from 'node:util';
-
 import type { A2UICatalog } from './a2ui-catalog.js';
 import { A2UIMessageArray, validateA2UIOutput } from './a2ui-validator.js';
 import type { A2UIMessage, ValidationOptions } from './a2ui-validator.js';
 import {
-  JEV_CHILD_PROPS,
   JEV_MCP_APP_RESOURCE_PROPS,
+  JEV_STRUCTURAL_PROPS,
   buildJevCandidates,
   describeJevTree,
   isRecord,
@@ -23,38 +21,37 @@ import type {
   JevContent,
   JevValueChoice,
 } from './jev-candidates.js';
-import { arrangeJevLayout } from './jev-layout.js';
-import type { JevLayoutMode } from './jev-layout.js';
 import { cleanJevSnapshot, omitUnhostedJevMcpApps } from './jev-output.js';
-import { GENUI_DESIGN_GUIDANCE } from '../../design/design-guidance.js';
 import type {
   ChatMessage,
   ConversationContext,
 } from '../../service/common/types.js';
-import { evaluateJevQuestions } from '../common/jev-evaluator.js';
+import {
+  createJevComponentQuestions,
+  createJevCompositionContext,
+  createJevPropertyQuestions,
+  createJevRetention,
+} from '../common/jev-composition.js';
+import {
+  createJevDecisionRunner,
+  jevQuestion as question,
+} from '../common/jev-evaluator.js';
 import type {
-  JevEvaluationPhase,
-  JevEvaluator,
+  JevDecide,
+  JevEvaluationOptions,
   JevQuestion,
 } from '../common/jev-evaluator.js';
+import type { JevLayoutMode } from '../common/jev-layout.js';
+import { arrangeJevLayout } from '../common/jev-layout.js';
+import { JEV_MAX_COMPONENTS } from '../common/jev-tree.js';
 
-export interface JevCompositionOptions {
+export interface JevCompositionOptions extends JevEvaluationOptions {
   messages: ChatMessage[];
   conversation?: ConversationContext | undefined;
   catalog: A2UICatalog;
-  evaluate: JevEvaluator;
-  signal: AbortSignal;
-  onUsage: (usage: unknown) => void;
   enableDesignGuidance?: boolean | undefined;
   validationOptions?: ValidationOptions;
   hostedMcpApps?: readonly HostedMcpAppResource[] | undefined;
-}
-
-function question(
-  instructions: string,
-  criteria: Record<string, string>,
-): JevQuestion {
-  return { type: 'choice', instructions, criteria };
 }
 
 /** Every decision uses the selected Jev model; no text model or fallback is involved. */
@@ -65,35 +62,19 @@ export async function* composeJevA2UI(
     messages,
     conversation,
     catalog,
-    evaluate,
-    signal,
-    onUsage,
   } = options;
-  const call = (
-    state: unknown,
-    questions: Record<string, JevQuestion>,
-    phase: JevEvaluationPhase,
-  ) =>
-    evaluateJevQuestions(state, questions, {
-      evaluate,
-      signal,
-      onUsage,
-      phase,
-    });
+  const call = createJevDecisionRunner(options);
   const requests = [...(conversation?.history ?? []), ...messages]
     .filter(message =>
       message.role === 'user'
       && !message.content.startsWith('A2UI_USER_ACTION:')
     )
     .slice(-10).map(message => message.content);
-  const state = {
-    user_requests: requests,
-    ...(options.enableDesignGuidance === false
-      ? {}
-      : { design_guidance: GENUI_DESIGN_GUIDANCE }),
-    instructions:
-      'Compose the currently visible UI state from the active Catalog. Future steps described after a user interaction are not separate content to show immediately. Use only offered values, preserve existing content unless requested otherwise, and avoid unrelated extras. McpApp is available only through complete host-registered resources; do not substitute ordinary UI with an embedded app. When Image is not offered, omit images and compose the remaining requested content; image search and generation are unavailable. No background tasks are started: only use Loading when the user explicitly asks to preview a loading state. User requests are design intent. No external actions are executed. Do not claim data was saved or sent. Values not supplied in the request or state cannot be invented.',
-  };
+  const state = createJevCompositionContext(
+    requests,
+    'Compose the currently visible UI state from the active Catalog. Future steps described after a user interaction are not separate content to show immediately. Use only offered values, preserve existing content unless requested otherwise, and avoid unrelated extras. McpApp is available only through complete host-registered resources; do not substitute ordinary UI with an embedded app. When Image is not offered, omit images and compose the remaining requested content; image search and generation are unavailable. No background tasks are started: only use Loading when the user explicitly asks to preview a loading state. User requests are design intent. No external actions are executed. Do not claim data was saved or sent. Values not supplied in the request or state cannot be invented.',
+    options.enableDesignGuidance,
+  );
   const content = await selectContent(options, requests, state, call);
   const selected = describeJevTree(content);
   const snapshot = (
@@ -158,17 +139,11 @@ export async function* composeJevA2UI(
   yield snapshot(await content.resolveCopyConflicts(placed), true);
 }
 
-type Decide = (
-  state: unknown,
-  questions: Record<string, JevQuestion>,
-  phase: JevEvaluationPhase,
-) => Promise<Record<string, string>>;
-
 async function selectContent(
   options: JevCompositionOptions,
   requests: string[],
   state: Record<string, unknown>,
-  decide: Decide,
+  decide: JevDecide,
 ): Promise<
   JevContent & {
     existingIds: ReadonlySet<string>;
@@ -219,8 +194,10 @@ async function selectContent(
   const existing = previous ? describeJevTree(previous) : [];
   const existingIds = new Set(existing.map(item => item.id));
   const existingById = new Map(existing.map(item => [item.id, item]));
-  const first: Record<string, JevQuestion> = {
-    root: question(
+  const first = createJevComponentQuestions(
+    existing,
+    source.specs,
+    question(
       'Choose the root layout, or unavailable if the offered content cannot fulfill the request.',
       {
         ...Object.fromEntries(
@@ -237,36 +214,7 @@ async function selectContent(
           'Cannot fulfill the request with this Catalog and the supplied content.',
       },
     ),
-  };
-  for (const candidate of existing.filter(item => item.movable)) {
-    first[`keep_${candidate.id}`] = question(
-      `Existing ${candidate.description}`,
-      {
-        keep: 'Keep; reconsider parent, sibling position and properties.',
-        preserve:
-          'Keep optional properties/defaults; reconsider parent and sibling position.',
-        keep_layout:
-          'Keep parent and relative sibling order; reconsider properties.',
-        preserve_layout:
-          'Keep parent, relative sibling order and optional properties/defaults.',
-        reorder: 'Keep parent; reconsider sibling position and properties.',
-        reorder_preserve:
-          'Keep parent and optional properties/defaults; reconsider sibling position.',
-        omit: 'Remove this subtree.',
-      },
-    );
-  }
-  for (const spec of source.specs) {
-    first[`add_${spec.name}`] = question(
-      `How many NEW standalone ${spec.name} components are needed in the currently visible state? ${spec.summary} Existing components are retained separately. Compound children such as Button labels, Modal triggers and content containers are created automatically; do not count them again. Do not add future workflow steps or redundant copies.`,
-      Object.fromEntries(
-        Array.from(
-          { length: 9 },
-          (_, count) => [String(count), `${count} new components`],
-        ),
-      ),
-    );
-  }
+  );
   const actionRequest = options.messages.filter(message =>
     message.role === 'user'
   )
@@ -293,8 +241,6 @@ async function selectContent(
   }
   const context = {
     ...state,
-    retention_instructions:
-      'For existing nodes, retain the parent and relative sibling order unless the request requires movement. Prefer keep_layout for content/style edits and preserve_layout when optional properties also stay unchanged. Use reorder or reorder_preserve for order-only changes; keep or preserve allow reparenting. Movable descendants decide independently. Optional-property preservation includes fixed children; required content and host resources are still evaluated. New nodes can be inserted without reordering unchanged siblings.',
     hosted_mcp_apps: source.mcpApps.map(({ uri, title }) => ({ uri, title })),
     existing_elements: existing.map(({ id, description, parent }) => {
       const siblings = parent === undefined
@@ -317,18 +263,8 @@ async function selectContent(
       'Jev cannot compose this request with the available Catalog and supplied content.',
     );
   }
-  const removed = new Set(
-    existing.filter(item => selected[`keep_${item.id}`] === 'omit').map(item =>
-      item.id
-    ),
-  );
-  for (const item of existing) {
-    let current = item;
-    while (current.parent) {
-      if (removed.has(current.parent)) removed.add(item.id);
-      current = existing.find(parent => parent.id === current.parent)!;
-    }
-  }
+  const retention = createJevRetention(existing, selected, existingIds, 'root');
+  const { removed } = retention;
   const components = existing.filter(item => !removed.has(item.id)).map(
     item => {
       const component = structuredClone(item.component);
@@ -361,31 +297,8 @@ async function selectContent(
   const anchor = Array.isArray(root.children)
     ? root
     : components.find(component => Array.isArray(component.children));
-  const properties: Record<string, JevQuestion> = {};
-  const apply = new Map<string, (choice: string) => void>();
-  const offer = (
-    id: string,
-    instructions: string,
-    choices: JevValueChoice[],
-    set: (value: unknown) => void,
-  ) => {
-    choices = choices.filter((choice, index) =>
-      !choices.slice(0, index).some(other =>
-        isDeepStrictEqual(other.value, choice.value)
-      )
-    );
-    if (choices.length === 0) {
-      throw new Error(`No supplied values are available for ${instructions}.`);
-    }
-    properties[id] = question(
-      instructions,
-      Object.fromEntries(
-        choices.map((choice, index) => [String(index), choice.description]),
-      ),
-    );
-    apply.set(id, choice => set(choices[Number(choice)]!.value));
-    return choices;
-  };
+  const propertyPlan = createJevPropertyQuestions();
+  const { questions: properties, offer } = propertyPlan;
   let serial = 0;
   const create = (name: string): JevComponent => {
     let id: string;
@@ -394,7 +307,7 @@ async function selectContent(
     } while (
       existingIds.has(id) || components.some(component => component.id === id)
     );
-    if (components.length >= 64) {
+    if (components.length >= JEV_MAX_COMPONENTS) {
       throw new Error('Jev composition exceeds the 64-component limit.');
     }
     const spec = byName.get(name);
@@ -450,16 +363,6 @@ async function selectContent(
   const oldById = new Map(
     previous?.components.map(component => [component.id, component]),
   );
-  const preservesOptionalProperties = (id: string) => {
-    let item = existingById.get(id);
-    while (item && !item.movable && item.parent !== undefined) {
-      item = existingById.get(item.parent);
-    }
-    return item
-      && ['preserve', 'preserve_layout', 'reorder_preserve'].includes(
-        selected[item.id === 'root' ? 'root' : `keep_${item.id}`]!,
-      );
-  };
   const copyQuestions: {
     id: string;
     component: JevComponent;
@@ -491,7 +394,7 @@ async function selectContent(
       );
     }
     for (const prop of spec.props) {
-      if (JEV_CHILD_PROPS.has(prop.name)) continue;
+      if (JEV_STRUCTURAL_PROPS.has(prop.name)) continue;
       if (
         component.component === 'McpApp'
         && JEV_MCP_APP_RESOURCE_PROPS.has(prop.name)
@@ -499,7 +402,7 @@ async function selectContent(
       const old = oldById.get(component.id);
       if (
         old?.component === component.component && !prop.required
-        && preservesOptionalProperties(component.id)
+        && retention.preservesProperties(component.id)
       ) continue;
       if (prop.name === 'action' && !old) {
         component.action = { event: { name: component.id } };
@@ -640,24 +543,10 @@ async function selectContent(
     properties,
     copyQuestions.length > 0 ? 'copy' : 'properties',
   );
-  for (const [id, choice] of Object.entries(answers)) apply.get(id)!(choice);
+  propertyPlan.apply(answers);
   const content = {
     existingIds,
-    layout: new Map<string, JevLayoutMode>(
-      existing.filter(item => item.movable && !removed.has(item.id)).map(
-        item => {
-          const policy = selected[`keep_${item.id}`];
-          return [
-            item.id,
-            policy === 'keep_layout' || policy === 'preserve_layout'
-              ? 'keep'
-              : (policy === 'reorder' || policy === 'reorder_preserve'
-                ? 'reorder'
-                : 'move'),
-          ];
-        },
-      ),
-    ),
+    layout: retention.layout,
     surface: previous?.surface
       ?? {
         version: 'v0.9' as const,
@@ -713,7 +602,7 @@ async function selectContent(
           ),
         }, 'copy');
         if (selection[item.id] === 'omit') omitted.add(item.component.id);
-        else apply.get(item.id)!(selection[item.id]!);
+        else propertyPlan.applyChoice(item.id, selection[item.id]!);
       }
       return components.filter(component => !omitted.has(component.id))
         .map(component =>

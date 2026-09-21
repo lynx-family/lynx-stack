@@ -6,8 +6,8 @@ import { expect, test } from '@rstest/core';
 
 import { describeJevTree } from '../agent/a2ui/jev-candidates.js';
 import type { JevComponent } from '../agent/a2ui/jev-candidates.js';
-import { arrangeJevLayout } from '../agent/a2ui/jev-layout.js';
-import type { JevLayoutMode } from '../agent/a2ui/jev-layout.js';
+import { arrangeJevLayout } from '../agent/common/jev-layout.js';
+import type { JevLayoutMode } from '../agent/common/jev-layout.js';
 
 const surface = {
   version: 'v0.9' as const,

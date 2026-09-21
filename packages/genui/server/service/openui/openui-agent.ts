@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { generateJevOpenUI, streamJevOpenUI } from './jev-composition.js';
 import { createOpenUIAgent } from '../../agent/openui/openui-agent.js';
 import type {
   OpenUIAgent,
@@ -11,11 +12,13 @@ import {
   buildCapabilityRunOptions,
   pickAgentCapabilityConfig,
 } from '../common/agent-capabilities.js';
+import { resolveJevModel } from '../common/jev-provider.js';
 import {
   buildConversationMessages,
   sumContentChars,
   toModelMessages,
 } from '../common/messages.js';
+import { withTextModelInteraction } from '../common/model-interaction.js';
 import {
   ProviderAgentCache,
   createStableValueHash,
@@ -96,6 +99,30 @@ export default class OpenUIAgentService {
     abortSignal?: AbortSignal,
   ): Promise<MastraStreamResult> {
     abortSignal?.throwIfAborted();
+    if (resolveJevModel(opts)) {
+      const stream = streamJevOpenUI(
+        messages,
+        opts,
+        undefined,
+        abortSignal,
+      );
+      let result: Awaited<ReturnType<typeof stream.finalize>> | undefined;
+      return {
+        textStream: (async function*() {
+          yield* stream.textStream;
+          result = await stream.finalize();
+        })(),
+        get text() {
+          return result?.text;
+        },
+        get usage() {
+          return result?.usage;
+        },
+        get finishReason() {
+          return result?.finishReason;
+        },
+      };
+    }
     const agent = await this.getAgent(opts);
     abortSignal?.throwIfAborted();
     const modelMessagesStartedAt = performance.now();
@@ -132,6 +159,9 @@ export default class OpenUIAgentService {
       finishReason: unknown;
     }>;
   }> {
+    if (resolveJevModel(opts)) {
+      return streamJevOpenUI(messages, opts, conversation, abortSignal);
+    }
     const buildConversationStartedAt = performance.now();
     const preparedMessages = buildConversationMessages(
       messages,
@@ -149,15 +179,21 @@ export default class OpenUIAgentService {
       preparedContentChars: sumContentChars(preparedMessages),
     });
 
-    const streamResult = await this.stream(
-      preparedMessages,
-      opts,
+    return withTextModelInteraction(
+      opts.onModelInteraction,
       abortSignal,
+      async () => {
+        const streamResult = await this.stream(
+          preparedMessages,
+          opts,
+          abortSignal,
+        );
+        return {
+          textStream: toAsyncIterable(streamResult.textStream),
+          finalize: () => finalizeResult(streamResult),
+        };
+      },
     );
-    return {
-      textStream: toAsyncIterable(streamResult.textStream),
-      finalize: () => finalizeResult(streamResult),
-    };
   }
 
   public async generateRaw(
@@ -167,6 +203,9 @@ export default class OpenUIAgentService {
     abortSignal?: AbortSignal,
   ): Promise<{ text: string; usage: unknown; finishReason: unknown }> {
     abortSignal?.throwIfAborted();
+    if (resolveJevModel(opts)) {
+      return generateJevOpenUI(messages, opts, conversation, abortSignal);
+    }
     const agent = await this.getAgent(opts);
     abortSignal?.throwIfAborted();
     const result = await agent.generate(

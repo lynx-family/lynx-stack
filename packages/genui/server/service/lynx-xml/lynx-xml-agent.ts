@@ -26,6 +26,7 @@ import {
   sumContentChars,
   toModelMessages,
 } from '../common/messages.js';
+import { withTextModelInteraction } from '../common/model-interaction.js';
 import {
   ProviderAgentCache,
   buildOpenAIRunOptions,
@@ -216,37 +217,47 @@ export default class LynxXmlAgentService {
       opts,
       maxOutputTokens,
     );
-    const streamResult = await this.streamWithScope(
-      preparedMessages,
-      opts,
+    return withTextModelInteraction(
+      opts.onModelInteraction,
       abortSignal,
-      scope,
-    );
-    return recoverTextGeneration({
-      initialMessages: preparedMessages,
-      initialResult: streamResult,
-      maxAttempts: LYNX_XML_MAX_GENERATION_ATTEMPTS,
-      reasoningRecovery: retrySettings
-        ? { maxOutputTokens, retrySettings }
-        : undefined,
-      stream: (nextMessages, settings) =>
-        this.streamWithScope(
-          nextMessages,
-          settings
-            ? { ...opts, reasoningEffort: settings.reasoningEffort }
-            : opts,
+      async () => {
+        const streamResult = await this.streamWithScope(
+          preparedMessages,
+          opts,
           abortSignal,
           scope,
-          settings?.maxOutputTokens,
-        ),
-      postprocess: result => {
-        const artifact = compileGeneration(result, opts);
-        return { ...artifact, text: normalizeLynxXmlArtifact(artifact.text) };
+        );
+        return recoverTextGeneration({
+          initialMessages: preparedMessages,
+          initialResult: streamResult,
+          maxAttempts: LYNX_XML_MAX_GENERATION_ATTEMPTS,
+          reasoningRecovery: retrySettings
+            ? { maxOutputTokens, retrySettings }
+            : undefined,
+          stream: (nextMessages, settings) =>
+            this.streamWithScope(
+              nextMessages,
+              settings
+                ? { ...opts, reasoningEffort: settings.reasoningEffort }
+                : opts,
+              abortSignal,
+              scope,
+              settings?.maxOutputTokens,
+            ),
+          postprocess: result => {
+            const artifact = compileGeneration(result, opts);
+            return {
+              ...artifact,
+              text: normalizeLynxXmlArtifact(artifact.text),
+            };
+          },
+          canContinue: text =>
+            /<lynx\b/u.test(text) && !text.includes('</lynx>'),
+          abortSignal,
+          onPerformanceEvent: opts.onPerformanceEvent,
+        });
       },
-      canContinue: text => /<lynx\b/u.test(text) && !text.includes('</lynx>'),
-      abortSignal,
-      onPerformanceEvent: opts.onPerformanceEvent,
-    });
+    );
   }
 
   public async generateRaw(

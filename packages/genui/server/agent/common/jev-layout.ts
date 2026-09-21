@@ -2,18 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { JEV_MAX_DEPTH, jevChildIds } from './jev-candidates.js';
-import type { JevCandidate } from './jev-candidates.js';
-import type {
-  JevEvaluationPhase,
-  JevQuestion,
-} from '../common/jev-evaluator.js';
-
-type Decide = (
-  state: unknown,
-  questions: Record<string, JevQuestion>,
-  phase: JevEvaluationPhase,
-) => Promise<Record<string, string>>;
+import { jevQuestion as question } from './jev-evaluator.js';
+import type { JevDecide, JevQuestion } from './jev-evaluator.js';
+import { JEV_MAX_DEPTH, jevChildIds } from './jev-tree.js';
+import type { JevCandidate } from './jev-tree.js';
 
 /** Keep both parent and relative order, reorder within the parent, or choose a new placement. */
 export type JevLayoutMode = 'keep' | 'reorder' | 'move';
@@ -22,7 +14,7 @@ export type JevLayoutMode = 'keep' | 'reorder' | 'move';
 export async function arrangeJevLayout(
   selected: JevCandidate[],
   state: Record<string, unknown>,
-  decide: Decide,
+  decide: JevDecide,
   retained: ReadonlyMap<string, JevLayoutMode> = new Map(),
   existingIds: ReadonlySet<string> = new Set(retained.keys()),
 ) {
@@ -90,17 +82,11 @@ export async function arrangeJevLayout(
       },
     ),
   });
-  const question = (
-    instructions: string,
-    criteria: Record<string, string>,
-  ): JevQuestion => ({
-    type: 'choice',
-    instructions,
-    criteria,
-  });
   const fits = (item: JevCandidate, parent: JevCandidate) => {
     const depth = depths.get(parent.id);
-    return depth !== undefined && depth + 1 + height(item.id) < JEV_MAX_DEPTH;
+    return depth !== undefined && depth + 1 + height(item.id) < JEV_MAX_DEPTH
+      && (!parent.allowedChildren
+        || parent.allowedChildren.includes(item.component.component));
   };
   const parentDescription = (parent: JevCandidate) => {
     const parentOwner = parents.get(parent.id);
@@ -123,7 +109,11 @@ export async function arrangeJevLayout(
       }`,
       Object.fromEntries(
         containers.filter(parent => {
-          if (owner.get(parent.id) === item.id) return false;
+          if (
+            owner.get(parent.id) === item.id
+            || (parent.allowedChildren
+              && !parent.allowedChildren.includes(item.component.component))
+          ) return false;
           if (!planning || depths.has(parent.id)) return fits(item, parent);
           // An unplaced unit starts at depth >= 1; its fixed descendants add offsets.
           const offset = units.get(owner.get(parent.id)!)!

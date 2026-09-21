@@ -9,6 +9,7 @@ import {
   toProviderRequestOptions,
 } from './shared.js';
 import type { ProviderSettings } from './shared.js';
+import { CHAT_PROMPT_SUGGESTIONS } from './suggestions.js';
 import type {
   ChatArtifact,
   ChatHydration,
@@ -43,24 +44,6 @@ const WELCOME_MESSAGE: ChatMessageModel = {
   text:
     'Describe the interface you want. I will stream a complete zero-build .lynxml artifact and render it directly in Lynx Preview.',
 };
-
-const SUGGESTIONS = [
-  {
-    label: '🌤️ Weather dashboard',
-    text:
-      'Create an interactive weather dashboard for Shanghai with current conditions, a five-day forecast, and a unit toggle. Use only self-contained data and Lynx-native shapes.',
-  },
-  {
-    label: '✅ Habit tracker',
-    text:
-      'Create a polished daily habit tracker with progress, four tappable habits, and a reset action. Make it responsive and keep all interaction on the main thread.',
-  },
-  {
-    label: '🎵 Music player',
-    text:
-      'Create a compact music-player interface with a self-contained album-art treatment, track metadata, progress, and working previous, play/pause, and next controls.',
-  },
-] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -345,7 +328,7 @@ export const LYNX_XML_CHAT_ADAPTER = {
     progressLabel: 'Streaming Lynx XML from the GenUI server...',
     failurePrefix: 'Lynx XML generation failed',
   },
-  suggestions: SUGGESTIONS,
+  suggestions: CHAT_PROMPT_SUGGESTIONS,
   settings: {
     ...CHAT_PROVIDER_SETTINGS_ADAPTER,
     initial(): ProviderSettings {
