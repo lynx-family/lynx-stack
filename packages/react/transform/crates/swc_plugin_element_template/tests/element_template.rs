@@ -139,7 +139,7 @@ fn first_attribute_slots_len(code: &str) -> Option<usize> {
     fn visit_call_expr(&mut self, call: &CallExpr) {
       if let Callee::Expr(callee) = &call.callee {
         if let Expr::Member(member) = &**callee {
-          if matches!(&member.prop, MemberProp::Ident(name) if name.sym == "__etHost" || name.sym == "__etPlainHost")
+          if matches!(&member.prop, MemberProp::Ident(name) if name.sym == "__etHost")
             && self.0.is_none()
           {
             if let Expr::Array(array) = &*call.args[4].expr {
@@ -767,9 +767,7 @@ fn should_reuse_same_content_template_id_and_asset_in_one_module() {
     "same content should emit one template id const:\n{code}"
   );
   assert_eq!(
-    code
-      .matches(&format!("__etPlainHost({template_id},"))
-      .count(),
+    code.matches(&format!("__etHost({template_id},")).count(),
     2,
     "both host calls should reference the reused template id exactly once each:\n{code}"
   );
@@ -1203,7 +1201,7 @@ fn should_lower_lepus_hosts_in_component_children_and_jsx_valued_props() {
     element_template_config(),
   );
   assert_eq!(user_templates(&templates).len(), 1, "{code}");
-  assert_eq!(code.matches(".__etPlainHost(").count(), 3, "{code}");
+  assert_eq!(code.matches(".__etHost(").count(), 3, "{code}");
   assert!(!code.contains("<_et_"), "{code}");
   assert!(!code.contains("attributeSlots="), "{code}");
   assert!(

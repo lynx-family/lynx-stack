@@ -6,7 +6,7 @@ import { createContext, h, options } from 'preact';
 import { useContext, useId, useState } from '@lynx-js/react/lepus/hooks';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { __etHost, __etPlainHost } from '../../../../src/element-template/runtime/render/host.js';
+import { __etHost } from '../../../../src/element-template/runtime/render/host.js';
 import { destroyAllElementTemplateListStates } from '../../../../src/element-template/runtime/list/list.js';
 import { renderToElementTemplate } from '../../../../src/element-template/runtime/render/render-direct.js';
 import { createElementTemplatePage, setupPage } from '../../../../src/element-template/runtime/page/page.js';
@@ -58,14 +58,14 @@ afterEach(() => {
   destroyAllElementTemplateListStates();
 });
 
-describe.each([['compact', __etHost], ['plain', __etPlainHost]] as const)(
+describe.each([['compact', undefined], ['plain', true]] as const)(
   '%s host direct materialization',
-  (_name, createHost) => {
+  (_name, plain) => {
     it('defers compact host creation and preserves reusable sparse inputs and explicit key', () => {
       vi.stubGlobal('__DEV__', false);
       const create = vi.spyOn(globalThis, '__CreateElementTemplate');
       const attrs = ['leaf'];
-      const leaf = createHost(
+      const leaf = __etHost(
         '__Card__:_et_compact_leaf',
         '_et_compact_leaf',
         '__Card__',
@@ -73,10 +73,11 @@ describe.each([['compact', __etHost], ['plain', __etPlainHost]] as const)(
         attrs,
         undefined,
         undefined,
+        plain,
       );
       const children = [leaf];
       const slots = [, children, false];
-      const host = createHost(
+      const host = __etHost(
         '__Card__:_et_compact_root',
         '_et_compact_root',
         '__Card__',
@@ -84,6 +85,7 @@ describe.each([['compact', __etHost], ['plain', __etPlainHost]] as const)(
         undefined,
         slots,
         undefined,
+        plain,
       );
       expect(create).not.toHaveBeenCalled();
       expect(leaf.key).toBe('key');
@@ -115,7 +117,7 @@ describe.each([['compact', __etHost], ['plain', __etPlainHost]] as const)(
         ids.push(useId());
         const context = useContext(Context);
         const [state] = useState(value);
-        return createHost(
+        return __etHost(
           '__Card__:_et_compact_leaf',
           '_et_compact_leaf',
           '__Card__',
@@ -123,12 +125,22 @@ describe.each([['compact', __etHost], ['plain', __etPlainHost]] as const)(
           [context + state],
           undefined,
           undefined,
+          plain,
         );
       }
-      const host = createHost('__Card__:_et_compact_root', '_et_compact_root', '__Card__', undefined, undefined, [[
-        h(Child, { value: 'a' }),
-        h(Child, { value: 'b' }),
-      ]], undefined);
+      const host = __etHost(
+        '__Card__:_et_compact_root',
+        '_et_compact_root',
+        '__Card__',
+        undefined,
+        undefined,
+        [[
+          h(Child, { value: 'a' }),
+          h(Child, { value: 'b' }),
+        ]],
+        undefined,
+        plain,
+      );
       const afterDiff = vi.fn();
       const previousDiffed = options.diffed;
       options.diffed = afterDiff;
@@ -166,9 +178,18 @@ describe.each([['compact', __etHost], ['plain', __etPlainHost]] as const)(
         undefined,
         undefined,
       );
-      const parent = createHost('__Card__:_et_compact_root', '_et_compact_root', '__Card__', undefined, undefined, [[
-        host,
-      ]], undefined);
+      const parent = __etHost(
+        '__Card__:_et_compact_root',
+        '_et_compact_root',
+        '__Card__',
+        undefined,
+        undefined,
+        [[
+          host,
+        ]],
+        undefined,
+        plain,
+      );
       const result = renderToElementTemplate(parent);
       expect(create.mock.calls[0]!.slice(0, 3)).toEqual(['_et_compact_leaf', null, ['-1:0:', null]]);
       expect(result.rootSubtreeHandles).toEqual([[{ uid: -1, ref: create.mock.results[0]!.value }]]);

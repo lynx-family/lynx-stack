@@ -54,17 +54,15 @@ impl<C: Comments> HostLowering<'_, C> {
         .map(|value| value.unwrap_or_else(|| quote!("void 0" as Expr))),
     );
     if plain {
-      args.pop(); // Plain hosts have no list-item platform input.
+      args.push(quote!("true" as Expr));
     }
     self.comments.add_pure_comment(node.span.lo);
     Some(Expr::Call(CallExpr {
       span: node.span,
       ctxt: Default::default(),
-      callee: Callee::Expr(Box::new(if plain {
-        quote!("$runtime.__etPlainHost" as Expr, runtime: Expr = self.runtime.clone())
-      } else {
-        quote!("$runtime.__etHost" as Expr, runtime: Expr = self.runtime.clone())
-      })),
+      callee: Callee::Expr(Box::new(
+        quote!("$runtime.__etHost" as Expr, runtime: Expr = self.runtime.clone()),
+      )),
       args: args
         .into_iter()
         .map(|expr| ExprOrSpread {

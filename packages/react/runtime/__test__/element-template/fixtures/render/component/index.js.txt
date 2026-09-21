@@ -5,9 +5,9 @@ export function App() {
     const x = null;
     const y = 2;
     const z = 3;
-    return /*#__PURE__*/ ReactLynxInternal.__etPlainHost(_et_f6567016e14b, "_et_f6567016e14b", _et_f6567016e14b_bundle, void 0, void 0, [
+    return /*#__PURE__*/ ReactLynxInternal.__etHost(_et_f6567016e14b, "_et_f6567016e14b", _et_f6567016e14b_bundle, void 0, void 0, [
         x,
         y,
         z
-    ]);
+    ], void 0, true);
 }

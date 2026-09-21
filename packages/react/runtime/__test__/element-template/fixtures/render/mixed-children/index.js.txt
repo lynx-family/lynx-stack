@@ -7,10 +7,10 @@ export class App extends Component {
         const leading = 'A';
         const innerText = 'B';
         const trailing = 'C';
-        return /*#__PURE__*/ ReactLynxInternal.__etPlainHost(_et_5c988e5983da, "_et_5c988e5983da", _et_5c988e5983da_bundle, void 0, void 0, [
+        return /*#__PURE__*/ ReactLynxInternal.__etHost(_et_5c988e5983da, "_et_5c988e5983da", _et_5c988e5983da_bundle, void 0, void 0, [
             leading,
             innerText,
             trailing
-        ]);
+        ], void 0, true);
     }
 }

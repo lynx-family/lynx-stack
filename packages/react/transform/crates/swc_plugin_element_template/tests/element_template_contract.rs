@@ -608,7 +608,7 @@ fn should_keep_static_attribute_values_out_of_et_attribute_slots() {
   assert_eq!(attr_by_key("class")["attrSlotIndex"].as_f64(), Some(1.0));
   let code = without_whitespace(&code);
   assert!(
-    code.contains(",void0,[1e400,cls],void0)"),
+    code.contains(",void0,[1e400,cls],void0,void0,true)"),
     "overflowed numeric literals should stay observable via ET attribute slots, got: {code}"
   );
 }
@@ -963,13 +963,12 @@ fn ordered_child_slots_are_lepus_only_and_preserve_template_identity() {
     }
     let code = without_whitespace(&code);
     if target == TransformTarget::LEPUS {
-      assert!(code.contains(",[first(),second()])"), "{code}");
+      assert!(code.contains(",[first(),second()],void0,true)"), "{code}");
       assert!(!code.contains("$0="), "{code}");
     } else {
       assert!(code.contains("$0={first()}$1={second()}"), "{code}");
       assert!(!code.contains("slotChildren="), "{code}");
       assert!(!code.contains(".__etHost("), "{code}");
-      assert!(!code.contains(".__etPlainHost("), "{code}");
     }
     let positions = ["key()", "attr()", "first()", "second()"].map(|expr| {
       assert_eq!(code.matches(expr).count(), 1, "{code}");
@@ -1005,7 +1004,7 @@ fn should_specialize_only_adapter_free_lepus_hosts_without_list_item_metadata() 
         },
       );
       assert_eq!(
-        code.contains(".__etPlainHost("),
+        without_whitespace(&code).contains(",void0,true)"),
         plain && target == TransformTarget::LEPUS,
         "{input}: {code}"
       );
