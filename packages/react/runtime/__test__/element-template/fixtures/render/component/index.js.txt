@@ -9,5 +9,5 @@ export function App() {
         x,
         y,
         z
-    ], void 0);
+    ], void 0, true);
 }

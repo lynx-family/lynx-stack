@@ -3,7 +3,7 @@ source: packages/react/transform/crates/swc_plugin_element_template/tests/elemen
 expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_snapshot_json(&templates),\n})"
 ---
 {
-  "code": "import * as ReactLynxInternal from \"@lynx-js/react/internal\";\nimport * as ReactLynx from \"@lynx-js/react\";\nconst _et_895419ad7379_bundle = globDynamicComponentEntry;\nconst _et_895419ad7379 = `${_et_895419ad7379_bundle}:${\"_et_895419ad7379\"}`;\nconst _et_856cbd06f956_bundle = globDynamicComponentEntry;\nconst _et_856cbd06f956 = `${_et_856cbd06f956_bundle}:${\"_et_856cbd06f956\"}`;\nReactLynxInternal.__etHost(_et_856cbd06f956, \"_et_856cbd06f956\", _et_856cbd06f956_bundle, void 0, void 0, [\n    items,\n    items.map((item)=>ReactLynxInternal.__etHost(_et_895419ad7379, \"_et_895419ad7379\", _et_895419ad7379_bundle, void 0, void 0, [\n            item\n        ], void 0))\n], void 0);\n",
+  "code": "import * as ReactLynxInternal from \"@lynx-js/react/internal\";\nimport * as ReactLynx from \"@lynx-js/react\";\nconst _et_895419ad7379_bundle = globDynamicComponentEntry;\nconst _et_895419ad7379 = `${_et_895419ad7379_bundle}:${\"_et_895419ad7379\"}`;\nconst _et_856cbd06f956_bundle = globDynamicComponentEntry;\nconst _et_856cbd06f956 = `${_et_856cbd06f956_bundle}:${\"_et_856cbd06f956\"}`;\nReactLynxInternal.__etHost(_et_856cbd06f956, \"_et_856cbd06f956\", _et_856cbd06f956_bundle, void 0, void 0, [\n    items,\n    items.map((item)=>ReactLynxInternal.__etHost(_et_895419ad7379, \"_et_895419ad7379\", _et_895419ad7379_bundle, void 0, void 0, [\n            item\n        ], void 0, true))\n], void 0, true);\n",
   "templates": [
     {
       "template_id": "_et_895419ad7379",
