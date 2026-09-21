@@ -12,6 +12,7 @@ import {
   toProviderRequestOptions,
 } from './shared.js';
 import type { ProviderSettings } from './shared.js';
+import { CHAT_PROMPT_SUGGESTIONS } from './suggestions.js';
 import type {
   ChatHydration,
   ChatHydrationContext,
@@ -64,24 +65,6 @@ interface PersistedA2UIAction {
 
 const WELCOME_TEXT =
   'I\'m A2UI Assistant. Describe the UI you want to build and I\'ll generate A2UI JSON for you.';
-
-const SUGGESTIONS = [
-  {
-    label: '🌤️ Weather with Refresh',
-    text:
-      'Create a weather card for San Francisco showing sunny, a photo, 22°C, humidity 60%, and a "Refresh" button. When the user taps Refresh, update the card with slightly different weather data to simulate a live fetch.',
-  },
-  {
-    label: '🛍️ Product card with Buy',
-    text:
-      'Create a product card for a limited-edition sneaker. Include name, a photo, price ($189), a short description, and a "Buy Now" button. When tapped, show a purchase confirmation step with a "Confirm Purchase" button. Only the Confirm Purchase button should submit the action; after the action response, replace the card with an order success page showing a fake order number and estimated delivery.',
-  },
-  {
-    label: '⚡ Quiz card with actions',
-    text:
-      'Create a trivia quiz card. Show a question "Which shape has three sides?" with 4 answer buttons: Triangle, Square, Circle, Hexagon. When the user taps an answer, show whether it is correct with a brief explanation.',
-  },
-] as const;
 
 const FEATURED_EXAMPLES: readonly StaticDemo[] = (() => {
   const featured = [...EXTENDED_STATIC_DEMOS];
@@ -514,7 +497,7 @@ export const A2UI_CHAT_ADAPTER = {
     progressLabel: 'Connecting to A2UI agent...',
     failurePrefix: 'Generation failed:',
   },
-  suggestions: SUGGESTIONS,
+  suggestions: CHAT_PROMPT_SUGGESTIONS,
   settings: createProviderSettingsAdapter('a2ui'),
   createRequest({ prompt, conversation, settings, host }) {
     const url = getChatEndpoint('a2ui', host, settings);

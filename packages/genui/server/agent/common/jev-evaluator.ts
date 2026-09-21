@@ -47,14 +47,37 @@ export type JevEvaluator = (
   phase?: JevEvaluationPhase,
 ) => Promise<{ answers: Record<string, string>; usage: unknown }>;
 
+export interface JevEvaluationOptions {
+  evaluate: JevEvaluator;
+  signal: AbortSignal;
+  onUsage: (usage: unknown) => void;
+}
+
+export type JevDecide = (
+  state: unknown,
+  questions: Record<string, JevQuestion>,
+  phase: JevEvaluationPhase,
+) => Promise<Record<string, string>>;
+
+export function jevQuestion(
+  instructions: string,
+  criteria: Record<string, string>,
+): JevQuestion {
+  return { type: 'choice', instructions, criteria };
+}
+
+export function createJevDecisionRunner(
+  options: JevEvaluationOptions,
+): JevDecide {
+  return (state, questions, phase) =>
+    evaluateJevQuestions(state, questions, { ...options, phase });
+}
+
 /** Evaluate independent questions from one composition phase, preserving its dependency boundary. */
 export async function evaluateJevQuestions(
   state: unknown,
   questions: Record<string, JevQuestion>,
-  options: {
-    evaluate: JevEvaluator;
-    signal: AbortSignal;
-    onUsage: (usage: unknown) => void;
+  options: JevEvaluationOptions & {
     phase?: JevEvaluationPhase;
   },
 ): Promise<Record<string, string>> {

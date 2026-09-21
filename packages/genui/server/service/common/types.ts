@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { ModelInteraction } from './model-interaction.js';
 import type { ImageGenerationCapabilityOptions } from '../../agent/common/image-generation-capability.js';
 import type { SearchCapabilityOptions } from '../../agent/common/search-capability.js';
 
@@ -45,6 +46,8 @@ export interface ChatOptions
   inheritReasoningEffort?: boolean | undefined;
   /** Provider-returned reasoning text for request-scoped failure details, not logs. */
   onReasoning?: (text: string) => void;
+  /** Sanitized diagnostics for actual composition-provider calls. */
+  onModelInteraction?: (event: ModelInteraction) => void;
   onPerformanceEvent?: (
     event: string,
     details?: Record<string, unknown>,

@@ -136,6 +136,9 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
   ]);
   const opts = {
     ...pickProviderOptions(parsed.body),
+    ...(typeof parsed.body.enableDesignGuidance === 'boolean'
+      ? { enableDesignGuidance: parsed.body.enableDesignGuidance }
+      : {}),
     ...(protocolOptions?.ok ? protocolOptions.options : {}),
     onReasoning: reasoning.append,
     onPerformanceEvent: (event: string, details = {}) => {
@@ -199,7 +202,12 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
           log('agent.connect.started');
           const { textStream, finalize } = await service.streamAsAsyncIterable(
             validated.messages,
-            opts,
+            {
+              ...opts,
+              onModelInteraction: event => {
+                enqueue('model', event);
+              },
+            },
             validatedConversation.conversation,
             generationController.signal,
           );

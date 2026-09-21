@@ -47,7 +47,7 @@ export const CUSTOM_JEV_PROVIDER_OPTION = {
   label: 'TypeSafe Jev',
   model: 'jev-latest',
 } as const;
-const A2UI_CUSTOM_PROVIDER_BASE_URL_OPTIONS = [
+const COMPOSITION_CUSTOM_PROVIDER_BASE_URL_OPTIONS = [
   ...CUSTOM_PROVIDER_BASE_URL_OPTIONS,
   CUSTOM_JEV_PROVIDER_OPTION,
 ];
@@ -57,7 +57,7 @@ export const CUSTOM_PROVIDER_MODEL = CUSTOM_PROVIDER_BASE_URL_OPTIONS[0].model;
 const MISSING_SERVER_MODEL_CONFIG_ERROR = 'GENUI_MODEL_CONFIG_JSON is required';
 
 function getCustomProviderDefaultModel(baseURL: string): string {
-  return A2UI_CUSTOM_PROVIDER_BASE_URL_OPTIONS.find(
+  return COMPOSITION_CUSTOM_PROVIDER_BASE_URL_OPTIONS.find(
     (option) => option.value === baseURL,
   )?.model ?? CUSTOM_PROVIDER_MODEL;
 }
@@ -194,14 +194,15 @@ export function compactProviderLabel(settings: ProviderSettings): string {
 
 export function getProviderSettingsValidationError(
   settings: ProviderSettings,
-  protocol?: 'a2ui',
+  protocol?: 'a2ui' | 'openui',
 ): string | undefined {
   if (settings.provider !== CUSTOM_PROVIDER_ID) return undefined;
 
   if (
     settings.baseURL === CUSTOM_JEV_PROVIDER_OPTION.value && protocol !== 'a2ui'
+    && protocol !== 'openui'
   ) {
-    return 'TypeSafe Jev is available only in A2UI Create. Select another provider endpoint.';
+    return 'TypeSafe Jev is available only in A2UI and OpenUI Create. Select another provider endpoint.';
   }
 
   const hasModel = settings.model.trim().length > 0;
@@ -220,7 +221,7 @@ export function getProviderSettingsValidationError(
 
 export function toProviderRequestOptions(
   settings: ProviderSettings,
-  protocol?: 'a2ui',
+  protocol?: 'a2ui' | 'openui',
 ): ProviderRequestOptions {
   if (settings.provider !== CUSTOM_PROVIDER_ID) {
     const model = settings.provider.trim();
@@ -285,7 +286,10 @@ function parseModelsResponse(value: unknown): {
   return { defaultModel: record.defaultModel, models };
 }
 
-export function getModelsEndpoint(host: ChatHost, protocol?: 'a2ui'): string {
+export function getModelsEndpoint(
+  host: ChatHost,
+  protocol?: 'a2ui' | 'openui',
+): string {
   const endpoint = new URL(getChatEndpoint('a2ui', host));
   endpoint.pathname = '/models';
   endpoint.search = '';
@@ -298,7 +302,7 @@ export async function loadProviderSettings(
   settings: ProviderSettings,
   host: ChatHost,
   signal: AbortSignal,
-  protocol?: 'a2ui',
+  protocol?: 'a2ui' | 'openui',
 ): Promise<ProviderSettings> {
   try {
     const response = await window.fetch(getModelsEndpoint(host, protocol), {
@@ -345,9 +349,9 @@ export async function loadProviderSettings(
   }
 }
 
-export function createProviderSettingsAdapter(protocol?: 'a2ui') {
-  const endpoints = protocol === 'a2ui'
-    ? A2UI_CUSTOM_PROVIDER_BASE_URL_OPTIONS
+export function createProviderSettingsAdapter(protocol?: 'a2ui' | 'openui') {
+  const endpoints = protocol === 'a2ui' || protocol === 'openui'
+    ? COMPOSITION_CUSTOM_PROVIDER_BASE_URL_OPTIONS
     : CUSTOM_PROVIDER_BASE_URL_OPTIONS;
   return {
     storageKeys: [

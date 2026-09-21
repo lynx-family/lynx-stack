@@ -17,8 +17,9 @@ function getModels(req: Request) {
     );
   }
 
-  const allowComposition = new URL(req.url).searchParams.get('protocol')
-    === 'a2ui';
+  const allowComposition = ['a2ui', 'openui'].includes(
+    new URL(req.url).searchParams.get('protocol') ?? '',
+  );
   const names = Object.keys(result.config.models).filter(name =>
     allowComposition || result.config.models[name]!.provider !== 'typesafe'
   );
