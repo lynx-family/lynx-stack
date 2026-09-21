@@ -26,9 +26,7 @@ ENV CI=1 \
     COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
     HUSKY=0 \
     TURBO_TELEMETRY_DISABLED=1 \
-    CARGO_HOME=/opt/cargo \
-    RUSTUP_HOME=/opt/rustup \
-    PATH=/opt/cargo/bin:${PATH}
+    PATH=/root/.cargo/bin:${PATH}
 
 WORKDIR /workspace
 
@@ -45,6 +43,7 @@ RUN node_version="$(cat .nvmrc)" \
     && npm install --global corepack@0.35.0 \
     && corepack enable
 
+# Use Rust's default directories: Turbo filters custom CARGO_HOME/RUSTUP_HOME.
 # rustup reads the pinned toolchain and Wasm targets from rust-toolchain.toml.
 RUN curl -fsSL --retry 3 https://sh.rustup.rs -o /tmp/rustup-init.sh \
     && sh /tmp/rustup-init.sh -y --no-modify-path --default-toolchain none \
