@@ -10,8 +10,8 @@ in a trace or in `Memory.getAllMemoryUsage`.
 
 ```bash
 pnpm dev            # Snapshot runtime
-ET=1 pnpm dev       # Element Template runtime
-RC=1 pnpm dev       # add `disableQuickTracingGC`, the mode the leak needs
+pnpm dev:et         # Element Template runtime
+pnpm dev:rc         # add `disableQuickTracingGC`, the mode the leak needs
 ```
 
 Open the page in LynxExplorer and tap **auto reload x20**, or drive it from

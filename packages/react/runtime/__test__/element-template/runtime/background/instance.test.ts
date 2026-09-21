@@ -19,7 +19,6 @@ import {
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
 } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
-import { __root, setRoot } from '../../../../src/element-template/runtime/page/root-instance.js';
 import { clearEventState, getEventHandlerForEventValue } from '../../../../src/element-template/prop-adapters/event.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import {
@@ -2526,26 +2525,6 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     instance.tearDown();
 
     expect(getEventHandlerForEventValue(eventValue)).toBeUndefined();
-  });
-
-  it('unlinks the background tree when the runtime is destroyed', () => {
-    const root = new BackgroundPageRootInstance();
-    setRoot(root as unknown as typeof __root);
-    const parent = new BackgroundElementTemplateInstance('view');
-    const child = new BackgroundElementTemplateInstance('view');
-    parent.appendChild(child);
-    root.appendChild(parent);
-
-    expect(child.parent).toBe(parent);
-    expect(parent.parent).toBe(root);
-
-    destroyElementTemplateBackgroundRuntime();
-
-    // Parent and child point at each other, so a tree left linked is a
-    // reference cycle that reference counting never frees.
-    expect(child.parent).toBeNull();
-    expect(parent.parent).toBeNull();
-    expect(root.firstChild).toBeNull();
   });
 
   it('clears event handlers when the background runtime is destroyed', () => {

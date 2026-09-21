@@ -6,7 +6,6 @@ import { render } from 'preact';
 
 import { cancelElementTemplateRemovedSubtreeCleanup, resetElementTemplateCommitState } from './commit-hook.js';
 import { resetElementTemplateHydrationListener } from './hydration-listener.js';
-import type { BackgroundElementTemplateInstance } from './instance.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
 import { withSyncEffectFlush } from '../../utils.js';
 import { clearEventState } from '../prop-adapters/event.js';
@@ -31,9 +30,5 @@ export function destroyElementTemplateBackgroundRuntime(): void {
   resetElementTemplateMainThreadFunctionRuntime();
   clearEventState();
   clearRefState();
-  // The unmounted tree keeps its parent/child links, which reference counting
-  // never frees. Runs after `flushPendingRefs`, which walks state `tearDown`
-  // clears.
-  (__root as unknown as Partial<BackgroundElementTemplateInstance>).tearDown?.();
   backgroundElementTemplateInstanceManager.clear();
 }
