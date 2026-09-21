@@ -15,7 +15,21 @@ export function __etHost(
   slotChildren: unknown[] | undefined,
   __listItemPlatformInfo: ETListItemPlatformInfo | undefined,
 ): ElementTemplateHost {
-  return { type, templateKey, bundleUrl, key, attributeSlots, slotChildren, __listItemPlatformInfo };
+  const host: ElementTemplateHost = {
+    type,
+    templateKey,
+    bundleUrl,
+    key,
+    attributeSlots,
+    slotChildren,
+    __listItemPlatformInfo,
+  };
+  if (__DEV__) {
+    // Preact debug formats host props in diagnostics such as duplicate keys.
+    // The renderer consumes the compact fields in both development and production.
+    host.props = { attributeSlots, children: slotChildren };
+  }
+  return host;
 }
 
 export interface ElementTemplateHost {
@@ -26,4 +40,8 @@ export interface ElementTemplateHost {
   attributeSlots: SerializableValue[] | undefined;
   slotChildren: unknown[] | undefined;
   __listItemPlatformInfo: ETListItemPlatformInfo | undefined;
+  props?: {
+    attributeSlots: SerializableValue[] | undefined;
+    children: unknown[] | undefined;
+  };
 }

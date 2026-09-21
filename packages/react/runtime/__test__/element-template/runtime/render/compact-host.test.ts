@@ -52,6 +52,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   clearEtAttrPlanMap();
   clearMainThreadDynamicAttrState();
   destroyAllElementTemplateListStates();
@@ -59,6 +60,7 @@ afterEach(() => {
 
 describe('compact host direct materialization', () => {
   it('defers compact host creation and preserves reusable sparse inputs and explicit key', () => {
+    vi.stubGlobal('__DEV__', false);
     const create = vi.spyOn(globalThis, '__CreateElementTemplate');
     const attrs = ['leaf'];
     const leaf = __etHost(
