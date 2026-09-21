@@ -78,7 +78,8 @@ export function createRenderedHost(
     return elementRef;
   }
 
-  const attrPlan = __etAttrPlanMap[type];
+  const plain = host?.plain === true;
+  const attrPlan = plain ? undefined : __etAttrPlanMap[type];
   const attributeSlots = attributes as SerializableValue[] | undefined;
   let preparedAttributeSlots = attributeSlots ?? null;
   if (attrPlan !== undefined) {
@@ -97,13 +98,14 @@ export function createRenderedHost(
   const identity = host ?? parseElementTemplateType(type);
   const templateKey = identity.templateKey;
   const bundleUrl = identity.bundleUrl === MAIN_BUNDLE_URL_SENTINEL ? null : identity.bundleUrl;
-  const hasMainThreadRef = /* #__NOINLINE__ */ hasMainThreadRefAttrSlot(type);
+  const hasMainThreadRef = !plain && /* #__NOINLINE__ */ hasMainThreadRefAttrSlot(type);
   const elementRef = createElementTemplateWithReservedHandle(
     handleId,
     templateKey,
     bundleUrl,
     preparedAttributeSlots,
     childSlots ?? null,
+    !plain,
   );
   if (hasMainThreadRef) {
     materializationHandles.push({

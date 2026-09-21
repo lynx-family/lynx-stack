@@ -14,6 +14,8 @@ export function __etHost(
   attributeSlots: SerializableValue[] | undefined,
   slotChildren: unknown[] | undefined,
   __listItemPlatformInfo: ETListItemPlatformInfo | undefined,
+  // Set only when the compiler proves no attribute adapters or list-item setup are needed.
+  plain?: true,
 ): ElementTemplateHost {
   const host: ElementTemplateHost = {
     type,
@@ -23,6 +25,7 @@ export function __etHost(
     attributeSlots,
     slotChildren,
     __listItemPlatformInfo,
+    plain,
   };
   if (__DEV__) {
     // Preact debug formats host props in diagnostics such as duplicate keys.
@@ -33,13 +36,14 @@ export function __etHost(
 }
 
 export interface ElementTemplateHost {
+  plain?: true | undefined;
   type: string;
   templateKey: string;
   bundleUrl: string;
   key: unknown;
   attributeSlots: SerializableValue[] | undefined;
   slotChildren: unknown[] | undefined;
-  __listItemPlatformInfo: ETListItemPlatformInfo | undefined;
+  __listItemPlatformInfo?: ETListItemPlatformInfo | undefined;
   props?: {
     attributeSlots: SerializableValue[] | undefined;
     children: unknown[] | undefined;

@@ -11,6 +11,6 @@ export class App extends Component {
             leading,
             innerText,
             trailing
-        ], void 0);
+        ], void 0, true);
     }
 }

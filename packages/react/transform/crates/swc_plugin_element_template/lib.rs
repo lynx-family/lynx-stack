@@ -233,7 +233,7 @@ where
   attr_plan_signatures_by_canonical_content: HashMap<String, String>,
   template_identity_collision_guard: TemplateIdentityCollisionGuard,
   current_template_defs: Vec<ModuleItem>,
-  host_identities: HashMap<Id, (String, Ident)>,
+  host_identities: HashMap<Id, (String, Ident, bool)>,
   comments: Option<C>,
   css_id_value: Option<f64>,
 }
@@ -589,9 +589,14 @@ where
           bundle_ident = bundle_ident.clone(),
           bundle_expr: Expr = bundle_expr,
         )));
-        self
-          .host_identities
-          .insert(template_ident.to_id(), (template_uid.clone(), bundle_ident));
+        self.host_identities.insert(
+          template_ident.to_id(),
+          (
+            template_uid.clone(),
+            bundle_ident,
+            attr_plan_slots.is_empty(),
+          ),
+        );
       }
       Expr::Ident(self.host_identities[&template_ident.to_id()].1.clone())
     } else {
