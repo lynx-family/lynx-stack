@@ -13,6 +13,7 @@ import {
   sumContentChars,
   toModelMessages,
 } from '../common/messages.js';
+import { withTextModelInteraction } from '../common/model-interaction.js';
 import { ProviderAgentCache } from '../common/provider.js';
 import {
   extractGenerationResult,
@@ -91,15 +92,21 @@ export default class HtmlAgentService {
       preparedContentChars: sumContentChars(preparedMessages),
     });
 
-    const streamResult = await this.stream(
-      preparedMessages,
-      opts,
+    return withTextModelInteraction(
+      opts.onModelInteraction,
       abortSignal,
+      async () => {
+        const streamResult = await this.stream(
+          preparedMessages,
+          opts,
+          abortSignal,
+        );
+        return {
+          textStream: toAsyncIterable(streamResult.textStream),
+          finalize: () => finalizeResult(streamResult),
+        };
+      },
     );
-    return {
-      textStream: toAsyncIterable(streamResult.textStream),
-      finalize: () => finalizeResult(streamResult),
-    };
   }
 
   public async generateRaw(

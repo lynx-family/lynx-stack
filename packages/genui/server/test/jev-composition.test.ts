@@ -36,10 +36,11 @@ import { pickProviderOptions } from '../app/common/provider-options.js';
 import { GENUI_DESIGN_GUIDANCE } from '../design/design-guidance.js';
 import {
   generateJevComposition,
-  resolveJevModel,
   streamJevComposition,
 } from '../service/a2ui/jev-composition.js';
+import { resolveJevModel } from '../service/common/jev-provider.js';
 import { parseModelConfig } from '../service/common/model-config.js';
+import type { ModelInteraction } from '../service/common/model-interaction.js';
 import app from '../src/app.js';
 
 rstest.mock('../agent/a2ui/a2ui-catalog.js', () => ({
@@ -261,7 +262,7 @@ describe('Jev A2UI composition', () => {
     ).toBeUndefined();
   });
 
-  test('discovers Jev only for A2UI Create and keeps connection settings private', async () => {
+  test('discovers Jev for A2UI Create and keeps connection settings private', async () => {
     rstest.stubEnv('GENUI_MODEL_CONFIG_JSON', JSON.stringify(config));
     const generalResponse = await app.request('/models');
     const general: unknown = await generalResponse.json();
@@ -279,7 +280,7 @@ describe('Jev A2UI composition', () => {
       /jev-server-secret|typesafe.ai|jev-latest/,
     );
     expect(() => createLLMProvider({ model: 'Jev' })).toThrow(
-      'A2UI component composition only',
+      'A2UI and OpenUI component composition only',
     );
     expect(
       parseModelConfig(JSON.stringify({
@@ -462,7 +463,7 @@ describe('Catalog-driven, single-model Jev', () => {
         },
       },
     ];
-    const events: JevModelInteraction[] = [];
+    const events: ModelInteraction[] = [];
     const fetch = mockDecisions((id, choice, body) => {
       expect(
         Object.keys(body.questions).some(key =>
@@ -507,9 +508,10 @@ describe('Catalog-driven, single-model Jev', () => {
     expect(content.components.find(item => item.id === 'inner')?.children)
       .toEqual(['body']);
     expect(
-      events.filter(event => event.status === 'started').map(event =>
-        event.phase
-      ),
+      events.filter(
+        (event): event is JevModelInteraction =>
+          event.provider === 'jev' && event.status === 'started',
+      ).map(event => event.phase),
     ).toEqual(['components', 'properties']);
     expect(fetch).toHaveBeenCalledTimes(2);
   });

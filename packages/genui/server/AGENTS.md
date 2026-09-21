@@ -41,7 +41,17 @@ limits are required.
 
 ## Model Configuration
 
-### Jev component composition in A2UI Create
+### Jev component composition in A2UI and OpenUI Create
+
+Common Jev capabilities live under `agent/common`: `jev-values.ts` owns finite
+candidate policy, `jev-composition.ts` owns component/retention and property
+questions, and `jev-evaluator.ts` owns direct TypeSafe calls and bounded scheduling.
+Tree validation and layout are shared there too. Keep protocol adapters focused
+on native Schema/slots, bindings, actions, resource policy, and artifact
+validation/serialization. Use `service/common/jev-composition.ts` for connection,
+deadline, cancellation, usage, diagnostics, stream consumption and finalization;
+protocol services supply artifact text and wire framing. Do not introduce
+`experimental_evaluate` or a second model into this path.
 
 Add a server-owned TypeSafe entry to `GENUI_MODEL_CONFIG_JSON`:
 
@@ -57,15 +67,15 @@ Add a server-owned TypeSafe entry to `GENUI_MODEL_CONFIG_JSON`:
 ```
 
 Merge this entry with existing models rather than replacing their configuration.
-After restarting the server, select Jev in A2UI Create. `/models?protocol=a2ui`
-includes composition models; ordinary `/models` omits them for the other Create
+After restarting the server, select Jev in A2UI or OpenUI Create. `/models?protocol=a2ui`
+and `/models?protocol=openui` include composition models; ordinary `/models` omits them for the other Create
 protocols and Bench. The public `composition: true` flag describes capability;
 credentials and upstream identifiers remain private. Jev is not a chat model,
 so do not configure `api`, `reasoningEffort`, or `maxOutputTokens` for it.
 Create keeps the same demo prompts and settings for every model to support
 comparison, including the shared Design Guidance switch.
 
-Alternatively, in A2UI Create choose **Custom API key**, select the **TypeSafe
+Alternatively, in A2UI or OpenUI Create choose **Custom API key**, select the **TypeSafe
 Jev** endpoint, and enter a TypeSafe key. The default model is `jev-latest` and
 may be changed to another TypeSafe evaluation model. This works without
 `GENUI_MODEL_CONFIG_JSON`. Generation and action requests supply the complete
@@ -170,6 +180,19 @@ nodes and invalidated fixed-slot owners are removed before composition.
 owns the TypeSafe provider call. Keep credentials server-side. Reference:
 [json-render's Jev composition](https://json-render.dev/docs/jev) and
 [TypeSafe AI SDK provider](https://ai-sdk.dev/providers/ai-sdk-providers/typesafe-ai).
+
+OpenUI uses its native headless component schemas and the shared Jev value,
+tree, layout and evaluator helpers. `agent/openui/jev-candidates.ts` normalizes
+the active schemas and builds component/property choices, including state
+bindings, ranking and availability filtering, without model calls.
+`agent/openui/jev-composer.ts` restores state, orchestrates decisions, composes
+OpenUI components and emits DSL with lang-core's `jsonToOpenUI`; it never
+translates A2UI protocol output. Preserve positional optional slots and validate
+with the same library parser. Retain referenced queries/actions from existing
+programs through `mergeStatements`, but do not invent external tools. New
+inputs use declared local state, and buttons request assistant UI updates.
+Keep entered state/form values local rather than in Jev prompts. OpenUI Create
+and action continuations both use `/openui/stream` and emit model diagnostics.
 
 ### Text generation models
 
@@ -496,7 +519,7 @@ overrides are ignored and ordinary model names resolve only through
 `GENUI_MODEL_CONFIG_JSON`.
 
 OpenAI-compatible custom providers accept only the exact HTTPS base URLs in
-`ALLOWED_CUSTOM_PROVIDER_BASE_URLS`. A2UI also accepts the exact TypeSafe Jev
+`ALLOWED_CUSTOM_PROVIDER_BASE_URLS`. A2UI and OpenUI also accept the exact TypeSafe Jev
 endpoint described above, through its evaluation adapter. Reject alternate origins, ports, paths,
 credentials, query strings, and fragments. Add a provider only when its
 official OpenAI-compatible endpoint is documented and covered by tests. Do not

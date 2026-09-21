@@ -1417,50 +1417,56 @@ test.each([
     ).toBe(true);
   },
 );
-test('A2UI Create loads composition models without changing demo prompts', async () => {
-  const suggestions = A2UI_CHAT_ADAPTER.suggestions;
-  const originalWindow = globalThis.window;
-  const fetch = rs.fn(async (_url: string, _init?: RequestInit) => ({
-    ok: true,
-    json: async () => ({
-      defaultModel: 'Jev',
-      models: [{ id: 'Jev', label: 'Jev', composition: true }],
-    }),
-  }));
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: { fetch },
-  });
-  try {
-    const settings = await A2UI_CHAT_ADAPTER.settings!.load!(
-      createDefaultProviderSettings(),
-      {
-        origin: 'http://localhost:3000',
-        hostname: 'localhost',
-        protocol: 'http:',
-        search: '',
-        baseUrl: 'http://localhost:3000/',
-      },
-      new AbortController().signal,
-    );
-    expect(fetch.mock.calls[0]?.[0]).toBe(
-      'http://localhost:3060/models?protocol=a2ui',
-    );
-    expect(settings.provider).toBe('Jev');
-    expect(A2UI_CHAT_ADAPTER.settings!.controls(settings)).toEqual(
-      CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings),
-    );
-    expect(A2UI_CHAT_ADAPTER.suggestions).toBe(suggestions);
-    expect(toProviderRequestOptions(settings)).toEqual({ model: 'Jev' });
-  } finally {
+test.each(['a2ui', 'openui'] as const)(
+  '%s Create loads composition models without changing demo prompts',
+  async protocol => {
+    const adapter = protocol === 'a2ui'
+      ? A2UI_CHAT_ADAPTER
+      : OPENUI_CHAT_ADAPTER;
+    const suggestions = adapter.suggestions;
+    const originalWindow = globalThis.window;
+    const fetch = rs.fn(async (_url: string, _init?: RequestInit) => ({
+      ok: true,
+      json: async () => ({
+        defaultModel: 'Jev',
+        models: [{ id: 'Jev', label: 'Jev', composition: true }],
+      }),
+    }));
     Object.defineProperty(globalThis, 'window', {
       configurable: true,
-      value: originalWindow,
+      value: { fetch },
     });
-  }
-});
+    try {
+      const settings = await adapter.settings!.load!(
+        createDefaultProviderSettings(),
+        {
+          origin: 'http://localhost:3000',
+          hostname: 'localhost',
+          protocol: 'http:',
+          search: '',
+          baseUrl: 'http://localhost:3000/',
+        },
+        new AbortController().signal,
+      );
+      expect(fetch.mock.calls[0]?.[0]).toBe(
+        `http://localhost:3060/models?protocol=${protocol}`,
+      );
+      expect(settings.provider).toBe('Jev');
+      expect(adapter.settings!.controls(settings)).toEqual(
+        CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings),
+      );
+      expect(adapter.suggestions).toBe(suggestions);
+      expect(toProviderRequestOptions(settings)).toEqual({ model: 'Jev' });
+    } finally {
+      Object.defineProperty(globalThis, 'window', {
+        configurable: true,
+        value: originalWindow,
+      });
+    }
+  },
+);
 
-test('offers custom Jev only in A2UI and forwards its connection to generation and actions without persisting it', () => {
+test('offers custom Jev in A2UI and OpenUI and forwards its connection without persisting it', () => {
   const adapter = A2UI_CHAT_ADAPTER.settings;
   let settings = adapter.update(
     createDefaultProviderSettings(),
@@ -1523,6 +1529,36 @@ test('offers custom Jev only in A2UI and forwards its connection to generation a
     }).body,
   )
     .toMatchObject(connection);
+  expect(OPENUI_CHAT_ADAPTER.settings.validate(settings)).toBeUndefined();
+  expect(
+    OPENUI_CHAT_ADAPTER.settings.controls(settings).find(control =>
+      control.id === 'baseURL'
+    )?.options,
+  ).toContainEqual(CUSTOM_JEV_PROVIDER_OPTION);
+  expect(
+    OPENUI_CHAT_ADAPTER.createRequest({
+      prompt: 'Show a card',
+      conversation,
+      settings,
+      host,
+    }).body,
+  ).toMatchObject(connection);
+  expect(
+    OPENUI_CHAT_ADAPTER.action.request({
+      action: {
+        type: 'continue',
+        params: {},
+        humanFriendlyMessage: 'Continue',
+      },
+      conversation,
+      settings,
+      host,
+    }).body,
+  ).toMatchObject(connection);
+  expect(OPENUI_CHAT_ADAPTER.settings.serialize(settings)).toEqual({
+    provider: CUSTOM_PROVIDER_ID,
+    enableDesignGuidance: false,
+  });
   expect(adapter.serialize(settings)).toEqual({
     provider: CUSTOM_PROVIDER_ID,
     enableDesignGuidance: false,
@@ -1538,7 +1574,6 @@ test('offers custom Jev only in A2UI and forwards its connection to generation a
   });
   for (
     const other of [
-      OPENUI_CHAT_ADAPTER,
       HTML_CHAT_ADAPTER,
       MCP_APPS_CHAT_ADAPTER,
       LYNX_XML_CHAT_ADAPTER,

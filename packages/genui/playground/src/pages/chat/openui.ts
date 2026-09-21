@@ -2,12 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import {
-  CHAT_PROVIDER_SETTINGS_ADAPTER,
+  createProviderSettingsAdapter,
   getChatEndpoint,
   parseTokenUsage,
   toProviderRequestOptions,
 } from './shared.js';
 import type { ProviderSettings } from './shared.js';
+import { CHAT_PROMPT_SUGGESTIONS } from './suggestions.js';
 import type {
   ChatArtifact,
   ChatHost,
@@ -54,24 +55,6 @@ const WELCOME_MESSAGE: ChatMessageModel = {
   text:
     'Describe the OpenUI surface you want to create. I will stream OpenUI Lang from the GenUI server and render the result in Lynx Preview.',
 };
-
-const SUGGESTIONS = [
-  {
-    label: 'Weather query',
-    text:
-      'Create an OpenUI weather card for Seattle with live query data, a refresh action, metrics, and alerts.',
-  },
-  {
-    label: 'Pricing picker',
-    text:
-      'Create an OpenUI pricing page with three plans, selected state, billing controls, and reset actions.',
-  },
-  {
-    label: 'Pizza order',
-    text:
-      'Create an OpenUI pizza order card with options, a summary, and an order action.',
-  },
-] as const;
 
 const LOCAL_SCENARIO_PROMPT_PREFIX = 'Load local OpenUI scenario: ';
 const OPENUI_ACTION_MESSAGE_TYPES = new Set([
@@ -219,7 +202,7 @@ function createOpenUIRequest(
   host: ChatHost,
 ): ChatHttpRequest {
   const endpoint = getChatEndpoint('openui', host, settings);
-  const providerOptions = toProviderRequestOptions(settings);
+  const providerOptions = toProviderRequestOptions(settings, 'openui');
   return {
     url: endpoint,
     method: 'POST' as const,
@@ -408,8 +391,8 @@ export const OPENUI_CHAT_ADAPTER = {
     progressLabel: 'Streaming OpenUI Lang from the GenUI server...',
     failurePrefix: 'OpenUI generation failed',
   },
-  suggestions: SUGGESTIONS,
-  settings: CHAT_PROVIDER_SETTINGS_ADAPTER,
+  suggestions: CHAT_PROMPT_SUGGESTIONS,
+  settings: createProviderSettingsAdapter('openui'),
   createRequest({ prompt, conversation, settings, host }) {
     return createOpenUIRequest(prompt, conversation, settings, host);
   },
