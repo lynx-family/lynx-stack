@@ -175,7 +175,6 @@ describe('MainThreadObject', () => {
     expect(register).toHaveBeenCalledWith(
       '@test/retained-module-value',
       create,
-      1,
     );
   });
 
@@ -208,7 +207,7 @@ describe('MainThreadObject', () => {
     render(<App />, __root);
 
     expect(globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType)
-      .toHaveBeenCalledWith('@test/accessor-definition', create, 1);
+      .toHaveBeenCalledWith('@test/accessor-definition', create);
     expect(typeReads).toBe(1);
     expect(createReads).toBe(1);
   });

@@ -187,7 +187,6 @@ describe('Lazy Exports', () => {
       expect(registerMainThreadObjectType).toHaveBeenCalledWith(
         '@test/lazy-module-evaluation',
         create,
-        1,
       );
     } finally {
       globalThis.__JS__ = originalJS;

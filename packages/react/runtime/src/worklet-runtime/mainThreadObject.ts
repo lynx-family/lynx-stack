@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { Worklet, WorkletRefImpl } from './bindings/types.js';
-import { MAIN_THREAD_OBJECT_PROTOCOL_VERSION } from './bindings/workletValue.js';
 
 type MainThreadObjectFactory = (initialValue: unknown) => object;
 interface MainThreadObjectDefinition {
@@ -17,14 +16,12 @@ let firstScreenMainThreadObjects = new Set<object>();
 function registerMainThreadObjectType(
   type: string,
   create: MainThreadObjectFactory | Worklet,
-  protocolVersion: number,
 ): void {
   if (type === 'main-thread') {
     throw new Error(
       'MainThreadObject type "main-thread" is reserved for MainThreadRef.',
     );
   }
-  assertMainThreadObjectProtocolVersion(type, protocolVersion);
   const registered = mainThreadObjectDefinitions.get(type);
   if (registered) {
     if (
@@ -82,16 +79,6 @@ function createMainThreadObject(refImpl: WorkletRefImpl<unknown>): object {
     firstScreenMainThreadObjects.add(value);
   }
   return value;
-}
-
-function assertMainThreadObjectProtocolVersion(type: string, protocolVersion: number): void {
-  if (protocolVersion !== MAIN_THREAD_OBJECT_PROTOCOL_VERSION) {
-    throw new Error(
-      `MainThreadObject protocol mismatch for type "${type}": runtime supports version ${MAIN_THREAD_OBJECT_PROTOCOL_VERSION}, but the bundle uses ${
-        String(protocolVersion)
-      }. Rebuild the main template and lazy bundle with compatible @lynx-js/react versions.`,
-    );
-  }
 }
 
 function isRealizedMainThreadObject(value: object): boolean {

@@ -31,7 +31,6 @@ interface RefImpl {
   registerMainThreadObjectType(
     type: string,
     create: MainThreadObjectFactory | Worklet,
-    protocolVersion: number,
   ): void;
   clearFirstScreenWorkletRefMap(): void;
 }

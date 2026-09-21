@@ -32,7 +32,6 @@ describe('MainThreadObject registry and realization', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/value',
       () => value,
-      1,
     );
 
     updateWorkletRefInitValueChanges([[7, 42, '@test/value']]);
@@ -49,7 +48,6 @@ describe('MainThreadObject registry and realization', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/lazy-factory',
       createDescriptor,
-      1,
     );
 
     // Type definition evaluation happens before the compiler-appended
@@ -81,40 +79,34 @@ describe('MainThreadObject registry and realization', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/value',
       create,
-      1,
     );
     expect(() => {
       globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
         '@test/value',
         value => ({ conflictingValue: value }),
-        1,
       );
     }).toThrow('Conflicting MainThreadObject registration for type "@test/value"');
     expect(() => {
       globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
         '@test/value',
         create,
-        1,
       );
     }).not.toThrow();
 
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/worklet-value',
       { _wkltId: 'stable-create' },
-      1,
     );
     expect(() => {
       globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
         '@test/worklet-value',
         { _wkltId: 'stable-create' },
-        1,
       );
     }).not.toThrow();
     expect(() => {
       globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
         '@test/worklet-value',
         { _wkltId: 'different-create' },
-        1,
       );
     }).toThrow('Conflicting MainThreadObject registration for type "@test/worklet-value"');
   });
@@ -124,7 +116,6 @@ describe('MainThreadObject registry and realization', () => {
       globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
         'main-thread',
         value => ({ value }),
-        1,
       );
     }).toThrow(
       'MainThreadObject type "main-thread" is reserved for MainThreadRef.',
@@ -140,44 +131,19 @@ describe('MainThreadObject registry and realization', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/lazy-duplicate',
       createA,
-      1,
     );
     expect(() => {
       globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
         '@test/lazy-duplicate',
         createB,
-        1,
       );
     }).not.toThrow();
-  });
-
-  it('rejects incompatible bundle protocol versions at registration', () => {
-    expect(() => {
-      globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
-        '@test/future',
-        value => ({ value }),
-        2,
-      );
-    }).toThrow(
-      'MainThreadObject protocol mismatch for type "@test/future": runtime supports version 1, but the bundle uses 2.',
-    );
-
-    expect(() => {
-      globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
-        '@test/legacy',
-        value => ({ value }),
-        undefined,
-      );
-    }).toThrow(
-      'MainThreadObject protocol mismatch for type "@test/legacy": runtime supports version 1, but the bundle uses undefined.',
-    );
   });
 
   it('rejects factories that do not create objects', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/invalid',
       () => 42,
-      1,
     );
 
     expect(() => {
@@ -194,7 +160,6 @@ describe('MainThreadObject registry and realization', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/proxy-value',
       () => value,
-      1,
     );
 
     updateWorkletRefInitValueChanges([[93, null, '@test/proxy-value']]);
