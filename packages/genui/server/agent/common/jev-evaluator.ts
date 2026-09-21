@@ -20,7 +20,13 @@ export type JevEvaluationPhase =
   | 'copy'
   | 'layout';
 
-/** Bounded diagnostics only: never include prompts, choices, URLs or provider bodies. */
+export interface JevQuestionDetail {
+  id: string;
+  instructions: string;
+  choices: string[];
+  answer?: string;
+}
+
 export interface JevModelInteraction {
   provider: 'jev';
   requestIndex: number;
@@ -32,6 +38,7 @@ export interface JevModelInteraction {
     stateChars: number;
     questionsChars: number;
   };
+  questions?: JevQuestionDetail[];
   durationMs?: number;
   response?: {
     answerCount: number;
@@ -161,6 +168,13 @@ export function createJevEvaluator(
   return async (state, questions, signal, phase = 'components') => {
     signal.throwIfAborted();
     const startedAt = performance.now();
+    const questionDetails: JevQuestionDetail[] = Object.entries(questions).map(
+      ([id, q]) => ({
+        id,
+        instructions: q.instructions,
+        choices: Object.keys(q.criteria),
+      }),
+    );
     const event = {
       provider: 'jev' as const,
       requestIndex: ++requestCount,
@@ -175,7 +189,11 @@ export function createJevEvaluator(
         questionsChars: JSON.stringify(questions).length,
       },
     };
-    onInteraction?.({ ...event, status: 'started' });
+    onInteraction?.({
+      ...event,
+      status: 'started',
+      questions: questionDetails,
+    });
     try {
       // The provider primitive performs one request, with no SDK retry loop.
       const result = await model.doEvaluate({
@@ -188,9 +206,14 @@ export function createJevEvaluator(
         const answer = result.answers[id];
         answers[id] = answer?.type === 'choice' ? answer.choice : '';
       }
+      const answeredDetails = questionDetails.map(detail => ({
+        ...detail,
+        answer: answers[detail.id],
+      }));
       onInteraction?.({
         ...event,
         status: 'completed',
+        questions: answeredDetails,
         durationMs: performance.now() - startedAt,
         response: {
           answerCount: Object.keys(questions).filter(id =>
@@ -208,6 +231,7 @@ export function createJevEvaluator(
       onInteraction?.({
         ...event,
         status: signal.aborted ? 'cancelled' : 'failed',
+        questions: questionDetails,
         durationMs: performance.now() - startedAt,
         ...(typeof statusCode === 'number' && Number.isFinite(statusCode)
           ? { statusCode }

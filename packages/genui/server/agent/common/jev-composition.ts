@@ -134,6 +134,7 @@ export function createJevPropertyQuestions() {
     choices: JevValueChoice[];
     set: (value: unknown) => void;
   }>();
+  const presetIds = new Set<string>();
   const applyChoice = (id: string, answer: string) => {
     const target = setters.get(id);
     const choice = target?.choices[Number(answer)];
@@ -161,6 +162,12 @@ export function createJevPropertyQuestions() {
           `No supplied values are available for ${instructions}.`,
         );
       }
+      if (unique.length === 1) {
+        set(unique[0]!.value);
+        presetIds.add(id);
+        setters.set(id, { choices: unique, set });
+        return unique;
+      }
       questions[id] = jevQuestion(
         instructions,
         Object.fromEntries(
@@ -172,6 +179,7 @@ export function createJevPropertyQuestions() {
     },
     ids: () => [...setters.keys()],
     choices: (id: string) => setters.get(id)?.choices ?? [],
+    isPreset: (id: string) => presetIds.has(id),
     applyChoice,
     apply(answers: Record<string, string>) {
       for (const [id, answer] of Object.entries(answers)) {
