@@ -90,9 +90,18 @@ const REFERENCE_SELECTIONS: SkillReferenceSelection[] = [
 /** Selected guidance bundled directly from `@lynx-js/skill-vanilla-lynx`. */
 export const VANILLA_LYNX_SKILL_GUIDANCE: string = buildSkillGuidance();
 
-function buildSkillGuidance(): string {
+/** Guidance for model-authored business callbacks with agent-owned lifecycle code. */
+export const VANILLA_LYNX_REUSED_SCRIPT_GUIDANCE: string = buildSkillGuidance(
+  true,
+);
+
+function buildSkillGuidance(reuseScript = false): string {
   const references = REFERENCE_SELECTIONS.map(selection => {
-    const sections = selection.sections.map(sectionName => {
+    const sections = selection.sections.filter(sectionName =>
+      !reuseScript || selection.file !== 'references/main-thread.md'
+      || !['Bind Element Events', 'Render', 'Update', 'Lifecycle Cleanup']
+        .includes(sectionName)
+    ).map(sectionName => {
       let section = extractLevelTwoSection(
         selection.markdown,
         sectionName,

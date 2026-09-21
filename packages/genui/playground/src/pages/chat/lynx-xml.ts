@@ -311,6 +311,7 @@ function persistOutput(output: LynxXmlOutput): ChatTurnPersistence {
 }
 
 const GENERATION_DEFAULTS = {
+  enableScriptReuse: true,
   enableDesignGuidance: true,
   enableHtmlFragment: true,
   stylePreset: 'default' as const,
@@ -348,6 +349,7 @@ export const LYNX_XML_CHAT_ADAPTER = {
       const stored = CHAT_PROVIDER_SETTINGS_ADAPTER.serialize(settings);
       delete stored.enableDesignGuidance;
       delete stored.enableHtmlFragment;
+      delete stored.enableScriptReuse;
       delete stored.stylePreset;
       return stored;
     },
@@ -357,6 +359,7 @@ export const LYNX_XML_CHAT_ADAPTER = {
         return {
           ...CHAT_PROVIDER_SETTINGS_ADAPTER.conversation.snapshot(settings),
           enableHtmlFragment: settings.enableHtmlFragment !== false,
+          enableScriptReuse: settings.enableScriptReuse !== false,
           stylePreset: settings.stylePreset ?? GENERATION_DEFAULTS.stylePreset,
         };
       },
@@ -370,6 +373,8 @@ export const LYNX_XML_CHAT_ADAPTER = {
             },
           ),
           enableHtmlFragment: saved.enableHtmlFragment ?? true,
+          enableScriptReuse: saved.enableScriptReuse
+            ?? GENERATION_DEFAULTS.enableScriptReuse,
           stylePreset: saved.stylePreset ?? GENERATION_DEFAULTS.stylePreset,
         };
       },
@@ -388,9 +393,19 @@ export const LYNX_XML_CHAT_ADAPTER = {
           'Reuse built-in utility styles with Template or Element PAPI.',
         kind: 'checkbox' as const,
         value: settings.stylePreset === false ? 'off' : 'on',
+      }, {
+        id: 'enableScriptReuse',
+        label: 'ScriptReuse',
+        description:
+          'Reuse lifecycle and event helpers to reduce generated code.',
+        kind: 'checkbox' as const,
+        value: settings.enableScriptReuse === false ? 'off' : 'on',
       }];
     },
     update(settings: ProviderSettings, id: string, next: string) {
+      if (id === 'enableScriptReuse') {
+        return { ...settings, enableScriptReuse: next === 'on' };
+      }
       if (id === 'stylePreset') {
         return {
           ...settings,
@@ -418,15 +433,22 @@ export const LYNX_XML_CHAT_ADAPTER = {
       body: {
         resourceId: 'lynx-xml-create',
         enableHtmlFragment: settings.enableHtmlFragment !== false,
+        enableScriptReuse: settings.enableScriptReuse !== false,
         ...(settings.stylePreset === false
           ? {}
           : { stylePreset: settings.stylePreset ?? 'default' }),
         messages: [{ role: 'user', content: prompt }],
         conversation: {
           ...conversation,
-          history: conversation.history.map(({ role, content }) => ({
+          history: conversation.history.map((
+            { role, content, lynxXmlModelOutput },
+          ) => ({
             role,
-            content,
+            content:
+              settings.enableScriptReuse !== false && role === 'assistant'
+                && lynxXmlModelOutput
+                ? lynxXmlModelOutput
+                : content,
           })),
         },
         ...toProviderRequestOptions(settings),

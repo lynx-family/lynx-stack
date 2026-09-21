@@ -170,6 +170,7 @@ function normalizeGroups(
         ...(protocol === 'lynx-xml'
           ? {
             enableHtmlFragment: item.enableHtmlFragment === true,
+            enableScriptReuse: item.enableScriptReuse === true,
             ...(item.stylePreset === 'default'
               ? { stylePreset: 'default' as const }
               : {}),
@@ -278,6 +279,20 @@ export function normalizeBenchJobRequest(
     };
   }
   const groups = normalizeGroups(value.groups);
+  if (
+    Array.isArray(value.groups)
+    && value.groups.some(group =>
+      isRecord(group) && group.protocol === 'lynx-xml'
+      && group.enableScriptReuse !== undefined
+      && typeof group.enableScriptReuse !== 'boolean'
+    )
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'enableScriptReuse must be a boolean',
+    };
+  }
   if (
     Array.isArray(value.groups)
     && value.groups.some(group =>

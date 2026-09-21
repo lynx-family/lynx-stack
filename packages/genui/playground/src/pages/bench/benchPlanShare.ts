@@ -116,6 +116,10 @@ function readPlan(value: unknown): BenchSharedPlan {
           enableHtmlFragment: boolean(group.enableHtmlFragment),
         }),
         ...(group.protocol === 'lynx-xml'
+            && typeof group.enableScriptReuse === 'boolean'
+          ? { enableScriptReuse: group.enableScriptReuse }
+          : {}),
+        ...(group.protocol === 'lynx-xml'
             && (group.stylePreset === 'default' || group.stylePreset === false)
           ? { stylePreset: group.stylePreset }
           : {}),

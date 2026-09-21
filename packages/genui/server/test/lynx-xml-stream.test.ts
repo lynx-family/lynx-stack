@@ -210,12 +210,14 @@ describe('Lynx XML stream route', () => {
             enableHtmlFragment: enabled === undefined
               ? undefined
               : enabled === true || enabled === 'default',
+            enableScriptReuse: enabled === true,
             ...(enabled === 'default' || enabled === 'preset-only'
               ? { stylePreset: 'default' }
               : {}),
           }),
         });
         expect(await response.text()).toContain('event: done');
+        expect(received?.enableScriptReuse).toBe(enabled === true);
         expect(received?.enableHtmlFragment).toBe(
           enabled === true || enabled === 'default',
         );
@@ -240,7 +242,10 @@ describe('Lynx XML stream route', () => {
     });
     expect(response.status).toBe(400);
   });
-  test.each([{ stylePreset: true, enableHtmlFragment: true }, {
+  test.each([{ enableScriptReuse: 'true' }, {
+    stylePreset: true,
+    enableHtmlFragment: true,
+  }, {
     stylePreset: 'unknown',
     enableHtmlFragment: true,
   }])(

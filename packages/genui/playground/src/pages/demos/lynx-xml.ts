@@ -11,6 +11,7 @@ import type { DemosListSource } from './DemosList.js';
 import type { DemosPageSource } from './type.js';
 import counterSource from '../../mock/lynx-xml/counter.lynxml?raw';
 import productCardSource from '../../mock/lynx-xml/product-card.lynxml?raw';
+import scriptReuseCounterSource from '../../mock/lynx-xml/script-reuse-counter.lynxml?raw';
 import stylePresetCounterSource from '../../mock/lynx-xml/style-preset-counter.lynxml?raw';
 import templateCounterSource from '../../mock/lynx-xml/template-counter.lynxml?raw';
 import todoListSource from '../../mock/lynx-xml/todo-list.lynxml?raw';
@@ -26,6 +27,7 @@ export interface LynxXmlScenario {
   sourcePath: string;
   source: string;
   templateSource?: string;
+  enableScriptReuse?: boolean;
   stylePreset?: LynxXmlStylePreset;
 }
 
@@ -105,6 +107,21 @@ export const LYNX_XML_SCENARIOS: readonly LynxXmlScenario[] = [
     templateSource: stylePresetCounterSource,
     stylePreset: 'default',
   },
+  {
+    id: 'script-reuse-counter',
+    title: 'ScriptReuse Counter',
+    description:
+      'The same counter with Template and StylePreset, using shared lifecycle and event helpers to shorten the authored script.',
+    badge: 'ScriptReuse',
+    sourcePath: 'demos/lynx-xml/script-reuse-counter.lynxml',
+    source: compileLynxXmlFragment(scriptReuseCounterSource, {
+      enableScriptReuse: true,
+      stylePreset: 'default',
+    }).text,
+    templateSource: scriptReuseCounterSource,
+    enableScriptReuse: true,
+    stylePreset: 'default',
+  },
 ];
 
 export const LYNX_XML_DEMOS_LIST_SOURCE = {
@@ -143,8 +160,10 @@ function compileEditorSource(
 ): string {
   return scenario?.templateSource === undefined
     ? source
-    : compileLynxXmlFragment(source, { stylePreset: scenario.stylePreset })
-      .text;
+    : compileLynxXmlFragment(source, {
+      enableScriptReuse: scenario.enableScriptReuse,
+      stylePreset: scenario.stylePreset,
+    }).text;
 }
 
 export const LYNX_XML_DEMOS_PAGE_SOURCE = {

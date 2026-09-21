@@ -34,7 +34,7 @@ Keep the Create starter section “Describe with a prompt · uses online agent�
 
 Display Create's Generation duration from the server's finite, non-negative `metrics.generationMs`, consuming A2UI's pre-upload `metrics` event and terminal `done`/`error` payloads in the shared controller. Persist it on the assistant turn and restore it independently of render metrics. Never substitute browser request-to-response time or summed Jev call durations. Keep legacy `agentOutputMs` distinct and do not relabel old values as generation time. Reset timing for every Create/action invocation; missing server timing stays unavailable. Verify that early metric delivery, upload completion and history restoration preserve the existing preview instance.
 
-Keep Create's provider selectors in separate labeled controls with a wrapping options row below them; size this layout to its resizable composer instead of a fixed-width enclosing pill. Keep Design, Template, and StylePreset independent. All three default on for new Lynx XML records; Template must not disable or reset StylePreset.
+Keep Create's provider selectors in separate labeled controls with a wrapping options row below them; size this layout to its resizable composer instead of a fixed-width enclosing pill. Keep Design, Template, StylePreset, and ScriptReuse independent. All four default on for new Lynx XML records; Template must not disable or reset StylePreset or ScriptReuse.
 
 Use Template and StylePreset consistently in Create, Bench, and reports. Template
 is the user-facing name for the existing `enableHtmlFragment` option; explain
@@ -69,7 +69,7 @@ Expose custom-provider completeness through the shared settings adapter validati
 
 Scope provider endpoint choices through the shared settings adapter factory. A2UI and OpenUI Create additionally offer TypeSafe Jev at `https://api.typesafe.ai/v1` with default model `jev-latest`; other Create protocols and Bench must not offer this evaluation provider. Pass the matching A2UI/OpenUI capability to both generation and action request builders. Preserve masked credentials, page-memory-only custom fields, unchanged demo prompts and the shared Design control. Do not add a provider-specific form or duplicate the shared settings implementation.
 
-Render Create's Design, Template, and StylePreset controls as compact checkboxes that wrap in narrow composers. Save their explicit values to the current draft on edits and before generation; restore them when selecting or reloading history, including failed or unsent records. Once a conversation has messages, render these options read-only and reject checkbox updates; changing them requires a new conversation. Unsent drafts remain editable. New Lynx XML records start with all three enabled instead of inheriting another record's values or global checkbox preferences. Prevent asynchronous model loading from overwriting restored or edited values, and keep credentials out of conversation settings. New Lynx XML Bench groups also default all three options on; preserve recorded values in plans, shared links, and reports, including StylePreset-only configurations. Keep API defaults separate from UI defaults.
+Render Create's Design, Template, StylePreset, and ScriptReuse controls as compact checkboxes that wrap in narrow composers. Save their explicit values to the current draft on edits and before generation; restore them when selecting or reloading history, including failed or unsent records. Once a conversation has messages, render these options read-only and reject checkbox updates; changing them requires a new conversation. Unsent drafts remain editable. New Lynx XML records start with all four enabled instead of inheriting another record's values or global checkbox preferences. Prevent asynchronous model loading from overwriting restored or edited values, and keep credentials out of conversation settings. New Lynx XML Bench groups also default all four options on; preserve recorded values in plans, shared links, and reports, including StylePreset-only configurations. Keep API defaults separate from UI defaults. ScriptReuse follows StylePreset: missing Create settings use the enabled UI default, while historical Bench plans and reports without the option continue to show it disabled.
 
 Route all protocol Create tabs through `pages/chat/ChatPage.tsx`. Keep all shared React state, effects, conversation operations, provider controls, usage and preview metrics, streaming transport, examples, actions, and rendering orchestration in `pages/chat/ChatController.tsx`. Keep the shared conversation list, header, transcript/composer slots, resizable preview, delete confirmation, copy toast, and mobile tabs in `pages/chat/ChatWorkspace.tsx`, with styles in `pages/chat/ChatPage.css`.
 
@@ -178,6 +178,7 @@ Keep MCP Apps Examples aligned with the renderer registry in `lynx-src/mcp-apps/
 ### Lynx XML
 
 - Store an XML template example's optional style preset in its scenario metadata and pass it to `compileLynxXmlFragment` both for its initial source and for edited/Transformed previews. Keep the editable template unchanged; list previews must resolve the registered example by `exampleId` so they receive the compiled styles as well.
+- Keep ScriptReuse example source limited to authored business callbacks. Save `enableScriptReuse` in its scenario and pass it alongside `stylePreset` during initial and edited-source assembly. Use the existing Original/Transformed views and `exampleId` preview routing so native and Web previews receive the assembled document, never an unresolved `definePage` call.
 - Expose Lynx XML Create at its protocol root, Examples at `/examples`, and the shared Bench tab linking to the canonical `#/bench` route; keep Catalog unavailable. Route Create through the shared Chat controller and the dedicated Lynx XML adapter.
 - Stream cumulative canonical source into the Create artifact viewer as soon as `<!doctype lynx>` arrives. Do not reload `<lynx-view>` for incomplete source; hand the complete document to the direct Lynx XML preview only after the final stream event.
 - Reuse the A2UI Playground Examples `flow` layout, `DemosList`, `ExamplePreviewCard`, and card styles without protocol-specific markup or CSS.
@@ -232,10 +233,13 @@ For the A2UI `LazyComponent` catalog component, load ReactLynx standalone lazy b
 
 Keep Bench database migration and persistence in `packages/genui/playground/src/storage/benchRepo.ts`, with schema upgrades in the existing `storage/db.ts`. Keep Bench history types, normalization, React hooks, and Bench-specific tests in `packages/genui/playground/src/pages/bench`. Upgrade the existing database without replacing conversation stores. Import legacy `a2ui-bench-history` localStorage records and the fallback report selection in one transaction; remove the legacy copy only after commit, and do not overwrite existing database IDs. Wait for hydration before enabling Bench mutations, serialize writes against the last successful snapshot, and apply record-level deltas so another tab’s unrelated entries survive. Keep report selection tab-local in sessionStorage, notify detail tabs after committed writes, and open the blank detail tab synchronously before awaiting database writes.
 
-For Lynx XML results transformed by Template or StylePreset, show the exact `done.metadata.modelOutput` as
+For Lynx XML results transformed by Template, StylePreset, or ScriptReuse, show the exact `done.metadata.modelOutput` as
 Original by default and the final Source as Transformed in the
 shared artifact viewer. Copy the selected view's text. Do not show a separate
 XML Fragment view. Preserve `lynxXmlFragment` and `lynxXmlModelOutput` in local
-and shared assistant history, keeping both out of runtime preview sources and
-model conversation inputs. Results with no source transformation show only Source;
+and shared assistant history, keeping both out of runtime preview sources.
+When ScriptReuse is enabled, send saved original model output as assistant
+conversation content so injected helpers do not consume input tokens again;
+fall back to saved content for older records without original output. Other
+modes continue using saved artifact content. Results with no source transformation show only Source;
 older converted results without model output must not fabricate a before view.

@@ -99,6 +99,7 @@ export function createLynxXmlBenchAdapter(
             enableImageGeneration: false,
             enableDesignGuidance: input.enableDesignGuidance !== false,
             enableHtmlFragment: input.enableHtmlFragment === true,
+            enableScriptReuse: input.enableScriptReuse === true,
             ...(input.stylePreset ? { stylePreset: input.stylePreset } : {}),
           }, signal);
           signal?.throwIfAborted();
