@@ -2,4 +2,4 @@
 
 ---
 
-Build and publish the Ubuntu workspace container image without changing npm package versions.
+Add an Ubuntu workspace container image and validate it after Linux CI builds without changing npm package versions.
