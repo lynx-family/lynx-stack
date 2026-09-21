@@ -1813,8 +1813,8 @@ importers:
         specifier: catalog:rsbuild
         version: 2.2.4(core-js@3.50.0)
       '@rsdoctor/core':
-        specifier: 2.0.0-beta.4
-        version: 2.0.0-beta.4(@rspack/core@2.2.2(@swc/helpers@0.5.23))
+        specifier: 2.0.0-rc.0
+        version: 2.0.0-rc.0(@rspack/core@2.2.2(@swc/helpers@0.5.23))
       typescript:
         specifier: 5.1.6 - 6.0.x
         version: 6.0.3
@@ -6105,15 +6105,15 @@ packages:
   '@rsdoctor/client@1.6.1':
     resolution: {integrity: sha512-UWc8uyXPtcGZuQtVX+jBZwPxMXrMrrp0GrbVvHoHjzTxWufdn4RcG1g4PFgZLPz5smcCGYOEaNvlNn5WOtVyMw==}
 
-  '@rsdoctor/client@2.0.0-beta.4':
-    resolution: {integrity: sha512-pZwGx086znmD0mzM+KeUR2yu3iV4dBf7OtrfeGdJaLwStJBKp+eE/t8tJMTwVhT2X/ZDTHpOPHb4Nk/k4VzORw==}
+  '@rsdoctor/client@2.0.0-rc.0':
+    resolution: {integrity: sha512-diq9yCKmf+kew6j69ruWsJlEF2fBmYJ/kNMpYAIY4P/AgN1e6uCa1qeZ4SCm+WcE/SIFntsHU8NLNe+VOWPvFA==}
     engines: {node: ^20.19.0 || >=22.12.0}
 
   '@rsdoctor/core@1.6.1':
     resolution: {integrity: sha512-PkNe5Z45gR3dEhFdOcN/ZTwUxTltJR66cJA4DHXj1Zuo9s8d6SKWHFBLi5zMqPV3ZyBAQl4tsGv2LoJDQa69wA==}
 
-  '@rsdoctor/core@2.0.0-beta.4':
-    resolution: {integrity: sha512-nHFyOXnnq0I62KC5GAjoDV1fSTgx0q4EN2fLGdND7B/6wBTwrDwP7TGPNV5HGUmQILhmDW0AWcWF9hj3d9HJHQ==}
+  '@rsdoctor/core@2.0.0-rc.0':
+    resolution: {integrity: sha512-AGWAFMGUsDX2za7grrwysOesflEemSTi0v/sUriQ5hjO1GL5sTCsuKjLsQU6eiBR+1aQjembMqX7wYWs8rkbNQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     peerDependencies:
       '@rspack/core': 2.2.2
@@ -6135,8 +6135,8 @@ packages:
   '@rsdoctor/sdk@1.6.1':
     resolution: {integrity: sha512-9dBk9SDVcY2Z8mHepUKDpHc3eaAsYNSioLlbNPNVLH4XinzcRe/4kJiX37VNjUVPv93IzZ6GTJhkiax/6O+fGw==}
 
-  '@rsdoctor/shared@2.0.0-beta.4':
-    resolution: {integrity: sha512-TdZQCOWjWfNFuKHnFS51ai5/fTa8AsQhCEBnVYz8W1wfN/UAZgdGFnQ7+o8wIZVU2PB1STr2VWBbaMmk/3NtXg==}
+  '@rsdoctor/shared@2.0.0-rc.0':
+    resolution: {integrity: sha512-V9vkJVD+6skfl4DGHMrwEWyZl9gzLyfWLG4UVuW5CgeS0gZI0KfeOcwOh+n9b1UuRGegEHNCxHQqs1jW4RXQlQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     peerDependencies:
       '@rspack/core': 2.2.2
@@ -15948,7 +15948,7 @@ snapshots:
 
   '@rsdoctor/client@1.6.1': {}
 
-  '@rsdoctor/client@2.0.0-beta.4': {}
+  '@rsdoctor/client@2.0.0-rc.0': {}
 
   '@rsdoctor/core@1.6.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@rsbuild/core@2.2.4(core-js@3.50.0))(@rspack/core@2.2.2(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))':
     dependencies:
@@ -15974,11 +15974,11 @@ snapshots:
       - utf-8-validate
       - webpack
 
-  '@rsdoctor/core@2.0.0-beta.4(@rspack/core@2.2.2(@swc/helpers@0.5.23))':
+  '@rsdoctor/core@2.0.0-rc.0(@rspack/core@2.2.2(@swc/helpers@0.5.23))':
     dependencies:
       '@babel/code-frame': 7.26.2
-      '@rsdoctor/client': 2.0.0-beta.4
-      '@rsdoctor/shared': 2.0.0-beta.4(@rspack/core@2.2.2(@swc/helpers@0.5.23))
+      '@rsdoctor/client': 2.0.0-rc.0
+      '@rsdoctor/shared': 2.0.0-rc.0(@rspack/core@2.2.2(@swc/helpers@0.5.23))
       '@rspack/lite-tapable': 1.1.5
       '@types/estree': 1.0.5
       acorn: 8.17.0
@@ -16050,7 +16050,7 @@ snapshots:
       - utf-8-validate
       - webpack
 
-  '@rsdoctor/shared@2.0.0-beta.4(@rspack/core@2.2.2(@swc/helpers@0.5.23))':
+  '@rsdoctor/shared@2.0.0-rc.0(@rspack/core@2.2.2(@swc/helpers@0.5.23))':
     dependencies:
       '@rspack/lite-tapable': 1.1.5
       '@types/estree': 1.0.5
