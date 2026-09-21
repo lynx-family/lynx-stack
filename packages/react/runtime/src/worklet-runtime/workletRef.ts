@@ -179,13 +179,12 @@ function updateWorkletRefInitValueChanges(
   profile('updateWorkletRefInitValueChanges', () => {
     let firstError: unknown;
     let hasError = false;
-    patch.forEach(([id, value, type, protocolVersion]) => {
+    patch.forEach(([id, value, type]) => {
       try {
         const handle = {
           _wvid: id,
           _initValue: value,
           _type: type,
-          _mtoVersion: protocolVersion,
         } as WorkletRefImpl<unknown>;
         const existing = impl!._workletRefMap[id];
         if (existing) {

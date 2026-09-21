@@ -169,8 +169,8 @@ const transformWorkletInner = (
 
     // A MainThreadObject initialization payload is user data. Resolve the
     // typed descriptor before walking it so payload properties that resemble
-    // worklet metadata remain untouched. Legacy MainThreadRef descriptors do
-    // not carry a protocol version and retain the existing recursive path.
+    // worklet metadata remain untouched. Legacy MainThreadRef descriptors retain
+    // the existing recursive path.
     if (isRealizedMainThreadObject(subObj)) {
       continue;
     }
@@ -265,6 +265,6 @@ function isMainThreadObjectDescriptor(
     && value !== null
     && typeof descriptor._wvid === 'number'
     && typeof descriptor._type === 'string'
-    && typeof descriptor._mtoVersion === 'number';
+    && descriptor._type !== 'main-thread';
 }
 export { initWorklet };

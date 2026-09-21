@@ -74,8 +74,11 @@ describe('MainThreadObject', () => {
       _wvid: 1,
       _initValue: 42,
       _type: '@test/main-thread-object',
-      _mtoVersion: 1,
     });
+    expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledWith(
+      'rLynxChangeRefInitValue',
+      { data: JSON.stringify([[1, 42, '@test/main-thread-object']]) },
+    );
 
     lynx.getNativeApp().createJSObjectDestructionObserver.mock.calls[0][0]();
     expect(dispatchEvent).toHaveBeenCalledWith({
@@ -111,7 +114,6 @@ describe('MainThreadObject', () => {
     expect(JSON.parse(JSON.stringify(counter))).toMatchObject({
       _initValue: 42,
       _type: '@test/counter',
-      _mtoVersion: 1,
     });
     definition.type = '@test/mutated-counter';
     expect(type.type).toBe('@test/counter');
@@ -241,7 +243,6 @@ describe('MainThreadObject', () => {
     expect(JSON.parse(JSON.stringify(counter))).toMatchObject({
       _initValue: 42,
       _type: '@test/main-thread-counter',
-      _mtoVersion: 1,
     });
   });
 

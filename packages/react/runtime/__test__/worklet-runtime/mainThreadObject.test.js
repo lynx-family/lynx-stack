@@ -35,7 +35,7 @@ describe('MainThreadObject registry and realization', () => {
       1,
     );
 
-    updateWorkletRefInitValueChanges([[7, 42, '@test/value', 1]]);
+    updateWorkletRefInitValueChanges([[7, 42, '@test/value']]);
 
     expect(getFromWorkletRefMap({ _wvid: 7 })).toBe(value);
     removeValueFromWorkletRefMap(7);
@@ -57,8 +57,8 @@ describe('MainThreadObject registry and realization', () => {
     globalThis.registerWorklet('main-thread', 'create-test-value', create);
 
     updateWorkletRefInitValueChanges([
-      [71, 'first', '@test/lazy-factory', 1],
-      [72, 'second', '@test/lazy-factory', 1],
+      [71, 'first', '@test/lazy-factory'],
+      [72, 'second', '@test/lazy-factory'],
     ]);
     expect(getFromWorkletRefMap({ _wvid: 71 })).toMatchObject({ value: 'first' });
     expect(getFromWorkletRefMap({ _wvid: 72 })).toMatchObject({ value: 'second' });
@@ -72,7 +72,7 @@ describe('MainThreadObject registry and realization', () => {
 
   it('rejects an unregistered main-thread object type', () => {
     expect(() => {
-      updateWorkletRefInitValueChanges([[8, 42, '@test/missing', 1]]);
+      updateWorkletRefInitValueChanges([[8, 42, '@test/missing']]);
     }).toThrow('MainThreadObject type is not registered: "@test/missing"');
   });
 
@@ -151,7 +151,7 @@ describe('MainThreadObject registry and realization', () => {
     }).not.toThrow();
   });
 
-  it('rejects incompatible handle protocol versions', () => {
+  it('rejects incompatible bundle protocol versions at registration', () => {
     expect(() => {
       globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
         '@test/future',
@@ -159,13 +159,17 @@ describe('MainThreadObject registry and realization', () => {
         2,
       );
     }).toThrow(
-      'MainThreadObject protocol mismatch for type "@test/future": runtime supports version 1, but the handle or bundle uses 2.',
+      'MainThreadObject protocol mismatch for type "@test/future": runtime supports version 1, but the bundle uses 2.',
     );
 
     expect(() => {
-      updateWorkletRefInitValueChanges([[9, 42, '@test/legacy', undefined]]);
+      globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+        '@test/legacy',
+        value => ({ value }),
+        undefined,
+      );
     }).toThrow(
-      'MainThreadObject protocol mismatch for type "@test/legacy": runtime supports version 1, but the handle or bundle uses undefined.',
+      'MainThreadObject protocol mismatch for type "@test/legacy": runtime supports version 1, but the bundle uses undefined.',
     );
   });
 
@@ -177,7 +181,7 @@ describe('MainThreadObject registry and realization', () => {
     );
 
     expect(() => {
-      updateWorkletRefInitValueChanges([[10, 42, '@test/invalid', 1]]);
+      updateWorkletRefInitValueChanges([[10, 42, '@test/invalid']]);
     }).toThrow('MainThreadObject type "@test/invalid" created a non-object value.');
   });
 
@@ -193,7 +197,7 @@ describe('MainThreadObject registry and realization', () => {
       1,
     );
 
-    updateWorkletRefInitValueChanges([[93, null, '@test/proxy-value', 1]]);
+    updateWorkletRefInitValueChanges([[93, null, '@test/proxy-value']]);
 
     expect(isHydratedWorkletValue(getFromWorkletRefMap({ _wvid: 93 }))).toBe(true);
     removeValueFromWorkletRefMap(93);

@@ -79,8 +79,6 @@ export abstract class MainThreadObjectHandle<I, O extends object> {
   /** @internal */
   protected _type: string;
   /** @internal */
-  protected _mtoVersion: number;
-  /** @internal */
   protected _releaseObserver?: unknown;
 
   /** @internal */
@@ -92,17 +90,13 @@ export abstract class MainThreadObjectHandle<I, O extends object> {
     this._wvid = allocateMainThreadRefId();
     this._initValue = initialValue;
     this._type = type;
-    this._mtoVersion = MAIN_THREAD_OBJECT_PROTOCOL_VERSION;
     registerMainThreadObjectHandle(this, type);
 
     if (__JS__) {
       addMainThreadRefInitValue(
         this._wvid,
         initialValue,
-        {
-          type,
-          protocolVersion: MAIN_THREAD_OBJECT_PROTOCOL_VERSION,
-        },
+        type,
       );
 
       const id = this._wvid;
@@ -125,12 +119,11 @@ export abstract class MainThreadObjectHandle<I, O extends object> {
   }
 
   /** @internal */
-  toJSON(): Pick<WorkletRefImpl<unknown>, '_wvid' | '_initValue' | '_type' | '_mtoVersion'> {
+  toJSON(): Pick<WorkletRefImpl<unknown>, '_wvid' | '_initValue' | '_type'> {
     return {
       _wvid: this._wvid,
       _initValue: this._initValue,
       _type: this._type,
-      _mtoVersion: this._mtoVersion,
     };
   }
 }
