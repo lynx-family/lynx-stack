@@ -99,9 +99,18 @@ describe('Jev actual model interaction diagnostics', () => {
     expect(starts.map(event => event.requestIndex)).toEqual([1, 2]);
     expect(starts.map(event => event.request.questionCount)).toEqual([32, 1]);
     expect(starts.every(event => event.phase === 'properties')).toBe(true);
+    expect(starts[0]!.questions).toHaveLength(32);
+    expect(starts[0]!.questions![0]).toMatchObject({
+      id: 'question_0',
+      instructions: 'Choose a value.',
+      choices: ['a', 'b'],
+    });
+    expect(starts[0]!.questions![0]!.answer).toBeUndefined();
     expect(fetch).toHaveBeenCalledTimes(2);
     for (const event of events.filter(item => item.status === 'completed')) {
       expect(event.durationMs).toBeGreaterThanOrEqual(0);
+      expect(event.questions).toHaveLength(event.request.questionCount);
+      expect(event.questions!.every(q => q.answer !== undefined)).toBe(true);
       expect(event.response).toMatchObject({
         answerCount: event.request.questionCount,
         tokenUsage: { inputTokens: event.requestIndex * 100, outputTokens: 0 },
@@ -150,6 +159,8 @@ describe('Jev actual model interaction diagnostics', () => {
         failure === 'cancelled' ? 'cancelled' : 'failed',
       ]);
       expect(events[1]?.response).toBeUndefined();
+      expect(events[1]?.questions).toHaveLength(1);
+      expect(events[1]?.questions![0]!.answer).toBeUndefined();
       if (failure === 'upstream') expect(events[1]?.statusCode).toBe(400);
       expect(JSON.stringify(events)).not.toMatch(/private-/);
     },

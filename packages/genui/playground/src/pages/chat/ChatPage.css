@@ -642,12 +642,27 @@
   border-left: 2px solid var(--geist-border);
 }
 
+/* Divider between consecutive model interactions in the timeline. */
+.chatAgentInteractionEventDivided {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--geist-border);
+}
+
 .chatAgentInteractionTime {
   margin-left: auto;
   white-space: nowrap;
 }
 
-.chatAgentInteractionEvent pre,
+.chatAgentInteractionEvent pre {
+  margin: 6px 0 0;
+  /* No inner scroll: a Model interaction shows its full detail and the whole
+     Agent interaction list (.chatAgentInteractionEvents) scrolls as one. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+}
+
 .chatAgentReasoning pre {
   margin: 6px 0 0;
   max-height: 180px;

@@ -1788,7 +1788,7 @@ describe('Catalog-driven, single-model Jev', () => {
     );
     expect(events.every(event => event.request.questionCount > 0)).toBe(true);
     expect(JSON.stringify(events)).not.toMatch(
-      /Weather dashboard|jev-server-secret|jev-latest|typesafe.ai/,
+      /jev-server-secret|jev-latest|typesafe.ai/,
     );
     expect(sse.indexOf('event: model')).toBeLessThan(
       sse.indexOf('event: message'),

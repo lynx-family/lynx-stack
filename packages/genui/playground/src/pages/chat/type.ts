@@ -55,6 +55,8 @@ export interface ChatInteractionEntry {
   detail: string;
   count: number;
   truncated: boolean;
+  /** Marks the `started` event that begins a distinct model interaction. */
+  modelStart?: boolean;
 }
 
 export interface ChatInteractionLog {

@@ -465,13 +465,15 @@ async function selectContent(
       );
       if (!old && component.component === 'Text' && prop.name === 'text') {
         const id = `prop_${component.id}_${prop.name}`;
-        copyQuestions.push({
-          id,
-          component,
-          question: properties[id]!,
-          choices: offeredChoices,
-        });
-        delete properties[id];
+        if (!propertyPlan.isPreset(id)) {
+          copyQuestions.push({
+            id,
+            component,
+            question: properties[id]!,
+            choices: offeredChoices,
+          });
+          delete properties[id];
+        }
       }
     }
   }
