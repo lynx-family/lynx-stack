@@ -4,13 +4,42 @@
 import { useLynx } from '@lynx-js/react';
 import { useEffect, useState } from '@lynx-js/react';
 
+import type { Check } from './store.js';
 import {
   getCount,
+  identityChecks,
   increment,
   incrementLater,
   instanceId,
+  mountedPages,
+  registerPage,
+  runtimeChecks,
   subscribe,
 } from './store.js';
+
+function CheckList(props: { title: string; checks: Check[] }): JSX.Element {
+  return (
+    <view
+      style={{ marginTop: '16px', display: 'flex', flexDirection: 'column' }}
+    >
+      <text style={{ fontSize: '13px', fontWeight: 'bold' }}>
+        {props.title}
+      </text>
+      {props.checks.map((check) => (
+        <text
+          key={check.label}
+          style={{
+            marginTop: '2px',
+            fontSize: '13px',
+            color: check.ok ? '#0f9d58' : '#d93025',
+          }}
+        >
+          {check.ok ? '✓' : '✗'} {check.label}
+        </text>
+      ))}
+    </view>
+  );
+}
 
 export function Page(props: { name: string }): JSX.Element {
   const lynx = useLynx();
@@ -19,9 +48,26 @@ export function Page(props: { name: string }): JSX.Element {
   // The main thread has its own copy of the store, so read the shared instance
   // after mount, when the background thread owns the tree.
   const [sharedInstance, setSharedInstance] = useState('');
+  const [pages, setPages] = useState('');
+  const [identity, setIdentity] = useState<Check[]>([]);
+  const [runtime, setRuntime] = useState<Check[]>([]);
 
   useEffect(() => {
+    registerPage(props.name);
     setSharedInstance(instanceId);
+    setPages(mountedPages.join(', '));
+    setIdentity(
+      identityChecks({
+        setTimeout,
+        clearTimeout,
+        setInterval,
+        clearInterval,
+        requestAnimationFrame,
+        cancelAnimationFrame,
+        NativeModules,
+      }),
+    );
+    void runtimeChecks().then(setRuntime);
     return subscribe(() => setCount(getCount()));
   }, []);
 
@@ -34,6 +80,9 @@ export function Page(props: { name: string }): JSX.Element {
       </text>
       <text style={{ marginTop: '4px', fontSize: '12px', color: '#888' }}>
         module instance: {sharedInstance}
+      </text>
+      <text style={{ marginTop: '4px', fontSize: '12px', color: '#888' }}>
+        pages mounted: {pages}
       </text>
       <text style={{ marginTop: '4px', fontSize: '12px', color: '#888' }}>
         page lynx: {String(lynx === globalThis.lynx)}
@@ -67,6 +116,20 @@ export function Page(props: { name: string }): JSX.Element {
           {pending ? '+1 in flight…' : '+1 after 1.5s'}
         </text>
       </view>
+
+      <CheckList
+        title='this page holds the captured globals'
+        checks={identity}
+      />
+      {runtime.length > 0
+        ? <CheckList title='captured globals still work' checks={runtime} />
+        : (
+          <text
+            style={{ marginTop: '16px', fontSize: '13px', color: '#888' }}
+          >
+            running captured-globals checks…
+          </text>
+        )}
     </view>
   );
 }
