@@ -33,7 +33,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
       () => {
         throw new Error('factory failed');
       },
-      1,
     );
 
     expect(() => {
@@ -51,7 +50,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/value',
       value => ({ get: () => value }),
-      1,
     );
     const firstScreenWorklet = {
       _wkltId: 'typed-value',
@@ -97,7 +95,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/unused-value',
       value => ({ value }),
-      1,
     );
     const firstScreenWorklet = {
       _wkltId: 'unused-typed-value',
@@ -162,7 +159,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/abandoned',
       value => ({ value }),
-      1,
     );
     const firstScreenWorklet = {
       _wkltId: 'abandoned-typed-value',
@@ -189,7 +185,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/mutable-cell-shaped-object',
       () => ({ _wvid: 91, current: 0 }),
-      1,
     );
     updateWorkletRefInitValueChanges([
       [91, null, '@test/mutable-cell-shaped-object'],
@@ -211,7 +206,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/atomic-hydration-payload',
       value => ({ value }),
-      1,
     );
     const unrelatedRef = { _wvid: 3, current: 'unrelated' };
     globalThis.lynxWorkletImpl._refImpl._workletRefMap[3] = unrelatedRef;
@@ -249,7 +243,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/main-type',
       value => ({ value }),
-      1,
     );
     const firstScreenWorklet = {
       _wkltId: 'macro-typed-value',
@@ -288,7 +281,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/value',
       value => ({ value }),
-      1,
     );
     const firstScreenWorklet = {
       _wkltId: 'kind-mismatch',
@@ -326,7 +318,6 @@ describe('MainThreadObject integration with the worklet ref map', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/value',
       value => ({ value }),
-      1,
     );
     const firstScreenWorklet = {
       _wkltId: 'patch-validation',

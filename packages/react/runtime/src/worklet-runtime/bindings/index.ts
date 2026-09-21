@@ -9,6 +9,6 @@ export * from './observers.js';
 
 export type * from './types.js';
 
-export { MAIN_THREAD_OBJECT_PROTOCOL_VERSION, type MainThreadRefInitValuePatch } from './workletValue.js';
+export type { MainThreadRefInitValuePatch } from './workletValue.js';
 
 export { WorkletEvents, type RunWorkletCtxData, type RunWorkletCtxRetData } from './events.js';

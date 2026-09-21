@@ -30,12 +30,13 @@ describe('core/main-thread-object definition', () => {
     expect(register).toHaveBeenCalledWith(
       '@test/lazy-module-value',
       create,
-      1,
     );
     expect(type).not.toHaveProperty('create');
   });
 
-  it('validates and freezes object type definitions', () => {
+  it.each([true, false])('validates and freezes object type definitions (__JS__=%s)', (isJS) => {
+    vi.stubGlobal('__JS__', isJS);
+    vi.stubGlobal('__LEPUS__', !isJS);
     expect(() =>
       defineMainThreadObjectType({
         type: '',
@@ -131,6 +132,19 @@ describe('core/main-thread-object definition', () => {
       create: value => ({ value }),
     });
     expect(Object.isFrozen(type)).toBe(true);
+
+    vi.stubGlobal('__DEV__', false);
+    const ownKeys = vi.fn(Reflect.ownKeys);
+    const create = new Proxy({
+      _wkltId: 'production-create',
+      _c: { mutableValue: 1 },
+    }, { ownKeys });
+    const productionType = defineMainThreadObjectType({
+      type: '@test/production',
+      create,
+    });
+    expect(productionType.type).toBe('@test/production');
+    expect(ownKeys).not.toHaveBeenCalled();
   });
 
   it('diagnoses an incompatible main-thread runtime', () => {

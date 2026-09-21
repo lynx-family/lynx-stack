@@ -40,7 +40,7 @@ describe('Worklet', () => {
       ? { nested: { _wvid: 999 }, _wkltId: 'user-data' }
       : {};
     if (kind === 'cycle') value.self = value;
-    lynxWorkletImpl._refImpl.registerMainThreadObjectType('@test/shared', () => value, 1);
+    lynxWorkletImpl._refImpl.registerMainThreadObjectType('@test/shared', () => value);
     updateWorkletRefInitValueChanges([[1, null, '@test/shared']]);
     registerWorklet('main-thread', 'shared', function() {
       return this._c.holder.value;
@@ -176,7 +176,7 @@ describe('Worklet', () => {
 
   it.each([{}, { _lepusWorkletHash: 'legacy' }])('rejects invalid factory descriptors %j', (descriptor) => {
     initWorklet();
-    lynxWorkletImpl._refImpl.registerMainThreadObjectType('@test/invalid-factory', descriptor, 1);
+    lynxWorkletImpl._refImpl.registerMainThreadObjectType('@test/invalid-factory', descriptor);
     expect(() => updateWorkletRefInitValueChanges([[1, null, '@test/invalid-factory']]))
       .toThrow('Cannot resolve an invalid Main Thread Function.');
   });
@@ -408,7 +408,6 @@ describe('Worklet', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/atomic-payload',
       create,
-      1,
     );
     globalThis.registerWorklet('main-thread', 'atomic-payload', function(value) {
       return value;
@@ -436,7 +435,6 @@ describe('Worklet', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/repeated-parameter',
       create,
-      1,
     );
     globalThis.registerWorklet('main-thread', 'repeated-parameter', function(value) {
       return value;

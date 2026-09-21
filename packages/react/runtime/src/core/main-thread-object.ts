@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
-  MAIN_THREAD_OBJECT_PROTOCOL_VERSION,
   WorkletEvents,
   loadWorkletRuntime,
   registerMainThreadObjectType,
@@ -160,7 +159,9 @@ export function defineMainThreadObjectType<I, O extends object>(
       `MainThreadObject type "${type}" must provide a create Main Thread Function.`,
     );
   }
-  assertCaptureFreeLifecycleFunction(type, 'create', create);
+  if (__DEV__) {
+    assertCaptureFreeLifecycleFunction(type, 'create', create);
+  }
 
   // Keep the validated fields independent from the caller-owned definition.
   // Registration may be deferred until the first main-thread hook use, so a
@@ -233,7 +234,6 @@ function registerMainThreadObjectDefinition<I, O extends object>(
   registerMainThreadObjectType(
     definition.type,
     definition.create as ((initialValue: unknown) => object) | Worklet,
-    MAIN_THREAD_OBJECT_PROTOCOL_VERSION,
   );
 }
 
