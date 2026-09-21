@@ -1,5 +1,5 @@
 ---
-applyTo: "Dockerfile,.dockerignore,.github/workflows/test.yml,.github/workflows/deploy-main.yml"
+applyTo: "Dockerfile,.dockerignore,.github/workflows/test.yml,.github/workflows/test-docker.yml,.github/workflows/deploy-main.yml"
 ---
 
 Keep the workspace image based on Ubuntu 26.04 and build it for Linux amd64, the supported Linux architecture of the bundled Lynx runtime. Read Node and Rust versions from `.nvmrc` and `rust-toolchain.toml`, and keep the Corepack version aligned with `.github/actions/pnpm-install/action.yml`.
@@ -10,4 +10,4 @@ Use separate builder and runtime stages. Keep only Node, production workspace de
 
 Set runtime `LYNX_LIB_PATH` and `LYNX_CORE_JS_PATH` to the copied assets. The headless runner otherwise retains Cargo-injected paths into the SDK cache removed during cleanup.
 
-Do not copy host `node_modules`, Cargo targets, Turbo caches, or local environment files into the Docker build context. Validate the complete Dockerfile in `test.yml` after the Linux `build` job succeeds, without waiting for the Windows build. Include the Docker build job in `done.needs` so failures block the final test status. Build without pushing images, registry credentials, or `packages: write` permission. Do not build Docker images in `deploy-main.yml`. Pin Docker Actions to verified commit SHAs.
+Do not copy host `node_modules`, Cargo targets, Turbo caches, or local environment files into the Docker build context. Validate the complete Dockerfile in the independent `test-docker.yml` workflow only for pull requests changing `.github/workflows/**`. Start without depending on the Ubuntu build, and keep Docker validation out of `test.yml` and its `done.needs`. Do not add push or merge-group triggers that would run this expensive build unconditionally. Build without pushing images, registry credentials, or `packages: write` permission. Do not build Docker images in `deploy-main.yml`. Pin Docker Actions to verified commit SHAs.

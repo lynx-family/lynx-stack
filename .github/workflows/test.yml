@@ -34,28 +34,6 @@ jobs:
     with:
       runs-on: lynx-ubuntu-26.04-xlarge
       runs-on-name: Ubuntu
-  docker-build:
-    name: Build workspace image
-    needs: build
-    runs-on: ubuntu-26.04
-    timeout-minutes: 60
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
-      - name: Build workspace image
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64
-          push: false
-          cache-from: type=gha,scope=workspace-runtime-linux-amd64
-          cache-to: type=gha,scope=workspace-runtime-linux-amd64,mode=min
   build-windows:
     name: Build (Windows)
     uses: ./.github/workflows/workflow-build.yml
@@ -556,7 +534,6 @@ jobs:
     needs:
       - benchmark
       - code-style-check
-      - docker-build
       - eslint
       # - playwright-linux
       - playwright-web-elements
