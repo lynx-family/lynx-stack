@@ -500,6 +500,15 @@ class ReactWebpackPlugin {
 
       const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
 
+      // The transform appends `-react__<layer>` to a `webpackChunkName` so the
+      // two layers keep their own chunk. Strip it again here: the resulting
+      // chunk groups still make up a single lazy bundle.
+      hooks.asyncChunkName.tap(
+        this.constructor.name,
+        (chunkName) =>
+          chunkName.replace(/-react__(?:background|main-thread)$/, ''),
+      );
+
       const { RawSource, ConcatSource } = compiler.webpack.sources;
       hooks.beforeEncode.tap(
         this.constructor.name,
