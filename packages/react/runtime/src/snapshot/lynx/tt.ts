@@ -4,7 +4,6 @@
 import { process, render } from 'preact';
 
 import { runWithForce } from './runWithForce.js';
-import { isBackgroundEntryReevalEnabled } from '../../core/entry-reloader.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { updateCardData } from '../../core/lynx-update-data.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../../core/performance.js';
@@ -25,7 +24,8 @@ import { delayedEvents, delayedPublishEvent } from '../lifecycle/event/delayEven
 import { delayLifecycleEvent, delayedLifecycleEvents } from '../lifecycle/event/delayLifecycleEvents.js';
 import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../lifecycle/patch/commit.js';
 import type { PatchList } from '../lifecycle/patch/commit.js';
-import { removeCtxNotFoundEventListener } from '../lifecycle/patch/error.js';
+import { addCtxNotFoundEventListener, removeCtxNotFoundEventListener } from '../lifecycle/patch/error.js';
+import { deinitGlobalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 import { runDelayedUiOps } from '../lifecycle/ref/delay.js';
 import { reloadBackground } from '../lifecycle/reload.js';
 import {
@@ -39,8 +39,11 @@ import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.j
 
 export { runWithForce };
 
+let injectedApp: unknown;
+
 function injectTt(): void {
   const tt = lynx.getApp();
+  injectedApp = tt;
   tt.OnLifecycleEvent = onLifecycleEvent;
   tt.publishEvent = delayedPublishEvent;
   tt.publicComponentEvent = delayedPublicComponentEvent;
@@ -60,15 +63,11 @@ function injectTt(): void {
 type OnAppReload = (updateData: Record<string, any>, options?: unknown) => void;
 
 /**
- * With `experimental_reloadEntryReeval`, reload is handed back to Lynx core,
- * which drops this app and evaluates the background entry again instead of
- * re-rendering the JSX of the previous render. Core installs that reload as
- * `onAppReload` before the entry runs, so its presence is what tells us a core
- * new enough to do it is underneath us; older ones leave the property unset.
- *
- * Whether the app asked for it is read at reload time rather than here, because
- * the marker that carries the answer is set by the entry and we may be running
- * from a framework bundle that was built without it.
+ * Lynx core installs an `onAppReload` of its own before the entry runs, which
+ * drops this app and loads the card again, so the background entry is evaluated
+ * afresh instead of re-rendering the JSX of the previous render. Defer to it
+ * when it is there; cores that predate it leave the property unset and get the
+ * re-render.
  *
  * Core seeds the new app from the `initData` the page was loaded with, which is
  * behind by every update since. Passing the data this app accumulated keeps the
@@ -77,6 +76,21 @@ type OnAppReload = (updateData: Record<string, any>, options?: unknown) => void;
  * The reload is counted here rather than by the app that comes back, which
  * starts at whatever the page realm already holds.
  */
+/**
+ * Wire this runtime to the app that is running now.
+ *
+ * Module scoped setup runs once per realm, and an externalized `@lynx-js/react`
+ * is not evaluated again when the background entry is, so the app a reload
+ * brings back would otherwise never be wired at all. The entry calls this on
+ * every render, and it does something only when the app underneath changed.
+ */
+function reattachTt(): void {
+  if (injectedApp !== lynx.getApp()) {
+    injectTt();
+    addCtxNotFoundEventListener();
+  }
+}
+
 function createOnAppReload(tt: { onAppReload?: OnAppReload | undefined }): OnAppReload {
   const reloadByCore = tt.onAppReload;
   if (typeof reloadByCore !== 'function') {
@@ -84,10 +98,7 @@ function createOnAppReload(tt: { onAppReload?: OnAppReload | undefined }): OnApp
   }
 
   return (updateData, options) => {
-    if (!isBackgroundEntryReevalEnabled()) {
-      reloadBackground(updateData);
-      return;
-    }
+    deinitGlobalSnapshotPatch();
     increaseReloadVersion();
     reloadByCore.call(tt, { ...lynx.__initData, ...updateData }, options);
   };
@@ -316,4 +327,4 @@ function updateGlobalProps(newData: Record<string, any>): void {
   });
 }
 
-export { injectTt, flushDelayedLifecycleEvents };
+export { injectTt, reattachTt, flushDelayedLifecycleEvents };

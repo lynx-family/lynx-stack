@@ -12,12 +12,12 @@ outside that bundle - otherwise the re-run replaces the framework's own
 `__root`, `__page` and snapshot registry. This example therefore enables
 `pluginExternalBundle` for both variants.
 
-On the background thread the framework hands reload back to Lynx core, which
-drops the app and loads the card again. Nothing framework-side is on the stack
-when that happens, so app-service.js and the bundles it pulls in are all
-evaluated again. This needs a Lynx core that installs its own `onAppReload`;
-older ones leave the background on the re-render path while the main thread
-still re-evaluates.
+On the background thread nothing is wrapped at all. Lynx core installs an
+`onAppReload` that drops the app and loads the card again, and the framework
+defers to it, so app-service.js and the bundles it pulls in are evaluated again
+with nothing framework-side on the stack. The background output is the same
+either way; what decides is the core underneath, and older ones keep the
+re-render while the main thread still re-evaluates.
 
 ## Build
 
@@ -44,9 +44,9 @@ Tap `reloadTemplate`, or drive the main thread directly:
 agent-lynx evaluate "updatePage({}, { reloadTemplate: true })" --thread main
 ```
 
-`dist/baseline` keeps logging `entry eval #1` on both threads. `dist/reeval`
-counts up on every reload, on the main thread and - given a core that supports
-it - on the background thread too.
+`dist/baseline` keeps logging `main-thread entry eval #1`; `dist/reeval` counts
+up on every reload. The background counts up in both, given a core that reloads
+the card.
 
 The `entry eval #` and `module value` on screen settle on the background
 thread's copies, since the background render is what survives hydration. They

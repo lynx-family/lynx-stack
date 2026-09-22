@@ -305,38 +305,6 @@ interface ReactWebpackPluginOptions {
  *
  * @public
  */
-/**
- * The initial JavaScript of every background entry, which is every initial
- * chunk holding background modules minus the main thread chunks - those can
- * share a chunk group with the background entry they belong to.
- */
-function backgroundEntryFiles(
-  compilation: Compilation,
-  options: Required<ReactWebpackPluginOptions>,
-): string[] {
-  const mainThreadChunks = new Set(options.mainThreadChunks ?? []);
-  const files: string[] = [];
-
-  for (const chunk of compilation.chunks) {
-    if (!chunk.canBeInitial()) {
-      continue;
-    }
-    const isBackground = Array.from(
-      compilation.chunkGraph.getChunkModulesIterable(chunk),
-    ).some(module => module.layer === LAYERS.BACKGROUND);
-    if (!isBackground) {
-      continue;
-    }
-    for (const file of chunk.files) {
-      if (file.endsWith('.js') && !mainThreadChunks.has(file)) {
-        files.push(file);
-      }
-    }
-  }
-
-  return files;
-}
-
 class ReactWebpackPlugin {
   /**
    * The loaders for ReactLynx.
@@ -544,8 +512,6 @@ class ReactWebpackPlugin {
         const { ConcatSource, RawSource } = compiler.webpack.sources;
         const reloader =
           `globalThis[Symbol.for('__LYNX_MAIN_THREAD_ENTRY_RELOADER__')]`;
-        const backgroundMarker =
-          `globalThis[Symbol.for('__LYNX_BACKGROUND_ENTRY_REEVAL__')]`;
         compilation.hooks.processAssets.tap(
           {
             name: this.constructor.name,
@@ -563,24 +529,6 @@ class ReactWebpackPlugin {
                   new RawSource(`${reloader} = () => {`),
                   asset.source,
                   new RawSource(`\n};\n${reloader}();\n`),
-                ),
-              );
-            }
-
-            // The background is re-evaluated by Lynx core rather than by a
-            // wrapper, so its entry only has to say that the app asked for it.
-            // The runtime reads this at reload time: it may well be running
-            // from an external bundle built without the option.
-            for (const name of backgroundEntryFiles(compilation, options)) {
-              const asset = compilation.getAsset(name);
-              if (!asset) {
-                continue;
-              }
-              compilation.updateAsset(
-                name,
-                new ConcatSource(
-                  new RawSource(`${backgroundMarker} = true;\n`),
-                  asset.source,
                 ),
               );
             }
