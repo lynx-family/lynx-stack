@@ -161,6 +161,10 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
 
     flushOptions.triggerDataUpdated = true;
     markTiming('updateDiffVdomEnd');
+
+    if (typeof lepusng_gc === 'function') {
+      lepusng_gc();
+    }
   }
 
   __FlushElementTree(__page, flushOptions);

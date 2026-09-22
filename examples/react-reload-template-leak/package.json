@@ -1,0 +1,27 @@
+{
+  "name": "@lynx-js/example-react-reload-template-leak",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rsbuild build",
+    "build:et": "ET=1 rsbuild build",
+    "dev": "rsbuild dev",
+    "dev:et": "ET=1 rsbuild dev",
+    "dev:rc": "RC=1 rsbuild dev",
+    "test:type": "tsc6 --noEmit"
+  },
+  "dependencies": {
+    "@lynx-js/react": "workspace:*"
+  },
+  "devDependencies": {
+    "@lynx-js/config-rsbuild-plugin": "workspace:*",
+    "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rsbuild-plugin": "workspace:*",
+    "@lynx-js/type-config": "4.2.0",
+    "@lynx-js/types": "4.1.0",
+    "@rsbuild/core": "catalog:rsbuild",
+    "@types/react": "^19.2.18"
+  }
+}
