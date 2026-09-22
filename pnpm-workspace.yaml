@@ -132,8 +132,8 @@ catalogs:
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "2.2.2"
-    "@rspack/core": "2.2.2"
+    "@rspack/cli": "2.2.6"
+    "@rspack/core": "2.2.6"
     "@rspack/dev-server": "2.2.1"
     "@rspack/test-tools": "2.2.2"
 
