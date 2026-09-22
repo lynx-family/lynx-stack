@@ -16,5 +16,19 @@ function getEntryReloader(): EntryReloader | undefined {
   return (globalThis as unknown as Record<symbol, EntryReloader | undefined>)[ENTRY_RELOADER];
 }
 
-export { ENTRY_RELOADER, getEntryReloader };
+/**
+ * The key of the marker the bundler prepends to the background entry.
+ *
+ * When present, `reloadTemplate` hands the background back to Lynx core, which
+ * evaluates the entry again, instead of re-rendering the JSX of the previous
+ * render. The framework runs from a bundle of its own, built without knowing
+ * whether the app asked for this, so the marker carries the answer at runtime.
+ */
+const BACKGROUND_ENTRY_REEVAL: symbol = Symbol.for('__LYNX_BACKGROUND_ENTRY_REEVAL__');
+
+function isBackgroundEntryReevalEnabled(): boolean {
+  return !!(globalThis as unknown as Record<symbol, boolean | undefined>)[BACKGROUND_ENTRY_REEVAL];
+}
+
+export { BACKGROUND_ENTRY_REEVAL, ENTRY_RELOADER, getEntryReloader, isBackgroundEntryReevalEnabled };
 export type { EntryReloader };

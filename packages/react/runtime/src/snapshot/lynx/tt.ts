@@ -4,6 +4,7 @@
 import { process, render } from 'preact';
 
 import { runWithForce } from './runWithForce.js';
+import { isBackgroundEntryReevalEnabled } from '../../core/entry-reloader.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { updateCardData } from '../../core/lynx-update-data.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../../core/performance.js';
@@ -49,9 +50,41 @@ function injectTt(): void {
   };
   tt.updateGlobalProps = updateGlobalProps;
   tt.updateCardData = updateCardData;
-  tt.onAppReload = reloadBackground;
+  tt.onAppReload = createOnAppReload(tt);
   tt.processCardConfig = () => {
     // used to updateTheme, no longer rely on this function
+  };
+}
+
+type OnAppReload = (updateData: Record<string, any>, options?: unknown) => void;
+
+/**
+ * With `experimental_reloadEntryReeval`, reload is handed back to Lynx core,
+ * which drops this app and evaluates the background entry again instead of
+ * re-rendering the JSX of the previous render. Core installs that reload as
+ * `onAppReload` before the entry runs, so its presence is what tells us a core
+ * new enough to do it is underneath us; older ones leave the property unset.
+ *
+ * Whether the app asked for it is read at reload time rather than here, because
+ * the marker that carries the answer is set by the entry and we may be running
+ * from a framework bundle that was built without it.
+ *
+ * Core seeds the new app from the `initData` the page was loaded with, which is
+ * behind by every update since. Passing the data this app accumulated keeps the
+ * reloaded app seeing what the re-rendering path would have shown it.
+ */
+function createOnAppReload(tt: { onAppReload?: OnAppReload | undefined }): OnAppReload {
+  const reloadByCore = tt.onAppReload;
+  if (typeof reloadByCore !== 'function') {
+    return reloadBackground;
+  }
+
+  return (updateData, options) => {
+    if (!isBackgroundEntryReevalEnabled()) {
+      reloadBackground(updateData);
+      return;
+    }
+    reloadByCore.call(tt, { ...lynx.__initData, ...updateData }, options);
   };
 }
 

@@ -29,6 +29,8 @@ const FIXTURE = join(__dirname, 'fixtures/reload-entry-reeval/index.jsx');
 
 const RELOADER =
   `globalThis[Symbol.for('__LYNX_MAIN_THREAD_ENTRY_RELOADER__')]`;
+const BACKGROUND_MARKER =
+  `globalThis[Symbol.for('__LYNX_BACKGROUND_ENTRY_REEVAL__')]`;
 
 interface BuildResult {
   mainThread: string;
@@ -86,10 +88,11 @@ async function build(
 }
 
 describe('ReactWebpackPlugin: experimental_reloadEntryReeval', () => {
-  test('leaves the main thread chunk alone by default', async () => {
-    const { mainThread } = await build({});
+  test('leaves both entries alone by default', async () => {
+    const { mainThread, background } = await build({});
 
     expect(mainThread).not.toContain(RELOADER);
+    expect(background).not.toContain(BACKGROUND_MARKER);
   });
 
   test('wraps the main thread chunk into a reloader that runs once', async () => {
@@ -99,7 +102,16 @@ describe('ReactWebpackPlugin: experimental_reloadEntryReeval', () => {
 
     expect(mainThread.startsWith(`${RELOADER} = () => {`)).toBe(true);
     expect(mainThread.trimEnd().endsWith(`${RELOADER}();`)).toBe(true);
-    // Only the main thread entry is re-evaluated.
+    // The background is re-evaluated by Lynx core, not by a wrapper.
     expect(background).not.toContain(RELOADER);
+  });
+
+  test('marks the background entry so the runtime hands reload to core', async () => {
+    const { mainThread, background } = await build({
+      experimental_reloadEntryReeval: true,
+    });
+
+    expect(background.startsWith(`${BACKGROUND_MARKER} = true;`)).toBe(true);
+    expect(mainThread).not.toContain(BACKGROUND_MARKER);
   });
 });
