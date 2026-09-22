@@ -190,8 +190,8 @@ catalogs:
       version: 2.2.4
   rslib:
     '@rslib/core':
-      specifier: 1.0.0
-      version: 1.0.0
+      specifier: 1.0.1
+      version: 1.0.1
   rspack:
     '@rspack/test-tools':
       specifier: 2.2.2
@@ -247,7 +247,7 @@ importers:
         version: 2.2.4(core-js@3.50.0)
       '@rslib/core':
         specifier: catalog:rslib
-        version: 1.0.0(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
+        version: 1.0.1(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       '@rspack/core':
         specifier: 2.2.2
         version: 2.2.2(@swc/helpers@0.5.23)
@@ -1250,7 +1250,7 @@ importers:
     devDependencies:
       '@rslib/core':
         specifier: catalog:rslib
-        version: 1.0.0(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
+        version: 1.0.1(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.0.1)
@@ -1445,7 +1445,7 @@ importers:
     devDependencies:
       '@rslib/core':
         specifier: catalog:rslib
-        version: 1.0.0(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
+        version: 1.0.1(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.0.1)
@@ -1592,7 +1592,7 @@ importers:
         version: link:../react
       '@rslib/core':
         specifier: catalog:rslib
-        version: 1.0.0(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
+        version: 1.0.1(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       preact:
         specifier: catalog:lynxjs
         version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
@@ -1927,10 +1927,10 @@ importers:
         version: 1.6.0(@rsbuild/core@2.2.4(core-js@3.50.0))(@rspack/core@2.2.2(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(typescript@6.0.3)
       '@rslib/core':
         specifier: catalog:rslib
-        version: 1.0.0(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
+        version: 1.0.1(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       '@rstest/adapter-rslib':
         specifier: catalog:rstest
-        version: 0.11.12(@rslib/core@1.0.0(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3))(@rstest/core@0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@27.4.0(supports-color@10.2.2)))(typescript@6.0.3)
+        version: 0.11.12(@rslib/core@1.0.1(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3))(@rstest/core@0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@27.4.0(supports-color@10.2.2)))(typescript@6.0.3)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@27.4.0(supports-color@10.2.2))
@@ -1988,7 +1988,7 @@ importers:
         version: 7.59.1(@types/node@24.13.3)
       '@rslib/core':
         specifier: catalog:rslib
-        version: 1.0.0(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
+        version: 1.0.1(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.0.1)
@@ -2731,7 +2731,7 @@ importers:
         version: 1.0.6(@rsbuild/core@2.2.4(core-js@3.50.0))
       '@rslib/core':
         specifier: catalog:rslib
-        version: 1.0.0(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
+        version: 1.0.1(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@27.4.0(supports-color@10.2.2))
@@ -2788,7 +2788,7 @@ importers:
         version: 2.2.4(core-js@3.50.0)
       '@rslib/core':
         specifier: catalog:rslib
-        version: 1.0.0(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
+        version: 1.0.1(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.0.1)
@@ -3310,13 +3310,13 @@ importers:
         version: 7.33.12(@types/node@24.13.3)
       '@rsbuild/plugin-sass':
         specifier: 2.0.1
-        version: 2.0.1(@rsbuild/core@2.2.4(core-js@3.50.0))
+        version: 2.0.1(@rsbuild/core@2.2.8(core-js@3.50.0))
       '@rsbuild/plugin-type-check':
         specifier: 1.6.0
-        version: 1.6.0(@rsbuild/core@2.2.4(core-js@3.50.0))(@rspack/core@2.2.2(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(typescript@6.0.3)
+        version: 1.6.0(@rsbuild/core@2.2.8(core-js@3.50.0))(@rspack/core@2.2.2(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(typescript@6.0.3)
       '@rsbuild/plugin-typed-css-modules':
         specifier: 1.2.4
-        version: 1.2.4(@rsbuild/core@2.2.4(core-js@3.50.0))
+        version: 1.2.4(@rsbuild/core@2.2.8(core-js@3.50.0))
       '@rspress/core':
         specifier: 2.0.21
         version: 2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
@@ -3467,66 +3467,66 @@ packages:
   '@asamuzakjp/nwsapi@2.3.9':
     resolution: {integrity: sha512-n8GuYSrI9bF7FFZ/SjhwevlHc8xaVlb/7HmHelnc/PZXBD2ZR49NnN9sMMuDdEGPeeRQ5d0hqlSlEpgCX3Wl0Q==}
 
-  '@ast-grep/napi-darwin-arm64@0.45.2':
-    resolution: {integrity: sha512-29+sfXTJ7xxqgTuWAHA89gDAQIiJyAZ1ZiHoupjKIqyn0mhXrktO1WOghlDzyYs++hITEPOeXftxy48Y0tDGDQ==}
+  '@ast-grep/napi-darwin-arm64@0.45.3':
+    resolution: {integrity: sha512-rMZJ6frSpR/xSbeV4hiA9WR5hHqk3rVYX8lOqEoUCaUnjEuFXvHdGN4WawJ8pVDq/IqM1UnTtsDSYgUdVmO5DA==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [darwin]
 
-  '@ast-grep/napi-darwin-x64@0.45.2':
-    resolution: {integrity: sha512-PUjh7Zf4dKNzYLOYhX5wU6O4BgRPdJnD9zkS1n+/5SeK0U1L5YL486RjNgFt9Xyff0PGtP/wDeoHMF5PhKEwsw==}
+  '@ast-grep/napi-darwin-x64@0.45.3':
+    resolution: {integrity: sha512-tIclZ5pM+YSgk8NNTBoTkaclbS39cU5lbVfSrFWX4LUnxXfUPG+F+ppxyFjKwJTBELsGHEO4LdX3/Lc+FDwPNA==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
 
-  '@ast-grep/napi-linux-arm64-gnu@0.45.2':
-    resolution: {integrity: sha512-bnGKLLHWO13pjPChOFq7Ifqj3HJdOAxMQAGDCUC2JSJhO2YL8/xBZrpN0cHIWNuoUNSAXjCtr5AsCnPz/3jlFg==}
+  '@ast-grep/napi-linux-arm64-gnu@0.45.3':
+    resolution: {integrity: sha512-Bm8F7/oRHQkDXbjH+gBi9oB5huJ0q12r/AIOMIypf5PWlAVvh206Tsw468phw4Oh6kd4Ad1Z+gflNW1MutgK2g==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@ast-grep/napi-linux-arm64-musl@0.45.2':
-    resolution: {integrity: sha512-FXVb4/V55THjhKxi5zWVrAO8JQj+/DiYP7JLsqenkm5V3UNuC8p2opGOyQpUvNpvcqJiZA9Hl+Onj/yfwSVr/A==}
+  '@ast-grep/napi-linux-arm64-musl@0.45.3':
+    resolution: {integrity: sha512-yr5xcRerV41GeRxmZ8SKbfGeyZRhQePoNNCgTAb4OrWMelWwbMI80aY7/IlF2bo1sN40BSW4hZdGIO/akTd1RQ==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@ast-grep/napi-linux-x64-gnu@0.45.2':
-    resolution: {integrity: sha512-mtEIPLV9MW2PBswFcp3ydM4T5Ub73s89SRd0QMT2+DfA9XBLCLhnC+r/Yt4eRgnf8FyNx49bFTPxXvFKscr9hw==}
+  '@ast-grep/napi-linux-x64-gnu@0.45.3':
+    resolution: {integrity: sha512-lluRK3hxfHMQdFuVID6seAKVx4FH0kEwF6rCh5/I40Sf3EtNR2UCBXAqd6RBA6hqlSckktvBxCfw+h4aescDmg==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@ast-grep/napi-linux-x64-musl@0.45.2':
-    resolution: {integrity: sha512-WLLHxDmuXkb/e3mz/xDCrB2dZPzv1ntsepuRTtpaIGczxnQTgFSzX/CXPD0e1MfsU/QL1AiXxxni8w+NGy/ZpQ==}
+  '@ast-grep/napi-linux-x64-musl@0.45.3':
+    resolution: {integrity: sha512-09wJQKq86LqILqQtw0+X09SzhcPwUnMVFKyia7S3XLbLqSeQpAMF55Y+zll53JRQ1dCzFEZJyvTT/7j9vwfE3w==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@ast-grep/napi-win32-arm64-msvc@0.45.2':
-    resolution: {integrity: sha512-04iOFaMzD2nf8CKw3nURWN42900wqPtUTQaMo1I2KRk3qbgtHSJjJoVJGAWUXkCq4LhPg3Xlk1s+ssWf4rNm2A==}
+  '@ast-grep/napi-win32-arm64-msvc@0.45.3':
+    resolution: {integrity: sha512-/HiVgw2cdtzXLDLoG4eBBcauekNXewfagy7qiVbjkVu/KcCH8dJ9lpj8DzeWwuBNtZxuD8jpiwP0M1pz3Bc3uw==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [win32]
 
-  '@ast-grep/napi-win32-ia32-msvc@0.45.2':
-    resolution: {integrity: sha512-tE3y0RQcajocKwpYLbgHKd4lzGGAx1wGMA0bGPsWdoFK8VSob6ZDuYdSlSdnaRs8jAc4F3axToNRKn15p+0/Dg==}
+  '@ast-grep/napi-win32-ia32-msvc@0.45.3':
+    resolution: {integrity: sha512-/gwJrJQUw65uNtAFcG2rtSTr117Gqqy3bfjaljCPKsa65dTeRcMMnjKLlZ6V9/g8z+4Xf78kdhp5ECbir4yfSw==}
     engines: {node: '>= 10'}
     cpu: [ia32]
     os: [win32]
 
-  '@ast-grep/napi-win32-x64-msvc@0.45.2':
-    resolution: {integrity: sha512-o8Z5Z42TAJe0fPnb11rrjtte58wlw/MuR4KpVMHl8IhJLBBR7gHR0E8wfMz88TxzsQz0U2KYev0k0a2fV4i0sQ==}
+  '@ast-grep/napi-win32-x64-msvc@0.45.3':
+    resolution: {integrity: sha512-CEZAMAsaDoQoVE3MT2c/ry3/ydfyaqlTjxv8DK5PG355SrdAYPgevGC2Me6tz4dhphJin89Y20VsnrS5UrYV5Q==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
 
-  '@ast-grep/napi@0.45.2':
-    resolution: {integrity: sha512-hBA5c7JV6OM7zFWoLjUNZhsDpxEIEIeew5S3z1giwK5tPQqobuFfM2OhS45bN3E0+yQtgCX/o8/AEHKbGD3ykg==}
+  '@ast-grep/napi@0.45.3':
+    resolution: {integrity: sha512-bjJsUt0g3UCwbn9bjv7MnoR15rszSm79yPCXn4DWWK0NuYUUqBU/srtNMR4WnpfR7TnfBRdYFoqSNx0pGCNWJg==}
     engines: {node: '>= 10'}
 
   '@babel/code-frame@7.26.2':
@@ -6043,6 +6043,16 @@ packages:
       core-js:
         optional: true
 
+  '@rsbuild/core@2.2.8':
+    resolution: {integrity: sha512-/htjYpZiqZFB/fELguE8nkqKDT/DqHXeXUgdf+X4UlP5BJc1EeolZ9ksDpCw9WNTlcn3zsPOj7UZ0dUUB4FAFA==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    hasBin: true
+    peerDependencies:
+      core-js: '>= 3.0.0'
+    peerDependenciesMeta:
+      core-js:
+        optional: true
+
   '@rsbuild/plugin-babel@2.0.1':
     resolution: {integrity: sha512-PkKWwQDm6Ll3emj9vrq4DYpob9XYonsgkuo4o9lY3ySNmK18+bKUCzPQkqrsMaJi+h1wDwFH/XnMGlIRS//dCw==}
     peerDependencies:
@@ -6187,8 +6197,8 @@ packages:
   '@rsdoctor/utils@1.6.4':
     resolution: {integrity: sha512-7oliDqtaLVtmVFkfSN3AKWoMQb8kuZA9AURCgb26cUW7+ZD3qgADg9uyD+WevpA6IOeF6gqo3hezTZKlwFR2Sg==}
 
-  '@rslib/core@1.0.0':
-    resolution: {integrity: sha512-eZNXCWU1v5oti4+DKCunc76DkNnYqMgRtks9UyZRRFlmaK4pKAxhejeCUS+XkbMurGIAa+aDyVynQD7DXEgK1w==}
+  '@rslib/core@1.0.1':
+    resolution: {integrity: sha512-FsUgiFALdgPQDM41OEYmt18J4061Vcm/fW2RXkZcwlO56PNaAEu2vtk+i8iH0lPEpCK79OaJPYjUzygOj4pPpA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -11587,8 +11597,8 @@ packages:
       '@rsbuild/core':
         optional: true
 
-  rsbuild-plugin-dts@1.0.0:
-    resolution: {integrity: sha512-FVoTsiTfSc0LPeSjrVhpvFOBRig0YXJq3Hp+bVxzh9/bzFvODzLRWOEux8q1Phe1oVCIIVSc2+Nb7kDcxIhosw==}
+  rsbuild-plugin-dts@1.0.1:
+    resolution: {integrity: sha512-vzLhs8v1SuRd0qyIWue5caaM2A1lGImuH+cQAX71KnNpS9BZHyHRBHHXBFp9jp610XJnLlkBATyPclqUfGtCAA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     peerDependencies:
       '@microsoft/api-extractor': ^7
@@ -13187,44 +13197,44 @@ snapshots:
 
   '@asamuzakjp/nwsapi@2.3.9': {}
 
-  '@ast-grep/napi-darwin-arm64@0.45.2':
+  '@ast-grep/napi-darwin-arm64@0.45.3':
     optional: true
 
-  '@ast-grep/napi-darwin-x64@0.45.2':
+  '@ast-grep/napi-darwin-x64@0.45.3':
     optional: true
 
-  '@ast-grep/napi-linux-arm64-gnu@0.45.2':
+  '@ast-grep/napi-linux-arm64-gnu@0.45.3':
     optional: true
 
-  '@ast-grep/napi-linux-arm64-musl@0.45.2':
+  '@ast-grep/napi-linux-arm64-musl@0.45.3':
     optional: true
 
-  '@ast-grep/napi-linux-x64-gnu@0.45.2':
+  '@ast-grep/napi-linux-x64-gnu@0.45.3':
     optional: true
 
-  '@ast-grep/napi-linux-x64-musl@0.45.2':
+  '@ast-grep/napi-linux-x64-musl@0.45.3':
     optional: true
 
-  '@ast-grep/napi-win32-arm64-msvc@0.45.2':
+  '@ast-grep/napi-win32-arm64-msvc@0.45.3':
     optional: true
 
-  '@ast-grep/napi-win32-ia32-msvc@0.45.2':
+  '@ast-grep/napi-win32-ia32-msvc@0.45.3':
     optional: true
 
-  '@ast-grep/napi-win32-x64-msvc@0.45.2':
+  '@ast-grep/napi-win32-x64-msvc@0.45.3':
     optional: true
 
-  '@ast-grep/napi@0.45.2':
+  '@ast-grep/napi@0.45.3':
     optionalDependencies:
-      '@ast-grep/napi-darwin-arm64': 0.45.2
-      '@ast-grep/napi-darwin-x64': 0.45.2
-      '@ast-grep/napi-linux-arm64-gnu': 0.45.2
-      '@ast-grep/napi-linux-arm64-musl': 0.45.2
-      '@ast-grep/napi-linux-x64-gnu': 0.45.2
-      '@ast-grep/napi-linux-x64-musl': 0.45.2
-      '@ast-grep/napi-win32-arm64-msvc': 0.45.2
-      '@ast-grep/napi-win32-ia32-msvc': 0.45.2
-      '@ast-grep/napi-win32-x64-msvc': 0.45.2
+      '@ast-grep/napi-darwin-arm64': 0.45.3
+      '@ast-grep/napi-darwin-x64': 0.45.3
+      '@ast-grep/napi-linux-arm64-gnu': 0.45.3
+      '@ast-grep/napi-linux-arm64-musl': 0.45.3
+      '@ast-grep/napi-linux-x64-gnu': 0.45.3
+      '@ast-grep/napi-linux-x64-musl': 0.45.3
+      '@ast-grep/napi-win32-arm64-msvc': 0.45.3
+      '@ast-grep/napi-win32-ia32-msvc': 0.45.3
+      '@ast-grep/napi-win32-x64-msvc': 0.45.3
 
   '@babel/code-frame@7.26.2':
     dependencies:
@@ -15873,6 +15883,15 @@ snapshots:
     transitivePeerDependencies:
       - '@module-federation/runtime-tools'
 
+  '@rsbuild/core@2.2.8(core-js@3.50.0)':
+    dependencies:
+      '@rspack/core': 2.2.2(@swc/helpers@0.5.23)
+      '@swc/helpers': 0.5.23
+    optionalDependencies:
+      core-js: 3.50.0
+    transitivePeerDependencies:
+      - '@module-federation/runtime-tools'
+
   '@rsbuild/plugin-babel@2.0.1(@rsbuild/core@2.2.4(core-js@3.50.0))(@rspack/core@2.2.2(@swc/helpers@0.5.23))(supports-color@10.2.2)(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))':
     dependencies:
       '@babel/core': 7.29.7(supports-color@10.2.2)
@@ -15943,6 +15962,15 @@ snapshots:
     transitivePeerDependencies:
       - '@rspack/core'
 
+  '@rsbuild/plugin-react@2.1.0(@rsbuild/core@2.2.8(core-js@3.50.0))(@rspack/core@2.2.2(@swc/helpers@0.5.23))':
+    dependencies:
+      '@rspack/plugin-react-refresh': 2.0.2(@rspack/core@2.2.2(@swc/helpers@0.5.23))(react-refresh@0.18.0)
+      react-refresh: 0.18.0
+    optionalDependencies:
+      '@rsbuild/core': 2.2.8(core-js@3.50.0)
+    transitivePeerDependencies:
+      - '@rspack/core'
+
   '@rsbuild/plugin-sass@2.0.1(@rsbuild/core@2.2.4(core-js@3.50.0))':
     dependencies:
       deepmerge: 4.3.1
@@ -15952,6 +15980,16 @@ snapshots:
       sass-embedded: 1.100.0
     optionalDependencies:
       '@rsbuild/core': 2.2.4(core-js@3.50.0)
+
+  '@rsbuild/plugin-sass@2.0.1(@rsbuild/core@2.2.8(core-js@3.50.0))':
+    dependencies:
+      deepmerge: 4.3.1
+      loader-utils: 2.0.4
+      postcss: 8.5.25
+      reduce-configs: 2.0.1
+      sass-embedded: 1.100.0
+    optionalDependencies:
+      '@rsbuild/core': 2.2.8(core-js@3.50.0)
 
   '@rsbuild/plugin-source-build@1.0.6(@rsbuild/core@2.2.4(core-js@3.50.0))':
     dependencies:
@@ -15974,9 +16012,26 @@ snapshots:
       - '@rspack/core'
       - typescript
 
+  '@rsbuild/plugin-type-check@1.6.0(@rsbuild/core@2.2.8(core-js@3.50.0))(@rspack/core@2.2.2(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(typescript@6.0.3)':
+    dependencies:
+      deepmerge: 4.3.1
+      json5: 2.2.3
+      reduce-configs: 1.1.2
+      ts-checker-rspack-plugin: 1.6.0(@rspack/core@2.2.2(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(typescript@6.0.3)
+    optionalDependencies:
+      '@rsbuild/core': 2.2.8(core-js@3.50.0)
+      '@typescript/native-preview': 7.0.0-dev.20260707.2
+    transitivePeerDependencies:
+      - '@rspack/core'
+      - typescript
+
   '@rsbuild/plugin-typed-css-modules@1.2.4(@rsbuild/core@2.2.4(core-js@3.50.0))':
     optionalDependencies:
       '@rsbuild/core': 2.2.4(core-js@3.50.0)
+
+  '@rsbuild/plugin-typed-css-modules@1.2.4(@rsbuild/core@2.2.8(core-js@3.50.0))':
+    optionalDependencies:
+      '@rsbuild/core': 2.2.8(core-js@3.50.0)
 
   '@rsdoctor/client@1.6.1': {}
 
@@ -16208,10 +16263,10 @@ snapshots:
       - '@rspack/core'
       - webpack
 
-  '@rslib/core@1.0.0(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)':
+  '@rslib/core@1.0.1(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)':
     dependencies:
-      '@rsbuild/core': 2.2.4(core-js@3.50.0)
-      rsbuild-plugin-dts: 1.0.0(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(@rsbuild/core@2.2.4(core-js@3.50.0))(typescript@6.0.3)
+      '@rsbuild/core': 2.2.8(core-js@3.50.0)
+      rsbuild-plugin-dts: 1.0.1(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(@rsbuild/core@2.2.8(core-js@3.50.0))(typescript@6.0.3)
     optionalDependencies:
       '@microsoft/api-extractor': 7.59.1(@types/node@24.13.3)
       typescript: 6.0.3
@@ -16410,8 +16465,8 @@ snapshots:
     dependencies:
       '@mdx-js/mdx': 3.1.1(supports-color@10.2.2)
       '@mdx-js/react': 3.1.1(@types/react@19.2.18)(react@19.2.8)
-      '@rsbuild/core': 2.2.4(core-js@3.50.0)
-      '@rsbuild/plugin-react': 2.1.0(@rsbuild/core@2.2.4(core-js@3.50.0))(@rspack/core@2.2.2(@swc/helpers@0.5.23))
+      '@rsbuild/core': 2.2.8(core-js@3.50.0)
+      '@rsbuild/plugin-react': 2.1.0(@rsbuild/core@2.2.8(core-js@3.50.0))(@rspack/core@2.2.2(@swc/helpers@0.5.23))
       '@rspress/shared': 2.0.21(core-js@3.50.0)(supports-color@10.2.2)
       '@shikijs/rehype': 4.3.1
       '@types/mdast': 4.0.4
@@ -16460,7 +16515,7 @@ snapshots:
 
   '@rspress/shared@2.0.21(core-js@3.50.0)(supports-color@10.2.2)':
     dependencies:
-      '@rsbuild/core': 2.2.4(core-js@3.50.0)
+      '@rsbuild/core': 2.2.8(core-js@3.50.0)
       '@shikijs/rehype': 4.3.1
       '@types/react': 19.2.18
       mdast-util-mdx-jsx: 3.2.0(supports-color@10.2.2)
@@ -16481,16 +16536,16 @@ snapshots:
       '@rsbuild/core': 2.2.4(core-js@3.50.0)
       '@rstest/core': 0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.0.1)
 
-  '@rstest/adapter-rslib@0.11.12(@rslib/core@1.0.0(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3))(@rstest/core@0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@27.4.0(supports-color@10.2.2)))(typescript@6.0.3)':
+  '@rstest/adapter-rslib@0.11.12(@rslib/core@1.0.1(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3))(@rstest/core@0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@27.4.0(supports-color@10.2.2)))(typescript@6.0.3)':
     dependencies:
-      '@rslib/core': 1.0.0(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
+      '@rslib/core': 1.0.1(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       '@rstest/core': 0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@27.4.0(supports-color@10.2.2))
     optionalDependencies:
       typescript: 6.0.3
 
   '@rstest/core@0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@27.4.0(supports-color@10.2.2))':
     dependencies:
-      '@rsbuild/core': 2.2.4(core-js@3.50.0)
+      '@rsbuild/core': 2.2.8(core-js@3.50.0)
       '@types/chai': 5.2.3
     optionalDependencies:
       happy-dom: 20.14.0
@@ -16501,7 +16556,7 @@ snapshots:
 
   '@rstest/core@0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.0.1)':
     dependencies:
-      '@rsbuild/core': 2.2.4(core-js@3.50.0)
+      '@rsbuild/core': 2.2.8(core-js@3.50.0)
       '@types/chai': 5.2.3
     optionalDependencies:
       happy-dom: 20.14.0
@@ -22320,10 +22375,10 @@ snapshots:
     optionalDependencies:
       '@rsbuild/core': 2.2.4(core-js@3.50.0)
 
-  rsbuild-plugin-dts@1.0.0(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(@rsbuild/core@2.2.4(core-js@3.50.0))(typescript@6.0.3):
+  rsbuild-plugin-dts@1.0.1(@microsoft/api-extractor@7.59.1(@types/node@24.13.3))(@rsbuild/core@2.2.8(core-js@3.50.0))(typescript@6.0.3):
     dependencies:
-      '@ast-grep/napi': 0.45.2
-      '@rsbuild/core': 2.2.4(core-js@3.50.0)
+      '@ast-grep/napi': 0.45.3
+      '@rsbuild/core': 2.2.8(core-js@3.50.0)
     optionalDependencies:
       '@microsoft/api-extractor': 7.59.1(@types/node@24.13.3)
       typescript: 6.0.3
