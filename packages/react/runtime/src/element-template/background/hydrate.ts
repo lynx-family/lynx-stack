@@ -603,23 +603,20 @@ function hydrateAttributeSlots(
   const slotCount = Math.max(beforeSlots.length, afterSlots.length);
   const slotKinds = getMainThreadDynamicAttrSlotKinds(templateType);
   for (let slotIndex = 0; slotIndex < slotCount; slotIndex += 1) {
-    const beforeValue = beforeSlots[slotIndex];
-    const afterValue = afterSlots[slotIndex];
+    // Native serialization and background preparation may represent an absent slot differently.
+    const beforeValue = beforeSlots[slotIndex] ?? null;
+    const afterValue = afterSlots[slotIndex] ?? null;
     if (
       !shouldForceMainThreadHydrateSlot(slotKinds?.get(slotIndex), afterValue)
       && isDirectOrDeepEqual(beforeValue, afterValue)
     ) {
       continue;
     }
-    if (afterValue === undefined && beforeValue === null) {
-      // JSON serialization turns undefined array slots into null on the main-thread payload.
-      continue;
-    }
     globalCommitContext.ops.push(
       getAttributeSlotUpdateOp(templateType, slotIndex),
       handleId,
       slotIndex,
-      afterValue ?? null,
+      afterValue,
     );
   }
 }
