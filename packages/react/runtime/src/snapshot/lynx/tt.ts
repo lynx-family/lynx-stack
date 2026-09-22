@@ -8,6 +8,7 @@ import { isBackgroundEntryReevalEnabled } from '../../core/entry-reloader.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { updateCardData } from '../../core/lynx-update-data.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../../core/performance.js';
+import { increaseReloadVersion } from '../../core/reload-version.js';
 import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
@@ -72,6 +73,9 @@ type OnAppReload = (updateData: Record<string, any>, options?: unknown) => void;
  * Core seeds the new app from the `initData` the page was loaded with, which is
  * behind by every update since. Passing the data this app accumulated keeps the
  * reloaded app seeing what the re-rendering path would have shown it.
+ *
+ * The reload is counted here rather than by the app that comes back, which
+ * starts at whatever the page realm already holds.
  */
 function createOnAppReload(tt: { onAppReload?: OnAppReload | undefined }): OnAppReload {
   const reloadByCore = tt.onAppReload;
@@ -84,6 +88,7 @@ function createOnAppReload(tt: { onAppReload?: OnAppReload | undefined }): OnApp
       reloadBackground(updateData);
       return;
     }
+    increaseReloadVersion();
     reloadByCore.call(tt, { ...lynx.__initData, ...updateData }, options);
   };
 }

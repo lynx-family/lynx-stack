@@ -7,6 +7,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { BACKGROUND_ENTRY_REEVAL } from '../../../src/core/entry-reloader';
+import { getReloadVersion } from '../../../src/core/reload-version';
 import { reloadBackground } from '../../../src/snapshot/lifecycle/reload';
 import { injectTt } from '../../../src/snapshot/lynx/tt';
 
@@ -57,5 +58,16 @@ describe('background reload handover', () => {
     expect(coreReload).toHaveBeenCalledTimes(1);
     expect(coreReload.mock.calls[0][0]).toEqual({ kept: 1, replaced: 'new' });
     expect(coreReload.mock.calls[0][1]).toEqual({ processorName: 'p' });
+  });
+
+  it('counts the reload so the re-evaluated entry stamps patches the main thread keeps', () => {
+    const onAppReload = injectWith(vi.fn());
+
+    globalThis[BACKGROUND_ENTRY_REEVAL] = true;
+    lynx.__initData = {};
+    const before = getReloadVersion();
+    onAppReload({}, {});
+
+    expect(getReloadVersion()).toBe(before + 1);
   });
 });
