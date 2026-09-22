@@ -223,6 +223,15 @@ interface ReactWebpackPluginOptions {
   mainThreadChunks?: string[] | undefined;
 
   /**
+   * Wrap the main thread entry so that `reloadTemplate` re-evaluates it instead
+   * of reusing the JSX of the previous render. Module scoped state of the entry
+   * is then reset on reload, while the element tree is still reused.
+   *
+   * @defaultValue false
+   */
+  experimental_reloadEntryReeval?: boolean;
+
+  /**
    * The main-thread and background entry pairs to merge the main-thread
    * definitions across.
    */
@@ -351,6 +360,7 @@ class ReactWebpackPlugin {
       globalPropsMode: 'reactive',
       enableSSR: false,
       mainThreadChunks: [],
+      experimental_reloadEntryReeval: false,
       entryPairs: [],
       extractStr: false,
       experimental_isLazyBundle: false,
@@ -497,6 +507,34 @@ class ReactWebpackPlugin {
             });
         },
       );
+
+      if (options.experimental_reloadEntryReeval) {
+        const { ConcatSource, RawSource } = compiler.webpack.sources;
+        const reloader =
+          `globalThis[Symbol.for('__LYNX_MAIN_THREAD_ENTRY_RELOADER__')]`;
+        compilation.hooks.processAssets.tap(
+          {
+            name: this.constructor.name,
+            stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_NONE,
+          },
+          () => {
+            for (const name of options.mainThreadChunks ?? []) {
+              const asset = compilation.getAsset(name);
+              if (!asset) {
+                continue;
+              }
+              compilation.updateAsset(
+                name,
+                new ConcatSource(
+                  new RawSource(`${reloader} = () => {`),
+                  asset.source,
+                  new RawSource(`\n};\n${reloader}();\n`),
+                ),
+              );
+            }
+          },
+        );
+      }
 
       const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
 

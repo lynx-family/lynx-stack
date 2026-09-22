@@ -940,6 +940,34 @@ importers:
         specifier: ^19.2.18
         version: 19.2.18
 
+  examples/react-reload-entry:
+    dependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+    devDependencies:
+      '@lynx-js/external-bundle-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-external-bundle
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-qrcode
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-react
+      '@lynx-js/react-umd':
+        specifier: workspace:*
+        version: link:../../packages/react-umd
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-lynx
+      '@lynx-js/types':
+        specifier: 4.1.0
+        version: 4.1.0
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.2.4(core-js@3.50.0)
+
   examples/react-signals:
     dependencies:
       '@lynx-js/react':
