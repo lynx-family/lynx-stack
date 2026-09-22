@@ -1,5 +1,5 @@
 ---
-"@lynx-js/rspeedy": minor
+"@lynx-js/rspeedy": patch
 ---
 
 Upgrade the built-in Rsdoctor to `@rsdoctor/core@2.0.0-rc.0`, which supports the same Node.js range as Rspeedy (`^20.19.0 || >=22.12.0`). `RSDOCTOR=true` automatically enables Rsdoctor 2.0, and manually registered plugins are preserved without duplicate injection.
