@@ -318,11 +318,20 @@ export class SnapshotInstance {
   }
 
   tearDown(): void {
-    traverseSnapshotInstance(this, v => {
-      v.__parent = null;
-      v.__previousSibling = null;
-      v.__nextSibling = null;
-    });
+    this.__parent = null;
+    this.__previousSibling = null;
+    this.__nextSibling = null;
+
+    // A list's children are the list's to recycle; never recurse into them.
+    if (this.__snapshot_def.isListHolder) {
+      return;
+    }
+    let child = this.__firstChild;
+    while (child) {
+      const next = child.__nextSibling;
+      child.tearDown();
+      child = next;
+    }
   }
 
   // onCreate?: () => void;

@@ -20,7 +20,7 @@ import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import { hydrate } from '../renderToOpcodes/hydrate.js';
 import { ssrHydrateByOpcodes } from '../renderToOpcodes/opcodes.js';
 import { __page, setupPage } from '../snapshot/definition.js';
-import { SnapshotInstance } from '../snapshot/snapshot.js';
+import { SnapshotInstance, snapshotInstanceManager } from '../snapshot/snapshot.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
 
 function ssrEncode() {
@@ -134,6 +134,7 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
     }
 
     const oldRoot = __root;
+    snapshotInstanceManager.clear();
     setRoot(new SnapshotInstance('root'));
     __root.__jsx = oldRoot.__jsx;
 
@@ -149,6 +150,8 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
         __root as SnapshotInstance,
         { skipUnRef: true, swap: firstScreenEventIdSwap },
       );
+      (oldRoot as SnapshotInstance).unRenderElements();
+      (oldRoot as SnapshotInstance).tearDown();
 
       // always call this before `__FlushElementTree`
       __pendingListUpdates.flush();
