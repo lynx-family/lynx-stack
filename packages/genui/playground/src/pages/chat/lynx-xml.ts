@@ -9,6 +9,7 @@ import {
   toProviderRequestOptions,
 } from './shared.js';
 import type { ProviderSettings } from './shared.js';
+import { CHAT_PROMPT_SUGGESTIONS } from './suggestions.js';
 import type {
   ChatArtifact,
   ChatHydration,
@@ -43,24 +44,6 @@ const WELCOME_MESSAGE: ChatMessageModel = {
   text:
     'Describe the interface you want. I will stream a complete zero-build .lynxml artifact and render it directly in Lynx Preview.',
 };
-
-const SUGGESTIONS = [
-  {
-    label: '🌤️ Weather dashboard',
-    text:
-      'Create an interactive weather dashboard for Shanghai with current conditions, a five-day forecast, and a unit toggle. Use only self-contained data and Lynx-native shapes.',
-  },
-  {
-    label: '✅ Habit tracker',
-    text:
-      'Create a polished daily habit tracker with progress, four tappable habits, and a reset action. Make it responsive and keep all interaction on the main thread.',
-  },
-  {
-    label: '🎵 Music player',
-    text:
-      'Create a compact music-player interface with a self-contained album-art treatment, track metadata, progress, and working previous, play/pause, and next controls.',
-  },
-] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -201,18 +184,13 @@ export const LYNX_XML_STREAM = {
   error: normalizeError,
 };
 
-function formatCharacterCount(source: string): string {
-  return `${source.length.toLocaleString()} chars`;
-}
-
-function generatedStatus(output: LynxXmlOutput): ChatMessageModel {
+function generatedStatus(): ChatMessageModel {
   return {
     kind: 'status',
     tone: 'success',
     icon: 'sparkles',
-    text: `Generated a complete Lynx XML artifact (${
-      formatCharacterCount(output.source)
-    }). Lynx Preview is rendering it now.`,
+    text:
+      'Generated a complete Lynx XML artifact. Lynx Preview is rendering it now.',
   };
 }
 
@@ -282,7 +260,7 @@ function hydrate(
       {
         ...(pendingLocalTitle
           ? localExampleStatus(pendingLocalTitle)
-          : generatedStatus(output)),
+          : generatedStatus()),
         generationUsage: message.generationUsage,
       },
     );
@@ -302,7 +280,7 @@ function createArtifact(output: LynxXmlOutput): ChatArtifact {
     || Boolean(output.modelOutput && output.modelOutput !== output.source);
   return {
     title: 'Generated Lynx XML Artifact',
-    meta: `.lynxml · ${formatCharacterCount(output.source)}`,
+    meta: '.lynxml',
     views: [
       ...(hasConversion && output.modelOutput
         ? [{
@@ -333,6 +311,7 @@ function persistOutput(output: LynxXmlOutput): ChatTurnPersistence {
 }
 
 const GENERATION_DEFAULTS = {
+  enableScriptReuse: true,
   enableDesignGuidance: true,
   enableHtmlFragment: true,
   stylePreset: 'default' as const,
@@ -350,7 +329,7 @@ export const LYNX_XML_CHAT_ADAPTER = {
     progressLabel: 'Streaming Lynx XML from the GenUI server...',
     failurePrefix: 'Lynx XML generation failed',
   },
-  suggestions: SUGGESTIONS,
+  suggestions: CHAT_PROMPT_SUGGESTIONS,
   settings: {
     ...CHAT_PROVIDER_SETTINGS_ADAPTER,
     initial(): ProviderSettings {
@@ -370,6 +349,7 @@ export const LYNX_XML_CHAT_ADAPTER = {
       const stored = CHAT_PROVIDER_SETTINGS_ADAPTER.serialize(settings);
       delete stored.enableDesignGuidance;
       delete stored.enableHtmlFragment;
+      delete stored.enableScriptReuse;
       delete stored.stylePreset;
       return stored;
     },
@@ -379,6 +359,7 @@ export const LYNX_XML_CHAT_ADAPTER = {
         return {
           ...CHAT_PROVIDER_SETTINGS_ADAPTER.conversation.snapshot(settings),
           enableHtmlFragment: settings.enableHtmlFragment !== false,
+          enableScriptReuse: settings.enableScriptReuse !== false,
           stylePreset: settings.stylePreset ?? GENERATION_DEFAULTS.stylePreset,
         };
       },
@@ -392,6 +373,8 @@ export const LYNX_XML_CHAT_ADAPTER = {
             },
           ),
           enableHtmlFragment: saved.enableHtmlFragment ?? true,
+          enableScriptReuse: saved.enableScriptReuse
+            ?? GENERATION_DEFAULTS.enableScriptReuse,
           stylePreset: saved.stylePreset ?? GENERATION_DEFAULTS.stylePreset,
         };
       },
@@ -410,9 +393,19 @@ export const LYNX_XML_CHAT_ADAPTER = {
           'Reuse built-in utility styles with Template or Element PAPI.',
         kind: 'checkbox' as const,
         value: settings.stylePreset === false ? 'off' : 'on',
+      }, {
+        id: 'enableScriptReuse',
+        label: 'ScriptReuse',
+        description:
+          'Reuse lifecycle and event helpers to reduce generated code.',
+        kind: 'checkbox' as const,
+        value: settings.enableScriptReuse === false ? 'off' : 'on',
       }];
     },
     update(settings: ProviderSettings, id: string, next: string) {
+      if (id === 'enableScriptReuse') {
+        return { ...settings, enableScriptReuse: next === 'on' };
+      }
       if (id === 'stylePreset') {
         return {
           ...settings,
@@ -440,15 +433,22 @@ export const LYNX_XML_CHAT_ADAPTER = {
       body: {
         resourceId: 'lynx-xml-create',
         enableHtmlFragment: settings.enableHtmlFragment !== false,
+        enableScriptReuse: settings.enableScriptReuse !== false,
         ...(settings.stylePreset === false
           ? {}
           : { stylePreset: settings.stylePreset ?? 'default' }),
         messages: [{ role: 'user', content: prompt }],
         conversation: {
           ...conversation,
-          history: conversation.history.map(({ role, content }) => ({
+          history: conversation.history.map((
+            { role, content, lynxXmlModelOutput },
+          ) => ({
             role,
-            content,
+            content:
+              settings.enableScriptReuse !== false && role === 'assistant'
+                && lynxXmlModelOutput
+                ? lynxXmlModelOutput
+                : content,
           })),
         },
         ...toProviderRequestOptions(settings),
@@ -471,18 +471,16 @@ export const LYNX_XML_CHAT_ADAPTER = {
         text: 'Streaming Lynx XML from the GenUI server...',
       };
     },
-    progress(text) {
+    progress(_text: string) {
       return {
         kind: 'status',
         tone: 'pending',
         icon: 'spinner',
-        text: `Streaming Lynx XML from the GenUI server... ${
-          formatCharacterCount(text)
-        }`,
+        text: 'Streaming Lynx XML from the GenUI server...',
       };
     },
-    success(output) {
-      return [generatedStatus(output)];
+    success(_output: LynxXmlOutput) {
+      return [generatedStatus()];
     },
     failure(error) {
       return {

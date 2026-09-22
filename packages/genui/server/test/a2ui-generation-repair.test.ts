@@ -37,6 +37,33 @@ const validText = JSON.stringify(
 );
 
 describe('validated A2UI generation repairs', () => {
+  test('returns the first validation failure when Create disables retries', async () => {
+    const generate = rstest.fn().mockResolvedValue({
+      text: 'invalid artifact',
+      finishReason: 'stop',
+      usage: { inputTokens: 10, outputTokens: 20 },
+    });
+    rstest.mocked(createA2UIAgent).mockResolvedValueOnce({
+      agent: { generate } as unknown as A2UIAgent,
+      catalog: BASIC_CATALOG,
+      model: 'test-model',
+    });
+    const result = await new A2UIAgentService().generateValidated(
+      [{ role: 'user', content: 'Build a card' }],
+      {
+        catalog: BASIC_CATALOG,
+        disableAgentCache: true,
+        maxRepairAttempts: 0,
+      },
+    );
+    expect(generate).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({
+      ok: false,
+      attempts: 1,
+      usage: { inputTokens: 10, outputTokens: 20 },
+    });
+  });
+
   test('preserves original conversation and tool scope while resetting failed attempts after length', async () => {
     const initialMessages: ChatMessage[] = [{
       role: 'user',

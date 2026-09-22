@@ -9,6 +9,110 @@ import {
   serializeChatInteraction,
 } from './chatInteraction.js';
 import type { ChatInteractionLog } from './type.js';
+import { readResponseUsage } from '../../utils/modelPricing.js';
+
+test('counts actual model starts independently of parallel responses and timeline eviction', () => {
+  let log: ChatInteractionLog = { entries: [], omittedEntries: 0 };
+  for (let requestIndex = 1; requestIndex <= 45; requestIndex++) {
+    log = appendChatInteraction(log, 'model', requestIndex, {
+      provider: 'jev',
+      requestIndex,
+      status: 'started',
+      phase: 'layout',
+    });
+  }
+  for (let requestIndex = 45; requestIndex >= 1; requestIndex--) {
+    const response = {
+      provider: 'jev',
+      requestIndex,
+      status: requestIndex === 1 ? 'failed' : 'completed',
+      response: { tokenUsage: { inputTokens: 100, outputTokens: 0 } },
+    };
+    log = appendChatInteraction(log, 'model', 100, response);
+    // Per-call diagnostics must not replace the turn's aggregate billing usage.
+    expect(readResponseUsage(response)).toBeUndefined();
+  }
+  log = appendChatInteraction(log, 'error', 101, 'Composition failed');
+  expect(log.entries).toHaveLength(80);
+  expect(log.omittedEntries).toBeGreaterThan(0);
+  expect(log.modelRequestCount).toBe(45);
+  expect(JSON.parse(serializeChatInteraction(log))).toMatchObject({
+    modelRequestCount: 45,
+  });
+  const next = appendChatInteraction(
+    { entries: [], omittedEntries: 0 },
+    'model',
+    0,
+    {
+      provider: 'jev',
+      requestIndex: 1,
+      status: 'started',
+    },
+  );
+  expect(next.modelRequestCount).toBe(1);
+});
+
+test('marks the started event of each model interaction for timeline dividers', () => {
+  let log: ChatInteractionLog = { entries: [], omittedEntries: 0 };
+  log = appendChatInteraction(log, 'request', 0, { model: 'test-model' });
+  log = appendChatInteraction(log, 'model', 1, {
+    provider: 'jev',
+    requestIndex: 1,
+    status: 'started',
+  });
+  log = appendChatInteraction(log, 'model', 2, {
+    provider: 'jev',
+    requestIndex: 1,
+    status: 'completed',
+  });
+  log = appendChatInteraction(log, 'model', 3, {
+    provider: 'jev',
+    requestIndex: 2,
+    status: 'started',
+  });
+  expect(log.entries.map((entry) => entry.modelStart ?? false)).toEqual([
+    false,
+    true,
+    false,
+    true,
+  ]);
+});
+
+test.each(['error', 'done', 'json'])(
+  'keeps %s reasoning separate from the timeline and compact copy payload',
+  event => {
+    const payload = {
+      message: 'Generation failed',
+      validation: { ok: false },
+      reasoning: { text: 'Returned reasoning', truncated: true },
+    };
+    const log = appendChatInteraction(
+      { entries: [], omittedEntries: 0 },
+      event,
+      5,
+      payload,
+    );
+    expect(log.reasoning).toEqual(payload.reasoning);
+    expect(serializeChatInteraction(log)).not.toContain('Returned reasoning');
+    expect(payload.reasoning.text).toBe('Returned reasoning');
+    const next = appendChatInteraction(log, 'error', 6, 'Generation failed');
+    expect(next.reasoning).toEqual(payload.reasoning);
+  },
+);
+
+test('bounds reasoning independently and does not fabricate text from token counts', () => {
+  const empty = { entries: [], omittedEntries: 0 };
+  expect(
+    appendChatInteraction(empty, 'error', 0, {
+      tokenUsage: { reasoningTokens: 100 },
+    }).reasoning,
+  ).toBeUndefined();
+  const log = appendChatInteraction(empty, 'error', 0, {
+    reasoning: { text: 'x'.repeat(65_000) },
+  });
+  expect(log.reasoning?.text).toHaveLength(64_000);
+  expect(log.reasoning?.truncated).toBe(true);
+});
 
 test('collects interleaved deltas in one raw output without duplicating timeline entries', () => {
   const start = appendChatInteraction(

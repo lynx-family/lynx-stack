@@ -26,6 +26,26 @@ function body(groups: unknown[]) {
 }
 
 describe('A2UI Bench request protocol groups', () => {
+  test.each([undefined, false, true, 'true'])(
+    'validates ScriptReuse: %s',
+    enableScriptReuse => {
+      const result = normalizeBenchJobRequest(body([{
+        id: 'xml',
+        protocol: 'lynx-xml',
+        enableScriptReuse,
+      }]));
+      if (typeof enableScriptReuse === 'string') {
+        expect(result).toMatchObject({ ok: false, status: 400 });
+      } else {
+        expect(result.ok).toBe(true);
+        if (result.ok) {
+          expect(result.request.groups[0]?.enableScriptReuse).toBe(
+            enableScriptReuse === true,
+          );
+        }
+      }
+    },
+  );
   test.each([false, true])(
     'validates the independent XML style preset (Template=%s)',
     enableHtmlFragment => {

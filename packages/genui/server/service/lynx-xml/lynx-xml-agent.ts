@@ -2,10 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import {
-  applyLynxXmlStylePreset,
-  compileLynxXmlFragment,
-} from '@lynx-js/genui-lynx-xml';
+import { assembleLynxXmlArtifact } from '@lynx-js/genui-lynx-xml';
 
 import { initializeArkImageGenerationRunScope } from '../../agent/common/ark-image-generation-tool.js';
 import { createSearchRunScope } from '../../agent/common/doubao-search-tool.js';
@@ -26,6 +23,7 @@ import {
   sumContentChars,
   toModelMessages,
 } from '../common/messages.js';
+import { withTextModelInteraction } from '../common/model-interaction.js';
 import {
   ProviderAgentCache,
   buildOpenAIRunOptions,
@@ -54,7 +52,7 @@ export interface LynxXmlGenerationMetadata extends Record<string, unknown> {
   xmlFragment?: string;
 }
 
-const LYNX_XML_MAX_GENERATION_ATTEMPTS = 3;
+const LYNX_XML_MAX_GENERATION_ATTEMPTS = 1;
 
 /** Initialize capability budgets once for all attempts in one request. */
 function createLynxXmlRunScope(): SearchRunScope {
@@ -74,6 +72,7 @@ function buildLynxXmlScopedRunOptions(
     ...buildOpenAIRunOptions(opts, abortSignal, maxOutputTokens),
     ...createAgentStepLogger(opts, 'lynx-xml', {
       enableHtmlFragment: opts.enableHtmlFragment === true,
+      enableScriptReuse: opts.enableScriptReuse === true,
       enableStylePreset: opts.stylePreset === 'default',
     }),
     requestContext: scope.requestContext,
@@ -85,18 +84,22 @@ function compileGeneration(
   opts: LynxXmlChatOptions,
 ): { text: string; metadata: LynxXmlGenerationMetadata } {
   try {
-    const compiled = opts.enableHtmlFragment === true
-      ? compileLynxXmlFragment(extractLynxXmlArtifact(result.text), {
-        stylePreset: opts.stylePreset ?? false,
-      })
-      : {
-        text: opts.stylePreset
-          ? applyLynxXmlStylePreset(
-            extractLynxXmlArtifact(result.text),
-            opts.stylePreset,
-          )
-          : result.text,
-      };
+    const startedAt = performance.now();
+    const compiled =
+      opts.enableHtmlFragment === true || opts.enableScriptReuse === true
+        || opts.stylePreset
+        ? assembleLynxXmlArtifact(extractLynxXmlArtifact(result.text), {
+          enableHtmlFragment: opts.enableHtmlFragment === true,
+          enableScriptReuse: opts.enableScriptReuse === true,
+          stylePreset: opts.stylePreset ?? false,
+        })
+        : { text: result.text };
+    opts.onPerformanceEvent?.('agent.artifact.assembled', {
+      durationMs: performance.now() - startedAt,
+      modelOutputChars: result.text.length,
+      artifactChars: compiled.text.length,
+      enableScriptReuse: opts.enableScriptReuse === true,
+    });
     return {
       text: compiled.text,
       metadata: {
@@ -104,6 +107,7 @@ function compileGeneration(
           ? { xmlFragment: compiled.xmlFragment }
           : {}),
         modelOutput: result.text,
+        ...(opts.enableScriptReuse ? { enableScriptReuse: true } : {}),
         ...(opts.stylePreset ? { stylePreset: opts.stylePreset } : {}),
       },
     };
@@ -120,6 +124,7 @@ export default class LynxXmlAgentService {
       createLynxXmlAgent({
         ...pickAgentCapabilityConfig(opts),
         enableHtmlFragment: opts.enableHtmlFragment,
+        enableScriptReuse: opts.enableScriptReuse,
         stylePreset: opts.stylePreset,
         enableDesignGuidance: opts.enableDesignGuidance,
       }).agent;
@@ -130,7 +135,8 @@ export default class LynxXmlAgentService {
       (opts.enableHtmlFragment === true
         ? 'html-fragment-enabled'
         : 'html-fragment-disabled')
-        + `:style-${opts.stylePreset === 'default' ? 'default' : 'off'}`,
+        + `:style-${opts.stylePreset === 'default' ? 'default' : 'off'}`
+        + `:script-${opts.enableScriptReuse === true ? 'on' : 'off'}`,
     );
   }
 
@@ -216,37 +222,47 @@ export default class LynxXmlAgentService {
       opts,
       maxOutputTokens,
     );
-    const streamResult = await this.streamWithScope(
-      preparedMessages,
-      opts,
+    return withTextModelInteraction(
+      opts.onModelInteraction,
       abortSignal,
-      scope,
-    );
-    return recoverTextGeneration({
-      initialMessages: preparedMessages,
-      initialResult: streamResult,
-      maxAttempts: LYNX_XML_MAX_GENERATION_ATTEMPTS,
-      reasoningRecovery: retrySettings
-        ? { maxOutputTokens, retrySettings }
-        : undefined,
-      stream: (nextMessages, settings) =>
-        this.streamWithScope(
-          nextMessages,
-          settings
-            ? { ...opts, reasoningEffort: settings.reasoningEffort }
-            : opts,
+      async () => {
+        const streamResult = await this.streamWithScope(
+          preparedMessages,
+          opts,
           abortSignal,
           scope,
-          settings?.maxOutputTokens,
-        ),
-      postprocess: result => {
-        const artifact = compileGeneration(result, opts);
-        return { ...artifact, text: normalizeLynxXmlArtifact(artifact.text) };
+        );
+        return recoverTextGeneration({
+          initialMessages: preparedMessages,
+          initialResult: streamResult,
+          maxAttempts: LYNX_XML_MAX_GENERATION_ATTEMPTS,
+          reasoningRecovery: retrySettings
+            ? { maxOutputTokens, retrySettings }
+            : undefined,
+          stream: (nextMessages, settings) =>
+            this.streamWithScope(
+              nextMessages,
+              settings
+                ? { ...opts, reasoningEffort: settings.reasoningEffort }
+                : opts,
+              abortSignal,
+              scope,
+              settings?.maxOutputTokens,
+            ),
+          postprocess: result => {
+            const artifact = compileGeneration(result, opts);
+            return {
+              ...artifact,
+              text: normalizeLynxXmlArtifact(artifact.text),
+            };
+          },
+          canContinue: text =>
+            /<lynx\b/u.test(text) && !text.includes('</lynx>'),
+          abortSignal,
+          onPerformanceEvent: opts.onPerformanceEvent,
+        });
       },
-      canContinue: text => /<lynx\b/u.test(text) && !text.includes('</lynx>'),
-      abortSignal,
-      onPerformanceEvent: opts.onPerformanceEvent,
-    });
+    );
   }
 
   public async generateRaw(

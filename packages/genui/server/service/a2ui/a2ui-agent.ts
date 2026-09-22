@@ -2,6 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import {
+  generateJevComposition,
+  streamJevComposition,
+} from './jev-composition.js';
 import { createA2UIAgent } from '../../agent/a2ui/a2ui-agent.js';
 import type { A2UIAgent } from '../../agent/a2ui/a2ui-agent.js';
 import type { A2UICatalog } from '../../agent/a2ui/a2ui-catalog.js';
@@ -20,6 +24,7 @@ import type {
   A2UIMessage,
   ValidationOptions,
 } from '../../agent/a2ui/a2ui-validator.js';
+import type { HostedMcpAppResource } from '../../agent/a2ui/jev-candidates.js';
 import type { ArkImageGenerationRunScope } from '../../agent/common/ark-image-generation-tool.js';
 import {
   createArkImageGenerationRunScope,
@@ -33,11 +38,13 @@ import {
 import { createAgentStepLogger } from '../common/agent-step-logger.js';
 import { readBenchTokenUsage } from '../common/bench/usage.js';
 import { buildGenerationRepairMessages } from '../common/generation-repair.js';
+import { resolveJevModel } from '../common/jev-provider.js';
 import {
   buildConversationMessages,
   sumContentChars,
   toModelMessages,
 } from '../common/messages.js';
+import { withTextModelInteraction } from '../common/model-interaction.js';
 import {
   ProviderAgentCache,
   buildOpenAIRunOptions,
@@ -62,6 +69,8 @@ import type {
 export interface A2UIChatOptions extends ChatOptions {
   catalog?: A2UICatalog | undefined;
   maxRepairAttempts?: number | undefined;
+  /** Jev resources resolved and authorized by the host; never copied from HTTP request bodies. */
+  hostedMcpApps?: readonly HostedMcpAppResource[] | undefined;
 }
 
 export interface A2UIResponse {
@@ -212,6 +221,9 @@ export default class A2UIAgentService {
       finishReason: unknown;
     }>;
   }> {
+    if (resolveJevModel(opts)) {
+      return streamJevComposition(messages, opts, conversation, abortSignal);
+    }
     const buildConversationStartedAt = performance.now();
     const preparedMessages = buildConversationMessages(
       messages,
@@ -228,113 +240,121 @@ export default class A2UIAgentService {
       preparedMessageCount: preparedMessages.length,
       preparedContentChars: sumContentChars(preparedMessages),
     });
-    const started = await this.startStream(
-      preparedMessages,
-      opts,
+    return withTextModelInteraction(
+      opts.onModelInteraction,
       abortSignal,
-      imageGenerationScope,
-    );
-    let resolveFinal!: (value: CompletedA2UIRun) => void;
-    let rejectFinal!: (reason?: unknown) => void;
-    const finalResult = new Promise<CompletedA2UIRun>((resolve, reject) => {
-      resolveFinal = resolve;
-      rejectFinal = reject;
-    });
-    void finalResult.catch(() => undefined);
-    let consumed = false;
-    let finalSettled = false;
+      async () => {
+        const started = await this.startStream(
+          preparedMessages,
+          opts,
+          abortSignal,
+          imageGenerationScope,
+        );
+        let resolveFinal!: (value: CompletedA2UIRun) => void;
+        let rejectFinal!: (reason?: unknown) => void;
+        const finalResult = new Promise<CompletedA2UIRun>((resolve, reject) => {
+          resolveFinal = resolve;
+          rejectFinal = reject;
+        });
+        void finalResult.catch(() => undefined);
+        let consumed = false;
+        let finalSettled = false;
 
-    return {
-      textStream: {
-        [Symbol.asyncIterator]: async function*() {
-          if (consumed) {
-            throw new Error('A2UI agent stream can only be consumed once');
-          }
-          consumed = true;
-          const phaseTexts: string[] = [];
-          let result = started.result;
-
-          try {
-            while (true) {
-              let streamedPhaseText = '';
-              for await (const chunk of toAsyncIterable(result.textStream)) {
-                streamedPhaseText += chunk;
-                yield chunk;
+        return {
+          textStream: {
+            [Symbol.asyncIterator]: async function*() {
+              if (consumed) {
+                throw new Error('A2UI agent stream can only be consumed once');
               }
+              consumed = true;
+              const phaseTexts: string[] = [];
+              let result = started.result;
 
-              const metadata = await finalizeResult(result);
-              const phaseText = streamedPhaseText.trim()
-                ? streamedPhaseText
-                : metadata.text ?? await extractText(result);
-              if (phaseText) phaseTexts.push(phaseText);
-              if (!isSuspended(metadata.finishReason)) {
-                const completed = {
-                  text: canonicalA2UIText(phaseTexts),
-                  usage: metadata.usage,
-                  finishReason: metadata.finishReason,
-                };
-                finalSettled = true;
-                resolveFinal(completed);
-                return;
-              }
+              try {
+                while (true) {
+                  let streamedPhaseText = '';
+                  for await (
+                    const chunk of toAsyncIterable(result.textStream)
+                  ) {
+                    streamedPhaseText += chunk;
+                    yield chunk;
+                  }
 
-              const suspended = await extractSuspension(result);
-              if (!suspended.runId) {
-                throw new Error(
-                  'Suspended image generation did not provide an agent runId',
-                );
-              }
-              opts.onPerformanceEvent?.('image_generation.suspended', {
-                runId: suspended.runId,
-              });
-              const waitStartedAt = performance.now();
-              const resumeData = await waitForPendingArkImageGeneration(
-                imageGenerationScope,
-                suspended.suspendPayload,
-              );
-              abortSignal?.throwIfAborted();
-              opts.onPerformanceEvent?.('image_generation.completed', {
-                durationMs: performance.now() - waitStartedAt,
-                ok: resumeData.ok,
-              });
+                  const metadata = await finalizeResult(result);
+                  const phaseText = streamedPhaseText.trim()
+                    ? streamedPhaseText
+                    : metadata.text ?? await extractText(result);
+                  if (phaseText) phaseTexts.push(phaseText);
+                  if (!isSuspended(metadata.finishReason)) {
+                    const completed = {
+                      text: canonicalA2UIText(phaseTexts),
+                      usage: metadata.usage,
+                      finishReason: metadata.finishReason,
+                    };
+                    finalSettled = true;
+                    resolveFinal(completed);
+                    return;
+                  }
 
-              yield '\n';
-              const resumeStartedAt = performance.now();
-              result = await started.agent.resumeStream(
-                resumeData,
-                {
-                  ...buildA2UIRunOptions(
-                    opts,
-                    abortSignal,
+                  const suspended = await extractSuspension(result);
+                  if (!suspended.runId) {
+                    throw new Error(
+                      'Suspended image generation did not provide an agent runId',
+                    );
+                  }
+                  opts.onPerformanceEvent?.('image_generation.suspended', {
+                    runId: suspended.runId,
+                  });
+                  const waitStartedAt = performance.now();
+                  const resumeData = await waitForPendingArkImageGeneration(
                     imageGenerationScope,
-                  ),
-                  runId: suspended.runId,
-                  ...(suspended.toolCallId
-                    ? { toolCallId: suspended.toolCallId }
-                    : {}),
-                },
-              ) as MastraStreamResult;
-              opts.onPerformanceEvent?.('agent.stream.resume.completed', {
-                durationMs: performance.now() - resumeStartedAt,
-                hasTextStream: Boolean(result.textStream),
-              });
-            }
-          } catch (error) {
-            finalSettled = true;
-            rejectFinal(error);
-            throw error;
-          } finally {
-            if (!finalSettled) {
-              finalSettled = true;
-              rejectFinal(
-                new Error('A2UI agent stream ended before completion'),
-              );
-            }
-          }
-        },
+                    suspended.suspendPayload,
+                  );
+                  abortSignal?.throwIfAborted();
+                  opts.onPerformanceEvent?.('image_generation.completed', {
+                    durationMs: performance.now() - waitStartedAt,
+                    ok: resumeData.ok,
+                  });
+
+                  yield '\n';
+                  const resumeStartedAt = performance.now();
+                  result = await started.agent.resumeStream(
+                    resumeData,
+                    {
+                      ...buildA2UIRunOptions(
+                        opts,
+                        abortSignal,
+                        imageGenerationScope,
+                      ),
+                      runId: suspended.runId,
+                      ...(suspended.toolCallId
+                        ? { toolCallId: suspended.toolCallId }
+                        : {}),
+                    },
+                  ) as MastraStreamResult;
+                  opts.onPerformanceEvent?.('agent.stream.resume.completed', {
+                    durationMs: performance.now() - resumeStartedAt,
+                    hasTextStream: Boolean(result.textStream),
+                  });
+                }
+              } catch (error) {
+                finalSettled = true;
+                rejectFinal(error);
+                throw error;
+              } finally {
+                if (!finalSettled) {
+                  finalSettled = true;
+                  rejectFinal(
+                    new Error('A2UI agent stream ended before completion'),
+                  );
+                }
+              }
+            },
+          },
+          finalize: () => finalResult,
+        };
       },
-      finalize: () => finalResult,
-    };
+    );
   }
 
   public async generate(
@@ -420,6 +440,9 @@ export default class A2UIAgentService {
     abortSignal?: AbortSignal,
     imageGenerationScope = createArkImageGenerationRunScope(),
   ): Promise<{ text: string; usage: unknown; finishReason: unknown }> {
+    if (resolveJevModel(opts)) {
+      return generateJevComposition(messages, opts, conversation, abortSignal);
+    }
     abortSignal?.throwIfAborted();
     const agent = await this.getAgent(opts);
     abortSignal?.throwIfAborted();
@@ -446,7 +469,21 @@ export default class A2UIAgentService {
   ): Promise<A2UIResponse> {
     abortSignal?.throwIfAborted();
     const catalog = opts.catalog ?? await loadBasicCatalog();
-    const maxAttempts = Math.max(1, opts.maxRepairAttempts ?? 2) + 1;
+    if (resolveJevModel(opts)) {
+      const result = await generateJevComposition(
+        messages,
+        { ...opts, catalog },
+        conversation,
+        abortSignal,
+      );
+      const validation = validateA2UIOutput(
+        result.text,
+        catalog,
+        validationOptions,
+      );
+      return { ...result, ...validation, attempts: 1 };
+    }
+    const maxAttempts = Math.max(0, opts.maxRepairAttempts ?? 0) + 1;
     const agent = await this.getAgent({ ...opts, catalog });
     abortSignal?.throwIfAborted();
 

@@ -116,6 +116,12 @@ function clonePreviewPerformanceMetrics(
   if (typeof value.fcpMs === 'number') next.fcpMs = value.fcpMs;
   if (typeof value.fmpMs === 'number') next.fmpMs = value.fmpMs;
   if (typeof value.ttiMs === 'number') next.ttiMs = value.ttiMs;
+  if (
+    typeof value.generationMs === 'number'
+    && Number.isFinite(value.generationMs) && value.generationMs >= 0
+  ) {
+    next.generationMs = value.generationMs;
+  }
   if (typeof value.agentOutputMs === 'number') {
     next.agentOutputMs = value.agentOutputMs;
   }
@@ -126,7 +132,10 @@ function clonePreviewPerformanceMetrics(
 function truncateConversationHistory(
   history: ModelChatMessage[],
 ): ModelChatMessage[] {
-  const byTurns = history.filter(message => !message.generationError).slice(
+  const byTurns = history.filter((message, index) =>
+    !message.generationError
+    && !(message.role === 'user' && history[index + 1]?.generationError)
+  ).slice(
     -MAX_CONVERSATION_TURNS * 2,
   );
   let totalChars = 0;

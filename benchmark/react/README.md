@@ -6,7 +6,10 @@ through `createBenchmarkConfig(true)`. The initial ET cases cover four-layer
 view hydration (`007`) and full attribute updates with `useState` (`018`).
 
 Snapshot metric names stay unchanged. ET profile, update, and script-loading
-metrics use the `benchmark/react/et` prefix so each backend has its own baseline.
+metrics use the `benchmark/react/et` path and an `et-` case-name prefix (for
+example, `et-007-four-layer-views-hydrate`) so the backend is visible in CodSpeed
+reports as well as having its own baseline. Renaming the ET cases creates new
+benchmark identities; results recorded under the previous names remain separate.
 Internal profiling spans are backend-specific; equal workload does not imply
 that individual Snapshot and ET spans measure equivalent work.
 

@@ -109,7 +109,7 @@ beforeEach(() => {
 });
 
 test.each([false, true])(
-  'real Mastra streaming continues truncated XML before final compilation (fragment=%s)',
+  'real Mastra streaming returns truncated XML errors without continuation (fragment=%s)',
   async enableHtmlFragment => {
     const document = enableHtmlFragment ? INTERMEDIATE : DIRECT;
     const split = document.indexOf('const page') + 'const pa'.length;
@@ -137,44 +137,19 @@ test.each([false, true])(
     let streamed = '';
     for await (const chunk of stream.textStream) streamed += chunk;
     expect(streamed).toBe(prefix);
-    const final = await stream.finalize();
-    expect(final.metadata).toMatchObject({
-      modelOutput: document,
-      generationAttempts: [
-        { mode: 'initial', finishReason: 'length' },
-        { mode: 'continue', finishReason: 'stop' },
-      ],
+    await expect(stream.finalize()).rejects.toMatchObject({
+      result: { text: prefix, finishReason: 'length', usage: USAGE },
     });
-    if (enableHtmlFragment) {
-      expect(final.metadata.xmlFragment).toBe(FRAGMENT);
-      expect(final.text).toContain('__CreateView(pageId)');
-      expect(final.text).not.toContain('<template>');
-    } else {
-      expect(final.text).toBe(DIRECT);
-    }
-    expect(final.text).toMatch(/<\/lynx>$/);
-    expect(final.usage).toMatchObject({
-      inputTokens: 24,
-      outputTokens: 16,
-      totalTokens: 40,
-    });
-    expect(calls).toHaveLength(2);
-    expect(calls[1]).toContain('Make a weather card for Hangzhou.');
-    expect(calls[1]).toContain('Continue the same artifact');
-    expect(budgets).toEqual([16_384, 16_384]);
+    expect(calls).toHaveLength(1);
+    expect(budgets).toEqual([32_768]);
     expect(createLLMProvider).toHaveBeenCalledTimes(1);
-    expect(log).toHaveBeenCalledWith('agent.recovery.started', {
-      attempt: 2,
-      maxAttempts: 3,
-      mode: 'continue',
-      previousFinishReason: 'length',
-      previousOutputChars: prefix.length,
-    });
+    expect(log.mock.calls.some(([event]) => event === 'agent.recovery.started'))
+      .toBe(false);
   },
 );
 
 test.each([false, true])(
-  'real Mastra streaming recovers an empty token-limited response (fragment=%s)',
+  'real Mastra streaming returns empty token-limit errors without regeneration (fragment=%s)',
   async enableHtmlFragment => {
     queued = [{ text: '', finishReason: 'length' }];
     const service = new LynxXmlAgentService();
@@ -184,23 +159,11 @@ test.each([false, true])(
       enableImageGeneration: false,
     });
     for await (const _chunk of stream.textStream) { /* drain */ }
-    const final = await stream.finalize();
-    expect(final.text).toMatch(/<\/lynx>$/);
-    expect(final.metadata).toMatchObject({
-      modelOutput: enableHtmlFragment ? INTERMEDIATE : DIRECT,
-      generationAttempts: [
-        { mode: 'initial', finishReason: 'length' },
-        { mode: 'regenerate', finishReason: 'stop' },
-      ],
+    await expect(stream.finalize()).rejects.toMatchObject({
+      result: { text: '', finishReason: 'length', usage: USAGE },
     });
-    expect(final.usage).toMatchObject({
-      inputTokens: 24,
-      outputTokens: 16,
-      totalTokens: 40,
-    });
-    expect(calls).toHaveLength(2);
-    expect(calls[1]).toContain('Regenerate a shorter');
-    expect(budgets).toEqual([16_384, 16_384]);
+    expect(calls).toHaveLength(1);
+    expect(budgets).toEqual([32_768]);
   },
 );
 
@@ -374,4 +337,65 @@ test('keeps token-limit failures actionable', () => {
   });
   expect(error.message).toContain('token limit');
   expect(error.result.usage).toEqual(USAGE);
+});
+
+test.each(['generate', 'stream'] as const)(
+  '%s isolates all ScriptReuse/Template/StylePreset variants and retains raw evidence',
+  async mode => {
+    const service = new LynxXmlAgentService();
+    for (const enableHtmlFragment of [false, true]) {
+      for (const stylePreset of [false, 'default'] as const) {
+        for (const enableScriptReuse of [false, true, false, true]) {
+          override = enableScriptReuse
+            ? `<!doctype lynx><lynx engine-version="4.2">${
+              enableHtmlFragment ? `<template>${FRAGMENT}</template>` : ''
+            }<script thread="main">definePage({render(ctx) { __SetClasses(ctx.page, "flex flex-col p-4"); }});</script></lynx>`
+            : (enableHtmlFragment ? INTERMEDIATE : DIRECT);
+          const options = {
+            enableHtmlFragment,
+            stylePreset,
+            enableScriptReuse,
+            enableWebSearch: false,
+            enableImageGeneration: false,
+          };
+          let result;
+          if (mode === 'generate') {
+            result = await service.generateRaw([], options);
+          } else {
+            const stream = await service.streamAsAsyncIterable([], options);
+            let raw = '';
+            for await (const chunk of stream.textStream) raw += chunk;
+            expect(raw).toBe(override);
+            result = await stream.finalize();
+          }
+          expect(result.metadata.modelOutput).toBe(override);
+          expect(result.metadata.enableScriptReuse).toBe(
+            enableScriptReuse || undefined,
+          );
+          expect(result.text?.includes('function definePage')).toBe(
+            enableScriptReuse,
+          );
+          expect(calls.at(-1)?.includes('ScriptReuse is enabled')).toBe(
+            enableScriptReuse,
+          );
+          expect(result.usage).toMatchObject(USAGE);
+        }
+      }
+    }
+    expect(createLLMProvider).toHaveBeenCalledTimes(8);
+    expect(calls).toHaveLength(16);
+  },
+);
+
+test('ScriptReuse failure preserves usage without a hidden model retry', async () => {
+  override = DIRECT;
+  await expect(new LynxXmlAgentService().generateRaw([], {
+    enableScriptReuse: true,
+    enableWebSearch: false,
+    enableImageGeneration: false,
+  })).rejects.toMatchObject({
+    name: 'GenerationPostprocessError',
+    result: { text: DIRECT, usage: USAGE, finishReason: 'stop' },
+  });
+  expect(calls).toHaveLength(1);
 });

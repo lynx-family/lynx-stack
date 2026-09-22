@@ -109,77 +109,65 @@ fn max_attr_slot_index(value: &serde_json::Value) -> Option<usize> {
 }
 
 fn first_attribute_slots_len(code: &str) -> Option<usize> {
-  let prefix = "attributeSlots={[";
-  let start = code.find(prefix)? + prefix.len();
-  let mut square_depth = 0usize;
-  let mut brace_depth = 0usize;
-  let mut paren_depth = 0usize;
-  let mut quote: Option<char> = None;
-  let mut escape = false;
-  let mut has_content = false;
-  let mut len = 1usize;
+  use std::sync::Arc;
+  use swc_core::common::{FileName, SourceMap};
+  use swc_core::ecma::{
+    ast::*,
+    parser::{lexer::Lexer, Parser, StringInput},
+    visit::{Visit, VisitWith},
+  };
 
-  for ch in code[start..].chars() {
-    if let Some(quote_ch) = quote {
-      if escape {
-        escape = false;
-        continue;
+  #[derive(Default)]
+  struct SlotInput(Option<usize>);
+  impl Visit for SlotInput {
+    fn visit_jsx_attr(&mut self, attr: &JSXAttr) {
+      if let JSXAttrName::Ident(name) = &attr.name {
+        if name.sym == "attributeSlots" && self.0.is_none() {
+          if let Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
+            expr: JSXExpr::Expr(expr),
+            ..
+          })) = &attr.value
+          {
+            if let Expr::Array(array) = &**expr {
+              self.0 = Some(array.elems.len());
+            }
+          }
+        }
       }
-      if ch == '\\' {
-        escape = true;
-        continue;
-      }
-      if ch == quote_ch {
-        quote = None;
-      }
-      continue;
+      attr.visit_children_with(self);
     }
-
-    match ch {
-      '\'' | '"' | '`' => {
-        has_content = true;
-        quote = Some(ch);
-      }
-      '[' => {
-        has_content = true;
-        square_depth += 1;
-      }
-      ']' if square_depth == 0 && brace_depth == 0 && paren_depth == 0 => {
-        return Some(if has_content { len } else { 0 });
-      }
-      ']' => {
-        if square_depth == 0 {
-          return None;
+    fn visit_call_expr(&mut self, call: &CallExpr) {
+      if let Callee::Expr(callee) = &call.callee {
+        if let Expr::Member(member) = &**callee {
+          if matches!(&member.prop, MemberProp::Ident(name) if name.sym == "__etHost")
+            && self.0.is_none()
+          {
+            if let Expr::Array(array) = &*call.args[4].expr {
+              self.0 = Some(array.elems.len());
+            }
+          }
         }
-        square_depth -= 1;
       }
-      '{' => {
-        has_content = true;
-        brace_depth += 1;
-      }
-      '}' => {
-        if brace_depth == 0 {
-          return None;
-        }
-        brace_depth -= 1;
-      }
-      '(' => {
-        has_content = true;
-        paren_depth += 1;
-      }
-      ')' => {
-        if paren_depth == 0 {
-          return None;
-        }
-        paren_depth -= 1;
-      }
-      ',' if square_depth == 0 && brace_depth == 0 && paren_depth == 0 => len += 1,
-      ch if !ch.is_whitespace() => has_content = true,
-      _ => {}
+      call.visit_children_with(self);
     }
   }
-
-  None
+  let cm = Arc::<SourceMap>::default();
+  let file = cm.new_source_file(FileName::Anon.into(), code.to_string());
+  let lexer = Lexer::new(
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    Default::default(),
+    StringInput::from(&*file),
+    None,
+  );
+  let module = Parser::new_from(lexer)
+    .parse_module()
+    .expect("valid generated code");
+  let mut slots = SlotInput::default();
+  module.visit_with(&mut slots);
+  slots.0
 }
 
 fn assert_attribute_slots_match_template(code: &str, templates: &[ElementTemplateAsset]) {
@@ -779,9 +767,9 @@ fn should_reuse_same_content_template_id_and_asset_in_one_module() {
     "same content should emit one template id const:\n{code}"
   );
   assert_eq!(
-    code.matches(&format!("<{template_id}")).count(),
+    code.matches(&format!("__etHost({template_id},")).count(),
     2,
-    "both JSX usages should reference the reused template id exactly once each:\n{code}"
+    "both host calls should reference the reused template id exactly once each:\n{code}"
   );
 }
 
@@ -1203,5 +1191,21 @@ fn should_warn_and_override_nested_dynamic_user_css_id_attr_without_reserving_sl
     &template["children"][0],
     100.0,
     "nested dynamic user css-id should be replaced by the framework css-id",
+  );
+}
+
+#[test]
+fn should_lower_lepus_hosts_in_component_children_and_jsx_valued_props() {
+  let (code, templates) = transform_to_code_and_templates(
+    r#"const result = <Wrapper first=<view id={first()} /> second={<view id={second()} />}><view key={key()} id={third()} /></Wrapper>;"#,
+    element_template_config(),
+  );
+  assert_eq!(user_templates(&templates).len(), 1, "{code}");
+  assert_eq!(code.matches(".__etHost(").count(), 3, "{code}");
+  assert!(!code.contains("<_et_"), "{code}");
+  assert!(!code.contains("attributeSlots="), "{code}");
+  assert!(
+    code.contains("key(), ["),
+    "key evaluation must precede attributes: {code}"
   );
 }

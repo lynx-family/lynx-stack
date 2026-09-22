@@ -4,6 +4,8 @@
 
 import { describe, expect, test } from '@rstest/core';
 
+import styleReference from '@lynx-js/skill-vanilla-lynx/references/style.md?raw';
+
 import {
   LYNX_XML_ENGINE_VERSION,
   LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS,
@@ -119,6 +121,33 @@ describe('buildLynxXmlSystemPrompt', () => {
       'globalThis.processData',
     );
   });
+
+  test.each([
+    { enableHtmlFragment: false, stylePreset: false as const },
+    { enableHtmlFragment: true, stylePreset: false as const },
+    { enableHtmlFragment: false, stylePreset: 'default' as const },
+    { enableHtmlFragment: true, stylePreset: 'default' as const },
+  ])(
+    'preserves complete CSS property constraints without code examples (%j)',
+    options => {
+      const propertyLists = [
+        ...styleReference.matchAll(/```text\n([\s\S]*?)\n```/gu),
+      ]
+        .map(match => match[1]!);
+      expect(propertyLists).toHaveLength(2);
+
+      const prompt = buildLynxXmlSystemPrompt(options);
+      const section = prompt.split('#### CSS Property Allowlist\n')[1]!
+        .split('#### Responsive Sizing')[0]!;
+      const [allowed, forbidden] = section.split(
+        'Never emit these properties:',
+      );
+      expect(allowed).toContain(propertyLists[0]);
+      expect(forbidden).toContain(propertyLists[1]);
+      expect(prompt).not.toContain('```');
+      expect(prompt).not.toContain('.page-root {');
+    },
+  );
 
   test('adds the Lynx XML artifact and runtime adaptation contracts', () => {
     expect(LYNX_XML_SYSTEM_PROMPT).toContain('Return only the raw artifact');

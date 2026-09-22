@@ -7,6 +7,8 @@ import { Hono } from 'hono';
 import { validateConversation, validateMessages } from './chat-validation.js';
 import { jsonWithCors } from './cors.js';
 import { errorMessage } from './errors.js';
+import { createFailureReasoning } from './failure-reasoning.js';
+import { createGenerationTiming } from './generation-timing.js';
 import { pickProviderOptions } from './provider-options.js';
 import { checkRateLimit, rateLimitSseResponse } from './rate-limit.js';
 import { readJsonBodyWithLimit } from './request.js';
@@ -128,9 +130,17 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
       status: 400,
     });
   }
+  const reasoning = createFailureReasoning([
+    parsed.body.apiKey,
+    parsed.body.baseURL,
+  ]);
   const opts = {
     ...pickProviderOptions(parsed.body),
+    ...(typeof parsed.body.enableDesignGuidance === 'boolean'
+      ? { enableDesignGuidance: parsed.body.enableDesignGuidance }
+      : {}),
     ...(protocolOptions?.ok ? protocolOptions.options : {}),
+    onReasoning: reasoning.append,
     onPerformanceEvent: (event: string, details = {}) => {
       log(event, details);
     },
@@ -186,12 +196,18 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
       };
 
       const run = async () => {
+        const timing = createGenerationTiming();
         try {
           const connectStartedAt = performance.now();
           log('agent.connect.started');
           const { textStream, finalize } = await service.streamAsAsyncIterable(
             validated.messages,
-            opts,
+            {
+              ...opts,
+              onModelInteraction: event => {
+                enqueue('model', event);
+              },
+            },
             validatedConversation.conversation,
             generationController.signal,
           );
@@ -261,6 +277,7 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
             requestId,
           });
           enqueue('done', {
+            metrics: timing.finish(),
             ok: true,
             text: finalText,
             ...(metadata ? { metadata } : {}),
@@ -280,12 +297,13 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
           }
           if (!closed && !generationController.signal.aborted) {
             const payload = {
+              metrics: timing.finish(),
               ...errorMessage(error, errorOptions),
               ...(resultMetadata ?? {}),
               tokenUsage: extractTokenUsage(resultMetadata?.usage),
             };
             log('error.enqueued', payload);
-            enqueue('error', payload);
+            enqueue('error', { ...payload, ...reasoning.payload() });
           }
         } finally {
           req.signal.removeEventListener('abort', onRequestAbort);

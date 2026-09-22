@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { ModelInteraction } from './model-interaction.js';
 import type { ImageGenerationCapabilityOptions } from '../../agent/common/image-generation-capability.js';
 import type { SearchCapabilityOptions } from '../../agent/common/search-capability.js';
 
@@ -34,7 +35,7 @@ export interface ChatOptions
   model?: string | undefined;
   api?: 'chat' | 'responses' | undefined;
   reasoningEffort?: OpenAIReasoningEffort | undefined;
-  /** SDK retries per model call; Bench owns retries and explicitly sets zero. */
+  /** Extra SDK retries per model call; defaults to zero. Bench owns retries. */
   maxRetries?: number | undefined;
   /** Do not retain request-scoped provider credentials in the shared cache. */
   disableAgentCache?: boolean | undefined;
@@ -43,6 +44,10 @@ export interface ChatOptions
    * reasoningEffort from the selected GENUI_MODEL_CONFIG_JSON entry.
    */
   inheritReasoningEffort?: boolean | undefined;
+  /** Provider-returned reasoning text for request-scoped failure details, not logs. */
+  onReasoning?: (text: string) => void;
+  /** Sanitized diagnostics for actual composition-provider calls. */
+  onModelInteraction?: (event: ModelInteraction) => void;
   onPerformanceEvent?: (
     event: string,
     details?: Record<string, unknown>,

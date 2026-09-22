@@ -163,7 +163,7 @@ export function resolveReasoningEffort(
 }
 
 /** Shared per-call generation target, further bounded by the selected model. */
-export const DEFAULT_AGENT_MAX_OUTPUT_TOKENS = 16_384;
+export const DEFAULT_AGENT_MAX_OUTPUT_TOKENS = 32_768;
 
 export function resolveModelOutputTokenBudget(
   opts: ChatOptions,
@@ -238,8 +238,13 @@ export function buildOpenAIRunOptions(
         }
         : undefined,
     }),
+    // Mastra can continue on `other` after reasoning-only output. Only tool
+    // calls justify another model step; retain each agent's maxSteps bound.
+    stopWhen: ({ steps }: {
+      steps: readonly { toolCalls: readonly unknown[] }[];
+    }) => steps.at(-1)?.toolCalls.length === 0,
     modelSettings: {
-      ...pickDefined({ maxRetries: opts.maxRetries }),
+      maxRetries: opts.maxRetries ?? 0,
       maxOutputTokens: resolveModelOutputTokenBudget(
         opts,
         desiredMaxOutputTokens,

@@ -2,6 +2,20 @@
 
 Rspeedy comes with a lightweight CLI that includes commands such as `dev` and `build`.
 
+## Using the global Rspeedy version
+
+You can invoke Rspeedy using `npx rspeedy`, but it's more convenient to also install it globally so that it's always available in your shell `PATH`:
+
+```bash
+# Install the Rspeedy globally
+npm install --global @lynx-js/rspeedy
+```
+
+:::info What if the globally installed Rspeedy binary is the wrong version?
+
+Just like [Rush](https://rushstack.io/), Rspeedy implements a "version selector" feature that will automatically discover your local `node_modules` folder and invoke `./node_modules/.bin/rspeedy`, ensuring that the correct version is used.
+:::
+
 ## Using Node.js TypeScript support
 
 If the version of Node.js you are using supports TypeScript:
@@ -37,6 +51,7 @@ Usage: rspeedy <command> [options]
 
 Options:
   -V, --version      output the version number
+  --unmanaged        Force to use the unmanaged version of Rspeedy, instead of the locally installed.
   -h, --help         display help for command
 
 Commands:
@@ -65,7 +80,6 @@ Options:
   --env-mode <mode>        specify the env mode to load the .env.[mode] file
   --no-env                 disable loading `.env` files"
   -m --mode <mode>         specify the build mode, can be `development`, `production` or `none`
-  -r --root <root>         set the project root directory (absolute path or relative to cwd)
   -h, --help               display help for command
 ```
 
@@ -89,7 +103,6 @@ Options:
   --env-mode <mode>        specify the env mode to load the .env.[mode] file
   --no-env                 disable loading `.env` files"
   -m --mode <mode>         specify the build mode, can be `development`, `production` or `none`
-  -r --root <root>         set the project root directory (absolute path or relative to cwd)
   -h, --help               display help for command
 ```
 
@@ -110,7 +123,6 @@ Options:
   --env-mode <mode>     specify the env mode to load the .env.[mode] file
   --no-env              disable loading `.env` files"
   -m --mode <mode>      specify the build mode, can be `development`, `production` or `none`
-  -r --root <root>      set the project root directory (absolute path or relative to cwd)
   -h, --help            display help for command
 ```
 
@@ -136,11 +148,10 @@ Options:
   --env-mode <mode>     specify the env mode to load the .env.[mode] file
   --no-env              disable loading `.env` files"
   -m --mode <mode>      specify the build mode, can be `development`, `production` or `none`
-  -r --root <root>      set the project root directory (absolute path or relative to cwd)
   -h, --help            display help for command
 ```
 
-When you run the command `rspeedy inspect` in the project root directory, the following files will be generated in the `dist/.lynx` directory of the project:
+When you run the command `rspeedy inspect` in the project root directory, the following files will be generated in the `dist/.rsbuild` directory of the project:
 
 - `rspeedy.config.js`: Represents the Rspeedy configuration used during the build.
 - `rsbuild.config.mjs`: Represents the Rsbuild configuration used during the build.
@@ -149,14 +160,11 @@ When you run the command `rspeedy inspect` in the project root directory, the fo
 ```text
 ➜ rspeedy inspect
 
-Inspect config succeed, open following files to view the content:
-
-  - Rspeedy Config: /project/dist/.rsbuild/rspeedy.config.mjs
+success config inspection completed, generated files:
+  - Rsbuild config: /project/dist/.rsbuild/rsbuild.config.mjs
   - Rspack Config (lynx): /project/dist/.rsbuild/rspack.config.lynx.mjs
-
-Inspect Rspeedy config succeed, open following files to view the content:
-
-  - Rspeedy: /Users/colin/rspeedy/examples/react/dist/rspeedy-rspack/.rsbuild/rspeedy.config.js
+success Inspect Rspeedy config succeed, open following files to view the content:
+  - Rspeedy: /project/dist/.rsbuild/rspeedy.config.js
 ```
 
 ### Specifying Mode

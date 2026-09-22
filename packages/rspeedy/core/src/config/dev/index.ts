@@ -230,18 +230,18 @@ export interface Dev {
   /**
    * Whether to display progress bar during compilation.
    *
-   * @defaultValue true
+   * @defaultValue false
    *
    * @example
    *
-   * Disable the progress bar.
+   * Enable the progress bar.
    *
    * ```js
    * import { defineConfig } from '@lynx-js/rspeedy'
    *
    * export default defineConfig({
    *   dev: {
-   *     progressBar: false,
+   *     progressBar: true,
    *   },
    * })
    * ```

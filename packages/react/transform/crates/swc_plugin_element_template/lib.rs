@@ -20,6 +20,7 @@ use swc_core::{
 mod asset;
 mod attr_name;
 mod extractor;
+mod host_lowering;
 mod lowering;
 mod template_attribute;
 mod template_definition;
@@ -232,6 +233,7 @@ where
   attr_plan_signatures_by_canonical_content: HashMap<String, String>,
   template_identity_collision_guard: TemplateIdentityCollisionGuard,
   current_template_defs: Vec<ModuleItem>,
+  host_identities: HashMap<Id, (String, Ident, bool)>,
   comments: Option<C>,
   css_id_value: Option<f64>,
 }
@@ -273,6 +275,7 @@ where
       attr_plan_signatures_by_canonical_content: HashMap::new(),
       template_identity_collision_guard: TemplateIdentityCollisionGuard::default(),
       current_template_defs: vec![],
+      host_identities: HashMap::new(),
       comments,
       css_id_value: None,
     }
@@ -569,15 +572,41 @@ where
     };
     let template_uid = template_identity.template_id.clone();
 
-    // External bundles have no `globDynamicComponentEntry` in scope; use the
-    // `__Card__` entry-name literal.
-    let entry_template_uid = if matches!(self.cfg.is_external_bundle, Some(true))
+    // Capture the bundle alongside the type at the original definition point.
+    // LEPUS calls pass it separately without allocating a descriptor per template.
+    let bundle_expr = if matches!(self.cfg.is_external_bundle, Some(true))
       && !matches!(self.cfg.is_dynamic_component, Some(true))
     {
-      quote!("`__Card__:${$template_uid}`" as Expr, template_uid: Expr = Expr::Lit(Lit::Str(template_uid.clone().into())))
+      quote!("\"__Card__\"" as Expr)
     } else {
-      quote!("`${globDynamicComponentEntry}:${$template_uid}`" as Expr, template_uid: Expr = Expr::Lit(Lit::Str(template_uid.clone().into())))
+      quote!("globDynamicComponentEntry" as Expr)
     };
+    let bundle_expr = if target == TransformTarget::LEPUS {
+      if is_new_template {
+        let bundle_ident = private_ident!(format!("{}_bundle", template_uid));
+        self.current_template_defs.push(ModuleItem::Stmt(quote!(
+          "const $bundle_ident = $bundle_expr" as Stmt,
+          bundle_ident = bundle_ident.clone(),
+          bundle_expr: Expr = bundle_expr,
+        )));
+        self.host_identities.insert(
+          template_ident.to_id(),
+          (
+            template_uid.clone(),
+            bundle_ident,
+            attr_plan_slots.is_empty(),
+          ),
+        );
+      }
+      Expr::Ident(self.host_identities[&template_ident.to_id()].1.clone())
+    } else {
+      bundle_expr
+    };
+    let entry_template_uid = quote!(
+      "`${$bundle}:${$template_uid}`" as Expr,
+      bundle: Expr = bundle_expr,
+      template_uid: Expr = Expr::Lit(Lit::Str(template_uid.clone().into())),
+    );
 
     if is_new_template {
       let entry_template_uid_def = ModuleItem::Stmt(quote!(
@@ -688,6 +717,13 @@ where
     }
 
     n.visit_mut_children_with(self);
+    if !self.host_identities.is_empty() {
+      n.visit_mut_with(&mut host_lowering::HostLowering {
+        identities: &self.host_identities,
+        runtime: self.internal_runtime_id.clone(),
+        comments: &self.comments,
+      });
+    }
     self.ensure_builtin_element_templates();
     if let Some(Expr::Ident(runtime_id)) = Lazy::get(&self.runtime_id) {
       prepend_stmt(

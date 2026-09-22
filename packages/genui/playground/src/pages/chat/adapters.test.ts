@@ -14,6 +14,7 @@ import {
 import { OPENUI_CHAT_ADAPTER } from './openui.js';
 import {
   CHAT_PROVIDER_SETTINGS_ADAPTER,
+  CUSTOM_JEV_PROVIDER_OPTION,
   CUSTOM_PROVIDER_BASE_URL,
   CUSTOM_PROVIDER_BASE_URL_OPTIONS,
   CUSTOM_PROVIDER_ID,
@@ -35,11 +36,39 @@ const reduceA2UIStream = A2UI_CHAT_ADAPTER.stream.reduce.bind(
   A2UI_CHAT_ADAPTER.stream,
 );
 
+test('does not accept invalid A2UI text as a successful response', () => {
+  const payload = {
+    text: JSON.stringify([{ version: 'v0.9', invalid: true }]),
+    validation: { ok: false, errors: ['Invalid component'], messages: [] },
+  };
+  expect(() => A2UI_CHAT_ADAPTER.stream.fromJson(payload)).toThrow(
+    'Invalid component',
+  );
+  expect(() =>
+    reduceA2UIStream(A2UI_CHAT_ADAPTER.stream.initial(), {
+      event: 'done',
+      data: payload,
+    })
+  ).toThrow('Invalid component');
+});
+
+test('restores the exact saved A2UI action for an explicit retry', () => {
+  const action = {
+    surfaceId: 'main',
+    action: { name: 'refresh', context: { item: 1 } },
+  };
+  expect(A2UI_CHAT_ADAPTER.action.parseUserText(
+    A2UI_CHAT_ADAPTER.action.userText(action),
+  )).toEqual(action);
+  expect(A2UI_CHAT_ADAPTER.action.parseUserText('Build a counter')).toBeNull();
+});
+
 test('Lynx XML starts all options on without inheriting another record’s preferences', () => {
   const adapter = LYNX_XML_CHAT_ADAPTER.settings;
   const defaults = {
     enableDesignGuidance: true,
     enableHtmlFragment: true,
+    enableScriptReuse: true,
     stylePreset: 'default',
   };
   expect(adapter.initial()).toMatchObject(defaults);
@@ -53,6 +82,7 @@ test('Lynx XML starts all options on without inheriting another record’s prefe
         provider: 'test-model',
         enableDesignGuidance: false,
         enableHtmlFragment: false,
+        enableScriptReuse: false,
         stylePreset: false,
       }),
     ]
@@ -101,6 +131,7 @@ test.each([
     expect(saved).toEqual({
       enableDesignGuidance: design,
       enableHtmlFragment: template,
+      enableScriptReuse: true,
       stylePreset: preset ? 'default' : false,
     });
     expect(
@@ -129,6 +160,66 @@ test.each([
     expect(request.body.enableDesignGuidance !== false).toBe(design);
     expect(request.body.enableHtmlFragment).toBe(template);
     expect(request.body.stylePreset).toBe(preset ? 'default' : undefined);
+  },
+);
+
+test.each([undefined, false, true])(
+  'ScriptReuse defaults on and preserves explicit selection %s',
+  enableScriptReuse => {
+    const adapter = LYNX_XML_CHAT_ADAPTER;
+    const enabled = enableScriptReuse !== false;
+    expect(adapter.settings.initial().enableScriptReuse).toBe(true);
+    const settings = adapter.settings.update(
+      {
+        ...adapter.settings.initial(),
+        enableScriptReuse,
+      },
+      'enableHtmlFragment',
+      'off',
+    );
+    expect(
+      adapter.settings.controls(settings).find(control =>
+        control.id === 'enableScriptReuse'
+      )?.value,
+    ).toBe(enabled ? 'on' : 'off');
+    const saved = adapter.settings.conversation.snapshot(settings);
+    expect(saved.enableScriptReuse).toBe(enabled);
+    expect(
+      adapter.settings.conversation.restore(adapter.settings.initial(), saved)
+        .enableScriptReuse,
+    ).toBe(enabled);
+    expect(adapter.settings.serialize(settings)).not.toHaveProperty(
+      'enableScriptReuse',
+    );
+    const request = adapter.createRequest({
+      prompt: 'Counter',
+      settings,
+      conversation: {
+        history: [{
+          role: 'assistant',
+          content: 'assembled runtime',
+          lynxXmlModelOutput: 'business callbacks',
+        }],
+        dataModel: {},
+      },
+      host: {
+        origin: 'http://localhost:3000',
+        hostname: 'localhost',
+        protocol: 'http:',
+        search: '',
+        baseUrl: '/',
+      },
+      signal: new AbortController().signal,
+    });
+    expect(request.body.enableScriptReuse).toBe(enabled);
+    expect(request.body.enableHtmlFragment).toBe(false);
+    expect(request.body.conversation).toEqual({
+      history: [{
+        role: 'assistant',
+        content: enabled ? 'business callbacks' : 'assembled runtime',
+      }],
+      dataModel: {},
+    });
   },
 );
 
@@ -1310,6 +1401,48 @@ test('A2UI can boot an empty live preview before any model output', () => {
   })).toMatchObject({ kind: 'a2ui', messages: [], liveAction: true });
 });
 
+test('A2UI final preview comparison ignores streaming placeholders but keeps real corrections', () => {
+  const create = {
+    version: 'v0.9',
+    createSurface: { surfaceId: 'main', catalogId: 'catalog' },
+  };
+  const data = {
+    version: 'v0.9',
+    updateDataModel: { surfaceId: 'main', value: { private: 'kept' } },
+  };
+  const update = (components: unknown[]) => ({
+    version: 'v0.9',
+    updateComponents: { surfaceId: create.createSurface.surfaceId, components },
+  });
+  const root = { id: 'root', component: 'Column', children: ['title'] };
+  const title = { id: 'title', component: 'Text', text: 'Shanghai' };
+  const streamed = [
+    create,
+    update([{ id: 'root', component: 'Loading' }]),
+    data,
+    update([root, { id: 'title', component: 'Loading' }]),
+    update([title]),
+  ];
+  const final = [create, data, update([root, title])];
+  const equal = A2UI_CHAT_ADAPTER.preview.isEquivalent;
+  expect(equal(streamed, final)).toBe(true);
+  expect(
+    equal(streamed, [
+      create,
+      data,
+      update([root, { ...title, text: 'Beijing' }]),
+    ]),
+  ).toBe(false);
+  expect(
+    equal(streamed, [create, {
+      ...data,
+      updateDataModel: { surfaceId: 'main', value: { private: 'changed' } },
+    }, update([root, title])]),
+  ).toBe(false);
+  expect(equal(streamed, [])).toBe(false);
+  expect(equal([], final)).toBe(false);
+});
+
 test.each([
   A2UI_CHAT_ADAPTER,
   OPENUI_CHAT_ADAPTER,
@@ -1347,3 +1480,181 @@ test.each([
     ).toBe(true);
   },
 );
+test.each(['a2ui', 'openui'] as const)(
+  '%s Create loads composition models without changing demo prompts',
+  async protocol => {
+    const adapter = protocol === 'a2ui'
+      ? A2UI_CHAT_ADAPTER
+      : OPENUI_CHAT_ADAPTER;
+    const suggestions = adapter.suggestions;
+    const originalWindow = globalThis.window;
+    const fetch = rs.fn(async (_url: string, _init?: RequestInit) => ({
+      ok: true,
+      json: async () => ({
+        defaultModel: 'Jev',
+        models: [{ id: 'Jev', label: 'Jev', composition: true }],
+      }),
+    }));
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { fetch },
+    });
+    try {
+      const settings = await adapter.settings!.load!(
+        createDefaultProviderSettings(),
+        {
+          origin: 'http://localhost:3000',
+          hostname: 'localhost',
+          protocol: 'http:',
+          search: '',
+          baseUrl: 'http://localhost:3000/',
+        },
+        new AbortController().signal,
+      );
+      expect(fetch.mock.calls[0]?.[0]).toBe(
+        `http://localhost:3060/models?protocol=${protocol}`,
+      );
+      expect(settings.provider).toBe('Jev');
+      expect(adapter.settings!.controls(settings)).toEqual(
+        CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings),
+      );
+      expect(adapter.suggestions).toBe(suggestions);
+      expect(toProviderRequestOptions(settings)).toEqual({ model: 'Jev' });
+    } finally {
+      Object.defineProperty(globalThis, 'window', {
+        configurable: true,
+        value: originalWindow,
+      });
+    }
+  },
+);
+
+test('offers custom Jev in A2UI and OpenUI and forwards its connection without persisting it', () => {
+  const adapter = A2UI_CHAT_ADAPTER.settings;
+  let settings = adapter.update(
+    createDefaultProviderSettings(),
+    'provider',
+    CUSTOM_PROVIDER_ID,
+  );
+  settings = adapter.update(
+    settings,
+    'baseURL',
+    CUSTOM_JEV_PROVIDER_OPTION.value,
+  );
+  expect(settings).toMatchObject({
+    baseURL: CUSTOM_JEV_PROVIDER_OPTION.value,
+    model: 'jev-latest',
+  });
+  expect(adapter.validate(settings)).toContain('API key');
+  settings = adapter.update(settings, 'apiKey', '  jev-user-secret  ');
+  settings = adapter.update(settings, 'model', '  jev-preview  ');
+  settings = adapter.update(settings, 'enableDesignGuidance', 'off');
+  expect(adapter.validate(settings)).toBeUndefined();
+  expect(adapter.controls(settings).find(control => control.id === 'baseURL'))
+    .toMatchObject({
+      options: [
+        ...CUSTOM_PROVIDER_BASE_URL_OPTIONS,
+        CUSTOM_JEV_PROVIDER_OPTION,
+      ],
+    });
+  expect(adapter.controls(settings).find(control => control.id === 'apiKey'))
+    .toMatchObject({ kind: 'password' });
+  const host = {
+    origin: 'http://localhost:3000',
+    hostname: 'localhost',
+    protocol: 'http:',
+    search: '',
+    baseUrl: 'http://localhost:3000/',
+  };
+  const conversation = { history: [], dataModel: {} };
+  const connection = {
+    apiKey: 'jev-user-secret',
+    baseURL: CUSTOM_JEV_PROVIDER_OPTION.value,
+    model: 'jev-preview',
+    enableDesignGuidance: false,
+  };
+  expect(toProviderRequestOptions(settings, 'a2ui')).toEqual(connection);
+  expect(
+    A2UI_CHAT_ADAPTER.createRequest({
+      prompt: 'Show a card',
+      conversation,
+      settings,
+      host,
+    }).body,
+  )
+    .toMatchObject(connection);
+  expect(
+    A2UI_CHAT_ADAPTER.action.request({
+      action: { surfaceId: 'main', action: { name: 'open' } },
+      conversation,
+      settings,
+      host,
+    }).body,
+  )
+    .toMatchObject(connection);
+  expect(OPENUI_CHAT_ADAPTER.settings.validate(settings)).toBeUndefined();
+  expect(
+    OPENUI_CHAT_ADAPTER.settings.controls(settings).find(control =>
+      control.id === 'baseURL'
+    )?.options,
+  ).toContainEqual(CUSTOM_JEV_PROVIDER_OPTION);
+  expect(
+    OPENUI_CHAT_ADAPTER.createRequest({
+      prompt: 'Show a card',
+      conversation,
+      settings,
+      host,
+    }).body,
+  ).toMatchObject(connection);
+  expect(
+    OPENUI_CHAT_ADAPTER.action.request({
+      action: {
+        type: 'continue',
+        params: {},
+        humanFriendlyMessage: 'Continue',
+      },
+      conversation,
+      settings,
+      host,
+    }).body,
+  ).toMatchObject(connection);
+  expect(OPENUI_CHAT_ADAPTER.settings.serialize(settings)).toEqual({
+    provider: CUSTOM_PROVIDER_ID,
+    enableDesignGuidance: false,
+  });
+  expect(adapter.serialize(settings)).toEqual({
+    provider: CUSTOM_PROVIDER_ID,
+    enableDesignGuidance: false,
+  });
+  expect(adapter.conversation.snapshot(settings)).toEqual({
+    provider: CUSTOM_PROVIDER_ID,
+    enableDesignGuidance: false,
+  });
+  expect(adapter.parseStored(JSON.stringify(settings))).toMatchObject({
+    apiKey: '',
+    baseURL: CUSTOM_PROVIDER_BASE_URL,
+    model: CUSTOM_PROVIDER_MODEL,
+  });
+  for (
+    const other of [
+      HTML_CHAT_ADAPTER,
+      MCP_APPS_CHAT_ADAPTER,
+      LYNX_XML_CHAT_ADAPTER,
+    ]
+  ) {
+    expect(
+      other.settings.controls({
+        ...settings,
+        baseURL: CUSTOM_PROVIDER_BASE_URL,
+      })
+        .find(control => control.id === 'baseURL')?.options,
+    ).not.toContainEqual(CUSTOM_JEV_PROVIDER_OPTION);
+    expect(other.settings.validate(settings)).toContain('only in A2UI');
+  }
+  expect(() => toProviderRequestOptions(settings)).toThrow('only in A2UI');
+  expect(adapter.update(settings, 'baseURL', CUSTOM_PROVIDER_BASE_URL))
+    .toMatchObject({
+      baseURL: CUSTOM_PROVIDER_BASE_URL,
+      model: CUSTOM_PROVIDER_MODEL,
+    });
+});

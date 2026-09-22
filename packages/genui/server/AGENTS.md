@@ -41,6 +41,161 @@ limits are required.
 
 ## Model Configuration
 
+### Jev component composition in A2UI and OpenUI Create
+
+Common Jev capabilities live under `agent/common`: `jev-values.ts` owns finite
+candidate policy, `jev-composition.ts` owns component/retention and property
+questions, and `jev-evaluator.ts` owns direct TypeSafe calls and bounded scheduling.
+Tree validation and layout are shared there too. Keep protocol adapters focused
+on native Schema/slots, bindings, actions, resource policy, and artifact
+validation/serialization. Use `service/common/jev-composition.ts` for connection,
+deadline, cancellation, usage, diagnostics, stream consumption and finalization;
+protocol services supply artifact text and wire framing. Do not introduce
+`experimental_evaluate` or a second model into this path.
+
+Add a server-owned TypeSafe entry to `GENUI_MODEL_CONFIG_JSON`:
+
+```json
+{
+  "Jev": {
+    "provider": "typesafe",
+    "model": "jev-latest",
+    "apiKey": "YOUR_TYPESAFE_API_KEY",
+    "baseURL": "https://api.typesafe.ai/v1"
+  }
+}
+```
+
+Merge this entry with existing models rather than replacing their configuration.
+After restarting the server, select Jev in A2UI or OpenUI Create. `/models?protocol=a2ui`
+and `/models?protocol=openui` include composition models; ordinary `/models` omits them for the other Create
+protocols and Bench. The public `composition: true` flag describes capability;
+credentials and upstream identifiers remain private. Jev is not a chat model,
+so do not configure `api`, `reasoningEffort`, or `maxOutputTokens` for it.
+Create keeps the same demo prompts and settings for every model to support
+comparison, including the shared Design Guidance switch.
+
+Alternatively, in A2UI or OpenUI Create choose **Custom API key**, select the **TypeSafe
+Jev** endpoint, and enter a TypeSafe key. The default model is `jev-latest` and
+may be changed to another TypeSafe evaluation model. This works without
+`GENUI_MODEL_CONFIG_JSON`. Generation and action requests supply the complete
+`model`, `apiKey`, and `baseURL` tuple; the exact `https://api.typesafe.ai/v1`
+endpoint (with an optional trailing slash) selects Jev composition. Custom
+fetches reject redirects and never inherit server credentials or enter the
+language-model agent cache. The key, endpoint and model remain in page memory
+only. Other Create protocols and Bench do not offer this endpoint.
+
+Jev generation uses only the selected TypeSafe evaluation model. Do not require
+or invoke a second text model for content preparation or fallback. Build finite
+component and property choices from the active Catalog, user-supplied text/JSON,
+existing components and state bindings. No business-domain recipes, fixed sample
+datasets or quoted-heading requirement belong in this path. Jev selects among
+these values; it cannot invent arbitrary prose or data absent from the choices.
+
+Rank current explicit values, matching JSON fields and complete phrases ahead of
+derived word fragments. Start with 32 choices per property and expand up to 96
+for supplied content, bindings and Catalog alternatives, retaining a fragment
+reserve for unquoted multilingual copy. Empty Catalog placeholders are distinct
+from explicit empty input and enum/const choices. Skip absent optional properties
+with only placeholders; deduplicate equivalent retained/candidate values.
+Do not offer synthetic empty placeholders for required display properties;
+without supplied content, omit the corresponding new component. Keep explicit
+empty values, enums/consts, bindings and initial bound input values available.
+RadioGroup choices use `items`, not component child references.
+The component-retention decision can select `preserve` to reuse optional values
+and omissions on a node and its fixed children, while movable descendants decide
+independently. Required content and current host-resource authorization still run.
+Keep optional styles configurable when not explicitly preserved by that decision;
+do not guess user intent using a fixed language or business vocabulary.
+
+Composition selects component counts and retained subtrees, then properties,
+then layout. Counts exclude automatically created compound labels and slots.
+Batch new Text copy and independent properties with each text's owner, role,
+ordinal and the full copy-target plan. After final layout, only duplicate new
+literal Text siblings receive one further allocation from unused candidates or
+explicit omission. Resolve those conflicts sequentially before the final snapshot;
+preserve existing content, bindings, fixed labels and distinct styles/scopes.
+Remove new empty container subtrees after layout.
+Resolve single-option questions locally. Batch at most 32 remaining questions per
+evaluation with at most two concurrent batches within the same independent phase,
+using the same Jev connection throughout. On failure, cancel sibling calls, stop
+queued batches and drain in-flight requests before reporting their completed usage.
+Plan structural parent edges in one question set, excluding each moving unit's
+own descendants. Install valid edges locally in dependency order; ask Jev to
+resolve only cycles and depth conflicts using replacement edges to placed
+containers. Keep compound slots, templates and retained descendants together.
+The existing retention question can choose `keep_layout`/`preserve_layout` to
+keep parent and relative sibling order, or `reorder`/`reorder_preserve` to keep
+the parent alone. The preserve variants also retain optional properties; `keep`
+and `preserve` permit reparenting. Movable descendants decide independently.
+Only ids from the previous snapshot have existing parent/position metadata;
+new nodes' temporary root placement is not an existing layout to preserve.
+Expose fixed-child ownership, planned edges and actual sibling groups to layout batches.
+Include fixed children, compound slots, template scopes and parent-preserved
+descendants in each moving unit's depth budget. Only ask position questions for
+nodes allowed to change order, using final sibling counts rather than the
+whole page. Resolve singleton positions locally and merge changed positions into
+the retained children-array order. Order only after leaf parents are resolved;
+resolve tied positions explicitly instead of using component enumeration order.
+Publish the completed layout, never the temporary staged tree.
+Never reuse a removed id for new content in the same edit. Validate each
+published snapshot against the Catalog and
+check the combined tree (64 components, eight levels). The whole request has a
+60-second deadline and no automatic retries. Aggregate usage from all completed
+Jev evaluations, including failures, using the selected model's prices.
+
+Create and action streams emit `model` events for actual Jev provider calls.
+Each call has an invocation-local index, composition phase, request counts and
+sizes, duration, status and normalized response usage. Agent interaction shows
+the total number of requests and retains it when older timeline events are
+omitted. Locally resolved questions are not requests. These events contain no
+raw prompts, choices, provider connection details or error bodies, and do not
+replace aggregate token usage or enter persisted conversation history.
+
+Preserve existing input bindings and data on follow-up edits, including compound
+children, named slots and repeating template scopes. New inputs use local data
+bindings. Send only topology, display copy and binding paths/types to Jev, never
+entered input values or action context. Generic server-dispatched events may
+change UI composition; they do not save records or invoke external services.
+User/host-provided images and links use the shared source policies; this path
+does not invoke search, image generation or another model.
+Offer new Image components only when a supplied literal or binding resolves to
+a loadable, allowed image source. Otherwise omit images and compose the rest of
+the request; never offer image descriptions or empty strings as Image.url.
+
+McpApp candidates require `A2UIChatOptions.hostedMcpApps`, supplied by the host
+through the server service API after registry/resource resolution and result
+validation. Each entry has a `ui://` URI, title, native bundle `url`, optional
+`webUrl`, and `mcpAppData` containing `renderer` and `input`. Bundle URLs must be
+HTTP(S). The public A2UI HTTP handlers do not accept this capability from request
+bodies; ordinary Create therefore does not offer McpApp. Jev selects complete
+resource tuples and never constructs URLs or render data. The host must supply
+resources on each edit; prior model output is not resource authorization.
+Native-only resources may intentionally omit `webUrl` and retain the existing
+mobile-preview fallback. When no host resources are available, prior McpApp
+nodes and invalidated fixed-slot owners are removed before composition.
+
+`agent/a2ui/jev-candidates.ts` builds Catalog/value choices and validates trees;
+`agent/a2ui/jev-composer.ts` applies decisions; `agent/common/jev-evaluator.ts`
+owns the TypeSafe provider call. Keep credentials server-side. Reference:
+[json-render's Jev composition](https://json-render.dev/docs/jev) and
+[TypeSafe AI SDK provider](https://ai-sdk.dev/providers/ai-sdk-providers/typesafe-ai).
+
+OpenUI uses its native headless component schemas and the shared Jev value,
+tree, layout and evaluator helpers. `agent/openui/jev-candidates.ts` normalizes
+the active schemas and builds component/property choices, including state
+bindings, ranking and availability filtering, without model calls.
+`agent/openui/jev-composer.ts` restores state, orchestrates decisions, composes
+OpenUI components and emits DSL with lang-core's `jsonToOpenUI`; it never
+translates A2UI protocol output. Preserve positional optional slots and validate
+with the same library parser. Retain referenced queries/actions from existing
+programs through `mergeStatements`, but do not invent external tools. New
+inputs use declared local state, and buttons request assistant UI updates.
+Keep entered state/form values local rather than in Jev prompts. OpenUI Create
+and action continuations both use `/openui/stream` and emit model diagnostics.
+
+### Text generation models
+
 To provide server-owned model choices, configure the provider credentials,
 endpoint, and model list through one JSON environment variable:
 
@@ -52,7 +207,7 @@ export GENUI_MODEL_CONFIG_JSON='{
     "baseURL": "https://api.openai.com/v1",
     "api": "responses",
     "default": true,
-    "maxOutputTokens": 16384,
+    "maxOutputTokens": 32768,
     "input_price": 2,
     "cached_price": 0.5,
     "output_price": 8
@@ -66,9 +221,11 @@ export GENUI_MODEL_CONFIG_JSON='{
 - `api` is optional and accepts `chat` or `responses`.
 - `default: true` is optional. When omitted, the first entry is the default.
 - `maxOutputTokens` is an optional positive integer describing the provider's
-  supported output ceiling. All generation agents share a 16384-token per-call
+  supported output ceiling. All generation agents share a 32768-token per-call
   target through `buildOpenAIRunOptions`, clamped to the effective model ceiling.
-  This includes raw generation, streaming, continuations, and repairs. Judge
+  A configured ceiling below 32768 still lowers the request budget; a larger
+  ceiling does not raise the default target. This includes raw generation,
+  streaming, continuations, and repairs. Judge
   requests score all five dimensions together using the same resolver with a
   4096-token target. Reasoning-only
   recovery may increase the requested budget, within that same ceiling.
@@ -94,8 +251,8 @@ parser microbenchmarks alone do not establish end-to-end latency improvements.
 
 `GENUI_MODEL_CONFIG_JSON` is optional when the request supplies a complete
 custom provider with `model`, `apiKey`, and `baseURL`. Partial custom provider
-values are ignored rather than inheriting a server-owned credential. A
-request-scoped custom `baseURL` must exactly match one of the public
+values are ignored rather than inheriting a server-owned credential. An
+OpenAI-compatible request-scoped custom `baseURL` must exactly match one of the public
 OpenAI-compatible provider URLs in `ALLOWED_CUSTOM_PROVIDER_BASE_URLS` (an
 optional trailing slash is normalized). Server-owned model configuration
 remains the trusted path for private, HTTP, or deployment-specific endpoints.
@@ -272,32 +429,29 @@ as a missing XML tag. The final artifact must start with lowercase
 thread script, and end with `</lynx>`. Keep generated UI on Element PAPI; do
 not route it through ReactLynx, JSX, OpenUI, or A2UI.
 
-The streaming service allows at most three generation attempts to recover an
-invalid response ending in `length`. It tries one continuation with an exact
-source-boundary echo, then falls back to requesting a shorter complete artifact.
-Empty or oversized prefixes go straight to compact regeneration. Keep the model,
-abort signal, and capability scope unchanged. Ordinary artifact recovery also
-keeps the per-call token budget. Recovery
-responses are buffered; only the validated final document replaces the initial
-streamed prefix in `done`. Sum all attempt usage and expose recovery modes in
-`metadata.generationAttempts`. Raw generation remains single-call so Bench owns
-its configured repair budget. Upstream failures normally stop recovery.
-
-The shared recovery helper also supports one fresh attempt after reasoning-only
-exhaustion: no text or tool output, positive input usage, and all output tokens
-used by reasoning at the exact request budget. Require `length` or the observed
-400 `input` / `<nil>` error. Keep that original error and finish reason, lower
-reasoning effort to `low` unless already none/minimal/low, and increase output
-tokens only within a known configured ceiling, at most 2x. Never append an empty
-assistant reply or replay hidden reasoning. Count this within the same three
-attempts and aggregate usage; keep the override request-scoped and skip it when
-settings would be unchanged or `inheritReasoningEffort` is false.
+Create performs one generation attempt. SDK `maxRetries` defaults to zero
+(additional retries), A2UI `maxRepairAttempts` defaults to zero, and Lynx XML
+streaming does not continue or regenerate after truncation or reasoning-only
+exhaustion. Preserve the original sanitized failure, usage, and finish reason;
+the Playground asks the user before starting another request. Do not add a
+separate retry switch to Create requests. Raw generation remains single-call,
+so Bench retains its configured repair budget. The shared recovery helper is
+still bounded by its caller's explicit attempt budget.
 
 `enableHtmlFragment` defaults to false. When enabled, the model outputs one
 intermediate document with one root-child `<template>` plus styles and scripts in any order;
 the service compiles the template and injects an id-based `createFragment`
 helper before final validation. Conversion is deterministic postprocessing,
 not a Mastra tool. Keep shared search/image capability scopes independent of it.
+
+`enableScriptReuse` independently defaults to false. When enabled, the model
+provides one top-level `definePage({...})` call with business callbacks; the
+agent assembles shared lifecycle, event cleanup, and text helpers through
+`assembleLynxXmlArtifact`. Keep this setting in the prompt, Agent cache key,
+Create request, Bench group, and every repair attempt. Stream original model
+deltas, deliver assembled XML only at completion, and preserve original output
+and usage on both success and failure. Assembly must not execute model code
+or introduce another model round.
 
 Return the exact assembled model text in `metadata.modelOutput` and the successful
 original fragment in `metadata.xmlFragment`; omit fragment metadata when off.
@@ -373,8 +527,9 @@ may provide a complete custom `model`, `apiKey`, and `baseURL`. Incomplete
 overrides are ignored and ordinary model names resolve only through
 `GENUI_MODEL_CONFIG_JSON`.
 
-Request-scoped custom providers accept only the exact HTTPS base URLs in
-`ALLOWED_CUSTOM_PROVIDER_BASE_URLS`; reject alternate origins, ports, paths,
+OpenAI-compatible custom providers accept only the exact HTTPS base URLs in
+`ALLOWED_CUSTOM_PROVIDER_BASE_URLS`. A2UI and OpenUI also accept the exact TypeSafe Jev
+endpoint described above, through its evaluation adapter. Reject alternate origins, ports, paths,
 credentials, query strings, and fragments. Add a provider only when its
 official OpenAI-compatible endpoint is documented and covered by tests. Do not
 expose these routes publicly without authentication.

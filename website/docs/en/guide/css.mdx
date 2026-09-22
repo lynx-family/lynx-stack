@@ -1,6 +1,10 @@
+---
+description: 'Style apps with CSS Modules, preprocessors, PostCSS, and Tailwind CSS.'
+---
+
 import { PackageManagerTabs } from '@theme';
 
-# CSS
+# Styling
 
 Rspeedy supports different ways of styling your application, including:
 
@@ -10,9 +14,9 @@ Rspeedy supports different ways of styling your application, including:
 
 - [**CSS pre-processors**](#using-css-pre-processors): Popular CSS pre-processors like [`sass`](https://sass-lang.com/) and [`less`](https://lesscss.org/) that extend CSS with features like variables, nested rules, and mixins.
 
-- [**(Legacy) Lynx Scoped CSS**](#using-lynx-scoped-css): Write like global CSS, but work like CSS Modules.
-
 - [**PostCSS**](#using-postcss): A tool for transforming CSS.
+
+- [**Tailwind CSS**](#using-tailwind-css): A utility-first CSS framework that allows for rapid custom designs by composing utility classes.
 
 ## Using CSS Modules
 
@@ -37,28 +41,28 @@ Rspeedy supports CSS Modules by default, you don't need to add additional config
 2. Use styles like a module:
 
 ```jsx title=Button.jsx
-import styles from './button.module.css'
+import styles from './button.module.css';
 
 export function Button() {
   return (
     <view className={styles.red}>
       <text>Button</text>
     </view>
-  )
+  );
 }
 ```
 
 Or, you can use **Named Imports**:
 
 ```jsx title=Button.jsx
-import { red } from './button.module.css'
+import { red } from './button.module.css';
 
 export function Button() {
   return (
     <view className={red}>
       <text>Button</text>
     </view>
-  )
+  );
 }
 ```
 
@@ -72,36 +76,36 @@ E.g.: the following style files are considered CSS Modules:
 - `*.module.less`
 - `*.module.sass`
 - `*.module.scss`
-- `*.module.styl`
+- `*.module.styl` {/* <!-- cspell:disable-line --> */}
 - `*.module.stylus`
 
 ### Recognition Rules
 
 By default, only files ending with `*.module.{css,scss,less}` are recognized as CSS Modules.
 
-If you want to treat other CSS files as CSS Modules as well, you can achieve this by configuring [output.cssModules.auto](/api/rspeedy.cssmodules.auto).
+If you want to treat other CSS files as CSS Modules as well, you can achieve this by configuring [output.cssModules.auto](../api/rspeedy.cssmodules.auto.md). {/* cspell:disable-line */}
 
 For example:
 
 ```js title=lynx.config.ts
-import { defineConfig } from '@lynx-js/rspeedy'
+import { defineConfig } from '@lynx-js/rspeedy';
 
 export default defineConfig({
   output: {
     cssModules: {
       auto(filename) {
-        return filename.includes('.module.') || filename.includes('/shared/')
+        return filename.includes('.module.') || filename.includes('/shared/');
       },
     },
   },
-})
+});
 ```
 
 Given this configuration, the following imports will be recognized as CSS Modules:
 
 ```js
-import * as foo from './foo.module.css'
-import * as bar from './shared/bar.css'
+import * as foo from './foo.module.css';
+import * as bar from './shared/bar.css';
 ```
 
 ### Type Declaration
@@ -112,14 +116,18 @@ When you import CSS Modules in TypeScript code, TypeScript may prompt that the m
 TS2307: Cannot find module './index.module.css' or its corresponding type declarations.
 ```
 
-To fix this, you need to add a type declaration file for the CSS Modules, please create a `src/rspeedy-env.d.ts` file, and add the corresponding type declaration.
+To fix this, add `@lynx-js/rspeedy/client`, which declares the types of CSS Modules, to the `types` array in `tsconfig.json`, keeping the entries already there:
 
-```typescript title=src/rspeedy-env.d.ts
-/// <reference types="@lynx-js/rspeedy/client" />
+```json title=tsconfig.json
+{
+  "compilerOptions": {
+    "types": ["@lynx-js/rspeedy/client"]
+  }
+}
 ```
 
 :::tip
-`create-rspeedy-app` will automatically create this file for you.
+[`create-lynx`](https://www.npmjs.com/package/@lynx-js/create-lynx) will automatically include this for you.
 :::
 
 If type errors still exist after adding the type declaration, you can try to restart the current IDE. Making sure the TypeScript can correctly identify the type definition.
@@ -131,10 +139,10 @@ The `@lynx-js/rspeedy/client` will give type declarations like this:
 ```ts
 declare module '*.module.css' {
   type CSSModuleClasses = {
-    readonly [key: string]: string
-  }
-  const classes: CSSModuleClasses
-  export default classes
+    readonly [key: string]: string;
+  };
+  const classes: CSSModuleClasses;
+  export default classes;
 }
 ```
 
@@ -147,20 +155,17 @@ Using [Typed CSS Modules Plugin](https://github.com/rspack-contrib/rsbuild-plugi
 2. Add the `pluginTypedCSSModules` to `lynx.config.ts`
 
 ```js title=lynx.config.ts
-import { pluginTypedCSSModules } from '@rsbuild/plugin-typed-css-modules'
+import { pluginTypedCSSModules } from '@rsbuild/plugin-typed-css-modules';
 
-import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
-import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
+import { defineConfig } from '@lynx-js/rspeedy';
 
 export default defineConfig({
   source: {
     entry: './src/index.tsx',
   },
-  plugins: [
-    pluginReactLynx(),
-    pluginTypedCSSModules(),
-  ],
-})
+  plugins: [pluginReactLynx(), pluginTypedCSSModules()],
+});
 ```
 
 After running `rspeedy build` or `rspeedy dev`, the type declarations will be generated.
@@ -169,10 +174,10 @@ After running `rspeedy build` or `rspeedy dev`, the type declarations will be ge
 // This file is automatically generated.
 // Please do not change this file!
 interface CssExports {
-  red: string
+  red: string;
 }
-export const cssExports: CssExports
-export default cssExports
+export const cssExports: CssExports;
+export default cssExports;
 ```
 
 You may also need to add [`"allowArbitraryExtensions": true`](https://www.typescriptlang.org/tsconfig/#allowArbitraryExtensions) and [`"moduleResolution": "Bundler"`](https://www.typescriptlang.org/tsconfig/#moduleResolution) to `tsconfig.json`.
@@ -210,14 +215,14 @@ Just write CSS code and imported from a javascript file.
 2. Import the `.css` file from the JSX file and use the CSS classes:
 
 ```jsx title=index.jsx
-import './styles.css'
+import './styles.css';
 
 export default function App() {
   return (
     <view className="red">
-      <text>Hello, ReactLynx!</text>
+      <text>Hello, Rspeedy!</text>
     </view>
-  )
+  );
 }
 ```
 
@@ -227,21 +232,6 @@ CSS pre-processors extend CSS with features like variables, nested rules, and mi
 
 ### Using `sass`
 
-Simply create `.scss` or `.sass` files and import them into JavaScript.
-
-```jsx
-import './global.sass'
-import styles from './button.module.scss'
-
-export function App() {
-  return (
-    <view className={styles.red}>
-      <text className="title">Hello, Sass</text>
-    </view>
-  )
-}
-```
-
 1. Install the `@rsbuild/plugin-sass` package
 
 <PackageManagerTabs command="install -D @rsbuild/plugin-sass" />
@@ -249,9 +239,9 @@ export function App() {
 2. Add the `pluginSass` to `lynx.config.ts`
 
 ```js title=lynx.config.ts
-import { pluginSass } from '@rsbuild/plugin-sass'
+import { pluginSass } from '@rsbuild/plugin-sass';
 
-import { defineConfig } from '@lynx-js/rspeedy'
+import { defineConfig } from '@lynx-js/rspeedy';
 
 export default defineConfig({
   source: {
@@ -262,27 +252,27 @@ export default defineConfig({
       /** sass options */
     }),
   ],
-})
+});
+```
+
+Then simply create `.scss` or `.sass` files and import them into JavaScript.
+
+```jsx
+import './global.sass';
+import styles from './button.module.scss';
+
+export function App() {
+  return (
+    <view className={styles.red}>
+      <text className="title">Hello, Sass</text>
+    </view>
+  );
+}
 ```
 
 More options can be used in `pluginSass`, please refer to [Sass Plugin](https://rsbuild.rs/plugins/list/plugin-sass) for usage.
 
 ### Using `less`
-
-Simply create `.less` files and import them into JavaScript.
-
-```jsx
-import './global.less'
-import styles from './button.module.less'
-
-export function App() {
-  return (
-    <view className={styles.red}>
-      <text className="title">Hello, Less</text>
-    </view>
-  )
-}
-```
 
 1. Install the `@rsbuild/plugin-less` package
 
@@ -291,9 +281,9 @@ export function App() {
 2. Add the `pluginLess` to `lynx.config.ts`
 
 ```js title=lynx.config.ts
-import { pluginLess } from '@rsbuild/plugin-less'
+import { pluginLess } from '@rsbuild/plugin-less';
 
-import { defineConfig } from '@lynx-js/rspeedy'
+import { defineConfig } from '@lynx-js/rspeedy';
 
 export default defineConfig({
   source: {
@@ -304,7 +294,22 @@ export default defineConfig({
       /** less options */
     }),
   ],
-})
+});
+```
+
+Then simply create `.less` files and import them into JavaScript.
+
+```jsx
+import './global.less';
+import styles from './button.module.less';
+
+export function App() {
+  return (
+    <view className={styles.red}>
+      <text className="title">Hello, Less</text>
+    </view>
+  );
+}
 ```
 
 More options can be used in `pluginLess`, please refer to [Less Plugin](https://rsbuild.rs/plugins/list/plugin-less) for usage.
@@ -318,9 +323,9 @@ More options can be used in `pluginLess`, please refer to [Less Plugin](https://
 2. Add the `pluginStylus` to `lynx.config.ts`
 
 ```js title=lynx.config.ts
-import { pluginStylus } from '@rsbuild/plugin-stylus'
+import { pluginStylus } from '@rsbuild/plugin-stylus';
 
-import { defineConfig } from '@lynx-js/rspeedy'
+import { defineConfig } from '@lynx-js/rspeedy';
 
 export default defineConfig({
   source: {
@@ -331,98 +336,16 @@ export default defineConfig({
       /** stylus options */
     }),
   ],
-})
+});
 ```
 
-More options can be used in `pluginStylus`, please refer to [Stylus Plugin](https://rsbuild.rs/plugins/list/plugin-stylus) for usage.
-
-## Using Lynx Scoped CSS
-
-:::info You may NOT need scoped CSS
-In most instances, there's no need to utilize scoped CSS. It's typically employed for compatibility with ReactLynx2.
-
-Use [CSS Modules](#using-css-modules) instead.
-:::
-
-Lynx Scoped CSS works just like CSS Modules. The CSS styles can only be used within the JavaScript files that import it.
-
-Given the following CSS file:
-
-```css title=styles.css
-.red {
-  color: red;
-}
-
-.bg {
-  width: 100vw;
-  height: 20px;
-  background: blue;
-}
-```
-
-The CSS styles can be imported and used:
-
-```jsx
-import './styles.css'
-import { Button } from './Button.jsx'
-
-const jsx = <view className="bg"></view>
-
-export function App() {
-  return (
-    <view>
-      <text className="red">Hello, Scoped CSS</text>
-      {jsx}
-			<Button />
-    </view>
-  )
-}
-```
-
-However, it will not be effective unless imported (this is where the concept of _scope_ is applicable):
-
-```jsx title=Button.jsx
-export function Button() {
-  return (
-    // The use of `red` here has no effect.
-    <view>
-      <text className="red">Button</text>
-    </view>
-  )
-}
-```
-
-:::tip
-Technically, the Scoped CSS can be used with [CSS Modules](#using-css-modules). But it does not make sense since CSS Modules are already _scoped_.
-
-If you would like to use CSS Modules, just safely disable Scoped CSS.
-:::
-
-Set `enableRemoveCSSScope` to `false` to enable Scoped CSS.
-
-```js title=lynx.config.ts
-import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
-import { defineConfig } from '@lynx-js/rspeedy'
-
-export default defineConfig({
-  source: {
-    entry: './src/index.tsx',
-  },
-  plugins: [
-    pluginReactLynx({
-      enableRemoveCSSScope: false,
-    }),
-  ],
-})
-```
+More options can be used in `pluginStylus`, please refer to [Stylus Plugin](https://v1.rsbuild.rs/plugins/list/plugin-stylus) for usage.
 
 ## Using PostCSS
 
 Powered by Rsbuild, Rspeedy has built-in [PostCSS](https://postcss.org/) to transform the CSS code.
 
 Rsbuild uses [postcss-load-config](https://github.com/postcss/postcss-load-config) to load the PostCSS configuration file in the root directory of the current project, such as `postcss.config.js`:
-
-{/** TODO(wangqingyu): use a Lynx example :) */}
 
 ```js
 export default {
@@ -431,42 +354,57 @@ export default {
       viewportWidth: 375,
     },
   },
-}
+};
 ```
 
-## CSS minification
+## Using Tailwind CSS
 
-Rspeedy uses [cssnano](https://github.com/cssnano/cssnano) to minify the CSS code.
+:::tip Tailwind CSS v3
+Lynx currently requires **Tailwind CSS v3**. Install `tailwindcss@^3` and use it as the PostCSS plugin. Note that v4 packages such as `@tailwindcss/postcss`, `@tailwindcss/vite`, and `@tailwindcss/cli` are incompatible with `@lynx-js/tailwind-preset`.
+:::
 
-### Disable CSS minification
+1. Installing Tailwind CSS
 
-You can disable CSS minification by setting [`output.minify.css`](../api/rspeedy.minify.css) to `false`.
+   Rspeedy has built-in support for PostCSS, you can install tailwindcss package to integrate Tailwind CSS:
 
-```js title=lynx.config.ts
-import { defineConfig } from '@lynx-js/rspeedy'
+   <PackageManagerTabs command="install -D tailwindcss@^3" />
 
-export default defineConfig({
-  output: {
-    minify: {
-      css: false,
-    }
-  },
-})
-```
+2. Configuring PostCSS
 
-### Customize CSS minification
+   You can register the tailwindcss PostCSS plugin through [`postcss.config.js`](https://www.npmjs.com/package/postcss-loader#config) or [`tools.postcss`](https://rsbuild.rs/config/tools/postcss).
 
-You can use [@rsbuild/plugin-css-minimizer](https://github.com/rspack-contrib/rsbuild-plugin-css-minimizer) to customize the CSS minimizer.
+   ```js title=postcss.config.js
+   export default {
+     plugins: {
+       tailwindcss: {},
+     },
+   };
+   ```
 
-```js title=lynx.config.ts
-import { defineConfig } from '@lynx-js/rspeedy'
-import { pluginCssMinimizer } from '@rsbuild/plugin-css-minimizer'
+3. Installing the `@lynx-js/tailwind-preset` package:
 
-export default defineConfig({
-  plugins: [
-    pluginCssMinimizer({
-      /** Custom options */
-    }),
-  ],
-})
-```
+   <PackageManagerTabs command="install -D @lynx-js/tailwind-preset" />
+
+4. Configuring `tailwind.config.js` and adding `@lynx-js/tailwind-preset`:
+
+   You must use [`@lynx-js/tailwind-preset`](https://github.com/lynx-family/lynx-stack/tree/main/packages/tailwind-preset) to remove all the tailwindcss utilities not supported in Lynx or adapt to Lynx-specific alternatives.
+
+   ```js title=tailwind.config.js
+   import lynxPreset from '@lynx-js/tailwind-preset';
+
+   export default {
+     content: ['./src/**/*.{js,ts,jsx,tsx}'],
+     presets: [lynxPreset],
+   };
+   ```
+
+   :::warning
+
+   `@lynx-js/tailwind-preset` is still not stable, please use it with caution. If you found any tailwindcss features that are not working and should be supported, please open an issue at https://github.com/lynx-family/lynx-stack/issues.
+
+   :::
+
+### Example
+
+
+See the [`tailwindcss` example](https://github.com/lynx-family/lynx-examples/tree/main/examples/tailwindcss).

@@ -16,6 +16,7 @@ export interface A2UIChatBody {
   baseURL?: string;
   api?: 'chat' | 'responses';
   reasoningEffort?: OpenAIReasoningEffort;
+  enableDesignGuidance?: boolean;
   catalog?: A2UICatalog;
   maxRepairAttempts?: number;
   validate?: boolean;
@@ -36,6 +37,9 @@ export interface ValidatedAction {
 export function pickA2UIChatOptions(body: A2UIChatBody): A2UIChatOptions {
   return {
     ...pickProviderOptions(body),
+    ...(typeof body.enableDesignGuidance === 'boolean'
+      ? { enableDesignGuidance: body.enableDesignGuidance }
+      : {}),
     catalog: body.catalog,
     maxRepairAttempts: body.maxRepairAttempts,
   };

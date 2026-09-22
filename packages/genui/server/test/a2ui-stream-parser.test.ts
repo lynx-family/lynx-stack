@@ -35,6 +35,117 @@ function latest(messages: A2UIMessage[]) {
 }
 
 describe('A2UI incremental parsing', () => {
+  test('renders a complete snapshot without automatic loading placeholders', () => {
+    const parser = new A2UIProtocolMessageStreamParser();
+    expect(parser.push(JSON.stringify([create, update([root, title])])))
+      .toEqual([create, update([root, title])]);
+  });
+
+  test('waits for the entire batch before filling gaps across component and data messages', () => {
+    const parser = new A2UIProtocolMessageStreamParser();
+    const data = {
+      version: 'v0.9',
+      updateDataModel: { surfaceId: 's', value: { title: 'Hello' } },
+    };
+    const source = [create, update([root]), data, update([title])];
+    expect(parser.push(JSON.stringify(source))).toEqual(source);
+  });
+
+  test('includes the real root in the first component update for a child-first complete batch', () => {
+    const parser = new A2UIProtocolMessageStreamParser();
+    expect(
+      parser.push(JSON.stringify([create, update([title]), update([root])])),
+    )
+      .toEqual([create, update([title, root])]);
+  });
+
+  test('establishes a root placeholder before children when the real root is still missing', () => {
+    const parser = new A2UIProtocolMessageStreamParser();
+    expect(parser.push(JSON.stringify([create, update([title])]))).toEqual([
+      create,
+      update([{ id: 'root', component: 'Loading', variant: 'block' }]),
+      update([title]),
+    ]);
+    expect(parser.push(JSON.stringify([update([root])]))).toEqual([
+      update([root]),
+    ]);
+  });
+
+  test('fills only remaining gaps and replaces them without resending ready components', () => {
+    const parser = new A2UIProtocolMessageStreamParser();
+    expect(components(parser.push(JSON.stringify([create])))).toEqual([{
+      id: 'root',
+      component: 'Loading',
+      variant: 'block',
+    }]);
+    expect(parser.push(' ')).toEqual([]);
+    const withMissingChild = parser.push(JSON.stringify([update([root])]));
+    expect(components(withMissingChild)).toEqual([
+      root,
+      { id: 'title', component: 'Loading', variant: 'block' },
+    ]);
+    expect(parser.push(JSON.stringify([update([root])]))).toEqual([]);
+    expect(parser.push(JSON.stringify([update([title])]))).toEqual([
+      update([title]),
+    ]);
+  });
+
+  test('does not fill a child removed by a later update in the same batch', () => {
+    const parser = new A2UIProtocolMessageStreamParser();
+    const source = [
+      create,
+      update([root]),
+      update([{ ...root, children: [] }]),
+    ];
+    expect(parser.push(JSON.stringify(source))).toEqual(source);
+  });
+
+  test('preserves visible content when a later snapshot repeats createSurface', () => {
+    const parser = new A2UIProtocolMessageStreamParser();
+    parser.push(JSON.stringify([create, update([root, title])]));
+    expect(parser.push(JSON.stringify([create]))).toEqual([create]);
+    const changedTitle = { ...title, text: 'Updated' };
+    expect(parser.push(JSON.stringify([update([root, changedTitle])]))).toEqual(
+      [
+        update([changedTitle]),
+      ],
+    );
+  });
+
+  test('does not overwrite existing children referenced by an action-only patch', () => {
+    const parser = new A2UIProtocolMessageStreamParser();
+    expect(parser.push(JSON.stringify([update([root])]))).toEqual([
+      update([root]),
+    ]);
+  });
+
+  test('retains intentional loading and unavailable-image placeholders', () => {
+    const parser = new A2UIProtocolMessageStreamParser();
+    const parent = { ...root, children: ['pending', 'image'] };
+    const pending = { id: 'pending', component: 'Loading', variant: 'inline' };
+    const image = { id: 'image', component: 'Image', url: '' };
+    expect(
+      parser.push(JSON.stringify([create, update([parent, pending, image])])),
+    )
+      .toEqual([
+        create,
+        update([parent, pending, {
+          id: 'image',
+          component: 'Loading',
+          variant: 'block',
+        }]),
+      ]);
+  });
+
+  test('does not publish loading for a surface deleted in the same batch', () => {
+    const parser = new A2UIProtocolMessageStreamParser();
+    const source = [create, {
+      version: 'v0.9',
+      deleteSurface: { surfaceId: 's' },
+    }];
+    expect(parser.push(JSON.stringify(source))).toEqual(source);
+  });
+
   test.each([1, 2, 7, 64, 8192])(
     'handles escaped strings with %i character chunks',
     (size) => {
@@ -89,7 +200,12 @@ describe('A2UI incremental parsing', () => {
         || component.id === 'title' && component.component === 'Text'
       ),
     ).toBe(false);
-    expect(messages.at(-1)).toEqual(data);
+    expect(messages.slice(0, 3)).toEqual([create, update([decorated]), data]);
+    expect(components(messages).at(-1)).toEqual({
+      id: 'title',
+      component: 'Loading',
+      variant: 'block',
+    });
   });
 
   test('supports reordered keys and never uses a previous message surface id', () => {

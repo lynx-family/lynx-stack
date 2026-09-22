@@ -1,12 +1,14 @@
-import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
 import * as ReactLynxInternal from "@lynx-js/react/element-template/internal";
 import { useCallback, useEffect, useState } from '@lynx-js/react';
 const arrow = './assets/arrow.png';
 const lynxLogo = './assets/lynx-logo.png';
 const reactLynxLogo = './assets/react-logo.png';
-const _et_b89c02b1874f = `${globDynamicComponentEntry}:${"_et_b89c02b1874f"}`;
-const _et_a51110b9901e = `${globDynamicComponentEntry}:${"_et_a51110b9901e"}`;
-const _et_b2bb4db3b1ed = `${globDynamicComponentEntry}:${"_et_b2bb4db3b1ed"}`;
+const _et_b89c02b1874f_bundle = globDynamicComponentEntry;
+const _et_b89c02b1874f = `${_et_b89c02b1874f_bundle}:${"_et_b89c02b1874f"}`;
+const _et_a51110b9901e_bundle = globDynamicComponentEntry;
+const _et_a51110b9901e = `${_et_a51110b9901e_bundle}:${"_et_a51110b9901e"}`;
+const _et_b2bb4db3b1ed_bundle = globDynamicComponentEntry;
+const _et_b2bb4db3b1ed = `${_et_b2bb4db3b1ed_bundle}:${"_et_b2bb4db3b1ed"}`;
 ReactLynxInternal.__etAttrPlanMap[_et_b2bb4db3b1ed] = [
     0,
     ReactLynxInternal.adaptEventAttrSlot
@@ -20,20 +22,15 @@ export function App() {
         'background-only';
         setAlterLogo((prevAlterLogo)=>!prevAlterLogo);
     }, []);
-    return /*#__PURE__*/ _jsx(_et_b2bb4db3b1ed, {
-        attributeSlots: [
-            1,
-            arrow
-        ],
-        $0: alterLogo ? /*#__PURE__*/ _jsx(_et_b89c02b1874f, {
-            attributeSlots: [
-                reactLynxLogo
-            ]
-        }) : /*#__PURE__*/ _jsx(_et_a51110b9901e, {
-            attributeSlots: [
-                lynxLogo
-            ]
-        }),
-        $1: ' src/App.tsx '
-    });
+    return /*#__PURE__*/ ReactLynxInternal.__etHost(_et_b2bb4db3b1ed, "_et_b2bb4db3b1ed", _et_b2bb4db3b1ed_bundle, void 0, [
+        1,
+        arrow
+    ], [
+        alterLogo ? /*#__PURE__*/ ReactLynxInternal.__etHost(_et_b89c02b1874f, "_et_b89c02b1874f", _et_b89c02b1874f_bundle, void 0, [
+            reactLynxLogo
+        ], void 0, void 0, true) : /*#__PURE__*/ ReactLynxInternal.__etHost(_et_a51110b9901e, "_et_a51110b9901e", _et_a51110b9901e_bundle, void 0, [
+            lynxLogo
+        ], void 0, void 0, true),
+        ' src/App.tsx '
+    ], void 0);
 }

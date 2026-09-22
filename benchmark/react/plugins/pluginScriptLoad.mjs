@@ -43,7 +43,8 @@ if (typeof Codspeed !== "undefined") {
             const caseDir = useElementTemplate
               ? `benchmark/react/et`
               : `benchmark/react`;
-            const chunkName = filename.replace(/^\.lynx\//, '');
+            const chunkName = (useElementTemplate ? 'et-' : '')
+              + filename.replace(/^\.lynx\//, '');
             // dprint-ignore
             return `\
 if (typeof Codspeed !== "undefined") {

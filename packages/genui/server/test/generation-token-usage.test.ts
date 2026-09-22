@@ -8,6 +8,7 @@ import { describe, expect, test } from '@rstest/core';
 
 import { BASIC_CATALOG } from '../agent/a2ui/a2ui-catalog.js';
 import { createTextStreamRoute } from '../app/common/text-stream-route.js';
+import type { ChatOptions } from '../service/common/types.js';
 import app from '../src/app.js';
 
 const usage = {
@@ -112,6 +113,56 @@ describe('generation token usage on the wire', () => {
     },
   );
 
+  test('returns invalid A2UI output and usage without automatically repairing Create requests', async () => {
+    const global = globalThis as typeof globalThis & {
+      __A2UI_AGENT_SERVICE__?: unknown;
+    };
+    const previous = global.__A2UI_AGENT_SERVICE__;
+    let repairCalls = 0;
+    global.__A2UI_AGENT_SERVICE__ = {
+      streamAsAsyncIterable: (_messages: unknown, opts: ChatOptions) => {
+        opts.onReasoning?.('Reasoning before invalid A2UI');
+        return streamed('invalid artifact');
+      },
+      generateValidated: () => {
+        repairCalls++;
+        throw new Error('Unexpected repair');
+      },
+    };
+    try {
+      for (const path of ['/a2ui/stream', '/a2ui/action/stream']) {
+        const response = await app.request(path, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-forwarded-for': '203.0.113.187',
+          },
+          body: JSON.stringify({
+            messages: [{ role: 'user', content: 'Create a card' }],
+            action: { name: 'refresh' },
+            surfaceId: 'main',
+            catalog: BASIC_CATALOG,
+          }),
+        });
+        expect(doneFrame(await response.text())).toMatchObject({
+          validation: { ok: false },
+          reasoning: {
+            text: 'Reasoning before invalid A2UI',
+            truncated: false,
+          },
+          tokenUsage: {
+            inputTokens: 100,
+            outputTokens: 20,
+            reasoningTokens: 8,
+          },
+        });
+      }
+      expect(repairCalls).toBe(0);
+    } finally {
+      global.__A2UI_AGENT_SERVICE__ = previous;
+    }
+  });
+
   test.each([true, false])(
     'counts the initial A2UI stream and all repair usage (repair ok=%s)',
     async ok => {
@@ -141,6 +192,7 @@ describe('generation token usage on the wire', () => {
               'x-forwarded-for': '203.0.113.181',
             },
             body: JSON.stringify({
+              maxRepairAttempts: 1,
               messages: [{ role: 'user', content: 'Create a card' }],
               action: { name: 'refresh' },
               surfaceId: 'main',

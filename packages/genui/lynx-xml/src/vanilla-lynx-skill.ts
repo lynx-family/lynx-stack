@@ -90,15 +90,24 @@ const REFERENCE_SELECTIONS: SkillReferenceSelection[] = [
 /** Selected guidance bundled directly from `@lynx-js/skill-vanilla-lynx`. */
 export const VANILLA_LYNX_SKILL_GUIDANCE: string = buildSkillGuidance();
 
-function buildSkillGuidance(): string {
+/** Guidance for model-authored business callbacks with agent-owned lifecycle code. */
+export const VANILLA_LYNX_REUSED_SCRIPT_GUIDANCE: string = buildSkillGuidance(
+  true,
+);
+
+function buildSkillGuidance(reuseScript = false): string {
   const references = REFERENCE_SELECTIONS.map(selection => {
-    const sections = selection.sections.map(sectionName => {
+    const sections = selection.sections.filter(sectionName =>
+      !reuseScript || selection.file !== 'references/main-thread.md'
+      || !['Bind Element Events', 'Render', 'Update', 'Lifecycle Cleanup']
+        .includes(sectionName)
+    ).map(sectionName => {
       let section = extractLevelTwoSection(
         selection.markdown,
         sectionName,
         selection.file,
       );
-      section = stripFencedCodeBlocks(section);
+      section = stripFencedExamples(section);
       if (selection.omitLineContaining) {
         section = omitLinesContaining(section, selection.omitLineContaining);
       }
@@ -120,8 +129,8 @@ function buildSkillGuidance(): string {
 The following selected guidance is bundled from ${SKILL_PACKAGE_NAME}. It is
 the source of truth for Element PAPI, lifecycle, event routing, background
 state, and Lynx styling behavior unless the later Lynx XML adaptation contract
-explicitly overrides it. Fenced examples are omitted to keep the generation
-prompt focused; their surrounding normative rules are preserved.
+explicitly overrides it. Code examples are omitted to keep the generation
+prompt focused; plain-text constraint lists and surrounding rules are preserved.
 
 ${references.join('\n\n')}
 `.trim();
@@ -156,9 +165,14 @@ function normalizeMarkdown(markdown: string): string {
   return markdown.replace(/\r\n?/gu, '\n').trim();
 }
 
-function stripFencedCodeBlocks(markdown: string): string {
+function stripFencedExamples(markdown: string): string {
   return markdown
-    .replace(/^```[^\n]*\n[\s\S]*?^```[ \t]*$/gmu, '')
+    .replace(
+      /^```([^\n]*)\n([\s\S]*?)^```[ \t]*$/gmu,
+      (_match, language: string, content: string) =>
+        // The skill uses text fences for normative CSS property lists.
+        language.trim() === 'text' ? content.trimEnd() : '',
+    )
     .replace(/\n{3,}/gu, '\n\n')
     .trim();
 }

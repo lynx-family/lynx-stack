@@ -25,6 +25,7 @@ import {
   searchedDoubaoImageURLs,
 } from '../../../../agent/common/doubao-search-tool.js';
 import { getA2UIAgentService } from '../../../../service/a2ui/a2ui-agent.js';
+import type { A2UIChatOptions } from '../../../../service/a2ui/a2ui-agent.js';
 import { readBenchTokenUsage } from '../../../../service/common/bench/usage.js';
 import {
   configuredApiStyle,
@@ -40,6 +41,8 @@ import {
 } from '../../../common/chat-validation';
 import { jsonWithCors } from '../../../common/cors';
 import { errorMessage } from '../../../common/errors';
+import { createFailureReasoning } from '../../../common/failure-reasoning.js';
+import { createGenerationTiming } from '../../../common/generation-timing.js';
 import {
   checkRateLimit,
   rateLimitSseResponse,
@@ -59,6 +62,7 @@ interface A2UIActionStreamBody {
   model?: string;
   apiKey?: string;
   baseURL?: string;
+  enableDesignGuidance?: boolean;
   reasoningEffort?: OpenAIReasoningEffort;
   catalog?: A2UICatalog;
   maxRepairAttempts?: number;
@@ -173,8 +177,10 @@ async function postA2UIActionStream(req: Request) {
     content: userContent,
   };
 
+  const reasoning = createFailureReasoning([body.apiKey, body.baseURL]);
   const opts = {
     ...pickA2UIChatOptions(body),
+    onReasoning: reasoning.append,
     onPerformanceEvent: (event: string, details = {}) => {
       log(event, details);
     },
@@ -264,12 +270,19 @@ async function postA2UIActionStream(req: Request) {
         }
       };
       const run = async () => {
+        const timing = createGenerationTiming();
+        const streamOptions: A2UIChatOptions = {
+          ...optsWithCatalog,
+          onModelInteraction: event => {
+            enqueue('model', event);
+          },
+        };
         try {
           const connectStartedAt = performance.now();
           log('agent.connect.started');
           const { textStream, finalize } = await service.streamAsAsyncIterable(
             [userMessage],
-            optsWithCatalog,
+            streamOptions,
             validatedConversation.conversation,
             generationController.signal,
             imageGenerationScope,
@@ -378,14 +391,14 @@ async function postA2UIActionStream(req: Request) {
             warnings: v.warnings,
             messages: validatedMessages,
           };
-          if (!v.ok) {
+          if (!v.ok && (opts.maxRepairAttempts ?? 0) > 0) {
             try {
               log('repair.started', {
                 sourceErrors: v.errors,
               });
               const repaired = await service.generateValidated(
                 [userMessage],
-                optsWithCatalog,
+                streamOptions,
                 validatedConversation.conversation,
                 validationOptions,
                 generationController.signal,
@@ -452,6 +465,8 @@ async function postA2UIActionStream(req: Request) {
           }
 
           generationController.signal.throwIfAborted();
+          const metrics = timing.finish();
+          enqueue('metrics', { metrics });
           const preview = validation.ok
             ? await publishA2UIPayload(validation.messages)
             : undefined;
@@ -471,12 +486,14 @@ async function postA2UIActionStream(req: Request) {
             requestId,
           });
           enqueue('done', {
+            metrics,
             text: finalText,
             usage,
             tokenUsage: extractTokenUsage(usage),
             cachedTokens,
             finishReason,
             validation,
+            ...(validation.ok ? {} : reasoning.payload()),
             preview,
             repair,
           });
@@ -484,7 +501,11 @@ async function postA2UIActionStream(req: Request) {
           if (!closed && !generationController.signal.aborted) {
             const error = errorMessage(err, errorOptions);
             log('error.enqueued', error);
-            enqueue('error', error);
+            enqueue('error', {
+              ...error,
+              ...reasoning.payload(),
+              metrics: timing.finish(),
+            });
           }
         } finally {
           req.signal.removeEventListener('abort', onRequestAbort);

@@ -4,6 +4,7 @@
 /** @rstest-environment jsdom */
 import { afterEach, beforeEach, expect, rstest, test } from '@rstest/core';
 import 'fake-indexeddb/auto';
+import { countTokens } from 'gpt-tokenizer/encoding/o200k_base';
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
@@ -130,6 +131,117 @@ async function reloadPage() {
   await mountPage();
 }
 
+test('counts the selected Lynx XML artifact view in tokens and restores it from history', async () => {
+  const original = '<template>\n  <text>杭州天气 ☀️</text>\n</template>';
+  rstest.stubGlobal('fetch', (url: string) =>
+    Promise.resolve(jsonResponse(
+      url.endsWith('/models') ? MODELS : {
+        text: DOCUMENT,
+        metadata: { modelOutput: original, xmlFragment: original },
+      },
+    )));
+  await mountPage();
+  await updateUI(() => {
+    const textarea = container.querySelector('textarea')!;
+    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!
+      .set!.call(textarea, 'Build a weather card');
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await React.act(async () => button('Send').click());
+  const verifyCount = async (source: string) => {
+    await rstest.waitFor(() => {
+      expect(container.querySelector('.chatArtifactMeta')?.textContent).toBe(
+        `.lynxml · ${countTokens(source).toLocaleString('en-US')} tokens`,
+      );
+    });
+    expect(container.querySelector('.chatMessages')?.textContent).not.toMatch(
+      /\bchars\b/,
+    );
+  };
+  await verifyCount(original);
+  await updateUI(() => button('Transformed').click());
+  await verifyCount(DOCUMENT);
+  await reloadPage();
+  await verifyCount(original);
+});
+
+test('shows the failure and waits for an explicit retry, including after reload', async () => {
+  const requests: Record<string, unknown>[] = [];
+  rstest.stubGlobal('fetch', (url: string, init?: RequestInit) => {
+    if (url.endsWith('/models')) return Promise.resolve(jsonResponse(MODELS));
+    const request = JSON.parse(init!.body as string) as Record<string, unknown>;
+    requests.push(request);
+    return Promise.resolve(
+      requests.length === 1
+        ? jsonResponse({
+          error: 'Model output budget exhausted',
+          reasoning: {
+            text: 'Returned reasoning <script>text</script>',
+            truncated: false,
+          },
+          tokenUsage: { outputTokens: 16384, reasoningTokens: 16384 },
+        }, 500)
+        : jsonResponse({
+          text: DOCUMENT,
+          tokenUsage: { outputTokens: 50, reasoningTokens: 0 },
+        }),
+    );
+  });
+  await mountPage();
+  await updateUI(() => {
+    const textarea = container.querySelector('textarea')!;
+    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!
+      .set!.call(textarea, 'Build a counter');
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await React.act(async () => button('Send').click());
+  await rstest.waitFor(() => expect(button('Retry').disabled).toBe(false));
+  expect(container.textContent).toContain('Model output budget exhausted');
+  expect(container.textContent).toContain('Retry this request?');
+  expect(requests).toHaveLength(1);
+  const reasoning = container.querySelector<HTMLDetailsElement>(
+    '.chatAgentReasoning',
+  )!;
+  expect(reasoning.open).toBe(false);
+  expect(reasoning.querySelector('pre')?.textContent).toBe(
+    'Returned reasoning <script>text</script>',
+  );
+  expect(reasoning.querySelector('script')).toBeNull();
+  const beforeReload = await loadConversation(
+    (await getActiveConversationId('lynx-xml'))!,
+  );
+  expect(JSON.stringify(beforeReload)).not.toContain('Returned reasoning');
+  await reloadPage();
+  expect(container.querySelector('.chatAgentReasoning')).toBeNull();
+  expect(requests).toHaveLength(1);
+  expect(button('Retry').disabled).toBe(false);
+  await updateUI(() => {
+    button('Retry').click();
+    button('Retry').click();
+  });
+  await rstest.waitFor(() => expect(button('New Chat').disabled).toBe(false));
+  expect(requests).toHaveLength(2);
+  for (const request of requests) {
+    expect(request).toMatchObject({
+      messages: [{ role: 'user', content: 'Build a counter' }],
+    });
+    expect(JSON.stringify(request.conversation)).not.toContain(
+      'Build a counter',
+    );
+  }
+  expect(container.querySelector('.chatRetryPrompt')).toBeNull();
+  const saved = await loadConversation(
+    (await getActiveConversationId('lynx-xml'))!,
+  );
+  const responses = saved!.messages.filter(message =>
+    message.role === 'assistant'
+  );
+  expect(responses).toHaveLength(2);
+  expect(responses[0]?.generationError).toBe('Model output budget exhausted');
+  expect(responses[0]?.generationUsage?.usage.reasoningTokens).toBe(16384);
+  expect(responses[1]?.generationError).toBeUndefined();
+});
+
 test.each([false, true])(
   'saves the request checkboxes before generation and restores them after reload (failure: %s)',
   async fail => {
@@ -140,6 +252,7 @@ test.each([false, true])(
         provider: 'test-model',
         enableDesignGuidance: false,
         enableHtmlFragment: false,
+        enableScriptReuse: false,
         stylePreset: 'default',
       });
       const payload = {
@@ -148,8 +261,33 @@ test.each([false, true])(
           cachedTokens: 6000,
           outputTokens: 2000,
           totalTokens: 12000,
+          reasoningTokens: 1500,
         },
         usage: { inputTokens: 1, cachedTokens: 0, outputTokens: 1 },
+        metadata: {
+          generationAttempts: [
+            {
+              mode: 'initial',
+              outputChars: 0,
+              finishReason: 'length',
+              usage: {
+                inputTokens: 5000,
+                outputTokens: 1500,
+                reasoningTokens: 1500,
+              },
+            },
+            {
+              mode: 'regenerate',
+              outputChars: DOCUMENT.length,
+              finishReason: 'stop',
+              usage: {
+                inputTokens: 5000,
+                outputTokens: 500,
+                reasoningTokens: 0,
+              },
+            },
+          ],
+        },
       };
       return fail
         ? jsonResponse({ ...payload, error: 'Generation failed' }, 500)
@@ -163,6 +301,7 @@ test.each([false, true])(
       const body = JSON.parse(init.body) as Record<string, unknown>;
       expect(body.enableDesignGuidance).toBe(false);
       expect(body.enableHtmlFragment).toBe(false);
+      expect(body.enableScriptReuse).toBe(false);
       expect(body.stylePreset).toBe('default');
       return generated();
     });
@@ -170,6 +309,7 @@ test.each([false, true])(
     await updateUI(() => {
       checkbox('Design').click();
       checkbox('Template').click();
+      checkbox('ScriptReuse').click();
     });
     await updateUI(() => {
       const textarea = container.querySelector('textarea')!;
@@ -189,6 +329,14 @@ test.each([false, true])(
       container.querySelector('[aria-label="Generation usage"]')?.textContent,
     ).toContain('Total 12.0k');
     expect(container.textContent).toContain('Est. cost ¥27.0000');
+    const verifyUsage = () => {
+      expect(container.querySelector('.chatTokenUsageBadge')?.textContent)
+        .toContain('Reasoning 1.50k');
+      expect(container.querySelector('.chatTokenUsageBadge')?.textContent)
+        .not.toContain('Attempts');
+      expect(container.querySelector('.chatGenerationAttempts')).toBeNull();
+    };
+    verifyUsage();
     expect(container.querySelector('.chatTokenUsageModel')?.textContent)
       .toBe('Model test-model');
     expect(
@@ -204,7 +352,16 @@ test.each([false, true])(
     ).toMatchObject({
       model: 'test-model',
       modelPrices: { input_price: 2, cached_price: 0.5, output_price: 8 },
-      usage: { inputTokens: 10000, cachedTokens: 6000, outputTokens: 2000 },
+      usage: {
+        inputTokens: 10000,
+        cachedTokens: 6000,
+        outputTokens: 2000,
+        reasoningTokens: 1500,
+      },
+      generationAttempts: [
+        { mode: 'initial', outputChars: 0, usage: { reasoningTokens: 1500 } },
+        { mode: 'regenerate', usage: { reasoningTokens: 0 } },
+      ],
     });
     // Simulate unrelated global preferences having changed before reload.
     window.localStorage.setItem(CHAT_PROVIDER_SETTINGS_STORAGE_KEY, '{}');
@@ -215,14 +372,18 @@ test.each([false, true])(
       })));
     await reloadPage();
     expect(container.textContent).toContain('Est. cost ¥27.0000');
+    verifyUsage();
     expect(checkbox('Design').checked).toBe(false);
     expect(checkbox('Template').checked).toBe(false);
     expect(checkbox('StylePreset').checked).toBe(true);
-    for (const label of ['Design', 'Template', 'StylePreset']) {
+    expect(checkbox('ScriptReuse').checked).toBe(false);
+    for (const label of ['Design', 'Template', 'StylePreset', 'ScriptReuse']) {
       expect(checkbox(label).disabled).toBe(true);
     }
     await updateUI(() => {
-      for (const label of ['Design', 'Template', 'StylePreset']) {
+      for (
+        const label of ['Design', 'Template', 'StylePreset', 'ScriptReuse']
+      ) {
         checkbox(label).click();
       }
     });
@@ -242,6 +403,8 @@ test.each([false, true])(
         expect(checkbox(label).checked).toBe(true);
         expect(checkbox(label).disabled).toBe(false);
       }
+      expect(checkbox('ScriptReuse').checked).toBe(true);
+      expect(checkbox('ScriptReuse').disabled).toBe(false);
     });
     await updateUI(() => {
       const item = [
@@ -259,7 +422,10 @@ test.each([false, true])(
       expect(checkbox('Design').checked).toBe(false);
       expect(checkbox('Template').checked).toBe(false);
       expect(checkbox('StylePreset').checked).toBe(true);
-      for (const label of ['Design', 'Template', 'StylePreset']) {
+      expect(checkbox('ScriptReuse').checked).toBe(false);
+      for (
+        const label of ['Design', 'Template', 'StylePreset', 'ScriptReuse']
+      ) {
         expect(checkbox(label).disabled).toBe(true);
       }
     });
@@ -338,7 +504,7 @@ test('restores each conversation independently and survives late model loading',
 test('saves checkbox edits before sending, reloads them, and defaults new records on', async () => {
   rstest.stubGlobal('fetch', () => Promise.resolve(jsonResponse(MODELS)));
   await mountPage();
-  const labels = ['Design', 'Template', 'StylePreset'];
+  const labels = ['Design', 'Template', 'StylePreset', 'ScriptReuse'];
   for (const label of labels) expect(checkbox(label).checked).toBe(true);
   await updateUI(() => {
     for (const label of labels) checkbox(label).click();
@@ -351,6 +517,7 @@ test('saves checkbox edits before sending, reloads them, and defaults new record
       provider: 'test-model',
       enableDesignGuidance: false,
       enableHtmlFragment: false,
+      enableScriptReuse: false,
       stylePreset: false,
     });
   });
@@ -433,6 +600,11 @@ test('keeps each turn badge in the chat transcript with its original model price
     expect(badges).toHaveLength(2);
     expect(badges[0]?.textContent).toContain('¥27.0000');
     expect(badges[1]?.textContent).toContain('¥54.0000');
+    for (const badge of badges) {
+      expect(badge.textContent).toContain('Reasoning Not recorded');
+      expect(badge.textContent).not.toContain('Attempts');
+      expect(badge.querySelector('.chatGenerationAttempts')).toBeNull();
+    }
     expect(badges[0]?.querySelector('.chatTokenUsageModel')?.textContent)
       .toBe('Model test-model');
     expect(badges[1]?.querySelector('.chatTokenUsageModel')?.textContent)
