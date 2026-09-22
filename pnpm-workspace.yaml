@@ -124,7 +124,7 @@ catalogs:
 
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "2.2.4"
+    "@rsbuild/core": "2.2.8"
 
   # Rslib monorepo packages
   rslib:
