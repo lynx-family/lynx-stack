@@ -7,7 +7,11 @@ import { Element } from '../../src/worklet-runtime/api/element';
 import { initApiEnv } from '../../src/worklet-runtime/api/lynxApi';
 import { RunWorkletSource } from '../../src/worklet-runtime/bindings/types';
 import { hydrateCtx } from '../../src/worklet-runtime/hydrate';
-import { updateWorkletRefInitValueChanges } from '../../src/worklet-runtime/workletRef';
+import {
+  getFromWorkletRefMap,
+  removeValueFromWorkletRefMap,
+  updateWorkletRefInitValueChanges,
+} from '../../src/worklet-runtime/workletRef';
 import { initWorklet } from '../../src/worklet-runtime/workletRuntime';
 
 describe('Worklet', () => {
@@ -41,12 +45,18 @@ describe('Worklet', () => {
       : {};
     if (kind === 'cycle') value.self = value;
     lynxWorkletImpl._refImpl.registerMainThreadObjectType('@test/shared', () => value);
-    updateWorkletRefInitValueChanges([[1, null, '@test/shared']]);
+    updateWorkletRefInitValueChanges([[1, null, '@test/shared'], [2, null, '@test/shared']]);
     registerWorklet('main-thread', 'shared', function() {
       return this._c.holder.value;
     });
-    const holder = { value: { _wvid: 1, _type: '@test/shared', _initValue: null } };
+    const holder = { value: { _wvid: 2, _type: '@test/shared', _initValue: null } };
     expect(runWorklet({ _wkltId: 'shared', _c: { holder } }, [])).toBe(value);
+    removeValueFromWorkletRefMap(1);
+    expect(lynxWorkletImpl._refImpl._workletRefMap[1]).toBeUndefined();
+    expect(getFromWorkletRefMap({ _wvid: 2 })).toBe(value);
+    expect(() => updateWorkletRefInitValueChanges([[2, null, '@test/shared']])).not.toThrow();
+    expect(getFromWorkletRefMap({ _wvid: -1, _type: '@test/shared', _initValue: null })).toBe(value);
+    lynxWorkletImpl._refImpl.clearFirstScreenWorkletRefMap();
     expect(runWorklet({ _wkltId: 'shared', _c: { holder } }, [])).toBe(value);
     if (kind === 'metadata') expect(value.nested).toEqual({ _wvid: 999 });
   });
@@ -62,6 +72,53 @@ describe('Worklet', () => {
     globalThis.runWorklet(worklet);
     expect(fn).toBeCalled();
   });
+
+  it.each([
+    { withSetter: false, configurable: false },
+    { withSetter: false, configurable: true },
+    { withSetter: true, configurable: false },
+    { withSetter: true, configurable: true },
+  ])(
+    'captures a typed target getter (setter: $withSetter, configurable: $configurable)',
+    ({ withSetter, configurable }) => {
+      initWorklet();
+      lynxWorkletImpl._refImpl.registerMainThreadObjectType('@test/getter', value => ({ value }));
+      updateWorkletRefInitValueChanges([[1, 'first', '@test/getter'], [2, 'second', '@test/getter']]);
+      const getter = vi.fn(function() {
+        return { _wvid: this.id, _type: '@test/getter', _initValue: null };
+      });
+      const setter = vi.fn();
+      const source = { id: 1 };
+      const descriptor = {
+        get: getter,
+        ...(withSetter ? { set: setter } : {}),
+        enumerable: true,
+        configurable,
+      };
+      Object.defineProperty(source, 'target', descriptor);
+      Object.defineProperty(source, 'aliasTarget', descriptor);
+      registerWorklet('main-thread', 'getter-parent', function() {
+        return [this._c.holder.source.target, this._c.holder.source.aliasTarget];
+      });
+      const holder = {
+        get source() {
+          return source;
+        },
+      };
+      const capture = () => runWorklet({ _wkltId: 'getter-parent', _c: { holder } }, []);
+      const first = capture();
+      source.id = 2;
+      const second = capture();
+      expect(first[0]).toBe(getFromWorkletRefMap({ _wvid: 1 }));
+      expect(first[1]).toBe(first[0]);
+      expect(second[0]).toBe(getFromWorkletRefMap({ _wvid: 2 }));
+      expect(second[1]).toBe(second[0]);
+      expect(getter).toHaveBeenCalledTimes(4);
+      expect(setter).not.toHaveBeenCalled();
+      expect(holder.source).toBe(source);
+      expect(Object.getOwnPropertyDescriptor(source, 'target').get).toBe(getter);
+    },
+  );
 
   it.each(['direct', 'nested', 'array'])('snapshots a %s method getter without consuming the source', (kind) => {
     initWorklet();

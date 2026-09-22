@@ -83,12 +83,13 @@ describe('MainThreadObject integration with the worklet ref map', () => {
     globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
 
     expect(getFromWorkletRefMap({ _wvid: 1 })).toBe(firstScreenValue);
-    expect(isHydratedWorkletValue(redundantValue)).toBe(false);
+    // Removing a runtime-owned reference must not revoke a retained target's brand.
+    expect(isHydratedWorkletValue(redundantValue)).toBe(true);
     expect(isHydratedWorkletValue(firstScreenValue)).toBe(true);
 
     removeValueFromWorkletRefMap(1);
     expect(getFromWorkletRefMap({ _wvid: 1 })).toBeUndefined();
-    expect(isHydratedWorkletValue(firstScreenValue)).toBe(false);
+    expect(isHydratedWorkletValue(firstScreenValue)).toBe(true);
   });
 
   it('does not hydrate an unused first-screen main-thread object', () => {
@@ -155,7 +156,7 @@ describe('MainThreadObject integration with the worklet ref map', () => {
     expect(getFromWorkletRefMap({ _wvid: 1 })).toBe(firstScreenValue);
   });
 
-  it('releases abandoned first-screen main-thread object metadata', () => {
+  it('releases first-screen map references without revoking retained target metadata', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/abandoned',
       value => ({ value }),
@@ -178,10 +179,11 @@ describe('MainThreadObject integration with the worklet ref map', () => {
     expect(isHydratedWorkletValue(value)).toBe(true);
 
     globalThis.lynxWorkletImpl._refImpl.clearFirstScreenWorkletRefMap();
-    expect(isHydratedWorkletValue(value)).toBe(false);
+    expect(globalThis.lynxWorkletImpl._refImpl._firstScreenWorkletRefMap).toEqual({});
+    expect(isHydratedWorkletValue(value)).toBe(true);
   });
 
-  it('releases typed objects whose shape resembles a mutable cell', () => {
+  it('keeps released typed objects distinct from mutable cells while they remain reachable', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/mutable-cell-shaped-object',
       () => ({ _wvid: 91, current: 0 }),
@@ -195,11 +197,11 @@ describe('MainThreadObject integration with the worklet ref map', () => {
     removeValueFromWorkletRefMap(91);
 
     expect(getFromWorkletRefMap({ _wvid: 91 })).toBeUndefined();
-    // The structural mutable-cell check still recognizes this shape after the
-    // typed-object metadata is released. Reusing it as a mutable cell proves
-    // that the authoritative typed-object metadata itself was removed.
+    // A retained target cannot be reclassified from its user-owned properties.
     globalThis.lynxWorkletImpl._refImpl._workletRefMap[92] = value;
-    expect(() => updateWorkletRefInitValueChanges([[92, null, 'main-thread']])).not.toThrow();
+    expect(() => updateWorkletRefInitValueChanges([[92, null, 'main-thread']])).toThrow(
+      'Worklet value kind mismatch',
+    );
   });
 
   it('does not hydrate worklet metadata found inside object payloads', () => {
