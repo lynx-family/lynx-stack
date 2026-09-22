@@ -63,20 +63,6 @@ function injectTt(): void {
 type OnAppReload = (updateData: Record<string, any>, options?: unknown) => void;
 
 /**
- * Lynx core installs an `onAppReload` of its own before the entry runs, which
- * drops this app and loads the card again, so the background entry is evaluated
- * afresh instead of re-rendering the JSX of the previous render. Defer to it
- * when it is there; cores that predate it leave the property unset and get the
- * re-render.
- *
- * Core seeds the new app from the `initData` the page was loaded with, which is
- * behind by every update since. Passing the data this app accumulated keeps the
- * reloaded app seeing what the re-rendering path would have shown it.
- *
- * The reload is counted here rather than by the app that comes back, which
- * starts at whatever the page realm already holds.
- */
-/**
  * Wire this runtime to the app that is running now.
  *
  * Module scoped setup runs once per realm, and an externalized `@lynx-js/react`
@@ -91,6 +77,20 @@ function reattachTt(): void {
   }
 }
 
+/**
+ * Lynx core installs an `onAppReload` of its own before the entry runs, which
+ * drops this app and loads the card again, so the background entry is evaluated
+ * afresh instead of re-rendering the JSX of the previous render. Defer to it
+ * when it is there; cores that predate it leave the property unset and get the
+ * re-render.
+ *
+ * Core seeds the new app from the `initData` the page was loaded with, which is
+ * behind by every update since. Passing the data this app accumulated keeps the
+ * reloaded app seeing what the re-rendering path would have shown it.
+ *
+ * The reload is counted here rather than by the app that comes back, which
+ * starts at whatever the page realm already holds.
+ */
 function createOnAppReload(tt: { onAppReload?: OnAppReload | undefined }): OnAppReload {
   const reloadByCore = tt.onAppReload;
   if (typeof reloadByCore !== 'function') {
