@@ -7,6 +7,13 @@ type Dictionary = Record<string, string>;
 
 const FENCE = /^(?:```|~~~)/;
 
+/**
+ * A declaration or signature line, which TypeDoc writes as a quote when it
+ * does not write it as a code block. The bold member name and the type that
+ * follows it are not prose, so the line is left alone either way.
+ */
+const DECLARATION = /^>\s.*\*\*/;
+
 /** The target of a Markdown link, which a localized page spells its own way. */
 const TARGET = /(\]\()([^)\s]*)(\))/g;
 
@@ -116,6 +123,9 @@ function translate(
       continue;
     }
     if (fence) {
+      out.push(line);
+    } else if (DECLARATION.test(line)) {
+      flush();
       out.push(line);
     } else if (line.trim() === '') {
       flush();
