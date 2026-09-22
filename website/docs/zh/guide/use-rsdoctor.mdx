@@ -1,8 +1,12 @@
+---
+description: '使用 Rsdoctor 分析和诊断构建。'
+---
+
 import { PackageManagerTabs } from '@theme';
 
 # 使用 Rsdoctor
 
-[Rsdoctor](https://rsdoctor.dev/) 是一个构建分析工具，可以直观地显示构建过程，例如编译时间、编译前后的代码变化、模块引用关系、重复模块等。
+[Rsdoctor](https://rsdoctor.rs/) 是一个构建分析工具，可以直观地显示构建过程，例如编译时间、编译前后的代码变化、模块引用关系、重复模块等。
 
 如果你需要调试构建输出或构建过程，可以使用 Rsdoctor 进行问题排查。
 
@@ -16,7 +20,6 @@ import { PackageManagerTabs } from '@theme';
 - **编译可视化**: Rsdoctor 可视化编译行为和时间消耗，使查看构建问题变得容易。
 
 - **多种分析能力**: Rsdoctor 支持构建产物、构建时间分析和防退化能力：
-
   - 构建产物支持资源列表和模块依赖等。
   - 构建时间分析支持加载器、插件和解析器的构建过程分析，包括：**Rspack 的内置 swc-loader**。
   - 构建规则支持重复包检测和 ES 版本检查等。
@@ -35,11 +38,11 @@ RSDOCTOR=true rspeedy dev
 RSDOCTOR=true rspeedy build
 ```
 
-运行上述命令后，Rspeedy 将自动注册 Rsdoctor 插件，并在构建完成后打开构建分析页面。有关完整功能，请参阅 [Rsdoctor 文档](https://rsdoctor.dev/)。
+运行上述命令后，Rspeedy 将自动注册 Rsdoctor 插件，并在构建完成后打开构建分析页面。有关完整功能，请参阅 [Rsdoctor 文档](https://rsdoctor.rs/)。
 
 ## 选项
 
-如果你需要配置[选项](https://rsdoctor.dev/config/options/options#options) provided by the Rsdoctor plugin, use [`tools.rsdoctor`](../../api/rspeedy.tools.rsdoctor).
+如果你需要配置[选项](https://rsdoctor.rs/config/options/options#options) provided by the Rsdoctor plugin, use [`tools.rsdoctor`](../api/rspeedy.tools.rsdoctor.md).
 
 ```ts title="lynx.config.ts"
 import { defineConfig } from '@lynx-js/rspeedy';

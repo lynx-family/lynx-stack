@@ -27,7 +27,7 @@ export type ConsoleType =
   | (string & Record<never, never>)
 
 /**
- * {@inheritdoc Config.performance}
+ * {@inheritDoc Config.performance}
  *
  * @public
  */
@@ -37,7 +37,11 @@ export interface Performance {
    *
    * @defaultValue false
    *
-   * @beta This feature is experimental and may be changed in the future.
+   * @remarks
+   *
+   * This feature is experimental and may be changed in the future.
+   *
+   * @beta
    *
    * @example
    *
@@ -75,7 +79,7 @@ export interface Performance {
   /**
    * {@link Performance.chunkSplit} is used to configure the chunk splitting strategy.
    *
-   * @defaultValue For web builds, Rsbuild currently uses `{ strategy: 'split-by-experience' }` when this option is unset.
+   * @defaultValue Unset, which bundles everything into one chunk (same as `'all-in-one'`).
    *
    * @deprecated Use the top-level {@link Config.splitChunks} option instead.
    */
@@ -83,9 +87,9 @@ export interface Performance {
 
   // TODO: Remove this option in Rspeedy v1 to align with Rsbuild v2.
   /**
-   * Whether capture timing information in Lynx runtime integrations such as ReactLynx.
+   * {@inheritDoc @lynx-js/rsbuild-plugin#LynxPerformance.profile}
    *
-   * @defaultValue Rspeedy sets this to `true` when `DEBUG` contains `rspeedy`; otherwise it leaves the option unset.
+   * @defaultValue `true` when `DEBUG=lynx`, otherwise `undefined`
    *
    * @example
    *
@@ -144,7 +148,7 @@ export interface Performance {
    *
    * @defaultValue true
    *
-   * {@link Performance.printFileSize}
+   * @remarks
    *
    * See {@link https://rsbuild.rs/config/performance/print-file-size | Rsbuild - performance.printFileSize} for details.
    *

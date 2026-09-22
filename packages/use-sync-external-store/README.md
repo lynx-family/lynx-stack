@@ -23,14 +23,21 @@ This package is designed to be used as a drop-in replacement for libraries that 
 
 ### Configuration
 
-Add the following alias configuration to your bundler (e.g., Rspack):
+`pluginReactLynx` (from `@lynx-js/react-rsbuild-plugin`) aliases `use-sync-external-store`, including its `/shim` and `/with-selector` entry points, to this package automatically.
+
+Add the alias by hand only when building without `pluginReactLynx` (e.g., with Rspack directly):
 
 ```js
 // rspack.config.js
 export default {
   resolve: {
     alias: {
-      'use-sync-external-store': '@lynx-js/use-sync-external-store',
+      'use-sync-external-store$': '@lynx-js/use-sync-external-store',
+      'use-sync-external-store/with-selector$':
+        '@lynx-js/use-sync-external-store/with-selector',
+      'use-sync-external-store/shim$': '@lynx-js/use-sync-external-store/shim',
+      'use-sync-external-store/shim/with-selector$':
+        '@lynx-js/use-sync-external-store/shim/with-selector',
     },
   },
 };

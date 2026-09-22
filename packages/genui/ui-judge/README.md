@@ -27,7 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```
 
 `CapturePageRequest` accepts `url`, `screenshot_settle`, `timeout`,
-`global_props_json`, and `initial_data_json`. The defaults are 16 ms of screenshot
+`global_props_json`, and `initial_data_json`. The defaults are 100 ms of screenshot
 settling and a 60-second operation timeout. URLs must use `file://`, `http://`,
 or `https://`; bare paths are rejected before runtime initialization. Compiled
 Lynx bundles and UTF-8 `.lynxml` documents use the existing headless runner.
@@ -142,18 +142,19 @@ download and private staging path; XML source is staged locally. Both return BMP
 
 In addition to the shared fields above, these two endpoints accept:
 
-| Field                | Required | Description                                                 |
-| -------------------- | -------- | ----------------------------------------------------------- |
-| `screenshotSettleMs` | No       | Non-negative integer wait before capture; defaults to 16 ms |
-| `timeoutMs`          | No       | Positive integer capture timeout; defaults to 60,000 ms     |
+| Field                | Required | Description                                                  |
+| -------------------- | -------- | ------------------------------------------------------------ |
+| `screenshotSettleMs` | No       | Non-negative integer wait before capture; defaults to 100 ms |
+| `timeoutMs`          | No       | Positive integer capture timeout; defaults to 60,000 ms      |
 
 Width and height default to `DEFAULT_SCREENSHOT_WIDTH` and
 `DEFAULT_SCREENSHOT_HEIGHT` (800 × 600). Bench explicitly sends its mobile
 viewport defaults (390 × 844), with per-dimension overrides when configured.
 `initData` and `globalProps` are JSON objects encoded as text fields;
-XML supports `initData` but rejects `globalProps`. The ZIP endpoints and the
-legacy `/screenshot/template/url` endpoint retain their existing fields and
-capture defaults; they do not accept the two new timing fields.
+XML supports `initData` but rejects `globalProps`. All screenshot endpoints share
+the Rust API's default 100 ms settling period. The ZIP endpoints and the legacy
+`/screenshot/template/url` endpoint retain their existing fields; they do not
+accept `screenshotSettleMs` or `timeoutMs`.
 
 ```bash
 curl --request POST http://127.0.0.1:8080/screenshot/template \
@@ -286,15 +287,57 @@ worker is joined.
 Untrusted staged pages, including remote templates submitted to `/screenshot/template`, are
 deliberately different. Each one is rendered by a fresh, short-lived
 `ui-judge-server` child process with its own `LynxContainer`, so native
-process-global image caches cannot return another request's bytes. The child
+process-global image caches cannot return another request's bytes. The server
+admits up to eight isolated renders per process, shared by LynXML,
+template, and ZIP requests. Additional requests wait for capacity within their
+deadline. ZIP extraction retains its separate four-permit limit. Each child
 receives only server-selected paths and page-load data, inherits no model
-credentials, and sends no request output to stdout or stderr. A private
+credentials, and has its stdout and stderr captured separately. A private
 stdin lifeline makes the child exit if its parent dies. Cancellation and timeout
 kill and reap the child before its render slot and staged tree are released;
 graceful shutdown drains accepted children. Failure to confirm reaping exits the
 service without unwinding the staging guard after a fixed five-second reap grace
 so its supervisor can restart it. This fail-closed exit does not request a core
 dump. The same absolute deadline also covers output reading.
+
+The child writes its BMP to a temporary file, closes it, and atomically publishes
+the completed file before native page teardown. If it subsequently exits with
+`SIGSEGV`, the server can still return `200` with that BMP after reaping the child
+and validating the screenshot format, requested dimensions, and complete pixel
+data. Validation checks the runner's fixed BMP layout without decoding pixels.
+Missing, unpublished, or invalid output still returns `422`. Other abnormal exits,
+timeouts, and cancellations remain errors, even if a completed file exists.
+Recovered captures emit a server log with `outcome=recovered-sigsegv`, `signal=11`,
+the job identity, and output byte count. This preserves completed screenshots;
+it does not fix the native crash.
+
+If a started child fails and its capture cannot be recovered, its JSON error response includes separate `stdout`
+and `stderr` strings alongside `message`. Each stream retains its last 64 KiB
+of bytes; `stdoutTruncated` and `stderrTruncated` indicate discarded earlier
+output. Invalid UTF-8 bytes use replacement characters. Both pipes continue to
+drain after reaching the limit so verbose children cannot block on a full pipe.
+`exitCode` reports a normal process exit code; it is `null` for signal termination
+or when the status is unavailable. `signal` reports the Unix termination signal
+number; it is `null` for normal exits, unavailable status, or non-Unix platforms.
+Timeout responses include output collected before cleanup and the final reaped
+status. A signal in an HTTP 408 response can result from the supervisor killing
+the timed-out child; it does not by itself indicate an external kill or OOM.
+Successful requests still return the original BMP bytes; errors before child
+startup retain the message-only response.
+
+```json
+{
+  "error": {
+    "message": "The LynXML source could not be rendered.",
+    "stdout": "runtime output\n",
+    "stderr": "render failure\n",
+    "stdoutTruncated": false,
+    "stderrTruncated": false,
+    "exitCode": 1,
+    "signal": null
+  }
+}
+```
 
 ### Secure ZIP staging
 
@@ -316,11 +359,11 @@ directory are validated before the ZIP library runs; ZIP64 metadata and
 ambiguous visible EOCD fallback records are rejected while EOCD bytes inside
 nested file data remain ordinary content.
 
-At most four ZIP requests may pass the isolated-render capacity gate at once.
+At most eight ZIP requests may pass the isolated-render capacity gate at once.
 When every slot is busy, the HTTP callback waits until a slot becomes available
 or its operation deadline expires; an outer middleware must implement any
 earlier load shedding. Acquiring the slot before extraction keeps staged trees
-within the same four-job bound. Synchronous ZIP work runs on Tokio's blocking
+within the same eight-job bound. Synchronous ZIP work runs on Tokio's blocking
 pool with a separate four-permit semaphore and its own ten-second absolute
 deadline. A blocking extraction retains its permit until it really exits, while
 a successful result owns its temporary-directory guard. The ZIP screenshot
@@ -335,9 +378,9 @@ cleanup itself failed. Nested ZIP entries are left as ordinary files.
 Rust limits are only one layer of containment. Production deployments must run
 the process as a non-root user with a read-only root filesystem and put
 `TMPDIR` on a dedicated `noexec,nosuid,nodev` volume with an ephemeral-storage
-quota. Size that quota for four simultaneous 100 MiB extractions plus archive
+quota. Size that quota for eight retained 100 MiB extracted trees plus archive
 and filesystem overhead. Apply container or cgroup CPU, memory, and process
-limits to the server and its four possible renderer children; the Rust deadline
+limits to the server and its eight possible renderer children; the Rust deadline
 does not prevent an allocation spike before it expires. Disable core dumps for
 the service account as defense in depth. Log the sanitized
 rejection kind, render outcome, and byte/count/timing statistics together with

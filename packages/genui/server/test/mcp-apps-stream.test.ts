@@ -11,15 +11,16 @@ import {
   MCP_PROTOCOL_VERSION,
 } from '@lynx-js/genui-mcp-apps/protocol';
 
+import type { ChatOptions } from '../service/common/types.js';
 import app from '../src/app.js';
 
 interface MockMcpAppsService {
   generateRaw(
     messages: unknown,
-    options: unknown,
+    options: ChatOptions,
     conversation: unknown,
     abortSignal?: AbortSignal,
-  ): Promise<never>;
+  ): Promise<unknown>;
 }
 
 type GlobalWithMcpAppsService = typeof globalThis & {
@@ -55,6 +56,84 @@ function requestBody() {
 }
 
 describe('MCP Apps stream', () => {
+  test('includes returned reasoning when the model fails', async () => {
+    const global = globalThis as GlobalWithMcpAppsService;
+    const previousService = global.__MCP_APPS_AGENT_SERVICE__;
+    global.__MCP_APPS_AGENT_SERVICE__ = {
+      generateRaw(_messages, opts) {
+        opts.onReasoning?.('Routing reasoning');
+        return Promise.reject(new Error('Model failed'));
+      },
+    };
+    try {
+      const response = await app.request('/mcp-apps/stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '203.0.113.214',
+        },
+        body: JSON.stringify(requestBody()),
+      });
+      const body = await response.text();
+      expect(body).toMatch(/"metrics":\{"generationMs":\d/u);
+      expect(body).toContain('event: error');
+      expect(body).toContain(
+        '"reasoning":{"text":"Routing reasoning","truncated":false}',
+      );
+    } finally {
+      global.__MCP_APPS_AGENT_SERVICE__ = previousService;
+    }
+  });
+
+  test.each([
+    { type: 'message', text: 'Hello' },
+    { type: 'tool_call', name: 'weather.current', arguments: {} },
+  ])('returns priced token dimensions for %j', async selection => {
+    const global = globalThis as GlobalWithMcpAppsService;
+    const previousService = global.__MCP_APPS_AGENT_SERVICE__;
+    const usage = {
+      prompt_tokens: 100,
+      completion_tokens: 20,
+      prompt_tokens_details: { cached_tokens: 60 },
+    };
+    global.__MCP_APPS_AGENT_SERVICE__ = {
+      generateRaw: () =>
+        Promise.resolve({
+          text: JSON.stringify(selection),
+          usage,
+          finishReason: 'stop',
+        }),
+    };
+    try {
+      const response = await app.request('/mcp-apps/stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '203.0.113.183',
+        },
+        body: JSON.stringify(requestBody()),
+      });
+      const body = await response.text();
+      expect(body).toMatch(/"metrics":\{"generationMs":\d/u);
+      const frame = body.split('\n\n').find(frame =>
+        frame.startsWith('event: done\n')
+      );
+      expect(frame).toBeDefined();
+      expect(JSON.parse(frame!.slice('event: done\ndata: '.length)))
+        .toMatchObject({
+          usage,
+          tokenUsage: {
+            inputTokens: 100,
+            cachedTokens: 60,
+            outputTokens: 20,
+            totalTokens: 120,
+          },
+        });
+    } finally {
+      global.__MCP_APPS_AGENT_SERVICE__ = previousService;
+    }
+  });
+
   test('aborts model generation when the response reader disconnects', async () => {
     const global = globalThis as GlobalWithMcpAppsService;
     const previousService = global.__MCP_APPS_AGENT_SERVICE__;

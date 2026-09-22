@@ -1,14 +1,18 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { compactA2UIMessagesToSnapshot } from '@lynx-js/genui/a2ui/snapshot';
+import type { ServerToClientMessage } from '@lynx-js/genui/a2ui/store';
+
 import {
-  CHAT_PROVIDER_SETTINGS_ADAPTER,
+  createProviderSettingsAdapter,
   getA2UIActionEndpoint,
   getChatEndpoint,
   parseTokenUsage,
   toProviderRequestOptions,
 } from './shared.js';
 import type { ProviderSettings } from './shared.js';
+import { CHAT_PROMPT_SUGGESTIONS } from './suggestions.js';
 import type {
   ChatHydration,
   ChatHydrationContext,
@@ -39,6 +43,7 @@ interface A2UIDonePayload {
   text?: unknown;
   errors?: unknown;
   validation?: {
+    ok?: boolean;
     messages?: unknown;
     errors?: unknown;
   };
@@ -54,29 +59,12 @@ interface A2UIDonePayload {
 
 interface PersistedA2UIAction {
   action: Record<string, unknown>;
+  surfaceId?: string;
   name: string;
 }
 
 const WELCOME_TEXT =
   'I\'m A2UI Assistant. Describe the UI you want to build and I\'ll generate A2UI JSON for you.';
-
-const SUGGESTIONS = [
-  {
-    label: '🌤️ Weather with Refresh',
-    text:
-      'Create a weather card for San Francisco showing sunny, a photo, 22°C, humidity 60%, and a "Refresh" button. When the user taps Refresh, update the card with slightly different weather data to simulate a live fetch.',
-  },
-  {
-    label: '🛍️ Product card with Buy',
-    text:
-      'Create a product card for a limited-edition sneaker. Include name, a photo, price ($189), a short description, and a "Buy Now" button. When tapped, show a purchase confirmation step with a "Confirm Purchase" button. Only the Confirm Purchase button should submit the action; after the action response, replace the card with an order success page showing a fake order number and estimated delivery.',
-  },
-  {
-    label: '⚡ Quiz card with actions',
-    text:
-      'Create a trivia quiz card. Show a question "Which shape has three sides?" with 4 answer buttons: Triangle, Square, Circle, Hexagon. When the user taps an answer, show whether it is correct with a brief explanation.',
-  },
-] as const;
 
 const FEATURED_EXAMPLES: readonly StaticDemo[] = (() => {
   const featured = [...EXTENDED_STATIC_DEMOS];
@@ -110,21 +98,10 @@ function safeStringify(value: unknown): string {
   }
 }
 
-function formatCharacterCount(count: number): string {
-  return `${count.toLocaleString()} char${count === 1 ? '' : 's'}`;
-}
-
-function generatedCharacterCount(value: unknown): number {
-  return safeStringify(value).length;
-}
-
-function renderedPreviewText(
-  messageCount: number,
-  characterCount: number,
-): string {
+function renderedPreviewText(messageCount: number): string {
   return `✅ Rendered ${messageCount} A2UI message${
     messageCount === 1 ? '' : 's'
-  } (${formatCharacterCount(characterCount)}) to Lynx Preview`;
+  } to Lynx Preview`;
 }
 
 function generatedOutputMessage(payload: unknown): ChatMessageModel {
@@ -169,6 +146,7 @@ function normalizeMessages(payload: unknown): A2UIOutput {
   if (!isRecord(payload)) return [];
 
   const record = payload as A2UIDonePayload;
+  if (record.validation?.ok === false) return [];
   if (Array.isArray(record.messages) && record.messages.length > 0) {
     return record.messages;
   }
@@ -310,6 +288,9 @@ function parsePersistedAction(content: string): PersistedA2UIAction | null {
     const event = isRecord(action.event) ? action.event : null;
     return {
       action,
+      ...(typeof parsed.surfaceId === 'string'
+        ? { surfaceId: parsed.surfaceId }
+        : {}),
       name: typeof action.name === 'string'
         ? action.name
         : (event && typeof event.name === 'string' ? event.name : 'unknown'),
@@ -389,10 +370,22 @@ function hydrateMessages(
     }
 
     if (message.role !== 'assistant') continue;
+    if (message.generationError) {
+      messages.push({
+        kind: 'status',
+        tone: 'error',
+        text: message.generationError,
+        generationUsage: message.generationUsage,
+      });
+      continue;
+    }
     const output = normalizeMessages(message.content);
     if (previousWasAction && output.length > 0) {
       messages.push(
-        agentRespondedMessage(output.length, message.previewMetrics),
+        {
+          ...agentRespondedMessage(output.length, message.previewMetrics),
+          generationUsage: message.generationUsage,
+        },
         {
           kind: 'output',
           tone: 'success',
@@ -414,10 +407,8 @@ function hydrateMessages(
       messages.push({
         kind: 'status',
         tone: 'success',
-        text: renderedPreviewText(
-          output.length,
-          generatedCharacterCount(message.content),
-        ),
+        generationUsage: message.generationUsage,
+        text: renderedPreviewText(output.length),
       });
       if (hasMetrics(message.previewMetrics)) {
         messages.push({
@@ -453,6 +444,40 @@ function mergeOutput(
   return [...(current ?? []), ...next];
 }
 
+function canonicalJson(value: unknown): string {
+  return JSON.stringify(value, (_key, item: unknown) =>
+    isRecord(item)
+      ? Object.fromEntries(
+        Object.entries(item).sort(([a], [b]) => a.localeCompare(b)),
+      )
+      : item);
+}
+
+function isEquivalentPreview(current: A2UIOutput, next: A2UIOutput): boolean {
+  // The streaming parser inserts Loading nodes and splits component batches.
+  // Compare resulting surfaces, not message arrays or object identities.
+  // Also retain unbound data: snapshot compaction only keeps referenced paths.
+  const dataMessages = (messages: A2UIOutput) =>
+    messages.filter(message =>
+      isRecord(message) && 'updateDataModel' in message
+    );
+  try {
+    return canonicalJson(dataMessages(current))
+        === canonicalJson(dataMessages(next))
+      && canonicalJson(
+          compactA2UIMessagesToSnapshot(current as ServerToClientMessage[])
+            .messages,
+        )
+        === canonicalJson(
+          compactA2UIMessagesToSnapshot(next as ServerToClientMessage[])
+            .messages,
+        );
+  } catch {
+    // Incomplete or repaired output still needs an authoritative replay.
+    return false;
+  }
+}
+
 function actionLabel(action: A2UIAction): string {
   const event = isRecord(action.action.event) ? action.action.event : null;
   return typeof action.action.name === 'string'
@@ -472,11 +497,11 @@ export const A2UI_CHAT_ADAPTER = {
     progressLabel: 'Connecting to A2UI agent...',
     failurePrefix: 'Generation failed:',
   },
-  suggestions: SUGGESTIONS,
-  settings: CHAT_PROVIDER_SETTINGS_ADAPTER,
+  suggestions: CHAT_PROMPT_SUGGESTIONS,
+  settings: createProviderSettingsAdapter('a2ui'),
   createRequest({ prompt, conversation, settings, host }) {
     const url = getChatEndpoint('a2ui', host, settings);
-    const provider = toProviderRequestOptions(settings);
+    const provider = toProviderRequestOptions(settings, 'a2ui');
     return {
       url,
       method: 'POST',
@@ -511,14 +536,12 @@ export const A2UI_CHAT_ADAPTER = {
         text: 'Connecting to A2UI agent...',
       };
     },
-    progress(text) {
+    progress(_text: string) {
       return {
         kind: 'assistant',
         tone: 'pending',
         icon: 'spinner',
-        text: `Streaming A2UI messages (${
-          formatCharacterCount(text.length)
-        })...`,
+        text: 'Streaming A2UI messages...',
       };
     },
     success(output) {
@@ -526,10 +549,7 @@ export const A2UI_CHAT_ADAPTER = {
         {
           kind: 'status',
           tone: 'success',
-          text: renderedPreviewText(
-            output.length,
-            generatedCharacterCount(output),
-          ),
+          text: renderedPreviewText(output.length),
         },
         generatedOutputMessage(output),
       ];
@@ -604,6 +624,7 @@ export const A2UI_CHAT_ADAPTER = {
     // capability to accumulate them; a final emission always replaces the
     // accumulated output with the server's complete validated message array.
     merge: mergeOutput,
+    isEquivalent: isEquivalentPreview,
     emptyTitle: 'Send a message to generate UI',
     emptySubtitle: 'Generated components will be previewed here',
     generatingHint:
@@ -612,6 +633,12 @@ export const A2UI_CHAT_ADAPTER = {
       'No A2UI data has been received yet. Send a message to generate Web Preview and Native Preview links.',
   },
   action: {
+    parseUserText(text) {
+      const parsed = parsePersistedAction(text);
+      return parsed
+        ? { action: parsed.action, surfaceId: parsed.surfaceId }
+        : null;
+    },
     parseWindowMessage(data) {
       if (!isRecord(data) || data.type !== 'A2UI_USER_ACTION') return null;
       if (!isRecord(data.action)) return null;
@@ -637,7 +664,7 @@ export const A2UI_CHAT_ADAPTER = {
     request({ action, conversation, settings, host }) {
       const chatEndpoint = getChatEndpoint('a2ui', host, settings);
       const url = getA2UIActionEndpoint(chatEndpoint);
-      const provider = toProviderRequestOptions(settings);
+      const provider = toProviderRequestOptions(settings, 'a2ui');
       return {
         url,
         method: 'POST',

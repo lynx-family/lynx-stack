@@ -1,6 +1,7 @@
-import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
+import * as ReactLynxInternal from "@lynx-js/react/element-template/internal";
 /*@jsxCSSId 1501958*/ import "./style.css?cssId=1501958";
-const _et_517e4a08d202 = `${globDynamicComponentEntry}:${"_et_517e4a08d202"}`;
+const _et_517e4a08d202_bundle = globDynamicComponentEntry;
+const _et_517e4a08d202 = `${_et_517e4a08d202_bundle}:${"_et_517e4a08d202"}`;
 export function App() {
-    return /*#__PURE__*/ _jsx(_et_517e4a08d202, {});
+    return /*#__PURE__*/ ReactLynxInternal.__etHost(_et_517e4a08d202, "_et_517e4a08d202", _et_517e4a08d202_bundle, void 0, void 0, void 0, void 0, true);
 }

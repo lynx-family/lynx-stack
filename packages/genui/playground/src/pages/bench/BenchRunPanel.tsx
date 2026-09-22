@@ -27,10 +27,9 @@ export function BenchRunPanel(props: {
 }) {
   const modelOptions = props.modelOptions ?? [];
   const configuredJudgeModel = props.settings.uiJudgeModel;
-  const selectedJudgeModel = configuredJudgeModel
-      && modelOptions.some((model) => model.id === configuredJudgeModel)
-    ? configuredJudgeModel
-    : modelOptions[0]?.id ?? '';
+  const selectedJudgeModel = configuredJudgeModel ?? modelOptions[0]?.id ?? '';
+  const missingJudgeModel = configuredJudgeModel
+    && !modelOptions.some(model => model.id === configuredJudgeModel);
   return (
     <section className='benchPlanSection benchRunSection'>
       <div className='benchRunPanel'>
@@ -65,6 +64,11 @@ export function BenchRunPanel(props: {
                       uiJudgeModel: event.target.value,
                     })}
                 >
+                  {missingJudgeModel && (
+                    <option value={configuredJudgeModel} disabled>
+                      {configuredJudgeModel} (unavailable)
+                    </option>
+                  )}
                   {modelOptions.map((model) => (
                     <option key={model.id} value={model.id}>
                       {model.label}
@@ -91,8 +95,8 @@ export function BenchRunPanel(props: {
                   </label>
                   <p className='benchFieldHint'>
                     Your browser connects to this service and uploads
-                    screenshots for scoring. The address is saved only in this
-                    browser.
+                    screenshots for scoring. The address is saved in this
+                    browser and included when sharing Bench parameters.
                   </p>
                   {props.uiJudgeServerUrlValidationError
                     ? (

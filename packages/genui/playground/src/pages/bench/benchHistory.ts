@@ -36,6 +36,7 @@ export interface BenchHistoryConfig {
 export interface BenchHistoryEntry {
   id: string;
   title: string;
+  titleIsCustom?: boolean;
   savedAt: string;
   report: BenchReport | null;
   config: BenchHistoryConfig;
@@ -130,6 +131,10 @@ export function createBenchGroupsFromReport(
         ? {
           enableHtmlFragment:
             (item.enableHtmlFragment ?? item.enableHtmlFragmentTool) === true,
+          enableScriptReuse: item.enableScriptReuse === true,
+          ...(item.stylePreset === 'default' || item.stylePreset === false
+            ? { stylePreset: item.stylePreset }
+            : {}),
         }
         : {}),
       profile: isBenchProfile(item.profile)

@@ -218,55 +218,67 @@ describe('OpenUI Bench adapter', () => {
     expect(receivedPrompt).toContain('Scenario complexity: 2');
   });
 
-  test('repairs once without backoff and accumulates both attempt records', async () => {
-    const generated = [
-      {
-        text: 'root = Column([SecretWidget("bad")])',
-        usage: { inputTokens: 10, outputTokens: 4, totalTokens: 14 },
-        finishReason: 'stop',
-      },
-      {
-        text: VALID_OPENUI,
-        usage: { input_tokens: 15, output_tokens: 6, total_tokens: 21 },
-        finishReason: 'stop',
-      },
-    ];
-    const receivedMessages: string[][] = [];
-    const sleepCalls: number[] = [];
-    let callCount = 0;
-    const adapter = createOpenUIBenchAdapter({
-      generateRaw: (messages) => {
-        receivedMessages.push(messages.map((message) => message.content));
-        return Promise.resolve(generated[callCount++]!);
-      },
-      now: sequenceNow([0, 10, 10, 35]),
-      sleep(delayMs) {
-        sleepCalls.push(delayMs);
-        return Promise.resolve();
-      },
-    });
+  test.each(['stop', 'length'])(
+    'repairs invalid output ending with %s and accumulates both attempt records',
+    async (finishReason) => {
+      const generated = [
+        {
+          text: finishReason === 'length'
+            ? ''
+            : 'root = Column([SecretWidget("bad")])',
+          usage: { inputTokens: 10, outputTokens: 4, totalTokens: 14 },
+          finishReason,
+        },
+        {
+          text: VALID_OPENUI,
+          usage: { input_tokens: 15, output_tokens: 6, total_tokens: 21 },
+          finishReason,
+        },
+      ];
+      const receivedMessages: string[][] = [];
+      const sleepCalls: number[] = [];
+      let callCount = 0;
+      const adapter = createOpenUIBenchAdapter({
+        generateRaw: (messages) => {
+          receivedMessages.push(messages.map((message) => message.content));
+          return Promise.resolve(generated[callCount++]!);
+        },
+        now: sequenceNow([0, 10, 10, 35]),
+        sleep(delayMs) {
+          sleepCalls.push(delayMs);
+          return Promise.resolve();
+        },
+      });
 
-    const result = await adapter.generate(adapterInput(99));
+      const result = await adapter.generate(adapterInput(99));
 
-    expect(callCount).toBe(2);
-    expect(result.finalValid).toBe(true);
-    expect(result.attemptCount).toBe(2);
-    expect(result.totalLatencyMs).toBe(35);
-    expect(result.totalUsage).toEqual({
-      inputTokens: 25,
-      outputTokens: 10,
-      totalTokens: 35,
-    });
-    expect(result.attempts.map((attempt) => attempt.valid)).toEqual([
-      false,
-      true,
-    ]);
-    expect(receivedMessages[1]).toHaveLength(3);
-    expect(receivedMessages[1]?.[1]).toContain('SecretWidget');
-    expect(receivedMessages[1]?.[2]).toContain('[unknown-component]');
-    expect(sleepCalls).toEqual([]);
-    expect(result.rawText).toBe(VALID_OPENUI);
-  });
+      expect(callCount).toBe(2);
+      expect(result.finalValid).toBe(true);
+      expect(result.attemptCount).toBe(2);
+      expect(result.totalLatencyMs).toBe(35);
+      expect(result.totalUsage).toEqual({
+        inputTokens: 25,
+        outputTokens: 10,
+        totalTokens: 35,
+      });
+      expect(result.attempts.map((attempt) => attempt.valid)).toEqual([
+        false,
+        true,
+      ]);
+      expect(receivedMessages[1]?.[0]).toBe(receivedMessages[0]?.[0]);
+      if (finishReason === 'length') {
+        expect(receivedMessages[1]).toHaveLength(2);
+        expect(receivedMessages[1]?.[1]).toContain('Regenerate a shorter');
+        expect(receivedMessages[1]).not.toContain('');
+      } else {
+        expect(receivedMessages[1]).toHaveLength(3);
+        expect(receivedMessages[1]?.[1]).toContain('SecretWidget');
+        expect(receivedMessages[1]?.[2]).toContain('[unknown-component]');
+      }
+      expect(sleepCalls).toEqual([]);
+      expect(result.rawText).toBe(VALID_OPENUI);
+    },
+  );
 
   test('honors the normalized attempt budget', async () => {
     let callCount = 0;

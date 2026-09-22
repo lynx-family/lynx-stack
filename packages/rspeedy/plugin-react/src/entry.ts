@@ -346,27 +346,9 @@ export function applyEntry(
         return environmentProfile
       }
 
-      const userProfile = lynxConfig?.performance.profile
-      if (userProfile !== undefined) {
-        return userProfile
-      }
-
-      if (isDebug()) {
-        return true
-      }
-
-      return undefined
+      return lynxConfig?.performance.profile
     }
   })
-}
-
-export const isDebug = (): boolean => {
-  if (!process.env['DEBUG']) {
-    return false
-  }
-
-  const values = process.env['DEBUG'].toLocaleLowerCase().split(',')
-  return ['lynx', 'rspeedy', '*'].some((key) => values.includes(key))
 }
 
 // This is copied from https://github.com/web-infra-dev/rsbuild/blob/037da7b9d92e20c7136c8b2efa21eef539fa2f88/packages/core/src/plugins/html.ts#L168

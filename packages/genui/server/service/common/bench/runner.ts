@@ -17,7 +17,8 @@ import type {
   ProtocolBenchJudgePayload,
 } from './protocol-adapter.js';
 import type { ProtocolBenchScenario } from './protocol-types.js';
-import { sanitizeBenchPublicValue } from './redaction.js';
+import { sanitizeBenchPlanValue } from './redaction.js';
+import { resolveBenchRetryDelay, waitForBenchRetry } from './retry.js';
 import { getBenchJobStore } from './store.js';
 import type {
   BenchCatalogLabel,
@@ -56,7 +57,9 @@ import type {
 import { createHtmlBenchAdapter } from '../../html/html-bench-adapter.js';
 import { createLynxXmlBenchAdapter } from '../../lynx-xml/lynx-xml-bench-adapter.js';
 import { createOpenUIBenchAdapter } from '../../openui/openui-bench-adapter.js';
-import { defaultModelName } from '../model-config.js';
+import { buildGenerationRepairMessages } from '../generation-repair.js';
+import { defaultModelName, readModelConfig } from '../model-config.js';
+import { GenerationUpstreamError } from '../result.js';
 import type { ChatMessage } from '../types.js';
 
 interface BenchRunItem {
@@ -183,12 +186,13 @@ async function generateA2UINative(
   usage: unknown[];
   warnings: string[];
 }> {
-  const conversation = [...messages];
+  let conversation = [...messages];
   const usage: unknown[] = [];
   const maxAttempts = Math.min(
     5,
     Math.max(1, request.settings.maxRepairAttempts + 1),
   );
+  let attempts = 0;
   let lastText = '';
   let lastErrors: string[] = [];
   let lastFinishReason: unknown;
@@ -201,23 +205,42 @@ async function generateA2UINative(
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     signal.throwIfAborted();
-    const generated = await getA2UIAgentService().generateRaw(
-      conversation,
-      {
-        resourceId: `bench:${item.group.id}:${runId}:attempt-${attempt}`,
-        apiKey: request.provider.apiKey,
-        baseURL: request.provider.baseURL,
-        model,
-        api: request.provider.api,
-        catalog,
-        disableAgentCache: true,
-        enableWebSearch: false,
-        enableImageGeneration: false,
-      },
-      undefined,
-      signal,
-      imageGenerationScope,
-    );
+    attempts = attempt;
+    let generated: { text: string; usage: unknown; finishReason: unknown };
+    try {
+      generated = await getA2UIAgentService().generateRaw(
+        conversation,
+        {
+          resourceId: `bench:${item.group.id}:${runId}:attempt-${attempt}`,
+          apiKey: request.provider.apiKey,
+          baseURL: request.provider.baseURL,
+          model,
+          api: request.provider.api,
+          catalog,
+          disableAgentCache: true,
+          maxRetries: 0,
+          enableWebSearch: false,
+          enableImageGeneration: false,
+        },
+        undefined,
+        signal,
+        imageGenerationScope,
+      );
+    } catch (error) {
+      signal.throwIfAborted();
+      const failed = error instanceof GenerationUpstreamError
+        ? error.result
+        : undefined;
+      usage.push(failed?.usage);
+      lastFinishReason = failed?.finishReason ?? 'error';
+      lastErrors = [error instanceof Error ? error.message : String(error)];
+      const delayMs = resolveBenchRetryDelay(error, attempt);
+      if (attempt < maxAttempts && delayMs !== undefined) {
+        await waitForBenchRetry(delayMs, signal);
+        continue;
+      }
+      break;
+    }
     usage.push(generated.usage);
     lastText = generated.text;
     lastFinishReason = generated.finishReason;
@@ -239,16 +262,17 @@ async function generateA2UINative(
       };
     }
     if (attempt < maxAttempts) {
-      conversation.push({ role: 'assistant', content: generated.text });
-      conversation.push({
-        role: 'user',
-        content: formatErrorsForModel(validation.errors),
+      conversation = buildGenerationRepairMessages({
+        initialMessages: messages,
+        messages: conversation,
+        result: generated,
+        repairPrompt: formatErrorsForModel(validation.errors),
       });
     }
   }
 
   return {
-    attempts: maxAttempts,
+    attempts,
     errors: lastErrors,
     finishReason: lastFinishReason,
     messages: [],
@@ -318,7 +342,7 @@ async function runA2UINativeOne(
           },
         }
         : {}),
-      result: sanitizeBenchPublicValue({
+      result: sanitizeBenchPlanValue({
         id: runId,
         groupId: item.group.id,
         groupName: item.group.name,
@@ -361,13 +385,13 @@ async function runA2UINativeOne(
         usage: result.usage,
         messages: result.messages,
         text: result.text,
-      }, request.provider) as BenchRunResult,
+      }, request) as BenchRunResult,
     };
   } catch (error) {
     const agentMs = performance.now() - startedAt;
     const message = error instanceof Error ? error.message : String(error);
     return {
-      result: sanitizeBenchPublicValue({
+      result: sanitizeBenchPlanValue({
         id: runId,
         groupId: item.group.id,
         groupName: item.group.name,
@@ -393,7 +417,7 @@ async function runA2UINativeOne(
         outputChars: 0,
         errors: [message],
         error: message,
-      }, request.provider) as BenchRunResult,
+      }, request) as BenchRunResult,
     };
   }
 }
@@ -459,7 +483,13 @@ async function runProtocolAdapterOne(
     const artifact = await adapter.generate({
       enableDesignGuidance: item.group.enableDesignGuidance !== false,
       ...(protocol === 'lynx-xml'
-        ? { enableHtmlFragment: item.group.enableHtmlFragment === true }
+        ? {
+          enableHtmlFragment: item.group.enableHtmlFragment === true,
+          enableScriptReuse: item.group.enableScriptReuse === true,
+          ...(item.group.stylePreset
+            ? { stylePreset: item.group.stylePreset }
+            : {}),
+        }
         : {}),
       runId,
       pairId: `${item.scenario.id}-repeat-${item.repeatIndex}`,
@@ -539,9 +569,9 @@ async function runProtocolAdapterOne(
       ...(artifact.finalText ? { text: artifact.finalText } : {}),
     };
     return {
-      result: sanitizeBenchPublicValue(
+      result: sanitizeBenchPlanValue(
         result,
-        request.provider,
+        request,
       ) as BenchRunResult,
       ...(judgePayload
         ? {
@@ -567,7 +597,7 @@ async function runProtocolAdapterOne(
     const agentMs = performance.now() - startedAt;
     const message = error instanceof Error ? error.message : String(error);
     return {
-      result: sanitizeBenchPublicValue({
+      result: sanitizeBenchPlanValue({
         id: runId,
         groupId: item.group.id,
         groupName: item.group.name,
@@ -593,7 +623,7 @@ async function runProtocolAdapterOne(
         outputChars: 0,
         errors: [message],
         error: message,
-      }, request.provider) as BenchRunResult,
+      }, request) as BenchRunResult,
     };
   }
 }
@@ -605,24 +635,38 @@ async function generateOne(
   adapters: Partial<Record<BenchProtocol, ProtocolBenchAdapter>>,
   signal: AbortSignal,
 ): Promise<GeneratedBenchRun> {
-  if (
-    protocolForGroup(item.group) === 'a2ui'
-    && profileForGroup(item.group) === 'native'
-  ) {
-    return await runA2UINativeOne(
+  const configured = readModelConfig();
+  const modelName = pickRunModel(request, item.group);
+  const model = configured.ok
+    ? configured.config.models[modelName ?? '']
+      ?? configured.config.models[configured.config.defaultModel]
+    : undefined;
+  const modelPrices = model
+    ? {
+      input_price: model.input_price,
+      cached_price: model.cached_price,
+      output_price: model.output_price,
+    }
+    : undefined;
+  const generated = (
+      protocolForGroup(item.group) === 'a2ui'
+      && profileForGroup(item.group) === 'native'
+    )
+    ? await runA2UINativeOne(
       jobId,
       request,
       item,
       signal,
+    )
+    : await runProtocolAdapterOne(
+      jobId,
+      request,
+      item,
+      adapters[protocolForGroup(item.group)],
+      signal,
     );
-  }
-  return await runProtocolAdapterOne(
-    jobId,
-    request,
-    item,
-    adapters[protocolForGroup(item.group)],
-    signal,
-  );
+  if (modelPrices) generated.result.modelPrices = modelPrices;
+  return generated;
 }
 
 async function finishRun(
@@ -674,7 +718,7 @@ async function finishRun(
   const errors = [...result.errors, ...judge.errors];
   const warnings = [...(result.judgeWarnings ?? []), ...judge.warnings];
   const ok = result.ok && judge.status !== 'failed';
-  return sanitizeBenchPublicValue({
+  return sanitizeBenchPlanValue({
     ...result,
     ok,
     status: ok ? 'complete' : 'failed',
@@ -696,7 +740,7 @@ async function finishRun(
     ...(judge.screenshotDataUrl
       ? { screenshotDataUrl: judge.screenshotDataUrl }
       : {}),
-  }, request.provider) as BenchRunResult;
+  }, request) as BenchRunResult;
 }
 
 /*
@@ -887,7 +931,7 @@ function buildReport(
     ),
     summary,
   };
-  return sanitizeBenchPublicValue(report, request.provider) as BenchReport;
+  return sanitizeBenchPlanValue(report, request, jobId) as BenchReport;
 }
 
 export function startBenchJob(jobId: string): void {

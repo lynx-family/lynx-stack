@@ -18,6 +18,7 @@ import {
   createDefaultBenchGroups,
 } from './benchData.js';
 import { BenchHistoryRail } from './BenchHistoryRail.js';
+import { benchGroupAverageCost, benchTotalCost } from './benchPricing.js';
 import { BenchReportPanel } from './BenchReportPanel.js';
 import { sanitizeBenchReportValue } from './benchReportSerialization.js';
 import type { BenchReport } from './benchReportTypes.js';
@@ -157,6 +158,7 @@ describe('local historical Bench reports', () => {
       expect(html).toContain('1m 28s');
       expect(html).toContain(`dateTime="${report.startedAt}"`);
       expect(html).toContain(`dateTime="${report.completedAt}"`);
+      expect(html).not.toMatch(/FMP|TTI|<th>Render<\/th>/u);
     }
     const history = renderToStaticMarkup(React.createElement(BenchHistoryRail, {
       activeId: entry.id,
@@ -363,7 +365,62 @@ describe('local historical Bench reports', () => {
 });
 
 describe('fixed read-only report template', () => {
-  test('opens all plan and run details by default', () => {
+  test('groups flat screenshots in plan order while retaining older unlisted results', () => {
+    const report = reportFixture();
+    report.groups.push({
+      ...report.groups[0]!,
+      id: 'experiment',
+      name: 'Experiment',
+      role: 'experiment',
+    });
+    report.scenarios.push({ ...DEFAULT_BENCH_SCENARIOS[1]! });
+    const result = report.results[0]!;
+    report.results = [
+      { ...result, id: 'weather-2', repeatIndex: 2 },
+      {
+        ...result,
+        id: 'legacy',
+        groupId: 'legacy-group',
+        groupName: 'Archived group',
+        scenarioId: 'legacy-scenario',
+        scenarioName: 'Archived scenario',
+      },
+      {
+        ...result,
+        id: 'experiment-weather',
+        groupId: 'experiment',
+        groupName: 'Experiment',
+      },
+      {
+        ...result,
+        id: 'product',
+        scenarioId: report.scenarios[1]!.id,
+        scenarioName: report.scenarios[1]!.name,
+      },
+      result,
+      { ...result, id: 'missing', screenshotDataUrl: undefined },
+    ];
+    const originalOrder = report.results.map((item) => item.id);
+    const markup = renderToStaticMarkup(
+      React.createElement(PublishedReportPage, { report }),
+    );
+    expect(markup.match(/class="publishedReportScreenshotGroup"/gu))
+      .toHaveLength(3);
+    expect(
+      [...markup.matchAll(/<img[^>]*alt="([^"]+)"/gu)].map((match) => match[1]),
+    )
+      .toEqual([
+        'Baseline · Weather Refresh Card · #1',
+        'Baseline · Weather Refresh Card · #2',
+        'Baseline · Product Purchase Card · #1',
+        'Experiment · Weather Refresh Card · #1',
+        'Archived group · Archived scenario · #1',
+      ]);
+    expect(markup).not.toContain('benchScreenshotMatrix');
+    expect(report.results.map((item) => item.id)).toEqual(originalOrder);
+  });
+
+  test('collapses all plan and run details by default', () => {
     const report = reportFixture();
     const markup = renderToStaticMarkup(
       React.createElement(PublishedReportPage, { report }),
@@ -379,7 +436,18 @@ describe('fixed read-only report template', () => {
     expect(disclosures).toHaveLength(
       report.scenarios.length + report.groups.length + report.results.length,
     );
-    expect(disclosures.every((tag) => tag.includes('open=""'))).toBe(true);
+    expect(disclosures.every((tag) => !tag.includes('open=""'))).toBe(true);
+    const planCount = report.scenarios.length + report.groups.length;
+    expect(
+      disclosures.slice(0, planCount).every((tag) =>
+        !tag.includes('data-report-image-exclude')
+      ),
+    ).toBe(true);
+    expect(
+      disclosures.slice(planCount).every((tag) =>
+        tag.includes('data-report-image-exclude')
+      ),
+    ).toBe(true);
   });
   test.each([
     'https://tracker.example.test/image.png',
@@ -409,11 +477,12 @@ describe('fixed read-only report template', () => {
         '11,408',
         '4 / 5',
         '63.5 / 100',
-        'zero values do not represent measured FMP',
       ]
     ) expect(html).toContain(text);
     expect(html).toContain(`src="${PNG}"`);
-    expect(html).toContain('View screenshots (1)');
+    expect(html).not.toContain('View screenshots');
+    expect(html).not.toContain('role="dialog"');
+    expect(html).not.toContain('benchScreenshotMatrixWrap');
     expect(html).not.toMatch(
       /<input|<textarea|Start run|New Bench|2026-07-30-matched-core|a2ui-comparisons/u,
     );
@@ -500,4 +569,43 @@ test('preserves usage through history serialization and displays group and run d
   expect(markup).toContain('Cache hit rate: 50%');
   expect(markup).toContain('Average token details: 11,408');
   expect(markup).toContain('Token details: 11,408');
+});
+
+test('preserves per-run price snapshots and displays costs in both report views', () => {
+  const report = reportFixture();
+  const result = report.results[0]!;
+  result.modelPrices = { input_price: 2, cached_price: 0.5, output_price: 8 };
+  result.usage = { inputTokens: 10000, cachedTokens: 6000, outputTokens: 2000 };
+  report.results.push({
+    ...result,
+    id: 'failed-repair',
+    status: 'failed',
+    ok: false,
+    modelPrices: { input_price: 4, cached_price: 1, output_price: 16 },
+  });
+  report.summaries[0]!.plannedRuns = 4;
+  const saved = sanitizeBenchReportValue(report) as BenchReport;
+  expect(saved.results[0]!.modelPrices).toEqual(result.modelPrices);
+  expect(benchTotalCost(saved.results)).toBeCloseTo(81);
+  expect(benchGroupAverageCost(saved, saved.summaries[0]!)).toBeCloseTo(
+    20.25,
+  );
+  const pages = [
+    React.createElement(PublishedReportPage, { report: saved }),
+    React.createElement(BenchReportPanel, {
+      report: saved,
+      reportIsStale: false,
+      settings: saved.settings,
+      onOpenScreenshots: noop,
+    }),
+  ];
+  for (const page of pages) {
+    const html = renderToStaticMarkup(page);
+    expect(html).toContain('Est. cost (CNY)');
+    expect(html).toContain('¥81.0000');
+    expect(html).toContain('¥20.2500');
+  }
+  delete saved.results[1]!.modelPrices;
+  expect(benchTotalCost(saved.results)).toBeUndefined();
+  expect(benchGroupAverageCost(saved, saved.summaries[0]!)).toBeUndefined();
 });

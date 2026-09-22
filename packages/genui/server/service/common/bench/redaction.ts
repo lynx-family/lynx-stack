@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { BenchProviderConfig } from './types.js';
+import type { BenchJobRequest, BenchProviderConfig } from './types.js';
 import {
   configuredModelName,
   redactModelConfigSecrets,
@@ -74,21 +74,50 @@ function sanitizeDiagnosticValue(
   return sanitizeBenchPublicValue(value, provider, seen);
 }
 
+export function sanitizeBenchPlanValue(
+  value: unknown,
+  request: Pick<BenchJobRequest, 'groups' | 'scenarios' | 'provider'>,
+  jobId?: string,
+): unknown {
+  return sanitizeBenchPublicValue(
+    value,
+    request.provider,
+    new WeakSet(),
+    new Set([
+      ...(jobId ? [jobId] : []),
+      ...request.groups.map(group => group.id),
+      ...request.scenarios.map(scenario => scenario.id),
+    ]),
+  );
+}
+
 export function sanitizeBenchPublicValue(
   value: unknown,
   provider: BenchProviderConfig,
   seen = new WeakSet<object>(),
+  publicIds?: ReadonlySet<string>,
 ): unknown {
   if (typeof value === 'string') return redactBenchText(value, provider);
   if (value === null || typeof value !== 'object') return value;
   if (seen.has(value)) return '[Circular]';
   seen.add(value);
   if (Array.isArray(value)) {
-    return value.map((item) => sanitizeBenchPublicValue(item, provider, seen));
+    return value.map((item) =>
+      sanitizeBenchPublicValue(item, provider, seen, publicIds)
+    );
   }
   return Object.fromEntries(
     Object.entries(value).flatMap(([key, item]) => {
       const normalizedKey = key.replace(/[^a-z]/giu, '').toLowerCase();
+      // Echo only known job/plan identifiers unchanged, so events still join
+      // their client-side rows when a legacy id includes a model name.
+      if (
+        (key === 'id' || key === 'groupId' || key === 'scenarioId'
+          || key === 'jobId')
+        && typeof item === 'string' && publicIds?.has(item)
+      ) {
+        return [[key, item]];
+      }
       // Group and scenario names are user-facing labels. They may contain a
       // configured model name (for example, "Group 01-gemini"), but that
       // label is not a provider credential and must remain stable in reports.
@@ -108,7 +137,7 @@ export function sanitizeBenchPublicValue(
           key,
           DIAGNOSTIC_FIELD_NAMES.has(normalizedKey)
             ? sanitizeDiagnosticValue(item, provider, seen)
-            : sanitizeBenchPublicValue(item, provider, seen),
+            : sanitizeBenchPublicValue(item, provider, seen, publicIds),
         ]];
     }),
   );

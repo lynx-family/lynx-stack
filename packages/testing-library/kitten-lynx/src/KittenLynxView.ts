@@ -64,9 +64,9 @@ export class KittenLynxView {
    * 4. Automatically re-attaching to the matched session and fetching the initial DOM tree (`DOM.getDocument`).
    *
    * @param url - The absolute URL of the Lynx bundle to navigate to (e.g., `'http://localhost:8080/dist/main.lynx.bundle'`).
-   * @param _options - Currently unused. Reserved for future navigation options.
+   * @param options - Optional settings. `options.timeout` is how long to poll for the matching session, in milliseconds (default 30000).
    * @throws An error if it times out waiting for the devtool server to boot (60s limit).
-   * @throws An error if the specific session for the URL cannot be found (30s limit) or cannot be attached.
+   * @throws An error if the specific session for the URL cannot be found within `options.timeout` or cannot be attached.
    */
   async goto(url: string, options?: { timeout?: number }): Promise<void> {
     const timeout = options?.timeout ?? 30000;

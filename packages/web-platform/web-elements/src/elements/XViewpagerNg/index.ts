@@ -8,13 +8,14 @@
  * `x-viewpager-ng` provides a page container that allows sliding between pages.
  *
  * Attributes:
- * - `select-index`: Index of the currently selected page.
+ * - `select-index`: Page shown on connect; later changes are ignored, use `selectTab()`.
  * - `initial-select-index`: Initial selected index.
  * - `allow-horizontal-gesture`: 'true' | 'false'.
  * - `enable-scroll`: 'true' | 'false'.
  *
  * Events:
  * - `change`: Fired when the selected page changes. Detail: `{ index, isDragged }`.
+ * - `willchange`: Fired on touch end with the page the view will settle on. Detail: `{ index }`.
  * - `offsetchange`: Fired when scroll offset changes. Detail: `{ offset }`.
  *
  * Methods:

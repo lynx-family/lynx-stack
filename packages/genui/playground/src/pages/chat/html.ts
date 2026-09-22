@@ -9,6 +9,7 @@ import {
   toProviderRequestOptions,
 } from './shared.js';
 import type { ProviderSettings } from './shared.js';
+import { CHAT_PROMPT_SUGGESTIONS } from './suggestions.js';
 import type {
   ChatArtifact,
   ChatHydration,
@@ -38,24 +39,6 @@ const WELCOME_MESSAGE: ChatMessageModel = {
   text:
     'Describe the web interface you want. I will stream a complete, standalone HTML document and render it in an isolated Web Preview.',
 };
-
-const SUGGESTIONS = [
-  {
-    label: '📊 Analytics dashboard',
-    text:
-      'Create a responsive analytics dashboard with summary cards, a CSS chart, recent activity, and a working date-range control. Keep everything in one HTML file.',
-  },
-  {
-    label: '🛍️ Product page',
-    text:
-      'Create a polished mobile-first product page with an inline product illustration, variant selection, quantity controls, and an add-to-cart confirmation.',
-  },
-  {
-    label: '✅ Task planner',
-    text:
-      'Create an interactive task planner with filters, completion toggles, progress, and an add-task form. Use only self-contained HTML, CSS, and JavaScript.',
-  },
-] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -180,18 +163,13 @@ export const HTML_STREAM = {
   error: normalizeError,
 };
 
-function formatCharacterCount(source: string): string {
-  return `${source.length.toLocaleString()} chars`;
-}
-
-function generatedStatus(output: HtmlOutput): ChatMessageModel {
+function generatedStatus(): ChatMessageModel {
   return {
     kind: 'status',
     tone: 'success',
     icon: 'sparkles',
-    text: `Generated a complete HTML document (${
-      formatCharacterCount(output.source)
-    }). Web Preview is rendering it now.`,
+    text:
+      'Generated a complete HTML document. Web Preview is rendering it now.',
   };
 }
 
@@ -220,10 +198,22 @@ function hydrate(
       continue;
     }
     if (message.role !== 'assistant') continue;
+    if (message.generationError) {
+      messages.push({
+        kind: 'status',
+        tone: 'error',
+        text: message.generationError,
+        generationUsage: message.generationUsage,
+      });
+      continue;
+    }
     const source = extractHtmlSource(message.content);
     if (!isCompleteHtmlSource(source)) continue;
     output = { source };
-    messages.push(generatedStatus(output));
+    messages.push({
+      ...generatedStatus(),
+      generationUsage: message.generationUsage,
+    });
   }
 
   const metrics = lastMetrics(history);
@@ -237,7 +227,7 @@ function hydrate(
 function createArtifact(output: HtmlOutput): ChatArtifact {
   return {
     title: 'Generated HTML Document',
-    meta: `.html · ${formatCharacterCount(output.source)}`,
+    meta: '.html',
     views: [{
       id: 'source',
       label: 'Source',
@@ -267,7 +257,7 @@ export const HTML_CHAT_ADAPTER = {
     progressLabel: 'Streaming HTML from the GenUI server...',
     failurePrefix: 'HTML generation failed',
   },
-  suggestions: SUGGESTIONS,
+  suggestions: CHAT_PROMPT_SUGGESTIONS,
   settings: CHAT_PROVIDER_SETTINGS_ADAPTER,
   createRequest({ prompt, conversation, settings, host }) {
     return {
@@ -301,18 +291,16 @@ export const HTML_CHAT_ADAPTER = {
         text: 'Streaming HTML from the GenUI server...',
       };
     },
-    progress(text) {
+    progress(_text: string) {
       return {
         kind: 'status',
         tone: 'pending',
         icon: 'spinner',
-        text: `Streaming HTML from the GenUI server... ${
-          formatCharacterCount(text)
-        }`,
+        text: 'Streaming HTML from the GenUI server...',
       };
     },
-    success(output) {
-      return [generatedStatus(output)];
+    success(_output: HtmlOutput) {
+      return [generatedStatus()];
     },
     failure(error) {
       return {

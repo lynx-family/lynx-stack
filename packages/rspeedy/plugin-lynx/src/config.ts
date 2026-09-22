@@ -5,6 +5,8 @@ import { posix } from 'node:path'
 
 import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
 
+import { isDebug } from './debug.js'
+
 /**
  * The context passed to the {@link LynxFilename.bundle} function.
  *
@@ -59,6 +61,58 @@ export interface LynxFilename {
    *
    * - `[name]`: the name of the entry.
    * - `[platform]`: the name of the Rsbuild environment.
+   * - `[contenthash]`: the hash of the bundle content.
+   *
+   * @example
+   *
+   * - Using content hash with length in bundle filename:
+   *
+   * ```js
+   * import { defineConfig } from '@rsbuild/core'
+   * import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+   *
+   * export default defineConfig({
+   *   plugins: [
+   *     pluginLynx({
+   *       output: {
+   *         filename: {
+   *           bundle: '[name].[contenthash:8].bundle',
+   *         },
+   *       },
+   *     }),
+   *   ],
+   * })
+   * ```
+   *
+   * @example
+   *
+   * - Using a function to control the main bundle and the lazy bundles
+   *   separately (e.g. emit lazy bundles into another directory with a git
+   *   commit hash appended):
+   *
+   * ```js
+   * import { execSync } from 'node:child_process'
+   *
+   * import { defineConfig } from '@rsbuild/core'
+   * import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+   *
+   * const gitHash = execSync('git rev-parse --short HEAD').toString().trim()
+   *
+   * export default defineConfig({
+   *   plugins: [
+   *     pluginLynx({
+   *       output: {
+   *         filename: {
+   *           bundle: ({ lazyBundle, platform }) =>
+   *             lazyBundle
+   *               ? `my-lazy-bundles/[name].[fullhash]-${gitHash}.bundle`
+   *               : `[name].${platform}.bundle`,
+   *         },
+   *       },
+   *     }),
+   *   ],
+   * })
+   * ```
    */
   bundle?: BundleFilename | undefined
 }
@@ -76,12 +130,60 @@ export interface LynxFilename {
  */
 export interface LynxMinify {
   /**
-   * The minifier options of the main thread.
+   * Overrides the Rsbuild `output.minify.jsOptions` for main-thread bundles.
+   *
+   * @remarks
+   *
+   * This option is deep-merged into `output.minify.jsOptions`.
+   * It is mainly used together with ReactLynx dual-thread outputs so that
+   * main-thread and background-thread bundles can use different compress rules.
+   *
+   * @example
+   *
+   * ```ts
+   * import { defineConfig } from '@rsbuild/core'
+   * import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+   *
+   * export default defineConfig({
+   *   output: {
+   *     minify: {
+   *       jsOptions: {
+   *         minimizerOptions: {
+   *           compress: {
+   *             pure_funcs: ['console.log'],
+   *           },
+   *         },
+   *       },
+   *     },
+   *   },
+   *   plugins: [
+   *     pluginLynx({
+   *       output: {
+   *         minify: {
+   *           mainThreadOptions: {
+   *             minimizerOptions: {
+   *               compress: {
+   *                 pure_funcs: ['NativeModules.call', 'lynx.getJSModule'],
+   *               },
+   *             },
+   *           },
+   *         },
+   *       },
+   *     }),
+   *   ],
+   * })
+   * ```
    */
   mainThreadOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined
 
   /**
-   * The minifier options of the background thread.
+   * Overrides the Rsbuild `output.minify.jsOptions` for background-thread bundles.
+   *
+   * @remarks
+   *
+   * This option is deep-merged into `output.minify.jsOptions`.
+   * It is mainly used together with ReactLynx dual-thread outputs so that
+   * main-thread and background-thread bundles can use different compress rules.
    */
   backgroundOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined
 }
@@ -117,6 +219,23 @@ export interface LynxPerformance {
    *
    * A framework includes runtime information using `console.profile` when this
    * is enabled.
+   *
+   * @defaultValue `true` when `DEBUG=lynx`, otherwise `undefined`
+   *
+   * @example
+   *
+   * ```ts
+   * import { defineConfig } from '@rsbuild/core'
+   * import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+   *
+   * export default defineConfig({
+   *   plugins: [
+   *     pluginLynx({
+   *       performance: { profile: true },
+   *     }),
+   *   ],
+   * })
+   * ```
    */
   profile?: boolean | undefined
 }
@@ -278,7 +397,10 @@ export function createLynxConfig(options: LynxPluginOptions): LynxConfig {
   return {
     output,
 
-    performance: options.performance ?? {},
+    performance: {
+      ...options.performance,
+      profile: options.performance?.profile ?? (isDebug() ? true : undefined),
+    },
 
     resolveBundleFilename({ entryName, platform }) {
       return resolve(output.filename?.bundle, {

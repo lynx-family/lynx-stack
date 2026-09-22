@@ -59,7 +59,7 @@ export interface DarkModeConfig {
   themeExpr: string
 }
 /**
- * {@inheritdoc CompatVisitorConfig.addComponentElement}
+ * {@inheritDoc CompatVisitorConfig.addComponentElement}
  * @public
  */
 export interface AddComponentElementConfig {
@@ -89,7 +89,7 @@ export interface AddComponentElementConfig {
   compilerOnly: boolean
 }
 /**
- * {@inheritdoc PluginReactLynxOptions.compat}
+ * {@inheritDoc PluginReactLynxOptions.compat}
  * @public
  */
 export interface CompatVisitorConfig {
@@ -341,9 +341,10 @@ export interface CompatVisitorConfig {
    */
   disableDeprecatedWarning: boolean
   /**
+   * Dark mode configuration
+   *
    * @public
    * @deprecated
-   * Dark mode configuration
    *
    * @defaultValue `undefined`
    *
@@ -407,7 +408,7 @@ export interface CssScopeVisitorConfig {
   filename: string
 }
 /**
- * {@inheritdoc PluginReactLynxOptions.defineDCE}
+ * {@inheritDoc PluginReactLynxOptions.defineDCE}
  * @public
  */
 export interface DefineDceVisitorConfig {
@@ -472,7 +473,7 @@ export interface DynamicImportVisitorConfig {
   injectLazyBundle?: boolean
 }
 /**
- * {@inheritdoc PluginReactLynxOptions.extractStr}
+ * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.extractStr}
  * @public
  */
 export interface ExtractStrConfig {
@@ -510,7 +511,7 @@ export interface RefreshVisitorConfig {
   library?: Array<string>
 }
 /**
- * {@inheritdoc PluginReactLynxOptions.shake}
+ * {@inheritDoc PluginReactLynxOptions.shake}
  * @public
  */
 export interface ShakeVisitorConfig {

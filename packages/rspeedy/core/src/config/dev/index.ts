@@ -4,7 +4,7 @@
 import type { WatchFiles } from '@rsbuild/core'
 
 /**
- * {@inheritdoc Config.dev}
+ * {@inheritDoc Config.dev}
  * @public
  */
 export interface Dev {
@@ -120,6 +120,8 @@ export interface Dev {
    *
    * @defaultValue true
    *
+   * @remarks
+   *
    * Live reload is used as a fallback when {@link Dev.hmr} is disabled or cannot be used in certain scenarios. When enabled, the page will automatically refresh when source files are changed.
    *
    * To completely disable both HMR and live reload, set both `dev.hmr` and `dev.liveReload` to `false`. Then, no WebSocket requests will be made to the dev server on the page, and the page will not automatically refresh when file changes.
@@ -226,18 +228,18 @@ export interface Dev {
   /**
    * Whether to display progress bar during compilation.
    *
-   * @defaultValue true
+   * @defaultValue false
    *
    * @example
    *
-   * Disable the progress bar.
+   * Enable the progress bar.
    *
    * ```js
    * import { defineConfig } from '@lynx-js/rspeedy'
    *
    * export default defineConfig({
    *   dev: {
-   *     progressBar: false,
+   *     progressBar: true,
    *   },
    * })
    * ```

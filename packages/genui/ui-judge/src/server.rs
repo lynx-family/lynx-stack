@@ -28,22 +28,22 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use socket2::{Domain, Protocol, SockAddr, Socket, Type};
 use thiserror::Error;
+use tokio::io::{AsyncRead, AsyncReadExt};
 use tokio::net::TcpListener;
 use tokio::process::{Child, Command};
 use tokio::sync::{oneshot, watch, Notify, OwnedSemaphorePermit, Semaphore};
 
 use crate::capture::{shared_workers, CaptureError, CaptureWorkers, WorkerPanicked};
-use crate::headless::PageLoadOptions;
+use crate::headless::{PageLoadOptions, DEFAULT_SCREENSHOT_SETTLE_MS};
 use crate::ssrf::{fetch_http_resource, HttpFetchError};
 use crate::visual::{
   compare_uploaded_images, ReferenceImageComparison, VisualEvaluationError, MAX_IMAGE_BYTES,
 };
-use crate::{CapturePageError, CapturePageRequest};
+use crate::CapturePageRequest;
 
 #[path = "zip/mod.rs"]
 pub mod zip;
 
-const DEFAULT_SCREENSHOT_SETTLE_MS: u64 = 16;
 const DEFAULT_SCREENSHOT_WIDTH: usize = 800;
 const DEFAULT_SCREENSHOT_HEIGHT: usize = 600;
 const MAX_SCREENSHOT_DIMENSION: usize = 8_192;
@@ -68,8 +68,8 @@ const ZIP_CAPTURE_HEIGHT_ENV: &str = "UI_JUDGE_INTERNAL_ZIP_CAPTURE_HEIGHT";
 const ISOLATED_CAPTURE_CONFIG_ARG: &str = "--ui-judge-isolated-capture-config-file";
 const ZIP_CAPTURE_PROCESS_GRACE: Duration = Duration::from_secs(5);
 const ZIP_CAPTURE_FATAL_EXIT_CODE: i32 = 75;
-const MAX_CONCURRENT_ZIP_RENDERERS: usize = 4;
-const ZIP_SCREENSHOT_SETTLE_MS: u64 = 500;
+const MAX_CONCURRENT_ZIP_RENDERERS: usize = 8;
+const MAX_CAPTURE_LOG_BYTES: usize = 64 * 1024;
 static NEXT_ZIP_JOB_ID: AtomicU64 = AtomicU64::new(1);
 
 #[derive(Clone, Copy)]
@@ -93,7 +93,7 @@ impl Default for IsolatedCaptureConfig {
     Self {
       global_props_json: None,
       initial_data_json: None,
-      screenshot_settle_ms: ZIP_SCREENSHOT_SETTLE_MS,
+      screenshot_settle_ms: DEFAULT_SCREENSHOT_SETTLE_MS,
       timeout_ms: DEFAULT_TIMEOUT_MS,
     }
   }
@@ -194,9 +194,10 @@ impl ZipCaptureProcesses {
     let started = activity.started;
     let (mut reply, response) = oneshot::channel();
     tokio::spawn(async move {
-      let result =
-        supervise_zip_capture_process(&base_dir, &url, viewport, config, &mut reply, deadline)
-          .await;
+      let result = supervise_zip_capture_process(
+        &base_dir, &url, viewport, config, job_id, &mut reply, deadline,
+      )
+      .await;
       let outcome = if reply.is_closed() {
         "cancelled"
       } else {
@@ -486,10 +487,48 @@ fn page_data_json(name: &str, value: Option<Value>) -> Result<Option<String>, Ap
   }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 struct ApiError {
   message: String,
+  #[serde(skip)]
   status: StatusCode,
+  #[serde(flatten, skip_serializing_if = "Option::is_none")]
+  child_output: Option<ChildOutput>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ChildOutput {
+  stdout: String,
+  stderr: String,
+  stdout_truncated: bool,
+  stderr_truncated: bool,
+  exit_code: Option<i32>,
+  signal: Option<i32>,
+}
+
+#[derive(Default)]
+struct CapturedOutput {
+  bytes: Vec<u8>,
+  truncated: bool,
+}
+
+impl CapturedOutput {
+  async fn drain(&mut self, mut reader: impl AsyncRead + Unpin) -> io::Result<()> {
+    let mut buffer = [0; 8192];
+    loop {
+      let read = reader.read(&mut buffer).await?;
+      if read == 0 {
+        return Ok(());
+      }
+      let overflow = (self.bytes.len() + read).saturating_sub(MAX_CAPTURE_LOG_BYTES);
+      if overflow > 0 {
+        self.bytes.drain(..overflow);
+        self.truncated = true;
+      }
+      self.bytes.extend_from_slice(&buffer[..read]);
+    }
+  }
 }
 
 impl ApiError {
@@ -497,7 +536,13 @@ impl ApiError {
     Self {
       message: message.into(),
       status,
+      child_output: None,
     }
+  }
+
+  fn with_child_output(mut self, output: ChildOutput) -> Self {
+    self.child_output = Some(output);
+    self
   }
 }
 
@@ -521,20 +566,12 @@ impl From<VisualEvaluationError> for ApiError {
 
 #[derive(Serialize)]
 struct ApiErrorBody {
-  error: CapturePageError,
+  error: ApiError,
 }
 
 impl IntoResponse for ApiError {
   fn into_response(self) -> Response {
-    (
-      self.status,
-      Json(ApiErrorBody {
-        error: CapturePageError {
-          message: self.message,
-        },
-      }),
-    )
-      .into_response()
+    (self.status, Json(ApiErrorBody { error: self })).into_response()
   }
 }
 
@@ -609,18 +646,24 @@ pub fn run_zip_capture_child() -> Result<bool, ServerError> {
       settle: Duration::from_millis(config.screenshot_settle_ms),
     })
     .map_err(|_| ServerError::IsolatedZipCapture)?;
-  let mut output = std::fs::OpenOptions::new()
-    .write(true)
-    .create_new(true)
-    .open(&output)
-    .map_err(|_| ServerError::IsolatedZipCapture)?;
-  output
-    .write_all(&bmp)
-    .map_err(|_| ServerError::IsolatedZipCapture)?;
-  output
-    .flush()
-    .map_err(|_| ServerError::IsolatedZipCapture)?;
+  publish_capture_bmp(&output, &bmp).map_err(|_| ServerError::IsolatedZipCapture)?;
   Ok(true)
+}
+
+fn publish_capture_bmp(output: &Path, bmp: &[u8]) -> io::Result<()> {
+  let mut pending = tempfile::NamedTempFile::new_in(
+    output
+      .parent()
+      .ok_or_else(|| io::Error::other("capture output has no parent"))?,
+  )?;
+  pending.write_all(bmp)?;
+  pending.flush()?;
+  // Close and atomically publish before native page/container teardown. A crash
+  // while writing leaves only the temporary file, never a partial capture.bmp.
+  pending
+    .into_temp_path()
+    .persist(output)
+    .map_err(io::Error::from)
 }
 
 fn isolated_capture_config_from_args() -> Result<IsolatedCaptureConfig, ServerError> {
@@ -1428,7 +1471,7 @@ async fn capture_staged_source(
 
 fn staged_screenshot_request(url: &str) -> CapturePageRequest {
   CapturePageRequest {
-    screenshot_settle: Duration::from_millis(ZIP_SCREENSHOT_SETTLE_MS),
+    screenshot_settle: Duration::from_millis(DEFAULT_SCREENSHOT_SETTLE_MS),
 
     timeout: Duration::from_millis(DEFAULT_TIMEOUT_MS),
     url: url.to_string(),
@@ -1516,23 +1559,19 @@ fn staged_source_timeout_error(kind: StagedSourceKind) -> ApiError {
   )
 }
 
-fn staged_source_render_api_error(kind: StagedSourceKind, error: ApiError) -> ApiError {
-  match error.status {
-    StatusCode::REQUEST_TIMEOUT => staged_source_timeout_error(kind),
-    StatusCode::UNPROCESSABLE_ENTITY => ApiError::new(
-      StatusCode::UNPROCESSABLE_ENTITY,
-      format!("The {} could not be rendered.", kind.label()),
-    ),
-    StatusCode::INTERNAL_SERVER_ERROR => ApiError::new(
-      StatusCode::INTERNAL_SERVER_ERROR,
-      format!("The isolated {} renderer is unavailable.", kind.label()),
-    ),
-    StatusCode::SERVICE_UNAVAILABLE => ApiError::new(
-      StatusCode::SERVICE_UNAVAILABLE,
-      format!("The isolated {} renderer is shutting down.", kind.label()),
-    ),
-    _ => error,
-  }
+fn staged_source_render_api_error(kind: StagedSourceKind, mut error: ApiError) -> ApiError {
+  error.message = match error.status {
+    StatusCode::REQUEST_TIMEOUT => format!("The {} render timed out.", kind.label()),
+    StatusCode::UNPROCESSABLE_ENTITY => format!("The {} could not be rendered.", kind.label()),
+    StatusCode::INTERNAL_SERVER_ERROR => {
+      format!("The isolated {} renderer is unavailable.", kind.label())
+    }
+    StatusCode::SERVICE_UNAVAILABLE => {
+      format!("The isolated {} renderer is shutting down.", kind.label())
+    }
+    _ => return error,
+  };
+  error
 }
 
 fn canonical_zip_base_dir(path: &std::path::Path) -> Result<PathBuf, ApiError> {
@@ -1549,6 +1588,7 @@ async fn supervise_zip_capture_process(
   url: &str,
   viewport: ScreenshotViewport,
   config: IsolatedCaptureConfig,
+  job_id: u64,
   reply: &mut oneshot::Sender<Result<Vec<u8>, ApiError>>,
   deadline: tokio::time::Instant,
 ) -> Result<Vec<u8>, ApiError> {
@@ -1578,8 +1618,8 @@ async fn supervise_zip_capture_process(
     .env(ZIP_CAPTURE_URL_ENV, url)
     .env(ZIP_CAPTURE_WIDTH_ENV, viewport.width.to_string())
     .stdin(Stdio::piped())
-    .stdout(Stdio::null())
-    .stderr(Stdio::null())
+    .stdout(Stdio::piped())
+    .stderr(Stdio::piped())
     .kill_on_drop(true);
   for name in [
     "LLVM_PROFILE_FILE",
@@ -1599,36 +1639,54 @@ async fn supervise_zip_capture_process(
     terminate_zip_capture_child_or_exit(&mut child).await;
     return Err(isolated_zip_worker_error());
   };
-  let status = tokio::select! {
-    biased;
-    _ = tokio::time::sleep_until(deadline) => {
-      terminate_zip_capture_child_or_exit(&mut child).await;
-      return Err(zip_render_timeout_error());
-    }
-    _ = reply.closed() => {
-      terminate_zip_capture_child_or_exit(&mut child).await;
-      return Err(isolated_zip_worker_error());
-    }
-    status = child.wait() => match status {
-      Ok(status) => status,
-      Err(_) => {
-        terminate_zip_capture_child_or_exit(&mut child).await;
-        return Err(isolated_zip_worker_error());
-      }
-    },
-  };
+  let child_result = wait_for_capture_child(&mut child, reply, deadline).await;
   drop(parent_lifeline);
-  if !status.success() {
-    return Err(ApiError::new(
-      StatusCode::UNPROCESSABLE_ENTITY,
-      "The uploaded ZIP could not be rendered.",
-    ));
+  read_capture_output(child_result, output_dir, viewport, job_id, reply, deadline).await
+}
+
+async fn read_capture_output(
+  child_result: Result<ChildOutput, ApiError>,
+  output_dir: tempfile::TempDir,
+  viewport: ScreenshotViewport,
+  job_id: u64,
+  reply: &mut oneshot::Sender<Result<Vec<u8>, ApiError>>,
+  deadline: tokio::time::Instant,
+) -> Result<Vec<u8>, ApiError> {
+  let (child_output, child_error) = match child_result {
+    Ok(output) => (output, None),
+    Err(mut error)
+      if error.status == StatusCode::UNPROCESSABLE_ENTITY
+        && error
+          .child_output
+          .as_ref()
+          .is_some_and(|output| output.signal == Some(11)) =>
+    {
+      // Only an independently observed SIGSEGV is recoverable. In particular,
+      // never recover a timeout/cancellation that killed the child during cleanup.
+      (
+        error
+          .child_output
+          .take()
+          .expect("SIGSEGV has child diagnostics"),
+        Some(error),
+      )
+    }
+    Err(error) => return Err(error),
+  };
+  // Tokio timers round deadlines up to a millisecond tick. A ready file read
+  // can win the select below after the actual deadline, even with `biased`.
+  if tokio::time::Instant::now() >= deadline {
+    return Err(zip_render_timeout_error().with_child_output(child_output));
   }
+  if reply.is_closed() {
+    return Err(isolated_zip_worker_error().with_child_output(child_output));
+  }
+  let recovering = child_error.is_some();
   let postprocess = async move {
-    let bmp = tokio::task::spawn_blocking(move || {
+    tokio::task::spawn_blocking(move || {
       // Keep the private output directory alive until this blocking read ends,
       // even if its async waiter is cancelled.
-      let _output_dir = output_dir;
+      let output = output_dir.path().join("capture.bmp");
       let metadata = std::fs::symlink_metadata(&output)?;
       if !metadata.file_type().is_file()
         || metadata.len() == 0
@@ -1639,21 +1697,129 @@ async fn supervise_zip_capture_process(
           "isolated ZIP capture returned an invalid frame",
         ));
       }
-      std::fs::read(output)
+      let mut bmp = Vec::with_capacity(metadata.len() as usize);
+      std::fs::File::open(output)?
+        .take((MAX_CAPTURE_BMP_BYTES + 1) as u64)
+        .read_to_end(&mut bmp)?;
+      if !valid_capture_bmp(&bmp, viewport) {
+        return Err(io::Error::new(
+          io::ErrorKind::InvalidData,
+          "invalid capture BMP",
+        ));
+      }
+      Ok(bmp)
     })
     .await
-    .map_err(|_| isolated_zip_worker_error())?
-    .map_err(|_| isolated_zip_worker_error())?;
-    if bmp.is_empty() || bmp.len() > MAX_CAPTURE_BMP_BYTES {
-      return Err(isolated_zip_worker_error());
-    }
-    Ok(bmp)
+    .map_err(io::Error::other)
+    .and_then(|result| result)
+    // Preserve the original crash diagnostics when no complete frame exists.
+    .map_err(|_| child_error.unwrap_or_else(isolated_zip_worker_error))
   };
-  tokio::select! {
+  let result = tokio::select! {
     biased;
     _ = tokio::time::sleep_until(deadline) => Err(zip_render_timeout_error()),
     _ = reply.closed() => Err(isolated_zip_worker_error()),
     result = postprocess => result,
+  };
+  // Recheck after the blocking read, before accepting or logging a recovery.
+  let result = if tokio::time::Instant::now() >= deadline {
+    Err(zip_render_timeout_error())
+  } else if reply.is_closed() {
+    Err(isolated_zip_worker_error())
+  } else {
+    result
+  };
+  if let Ok(bmp) = &result {
+    if recovering {
+      // Keep crashes observable even though the HTTP request returns a BMP.
+      // Do not log the child streams, which can contain user page data.
+      eprintln!(
+        "[ui-judge-server] zip job_id={}-{} phase=recovery outcome=recovered-sigsegv signal=11 output_bytes={}",
+        std::process::id(), job_id, bmp.len(),
+      );
+    }
+  }
+  result.map_err(|error| error.with_child_output(child_output))
+}
+
+fn valid_capture_bmp(bmp: &[u8], viewport: ScreenshotViewport) -> bool {
+  // The headless runner emits top-down, uncompressed 32-bit BITMAPV4HEADER
+  // screenshots. Validate that fixed layout and every pixel's presence without
+  // allocating a decoded image or adding per-pixel work to the screenshot path.
+  let pixel_bytes = viewport.width * viewport.height * 4;
+  let file_bytes = 122 + pixel_bytes;
+  bmp.len() == file_bytes
+    && bmp.starts_with(b"BM")
+    && bmp[2..6] == (file_bytes as u32).to_le_bytes()
+    && bmp[10..14] == 122_u32.to_le_bytes()
+    && bmp[14..18] == 108_u32.to_le_bytes()
+    && bmp[18..22] == (viewport.width as i32).to_le_bytes()
+    && bmp[22..26] == (-(viewport.height as i32)).to_le_bytes()
+    && bmp[26..28] == 1_u16.to_le_bytes()
+    && bmp[28..30] == 32_u16.to_le_bytes()
+    && bmp[30..34] == 3_u32.to_le_bytes() // BI_BITFIELDS
+    && bmp[34..38] == (pixel_bytes as u32).to_le_bytes()
+    && bmp[54..58] == 0x00ff_0000_u32.to_le_bytes()
+    && bmp[58..62] == 0x0000_ff00_u32.to_le_bytes()
+    && bmp[62..66] == 0x0000_00ff_u32.to_le_bytes()
+    && bmp[66..70] == 0xff00_0000_u32.to_le_bytes()
+}
+
+async fn wait_for_capture_child(
+  child: &mut Child,
+  reply: &mut oneshot::Sender<Result<Vec<u8>, ApiError>>,
+  deadline: tokio::time::Instant,
+) -> Result<ChildOutput, ApiError> {
+  let stdout = child.stdout.take().expect("capture stdout is piped");
+  let stderr = child.stderr.take().expect("capture stderr is piped");
+  let mut stdout_output = CapturedOutput::default();
+  let mut stderr_output = CapturedOutput::default();
+  // Drain both pipes while waiting, even after the retained tails reach the cap.
+  // The deadline also bounds EOF waits if a descendant inherits either pipe.
+  let result = tokio::select! {
+    biased;
+    _ = tokio::time::sleep_until(deadline) => Err(zip_render_timeout_error()),
+    _ = reply.closed() => Err(isolated_zip_worker_error()),
+    result = async {
+      let (status, stdout, stderr) = tokio::join!(
+        child.wait(), stdout_output.drain(stdout), stderr_output.drain(stderr)
+      );
+      let status = status.map_err(|_| isolated_zip_worker_error())?;
+      if !status.success() {
+        return Err(ApiError::new(
+          StatusCode::UNPROCESSABLE_ENTITY,
+          "The uploaded ZIP could not be rendered.",
+        ));
+      }
+      stdout.and(stderr).map_err(|_| isolated_zip_worker_error())
+    } => result,
+  };
+  // The select has dropped the pipe readers before cleanup. Reap the child
+  // before releasing its staging directory or renderer permit on every path.
+  if result.is_err() {
+    terminate_zip_capture_child_or_exit(child).await;
+  }
+  // Waiting and cleanup both reap the child. Read the cached status so timeout
+  // responses also describe the termination performed by this supervisor.
+  let exit_status = child.try_wait().ok().flatten();
+  #[cfg(unix)]
+  let signal = {
+    use std::os::unix::process::ExitStatusExt;
+    exit_status.and_then(|status| status.signal())
+  };
+  #[cfg(not(unix))]
+  let signal = None;
+  let output = ChildOutput {
+    stdout: String::from_utf8_lossy(&stdout_output.bytes).into_owned(),
+    stderr: String::from_utf8_lossy(&stderr_output.bytes).into_owned(),
+    stdout_truncated: stdout_output.truncated,
+    stderr_truncated: stderr_output.truncated,
+    exit_code: exit_status.and_then(|status| status.code()),
+    signal,
+  };
+  match result {
+    Ok(()) => Ok(output),
+    Err(error) => Err(error.with_child_output(output)),
   }
 }
 
@@ -1905,6 +2071,7 @@ async fn shutdown_signal() -> io::Result<()> {
 #[cfg(test)]
 mod tests {
   use crate::capture::CaptureResponse;
+  use std::future::Future;
   use std::io::{Cursor, Write};
   use std::path::Path;
   use std::sync::mpsc::Receiver;
@@ -2955,6 +3122,425 @@ mod tests {
 
     assert_eq!(response.0, json!({ "status": "ok" }));
     headless.shutdown().expect("stop mock headless worker");
+  }
+
+  #[tokio::test]
+  async fn errors_without_children_keep_the_existing_json_shape() {
+    let response = ApiError::new(StatusCode::BAD_REQUEST, "invalid input").into_response();
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    let body = axum::body::to_bytes(response.into_body(), 1024)
+      .await
+      .unwrap();
+    assert_eq!(
+      serde_json::from_slice::<Value>(&body).unwrap(),
+      json!({
+        "error": { "message": "invalid input" }
+      })
+    );
+  }
+
+  #[tokio::test]
+  async fn captured_output_preserves_bytes_and_marks_only_actual_truncation() {
+    let mut output = CapturedOutput::default();
+    let bytes = vec![b'x'; MAX_CAPTURE_LOG_BYTES];
+    output.drain(bytes.as_slice()).await.unwrap();
+    assert_eq!(output.bytes, bytes);
+    assert!(!output.truncated);
+    output.drain(&b"\xfftail"[..]).await.unwrap();
+    assert_eq!(output.bytes.len(), MAX_CAPTURE_LOG_BYTES);
+    assert!(output.truncated);
+    assert!(String::from_utf8_lossy(&output.bytes).ends_with("\u{fffd}tail"));
+  }
+
+  #[cfg(unix)]
+  fn output_test_child(script: &str) -> Child {
+    Command::new("/bin/sh")
+      .arg("-c")
+      .arg(script)
+      .stdin(Stdio::null())
+      .stdout(Stdio::piped())
+      .stderr(Stdio::piped())
+      .kill_on_drop(true)
+      .spawn()
+      .expect("start output test child")
+  }
+
+  fn capture_output_bmp() -> Vec<u8> {
+    let mut bmp = sample_bmp(Rgba([20, 40, 60, 255]));
+    // The image encoder uses bottom-up rows; the runner uses top-down rows.
+    // Every pixel in this fixture is the same, so only the height changes.
+    bmp[22..26].copy_from_slice(&(-8_i32).to_le_bytes());
+    bmp
+  }
+
+  #[test]
+  fn publishes_complete_capture_before_native_teardown() {
+    let directory = tempfile::tempdir().unwrap();
+    let output = directory.path().join("capture.bmp");
+    let bmp = capture_output_bmp();
+    publish_capture_bmp(&output, &bmp).unwrap();
+    assert_eq!(std::fs::read(output).unwrap(), bmp);
+    assert_eq!(std::fs::read_dir(directory.path()).unwrap().count(), 1);
+    assert!(valid_capture_bmp(
+      &bmp,
+      ScreenshotViewport::new(8, 8).unwrap()
+    ));
+    let decoded = lynx_headless_rust_test_runner::decode_screenshot(&bmp).unwrap();
+    assert_eq!((decoded.width, decoded.height), (8, 8));
+    assert_eq!(decoded.rgba, [20, 40, 60, 255].repeat(64));
+  }
+
+  #[test]
+  fn capture_validation_rejects_incomplete_or_incompatible_bmp_layouts() {
+    let bmp = capture_output_bmp();
+    let viewport = ScreenshotViewport::new(8, 8).unwrap();
+    for length in [0, 2, 54, 121, 122, bmp.len() - 1] {
+      assert!(
+        !valid_capture_bmp(&bmp[..length], viewport),
+        "length={length}"
+      );
+    }
+    // Signature, file size, offset, DIB size, dimensions, planes, bit count,
+    // compression, pixel size, and all four masks must match the runner format.
+    for offset in [0, 2, 10, 14, 18, 22, 26, 28, 30, 34, 54, 58, 62, 66] {
+      let mut corrupt = bmp.clone();
+      corrupt[offset] ^= 1;
+      assert!(!valid_capture_bmp(&corrupt, viewport), "offset={offset}");
+    }
+    let mut trailing = bmp.clone();
+    trailing.push(0);
+    assert!(!valid_capture_bmp(&trailing, viewport));
+    assert!(!valid_capture_bmp(
+      &bmp,
+      ScreenshotViewport::new(4, 16).unwrap()
+    ));
+  }
+
+  #[cfg(unix)]
+  #[tokio::test]
+  async fn sigsegv_recovers_only_a_complete_published_capture() {
+    let bmp = capture_output_bmp();
+    for case in [
+      "complete",
+      "missing",
+      "unpublished",
+      "truncated",
+      "corrupt",
+      "dimensions",
+      "symlink",
+    ] {
+      let directory = tempfile::tempdir().unwrap();
+      let directory_path = directory.path().to_path_buf();
+      let mut bytes = bmp.clone();
+      if case == "truncated" {
+        bytes.pop();
+      } else if case == "corrupt" {
+        bytes[0] = b'X';
+      } else if case == "dimensions" {
+        bytes[18..22].copy_from_slice(&4_i32.to_le_bytes());
+      }
+      std::fs::write(directory.path().join("pending.bmp"), bytes).unwrap();
+      let script = match case {
+        "missing" => "rm pending.bmp;",
+        "unpublished" => "",
+        "symlink" => "ln -s pending.bmp capture.bmp;",
+        _ => "mv pending.bmp capture.bmp;",
+      };
+      let mut child = Command::new("/bin/sh")
+        .arg("-c")
+        .arg(format!(
+          "ulimit -c 0; {script} printf 'captured'; printf 'teardown' >&2; kill -SEGV $$"
+        ))
+        .current_dir(directory.path())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .kill_on_drop(true)
+        .spawn()
+        .unwrap();
+      let (mut reply, _response) = oneshot::channel();
+      let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+      let child_result = wait_for_capture_child(&mut child, &mut reply, deadline).await;
+      assert!(child.try_wait().unwrap().is_some());
+      assert_eq!(
+        child_result
+          .as_ref()
+          .unwrap_err()
+          .child_output
+          .as_ref()
+          .unwrap()
+          .signal,
+        Some(11)
+      );
+      let result = read_capture_output(
+        child_result,
+        directory,
+        ScreenshotViewport::new(8, 8).unwrap(),
+        1,
+        &mut reply,
+        deadline,
+      )
+      .await;
+      if case == "complete" {
+        assert_eq!(result.unwrap(), bmp);
+      } else {
+        let error = result.unwrap_err();
+        assert_eq!(error.status, StatusCode::UNPROCESSABLE_ENTITY, "{case}");
+        let output = error.child_output.unwrap();
+        assert_eq!(output.signal, Some(11));
+        assert_eq!(output.stdout, "captured");
+        assert_eq!(output.stderr, "teardown");
+      }
+      assert!(
+        !directory_path.exists(),
+        "{case} output directory must be cleaned up"
+      );
+    }
+  }
+
+  #[cfg(unix)]
+  #[tokio::test]
+  async fn complete_capture_does_not_override_other_failures_timeout_or_cancellation() {
+    for case in [
+      "exit",
+      "signal",
+      "timeout",
+      "cancelled",
+      "timeout-after-crash",
+      "cancelled-after-crash",
+      "timeout-after-success",
+      "cancelled-after-success",
+    ] {
+      let directory = tempfile::tempdir().unwrap();
+      publish_capture_bmp(&directory.path().join("capture.bmp"), &capture_output_bmp()).unwrap();
+      let mut child = output_test_child(match case {
+        "exit" => "exit 7",
+        "signal" => "kill -TERM $$",
+        "timeout" | "cancelled" => "exec sleep 30",
+        "timeout-after-success" | "cancelled-after-success" => "exit 0",
+        _ => "ulimit -c 0; kill -SEGV $$",
+      });
+      let (mut reply, response) = oneshot::channel();
+      let mut response = Some(response);
+      let mut deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+      if case == "timeout" {
+        deadline = tokio::time::Instant::now();
+      } else if case == "cancelled" {
+        drop(response.take());
+      }
+      let child_result = wait_for_capture_child(&mut child, &mut reply, deadline).await;
+      assert!(child.try_wait().unwrap().is_some());
+      if case.starts_with("timeout-after-") {
+        deadline = tokio::time::Instant::now();
+      } else if case.starts_with("cancelled-after-") {
+        drop(response.take());
+      }
+      let error = read_capture_output(
+        child_result,
+        directory,
+        ScreenshotViewport::new(8, 8).unwrap(),
+        1,
+        &mut reply,
+        deadline,
+      )
+      .await
+      .expect_err(case);
+      let expected = if case.starts_with("timeout") {
+        StatusCode::REQUEST_TIMEOUT
+      } else if case.starts_with("cancelled") {
+        StatusCode::INTERNAL_SERVER_ERROR
+      } else {
+        StatusCode::UNPROCESSABLE_ENTITY
+      };
+      assert_eq!(error.status, expected, "{case}");
+      assert!(error.child_output.is_some());
+    }
+  }
+
+  #[cfg(unix)]
+  #[tokio::test]
+  async fn failed_child_drains_both_pipes_and_returns_separate_bounded_json_fields() {
+    let mut child = output_test_child(
+      "i=0; while [ \"$i\" -lt 8192 ]; do printf 'stdout-entry\\n'; printf 'stderr-entry\\n' >&2; i=$((i+1)); done; printf 'stdout-tail'; printf 'stderr-tail' >&2; exit 7",
+    );
+    let (mut reply, _response) = oneshot::channel();
+    let error = wait_for_capture_child(
+      &mut child,
+      &mut reply,
+      tokio::time::Instant::now() + Duration::from_secs(10),
+    )
+    .await
+    .unwrap_err();
+    assert_eq!(child.try_wait().unwrap().unwrap().code(), Some(7));
+    let response = staged_source_render_api_error(StagedSourceKind::Lynxml, error).into_response();
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    let body = axum::body::to_bytes(response.into_body(), 4 * MAX_CAPTURE_LOG_BYTES)
+      .await
+      .unwrap();
+    let body: Value = serde_json::from_slice(&body).unwrap();
+    let error = &body["error"];
+    assert_eq!(error["message"], "The LynXML source could not be rendered.");
+    let stdout = error["stdout"].as_str().unwrap();
+    let stderr = error["stderr"].as_str().unwrap();
+    assert_eq!(stdout.len(), MAX_CAPTURE_LOG_BYTES);
+    assert_eq!(stderr.len(), MAX_CAPTURE_LOG_BYTES);
+    assert!(stdout.ends_with("stdout-tail"));
+    assert!(stderr.ends_with("stderr-tail"));
+    assert!(!stdout.contains("stderr"));
+    assert!(!stderr.contains("stdout"));
+    assert_eq!(error["stdoutTruncated"], true);
+    assert_eq!(error["stderrTruncated"], true);
+    assert_eq!(error["exitCode"], 7);
+    assert_eq!(error["signal"], Value::Null);
+  }
+
+  #[cfg(unix)]
+  #[tokio::test]
+  async fn signalled_child_returns_signal_even_without_output() {
+    let mut child = output_test_child("kill -TERM $$");
+    let (mut reply, _response) = oneshot::channel();
+    let error = wait_for_capture_child(
+      &mut child,
+      &mut reply,
+      tokio::time::Instant::now() + Duration::from_secs(5),
+    )
+    .await
+    .unwrap_err();
+    let response = staged_source_render_api_error(StagedSourceKind::Lynxml, error).into_response();
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    let body = axum::body::to_bytes(response.into_body(), 1024)
+      .await
+      .unwrap();
+    assert_eq!(
+      serde_json::from_slice::<Value>(&body).unwrap(),
+      json!({
+        "error": {
+          "message": "The LynXML source could not be rendered.",
+          "stdout": "",
+          "stderr": "",
+          "stdoutTruncated": false,
+          "stderrTruncated": false,
+          "exitCode": null,
+          "signal": 15
+        }
+      })
+    );
+  }
+
+  #[cfg(unix)]
+  #[tokio::test]
+  async fn successful_child_returns_complete_output_with_empty_stderr() {
+    let mut child = output_test_child("printf 'rendered'");
+    let (mut reply, _response) = oneshot::channel();
+    let output = wait_for_capture_child(
+      &mut child,
+      &mut reply,
+      tokio::time::Instant::now() + Duration::from_secs(5),
+    )
+    .await
+    .unwrap();
+    assert_eq!(output.stdout, "rendered");
+    assert_eq!(output.stderr, "");
+    assert!(!output.stdout_truncated);
+    assert!(!output.stderr_truncated);
+    assert_eq!(output.exit_code, Some(0));
+    assert_eq!(output.signal, None);
+    assert!(child.try_wait().unwrap().unwrap().success());
+  }
+
+  #[cfg(unix)]
+  #[tokio::test]
+  async fn timed_out_child_is_reaped_and_returns_partial_output() {
+    let mut child =
+      output_test_child("printf 'before-timeout'; printf 'diagnostic' >&2; exec sleep 30");
+    let (mut reply, _response) = oneshot::channel();
+    let error = wait_for_capture_child(
+      &mut child,
+      &mut reply,
+      tokio::time::Instant::now() + Duration::from_secs(2),
+    )
+    .await
+    .unwrap_err();
+    assert_eq!(error.status, StatusCode::REQUEST_TIMEOUT);
+    let output = error.child_output.unwrap();
+    assert_eq!(output.stdout, "before-timeout");
+    assert_eq!(output.stderr, "diagnostic");
+    assert_eq!(output.exit_code, None);
+    assert_eq!(output.signal, Some(9));
+    assert!(child.try_wait().unwrap().is_some());
+  }
+
+  #[cfg(unix)]
+  #[tokio::test]
+  async fn cancelled_capture_reaps_the_child_while_output_is_being_written() {
+    let mut child = output_test_child("while :; do printf 'output'; printf 'error' >&2; done");
+    let (mut reply, response) = oneshot::channel();
+    let cancel = async {
+      tokio::task::yield_now().await;
+      drop(response);
+    };
+    let (result, ()) = tokio::join!(
+      wait_for_capture_child(
+        &mut child,
+        &mut reply,
+        tokio::time::Instant::now() + Duration::from_secs(5)
+      ),
+      cancel,
+    );
+    assert!(result.is_err());
+    assert!(child.try_wait().unwrap().is_some());
+  }
+
+  #[tokio::test]
+  #[cfg_attr(
+    not(target_os = "linux"),
+    ignore = "the Linux runtime-backed test is the CI contract; run explicitly for local diagnostics"
+  )]
+  async fn failed_native_capture_child_returns_stderr() {
+    let headless = scripted_workers(|_| panic!("isolated capture must not use the shared worker"));
+    let error = screenshot_zip_upload(
+      State(AppState {
+        headless: Arc::clone(&headless),
+        zip_capture_backend: ZipCaptureBackend::IsolatedProcess,
+        zip_capture_processes: ZipCaptureProcesses::new(),
+      }),
+      zip_request(
+        "zip:///missing.lynxml",
+        zip_upload(&[("index.lynxml", b"<lynx/>")]),
+      ),
+    )
+    .await
+    .expect_err("missing entry fails in the actual capture child");
+    headless.shutdown().expect("stop mock headless worker");
+    assert_eq!(error.status, StatusCode::UNPROCESSABLE_ENTITY);
+    let output = error.child_output.expect("capture child diagnostics");
+    assert!(output.stderr.contains("IsolatedZipCapture"));
+  }
+
+  #[tokio::test]
+  async fn eight_isolated_renders_run_before_the_next_request_waits() {
+    let processes = ZipCaptureProcesses::new();
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+    let mut active = Vec::new();
+    for _ in 0..8 {
+      active.push(
+        processes
+          .begin(deadline)
+          .await
+          .expect("admit eight renders"),
+      );
+    }
+    let waiting = processes.begin(deadline);
+    tokio::pin!(waiting);
+    assert!(
+      std::future::poll_fn(|cx| { std::task::Poll::Ready(waiting.as_mut().poll(cx).is_pending()) })
+        .await
+    );
+
+    drop(active.pop());
+    let next = waiting.await.expect("admit the next render after release");
+    drop(next);
+    drop(active);
+    processes.close_and_wait().await;
   }
 
   #[tokio::test]

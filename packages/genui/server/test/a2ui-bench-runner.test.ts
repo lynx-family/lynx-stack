@@ -27,6 +27,8 @@ import type {
   BenchJobRequest,
   BenchRunResult,
 } from '../service/common/bench/types.js';
+import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
+import type { ChatMessage } from '../service/common/types.js';
 
 rstest.mock('../service/a2ui/a2ui-bench-judge.js', { mock: true });
 rstest.mock('../service/a2ui/a2ui-agent.js', { mock: true });
@@ -142,6 +144,85 @@ function screenshotDataUrlForBytes(bytes: number): string {
 }
 
 describe('A2UI Bench UI Judge integration', () => {
+  test.each([true, false])(
+    'retains legacy model preset identities through generation and reporting (success: %s)',
+    async (success) => {
+      const model = 'public-model';
+      rstest.stubEnv(
+        GENUI_MODEL_CONFIG_ENV,
+        JSON.stringify({
+          [model]: {
+            model,
+            apiKey: 'private-key',
+            baseURL: 'https://provider.example/v1',
+          },
+        }),
+      );
+      try {
+        const benchRequest = request(false);
+        const groupId = `preset-${model}`;
+        const scenarioId = `scenario-${model}`;
+        benchRequest.groups = [{
+          ...group,
+          id: groupId,
+          model,
+          protocol: 'openui',
+          profile: 'matched-core',
+        }];
+        benchRequest.scenarios = [{
+          ...benchRequest.scenarios[0]!,
+          id: scenarioId,
+        }];
+        const store = getBenchJobStore();
+        const job = store.createJob(benchRequest, 1);
+        await runBenchJob(job.id, {
+          adapters: {
+            openui: {
+              protocol: 'openui',
+              generate: () => {
+                if (!success) throw new Error(`${model} private-key`);
+                return Promise.resolve({
+                  attempts: [],
+                  finalValid: true,
+                  finalText: 'root = Text("ready")',
+                  finalErrors: [],
+                });
+              },
+            },
+          },
+        });
+        expect(job.report?.results[0]).toMatchObject({
+          groupId,
+          scenarioId,
+          ok: success,
+        });
+        expect(job.report?.groups[0]?.id).toBe(groupId);
+        expect(job.report?.summaries[0]).toMatchObject({
+          groupId,
+          runCount: 1,
+        });
+        expect(job.report?.runProgress?.[0]).toMatchObject({
+          groupId,
+          scenarioId,
+          phase: success ? 'complete' : 'failed',
+          generation: success ? 'complete' : 'failed',
+        });
+        expect(
+          job.events.find(event =>
+            event.event === (success ? 'run-complete' : 'run-error')
+          )?.data,
+        )
+          .toMatchObject({
+            runProgress: { groupId, scenarioId },
+            result: { groupId, scenarioId },
+          });
+        expect(JSON.stringify(job.report)).not.toContain('private-key');
+      } finally {
+        rstest.unstubAllEnvs();
+      }
+    },
+  );
+
   test('routes HTML source to Judge and preserves HTML results and summaries', async () => {
     const rawText =
       '<!doctype html><html><head></head><body>Hello</body></html>';
@@ -170,6 +251,7 @@ describe('A2UI Bench UI Judge integration', () => {
           protocol: 'html',
           generate: (input) => {
             expect(input.enableHtmlFragment).toBeUndefined();
+            expect(input.enableScriptReuse).toBeUndefined();
             return Promise.resolve({
               attempts: [{
                 index: 1,
@@ -246,6 +328,7 @@ describe('A2UI Bench UI Judge integration', () => {
       profile: 'native',
       model: 'xml-model',
       enableHtmlFragment: true,
+      enableScriptReuse: true,
     }];
     const store = getBenchJobStore();
     const job = store.createJob(benchRequest, 1);
@@ -255,6 +338,7 @@ describe('A2UI Bench UI Judge integration', () => {
           protocol: 'lynx-xml',
           generate: (input) => {
             expect(input.enableHtmlFragment).toBe(true);
+            expect(input.enableScriptReuse).toBe(true);
             return Promise.resolve({
               attempts: [{
                 index: 1,
@@ -865,90 +949,108 @@ describe('A2UI Bench UI Judge integration', () => {
     );
   });
 
-  test('aggregates native A2UI repair tokens and keeps its Judge screenshot', async () => {
-    rstest.mocked(resolveBenchUiJudge).mockResolvedValueOnce({
-      enabled: true,
-      session: {
-        zipUrl: 'https://bundle.example/a2ui.lynx.zip',
-        screenshotPath: 'screenshot/zip/url',
-      },
-    });
-    rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
-      dimensions: geqiDimensions(4),
-      errors: [],
-      geqiScore: 80,
-      score: 4,
-      screenshotDataUrl:
-        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB',
-      status: 'complete',
-      warnings: [],
-    });
-    let callCount = 0;
-    let receivedEnableWebSearch: boolean | undefined;
-    let receivedEnableImageGeneration: boolean | undefined;
-    rstest.mocked(getA2UIAgentService).mockReturnValue({
-      generateRaw(_messages: unknown, options: {
-        catalog?: { id?: string };
-        enableWebSearch?: boolean;
-        enableImageGeneration?: boolean;
-      }) {
-        callCount += 1;
-        receivedEnableWebSearch = options.enableWebSearch;
-        receivedEnableImageGeneration = options.enableImageGeneration;
-        if (callCount === 1) {
+  test.each(['stop', 'length'])(
+    'aggregates native A2UI repair tokens after %s and keeps its Judge screenshot',
+    async (finishReason) => {
+      rstest.mocked(resolveBenchUiJudge).mockResolvedValueOnce({
+        enabled: true,
+        session: {
+          zipUrl: 'https://bundle.example/a2ui.lynx.zip',
+          screenshotPath: 'screenshot/zip/url',
+        },
+      });
+      rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
+        dimensions: geqiDimensions(4),
+        errors: [],
+        geqiScore: 80,
+        score: 4,
+        screenshotDataUrl:
+          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB',
+        status: 'complete',
+        warnings: [],
+      });
+      let callCount = 0;
+      const conversations: ChatMessage[][] = [];
+      let receivedEnableWebSearch: boolean | undefined;
+      let receivedEnableImageGeneration: boolean | undefined;
+      rstest.mocked(getA2UIAgentService).mockReturnValue({
+        generateRaw(messages: ChatMessage[], options: {
+          catalog?: { id?: string };
+          enableWebSearch?: boolean;
+          enableImageGeneration?: boolean;
+        }) {
+          conversations.push([...messages]);
+          callCount += 1;
+          receivedEnableWebSearch = options.enableWebSearch;
+          receivedEnableImageGeneration = options.enableImageGeneration;
+          if (callCount === 1) {
+            return Promise.resolve({
+              text: 'invalid',
+              usage: { total_tokens: 5 },
+              finishReason,
+            });
+          }
           return Promise.resolve({
-            text: 'invalid',
-            usage: { total_tokens: 5 },
-            finishReason: 'stop',
+            text: JSON.stringify([
+              {
+                version: 'v0.9',
+                createSurface: {
+                  surfaceId: 'main',
+                  catalogId: options.catalog?.id,
+                },
+              },
+              {
+                version: 'v0.9',
+                updateComponents: {
+                  surfaceId: 'main',
+                  components: [{
+                    id: 'root',
+                    component: 'Text',
+                    text: 'Ready',
+                    variant: 'body',
+                  }],
+                },
+              },
+            ]),
+            usage: { total_tokens: 7 },
+            finishReason,
           });
-        }
-        return Promise.resolve({
-          text: JSON.stringify([
-            {
-              version: 'v0.9',
-              createSurface: {
-                surfaceId: 'main',
-                catalogId: options.catalog?.id,
-              },
-            },
-            {
-              version: 'v0.9',
-              updateComponents: {
-                surfaceId: 'main',
-                components: [{
-                  id: 'root',
-                  component: 'Text',
-                  text: 'Ready',
-                  variant: 'body',
-                }],
-              },
-            },
-          ]),
-          usage: { total_tokens: 7 },
-          finishReason: 'stop',
-        });
-      },
-    } as unknown as ReturnType<typeof getA2UIAgentService>);
-    const benchRequest = request();
-    benchRequest.settings.maxRepairAttempts = 1;
-    const store = getBenchJobStore();
-    const job = store.createJob(benchRequest, 1);
+        },
+      } as unknown as ReturnType<typeof getA2UIAgentService>);
+      const benchRequest = request();
+      benchRequest.settings.maxRepairAttempts = 1;
+      const store = getBenchJobStore();
+      const job = store.createJob(benchRequest, 1);
 
-    await runBenchJob(job.id);
+      await runBenchJob(job.id);
 
-    expect(receivedEnableWebSearch).toBe(false);
-    expect(receivedEnableImageGeneration).toBe(false);
-    expect(store.getJob(job.id)?.report?.results[0]).toMatchObject({
-      judgeDimensions: geqiDimensions(4),
-      judgeGeqiScore: 80,
-      protocol: 'a2ui',
-      profile: 'native',
-      tokens: 12,
-      attempts: 2,
-      screenshotDataUrl:
-        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB',
-    });
-  });
+      expect(conversations).toHaveLength(2);
+      expect(conversations[1]?.[0]).toEqual(conversations[0]?.[0]);
+      if (finishReason === 'length') {
+        expect(conversations[1]).toHaveLength(2);
+        expect(conversations[1]?.[1]?.content).toContain(
+          'Regenerate a shorter',
+        );
+        expect(conversations[1]?.some(message => message.role === 'assistant'))
+          .toBe(false);
+      } else {
+        expect(conversations[1]).toHaveLength(3);
+        expect(conversations[1]?.[1]?.content).toBe('invalid');
+      }
+      expect(receivedEnableWebSearch).toBe(false);
+      expect(receivedEnableImageGeneration).toBe(false);
+      expect(store.getJob(job.id)?.report?.results[0]).toMatchObject({
+        judgeDimensions: geqiDimensions(4),
+        judgeGeqiScore: 80,
+        protocol: 'a2ui',
+        profile: 'native',
+        tokens: 12,
+        attempts: 2,
+        screenshotDataUrl:
+          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB',
+      });
+    },
+  );
 
   test('marks a native A2UI run failed when Judge fails', async () => {
     rstest.mocked(resolveBenchUiJudge).mockResolvedValueOnce({

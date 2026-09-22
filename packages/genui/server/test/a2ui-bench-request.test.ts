@@ -26,6 +26,54 @@ function body(groups: unknown[]) {
 }
 
 describe('A2UI Bench request protocol groups', () => {
+  test.each([undefined, false, true, 'true'])(
+    'validates ScriptReuse: %s',
+    enableScriptReuse => {
+      const result = normalizeBenchJobRequest(body([{
+        id: 'xml',
+        protocol: 'lynx-xml',
+        enableScriptReuse,
+      }]));
+      if (typeof enableScriptReuse === 'string') {
+        expect(result).toMatchObject({ ok: false, status: 400 });
+      } else {
+        expect(result.ok).toBe(true);
+        if (result.ok) {
+          expect(result.request.groups[0]?.enableScriptReuse).toBe(
+            enableScriptReuse === true,
+          );
+        }
+      }
+    },
+  );
+  test.each([false, true])(
+    'validates the independent XML style preset (Template=%s)',
+    enableHtmlFragment => {
+      const group = { id: 'xml', protocol: 'lynx-xml', enableHtmlFragment };
+      for (const stylePreset of [undefined, false, 'default']) {
+        const result = normalizeBenchJobRequest(
+          body([{ ...group, stylePreset }]),
+        );
+        expect(result.ok).toBe(true);
+        if (result.ok) {
+          expect(result.request.groups[0]?.stylePreset).toBe(
+            stylePreset === 'default' ? 'default' : undefined,
+          );
+        }
+      }
+      for (
+        const invalid of [
+          { ...group, stylePreset: true },
+          { ...group, stylePreset: 'unknown' },
+        ]
+      ) {
+        expect(normalizeBenchJobRequest(body([invalid]))).toMatchObject({
+          ok: false,
+          status: 400,
+        });
+      }
+    },
+  );
   test.each([undefined, false, true])(
     'normalizes fragment conversion with default off: %s',
     (enabled) => {

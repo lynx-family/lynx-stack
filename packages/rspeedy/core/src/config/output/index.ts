@@ -14,7 +14,7 @@ import type { Minify } from './minify.js'
 import type { SourceMap } from './source-map.js'
 
 /**
- * {@inheritdoc Config.output}
+ * {@inheritDoc Config.output}
  * @public
  */
 export interface Output {
@@ -264,7 +264,7 @@ export interface Output {
   distPath?: DistPathConfig | undefined
 
   /**
-   * The {@link Filename} determines the name of the JavaScript bundle file to be output. These bundles will be written to the directory specified by output.path.
+   * The {@link Filename} determines the name of the Lynx bundle files emitted under {@link Output.distPath}.
    *
    * @defaultValue `{ bundle: '[name].[platform].bundle', template: '[name].[platform].bundle' }`
    *

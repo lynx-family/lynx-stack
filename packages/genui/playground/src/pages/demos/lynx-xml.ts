@@ -4,10 +4,16 @@
 
 import { html } from '@codemirror/lang-html';
 
+import { compileLynxXmlFragment } from '@lynx-js/genui/lynx-xml';
+import type { LynxXmlStylePreset } from '@lynx-js/genui/lynx-xml';
+
 import type { DemosListSource } from './DemosList.js';
 import type { DemosPageSource } from './type.js';
 import counterSource from '../../mock/lynx-xml/counter.lynxml?raw';
 import productCardSource from '../../mock/lynx-xml/product-card.lynxml?raw';
+import scriptReuseCounterSource from '../../mock/lynx-xml/script-reuse-counter.lynxml?raw';
+import stylePresetCounterSource from '../../mock/lynx-xml/style-preset-counter.lynxml?raw';
+import templateCounterSource from '../../mock/lynx-xml/template-counter.lynxml?raw';
 import todoListSource from '../../mock/lynx-xml/todo-list.lynxml?raw';
 import travelPlanSource from '../../mock/lynx-xml/travel-plan.lynxml?raw';
 import weatherCardSource from '../../mock/lynx-xml/weather-card.lynxml?raw';
@@ -20,6 +26,9 @@ export interface LynxXmlScenario {
   badge: string;
   sourcePath: string;
   source: string;
+  templateSource?: string;
+  enableScriptReuse?: boolean;
+  stylePreset?: LynxXmlStylePreset;
 }
 
 interface LynxXmlPreviewInput {
@@ -75,6 +84,44 @@ export const LYNX_XML_SCENARIOS: readonly LynxXmlScenario[] = [
     sourcePath: 'demos/lynx-xml/todo-list.lynxml',
     source: todoListSource,
   },
+  {
+    id: 'template-counter',
+    title: 'Template Counter',
+    description:
+      'Converts a template to Element PAPI at runtime, with counter events authored in the same XML document.',
+    badge: 'Template',
+    sourcePath: 'demos/lynx-xml/template-counter.lynxml',
+    source: compileLynxXmlFragment(templateCounterSource).text,
+    templateSource: templateCounterSource,
+  },
+  {
+    id: 'style-preset-counter',
+    title: 'StylePreset Counter',
+    description:
+      'The same Template Counter UI and interactions with utility styles, for comparing source token counts.',
+    badge: 'StylePreset',
+    sourcePath: 'demos/lynx-xml/style-preset-counter.lynxml',
+    source: compileLynxXmlFragment(stylePresetCounterSource, {
+      stylePreset: 'default',
+    }).text,
+    templateSource: stylePresetCounterSource,
+    stylePreset: 'default',
+  },
+  {
+    id: 'script-reuse-counter',
+    title: 'ScriptReuse Counter',
+    description:
+      'The same counter with Template and StylePreset, using shared lifecycle and event helpers to shorten the authored script.',
+    badge: 'ScriptReuse',
+    sourcePath: 'demos/lynx-xml/script-reuse-counter.lynxml',
+    source: compileLynxXmlFragment(scriptReuseCounterSource, {
+      enableScriptReuse: true,
+      stylePreset: 'default',
+    }).text,
+    templateSource: scriptReuseCounterSource,
+    enableScriptReuse: true,
+    stylePreset: 'default',
+  },
 ];
 
 export const LYNX_XML_DEMOS_LIST_SOURCE = {
@@ -93,6 +140,7 @@ export const LYNX_XML_DEMOS_LIST_SOURCE = {
   createPreviewUrl({ baseUrl, scenario, theme }) {
     return buildLynxXmlRenderUrl({
       sourceUrl: new URL(scenario.sourcePath, baseUrl).toString(),
+      exampleId: scenario.templateSource ? scenario.id : undefined,
       theme,
     }, baseUrl);
   },
@@ -106,22 +154,44 @@ function findScenario(id?: string): LynxXmlScenario | undefined {
   return LYNX_XML_SCENARIOS.find((scenario) => scenario.id === id);
 }
 
+function compileEditorSource(
+  source: string,
+  scenario?: LynxXmlScenario,
+): string {
+  return scenario?.templateSource === undefined
+    ? source
+    : compileLynxXmlFragment(source, {
+      enableScriptReuse: scenario.enableScriptReuse,
+      stylePreset: scenario.stylePreset,
+    }).text;
+}
+
 export const LYNX_XML_DEMOS_PAGE_SOURCE = {
   scenarios: LYNX_XML_SCENARIOS,
   findScenario,
   getEditorValue(scenario) {
-    return scenario.source;
+    return scenario.templateSource ?? scenario.source;
   },
   createScenarioPreviewInput(scenario) {
-    return { source: scenario.source, sourcePath: scenario.sourcePath };
+    return {
+      source: scenario.source,
+      sourcePath: scenario.templateSource ? undefined : scenario.sourcePath,
+    };
   },
   commit({ editorEdited, editorValue, scenario }) {
     if (!editorValue.trim()) return { error: 'Lynx XML source is empty.' };
+    let source: string;
+    try {
+      source = compileEditorSource(editorValue, scenario);
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : String(error) };
+    }
     return {
       value: {
         previewInput: {
-          source: editorValue,
-          sourcePath: !editorEdited && scenario?.source === editorValue
+          source,
+          sourcePath: !scenario?.templateSource && !editorEdited
+              && scenario?.source === source
             ? scenario.sourcePath
             : undefined,
         },
@@ -148,6 +218,33 @@ export const LYNX_XML_DEMOS_PAGE_SOURCE = {
   editor: {
     title: 'Lynx XML Source',
     badge: 'XML',
+    iconOnlyActions: true,
+    defaultView: 'original',
+    views: [
+      {
+        id: 'original',
+        label: 'Original',
+        title: 'Edit the authored Lynx XML source',
+        editable: true,
+        getValue: ({ editorValue }) => editorValue,
+      },
+      {
+        id: 'transformed',
+        label: 'Transformed',
+        title: 'Inspect the Element PAPI artifact used for rendering',
+        editable: false,
+        getValue: ({ editorValue, scenario }) => {
+          if (!editorValue.trim()) return '';
+          try {
+            return compileEditorSource(editorValue, scenario);
+          } catch (error) {
+            return `Conversion failed: ${
+              error instanceof Error ? error.message : String(error)
+            }`;
+          }
+        },
+      },
+    ],
     basicSetup: {
       lineNumbers: true,
       foldGutter: true,

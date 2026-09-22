@@ -13,14 +13,28 @@ export default createTextStreamRoute({
   getService: getLynxXmlAgentService,
   parseOptions(body) {
     if (
+      body.enableScriptReuse !== undefined
+      && typeof body.enableScriptReuse !== 'boolean'
+    ) {
+      return { ok: false, error: 'enableScriptReuse must be a boolean' };
+    }
+    if (
       body.enableHtmlFragment !== undefined
       && typeof body.enableHtmlFragment !== 'boolean'
     ) {
       return { ok: false, error: 'enableHtmlFragment must be a boolean' };
     }
     const options: LynxXmlChatOptions = {
+      enableScriptReuse: body.enableScriptReuse === true,
       enableHtmlFragment: body.enableHtmlFragment === true,
     };
+    if (
+      body.stylePreset !== undefined && body.stylePreset !== false
+      && body.stylePreset !== 'default'
+    ) {
+      return { ok: false, error: 'stylePreset must be false or "default"' };
+    }
+    if (body.stylePreset) options.stylePreset = body.stylePreset;
     return { ok: true, options };
   },
   normalizeFinalText: normalizeLynxXmlArtifact,

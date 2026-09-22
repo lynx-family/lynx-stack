@@ -4,7 +4,7 @@
 import type { Rspack } from '@rsbuild/core'
 
 /**
- * {@inheritdoc Output.sourceMap}
+ * {@inheritDoc Output.sourceMap}
  *
  * @public
  */

@@ -22,6 +22,42 @@ describe('pluginLynx', () => {
 
     await expect(rsbuild.initConfigs()).resolves.toBeDefined()
   })
+
+  test('defaults environments to lynx', async () => {
+    const rsbuild = await createRsbuild({
+      cwd: path.dirname(fileURLToPath(import.meta.url)),
+      rsbuildConfig: {
+        mode: 'production',
+        plugins: [pluginLynx()],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    expect(Object.keys(rsbuild.getNormalizedConfig().environments)).toEqual([
+      'lynx',
+    ])
+    expect(pluginNames(config)).toContain('DropSourceMapAssetsPlugin')
+  })
+
+  test.each([
+    { environments: { web: {} } },
+    { environments: {} },
+  ])('keeps the configured environments %o', async ({ environments }) => {
+    const rsbuild = await createRsbuild({
+      cwd: path.dirname(fileURLToPath(import.meta.url)),
+      rsbuildConfig: {
+        environments,
+        plugins: [pluginLynx()],
+      },
+    })
+
+    await rsbuild.initConfigs()
+
+    expect(Object.keys(rsbuild.getNormalizedConfig().environments)).toEqual([
+      'web',
+    ])
+  })
 })
 
 function swcEnvIncludes(config: unknown): string[] {

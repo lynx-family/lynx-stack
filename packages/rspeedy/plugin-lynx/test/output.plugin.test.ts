@@ -174,4 +174,28 @@ describe('pluginOutput', () => {
       rsbuild.getNormalizedConfig({ environment: 'web' }).output.legalComments,
     ).toBe('none')
   })
+
+  test('defaults output.dataUriLimit to 2 KiB', async () => {
+    const rsbuild = await createStubRsbuild()
+    await rsbuild.initConfigs()
+    expect(rsbuild.getNormalizedConfig().output.dataUriLimit).toBe(2 * 1024)
+  })
+
+  test('keeps a user-set output.dataUriLimit', async () => {
+    const rsbuild = await createStubRsbuild({
+      output: { dataUriLimit: 0 },
+    })
+    await rsbuild.initConfigs()
+    expect(rsbuild.getNormalizedConfig().output.dataUriLimit).toBe(0)
+  })
+
+  test('keeps a user-set output.dataUriLimit object', async () => {
+    const rsbuild = await createStubRsbuild({
+      output: { dataUriLimit: { image: 1000 } },
+    })
+    await rsbuild.initConfigs()
+    expect(rsbuild.getNormalizedConfig().output.dataUriLimit).toMatchObject({
+      image: 1000,
+    })
+  })
 })

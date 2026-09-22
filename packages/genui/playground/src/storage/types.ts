@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import type { GenerationUsageRecord } from '../utils/modelPricing.js';
 
 export type ConversationProtocol =
   | 'a2ui'
@@ -8,6 +9,14 @@ export type ConversationProtocol =
   | 'mcp-apps'
   | 'lynx-xml'
   | 'html';
+
+export interface ConversationGenerationSettings {
+  provider?: string;
+  enableDesignGuidance: boolean;
+  enableHtmlFragment?: boolean;
+  enableScriptReuse?: boolean;
+  stylePreset?: 'default' | false;
+}
 
 export interface ConversationMeta {
   id: string;
@@ -17,6 +26,7 @@ export interface ConversationMeta {
   updatedAt: number;
   messageCount: number;
   previewText: string;
+  generationSettings?: ConversationGenerationSettings;
 }
 
 export interface PreviewPayloadUrls {
@@ -28,11 +38,16 @@ export interface PreviewPerformanceMetrics {
   fcpMs?: number;
   fmpMs?: number;
   ttiMs?: number;
+  /** Server generation pipeline, including validation but excluding publishing. */
+  generationMs?: number;
+  /** Legacy request-to-response duration; never interpret as generationMs. */
   agentOutputMs?: number;
   renderMs?: number;
 }
 
 export interface PersistedMessage {
+  generationUsage?: GenerationUsageRecord;
+  generationError?: string;
   conversationId: string;
   seq: number;
   role: 'user' | 'assistant' | 'system';

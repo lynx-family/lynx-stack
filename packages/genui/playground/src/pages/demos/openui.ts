@@ -126,9 +126,8 @@ export const OPENUI_DEMOS_PAGE_SOURCE = {
         label: 'JSON',
         title: 'Parsed JSON',
         editable: false,
-        getValue({ editorValue, scenario }) {
+        getValue({ editorValue }) {
           if (!editorValue.trim()) return '';
-          if (scenario && editorValue === scenario.raw) return scenario.parsed;
           try {
             return parseOpenUIScenarioRaw(editorValue);
           } catch (error) {

@@ -8,10 +8,6 @@ import type { UndefinedOnPartialDeep } from 'type-fest'
 import { toRsbuildEntry } from './entry.js'
 import type { Config } from '../index.js'
 
-// This is the default value from lynx-speedy.
-// We may change it based on new benchmarks.
-const defaultDataUriLimit = 2 * 1024
-
 export function toRsbuildConfig(
   config: Config,
 ): UndefinedOnPartialDeep<RsbuildConfig> {
@@ -19,14 +15,14 @@ export function toRsbuildConfig(
     dev: {
       assetPrefix: config.dev?.assetPrefix,
 
-      hmr: config.dev?.hmr ?? true,
-      liveReload: config.dev?.liveReload ?? true,
+      hmr: config.dev?.hmr,
+      liveReload: config.dev?.liveReload,
       watchFiles: config.dev?.watchFiles,
       writeToDisk: config.dev?.writeToDisk,
 
-      progressBar: config.dev?.progressBar ?? true,
+      progressBar: config.dev?.progressBar,
     },
-    environments: config.environments ?? { lynx: {} },
+    environments: config.environments,
     mode: config.mode,
     output: {
       assetPrefix: config.output?.assetPrefix,
@@ -39,8 +35,7 @@ export function toRsbuildConfig(
 
       cssModules: config.output?.cssModules,
 
-      // We expect to use different default dataUriLimit with Rsbuild
-      dataUriLimit: config.output?.dataUriLimit ?? defaultDataUriLimit,
+      dataUriLimit: config.output?.dataUriLimit,
 
       distPath: config.output?.distPath,
 
@@ -117,7 +112,7 @@ export function toRsbuildConfig(
         | false
         | undefined,
 
-      printFileSize: config.performance?.printFileSize ?? true,
+      printFileSize: config.performance?.printFileSize,
     },
     tools: {
       bundlerChain: config.tools?.bundlerChain,

@@ -6,21 +6,89 @@ Apply the selected model's `reasoningEffort` through the shared run options for 
 
 # GenUI Server Architecture
 
+Create streaming routes report `metrics.generationMs` using a server monotonic clock around the generation service through final normalization, validation and any configured repair. Include tool work and all model phases as elapsed wall time, not a sum of concurrent provider calls. Freeze the measurement before artifact publishing; A2UI Create/actions emit a `metrics` SSE event before upload and reuse the same value in `done`. All Create protocols include timing in terminal success/error payloads once generation starts. Exclude request parsing, initial catalog loading, artifact upload, client transport and preview rendering. Keep the timer request-local and verify the upload boundary and repair/error paths with deterministic clocks.
+
+Use one A2UI streaming placeholder policy for every model, including Jev. Process the full input chunk before adding automatic Loading nodes: a complete snapshot, even across multiple component messages, must render without a transient root or child placeholder. Preserve component/data-model ordering once the root is established, and retain lifecycle boundaries. Buffer initial child-only definitions until an update can establish the real root or an end-of-batch root placeholder. Fill only still-missing reachable child IDs and an absent root on surfaces created by the current stream, deduplicate placeholders, and replace them using the same IDs without resending ready parents. An action-only patch may reference existing nodes unknown to its parser; do not overwrite those nodes with inferred placeholders. Repeated createSurface messages update metadata and retain known components; only deleteSurface clears that surface's parser state. Keep explicitly generated Loading and image/openUrl provenance guards intact. Cover complete batches, fragmented components, resumed updates, repeated creation and deletion with deterministic parser tests.
+
+Snapshot only `input_price`, `cached_price`, and `output_price` into each Bench run's `modelPrices` before generation, resolving the same public model and default fallback as the run. Keep that snapshot through failed attempts, report storage, and public events so clients can calculate historical costs without current configuration. Never copy the whole configured model, its upstream identity, endpoint, or credentials. Monetary totals stay client-side; the Playground displays configured prices as CNY, so its deployment must configure all rates in CNY per thousand tokens.
+
+UI Judge must work with configured models that reject native json_schema response formats. Set Mastra structuredOutput.jsonPromptInjection to true, keep the Zod score schema and strict local validation, and omit native response_format/text.format on the wire. Do not switch models or add another structuring-agent pass. Verify both Chat Completions and Responses requests against deterministic endpoints that only return JSON text, including invalid score output.
+
+Pace UI Judge model calls through a process-wide queue keyed by the resolved upstream base URL and model, so public aliases and separate Bench jobs share admission. Keep two calls active at most and space starts by at least one second. Retain five independent scoring dimensions and their weights. Disable SDK retries and retry only a failed dimension, at most three attempts, retaining completed dimensions. Reuse the shared transient-error classifier and Retry-After parser; without a provider hint, wait 60 seconds for HTTP 429 and use exponential backoff for other transient failures. Publish cooldowns to the shared queue before releasing request slots, keep waits abortable within the Judge deadline, and drain active calls on failure. Read Mastra result errors before validating scores. After scoring starts, never retry the whole capture/evaluation pipeline; preserve bounded capture retries for capture failures. Verify wire-level retry counts with real Mastra and deterministic Chat/Responses mocks.
+
 Organize both `agent` and `service` into `common`, `a2ui`, `openui`, `html`, `lynx-xml`, and `mcp-apps`. Keep protocol factories, prompts, catalogs, parsing, validation, and custom tools in `agent/<protocol>`, and generation services and protocol-specific Bench adapters in `service/<protocol>`. Shared provider helpers, Mastra storage, search/image tools, and screenshot evaluation belong in `agent/common`. Cross-protocol Bench scheduling, request normalization, report storage/types, redaction, screenshot conversion, and Judge orchestration belong in `service/common/bench`; this orchestration may wire protocol implementations, while ordinary common helpers remain independent of protocol services. Move files without changing runtime behavior or leaving old-path forwarding modules. Update consumers, mocks, documentation scopes, and the A2UI prompt package's exports, TypeScript includes, and Turbo inputs together.
 
 Keep shared design guidance in `design/design-guidance.ts` as one `GENUI_DESIGN_GUIDANCE` constant, with separate product and mobile sections inside the prompt. Inject it once for every output agent through the shared `enableDesignGuidance` option; keep the sections together unless an independent use case requires separate configuration. Do not place framework, catalog, or runtime API details in the shared design contract.
 
 Treat design guidance as a shared generation capability. It is enabled by default, can be disabled with `enableDesignGuidance: false` for Create requests or individual Bench groups, and must be included in provider-agent cache keys so enabled and disabled agents are never reused interchangeably.
 
+A2UI and OpenUI permit request-scoped TypeSafe evaluation at the exact official `https://api.typesafe.ai/v1` endpoint, with an optional trailing slash. This is separate from the OpenAI-compatible custom endpoint allow-list: select the Jev composition path for a complete model/key/endpoint tuple and disable redirects with the shared custom fetch wrapper. Other protocols and Bench retain their existing provider boundaries. Reference the [official TypeSafe provider documentation](https://ai-sdk.dev/providers/ai-sdk-providers/typesafe-ai) and cover credential isolation, invalid endpoint variants, cancellation and error redaction with provider mocks.
+
 Keep protocol-neutral request infrastructure in `app/common`. Request-size enforcement, JSON parsing, chat and conversation validation, provider override selection, error and usage extraction, CORS, rate limiting, SSE encoding and headers, and stream logging must not live under a protocol route such as `app/a2ui`.
 
 Keep shared agent-service contracts and helpers in `service/common`. `ChatMessage`, `ConversationContext`, generic provider options, provider agent caching, conversation assembly, model-message conversion, Mastra result extraction, and stream adaptation must not be imported from `service/a2ui/a2ui-agent` by OpenUI or MCP Apps. Extend the generic options inside `service/a2ui/a2ui-agent` only for A2UI-specific catalog and repair settings.
 
+Use `service/common/generation-repair.ts` in artifact-validation repair loops
+across protocols. Validate first: `finishReason: length` alone does not invalidate
+a complete artifact. If validation fails with `length`, use the remaining repair
+budget to request a shorter complete artifact from the original messages, keeping
+prior conversation history and data-model context but discarding this run's failed
+outputs and repair prompts. Preserve required content/actions, protocol options,
+model settings, cancellation, shared tool scopes, and Bench attempt/usage records.
+Ordinary validation errors retain their targeted repair feedback. Do not append
+closing tags to truncated code or add hidden retries to raw generators.
+
+Keep bounded text-stream recovery in `service/common/text-generation-recovery.ts`.
+Lynx XML Create uses one attempt and must not opt in to automatic recovery.
+Test its request-wide image budget across normal tool-result steps; truncated
+final output must fail without another generation attempt, retaining model usage.
+For callers that explicitly allow multiple attempts, try one continuation of a bounded prefix
+only when the model echoes its exact trailing source characters, preserving
+whitespace. Fall back to compact regeneration on empty output, mismatched
+boundaries, or invalid continued output. Validate and compile the assembled
+artifact before success. Buffer recovery attempts and publish their final text
+through `done`, because a replacement cannot be appended to the initial deltas.
+Reuse model options, cancellation, and capability scopes; aggregate every
+attempt's usage and expose recovery modes in `metadata.generationAttempts`.
+Upstream errors normally stop artifact recovery. Keep raw generation single-call
+so Bench continues to own its configured repair budget.
+
+Resolve per-call output limits in `service/common/provider.ts` through
+`buildOpenAIRunOptions`. All five generation agents use its shared 32768-token
+target for raw generation, streaming, tool resumption, and repairs; never add
+protocol-specific budget wrappers or overwrite `modelSettings` after resolving
+it. Specialized calls such as Judge may request a smaller target through the
+same function, and recovery may request a larger one. Always clamp to the
+effective selected model's configured ceiling, including default-model fallback
+for unknown names. Complete custom-provider connections do not inherit a
+server-model ceiling. Raising the shared target must preserve lower configured
+ceilings, explicit per-call budgets, and Create's single-attempt behavior.
+Keep maxRetries, reasoning settings, cancellation, and
+budget overrides scoped to the invocation. Verify Chat and Responses token
+parameters with real SDK mocks across all generation services.
+
+Handle reasoning-only exhaustion separately from artifact continuation. An opted-in
+stream may regenerate once when it has no text or non-text output, known positive
+input usage, and output usage equal to both the request budget and reasoning usage.
+Require either `length` or the observed HTTP 400 `input` / `<nil>` failure; do not
+retry generic parameter, authentication, or transport errors. Preserve the original
+error and finish reason instead of relabeling them as truncation. Use the original
+messages plus a compact-output request, never an empty assistant message or hidden
+reasoning. Keep the same model; lower medium/high/unset effort to low without
+raising none/minimal/low, and grow the budget by at most 2x only within the selected
+model's configured ceiling. Skip unchanged settings and controlled runs with
+`inheritReasoningEffort: false`. Count this restart within the three-attempt limit,
+reuse cancellation and capability budgets, and retain all usage and request IDs.
+Do not persist the override in cached agents. Test both Chat and Responses wire
+parameters through the real SDK with deterministic upstream mocks.
+
 Keep public provider integrations vendor-neutral. Do not commit deployment-only gateway rewrites, private hostnames, environment-specific authentication conventions, or credentials; inject those only through the deployment environment.
 
-Normalize missing `output[].content[].annotations` to an empty array only on `output_text` parts of message items in successful JSON Responses replies from compatible providers. Keep this at the shared provider transport boundary so generation and scoring use the same SDK-compatible shape. Preserve existing annotations, output text, reasoning, tool calls, usage, request IDs, and HTTP status; leave malformed explicit values for SDK validation. Do not buffer or rewrite SSE, Chat Completions, official OpenAI replies, or HTTP errors. Keep custom-provider redirect restrictions and abort signals intact, and remove stale encoding and length headers when rewriting a decoded body. Cover the real SDK/Mastra path with deterministic responses containing reasoning followed by a message with omitted annotations.
+Normalize missing `output[].content[].annotations` to an empty array only on `output_text` parts of message items in successful JSON Responses replies from compatible providers. Keep this at the shared provider transport boundary so generation and scoring use the same SDK-compatible shape. Preserve existing annotations, output text, reasoning, tool calls, usage, request IDs, and HTTP status; leave malformed explicit values for SDK validation. Do not buffer entire SSE responses or rewrite Chat Completions, official OpenAI replies, or HTTP errors. Keep custom-provider redirect restrictions and abort signals intact, and remove stale encoding and length headers when rewriting a decoded body. Cover the real SDK/Mastra path with deterministic responses containing reasoning followed by a message with omitted annotations.
 
-Configure server-owned GenUI providers through `GENUI_MODEL_CONFIG_JSON` as an object keyed by public model name. Give every value its own upstream `model`, credentials, base URL, and optional API style, reasoning effort, positive-integer `maxOutputTokens` capability ceiling, and default marker. Outside Bench, a complete request-scoped `model`, `apiKey`, and `baseURL` may run without server model configuration; ignore partial custom-provider overrides as one unit at both request normalization and provider creation so a client endpoint or API style can never inherit a server-owned credential. Bench must not accept request-scoped provider connections. Each Bench group may independently select only a public model name returned by the server; drop unconfigured group model names rather than treating them as upstream model IDs. Never mix individual connection fields from different entries. Accept a request-scoped custom base URL only when it exactly matches an official OpenAI-compatible HTTPS endpoint in `ALLOWED_CUSTOM_PROVIDER_BASE_URLS`, allowing normalization of a trailing slash only; reject alternate origins, ports, paths, credentials, queries, and fragments, and disable redirect following for request-scoped provider fetches. Add endpoints only with official documentation and allow-list regression tests. Treat server-owned model configuration as trusted so operators can intentionally configure private, HTTP, or deployment-specific endpoints. Keep public responses, including `GET /models` and health endpoints, limited to public model names and readiness metadata; never expose server-owned upstream model ids, credentials, base URLs, API styles, or token ceilings. Redact both server-owned configuration and the current request's custom API key, including encoded and escaped variants, from upstream error names and messages before using the same sanitized payload for logs or client responses; never store request keys in global redaction state. Resolve an ordinary client model selection through its configured name before creating the provider. Lynx XML generation should target 16384 output tokens and use the lower of that target and the configured model ceiling. Require authentication on public deployments.
+For compatible Responses providers, adapt returned `reasoning_text` content parts and SSE events into the OpenAI SDK's reasoning-summary representation at the transport boundary. This representation change does not request or generate summaries. Stream complete SSE frames incrementally across UTF-8 and CR/LF boundaries, preserve unrelated/error frames, and propagate cancellation and stream errors. Map content indices consistently through start/delta/end, avoid duplicating full text from done events, and keep only the first representation when an item emits both raw text and summaries. For JSON replies use plain reasoning content only when summary is missing or empty, preserving malformed explicit values for SDK validation. Test real SDK consumption and failed Create delivery without logging reasoning or changing retries and usage.
+
+Configure server-owned GenUI providers through `GENUI_MODEL_CONFIG_JSON` as an object keyed by public model name. Give every value its own upstream `model`, credentials, base URL, and optional API style, reasoning effort, positive-integer `maxOutputTokens` capability ceiling, and default marker. Outside Bench, a complete request-scoped `model`, `apiKey`, and `baseURL` may run without server model configuration; ignore partial custom-provider overrides as one unit at both request normalization and provider creation so a client endpoint or API style can never inherit a server-owned credential. Bench must not accept request-scoped provider connections. Each Bench group may independently select only a public model name returned by the server; drop unconfigured group model names rather than treating them as upstream model IDs. Never mix individual connection fields from different entries. Accept a request-scoped custom base URL only when it exactly matches an official OpenAI-compatible HTTPS endpoint in `ALLOWED_CUSTOM_PROVIDER_BASE_URLS`, allowing normalization of a trailing slash only; reject alternate origins, ports, paths, credentials, queries, and fragments, and disable redirect following for request-scoped provider fetches. Add endpoints only with official documentation and allow-list regression tests. Treat server-owned model configuration as trusted so operators can intentionally configure private, HTTP, or deployment-specific endpoints. Keep public responses, including `GET /models` and health endpoints, limited to public model names, configured prices, and readiness metadata; never expose server-owned upstream model ids, credentials, base URLs, API styles, or token ceilings. Redact both server-owned configuration and the current request's custom API key, including encoded and escaped variants, from upstream error names and messages before using the same sanitized payload for logs or client responses; never store request keys in global redaction state. Resolve an ordinary client model selection through its configured name before creating the provider. Require authentication on public deployments.
 
 GenUI Server must never read or request `UI_JUDGE_SERVER_URL`. The Playground stores this address locally, checks `/health`, requests screenshots directly, and uploads BMP bytes to GenUI for model scoring. Judge-enabled Bench requests require `playground.browserScreenshots: true`; do not accept or retain a screenshot service address in job configuration. Issue bounded, cancellable screenshot tasks through SSE `screenshot-requested` events containing only a capture ID. Serve each pending task's protocol path and sanitized capture fields through `GET /a2ui/bench/jobs/:jobId/screenshots/:captureId`; accept bounded `image/bmp` uploads or JSON capture errors at the same path. Preserve the artifact text outside diagnostic/event redaction. Validate BMP before PNG conversion and score with the existing Bench group model. Never send provider credentials or model settings to the screenshot service. Keep screenshot bundle URLs server-owned and preserve capture safety checks, cancellation, scoring, and report limits.
 
@@ -62,6 +130,10 @@ Derive CORS preflight and 405 `Allow` behavior from the composed Hono applicatio
 
 Every SSE route that starts model generation must propagate both `Request.signal` aborts and response-stream cancellation to the upstream model call. Guard enqueues and stream closure against reader cancellation, remove abort listeners during cleanup, and cover the disconnect path with a test.
 
+Default SDK `maxRetries` to zero: it counts additional retries, not total attempts. Default A2UI `maxRepairAttempts` to zero and limit Lynx XML streaming to one generation attempt, including reasoning-only exhaustion and truncated artifacts. Return the original sanitized error and any usage without an automatic follow-up call. Keep explicit retry budgets and Bench's independent retry policy; do not add another retry switch to Create requests.
+
+SDK retries and Mastra model steps are separate. Shared run options must stop after a step without tool calls, including reasoning-only output with an unrecognized finish reason mapped to `other`; otherwise Mastra may submit an unintended continuation. Preserve normal tool-result continuations and each agent's existing step limit. On artifact validation failure, identify empty output with known positive reasoning usage as reasoning without a final artifact, retaining the original finish reason and usage rather than guessing token truncation. Test real SDK/Mastra request counts for streaming and raw generation and verify that an explicit new request still works.
+
 Bound graceful process shutdown so long-lived SSE connections cannot block it indefinitely. Track and destroy remaining connections after the grace period in a way that works for both HTTP/1 and HTTP/2; do not rely only on HTTP/1-specific server methods.
 
 Target the repository-supported Node.js 22 and 24 release lines. Let `@hono/node-server` own HTTP/1 and HTTP/2 request adaptation, including HTTP/2 pseudo-header filtering; do not recreate that transport code locally. Use explicit `.js` specifiers for relative ESM imports and re-exports so TypeScript resolves the source modules while the emitted JavaScript remains valid native Node ESM.
@@ -77,3 +149,19 @@ the sanitized message, HTTP status, and `upstreamRequestId` separately from the
 local request ID; never forward provider request/response bodies or all headers.
 If the provider supplies no reason, report an upstream failure rather than a
 missing artifact. Keep Bench usage for failed model attempts.
+
+When diagnosing streamed generation failures, distinguish the local SSE HTTP
+status from upstream model success. Aggregate usage and duplicate client error
+entries do not establish the number of upstream calls; use
+`agent.model.step.completed` and `agent.model.error` to identify the failing
+step. Reasoning-only output has no artifact prefix to continue. Do not reinterpret
+an upstream error as token truncation solely because its reported output usage
+equals the token budget. Ordinary artifact recovery requires `length`; the
+separate reasoning-only restart above preserves an original upstream error and
+requires all of its additional evidence checks.
+
+Expose optional per-model `input_price`, `cached_price`, and `output_price` from `GENUI_MODEL_CONFIG_JSON` through `GET /models`, defaulting each omitted price to zero and validating finite non-negative numbers. Prices are in CNY per thousand tokens. Keep money calculation on the client. Preserve raw generation `usage` and expose normalized `tokenUsage` with input, cached, and output counts across every generation response; unreported dimensions are null, not zero. Cached input is included in total input, and reasoning is included in output, so subtract cache hits before applying the ordinary input rate. Sum independent validation-repair attempts, including the initial streamed attempt, without double-counting SDK aggregate usage across suspended/resumed phases. Never drop known usage merely because validation failed.
+
+Collect provider-returned reasoning text through a separate request-scoped callback, including deltas received before a stream fails. Return bounded, redacted reasoning only in failed Create responses (including A2UI validation failures). Do not log it, decode redacted reasoning, or implicitly request extra reasoning summaries.
+
+In Bench screenshot resource checks, distinguish JavaScript `data:` event-payload fields from data URI prefixes. Allow inline cross-thread payloads, including minified object fields and identifier values, while retaining rejection of quoted data URI prefixes, unquoted CSS data URIs, HTTP(S)/file resource markers, and host `openUrl` calls. Cover both accepted source relay and rejection before screenshot capture.

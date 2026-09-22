@@ -181,7 +181,7 @@ describe('Lynx XML stream route', () => {
       global.__LYNX_XML_AGENT_SERVICE__ = previous;
     }
   });
-  test.each([undefined, false, true])(
+  test.each([undefined, false, true, 'default', 'preset-only'])(
     'forwards the fragment choice with default off: %s',
     async (enabled) => {
       const global = globalThis as GlobalWithLynxXmlService;
@@ -207,11 +207,25 @@ describe('Lynx XML stream route', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             messages: [{ role: 'user', content: 'Hello' }],
-            enableHtmlFragment: enabled,
+            enableHtmlFragment: enabled === undefined
+              ? undefined
+              : enabled === true || enabled === 'default',
+            enableScriptReuse: enabled === true,
+            ...(enabled === 'default' || enabled === 'preset-only'
+              ? { stylePreset: 'default' }
+              : {}),
           }),
         });
         expect(await response.text()).toContain('event: done');
-        expect(received?.enableHtmlFragment).toBe(enabled === true);
+        expect(received?.enableScriptReuse).toBe(enabled === true);
+        expect(received?.enableHtmlFragment).toBe(
+          enabled === true || enabled === 'default',
+        );
+        expect(received?.stylePreset).toBe(
+          enabled === 'default' || enabled === 'preset-only'
+            ? 'default'
+            : undefined,
+        );
       } finally {
         global.__LYNX_XML_AGENT_SERVICE__ = previous;
       }
@@ -228,6 +242,26 @@ describe('Lynx XML stream route', () => {
     });
     expect(response.status).toBe(400);
   });
+  test.each([{ enableScriptReuse: 'true' }, {
+    stylePreset: true,
+    enableHtmlFragment: true,
+  }, {
+    stylePreset: 'unknown',
+    enableHtmlFragment: true,
+  }])(
+    'rejects invalid style preset options: %j',
+    async options => {
+      const response = await app.request('/lynx-xml/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: 'Hello' }],
+          ...options,
+        }),
+      });
+      expect(response.status).toBe(400);
+    },
+  );
   test.each([undefined, {
     xmlFragment: '<view>\n  <text>Hello &amp; 你好</text>\n</view>',
     modelOutput: '<!doctype lynx>\n<!-- original model response -->',

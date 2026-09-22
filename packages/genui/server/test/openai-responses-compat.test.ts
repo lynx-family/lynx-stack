@@ -6,7 +6,11 @@ import { afterEach, expect, rstest, test } from '@rstest/core';
 
 import { createLLMProvider } from '../agent/common/openai-provider.js';
 import { createResponsesCompatFetch } from '../agent/common/openai-responses-compat.js';
+import { resolveBenchCatalog } from '../service/a2ui/a2ui-bench-catalog.js';
 import type { ProtocolBenchAdapterInput } from '../service/common/bench/protocol-adapter.js';
+import { runBenchJob } from '../service/common/bench/runner.js';
+import { getBenchJobStore } from '../service/common/bench/store.js';
+import type { BenchJobRequest } from '../service/common/bench/types.js';
 import { readBenchTokenUsage } from '../service/common/bench/usage.js';
 import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 import { createHtmlBenchAdapter } from '../service/html/html-bench-adapter.js';
@@ -121,6 +125,257 @@ test.each(
   },
 );
 
+test.each(['native', 'matched-core'] as const)(
+  'repairs invalid %s A2UI through real Bench, Mastra, and Responses requests requiring assistant type and status',
+  async (profile) => {
+    configureProvider();
+    const catalogId = resolveBenchCatalog('Full Catalog').id
+      + (profile === 'matched-core' ? '#matched-core' : '');
+    const source = JSON.stringify([
+      { version: 'v0.9', createSurface: { surfaceId: 'main', catalogId } },
+      {
+        version: 'v0.9',
+        updateComponents: {
+          surfaceId: 'main',
+          components: [{
+            id: 'root',
+            component: 'Text',
+            text: 'Hello',
+            variant: 'body',
+          }],
+        },
+      },
+    ]);
+    const conversations: Record<string, unknown>[][] = [];
+    const fetch = rstest.spyOn(globalThis, 'fetch').mockImplementation(
+      (_url, init) => {
+        if (typeof init?.body !== 'string') {
+          throw new Error('Expected a JSON request body');
+        }
+        const body = JSON.parse(init.body) as {
+          input: Record<string, unknown>[];
+          model: string;
+          reasoning: unknown;
+        };
+        expect(body.model).toBe('opaque-model');
+        expect(body.reasoning).toEqual({ effort: 'low' });
+        conversations.push(body.input);
+        const missingField = ['type', 'status'].find(field =>
+          body.input.some(item =>
+            item.role === 'assistant' && item[field] === undefined
+          )
+        );
+        if (missingField) {
+          return Promise.resolve(Response.json({
+            error: {
+              message:
+                `The request failed because it is missing \`input.${missingField}\` parameter.`,
+              type: 'invalid_request_error',
+            },
+          }, { status: 400 }));
+        }
+        return Promise.resolve(Response.json(
+          responseBody(conversations.length === 1 ? 'invalid' : source),
+        ));
+      },
+    );
+    const request: BenchJobRequest = {
+      groups: [{
+        id: 'compat-group',
+        name: 'Compatible group',
+        enabled: true,
+        role: 'control',
+        variable: 'custom',
+        model: 'Compatible',
+        protocol: 'a2ui',
+        profile,
+      }],
+      provider: {},
+      scenarios: [input.scenario],
+      settings: {
+        judgeEnabled: false,
+        renderMetricsEnabled: false,
+        repairEnabled: true,
+        maxRepairAttempts: 1,
+        repeats: 1,
+      },
+    };
+    const job = getBenchJobStore().createJob(request, 1);
+    await runBenchJob(job.id);
+
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(conversations[0]?.some(item => item.role === 'assistant')).toBe(
+      false,
+    );
+    expect(conversations[1]?.filter(item => item.role === 'assistant')).toEqual(
+      [
+        {
+          type: 'message',
+          role: 'assistant',
+          status: 'completed',
+          content: [{ type: 'output_text', text: 'invalid' }],
+        },
+      ],
+    );
+    expect(job.report?.results[0]).toMatchObject({
+      ok: true,
+      attempts: 2,
+      tokens: 36,
+      errors: [],
+      protocol: 'a2ui',
+      profile,
+    });
+    expect(JSON.parse(job.report!.results[0]!.text!)).toEqual(
+      JSON.parse(source),
+    );
+  },
+);
+
+test.each([false, true])(
+  'fills absent historical assistant types and statuses independently and preserves request options (stream: %s)',
+  async (stream) => {
+    const assistant = {
+      role: 'assistant',
+      content: [{ type: 'output_text', text: 'Previous answer' }],
+    };
+    const payload = {
+      model: 'opaque-model',
+      stream,
+      input: [
+        assistant,
+        {
+          ...assistant,
+          type: 'message',
+          id: 'message-1',
+          phase: 'final_answer',
+        },
+        {
+          role: 'assistant',
+          type: 'message',
+          content: [{ type: 'refusal', refusal: 'Unavailable' }],
+        },
+        ...['completed', 'in_progress', 'incomplete', null, 'invalid'].map(
+          status => ({ ...assistant, status }),
+        ),
+        { ...assistant, partial: true },
+        { ...assistant, type: 'unknown' },
+        { ...assistant, type: null },
+        { ...assistant, content: [] },
+        { ...assistant, content: [null] },
+        { ...assistant, content: 'Plain assistant input' },
+        { ...assistant, content: [{ type: 'input_text', text: 'Input' }] },
+        { role: 'user', content: [{ type: 'input_text', text: 'Continue' }] },
+        { role: 'system', content: 'System instructions' },
+        { type: 'reasoning', id: 'reasoning-1', summary: [] },
+        {
+          type: 'function_call',
+          call_id: 'call-1',
+          name: 'lookup',
+          arguments: '{}',
+        },
+        { type: 'function_call_output', call_id: 'call-1', output: 'Result' },
+        { type: 'item_reference', id: 'message-2' },
+        null,
+      ],
+    };
+    const expected = structuredClone(payload);
+    for (const item of expected.input.slice(0, 3)) {
+      Object.assign(item!, { type: 'message', status: 'completed' });
+    }
+    for (const item of expected.input.slice(3, 9)) {
+      Object.assign(item!, { type: 'message' });
+    }
+    const body = JSON.stringify(payload);
+    const controller = new AbortController();
+    const options = {
+      method: 'POST',
+      body,
+      signal: controller.signal,
+      redirect: 'error',
+      headers: new Headers({
+        authorization: 'Bearer test-secret',
+        'content-type': 'application/json',
+        'content-length': String(body.length),
+      }),
+    } satisfies RequestInit;
+    const response = stream
+      ? new Response('data: [DONE]\n\n', {
+        headers: { 'content-type': 'text/event-stream' },
+      })
+      : new Response(null, { status: 204 });
+    const fetch = rstest.fn(
+      (_url: Parameters<typeof globalThis.fetch>[0], init?: RequestInit) => {
+        expect(init?.body).toBe(JSON.stringify(expected));
+        expect(init?.method).toBe('POST');
+        expect(init?.signal).toBe(controller.signal);
+        expect(init?.redirect).toBe('error');
+        const headers = new Headers(init?.headers);
+        expect(headers.get('authorization')).toBe('Bearer test-secret');
+        expect(headers.get('content-type')).toBe('application/json');
+        expect(headers.has('content-length')).toBe(false);
+        return Promise.resolve(response);
+      },
+    );
+    const result = await createResponsesCompatFetch(fetch)(endpoint, options);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    if (!stream) expect(result).toBe(response);
+    expect(result.bodyUsed).toBe(false);
+    expect(options.body).toBe(body);
+    expect(options.headers.get('content-length')).toBe(String(body.length));
+    await result.body?.cancel();
+  },
+);
+
+test.each([
+  undefined,
+  new Uint8Array([1, 2, 3]),
+  '{ invalid JSON',
+  'null',
+  '{"input":"Hello"}',
+  '{"input":[{"type":"message","role":"assistant","status":"incomplete","content":[{"type":"output_text","text":"Partial"}]}]}',
+])(
+  'leaves unrelated or unmodified request bodies untouched: %s',
+  async (body) => {
+    const options: RequestInit = body === undefined ? {} : { body };
+    const fetch = rstest.fn<typeof globalThis.fetch>(() =>
+      Promise.resolve(new Response(null, { status: 204 }))
+    );
+    await createResponsesCompatFetch(fetch)(endpoint, options);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch.mock.calls[0]?.[1]).toBe(options);
+  },
+);
+
+test('leaves official OpenAI assistant inputs unchanged', async () => {
+  configureProvider('https://api.openai.com/v1');
+  const fetch = rstest.spyOn(globalThis, 'fetch').mockImplementation(
+    (_url, init) => {
+      const body = JSON.parse(init!.body as string) as {
+        input: Record<string, unknown>[];
+      };
+      expect(body.input.find(item => item.role === 'assistant')).toEqual({
+        role: 'assistant',
+        content: [{ type: 'output_text', text: 'Previous answer' }],
+      });
+      return Promise.resolve(
+        Response.json(responseBody('Hello', { annotations: [] })),
+      );
+    },
+  );
+  const { provider, model } = createLLMProvider({ model: 'Compatible' });
+  await provider.responses(model).doGenerate({
+    prompt: [
+      { role: 'user', content: [{ type: 'text', text: 'Show Hello' }] },
+      {
+        role: 'assistant',
+        content: [{ type: 'text', text: 'Previous answer' }],
+      },
+      { role: 'user', content: [{ type: 'text', text: 'Continue' }] },
+    ],
+  });
+  expect(fetch).toHaveBeenCalledTimes(1);
+});
+
 test('fills only absent text annotations while retaining citations, reasoning, tools, and usage', async () => {
   const payload = {
     ...responseBody('Hello'),
@@ -183,7 +438,6 @@ test('fills only absent text annotations while retaining citations, reasoning, t
 
 test.each(
   [
-    ['SSE', 200, 'text/event-stream'],
     ['HTTP errors', 429, 'application/json'],
     ['non-JSON replies', 200, 'text/plain'],
   ] as const,
@@ -271,6 +525,14 @@ test('retains redirect restrictions and cancellation on custom Responses provide
     (_url, init) => {
       expect(init?.redirect).toBe('error');
       expect(init?.signal).toBe(controller.signal);
+      const body = JSON.parse(init!.body as string) as {
+        input: Record<string, unknown>[];
+      };
+      expect(body.input.find(item => item.role === 'assistant')).toMatchObject({
+        type: 'message',
+        status: 'completed',
+        content: [{ type: 'output_text', text: 'Previous answer' }],
+      });
       return Promise.resolve(Response.json(responseBody('Hello')));
     },
   );
@@ -281,7 +543,14 @@ test('retains redirect restrictions and cancellation on custom Responses provide
     api: 'responses',
   });
   const result = await provider.responses(model).doGenerate({
-    prompt: [{ role: 'user', content: [{ type: 'text', text: 'Show Hello' }] }],
+    prompt: [
+      { role: 'user', content: [{ type: 'text', text: 'Show Hello' }] },
+      {
+        role: 'assistant',
+        content: [{ type: 'text', text: 'Previous answer' }],
+      },
+      { role: 'user', content: [{ type: 'text', text: 'Continue' }] },
+    ],
     abortSignal: controller.signal,
   });
   expect(result.content).toEqual(expect.arrayContaining([

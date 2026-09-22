@@ -10,6 +10,7 @@ import { pluginChunkLoading } from './plugins/chunkLoading.plugin.js'
 import { pluginConfig } from './plugins/config.plugin.js'
 import { pluginCssMinimizer } from './plugins/cssMinimizer.plugin.js'
 import { pluginDev } from './plugins/dev.plugin.js'
+import { pluginEnvironments } from './plugins/environments.plugin.js'
 import { pluginMinify } from './plugins/minify.plugin.js'
 import { pluginOptimization } from './plugins/optimization.plugin.js'
 import { pluginOutput } from './plugins/output.plugin.js'
@@ -82,6 +83,7 @@ export function pluginLynx(
       },
     },
     pluginConfig(options),
+    pluginEnvironments(),
     pluginLynxDebugMetadata(),
     pluginResolve(),
     pluginSwc(),

@@ -8,9 +8,11 @@ import type {
   ModelChatMessage,
 } from '../../hooks/useConversation.js';
 import type {
+  ConversationGenerationSettings,
   PreviewPayloadUrls,
   PreviewPerformanceMetrics,
 } from '../../storage/types.js';
+import type { GenerationUsageRecord } from '../../utils/modelPricing.js';
 import type { Protocol, ProtocolName } from '../../utils/protocol.js';
 
 export interface ChatHost {
@@ -53,15 +55,21 @@ export interface ChatInteractionEntry {
   detail: string;
   count: number;
   truncated: boolean;
+  /** Marks the `started` event that begins a distinct model interaction. */
+  modelStart?: boolean;
 }
 
 export interface ChatInteractionLog {
   entries: readonly ChatInteractionEntry[];
   omittedEntries: number;
+  /** Actual upstream requests, independent of timeline retention and SSE chunks. */
+  modelRequestCount?: number;
   rawOutput?: ChatInteractionEntry;
+  reasoning?: { text: string; truncated: boolean };
 }
 
 export interface ChatMessageModel {
+  generationUsage?: GenerationUsageRecord;
   id?: string;
   kind: ChatMessageKind;
   side?: 'left' | 'right';
@@ -141,6 +149,7 @@ export interface ChatSettingOption {
 export interface ChatSettingControl {
   id: string;
   label: string;
+  description?: string;
   value: string;
   kind: 'select' | 'text' | 'password' | 'checkbox';
   disabled?: boolean;
@@ -149,10 +158,21 @@ export interface ChatSettingControl {
 }
 
 export interface ChatSettingsAdapter<TSettings> {
+  usageModel?: (
+    value: TSettings,
+  ) => Pick<GenerationUsageRecord, 'model' | 'modelPrices'>;
   storageKeys: readonly string[];
   initial: () => TSettings;
   parseStored: (raw: unknown) => TSettings;
   serialize: (value: TSettings) => unknown;
+  conversation?: {
+    defaults?: ConversationGenerationSettings;
+    snapshot: (value: TSettings) => ConversationGenerationSettings;
+    restore: (
+      value: TSettings,
+      saved: ConversationGenerationSettings,
+    ) => TSettings;
+  };
   load?: (
     value: TSettings,
     host: ChatHost,
@@ -206,6 +226,8 @@ export interface ChatPreviewAdapter<TOutput> {
   artifact?: (output: TOutput) => ChatArtifact;
   livePayload?: (output: TOutput) => unknown[];
   merge?: (current: TOutput | null, next: TOutput) => TOutput;
+  /** Compare rendered states, including streams with temporary loading messages. */
+  isEquivalent?: (current: TOutput, next: TOutput) => boolean;
   emptyTitle: string;
   emptySubtitle: string;
   generatingHint: string;
@@ -233,6 +255,7 @@ export interface ChatActionAdapter<
   TSettings,
   TStreamState,
 > {
+  parseUserText?: (text: string) => TAction | null;
   parseWindowMessage: (data: unknown) => TAction | null;
   userText: (action: TAction) => string;
   label: (action: TAction) => string;

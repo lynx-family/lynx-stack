@@ -17,11 +17,11 @@
     "@radix-ui/react-select": "^2.3.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^1.38.0",
+    "lucide-react": "^1.47.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-resizable-panels": "^4.12.3",
-    "tailwind-merge": "^3.6.0"
+    "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
     "@lynx-js/lynx-core": "0.1.4",

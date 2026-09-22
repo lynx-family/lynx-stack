@@ -1,9 +1,8 @@
 {
   "name": "@lynx-js/rspeedy",
   "version": "0.17.2",
-  "description": "A webpack/rspack-based frontend toolchain for Lynx",
+  "description": "An Rspack-based frontend toolchain for Lynx",
   "keywords": [
-    "webpack",
     "rspack",
     "Lynx",
     "ReactLynx"
@@ -55,7 +54,7 @@
   "dependencies": {
     "@lynx-js/rsbuild-plugin": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rsdoctor/rspack-plugin": "~1.6.1"
+    "@rsdoctor/rspack-plugin": "~1.6.4"
   },
   "devDependencies": {
     "@lynx-js/test-tools": "workspace:*",

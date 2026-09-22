@@ -2,4 +2,4 @@
 "@lynx-js/genui": patch
 ---
 
-Updated dependency `@openuidev/lang-core` to `^0.2.18`.
+Updated dependency `@openuidev/lang-core` to `^0.3.0`.

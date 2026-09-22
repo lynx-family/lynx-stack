@@ -608,3 +608,47 @@ test('pool removes cancelled waiters and retains active slots until work settles
   await Promise.all([first, third]);
   expect(task).toHaveBeenCalledTimes(1);
 });
+
+test.each([undefined, 'model-0'])(
+  'snapshots only public prices before generating with model %s',
+  async (selected) => {
+    const prices = { input_price: 2, cached_price: 0.5, output_price: 8 };
+    const config = {
+      'model-0': {
+        ...prices,
+        apiKey: 'private-key',
+        baseURL: 'https://private.example/v1',
+        model: 'private-upstream',
+      },
+    };
+    rstest.stubEnv('GENUI_MODEL_CONFIG_JSON', JSON.stringify(config));
+    try {
+      const plan = request('html', 'native', 1);
+      plan.groups[0]!.model = selected;
+      plan.settings.judgeEnabled = false;
+      const job = getBenchJobStore().createJob(plan, 1);
+      await runBenchJob(job.id, {
+        adapters: {
+          html: {
+            protocol: 'html',
+            generate: () => {
+              rstest.stubEnv(
+                'GENUI_MODEL_CONFIG_JSON',
+                JSON.stringify({
+                  'model-0': { ...config['model-0'], input_price: 200 },
+                }),
+              );
+              return Promise.resolve(artifact('html'));
+            },
+          },
+        },
+      });
+      expect(job.report?.results[0]?.modelPrices).toEqual(prices);
+      expect(JSON.stringify(job.report)).not.toMatch(
+        /private-key|private-upstream|private.example/u,
+      );
+    } finally {
+      rstest.unstubAllEnvs();
+    }
+  },
+);

@@ -27,8 +27,7 @@ import {
   clearEtAttrPlanMap,
 } from '../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { renderMainThread } from '../../../src/element-template/runtime/render/render-main-thread.js';
-import { render as mockRender } from '../../../src/element-template/runtime/render/render-to-opcodes.js';
-import { renderOpcodesIntoElementTemplate as mockRenderOpcodesIntoElementTemplate } from '../../../src/element-template/runtime/render/render-opcodes.js';
+import { renderToElementTemplate as mockRender } from '../../../src/element-template/runtime/render/render-direct.js';
 import { render as preactRender } from 'preact';
 
 const mockedState = vi.hoisted(() => ({
@@ -59,13 +58,8 @@ vi.mock('../../../src/element-template/runtime/page/root-instance.js', () => ({
   }),
 }));
 
-vi.mock('../../../src/element-template/runtime/render/render-to-opcodes.js', () => ({
-  render: vi.fn(),
-  registerSlot: vi.fn(),
-}));
-
-vi.mock('../../../src/element-template/runtime/render/render-opcodes.js', () => ({
-  renderOpcodesIntoElementTemplate: vi.fn(),
+vi.mock('../../../src/element-template/runtime/render/render-direct.js', () => ({
+  renderToElementTemplate: vi.fn(),
 }));
 
 vi.mock('../../../src/element-template/runtime/template/registry.js', () => ({
@@ -181,7 +175,6 @@ describe('ElementTemplate reloadMainThread', () => {
       childSlots: [[oldSerializedRoot]],
       uid: 0,
     };
-    const opcodes = [0, 'opcode'];
     const rootRef = { type: 'ref-a' } as unknown as ElementTemplateHandle;
     const serializedRoot = {
       templateKey: '_et_reload',
@@ -224,8 +217,7 @@ describe('ElementTemplate reloadMainThread', () => {
       attachMainThreadDynamicAttrRefsForSubtree([{ uid: -1, ref: oldRootRef }]);
       expect(getMainThreadDynamicAttrState(-1, 0)).toBeDefined();
       expect(getMainThreadDynamicAttrState(-1, 1)).toBeDefined();
-      vi.mocked(mockRender).mockReturnValueOnce(['old-opcode']);
-      vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValueOnce({
+      vi.mocked(mockRender).mockReturnValueOnce({
         pageAttributes: { id: 'background' },
         rootRefs: [oldRootRef],
         rootSubtreeHandles: [[]],
@@ -243,10 +235,8 @@ describe('ElementTemplate reloadMainThread', () => {
       vi.mocked(__SetAttributeOfElementTemplate).mockClear();
       vi.mocked(__SerializeElementTemplate).mockClear();
       vi.mocked(mockRender).mockClear();
-      vi.mocked(mockRenderOpcodesIntoElementTemplate).mockClear();
       dispatchEvent.mockClear();
-      vi.mocked(mockRender).mockReturnValue(opcodes);
-      vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+      vi.mocked(mockRender).mockReturnValue({
         pageAttributes: null,
         rootRefs: [rootRef],
         rootSubtreeHandles: [[]],
@@ -279,7 +269,6 @@ describe('ElementTemplate reloadMainThread', () => {
       expect(__root.__jsx).toBe(jsx);
       expect(__root).not.toHaveProperty('stale');
       expect(mockRender).toHaveBeenCalledWith(jsx, undefined);
-      expect(mockRenderOpcodesIntoElementTemplate).toHaveBeenCalledWith(opcodes);
       expect(__InsertNodeToElementTemplate).toHaveBeenCalledWith(page, 0, rootRef, null);
       expect(__SerializeElementTemplate).toHaveBeenCalledTimes(2);
       expect(__SerializeElementTemplate).toHaveBeenNthCalledWith(1, page);
@@ -308,8 +297,7 @@ describe('ElementTemplate reloadMainThread', () => {
 
   it('rebuilds when the physical page has no root slot', () => {
     mockedState.root = { __jsx: null };
-    vi.mocked(mockRender).mockReturnValue([]);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+    vi.mocked(mockRender).mockReturnValue({
       pageAttributes: null,
       rootRefs: [],
       rootSubtreeHandles: [],
@@ -347,8 +335,7 @@ describe('ElementTemplate reloadMainThread', () => {
       },
     } as typeof globalThis.lynxWorkletImpl;
     mockedState.root = { __jsx: null };
-    vi.mocked(mockRender).mockReturnValue([]);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+    vi.mocked(mockRender).mockReturnValue({
       pageAttributes: null,
       rootRefs: [],
       rootSubtreeHandles: [],
@@ -369,8 +356,7 @@ describe('ElementTemplate reloadMainThread', () => {
     mockedState.page = { type: 'page', id: '0', children: [] };
     const ctx = { _wkltId: 'new' };
     const rootRef = { type: 'ref-a' } as unknown as ElementTemplateHandle;
-    vi.mocked(mockRender).mockReturnValue(['opcode']);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockImplementationOnce(() => {
+    vi.mocked(mockRender).mockImplementationOnce(() => {
       __etAttrPlanMap._et_reload = [0, adaptMTEventAttrSlot];
       initializeMainThreadDynamicAttrSlots(
         -2,
@@ -494,8 +480,7 @@ describe('ElementTemplate reloadMainThread', () => {
     mockedState.root = { __jsx: { type: 'App' } };
     lynx.__initData = { stale: true, msg: 'init' };
     mockedState.page = { type: 'page', id: '0', children: [] };
-    vi.mocked(mockRender).mockReturnValue([]);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+    vi.mocked(mockRender).mockReturnValue({
       pageAttributes: null,
       rootRefs: [],
       rootSubtreeHandles: [],
@@ -509,8 +494,7 @@ describe('ElementTemplate reloadMainThread', () => {
   it('profiles main-thread reload when profiling is enabled', () => {
     vi.stubGlobal('__PROFILE__', true);
     mockedState.root = { __jsx: null };
-    vi.mocked(mockRender).mockReturnValue([]);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+    vi.mocked(mockRender).mockReturnValue({
       pageAttributes: null,
       rootRefs: [],
       rootSubtreeHandles: [],

@@ -21,17 +21,12 @@ import {
 } from '../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 
-vi.mock('../../../../src/element-template/runtime/render/render-to-opcodes.js', () => ({
-  render: vi.fn(),
+vi.mock('../../../../src/element-template/runtime/render/render-direct.js', () => ({
+  renderToElementTemplate: vi.fn(),
   registerSlot: vi.fn(),
 }));
 
-vi.mock('../../../../src/element-template/runtime/render/render-opcodes.js', () => ({
-  renderOpcodesIntoElementTemplate: vi.fn(),
-}));
-
-import { render as mockRender } from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
-import { renderOpcodesIntoElementTemplate as mockRenderOpcodesIntoElementTemplate } from '../../../../src/element-template/runtime/render/render-opcodes.js';
+import { renderToElementTemplate as mockRender } from '../../../../src/element-template/runtime/render/render-direct.js';
 
 describe('renderMainThread', () => {
   let dispatchEvent: ReturnType<typeof vi.fn>;
@@ -39,7 +34,6 @@ describe('renderMainThread', () => {
 
   beforeEach(() => {
     vi.mocked(mockRender).mockReset();
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReset();
     setRoot({ __jsx: { type: 'test-root' } });
     pageRef = { type: 'page', children: [] } as unknown as ElementTemplateHandle;
     setupPage(pageRef);
@@ -60,7 +54,7 @@ describe('renderMainThread', () => {
     destroyAllElementTemplateListStates();
     clearMainThreadDynamicAttrState();
     clearEtAttrPlanMap();
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+    vi.mocked(mockRender).mockReturnValue({
       pageAttributes: null,
       rootRefs: [],
       rootSubtreeHandles: [],
@@ -74,7 +68,7 @@ describe('renderMainThread', () => {
     clearEtAttrPlanMap();
   });
 
-  it('should report error when renderToOpcodes fails', () => {
+  it('reports a failed component render and commits an empty page', () => {
     const reportErrorSpy = vi.fn();
     const serializedPage = {
       tag: 'page',
@@ -94,21 +88,17 @@ describe('renderMainThread', () => {
     renderMainThread();
 
     expect(reportErrorSpy).toHaveBeenCalledWith(expect.objectContaining({ message: 'Render failed' }));
-    expect(mockRenderOpcodesIntoElementTemplate).toHaveBeenCalledWith([]);
     expect(__SetAttributeOfElementTemplate).toHaveBeenCalledWith(pageRef, 0, null);
     expect(__InsertNodeToElementTemplate).not.toHaveBeenCalled();
     expect(__SerializeElementTemplate).toHaveBeenCalledWith(pageRef);
     expect(dispatchEvent).toHaveBeenCalledWith({
       type: 'rLynxElementTemplateHydrate',
-      data: {
-        page: serializedPage,
-        reloadVersion: getReloadVersion(),
-      },
+      data: { page: serializedPage, reloadVersion: getReloadVersion() },
     });
+    reportErrorSpy.mockClear();
   });
 
-  it('should render opcodes into the current page and dispatch hydrate data', () => {
-    const opcodes = [0, 'opcode'];
+  it('commits completed roots into the current page and dispatches hydrate data', () => {
     const rootRefA = { type: 'ref-a' } as unknown as ElementTemplateHandle;
     const rootRefB = { type: 'ref-b' } as unknown as ElementTemplateHandle;
     const dispatchEvent = vi.fn();
@@ -130,8 +120,7 @@ describe('renderMainThread', () => {
       childSlots: [[serializedA, serializedB]],
       uid: 0,
     };
-    vi.mocked(mockRender).mockReturnValue(opcodes);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+    vi.mocked(mockRender).mockReturnValue({
       pageAttributes: null,
       rootRefs: [rootRefA, rootRefB],
       rootSubtreeHandles: [[], []],
@@ -146,9 +135,6 @@ describe('renderMainThread', () => {
 
     expect(() => renderMainThread()).not.toThrow();
     expect(mockRender).toHaveBeenCalledWith({ type: 'test-root' }, undefined);
-    expect(mockRenderOpcodesIntoElementTemplate).toHaveBeenCalledWith(
-      opcodes,
-    );
     expect(__InsertNodeToElementTemplate).toHaveBeenNthCalledWith(
       1,
       pageRef,
@@ -177,13 +163,17 @@ describe('renderMainThread', () => {
     });
   });
 
-  it('does not commit the physical page when opcode materialization fails', () => {
-    vi.mocked(mockRender).mockReturnValue([0, 'opcode']);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockImplementationOnce(() => {
+  it('propagates an exception from reportError without committing an empty result', () => {
+    vi.mocked(mockRender).mockImplementationOnce(() => {
       throw new Error('Materialization failed');
     });
 
-    expect(() => renderMainThread()).toThrow('Materialization failed');
+    vi.mocked(lynx.reportError).mockImplementationOnce(() => {
+      throw new Error('reportError failed');
+    });
+
+    expect(() => renderMainThread()).toThrow('reportError failed');
+    expect(lynx.reportError).toHaveBeenCalledWith(expect.objectContaining({ message: 'Materialization failed' }));
     expect(__SetAttributeOfElementTemplate).not.toHaveBeenCalled();
     expect(__InsertNodeToElementTemplate).not.toHaveBeenCalled();
     expect(__SerializeElementTemplate).not.toHaveBeenCalled();
@@ -191,8 +181,7 @@ describe('renderMainThread', () => {
 
   it('applies authored page attrs before inserting rendered roots', () => {
     const rootRef = { type: 'root-ref' } as unknown as ElementTemplateHandle;
-    vi.mocked(mockRender).mockReturnValue([]);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+    vi.mocked(mockRender).mockReturnValue({
       pageAttributes: {
         id: 'screen',
         bindtap: '0:0:bindtap',
@@ -249,8 +238,7 @@ describe('renderMainThread', () => {
       }]],
       uid: 0,
     };
-    vi.mocked(mockRender).mockReturnValue([]);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+    vi.mocked(mockRender).mockReturnValue({
       pageAttributes: null,
       rootRefs: [rootRef],
       rootSubtreeHandles: [[]],
@@ -306,8 +294,7 @@ describe('renderMainThread', () => {
       '_et_ref',
       [{ type: 'main-thread-ref', value: ref }],
     );
-    vi.mocked(mockRender).mockReturnValue([]);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+    vi.mocked(mockRender).mockReturnValue({
       pageAttributes: null,
       rootRefs: [rootRef],
       rootSubtreeHandles: [[{ uid: -1, ref: rootRef }]],
@@ -353,8 +340,7 @@ describe('renderMainThread', () => {
       '_et_ref',
       [{ type: 'main-thread-ref', value: ref }],
     );
-    vi.mocked(mockRender).mockReturnValue([]);
-    vi.mocked(mockRenderOpcodesIntoElementTemplate).mockReturnValue({
+    vi.mocked(mockRender).mockReturnValue({
       pageAttributes: null,
       rootRefs: [rootRef],
       rootSubtreeHandles: [[{ uid: -1, ref: rootRef }]],

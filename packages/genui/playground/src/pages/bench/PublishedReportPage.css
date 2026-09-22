@@ -12,14 +12,35 @@
 .publishedReportContent {
   max-width: 1160px;
   margin: 0 auto;
-  padding: 28px clamp(20px, 4vw, 48px) 64px;
+  padding: 20px clamp(16px, 3vw, 32px) 32px;
+}
+
+.publishedReportScreenshotGroup {
+  min-width: 0;
+  margin: 0 0 16px;
+}
+
+.publishedReportScreenshotGroup h3 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.publishedReportScreenshotGroup h3 span {
+  color: var(--geist-secondary);
+  font-size: 11px;
+  font-weight: 400;
 }
 
 .publishedReportScreenshots {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
-  gap: 16px;
-  margin: 20px 0;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 12px;
 }
 
 .publishedReportScreenshots figure {
@@ -41,8 +62,8 @@
 .publishedReportScreenshots figcaption {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 12px;
+  gap: 2px;
+  padding: 8px 10px;
   border-top: 1px solid var(--geist-border);
   color: var(--geist-secondary);
   font-size: 12px;
@@ -55,21 +76,19 @@
 
 .publishedReportShareBar,
 .publishedReportShareActions,
-.publishedReportTitleRow,
-.publishedReportSectionHeading {
+.publishedReportTitleRow {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
 }
 
-.publishedReportShareBar,
-.publishedReportSectionHeading {
+.publishedReportShareBar {
   justify-content: space-between;
 }
 
 .publishedReportShareBar {
-  margin-bottom: 40px;
+  margin-bottom: 20px;
   font-size: 12px;
 }
 
@@ -90,7 +109,7 @@
 }
 
 .publishedReportEyebrow {
-  margin-bottom: 14px;
+  margin-bottom: 8px;
   color: var(--geist-secondary);
   font-size: 10px;
   font-weight: 600;
@@ -99,13 +118,14 @@
 
 .publishedReportTitleRow h1 {
   margin: 0;
-  font-size: clamp(32px, 4vw, 48px);
+  font-size: clamp(24px, 3vw, 32px);
+  line-height: 1.2;
   font-weight: 600;
   letter-spacing: -0.05em;
 }
 
 .publishedReportStatus {
-  padding: 5px 9px;
+  padding: 3px 8px;
   border: 1px solid var(--geist-border);
   border-radius: 999px;
   color: var(--geist-secondary);
@@ -114,15 +134,16 @@
 }
 
 .publishedReportDescription {
-  margin: 14px 0;
+  margin: 8px 0;
   color: var(--geist-secondary);
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .publishedReportRecordDate {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 20px;
+  gap: 4px 12px;
+  margin: 6px 0;
   color: var(--geist-secondary);
   font-family: var(--geist-mono);
   font-size: 11px;
@@ -130,24 +151,24 @@
 }
 
 .publishedReportShareNote {
-  margin: 18px 0 0;
+  margin: 10px 0 0;
   color: var(--geist-secondary);
   font-size: 12px;
-  line-height: 1.7;
+  line-height: 1.5;
 }
 
 .publishedReportSection {
-  margin-top: 32px;
-  padding-top: 28px;
+  margin-top: 20px;
+  padding-top: 16px;
   border-top: 1px solid var(--geist-border);
 }
 
 .publishedReportSection h2 {
   display: flex;
   align-items: baseline;
-  gap: 12px;
-  margin: 0 0 22px;
-  font-size: 18px;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.025em;
 }
@@ -161,13 +182,13 @@
 
 .publishedReportStats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  margin: 0 0 28px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 16px;
 }
 
 .publishedReportStats > div {
-  padding: 18px;
+  padding: 12px;
   border: 1px solid var(--geist-border);
   border-radius: var(--geist-radius-md);
 }
@@ -178,8 +199,8 @@
 }
 
 .publishedReportStats dd {
-  margin: 12px 0 0;
-  font-size: 26px;
+  margin: 6px 0 0;
+  font-size: 22px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
@@ -198,14 +219,14 @@
 }
 
 .publishedReportTable caption {
-  padding: 14px 16px;
+  padding: 10px 12px;
   font-weight: 600;
   text-align: left;
 }
 
 .publishedReportTable th,
 .publishedReportTable td {
-  padding: 14px 16px;
+  padding: 8px 12px;
   border-top: 1px solid var(--geist-border);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
@@ -220,7 +241,7 @@
 
 .publishedReportTable th > small {
   display: block;
-  margin-top: 5px;
+  margin-top: 3px;
   color: var(--geist-secondary);
   font-size: 11px;
   font-weight: 400;
@@ -229,18 +250,18 @@
 .publishedReportPlan {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
+  gap: 16px;
 }
 
 .publishedReportPlan h3,
 .publishedReportWarnings h3 {
-  margin: 0 0 14px;
+  margin: 0 0 8px;
   font-size: 13px;
   font-weight: 500;
 }
 
 .publishedReportDisclosure {
-  padding: 14px 0;
+  padding: 10px 0;
   border-bottom: 1px solid var(--geist-border);
   font-size: 12px;
 }
@@ -248,17 +269,18 @@
 .publishedReportDisclosure > summary {
   color: var(--geist-foreground);
   cursor: pointer;
-  line-height: 1.6;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .publishedReportDisclosure > summary > span {
-  margin-left: 12px;
+  margin-left: 8px;
   color: var(--geist-secondary);
   font-size: 11px;
 }
 
 .publishedReportRunStatus {
-  padding: 3px 7px;
+  padding: 2px 6px;
   border: 1px solid var(--geist-border);
   border-radius: 999px;
 }
@@ -267,19 +289,31 @@
   color: var(--geist-error, #e00);
 }
 
+.publishedReportArtifactAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  vertical-align: middle;
+}
+
 .publishedReportDisclosure p,
 .publishedReportGroupConfig dd {
   color: var(--geist-secondary);
-  line-height: 1.7;
+  line-height: 1.6;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.publishedReportDisclosure p,
+.publishedReportGroupConfig {
+  margin: 8px 0;
 }
 
 .publishedReportGroupConfig > div {
   display: grid;
   grid-template-columns: 70px minmax(0, 1fr);
-  gap: 12px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 6px;
 }
 
 .publishedReportGroupConfig dt {
@@ -292,12 +326,12 @@
 
 .publishedReportWarnings,
 .publishedReportEmpty {
-  margin-top: 20px;
-  padding: 16px;
+  margin-top: 12px;
+  padding: 12px;
   color: var(--geist-secondary);
   background: var(--geist-surface);
   font-size: 12px;
-  line-height: 1.7;
+  line-height: 1.6;
 }
 
 .publishedReportLoadState {
@@ -386,15 +420,16 @@
 @media (width <= 640px) {
   .publishedReportStats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+    gap: 8px;
   }
 
   .publishedReportPlan {
     grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
   }
 
   .publishedReportShareBar {
     align-items: flex-start;
-    margin-bottom: 28px;
+    margin-bottom: 16px;
   }
 }

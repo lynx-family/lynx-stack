@@ -426,6 +426,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+  container: exampleEditor / inline-size;
 }
 
 .codePanelToolbar {
@@ -476,15 +477,72 @@
   white-space: nowrap;
 }
 
-.openuiCodeViewSwitch {
-  width: 118px;
-  margin-left: 4px;
+.previewModeSwitch.openuiCodeViewSwitch {
+  width: max-content;
+  max-width: 100%;
+  gap: 2px;
+  margin-left: 0;
+  padding: 3px;
+  border-radius: 9px;
 }
 
 .openuiCodeViewSwitch .previewModeBtn {
-  flex: 1;
-  min-width: 0;
+  flex: 1 0 auto;
+  min-height: 28px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-family: inherit;
+  line-height: 20px;
   text-align: center;
+  white-space: nowrap;
+  transition:
+    background var(--geist-transition),
+    color var(--geist-transition),
+    box-shadow var(--geist-transition);
+}
+
+.openuiCodeViewSwitch .previewModeBtn:hover {
+  background: var(--geist-border);
+}
+
+.openuiCodeViewSwitch .previewModeBtn.active {
+  background: var(--geist-background);
+  color: var(--geist-foreground);
+  box-shadow: var(--geist-shadow-sm);
+}
+
+.openuiCodeViewSwitch .previewModeBtn:focus-visible {
+  outline: 2px solid var(--geist-foreground);
+  outline-offset: 2px;
+}
+
+@container exampleEditor (max-width: 600px) {
+  .codePanelToolbar:has(.openuiCodeViewSwitch) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 10px;
+  }
+
+  .codePanelToolbar:has(.openuiCodeViewSwitch) > .codePanelTitle {
+    min-width: 0;
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .codePanelToolbar:has(.openuiCodeViewSwitch) > .toolbarActions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .codePanelToolbar:has(.openuiCodeViewSwitch) > .spacer {
+    display: none;
+  }
+
+  .previewModeSwitch.openuiCodeViewSwitch {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+  }
 }
 
 .openuiToolbarActions {
@@ -497,6 +555,56 @@
   width: 100%;
   min-height: 0;
   overflow: hidden;
+}
+
+.exampleTokenCount {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--geist-border);
+  background: var(--geist-surface);
+  color: var(--geist-secondary);
+}
+
+.exampleTokenCountMetric {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  min-height: 24px;
+}
+
+.exampleTokenCountValue {
+  color: var(--geist-foreground);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.exampleTokenCountUnit {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.exampleTokenCountStatus {
+  align-self: center;
+  font-size: 12px;
+}
+
+.exampleTokenCountEncoding {
+  margin-left: auto;
+  padding: 3px 6px;
+  border: 1px solid var(--geist-border);
+  border-radius: 5px;
+  background: var(--geist-background);
+  font-family: var(--geist-mono);
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .codeEditor .cm-editor {
@@ -1179,11 +1287,6 @@
   .openuiCodeToolbar {
     gap: 6px;
     padding: 6px 8px;
-  }
-
-  .openuiCodeViewSwitch .previewModeBtn {
-    padding: 2px 8px;
-    font-size: 11px;
   }
 
   .openuiCodeTitleText {

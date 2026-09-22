@@ -20,7 +20,8 @@ import {
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { applyElementTemplateUpdateCommands } from '../../../../src/element-template/runtime/patch.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
-import { renderOpcodesIntoElementTemplate } from '../../../../src/element-template/runtime/render/render-opcodes.js';
+import { renderToElementTemplate } from '../../../../src/element-template/runtime/render/render-direct.js';
+import { resetElementTemplatePatchListener } from '../../../../src/element-template/native/patch-listener.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import type {
@@ -28,7 +29,6 @@ import type {
   SerializedEtNode,
   SerializedTypedListNode,
 } from '../../../../src/element-template/protocol/types.js';
-import { renderToString } from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
 import { hydrateBackground } from '../../test-utils/debug/hydrate.js';
 import { clearTemplates, registerBuiltinRawTextTemplate, registerTemplates } from '../../test-utils/debug/registry.js';
 import { installMockNativePapi, lastMock } from '../../test-utils/mock/mockNativePapi.js';
@@ -168,8 +168,7 @@ async function compileAndRender(
     };
 
     const vnode = { type: module.App, props: {}, key: null, ref: null };
-    const opcodes = renderToString(vnode, null);
-    const { rootRefs } = renderOpcodesIntoElementTemplate(opcodes);
+    const { rootRefs } = renderToElementTemplate(vnode);
 
     expect(rootRefs).toHaveLength(1);
 
@@ -181,6 +180,7 @@ async function compileAndRender(
       code: transformedCode,
     };
   } finally {
+    resetElementTemplatePatchListener();
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
 }
@@ -422,7 +422,8 @@ describe('render transform contract', () => {
 
     expect(result.code).toContain('DeferredListItem');
     expect(result.code).toContain('unmountRecycled');
-    expect(result.code).toContain('__listItemPlatformInfo');
+    expect(result.code).toContain('__etHost');
+    expect(result.code).toContain('"item-key": "late"');
   });
 
   it('chains create, serialize, update, and callbacks', async () => {

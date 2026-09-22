@@ -46,6 +46,8 @@ export function pluginOutput(): RsbuildPlugin {
               },
               // A Lynx bundle has nowhere to link a separate license file to.
               legalComments: output?.legalComments ?? 'none',
+              // Align the asset inlining threshold with Rspeedy.
+              dataUriLimit: output?.dataUriLimit ?? 2 * 1024,
             },
           })
         },

@@ -7,7 +7,22 @@ import { cssTransformValue, transform } from '../../plugins/lynx/transform.js';
 import type { CSSRuleObject } from '../../types/tailwind-types.js';
 import { runPlugin } from '../utils/run-plugin.js';
 
+/**
+ * Unit coverage for the canonical transform chain and its utility bindings.
+ *
+ * The Skew assertion intentionally checks only the Tailwind CSS v3-compatible
+ * segment, leaving the other transform functions free to evolve independently.
+ */
 describe('transform plugin', () => {
+  it('composes transforms with Tailwind CSS v3-compatible skew functions', () => {
+    expect(cssTransformValue).toContain(
+      'skewX(var(--tw-skx)) skewY(var(--tw-sky))',
+    );
+    expect(cssTransformValue).not.toContain(
+      'skew(var(--tw-skx), var(--tw-sky))',
+    );
+  });
+
   it('registers base transform utilities', () => {
     const { api } = runPlugin(transform);
 

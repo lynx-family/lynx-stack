@@ -7,9 +7,9 @@
 - Bundle: async/common.js
 - Bundle: async/lazy.js
 - Bundle: entry.js
-- Manifest: async/common.css.hot-update.json, size: 1248
-- Manifest: async/lazy.css.hot-update.json, size: 1554
-- Manifest: entry.css.hot-update.json, size: 1822
+- Manifest: async/common.css.hot-update.json, size: 1256
+- Manifest: async/lazy.css.hot-update.json, size: 1562
+- Manifest: entry.css.hot-update.json, size: 1830
 
 ## Manifest
 
@@ -41,7 +41,7 @@
         "enableNewIntersectionObserver": true,
         "enableNativeList": true,
         "enableNewSticky": true,
-        "flexBasisZeroPercent": true,
+        "enableFlexBasisZeroPercent": true,
         "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
@@ -97,7 +97,7 @@
         "enableNewIntersectionObserver": true,
         "enableNativeList": true,
         "enableNewSticky": true,
-        "flexBasisZeroPercent": true,
+        "enableFlexBasisZeroPercent": true,
         "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
@@ -185,7 +185,7 @@
         "enableNewIntersectionObserver": true,
         "enableNativeList": true,
         "enableNewSticky": true,
-        "flexBasisZeroPercent": true,
+        "enableFlexBasisZeroPercent": true,
         "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,

@@ -16,4 +16,13 @@ export {
   MAX_XML_FRAGMENT_LENGTH,
 } from './html-fragment.js';
 export type { GeneratedMainThreadScript } from './html-fragment.js';
-export { compileLynxXmlFragment } from './fragment-artifact.js';
+export {
+  assembleLynxXmlArtifact,
+  applyLynxXmlStylePreset,
+  compileLynxXmlFragment,
+} from './fragment-artifact.js';
+export type {
+  AssembleLynxXmlArtifactOptions,
+  CompileLynxXmlFragmentOptions,
+} from './fragment-artifact.js';
+export type { LynxXmlStylePreset } from './style-preset.js';

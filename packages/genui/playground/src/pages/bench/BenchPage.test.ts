@@ -55,6 +55,8 @@ test('renders a Lynx XML comparison with native capability and no catalog', () =
       onAdd: noop,
       onCatalogChange: noop,
       onFragmentChange: noop,
+      onStylePresetChange: noop,
+      onDesignGuidanceChange: noop,
       onEnabledChange: noop,
       onModelChange: noop,
       onNameChange: noop,
@@ -65,8 +67,9 @@ test('renders a Lynx XML comparison with native capability and no catalog', () =
   );
   expect(markup).toContain('Lynx XML');
   expect(markup).toMatch(
-    /aria-label="Baseline XML fragment"><span>Off<\/span>/u,
+    /aria-label="Baseline Template"><span>On<\/span>/u,
   );
+  expect(markup).toMatch(/aria-label="Baseline StylePreset"><span>On<\/span>/u);
   expect(markup).not.toContain('<p class="benchFieldHint">');
   expect(markup).not.toContain('Baseline Profile');
   expect(markup).not.toContain('Baseline Catalog');
@@ -225,6 +228,8 @@ describe('BenchPage', () => {
         onAdd: noop,
         onCatalogChange: noop,
         onFragmentChange: noop,
+        onStylePresetChange: noop,
+        onDesignGuidanceChange: noop,
         onEnabledChange: noop,
         onModelChange: noop,
         onNameChange: noop,
@@ -275,6 +280,8 @@ describe('BenchPage', () => {
         onAdd: noop,
         onCatalogChange: noop,
         onFragmentChange: noop,
+        onStylePresetChange: noop,
+        onDesignGuidanceChange: noop,
         onEnabledChange: noop,
         onModelChange: noop,
         onNameChange: noop,
@@ -712,6 +719,36 @@ describe('BenchPage', () => {
         completedDraft as never,
       ).map((entry) => `${entry.id}:${entry.report?.jobId ?? 'draft'}`),
     ).toEqual(['bench-draft-1:job-2', 'history-1:job-1']);
+  });
+
+  test('preserves a custom name when a draft completes and its report is reloaded', () => {
+    const completed = createCompletedHistoryEntry(
+      'bench-draft-1',
+      '059a758e-4cbf-4053-bbe4-9f8cb47f7444',
+    );
+    const draft = {
+      ...completed,
+      report: null,
+      title: 'New Bench',
+      titleIsCustom: true,
+    };
+    const saved = saveBenchHistoryEntry([draft] as never, completed as never);
+    expect(saved[0]).toMatchObject({
+      title: 'New Bench',
+      titleIsCustom: true,
+      report: completed.report,
+    });
+    const restored = upsertBenchHistoryEntry(saved, {
+      ...completed,
+      id: 'reloaded-report',
+      title: 'Generated report summary',
+    } as never);
+    expect(restored).toHaveLength(1);
+    expect(restored[0]).toMatchObject({
+      title: 'New Bench',
+      titleIsCustom: true,
+      report: completed.report,
+    });
   });
 
   test('retains a new Bench draft before it has a report', () => {

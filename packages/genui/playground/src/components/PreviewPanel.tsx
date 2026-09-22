@@ -20,6 +20,7 @@ import { Drawer } from 'vaul';
 import { Button } from './Button.js';
 import { CopyToast, useCopyToast } from './CopyToast.js';
 import { Maximize2, Minimize2, Smartphone } from './Icon.js';
+import { OpenUIRenderErrors } from './OpenUIRenderErrors.js';
 import { PreviewSimulationBar } from './PreviewSimulationBar.js';
 import { QrCode } from './QrCode.js';
 import { componentsByMessage } from '../demos.js';
@@ -47,6 +48,9 @@ import {
 } from '../utils/renderUrl.js';
 
 declare const __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__: boolean;
+
+// The Blob cache keys payloads by identity, so live sessions share this reference.
+const LIVE_PREVIEW_BOOTSTRAP_MESSAGES: readonly unknown[] = [];
 
 export type PreviewMode = 'phone' | 'full';
 
@@ -762,11 +766,16 @@ export function PreviewPanel(props: PreviewPanelProps) {
         )
         ? providedMessagesUrl
         : undefined;
+      const isLivePreview = previewSource.liveAction === true;
       let localMessagesPayload: LocalA2UIMessagesPayload | undefined;
-      if (!demoId && !providedMessagesUrl) {
+      if (isLivePreview || (!demoId && !providedMessagesUrl)) {
         try {
           localMessagesPayload = localMessagesPayloadCache.ensure(
-            previewSource.messages,
+            // The controller delivers live content after runtime readiness.
+            // Publishing the final/share payload must not navigate this iframe.
+            isLivePreview
+              ? LIVE_PREVIEW_BOOTSTRAP_MESSAGES
+              : previewSource.messages,
           );
         } catch {
           localMessagesPayloadCache.clear();
@@ -782,17 +791,20 @@ export function PreviewPanel(props: PreviewPanelProps) {
       const renderInit = {
         protocol: previewSource.protocol,
         demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
-        messagesUrl: providedMessagesUrl ?? localMessagesPayload?.messagesUrl,
+        messagesUrl: isLivePreview
+          ? localMessagesPayload?.messagesUrl
+          : providedMessagesUrl ?? localMessagesPayload?.messagesUrl,
         messages: previewSource.messages,
-        actionMocksUrl: previewSource.actionMocksUrl,
-        actionMocks: previewSource.actionMocks,
+        actionMocksUrl: isLivePreview
+          ? undefined
+          : previewSource.actionMocksUrl,
+        actionMocks: isLivePreview ? undefined : previewSource.actionMocks,
         theme: previewSource.theme,
-        demoId,
+        demoId: isLivePreview ? undefined : demoId,
         speed,
         liveAction: previewSource.liveAction,
         playbackMode: previewSource.playbackMode,
       };
-      const isLivePreview = previewSource.liveAction === true;
       const hasExternalPayload = hasExternalA2UIRenderPayload(previewSource);
       const url = buildRenderUrl(renderInit, baseUrl);
       // Shared URLs always render normally — playback is a local-only
@@ -1450,6 +1462,14 @@ export function PreviewPanel(props: PreviewPanelProps) {
               />
             </div>
             {beforeBody}
+            {previewSource?.kind === 'openui'
+              ? (
+                <OpenUIRenderErrors
+                  frameSrc={metricFrameSrc}
+                  containerRef={panelRef}
+                />
+              )
+              : null}
             {renderPreviewMetrics()}
             {showSimulationBar
                 && previewSource

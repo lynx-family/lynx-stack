@@ -398,6 +398,7 @@ describe('runBenchUiJudge', () => {
 
     expect(result).toEqual({
       errors: ['ui-judge failed: capture failed'],
+      retryable: false,
       score: 0,
       status: 'failed',
       warnings: [],
@@ -433,6 +434,7 @@ describe('runBenchUiJudge', () => {
       errors: [
         'ui-judge consistency-standards failed: dimension request timed out',
       ],
+      retryable: false,
       score: 0,
       status: 'failed',
       warnings: [],

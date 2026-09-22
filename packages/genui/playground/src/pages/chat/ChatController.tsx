@@ -2,15 +2,16 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { KeyboardEvent, ReactNode } from 'react';
+import type { KeyboardEvent } from 'react';
 
+import { ChatAgentInteraction } from './ChatAgentInteraction.js';
 import {
   appendChatInteraction,
-  chatInteractionLabel,
   describeChatRequest,
-  serializeChatInteraction,
 } from './chatInteraction.js';
+import { ChatUsage } from './ChatUsage.js';
 import { ChatWorkspace } from './ChatWorkspace.js';
+import { readGenerationMetrics } from './generationMetrics.js';
 import {
   isA2UIRuntimeReadyMessage,
   isMatchingLivePreviewFrame,
@@ -24,11 +25,8 @@ import type {
   PendingLivePreviewOutput,
 } from './livePreviewDelivery.js';
 import {
-  EMPTY_CHAT_TOKEN_USAGE,
-  addTokenUsage,
   createChatHost,
   createChatRequestInit,
-  formatTokenCount,
   parseSseFrame,
   targetOriginForUrl,
 } from './shared.js';
@@ -42,23 +40,17 @@ import type {
   ChatSseEvent,
   ChatStreamAdapter,
   ChatStreamEmission,
-  ChatTokenUsage,
 } from './type.js';
 import { Button } from '../../components/Button.js';
 import { useCopyToast } from '../../components/CopyToast.js';
-import {
-  ChevronDown,
-  Send,
-  Sparkles,
-  TriangleAlert,
-  Zap,
-} from '../../components/Icon.js';
+import { Send, Sparkles, TriangleAlert, Zap } from '../../components/Icon.js';
 import type { MobilePaneTab } from '../../components/MobileTabBar.js';
 import type {
   PreviewMetricName,
   PreviewPanelMetricItem,
 } from '../../components/PreviewPanel.js';
 import { PreviewViewport } from '../../components/PreviewViewport.js';
+import { SourceTokenCount } from '../../components/SourceTokenCount.js';
 import { useConversation } from '../../hooks/useConversation.js';
 import type { ModelChatMessage } from '../../hooks/useConversation.js';
 import { useResizablePanels } from '../../hooks/useResizablePanels.js';
@@ -76,6 +68,11 @@ import type {
   PreviewPerformanceMetrics,
 } from '../../storage/types.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
+import {
+  readGenerationAttempts,
+  readResponseUsage,
+} from '../../utils/modelPricing.js';
+import type { GenerationUsageRecord } from '../../utils/modelPricing.js';
 import type { Protocol } from '../../utils/protocol.js';
 import {
   buildConversationShareUrl,
@@ -311,9 +308,9 @@ function MessageMetrics(props: { metrics: PreviewPerformanceMetrics }) {
     { key: 'fmpMs', label: 'FMP', value: props.metrics.fmpMs },
     { key: 'ttiMs', label: 'TTI', value: props.metrics.ttiMs },
     {
-      key: 'agentOutputMs',
-      label: 'Agent',
-      value: props.metrics.agentOutputMs,
+      key: 'generationMs',
+      label: 'Generation',
+      value: props.metrics.generationMs,
     },
     { key: 'renderMs', label: 'Render', value: props.metrics.renderMs },
   ].filter((item) => typeof item.value === 'number');
@@ -332,107 +329,6 @@ function MessageMetrics(props: { metrics: PreviewPerformanceMetrics }) {
   );
 }
 
-function AgentInteractionDetails(props: {
-  children: ReactNode;
-  log: ChatInteractionLog;
-  onCopy: (text: string) => void;
-}) {
-  const { children, log, onCopy } = props;
-  return (
-    <details className='chatAgentInteraction'>
-      <summary className='chatMessageBody chatAgentInteractionSummary'>
-        {children}
-        <ChevronDown
-          className='chatAgentInteractionChevron'
-          size={14}
-          aria-hidden='true'
-        />
-      </summary>
-      <div className='chatAgentInteractionDetails'>
-        <div className='chatAgentInteractionHeader'>
-          <span>Agent interaction</span>
-          <button
-            type='button'
-            className='chatJsonCopyButton'
-            onClick={() => onCopy(serializeChatInteraction(log))}
-          >
-            Copy details
-          </button>
-        </div>
-        {log.omittedEntries > 0
-          ? (
-            <p className='chatAgentInteractionNotice'>
-              {log.omittedEntries} earlier events omitted.
-            </p>
-          )
-          : null}
-        <ol
-          className='chatAgentInteractionEvents'
-          aria-label='Agent interaction events'
-        >
-          {log.entries.map((entry, index) => (
-            <li className='chatAgentInteractionEvent' key={index}>
-              <div className='chatAgentInteractionEventHeader'>
-                <span>{chatInteractionLabel(entry.event)}</span>
-                {entry.count > 1 ? <span>{entry.count} chunks</span> : null}
-                <span className='chatAgentInteractionTime'>
-                  +{(entry.elapsedMs / 1000).toFixed(2)}s
-                </span>
-              </div>
-              {entry.detail ? <pre>{entry.detail}</pre> : null}
-              {entry.truncated
-                ? (
-                  <p className='chatAgentInteractionNotice'>
-                    Event details truncated.
-                  </p>
-                )
-                : null}
-            </li>
-          ))}
-        </ol>
-        {log.rawOutput
-          ? (
-            <details className='chatAgentInteractionRaw'>
-              <summary className='chatAgentInteractionRawSummary'>
-                <span>Raw output</span>
-                <span>
-                  {log.rawOutput.count}{' '}
-                  {log.rawOutput.count === 1 ? 'chunk' : 'chunks'}
-                </span>
-                <span className='chatAgentInteractionTime'>
-                  +{(log.rawOutput.elapsedMs / 1000).toFixed(2)}s
-                </span>
-                <ChevronDown
-                  className='chatAgentInteractionChevron'
-                  size={14}
-                  aria-hidden='true'
-                />
-              </summary>
-              <div className='chatAgentInteractionRawContent'>
-                <button
-                  type='button'
-                  className='chatJsonCopyButton'
-                  onClick={() => onCopy(log.rawOutput?.detail ?? '')}
-                >
-                  Copy raw output
-                </button>
-                <pre>{log.rawOutput.detail}</pre>
-                {log.rawOutput.truncated
-                  ? (
-                    <p className='chatAgentInteractionNotice'>
-                      Raw output truncated.
-                    </p>
-                  )
-                  : null}
-              </div>
-            </details>
-          )
-          : null}
-      </div>
-    </details>
-  );
-}
-
 function MessageList(props: {
   messages: readonly ChatMessageModel[];
   onCopy: (text: string) => void;
@@ -441,21 +337,6 @@ function MessageList(props: {
   return (
     <>
       {messages.map((message, index) => {
-        const roleClassName = (() => {
-          if (message.kind === 'user') return 'chatMessageUser';
-          if (message.kind === 'action') {
-            return message.payload === undefined
-              ? 'chatMessageAction'
-              : 'chatMessageAction chatMessageActionExpanded';
-          }
-          if (message.kind === 'output') return 'chatMessageJson';
-          if (message.kind === 'status') {
-            return `chatMessageStatus chatMessageStatus-${
-              message.tone ?? 'info'
-            }`;
-          }
-          return 'chatMessageAI';
-        })();
         const payloadText = message.payload === undefined
           ? ''
           : safeStringifyPayload(message.payload);
@@ -475,6 +356,14 @@ function MessageList(props: {
                 )
                 : null}
             </span>
+            {message.kind === 'output' && message.payload !== undefined
+              ? (
+                <SourceTokenCount
+                  source={payloadText}
+                  className='chatArtifactMeta'
+                />
+              )
+              : null}
             {message.payload === undefined
               ? null
               : (
@@ -488,23 +377,11 @@ function MessageList(props: {
               )}
           </>
         );
-        return (
-          <div
-            className={`chatMessage ${roleClassName}${
-              message.side === 'right' ? ' chatMessageRight' : ''
-            }${message.interaction ? ' chatMessageWithInteraction' : ''}`}
-            key={message.id ?? index}
-          >
-            {message.interaction
-              ? (
-                <AgentInteractionDetails
-                  log={message.interaction}
-                  onCopy={onCopy}
-                >
-                  {messageBody}
-                </AgentInteractionDetails>
-              )
-              : <div className='chatMessageBody'>{messageBody}</div>}
+        const messageDetails = (
+          <>
+            {message.generationUsage
+              ? <ChatUsage record={message.generationUsage} />
+              : null}
             {message.payload === undefined
               ? null
               : (
@@ -517,6 +394,45 @@ function MessageList(props: {
             {message.metrics
               ? <MessageMetrics metrics={message.metrics} />
               : null}
+          </>
+        );
+        if (message.interaction) {
+          return (
+            <ChatAgentInteraction
+              key={message.id ?? index}
+              summary={messageBody}
+              tone={message.tone}
+              log={message.interaction}
+              onCopy={onCopy}
+            >
+              {messageDetails}
+            </ChatAgentInteraction>
+          );
+        }
+        const roleClassName = (() => {
+          if (message.kind === 'user') return 'chatMessageUser';
+          if (message.kind === 'action') {
+            return message.payload === undefined
+              ? 'chatMessageAction'
+              : 'chatMessageAction chatMessageActionExpanded';
+          }
+          if (message.kind === 'output') return 'chatMessageJson';
+          if (message.kind === 'status') {
+            return `chatMessageStatus chatMessageStatus-${
+              message.tone ?? 'info'
+            }`;
+          }
+          return 'chatMessageAI';
+        })();
+        return (
+          <div
+            className={`chatMessage ${roleClassName}${
+              message.side === 'right' ? ' chatMessageRight' : ''
+            }`}
+            key={message.id ?? index}
+          >
+            <div className='chatMessageBody'>{messageBody}</div>
+            {messageDetails}
           </div>
         );
       })}
@@ -550,69 +466,79 @@ function ArtifactViewer(props: {
       <div className='chatGeneratedJsonTitle chatArtifactHeader'>
         <div className='chatArtifactTitle'>
           <span>{artifact.title}</span>
-          {artifact.meta
-            ? <span className='chatArtifactMeta'>{artifact.meta}</span>
-            : null}
+          <span className='chatArtifactMeta'>
+            {artifact.meta ? `${artifact.meta} · ` : ''}
+            <SourceTokenCount source={displayedText} />
+          </span>
         </div>
-        <div className='chatArtifactActions'>
-          {artifact.views.length > 1
-            ? (
-              <div className='previewModeSwitch chatArtifactSwitch'>
-                {artifact.views.map((view) => (
-                  <button
-                    key={view.id}
-                    type='button'
-                    className={view.id === activeView.id
-                      ? 'previewModeBtn active'
-                      : 'previewModeBtn'}
-                    onClick={() => setActiveViewId(view.id)}
-                  >
-                    {view.label}
-                  </button>
-                ))}
+      </div>
+      <div className='chatMessageChunk chatArtifactCode'>
+        <div className='chatMessageChunkHeader chatArtifactCodeToolbar'>
+          <div className='chatArtifactCodeControls'>
+            {artifact.views.length > 1
+              ? (
+                <div
+                  className='chatArtifactFormatSwitch'
+                  role='group'
+                  aria-label='Artifact view'
+                >
+                  {artifact.views.map(view => (
+                    <button
+                      key={view.id}
+                      type='button'
+                      className='chatArtifactFormatButton'
+                      aria-pressed={view.id === activeView.id}
+                      onClick={() => setActiveViewId(view.id)}
+                    >
+                      {view.label}
+                    </button>
+                  ))}
+                </div>
+              )
+              : (activeView.formattedText === undefined
+                ? (
+                  <span className='chatArtifactCodeLabel'>
+                    {activeView.label}
+                  </span>
+                )
+                : null)}
+            {activeView.formattedText === undefined ? null : (
+              <div
+                className='chatArtifactFormatSwitch'
+                role='group'
+                aria-label={`${activeView.label} formatting`}
+              >
+                <button
+                  type='button'
+                  className='chatArtifactFormatButton'
+                  aria-pressed={!showFormatted}
+                  onClick={() => setShowFormatted(false)}
+                >
+                  Raw
+                </button>
+                <button
+                  type='button'
+                  className='chatArtifactFormatButton'
+                  aria-pressed={showFormatted}
+                  onClick={() => setShowFormatted(true)}
+                >
+                  Formatted
+                </button>
               </div>
-            )
-            : null}
+            )}
+          </div>
+          <button
+            type='button'
+            className='chatJsonCopyButton chatArtifactCopyButton'
+            onClick={() => onCopy(displayedText)}
+          >
+            Copy
+          </button>
         </div>
+        <pre className='chatMessageChunkJson chatArtifactCodeBlock'>
+          {displayedText}
+        </pre>
       </div>
-      <div className='chatArtifactCodeToolbar'>
-        {activeView.formattedText === undefined
-          ? <span className='chatArtifactCodeLabel'>{activeView.label}</span>
-          : (
-            <div
-              className='chatArtifactFormatSwitch'
-              role='group'
-              aria-label={`${activeView.label} formatting`}
-            >
-              <button
-                type='button'
-                className='chatArtifactFormatButton'
-                aria-pressed={!showFormatted}
-                onClick={() => setShowFormatted(false)}
-              >
-                Raw
-              </button>
-              <button
-                type='button'
-                className='chatArtifactFormatButton'
-                aria-pressed={showFormatted}
-                onClick={() => setShowFormatted(true)}
-              >
-                Formatted
-              </button>
-            </div>
-          )}
-        <button
-          type='button'
-          className='chatJsonCopyButton chatArtifactCopyButton'
-          onClick={() => onCopy(displayedText)}
-        >
-          Copy
-        </button>
-      </div>
-      <pre className='chatMessageChunkJson chatArtifactCodeBlock'>
-        {displayedText}
-      </pre>
     </div>
   );
 }
@@ -627,7 +553,7 @@ function mergeMetrics(
       'fcpMs',
       'fmpMs',
       'ttiMs',
-      'agentOutputMs',
+      'generationMs',
       'renderMs',
     ] as const
   ) {
@@ -699,6 +625,7 @@ export function ChatController<
     previewMessages: persistedPreviewMessages,
     previewPayloadUrls: persistedPreviewPayloadUrls,
     recordTurn,
+    recordGenerationSettings,
     remove,
     rename,
     switchTo,
@@ -729,9 +656,6 @@ export function ChatController<
   const [previewRevision, setPreviewRevision] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isActionRunning, setIsActionRunning] = useState(false);
-  const [usage, setUsage] = useState<ChatTokenUsage>({
-    ...EMPTY_CHAT_TOKEN_USAGE,
-  });
   const [metrics, setMetrics] = useState<PreviewPerformanceMetrics>(
     initialHydration.metrics ?? {},
   );
@@ -793,6 +717,7 @@ export function ChatController<
   });
 
   const busy = isGenerating || isActionRunning;
+  const generationSettingsLocked = persistedMessages.length > 0;
   const settingsValidationError = adapter.settings?.validate?.(settings);
 
   const setCurrentOutput = useCallback((next: TOutput | null) => {
@@ -850,7 +775,14 @@ export function ChatController<
     const controller = new AbortController();
     void loadSettings(settingsRef.current, host, controller.signal).then(
       (next) => {
-        if (!controller.signal.aborted) setSettings(next);
+        if (!controller.signal.aborted) {
+          setSettings((current) => {
+            const historySettings = adapter.settings?.conversation;
+            return historySettings
+              ? historySettings.restore(next, historySettings.snapshot(current))
+              : next;
+          });
+        }
       },
       () => {
         // Abort-driven rejections are expected when the protocol changes.
@@ -920,10 +852,22 @@ export function ChatController<
     followBottomRef.current = distanceFromBottom <= 32;
   }, []);
 
+  const savedGenerationSettings = conversations.find((item) =>
+    item.id === activeId
+  )?.generationSettings;
+
   useEffect(() => {
     if (!isReady || busy) return;
     if (hydratedActiveIdRef.current === activeId) return;
     hydratedActiveIdRef.current = activeId;
+    const historySettings = adapter.settings?.conversation;
+    const generationSettings = savedGenerationSettings
+      ?? historySettings?.defaults;
+    if (historySettings && generationSettings) {
+      setSettings((current) =>
+        historySettings.restore(current, generationSettings)
+      );
+    }
     const hydrated = adapter.hydrate({
       history: persistedMessages,
       previewMessages: persistedPreviewMessages,
@@ -938,7 +882,6 @@ export function ChatController<
     const nextMetrics = hydrated.metrics ?? {};
     metricsRef.current = nextMetrics;
     setMetrics(nextMetrics);
-    setUsage({ ...EMPTY_CHAT_TOKEN_USAGE });
     setPreviewRevision((value) => value + 1);
     metricsPersistenceReadyRef.current = persistedMessages.some(
       (message) => message.role === 'assistant',
@@ -952,6 +895,7 @@ export function ChatController<
     persistedPreviewMessages,
     persistedPreviewPayloadUrls,
     resetLivePreviewDelivery,
+    savedGenerationSettings,
     setCurrentOutput,
     setCurrentPreviewOutput,
     setCurrentPreviewPayloadUrls,
@@ -1136,6 +1080,37 @@ export function ChatController<
     };
   }, []);
 
+  const trackTurnUsage = useCallback(
+    (pendingId: string, requestSettings: TSettings) => {
+      let record: GenerationUsageRecord = {
+        model: 'Server default',
+        ...adapter.settings?.usageModel?.(requestSettings),
+        usage: {},
+      };
+      return {
+        current: () => record,
+        observe(payload: unknown) {
+          const usage = readResponseUsage(payload);
+          const generationAttempts = readGenerationAttempts(payload);
+          if (!usage && !generationAttempts) return;
+          record = {
+            ...record,
+            ...(usage ? { usage } : {}),
+            ...(generationAttempts ? { generationAttempts } : {}),
+          };
+          setMessages(current =>
+            current.map(message =>
+              message.id === pendingId
+                ? { ...message, generationUsage: record }
+                : message
+            )
+          );
+        },
+      };
+    },
+    [adapter.settings],
+  );
+
   const handleStreamEmission = useCallback((
     emission: ChatStreamEmission<TOutput>,
     pendingId: string,
@@ -1154,10 +1129,7 @@ export function ChatController<
       );
       return;
     }
-    if (emission.type === 'usage') {
-      setUsage((current) => addTokenUsage(current, emission.usage));
-      return;
-    }
+    if (emission.type === 'usage') return;
     if (emission.type === 'previewPayload') {
       setCurrentPreviewPayloadUrls(emission.value);
       return;
@@ -1165,6 +1137,7 @@ export function ChatController<
     const nextOutput = emission.type === 'partial' && adapter.preview.merge
       ? adapter.preview.merge(outputRef.current, emission.output)
       : emission.output;
+    const previousOutput = outputRef.current;
     setCurrentOutput(nextOutput);
     if (emission.type === 'partial') {
       if (adapter.preview.delivery === 'live-message') {
@@ -1179,7 +1152,13 @@ export function ChatController<
     }
     if (adapter.preview.delivery === 'live-message') {
       setCurrentPreviewOutput(nextOutput);
-      queueOrPostLiveOutput('A2UI_REPLAY_MESSAGES', nextOutput);
+      if (
+        pendingLiveOutputsRef.current.length > 0
+        || previousOutput === null
+        || !adapter.preview.isEquivalent?.(previousOutput, nextOutput)
+      ) {
+        queueOrPostLiveOutput('A2UI_REPLAY_MESSAGES', nextOutput);
+      }
     } else {
       resetLivePreviewDelivery();
       setCurrentPreviewOutput(nextOutput);
@@ -1188,6 +1167,7 @@ export function ChatController<
   }, [
     adapter.preview.delivery,
     adapter.preview.merge,
+    adapter.preview.isEquivalent,
     adapter.transcript,
     queueOrPostLiveOutput,
     resetLivePreviewDelivery,
@@ -1196,13 +1176,23 @@ export function ChatController<
     setCurrentPreviewPayloadUrls,
   ]);
 
-  const handleSend = useCallback(() => {
-    const prompt = inputValue.trim();
+  const observeGenerationMetrics = useCallback((event: ChatSseEvent) => {
+    if (!['metrics', 'done', 'error', 'json'].includes(event.event)) return;
+    const patch = readGenerationMetrics(event.data);
+    if (!patch) return;
+    const next = mergeMetrics(metricsRef.current, patch);
+    metricsRef.current = next;
+    setMetrics(next);
+  }, []);
+
+  const handleSend = useCallback((retryPrompt?: string) => {
+    const prompt = (retryPrompt ?? inputValue).trim();
     const validationError = adapter.settings?.validate?.(
       settingsRef.current,
     );
     if (
-      !isReady || !prompt || busy
+      !isReady || !prompt || busy || generationAbortRef.current !== null
+      || actionAbortRef.current !== null
       || validationError !== undefined
     ) return;
     abortOperations();
@@ -1246,16 +1236,27 @@ export function ChatController<
     resetLivePreviewDelivery();
     setCurrentOutput(null);
     setCurrentPreviewOutput(adapter.preview.initialOutput?.() ?? null);
+    // Start a new live session explicitly; finishing it keeps the same iframe.
+    if (adapter.preview.delivery === 'live-message') {
+      setPreviewRevision(value => value + 1);
+    }
     setCurrentPreviewPayloadUrls(null);
-    setUsage({ ...EMPTY_CHAT_TOKEN_USAGE });
     metricsRef.current = {};
     setMetrics({});
     metricsPersistenceReadyRef.current = false;
     setIsGenerating(true);
 
+    const requestSettings = settingsRef.current;
+    const turnUsage = trackTurnUsage(pendingId, requestSettings);
     void (async () => {
       try {
-        const requestSettings = settingsRef.current;
+        const generationSettings = adapter.settings?.conversation?.snapshot(
+          requestSettings,
+        );
+        if (generationSettings) {
+          await recordGenerationSettings(generationSettings);
+        }
+        controller.signal.throwIfAborted();
         const request = await adapter.createRequest({
           prompt,
           conversation: requestConversation,
@@ -1275,6 +1276,8 @@ export function ChatController<
         });
         if (!response.ok) {
           const payload: unknown = await response.json().catch(() => ({}));
+          turnUsage.observe(payload);
+          recordInteraction('error', payload);
           throw new Error(adapter.stream.error(payload));
         }
         const finalOutput = await consumeResponse(
@@ -1282,7 +1285,14 @@ export function ChatController<
           adapter.stream,
           {
             signal: controller.signal,
-            onEvent: (event) => recordInteraction(event.event, event.data),
+            onEvent: (event) => {
+              recordInteraction(event.event, event.data);
+              if (controller.signal.aborted || runIdRef.current !== runId) {
+                return;
+              }
+              turnUsage.observe(event.data);
+              observeGenerationMetrics(event);
+            },
             onEmission: (emission) => {
               if (runIdRef.current !== runId) return;
               if (emission.type === 'usage') {
@@ -1294,10 +1304,14 @@ export function ChatController<
         );
         if (controller.signal.aborted || runIdRef.current !== runId) return;
 
+        const streamedOutput = outputRef.current;
         setCurrentOutput(finalOutput);
         if (
           adapter.preview.delivery === 'live-message'
           && previewOutputRef.current !== finalOutput
+          && (pendingLiveOutputsRef.current.length > 0
+            || streamedOutput === null
+            || !adapter.preview.isEquivalent?.(streamedOutput, finalOutput))
         ) {
           queueOrPostLiveOutput('A2UI_REPLAY_MESSAGES', finalOutput);
         }
@@ -1305,11 +1319,7 @@ export function ChatController<
         if (adapter.preview.delivery === 'reload') {
           setPreviewRevision((value) => value + 1);
         }
-        const nextMetrics = mergeMetrics(metricsRef.current, {
-          agentOutputMs: performance.now() - startedAt,
-        });
-        metricsRef.current = nextMetrics;
-        setMetrics(nextMetrics);
+        const nextMetrics = metricsRef.current;
         const persistence = adapter.persist(finalOutput, {
           kind: 'create',
           current: previousOutput,
@@ -1319,6 +1329,7 @@ export function ChatController<
           userMessage,
           ...persistence,
           previewMetrics: nextMetrics,
+          generationUsage: turnUsage.current(),
         });
         metricsPersistenceReadyRef.current = true;
         void updateLastAssistantPreviewMetrics(metricsRef.current);
@@ -1327,7 +1338,15 @@ export function ChatController<
           current.flatMap((message) =>
             message.id === pendingId
               ? adapter.transcript.success(finalOutput).map((result, index) =>
-                index === 0 ? { ...result, id: pendingId, interaction } : result
+                index === 0
+                  ? {
+                    ...result,
+                    id: pendingId,
+                    interaction,
+                    generationUsage: turnUsage.current(),
+                    metrics: nextMetrics,
+                  }
+                  : result
               )
               : [message]
           )
@@ -1335,12 +1354,24 @@ export function ChatController<
       } catch (error) {
         if (controller.signal.aborted || runIdRef.current !== runId) return;
         recordInteraction('error', getErrorMessage(error));
+        await recordTurn({
+          userMessage,
+          assistantContent: '',
+          previewMetrics: metricsRef.current,
+          generationError: getErrorMessage(error),
+          generationUsage: turnUsage.current(),
+          a2uiMessages: [],
+          previewMessages: persistedPreviewMessages,
+          snapshotPreviewPayloadUrls: persistedPreviewPayloadUrls,
+        });
         setMessages((current) =>
           current.map((message) =>
             message.id === pendingId
               ? {
                 ...message,
                 ...adapter.transcript.failure(getErrorMessage(error)),
+                metrics: metricsRef.current,
+                generationUsage: turnUsage.current(),
                 id: pendingId,
               }
               : message
@@ -1359,11 +1390,16 @@ export function ChatController<
     buildConversationContext,
     busy,
     handleStreamEmission,
+    trackTurnUsage,
+    observeGenerationMetrics,
+    persistedPreviewMessages,
+    persistedPreviewPayloadUrls,
     host,
     inputValue,
     isReady,
     queueOrPostLiveOutput,
     recordTurn,
+    recordGenerationSettings,
     resetLivePreviewDelivery,
     setCurrentOutput,
     setCurrentPreviewOutput,
@@ -1394,7 +1430,6 @@ export function ChatController<
     setCurrentOutput(hydrated.output);
     setCurrentPreviewOutput(hydrated.output);
     setCurrentPreviewPayloadUrls(null);
-    setUsage({ ...EMPTY_CHAT_TOKEN_USAGE });
     metricsRef.current = hydrated.metrics ?? {};
     setMetrics(hydrated.metrics ?? {});
     metricsPersistenceReadyRef.current = false;
@@ -1520,197 +1555,243 @@ export function ChatController<
     }
   }, [updateLastAssistantPreviewMetrics]);
 
-  useEffect(() => {
+  const handleAction = useCallback((action: TAction) => {
     const actionAdapter = adapter.action;
-    if (!actionAdapter) return;
-    const handleMessage = (event: MessageEvent<unknown>) => {
-      const frame = previewFrameRef.current;
-      if (!frame?.contentWindow || event.source !== frame.contentWindow) return;
-      if (event.origin !== targetOriginForUrl(frame.src, host)) return;
-      if (generationAbortRef.current !== null) return;
-      const action = actionAdapter.parseWindowMessage(event.data);
-      if (action === null) return;
-      const validationError = adapter.settings?.validate?.(
-        settingsRef.current,
-      );
-      if (validationError !== undefined) {
-        setMessages((current) => [
-          ...current,
-          {
-            kind: 'status',
-            tone: 'error',
-            icon: 'error',
-            text: validationError,
-          },
-        ]);
-        return;
-      }
-
-      actionAbortRef.current?.abort();
-      const controller = new AbortController();
-      actionAbortRef.current = controller;
-      const runId = ++runIdRef.current;
-      const currentOutput = outputRef.current;
-      const requestConversation = buildConversationContext();
-      const label = actionAdapter.label(action);
-      const pendingId = createMessageId(`${adapter.id}-action`);
-      const userMessage: ModelChatMessage = {
-        role: 'user',
-        content: actionAdapter.userText(action),
-      };
-      const startedAt = performance.now();
-      let actionPreviewPayloadUrls: PreviewPayloadUrls | null = null;
-      let streamedResponseOutput: TOutput | null = null;
-      metricsPersistenceReadyRef.current = false;
-      setIsActionRunning(true);
+    if (
+      !actionAdapter || !isReady || generationAbortRef.current !== null
+      || actionAbortRef.current !== null
+    ) return;
+    const validationError = adapter.settings?.validate?.(
+      settingsRef.current,
+    );
+    if (validationError !== undefined) {
       setMessages((current) => [
         ...current,
         {
-          kind: 'action',
-          text: `Action: ${label}`,
-          payload: action,
-          payloadLayout: 'single',
-        },
-        {
-          id: pendingId,
-          kind: 'output',
-          tone: 'pending',
-          icon: 'spinner',
-          text: 'LLM Response',
+          kind: 'status',
+          tone: 'error',
+          icon: 'error',
+          text: validationError,
         },
       ]);
+      return;
+    }
 
-      void (async () => {
-        try {
-          const requestSettings = settingsRef.current;
-          const request = actionAdapter.request({
-            action,
-            conversation: requestConversation,
-            settings: requestSettings,
-            host,
-          });
-          adapter.settings?.validateRequest?.(requestSettings, request.url);
-          const response = await window.fetch(
-            request.url,
-            createChatRequestInit(request, controller.signal),
-          );
-          if (!response.ok) {
-            const payload: unknown = await response.json().catch(() => ({}));
-            throw new Error(actionAdapter.stream.error(payload));
-          }
-          const responseOutput = await consumeResponse(
-            response,
-            actionAdapter.stream,
-            {
-              signal: controller.signal,
-              onEmission: (emission) => {
-                if (runIdRef.current !== runId) return;
-                if (emission.type === 'usage') {
-                  setUsage((current) => addTokenUsage(current, emission.usage));
-                } else if (emission.type === 'previewPayload') {
-                  actionPreviewPayloadUrls = emission.value;
-                } else if (emission.type === 'partial') {
-                  streamedResponseOutput = actionAdapter.merge(
-                    streamedResponseOutput,
+    const controller = new AbortController();
+    actionAbortRef.current = controller;
+    const runId = ++runIdRef.current;
+    const currentOutput = outputRef.current;
+    const requestConversation = buildConversationContext();
+    const label = actionAdapter.label(action);
+    const pendingId = createMessageId(`${adapter.id}-action`);
+    const userMessage: ModelChatMessage = {
+      role: 'user',
+      content: actionAdapter.userText(action),
+    };
+    const startedAt = performance.now();
+    let actionPreviewPayloadUrls: PreviewPayloadUrls | null = null;
+    let interaction: ChatInteractionLog = { entries: [], omittedEntries: 0 };
+    const recordInteraction = (event: string, data: unknown) => {
+      interaction = appendChatInteraction(
+        interaction,
+        event,
+        performance.now() - startedAt,
+        data,
+      );
+    };
+    let streamedResponseOutput: TOutput | null = null;
+    metricsPersistenceReadyRef.current = false;
+    metricsRef.current = { ...metricsRef.current, generationMs: undefined };
+    setMetrics(metricsRef.current);
+    setIsActionRunning(true);
+    setMessages((current) => [
+      ...current,
+      {
+        kind: 'action',
+        text: `Action: ${label}`,
+        payload: action,
+        payloadLayout: 'single',
+      },
+      {
+        id: pendingId,
+        kind: 'output',
+        tone: 'pending',
+        icon: 'spinner',
+        text: 'LLM Response',
+      },
+    ]);
+
+    const requestSettings = settingsRef.current;
+    const turnUsage = trackTurnUsage(pendingId, requestSettings);
+    void (async () => {
+      try {
+        const generationSettings = adapter.settings?.conversation?.snapshot(
+          requestSettings,
+        );
+        if (generationSettings) {
+          await recordGenerationSettings(generationSettings);
+        }
+        controller.signal.throwIfAborted();
+        const request = actionAdapter.request({
+          action,
+          conversation: requestConversation,
+          settings: requestSettings,
+          host,
+        });
+        adapter.settings?.validateRequest?.(requestSettings, request.url);
+        const response = await window.fetch(
+          request.url,
+          createChatRequestInit(request, controller.signal),
+        );
+        if (!response.ok) {
+          const payload: unknown = await response.json().catch(() => ({}));
+          turnUsage.observe(payload);
+          recordInteraction('error', payload);
+          throw new Error(actionAdapter.stream.error(payload));
+        }
+        const responseOutput = await consumeResponse(
+          response,
+          actionAdapter.stream,
+          {
+            signal: controller.signal,
+            onEvent: (event) => {
+              recordInteraction(event.event, event.data);
+              if (controller.signal.aborted || runIdRef.current !== runId) {
+                return;
+              }
+              turnUsage.observe(event.data);
+              observeGenerationMetrics(event);
+            },
+            onEmission: (emission) => {
+              if (runIdRef.current !== runId) return;
+              if (emission.type === 'previewPayload') {
+                actionPreviewPayloadUrls = emission.value;
+              } else if (emission.type === 'partial') {
+                streamedResponseOutput = actionAdapter.merge(
+                  streamedResponseOutput,
+                  emission.output,
+                );
+                setMessages((current) =>
+                  current.map((message) =>
+                    message.id === pendingId
+                      ? {
+                        ...message,
+                        payload: streamedResponseOutput,
+                        payloadLayout: 'chunks',
+                      }
+                      : message
+                  )
+                );
+                if (adapter.preview.delivery === 'live-message') {
+                  queueOrPostLiveOutput(
+                    'A2UI_ACTION_RESPONSE',
                     emission.output,
                   );
-                  setMessages((current) =>
-                    current.map((message) =>
-                      message.id === pendingId
-                        ? {
-                          ...message,
-                          payload: streamedResponseOutput,
-                          payloadLayout: 'chunks',
-                        }
-                        : message
-                    )
-                  );
-                  if (adapter.preview.delivery === 'live-message') {
-                    queueOrPostLiveOutput(
-                      'A2UI_ACTION_RESPONSE',
-                      emission.output,
-                    );
-                  }
                 }
-              },
+              }
             },
-          );
-          if (controller.signal.aborted || runIdRef.current !== runId) return;
-          const mergedOutput = actionAdapter.merge(
+          },
+        );
+        if (controller.signal.aborted || runIdRef.current !== runId) return;
+        const mergedOutput = actionAdapter.merge(
+          currentOutput,
+          responseOutput,
+        );
+        setCurrentPreviewPayloadUrls(null);
+        setCurrentOutput(mergedOutput);
+        setCurrentPreviewOutput(mergedOutput);
+        if (adapter.preview.delivery === 'live-message') {
+          const streamedOutput = actionAdapter.merge(
             currentOutput,
-            responseOutput,
+            streamedResponseOutput ?? responseOutput,
           );
-          setCurrentPreviewPayloadUrls(null);
-          setCurrentOutput(mergedOutput);
-          setCurrentPreviewOutput(mergedOutput);
-          if (adapter.preview.delivery === 'live-message') {
+          if (
+            pendingLiveOutputsRef.current.length > 0
+            || streamedResponseOutput === null
+            || !adapter.preview.isEquivalent?.(streamedOutput, mergedOutput)
+          ) {
             queueOrPostLiveOutput('A2UI_REPLAY_MESSAGES', mergedOutput);
-          } else {
-            resetLivePreviewDelivery();
-            setPreviewRevision((value) => value + 1);
           }
-          const nextMetrics = mergeMetrics(metricsRef.current, {
-            agentOutputMs: performance.now() - startedAt,
-          });
-          metricsRef.current = nextMetrics;
-          setMetrics(nextMetrics);
-          const persistence = adapter.persist(responseOutput, {
-            kind: 'action',
-            current: currentOutput,
-            previewPayloadUrls: actionPreviewPayloadUrls,
-          });
-          await recordTurn({
-            userMessage,
-            ...persistence,
-            previewMetrics: nextMetrics,
-          });
-          metricsPersistenceReadyRef.current = true;
-          void updateLastAssistantPreviewMetrics(metricsRef.current);
-          setMessages((current) =>
-            current.flatMap((message) =>
-              message.id === pendingId
-                ? [{
-                  id: pendingId,
-                  kind: 'output' as const,
-                  text: 'LLM Response',
-                  payload: responseOutput,
-                  payloadLayout: 'chunks' as const,
-                }]
-                : [message]
-            )
-          );
-        } catch (error) {
-          if (controller.signal.aborted || runIdRef.current !== runId) return;
-          metricsPersistenceReadyRef.current = true;
-          setMessages((current) =>
-            current.map((message) =>
-              message.id === pendingId
-                ? {
-                  id: pendingId,
-                  kind: 'status',
-                  tone: 'error',
-                  icon: 'error',
-                  text: `Action failed: ${getErrorMessage(error)}`,
-                }
-                : message
-            )
-          );
-        } finally {
-          if (actionAbortRef.current === controller) {
-            actionAbortRef.current = null;
-          }
-          if (runIdRef.current === runId) setIsActionRunning(false);
+        } else {
+          resetLivePreviewDelivery();
+          setPreviewRevision((value) => value + 1);
         }
-      })();
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+        const nextMetrics = metricsRef.current;
+        const persistence = adapter.persist(responseOutput, {
+          kind: 'action',
+          current: currentOutput,
+          previewPayloadUrls: actionPreviewPayloadUrls,
+        });
+        await recordTurn({
+          userMessage,
+          ...persistence,
+          previewMetrics: nextMetrics,
+          generationUsage: turnUsage.current(),
+        });
+        metricsPersistenceReadyRef.current = true;
+        void updateLastAssistantPreviewMetrics(metricsRef.current);
+        setMessages((current) =>
+          current.flatMap((message) =>
+            message.id === pendingId
+              ? [{
+                id: pendingId,
+                kind: 'output' as const,
+                text: 'LLM Response',
+                metrics: nextMetrics,
+                generationUsage: turnUsage.current(),
+                payload: responseOutput,
+                payloadLayout: 'chunks' as const,
+              }]
+              : [message]
+          )
+        );
+      } catch (error) {
+        if (controller.signal.aborted || runIdRef.current !== runId) return;
+        metricsPersistenceReadyRef.current = true;
+        await recordTurn({
+          userMessage,
+          assistantContent: '',
+          previewMetrics: metricsRef.current,
+          generationError: `Action failed: ${getErrorMessage(error)}`,
+          generationUsage: turnUsage.current(),
+          a2uiMessages: [],
+          previewMessages: persistedPreviewMessages,
+          snapshotPreviewPayloadUrls: persistedPreviewPayloadUrls,
+        });
+        setMessages((current) =>
+          current.map((message) =>
+            message.id === pendingId
+              ? {
+                id: pendingId,
+                kind: 'status',
+                tone: 'error',
+                icon: 'error',
+                text: `Action failed: ${getErrorMessage(error)}`,
+                metrics: metricsRef.current,
+                generationUsage: turnUsage.current(),
+                interaction,
+              }
+              : message
+          )
+        );
+      } finally {
+        if (actionAbortRef.current === controller) {
+          actionAbortRef.current = null;
+        }
+        if (runIdRef.current === runId) setIsActionRunning(false);
+      }
+    })();
   }, [
     adapter,
     buildConversationContext,
+    trackTurnUsage,
+    observeGenerationMetrics,
+    persistedPreviewMessages,
+    persistedPreviewPayloadUrls,
     host,
+    isReady,
     queueOrPostLiveOutput,
+    recordGenerationSettings,
     recordTurn,
     resetLivePreviewDelivery,
     setCurrentOutput,
@@ -1718,6 +1799,27 @@ export function ChatController<
     setCurrentPreviewPayloadUrls,
     updateLastAssistantPreviewMetrics,
   ]);
+
+  useEffect(() => {
+    const actionAdapter = adapter.action;
+    if (!actionAdapter) return;
+    const handleMessage = (event: MessageEvent<unknown>) => {
+      const frame = previewFrameRef.current;
+      if (!frame?.contentWindow || event.source !== frame.contentWindow) return;
+      if (event.origin !== targetOriginForUrl(frame.src, host)) return;
+      const action = actionAdapter.parseWindowMessage(event.data);
+      if (action !== null) handleAction(action);
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [adapter.action, handleAction, host]);
+
+  const lastUserMessage = persistedMessages[persistedMessages.length - 2];
+  const retryMessage = !busy && messages[messages.length - 1]?.tone === 'error'
+      && persistedMessages[persistedMessages.length - 1]?.generationError
+      && lastUserMessage?.role === 'user'
+    ? lastUserMessage
+    : undefined;
 
   const settingsControls = adapter.settings?.controls(settings) ?? [];
   const selectControls = settingsControls.filter((item) =>
@@ -1731,8 +1833,19 @@ export function ChatController<
   );
   const updateSetting = (id: string, value: string) => {
     const settingsAdapter = adapter.settings;
-    if (!settingsAdapter) return;
-    setSettings((current) => settingsAdapter.update(current, id, value));
+    if (!settingsAdapter || !isReady || busy) return;
+    if (
+      generationSettingsLocked
+      && checkboxControls.some(control => control.id === id)
+    ) return;
+    const next = settingsAdapter.update(settingsRef.current, id, value);
+    settingsRef.current = next;
+    setSettings(next);
+    if (isReady && settingsAdapter.conversation) {
+      void recordGenerationSettings(
+        settingsAdapter.conversation.snapshot(next),
+      );
+    }
   };
   const artifact = output === null
     ? null
@@ -1759,18 +1872,21 @@ export function ChatController<
     : undefined;
   const extraMetrics = useMemo<PreviewPanelMetricItem[]>(
     () =>
-      isGenerating
+      busy
         || output !== null
-        || typeof metrics.agentOutputMs === 'number'
+        || typeof metrics.generationMs === 'number'
         || typeof metrics.renderMs === 'number'
         ? [
-          {
-            key: 'agentOutputMs',
-            label: 'Agent',
-            title: 'Agent output duration',
-            description: 'Time from request until final agent output.',
-            value: metrics.agentOutputMs,
-          },
+          ...(busy || typeof metrics.generationMs === 'number'
+            ? [{
+              key: 'generationMs',
+              label: 'Generation',
+              title: 'Generation duration',
+              description:
+                'Server generation time, including tools and validation; excludes artifact upload, client transport and rendering.',
+              value: metrics.generationMs,
+            }]
+            : []),
           {
             key: 'renderMs',
             label: 'Render',
@@ -1781,7 +1897,7 @@ export function ChatController<
           },
         ]
         : [],
-    [isGenerating, metrics.agentOutputMs, metrics.renderMs, output],
+    [busy, metrics.generationMs, metrics.renderMs, output],
   );
   const showStarterContent = messages.length <= 1;
 
@@ -1836,48 +1952,6 @@ export function ChatController<
                   Browse examples
                 </button>
               )}
-            {usage.totalTokens > 0
-              ? (
-                <span className='chatTokenUsageBadge'>
-                  <span className='chatTokenUsageItem'>
-                    Prompt {formatTokenCount(usage.promptTokens)}
-                  </span>
-                  <span
-                    className='chatTokenUsageItem'
-                    title={usage.cachedTokens === undefined
-                      ? 'Cache read usage was not reported for every model call.'
-                      : 'Input tokens read from the prompt cache, as a percentage of Prompt. Included in Prompt and Total.'}
-                  >
-                    Cached {usage.cachedTokens === undefined
-                      ? '—'
-                      : formatTokenCount(usage.cachedTokens)}
-                    {usage.cachedTokens !== undefined && usage.promptTokens > 0
-                      ? ` (${
-                        (usage.cachedTokens / usage.promptTokens * 100).toFixed(
-                          1,
-                        )
-                      }%)`
-                      : null}
-                  </span>
-                  {usage.cacheWriteTokens === undefined
-                    ? null
-                    : (
-                      <span
-                        className='chatTokenUsageItem'
-                        title='Input tokens written to the prompt cache. Included in Prompt and Total.'
-                      >
-                        Cache write {formatTokenCount(usage.cacheWriteTokens)}
-                      </span>
-                    )}
-                  <span className='chatTokenUsageItem'>
-                    Output {formatTokenCount(usage.completionTokens)}
-                  </span>
-                  <span className='chatTokenUsageItem chatTokenUsageTotal'>
-                    Total {formatTokenCount(usage.totalTokens)}
-                  </span>
-                </span>
-              )
-              : null}
           </>
         ),
       }}
@@ -1886,6 +1960,30 @@ export function ChatController<
       messages={
         <>
           <MessageList messages={messages} onCopy={handleCopyText} />
+          {retryMessage
+            ? (
+              <div
+                className='chatRetryPrompt'
+                role='group'
+                aria-label='Retry failed request'
+              >
+                <span>Retry this request?</span>
+                <Button
+                  variant='secondary'
+                  disabled={settingsValidationError !== undefined}
+                  onClick={() => {
+                    const action = adapter.action?.parseUserText?.(
+                      retryMessage.content,
+                    );
+                    if (action == null) handleSend(retryMessage.content);
+                    else handleAction(action);
+                  }}
+                >
+                  Retry
+                </Button>
+              </div>
+            )
+            : null}
           {artifact
             ? <ArtifactViewer artifact={artifact} onCopy={handleCopyText} />
             : null}
@@ -2025,44 +2123,68 @@ export function ChatController<
               )
               : null}
             <div className='chatComposerFooter'>
-              <div
-                className={checkboxControls.length > 1
-                  ? 'chatProviderControl chatProviderControlWrap'
-                  : 'chatProviderControl'}
-              >
-                {selectControls.map((control) => (
-                  <select
-                    key={control.id}
-                    className='chatProviderSelect'
-                    title={control.label}
-                    aria-label={control.label}
-                    value={control.value}
-                    disabled={busy || control.disabled}
-                    onChange={(event) =>
-                      updateSetting(control.id, event.target.value)}
-                  >
-                    {control.options?.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                ))}
-                {checkboxControls.map((control) => (
-                  <label key={control.id} className='chatProviderCheckbox'>
-                    <input
-                      type='checkbox'
-                      checked={control.value === 'on'}
-                      disabled={busy || control.disabled}
-                      onChange={(event) =>
-                        updateSetting(
-                          control.id,
-                          event.target.checked ? 'on' : 'off',
-                        )}
-                    />
-                    <span>{control.label}</span>
-                  </label>
-                ))}
+              <div className='chatProviderControl'>
+                {selectControls.length > 0
+                  ? (
+                    <div className='chatProviderSelectGroup'>
+                      {selectControls.map((control) => (
+                        <label
+                          key={control.id}
+                          className='chatProviderSelectField'
+                        >
+                          <span className='chatProviderSelectLabel'>
+                            {control.label}
+                          </span>
+                          <select
+                            className='chatProviderSelect'
+                            title={control.options?.find((option) =>
+                              option.value === control.value
+                            )?.label ?? control.label}
+                            aria-label={control.label}
+                            value={control.value}
+                            disabled={busy || control.disabled}
+                            onChange={(event) =>
+                              updateSetting(control.id, event.target.value)}
+                          >
+                            {control.options?.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      ))}
+                    </div>
+                  )
+                  : null}
+                {checkboxControls.length > 0
+                  ? (
+                    <div className='chatProviderOptions'>
+                      {checkboxControls.map((control) => (
+                        <label
+                          key={control.id}
+                          className='chatProviderCheckbox'
+                          title={generationSettingsLocked
+                            ? 'Saved generation options. Start a new chat to change them.'
+                            : control.description}
+                        >
+                          <input
+                            type='checkbox'
+                            checked={control.value === 'on'}
+                            disabled={!isReady || busy
+                              || generationSettingsLocked || control.disabled}
+                            onChange={(event) =>
+                              updateSetting(
+                                control.id,
+                                event.target.checked ? 'on' : 'off',
+                              )}
+                          />
+                          <span>{control.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )
+                  : null}
               </div>
               <Button
                 variant='primary'
@@ -2071,7 +2193,7 @@ export function ChatController<
                 disabled={!isReady || busy || inputValue.trim().length === 0
                   || settingsValidationError !== undefined}
                 title={settingsValidationError}
-                onClick={handleSend}
+                onClick={() => handleSend()}
               >
                 {isGenerating ? 'Generating' : 'Send'}
               </Button>

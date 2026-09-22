@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 
 import { A2UI_DEMOS_PAGE_SOURCE } from './a2ui.js';
+import { ExampleTokenCount } from './ExampleTokenCount.js';
 import { LYNX_XML_DEMOS_PAGE_SOURCE } from './lynx-xml.js';
 import { MCP_APPS_DEMOS_PAGE_SOURCE } from './mcp-apps.js';
 import { OPENUI_DEMOS_PAGE_SOURCE } from './openui.js';
@@ -691,7 +692,11 @@ function DemosPageContent<
               </div>
               {source.editor.views && source.editor.views.length > 1
                 ? (
-                  <div className='previewModeSwitch openuiCodeViewSwitch'>
+                  <div
+                    className='previewModeSwitch openuiCodeViewSwitch'
+                    role='group'
+                    aria-label='Code view'
+                  >
                     {source.editor.views.map((view) => (
                       <button
                         key={view.id}
@@ -701,6 +706,7 @@ function DemosPageContent<
                           : 'previewModeBtn'}
                         onClick={() => setActiveEditorView(view.id)}
                         title={view.title}
+                        aria-pressed={activeEditorView === view.id}
                       >
                         {view.label}
                       </button>
@@ -772,6 +778,7 @@ function DemosPageContent<
               theme='dark'
               basicSetup={source.editor.basicSetup}
             />
+            <ExampleTokenCount source={displayedEditorValue} />
             {error ? <div className='codeError'>{error}</div> : null}
           </div>
         </div>

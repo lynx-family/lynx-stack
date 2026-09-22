@@ -1,0 +1,13 @@
+---
+applyTo: "Dockerfile,.dockerignore,.github/workflows/test.yml,.github/workflows/test-docker.yml,.github/workflows/deploy-main.yml"
+---
+
+Keep the workspace image based on Ubuntu 26.04 and build it for Linux amd64, the supported Linux architecture of the bundled Lynx runtime. Read Node and Rust versions from `.nvmrc` and `rust-toolchain.toml`, and keep the Corepack version aligned with `.github/actions/pnpm-install/action.yml`.
+
+Build npm workspaces through the repository-root Turbo command used by `deploy-main.yml`, excluding both `benchx_cli` and `@lynx-js/benchmark-*`. Keep Wasm packages in this build. Exclude `swc_plugin_reactlynx`, `swc_plugin_reactlynx_compat`, and `web-core` only from the subsequent native Cargo build, and enable `ui_judge/server` to include its optional binary and packaged runtime assets.
+
+Use separate builder and runtime stages. Keep only Node, production workspace dependencies, package outputs, and final native deliverables in the runtime image. Reinstall production dependencies with `--prefer-offline --frozen-lockfile --ignore-scripts` after removing workspace `node_modules`; do not rely on `pnpm prune` to prune a monorepo. Avoid `--offline`: a previous full install does not guarantee every package snapshot remains available for the production reinstall, so missing snapshots must be allowed to download. Preserve source files exported by workspace packages. Remove Cargo targets, build caches, and generated source maps before copying the workspace into the runtime stage. Copy both Rust executables, the React transform shared library, the generated launcher, the Lynx runtime library, and `lynx_core.js` explicitly. Strip only binaries built here, preserving the downloaded Lynx runtime unchanged. Do not copy compiler toolchains, package managers, headers, or download caches into the final image. Use BuildKit cache export `mode=min` so CI builds do not export intermediate builder layers.
+
+Set runtime `LYNX_LIB_PATH` and `LYNX_CORE_JS_PATH` to the copied assets. The headless runner otherwise retains Cargo-injected paths into the SDK cache removed during cleanup.
+
+Do not copy host `node_modules`, Cargo targets, Turbo caches, or local environment files into the Docker build context. Validate the complete Dockerfile in the independent `test-docker.yml` workflow only for pull requests changing `.github/workflows/**`. Start without depending on the Ubuntu build, and keep Docker validation out of `test.yml` and its `done.needs`. Do not add push or merge-group triggers that would run this expensive build unconditionally. Build without pushing images, registry credentials, or `packages: write` permission. Do not build Docker images in `deploy-main.yml`. Pin Docker Actions to verified commit SHAs.

@@ -8,6 +8,12 @@
     // Delay npm updates by 3 days so risky or unpublished releases have time to surface.
     "security:minimumReleaseAgeNpm",
     ":disableRateLimiting",
+    // Automerge non-major updates of semver-stable (non-0.x) packages, and all
+    // `@types/*`, once CI is green. Groups below opt out where a green CI is
+    // not enough of a signal. Note that a grouped PR only automerges when
+    // *every* upgrade in it is automergeable.
+    ":automergeStableNonMajor",
+    ":automergeTypes",
   ],
 
   // Exclude `examples` from "config:recommended"
@@ -61,20 +67,6 @@
       "allowedVersions": "<4",
     },
     {
-      // >=1.29 adds a `types` condition to the `./*` subpath export that does
-      // not strip the `.js` extension:
-      //
-      //   "./*": { "types": "./dist/esm/*.d.ts", "import": "./dist/esm/*", ... }
-      //
-      // so `@modelcontextprotocol/sdk/server/mcp.js` resolves its types to
-      // `dist/esm/server/mcp.js.d.ts`, which the package does not ship. The
-      // TypeScript resolver prefers the `types` condition, so `eslint` fails
-      // `import/no-unresolved` on `packages/mcp-servers/docs-mcp-server`
-      // (#3210, and again in #3213). Lift this once upstream ships a fix.
-      "matchPackageNames": ["@modelcontextprotocol/sdk"],
-      "allowedVersions": "<1.29",
-    },
-    {
       // Batch low-risk updates: all devDependencies minor/patch bumps share one
       // rolling PR instead of one PR each. Kept near the top on purpose -- the
       // specific groups below (Rspack, types, linting, ...) match later and win,
@@ -118,6 +110,7 @@
         "dependencies",
         "pnpm.catalog.rspack",
       ],
+      "automerge": false,
       "matchPackageNames": [
         "/@rspack/*/",
       ],
@@ -132,6 +125,7 @@
         "dependencies",
         "pnpm.catalog.rsbuild",
       ],
+      "automerge": false,
       "matchPackageNames": [
         "/@rsbuild/*/",
         "/rsbuild-plugin-*/",
@@ -151,6 +145,7 @@
         "dependencies",
         "pnpm.catalog.rstest",
       ],
+      "automerge": false,
       "matchPackageNames": [
         "/@rstest/*/",
       ],
@@ -163,6 +158,7 @@
         "devDependencies",
         "dependencies",
       ],
+      "automerge": false,
       "matchPackageNames": [
         "rspress",
         "/@rspress/*/",
@@ -210,6 +206,10 @@
         "@lynx-js/**",
       ],
       "minimumReleaseAge": "0 days",
+      // First-party releases are coordinated by hand (and the dated-snapshot
+      // builds above ship straight from `main`), so they get a human look
+      // instead of riding on a green CI.
+      "automerge": false,
     },
     {
       "groupName": "API Extractor",
@@ -278,6 +278,7 @@
       "matchPackageNames": [
         "@typescript/native-preview",
       ],
+      "automerge": false,
     },
     {
       "groupName": "Lynx Engine",
@@ -290,6 +291,7 @@
       "schedule": [
         "* 0-3 1 * *",
       ],
+      "automerge": false,
     },
         {
       "groupName": "Rust Crates",
@@ -314,6 +316,7 @@
         "rkyv",
         "rkyv_derive",
       ],
+      "automerge": false,
     },
     {
       "groupName": "SWC",

@@ -5,7 +5,7 @@
 /**
  * @returns {import("@lynx-js/rspeedy").RsbuildPlugin}
  */
-export const pluginScriptLoad = () => ({
+export const pluginScriptLoad = (useElementTemplate = false) => ({
   name: 'pluginScriptLoad',
   /**
    * @param {import("@lynx-js/rspeedy").RsbuildPluginAPI} api
@@ -40,8 +40,11 @@ if (typeof Codspeed !== "undefined") {
           banner: ({ filename }) => {
             if (filename.endsWith('.css')) return '';
             // TODO(hzy): avoid hardcoded case dir
-            const caseDir = `benchmark/react`;
-            const chunkName = filename.replace(/^\.lynx\//, '');
+            const caseDir = useElementTemplate
+              ? `benchmark/react/et`
+              : `benchmark/react`;
+            const chunkName = (useElementTemplate ? 'et-' : '')
+              + filename.replace(/^\.lynx\//, '');
             // dprint-ignore
             return `\
 if (typeof Codspeed !== "undefined") {

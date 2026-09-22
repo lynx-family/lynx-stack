@@ -6,8 +6,7 @@
  * Implements the IFR (Instant First-Frame Rendering) on main thread.
  */
 
-import { renderOpcodesIntoElementTemplate } from './render-opcodes.js';
-import { render as renderToString } from './render-to-opcodes.js';
+import { renderToElementTemplate } from './render-direct.js';
 import { getReloadVersion } from '../../../core/reload-version.js';
 import { profileEnd, profileStart } from '../../debug/profile.js';
 import { ElementTemplateLifecycleConstant } from '../../protocol/lifecycle-constant.js';
@@ -21,20 +20,22 @@ import { getElementTemplateNativeRef } from '../template/registry.js';
 import { TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX } from '../template/typed-attributes.js';
 
 function renderMainThread(): void {
-  let opcodes;
+  let rendered;
   profileStart('ReactLynx::renderMainThread');
   try {
-    opcodes = renderToString(__root.__jsx, undefined);
-  } catch (e) {
-    lynx.reportError(e as Error);
-    opcodes = [];
+    rendered = renderToElementTemplate(__root.__jsx, undefined);
+  } catch (error) {
+    // Like Snapshot, any failure during synchronous rendering is reported at
+    // the lifecycle boundary before committing an empty result.
+    lynx.reportError(error as Error);
+    rendered = { pageAttributes: null, rootRefs: [], rootSubtreeHandles: [] };
   } finally {
     profileEnd();
   }
 
-  profileStart('ReactLynx::renderOpcodes');
+  profileStart('ReactLynx::commitElementTemplate');
   try {
-    const { pageAttributes, rootRefs, rootSubtreeHandles } = renderOpcodesIntoElementTemplate(opcodes);
+    const { pageAttributes, rootRefs, rootSubtreeHandles } = rendered;
     __SetAttributeOfElementTemplate(__page, TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX, pageAttributes);
     for (let index = 0; index < rootRefs.length; index += 1) {
       const rootRef = rootRefs[index]!;

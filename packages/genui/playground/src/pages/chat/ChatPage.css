@@ -194,8 +194,8 @@
 .conversationListItem {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
   border: 1px solid var(--geist-border);
   border-radius: var(--geist-radius-md);
   background: var(--geist-background);
@@ -236,6 +236,7 @@
 
 .conversationListItemMain {
   min-width: 0;
+  min-height: 28px;
   padding: 0;
   border: none;
   background: transparent;
@@ -244,6 +245,7 @@
   cursor: pointer;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 3px;
 }
 
@@ -253,6 +255,7 @@
 }
 
 .conversationListItemTitle {
+  padding-right: 64px;
   overflow: hidden;
   color: var(--geist-foreground);
   font-size: 13px;
@@ -281,15 +284,13 @@
 }
 
 .conversationListItemActions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: flex-end;
   gap: 4px;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(4px);
-  transition:
-    opacity var(--geist-transition),
-    transform var(--geist-transition);
 }
 
 .historyRailClear,
@@ -316,19 +317,11 @@
   opacity: 0.4;
 }
 
-.conversationListItem:hover .conversationListItemActions,
-.conversationListItem-active .conversationListItemActions,
-.conversationListItem:focus-within .conversationListItemActions {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateX(0);
-}
-
 /* conversationIconButton / conversationIconButtonDanger: replaced by
    <Button variant="ghost"|"danger" size="sm" iconOnly>. */
 
 .conversationRenameInput {
-  width: 100%;
+  width: calc(100% - 64px);
   height: 28px;
   min-width: 0;
   border: 1px solid var(--geist-border);
@@ -392,7 +385,7 @@
   gap: 6px 8px;
   max-width: 100%;
   min-height: 26px;
-  margin-left: auto;
+  margin: 8px 0 0;
   padding: 4px 10px;
   border: 1px solid var(--geist-border);
   border-radius: 14px;
@@ -410,6 +403,12 @@
   align-items: center;
 }
 
+.chatTokenUsageModel {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .chatTokenUsageTotal {
   padding: 3px 7px;
   border: 1px solid var(--geist-border);
@@ -418,6 +417,19 @@
   color: var(--geist-foreground);
   font-size: 12px;
   font-weight: 600;
+}
+
+.chatRetryPrompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  color: var(--geist-secondary);
+  font-size: 12px;
 }
 
 .chatHeaderSub {
@@ -568,13 +580,11 @@
   list-style: none;
 }
 
-.chatAgentInteractionSummary::-webkit-details-marker,
-.chatAgentInteractionRawSummary::-webkit-details-marker {
+.chatAgentInteractionSummary::-webkit-details-marker {
   display: none;
 }
 
-.chatAgentInteractionSummary:focus-visible,
-.chatAgentInteractionRawSummary:focus-visible {
+.chatAgentInteractionSummary:focus-visible {
   outline: 2px solid var(--geist-accent);
   outline-offset: -2px;
   border-radius: var(--geist-radius-md);
@@ -590,8 +600,7 @@
   color: var(--geist-secondary);
 }
 
-.chatAgentInteraction[open] > summary .chatAgentInteractionChevron,
-.chatAgentInteractionRaw[open] > summary .chatAgentInteractionChevron {
+.chatAgentInteraction[open] > summary .chatAgentInteractionChevron {
   transform: rotate(180deg);
 }
 
@@ -633,19 +642,45 @@
   border-left: 2px solid var(--geist-border);
 }
 
+/* Divider between consecutive model interactions in the timeline. */
+.chatAgentInteractionEventDivided {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--geist-border);
+}
+
 .chatAgentInteractionTime {
   margin-left: auto;
   white-space: nowrap;
 }
 
-.chatAgentInteractionEvent pre,
-.chatAgentInteractionRawContent pre {
+.chatAgentInteractionEvent pre {
+  margin: 6px 0 0;
+  /* No inner scroll: a Model interaction shows its full detail and the whole
+     Agent interaction list (.chatAgentInteractionEvents) scrolls as one. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+}
+
+.chatAgentReasoning pre {
   margin: 6px 0 0;
   max-height: 180px;
   overflow: auto;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   font: inherit;
+}
+
+.chatAgentReasoning {
+  margin: 8px 0;
+  padding: 8px 0;
+  border-block: 1px solid var(--geist-border);
+}
+
+.chatAgentReasoning > summary {
+  color: var(--geist-foreground);
+  cursor: pointer;
 }
 
 .chatAgentInteractionRaw {
@@ -658,16 +693,8 @@
   align-items: center;
   gap: 8px;
   padding: 8px 0;
-  cursor: pointer;
-  list-style: none;
   color: var(--geist-secondary);
   font-size: 11px;
-}
-
-.chatAgentInteractionRawContent {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
 }
 
 .chatAgentInteractionNotice {
@@ -728,17 +755,22 @@
   overflow: hidden;
 }
 
-.chatMessageStatus {
+.chatMessageStatus,
+.chatGeneratedJson {
   align-self: stretch;
-  display: flex;
-  align-items: flex-start;
-  flex-direction: column;
-  gap: 6px;
+  min-width: 0;
   max-width: 100%;
   padding: 6px 10px;
   border: none;
   border-radius: var(--geist-radius-md);
   background: transparent;
+}
+
+.chatMessageStatus {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 6px;
   color: var(--geist-secondary);
   font-size: 12px;
   font-family: var(--geist-mono);
@@ -995,13 +1027,7 @@
 }
 
 .chatGeneratedJson {
-  width: 100%;
-  max-width: 80%;
-  align-self: flex-start;
-  border: 1px solid var(--geist-border);
-  border-radius: var(--geist-radius-md);
   overflow: hidden;
-  background: var(--geist-surface);
   flex-shrink: 0;
 }
 
@@ -1466,86 +1492,112 @@
 }
 
 .chatComposerFooter {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px;
 }
 
 .chatProviderControl {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.chatProviderSelectGroup,
+.chatProviderOptions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.chatProviderSelectField {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   min-width: 0;
-  max-width: min(360px, 65%);
-  height: 34px;
-  padding: 0 8px 0 10px;
+  max-width: 100%;
+  height: 32px;
+  padding: 0 8px;
   border: 1px solid var(--geist-border);
-  border-radius: 999px;
+  border-radius: 8px;
   background: color-mix(
     in srgb,
     var(--geist-surface) 72%,
     var(--geist-background)
   );
+  transition:
+    border-color var(--geist-transition),
+    background var(--geist-transition);
 }
 
-.chatProviderControlWrap {
-  flex: 1;
-  flex-wrap: wrap;
-  row-gap: 4px;
-  max-width: 440px;
-  min-height: 34px;
-  height: auto;
-  padding-block: 2px;
+.chatProviderSelectField:hover:not(:has(select:disabled)) {
+  border-color: var(--geist-border-hover);
+  background: var(--geist-background);
 }
 
-.chatProviderStatus {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: color-mix(
-    in srgb,
-    var(--geist-success) 85%,
-    var(--geist-foreground)
-  );
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--geist-success) 14%, transparent);
+.chatProviderSelectField:has(select:focus-visible) {
+  outline: 2px solid
+    color-mix(in srgb, var(--geist-foreground) 35%, transparent);
+  outline-offset: 2px;
+}
+
+.chatProviderSelectLabel {
   flex-shrink: 0;
+  color: var(--geist-secondary);
+  font-size: 11px;
+  line-height: 1;
 }
 
 .chatProviderSelect {
+  flex: 1;
   min-width: 0;
-  max-width: 260px;
+  max-width: 220px;
   height: 30px;
-  padding: 0 24px 0 0;
+  padding: 0 2px;
   border: 0;
   background: transparent;
-  color: var(--geist-secondary);
+  color: var(--geist-foreground);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   font-family: inherit;
+  text-overflow: ellipsis;
   outline: none;
   cursor: pointer;
 }
 
-.chatProviderSelect:hover,
-.chatProviderSelect:focus {
+.chatProviderSelect option {
+  background: var(--geist-background);
   color: var(--geist-foreground);
+}
+
+.chatProviderOptions {
+  column-gap: 14px;
+  row-gap: 2px;
 }
 
 .chatProviderCheckbox {
   display: inline-flex;
-  flex-shrink: 0;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  min-height: 24px;
+  padding: 2px 0;
   color: var(--geist-secondary);
   font-size: 11px;
   font-weight: 400;
-  white-space: nowrap;
+  line-height: 1.4;
   cursor: pointer;
 }
 
+.chatProviderCheckbox:hover:not(:has(input:disabled)) {
+  color: var(--geist-foreground);
+}
+
 .chatProviderCheckbox input {
+  flex-shrink: 0;
   width: 12px;
   height: 12px;
   margin: 0;
@@ -1553,9 +1605,14 @@
   cursor: inherit;
 }
 
+.chatProviderSelectField:has(select:disabled),
 .chatProviderCheckbox:has(input:disabled) {
   opacity: 0.5;
-  cursor: default;
+  cursor: not-allowed;
+}
+
+.chatProviderSelect:disabled {
+  cursor: inherit;
 }
 
 /* chatSendBtn / chatSendIcon: replaced by <Button variant="primary" size="lg"
@@ -1574,14 +1631,16 @@
   .conversationPanel {
     width: 100%;
     max-width: none;
-    min-height: 132px;
-    max-height: 180px;
+    min-height: 0;
+    max-height: none;
     border-right: none;
     border-bottom: 1px solid var(--geist-border);
   }
 
   .conversationList {
+    flex: none;
     flex-direction: row;
+    align-items: flex-start;
     overflow-x: auto;
     overflow-y: hidden;
   }
@@ -1599,12 +1658,6 @@
   .conversationListItem {
     width: 220px;
     flex-shrink: 0;
-  }
-
-  .conversationListItemActions {
-    opacity: 1;
-    pointer-events: auto;
-    transform: none;
   }
 
   .chatPanel {
@@ -1646,7 +1699,6 @@
 @media (max-width: 720px) {
   .chatMessage,
   .chatMessageJson,
-  .chatGeneratedJson,
   .chatMessageAction.chatMessageActionExpanded {
     max-width: 100%;
   }
@@ -1678,20 +1730,18 @@
     border-left: none;
   }
 
-  /* Conversation panel collapses into a single horizontal strip on
-     phones: +New Chat is an icon button on the left, conversations
-     scroll as compact one-line cards on the right. Drops from ~150px
-     to ~52px of vertical chrome. */
+  /* Keep phone history compact with menu triggers beside the titles. */
   .chatPage[data-active-tab="edit"] .conversationPanel {
     flex-direction: row;
     align-items: stretch;
     min-height: 0;
     max-height: none;
-    height: 52px;
+    height: 56px;
     background: var(--geist-background);
   }
   .conversationPanelHeader,
-  .conversationPanelCreateRow {
+  .conversationPanelCreateRow,
+  .conversationPanel .historyRailCreate {
     flex: 0 0 auto;
     width: auto;
     min-height: 0;
@@ -1699,6 +1749,10 @@
     border-bottom: none;
     border-right: 1px solid var(--geist-border);
     background: transparent;
+  }
+  .conversationPanel .historyRailHeader,
+  .conversationPanel .conversationHistoryClear {
+    display: none;
   }
   .conversationNewButton {
     width: 36px;
@@ -1716,11 +1770,6 @@
     padding: 6px 8px;
     gap: 6px;
   }
-  /* Keep the desktop card aesthetic on mobile: rounded rectangle, active
-     bar on the left, Edit/Del hidden by default and revealed only on the
-     active card (matching the desktop hover/active behavior). Vertically
-     center title + actions since the meta/date row is hidden — the
-     desktop card is a two-line block, the mobile chip is single-line. */
   .conversationListItem {
     flex: 0 0 auto;
     width: auto;
@@ -1737,18 +1786,6 @@
     font-size: 12px;
     line-height: 1.25;
   }
-  .conversationListItemActions {
-    opacity: 0;
-    pointer-events: none;
-    transform: none;
-    gap: 4px;
-  }
-  .conversationListItem-active .conversationListItemActions,
-  .conversationListItem:focus-within .conversationListItemActions {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
   /* Pill Send button (drops the desktop drop-shadow on mobile). */
   .chatSendBtn {
     min-width: 84px;
@@ -1870,13 +1907,12 @@
   color: var(--geist-foreground);
 }
 
-.chatArtifact {
-  max-width: 80%;
-}
-
 .chatArtifactHeader {
   align-items: center;
   gap: 8px;
+  padding: 4px 10px 8px;
+  border-bottom: 0;
+  background: transparent;
 }
 
 .chatArtifactTitle {
@@ -1885,6 +1921,7 @@
   min-width: 0;
   flex-direction: column;
   gap: 4px;
+  overflow-wrap: anywhere;
 }
 
 .chatArtifactMeta {
@@ -1892,44 +1929,36 @@
   font-size: 11px;
   font-weight: 500;
   line-height: 1.4;
-}
-
-.chatArtifactActions {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 8px;
-}
-
-.chatArtifactSwitch {
-  height: 26px;
-}
-
-.chatArtifactSwitch .previewModeBtn {
-  height: 24px;
-  padding: 0 8px;
-  font-size: 11px;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .chatArtifactCodeToolbar {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 0 10px;
-  min-height: 36px;
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--geist-border) 55%, transparent);
-  background: var(--geist-surface);
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.chatArtifactCodeControls {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  align-self: stretch;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .chatArtifactFormatSwitch {
   display: flex;
   align-self: stretch;
+  flex-wrap: wrap;
   gap: 14px;
 }
 
 .chatArtifactFormatButton {
+  min-height: 32px;
   padding: 0 2px;
   border: 0;
   border-bottom: 2px solid transparent;
@@ -1962,14 +1991,7 @@
 }
 
 .chatArtifactCopyButton {
-  border-color: transparent;
-  background: transparent;
-  color: var(--geist-secondary);
-  font-weight: 500;
-}
-
-.chatArtifactCopyButton:hover {
-  color: var(--geist-foreground);
+  flex-shrink: 0;
 }
 
 .chatArtifactCodeBlock {
@@ -1983,27 +2005,4 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
-}
-
-@media (max-width: 720px) {
-  .chatArtifact {
-    max-width: 100%;
-  }
-
-  .chatArtifactHeader {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .chatArtifactActions {
-    justify-content: space-between;
-  }
-
-  .chatArtifactSwitch {
-    flex: 1;
-  }
-
-  .chatArtifactSwitch .previewModeBtn {
-    flex: 1;
-  }
 }

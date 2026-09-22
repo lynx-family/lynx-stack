@@ -4,6 +4,7 @@
 
 import { describe, expect, test } from '@rstest/core';
 
+import { BASIC_CATALOG } from '../agent/a2ui/a2ui-catalog.js';
 import app from '../src/app.js';
 
 interface MockStreamingService {
@@ -89,7 +90,10 @@ describe('agent stream cancellation', () => {
     try {
       await cancelResponse(
         '/a2ui/stream',
-        { messages: [{ role: 'user', content: 'Create a card' }] },
+        {
+          messages: [{ role: 'user', content: 'Create a card' }],
+          catalog: BASIC_CATALOG,
+        },
         '203.0.113.43',
       );
       expect(receivedSignal?.aborted).toBe(true);
@@ -152,6 +156,7 @@ describe('agent stream cancellation', () => {
         {
           action: { name: 'refresh' },
           surfaceId: 'surface-1',
+          catalog: BASIC_CATALOG,
         },
         '203.0.113.44',
       );

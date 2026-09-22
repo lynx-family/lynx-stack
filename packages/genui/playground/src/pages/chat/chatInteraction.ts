@@ -5,6 +5,7 @@ import type { ChatHttpRequest, ChatInteractionLog } from './type.js';
 
 const MAX_ENTRIES = 80;
 const MAX_DETAIL_LENGTH = 12_000;
+const MAX_REASONING_LENGTH = 64_000;
 const MAX_MESSAGE_SUMMARIES = 4;
 const MAX_COMPONENT_NAMES = 5;
 
@@ -134,6 +135,29 @@ export function appendChatInteraction(
   elapsedMs: number,
   data?: unknown,
 ): ChatInteractionLog {
+  const isModelStart = event === 'model' && isRecord(data)
+    && data.status === 'started';
+  if (isModelStart) {
+    log = { ...log, modelRequestCount: (log.modelRequestCount ?? 0) + 1 };
+  }
+  if (['error', 'done', 'json'].includes(event) && isRecord(data)) {
+    const { reasoning, ...details } = data;
+    if (
+      isRecord(reasoning) && typeof reasoning.text === 'string'
+      && reasoning.text.trim()
+    ) {
+      log = {
+        ...log,
+        reasoning: {
+          text: reasoning.text.slice(0, MAX_REASONING_LENGTH),
+          truncated: reasoning.truncated === true
+            || reasoning.text.length > MAX_REASONING_LENGTH,
+        },
+      };
+    }
+    // Keep reasoning out of the compact event timeline and its copy payload.
+    data = details;
+  }
   if (event === 'done' || event === 'json') {
     const payload = isRecord(data) ? data : {};
     let messages: unknown[] | undefined;
@@ -167,6 +191,7 @@ export function appendChatInteraction(
     count: previous ? previous.count + 1 : 1,
     truncated: (previous?.truncated ?? false)
       || text.length > MAX_DETAIL_LENGTH,
+    ...(isModelStart ? { modelStart: true } : {}),
   };
   if (event === 'delta') return { ...log, rawOutput: entry };
 
@@ -187,6 +212,9 @@ export function serializeChatInteraction(log: ChatInteractionLog): string {
     {
       entries: log.entries,
       omittedEntries: log.omittedEntries,
+      ...(log.modelRequestCount === undefined
+        ? {}
+        : { modelRequestCount: log.modelRequestCount }),
       ...(log.rawOutput
         ? {
           rawOutput: {
@@ -236,6 +264,8 @@ export function chatInteractionLabel(event: string): string {
       return 'Server response';
     case 'message':
       return 'Protocol messages';
+    case 'model':
+      return 'Model interaction';
     case 'done':
     case 'json':
       return 'Final response';

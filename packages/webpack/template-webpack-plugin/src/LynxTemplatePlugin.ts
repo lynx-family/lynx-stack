@@ -215,7 +215,7 @@ export interface LynxTemplatePluginOptions {
   excludeChunks?: string[];
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.customCSSInheritanceList}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.customCSSInheritanceList}
    *
    * @example
    *
@@ -231,18 +231,18 @@ export interface LynxTemplatePluginOptions {
    *      customCSSInheritanceList: ['direction', 'overflow']
    *    }),
    *  ],
-   * }
+   * })
    * ```
    */
   customCSSInheritanceList: string[] | undefined;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.debugInfoOutside}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.debugInfoOutside}
    */
   debugInfoOutside: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.defaultDisplayLinear}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.defaultDisplayLinear}
    */
   defaultDisplayLinear: boolean;
 
@@ -254,7 +254,7 @@ export interface LynxTemplatePluginOptions {
   dsl?: 'tt' | 'react' | 'react_nodiff';
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableAccessibilityElement}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableAccessibilityElement}
    */
   enableAccessibilityElement: boolean;
 
@@ -264,37 +264,37 @@ export interface LynxTemplatePluginOptions {
   enableA11y: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInheritance}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInheritance}
    */
   enableCSSInheritance: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInvalidation}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInvalidation}
    */
   enableCSSInvalidation: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSSelector}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSSelector}
    */
   enableCSSSelector: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableNewGesture}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableNewGesture}
    */
   enableNewGesture: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope}
    */
   enableRemoveCSSScope: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.removeDescendantSelectorScope}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.removeDescendantSelectorScope}
    */
   removeDescendantSelectorScope: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion}
    */
   targetSdkVersion: string;
 
@@ -306,7 +306,7 @@ export interface LynxTemplatePluginOptions {
   defaultOverflowVisible?: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle}
    *
    * @alpha
    */
@@ -484,7 +484,8 @@ export class LynxTemplatePlugin {
    * Convert the css chunks to css map.
    *
    * @param cssChunks - The CSS chunks content.
-   * @param options - The encode options.
+   * @param plugins - The CSS plugins passed to the parser.
+   * @param enableCSSSelector - Whether to enable the CSS selector.
    * @returns The CSS map and css source.
    *
    * @remarks
@@ -499,12 +500,10 @@ export class LynxTemplatePlugin {
    *
    * @example
    * ```
-   * (console.log(await convertCSSChunksToMap(
-   *   '.red { color: red; }',
-   *   {
-   *     targetSdkVersion: '3.2',
-   *     enableCSSSelector: true,
-   *   },
+   * (console.log(LynxTemplatePlugin.convertCSSChunksToMap(
+   *   ['.red { color: red; }'],
+   *   [],
+   *   true,
    * )));
    * ```
    */
@@ -540,7 +539,7 @@ const SECTION_BACKGROUND = 'background';
 
 interface AsyncChunkLayout {
   name: string;
-  layer: string | undefined;
+  layer: string;
 }
 
 function shortLayerName(layer: string): string {
@@ -741,9 +740,6 @@ class LynxTemplatePluginImpl {
           );
           if (layout !== undefined) {
             const { name, layer } = layout;
-            if (layer === undefined) {
-              return `${prefix}lazy-bundle/${name}.js`;
-            }
             // A lazy bundle's chunk in a layer mirrors the entry of that layer:
             // `<root>/main/background.[contenthash:8].js` becomes
             // `<root>/lazy-bundle/<name>/background.[contenthash:8].js`, so it
@@ -1126,7 +1122,7 @@ class LynxTemplatePluginImpl {
       return undefined;
     }
     const { name, layer } = layout;
-    return layer === undefined ? name : `${name}/${shortLayerName(layer)}`;
+    return `${name}/${shortLayerName(layer)}`;
   }
 
   static #getAsyncChunkLayout(
@@ -1143,14 +1139,11 @@ class LynxTemplatePluginImpl {
           LynxTemplatePluginImpl.#getAsyncChunkGroups(compilation),
         )
       ) {
-        // A named chunk group means the user wrote an explicit
-        // `webpackChunkName` — keep the user-controlled `[name]` placement.
         // Context imports (`import(`./x/${y}`)`) group under an empty name
-        // and are not lazy bundles — leave them on the default template.
-        if (
-          name === ''
-          || chunkGroups.some(cg => cg.name !== null && cg.name !== undefined)
-        ) {
+        // and are not lazy bundles — leave them on the default template. A
+        // named group is a lazy bundle like any other: its name went through
+        // the `asyncChunkName` hook, so both layers share it here.
+        if (name === '') {
           continue;
         }
         for (const chunk of chunkGroups.flatMap(cg => cg.chunks)) {
@@ -1163,6 +1156,12 @@ class LynxTemplatePluginImpl {
               layer = String(module.layer);
               break;
             }
+          }
+          // Every Lynx DSL compiles its two threads as Rspack layers. Without
+          // one there is nothing to tell the chunks of a lazy bundle apart, so
+          // they keep the default `[name]` placement.
+          if (layer === undefined) {
+            continue;
           }
           layouts.set(chunk.id, { name, layer });
         }
@@ -1311,7 +1310,7 @@ class LynxTemplatePluginImpl {
           enableNewIntersectionObserver: true,
           enableNativeList: true,
           enableNewSticky: true,
-          flexBasisZeroPercent: true,
+          enableFlexBasisZeroPercent: true,
           enableGridPlacementShorthands: true,
           syncXElementRegistry: true,
           enableA11y,

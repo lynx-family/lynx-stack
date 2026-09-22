@@ -14,7 +14,7 @@ hero = Card([Text("Layout Showcase", "h2"), Text("Row, Column, List and Divider 
 layoutCard = Card([CardHeader("Release Roadmap", "Row and Column primitives"), statusRow, Divider("horizontal"), milestoneColumn], "card", "column", false, "m", "stretch", "start")
 statusRow = Row([Text("Design", "h5"), Tag("In review"), Icon("arrow_forward", "sm", "muted"), Text("Build", "h5"), Tag("Active"), Icon("arrow_forward", "sm", "muted"), Text("Launch", "h5")], "between", "center", "s", true)
 milestoneColumn = Column([Text("1. API shape finalized", "body"), Text("2. Playground coverage added", "body"), Text("3. Browser verification complete", "body")], "start", "stretch", "s")
-listCard = Card([CardHeader("Checklist", "Tap each item to update local state"), List([CheckBox("Document usage snippets", true), CheckBox("Verify tabs and modal interactions", false), CheckBox("Confirm media placeholders render", false)], "vertical", "stretch", "s", true)], "sunk", "column", false, "m", "stretch", "start")`;
+listCard = Card([CardHeader("Checklist", "Tap each item to update local state"), List([CheckBox("Document usage snippets", true), CheckBox("Verify tabs and modal interactions", false), CheckBox("Confirm media placeholders render", false)], null, "vertical", "stretch", "s", true)], "sunk", "column", false, "m", "stretch", "start")`;
 
 const NEW_INTERACTIVE_CONTROLS_RAW = `$status = "Draft"
 root = Column([masthead, introRule, tabs, actionRule, actionBlock], "start", "stretch", "xl")
@@ -39,7 +39,7 @@ const NEW_MEDIA_CARDS_RAW =
 header = Card([Text("Media Cards", "h2"), Text("AudioPlayer and Video provide lightweight media attachment surfaces.", "body")], "card", "column", false, "s", "start", "start")
 mediaTabs = Tabs([{ value: "audio", title: "Audio", child: audioCard }, { value: "video", title: "Video", child: videoCard }])
 audioCard = Card([CardHeader("Podcast Preview", "AudioPlayer placeholder"), AudioPlayer("https://example.com/openui-weekly.mp3", "OpenUI Weekly - catalog additions"), Row([Icon("pause", "sm", "muted"), Text("12 min episode", "caption"), Tag("Transcript ready")], "start", "center", "s", true)], "card", "column", false, "m", "stretch", "start")
-videoCard = Card([CardHeader("Launch Walkthrough", "Video placeholder"), Video("https://example.com/openui-launch.mp4", "OpenUI component walkthrough"), List([Text("Covers layout primitives", "body"), Text("Shows tabs and modal", "body"), Text("Highlights media cards", "body")], "vertical", "stretch", "xs", true)], "card", "column", false, "m", "stretch", "start")`;
+videoCard = Card([CardHeader("Launch Walkthrough", "Video placeholder"), Video("https://example.com/openui-launch.mp4", "OpenUI component walkthrough"), List([Text("Covers layout primitives", "body"), Text("Shows tabs and modal", "body"), Text("Highlights media cards", "body")], null, "vertical", "stretch", "xs", true)], "card", "column", false, "m", "stretch", "start")`;
 
 export const OPENUI_SCENARIOS: OpenUIScenario[] = [
   {
@@ -60,31 +60,31 @@ export const OPENUI_SCENARIOS: OpenUIScenario[] = [
   {
     id: 'pricing-cards',
     title: 'Pricing Cards',
-    raw: `root = Stack([header, cards], "column", "l", "center")
+    raw: `root = Stack([header, cards], "column", false, "l", "center")
 header = TextContent("Choose Your Plan", "large-heavy")
-cards = Stack([freeCard, proCard, enterpriseCard], "row", "l", "stretch")
+cards = Stack([freeCard, proCard, enterpriseCard], "row", true, "l", "stretch")
 
-freeCard = Card([freeHeader, freePrice, freeSep, freeFeatures, freeBtn], "card", "column", "stretch", "between")
+freeCard = Card([freeHeader, freePrice, freeSep, freeFeatures, freeBtn], "card", "column", false, "m", "stretch", "between")
 freeHeader = CardHeader("Free", "For individuals just getting started")
-freePrice = Stack([freePriceAmt, freePricePer], "row", "none", "baseline")
+freePrice = Stack([freePriceAmt, freePricePer], "row", false, "none", "end")
 freePriceAmt = TextContent("$0", "large-heavy")
 freePricePer = TextContent(" / month", "small")
-freeSep = Separator("horizontal", true)
-freeFeatures = Stack([ff1, ff2, ff3, ff4], "column", "s")
+freeSep = Separator()
+freeFeatures = Stack([ff1, ff2, ff3, ff4], "column", false, "s")
 ff1 = TextContent("✓  1 user")
 ff2 = TextContent("✓  5 projects")
 ff3 = TextContent("✓  2 GB storage")
 ff4 = TextContent("✗  Priority support")
 freeBtn = Buttons([Button("Get Started", Action([@ToAssistant("Get started with Free plan")]), "secondary")])
 
-proCard = Card([proHeader, proPrice, proBadge, proSep, proFeatures, proBtn], "card", "column", "stretch", "between")
+proCard = Card([proHeader, proPrice, proBadge, proSep, proFeatures, proBtn], "card", "column", false, "m", "stretch", "between")
 proHeader = CardHeader("Pro", "For growing teams and professionals")
-proPrice = Stack([proPriceAmt, proPricePer], "row", "none", "baseline")
+proPrice = Stack([proPriceAmt, proPricePer], "row", false, "none", "end")
 proPriceAmt = TextContent("$29", "large-heavy")
 proPricePer = TextContent(" / month", "small")
-proBadge = Tag("Most Popular", null, "sm", "info")
-proSep = Separator("horizontal", true)
-proFeatures = Stack([pf1, pf2, pf3, pf4, pf5], "column", "s")
+proBadge = Tag("Most Popular")
+proSep = Separator()
+proFeatures = Stack([pf1, pf2, pf3, pf4, pf5], "column", false, "s")
 pf1 = TextContent("✓  Up to 10 users")
 pf2 = TextContent("✓  Unlimited projects")
 pf3 = TextContent("✓  50 GB storage")
@@ -92,13 +92,13 @@ pf4 = TextContent("✓  Priority support")
 pf5 = TextContent("✓  Advanced analytics")
 proBtn = Buttons([Button("Start Free Trial", Action([@ToAssistant("Start free trial with Pro plan")]), "primary")])
 
-enterpriseCard = Card([entHeader, entPrice, entSep, entFeatures, entBtn], "card", "column", "stretch", "between")
+enterpriseCard = Card([entHeader, entPrice, entSep, entFeatures, entBtn], "card", "column", false, "m", "stretch", "between")
 entHeader = CardHeader("Enterprise", "For large organizations at scale")
-entPrice = Stack([entPriceAmt, entPricePer], "row", "none", "baseline")
+entPrice = Stack([entPriceAmt, entPricePer], "row", false, "none", "end")
 entPriceAmt = TextContent("$99", "large-heavy")
 entPricePer = TextContent(" / month", "small")
-entSep = Separator("horizontal", true)
-entFeatures = Stack([ef1, ef2, ef3, ef4, ef5, ef6], "column", "s")
+entSep = Separator()
+entFeatures = Stack([ef1, ef2, ef3, ef4, ef5, ef6], "column", false, "s")
 ef1 = TextContent("✓  Unlimited users")
 ef2 = TextContent("✓  Unlimited projects")
 ef3 = TextContent("✓  1 TB storage")

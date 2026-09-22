@@ -30,6 +30,8 @@ export type ProtocolBenchJudgePayload =
 export interface ProtocolBenchAdapterInput {
   enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
+  enableScriptReuse?: boolean;
+  stylePreset?: 'default' | false;
   runId: string;
   pairId: string;
   scenario: ProtocolBenchScenario;

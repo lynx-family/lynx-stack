@@ -157,7 +157,7 @@ subtitle = TextContent("A simple stack example")`,
       },
     ],
     usage:
-      `root = List([Text("First", "body"), Text("Second", "body"), Text("Third", "body")], "vertical", "stretch", "s", true)`,
+      `root = List([Text("First", "body"), Text("Second", "body"), Text("Third", "body")], null, "vertical", "stretch", "s", true)`,
   },
   {
     name: 'Card',

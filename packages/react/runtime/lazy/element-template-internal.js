@@ -17,6 +17,7 @@ export const {
   __ElementTemplatePage,
   __dynamicImport,
   __etAttrPlanMap,
+  __etHost,
   __root,
   adaptEventAttrSlot,
   adaptMTEventAttrSlot,

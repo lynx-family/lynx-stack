@@ -11,10 +11,7 @@ import {
   createBenchRunProgress,
   finishBenchRunProgress,
 } from './progress.js';
-import {
-  redactBenchDiagnostic,
-  sanitizeBenchPublicValue,
-} from './redaction.js';
+import { redactBenchDiagnostic, sanitizeBenchPlanValue } from './redaction.js';
 import {
   MAX_BENCH_JOB_SCREENSHOT_DECODED_BYTES,
   MAX_BENCH_SCREENSHOT_DECODED_BYTES,
@@ -82,8 +79,12 @@ export interface BenchJobRecord {
   workerActive: boolean;
 }
 
+function sanitizeJobValue(job: BenchJobRecord, value: unknown): unknown {
+  return sanitizeBenchPlanValue(value, job.request, job.id);
+}
+
 function snapshotJob(job: BenchJobRecord): BenchJobSnapshot {
-  return sanitizeBenchPublicValue({
+  return sanitizeJobValue(job, {
     ok: true,
     jobId: job.id,
     status: job.status,
@@ -95,7 +96,7 @@ function snapshotJob(job: BenchJobRecord): BenchJobSnapshot {
     ...(job.report ? { summary: job.report.summary } : {}),
     ...(job.error ? { error: job.error } : {}),
     warnings: job.warnings,
-  }, job.request.provider) as BenchJobSnapshot;
+  }) as BenchJobSnapshot;
 }
 
 function matchesRun(
@@ -392,7 +393,8 @@ export class BenchJobStore {
       redactBenchDiagnostic(warning, provider)
     );
     const completedAt = new Date().toISOString();
-    job.report = sanitizeBenchPublicValue(
+    job.report = sanitizeJobValue(
+      job,
       {
         ...report,
         runProgress: job.progress.runs,
@@ -403,7 +405,6 @@ export class BenchJobStore {
           Math.round(performance.now() - job.startedAtMonotonicMs),
         ),
       },
-      provider,
     ) as BenchReport;
     job.workerActive = false;
     job.updatedAt = completedAt;
@@ -433,7 +434,7 @@ export class BenchJobStore {
     const item: BenchJobEvent = {
       id: job.nextEventId++,
       event,
-      data: sanitizeBenchPublicValue(data, job.request.provider),
+      data: sanitizeJobValue(job, data),
     };
     job.events.push(item);
     if (job.events.length > MAX_EVENT_HISTORY) {

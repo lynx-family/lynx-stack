@@ -6,13 +6,13 @@ import { Agent } from '@mastra/core/agent';
 import { z } from 'zod';
 
 import { createLLMProvider } from './openai-provider.js';
+import { getUiJudgeRequestQueue } from './ui-judge-request-queue.js';
+import type { UiJudgeRequestQueue } from './ui-judge-request-queue.js';
 import { createAgentStepLogger } from '../../service/common/agent-step-logger.js';
-import {
-  buildOpenAIRunOptions,
-  resolveModelOutputTokenBudget,
-} from '../../service/common/provider.js';
+import { buildOpenAIRunOptions } from '../../service/common/provider.js';
+import { finalizeResult } from '../../service/common/result.js';
 
-const resultSchema = z.object({
+const dimensionResultSchema = z.object({
   score: z.number().int().min(0).max(5),
   reason: z.string().trim().min(1),
   summary: z.string().trim().min(1),
@@ -83,12 +83,22 @@ export const JUDGE_DIMENSIONS = [
   },
 ] as const;
 
+const resultSchema = z.object(
+  Object.fromEntries(
+    JUDGE_DIMENSIONS.map(dimension => [dimension.id, dimensionResultSchema]),
+  ) as Record<
+    typeof JUDGE_DIMENSIONS[number]['id'],
+    typeof dimensionResultSchema
+  >,
+).strict();
+
 export interface ScreenshotEvaluationRequest {
   screenshotDataUrl: string;
   task: string;
   reference?: string;
   model?: string;
   signal?: AbortSignal;
+  onPhase?: (phase: 'judge' | 'judge-retry') => void;
 }
 
 export interface ScreenshotEvaluation {
@@ -113,8 +123,11 @@ export type ScreenshotEvaluator = (
 function createJudgeAgent(modelName?: string): {
   agent: Agent;
   model?: string;
+  queue: UiJudgeRequestQueue;
 } {
-  const { buildModel, model } = createLLMProvider({ model: modelName });
+  const { buildModel, model, baseURL } = createLLMProvider({
+    model: modelName,
+  });
   return {
     agent: new Agent({
       id: 'ui-judge-agent',
@@ -126,16 +139,14 @@ function createJudgeAgent(modelName?: string): {
     // Keep the configured model name for run options so model-specific limits
     // and reasoning settings are resolved from the shared model configuration.
     model: modelName,
+    queue: getUiJudgeRequestQueue(baseURL, model),
   };
 }
 
 export function buildJudgePrompt(
-  dimension: typeof JUDGE_DIMENSIONS[number],
   request: ScreenshotEvaluationRequest,
 ): string {
   return `You are a senior product and design reviewer judging a generated Lynx UI screenshot.
-Dimension: ${dimension.title}
-Focus: ${dimension.focus}
 Task: ${request.task.trim()}
 ${request.reference ? `Reference answer or target: ${request.reference}` : ''}
 Use only the supplied screenshot and visible UI state. Do not assume hidden behavior or claim to have executed interactions.
@@ -148,17 +159,26 @@ Use this 0–5 scale:
 1 = Disaster or blocker: seriously violates interaction common sense or blocks the core flow and should be redone.
 0 = The UI is unrelated, blank, failed to render, impossible to inspect, or completely wrong.
 
+Evaluate all five dimensions below from this same screenshot:
+${
+    JUDGE_DIMENSIONS.map(dimension =>
+      `Dimension: ${dimension.title}
+Result key: ${dimension.id}
+Focus: ${dimension.focus}
 Criteria:
 ${
-    dimension.criteria.map((criterion, index) => `${index + 1}. ${criterion}`)
-      .join('\n')
+        dimension.criteria.map((criterion, index) =>
+          `${index + 1}. ${criterion}`
+        ).join('\n')
+      }`
+    ).join('\n\n')
   }
 
-Score only this dimension. Accept minor capitalization, punctuation, spacing, and label variations that preserve semantic intent, unless exact text was requested. Accept component ordering variations unless an order was requested. Do not penalize valid optional properties. Do not award a high score when required components are missing or substantive behavior is wrong.
-Return an integer score, a one-sentence reason, and a short paragraph summary.`;
+Assess each dimension separately against its own criteria; do not copy one overall impression across all scores. Accept minor capitalization, punctuation, spacing, and label variations that preserve semantic intent, unless exact text was requested. Accept component ordering variations unless an order was requested. Do not penalize valid optional properties. Do not award a high score when required components are missing or substantive behavior is wrong.
+Return one JSON object with exactly the five result keys above. For each dimension, include an integer score, a one-sentence reason, and a concise summary of visible evidence. Include every dimension. Do not calculate an aggregate score or weights; the caller calculates those.`;
 }
 
-/** Evaluate the same PNG independently across visual correctness and four GEQI dimensions. */
+/** Score visual correctness and all four GEQI dimensions in one model request. */
 export async function evaluateScreenshot(
   request: ScreenshotEvaluationRequest,
 ): Promise<ScreenshotEvaluation> {
@@ -169,10 +189,10 @@ export async function evaluateScreenshot(
 export function createScreenshotEvaluator(
   modelName?: string,
 ): { evaluate: ScreenshotEvaluator } {
-  const { agent, model } = createJudgeAgent(modelName);
+  const { agent, model, queue } = createJudgeAgent(modelName);
   return {
     evaluate: async (request: ScreenshotEvaluationRequest) =>
-      evaluateScreenshotWithAgent(request, agent, model),
+      evaluateScreenshotWithAgent(request, agent, model, queue),
   };
 }
 
@@ -180,56 +200,54 @@ async function evaluateScreenshotWithAgent(
   request: ScreenshotEvaluationRequest,
   agent: Agent,
   model: string | undefined,
+  queue: UiJudgeRequestQueue,
 ): Promise<ScreenshotEvaluation> {
   if (!request.task.trim()) {
     throw new Error('A screenshot evaluation task is required.');
   }
   request.signal?.throwIfAborted();
-  const controller = new AbortController();
-  const signal = request.signal
-    ? AbortSignal.any([request.signal, controller.signal])
-    : controller.signal;
-  const evaluations = JUDGE_DIMENSIONS.map(async (dimension) => {
-    const response = await agent.generate([{
-      role: 'user',
-      content: [
-        {
-          type: 'image',
-          image: request.screenshotDataUrl,
-          mediaType: 'image/png',
-        },
-        { type: 'text', text: buildJudgePrompt(dimension, request) },
-      ],
-    }], {
-      ...buildOpenAIRunOptions({ model }, signal),
-      ...createAgentStepLogger<z.infer<typeof resultSchema>>({
-        model,
-      }, 'ui-judge'),
-      maxSteps: 1,
-      modelSettings: {
-        maxOutputTokens: resolveModelOutputTokenBudget(
-          { model },
-          2048,
+  const results = await queue.run(
+    async () => {
+      request.onPhase?.('judge');
+      const response = await agent.generate([{
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            image: request.screenshotDataUrl,
+            mediaType: 'image/png',
+          },
+          { type: 'text', text: buildJudgePrompt(request) },
+        ],
+      }], {
+        ...buildOpenAIRunOptions(
+          { model, maxRetries: 0 },
+          request.signal,
+          4096,
         ),
-      },
-      structuredOutput: { schema: resultSchema },
-    });
-    return resultSchema.parse(response.object);
-  });
-  const results = await Promise.all(evaluations).catch(
-    async (error: unknown) => {
-      controller.abort();
-      await Promise.allSettled(evaluations);
-      throw error;
+        ...createAgentStepLogger<z.infer<typeof resultSchema>>({
+          model,
+        }, 'ui-judge'),
+        maxSteps: 1,
+        structuredOutput: {
+          schema: resultSchema,
+          // Compatible endpoints may reject json_schema; validate JSON locally.
+          jsonPromptInjection: true,
+        },
+      });
+      await finalizeResult(response);
+      return resultSchema.parse(response.object);
     },
+    request.signal,
+    () => request.onPhase?.('judge-retry'),
   );
-  signal.throwIfAborted();
-  const primary = results[0]!;
-  const dimensions = JUDGE_DIMENSIONS.slice(1).map((dimension, index) => ({
+  request.signal?.throwIfAborted();
+  const primary = results['visual-correctness'];
+  const dimensions = JUDGE_DIMENSIONS.slice(1).map((dimension) => ({
     dimension: dimension.id,
     dimensionLabel: dimension.title,
     weight: dimension.weight,
-    ...results[index + 1]!,
+    ...results[dimension.id],
   }));
   const totalWeight = dimensions.reduce(
     (sum, dimension) => sum + dimension.weight,
