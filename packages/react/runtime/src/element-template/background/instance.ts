@@ -178,9 +178,6 @@ export class BackgroundElementTemplateInstance {
   }
 
   private restoreManagerRegistration(): void {
-    if (this.instanceId === ELEMENT_TEMPLATE_PAGE_HANDLE_ID) {
-      return;
-    }
     const instances = backgroundElementTemplateInstanceManager.values;
     const existing = instances.get(this.instanceId);
     if (existing === this) {
@@ -422,10 +419,9 @@ export class BackgroundElementTemplateInstance {
   }
 
   markMaterializedByHydration(): void {
-    // Hydration binds this object to a template that already exists on the main
-    // thread; future updates must treat it as materialized without emitting create.
+    // Hydration has already registered the stable handle through updateId.
+    // Future updates must not emit create for this existing main-thread template.
     this.isMaterializedOnMainThread = true;
-    this.restoreManagerRegistration();
   }
 
   prepareAttributeSlotsForNative(options?: { publishRefEffects?: boolean }): void {
@@ -454,6 +450,9 @@ export class BackgroundElementTemplateInstance {
   }
 
   prepareAttributeSlotsForHydration(): void {
+    if (!this.rawAttributeSlots) {
+      return;
+    }
     // Hydrate only rebinds the selector marker to the stable handle. The ref was
     // already made visible to user effects on the pre-hydration commit path.
     this.prepareAttributeSlotsForNative({
