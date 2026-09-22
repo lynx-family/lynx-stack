@@ -1,29 +1,20 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { mkdtemp, readFile } from 'node:fs/promises';
+import { mkdtempSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import path, { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { rspack } from '@rspack/core';
-import type { Configuration, Stats } from '@rspack/core';
+import type { Stats } from '@rspack/core';
 import { describe, expect, test } from '@rstest/core';
 
-import {
-  LynxEncodePlugin,
-  LynxTemplatePlugin,
-} from '@lynx-js/template-webpack-plugin';
+import { LAYERS, ReactWebpackPlugin } from '../src/index.js';
 
-// `create-react-config.js` is plain JS without a generated d.ts.
-// @ts-expect-error untyped JS helper
-import { createConfig as createConfigUntyped } from './create-react-config.js';
-
-const createConfig = createConfigUntyped as (
-  loaderOptions: Record<string, unknown>,
-  pluginOptions: Record<string, unknown>,
-) => Configuration;
-
+const require = createRequire(import.meta.url);
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURE = join(__dirname, 'fixtures/reload-entry-reeval/index.jsx');
 
@@ -38,31 +29,27 @@ interface BuildResult {
 async function build(
   pluginOptions: Record<string, unknown>,
 ): Promise<BuildResult> {
-  const dist = await mkdtemp(join(tmpdir(), 'rwp-reload-entry-'));
-  const config = createConfig({}, {
-    mainThreadChunks: ['main__main-thread.js'],
-    ...pluginOptions,
+  const dist = mkdtempSync(path.join(tmpdir(), 'reload-entry-'));
+  const compiler = rspack({
+    context: __dirname,
+    mode: 'none',
+    entry: {
+      'main__main-thread': { import: FIXTURE, layer: LAYERS.MAIN_THREAD },
+      'main__background': { import: FIXTURE, layer: LAYERS.BACKGROUND },
+    },
+    experiments: { layers: true },
+    output: { path: dist, filename: '[name].js' },
+    plugins: [
+      new ReactWebpackPlugin({
+        mainThreadChunks: ['main__main-thread.js'],
+        workletRuntimePath: require.resolve(
+          '@lynx-js/react/worklet-dev-runtime',
+        ),
+        ...pluginOptions,
+      }),
+    ],
   });
-  config.entry = {
-    'main__main-thread': { import: FIXTURE, layer: 'react:main-thread' },
-    'main__background': { import: FIXTURE, layer: 'react:background' },
-  };
-  config.context = dirname(FIXTURE);
-  config.output = { ...config.output, filename: '[name].js', path: dist };
-  config.mode = 'development';
-  config.devtool = false;
-  config.plugins = [
-    ...(config.plugins ?? []),
-    new LynxEncodePlugin(),
-    new LynxTemplatePlugin({
-      ...LynxTemplatePlugin.defaultOptions,
-      chunks: ['main__main-thread', 'main__background'],
-      filename: 'main/template.js',
-      intermediate: '.rspeedy/main',
-    }),
-  ];
 
-  const compiler = rspack(config);
   let stats: Stats;
   try {
     stats = await new Promise((resolve, reject) => {
