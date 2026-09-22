@@ -1261,7 +1261,7 @@ class LynxTemplatePluginImpl {
           enableNewIntersectionObserver: true,
           enableNativeList: true,
           enableNewSticky: true,
-          flexBasisZeroPercent: true,
+          enableFlexBasisZeroPercent: true,
           enableGridPlacementShorthands: true,
           syncXElementRegistry: true,
           enableA11y,
