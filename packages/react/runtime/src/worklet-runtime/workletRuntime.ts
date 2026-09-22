@@ -19,7 +19,7 @@ import { getFromWorkletRefMap, initWorkletRef } from './workletRef.js';
 function initWorklet(): void {
   globalThis.lynxWorkletImpl = {
     _workletMap: {},
-    _refImpl: initWorkletRef(resolveWorklet),
+    _refImpl: initWorkletRef(),
     _runOnBackgroundDelayImpl: initRunOnBackgroundDelay(),
     _hydrateCtx: hydrateCtx,
     _eventDelayImpl: initEventDelay(),
@@ -106,13 +106,6 @@ function validateWorklet(ctx: unknown): ctx is Worklet {
   return typeof ctx === 'object' && ctx !== null && ('_wkltId' in ctx || '_lepusWorkletHash' in ctx);
 }
 
-function resolveWorklet(ctx: Worklet): (...args: unknown[]) => unknown {
-  if (!validateWorklet(ctx) || '_lepusWorkletHash' in ctx) {
-    throw new Error('Cannot resolve an invalid Main Thread Function.');
-  }
-  return transformWorklet(ctx, true);
-}
-
 const workletCache = /*#__PURE__*/ new WeakMap<object, ClosureValueType | ((...args: unknown[]) => unknown)>();
 
 function transformWorklet(ctx: Worklet, isWorklet: true): (...args: unknown[]) => unknown;
@@ -175,14 +168,12 @@ const transformWorkletInner = (
       continue;
     }
     if (isMainThreadObjectDescriptor(subObj)) {
-      obj[key] = getFromWorkletRefMap(
-        subObj as unknown as WorkletRefImpl<unknown>,
-      );
+      obj[key] = getFromWorkletRefMap(subObj);
       continue;
     }
 
     if (/** isEventTarget */ 'elementRefptr' in subObj) {
-      obj[key] = new Element(subObj['elementRefptr'] as ElementNode);
+      obj[key] = new Element(subObj.elementRefptr as ElementNode);
       continue;
     } else if (subObj instanceof Element) {
       continue;
@@ -235,7 +226,7 @@ const transformWorkletInner = (
     }
     const isJsFn = '_jsFnId' in subObj;
     if (isJsFn) {
-      subObj['_execId'] = (ctx as Worklet)._execId;
+      (subObj as Record<string, ClosureValueType>)['_execId'] = (ctx as Worklet)._execId;
       lynxWorkletImpl._jsFunctionLifecycleManager?.addRef(
         (ctx as Worklet)._execId!,
         subObj,
@@ -258,12 +249,10 @@ function copyAccessorCapture(obj: Record<string, ClosureValueType>): Record<stri
 }
 
 function isMainThreadObjectDescriptor(
-  value: ClosureValueType,
-): boolean {
-  const descriptor = value as unknown as Partial<WorkletRefImpl<unknown>>;
-  return typeof value === 'object'
-    && value !== null
-    && typeof descriptor._wvid === 'number'
+  value: object,
+): value is WorkletRefImpl<unknown> {
+  const descriptor = value as Partial<WorkletRefImpl<unknown>>;
+  return typeof descriptor._wvid === 'number'
     && typeof descriptor._type === 'string'
     && descriptor._type !== 'main-thread';
 }
