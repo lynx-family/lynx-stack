@@ -1414,7 +1414,7 @@ importers:
         version: 3.0.3(zod@4.4.3)
       '@hono/node-server':
         specifier: ^2.1.0
-        version: 2.1.0(hono@4.13.0)
+        version: 2.1.0(hono@4.13.8)
       '@lynx-js/genui-lynx-xml':
         specifier: workspace:*
         version: link:../lynx-xml
@@ -1434,8 +1434,8 @@ importers:
         specifier: ^2.9.1
         version: 2.9.1(supports-color@10.2.2)
       hono:
-        specifier: 4.13.0
-        version: 4.13.0
+        specifier: 4.13.8
+        version: 4.13.8
       pngjs:
         specifier: ^7.0.0
         version: 7.0.0
@@ -9219,8 +9219,8 @@ packages:
   hastscript@9.0.1:
     resolution: {integrity: sha512-g7df9rMFX/SPi34tyGCyUBREQoKkapwdY/T04Qn9TDWfHhAYt4/I0gMVirzK5wEzeUqIjEB+LXC/ypb7Aqno5w==}
 
-  hono@4.13.0:
-    resolution: {integrity: sha512-jhunvfHWxd7J5EFfSgH4xsYJzSe/lfqbUCxiyyeaQasUsXeEHXtzVid+7EOGByc5JnFa23SSFL3Y2RV/z1T+eQ==}
+  hono@4.13.8:
+    resolution: {integrity: sha512-/Gng7NfoykZl2pjukW5Z6+8Yxm3BPRf86GTbQnt0SbySkvax4fyL4H3HhY1cCpBGmiW9XDRFzRV+CXK2W8QudQ==}
     engines: {node: '>=16.9.0'}
 
   hookable@6.0.1:
@@ -14190,14 +14190,14 @@ snapshots:
       '@shikijs/types': 3.23.0
       '@shikijs/vscode-textmate': 10.0.2
 
-  '@hono/node-server@1.19.9(hono@4.13.0)':
+  '@hono/node-server@1.19.9(hono@4.13.8)':
     dependencies:
-      hono: 4.13.0
+      hono: 4.13.8
     optional: true
 
-  '@hono/node-server@2.1.0(hono@4.13.0)':
+  '@hono/node-server@2.1.0(hono@4.13.8)':
     dependencies:
-      hono: 4.13.0
+      hono: 4.13.8
 
   '@humanfs/core@0.19.2':
     dependencies:
@@ -15163,7 +15163,7 @@ snapshots:
 
   '@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3)':
     dependencies:
-      '@hono/node-server': 1.19.9(hono@4.13.0)
+      '@hono/node-server': 1.19.9(hono@4.13.8)
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
       content-type: 1.0.5
@@ -15173,7 +15173,7 @@ snapshots:
       eventsource-parser: 3.1.0
       express: 5.2.1(supports-color@10.2.2)
       express-rate-limit: 8.6.0(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)
-      hono: 4.13.0
+      hono: 4.13.8
       jose: 6.2.10
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
@@ -19513,7 +19513,7 @@ snapshots:
       property-information: 7.0.0
       space-separated-tokens: 2.0.2
 
-  hono@4.13.0: {}
+  hono@4.13.8: {}
 
   hookable@6.0.1: {}
 
