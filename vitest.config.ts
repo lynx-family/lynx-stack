@@ -77,6 +77,7 @@ export default defineConfig({
       'packages/react/*/vitest.**.config.ts',
       'packages/react/runtime/__test__/element-template/vitest.config.ts',
       'packages/rspeedy/*/vitest.config.ts',
+      'packages/web-platform/web-explorer/vitest.config.ts',
       'packages/testing-library/*/vitest.config.mts',
       'packages/testing-library/examples/*/vitest.config.ts',
       '!packages/testing-library/examples/react-compiler/vitest.config.ts',
