@@ -21,7 +21,7 @@ import {
 import { dropFunctionCallReturnIds } from '../../core/thread-function-call/return-value.js';
 import { COMMIT } from '../../shared/render-constants.js';
 import { hook, isEmptyObject } from '../../utils.js';
-import type { MainThreadRefInitValuePatch } from '../../worklet-runtime/bindings/workletValue.js';
+import type { MainThreadRefInitValuePatch } from '../../worklet-runtime/bindings/types.js';
 import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { clearPendingRefs, flushPendingRefs, hasPendingRefs } from '../prop-adapters/ref.js';

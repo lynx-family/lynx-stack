@@ -23,23 +23,18 @@ export interface WorkletRef<T> {
   [key: string]: unknown;
 }
 
-interface ClosureValueType_ extends Record<string, ClosureValueType> {}
-
 export type ClosureValueType =
   | null
   | undefined
   | string
   | boolean
   | number
-  | object
-  | Worklet
-  | WorkletRef<unknown>
-  | Element
-  | (((...args: unknown[]) => unknown) & {
-    boundCtx?: object;
-  })
-  | ClosureValueType_
-  | ClosureValueType[];
+  | object;
+
+export type MainThreadRefInitValuePatch = (
+  | [id: number, value: unknown]
+  | [id: number, value: unknown, type: string]
+)[];
 
 export interface Worklet {
   _wkltId: string;

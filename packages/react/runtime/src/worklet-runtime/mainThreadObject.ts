@@ -52,7 +52,12 @@ function resolveFactoryFunction(
   if (typeof factory === 'function') {
     return factory;
   }
-  return resolveWorklet(factory) as MainThreadObjectFactory;
+  if (!('_wkltId' in factory) || '_lepusWorkletHash' in factory) {
+    throw new Error('Cannot resolve an invalid Main Thread Function.');
+  }
+  // Factories are capture-free, so they need neither context traversal nor binding.
+  // Resolve on first use: the compiler registers worklets after module evaluation.
+  return lynxWorkletImpl._workletMap[factory._wkltId] as MainThreadObjectFactory;
 }
 
 function getMainThreadObjectFactory(
@@ -103,18 +108,11 @@ function releaseMainThreadObject(value: unknown): void {
   if (typeof value !== 'object' || value === null) {
     return;
   }
-  if (!realizedMainThreadObjectTypes.has(value)) {
-    return;
-  }
   firstScreenMainThreadObjects.delete(value);
   realizedMainThreadObjectTypes.delete(value);
 }
 
-type WorkletResolver = (worklet: Worklet) => (...args: unknown[]) => unknown;
-let resolveWorklet: WorkletResolver;
-
-function initMainThreadObjects(resolver: WorkletResolver): void {
-  resolveWorklet = resolver;
+function initMainThreadObjects(): void {
   mainThreadObjectDefinitions.clear();
   realizedMainThreadObjectTypes = new WeakMap();
   firstScreenMainThreadObjects = new Set();
@@ -125,13 +123,12 @@ function retainHydratedMainThreadObject(value: object): void {
 }
 
 function clearFirstScreenMainThreadObjects(): void {
-  firstScreenMainThreadObjects.forEach(value => releaseMainThreadObject(value));
+  firstScreenMainThreadObjects.forEach(value => realizedMainThreadObjectTypes.delete(value));
   firstScreenMainThreadObjects.clear();
 }
 
 export {
   type MainThreadObjectFactory,
-  type WorkletResolver,
   initMainThreadObjects,
   registerMainThreadObjectType,
   createMainThreadObject,

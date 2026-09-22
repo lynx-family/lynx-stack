@@ -6,7 +6,7 @@ import type { RunWorkletCtxData } from '@lynx-js/react/worklet-runtime/bindings'
 
 import { ElementTemplateUpdateOps } from './opcodes.js';
 import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID, ELEMENT_TEMPLATE_PAGE_TYPE } from './page.js';
-import type { MainThreadRefInitValuePatch } from '../../worklet-runtime/bindings/workletValue.js';
+import type { MainThreadRefInitValuePatch } from '../../worklet-runtime/bindings/types.js';
 
 export type SerializableValue =
   | string

@@ -53,6 +53,8 @@ describe('MainThreadObject registry and realization', () => {
     // Type definition evaluation happens before the compiler-appended
     // registerWorklet calls at the end of the MTS module.
     globalThis.registerWorklet('main-thread', 'create-test-value', create);
+    const lookupFactory = vi.fn(() => create);
+    Object.defineProperty(lynxWorkletImpl._workletMap, 'create-test-value', { get: lookupFactory });
 
     updateWorkletRefInitValueChanges([
       [71, 'first', '@test/lazy-factory'],
@@ -61,11 +63,12 @@ describe('MainThreadObject registry and realization', () => {
     expect(getFromWorkletRefMap({ _wvid: 71 })).toMatchObject({ value: 'first' });
     expect(getFromWorkletRefMap({ _wvid: 72 })).toMatchObject({ value: 'second' });
     expect(create).toHaveBeenCalledTimes(2);
-    expect(bindFactory).toHaveBeenCalledOnce();
+    expect(lookupFactory).toHaveBeenCalledOnce();
+    expect(bindFactory).not.toHaveBeenCalled();
 
     removeValueFromWorkletRefMap(71);
     removeValueFromWorkletRefMap(72);
-    expect(bindFactory).toHaveBeenCalledOnce();
+    expect(lookupFactory).toHaveBeenCalledOnce();
   });
 
   it('rejects an unregistered main-thread object type', () => {
@@ -73,6 +76,15 @@ describe('MainThreadObject registry and realization', () => {
       updateWorkletRefInitValueChanges([[8, 42, '@test/missing']]);
     }).toThrow('MainThreadObject type is not registered: "@test/missing"');
   });
+
+  it.each([{}, { _lepusWorkletHash: 'legacy' }, { _wkltId: 'legacy', _lepusWorkletHash: 'legacy' }])(
+    'rejects invalid factory descriptors %j',
+    (descriptor) => {
+      lynxWorkletImpl._refImpl.registerMainThreadObjectType('@test/invalid-factory', descriptor);
+      expect(() => updateWorkletRefInitValueChanges([[1, null, '@test/invalid-factory']]))
+        .toThrow('Cannot resolve an invalid Main Thread Function.');
+    },
+  );
 
   it('rejects conflicting registrations for the same type key', () => {
     const create = value => ({ value });

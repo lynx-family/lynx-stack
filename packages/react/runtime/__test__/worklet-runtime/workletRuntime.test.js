@@ -174,13 +174,6 @@ describe('Worklet', () => {
     expect(second).toBeCalled();
   });
 
-  it.each([{}, { _lepusWorkletHash: 'legacy' }])('rejects invalid factory descriptors %j', (descriptor) => {
-    initWorklet();
-    lynxWorkletImpl._refImpl.registerMainThreadObjectType('@test/invalid-factory', descriptor);
-    expect(() => updateWorkletRefInitValueChanges([[1, null, '@test/invalid-factory']]))
-      .toThrow('Cannot resolve an invalid Main Thread Function.');
-  });
-
   it('worklet should be called with arguments', async () => {
     initWorklet();
 

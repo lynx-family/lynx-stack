@@ -2,8 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
-import type { Worklet, WorkletRef, WorkletRefId, WorkletRefImpl } from './bindings/types.js';
-import type { MainThreadRefInitValuePatch } from './bindings/workletValue.js';
+import type {
+  MainThreadRefInitValuePatch,
+  Worklet,
+  WorkletRef,
+  WorkletRefId,
+  WorkletRefImpl,
+} from './bindings/types.js';
 import {
   assertCompatibleMainThreadObject,
   clearFirstScreenMainThreadObjects,
@@ -14,7 +19,7 @@ import {
   releaseMainThreadObject,
   retainHydratedMainThreadObject,
 } from './mainThreadObject.js';
-import type { MainThreadObjectFactory, WorkletResolver } from './mainThreadObject.js';
+import type { MainThreadObjectFactory } from './mainThreadObject.js';
 import { mainThreadFlushLoopMark } from './utils/mainThreadFlushLoopGuard.js';
 import { profile } from './utils/profile.js';
 
@@ -36,8 +41,8 @@ interface RefImpl {
 }
 
 let impl: RefImpl | undefined;
-function initWorkletRef(resolveWorklet: WorkletResolver): RefImpl {
-  initMainThreadObjects(resolveWorklet);
+function initWorkletRef(): RefImpl {
+  initMainThreadObjects();
   return (impl = {
     _workletRefMap: {},
     /**

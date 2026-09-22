@@ -45,18 +45,13 @@ function hydrateCtxImpl(
     return;
   }
 
-  // MainThreadObject descriptors are atomic. Their `_initValue` belongs to
-  // the user and must not be traversed as a nested worklet context. Legacy
-  // MainThreadRef descriptors do not carry the object protocol metadata and
-  // continue through the existing `_wvid` path below.
-  if (isMainThreadObjectDescriptor(ctxObj)) {
-    hydrateWorkletValueHandle(
-      ctxObj as unknown as WorkletRefImpl<unknown>,
-      firstScreenCtxObj,
-    );
+  // Typed handles (including `_type: 'main-thread'` mutable cells) hydrate
+  // atomically without walking their initialization payload. Untyped legacy
+  // refs continue through the existing `_wvid` path below.
+  if (isTypedWorkletRefDescriptor(ctxObj)) {
+    hydrateWorkletValueHandle(ctxObj, firstScreenCtxObj);
     return;
   }
-  // eslint-disable-next-line @typescript-eslint/no-for-in-array
   for (const key in ctx) {
     if (key === '_wvid') {
       hydrateMainThreadRef(
@@ -78,13 +73,11 @@ function hydrateCtxImpl(
   }
 }
 
-function isMainThreadObjectDescriptor(
-  value: ClosureValueType,
-): boolean {
-  const descriptor = value as unknown as Partial<WorkletRefImpl<unknown>>;
-  return typeof value === 'object'
-    && value !== null
-    && typeof descriptor._wvid === 'number'
+function isTypedWorkletRefDescriptor(
+  value: object,
+): value is WorkletRefImpl<unknown> {
+  const descriptor = value as Partial<WorkletRefImpl<unknown>>;
+  return typeof descriptor._wvid === 'number'
     && typeof descriptor._type === 'string';
 }
 
@@ -104,8 +97,8 @@ function hydrateMainThreadRef(
 }
 
 /**
- * Hydrates a MainThreadObject handle on the main thread.
- * The target is the object realized from the matching first-screen handle.
+ * Hydrates a typed worklet handle on the main thread.
+ * The target is the object or mutable cell realized from the matching first-screen handle.
  */
 function hydrateWorkletValueHandle(
   handle: WorkletRefImpl<unknown>,
