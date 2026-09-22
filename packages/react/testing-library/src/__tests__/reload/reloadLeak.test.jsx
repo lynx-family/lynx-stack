@@ -115,6 +115,32 @@ describe('reload does not retain the old tree', () => {
     }
   });
 
+  it('retires a replaced list child the list still holds and releases the rest', () => {
+    const ui = <ListApp />;
+    const { container } = render(ui, { enableMainThread: true });
+
+    lynxTestingEnv.switchToMainThread();
+    const oldNodes = collect(__root);
+    const oldChildren = oldNodes.find(node => node.__snapshot_def.isListHolder).childNodes;
+    expect(oldChildren).toHaveLength(3);
+    elementTree.enterListItemAtIndex(container.firstChild, 0);
+
+    reloadTemplate(ui, { keys: [1, 2] });
+
+    // Item 0 is dropped while native still shows it: the same state
+    // `removeChild` leaves a list child in, torn down by `componentAtIndex`
+    // once its elements have been reused. Items 1 and 2 were never
+    // materialized, so nothing holds them.
+    expect(oldChildren[0].__id).toBe(0);
+    expect(oldChildren[0].__element_root).toBeDefined();
+    for (const child of oldChildren.slice(1)) {
+      expect(child.__id).not.toBe(0);
+      expect(child.__element_root).toBeUndefined();
+      expect(child.parentNode?.type ?? null).toBeNull();
+    }
+    expect(registered(oldNodes)).toEqual([]);
+  });
+
   it('keeps working across two reloads', async () => {
     const ui = <App />;
     const { container } = render(ui, { enableMainThread: true });
