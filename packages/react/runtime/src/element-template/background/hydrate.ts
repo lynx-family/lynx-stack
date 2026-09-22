@@ -156,8 +156,10 @@ function hydrateCompiledInstance(
   if (!bindHydrationHandleId(instance, handleId, serialized.templateKey)) {
     return false;
   }
-  instance.prepareAttributeSlotsForHydration();
-  hydrateAttributeSlots(instance.type, handleId, serialized.attributeSlots ?? [], instance.attributeSlots);
+  if (serialized.attributeSlots?.length || instance.attributeSlots.length) {
+    instance.prepareAttributeSlotsForHydration();
+    hydrateAttributeSlots(instance.type, handleId, serialized.attributeSlots ?? [], instance.attributeSlots);
+  }
 
   if (serialized.templateKey === BUILTIN_RAW_TEXT_TEMPLATE_KEY) {
     return true;
