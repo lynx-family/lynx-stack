@@ -8,6 +8,12 @@
     // Delay npm updates by 3 days so risky or unpublished releases have time to surface.
     "security:minimumReleaseAgeNpm",
     ":disableRateLimiting",
+    // Automerge non-major updates of semver-stable (non-0.x) packages, and all
+    // `@types/*`, once CI is green. Groups below opt out where a green CI is
+    // not enough of a signal. Note that a grouped PR only automerges when
+    // *every* upgrade in it is automergeable.
+    ":automergeStableNonMajor",
+    ":automergeTypes",
   ],
 
   // Exclude `examples` from "config:recommended"
@@ -104,6 +110,7 @@
         "dependencies",
         "pnpm.catalog.rspack",
       ],
+      "automerge": false,
       "matchPackageNames": [
         "/@rspack/*/",
       ],
@@ -118,6 +125,7 @@
         "dependencies",
         "pnpm.catalog.rsbuild",
       ],
+      "automerge": false,
       "matchPackageNames": [
         "/@rsbuild/*/",
         "/rsbuild-plugin-*/",
@@ -137,6 +145,7 @@
         "dependencies",
         "pnpm.catalog.rstest",
       ],
+      "automerge": false,
       "matchPackageNames": [
         "/@rstest/*/",
       ],
@@ -149,6 +158,7 @@
         "devDependencies",
         "dependencies",
       ],
+      "automerge": false,
       "matchPackageNames": [
         "rspress",
         "/@rspress/*/",
@@ -196,6 +206,10 @@
         "@lynx-js/**",
       ],
       "minimumReleaseAge": "0 days",
+      // First-party releases are coordinated by hand (and the dated-snapshot
+      // builds above ship straight from `main`), so they get a human look
+      // instead of riding on a green CI.
+      "automerge": false,
     },
     {
       "groupName": "API Extractor",
@@ -264,6 +278,7 @@
       "matchPackageNames": [
         "@typescript/native-preview",
       ],
+      "automerge": false,
     },
     {
       "groupName": "Lynx Engine",
@@ -276,6 +291,7 @@
       "schedule": [
         "* 0-3 1 * *",
       ],
+      "automerge": false,
     },
         {
       "groupName": "Rust Crates",
@@ -300,6 +316,7 @@
         "rkyv",
         "rkyv_derive",
       ],
+      "automerge": false,
     },
     {
       "groupName": "SWC",
