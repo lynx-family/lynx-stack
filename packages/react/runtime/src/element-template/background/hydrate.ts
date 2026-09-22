@@ -165,6 +165,10 @@ function hydrateCompiledInstance(
     return true;
   }
 
+  if (!serialized.childSlots?.length && !instance.firstChild) {
+    return true;
+  }
+
   const serializedChildSlots = serialized.childSlots ?? [];
   const backgroundChildSlots = instance.childSlots;
   // Snapshot hydrates dynamic children through slot-filtered lists. Keeping ET
