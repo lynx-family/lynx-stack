@@ -11,13 +11,10 @@ import type {
 } from './bindings/types.js';
 import {
   assertCompatibleMainThreadObject,
-  clearFirstScreenMainThreadObjects,
   createMainThreadObject,
   initMainThreadObjects,
   isRealizedMainThreadObject,
   registerMainThreadObjectType,
-  releaseMainThreadObject,
-  retainHydratedMainThreadObject,
 } from './mainThreadObject.js';
 import type { MainThreadObjectFactory } from './mainThreadObject.js';
 import { mainThreadFlushLoopMark } from './utils/mainThreadFlushLoopGuard.js';
@@ -145,7 +142,6 @@ const getFromWorkletRefMap = (
 };
 
 function removeValueFromWorkletRefMap(id: WorkletRefId): void {
-  releaseMainThreadObject(impl!._workletRefMap[id]);
   delete impl!._workletRefMap[id];
 }
 
@@ -154,12 +150,7 @@ function hydrateWorkletValue(
   value: object,
 ): void {
   assertCompatibleWorkletValue(handle, value, 'hydration');
-  const previous = impl!._workletRefMap[handle._wvid];
-  if (previous !== value) {
-    releaseMainThreadObject(previous);
-  }
   impl!._workletRefMap[handle._wvid] = value;
-  retainHydratedMainThreadObject(value);
 }
 
 /**
@@ -214,7 +205,6 @@ function updateWorkletRefInitValueChanges(
 }
 
 function clearFirstScreenWorkletRefMap(): void {
-  clearFirstScreenMainThreadObjects();
   impl!._firstScreenWorkletRefMap = {};
 }
 

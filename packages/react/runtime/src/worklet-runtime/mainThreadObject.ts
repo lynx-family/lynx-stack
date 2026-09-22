@@ -10,8 +10,9 @@ interface MainThreadObjectDefinition {
 }
 
 const mainThreadObjectDefinitions = new Map<string, MainThreadObjectDefinition>();
+// The brand belongs to the target, not an individual handle. Other handles or
+// captured contexts may still own the target after one ref-map entry is removed.
 let realizedMainThreadObjectTypes = new WeakMap<object, string>();
-let firstScreenMainThreadObjects = new Set<object>();
 
 function registerMainThreadObjectType(
   type: string,
@@ -80,9 +81,6 @@ function createMainThreadObject(refImpl: WorkletRefImpl<unknown>): object {
     throw new Error(`MainThreadObject type "${type}" created a non-object value.`);
   }
   realizedMainThreadObjectTypes.set(value, type);
-  if (refImpl._wvid < 0) {
-    firstScreenMainThreadObjects.add(value);
-  }
   return value;
 }
 
@@ -104,27 +102,9 @@ function assertCompatibleMainThreadObject(
   }
 }
 
-function releaseMainThreadObject(value: unknown): void {
-  if (typeof value !== 'object' || value === null) {
-    return;
-  }
-  firstScreenMainThreadObjects.delete(value);
-  realizedMainThreadObjectTypes.delete(value);
-}
-
 function initMainThreadObjects(): void {
   mainThreadObjectDefinitions.clear();
   realizedMainThreadObjectTypes = new WeakMap();
-  firstScreenMainThreadObjects = new Set();
-}
-
-function retainHydratedMainThreadObject(value: object): void {
-  firstScreenMainThreadObjects.delete(value);
-}
-
-function clearFirstScreenMainThreadObjects(): void {
-  firstScreenMainThreadObjects.forEach(value => realizedMainThreadObjectTypes.delete(value));
-  firstScreenMainThreadObjects.clear();
 }
 
 export {
@@ -134,7 +114,4 @@ export {
   createMainThreadObject,
   assertCompatibleMainThreadObject,
   isRealizedMainThreadObject,
-  releaseMainThreadObject,
-  retainHydratedMainThreadObject,
-  clearFirstScreenMainThreadObjects,
 };

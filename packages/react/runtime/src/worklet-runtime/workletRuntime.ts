@@ -168,7 +168,7 @@ const transformWorkletInner = (
       continue;
     }
     if (isMainThreadObjectDescriptor(subObj)) {
-      obj[key] = getFromWorkletRefMap(subObj);
+      obj = replaceCapturedProperty(obj, value, key, getFromWorkletRefMap(subObj));
       continue;
     }
 
@@ -197,21 +197,8 @@ const transformWorkletInner = (
       const boundWorklet: ((...args: unknown[]) => unknown) & { boundCtx?: object } = lynxWorkletImpl
         ._workletMap[(subObj as Worklet)._wkltId]!
         .bind(boundCtx);
-      const descriptor = Object.getOwnPropertyDescriptor(obj, key);
       if (transformedSubObj !== subObj && obj === value && obj !== ctx) obj = copyAccessorCapture(obj);
-      if (descriptor?.get) {
-        // Generated method getters create a fresh receiver snapshot on each capture.
-        // Materialize only the captured copy; the source must keep its getter.
-        if (obj === value) obj = copyAccessorCapture(obj);
-        Object.defineProperty(obj, key, {
-          value: boundWorklet,
-          writable: true,
-          enumerable: descriptor.enumerable!,
-          configurable: descriptor.configurable!,
-        });
-      } else {
-        obj[key] = boundWorklet;
-      }
+      obj = replaceCapturedProperty(obj, value, key, boundWorklet);
       if (!isRootWorklet) {
         // Hydration needs the same context that the function already owns through bind().
         // The original nested context can disappear after its parent replaces it with this function.
@@ -222,7 +209,7 @@ const transformWorkletInner = (
     if (transformedSubObj !== subObj) {
       // The root context is runtime-owned: hydration must see its captured copy.
       if (obj === value && obj !== ctx) obj = copyAccessorCapture(obj);
-      obj[key] = transformedSubObj;
+      obj = replaceCapturedProperty(obj, value, key, transformedSubObj);
     }
     const isJsFn = '_jsFnId' in subObj;
     if (isJsFn) {
@@ -237,14 +224,46 @@ const transformWorkletInner = (
   return obj;
 };
 
-function copyAccessorCapture(obj: Record<string, ClosureValueType>): Record<string, ClosureValueType> {
+function replaceCapturedProperty(
+  obj: Record<string, ClosureValueType>,
+  source: object,
+  key: string,
+  value: ClosureValueType,
+): Record<string, ClosureValueType> {
+  const descriptor = Object.getOwnPropertyDescriptor(obj, key);
+  if (descriptor?.get) {
+    // Getters can refresh handles or method receivers. Materialize the captured
+    // value without consuming the source getter or invoking its setter.
+    const capturedDescriptor = {
+      value,
+      writable: true,
+      enumerable: descriptor.enumerable!,
+      configurable: descriptor.configurable!,
+    };
+    if (obj === source || !descriptor.configurable) {
+      // Replace before defining the copy, including non-configurable getters.
+      const descriptors = Object.getOwnPropertyDescriptors(obj);
+      descriptors[key] = capturedDescriptor;
+      return copyAccessorCapture(obj, descriptors);
+    }
+    Object.defineProperty(obj, key, capturedDescriptor);
+  } else {
+    obj[key] = value;
+  }
+  return obj;
+}
+
+function copyAccessorCapture(
+  obj: Record<string, ClosureValueType>,
+  descriptors: PropertyDescriptorMap = Object.getOwnPropertyDescriptors(obj),
+): Record<string, ClosureValueType> {
   // Copy descriptors without evaluating getters a second time. Array ancestors
   // retain their array identity when a nested accessor requires a captured copy.
   return Object.defineProperties(
     Array.isArray(obj)
       ? []
       : Object.create(Object.getPrototypeOf(obj) as object | null) as Record<string, ClosureValueType>,
-    Object.getOwnPropertyDescriptors(obj),
+    descriptors,
   ) as Record<string, ClosureValueType>;
 }
 
