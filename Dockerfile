@@ -81,9 +81,10 @@ RUN mkdir -p /out/native/lib \
         /out/native/lynx-headless-rust-test-runner /out/native/libreact_transform.so
 
 # pnpm prune does not prune an entire workspace. Reinstall production dependencies
-# from the populated store, preserving workspace links and generated package files.
+# using cached packages when available, fetching any missing package snapshots.
+# Preserve workspace links and generated package files.
 RUN find . -type d -name node_modules -prune -exec rm -rf '{}' + \
-    && corepack pnpm install --prod --offline --frozen-lockfile --ignore-scripts \
+    && corepack pnpm install --prod --prefer-offline --frozen-lockfile --ignore-scripts \
     && find . -type d -name node_modules -prune -o \
         -type d \( -name target -o -name .turbo -o -name .swc \
         -o -name .rslib -o -name .generated \) -prune -exec rm -rf '{}' + \
