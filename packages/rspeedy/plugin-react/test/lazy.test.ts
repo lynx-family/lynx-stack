@@ -301,6 +301,50 @@ describe('Lazy', () => {
         expect(backgroundCode).not.toBe('')
         expect(mainThreadCode).not.toBe('')
 
+        type BootstrapTarget =
+          & (() => unknown)
+          & Record<
+            PropertyKey,
+            unknown
+          >
+        const bootstrapTarget = new Proxy(
+          (() => undefined) as BootstrapTarget,
+          {
+            get(target, property, receiver: unknown): unknown {
+              if (
+                typeof property === 'symbol'
+                || Reflect.has(target, property)
+              ) {
+                return Reflect.get(target, property, receiver) as unknown
+              }
+              return receiver
+            },
+            apply: (_target, thisArg: unknown): unknown => thisArg,
+          },
+        )
+        for (
+          const [name, value] of Object.entries({
+            __BACKGROUND__: true,
+            __DEV__: false,
+            __ENABLE_REACT_ONLY__: false,
+            __ENABLE_SSR__: false,
+            __FIRST_SCREEN_SYNC_TIMING__: false,
+            __JS__: true,
+            __LEPUS__: false,
+            __MAIN_THREAD__: false,
+            __PROFILE__: false,
+            __USE_ELEMENT_TEMPLATE__: true,
+            lynx: bootstrapTarget,
+          })
+        ) {
+          rstest.stubGlobal(name, value)
+        }
+        const {
+          RUNTIME_BACKEND_ELEMENT_TEMPLATE,
+          RUNTIME_BACKEND_SNAPSHOT,
+          registerRuntimeBackend,
+        } = await import('@lynx-js/react/element-template/internal')
+
         for (const thread of ['background', 'main-thread']) {
           const app = {
             callDestroyLifetimeFun: rstest.fn(),
@@ -318,15 +362,8 @@ describe('Lazy', () => {
             useEffect: rstest.fn(),
             useState: rstest.fn(),
           }
-          const hostInternal = { __root: {}, options: {} }
           const hostJSX = { jsx: rstest.fn(() => vnode) }
           const hostJSXDev = { jsxDEV: rstest.fn(() => vnode) }
-          const expectedRuntime = {
-            ...hostReact,
-            ...hostInternal,
-            ...hostJSX,
-            ...hostJSXDev,
-          }
           // The emitted module reads the real lazy ABI. A finite host makes any
           // accidental native initialization fail instead of absorbing it.
           const target: Record<string | symbol, unknown> = {
@@ -335,7 +372,23 @@ describe('Lazy', () => {
             getApp: () => app,
           }
           const backend = Symbol.for('__REACT_LYNX_RUNTIME_BACKEND__')
-          target[backend] = 'Element Template'
+          target[backend] = RUNTIME_BACKEND_ELEMENT_TEMPLATE
+          rstest.stubGlobal('__LEPUS__', false)
+          rstest.stubGlobal('lynx', target)
+          const hostInternal = {
+            __root: {},
+            options: {},
+            RUNTIME_BACKEND_ELEMENT_TEMPLATE,
+            RUNTIME_BACKEND_SNAPSHOT,
+            registerRuntimeBackend,
+          }
+          const expectedRuntime = {
+            ...hostReact,
+            __root: hostInternal.__root,
+            options: hostInternal.options,
+            ...hostJSX,
+            ...hostJSXDev,
+          }
           for (
             const [entry, value] of Object.entries({
               '@lynx-js/react': hostReact,
@@ -401,7 +454,7 @@ describe('Lazy', () => {
           }
 
           Object.defineProperty(target, backend, {
-            value: 'Snapshot',
+            value: RUNTIME_BACKEND_SNAPSHOT,
             configurable: true,
           })
           expect(execute).toThrow(
@@ -414,6 +467,7 @@ describe('Lazy', () => {
         }
       } finally {
         rstest.unstubAllEnvs()
+        rstest.unstubAllGlobals()
         await fs.rm(tmp, { recursive: true, force: true })
       }
     })

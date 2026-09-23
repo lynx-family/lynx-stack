@@ -5,7 +5,7 @@
 // import { Suspense, createElement, lazy } from 'preact/compat';
 // import type { FC } from 'react';
 
-import './runtime-backend-marker.js';
+import './runtime-marker.js';
 import './native/index.js';
 
 // import { factory as factory2 } from '../compat/componentIs.js';
@@ -33,6 +33,15 @@ export {
 export type { Options } from 'preact';
 
 export { loadDynamicJS, __dynamicImport } from '../core/lynx/dynamic-import.js';
+
+// Re-exported so lazy bundle shells can reach the host runtime APIs
+// via `target[sExportsReactInternal]`.
+export { registerRuntimeVersion, getRuntimeVersion } from '../core/lynx/runtime-version.js';
+export {
+  RUNTIME_BACKEND_ELEMENT_TEMPLATE,
+  RUNTIME_BACKEND_SNAPSHOT,
+  registerRuntimeBackend,
+} from '../core/lynx/runtime-backend.js';
 
 export { withInitDataInState } from '../core/initData.js';
 
