@@ -5,7 +5,6 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
-import gte from 'semver/functions/gte.js'
 
 export interface Options {
   lazy?: boolean | undefined
@@ -32,7 +31,6 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
       const reactLynxPkg = require.resolve('@lynx-js/react/package.json', {
         paths: [rootPath ?? api.context.rootPath],
       })
-      const { version } = require(reactLynxPkg) as { version: string }
 
       const reactLynxDir = path.dirname(reactLynxPkg)
 
@@ -74,8 +72,8 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           preactHooks,
           hooksBackground,
           hooksMainThread,
-          reactLepusBackground,
-          reactLepusMainThread,
+          reactLynxBackground,
+          reactLynxMainThread,
           reactCompat,
           elementTemplateEntry,
           elementTemplateInternalEntry,
@@ -95,9 +93,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           resolve('@lynx-js/react/lepus/hooks'),
           resolve('@lynx-js/react'),
           resolve('@lynx-js/react/lepus'),
-          gte(version, '0.111.9999')
-            ? resolve('@lynx-js/react/compat')
-            : Promise.resolve(null),
+          resolve('@lynx-js/react/compat'),
           elementTemplate
             ? resolve('@lynx-js/react/element-template')
             : Promise.resolve(null),
@@ -114,9 +110,9 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           background: jsxDevRuntimeBackground,
           mainThread: elementTemplateJsxDevRuntime ?? jsxDevRuntimeMainThread,
         }
-        const reactLepus = {
-          background: reactLepusBackground,
-          mainThread: reactLepusMainThread,
+        const reactLynx = {
+          background: reactLynxBackground,
+          mainThread: reactLynxMainThread,
         }
 
         const reactHooks = {
@@ -138,7 +134,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
                   .set('react/jsx-dev-runtime', jsxDevRuntime.mainThread)
                   .set('@lynx-js/react/jsx-runtime', jsxRuntime.mainThread)
                   .set('@lynx-js/react/jsx-dev-runtime', jsxDevRuntime.mainThread)
-                  .set('@lynx-js/react/lepus$', reactLepus.mainThread)
+                  .set('@lynx-js/react/lepus$', reactLynx.mainThread)
                   .set('@lynx-js/react/lepus/jsx-runtime', jsxRuntime.mainThread)
                   .set('@lynx-js/react/lepus/jsx-dev-runtime', jsxDevRuntime.mainThread)
                   .set('preact/hooks', reactHooks.mainThread)
@@ -156,7 +152,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
                   .set('react/jsx-dev-runtime', jsxDevRuntime.background)
                   .set('@lynx-js/react/jsx-runtime', jsxRuntime.background)
                   .set('@lynx-js/react/jsx-dev-runtime', jsxDevRuntime.background)
-                  .set('@lynx-js/react/lepus$', elementTemplateEntry ?? reactLepus.background)
+                  .set('@lynx-js/react/lepus$', elementTemplateEntry ?? reactLynx.background)
                   .set('preact/hooks', reactHooks.preact)
                   .set('@lynx-js/react/hooks', reactHooks.background)
                 .end()
@@ -213,7 +209,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         if (!chain.resolve.alias.has('react$')) {
           chain.resolve.alias.set(
             'react$',
-            reactLepus.background,
+            reactCompat,
           )
         }
 
@@ -222,7 +218,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           .alias
           .set(
             '@lynx-js/react$',
-            elementTemplateEntry ?? reactLepus.background,
+            elementTemplateEntry ?? reactLynx.background,
           )
           .set(
             '@lynx-js/react/internal$',
@@ -260,15 +256,13 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
             )
         }
 
-        if (reactCompat) {
-          chain
-            .resolve
-            .alias
-            .set(
-              '@lynx-js/react/compat$',
-              reactCompat,
-            )
-        }
+        chain
+          .resolve
+          .alias
+          .set(
+            '@lynx-js/react/compat$',
+            reactCompat,
+          )
 
         const preactEntries = [
           'preact',

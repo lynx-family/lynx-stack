@@ -57,6 +57,7 @@ export default defineConfig({
     'packages/genui/openui/rstest.config.ts',
     'packages/genui/playground/rstest.config.ts',
     'packages/genui/server/rstest.config.ts',
+    'packages/react-compat/rstest.config.ts',
     'packages/rspeedy/*/rstest.config.ts',
     'packages/web-platform/*/rstest.config.ts',
     'packages/webpack/*/rstest.config.ts',

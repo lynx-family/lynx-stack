@@ -54,6 +54,7 @@
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-alias-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react-compat": "workspace:*",
     "@lynx-js/react-refresh-webpack-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-signals": "workspace:*",

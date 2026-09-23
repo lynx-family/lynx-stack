@@ -1161,7 +1161,7 @@ describe('pluginReactLynx', () => {
         "preact/jsx-dev-runtime$": "preact/jsx-runtime/dist/jsxRuntime.mjs",
         "preact/jsx-runtime$": "preact/jsx-runtime/dist/jsxRuntime.mjs",
         "preact/test-utils$": "preact/test-utils/dist/testUtils.mjs",
-        "react$": "<ROOT>/packages/react/runtime/lib/index.js",
+        "react$": "<ROOT>/packages/react/runtime/compat/index.js",
         "react-compiler-runtime": "<PNPM_INNER>/react-compiler-runtime",
         "use-sync-external-store$": "<ROOT>/packages/use-sync-external-store/index.js",
         "use-sync-external-store/shim$": "<ROOT>/packages/use-sync-external-store/index.js",
