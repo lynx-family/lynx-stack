@@ -133,6 +133,7 @@ describe('SWC configuration', () => {
           "env": {
             "include": [
               "transform-block-scoping",
+              "transform-destructuring",
               "transform-async-generator-functions",
               "transform-dotall-regex",
               "transform-named-capturing-groups-regex",

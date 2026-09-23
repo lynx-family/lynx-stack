@@ -24,6 +24,7 @@ describe('pluginSwc', () => {
     expect(loaderOptions?.env?.targets).toEqual(ES_ENV_TARGETS)
     expect(loaderOptions?.env?.include).toEqual([
       'transform-block-scoping',
+      'transform-destructuring',
       ...getESVersionEnvInclude(),
     ])
   })

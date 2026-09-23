@@ -42,6 +42,12 @@ export function pluginSwc(): RsbuildPlugin {
                     // faster. Listing it in `env.exclude` opts out
                     // (exclude > include).
                     'transform-block-scoping',
+                    // Object-rest parameter lowering can introduce array rest
+                    // that minification inlines to `[a, ...b] = [c, d]`.
+                    // Safari < 14.1 / iOS < 14.5 miscompiles that pattern.
+                    // Lower destructuring too, including compiler-generated
+                    // patterns; `env.bugfixes` alone does not cover this in SWC.
+                    'transform-destructuring',
                     ...getESVersionEnvInclude(),
                     ...(config.env?.include ?? []),
                   ]),
