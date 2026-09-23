@@ -10,6 +10,7 @@ import { initEomImpl } from './eomImpl.js';
 import { addEventMethodsIfNeeded } from './eventPropagation.js';
 import { hydrateCtx } from './hydrate.js';
 import { JsFunctionLifecycleManager, isRunOnBackgroundEnabled } from './jsFunctionLifecycle.js';
+import { isRealizedMainThreadObject } from './mainThreadObject.js';
 import { runRunOnMainThreadTask } from './runOnMainThread.js';
 import { mainThreadFlushLoopMark } from './utils/mainThreadFlushLoopGuard.js';
 import { profile } from './utils/profile.js';
@@ -129,8 +130,7 @@ function transformWorklet(
     }
   }
 
-  const worklet = { main: ctx };
-  transformWorkletInner(worklet, 0, ctx);
+  const worklet = transformWorkletInner({ main: ctx }, 0, ctx) as { main: ClosureValueType };
 
   if (isWorklet) {
     workletCache.set(ctx, worklet.main);
@@ -143,16 +143,16 @@ const transformWorkletInner = (
   value: ClosureValueType,
   depth: number,
   ctx: unknown,
-) => {
+): ClosureValueType => {
   const limit = 1000;
   if (++depth >= limit) {
     throw new Error('Depth of value exceeds limit of ' + limit + '.');
   }
   /* v8 ignore next 3 */
   if (typeof value !== 'object' || value === null) {
-    return;
+    return value;
   }
-  const obj = value as Record<string, ClosureValueType>;
+  let obj = value as Record<string, ClosureValueType>;
 
   for (const key in obj) {
     const subObj: ClosureValueType = obj[key];
@@ -160,14 +160,26 @@ const transformWorkletInner = (
       continue;
     }
 
+    // A MainThreadObject initialization payload is user data. Resolve the
+    // typed descriptor before walking it so payload properties that resemble
+    // worklet metadata remain untouched. Legacy MainThreadRef descriptors retain
+    // the existing recursive path.
+    if (isRealizedMainThreadObject(subObj)) {
+      continue;
+    }
+    if (isMainThreadObjectDescriptor(subObj)) {
+      obj = replaceCapturedProperty(obj, value, key, getFromWorkletRefMap(subObj));
+      continue;
+    }
+
     if (/** isEventTarget */ 'elementRefptr' in subObj) {
-      obj[key] = new Element(subObj['elementRefptr'] as ElementNode);
+      obj[key] = new Element(subObj.elementRefptr as ElementNode);
       continue;
     } else if (subObj instanceof Element) {
       continue;
     }
 
-    transformWorkletInner(subObj, depth, ctx);
+    const transformedSubObj = transformWorkletInner(subObj, depth, ctx) as Record<string, ClosureValueType>;
 
     const isWorkletRef = '_wvid' in (subObj as object);
     if (isWorkletRef) {
@@ -179,21 +191,29 @@ const transformWorkletInner = (
     const isWorklet = '_wkltId' in subObj;
     if (isWorklet) {
       const isRootWorklet = subObj === ctx;
-      const boundCtx = { ...subObj };
+      const boundCtx = { ...transformedSubObj };
       // Keep the original context collectible. PrimJS traces WeakMap values even
       // when their keys are otherwise unreachable, so the cached function must not point back to its key.
-      obj[key] = lynxWorkletImpl._workletMap[(subObj as Worklet)._wkltId]!
+      const boundWorklet: ((...args: unknown[]) => unknown) & { boundCtx?: object } = lynxWorkletImpl
+        ._workletMap[(subObj as Worklet)._wkltId]!
         .bind(boundCtx);
+      if (transformedSubObj !== subObj && obj === value && obj !== ctx) obj = copyAccessorCapture(obj);
+      obj = replaceCapturedProperty(obj, value, key, boundWorklet);
       if (!isRootWorklet) {
         // Hydration needs the same context that the function already owns through bind().
         // The original nested context can disappear after its parent replaces it with this function.
-        obj[key].boundCtx = boundCtx;
+        boundWorklet.boundCtx = boundCtx;
       }
       continue;
     }
+    if (transformedSubObj !== subObj) {
+      // The root context is runtime-owned: hydration must see its captured copy.
+      if (obj === value && obj !== ctx) obj = copyAccessorCapture(obj);
+      obj = replaceCapturedProperty(obj, value, key, transformedSubObj);
+    }
     const isJsFn = '_jsFnId' in subObj;
     if (isJsFn) {
-      subObj['_execId'] = (ctx as Worklet)._execId;
+      (subObj as Record<string, ClosureValueType>)['_execId'] = (ctx as Worklet)._execId;
       lynxWorkletImpl._jsFunctionLifecycleManager?.addRef(
         (ctx as Worklet)._execId!,
         subObj,
@@ -201,6 +221,58 @@ const transformWorkletInner = (
       continue;
     }
   }
+  return obj;
 };
 
+function replaceCapturedProperty(
+  obj: Record<string, ClosureValueType>,
+  source: object,
+  key: string,
+  value: ClosureValueType,
+): Record<string, ClosureValueType> {
+  const descriptor = Object.getOwnPropertyDescriptor(obj, key);
+  if (descriptor?.get) {
+    // Getters can refresh handles or method receivers. Materialize the captured
+    // value without consuming the source getter or invoking its setter.
+    const capturedDescriptor = {
+      value,
+      writable: true,
+      enumerable: descriptor.enumerable!,
+      configurable: descriptor.configurable!,
+    };
+    if (obj === source || !descriptor.configurable) {
+      // Replace before defining the copy, including non-configurable getters.
+      const descriptors = Object.getOwnPropertyDescriptors(obj);
+      descriptors[key] = capturedDescriptor;
+      return copyAccessorCapture(obj, descriptors);
+    }
+    Object.defineProperty(obj, key, capturedDescriptor);
+  } else {
+    obj[key] = value;
+  }
+  return obj;
+}
+
+function copyAccessorCapture(
+  obj: Record<string, ClosureValueType>,
+  descriptors: PropertyDescriptorMap = Object.getOwnPropertyDescriptors(obj),
+): Record<string, ClosureValueType> {
+  // Copy descriptors without evaluating getters a second time. Array ancestors
+  // retain their array identity when a nested accessor requires a captured copy.
+  return Object.defineProperties(
+    Array.isArray(obj)
+      ? []
+      : Object.create(Object.getPrototypeOf(obj) as object | null) as Record<string, ClosureValueType>,
+    descriptors,
+  ) as Record<string, ClosureValueType>;
+}
+
+function isMainThreadObjectDescriptor(
+  value: object,
+): value is WorkletRefImpl<unknown> {
+  const descriptor = value as Partial<WorkletRefImpl<unknown>>;
+  return typeof descriptor._wvid === 'number'
+    && typeof descriptor._type === 'string'
+    && descriptor._type !== 'main-thread';
+}
 export { initWorklet };

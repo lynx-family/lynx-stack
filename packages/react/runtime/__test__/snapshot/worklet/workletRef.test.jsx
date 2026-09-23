@@ -32,6 +32,7 @@ beforeAll(() => {
     _refImpl: {
       updateWorkletRef: vi.fn(),
       updateWorkletRefInitValueChanges: vi.fn(),
+      registerMainThreadObjectType: vi.fn(),
       clearFirstScreenWorkletRefMap: vi.fn(),
     },
     _runOnBackgroundDelayImpl: {

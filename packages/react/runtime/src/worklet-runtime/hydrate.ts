@@ -2,8 +2,16 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { ClosureValueType, JsFnHandle, Worklet, WorkletRefId, WorkletRefImpl } from './bindings/index.js';
+import type {
+  ClosureValueType,
+  JsFnHandle,
+  Worklet,
+  WorkletRef,
+  WorkletRefId,
+  WorkletRefImpl,
+} from './bindings/index.js';
 import { profile } from './utils/profile.js';
+import { hydrateWorkletValue, isHydratedWorkletValue } from './workletRef.js';
 
 /**
  * Hydrates a Worklet context with data from a first-screen Worklet context.
@@ -37,7 +45,13 @@ function hydrateCtxImpl(
     return;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-for-in-array
+  // Typed handles (including `_type: 'main-thread'` mutable cells) hydrate
+  // atomically without walking their initialization payload. Untyped legacy
+  // refs continue through the existing `_wvid` path below.
+  if (isTypedWorkletRefDescriptor(ctxObj)) {
+    hydrateWorkletValueHandle(ctxObj, firstScreenCtxObj);
+    return;
+  }
   for (const key in ctx) {
     if (key === '_wvid') {
       hydrateMainThreadRef(
@@ -59,23 +73,42 @@ function hydrateCtxImpl(
   }
 }
 
+function isTypedWorkletRefDescriptor(
+  value: object,
+): value is WorkletRefImpl<unknown> {
+  const descriptor = value as Partial<WorkletRefImpl<unknown>>;
+  return typeof descriptor._wvid === 'number'
+    && typeof descriptor._type === 'string';
+}
+
 /**
  * Hydrates a WorkletRef on the main thread.
- * This is used to update the WorkletRef's background initial value based on changes
- * that occurred in the first-screen Worklet context before hydration.
- *
- * @param refId The ID of the WorkletRef to hydrate.
- * @param value The new value for the WorkletRef.
+ * This maps the positive-ID background handle to the target realized during
+ * first-screen rendering, while leaving an unused first-screen handle alone.
  */
 function hydrateMainThreadRef(
   refId: WorkletRefId,
   value: WorkletRefImpl<unknown>,
-) {
+): void {
   if ('_initValue' in value) {
-    // The ref has not been accessed yet.
     return;
   }
-  lynxWorkletImpl!._refImpl._workletRefMap[refId] = value;
+  lynxWorkletImpl!._refImpl._workletRefMap[refId] = value as WorkletRef<unknown>;
+}
+
+/**
+ * Hydrates a typed worklet handle on the main thread.
+ * The target is the object or mutable cell realized from the matching first-screen handle.
+ */
+function hydrateWorkletValueHandle(
+  handle: WorkletRefImpl<unknown>,
+  value: ClosureValueType,
+): void {
+  if (!isHydratedWorkletValue(value)) {
+    // The handle was not accessed during first-screen rendering.
+    return;
+  }
+  hydrateWorkletValue(handle, value);
 }
 
 /**

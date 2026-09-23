@@ -24,6 +24,7 @@ export const {
   adaptMTRefAttrSlot,
   adaptRefAttrSlot,
   adaptSpreadAttrSlot,
+  captureMainThreadObject,
   loadDynamicJS,
   loadLazyBundle,
   loadWorkletRuntime,

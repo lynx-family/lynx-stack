@@ -3,9 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 
 import { updateWorkletRefInitValueChanges } from '@lynx-js/react/worklet-runtime/bindings';
+import type { MainThreadRefInitValuePatch } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { takeMainThreadRefInitValuePatch } from '../../../core/main-thread-ref-init-value.js';
-import type { MainThreadRefInitValuePatch } from '../../../core/main-thread-ref-init-value.js';
 import { LifecycleConstant } from '../../lifecycle/constant.js';
 
 function updateMTRefInitValue({ data }: { data: string }): void {

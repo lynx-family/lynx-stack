@@ -11,7 +11,6 @@ import {
 } from './commit-context.js';
 import type { BackgroundElementTemplateInstance } from './instance.js';
 import { clearElementTemplateRenderScope, resetElementTemplateRenderScope } from './render-scope.js';
-import type { MainThreadRefInitValuePatch } from '../../core/main-thread-ref-init-value.js';
 import { takeMainThreadRefInitValuePatch } from '../../core/main-thread-ref-init-value.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../core/performance.js';
 import { getReloadVersion } from '../../core/reload-version.js';
@@ -22,6 +21,7 @@ import {
 import { dropFunctionCallReturnIds } from '../../core/thread-function-call/return-value.js';
 import { COMMIT } from '../../shared/render-constants.js';
 import { hook, isEmptyObject } from '../../utils.js';
+import type { MainThreadRefInitValuePatch } from '../../worklet-runtime/bindings/types.js';
 import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { clearPendingRefs, flushPendingRefs, hasPendingRefs } from '../prop-adapters/ref.js';

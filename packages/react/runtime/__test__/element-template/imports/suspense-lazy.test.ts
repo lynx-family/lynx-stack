@@ -267,10 +267,50 @@ describe('element-template Suspense and lazy imports', () => {
     for (const [producer, host] of entries) {
       expect(Object.keys(producer).sort()).toEqual(Object.keys(host as object).sort());
       for (const [name, value] of Object.entries(producer)) {
+        if (
+          host === target[sExportsReact]
+          && (name === 'defineMainThreadObjectType' || name === 'useMainThreadObject')
+        ) {
+          expect(value).toBeTypeOf('function');
+          continue;
+        }
         expect(value).toBe((host as Record<string, unknown>)[name]);
       }
     }
     expect(Object.getOwnPropertyDescriptors(lynx.getApp())).toEqual(appDescriptors);
+  });
+
+  it('diagnoses MainThreadObject lazy bundle/runtime mismatches', async () => {
+    clearLazyTargetSymbols();
+    vi.resetModules();
+    await import('../../../lazy/element-template-import.js');
+
+    const target = lynx as typeof lynx & Record<symbol, unknown>;
+    const reactDescriptor = Object.getOwnPropertyDescriptor(target, sExportsReact);
+    Object.defineProperty(target, sExportsReact, {
+      ...reactDescriptor,
+      value: {
+        ...(target[sExportsReact] as object),
+        defineMainThreadObjectType: undefined,
+        useMainThreadObject: undefined,
+      },
+    });
+
+    try {
+      vi.resetModules();
+      const incompatibleReact = await import(
+        '../../../lazy/element-template.js?missing-main-thread-object'
+      );
+
+      expect(() => incompatibleReact.defineMainThreadObjectType({})).toThrow(
+        'This lazy bundle requires ReactLynx runtime export defineMainThreadObjectType for MainThreadObject.',
+      );
+      expect(() => incompatibleReact.useMainThreadObject({}, 1)).toThrow(
+        'This lazy bundle requires ReactLynx runtime export useMainThreadObject for MainThreadObject.',
+      );
+    } finally {
+      Object.defineProperty(target, sExportsReact, reactDescriptor!);
+    }
   });
 
   it.each([
