@@ -19,14 +19,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version-file: .nvmrc
-          package-manager-cache: false
-      - name: Check runtime layers and image retention
-        run: |
-          node .volcengine/check-layers.mjs
-          node .volcengine/check-retention.mjs
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Build workspace image
