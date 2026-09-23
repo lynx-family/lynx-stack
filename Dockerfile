@@ -1,28 +1,36 @@
 # syntax=docker/dockerfile:1
 
-FROM ubuntu:26.04 AS builder
+FROM ubuntu:26.04 AS base
 
 ARG UBUNTU_MIRROR
 
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-# The bundled Linux Lynx runtime currently supports amd64 only.
-# Override the APT mirror for builders that cannot reach Ubuntu's default hosts.
-RUN test "$(dpkg --print-architecture)" = amd64 \
-    && if [ -n "$UBUNTU_MIRROR" ]; then \
+# Share runtime libraries and the optional APT mirror across both stages.
+RUN if [ -n "$UBUNTU_MIRROR" ]; then \
         sed -i -E "s#http://(archive|security)[.]ubuntu[.]com/ubuntu#$UBUNTU_MIRROR#g" \
             /etc/apt/sources.list.d/ubuntu.sources; \
     fi \
     && apt-get update --error-on=any \
     && apt-get install -y --no-install-recommends \
-        build-essential \
         ca-certificates \
+        libepoxy0 \
+        libexpat1 \
+        libgcc-s1 \
+        libstdc++6 \
+    && rm -rf /var/lib/apt/lists/*
+
+FROM base AS builder
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# The bundled Linux Lynx runtime currently supports amd64 only.
+RUN test "$(dpkg --print-architecture)" = amd64 \
+    && apt-get update --error-on=any \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
         clang \
         cmake \
         curl \
         git \
-        libepoxy0 \
-        libexpat1 \
         pkg-config \
         python3 \
         unzip \
@@ -79,12 +87,10 @@ RUN cargo build --workspace --locked --release \
 
 # Export only native deliverables before removing every Cargo target directory.
 RUN mkdir -p /out/native /out/sdk/lib \
-    && cp target/x86_64-unknown-linux-gnu/release/ui-judge-server \
-        target/x86_64-unknown-linux-gnu/release/lynx-headless-rust-test-runner \
-        target/x86_64-unknown-linux-gnu/release/libreact_transform.so \
-        target/x86_64-unknown-linux-gnu/release/start.sh /out/native/ \
-    && cp target/x86_64-unknown-linux-gnu/release/lynx_core.js /out/sdk/ \
-    && cp target/x86_64-unknown-linux-gnu/release/lib/libLynx_clay.so /out/sdk/lib/ \
+    && cd target/x86_64-unknown-linux-gnu/release \
+    && cp ui-judge-server lynx-headless-rust-test-runner libreact_transform.so start.sh /out/native/ \
+    && cp lynx_core.js /out/sdk/ \
+    && cp lib/libLynx_clay.so /out/sdk/lib/ \
     && strip --strip-unneeded /out/native/ui-judge-server \
         /out/native/lynx-headless-rust-test-runner /out/native/libreact_transform.so
 
@@ -117,22 +123,7 @@ RUN mkdir -p /out/dependencies \
     && TZ=UTC find /out/dependencies /out/sdk /out/native /workspace \
         -exec touch -h -t 197001010000.00 '{}' +
 
-FROM ubuntu:26.04 AS runtime
-
-ARG UBUNTU_MIRROR
-
-RUN if [ -n "$UBUNTU_MIRROR" ]; then \
-        sed -i -E "s#http://(archive|security)[.]ubuntu[.]com/ubuntu#$UBUNTU_MIRROR#g" \
-            /etc/apt/sources.list.d/ubuntu.sources; \
-    fi \
-    && apt-get update --error-on=any \
-    && apt-get install -y --no-install-recommends \
-        ca-certificates \
-        libepoxy0 \
-        libexpat1 \
-        libgcc-s1 \
-        libstdc++6 \
-    && rm -rf /var/lib/apt/lists/*
+FROM base AS runtime
 
 WORKDIR /workspace
 
