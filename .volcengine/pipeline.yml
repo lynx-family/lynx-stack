@@ -47,19 +47,21 @@ stages:
               useCache: true
           - step: tag-commit
             displayName: 添加 commit SHA 标签
-            component: custom-image@2.0.0
+            component: exec@1.0.0
             inputs:
-              image: docker.io/regclient/regctl:v0.11.6-alpine
+              shell: BASH
               cmd: |
                 set +x
                 set -e
                 cd "$(CP_WORKSPACE)"
+                curl -fsSL https://github.com/regclient/regclient/releases/download/v0.11.6/regctl-linux-amd64 -o regctl
+                chmod +x regctl
                 image_repo='REPLACE_WITH_CR_HOST/REPLACE_WITH_CR_NAMESPACE/REPLACE_WITH_CR_REPOSITORY'
                 export REGCTL_CONFIG="$(CP_WORKSPACE)/regctl.json"
-                printf '%s' "$CR_PASSWORD" | regctl registry login "${image_repo%%/*}" --user "$CR_USERNAME" --pass-stdin
+                printf '%s' "$CR_PASSWORD" | ./regctl registry login "${image_repo%%/*}" --user "$CR_USERNAME" --pass-stdin
                 image_ref="$image_repo:$(cat main.commit)"
-                regctl image copy "$image_repo:build-$(PIPELINERUN_ID)" "$image_ref"
-                regctl tag delete "$image_repo:build-$(PIPELINERUN_ID)"
+                ./regctl image copy "$image_repo:build-$(PIPELINERUN_ID)" "$image_ref"
+                ./regctl tag delete "$image_repo:build-$(PIPELINERUN_ID)"
                 echo "Published image: $image_ref"
           - step: cleanup
             displayName: 清理源码和临时文件
@@ -69,4 +71,4 @@ stages:
               cmd: |
                 set -e
                 cd "$(CP_WORKSPACE)"
-                rm -rf -- source main.commit regctl.json
+                rm -rf -- source main.commit regctl regctl.json
