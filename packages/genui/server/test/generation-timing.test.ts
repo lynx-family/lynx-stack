@@ -9,6 +9,7 @@ import { publishA2UIPayload } from '../app/a2ui/payload-publisher.js';
 import * as publisher from '../app/a2ui/payload-publisher.js' with {
   rstest: 'importActual',
 };
+import { createGenerationTiming } from '../app/common/generation-timing.js';
 import app from '../src/app.js';
 
 rstest.mock('../app/a2ui/payload-publisher.js', () => ({
@@ -19,6 +20,91 @@ rstest.mock('../app/a2ui/payload-publisher.js', () => ({
 afterEach(() => {
   rstest.restoreAllMocks();
   rstest.unstubAllGlobals();
+});
+
+test('collects first-token latency and cumulative model time', () => {
+  let now = 100;
+  rstest.spyOn(performance, 'now').mockImplementation(() => now);
+  const timing = createGenerationTiming();
+
+  now = 140;
+  timing.observe('agent.model.first_reasoning_token', {
+    invocationId: 'initial',
+    durationMs: 35,
+  });
+  now = 180;
+  timing.observe('agent.model.first_reasoning_token', {
+    invocationId: 'repair',
+    durationMs: 5,
+  });
+  now = 220;
+  timing.observe('agent.model.first_text_token', {
+    invocationId: 'initial',
+    durationMs: 115,
+  });
+  timing.observe('agent.model.error', {
+    invocationId: 'initial',
+    durationMs: 110,
+  });
+  timing.observe('agent.model.completed', {
+    invocationId: 'initial',
+    durationMs: 120,
+  });
+  timing.observe('agent.model.completed', {
+    invocationId: 'repair',
+    durationMs: 80,
+  });
+  timing.observe('jev.model.completed', {
+    requestIndex: 1,
+    durationMs: 30,
+  });
+  timing.observe('agent.tool.completed', {
+    callId: 'web-search',
+    toolName: 'web_search',
+    durationMs: 25,
+  });
+  timing.observe('agent.tool.completed', {
+    callId: 'image-search',
+    toolName: 'image_search',
+    durationMs: 35,
+  });
+  timing.observe('agent.tool.completed', {
+    callId: 'image-search',
+    toolName: 'image_search',
+    durationMs: 30,
+  });
+  timing.observe('agent.tool.completed', {
+    callId: 'image-generation',
+    toolName: 'generate_image',
+    durationMs: 90,
+  });
+  now = 500;
+
+  expect(timing.finish()).toEqual({
+    generationMs: 400,
+    firstReasoningTokenMs: 40,
+    firstTextTokenMs: 120,
+    modelMs: 230,
+    searchMs: 60,
+    imageGenerationMs: 90,
+  });
+});
+
+test('omits unavailable generation details and freezes metrics at finish', () => {
+  let now = 10;
+  rstest.spyOn(performance, 'now').mockImplementation(() => now);
+  const timing = createGenerationTiming();
+  timing.observe('agent.model.completed', {
+    invocationId: 'invalid',
+    durationMs: Number.NaN,
+  });
+  now = 25;
+  const metrics = timing.finish();
+  now = 40;
+  timing.observe('agent.model.first_text_token');
+
+  expect(metrics).toEqual({ generationMs: 15 });
+  expect(timing.finish()).toBe(metrics);
 });
 
 const messages = [{
@@ -153,13 +239,45 @@ test.each([
   let now = 100;
   rstest.spyOn(performance, 'now').mockImplementation(() => now);
   rstest.stubGlobal(serviceKey, {
-    streamAsAsyncIterable() {
-      now += 580;
+    streamAsAsyncIterable(_messages: unknown, options: {
+      onPerformanceEvent?: (
+        event: string,
+        details?: Record<string, unknown>,
+      ) => void;
+    }) {
+      now += 100;
+      options.onPerformanceEvent?.('agent.model.first_text_token', {
+        invocationId: 'failed-invocation',
+        durationMs: 90,
+      });
+      now += 480;
+      options.onPerformanceEvent?.('agent.model.error', {
+        invocationId: 'failed-invocation',
+        durationMs: 500,
+      });
+      options.onPerformanceEvent?.('agent.tool.completed', {
+        callId: 'failed-search',
+        toolName: 'web_search',
+        durationMs: 75,
+        status: 'error',
+      });
+      options.onPerformanceEvent?.('agent.tool.completed', {
+        callId: 'failed-image',
+        toolName: 'generate_image',
+        durationMs: 125,
+        status: 'error',
+      });
       return Promise.reject(new Error('Generation failed'));
     },
   });
   const response = await request(path);
   const body = await response.text();
   expect(body).not.toContain('event: done');
-  expect(eventPayload(body, 'error').metrics).toEqual({ generationMs: 580 });
+  expect(eventPayload(body, 'error').metrics).toEqual({
+    generationMs: 580,
+    firstTextTokenMs: 100,
+    modelMs: 500,
+    searchMs: 75,
+    imageGenerationMs: 125,
+  });
 });

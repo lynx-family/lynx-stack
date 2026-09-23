@@ -23,6 +23,7 @@ import type {
   ChatMessage,
   ChatOptions,
   ConversationContext,
+  OpenAIReasoningEffort,
 } from '../../service/common/types.js';
 
 interface TextChatBody extends Record<string, unknown> {
@@ -33,6 +34,7 @@ interface TextChatBody extends Record<string, unknown> {
   apiKey?: string;
   baseURL?: string;
   api?: 'chat' | 'responses';
+  reasoningEffort?: OpenAIReasoningEffort;
 }
 
 interface TextStreamingService {
@@ -134,6 +136,9 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
     parsed.body.apiKey,
     parsed.body.baseURL,
   ]);
+  let observeGenerationTiming:
+    | ((event: string, details?: Record<string, unknown>) => void)
+    | undefined;
   const opts = {
     ...pickProviderOptions(parsed.body),
     ...(typeof parsed.body.enableDesignGuidance === 'boolean'
@@ -143,6 +148,7 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
     onReasoning: reasoning.append,
     onPerformanceEvent: (event: string, details = {}) => {
       log(event, details);
+      observeGenerationTiming?.(event, details);
     },
   };
   const errorOptions = { secrets: [parsed.body.apiKey, opts.apiKey] };
@@ -197,6 +203,7 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
 
       const run = async () => {
         const timing = createGenerationTiming();
+        observeGenerationTiming = timing.observe;
         try {
           const connectStartedAt = performance.now();
           log('agent.connect.started');

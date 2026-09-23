@@ -20,6 +20,12 @@ model-authored unless the optional StylePreset is enabled.
 Template mode generates the static element tree deterministically, without an
 additional model round trip.
 
+Both generation modes currently target the main thread only: all page state,
+UI interactions, and lifecycle callbacks live in one `<script thread="main">`.
+Prompts omit background execution and cross-thread communication instructions
+to reduce model input. This is a generation policy; existing source parsing
+and rendering support for background scripts is unchanged.
+
 ## Build a system prompt
 
 Use the default prompt for direct generation:
@@ -160,8 +166,8 @@ Final metadata records the selected preset.
 Set `enableScriptReuse: true` in both `buildLynxXmlSystemPrompt` and
 `assembleLynxXmlArtifact`. It defaults to `false` at the API level, independently of Template
 and StylePreset. The agent assembles page creation, lifecycle registration,
-render guarding, event cleanup, and text-update helpers locally. The model
-only writes business state and synchronous callbacks:
+render guarding, event cleanup, and UI helpers locally. The model only writes
+business state and synchronous callbacks:
 
 ```xml
 <!doctype lynx>
@@ -201,14 +207,26 @@ optional `render(ctx, data)`, `update(ctx, patch)`, and `destroy(ctx)` hooks.
 Without Template, `render` is required and creates the business tree with
 Element PAPI. `ctx.page`, `ctx.pageId`, and `ctx.nodes` exist before render.
 With Template, the initial tree and node map are already created.
+Template plus ScriptReuse exposes only task-oriented UI helpers to model code:
+`ctx.createView()`, `ctx.createScrollView()`, `ctx.createText(value)`,
+`ctx.createImage()`, `ctx.append(parent, child)`,
+`ctx.replaceChildren(parent, children)`, `ctx.setText(textNode, value)`,
+`ctx.setClasses(node, classes)`, `ctx.setAttribute(node, name, value)`, and
+`ctx.setInlineStyles(node, styles)`. The shared runtime translates these calls
+to Element PAPI; raw Element PAPI remains accepted for compatibility but is not
+part of this mode's model-facing contract.
 `ctx.on(node, name, handler, options?)` and
-`ctx.listen(context, name, handler)` return an unsubscribe function; call it
-before discarding dynamic nodes. Remaining listeners are removed on destroy.
+`ctx.listen(name, handler)` return an unsubscribe function.
+`ctx.emit(name, data)` uses the shared main-thread local event context.
+`ctx.replaceChildren` automatically removes listeners from discarded
+subtrees while preserving listeners on reused nodes. Remaining listeners are
+removed on destroy.
 `ctx.setText(textNode, value)` replaces text children. Initial rendering uses
-the SDK flush; update and registered event callbacks flush automatically.
+the SDK flush; update and registered event callbacks flush automatically. Use
+`ctx.flush()` only after mutations made by another synchronous callback.
 Hooks receive the first object in engine `event.data`, defaulting to `{}`.
-Business state merging and optional background-thread logic remain model-owned.
-The `destroy` hook must forward an app-defined background cleanup event when needed.
+Business state merging remains model-owned. Generated app events use one
+shared main-thread local context; `destroy` releases page-owned resources.
 
 Create and Bench expose a **ScriptReuse** switch, on by default for new
 conversations and comparison groups, matching StylePreset. Explicit saved values
@@ -224,6 +242,17 @@ ScriptReuse is enabled, avoiding resending injected helpers. Older records
 without original output fall back to their saved artifact.
 
 This removes repeated script generation and redundant lifecycle prompt sections.
+When Template and ScriptReuse are both enabled, the prompt also uses a compact
+selection from the pinned Vanilla Lynx skill: document rules, opaque element
+handling, text/image update constraints, and local event payloads. The
+`definePage`/`ctx` contract replaces raw Element PAPI signatures, initial-tree
+construction, engine lifecycle registration, and low-level listener
+instructions. Dynamic subtree
+replacement still requires unsubscribing listeners on discarded nodes and their
+descendants. All styling guidance, including the complete CSS property lists,
+is retained. This selection applies with StylePreset on or off and requires no
+additional switch; other option combinations keep their existing guidance.
+
 It does not reduce the final runtime artifact by the same amount: the shared
 implementation is inlined locally. Compare identical Bench groups with only
 ScriptReuse changed, checking input/output tokens, generation duration, validity,
@@ -254,27 +283,50 @@ Use `generateMainThreadScript` when only the JavaScript string is needed.
 The prompt combines selected guidance from the pinned
 `@lynx-js/skill-vanilla-lynx` dependency with local rules in
 [`src/prompt.ts`](./src/prompt.ts). Shared guidance covers Element PAPI,
-lifecycle, event routing, background state, and styling. It is inlined at build
+lifecycle, main-thread local events, and styling. It is inlined at build
 time, so consumers need no skill files or filesystem reads at runtime.
 Code examples are omitted, while plain-text constraint lists, including allowed
 and forbidden CSS properties, are retained without Markdown fences.
+Mixed runtime sections retain their main-thread requirements while removing
+background and cross-thread instructions. The styling reference is preserved
+without this filtering, including CSS background properties.
 
 The local prompt adapts that guidance to single-file `.lynxml` artifacts and
 takes precedence over imported guidance. Its key constraints are:
 
 - **Node references:** `__AppendElement` and append helpers receive nodes,
-  not numeric ids. `pageId` is reserved for page-owned element creation APIs.
+  not numeric ids. In Element PAPI calls, `pageId` is reserved for page-owned
+  element creation APIs. With Template, this rule covers later JavaScript
+  updates; initial nodes come from `nodes` or `ctx.nodes`.
 - **Layout:** the Page and every container that lays out Element children use
   applied classes with explicit `display: flex` and `flex-direction`.
-- **Scrolling:** content that can exceed one viewport uses a definite-height
-  vertical `scroll-view` as the first business node directly below the Page,
-  without a business `view` wrapper. Fixed bars reserve scroll content space,
-  including safe-area insets.
+  ScriptReuse supplies the Page and its `genui-page` class; generated code uses
+  `ctx.page` and `ctx.pageId` and styles the business containers.
+- **Scrolling:** use a definite-height vertical `scroll-view` as the default
+  first business node directly below the Page, including when content height is
+  uncertain. Use a non-scrolling `view` only when the user explicitly requests
+  a fixed single-screen layout; merely fitting one viewport is not an exception.
+  Do not wrap the scroll view in a business `view`. Fixed bars reserve scroll
+  content space, including safe-area insets. Template expresses this as XML
+  roots; direct mode creates and appends nodes with Element PAPI.
+- **Preset styling:** with StylePreset, layout and scrolling instructions use
+  preset classes such as `flex flex-col w-full h-screen` and `shrink-0`.
+  Without it, the model authors the corresponding CSS classes.
+- **Payloads:** without ScriptReuse, validate lifecycle and app-event payloads.
+  ScriptReuse normalizes lifecycle payloads before invoking hooks; business
+  fields and app-event payloads still need validation.
 - **Artifact boundaries:** all code stays in the document, without imports,
   packages, dynamic code execution, external scripts, analytics, or tracking.
   Asset and link URLs come from the user, host, or enabled search/image tools.
-  Runtime fetching is limited to explicitly requested integrations on the
-  background thread.
+  Generated scripts keep runtime behavior local and do not make network requests.
+
+The adaptation contract combines Template, ScriptReuse, and StylePreset
+constraints independently. It focuses on node/scope correctness, explicit
+layout, scrolling/safe areas, and CSS value limits. Node-map access,
+initial-tree assembly, and lifecycle ownership are defined in the earlier
+Template and ScriptReuse sections instead of being repeated here.
+All eight combinations have complete prompt snapshots in
+`test/__snapshots__/prompt/`, one readable text file per mode.
 
 Product and mobile design defaults are composed separately by GenUI Server in
 [`design-guidance.ts`](../server/design/design-guidance.ts). The local prompt

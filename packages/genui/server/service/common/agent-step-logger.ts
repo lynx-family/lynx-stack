@@ -154,6 +154,8 @@ export function createAgentStepLogger<OUTPUT = undefined>(
   let previousStepAt = startedAt;
   const usages: BenchTokenUsage[] = [];
   let streamedReasoning = false;
+  let firstReasoningTokenLogged = false;
+  let firstTextTokenLogged = false;
   const emit = (event: string, details: Record<string, unknown>) => {
     const payload = {
       agent,
@@ -173,8 +175,23 @@ export function createAgentStepLogger<OUTPUT = undefined>(
     // reasoning even when the SDK never finishes the step. Never log this text.
     onChunk(chunk: ChunkType<OUTPUT>) {
       if (chunk.type === 'reasoning-delta' && chunk.payload.text) {
+        if (!firstReasoningTokenLogged) {
+          firstReasoningTokenLogged = true;
+          emit('agent.model.first_reasoning_token', {
+            durationMs: Math.round(performance.now() - startedAt),
+          });
+        }
         streamedReasoning = true;
         opts.onReasoning?.(chunk.payload.text);
+      }
+      if (
+        chunk.type === 'text-delta' && chunk.payload.text
+        && !firstTextTokenLogged
+      ) {
+        firstTextTokenLogged = true;
+        emit('agent.model.first_text_token', {
+          durationMs: Math.round(performance.now() - startedAt),
+        });
       }
     },
     // A direct SDK failure can throw before Mastra invokes onFinish.
