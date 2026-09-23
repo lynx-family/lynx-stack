@@ -18,6 +18,7 @@ import {
   loadConversation,
 } from '../../storage/conversationRepo.js';
 import { getDB } from '../../storage/db.js';
+import type { PreviewPerformanceMetrics } from '../../storage/types.js';
 import { PROTOCOLS } from '../../utils/protocol.js';
 
 rstest.mock('../../components/QrCode.js', () => ({ QrCode: () => null }));
@@ -201,7 +202,7 @@ async function emit(event: string, data: unknown, close = false) {
 
 async function done(
   messages: unknown[],
-  metrics: { generationMs: number } | null = { generationMs: 125 },
+  metrics: PreviewPerformanceMetrics | null = { generationMs: 125 },
 ) {
   await emit('done', {
     ...(metrics ? { metrics } : {}),
@@ -340,19 +341,44 @@ async function reloadController() {
 
 test('persists and restores server generation time without relabeling legacy Agent timing', async () => {
   await send();
-  await done([create, update('Shanghai')]);
+  await done([create, update('Shanghai')], {
+    generationMs: 125,
+    firstReasoningTokenMs: 30,
+    firstTextTokenMs: 70,
+    modelMs: 100,
+    searchMs: 45,
+    imageGenerationMs: 80,
+  });
   const id = (await getActiveConversationId('a2ui'))!;
   const record = (await loadConversation(id))!;
   const assistant = record.messages.find(message =>
     message.role === 'assistant'
   )!;
-  expect(assistant.previewMetrics?.generationMs).toBe(125);
+  expect(assistant.previewMetrics).toMatchObject({
+    generationMs: 125,
+    firstReasoningTokenMs: 30,
+    firstTextTokenMs: 70,
+    modelMs: 100,
+    searchMs: 45,
+    imageGenerationMs: 80,
+  });
   expect(assistant.previewMetrics?.agentOutputMs).toBeUndefined();
   await reloadController();
-  expect(
-    container.querySelector('[aria-label^="Generation:"] .previewMetricValue')
-      ?.textContent,
-  ).toBe('125ms');
+  for (
+    const [label, value] of [
+      ['Generation', '125ms'],
+      ['1st Reasoning', '30ms'],
+      ['1st Text', '70ms'],
+      ['Model', '100ms'],
+      ['Search', '45ms'],
+      ['Image Gen', '80ms'],
+    ]
+  ) {
+    expect(
+      container.querySelector(`[aria-label^="${label}:"] .previewMetricValue`)
+        ?.textContent,
+    ).toBe(value);
+  }
 
   const db = await getDB();
   await db.put('messages', {

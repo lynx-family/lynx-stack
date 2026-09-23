@@ -35,6 +35,7 @@ import {
   searchedDoubaoDocumentURLs,
   searchedDoubaoImageURLs,
 } from '../../agent/common/doubao-search-tool.js';
+import { registerToolPerformanceObserver } from '../../agent/common/tool-performance.js';
 import { createAgentStepLogger } from '../common/agent-step-logger.js';
 import { readBenchTokenUsage } from '../common/bench/usage.js';
 import { buildGenerationRepairMessages } from '../common/generation-repair.js';
@@ -101,6 +102,10 @@ function buildA2UIRunOptions(
   abortSignal: AbortSignal | undefined,
   imageGenerationScope: ArkImageGenerationRunScope,
 ) {
+  registerToolPerformanceObserver(
+    imageGenerationScope,
+    opts.onPerformanceEvent,
+  );
   return {
     ...buildOpenAIRunOptions(opts, abortSignal),
     ...createAgentStepLogger(opts, 'a2ui'),

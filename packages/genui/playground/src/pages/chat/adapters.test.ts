@@ -314,6 +314,56 @@ describe('chat protocol adapters', () => {
     });
   });
 
+  test('configures reasoning effort and omits the default override', () => {
+    const settings = {
+      ...createDefaultProviderSettings(),
+      provider: 'test-model',
+      models: [{ id: 'test-model', label: 'Test model' }],
+      status: 'ready' as const,
+    };
+    const control = CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings).find(
+      ({ id }) => id === 'reasoningEffort',
+    );
+    expect(control).toMatchObject({
+      kind: 'select',
+      value: '',
+      options: [
+        { value: '', label: 'Default' },
+        { value: 'none', label: 'None' },
+        { value: 'minimal', label: 'Minimal' },
+        { value: 'low', label: 'Low' },
+        { value: 'medium', label: 'Medium' },
+        { value: 'high', label: 'High' },
+        { value: 'xhigh', label: 'Extra high' },
+      ],
+    });
+
+    const explicit = CHAT_PROVIDER_SETTINGS_ADAPTER.update(
+      settings,
+      'reasoningEffort',
+      'high',
+    );
+    expect(toProviderRequestOptions(explicit)).toEqual({
+      model: 'test-model',
+      reasoningEffort: 'high',
+    });
+    expect(CHAT_PROVIDER_SETTINGS_ADAPTER.conversation.snapshot(explicit))
+      .toMatchObject({ reasoningEffort: 'high' });
+    expect(serializeProviderSettings(explicit)).toMatchObject({
+      reasoningEffort: 'high',
+    });
+
+    const inherited = CHAT_PROVIDER_SETTINGS_ADAPTER.update(
+      explicit,
+      'reasoningEffort',
+      '',
+    );
+    expect(inherited).not.toHaveProperty('reasoningEffort');
+    expect(toProviderRequestOptions(inherited)).toEqual({
+      model: 'test-model',
+    });
+  });
+
   test('loads the model list and default model from the server', async () => {
     const host = {
       origin: 'http://localhost:3000',
@@ -378,6 +428,7 @@ describe('chat protocol adapters', () => {
         'model',
         'apiKey',
         'baseURL',
+        'reasoningEffort',
         'enableDesignGuidance',
       ]);
       expect(CHAT_PROVIDER_SETTINGS_ADAPTER.controls(customSettings)[3])
@@ -537,6 +588,7 @@ describe('chat protocol adapters', () => {
         'model',
         'apiKey',
         'baseURL',
+        'reasoningEffort',
         'enableDesignGuidance',
       ]);
       expect(CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings)[0])

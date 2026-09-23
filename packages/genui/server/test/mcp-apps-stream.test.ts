@@ -62,6 +62,14 @@ describe('MCP Apps stream', () => {
     global.__MCP_APPS_AGENT_SERVICE__ = {
       generateRaw(_messages, opts) {
         opts.onReasoning?.('Routing reasoning');
+        opts.onPerformanceEvent?.('agent.model.first_text_token', {
+          invocationId: 'mcp-routing',
+          durationMs: 40,
+        });
+        opts.onPerformanceEvent?.('agent.model.error', {
+          invocationId: 'mcp-routing',
+          durationMs: 44,
+        });
         return Promise.reject(new Error('Model failed'));
       },
     };
@@ -75,11 +83,25 @@ describe('MCP Apps stream', () => {
         body: JSON.stringify(requestBody()),
       });
       const body = await response.text();
-      expect(body).toMatch(/"metrics":\{"generationMs":\d/u);
       expect(body).toContain('event: error');
       expect(body).toContain(
         '"reasoning":{"text":"Routing reasoning","truncated":false}',
       );
+      const frame = body.split('\n\n').find(frame =>
+        frame.startsWith('event: error\n')
+      );
+      const payload = JSON.parse(
+        frame!.slice('event: error\ndata: '.length),
+      ) as {
+        metrics: {
+          generationMs: unknown;
+          firstTextTokenMs: unknown;
+          modelMs: unknown;
+        };
+      };
+      expect(payload.metrics.generationMs).toBeTypeOf('number');
+      expect(payload.metrics.firstTextTokenMs).toBeTypeOf('number');
+      expect(payload.metrics.modelMs).toBe(44);
     } finally {
       global.__MCP_APPS_AGENT_SERVICE__ = previousService;
     }

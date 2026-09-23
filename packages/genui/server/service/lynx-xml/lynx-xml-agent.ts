@@ -7,6 +7,7 @@ import { assembleLynxXmlArtifact } from '@lynx-js/genui-lynx-xml';
 import { initializeArkImageGenerationRunScope } from '../../agent/common/ark-image-generation-tool.js';
 import { createSearchRunScope } from '../../agent/common/doubao-search-tool.js';
 import type { SearchRunScope } from '../../agent/common/doubao-search-tool.js';
+import { registerToolPerformanceObserver } from '../../agent/common/tool-performance.js';
 import { createLynxXmlAgent } from '../../agent/lynx-xml/lynx-xml-agent.js';
 import type {
   LynxXmlAgent,
@@ -68,6 +69,7 @@ function buildLynxXmlScopedRunOptions(
   scope: SearchRunScope,
   maxOutputTokens?: number,
 ) {
+  registerToolPerformanceObserver(scope, opts.onPerformanceEvent);
   return {
     ...buildOpenAIRunOptions(opts, abortSignal, maxOutputTokens),
     ...createAgentStepLogger(opts, 'lynx-xml', {

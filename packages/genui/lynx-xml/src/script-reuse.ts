@@ -10,15 +10,22 @@ export function scriptReuseInstructions(template: boolean): string {
 - Hooks: render(ctx, data), update(ctx, patch), destroy(ctx), all synchronous and optional${
     template ? '' : ' except render'
   }. Engine data/patch is the first event.data array entry, or {} for malformed payloads. Keep business state in your own script scope; no automatic state merge is performed.
-- ctx.page and ctx.pageId are available inside hooks. ${
+- ${
     template
-      ? 'ctx.nodes is the template id-to-node map, already created before render; never call createFragment or recreate the initial tree.'
-      : 'Create the business tree in render using Element PAPI and append it to ctx.page. ctx.nodes starts as an empty map for your own references.'
+      ? 'ctx.page is available inside hooks. ctx.nodes is the template id-to-node map, already created before render; never call createFragment or recreate the initial tree.'
+      : 'ctx.page and ctx.pageId are available inside hooks. Create the business tree in render using Element PAPI and append it to ctx.page. ctx.nodes starts as an empty map for your own references.'
   }
-- ctx.on(node, eventName, handler, options = {}) binds a node event, flushes after its synchronous handler, and returns an unsubscribe function. Use it for all UI listeners; call unsubscribe before discarding dynamic nodes.
-- ctx.listen(context, eventName, handler) binds app/background events with automatic flushing and returns unsubscribe. Reuse the correct Lynx context. Destroy removes registered listeners. Background code still owns its cleanup; forward its destroy event from your destroy hook when needed.
-- ctx.setText(textNode, value) replaces text children with String(value). It does not flush. Render relies on the SDK initial flush; update, on, and listen flush automatically. For other mutation paths call __FlushElementTree().
-- Hooks and helpers run only on the main thread. Declare business-specific state/handlers only; keep optional background logic in its normal source block.`;
+- ctx.on(node, eventName, handler, options = {}) binds a node event, flushes after its synchronous handler, and returns an unsubscribe function. Use it for all UI listeners; call unsubscribe to stop listening early.
+- ctx.listen(eventName, handler) receives main-thread app events through event.data and returns an unsubscribe function. ctx.emit(eventName, data) dispatches them. Destroy removes registered listeners.
+- ctx.setText(textNode, value) replaces text children with String(value). UI helpers do not flush individually: render relies on the SDK initial flush, while update, on, and listen flush automatically. Call ctx.flush() only after mutations from another synchronous callback.
+- Hooks and helpers run only on the main thread. Declare business-specific state and handlers only.${
+    template
+      ? `
+- Additional UI helpers do not flush: ctx.createView(), ctx.createScrollView(), ctx.createText(value), ctx.createImage(), ctx.append(parent, child), ctx.replaceChildren(parent, children), ctx.setClasses(node, classes), ctx.setAttribute(node, name, value), and ctx.setInlineStyles(node, styles). children must be an array. createText stringifies value. Use classes for static styling and inline styles only for runtime-computed values.
+- Use only the ctx UI helpers for later mutations and new nodes; do not call raw Element PAPI. The agent owns the initial tree. ctx.replaceChildren removes listeners from discarded subtrees while preserving listeners on reused nodes. Release retained references after replacement, and use destroy(ctx) to release other business-owned resources.
+- Pass runtime names such as "tap" to ctx.on, never markup names such as bindtap or catchtap.`
+      : ''
+  }`;
 }
 
 /** Generate a hoisted helper with all mutable state scoped to one page instance. */
@@ -28,13 +35,51 @@ function definePage(hooks) {
   const engine = lynx.getEngine();
   let rendered = false;
   let destroyed = false;
+  let localContext;
   const disposers = [];
   const ctx = {
     page: undefined,
     pageId: undefined,
     nodes: Object.create(null),
+    createView() {
+      return __CreateView(ctx.pageId);
+    },
+    createScrollView() {
+      return __CreateScrollView(ctx.pageId);
+    },
+    createText(value) {
+      const node = __CreateText(ctx.pageId);
+      __AppendElement(node, __CreateRawText(String(value)));
+      return node;
+    },
+    createImage() {
+      return __CreateImage(ctx.pageId);
+    },
+    append(parent, child) {
+      __AppendElement(parent, child);
+    },
+    replaceChildren(parent, children) {
+      const previous = __GetChildren(parent);
+      disposeRemovedListeners(previous, children);
+      __ReplaceElements(parent, children, previous);
+    },
     setText(node, value) {
       __ReplaceElements(node, [__CreateRawText(String(value))], __GetChildren(node));
+    },
+    setClasses(node, classes) {
+      __SetClasses(node, classes);
+    },
+    setAttribute(node, name, value) {
+      __SetAttribute(node, name, value);
+    },
+    setInlineStyles(node, styles) {
+      __SetInlineStyles(node, styles);
+    },
+    flush() {
+      if (!destroyed) __FlushElementTree();
+    },
+    emit(name, data) {
+      if (!destroyed) getLocalContext().dispatchEvent({ type: name, data });
     },
     on(node, name, handler, options = {}) {
       if (destroyed) return () => {};
@@ -44,10 +89,17 @@ function definePage(hooks) {
         if (!destroyed) __FlushElementTree();
       }
       __AddEventListener(node, name, wrapped, options);
-      return track(() => __RemoveEventListener(node, name, wrapped, options));
+      return track(
+        () => __RemoveEventListener(node, name, wrapped, options),
+        node
+      );
     },
-    listen(context, name, handler) {
+    listen(contextOrName, nameOrHandler, optionalHandler) {
       if (destroyed) return () => {};
+      const usesLocalContext = typeof contextOrName === "string";
+      const context = usesLocalContext ? getLocalContext() : contextOrName;
+      const name = usesLocalContext ? contextOrName : nameOrHandler;
+      const handler = usesLocalContext ? nameOrHandler : optionalHandler;
       function wrapped(event) {
         if (!rendered || destroyed) return;
         handler(event);
@@ -57,13 +109,38 @@ function definePage(hooks) {
       return track(() => context.removeEventListener(name, wrapped));
     }
   };
-  function track(remove) {
+  function getLocalContext() {
+    if (!localContext) localContext = lynx.getCoreContext();
+    return localContext;
+  }
+  function containsNode(roots, target) {
+    for (const root of roots) {
+      if (__ElementIsEqual(root, target)) return true;
+      const children = __GetChildren(root);
+      if (children && containsNode(children, target)) return true;
+    }
+    return false;
+  }
+  function disposeRemovedListeners(previous, next) {
+    for (let index = disposers.length - 1; index >= 0; index -= 1) {
+      const dispose = disposers[index];
+      if (
+        dispose.node
+        && containsNode(previous, dispose.node)
+        && !containsNode(next, dispose.node)
+      ) {
+        dispose();
+      }
+    }
+  }
+  function track(remove, node) {
     function dispose() {
       const index = disposers.indexOf(dispose);
       if (index < 0) return;
       disposers.splice(index, 1);
       remove();
     }
+    dispose.node = node;
     disposers.push(dispose);
     return dispose;
   }
@@ -100,6 +177,7 @@ function definePage(hooks) {
         ctx.nodes = Object.create(null);
         ctx.page = undefined;
         ctx.pageId = undefined;
+        localContext = undefined;
         hooks = {};
       }
     }
