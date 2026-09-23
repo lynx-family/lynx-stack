@@ -1,5 +1,6 @@
-# 先注册同目录 main-head.yml 中的自定义步骤，再导入本流水线。
-# 替换镜像仓库地址，并保留控制台配置的用户名密码 loginCredential。
+# 全流程只有一个 task，不需要注册自定义步骤。
+# 替换两处镜像仓库地址，并保留控制台配置的用户名密码 loginCredential。
+# 在流水线变量中将 CR_USERNAME、CR_PASSWORD 设为环境变量，密码设为隐私变量。
 # 使用「通用 Webhook 触发」，运行时变量留空，POST {}；不绑定代码源。
 version: 2.0.0
 agentPool: public/prod-v2-public
@@ -8,24 +9,8 @@ stages:
   - stage: build-and-push
     displayName: 构建并推送 Lynx Stack 镜像
     tasks:
-      - task: resolve-main
-        displayName: 获取 main 最新提交
-        timeout: 10m
-        resourcesPolicy: none
-        resources:
-          limits:
-            cpu: 1C
-            memory: 2Gi
-        steps:
-          - step: main-head
-            component: custom@1.0.0/lynx-main-head@1.0.0
-            inputs: {}
-        outputs:
-          - commitSha_main-head
       - task: workspace-image
         displayName: 构建并上传 commit 镜像
-        dependsOn:
-          - resolve-main
         timeout: 2h
         resourcesPolicy: none
         resources:
@@ -34,24 +19,22 @@ stages:
             memory: 16Gi
         steps:
           - step: checkout
-            displayName: 拉取 main 对应的提交
+            displayName: 克隆 main 并保存 HEAD
             component: exec@1.0.0
             inputs:
               shell: BASH
               cmd: |
                 set -e
                 cd "$(CP_WORKSPACE)"
-                git init source
-                git -C source remote add origin https://github.com/lynx-family/lynx-stack.git
-                git -C source fetch --depth=1 origin '$(stages.build-and-push.tasks.resolve-main.outputs.commitSha_main-head)'
-                git -C source checkout --detach FETCH_HEAD
+                git clone --depth=1 --single-branch --branch main https://github.com/lynx-family/lynx-stack.git source
+                git -C source rev-parse HEAD > main.commit
           - step: buildkit-custom
-            displayName: BuildKit 构建并以 commit SHA 上传
+            displayName: BuildKit 构建并上传
             component: buildkit-custom@3.0.0
             inputs:
               customImageAddress:
                 protocol: https
-                address: REPLACE_WITH_CR_HOST/REPLACE_WITH_CR_NAMESPACE/REPLACE_WITH_CR_REPOSITORY:$(stages.build-and-push.tasks.resolve-main.outputs.commitSha_main-head)
+                address: REPLACE_WITH_CR_HOST/REPLACE_WITH_CR_NAMESPACE/REPLACE_WITH_CR_REPOSITORY:build-$(PIPELINERUN_ID)
               # 在控制台添加用户名密码凭据，替换此空列表。
               loginCredential: []
               contextPath: ./source
@@ -62,14 +45,28 @@ stages:
               compression: gzip
               disableSSLVerify: false
               useCache: true
+          - step: tag-commit
+            displayName: 添加 commit SHA 标签
+            component: custom-image@2.0.0
+            inputs:
+              image: docker.io/regclient/regctl:v0.11.6-alpine
+              cmd: |
+                set +x
+                set -e
+                cd "$(CP_WORKSPACE)"
+                image_repo='REPLACE_WITH_CR_HOST/REPLACE_WITH_CR_NAMESPACE/REPLACE_WITH_CR_REPOSITORY'
+                export REGCTL_CONFIG="$(CP_WORKSPACE)/regctl.json"
+                printf '%s' "$CR_PASSWORD" | regctl registry login "${image_repo%%/*}" --user "$CR_USERNAME" --pass-stdin
+                image_ref="$image_repo:$(cat main.commit)"
+                regctl image copy "$image_repo:build-$(PIPELINERUN_ID)" "$image_ref"
+                regctl tag delete "$image_repo:build-$(PIPELINERUN_ID)"
+                echo "Published image: $image_ref"
           - step: cleanup
-            displayName: 清理源码
+            displayName: 清理源码和临时文件
             component: exec@1.0.0
             inputs:
               shell: BASH
               cmd: |
                 set -e
                 cd "$(CP_WORKSPACE)"
-                rm -rf -- source
-        outputs:
-          - imageOutput_buildkit-custom
+                rm -rf -- source main.commit regctl.json
