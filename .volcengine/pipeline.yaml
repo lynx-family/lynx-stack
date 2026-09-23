@@ -1,0 +1,101 @@
+# 火山 CP：匿名 clone main，BuildKit 构建推送，最终以实际 HEAD 的完整 hash 为标签。
+# 使用前在控制台配置：
+# 1. 替换本文件两处相同的 CR 域名/命名空间/仓库占位符，不含 https://。
+# 2. 在 BuildKit 步骤的「凭证信息」选择「用户名密码」，保存生成的 loginCredential。
+# 3. 在「变量 > 自定义变量」配置 CR_USERNAME、CR_PASSWORD，开启「环境变量」、
+#    关闭「动态」，密码开启「隐私」。隐私仅隐藏界面值，脚本须保持关闭 tracing。
+#    不写入公开 YAML，也不通过 Webhook 传递。账号需要仓库读、推送和删除镜像权限。
+# 4. 添加「通用 Webhook 触发」，运行时变量留空，POST {} 即可；不绑定 GitHub 代码源。
+# 5. 在控制台配置同一仓库的发布串行运行，避免清理与其他发布同时修改标签。
+# 6. 当前尚未部署，默认保留最新构建的 10 个 commit 镜像。以后部署前，通过
+#    CR_PROTECTED_COMMITS 环境变量保护部署/回滚的 SHA（空格分隔），或添加非 SHA
+#    保护标签。受保护 digest 对应的 commit 标签也会保留，不受数量限制。
+# 本文件调用仓库中的 .volcengine/publish-image.sh；使用前须将这些改动合并到 main。
+#
+# 所有步骤必须在同一个 task 内，使用共享工作区的 main.commit 传递 HEAD。
+# exec@1.0.0 没有 commitSha 输出，不能用 task.outputs 或 /tekton/results 扩展它。
+# BuildKit 先推送唯一临时标签 build-<流水线运行 ID>；regctl 通过仓库 API 添加 commit
+# 标签，核对 digest 后清理旧版本。同一 SHA 已发布时保持原有镜像，不覆盖标签。
+# 不需要 Docker daemon。任务不导出指向临时标签的 imageOutput，最终镜像地址见日志。
+# 每次成功构建后，保留最新构建的 10 个 SHA 版本，清理超过 24 小时的 build-*。
+# 使用镜像配置的创建时间排序，不按 SHA 字典序；仅操作此仓库的 SHA 和 build-* 标签。
+# 不删除被保留标签或镜像索引引用的 manifest；空间实际释放由 CR 垃圾回收完成。
+# 仍建议配置 CR 原生定时保留规则，处理连续失败或无后续构建时的残留。
+# 成功后删除源码和 commit 文件，认证临时文件在打标签步骤退出时删除。
+# 失败/取消时公共任务工作区由平台回收；BuildKit 缓存由组件管理，不进入 runtime 镜像。
+# npm/Cargo 编译和镜像精简由根目录 Dockerfile 完成；默认 CMD /bin/bash，部署时需覆盖。
+# 组件：https://docs.volcengine.com/docs/CodePipeline/Buildingimages
+# 命令：https://docs.volcengine.com/docs/CodePipeline/Commandexecution
+# 标签：https://regclient.org/cli/regctl/image/copy/
+# 清理：https://regclient.org/cli/regctl/tag/delete/
+version: 2.0.0
+agentPool: public/prod-v2-public
+
+stages:
+  - stage: build-and-push
+    displayName: 构建并推送 Lynx Stack 镜像
+    tasks:
+      - task: workspace-image
+        displayName: main 构建与 CR 推送
+        timeout: 2h
+        resourcesPolicy: none
+        resources:
+          limits:
+            cpu: 8C
+            memory: 16Gi
+        steps:
+          - step: checkout-main
+            displayName: Bash 匿名 clone main 并保存 HEAD
+            component: exec@1.0.0
+            inputs:
+              shell: BASH
+              cmd: |
+                set +x
+                set -euo pipefail
+                export GIT_TERMINAL_PROMPT=0
+                cd "$(CP_WORKSPACE)"
+                git -c credential.helper= clone --depth=1 --single-branch --branch main https://github.com/lynx-family/lynx-stack.git source
+                commit_sha=$(git -C source rev-parse HEAD)
+                printf '%s\n' "$commit_sha" > main.commit
+                chmod 644 main.commit
+                echo "Building main at $commit_sha"
+          - step: buildkit-custom
+            displayName: BuildKit 构建并推送临时标签
+            component: buildkit-custom@3.0.0
+            inputs:
+              customImageAddress:
+                protocol: https
+                address: REPLACE_WITH_CR_HOST/REPLACE_WITH_CR_NAMESPACE/REPLACE_WITH_CR_REPOSITORY:build-$(PIPELINERUN_ID)
+              # 在控制台添加 CR 用户名密码凭据，替换此空列表。
+              loginCredential: []
+              contextPath: ./source
+              dockerfiles:
+                default:
+                  path: ./source/Dockerfile
+              # 组件默认构建 linux/amd64；buildParams 中的 --platform 会被忽略。
+              buildParams: --target runtime --build-arg UBUNTU_MIRROR=http://mirrors.volces.com/ubuntu
+              compression: gzip
+              disableSSLVerify: false
+              useCache: true
+          - step: tag-commit
+            displayName: 使用 HEAD 标签发布并保留最近 10 个版本
+            component: custom-image@2.0.0
+            inputs:
+              # Alpine 版本提供 /bin/sh；此步骤使用 POSIX shell 语法。
+              image: docker.io/regclient/regctl:v0.11.6-alpine
+              cmd: |
+                set +x
+                set -eu
+                cd "$(CP_WORKSPACE)"
+                image_repo='REPLACE_WITH_CR_HOST/REPLACE_WITH_CR_NAMESPACE/REPLACE_WITH_CR_REPOSITORY'
+                sh source/.volcengine/publish-image.sh "$image_repo" \
+                  'build-$(PIPELINERUN_ID)' "$(cat main.commit)"
+          - step: cleanup
+            displayName: 清理源码和临时文件
+            component: exec@1.0.0
+            inputs:
+              shell: BASH
+              cmd: |
+                set -euo pipefail
+                cd "$(CP_WORKSPACE)"
+                rm -rf -- source main.commit

@@ -2,11 +2,18 @@
 
 FROM ubuntu:26.04 AS builder
 
+ARG UBUNTU_MIRROR
+
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # The bundled Linux Lynx runtime currently supports amd64 only.
+# Override the APT mirror for builders that cannot reach Ubuntu's default hosts.
 RUN test "$(dpkg --print-architecture)" = amd64 \
-    && apt-get update \
+    && if [ -n "$UBUNTU_MIRROR" ]; then \
+        sed -i -E "s#http://(archive|security)[.]ubuntu[.]com/ubuntu#$UBUNTU_MIRROR#g" \
+            /etc/apt/sources.list.d/ubuntu.sources; \
+    fi \
+    && apt-get update --error-on=any \
     && apt-get install -y --no-install-recommends \
         build-essential \
         ca-certificates \
@@ -30,7 +37,7 @@ ENV CI=1 \
 
 WORKDIR /workspace
 
-COPY .nvmrc rust-toolchain.toml ./
+COPY .nvmrc ./
 
 # Use the repository's Node pin and verify the official distribution checksum.
 RUN node_version="$(cat .nvmrc)" \
@@ -45,6 +52,7 @@ RUN node_version="$(cat .nvmrc)" \
 
 # Use Rust's default directories: Turbo filters custom CARGO_HOME/RUSTUP_HOME.
 # rustup reads the pinned toolchain and Wasm targets from rust-toolchain.toml.
+COPY rust-toolchain.toml ./
 RUN curl -fsSL --retry 3 https://sh.rustup.rs -o /tmp/rustup-init.sh \
     && sh /tmp/rustup-init.sh -y --no-modify-path --default-toolchain none \
     && rustup show \
@@ -70,13 +78,13 @@ RUN cargo build --workspace --locked --release \
     --features ui_judge/server
 
 # Export only native deliverables before removing every Cargo target directory.
-RUN mkdir -p /out/native/lib \
+RUN mkdir -p /out/native /out/sdk/lib \
     && cp target/x86_64-unknown-linux-gnu/release/ui-judge-server \
         target/x86_64-unknown-linux-gnu/release/lynx-headless-rust-test-runner \
         target/x86_64-unknown-linux-gnu/release/libreact_transform.so \
-        target/x86_64-unknown-linux-gnu/release/start.sh \
-        target/x86_64-unknown-linux-gnu/release/lynx_core.js /out/native/ \
-    && cp target/x86_64-unknown-linux-gnu/release/lib/libLynx_clay.so /out/native/lib/ \
+        target/x86_64-unknown-linux-gnu/release/start.sh /out/native/ \
+    && cp target/x86_64-unknown-linux-gnu/release/lynx_core.js /out/sdk/ \
+    && cp target/x86_64-unknown-linux-gnu/release/lib/libLynx_clay.so /out/sdk/lib/ \
     && strip --strip-unneeded /out/native/ui-judge-server \
         /out/native/lynx-headless-rust-test-runner /out/native/libreact_transform.so
 
@@ -91,11 +99,33 @@ RUN find . -type d -name node_modules -prune -exec rm -rf '{}' + \
     && find . -type f \( -name '*.tsbuildinfo' -o -name '*.js.map' \
         -o -name '*.mjs.map' -o -name '*.cjs.map' -o -name '*.css.map' \
         -o -name '*.d.ts.map' \) -delete \
-    && rm -rf .github .changeset .vscode .idea .agents
+    && rm -rf .github .changeset .vscode .idea .agents .volcengine
+
+# Keep dependency paths and workspace symlinks intact when splitting the layers.
+# Install bookkeeping and timestamps must not give unchanged dependencies a new digest.
+RUN mkdir -p /out/dependencies \
+    && find . -type d -name node_modules -prune -print0 > /tmp/runtime-node-modules \
+    && while IFS= read -r -d '' modules; do \
+        mkdir -p "/out/dependencies/$(dirname "$modules")" \
+            && mv "$modules" "/out/dependencies/$modules" || exit 1; \
+    done < /tmp/runtime-node-modules \
+    && rm /tmp/runtime-node-modules \
+    && rm -rf /out/dependencies/node_modules/.cache \
+        /out/dependencies/node_modules/.pnpm-store \
+    && rm -f /out/dependencies/node_modules/.modules.yaml \
+        /out/dependencies/node_modules/.pnpm-workspace-state-v1.json \
+    && TZ=UTC find /out/dependencies /out/sdk /out/native /workspace \
+        -exec touch -h -t 197001010000.00 '{}' +
 
 FROM ubuntu:26.04 AS runtime
 
-RUN apt-get update \
+ARG UBUNTU_MIRROR
+
+RUN if [ -n "$UBUNTU_MIRROR" ]; then \
+        sed -i -E "s#http://(archive|security)[.]ubuntu[.]com/ubuntu#$UBUNTU_MIRROR#g" \
+            /etc/apt/sources.list.d/ubuntu.sources; \
+    fi \
+    && apt-get update --error-on=any \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
         libepoxy0 \
@@ -107,9 +137,11 @@ RUN apt-get update \
 WORKDIR /workspace
 
 # No compiler, package manager, download cache, or builder layers enter this stage.
-COPY --from=builder /usr/local/bin/node /usr/local/bin/node
-COPY --from=builder /workspace/ ./
-COPY --from=builder /out/native/ ./target/x86_64-unknown-linux-gnu/release/
+COPY --link --from=builder /usr/local/bin/node /usr/local/bin/node
+COPY --link --from=builder /out/dependencies/ ./
+COPY --link --from=builder /out/sdk/ ./target/x86_64-unknown-linux-gnu/release/
+COPY --link --from=builder /workspace/ ./
+COPY --link --from=builder /out/native/ ./target/x86_64-unknown-linux-gnu/release/
 
 ENV NODE_ENV=production \
     LYNX_LIB_PATH=/workspace/target/x86_64-unknown-linux-gnu/release/lib/libLynx_clay.so \
