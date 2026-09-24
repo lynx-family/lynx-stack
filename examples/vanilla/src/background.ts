@@ -1,11 +1,14 @@
-import type { CounterPatch } from './events.js';
+import { initializeBackgroundThread } from '@lynx-js/lynx-runtime/background';
+
+import type {
+  CounterPatch,
+  EventsFromBackground,
+  EventsToBackground,
+} from './events.js';
 import {
   counterUpdatedEventName,
-  destroyLifetimeEventName,
   incrementCounterEventName,
 } from './events.js';
-
-const mainThread = lynx.getCoreContext();
 
 let count = 0;
 
@@ -13,19 +16,12 @@ function onIncrementCounter(): void {
   count += 1;
 
   const patch: CounterPatch = { count };
-  mainThread.dispatchEvent({
-    type: counterUpdatedEventName,
-    data: patch,
-  });
+  runtime.dispatchToMainThread(counterUpdatedEventName, patch);
 }
 
-function cleanup(): void {
-  mainThread.removeEventListener(
-    incrementCounterEventName,
-    onIncrementCounter,
-  );
-  mainThread.removeEventListener(destroyLifetimeEventName, cleanup);
-}
+const runtime = initializeBackgroundThread<
+  EventsFromBackground,
+  EventsToBackground
+>();
 
-mainThread.addEventListener(incrementCounterEventName, onIncrementCounter);
-mainThread.addEventListener(destroyLifetimeEventName, cleanup);
+runtime.onMainThreadEvent(incrementCounterEventName, onIncrementCounter);

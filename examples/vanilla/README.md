@@ -2,6 +2,10 @@
 
 This example renders a counter directly with Element PAPI and TypeScript, without ReactLynx, JSX, or a virtual DOM. A `tap` event starts on the main thread, increments the counter on the background thread, and sends the new value back for the main thread to render.
 
+It uses `@lynx-js/lynx-runtime` to initialize both threads, subscribe to
+lifecycle and application events, forward destruction, and clean up listeners.
+The example itself only owns Element PAPI rendering and counter business logic.
+
 ## Run
 
 From the repository root:
