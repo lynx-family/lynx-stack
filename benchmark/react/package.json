@@ -58,7 +58,7 @@
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-signals": "workspace:*",
     "benchx_cli": "workspace:*",
-    "empathic": "^2.0.1",
+    "empathic": "^2.1.0",
     "event-target-polyfill": "^0.0.4",
     "magic-string": "^1.1.0",
     "tinybench": "^6.1.4"
