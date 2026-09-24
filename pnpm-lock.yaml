@@ -405,10 +405,10 @@ importers:
     devDependencies:
       '@rspress/core':
         specifier: 2.0.21
-        version: 2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
+        version: 2.0.21(@rspack/core@2.2.7(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
       '@rspress/plugin-typedoc':
         specifier: 2.0.21
-        version: 2.0.21(@rspress/core@2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))(typescript@6.0.3)
+        version: 2.0.21(@rspress/core@2.0.21(@rspack/core@2.2.7(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))(typescript@6.0.3)
       '@types/react':
         specifier: npm:@types/react@^19.2.18
         version: 19.2.18
@@ -16028,9 +16028,9 @@ snapshots:
     dependencies:
       '@rspress/core': 2.0.21(@rspack/core@2.2.7(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
 
-  '@rspress/plugin-typedoc@2.0.21(@rspress/core@2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))(typescript@6.0.3)':
+  '@rspress/plugin-typedoc@2.0.21(@rspress/core@2.0.21(@rspack/core@2.2.7(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2))(typescript@6.0.3)':
     dependencies:
-      '@rspress/core': 2.0.21(@rspack/core@2.2.2(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
+      '@rspress/core': 2.0.21(@rspack/core@2.2.7(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
       typedoc: 0.28.20(typescript@6.0.3)
       typedoc-plugin-markdown: 4.13.1(typedoc@0.28.20(typescript@6.0.3))
     transitivePeerDependencies:
