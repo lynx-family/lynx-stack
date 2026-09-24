@@ -8,13 +8,12 @@ import * as ReactInternalExports from '../../lazy/internal.js';
 import * as ReactJSXRuntimeExports from '../../lazy/jsx-runtime.js';
 import * as ReactJSXDevRuntimeExports from '../../lazy/jsx-dev-runtime.js';
 import * as ReactLegacyReactRuntimeExports from '../../lazy/legacy-react-runtime.js';
-import {
+import { sRuntimeBackend, target } from '../../lazy/target.js';
+const {
   RUNTIME_BACKEND_ELEMENT_TEMPLATE,
   RUNTIME_BACKEND_SNAPSHOT,
-  registerLazyRuntimeBackend,
-  sRuntimeBackend,
-  target,
-} from '../../lazy/target.js';
+  registerRuntimeBackend,
+} = ReactInternalExports;
 
 function restoreDescriptor(target, symbol, descriptor) {
   if (descriptor) {
@@ -41,6 +40,18 @@ async function withRuntimeBackend(backend, callback) {
     return await callback();
   } finally {
     restoreDescriptor(target, sRuntimeBackend, descriptor);
+  }
+}
+
+async function withoutRecordedRuntimeVersion(callback) {
+  const symbol = Symbol.for('__REACT_LYNX_RUNTIME_VERSION__');
+  const descriptor = Object.getOwnPropertyDescriptor(target, symbol);
+  delete target[symbol];
+
+  try {
+    return await callback();
+  } finally {
+    restoreDescriptor(target, symbol, descriptor);
   }
 }
 
@@ -161,20 +172,44 @@ describe('Lazy Exports', () => {
     expect(target[sRuntimeBackend]).toBe(RUNTIME_BACKEND_SNAPSHOT);
   });
 
+  test('records a stamped runtime version from the host runtime marker', async () => {
+    await withoutRecordedRuntimeVersion(async () => {
+      vi.stubGlobal('__RUNTIME_VERSION__', '1.2.0');
+      onTestFinished(() => vi.unstubAllGlobals());
+      vi.resetModules();
+
+      await import('../../src/runtime-marker.ts');
+
+      expect(ReactInternalExports.getRuntimeVersion()).toBe('1.2.0');
+    });
+  });
+
+  test('records a stamped runtime version from the standalone lazy import', async () => {
+    await withoutRecordedRuntimeVersion(async () => {
+      vi.stubGlobal('__RUNTIME_VERSION__', '1.2.0');
+      onTestFinished(() => vi.unstubAllGlobals());
+      vi.resetModules();
+
+      await import('../../lazy/internal.js');
+
+      expect(ReactInternalExports.getRuntimeVersion()).toBe('1.2.0');
+    });
+  });
+
   test('records a lazy backend when no main template marker exists', async () => {
     await withRuntimeBackend(undefined, () => {
-      registerLazyRuntimeBackend(RUNTIME_BACKEND_SNAPSHOT);
+      registerRuntimeBackend(RUNTIME_BACKEND_SNAPSHOT);
 
       expect(target[sRuntimeBackend]).toBe(RUNTIME_BACKEND_SNAPSHOT);
     });
   });
 
   test('allows matching lazy backend registration', () => {
-    expect(() => registerLazyRuntimeBackend(RUNTIME_BACKEND_SNAPSHOT)).not.toThrow();
+    expect(() => registerRuntimeBackend(RUNTIME_BACKEND_SNAPSHOT)).not.toThrow();
   });
 
   test('throws when a lazy bundle backend does not match the main template backend', () => {
-    expect(() => registerLazyRuntimeBackend(RUNTIME_BACKEND_ELEMENT_TEMPLATE)).toThrow(
+    expect(() => registerRuntimeBackend(RUNTIME_BACKEND_ELEMENT_TEMPLATE)).toThrow(
       'Snapshot and Element Template templates cannot share lazy bundles.',
     );
   });
@@ -192,7 +227,7 @@ describe('Lazy Exports', () => {
     await withRuntimeBackend(undefined, async () => {
       vi.resetModules();
 
-      await import('../../src/element-template/runtime-backend-marker.ts');
+      await import('../../src/element-template/runtime-marker.ts');
       expect(target[sRuntimeBackend]).toBe(RUNTIME_BACKEND_ELEMENT_TEMPLATE);
 
       await expect(import('../../lazy/import.js')).rejects.toThrow(

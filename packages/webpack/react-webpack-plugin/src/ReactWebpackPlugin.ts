@@ -280,6 +280,17 @@ interface ReactWebpackPluginOptions {
    * @public
    */
   lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
+
+  /**
+   * The `@lynx-js/react` runtime version the app being compiled depends on.
+   * Stamped into the bundle as `__RUNTIME_VERSION__` so a lazy bundle can be
+   * checked at runtime against the host's runtime version. Resolved by the
+   * caller (e.g. `pluginReactLynx`) against the app root; left `undefined` when
+   * it cannot be determined.
+   *
+   * @public
+   */
+  runtimeVersion?: string | undefined;
 }
 
 /**
@@ -359,6 +370,7 @@ class ReactWebpackPlugin {
       experimental_useElementTemplate: false,
       experimental_transformBuiltinAttributeNames: false,
       lazyBundleFetcher: 'QueryComponent',
+      runtimeVersion: undefined,
     });
 
   /**
@@ -431,6 +443,7 @@ class ReactWebpackPlugin {
         options.experimental_transformBuiltinAttributeNames,
       ),
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
+      __RUNTIME_VERSION__: JSON.stringify(options.runtimeVersion),
     }).apply(compiler);
 
     const entryPairs = options.entryPairs ?? [];

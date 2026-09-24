@@ -34,6 +34,7 @@ declare global {
   declare const __ENABLE_SSR__: boolean;
   declare const __GLOBAL_PROPS_MODE__: 'reactive' | 'event' | undefined;
   declare const __LAZY_BUNDLE_FETCHER__: 'FetchBundle' | 'QueryComponent';
+  declare const __RUNTIME_VERSION__: string | undefined;
   declare function __CreatePage(componentId: string, cssId: number): FiberElement;
   declare function __CreateElement(
     tag: string,
