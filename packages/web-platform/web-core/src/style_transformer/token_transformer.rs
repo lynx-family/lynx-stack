@@ -49,7 +49,8 @@ pub(crate) fn transform_one_token<'a>(
           );
         }
       }
-      if len > 2 {
+      // Require a digit before the unit so `dvh`, `svw`, `lvh`, etc. are left alone
+      if len > 2 && token_value.as_bytes()[len - 3].is_ascii_digit() {
         let suffix = &token_value[len - 2..];
         if config.transform_vw && suffix.eq_ignore_ascii_case("vw") {
           let value = &token_value[..len - 2];
@@ -179,6 +180,19 @@ mod tests {
       },
     );
     assert_eq!(tv, "calc(50 * var(--vw-unit))");
+  }
+
+  #[test]
+  fn test_keep_dynamic_viewport_units() {
+    let config = TransformerConfig {
+      transform_vw: true,
+      transform_vh: true,
+      ..Default::default()
+    };
+    let (_, tv) = transform_one_token(DIMENSION_TOKEN, "100dvh", &config);
+    assert_eq!(tv, "100dvh");
+    let (_, tv) = transform_one_token(DIMENSION_TOKEN, "50svw", &config);
+    assert_eq!(tv, "50svw");
   }
 
   #[test]
