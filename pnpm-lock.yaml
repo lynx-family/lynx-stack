@@ -1116,6 +1116,9 @@ importers:
 
   examples/vanilla:
     devDependencies:
+      '@lynx-js/lynx-runtime':
+        specifier: workspace:*
+        version: link:../../packages/lynx/lynx-runtime
       '@lynx-js/rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-lynx
@@ -1570,6 +1573,8 @@ importers:
       rsbuild-plugin-publint:
         specifier: 1.0.0
         version: 1.0.0(@rsbuild/core@2.2.9(core-js@3.50.0))
+
+  packages/lynx/lynx-runtime: {}
 
   packages/motion:
     dependencies:

@@ -1,9 +1,13 @@
+import { initializeMainThread } from '@lynx-js/lynx-runtime/main-thread';
 import type { ElementRef } from '@lynx-js/type-element-api';
 
-import type { CounterPatch } from './events.js';
+import type {
+  CounterPatch,
+  EventsFromBackground,
+  EventsToBackground,
+} from './events.js';
 import {
   counterUpdatedEventName,
-  destroyLifetimeEventName,
   incrementCounterEventName,
 } from './events.js';
 
@@ -11,15 +15,9 @@ const page = __CreatePage('0', 0);
 const pageId = __GetElementUniqueID(page);
 __SetClasses(page, 'page');
 
-Object.assign(globalThis, {
-  processData: (data: unknown): unknown => data,
-});
-
-const engine = lynx.getEngine();
-const backgroundThread = lynx.getJSContext();
-
 let button: ElementRef | undefined;
 let counterText: ElementRef | undefined;
+const buttonEventOptions = {};
 
 function replaceText(text: ElementRef, value: string): void {
   __ReplaceElements(
@@ -30,15 +28,11 @@ function replaceText(text: ElementRef, value: string): void {
 }
 
 function onTap(): void {
-  backgroundThread.dispatchEvent({
-    type: incrementCounterEventName,
-    data: undefined,
-  });
+  runtime.dispatchToBackground(incrementCounterEventName, undefined);
 }
 
-function onCounterUpdated(event: { data: unknown }): void {
-  const patch = event.data as Partial<CounterPatch> | undefined;
-  if (typeof patch?.count !== 'number' || !counterText) {
+function onCounterUpdated(patch: CounterPatch): void {
+  if (!counterText) {
     return;
   }
 
@@ -74,29 +68,24 @@ function renderPage(): void {
   __AppendElement(button, buttonLabel);
   __AppendElement(content, button);
 
-  __AddEventListener(button, 'tap', onTap, {});
+  __AddEventListener(button, 'tap', onTap, buttonEventOptions);
 }
 
 function cleanup(): void {
-  backgroundThread.dispatchEvent({
-    type: destroyLifetimeEventName,
-    data: undefined,
-  });
-  backgroundThread.removeEventListener(
-    counterUpdatedEventName,
-    onCounterUpdated,
-  );
-  engine.removeEventListener('__RenderPage', renderPage);
-  engine.removeEventListener(destroyLifetimeEventName, cleanup);
-
   if (button) {
-    __RemoveEventListener(button, 'tap', onTap);
+    __RemoveEventListener(button, 'tap', onTap, buttonEventOptions);
   }
 
   button = undefined;
   counterText = undefined;
 }
 
-backgroundThread.addEventListener(counterUpdatedEventName, onCounterUpdated);
-engine.addEventListener('__RenderPage', renderPage);
-engine.addEventListener(destroyLifetimeEventName, cleanup);
+const runtime = initializeMainThread<
+  EventsToBackground,
+  EventsFromBackground
+>({
+  onDestroy: cleanup,
+  onRenderPage: renderPage,
+});
+
+runtime.onBackgroundEvent(counterUpdatedEventName, onCounterUpdated);
