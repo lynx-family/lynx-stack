@@ -1,5 +1,13 @@
 # `@lynx-js/vanilla-rsbuild-plugin`
 
+## 0.1.2
+
+### Patch Changes
+
+- Add `@lynx-js/rspeedy` `^0.18.0` to the peer dependency range. ([#3971](https://github.com/lynx-family/lynx-stack/pull/3971))
+- Updated dependencies [[`b5241dd`](https://github.com/lynx-family/lynx-stack/commit/b5241dd52770e97cb9bc5f08d9aa3bdbf7be9ce8), [`c5809d0`](https://github.com/lynx-family/lynx-stack/commit/c5809d097d6cd3c29ba8a140288fce0846b60b2c), [`4c453b9`](https://github.com/lynx-family/lynx-stack/commit/4c453b9ed1c58860f96cde9c4e91722f5d145470)]:
+  - @lynx-js/template-webpack-plugin@0.16.2
+
 ## 0.1.1
 
 ### Patch Changes

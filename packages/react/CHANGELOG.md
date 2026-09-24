@@ -1,5 +1,27 @@
 # @lynx-js/react
 
+## 0.126.2
+
+### Patch Changes
+
+- Reduce profiling overhead in the Snapshot and Element Template backends by directly forwarding fixed arguments in diff, render, commit, and setState callbacks. Existing profiling events and state diagnostics are preserved. This change only affects execution with profiling hooks installed. ([#3998](https://github.com/lynx-family/lynx-stack/pull/3998))
+
+- Preserve first-screen MainThreadRef values and delayed `runOnBackground` calls when a nested main-thread function's original context is garbage-collected before hydration. Hydration now reads the context already owned by the bound function without retaining the original context. ([#3958](https://github.com/lynx-family/lynx-stack/pull/3958))
+
+- Add `registerRuntimeVersion()` and `getRuntimeVersion()` to record the host's `@lynx-js/react` runtime version and report versions from standalone lazy bundles. The build stamps each bundle with `__RUNTIME_VERSION__`; bundles built by older plugins that do not stamp the version are unaffected. ([#4035](https://github.com/lynx-family/lynx-stack/pull/4035))
+
+- Keep both layers of a lazy bundle that a `webpackChunkName` names. The name is the identity of a chunk group, so writing one collapsed the main-thread and the background compilation into a single chunk: the bundle shipped with an empty `lepusCode`, and its intermediate outputs landed outside of `.lynx/lazy-bundle/<name>/`. The transform now appends `-react__<layer>` to a user-written name and the plugin strips it again, the way it did for the names the transform used to inject, so a named lazy bundle is built exactly like an unnamed one. ([#4002](https://github.com/lynx-family/lynx-stack/pull/4002))
+
+- Preserve component owners in development error stacks after scheduled state updates, and enable background component stacks for Element Template. ([#3919](https://github.com/lynx-family/lynx-stack/pull/3919))
+
+- Run a GC pass after `reloadTemplate`, and after an update that arrives before ([#4022](https://github.com/lynx-family/lynx-stack/pull/4022))
+  the first screen is synced, when the engine exposes `lepusng_gc`. Both replace
+  the rendered tree, and under reference counting the replaced tree is not freed
+  on its own.
+- Fix SSR hydration of list snapshots with surrounding elements so list callbacks and recycling state are restored on the list element while preserving the snapshot root. ([#3983](https://github.com/lynx-family/lynx-stack/pull/3983))
+
+- Type `RenderResult.unmount` from `@lynx-js/react/testing-library` as returning `void`, matching the runtime. ([#3960](https://github.com/lynx-family/lynx-stack/pull/3960))
+
 ## 0.126.1
 
 ### Patch Changes
