@@ -1,0 +1,144 @@
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
+import type { RsbuildPluginAPI, Rspack } from '@rsbuild/core'
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  rstest,
+  test,
+} from '@rstest/core'
+
+import { pluginRsdoctor } from '../../src/plugins/rsdoctor.plugin.js'
+
+const { createPlugin } = rstest.hoisted(() => ({ createPlugin: rstest.fn() }))
+rstest.mock('@rsdoctor/core', () => ({
+  migrateRsdoctorOptions: (options: unknown) => options,
+  RsdoctorRspackPlugin: class {
+    readonly isRsdoctorPlugin = true
+    constructor(options: unknown) {
+      createPlugin(options)
+    }
+  },
+}))
+
+async function register(
+  configs: Rspack.Configuration[],
+  options?: Parameters<typeof pluginRsdoctor>[0],
+) {
+  const onBeforeCreateCompiler = rstest.fn<
+    (
+      callback: (
+        args: { bundlerConfigs: Rspack.Configuration[] },
+      ) => Promise<void>,
+    ) => void
+  >()
+  await pluginRsdoctor(options).setup(
+    { onBeforeCreateCompiler } as unknown as RsbuildPluginAPI,
+  )
+  await onBeforeCreateCompiler.mock.calls[0]?.[0]({ bundlerConfigs: configs })
+}
+
+beforeEach(() => {
+  rstest.stubEnv('RSDOCTOR', 'true')
+  createPlugin.mockReset()
+})
+afterEach(() => {
+  rstest.unstubAllGlobals()
+  rstest.unstubAllEnvs()
+})
+
+describe('Rsdoctor 2 registration', () => {
+  test('recognizes a custom plugin by class name without a marker', async () => {
+    class RsdoctorRspackPlugin {
+      apply = rstest.fn()
+    }
+    const plugin = new RsdoctorRspackPlugin()
+    const config = { plugins: [plugin] }
+    await register([config])
+    expect(config.plugins).toEqual([plugin])
+    expect(createPlugin).not.toHaveBeenCalled()
+  })
+
+  test('preserves other plugins and fills every unconfigured compiler', async () => {
+    const plugin = { apply: rstest.fn() }
+    const configs: Rspack.Configuration[] = [{ plugins: [plugin] }, {}]
+    await register(configs)
+    expect(configs[0]?.plugins).toHaveLength(2)
+    expect(configs[0]?.plugins?.[0]).toBe(plugin)
+    expect(configs[1]?.plugins).toHaveLength(1)
+    expect(createPlugin).toHaveBeenCalledTimes(2)
+    expect(configs[0]?.plugins?.[1]).not.toBe(configs[1]?.plugins?.[0])
+  })
+
+  test.each([
+    { ci: 'true', override: undefined, expected: true },
+    { ci: 'false', override: undefined, expected: false },
+    { ci: 'true', override: false, expected: false },
+    { ci: 'false', override: true, expected: true },
+  ])('client server with CI=$ci and override=$override', async ({
+    ci,
+    override,
+    expected,
+  }) => {
+    rstest.stubEnv('CI', ci)
+    await register(
+      [{}],
+      override === undefined ? {} : { disableClientServer: override },
+    )
+    expect(createPlugin).toHaveBeenCalledWith(expect.objectContaining({
+      disableClientServer: expected,
+      supports: { banner: true },
+      linter: {
+        rules: { 'ecma-version-check': ['Warn', { ecmaVersion: 2019 }] },
+      },
+    }))
+  })
+
+  test('does not register when analysis is disabled', async () => {
+    rstest.stubEnv('RSDOCTOR', 'false')
+    await register([{}])
+    expect(createPlugin).not.toHaveBeenCalled()
+  })
+
+  test.each(['20.19.0', '22.12.0', '22.18.0', '24.0.0'])(
+    'auto-registers on Node %s',
+    async node => {
+      rstest.stubGlobal('process', {
+        ...process,
+        versions: { ...process.versions, node },
+      })
+      const config: Rspack.Configuration = {}
+      await register([config])
+      expect(config.plugins).toHaveLength(1)
+      expect(createPlugin).toHaveBeenCalledTimes(1)
+    },
+  )
+
+  test('only fills missing configs in a multi-compiler build', async () => {
+    const plugin = { isRsdoctorPlugin: true, apply: rstest.fn() }
+    const custom = { plugins: [plugin] }
+    const pending: Rspack.Configuration = {}
+    await register([custom, pending])
+    expect(custom.plugins).toEqual([plugin])
+    expect(pending.plugins).toHaveLength(1)
+    expect(createPlugin).toHaveBeenCalledTimes(1)
+  })
+
+  test('does not construct another plugin when all configs already have one', async () => {
+    const plugin = { isRsdoctorPlugin: true, apply: rstest.fn() }
+    await register([{ plugins: [plugin] }, { plugins: [plugin] }])
+    expect(createPlugin).not.toHaveBeenCalled()
+  })
+
+  test('preserves plugin initialization errors', async () => {
+    const error = new Error('invalid plugin options')
+    createPlugin.mockImplementation(() => {
+      throw error
+    })
+    await expect(register([{}])).rejects.toBe(error)
+  })
+})

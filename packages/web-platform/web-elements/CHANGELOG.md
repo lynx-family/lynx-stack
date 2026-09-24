@@ -1,5 +1,11 @@
 # @lynx-js/web-elements
 
+## 0.12.12
+
+### Patch Changes
+
+- Updated dependency `markdown-it` to `^15.0.2`. ([#3943](https://github.com/lynx-family/lynx-stack/pull/3943))
+
 ## 0.12.11
 
 ### Patch Changes

@@ -52,6 +52,10 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   __pendingListUpdates.flush();
   applyRefQueue();
 
+  if (typeof lepusng_gc === 'function') {
+    lepusng_gc();
+  }
+
   if (isFirstScreenSynced) {
     __OnLifecycleEvent([
       LifecycleConstant.firstScreen, /* FIRST_SCREEN */

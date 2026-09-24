@@ -116,11 +116,24 @@ function clonePreviewPerformanceMetrics(
   if (typeof value.fcpMs === 'number') next.fcpMs = value.fcpMs;
   if (typeof value.fmpMs === 'number') next.fmpMs = value.fmpMs;
   if (typeof value.ttiMs === 'number') next.ttiMs = value.ttiMs;
-  if (
-    typeof value.generationMs === 'number'
-    && Number.isFinite(value.generationMs) && value.generationMs >= 0
+  for (
+    const key of [
+      'generationMs',
+      'firstReasoningTokenMs',
+      'firstTextTokenMs',
+      'modelMs',
+      'searchMs',
+      'imageGenerationMs',
+    ] as const
   ) {
-    next.generationMs = value.generationMs;
+    const duration = value[key];
+    if (
+      typeof duration === 'number'
+      && Number.isFinite(duration)
+      && duration >= 0
+    ) {
+      next[key] = duration;
+    }
   }
   if (typeof value.agentOutputMs === 'number') {
     next.agentOutputMs = value.agentOutputMs;

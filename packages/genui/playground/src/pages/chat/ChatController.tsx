@@ -312,6 +312,23 @@ function MessageMetrics(props: { metrics: PreviewPerformanceMetrics }) {
       label: 'Generation',
       value: props.metrics.generationMs,
     },
+    {
+      key: 'firstReasoningTokenMs',
+      label: '1st Reasoning',
+      value: props.metrics.firstReasoningTokenMs,
+    },
+    {
+      key: 'firstTextTokenMs',
+      label: '1st Text',
+      value: props.metrics.firstTextTokenMs,
+    },
+    { key: 'modelMs', label: 'Model', value: props.metrics.modelMs },
+    { key: 'searchMs', label: 'Search', value: props.metrics.searchMs },
+    {
+      key: 'imageGenerationMs',
+      label: 'Image Gen',
+      value: props.metrics.imageGenerationMs,
+    },
     { key: 'renderMs', label: 'Render', value: props.metrics.renderMs },
   ].filter((item) => typeof item.value === 'number');
   if (items.length === 0) return null;
@@ -554,6 +571,11 @@ function mergeMetrics(
       'fmpMs',
       'ttiMs',
       'generationMs',
+      'firstReasoningTokenMs',
+      'firstTextTokenMs',
+      'modelMs',
+      'searchMs',
+      'imageGenerationMs',
       'renderMs',
     ] as const
   ) {
@@ -1601,7 +1623,15 @@ export function ChatController<
     };
     let streamedResponseOutput: TOutput | null = null;
     metricsPersistenceReadyRef.current = false;
-    metricsRef.current = { ...metricsRef.current, generationMs: undefined };
+    metricsRef.current = {
+      ...metricsRef.current,
+      generationMs: undefined,
+      firstReasoningTokenMs: undefined,
+      firstTextTokenMs: undefined,
+      modelMs: undefined,
+      searchMs: undefined,
+      imageGenerationMs: undefined,
+    };
     setMetrics(metricsRef.current);
     setIsActionRunning(true);
     setMessages((current) => [
@@ -1875,6 +1905,11 @@ export function ChatController<
       busy
         || output !== null
         || typeof metrics.generationMs === 'number'
+        || typeof metrics.firstReasoningTokenMs === 'number'
+        || typeof metrics.firstTextTokenMs === 'number'
+        || typeof metrics.modelMs === 'number'
+        || typeof metrics.searchMs === 'number'
+        || typeof metrics.imageGenerationMs === 'number'
         || typeof metrics.renderMs === 'number'
         ? [
           ...(busy || typeof metrics.generationMs === 'number'
@@ -1887,6 +1922,56 @@ export function ChatController<
               value: metrics.generationMs,
             }]
             : []),
+          ...(busy || typeof metrics.firstReasoningTokenMs === 'number'
+            ? [{
+              key: 'firstReasoningTokenMs',
+              label: '1st Reasoning',
+              title: 'First reasoning token',
+              description:
+                'Time from server generation start to the first non-empty reasoning delta.',
+              value: metrics.firstReasoningTokenMs,
+            }]
+            : []),
+          ...(busy || typeof metrics.firstTextTokenMs === 'number'
+            ? [{
+              key: 'firstTextTokenMs',
+              label: '1st Text',
+              title: 'First text token',
+              description:
+                'Time from server generation start to the first non-empty text delta.',
+              value: metrics.firstTextTokenMs,
+            }]
+            : []),
+          ...(busy || typeof metrics.modelMs === 'number'
+            ? [{
+              key: 'modelMs',
+              label: 'Model',
+              title: 'Cumulative model duration',
+              description:
+                'Sum of completed model invocation durations, including repairs; concurrent calls may overlap.',
+              value: metrics.modelMs,
+            }]
+            : []),
+          ...(busy || typeof metrics.searchMs === 'number'
+            ? [{
+              key: 'searchMs',
+              label: 'Search',
+              title: 'Cumulative search duration',
+              description:
+                'Sum of completed web and image search call durations; concurrent calls may overlap.',
+              value: metrics.searchMs,
+            }]
+            : []),
+          ...(busy || typeof metrics.imageGenerationMs === 'number'
+            ? [{
+              key: 'imageGenerationMs',
+              label: 'Image Gen',
+              title: 'Cumulative image generation duration',
+              description:
+                'Sum of completed image-generation call durations; concurrent calls may overlap.',
+              value: metrics.imageGenerationMs,
+            }]
+            : []),
           {
             key: 'renderMs',
             label: 'Render',
@@ -1897,7 +1982,17 @@ export function ChatController<
           },
         ]
         : [],
-    [busy, metrics.generationMs, metrics.renderMs, output],
+    [
+      busy,
+      metrics.firstReasoningTokenMs,
+      metrics.firstTextTokenMs,
+      metrics.generationMs,
+      metrics.imageGenerationMs,
+      metrics.modelMs,
+      metrics.renderMs,
+      metrics.searchMs,
+      output,
+    ],
   );
   const showStarterContent = messages.length <= 1;
 

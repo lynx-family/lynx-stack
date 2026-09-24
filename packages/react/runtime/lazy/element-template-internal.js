@@ -2,17 +2,23 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import {
-  RUNTIME_BACKEND_ELEMENT_TEMPLATE,
-  registerLazyRuntimeBackend,
-  sExportsReactInternal,
-  target,
-} from './target.js';
+import { sExportsReactInternal, target } from './target.js';
 
-registerLazyRuntimeBackend(RUNTIME_BACKEND_ELEMENT_TEMPLATE);
+const ReactInternal = target[sExportsReactInternal];
+
+// Use the host implementation while registering the standalone bundle's
+// backend and build-time runtime version. Older hosts may not export them.
+ReactInternal.registerRuntimeBackend?.(
+  ReactInternal.RUNTIME_BACKEND_ELEMENT_TEMPLATE,
+);
+ReactInternal.registerRuntimeVersion?.(
+  typeof __RUNTIME_VERSION__ === 'undefined' ? undefined : __RUNTIME_VERSION__,
+);
 
 export const {
   Component,
+  RUNTIME_BACKEND_ELEMENT_TEMPLATE,
+  RUNTIME_BACKEND_SNAPSHOT,
   SnapshotInstance,
   __ElementTemplatePage,
   __dynamicImport,
@@ -24,13 +30,16 @@ export const {
   adaptMTRefAttrSlot,
   adaptRefAttrSlot,
   adaptSpreadAttrSlot,
+  getRuntimeVersion,
   loadDynamicJS,
   loadLazyBundle,
   loadWorkletRuntime,
   options,
   process,
+  registerRuntimeBackend,
+  registerRuntimeVersion,
   registerWorkletOnBackground,
   transformToWorklet,
   withInitDataInState,
   wrapWithLynxComponent,
-} = target[sExportsReactInternal];
+} = ReactInternal;

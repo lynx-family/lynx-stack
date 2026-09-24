@@ -12,6 +12,7 @@ export type ConversationProtocol =
 
 export interface ConversationGenerationSettings {
   provider?: string;
+  reasoningEffort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
   enableDesignGuidance: boolean;
   enableHtmlFragment?: boolean;
   enableScriptReuse?: boolean;
@@ -40,6 +41,16 @@ export interface PreviewPerformanceMetrics {
   ttiMs?: number;
   /** Server generation pipeline, including validation but excluding publishing. */
   generationMs?: number;
+  /** Time from generation start to the first non-empty reasoning delta. */
+  firstReasoningTokenMs?: number;
+  /** Time from generation start to the first non-empty text delta. */
+  firstTextTokenMs?: number;
+  /** Cumulative duration of model invocations; concurrent calls may overlap. */
+  modelMs?: number;
+  /** Cumulative duration of web and image search calls. */
+  searchMs?: number;
+  /** Cumulative duration of image-generation calls. */
+  imageGenerationMs?: number;
   /** Legacy request-to-response duration; never interpret as generationMs. */
   agentOutputMs?: number;
   renderMs?: number;

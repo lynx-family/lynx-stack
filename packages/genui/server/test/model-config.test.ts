@@ -195,13 +195,14 @@ describe('GenUI model configuration', () => {
         apiKey: 'client-secret',
         model: 'Doubao Pro',
         api: 'responses',
+        reasoningEffort: 'high',
       })).toEqual({
         resourceId: undefined,
         model: 'Doubao Pro',
         apiKey: undefined,
         baseURL: undefined,
         api: undefined,
-        reasoningEffort: undefined,
+        reasoningEffort: 'high',
         disableAgentCache: undefined,
       });
       expect(pickProviderOptions({ model: 'Unknown Model' }).model).toBe(

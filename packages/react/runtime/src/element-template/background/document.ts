@@ -13,7 +13,7 @@ import {
 export interface BackgroundElementTemplateDocument {
   createElement(type: string): BackgroundElementTemplateInstance;
   createElementNS(ns: string, type: string): BackgroundElementTemplateInstance;
-  createTextNode(text: string): BackgroundElementTemplateInstance;
+  createTextNode(text: string | number): BackgroundElementTemplateInstance;
 }
 
 export function setupBackgroundElementTemplateDocument(): BackgroundElementTemplateDocument {
@@ -30,8 +30,8 @@ export function setupBackgroundElementTemplateDocument(): BackgroundElementTempl
       }
       return new BackgroundElementTemplateInstance(type);
     },
-    createTextNode(text: string): BackgroundElementTemplateInstance {
-      return new BackgroundElementTemplateInstance(BUILTIN_RAW_TEXT_TEMPLATE_KEY, [text]);
+    createTextNode(text: string | number): BackgroundElementTemplateInstance {
+      return new BackgroundElementTemplateInstance(BUILTIN_RAW_TEXT_TEMPLATE_KEY, [String(text)]);
     },
   };
 

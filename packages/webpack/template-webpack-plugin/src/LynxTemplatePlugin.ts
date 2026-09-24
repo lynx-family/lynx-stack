@@ -538,7 +538,7 @@ const SECTION_BACKGROUND = 'background';
 
 interface AsyncChunkLayout {
   name: string;
-  layer: string | undefined;
+  layer: string;
 }
 
 function shortLayerName(layer: string): string {
@@ -739,9 +739,6 @@ class LynxTemplatePluginImpl {
           );
           if (layout !== undefined) {
             const { name, layer } = layout;
-            if (layer === undefined) {
-              return `${prefix}lazy-bundle/${name}.js`;
-            }
             // A lazy bundle's chunk in a layer mirrors the entry of that layer:
             // `<root>/main/background.[contenthash:8].js` becomes
             // `<root>/lazy-bundle/<name>/background.[contenthash:8].js`, so it
@@ -1080,7 +1077,7 @@ class LynxTemplatePluginImpl {
       return undefined;
     }
     const { name, layer } = layout;
-    return layer === undefined ? name : `${name}/${shortLayerName(layer)}`;
+    return `${name}/${shortLayerName(layer)}`;
   }
 
   static #getAsyncChunkLayout(
@@ -1097,14 +1094,11 @@ class LynxTemplatePluginImpl {
           LynxTemplatePluginImpl.#getAsyncChunkGroups(compilation),
         )
       ) {
-        // A named chunk group means the user wrote an explicit
-        // `webpackChunkName` — keep the user-controlled `[name]` placement.
         // Context imports (`import(`./x/${y}`)`) group under an empty name
-        // and are not lazy bundles — leave them on the default template.
-        if (
-          name === ''
-          || chunkGroups.some(cg => cg.name !== null && cg.name !== undefined)
-        ) {
+        // and are not lazy bundles — leave them on the default template. A
+        // named group is a lazy bundle like any other: its name went through
+        // the `asyncChunkName` hook, so both layers share it here.
+        if (name === '') {
           continue;
         }
         for (const chunk of chunkGroups.flatMap(cg => cg.chunks)) {
@@ -1117,6 +1111,12 @@ class LynxTemplatePluginImpl {
               layer = String(module.layer);
               break;
             }
+          }
+          // Every Lynx DSL compiles its two threads as Rspack layers. Without
+          // one there is nothing to tell the chunks of a lazy bundle apart, so
+          // they keep the default `[name]` placement.
+          if (layer === undefined) {
+            continue;
           }
           layouts.set(chunk.id, { name, layer });
         }

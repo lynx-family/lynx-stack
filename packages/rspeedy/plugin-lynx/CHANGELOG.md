@@ -1,5 +1,18 @@
 # @lynx-js/rsbuild-plugin
 
+## 0.1.3
+
+### Patch Changes
+
+- Default `output.dataUriLimit` to 2 KiB to align with Rspeedy. ([#3953](https://github.com/lynx-family/lynx-stack/pull/3953))
+
+- Default `environments` to `{ lynx: {} }` when none is configured, aligned with Rspeedy. The Rsbuild templates no longer set it. ([#3954](https://github.com/lynx-family/lynx-stack/pull/3954))
+
+- Default `performance.profile` to `true` in `pluginLynx` when `DEBUG` includes `lynx`, `rsbuild`, `rspeedy` or `*`, to align with Rspeedy. ([#3973](https://github.com/lynx-family/lynx-stack/pull/3973))
+- Updated dependencies [[`b5241dd`](https://github.com/lynx-family/lynx-stack/commit/b5241dd52770e97cb9bc5f08d9aa3bdbf7be9ce8), [`c5809d0`](https://github.com/lynx-family/lynx-stack/commit/c5809d097d6cd3c29ba8a140288fce0846b60b2c), [`4c453b9`](https://github.com/lynx-family/lynx-stack/commit/4c453b9ed1c58860f96cde9c4e91722f5d145470)]:
+  - @lynx-js/template-webpack-plugin@0.16.2
+  - @lynx-js/web-rsbuild-server-middleware@0.26.2
+
 ## 0.1.2
 
 ### Patch Changes

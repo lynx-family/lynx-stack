@@ -1,5 +1,21 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.12.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Remove the unused `jsx` option from `ReactLoaderOptions`. `pluginReactLynx` dropped its `jsx` option in #903, and the loader never read this one. ([#3979](https://github.com/lynx-family/lynx-stack/pull/3979))
+
+### Patch Changes
+
+- Fix `RangeError: Maximum call stack size exceeded` when lazy chunks import each other. ([#3930](https://github.com/lynx-family/lynx-stack/pull/3930))
+
+- Add `registerRuntimeVersion()` and `getRuntimeVersion()` to record the host's `@lynx-js/react` runtime version and report versions from standalone lazy bundles. The build stamps each bundle with `__RUNTIME_VERSION__`; bundles built by older plugins that do not stamp the version are unaffected. ([#4035](https://github.com/lynx-family/lynx-stack/pull/4035))
+
+- Keep both layers of a lazy bundle that a `webpackChunkName` names. The name is the identity of a chunk group, so writing one collapsed the main-thread and the background compilation into a single chunk: the bundle shipped with an empty `lepusCode`, and its intermediate outputs landed outside of `.lynx/lazy-bundle/<name>/`. The transform now appends `-react__<layer>` to a user-written name and the plugin strips it again, the way it did for the names the transform used to inject, so a named lazy bundle is built exactly like an unnamed one. ([#4002](https://github.com/lynx-family/lynx-stack/pull/4002))
+
+- Optimize single string literal and template literal children of `<text>` into `text` attributes when `engineVersion` is at least 3.1, avoiding separate raw text nodes while preserving expression values and updates. ([#3984](https://github.com/lynx-family/lynx-stack/pull/3984))
+
 ## 0.11.4
 
 ### Patch Changes

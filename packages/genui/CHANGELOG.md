@@ -1,5 +1,23 @@
 # @lynx-js/genui
 
+## 0.5.0
+
+### Minor Changes
+
+- Add optional StylePreset utility styles independently of Lynx XML Template ([#3987](https://github.com/lynx-family/lynx-stack/pull/3987))
+  conversion, including `applyLynxXmlStylePreset` for direct Element PAPI documents.
+  Generate only referenced Lynx-compatible CSS
+  and preserve authored style overrides, with preset selection available in
+  Playground Create and Bench.
+
+### Patch Changes
+
+- Simplify Lynx XML runtime and artifact constraints, keep design defaults in the shared server guidance, and allow asset and link URLs supplied by the host or enabled search/image tools. ([#3985](https://github.com/lynx-family/lynx-stack/pull/3985))
+
+- Updated dependency `@openuidev/lang-core` to `^0.3.0`. ([#3829](https://github.com/lynx-family/lynx-stack/pull/3829))
+- Updated dependencies [[`d8cef4e`](https://github.com/lynx-family/lynx-stack/commit/d8cef4eecf38696264c938aa4ca9e1b37e3ac775)]:
+  - @lynx-js/react-signals@0.0.4
+
 ## 0.4.0
 
 ### Minor Changes

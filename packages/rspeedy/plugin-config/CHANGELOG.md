@@ -1,5 +1,13 @@
 # @lynx-js/config-rsbuild-plugin
 
+## 0.2.4
+
+### Patch Changes
+
+- Skip `LynxConfigWebpackPlugin` when the caller is Rstest, so `withLynxConfig()` no longer fails with "No `LynxTemplatePlugin` exposed" in a config that uses `pluginLynxConfig`. The Lynx config is still exposed to the other plugins. ([#3976](https://github.com/lynx-family/lynx-stack/pull/3976))
+
+- Add `@lynx-js/rspeedy` `^0.18.0` to the peer dependency range. ([#3971](https://github.com/lynx-family/lynx-stack/pull/3971))
+
 ## 0.2.3
 
 ### Patch Changes
