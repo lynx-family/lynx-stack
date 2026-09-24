@@ -1,5 +1,12 @@
 # create-rspeedy
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [[`469b1d8`](https://github.com/lynx-family/lynx-stack/commit/469b1d8848d9dcba396d5e3e46ef38e519469d47), [`0cea2a3`](https://github.com/lynx-family/lynx-stack/commit/0cea2a3d34cb4dee019f0bc82ba07ef3a664ef23)]:
+  - @lynx-js/create-lynx@0.2.1
+
 ## 0.17.2
 
 ### Patch Changes

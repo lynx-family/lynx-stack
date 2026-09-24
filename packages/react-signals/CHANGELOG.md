@@ -1,5 +1,11 @@
 # @lynx-js/react-signals
 
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependency `@preact/signals` to `^2.11.2`. ([#3830](https://github.com/lynx-family/lynx-stack/pull/3830))
+
 ## 0.0.3
 
 ### Patch Changes
