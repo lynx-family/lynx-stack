@@ -57,6 +57,10 @@ minimumReleaseAgeExclude:
   - "rsbuild-plugin-dts"
   - "@rstest/*"
   - "@rstackjs/create-toolkit"
+  # Rsdoctor rc.1 is upgraded deliberately as a coordinated release.
+  - "@rsdoctor/core"
+  - "@rsdoctor/client"
+  - "@rsdoctor/shared"
   # Changesets v3 packages were released as one coordinated set.
   - "@changesets/*"
 minimumReleaseAgeExcludePrune: true

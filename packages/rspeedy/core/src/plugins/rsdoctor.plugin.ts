@@ -4,6 +4,10 @@
 
 import { logger, mergeRsbuildConfig } from '@rsbuild/core'
 import type { RsbuildPlugin } from '@rsbuild/core'
+import type {
+  CompatibleRsdoctorOptions,
+  RsdoctorRspackPluginOptions as RawRsdoctorRspackPluginOptions,
+} from '@rsdoctor/core'
 
 import type {
   RsdoctorRspackPluginOptions,
@@ -24,22 +28,20 @@ export function pluginRsdoctor(
       }
 
       api.onBeforeCreateCompiler(async ({ bundlerConfigs }) => {
-        const { RsdoctorRspackPlugin } = await import('@rsdoctor/rspack-plugin')
-
-        for (const config of bundlerConfigs) {
-          const pluginName = 'RsdoctorRspackPlugin'
-
-          const registered = config.plugins?.some(
-            (plugin) =>
-              (typeof plugin === 'object'
-                && plugin?.['isRsdoctorPlugin'] === true)
-              || plugin?.constructor?.name === pluginName,
+        const pendingConfigs = bundlerConfigs.filter(config =>
+          !config.plugins?.some(plugin =>
+            (typeof plugin === 'object'
+              && plugin?.['isRsdoctorPlugin'] === true)
+            || plugin?.constructor?.name === 'RsdoctorRspackPlugin'
           )
+        )
+        if (pendingConfigs.length === 0) return
 
-          if (registered) {
-            continue
-          }
+        const { RsdoctorRspackPlugin, migrateRsdoctorOptions } = await import(
+          '@rsdoctor/core'
+        )
 
+        for (const config of pendingConfigs) {
           config.plugins ??= []
 
           const defaultOptions: RsdoctorRspackPluginOptions = {
@@ -66,8 +68,10 @@ export function pluginRsdoctor(
             // Normalize the simplified config type at the plugin boundary.
             new RsdoctorRspackPlugin(
               mergeRsbuildConfig(
-                defaultOptions,
-                options,
+                defaultOptions as RawRsdoctorRspackPluginOptions<[]>,
+                migrateRsdoctorOptions<[]>(
+                  options as CompatibleRsdoctorOptions<[]>,
+                ),
               ) as unknown as ConstructorParameters<
                 typeof RsdoctorRspackPlugin<[]>
               >[0],
