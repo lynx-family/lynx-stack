@@ -47,11 +47,7 @@ export default defineConfig({
     pluginReactLynx({
       experimental_useElementTemplate: true,
     }),
-    pluginQRCode({
-      schema(url) {
-        return `${url}?fullscreen=true`;
-      },
-    }),
+    pluginQRCode({ fullscreen: true }),
   ],
   environments: {
     lynx: {},
