@@ -11,6 +11,7 @@ import { render } from 'preact';
 
 import { destroyBackground } from './destroy.js';
 import { renderMainThread } from './render.js';
+import { getEntryReloader } from '../../core/entry-reloader.js';
 import { increaseReloadVersion } from '../../core/reload-version.js';
 import { __root, setRoot } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
@@ -42,7 +43,12 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
 
   const oldRoot = __root;
   setRoot(new SnapshotInstance('root'));
-  __root.__jsx = oldRoot.__jsx;
+  const reloadEntry = getEntryReloader();
+  if (reloadEntry) {
+    reloadEntry();
+  } else {
+    __root.__jsx = oldRoot.__jsx;
+  }
   renderMainThread();
   hydrate(oldRoot as SnapshotInstance, __root as SnapshotInstance, {
     skipUnRef: true,
