@@ -14,7 +14,7 @@ import { __root } from './root.js';
 import { profileEnd, profileStart } from './shared/profile.js';
 import { LifecycleConstant } from './snapshot/lifecycle/constant.js';
 import { onFirstScreenSyncReady } from './snapshot/lifecycle/event/firstScreenSync.js';
-import { flushDelayedLifecycleEvents } from './snapshot/lynx/tt.js';
+import { flushDelayedLifecycleEvents, reattachTt } from './snapshot/lynx/tt.js';
 
 /**
  * The default root exported by `@lynx-js/react` for you to render a JSX
@@ -90,6 +90,7 @@ export const root: Root = {
     if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
       __root.__jsx = jsx;
     } else {
+      reattachTt();
       __root.__jsx = jsx;
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileStart('ReactLynx::renderBackground');

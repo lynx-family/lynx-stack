@@ -86,7 +86,7 @@ describe('ReactWebpackPlugin: experimental_reloadEntryReeval', () => {
 
     expect(mainThread.startsWith(`${RELOADER} = () => {`)).toBe(true);
     expect(mainThread.trimEnd().endsWith(`${RELOADER}();`)).toBe(true);
-    // Only the main thread entry is re-evaluated.
+    // The background is re-evaluated by Lynx core, not by a wrapper.
     expect(background).not.toContain(RELOADER);
   });
 });
