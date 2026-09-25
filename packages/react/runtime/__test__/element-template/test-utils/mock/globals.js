@@ -26,6 +26,13 @@ export function injectGlobals() {
 
   installPerformanceGlobals();
   globalThis.lynx.getApp = () => lynxApp;
+  const globalEventEmitter = {
+    emit: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    removeAllListeners: vi.fn(),
+  };
+  globalThis.lynx.getJSModule = (name) => name === 'GlobalEventEmitter' ? globalEventEmitter : undefined;
 
   globalThis.requestAnimationFrame = setTimeout;
   globalThis.cancelAnimationFrame = clearTimeout;
