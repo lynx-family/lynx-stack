@@ -45,6 +45,8 @@ const fiberElementPAPINameList = [
   '__RemoveGestureDetector',
 ];
 
+const ALOG_WRAPPED = Symbol.for('__ELEMENT_PAPI_CALL_ALOG_WRAPPED__');
+
 export function initElementPAPICallAlog(globalWithIndex: Record<string, unknown> = globalThis): void {
   let count = 0;
   const fiberElementMap = new Map<any, {
@@ -65,8 +67,14 @@ export function initElementPAPICallAlog(globalWithIndex: Record<string, unknown>
 
   filteredFiberElementPAPINameList.forEach(fiberElementPAPIName => {
     const oldFiberElementPAPI = globalWithIndex[fiberElementPAPIName];
+    // Both this module's own bootstrap and the testing-library setup hook can
+    // reach the same globals. Wrapping an existing wrapper stacks two
+    // independent counters and logs every call twice, so skip it.
+    if ((oldFiberElementPAPI as { [ALOG_WRAPPED]?: boolean })?.[ALOG_WRAPPED]) {
+      return;
+    }
     if (typeof oldFiberElementPAPI === 'function') {
-      globalWithIndex[fiberElementPAPIName] = (...args: unknown[]): unknown => {
+      const wrapped = (...args: unknown[]): unknown => {
         if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
           profileStart(`FiberElementPAPI: ${fiberElementPAPIName}`, {
             args: {
@@ -127,6 +135,8 @@ export function initElementPAPICallAlog(globalWithIndex: Record<string, unknown>
         );
         return result;
       };
+      (wrapped as { [ALOG_WRAPPED]?: boolean })[ALOG_WRAPPED] = true;
+      globalWithIndex[fiberElementPAPIName] = wrapped;
     }
   });
 }
