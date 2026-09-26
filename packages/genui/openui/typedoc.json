@@ -1,0 +1,18 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "openui",
+  "entryPoints": [
+    "src/core/index.ts",
+    "src/core/explicit.ts",
+    "src/openui-prompt/index.ts"
+  ],
+  "tsconfig": "tsconfig.build.json",
+  "intentionallyNotExported": [
+    "HeadlessRenderer"
+  ],
+  "externalSymbolLinkMappings": {
+    "@openuidev/lang-core": {
+      "generateSystemPrompt": "https://www.npmjs.com/package/@openuidev/lang-core"
+    }
+  }
+}

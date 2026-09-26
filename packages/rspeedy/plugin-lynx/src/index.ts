@@ -1,6 +1,76 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+
+/**
+ * @packageDocumentation
+ *
+ * The Lynx build engine as an Rsbuild plugin. It builds a Lynx app with the
+ * Rsbuild CLI directly, without the Rspeedy CLI.
+ *
+ * DSL plugins such as
+ * {@link @lynx-js/react-rsbuild-plugin#pluginReactLynx | pluginReactLynx}
+ * register the engine automatically when it is missing, so you only add
+ * `pluginLynx` yourself to pass the options below. Rspeedy registers it for
+ * you as well and forwards `output.filename` and `performance.profile` from
+ * `lynx.config.ts`.
+ *
+ * @example
+ *
+ * Register the plugin next to a DSL plugin in `rsbuild.config.ts`. The
+ * environment name (`lynx` below) becomes the `[platform]` placeholder of the
+ * bundle filename, so the default output of this config is
+ * `dist/main.lynx.bundle`.
+ *
+ * ```ts title="rsbuild.config.ts"
+ * import { defineConfig } from '@rsbuild/core'
+ * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+ * import { pluginLynx } from '@lynx-js/rsbuild-plugin'
+ *
+ * export default defineConfig({
+ *   source: {
+ *     entry: { main: './src/index.tsx' },
+ *   },
+ *   environments: {
+ *     lynx: {},
+ *   },
+ *   plugins: [
+ *     pluginLynx({
+ *       performance: { profile: false },
+ *     }),
+ *     pluginReactLynx(),
+ *   ],
+ * })
+ * ```
+ *
+ * Then use the Rsbuild CLI:
+ *
+ * ```bash
+ * rsbuild dev
+ * rsbuild build
+ * ```
+ *
+ * @remarks
+ *
+ * To migrate from Rspeedy, replace `rspeedy dev` / `rspeedy build` with
+ * `rsbuild dev` / `rsbuild build`, rename `lynx.config.ts` to
+ * `rsbuild.config.ts` and import `defineConfig` from `@rsbuild/core`. The two
+ * options Rspeedy used to forward to the engine are now passed to
+ * `pluginLynx` directly:
+ *
+ * | `lynx.config.ts` (Rspeedy) | `pluginLynx()` (Rsbuild) |
+ * | --- | --- |
+ * | `output.filename` as a string | `output.filename.bundle` |
+ * | `output.filename.bundle` | `output.filename.bundle` |
+ * | `output.filename.template` (deprecated) | `output.filename.bundle` |
+ * | `performance.profile` | `performance.profile` |
+ *
+ * Everything else in `output`, `source`, `dev` and `server` keeps the Rsbuild
+ * shape and stays in `rsbuild.config.ts`. The engine applies Lynx-specific
+ * defaults on top of the Rsbuild ones (bundle target, chunk loading, CSS
+ * extraction, source maps) and only overrides a setting when another plugin
+ * has not already set it.
+ */
 import type { RsbuildPlugin } from '@rsbuild/core'
 
 import { pluginLynxDebugMetadata } from '@lynx-js/debug-metadata-rsbuild-plugin'

@@ -28,6 +28,8 @@ export function isMainThreadRef(value: unknown): value is WorkletRefImpl<unknown
  * The data saved in `current` property of the `MainThreadRef` can be read and written in
  * multiple main thread functions.
  * @public
+ *
+ * @group Types
  */
 export class MainThreadRef<T> {
   /**
@@ -134,6 +136,8 @@ export class MainThreadRef<T> {
  * ```
  *
  * @public
+ *
+ * @group Hooks
  */
 export function useMainThreadRef<T>(initValue: T): MainThreadRef<T>;
 

@@ -18,7 +18,7 @@ import type { DependencyList } from 'react';
 import type { EffectCallback } from 'react';
 import type { FC } from 'react';
 import { forwardRef } from 'react';
-import { Fragment } from 'react';
+import { Fragment as Fragment_2 } from 'react';
 import type { IntrinsicElements } from '@lynx-js/types';
 import { isValidElement } from 'react';
 import { lazy } from 'react';
@@ -28,7 +28,7 @@ import { PureComponent } from 'react';
 import type { ReactElement } from 'react';
 import type { ReactNode } from 'react';
 import type { RefObject } from 'react';
-import { Suspense } from 'react';
+import { Suspense as Suspense_2 } from 'react';
 import { useCallback } from 'react';
 import { useContext } from 'react';
 import { useDebugValue } from 'react';
@@ -89,19 +89,16 @@ export interface DataProcessors {
 
 export { forwardRef }
 
-export { Fragment }
+// @public
+export const Fragment: Fragment_2;
 
 // @public
 export interface GlobalProps {
 }
 
-// Warning: (tsdoc-undefined-tag) The TSDoc tag "@group" is not defined in this configuration
-//
 // @public
 export const GlobalPropsConsumer: Consumer<GlobalProps>;
 
-// Warning: (tsdoc-undefined-tag) The TSDoc tag "@group" is not defined in this configuration
-//
 // @public
 export const GlobalPropsProvider: FC<{
     children?: ReactNode | undefined;
@@ -111,13 +108,9 @@ export const GlobalPropsProvider: FC<{
 export interface InitData {
 }
 
-// Warning: (tsdoc-undefined-tag) The TSDoc tag "@group" is not defined in this configuration
-//
 // @public
 export const InitDataConsumer: Consumer<InitData>;
 
-// Warning: (tsdoc-undefined-tag) The TSDoc tag "@group" is not defined in this configuration
-//
 // @public
 export const InitDataProvider: FC<{
     children?: ReactNode | undefined;
@@ -175,7 +168,8 @@ export function runOnBackground<R, Fn extends (...args: any[]) => R>(f: Fn): (..
 // @public
 export function runOnMainThread<R, Fn extends (...args: any[]) => R>(fn: Fn): (...args: Parameters<Fn>) => Promise<R>;
 
-export { Suspense }
+// @public
+export const Suspense: Suspense_2;
 
 export { useCallback }
 
@@ -229,7 +223,5 @@ export { useSyncExternalStore }
 
 // @public
 export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentClass<P, S>;
-
-// (No @packageDocumentation comment for this package)
 
 ```

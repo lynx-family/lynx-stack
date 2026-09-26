@@ -29,6 +29,8 @@ const runOnMainThreadImpl = createRunOnMainThread({
  * }
  * ```
  * @public
+ *
+ * @group Functions
  */
 export function runOnMainThread<R, Fn extends (...args: any[]) => R>(
   fn: Fn,

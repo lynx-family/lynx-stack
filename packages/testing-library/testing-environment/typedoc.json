@@ -1,0 +1,7 @@
+{
+  "intentionallyNotExported": [
+    "ElementTree"
+  ],
+  "readme": "README.md",
+  "excludeExternals": true
+}

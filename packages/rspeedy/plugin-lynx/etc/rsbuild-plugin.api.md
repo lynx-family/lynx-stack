@@ -74,6 +74,4 @@ export const PLUGIN_LYNX_NAME = "lynx:rsbuild";
 // @public (undocumented)
 export function pluginLynx(options?: LynxPluginOptions): RsbuildPlugin[];
 
-// (No @packageDocumentation comment for this package)
-
 ```

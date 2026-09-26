@@ -1,0 +1,6 @@
+{
+  "intentionallyNotExported": [
+    "EncodeRawData",
+    "InlineChunkConfig"
+  ]
+}
