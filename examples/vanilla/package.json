@@ -9,6 +9,7 @@
     "test:type": "tsc6 --noEmit"
   },
   "devDependencies": {
+    "@lynx-js/lynx-runtime": "workspace:*",
     "@lynx-js/rsbuild-plugin": "workspace:*",
     "@lynx-js/type-element-api": "0.0.9",
     "@lynx-js/types": "4.1.0",

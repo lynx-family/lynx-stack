@@ -1,0 +1,53 @@
+{
+  "name": "@lynx-js/lynx-runtime",
+  "version": "0.0.0",
+  "description": "Lifecycle and cross-thread runtime utilities for Vanilla Lynx applications.",
+  "keywords": [
+    "lynx",
+    "runtime",
+    "vanilla"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/lynx/lynx-runtime"
+  },
+  "license": "Apache-2.0",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./background": {
+      "types": "./dist/background.d.ts",
+      "default": "./dist/background.js"
+    },
+    "./common": {
+      "types": "./dist/common.d.ts",
+      "default": "./dist/common.js"
+    },
+    "./main-thread": {
+      "types": "./dist/main-thread.d.ts",
+      "default": "./dist/main-thread.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "CHANGELOG.md",
+    "README.md",
+    "dist"
+  ],
+  "scripts": {
+    "build": "rslib",
+    "dev": "rslib --watch",
+    "test": "vitest run",
+    "test:type": "tsc6 --project tsconfig.test.json --noEmit"
+  },
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0"
+  }
+}
