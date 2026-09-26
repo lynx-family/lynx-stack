@@ -47,7 +47,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "motion": "13.0.0",
+    "motion": "13.4.2",
     "motion-dom": "13.4.1",
     "motion-utils": "13.0.0"
   },
