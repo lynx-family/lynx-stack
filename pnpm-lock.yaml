@@ -3056,8 +3056,8 @@ importers:
         specifier: 2.2.7
         version: 2.2.7(@swc/helpers@0.5.23)
       '@rspack/lite-tapable':
-        specifier: 1.1.5
-        version: 1.1.5
+        specifier: 1.3.0
+        version: 1.3.0
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
@@ -3099,8 +3099,8 @@ importers:
         specifier: 2.2.7
         version: 2.2.7(@swc/helpers@0.5.23)
       '@rspack/lite-tapable':
-        specifier: 1.1.5
-        version: 1.1.5
+        specifier: 1.3.0
+        version: 1.3.0
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
@@ -3167,8 +3167,8 @@ importers:
         specifier: workspace:^
         version: link:../webpack-runtime-globals
       '@rspack/lite-tapable':
-        specifier: 1.1.5
-        version: 1.1.5
+        specifier: 1.3.0
+        version: 1.3.0
       css-tree:
         specifier: ^3.2.1
         version: 3.2.1
@@ -6264,9 +6264,6 @@ packages:
         optional: true
       '@swc/helpers':
         optional: true
-
-  '@rspack/lite-tapable@1.1.5':
-    resolution: {integrity: sha512-uzB782zJbFTM3ta+e2Glikx36dca/6Y+DXyvFN+wb0Tx5ItIW+g03A0t3amP3LGzPHSkb0k81VHCm4jxLQwfag==}
 
   '@rspack/lite-tapable@1.3.0':
     resolution: {integrity: sha512-YQLaGRltBp5wzh9ee7PMmh1pErbx0E3zDlfO4K3iQpsEcJcBcgj3+9gq6/wqB/zbXbluoWoRCvL+odkft/Qt3A==}
@@ -16005,8 +16002,6 @@ snapshots:
     optionalDependencies:
       '@swc/helpers': 0.5.23
 
-  '@rspack/lite-tapable@1.1.5': {}
-
   '@rspack/lite-tapable@1.3.0': {}
 
   '@rspack/plugin-react-refresh@2.0.2(@rspack/core@2.2.7(@swc/helpers@0.5.23))(react-refresh@0.18.0)':
@@ -22018,7 +22013,7 @@ snapshots:
     dependencies:
       '@rollup/pluginutils': 5.3.0(rollup@4.62.2)
       '@rsbuild/core': 2.2.9(core-js@3.50.0)
-      '@rspack/lite-tapable': 1.1.5
+      '@rspack/lite-tapable': 1.3.0
       i18next-cli: 1.67.7(@swc/helpers@0.5.23)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(typescript@6.0.3)
     transitivePeerDependencies:
       - rollup
@@ -22784,7 +22779,7 @@ snapshots:
 
   ts-checker-rspack-plugin@1.6.0(@rspack/core@2.2.7(@swc/helpers@0.5.23))(@typescript/native-preview@7.0.0-dev.20260707.2)(typescript@6.0.3):
     dependencies:
-      '@rspack/lite-tapable': 1.1.5
+      '@rspack/lite-tapable': 1.3.0
       chokidar: 3.6.0
       memfs: 4.74.0
       picocolors: 1.1.1
