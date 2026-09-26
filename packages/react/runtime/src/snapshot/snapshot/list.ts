@@ -2,11 +2,15 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from '../list/list.js';
+import {
+  componentAtIndexFactory,
+  destroyLifetimeHandlerMap,
+  enqueueComponentFactory,
+  gRecycleMap,
+  gSignMap,
+} from '../list/list.js';
 import { hydrate } from '../renderToOpcodes/hydrate.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
-
-const destroyLifetimeHandlerMap = /*#__PURE__*/ new Map<number, () => void>();
 
 export function snapshotCreateList(
   pageId: number,
@@ -39,28 +43,4 @@ export function snapshotCreateList(
   return list;
 }
 
-export function snapshotDestroyList(si: SnapshotInstance): void {
-  const [, elementIndex] = si.__snapshot_def.slot[0]!;
-  const list = si.__elements?.[elementIndex];
-  // `takeElements` and hydration transfer the rendered elements to a new
-  // SnapshotInstance while leaving the old instance tree available for
-  // teardown. Only the instance that still owns the list element may clean up
-  // its callbacks and recycling state.
-  if (list === undefined) {
-    return;
-  }
-  const listID = __GetElementUniqueID(list);
-
-  __UpdateListCallbacks(list, () => -1, () => {}, () => {});
-
-  if (typeof lynx !== 'undefined' && typeof lynx.getNative === 'function') {
-    const cb = destroyLifetimeHandlerMap.get(listID);
-    if (cb) {
-      lynx.getNative()?.removeEventListener('__DestroyLifetime', cb);
-      destroyLifetimeHandlerMap.delete(listID);
-    }
-  }
-
-  delete gSignMap[listID];
-  delete gRecycleMap[listID];
-}
+export { snapshotDestroyList } from '../list/list.js';
