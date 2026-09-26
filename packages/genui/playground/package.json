@@ -46,8 +46,8 @@
     "@rsbuild/plugin-react": "2.1.0",
     "@rstest/core": "catalog:rstest",
     "@types/qrcode": "^1.5.6",
-    "@types/react": "npm:@types/react@^19.2.18",
-    "@types/react-dom": "^19.2.4",
+    "@types/react": "npm:@types/react@^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "fake-indexeddb": "^6.2.5",
     "typescript": "^6.0.3"
   }

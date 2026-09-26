@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@types/css-tree": "^3.2.0",
-    "@types/node": "^24.13.3"
+    "@types/node": "^24.13.6"
   },
   "@lynx-js/source-field": "./src/index.ts"
 }

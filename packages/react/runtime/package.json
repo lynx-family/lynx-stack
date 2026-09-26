@@ -26,8 +26,8 @@
     "@lynx-js/react-signals": "workspace:*",
     "@lynx-js/react-transform": "workspace:*",
     "@lynx-js/types": "4.1.0",
-    "@types/node": "^24.13.3",
-    "@types/react": "^19.2.18",
+    "@types/node": "^24.13.6",
+    "@types/react": "^19.3.0",
     "pretty-format": "^30.4.1"
   },
   "peerDependencies": {

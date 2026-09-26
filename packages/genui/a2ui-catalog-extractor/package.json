@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@rstest/core": "catalog:rstest",
-    "@types/node": "^24.13.3"
+    "@types/node": "^24.13.6"
   },
   "engines": {
     "node": ">=22"
