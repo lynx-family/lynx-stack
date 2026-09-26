@@ -36,7 +36,7 @@
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
     "@types/eslint-scope": "^3.7.7",
-    "@types/node": "^24.13.3"
+    "@types/node": "^24.13.6"
   },
   "engines": {
     "node": ">=22"
