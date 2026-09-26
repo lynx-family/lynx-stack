@@ -1,5 +1,12 @@
 # create-rspeedy
 
+## 0.18.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/create-lynx@0.2.1
+
 ## 0.18.0
 
 ### Patch Changes
