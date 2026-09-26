@@ -47,6 +47,8 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   hydrate(oldRoot as SnapshotInstance, __root as SnapshotInstance, {
     skipUnRef: true,
   });
+  (oldRoot as SnapshotInstance).unRenderElements();
+  (oldRoot as SnapshotInstance).tearDown();
 
   // always call this before `__FlushElementTree`
   __pendingListUpdates.flush();
