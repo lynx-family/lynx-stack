@@ -1441,8 +1441,8 @@ importers:
         specifier: ^4.0.53
         version: 4.0.53(zod@4.6.5)
       '@ai-sdk/typesafe-ai':
-        specifier: 3.0.5
-        version: 3.0.5(zod@4.6.5)
+        specifier: 3.0.6
+        version: 3.0.6(zod@4.6.5)
       '@hono/node-server':
         specifier: ^2.1.0
         version: 2.1.0(hono@4.13.8)
@@ -3432,8 +3432,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider-utils@5.0.46':
-    resolution: {integrity: sha512-XYpiJbd3jW12HC4yzqNmUuPbZ7ooKXVxQjnXCC3O/VzzV2OvRWD6lDFUYYPLs/ZJgTcWWUkmHL/vIyvnxyplVA==}
+  '@ai-sdk/provider-utils@5.0.47':
+    resolution: {integrity: sha512-NZQ1hMxY6Hd4ZiinjpU5HUOsyCHiTFkHw7AiM1EVN+Cd3kNTi47flZWNvFwGqnBojntB1+2eBRTeHRuVLtPhEg==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -3458,8 +3458,8 @@ packages:
     resolution: {integrity: sha512-XnGXPWiBIfqjsVEud5pOaVneRByJQOu2sYNwlSVJTPCvakdCDkVuYKKfNuStkIpMUYl7JIkBZGBx+B5YfNeVjA==}
     engines: {node: '>=22'}
 
-  '@ai-sdk/typesafe-ai@3.0.5':
-    resolution: {integrity: sha512-8fSHklfS5siBa1s5HYQSZ7wJrL/gfSQYOGeOCVrF24Xk1rBovRRfwv6zihqfbxFYjDQZkC7muGCtEj79jmHkzg==}
+  '@ai-sdk/typesafe-ai@3.0.6':
+    resolution: {integrity: sha512-hcLt6Q75go3QZu4HJnLfqQbk9QCe6tR2bWfPIM/zpFmCUmLkbVY7LHK7bLk5O1DUk7/5ULfhma0cvwvDWbqQCg==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -13047,7 +13047,7 @@ snapshots:
       undici: 7.29.0
       zod: 4.6.5
 
-  '@ai-sdk/provider-utils@5.0.46(zod@4.6.5)':
+  '@ai-sdk/provider-utils@5.0.47(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.18
       '@standard-schema/spec': 1.1.0
@@ -13076,10 +13076,10 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/typesafe-ai@3.0.5(zod@4.6.5)':
+  '@ai-sdk/typesafe-ai@3.0.6(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.18
-      '@ai-sdk/provider-utils': 5.0.46(zod@4.6.5)
+      '@ai-sdk/provider-utils': 5.0.47(zod@4.6.5)
       zod: 4.6.5
 
   '@alloc/quick-lru@5.2.0': {}
