@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { process, render } from 'preact';
+import type { ReactNode } from 'react';
 
 import { runWithForce } from './runWithForce.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
@@ -151,20 +152,18 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
 
       // TODO: It seems `delayedEvents` and `delayedLifecycleEvents` should be merged into one array to ensure the proper order of events.
       flushDelayedLifecycleEvents();
-      if (delayedEvents) {
-        delayedEvents.forEach((args) => {
-          const [handlerName, data] = args;
-          // eslint-disable-next-line prefer-const
-          let [idStr, ...rest] = handlerName.split(':');
-          while (firstScreenEventIdSwap[idStr!]) idStr = firstScreenEventIdSwap[idStr!]?.toString();
-          try {
-            publishEvent([idStr, ...rest].join(':'), data);
-          } catch (e) {
-            getPageLynx().reportError(e as Error);
-          }
-        });
-        delayedEvents.length = 0;
-      }
+      delayedEvents.forEach((args) => {
+        const [handlerName, data] = args;
+        // eslint-disable-next-line prefer-const
+        let [idStr, ...rest] = handlerName.split(':');
+        while (firstScreenEventIdSwap[idStr!]) idStr = firstScreenEventIdSwap[idStr!]?.toString();
+        try {
+          publishEvent([idStr, ...rest].join(':'), data);
+        } catch (e) {
+          getPageLynx().reportError(e as Error);
+        }
+      });
+      delayedEvents.length = 0;
 
       enablePublishEvent(ctxBeforeProcess);
 
@@ -205,6 +204,28 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       getPageLynx().getApp().publishEvent(handlerName, d);
       break;
     }
+  }
+}
+
+function renderBackground(jsx: ReactNode): void {
+  __root.__jsx = jsx;
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
+    profileStart('ReactLynx::renderBackground');
+  }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  render(jsx, __root as any);
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
+    profileEnd();
+  }
+  if (__FIRST_SCREEN_SYNC_TIMING__ === 'jsReady') {
+    // `jsReady` is a special case of the `manual` first-screen sync: the
+    // framework marks ready automatically once the background is ready.
+    getPageLynx().getNativeApp().callLepusMethod(LifecycleConstant.firstScreenSyncReady, {});
+  } else {
+    // `immediately` or `manual`: the first screen is synced without waiting
+    // for the background, so the `firstScreen` message might have been
+    // reached when `root.render()` is called asynchronously.
+    flushDelayedLifecycleEvents();
   }
 }
 
@@ -300,4 +321,4 @@ function updateGlobalProps(newData: Record<string, any>): void {
   });
 }
 
-export { enablePublishEvent, registerAppCallbacks, flushDelayedLifecycleEvents };
+export { enablePublishEvent, registerAppCallbacks, flushDelayedLifecycleEvents, renderBackground };

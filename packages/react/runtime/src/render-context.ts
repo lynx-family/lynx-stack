@@ -17,7 +17,7 @@ export class RootContext {
   patchOptions: GlobalPatchOptions = {};
   bgInstancesToRemove: number[] = [];
   bsiValues: Map<number, BackgroundSnapshotInstance> = new Map();
-  delayedEvents: [handlerName: string, data: EventDataType][] | undefined;
+  delayedEvents: [handlerName: string, data: EventDataType][] = [];
   delayedLifecycleEvents: [type: LifecycleConstant, data: unknown][] = [];
   delayedRunOnMainThreadData: RunWorkletCtxData[] = [];
 }
@@ -25,16 +25,6 @@ export class RootContext {
 export const defaultRootContext: RootContext = /* @__PURE__ */ new RootContext();
 
 let currentRootContext = defaultRootContext;
-
-let boundLynx: typeof lynx | undefined;
-
-export function contextLynx(): typeof lynx {
-  return boundLynx ?? lynx;
-}
-
-export function hasBoundLynx(): boolean {
-  return boundLynx !== undefined;
-}
 
 export function getCurrentRootContext(): RootContext {
   return currentRootContext;
@@ -50,7 +40,6 @@ export function switchRootContext(next: RootContext): void {
   if (next === currentRootContext) {
     return;
   }
-  boundLynx = next.lynx;
   currentRootContext = next;
   for (const refresh of rootAliasRefreshers) {
     refresh();
