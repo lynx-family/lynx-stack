@@ -100,13 +100,8 @@ describe('Compiled runOnMainThread background fixtures', () => {
     installElementTemplateCommitHook();
     installElementTemplateHydrationListener();
 
-    vi.stubGlobal(
-      '__LoadLepusChunk',
-      vi.fn().mockImplementation(() => {
-        initWorklet();
-        return true;
-      }),
-    );
+    initWorklet();
+    vi.stubGlobal('__LoadLepusChunk', vi.fn());
 
     envManager.switchToMainThread();
     installElementTemplatePatchListener();
@@ -182,7 +177,8 @@ describe('Compiled runOnMainThread background fixtures', () => {
     expect(backgroundArtifact.code).not.toContain('__globalSnapshotPatch');
     expect(backgroundArtifact.code).not.toContain('PatchList');
     expect(backgroundArtifact.code).not.toContain('isRendering');
-    expect(mainArtifact.code).toContain('loadWorkletRuntime');
+    expect(mainArtifact.code).toContain('import "@lynx-js/react/worklet-runtime/init"');
+    expect(mainArtifact.code).not.toContain('loadWorkletRuntime');
     expect(mainArtifact.code).toContain('element-template-formatter');
     expect(mainArtifact.code).toContain('registerWorkletInternal("main-thread"');
     expect(mainArtifact.code).not.toContain('snapshot/');

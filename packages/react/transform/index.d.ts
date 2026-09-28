@@ -763,9 +763,16 @@ export interface TransformNodiffOutput {
   /** @internal */
   elementTemplates?: Array<ElementTemplateAsset>
   /** @internal */
+  runtimeRequirements: TransformRuntimeRequirements
+  /** @internal */
   definesForSnapshot?: Array<Define>
   /** @internal */
   definesForWorklet?: Array<Define>
+}
+/** @internal */
+export interface TransformRuntimeRequirements {
+  /** @internal */
+  mainThreadProgrammability: boolean
 }
 /**
  * @internal
@@ -791,6 +798,8 @@ export interface Define {
    * the main thread lacks such a definition.
    */
   unmergeable?: boolean
+  /** @internal Compiler requirements of the extracted registration. */
+  runtimeRequirements?: TransformRuntimeRequirements
 }
 /** @internal */
 export interface ElementTemplateAsset {

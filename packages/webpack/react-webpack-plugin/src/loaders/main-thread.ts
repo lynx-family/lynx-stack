@@ -19,6 +19,8 @@ import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
 export const ELEMENT_TEMPLATE_BUILD_INFO = 'lynx:element-templates';
+export const REACT_RUNTIME_REQUIREMENTS_BUILD_INFO =
+  'lynx:react-runtime-requirements';
 
 const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
   this: LoaderContext<ReactLoaderOptions>,
@@ -111,6 +113,25 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     | undefined;
   if (buildInfo) {
     buildInfo[UI_SOURCE_MAP_RECORDS_BUILD_INFO] = result.uiSourceMapRecords;
+    if (result.runtimeRequirements === undefined) {
+      // A custom/older transform has no semantic producer. Keep this distinct
+      // from an explicit false result so downstream telemetry remains unknown.
+      delete buildInfo[REACT_RUNTIME_REQUIREMENTS_BUILD_INFO];
+    } else {
+      if (
+        typeof result.runtimeRequirements !== 'object'
+        || result.runtimeRequirements === null
+        || typeof result.runtimeRequirements.mainThreadProgrammability
+          !== 'boolean'
+      ) {
+        throw new TypeError(
+          'react-transform returned invalid runtimeRequirements.mainThreadProgrammability',
+        );
+      }
+      buildInfo[REACT_RUNTIME_REQUIREMENTS_BUILD_INFO] = {
+        ...result.runtimeRequirements,
+      };
+    }
     if (result.elementTemplates && result.elementTemplates.length > 0) {
       buildInfo[ELEMENT_TEMPLATE_BUILD_INFO] = result.elementTemplates;
     } else {

@@ -2,6 +2,12 @@
 
 exports.transformReactLynxSync = function transformReactLynxSync(content) {
   const shouldEmitTemplate = content.includes('__emitTemplate');
+  const hasMainThreadProgrammability = content.includes(
+    '__mainThreadProgrammability',
+  );
+  const hasInvalidRuntimeRequirements = content.includes(
+    '__invalidRuntimeRequirements',
+  );
 
   return {
     code: shouldEmitTemplate
@@ -11,6 +17,9 @@ exports.transformReactLynxSync = function transformReactLynxSync(content) {
     errors: [],
     warnings: [],
     uiSourceMapRecords: [],
+    runtimeRequirements: hasInvalidRuntimeRequirements
+      ? { mainThreadProgrammability: 'invalid' }
+      : { mainThreadProgrammability: hasMainThreadProgrammability },
     elementTemplates: shouldEmitTemplate
       ? [
         {

@@ -8,6 +8,8 @@ import { rspack } from '@rspack/core';
 
 import { LAYERS, ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin';
 
+const require = createRequire(import.meta.url);
+
 /**
  * @param {string=} name - The name
  * @param {string=} source - The source path
@@ -67,8 +69,6 @@ function createReactRules(options, swcLoaderOptions = {
     createRuleFor('MAIN_THREAD', options),
   ];
 }
-
-const require = createRequire(import.meta.url);
 
 /**
  * @param {import('../src').ReactLoaderOptions=} loaderOptions - The options for loader

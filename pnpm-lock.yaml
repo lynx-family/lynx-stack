@@ -3080,6 +3080,9 @@ importers:
         specifier: ^1.3.3
         version: 1.3.3
     devDependencies:
+      '@lynx-js/chunk-loading-webpack-plugin':
+        specifier: workspace:*
+        version: link:../chunk-loading-webpack-plugin
       '@lynx-js/css-extract-webpack-plugin':
         specifier: workspace:*
         version: link:../css-extract-webpack-plugin

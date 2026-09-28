@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import type { RsbuildConfig, RsbuildPluginAPI, Rspack } from '@rsbuild/core'
 
+import { LAYERS } from '@lynx-js/react-webpack-plugin'
+
 type CacheGroups = Rspack.Configuration extends {
   optimization?: {
     splitChunks?:
@@ -42,6 +44,19 @@ export function getUserSplitChunks(
     chunkSplitStrategy: scoped?.performance?.chunkSplit?.strategy
       ?? config.performance?.chunkSplit?.strategy,
   }
+}
+
+function isMainThreadChunk(chunk: Rspack.Chunk): boolean {
+  if (chunk.name?.includes('__main-thread')) {
+    return true
+  }
+
+  const originModules = [...chunk.groupsIterable].flatMap(group =>
+    group.origins.flatMap(origin => origin.module ? [origin.module] : [])
+  )
+
+  return originModules.length > 0
+    && originModules.every(module => module.layer === LAYERS.MAIN_THREAD)
 }
 
 export const applySplitChunksRule: (
@@ -117,7 +132,7 @@ export const applySplitChunksRule: (
     rspackConfig.optimization.splitChunks.chunks = function chunks(chunk) {
       // TODO: support `splitChunks.chunks: 'async'`
       // We don't want main thread to be split
-      return !chunk.name?.includes('__main-thread')
+      return !isMainThreadChunk(chunk)
     }
     return rspackConfig
   })
