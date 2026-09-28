@@ -12,6 +12,8 @@ import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../core/thread-function-call/main-thread.js';
+import { defaultRootContext, getCurrentRootContext, switchRootContext } from '../../render-context.js';
+import type { RootContext } from '../../render-context.js';
 import { __root } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { CHILDREN } from '../../shared/render-constants.js';
@@ -38,19 +40,29 @@ import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.j
 
 export { runWithForce };
 
+function bindContext<T extends unknown[], R>(ctx: RootContext, fn: (...args: T) => R): (...args: T) => R {
+  return (...args: T) => {
+    switchRootContext(ctx);
+    return fn(...args);
+  };
+}
+
 function registerAppCallbacks(pageLynx: typeof lynx): void {
+  const ctx = getCurrentRootContext();
   const app = pageLynx.getApp();
-  app.OnLifecycleEvent = onLifecycleEvent;
-  app.publishEvent = delayedPublishEvent;
-  app.publicComponentEvent = delayedPublicComponentEvent;
-  app.callDestroyLifetimeFun = () => {
-    removeCtxNotFoundEventListener();
+  app.OnLifecycleEvent = bindContext(ctx, onLifecycleEvent);
+  app.publishEvent = bindContext(ctx, delayedPublishEvent);
+  app.publicComponentEvent = bindContext(ctx, delayedPublicComponentEvent);
+  app.callDestroyLifetimeFun = bindContext(ctx, () => {
+    if (ctx === defaultRootContext) {
+      removeCtxNotFoundEventListener();
+    }
     destroyWorklet();
     destroyBackground();
-  };
-  app.updateGlobalProps = updateGlobalProps;
-  app.updateCardData = updateCardData;
-  app.onAppReload = reloadBackground;
+  });
+  app.updateGlobalProps = bindContext(ctx, updateGlobalProps);
+  app.updateCardData = bindContext(ctx, updateCardData);
+  app.onAppReload = bindContext(ctx, reloadBackground);
   app.processCardConfig = () => {
     // used to updateTheme, no longer rely on this function
   };
@@ -84,11 +96,14 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
   switch (type) {
     case LifecycleConstant.firstScreen: {
       let processErr;
+      const ctxBeforeProcess = getCurrentRootContext();
       try {
         process();
       } catch (e) {
         processErr = e;
       }
+      // process() may render other roots via Preact's shared queue; re-assert ours.
+      switchRootContext(ctxBeforeProcess);
       const { root: lepusSide, firstScreenEventIdSwap } = data as FirstScreenData;
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileStart('ReactLynx::hydrate');
@@ -151,8 +166,11 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         delayedEvents.length = 0;
       }
 
-      getPageLynx().getApp().publishEvent = publishEvent;
-      getPageLynx().getApp().publicComponentEvent = publicComponentEvent;
+      {
+        const app = getPageLynx().getApp();
+        app.publishEvent = bindContext(ctxBeforeProcess, publishEvent);
+        app.publicComponentEvent = bindContext(ctxBeforeProcess, publicComponentEvent);
+      }
 
       // console.debug("********** After hydration:");
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);
