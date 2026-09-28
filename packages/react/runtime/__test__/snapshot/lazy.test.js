@@ -8,7 +8,13 @@ import * as ReactInternalExports from '../../lazy/internal.js';
 import * as ReactJSXRuntimeExports from '../../lazy/jsx-runtime.js';
 import * as ReactJSXDevRuntimeExports from '../../lazy/jsx-dev-runtime.js';
 import * as ReactLegacyReactRuntimeExports from '../../lazy/legacy-react-runtime.js';
-import { sExportsReact, sRuntimeBackend, target } from '../../lazy/target.js';
+import {
+  sExportsReact,
+  sExportsReactCompat,
+  sExportsReactInternal,
+  sRuntimeBackend,
+  target,
+} from '../../lazy/target.js';
 const {
   RUNTIME_BACKEND_ELEMENT_TEMPLATE,
   RUNTIME_BACKEND_SNAPSHOT,
@@ -147,24 +153,20 @@ describe('Lazy Exports', () => {
     );
   });
 
-  test('forwards MainThreadObject lazy exports to a compatible runtime', async () => {
-    const useMainThreadObject = vi.spyOn(target[sExportsReact], 'useMainThreadObject');
-    onTestFinished(() => useMainThreadObject.mockRestore());
-    const compatibleReact = await import('../../lazy/react.js?compatible-main-thread-object');
-    const definition = {
-      type: '@test/lazy-compatible',
-      create: value => ({ value }),
-    };
-
-    const objectType = compatibleReact.defineMainThreadObjectType(definition);
-    expect(objectType).toMatchObject({ type: definition.type });
-    expect(objectType).not.toHaveProperty('create');
-    expect(objectType.downcast).toBeTypeOf('function');
-    expect(objectType.downcast({})).toBeUndefined();
-    expect(() => compatibleReact.useMainThreadObject(objectType, 1)).toThrow();
-    expect(useMainThreadObject).toHaveBeenCalledExactlyOnceWith(objectType, 1);
-
-    expect(ReactInternalExports.captureMainThreadObject({})).toBeUndefined();
+  test('forwards MainThreadObject lazy exports from the host runtime', () => {
+    expect(ReactExports.defineMainThreadObjectType).toBe(
+      target[sExportsReact].defineMainThreadObjectType,
+    );
+    expect(ReactExports.useMainThreadObject).toBe(target[sExportsReact].useMainThreadObject);
+    expect(ReactCompatExports.defineMainThreadObjectType).toBe(
+      target[sExportsReactCompat].defineMainThreadObjectType,
+    );
+    expect(ReactCompatExports.useMainThreadObject).toBe(
+      target[sExportsReactCompat].useMainThreadObject,
+    );
+    expect(ReactInternalExports.captureMainThreadObject).toBe(
+      target[sExportsReactInternal].captureMainThreadObject,
+    );
   });
 
   test('registers a MainThreadObject type while evaluating a lazy MTS module', () => {
