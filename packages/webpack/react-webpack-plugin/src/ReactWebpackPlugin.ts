@@ -19,6 +19,7 @@ import { applyDefinesInjection } from './DefinesInjection.js';
 import { LAYERS } from './layer.js';
 import {
   ELEMENT_TEMPLATE_BUILD_INFO,
+  LEGACY_WORKLET_RUNTIME_BUILD_INFO,
   REACT_RUNTIME_REQUIREMENTS_BUILD_INFO,
 } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
@@ -63,6 +64,7 @@ export function collectReactCompileResult<TChunk>(
 ): ReactCompileResult | undefined {
   const visited = new Set<ModuleWithReactRuntimeRequirementsBuildInfo>();
   let hasSemanticProducer = false;
+  let hasLegacyWorklet = false;
   let mainThreadProgrammability = false;
 
   const collectFromModule = (
@@ -72,6 +74,8 @@ export function collectReactCompileResult<TChunk>(
       return;
     }
     visited.add(module);
+    hasLegacyWorklet ||= module.buildInfo?.[LEGACY_WORKLET_RUNTIME_BUILD_INFO]
+      === true;
 
     const runtimeRequirements = module.buildInfo?.[
       REACT_RUNTIME_REQUIREMENTS_BUILD_INFO
@@ -95,7 +99,7 @@ export function collectReactCompileResult<TChunk>(
     }
   }
 
-  if (!hasSemanticProducer) {
+  if (!hasSemanticProducer || hasLegacyWorklet) {
     return undefined;
   }
 
@@ -626,11 +630,16 @@ class ReactWebpackPlugin {
       );
 
       const { RawSource, ConcatSource } = compiler.webpack.sources;
+      const getModules = (chunk: Chunk) =>
+        compilation.chunkGraph.getChunkModulesIterable(chunk);
       hooks.beforeEncode.tap(
         this.constructor.name,
         (args) => {
+          const chunks = args.chunkGroups.flatMap(group => group.chunks);
+          // Semantic requirements describe modern modules only. A legacy
+          // registration in this artifact can run before a modern initializer.
           if (
-            collectReactCompileResultFromCompilation(compilation) !== undefined
+            collectReactCompileResult(chunks, getModules) !== undefined
           ) {
             return args;
           }

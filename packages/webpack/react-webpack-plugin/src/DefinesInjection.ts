@@ -18,7 +18,10 @@ import {
   boundaryKey,
   definesImportByBoundary,
 } from './loaders/defines-import-by-boundary.js';
-import { REACT_RUNTIME_REQUIREMENTS_BUILD_INFO } from './loaders/main-thread.js';
+import {
+  LEGACY_WORKLET_RUNTIME_BUILD_INFO,
+  REACT_RUNTIME_REQUIREMENTS_BUILD_INFO,
+} from './loaders/main-thread.js';
 
 export interface EntryPair {
   mainThread: string;
@@ -48,7 +51,12 @@ export function applyDefinesInjection(
       definesImports.clear();
       const requirementsByRequest = new Map<
         string,
-        { mainThreadProgrammability: boolean }
+        {
+          runtimeRequirements:
+            | { mainThreadProgrammability: boolean }
+            | undefined;
+          legacy: boolean;
+        }
       >();
       compilation.hooks.finishModules.tap(pluginName, modules => {
         // Rebuilding an async boundary does not finish its new dependencies.
@@ -57,8 +65,17 @@ export function applyDefinesInjection(
           const resource = (module as ModuleWithMeta).resource;
           const requirements = resource && requirementsByRequest.get(resource);
           if (requirements) {
-            module.buildInfo![REACT_RUNTIME_REQUIREMENTS_BUILD_INFO] =
-              requirements;
+            if (requirements.runtimeRequirements) {
+              module.buildInfo![REACT_RUNTIME_REQUIREMENTS_BUILD_INFO] =
+                requirements.runtimeRequirements;
+            } else {
+              delete module.buildInfo![REACT_RUNTIME_REQUIREMENTS_BUILD_INFO];
+            }
+            if (requirements.legacy) {
+              module.buildInfo![LEGACY_WORKLET_RUNTIME_BUILD_INFO] = true;
+            } else {
+              delete module.buildInfo![LEGACY_WORKLET_RUNTIME_BUILD_INFO];
+            }
           }
         }
       });
@@ -172,21 +189,34 @@ export function applyDefinesInjection(
           );
         }
         if (missingSnapshot.length > 0 || missingWorklet.length > 0) {
+          const previousModule = [...compilation.modules].find(module =>
+            (module as ModuleWithMeta).resource === request
+          );
           virtualModules.writeModule(
             request,
             renderDefinesModule(missingSnapshot, missingWorklet),
           );
+          // Updating the virtual file does not invalidate a module already
+          // reused by this compilation. Rebuild it before reusing its imports.
+          if (previousModule) {
+            await rebuildModule(previousModule);
+          }
           await inject(request);
           const requirements = missingWorklet.flatMap(define =>
             define.runtimeRequirements ? [define.runtimeRequirements] : []
           );
-          if (requirements.length > 0) {
-            requirementsByRequest.set(request, {
-              mainThreadProgrammability: requirements.some(
-                requirement => requirement.mainThreadProgrammability,
-              ),
-            });
-          }
+          requirementsByRequest.set(request, {
+            runtimeRequirements: requirements.length > 0
+              ? {
+                mainThreadProgrammability: requirements.some(
+                  requirement => requirement.mainThreadProgrammability,
+                ),
+              }
+              : undefined,
+            legacy: missingWorklet.some(define =>
+              define.runtimeRequirements === undefined
+            ),
+          });
         }
         for (
           const [resource, backgroundBoundary] of background.asyncBoundaries

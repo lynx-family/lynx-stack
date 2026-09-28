@@ -460,7 +460,10 @@ describe('Sourcemap', () => {
       expect(registrationPosition.line).toBeGreaterThan(0)
       expect(registrationPosition.column).toBeGreaterThanOrEqual(0)
       expect(registrationSourcePosition).toMatchObject({
-        source: lazyMap.sources[lazySourceIndex],
+        source: new URL(
+          './fixtures/sourcemap/lazy-bundle-comp.tsx',
+          import.meta.url,
+        ).href,
         line: authoredDirectivePosition.line,
         column: authoredDirectivePosition.column,
       })

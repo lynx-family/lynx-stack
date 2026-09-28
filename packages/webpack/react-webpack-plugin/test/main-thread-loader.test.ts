@@ -83,6 +83,24 @@ describe('main-thread loader', () => {
     });
   });
 
+  it('clears legacy runtime ownership when a module rebuilds with a modern or plain transform result', async () => {
+    const buildInfo: Record<string, unknown> = {};
+    for (
+      const modernSource of [
+        '/* __mainThreadProgrammability */',
+        'export const plain = true;',
+        '/* __legacyPlain */',
+      ]
+    ) {
+      await runMainThreadLoader('/* __legacyWorklet */', buildInfo);
+      expect(buildInfo['lynx:legacy-worklet-runtime']).toBe(true);
+      expect(buildInfo).not.toHaveProperty('lynx:react-runtime-requirements');
+
+      await runMainThreadLoader(modernSource, buildInfo);
+      expect(buildInfo).not.toHaveProperty('lynx:legacy-worklet-runtime');
+    }
+  });
+
   it('rejects malformed semantic runtime requirements', async () => {
     await expect(
       runMainThreadLoader(
