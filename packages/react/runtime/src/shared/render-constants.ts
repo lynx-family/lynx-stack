@@ -22,6 +22,7 @@ export const INDEX = '__i';
 export const FLAGS = '__u';
 
 // Component properties
+export const PARENT_DOM = '__P';
 export const VNODE = '__v';
 // Preact 11 merged the `_dirty` / `_force` / error booleans into a `_bits`
 // bitfield (`COMPONENT_DIRTY = 1 << 3`, `COMPONENT_FORCE = 1 << 2`).
