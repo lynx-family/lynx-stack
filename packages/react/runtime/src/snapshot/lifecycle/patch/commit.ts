@@ -37,6 +37,7 @@ import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../../core/thread-function-call/main-thread.js';
+import { getCurrentRootContext, onRootContextSwitch } from '../../../render-context.js';
 import { profileEnd, profileStart } from '../../../shared/profile.js';
 import { COMMIT } from '../../../shared/render-constants.js';
 import { hook, isEmptyObject } from '../../../utils.js';
@@ -46,8 +47,13 @@ import { applyQueuedRefs } from '../../snapshot/ref.js';
 import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValue.js';
 import { isRendering } from '../isRendering.js';
 
-const globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map<number, () => void>();
-let nextCommitTaskId = 1;
+// Storage lives on the current `RootContext`; this binding is an alias kept in
+// sync on context switches.
+let globalCommitTaskMap: Map<number, () => void> = getCurrentRootContext().commitTaskMap;
+
+onRootContextSwitch(() => {
+  globalCommitTaskMap = getCurrentRootContext().commitTaskMap;
+});
 
 /**
  * A single patch operation.
@@ -81,11 +87,17 @@ interface PatchOptions {
  * Allow to pass options to the patch operation
  */
 export type GlobalPatchOptions = Omit<PatchOptions, 'reloadVersion'>;
-export let globalPatchOptions: GlobalPatchOptions = {};
+export let globalPatchOptions: GlobalPatchOptions = getCurrentRootContext().patchOptions;
+
+onRootContextSwitch(() => {
+  globalPatchOptions = getCurrentRootContext().patchOptions;
+});
 
 function takeGlobalPatchOptions(): GlobalPatchOptions {
-  const res = globalPatchOptions;
-  globalPatchOptions = {};
+  const ctx = getCurrentRootContext();
+  const res = ctx.patchOptions;
+  ctx.patchOptions = {};
+  globalPatchOptions = ctx.patchOptions;
   return res;
 }
 
@@ -253,14 +265,14 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: GlobalPatchOption
  * Generates a unique ID for commit tasks
  */
 function genCommitTaskId(): number {
-  return nextCommitTaskId++;
+  return getCurrentRootContext().nextCommitTaskId++;
 }
 
 /**
  * Resets the commit task ID counter
  */
 function clearCommitTaskId(): void {
-  nextCommitTaskId = 1;
+  getCurrentRootContext().nextCommitTaskId = 1;
 }
 
 /**

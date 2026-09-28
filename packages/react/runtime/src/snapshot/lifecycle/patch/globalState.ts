@@ -6,11 +6,17 @@
  * Global state shared across modules to avoid circular dependencies
  */
 
-/**
- * List of background snapshot instances to remove during commit phase
- */
-export let globalBackgroundSnapshotInstancesToRemove: number[] = [];
+import { getCurrentRootContext, onRootContextSwitch } from '../../../render-context.js';
+
+// Storage lives on the current `RootContext`; this binding is an alias kept in
+// sync on writes and on context switches.
+export let globalBackgroundSnapshotInstancesToRemove: number[] = getCurrentRootContext().bgInstancesToRemove;
+
+onRootContextSwitch(() => {
+  globalBackgroundSnapshotInstancesToRemove = getCurrentRootContext().bgInstancesToRemove;
+});
 
 export function setGlobalBackgroundSnapshotInstancesToRemove(ids: number[]): void {
+  getCurrentRootContext().bgInstancesToRemove = ids;
   globalBackgroundSnapshotInstancesToRemove = ids;
 }
