@@ -17,8 +17,15 @@ import { ChunkLoadingWebpackPluginImpl } from './ChunkLoadingWebpackPlugin.js';
  *
  * @public
  */
-// biome-ignore lint/suspicious/noEmptyInterface: As expected.
-export interface ChunkLoadingWebpackPluginOptions {}
+export interface ChunkLoadingWebpackPluginOptions {
+  /**
+   * Share the module instances of a chunk across the cards of a LynxGroup
+   * that install the same chunk.
+   *
+   * @alpha
+   */
+  experimental_lynxGroupModuleSharing: boolean;
+}
 
 /**
  * The ChunkLoadingWebpackPlugin enables chunk loading for Rspack in Lynx.
@@ -52,7 +59,9 @@ export class ChunkLoadingWebpackPlugin {
    */
   static defaultOptions = Object.freeze<
     Required<ChunkLoadingWebpackPluginOptions>
-  >({});
+  >({
+    experimental_lynxGroupModuleSharing: false,
+  });
 
   /**
    * The entry point of a webpack plugin.

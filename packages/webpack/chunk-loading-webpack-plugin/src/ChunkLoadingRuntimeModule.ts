@@ -14,6 +14,7 @@ type ChunkLoadingRuntimeModule = new(
 
 export function createChunkLoadingRuntimeModule(
   webpack: typeof import('@rspack/core').rspack,
+  shareModuleCache: boolean,
 ): ChunkLoadingRuntimeModule {
   const { RuntimeGlobals, RuntimeModule, Template } = webpack;
   return class ChunkLoadingRuntimeModule extends RuntimeModule {
@@ -69,6 +70,9 @@ export function createChunkLoadingRuntimeModule(
             withOnload,
           )
           : '// no chunk install function needed',
+        ...(withLoading && shareModuleCache
+          ? [JavaScriptRuntimeModule.generateShareModuleCacheRuntime(webpack)]
+          : []),
         withLoading
           ? JavaScriptRuntimeModule.generateChunkLoadingRuntime(webpack, 'true') // TODO: JS_MATCHER
           : '// no chunk loading',

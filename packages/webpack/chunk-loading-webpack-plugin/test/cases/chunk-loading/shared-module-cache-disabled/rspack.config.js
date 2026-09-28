@@ -12,8 +12,6 @@ export default {
     chunkIds: 'named',
   },
   plugins: [
-    new ChunkLoadingWebpackPlugin({
-      experimental_lynxGroupModuleSharing: true,
-    }),
+    new ChunkLoadingWebpackPlugin(),
   ],
 };
