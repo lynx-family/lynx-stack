@@ -10,28 +10,15 @@
 /* istanbul ignore file */
 
 export default function() {
-  var aliasModuleCache = function(moduleCache, moduleId) {
-    Object.defineProperty($RuntimeGlobals_moduleCache$, moduleId, {
-      configurable: true,
-      get: function() {
-        return moduleCache[moduleId];
-      },
-      set: function(module) {
-        moduleCache[moduleId] = module;
-      },
-    });
-  };
   // object to store loaded chunks
   // "1" means "loaded", otherwise not loaded yet
   var installChunk = function(chunk) {
     var moreModules = chunk.modules,
       chunkIds = chunk.ids,
       runtime = chunk.runtime;
-    var moduleCache = chunk.__moduleCache || (chunk.__moduleCache = {});
     for (var moduleId in moreModules) {
       if ($RuntimeGlobals_hasOwnProperty$(moreModules, moduleId)) {
         $RuntimeGlobals_moduleFactories$[moduleId] = moreModules[moduleId];
-        aliasModuleCache(moduleCache, moduleId);
       }
     }
     if (runtime) runtime(__webpack_require__);

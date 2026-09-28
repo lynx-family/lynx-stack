@@ -9,6 +9,7 @@ import chunkOnloadRuntime from './javascript/chunk-onload.js';
 import hmrLoadChunkRuntime from './javascript/hmr-load-chunk.js';
 import hmrLoadManifestRuntime from './javascript/hmr-load-manifest.js';
 import hmrRuntime from './javascript/hmr-runtime.js';
+import shareModuleCacheRuntime from './javascript/share-module-cache.js';
 import { generateFromTemplate } from './helper.js';
 
 /**
@@ -28,6 +29,16 @@ export class JavaScriptRuntimeModule {
   ): string {
     return generateFromTemplate(webpack, installChunkRuntime)
       .replace(/\$WITH_ONLOAD\$/g, `${withOnload}`);
+  }
+
+  /**
+   * @internal
+   * @returns JavaScript runtime code that keeps the instances of an installed chunk's modules on the chunk
+   */
+  static generateShareModuleCacheRuntime(
+    webpack: typeof import('@rspack/core').rspack,
+  ): string {
+    return generateFromTemplate(webpack, shareModuleCacheRuntime);
   }
 
   /**

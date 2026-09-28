@@ -75,6 +75,20 @@ export function applyEntry(
       experimental_transformBuiltinAttributeNames
   }
 
+  if (options.experimental_lynxGroupModuleSharing) {
+    api.modifyBundlerChain({
+      order: 'post',
+      handler: chain => {
+        chain
+          .plugin('lynx:chunk-loading')
+          .tap(([chunkLoadingOptions]: Record<string, unknown>[]) => [{
+            ...chunkLoadingOptions,
+            experimental_lynxGroupModuleSharing: true,
+          }])
+      },
+    })
+  }
+
   api.modifyBundlerChain(async (chain, { environment, isDev, isProd }) => {
     // Rstest has no template engine. Application and library builds read the
     // engine implementation after all user plugin setup hooks have run.
