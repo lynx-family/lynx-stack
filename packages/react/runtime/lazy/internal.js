@@ -42,6 +42,7 @@ export const {
   __pageId,
   __root,
   captureMainThreadObject,
+  createRoot,
   createSnapshot,
   getRuntimeVersion,
   loadDynamicJS,
