@@ -23,7 +23,7 @@ const formatterType = defineMainThreadObjectType({
 
 const echoOnMainThread = (value: string): string => {
   'main thread';
-  return `main:${value}`;
+  return `${config.prefix}:${value}`;
 };
 
 export function callMainDirect(label = 'manual'): Promise<string> {

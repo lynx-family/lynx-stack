@@ -1,5 +1,5 @@
-import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-var loadWorkletRuntime = __loadWorkletRuntime;
+import { captureMainThreadObject as __captureMainThreadObject, loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
+var captureMainThreadObject = __captureMainThreadObject, loadWorkletRuntime = __loadWorkletRuntime;
 let X = {
     _c: {
         y1,
@@ -8,7 +8,7 @@ let X = {
         y4,
         y8,
         y5,
-        y6: {
+        y6: captureMainThreadObject(y6) ?? {
             m: y6.m
         },
         y7

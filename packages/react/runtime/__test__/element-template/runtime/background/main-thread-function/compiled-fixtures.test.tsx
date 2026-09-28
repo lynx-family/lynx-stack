@@ -174,6 +174,7 @@ describe('Compiled runOnMainThread background fixtures', () => {
     });
 
     expect(backgroundArtifact.code).toContain('runOnMainThread');
+    expect(backgroundArtifact.code).toContain('captureMainThreadObject');
     expect(backgroundArtifact.code).toContain('defineMainThreadObjectType');
     expect(backgroundArtifact.code).toContain('useMainThreadObject');
     expect(backgroundArtifact.code).toContain('from \'@lynx-js/react\'');
