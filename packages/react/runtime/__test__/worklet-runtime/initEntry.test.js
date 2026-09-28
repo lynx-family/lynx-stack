@@ -74,7 +74,8 @@ describe('worklet-runtime init entry', () => {
     const registerWorkletInternal = globalThis.registerWorkletInternal;
     const runWorklet = globalThis.runWorklet;
 
-    await import('../../src/worklet-runtime/index.ts?repeat-init');
+    vi.resetModules();
+    await import('@lynx-js/react/worklet-runtime/init');
 
     expect(globalThis.lynxWorkletImpl).toBe(workletImpl);
     expect(globalThis.registerWorklet).toBe(registerWorklet);
