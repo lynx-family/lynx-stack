@@ -10,6 +10,7 @@ const ReactInternal = target[sExportsReactInternal];
 // backend and build-time runtime version. Older hosts may not export them.
 ReactInternal.registerRuntimeBackend?.(ReactInternal.RUNTIME_BACKEND_SNAPSHOT);
 ReactInternal.registerRuntimeVersion?.(
+  /* v8 ignore next -- the build-time version is exercised in a separate module load */
   typeof __RUNTIME_VERSION__ === 'undefined' ? undefined : __RUNTIME_VERSION__,
 );
 

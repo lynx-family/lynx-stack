@@ -315,6 +315,18 @@ describe('Lazy Exports', () => {
     });
   });
 
+  test('allows a standalone lazy import without a stamped runtime version', async () => {
+    await withoutRecordedRuntimeVersion(async () => {
+      vi.stubGlobal('__RUNTIME_VERSION__', undefined);
+      onTestFinished(() => vi.unstubAllGlobals());
+      vi.resetModules();
+
+      await import('../../lazy/internal.js');
+
+      expect(ReactInternalExports.getRuntimeVersion()).toBeUndefined();
+    });
+  });
+
   test('records a lazy backend when no main template marker exists', async () => {
     await withRuntimeBackend(undefined, () => {
       registerRuntimeBackend(RUNTIME_BACKEND_SNAPSHOT);
