@@ -31,8 +31,6 @@ use swc_plugins_shared::{
 #[cfg(feature = "napi")]
 pub mod napi;
 
-const WORKLET_RUNTIME_INIT_REQUEST: &str = "@lynx-js/react/worklet-runtime/init";
-
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct WorkletVisitorConfig {
@@ -56,7 +54,7 @@ impl Default for WorkletVisitorConfig {
       filename: "index.js".into(),
       target: TransformTarget::LEPUS,
       custom_global_ident_names: None,
-      runtime_pkg: "NoDiff".into(),
+      runtime_pkg: "@lynx-js/react/internal".into(),
     }
   }
 }
@@ -720,6 +718,15 @@ impl VisitMut for WorkletVisitor {
     let mut prepended_items = vec![];
 
     if self.requires_main_thread_runtime {
+      let runtime_pkg = self
+        .cfg
+        .runtime_pkg
+        .strip_suffix("/internal")
+        // A scoped package named `internal` is a package root, not an entry.
+        .filter(|pkg| !pkg.starts_with('@') || pkg.contains('/'))
+        .unwrap_or(&self.cfg.runtime_pkg);
+      let runtime_init_request = format!("{runtime_pkg}/worklet-runtime/init");
+
       // Recreate the init import after the visitor finishes instead of keeping
       // an input copy. Earlier imports can be removed by downstream DCE, while
       // this compiler-owned import is part of the generated registration
@@ -729,7 +736,7 @@ impl VisitMut for WorkletVisitor {
         !matches!(
           item,
           ModuleItem::ModuleDecl(ModuleDecl::Import(import_decl))
-            if import_decl.src.value == WORKLET_RUNTIME_INIT_REQUEST
+            if import_decl.src.value == runtime_init_request.as_str()
         )
       });
 
@@ -743,7 +750,7 @@ impl VisitMut for WorkletVisitor {
         src: Box::new(Str {
           span: DUMMY_SP,
           raw: None,
-          value: WORKLET_RUNTIME_INIT_REQUEST.into(),
+          value: runtime_init_request.into(),
         }),
         type_only: Default::default(),
         with: Default::default(),

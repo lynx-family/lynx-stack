@@ -2475,8 +2475,14 @@ export function foo() {
     });
   });
 
-  it('should keep runtime init canonical with a custom runtime package', async () => {
-    const customRuntimePkg = '@custom/react/internal';
+  it.each([
+    ['custom-runtime', 'custom-runtime/worklet-runtime/init'],
+    ['custom-runtime/internal', 'custom-runtime/worklet-runtime/init'],
+    ['@custom/react', '@custom/react/worklet-runtime/init'],
+    ['@custom/react/internal', '@custom/react/worklet-runtime/init'],
+    ['@custom/internal-tools/internal', '@custom/internal-tools/worklet-runtime/init'],
+    ['@custom/internal', '@custom/internal/worklet-runtime/init'],
+  ])('should resolve runtime init from %s', async (customRuntimePkg, initRequest) => {
     const { code, runtimeRequirements } = await transformReactLynx(
       `\
 function backgroundFunction() {}
@@ -2495,43 +2501,42 @@ export function foo() {
       },
     );
 
-    expect(
-      (code.match(/import "@lynx-js\/react\/worklet-runtime\/init"/g) ?? []).length,
-    ).toBe(1);
-    expect(code).not.toContain('@custom/react/worklet-runtime/init');
+    expect(code.split(`import "${initRequest}";`)).toHaveLength(2);
+    expect(code).not.toContain('@lynx-js/react');
     expect(code).toContain(
-      'import { transformToWorklet as __transformToWorklet } from "@custom/react/internal"',
+      `import { transformToWorklet as __transformToWorklet } from "${customRuntimePkg}"`,
     );
     expect(runtimeRequirements).toEqual({
       mainThreadProgrammability: true,
     });
   });
 
-  it('should not duplicate an existing runtime init import', async () => {
-    const { code, runtimeRequirements } = await transformReactLynx(
-      `\
-import '@lynx-js/react/worklet-runtime/init';
+  it.each(['@lynx-js/react', '@custom/react', '@custom/internal-tools'])(
+    'should not duplicate an existing runtime init import for %s',
+    async runtimePkg => {
+      const { code, runtimeRequirements } = await transformReactLynx(
+        `\
+import '${runtimePkg}/worklet-runtime/init';
 export function foo() {
   "main thread";
 }
 `,
-      {
-        ...lepusWorkletOptions,
-        worklet: {
-          ...lepusWorkletOptions.worklet,
-          runtimePkg: '@custom/react/internal',
+        {
+          ...lepusWorkletOptions,
+          worklet: {
+            ...lepusWorkletOptions.worklet,
+            runtimePkg: `${runtimePkg}/internal`,
+          },
         },
-      },
-    );
+      );
 
-    expect(
-      (code.match(/import "@lynx-js\/react\/worklet-runtime\/init"/g) ?? []).length,
-    ).toBe(1);
-    expect((code.match(/worklet-runtime\/init/g) ?? []).length).toBe(1);
-    expect(runtimeRequirements).toEqual({
-      mainThreadProgrammability: true,
-    });
-  });
+      expect(code.split(`import "${runtimePkg}/worklet-runtime/init";`)).toHaveLength(2);
+      expect((code.match(/worklet-runtime\/init/g) ?? []).length).toBe(1);
+      expect(runtimeRequirements).toEqual({
+        mainThreadProgrammability: true,
+      });
+    },
+  );
 
   it('should reset runtime requirements between transforms', async () => {
     const withMainThreadUnit = await transformReactLynx(

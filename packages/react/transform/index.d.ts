@@ -676,6 +676,10 @@ export interface WorkletVisitorConfig {
   filename: string
   /** @internal */
   target: 'LEPUS' | 'JS' | 'MIXED'
+  /**
+   * Module providing worklet helpers. The init entry uses this path with a
+   * trailing `/internal` removed, followed by `/worklet-runtime/init`.
+   */
   runtimePkg: string
 }
 /**

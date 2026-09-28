@@ -25,6 +25,8 @@ pub struct WorkletVisitorConfig {
   /// @internal
   #[napi(ts_type = "'LEPUS' | 'JS' | 'MIXED'")]
   pub target: TransformTarget,
+  /// Module providing worklet helpers. The init entry uses this path with a
+  /// trailing `/internal` removed, followed by `/worklet-runtime/init`.
   pub runtime_pkg: String,
 }
 
@@ -34,7 +36,7 @@ impl Default for WorkletVisitorConfig {
       filename: "index.js".into(),
       target: TransformTarget::LEPUS,
       custom_global_ident_names: None,
-      runtime_pkg: "NoDiff".into(),
+      runtime_pkg: "@lynx-js/react/internal".into(),
     }
   }
 }
