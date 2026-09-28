@@ -41,6 +41,7 @@ export const {
   __page,
   __pageId,
   __root,
+  captureMainThreadObject,
   createSnapshot,
   getRuntimeVersion,
   loadDynamicJS,
@@ -68,18 +69,6 @@ export const {
   withInitDataInState,
   wrapWithLynxComponent,
 } = ReactInternal;
-
-const captureMainThreadObjectImpl = target[sExportsReactInternal]
-  .captureMainThreadObject;
-
-export function captureMainThreadObject(source) {
-  if (typeof captureMainThreadObjectImpl !== 'function') {
-    throw new Error(
-      'This lazy bundle uses MainThreadObject capture support that is unavailable in the main ReactLynx runtime. Upgrade the main template runtime or rebuild the lazy bundle with a compatible @lynx-js/react version.',
-    );
-  }
-  return captureMainThreadObjectImpl(source);
-}
 
 /* v8 ignore start */
 if (__DEV__ && !snapshotCreatorMap) {

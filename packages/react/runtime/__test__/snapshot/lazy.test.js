@@ -8,13 +8,7 @@ import * as ReactInternalExports from '../../lazy/internal.js';
 import * as ReactJSXRuntimeExports from '../../lazy/jsx-runtime.js';
 import * as ReactJSXDevRuntimeExports from '../../lazy/jsx-dev-runtime.js';
 import * as ReactLegacyReactRuntimeExports from '../../lazy/legacy-react-runtime.js';
-import {
-  sExportsReact,
-  sExportsReactCompat,
-  sExportsReactInternal,
-  sRuntimeBackend,
-  target,
-} from '../../lazy/target.js';
+import { sExportsReact, sRuntimeBackend, target } from '../../lazy/target.js';
 const {
   RUNTIME_BACKEND_ELEMENT_TEMPLATE,
   RUNTIME_BACKEND_SNAPSHOT,
@@ -208,61 +202,6 @@ describe('Lazy Exports', () => {
       globalThis.__MAIN_THREAD__ = originalMainThread;
       globalThis.__BACKGROUND__ = originalBackground;
       globalThis.lynxWorkletImpl = originalWorkletImpl;
-    }
-  });
-
-  test('diagnoses MainThreadObject lazy bundle/runtime mismatches', async () => {
-    const reactDescriptor = Object.getOwnPropertyDescriptor(target, sExportsReact);
-    const compatDescriptor = Object.getOwnPropertyDescriptor(target, sExportsReactCompat);
-    const internalDescriptor = Object.getOwnPropertyDescriptor(target, sExportsReactInternal);
-    Object.defineProperty(target, sExportsReact, {
-      ...reactDescriptor,
-      value: {
-        ...target[sExportsReact],
-        defineMainThreadObjectType: undefined,
-        useMainThreadObject: undefined,
-      },
-    });
-    Object.defineProperty(target, sExportsReactInternal, {
-      ...internalDescriptor,
-      value: {
-        ...target[sExportsReactInternal],
-        captureMainThreadObject: undefined,
-      },
-    });
-    Object.defineProperty(target, sExportsReactCompat, {
-      ...compatDescriptor,
-      value: {
-        ...target[sExportsReactCompat],
-        defineMainThreadObjectType: undefined,
-        useMainThreadObject: undefined,
-      },
-    });
-    try {
-      vi.resetModules();
-      const incompatibleReact = await import('../../lazy/react.js?missing-main-thread-object');
-      const incompatibleCompat = await import('../../lazy/compat.js?missing-main-thread-object');
-      const incompatibleInternal = await import('../../lazy/internal.js?missing-main-thread-object');
-
-      expect(() => incompatibleReact.defineMainThreadObjectType({})).toThrow(
-        'This lazy bundle requires ReactLynx runtime export defineMainThreadObjectType for MainThreadObject.',
-      );
-      expect(() => incompatibleReact.useMainThreadObject({}, 1)).toThrow(
-        'This lazy bundle requires ReactLynx runtime export useMainThreadObject for MainThreadObject.',
-      );
-      expect(() => incompatibleCompat.defineMainThreadObjectType({})).toThrow(
-        'This lazy bundle requires ReactLynx runtime export defineMainThreadObjectType for MainThreadObject.',
-      );
-      expect(() => incompatibleCompat.useMainThreadObject({}, 1)).toThrow(
-        'This lazy bundle requires ReactLynx runtime export useMainThreadObject for MainThreadObject.',
-      );
-      expect(() => incompatibleInternal.captureMainThreadObject({}, {})).toThrow(
-        'This lazy bundle uses MainThreadObject capture support that is unavailable in the main ReactLynx runtime.',
-      );
-    } finally {
-      restoreDescriptor(target, sExportsReact, reactDescriptor);
-      restoreDescriptor(target, sExportsReactCompat, compatDescriptor);
-      restoreDescriptor(target, sExportsReactInternal, internalDescriptor);
     }
   });
 
