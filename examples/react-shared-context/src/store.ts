@@ -16,19 +16,35 @@ export const instanceId = `${Date.now()}-${
   Math.random().toString(36).slice(2, 7)
 }`;
 
-export const mountedPages: string[] = [];
-
-export function registerPage(name: string): void {
-  if (!mountedPages.includes(name)) {
-    mountedPages.push(name);
-  }
-}
-
 let count = 0;
+const livePages: string[] = [];
 const listeners = new Set<() => void>();
+
+function notify(): void {
+  listeners.forEach((listener) => listener());
+}
 
 export function getCount(): number {
   return count;
+}
+
+export function getLivePages(): string {
+  const names = [...new Set(livePages)];
+  return names
+    .map((name) => {
+      const instances = livePages.filter((page) => page === name).length;
+      return instances > 1 ? `${name} ×${instances}` : name;
+    })
+    .join(', ');
+}
+
+export function registerPage(name: string): () => void {
+  livePages.push(name);
+  notify();
+  return () => {
+    livePages.splice(livePages.indexOf(name), 1);
+    notify();
+  };
 }
 
 export function subscribe(listener: () => void): () => void {
@@ -38,7 +54,7 @@ export function subscribe(listener: () => void): () => void {
 
 export function increment(): void {
   count += 1;
-  listeners.forEach((listener) => listener());
+  notify();
 }
 
 export function incrementLater(delayMs = 1500): Promise<void> {
