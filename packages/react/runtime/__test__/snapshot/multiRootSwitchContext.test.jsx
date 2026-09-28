@@ -198,6 +198,59 @@ describe('createRoot app callbacks', () => {
     expect(b.pageLynx.__globalProps).toEqual({ k: 2 });
   });
 
+  it('runs each page\'s effects against its own lynx', async () => {
+    globalEnvManager.switchToBackground();
+    const { createRoot } = await importWithSharing();
+    const { useEffect } = await import('../../src/index');
+    const { getPageLynx } = await import('../../src/core/page-lynx');
+
+    const lynxInEffect = {};
+    const lynxInCleanup = {};
+    const Page = ({ name }) => {
+      useEffect(() => {
+        lynxInEffect[name] = getPageLynx();
+        if (name === 'A') {
+          return () => {
+            lynxInCleanup[name] = getPageLynx();
+          };
+        }
+      }, []);
+      return null;
+    };
+    const a = stubPage('A');
+    const b = stubPage('B');
+    const rootA = createRoot(a.pageLynx);
+    const rootB = createRoot(b.pageLynx);
+    rootA.render(<Page name='A' />);
+    rootB.render(<Page name='B' />);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(lynxInEffect.A).toBe(a.pageLynx);
+    expect(lynxInEffect.B).toBe(b.pageLynx);
+
+    rootA.render(null);
+    rootB.render(<Page name='B' />);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(lynxInCleanup.A).toBe(a.pageLynx);
+  });
+
+  it('installs the lazy bundle loader on each page\'s lynx', async () => {
+    globalEnvManager.switchToBackground();
+    const { createRoot } = await importWithSharing();
+    const { loadLazyBundle } = await import('../../src/core/lynx/lazy-bundle');
+
+    const a = stubPage('A');
+    const b = stubPage('B');
+    delete a.pageLynx.loadLazyBundle;
+    delete b.pageLynx.loadLazyBundle;
+    createRoot(a.pageLynx);
+    createRoot(b.pageLynx);
+
+    expect(a.pageLynx.loadLazyBundle).toBe(loadLazyBundle);
+    expect(b.pageLynx.loadLazyBundle).toBe(loadLazyBundle);
+  });
+
   it('re-renders the page whose globalProps changed', async () => {
     globalEnvManager.switchToBackground();
     const { createRoot } = await importWithSharing();

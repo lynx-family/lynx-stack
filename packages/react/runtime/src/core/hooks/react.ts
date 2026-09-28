@@ -19,6 +19,7 @@ import type { DependencyList, EffectCallback } from 'react';
 
 import type { TraceOption } from '@lynx-js/types';
 
+import { getCurrentRootContext, switchRootContext } from '../../render-context.js';
 import { isProfiling, profileEnd, profileFlowId, profileStart } from '../../shared/profile.js';
 
 type GenericSetState = Dispatch<StateUpdater<unknown>>;
@@ -136,9 +137,30 @@ const useState: typeof usePreactState = (__BACKGROUND__ && isProfiling)
  * @function
  * @public
  */
-const useEffect: (effect: EffectCallback, deps?: DependencyList) => void = (__BACKGROUND__ && isProfiling)
-  ? useEffectProfiled
-  : usePreactEffect;
+function withRootContext(
+  useEffectImpl: (effect: EffectCallback, deps?: DependencyList) => void,
+): (effect: EffectCallback, deps?: DependencyList) => void {
+  if (typeof __LYNX_GROUP_MODULE_SHARING__ === 'undefined' || !__LYNX_GROUP_MODULE_SHARING__ || !__BACKGROUND__) {
+    return useEffectImpl;
+  }
+  return (effect, deps) => {
+    const ctx = getCurrentRootContext();
+    useEffectImpl(() => {
+      switchRootContext(ctx);
+      const cleanup = effect();
+      return typeof cleanup === 'function'
+        ? () => {
+          switchRootContext(ctx);
+          cleanup();
+        }
+        : cleanup;
+    }, deps);
+  };
+}
+
+const useEffect: (effect: EffectCallback, deps?: DependencyList) => void = withRootContext(
+  (__BACKGROUND__ && isProfiling) ? useEffectProfiled : usePreactEffect,
+);
 
 /**
  * `useLayoutEffect` is now an alias of `useEffect`. Use `useEffect` instead.
@@ -153,9 +175,9 @@ const useEffect: (effect: EffectCallback, deps?: DependencyList) => void = (__BA
  *
  * @deprecated `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React.
  */
-const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) => void = (__BACKGROUND__ && isProfiling)
-  ? useLayoutEffectProfiled
-  : usePreactEffect;
+const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) => void = withRootContext(
+  (__BACKGROUND__ && isProfiling) ? useLayoutEffectProfiled : usePreactEffect,
+);
 
 export {
   // preact

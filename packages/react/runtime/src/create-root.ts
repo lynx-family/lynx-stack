@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import type { ReactNode } from 'react';
 
+import { loadLazyBundle } from './core/lynx/lazy-bundle.js';
 import type { DataProcessorDefinition, Root } from './lynx-api.js';
 import { root } from './lynx-api.js';
 import { initBackgroundRuntimeForRoot, initBackgroundRuntimeGlobals } from './lynx.js';
@@ -57,6 +58,7 @@ export function createRoot(pageLynx: typeof lynx): Root {
     setRoot(new BackgroundSnapshotInstance('root'));
     initBackgroundRuntimeForRoot();
   });
+  pageLynx.loadLazyBundle = loadLazyBundle;
 
   return {
     render: (jsx: ReactNode): void => {
