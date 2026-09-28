@@ -61,7 +61,7 @@
     "@microsoft/api-extractor": "catalog:",
     "@rsbuild/plugin-css-minimizer": "2.0.1",
     "@rstest/core": "catalog:rstest",
-    "@swc/core": "^1.15.47",
+    "@swc/core": "^1.16.2",
     "chokidar": "^5.0.0",
     "commander": "^15.0.0",
     "eventemitter3": "^5.0.4",
@@ -72,7 +72,7 @@
     "rsbuild-plugin-arethetypeswrong": "0.4.0",
     "rsbuild-plugin-publint": "1.0.0",
     "ts-blank-space": "^0.9.0",
-    "type-fest": "^5.8.0",
+    "type-fest": "^5.10.0",
     "typia": "12.2.1",
     "typia-rspack-plugin": "3.0.1"
   },
