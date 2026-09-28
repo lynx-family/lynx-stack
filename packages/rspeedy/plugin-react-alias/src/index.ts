@@ -193,6 +193,13 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           ),
         )
 
+        // The published runtime carries its original TS sources in external maps.
+        chain.module.rule('react:runtime-source-map')
+          .test(/\.js$/)
+          .issuerLayer(LAYERS.MAIN_THREAD)
+          .set('extractSourceMap', true)
+          .include.add(path.join(reactLynxDir, 'runtime/lib') + path.sep)
+
         const resolvedTransformedEntryAliases = await Promise.all(
           transformedEntries.map(async entry => {
             const request = `@lynx-js/react/${entry}`
