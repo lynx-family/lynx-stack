@@ -70,8 +70,13 @@ if (typeof __ALOG_ELEMENT_API__ !== 'undefined' && __ALOG_ELEMENT_API__) {
   initElementPAPICallAlog();
 }
 
-export function initBackgroundRuntime(): void {
-  registerAppCallbacks(getPageLynx());
+let backgroundGlobalsInitialized = false;
+
+export function initBackgroundRuntimeGlobals(): void {
+  if (backgroundGlobalsInitialized) {
+    return;
+  }
+  backgroundGlobalsInitialized = true;
 
   // Trick Preact and TypeScript to accept our custom document adapter.
   options.document = document as unknown as Document;
@@ -90,8 +95,16 @@ export function initBackgroundRuntime(): void {
       initProfileHook();
     }
   }
+}
 
+export function initBackgroundRuntimeForRoot(): void {
+  registerAppCallbacks(getPageLynx());
   setupLynxEnv();
+}
+
+export function initBackgroundRuntime(): void {
+  initBackgroundRuntimeGlobals();
+  initBackgroundRuntimeForRoot();
 }
 
 if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {

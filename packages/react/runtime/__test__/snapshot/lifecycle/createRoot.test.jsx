@@ -46,11 +46,18 @@ describe('createRoot', () => {
     expect(pageLynx.__initData).toEqual({ from: 'page' });
   });
 
-  it('can be called only once', async () => {
+  it('gives each page an independent root', async () => {
     const { createRoot } = await importWithSharing();
-    createRoot(stubPage().pageLynx);
+    const a = stubPage();
+    const b = stubPage();
 
-    expect(() => createRoot(stubPage().pageLynx)).toThrow('only once');
+    const rootA = createRoot(a.pageLynx);
+    const rootB = createRoot(b.pageLynx);
+
+    expect(rootA).not.toBe(rootB);
+    expect(a.app.OnLifecycleEvent).toBeTypeOf('function');
+    expect(b.app.OnLifecycleEvent).toBeTypeOf('function');
+    expect(a.app.OnLifecycleEvent).not.toBe(b.app.OnLifecycleEvent);
   });
 
   it('is required before root.render', async () => {
