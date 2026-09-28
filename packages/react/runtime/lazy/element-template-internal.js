@@ -31,6 +31,7 @@ export const {
   adaptRefAttrSlot,
   adaptSpreadAttrSlot,
   getRuntimeVersion,
+  captureMainThreadObject,
   loadDynamicJS,
   loadLazyBundle,
   loadWorkletRuntime,

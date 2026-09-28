@@ -20,10 +20,12 @@ function expectRuntimeVersionRegistration(
   runtimeVersion: string,
 ): void {
   expect(source).toBeDefined()
+  // The compiled version expression may retain a V8 coverage annotation and
+  // its constant-folded fallback between the call and the version literal.
   expect(source).toMatch(
     new RegExp(
       String
-        .raw`ReactInternal\.registerRuntimeVersion[\s\S]{0,320}\.call\(ReactInternal,[\s\S]{0,80}${
+        .raw`ReactInternal\.registerRuntimeVersion[\s\S]{0,320}\.call\(ReactInternal,[\s\S]{0,240}${
         escapeRegExp(JSON.stringify(runtimeVersion))
       }\)`,
     ),
