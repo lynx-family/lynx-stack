@@ -1202,6 +1202,102 @@ mod tests {
   }
 
   #[test]
+  fn should_report_runtime_requirements_from_each_transformed_module() {
+    let options = TransformNodiffOptions {
+      worklet: Either::A(true),
+      css_scope: Either::A(false),
+      ..Default::default()
+    };
+    let worklet = transform_react_lynx_inner(
+      r#"
+import '@lynx-js/react/worklet-runtime/init';
+export function handler() { 'main thread'; return 42; }
+"#
+      .into(),
+      options.clone(),
+    );
+
+    assert!(worklet.errors.is_empty());
+    assert!(worklet.runtime_requirements.main_thread_programmability);
+    assert_eq!(
+      worklet
+        .code
+        .matches("@lynx-js/react/worklet-runtime/init")
+        .count(),
+      1
+    );
+    assert_eq!(worklet.code.matches("registerWorkletInternal(").count(), 1);
+    assert!(!worklet.code.contains("loadWorkletRuntime"));
+
+    let plain =
+      transform_react_lynx_inner("export function handler() { return 42; }".into(), options);
+    assert!(plain.errors.is_empty());
+    assert!(!plain.runtime_requirements.main_thread_programmability);
+    assert!(!plain.code.contains("worklet-runtime/init"));
+    assert!(!plain.code.contains("registerWorkletInternal"));
+  }
+
+  #[test]
+  fn should_preserve_injected_worklet_requirements_without_retransforming_its_body() {
+    let result = transform_react_lynx_inner(
+      "export function handler() { 'main thread'; return 42; }".into(),
+      TransformNodiffOptions {
+        worklet: Either::B(WorkletVisitorConfig {
+          target: swc_plugins_shared::target_napi::TransformTarget::JS,
+          ..Default::default()
+        }),
+        css_scope: Either::A(false),
+        ..Default::default()
+      },
+    );
+
+    assert!(result.errors.is_empty());
+    assert!(!result.runtime_requirements.main_thread_programmability);
+    assert!(!result.code.contains("worklet-runtime/init"));
+    let definitions = result.defines_for_worklet.unwrap();
+    assert_eq!(definitions.len(), 1);
+    let definition = &definitions[0];
+    assert!(
+      definition
+        .runtime_requirements
+        .as_ref()
+        .unwrap()
+        .main_thread_programmability
+    );
+    assert!(!definition.code.contains("main thread"));
+    assert!(!definition.code.contains("loadWorkletRuntime"));
+
+    let injected = transform_react_lynx_inner(
+      format!("import '@lynx-js/react/internal';\n{}", definition.code),
+      TransformNodiffOptions {
+        worklet: Either::A(true),
+        css_scope: Either::A(false),
+        ..Default::default()
+      },
+    );
+    assert!(injected.errors.is_empty());
+    assert!(injected.defines_for_worklet.unwrap().is_empty());
+    assert_eq!(injected.code.matches("registerWorkletInternal(").count(), 1);
+    assert!(injected.code.contains("return 42"));
+  }
+
+  #[test]
+  fn should_return_no_runtime_requirement_when_parsing_fails() {
+    let result = transform_react_lynx_inner(
+      "export function handler( {".into(),
+      TransformNodiffOptions {
+        worklet: Either::A(true),
+        ..Default::default()
+      },
+    );
+
+    assert!(!result.errors.is_empty());
+    assert!(result.code.is_empty());
+    assert!(!result.runtime_requirements.main_thread_programmability);
+    assert!(result.defines_for_worklet.is_none());
+  }
+
+  #[test]
   fn should_preserve_active_empty_element_template_collector() {
     let collector = Rc::new(RefCell::new(vec![]));
 

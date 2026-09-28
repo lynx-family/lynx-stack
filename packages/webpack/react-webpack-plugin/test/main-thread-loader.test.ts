@@ -13,21 +13,13 @@ async function runMainThreadLoader(
   buildInfo: Record<string, unknown>,
 ): Promise<{ code: string; map?: string }> {
   return new Promise((resolve, reject) => {
-    const loaderPath = path.resolve(
-      __dirname,
-      '../lib/loaders/main-thread.js',
-    );
     const transformPath = path.resolve(
       __dirname,
       './fixtures/mock-main-thread-transform.cjs',
     );
 
-    import(loaderPath).then(
-      (
-        mod: {
-          default: (this: Record<string, unknown>, content: string) => void;
-        },
-      ) => {
+    import('../src/loaders/main-thread.js').then(
+      (mod) => {
         const loader = mod.default;
 
         const ctx: Record<string, unknown> = {
@@ -54,7 +46,7 @@ async function runMainThreadLoader(
           },
         };
 
-        loader.call(ctx, content);
+        void loader.call(ctx as ThisParameterType<typeof loader>, content);
       },
     ).catch(reject);
   });
