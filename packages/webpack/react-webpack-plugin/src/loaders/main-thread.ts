@@ -19,6 +19,7 @@ import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
 export const ELEMENT_TEMPLATE_BUILD_INFO = 'lynx:element-templates';
+export const LEGACY_WORKLET_RUNTIME_BUILD_INFO = 'lynx:legacy-worklet-runtime';
 export const REACT_RUNTIME_REQUIREMENTS_BUILD_INFO =
   'lynx:react-runtime-requirements';
 
@@ -113,6 +114,14 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     | undefined;
   if (buildInfo) {
     buildInfo[UI_SOURCE_MAP_RECORDS_BUILD_INFO] = result.uiSourceMapRecords;
+    if (
+      result.runtimeRequirements === undefined
+      && result.code.includes('registerWorkletInternal')
+    ) {
+      buildInfo[LEGACY_WORKLET_RUNTIME_BUILD_INFO] = true;
+    } else {
+      delete buildInfo[LEGACY_WORKLET_RUNTIME_BUILD_INFO];
+    }
     if (result.runtimeRequirements === undefined) {
       // A custom/older transform has no semantic producer. Keep this distinct
       // from an explicit false result so downstream telemetry remains unknown.

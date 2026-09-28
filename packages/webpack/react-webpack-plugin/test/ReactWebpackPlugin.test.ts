@@ -65,6 +65,19 @@ describe('collectReactCompileResult', () => {
     ).toBeUndefined();
   });
 
+  it.each([false, true])(
+    'returns unknown for legacy registrations mixed with a modern %s requirement',
+    (required) => {
+      expect(collectReactCompileResult(
+        [{ id: 'main' }],
+        () => [
+          moduleWithRequirement(required),
+          { modules: [{ buildInfo: { 'lynx:legacy-worklet-runtime': true } }] },
+        ],
+      )).toBeUndefined();
+    },
+  );
+
   it('does not include transformed modules outside the final chunks', () => {
     const reachableChunk = { id: 'main' };
     const unreachableModule = moduleWithRequirement(true);

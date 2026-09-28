@@ -25,21 +25,27 @@ const workletSource = `export const handler = () => {
   'main thread';
   return 'injected-worklet';
 };`;
+const legacyWorkletSource = '/* __legacy_worklet_fixture */';
 const plainSource = `export function handler() { return 'background-only'; }`;
 
 interface Artifact {
   async: boolean;
   source: string;
   chunks: string[];
+  filename: string;
+  legacyRuntime: string | undefined;
 }
 
 interface BuildResult {
-  compileResult: ReactCompileResult;
+  compileResult: ReactCompileResult | undefined;
   artifacts: Artifact[];
   workletIds: string[];
 }
 
-async function createFixture(lazy: boolean) {
+async function createFixture(
+  lazy: boolean,
+  { legacy = false, separateEntry = false } = {},
+) {
   // Share module instances with the loader files, including compiler-scoped
   // boundary imports and the template plugin's instanceof checks.
   const { ReactWebpackPlugin } = await import(
@@ -72,7 +78,14 @@ async function createFixture(lazy: boolean) {
       `import { handler } from './worklet.js';
 export const onTap = __MAIN_THREAD__ ? null : handler;`,
     ),
-    fs.writeFile(workletPath, workletSource),
+    fs.writeFile(workletPath, legacy ? legacyWorkletSource : workletSource),
+    fs.writeFile(
+      path.join(context, 'modern.js'),
+      workletSource.replace(
+        'injected-worklet',
+        'modern-worklet',
+      ),
+    ),
   ]);
 
   let artifacts: Artifact[] = [];
@@ -83,6 +96,9 @@ export const onTap = __MAIN_THREAD__ ? null : handler;`,
     entry: {
       'main__main-thread': { import: './main.js', layer: LAYERS.MAIN_THREAD },
       main__background: { import: './background.js', layer: LAYERS.BACKGROUND },
+      ...(separateEntry
+        ? { modern: { import: './modern.js', layer: LAYERS.MAIN_THREAD } }
+        : {}),
     },
     resolve: {
       modules: [path.resolve(__dirname, '../node_modules'), 'node_modules'],
@@ -105,13 +121,21 @@ export const onTap = __MAIN_THREAD__ ? null : handler;`,
           test: /\.js$/,
           issuerLayer: LAYERS[layer],
           loader: ReactWebpackPlugin.loaders[layer],
+          options: {
+            transformPath: require.resolve(
+              './fixtures/mixed-main-thread-transform.cjs',
+            ),
+          },
         })),
       ],
     },
     plugins: [
       new ChunkLoadingWebpackPlugin(),
       new ReactWebpackPlugin({
-        mainThreadChunks: ['main__main-thread.js'],
+        mainThreadChunks: [
+          'main__main-thread.js',
+          ...(separateEntry ? ['modern.js'] : []),
+        ],
         entryPairs: [{
           mainThread: 'main__main-thread',
           background: 'main__background',
@@ -124,6 +148,16 @@ export const onTap = __MAIN_THREAD__ ? null : handler;`,
         chunks: ['main__main-thread', 'main__background'],
         filename: 'template.js',
       }),
+      ...(separateEntry
+        ? [
+          new LynxTemplatePlugin({
+            ...LynxTemplatePlugin.defaultOptions,
+            chunks: ['modern'],
+            filename: 'modern/template.js',
+            intermediate: '.lynx/modern',
+          }),
+        ]
+        : []),
       {
         apply(compiler: Compiler) {
           compiler.hooks.thisCompilation.tap(
@@ -133,6 +167,10 @@ export const onTap = __MAIN_THREAD__ ? null : handler;`,
               LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation)
                 .beforeEncode.tap('capture-defines-runtime', args => {
                   artifacts.push({
+                    filename: args.filenameTemplate,
+                    legacyRuntime: args.encodeData.lepusCode.chunks.find(
+                      chunk => chunk.name === 'worklet-runtime',
+                    )?.source.source().toString(),
                     async: args.chunkGroups.every(group => !group.isInitial()),
                     source: args.encodeData.lepusCode.root!.source.source()
                       .toString(),
@@ -160,10 +198,12 @@ export const onTap = __MAIN_THREAD__ ? null : handler;`,
         );
       }
       return {
-        compileResult:
-          (stats.compilation as unknown as Record<symbol, ReactCompileResult>)[
-            compileResultKey
-          ]!,
+        compileResult: (stats.compilation as unknown as Record<
+          symbol,
+          ReactCompileResult | undefined
+        >)[
+          compileResultKey
+        ],
         artifacts,
         workletIds: [...stats.compilation.modules].flatMap(module => {
           if (module.layer !== LAYERS.BACKGROUND) {
@@ -196,6 +236,7 @@ function execute(
   inspect?: (context: Context, lazy: boolean) => void,
 ) {
   const noop = () => undefined;
+  let activeArtifact: Artifact;
   const host = {
     console,
     lynx: {
@@ -213,8 +254,11 @@ function execute(
     __MAIN_THREAD__: true,
     __JS__: false,
     __OnLifecycleEvent: noop,
-    __LoadLepusChunk() {
-      throw new Error('An injected worklet must initialize its runtime inline');
+    __LoadLepusChunk(name: string) {
+      expect(name).toBe('worklet-runtime');
+      expect(activeArtifact.legacyRuntime).toBeDefined();
+      runInContext(activeArtifact.legacyRuntime!, context);
+      return true;
     },
     lynxWorkletImpl: undefined as undefined | {
       _workletMap: Record<string, () => string>;
@@ -226,9 +270,11 @@ function execute(
   const context = createContext(host);
   const entry = artifacts.filter(artifact => !artifact.async);
   expect(entry).toHaveLength(1);
-  runInContext(entry[0]!.source, context);
+  activeArtifact = entry[0]!;
+  runInContext(activeArtifact.source, context);
   inspect?.(context, false);
   for (const artifact of artifacts.filter(artifact => artifact.async)) {
+    activeArtifact = artifact;
     const factory: unknown = runInContext(artifact.source, context);
     host.processEvalResult!(factory, 'lazy-worklet');
     inspect?.(context, true);
@@ -263,6 +309,74 @@ it('boots a background-only worklet through the paired main entry', async () => 
     await fixture.dispose();
   }
 });
+
+it.each([false, true])(
+  'keeps legacy initialization local to its artifact with a separate modern entry: %s',
+  async (separateEntry) => {
+    const fixture = await createFixture(false, { legacy: true, separateEntry });
+    try {
+      const result = fixture.result(await run(fixture.compiler));
+      expect(result.compileResult).toBeUndefined();
+      const legacy = result.artifacts.filter(artifact =>
+        artifact.filename === 'template.js'
+      );
+      expect(legacy).toHaveLength(1);
+      expect(legacy[0]!.chunks).toContain('worklet-runtime');
+      expect(execute(legacy)['legacy-transform:1']!()).toBe('injected-worklet');
+      if (separateEntry) {
+        const modern = result.artifacts.filter(artifact =>
+          artifact.filename === 'modern/template.js'
+        );
+        expect(modern).toHaveLength(1);
+        expect(modern[0]!.chunks).not.toContain('worklet-runtime');
+        expect(Object.values(execute(modern)).map(worklet => worklet()))
+          .toEqual(['modern-worklet']);
+      }
+    } finally {
+      await fixture.dispose();
+    }
+  },
+);
+
+it.each([false, true])(
+  'loads a legacy worklet before a later modern module, without treating plain legacy code as a worklet (legacy worklet: %s)',
+  async (hasLegacyWorklet) => {
+    const fixture = await createFixture(false, { legacy: true });
+    try {
+      if (!hasLegacyWorklet) {
+        await fs.writeFile(fixture.workletPath, '/* __legacy_plain_fixture */');
+      }
+      await fs.writeFile(
+        path.join(path.dirname(fixture.workletPath), 'main.js'),
+        `
+import './worklet.js';
+import './modern.js';
+export const ready = true;
+`,
+      );
+      const result = fixture.result(await run(fixture.compiler));
+      expect(result.compileResult).toEqual(
+        hasLegacyWorklet ? undefined : {
+          version: 1,
+          runtimeRequirements: { mainThreadProgrammability: true },
+        },
+      );
+      expect(result.artifacts[0]!.chunks.includes('worklet-runtime')).toBe(
+        hasLegacyWorklet,
+      );
+      expect(
+        Object.values(execute(result.artifacts)).map(worklet => worklet())
+          .sort(),
+      ).toEqual(
+        hasLegacyWorklet
+          ? ['injected-worklet', 'modern-worklet']
+          : ['modern-worklet'],
+      );
+    } finally {
+      await fixture.dispose();
+    }
+  },
+);
 
 it('preserves a cold-start MainThreadObject across lazy initialization', async () => {
   const fixture = await createFixture(true);
@@ -337,45 +451,66 @@ export const load = () => import('./boundary.js');
   }
 });
 
-it('removes injected async worklets and their requirements on a watch rebuild', async () => {
-  const fixture = await createFixture(true);
-  try {
-    await new Promise<void>((resolve, reject) => {
-      let builds = 0;
-      const timeout = setTimeout(
-        () => reject(new Error('Watch rebuild did not complete')),
-        15_000,
-      );
-      fixture.compiler.watch({ aggregateTimeout: 25 }, (error, stats) => {
-        if (error) {
-          clearTimeout(timeout);
-          reject(error);
-          return;
-        }
-        try {
-          expectRuntime(fixture.result(stats!), builds % 2 === 0, true);
-        } catch (error) {
-          clearTimeout(timeout);
-          reject(error as Error);
-          return;
-        }
-        const next = [
-          [fixture.workletPath, plainSource],
-          [fixture.workletPath, workletSource],
-          [fixture.backgroundPath, 'export const ready = true;'],
-        ][builds++];
-        if (next) {
-          void fs.writeFile(next[0]!, next[1]!).catch((error: Error) => {
+it.each([false, true])(
+  'removes injected async worklets and their requirements on a watch rebuild (legacy: %s)',
+  async (legacy) => {
+    const fixture = await createFixture(true, { legacy });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        let builds = 0;
+        const timeout = setTimeout(
+          () => reject(new Error('Watch rebuild did not complete')),
+          15_000,
+        );
+        fixture.compiler.watch({ aggregateTimeout: 25 }, (error, stats) => {
+          if (error) {
             clearTimeout(timeout);
             reject(error);
-          });
-        } else {
-          clearTimeout(timeout);
-          resolve();
-        }
+            return;
+          }
+          try {
+            const result = fixture.result(stats!);
+            if (legacy && builds % 2 === 0) {
+              expect(result.compileResult).toBeUndefined();
+              expect(
+                result.artifacts.find(artifact => !artifact.async)!.chunks,
+              ).not.toContain('worklet-runtime');
+              expect(
+                result.artifacts.find(artifact => artifact.async)!.chunks,
+              ).toContain('worklet-runtime');
+              expect(execute(result.artifacts)['legacy-transform:1']!()).toBe(
+                'injected-worklet',
+              );
+            } else {
+              expectRuntime(
+                result,
+                legacy ? builds === 1 : builds % 2 === 0,
+                true,
+              );
+            }
+          } catch (error) {
+            clearTimeout(timeout);
+            reject(error as Error);
+            return;
+          }
+          const next = [
+            [fixture.workletPath, legacy ? workletSource : plainSource],
+            [fixture.workletPath, legacy ? legacyWorkletSource : workletSource],
+            [fixture.backgroundPath, 'export const ready = true;'],
+          ][builds++];
+          if (next) {
+            void fs.writeFile(next[0]!, next[1]!).catch((error: Error) => {
+              clearTimeout(timeout);
+              reject(error);
+            });
+          } else {
+            clearTimeout(timeout);
+            resolve();
+          }
+        });
       });
-    });
-  } finally {
-    await fixture.dispose();
-  }
-});
+    } finally {
+      await fixture.dispose();
+    }
+  },
+);
