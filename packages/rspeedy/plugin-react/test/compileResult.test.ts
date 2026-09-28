@@ -34,6 +34,24 @@ describe('react compile result exposure', () => {
       .toBeUndefined()
   })
 
+  it('returns unknown for an unsupported producer version', () => {
+    const stats = createStats(false)
+    const compilation = stats.compilation as unknown as Record<symbol, unknown>
+    compilation[REACT_COMPILATION_RESULT] = {
+      version: 2,
+      runtimeRequirements: { mainThreadProgrammability: false },
+    }
+
+    expect(reactCompileResultExposure.getCompileResult(stats)).toBeUndefined()
+  })
+
+  it('returns unknown when MultiStats has no child compilations', () => {
+    const multiStats = { stats: [] } as unknown as Rspack.MultiStats
+
+    expect(reactCompileResultExposure.getCompileResult(multiStats))
+      .toBeUndefined()
+  })
+
   it('aggregates all child compilations in MultiStats', () => {
     const multiStats = {
       stats: [createStats(false), createStats(true)],
