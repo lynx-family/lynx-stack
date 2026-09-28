@@ -82,6 +82,34 @@ describe('worklet-runtime init entry', () => {
     expect(globalThis.runWorklet).toBe(runWorklet);
   });
 
+  it.each([
+    ['querySelector', 'querySelectorAll'],
+    ['querySelectorAll', 'querySelector'],
+  ])('fills %s while preserving the host %s', async (missing, provided) => {
+    const hostSelector = vi.fn(() => 'host-result');
+    globalThis.lynx[provided] = hostSelector;
+    delete globalThis.lynx[missing];
+    globalThis.__GetPageElement = vi.fn(() => 'page-element');
+    globalThis.__QuerySelector = vi.fn(() => 'mock-element');
+    globalThis.__QuerySelectorAll = vi.fn(() => ['mock-element']);
+
+    await import('@lynx-js/react/worklet-runtime/init');
+
+    expect(globalThis.lynx[provided]).toBe(hostSelector);
+    expect(globalThis.lynx[provided]('#host')).toBe('host-result');
+    expect(hostSelector).toHaveBeenCalledWith('#host');
+    const result = globalThis.lynx[missing]('#test-id');
+    expect(result).toEqual(
+      missing === 'querySelector'
+        ? expect.objectContaining({ element: 'mock-element' })
+        : [expect.objectContaining({ element: 'mock-element' })],
+    );
+    const nativeSelector = missing === 'querySelector'
+      ? globalThis.__QuerySelector
+      : globalThis.__QuerySelectorAll;
+    expect(nativeSelector).toHaveBeenCalledWith('page-element', '#test-id', {});
+  });
+
   it('fills selector APIs without replacing a runtime supplied by the host', async () => {
     const existingWorkletImpl = { marker: 'host-runtime' };
     const existingRegisterWorklet = vi.fn();
