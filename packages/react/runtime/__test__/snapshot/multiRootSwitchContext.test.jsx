@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { options } from 'preact';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RootContext, defaultRootContext, getCurrentRootContext, switchRootContext } from '../../src/render-context';
@@ -9,7 +10,9 @@ import {
   initGlobalSnapshotPatch,
   takeGlobalSnapshotPatch,
 } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
+import { replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
 import { backgroundSnapshotInstanceManager } from '../../src/snapshot';
+import { COMMIT } from '../../src/shared/render-constants';
 import { BackgroundSnapshotInstance } from '../../src/snapshot/snapshot/backgroundSnapshot';
 import { globalEnvManager } from './utils/envManager';
 
@@ -105,6 +108,39 @@ describe('per-root background snapshot instances', () => {
   });
 });
 
+describe('commit callbacks', () => {
+  it('run the commit task of the context that sent the patch', () => {
+    globalEnvManager.switchToBackground();
+    replaceCommitHook();
+    const commitInContext = () => {
+      const ctx = new RootContext();
+      let onPatchApplied;
+      ctx.lynx = {
+        ...lynx,
+        getNativeApp: () => ({
+          ...lynx.getNativeApp(),
+          callLepusMethod: (_name, _data, callback) => {
+            onPatchApplied = callback;
+          },
+        }),
+      };
+      switchRootContext(ctx);
+      initGlobalSnapshotPatch();
+      options[COMMIT]({}, []);
+      return { ctx, onPatchApplied: () => onPatchApplied() };
+    };
+
+    const a = commitInContext();
+    const b = commitInContext();
+    expect(a.ctx.commitTaskMap.size).toBe(1);
+    expect(b.ctx.commitTaskMap.size).toBe(1);
+
+    a.onPatchApplied();
+    expect(a.ctx.commitTaskMap.size).toBe(0);
+    expect(b.ctx.commitTaskMap.size).toBe(1);
+  });
+});
+
 async function importWithSharing() {
   globalThis.__LYNX_GROUP_MODULE_SHARING__ = true;
   vi.resetModules();
@@ -160,5 +196,30 @@ describe('createRoot app callbacks', () => {
 
     expect(a.pageLynx.__globalProps).toEqual({ k: 1 });
     expect(b.pageLynx.__globalProps).toEqual({ k: 2 });
+  });
+
+  it('re-renders the page whose globalProps changed', async () => {
+    globalEnvManager.switchToBackground();
+    const { createRoot } = await importWithSharing();
+    const rc = await import('../../src/render-context');
+
+    const renders = { A: 0, B: 0 };
+    const Page = ({ name }) => {
+      renders[name]++;
+      return null;
+    };
+    const a = stubPage('A');
+    const b = stubPage('B');
+    const rootA = createRoot(a.pageLynx);
+    const rootB = createRoot(b.pageLynx);
+    rootA.render(<Page name='A' />);
+    rootB.render(<Page name='B' />);
+    renders.A = renders.B = 0;
+
+    a.app.updateGlobalProps({ k: 1 });
+    rc.switchRootContext(rc.defaultRootContext);
+    await Promise.resolve();
+
+    expect(renders).toEqual({ A: 1, B: 0 });
   });
 });

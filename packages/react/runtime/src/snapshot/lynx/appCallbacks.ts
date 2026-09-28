@@ -182,13 +182,14 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       }
       const obj = commitPatchUpdate(patchList, { isHydration: true });
       sendMTRefInitValueToMainThread();
+      const commitTaskMap = globalCommitTaskMap;
       getPageLynx().getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-        globalCommitTaskMap.forEach((commitTask, id) => {
+        commitTaskMap.forEach((commitTask, id) => {
           if (id > commitTaskId) {
             return;
           }
           commitTask();
-          globalCommitTaskMap.delete(id);
+          commitTaskMap.delete(id);
         });
       });
       runDelayedUiOps();
@@ -311,10 +312,10 @@ function updateGlobalProps(newData: Record<string, any>): void {
   updateGlobalPropsCore(newData, {
     // Snapshot force render consumes any sync setState dirty flags produced by
     // onGlobalPropsChanged listeners, avoiding an extra diff pass.
-    forceRerender: () => {
+    forceRerender: bindContext(getCurrentRootContext(), () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       runWithForce(() => render(__root.__jsx, __root as any));
-    },
+    }),
   });
 }
 

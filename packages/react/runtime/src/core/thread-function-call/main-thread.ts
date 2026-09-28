@@ -19,8 +19,6 @@ interface RunOnMainThreadOptions {
 
 export type RunOnMainThread = <R, Fn extends (...args: any[]) => R>(fn: Fn) => (...args: Parameters<Fn>) => Promise<R>;
 
-// Storage lives on the current `RootContext`; this binding is an alias kept in
-// sync on writes and on context switches.
 export let delayedRunOnMainThreadData: RunWorkletCtxData[] = getCurrentRootContext().delayedRunOnMainThreadData;
 
 onRootContextSwitch(() => {

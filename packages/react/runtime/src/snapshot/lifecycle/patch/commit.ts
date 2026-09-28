@@ -47,8 +47,6 @@ import { applyQueuedRefs } from '../../snapshot/ref.js';
 import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValue.js';
 import { isRendering } from '../isRendering.js';
 
-// Storage lives on the current `RootContext`; this binding is an alias kept in
-// sync on context switches.
 let globalCommitTaskMap: Map<number, () => void> = getCurrentRootContext().commitTaskMap;
 
 onRootContextSwitch(() => {
@@ -141,13 +139,15 @@ function replaceCommitHook(): void {
       setGlobalBackgroundSnapshotInstancesToRemove([]);
 
       const commitTaskId = genCommitTaskId();
+      const commitTaskMap = globalCommitTaskMap;
+      const bsiValues = backgroundSnapshotInstanceManager.values;
 
       // Register the commit task
-      globalCommitTaskMap.set(commitTaskId, () => {
+      commitTaskMap.set(commitTaskId, () => {
         if (backgroundSnapshotInstancesToRemove.length) {
           setTimeout(() => {
             backgroundSnapshotInstancesToRemove.forEach(id => {
-              backgroundSnapshotInstanceManager.values.get(id)?.tearDown();
+              bsiValues.get(id)?.tearDown();
             });
           }, 10000);
         }
@@ -189,10 +189,10 @@ function replaceCommitHook(): void {
 
       // Send the update to the native layer
       getPageLynx().getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-        const commitTask = globalCommitTaskMap.get(commitTaskId);
+        const commitTask = commitTaskMap.get(commitTaskId);
         if (commitTask) {
           commitTask();
-          globalCommitTaskMap.delete(commitTaskId);
+          commitTaskMap.delete(commitTaskId);
         }
       });
 
