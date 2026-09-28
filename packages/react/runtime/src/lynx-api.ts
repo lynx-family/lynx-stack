@@ -1,7 +1,6 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { render } from 'preact';
 import { createContext, createElement } from 'preact/compat';
 import { useState } from 'preact/hooks';
 import type { Consumer, FC, ReactNode } from 'react';
@@ -12,10 +11,9 @@ import { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListe
 import { factory, withInitDataInState } from './core/initData.js';
 import { getPageLynx, hasPageLynx } from './core/page-lynx.js';
 import { __root } from './root.js';
-import { profileEnd, profileStart } from './shared/profile.js';
 import { LifecycleConstant } from './snapshot/lifecycle/constant.js';
 import { onFirstScreenSyncReady } from './snapshot/lifecycle/event/firstScreenSync.js';
-import { flushDelayedLifecycleEvents } from './snapshot/lynx/appCallbacks.js';
+import { renderBackground } from './snapshot/lynx/appCallbacks.js';
 
 /**
  * The default root exported by `@lynx-js/react` for you to render a JSX
@@ -97,25 +95,7 @@ export const root: Root = {
       ) {
         throw new Error('experimental_lynxGroupModuleSharing requires rendering through createRoot(lynx).');
       }
-      __root.__jsx = jsx;
-      if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-        profileStart('ReactLynx::renderBackground');
-      }
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      render(jsx, __root as any);
-      if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-        profileEnd();
-      }
-      if (__FIRST_SCREEN_SYNC_TIMING__ === 'jsReady') {
-        // `jsReady` is a special case of the `manual` first-screen sync: the
-        // framework marks ready automatically once the background is ready.
-        getPageLynx().getNativeApp().callLepusMethod(LifecycleConstant.firstScreenSyncReady, {});
-      } else {
-        // `immediately` or `manual`: the first screen is synced without waiting
-        // for the background, so the `firstScreen` message might have been
-        // reached when `root.render()` is called asynchronously.
-        flushDelayedLifecycleEvents();
-      }
+      renderBackground(jsx);
     }
   },
   /* v8 ignore next 3 */

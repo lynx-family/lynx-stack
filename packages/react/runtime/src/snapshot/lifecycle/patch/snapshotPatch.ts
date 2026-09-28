@@ -78,8 +78,6 @@ export const SnapshotOperationParams: Record<number, { name: string; params: str
 
 export type SnapshotPatch = unknown[];
 
-// The storage lives on the current `RootContext`; this module-level binding is
-// a maintained alias kept in sync on writes and on context switches.
 export let __globalSnapshotPatch: SnapshotPatch | undefined = getCurrentRootContext().snapshotPatch;
 
 onRootContextSwitch(() => {

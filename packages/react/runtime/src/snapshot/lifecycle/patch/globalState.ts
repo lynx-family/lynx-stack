@@ -8,8 +8,6 @@
 
 import { getCurrentRootContext, onRootContextSwitch } from '../../../render-context.js';
 
-// Storage lives on the current `RootContext`; this binding is an alias kept in
-// sync on writes and on context switches.
 export let globalBackgroundSnapshotInstancesToRemove: number[] = getCurrentRootContext().bgInstancesToRemove;
 
 onRootContextSwitch(() => {

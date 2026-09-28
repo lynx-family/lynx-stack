@@ -102,14 +102,10 @@ export function initBackgroundRuntimeForRoot(): void {
   setupLynxEnv();
 }
 
-export function initBackgroundRuntime(): void {
-  initBackgroundRuntimeGlobals();
-  initBackgroundRuntimeForRoot();
-}
-
 if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
   if (typeof __LYNX_GROUP_MODULE_SHARING__ === 'undefined' || !__LYNX_GROUP_MODULE_SHARING__) {
-    initBackgroundRuntime();
+    initBackgroundRuntimeGlobals();
+    initBackgroundRuntimeForRoot();
   }
 } else {
   setupLynxEnv();

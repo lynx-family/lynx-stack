@@ -3,17 +3,14 @@
 // LICENSE file in the root directory of this source tree.
 import { getCurrentRootContext, onRootContextSwitch } from '../../../render-context.js';
 
-let delayedEvents: [handlerName: string, data: EventDataType][] | undefined = getCurrentRootContext().delayedEvents;
+let delayedEvents: [handlerName: string, data: EventDataType][] = getCurrentRootContext().delayedEvents;
 
 onRootContextSwitch(() => {
   delayedEvents = getCurrentRootContext().delayedEvents;
 });
 
 function delayedPublishEvent(handlerName: string, data: EventDataType): void {
-  const ctx = getCurrentRootContext();
-  ctx.delayedEvents ??= [];
-  delayedEvents = ctx.delayedEvents;
-  ctx.delayedEvents.push([handlerName, data]);
+  getCurrentRootContext().delayedEvents.push([handlerName, data]);
 }
 
 export { delayedEvents, delayedPublishEvent };
