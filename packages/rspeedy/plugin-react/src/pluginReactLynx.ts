@@ -346,7 +346,8 @@ export interface PluginReactLynxOptions {
 
   /**
    * Share module instances across the cards of a LynxGroup. Each page then
-   * renders through `createRoot(lynx)` instead of `root`.
+   * renders through `createRoot(lynx)` from `@lynx-js/react/internal` instead
+   * of `root`.
    *
    * @defaultValue `false`
    *
