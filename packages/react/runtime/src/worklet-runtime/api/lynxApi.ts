@@ -5,10 +5,16 @@ import { querySelector, querySelectorAll } from './lepusQuerySelector.js';
 import { isSdkVersionGt } from '../utils/version.js';
 
 function initApiEnv(): void {
-  // @ts-expect-error type
-  lynx.querySelector = querySelector;
-  // @ts-expect-error type
-  lynx.querySelectorAll = querySelectorAll;
+  const mainThreadLynx = lynx as typeof lynx & {
+    querySelector?: unknown;
+    querySelectorAll?: unknown;
+  };
+  if (typeof mainThreadLynx.querySelector !== 'function') {
+    mainThreadLynx.querySelector = querySelector;
+  }
+  if (typeof mainThreadLynx.querySelectorAll !== 'function') {
+    mainThreadLynx.querySelectorAll = querySelectorAll;
+  }
   // @ts-expect-error type
   globalThis.setTimeout = lynx.setTimeout as (cb: () => void, timeout: number) => number;
   // @ts-expect-error type
