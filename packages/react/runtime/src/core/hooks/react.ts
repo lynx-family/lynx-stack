@@ -127,18 +127,6 @@ const useState: typeof usePreactState = (__BACKGROUND__ && isProfiling)
   ? useStateWithProfile as typeof usePreactState
   : usePreactState;
 
-/**
- * Accepts a function that contains imperative, possibly effectful code.
- * The effects run after main thread dom update without blocking it.
- *
- * @param effect - Imperative function that can return a cleanup function
- * @param deps - If present, effect will only activate if the values in the list change (using ===).
- *
- * @function
- * @public
- *
- * @group Hooks
- */
 function withRootContext(
   useEffectImpl: (effect: EffectCallback, deps?: DependencyList) => void,
 ): (effect: EffectCallback, deps?: DependencyList) => void {
@@ -160,6 +148,16 @@ function withRootContext(
   };
 }
 
+/**
+ * Accepts a function that contains imperative, possibly effectful code.
+ * The effects run after main thread dom update without blocking it.
+ *
+ * @param effect - Imperative function that can return a cleanup function
+ * @param deps - If present, effect will only activate if the values in the list change (using ===).
+ *
+ * @function
+ * @public
+ */
 const useEffect: (effect: EffectCallback, deps?: DependencyList) => void = withRootContext(
   (__BACKGROUND__ && isProfiling) ? useEffectProfiled : usePreactEffect,
 );
