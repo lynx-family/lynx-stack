@@ -411,6 +411,41 @@ describe('React - alias', () => {
     ).toBe('preact/hooks/dist/hooks.mjs')
   })
 
+  test.each([false, true])(
+    'alias worklet-runtime init to source entry (lazy: %s)',
+    async (lazy) => {
+      rstest.stubEnv('NODE_ENV', 'development')
+      const { pluginReactAlias } = await import('../src/index.js')
+
+      const rsbuild = await createRsbuild({
+        rsbuildConfig: {
+          plugins: [
+            pluginReactAlias({
+              LAYERS,
+              lazy,
+            }),
+          ],
+        },
+        cwd: path.dirname(fileURLToPath(import.meta.url)),
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      if (!config?.resolve?.alias) {
+        expect.fail('should have config.resolve.alias')
+      }
+
+      expect(
+        config.resolve.alias['@lynx-js/react/worklet-runtime/init$'],
+      ).toEqual(
+        expect.stringContaining(
+          '/packages/react/runtime/src/worklet-runtime/init.ts'
+            .replaceAll('/', path.sep),
+        ),
+      )
+    },
+  )
+
   test('applies aliases once per bundler chain', async () => {
     rstest.stubEnv('NODE_ENV', 'production')
     const { pluginReactAlias } = await import('../src/index.js')
