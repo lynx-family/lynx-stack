@@ -1,20 +1,22 @@
 # react-shared-context
 
-Two pages that share one module instance when they run in the same LynxGroup.
+Two cards that share one ReactLynx runtime when they run in the same LynxGroup.
 
 ## What it shows
 
-`src/store.ts` is imported by both entries, so `splitChunks` moves it into a
-common chunk the pages load through `lynx.requireModuleAsync`. With
-`experimental_lynxGroupModuleSharing` on, the group evaluates it once:
+`splitChunks` moves every module both entries share — `src/store.ts` and the
+ReactLynx framework itself — into a common chunk the cards load through
+`lynx.requireModuleAsync`. With `experimental_lynxGroupModuleSharing` on, the
+group evaluates that chunk once, so both cards run on one framework instance and
+one `store.ts`:
 
-- **shared count** — moves together on both pages
-- **module instance** — identical on both pages when shared, different when not
-- **pages mounted** — every page that mounted against this module instance, so
-  the second page lists both
+- **shared count** — moves together on both cards
+- **module instance** — identical on both cards when shared, different when not
+- **pages mounted** — every card that mounted against this module instance, so
+  the second card lists both
 
-Only `src/store.ts` goes into the common chunk. The framework stays in each
-entry, so every page keeps its own renderer state.
+Each card renders through its own `createRoot(lynx)`, so the one shared runtime
+keeps their render state apart while they share module-level state on purpose.
 
 The common chunk is also the group-level runtime. The QR schema passes its URL
 as `standalone_url`, so the host evaluates it into the group once, before any card,

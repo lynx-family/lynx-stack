@@ -42,7 +42,6 @@ export default defineConfig({
       defaultVendors: false,
       shared: {
         name: 'shared',
-        test: /[\\/]src[\\/]store\.ts$/,
         minChunks: 2,
         enforce: true,
       },
