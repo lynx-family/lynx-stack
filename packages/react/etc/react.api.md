@@ -69,9 +69,6 @@ export function createPortal(vnode: ComponentChild, container: NodesRef): ReactN
 
 export { createRef }
 
-// @alpha
-export function createRoot(pageLynx: typeof lynx): Root;
-
 // @public
 export interface DataProcessorDefinition {
     dataProcessors?: DataProcessors;

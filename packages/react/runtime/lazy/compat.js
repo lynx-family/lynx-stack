@@ -20,7 +20,6 @@ export const {
   createElement,
   createPortal,
   createRef,
-  createRoot,
   forwardRef,
   isValidElement,
   lazy,

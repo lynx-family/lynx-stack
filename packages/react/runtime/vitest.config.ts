@@ -141,6 +141,7 @@ export default defineConfig({
         'src/shared/component-stack.ts',
         'src/shared/profile.ts',
         'src/index.ts',
+        'src/create-root.ts',
         'src/lynx-api.ts',
         'src/lynx.ts',
         'src/root.ts',

@@ -10,8 +10,7 @@ import { createGlobalProps } from './core/globalProps.js';
 import type { GlobalProps } from './core/globalProps.js';
 import { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListener.js';
 import { factory, withInitDataInState } from './core/initData.js';
-import { bindPageLynx, getPageLynx, hasPageLynx } from './core/page-lynx.js';
-import { initBackgroundRuntime } from './lynx.js';
+import { getPageLynx, hasPageLynx } from './core/page-lynx.js';
 import { __root } from './root.js';
 import { profileEnd, profileStart } from './shared/profile.js';
 import { LifecycleConstant } from './snapshot/lifecycle/constant.js';
@@ -124,35 +123,6 @@ export const root: Root = {
     getPageLynx().registerDataProcessors(dataProcessorDefinition);
   },
 };
-
-/**
- * Binds the runtime to one page's `lynx` and returns that page's root. Requires
- * `experimental_lynxGroupModuleSharing`; unstable and subject to change.
- *
- * @example
- *
- * ```ts
- * import { createRoot } from '@lynx-js/react'
- *
- * createRoot(lynx).render(<App />)
- * ```
- *
- * @experimental
- * @alpha
- */
-export function createRoot(pageLynx: typeof lynx): Root {
-  if (
-    typeof __LYNX_GROUP_MODULE_SHARING__ === 'undefined'
-    || !__LYNX_GROUP_MODULE_SHARING__
-  ) {
-    throw new Error('createRoot(lynx) requires the experimental_lynxGroupModuleSharing option of pluginReactLynx.');
-  }
-  if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
-    bindPageLynx(pageLynx);
-    initBackgroundRuntime();
-  }
-  return root;
-}
 
 /**
  * Mark the first screen as ready to sync when `firstScreenSyncTiming` is `'manual'`.
