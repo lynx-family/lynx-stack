@@ -11,7 +11,11 @@ mod swc_plugin_refresh;
 mod swc_plugin_transform_builtin_attribute_names;
 mod swc_plugin_worklet_post_process;
 
-use std::{cell::RefCell, rc::Rc, vec};
+use std::{
+  cell::{Cell, RefCell},
+  rc::Rc,
+  vec,
+};
 
 use napi::{bindgen_prelude::AsyncTask, Either, Env, Task};
 
@@ -299,6 +303,15 @@ pub struct Define {
   pub code: String,
   /// @internal
   pub unmergeable: Option<bool>,
+  /// @internal
+  pub runtime_requirements: Option<TransformRuntimeRequirements>,
+}
+
+#[napi(object)]
+pub struct TransformRuntimeRequirements {
+  /// @internal
+  #[napi(js_name = "mainThreadProgrammability")]
+  pub main_thread_programmability: bool,
 }
 
 #[napi(object)]
@@ -315,11 +328,22 @@ pub struct TransformNodiffOutput {
   #[napi(js_name = "elementTemplates")]
   pub element_templates: Option<Vec<ElementTemplateAsset>>,
   /// @internal
+  #[napi(js_name = "runtimeRequirements")]
+  pub runtime_requirements: TransformRuntimeRequirements,
+  /// @internal
   #[napi(js_name = "definesForSnapshot")]
   pub defines_for_snapshot: Option<Vec<Define>>,
   /// @internal
   #[napi(js_name = "definesForWorklet")]
   pub defines_for_worklet: Option<Vec<Define>>,
+}
+
+fn transform_runtime_requirements(
+  main_thread_programmability: bool,
+) -> TransformRuntimeRequirements {
+  TransformRuntimeRequirements {
+    main_thread_programmability,
+  }
 }
 
 fn print_define(
@@ -449,6 +473,7 @@ fn transform_react_lynx_inner(
 
   let snapshot_ui_source_map_records: Rc<RefCell<Vec<SnapshotCoreUISourceMapRecord>>> =
     Rc::new(RefCell::new(vec![]));
+  let main_thread_programmability = Rc::new(Cell::new(false));
 
   let result = GLOBALS.set(&Default::default(), || {
     let program = c.parse_js(
@@ -469,6 +494,7 @@ fn transform_react_lynx_inner(
           warnings: warnings.read().unwrap().clone(),
           ui_source_map_records: vec![],
           element_templates: None,
+          runtime_requirements: transform_runtime_requirements(main_thread_programmability.get()),
           defines_for_snapshot: None,
           defines_for_worklet: None,
         };
@@ -799,7 +825,9 @@ fn transform_react_lynx_inner(
       Either::A(config) => {
         let visitor = WorkletVisitor::default().with_content_hash(content_hash);
         let visitor =
-          visitor.with_defines_collector(defines_collector.clone());
+          visitor
+            .with_defines_collector(defines_collector.clone())
+            .with_main_thread_programmability(Rc::clone(&main_thread_programmability));
         Optional::new(visit_mut_pass(visitor), config)
       }
       Either::B(config) => {
@@ -807,7 +835,9 @@ fn transform_react_lynx_inner(
           WorkletVisitor::new(options.mode.unwrap_or(TransformMode::Production), config)
             .with_content_hash(content_hash);
         let visitor =
-          visitor.with_defines_collector(defines_collector.clone());
+          visitor
+            .with_defines_collector(defines_collector.clone())
+            .with_main_thread_programmability(Rc::clone(&main_thread_programmability));
         Optional::new(visit_mut_pass(visitor), true)
       }
     };
@@ -936,6 +966,8 @@ fn transform_react_lynx_inner(
             let printed = Define {
               id: define.id.clone(),
               unmergeable: define.unmergeable.then_some(true),
+              runtime_requirements: (define.kind == DefineKind::Worklet)
+                .then(|| transform_runtime_requirements(true)),
               code: match print_define(&c, define.items.clone(), top_level_mark, &comments) {
                 Ok(code) => code,
                 Err(err) => {
@@ -972,6 +1004,7 @@ fn transform_react_lynx_inner(
             clone_snapshot_ui_source_map_records(&snapshot_ui_source_map_records, &options.filename)
           },
           element_templates,
+          runtime_requirements: transform_runtime_requirements(main_thread_programmability.get()),
           defines_for_snapshot: Some(defines_for_snapshot),
           defines_for_worklet: Some(defines_for_worklet),
         }
@@ -989,6 +1022,7 @@ fn transform_react_lynx_inner(
             clone_snapshot_ui_source_map_records(&snapshot_ui_source_map_records, &options.filename)
           },
           element_templates,
+          runtime_requirements: transform_runtime_requirements(main_thread_programmability.get()),
           defines_for_snapshot: None,
           defines_for_worklet: None,
         };
@@ -1008,6 +1042,7 @@ fn transform_react_lynx_inner(
     // Preserve the element-template assets collected in the successful transform
     // path instead of dropping them in the final wrapper object.
     element_templates: result.element_templates,
+    runtime_requirements: result.runtime_requirements,
     defines_for_snapshot: result.defines_for_snapshot,
     defines_for_worklet: result.defines_for_worklet,
   };

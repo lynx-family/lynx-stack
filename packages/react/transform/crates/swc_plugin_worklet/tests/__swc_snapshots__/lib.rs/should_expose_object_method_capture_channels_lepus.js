@@ -1,5 +1,4 @@
-import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-var loadWorkletRuntime = __loadWorkletRuntime;
+import "@lynx-js/react/worklet-runtime/init";
 const callback = ()=>{};
 const valueType = defineMainThreadObjectType({
     type: '@test/capturing-value',
@@ -29,13 +28,12 @@ const valueType = defineMainThreadObjectType({
         };
     }
 });
-const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-__workletRuntimeLoaded && registerWorkletInternal("main-thread", "a77b:test:1", function() {
+registerWorkletInternal("main-thread", "a77b:test:1", function() {
     let { _jsFn1 } = this["_jsFn"];
     "main thread";
     runOnBackground(_jsFn1)();
 });
-__workletRuntimeLoaded && registerWorkletInternal("main-thread", "a77b:test:2", function(initialValue: number) {
+registerWorkletInternal("main-thread", "a77b:test:2", function(initialValue: number) {
     let { _jsFn1 } = this["_jsFn"];
     "main thread";
     runOnBackground(_jsFn1)();

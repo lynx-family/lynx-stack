@@ -61,6 +61,39 @@ async function runMainThreadLoader(
 }
 
 describe('main-thread loader', () => {
+  it('replaces semantic runtime requirements when a rebuilt module changes', async () => {
+    const buildInfo: Record<string, unknown> = {};
+
+    await runMainThreadLoader(
+      '/* __mainThreadProgrammability */ export function App() { return null; }',
+      buildInfo,
+    );
+
+    expect(buildInfo['lynx:react-runtime-requirements']).toEqual({
+      mainThreadProgrammability: true,
+    });
+
+    await runMainThreadLoader(
+      'export function App() { return null; }',
+      buildInfo,
+    );
+
+    expect(buildInfo['lynx:react-runtime-requirements']).toEqual({
+      mainThreadProgrammability: false,
+    });
+  });
+
+  it('rejects malformed semantic runtime requirements', async () => {
+    await expect(
+      runMainThreadLoader(
+        '/* __invalidRuntimeRequirements */ export function App() { return null; }',
+        {},
+      ),
+    ).rejects.toThrow(
+      'react-transform returned invalid runtimeRequirements.mainThreadProgrammability',
+    );
+  });
+
   it('clears stale element-template build info when recompilation stops emitting templates', async () => {
     const buildInfo: Record<string, unknown> = {};
 

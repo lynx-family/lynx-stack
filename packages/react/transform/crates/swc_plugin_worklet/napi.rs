@@ -1,4 +1,6 @@
 use napi_derive::napi;
+use std::cell::Cell;
+use std::rc::Rc;
 
 use swc_core::ecma::ast::*;
 use swc_core::ecma::visit::{noop_visit_mut_type, VisitMut};
@@ -100,6 +102,11 @@ impl VisitMut for WorkletVisitor {
 impl WorkletVisitor {
   pub fn with_content_hash(mut self, content_hash: String) -> Self {
     self.inner.content_hash = content_hash;
+    self
+  }
+
+  pub fn with_main_thread_programmability(mut self, result: Rc<Cell<bool>>) -> Self {
+    self.inner = self.inner.with_main_thread_programmability(result);
     self
   }
 

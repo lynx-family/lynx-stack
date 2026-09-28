@@ -9,6 +9,7 @@ export interface Define {
   id: string;
   code: string;
   unmergeable?: boolean;
+  runtimeRequirements?: { mainThreadProgrammability: boolean };
 }
 
 interface ModuleWithDefines {
@@ -87,7 +88,16 @@ export function renderDefinesModule(
   definesForWorklet: readonly Define[],
 ): string {
   const prelude = [`import * as ReactLynx from '@lynx-js/react/internal';`];
-  if (definesForWorklet.length > 0) {
+  if (
+    definesForWorklet.some(define =>
+      define.runtimeRequirements?.mainThreadProgrammability
+    )
+  ) {
+    prelude.push(`import '@lynx-js/react/worklet-runtime/init';`);
+  }
+  if (
+    definesForWorklet.some(define => define.runtimeRequirements === undefined)
+  ) {
     prelude.push(`var loadWorkletRuntime = ReactLynx.loadWorkletRuntime;`);
   }
   const defines = [...definesForWorklet, ...definesForSnapshot];
