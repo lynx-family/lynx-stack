@@ -1,16 +1,16 @@
 {
-  "name": "@lynx-js/lynx-runtime",
+  "name": "@lynx-js/element-template-runtime",
   "version": "0.0.0",
-  "description": "Lifecycle and cross-thread runtime utilities for Vanilla Lynx applications.",
+  "description": "Framework-neutral Element Template runtime primitives for Lynx.",
   "keywords": [
     "lynx",
-    "runtime",
-    "vanilla"
+    "element template",
+    "runtime"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/lynx-family/lynx-stack.git",
-    "directory": "packages/lynx/lynx-runtime"
+    "directory": "packages/lynx/element-template-runtime"
   },
   "license": "Apache-2.0",
   "sideEffects": false,
@@ -19,18 +19,6 @@
     ".": {
       "types": "./lib/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./background": {
-      "types": "./lib/background.d.ts",
-      "default": "./dist/background.js"
-    },
-    "./common": {
-      "types": "./lib/common.d.ts",
-      "default": "./dist/common.js"
-    },
-    "./main-thread": {
-      "types": "./lib/main-thread.d.ts",
-      "default": "./dist/main-thread.js"
     }
   },
   "main": "./dist/index.js",
@@ -47,6 +35,9 @@
     "test": "vitest run",
     "test:type": "tsc6 --project tsconfig.test.json --noEmit"
   },
+  "dependencies": {
+    "@lynx-js/lynx-runtime": "workspace:*"
+  },
   "engines": {
     "node": "^22.22.2 || ^24.15.0"
   },
@@ -56,18 +47,6 @@
       ".": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
-      },
-      "./background": {
-        "types": "./dist/background.d.ts",
-        "default": "./dist/background.js"
-      },
-      "./common": {
-        "types": "./dist/common.d.ts",
-        "default": "./dist/common.js"
-      },
-      "./main-thread": {
-        "types": "./dist/main-thread.d.ts",
-        "default": "./dist/main-thread.js"
       }
     },
     "types": "./dist/index.d.ts"

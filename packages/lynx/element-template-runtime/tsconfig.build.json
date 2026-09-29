@@ -10,4 +10,7 @@
     "target": "ES2022",
   },
   "include": ["src"],
+  "references": [
+    { "path": "../lynx-runtime/tsconfig.build.json" },
+  ],
 }

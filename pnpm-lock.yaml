@@ -1559,6 +1559,12 @@ importers:
         specifier: workspace:^
         version: link:../../rspeedy/core
 
+  packages/lynx/element-template-runtime:
+    dependencies:
+      '@lynx-js/lynx-runtime':
+        specifier: workspace:*
+        version: link:../lynx-runtime
+
   packages/lynx/gesture-runtime:
     devDependencies:
       '@lynx-js/react':
@@ -1600,6 +1606,9 @@ importers:
 
   packages/react:
     dependencies:
+      '@lynx-js/element-template-runtime':
+        specifier: workspace:*
+        version: link:../lynx/element-template-runtime
       preact:
         specifier: catalog:lynxjs
         version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
@@ -1667,6 +1676,10 @@ importers:
         version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
 
   packages/react/runtime:
+    dependencies:
+      '@lynx-js/element-template-runtime':
+        specifier: workspace:*
+        version: link:../../lynx/element-template-runtime
     devDependencies:
       '@lynx-js/react':
         specifier: workspace:*

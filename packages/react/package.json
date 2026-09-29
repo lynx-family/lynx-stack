@@ -228,6 +228,7 @@
     "build": "rslib"
   },
   "dependencies": {
+    "@lynx-js/element-template-runtime": "workspace:*",
     "preact": "catalog:lynxjs"
   },
   "devDependencies": {

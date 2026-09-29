@@ -2,6 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { createElementTemplateHost } from '@lynx-js/element-template-runtime';
+import type { ElementTemplateHost as SharedElementTemplateHost } from '@lynx-js/element-template-runtime';
+
 import type { SerializableValue } from '../../protocol/types.js';
 import type { ETListItemPlatformInfo } from '../list/list.js';
 
@@ -17,7 +20,11 @@ export function __etHost(
   // Set only when the compiler proves no attribute adapters or list-item setup are needed.
   plain?: true,
 ): ElementTemplateHost {
-  const host: ElementTemplateHost = {
+  return createElementTemplateHost<
+    SerializableValue,
+    unknown,
+    ETListItemPlatformInfo
+  >(
     type,
     templateKey,
     bundleUrl,
@@ -26,26 +33,12 @@ export function __etHost(
     slotChildren,
     __listItemPlatformInfo,
     plain,
-  };
-  if (__DEV__) {
-    // Preact debug formats host props in diagnostics such as duplicate keys.
-    // The renderer consumes the compact fields in both development and production.
-    host.props = { attributeSlots, children: slotChildren };
-  }
-  return host;
+    { includeDebugProps: Boolean(__DEV__) },
+  );
 }
 
-export interface ElementTemplateHost {
-  plain?: true | undefined;
-  type: string;
-  templateKey: string;
-  bundleUrl: string;
-  key: unknown;
-  attributeSlots: SerializableValue[] | undefined;
-  slotChildren: unknown[] | undefined;
-  __listItemPlatformInfo?: ETListItemPlatformInfo | undefined;
-  props?: {
-    attributeSlots: SerializableValue[] | undefined;
-    children: unknown[] | undefined;
-  };
-}
+export type ElementTemplateHost = SharedElementTemplateHost<
+  SerializableValue,
+  unknown,
+  ETListItemPlatformInfo
+>;

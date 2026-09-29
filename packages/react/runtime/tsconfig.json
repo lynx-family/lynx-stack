@@ -27,4 +27,7 @@
     "types/types.d.ts",
     "types/internal-preact.d.ts",
   ],
+  "references": [
+    { "path": "../../lynx/element-template-runtime/tsconfig.build.json" },
+  ],
 }

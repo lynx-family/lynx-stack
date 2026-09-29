@@ -21,6 +21,9 @@
     "test:et": "vitest run -c __test__/element-template/vitest.config.ts --coverage",
     "test:snapshot": "vitest run --coverage __test__/snapshot __test__/worklet-runtime __test__/guardrails"
   },
+  "dependencies": {
+    "@lynx-js/element-template-runtime": "workspace:*"
+  },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-signals": "workspace:*",
