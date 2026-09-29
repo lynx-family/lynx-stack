@@ -87,6 +87,9 @@ export interface DataProcessors {
     };
 }
 
+// @public
+export function defineMainThreadObjectType<I, O extends object>(definition: MainThreadObjectTypeDefinition<I, O>): MainThreadObjectType<I, O>;
+
 export { forwardRef }
 
 // @public
@@ -128,6 +131,23 @@ export { lazy }
 export interface Lynx {
     registerDataProcessors: (dataProcessorDefinition?: DataProcessorDefinition) => void;
     triggerGlobalEventFromLepus: (eventName: string, params: any) => void;
+}
+
+// @public
+export abstract class MainThreadObjectHandle<I, O extends object> {
+    get creationPayload(): Readonly<I>;
+}
+
+// @public
+export interface MainThreadObjectType<I, O extends object> {
+    readonly downcast: (value: unknown) => MainThreadObjectHandle<I, O> | undefined;
+    readonly type: string;
+}
+
+// @public
+export interface MainThreadObjectTypeDefinition<I, O extends object> {
+    readonly create: (initialValue: I) => O;
+    readonly type: string;
 }
 
 // @public
@@ -201,6 +221,9 @@ export const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) =>
 
 // @public
 export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(eventName: string, listener: T): void;
+
+// @public
+export function useMainThreadObject<I, O extends object>(objectType: MainThreadObjectType<I, O>, initialValue: I): O;
 
 // @public
 export function useMainThreadRef<T>(initValue: T): MainThreadRef<T>;

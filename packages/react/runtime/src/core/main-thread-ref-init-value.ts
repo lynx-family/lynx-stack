@@ -2,21 +2,29 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { isMtsEnabled } from './mts-capability.js';
+import type { MainThreadRefInitValuePatch } from '@lynx-js/react/worklet-runtime/bindings';
 
-export type MainThreadRefInitValuePatch = [id: number, value: unknown][];
+import { isMtsEnabled } from './mts-capability.js';
 
 let mainThreadRefInitValuePatch: MainThreadRefInitValuePatch = [];
 
 /**
  * @internal
  */
-export function addMainThreadRefInitValue(id: number, value: unknown): void {
+export function addMainThreadRefInitValue(
+  id: number,
+  value: unknown,
+  type?: string,
+): void {
   if (!isMtsEnabled()) {
     return;
   }
 
-  mainThreadRefInitValuePatch.push([id, value]);
+  mainThreadRefInitValuePatch.push(
+    type === undefined
+      ? [id, value]
+      : [id, value, type],
+  );
 }
 
 /**

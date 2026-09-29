@@ -119,6 +119,16 @@ impl Visit for BindingCollector {
     }
   }
 
+  fn visit_method_prop(&mut self, node: &MethodProp) {
+    if self.should_enter_ctx {
+      self.should_enter_ctx = false;
+      self.enter_next_block = true;
+      // An object method's key is evaluated in the enclosing scope. Only the
+      // function parameters and body belong to the method's local scope.
+      node.function.visit_with(self);
+    }
+  }
+
   fn visit_catch_clause(&mut self, node: &CatchClause) {
     if self.should_enter_ctx {
       self.should_enter_ctx = false;
