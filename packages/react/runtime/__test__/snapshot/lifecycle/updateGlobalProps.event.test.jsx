@@ -9,6 +9,10 @@ import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit'
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
 import { globalEnvManager } from '../utils/envManager';
 
+vi.hoisted(() => {
+  globalThis.__GLOBAL_PROPS_MODE__ = 'event';
+});
+
 beforeAll(() => {
   replaceCommitHook();
 });

@@ -909,6 +909,32 @@ describe('Config', () => {
       expect(firstScreenSyncTiming).toBe('immediately')
     })
 
+    test('experimental_lynxGroupModuleSharing is passed to ReactWebpackPlugin', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx({ experimental_lynxGroupModuleSharing: true }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      const ReactWebpackPlugin = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        p?.constructor.name === 'ReactWebpackPlugin'
+      )
+
+      // @ts-expect-error private field
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const { experimental_lynxGroupModuleSharing } =
+        ReactWebpackPlugin?.options ?? {}
+      expect(experimental_lynxGroupModuleSharing).toBe(true)
+    })
+
     test('globalPropsMode defaults to "reactive"', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
       const rsbuild = await createRspeedy({

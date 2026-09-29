@@ -3,23 +3,24 @@
 // LICENSE file in the root directory of this source tree.
 
 import { resetElementTemplatePatchListener } from './patch-listener.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 import { destroyAllElementTemplateListStates } from '../runtime/list/list.js';
 import { resetElementTemplateMainThreadBackgroundFunctionRuntime } from '../runtime/template/main-thread-background-function.js';
 import { clearMainThreadDynamicAttrState } from '../runtime/template/main-thread-dynamic-attr-state.js';
 import { elementTemplateRegistry } from '../runtime/template/registry.js';
 
 export function installOnMtsDestruction(): void {
-  lynx.getNative?.().addEventListener('__DestroyLifetime', onMtsDestruction);
+  getPageLynx().getNative?.().addEventListener('__DestroyLifetime', onMtsDestruction);
 }
 
 export function onMtsDestruction(): void {
-  const performance = lynx.performance;
+  const performance = getPageLynx().performance;
   performance?.profileStart?.('ReactLynx::onMtsDestruction');
   try {
     destroyElementTemplateMainThreadRuntime();
   } finally {
     performance?.profileEnd?.();
-    lynx.getNative?.().removeEventListener('__DestroyLifetime', onMtsDestruction);
+    getPageLynx().getNative?.().removeEventListener('__DestroyLifetime', onMtsDestruction);
   }
 }
 

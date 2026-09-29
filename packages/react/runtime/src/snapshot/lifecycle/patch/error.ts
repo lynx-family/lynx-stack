@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { getPageLynx } from '../../../core/page-lynx.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot/backgroundSnapshot.js';
 import { snapshotManager } from '../../snapshot/definition.js';
 
@@ -17,10 +18,10 @@ export interface CtxNotFoundData {
 
 export function sendCtxNotFoundEventToBackground(id: number): void {
   /* v8 ignore next 3 */
-  if (!lynx.getJSContext) {
+  if (!getPageLynx().getJSContext) {
     throw new Error(errorMsg);
   }
-  lynx.getJSContext().dispatchEvent({
+  getPageLynx().getJSContext().dispatchEvent({
     type: ctxNotFoundType,
     data: {
       id,
@@ -47,18 +48,18 @@ export function reportCtxNotFound(data: CtxNotFoundData): void {
   if (__DEV__) {
     message += '. You can set environment variable `REACT_ALOG=true` and restart your dev server for troubleshooting.';
   }
-  lynx.reportError(new Error(message));
+  getPageLynx().reportError(new Error(message));
 }
 
 export function addCtxNotFoundEventListener(): void {
   ctxNotFoundEventListener = (e) => {
     reportCtxNotFound(e.data as CtxNotFoundData);
   };
-  lynx.getCoreContext?.().addEventListener(ctxNotFoundType, ctxNotFoundEventListener);
+  getPageLynx().getCoreContext?.().addEventListener(ctxNotFoundType, ctxNotFoundEventListener);
 }
 
 export function removeCtxNotFoundEventListener(): void {
-  const coreContext = lynx.getCoreContext?.();
+  const coreContext = getPageLynx().getCoreContext?.();
   if (coreContext && ctxNotFoundEventListener) {
     coreContext.removeEventListener(ctxNotFoundType, ctxNotFoundEventListener);
     ctxNotFoundEventListener = null;

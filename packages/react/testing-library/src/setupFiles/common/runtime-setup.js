@@ -5,7 +5,10 @@ import { deinitGlobalSnapshotPatch } from '../../../../runtime/lib/snapshot/life
 import { injectUpdateMainThread } from '../../../../runtime/lib/snapshot/lifecycle/patch/updateMainThread.js';
 import { injectUpdateMTRefInitValue } from '../../../../runtime/lib/snapshot/worklet/ref/updateInitValue.js';
 import { injectCalledByNative } from '../../../../runtime/lib/snapshot/lynx/calledByNative.js';
-import { flushDelayedLifecycleEvents, injectTt } from '../../../../runtime/lib/snapshot/lynx/tt.js';
+import {
+  flushDelayedLifecycleEvents,
+  registerAppCallbacks,
+} from '../../../../runtime/lib/snapshot/lynx/appCallbacks.js';
 import { initElementPAPICallAlog } from '../../../../runtime/lib/snapshot/alog/elementPAPICall.js';
 import { addCtxNotFoundEventListener } from '../../../../runtime/lib/snapshot/lifecycle/patch/error.js';
 import { setRoot } from '../../../../runtime/lib/root.js';
@@ -87,16 +90,7 @@ globalThis.onInjectBackgroundThreadGlobals = (target) => {
   setupBackgroundDocument(target._document);
   target.globalPipelineOptions = undefined;
 
-  // TODO: can we only inject to target(mainThread.globalThis) instead of globalThis?
-  // packages/react/runtime/src/lynx.ts
-  // point `lynx` at the target thread so injectTt assigns onto its app object
-  const oldLynx = globalThis.lynx;
-  globalThis.lynx = target.lynx;
-  try {
-    injectTt();
-  } finally {
-    globalThis.lynx = oldLynx;
-  }
+  registerAppCallbacks(target.lynx);
 
   // re-init global snapshot patch to undefined
   deinitGlobalSnapshotPatch();
@@ -113,7 +107,7 @@ globalThis.onResetLynxTestingEnv = () => {
   lynxTestingEnv.switchToMainThread();
   initEventListeners();
   lynxTestingEnv.switchToBackgroundThread();
-  injectTt();
+  registerAppCallbacks(lynx);
   addCtxNotFoundEventListener();
 };
 

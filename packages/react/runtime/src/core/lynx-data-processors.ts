@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { DataProcessorDefinition, InitData, InitDataRaw } from '../lynx-api.js';
+import { getPageLynx } from './page-lynx.js';
 import { profileEnd, profileStart } from '../shared/profile.js';
 
 // `true` only while the default data processor is running. `defaultDataProcessor` is
@@ -41,7 +42,7 @@ export function createProcessData(
         }
       }
     } catch (error: unknown) {
-      lynx.reportError(error as Error);
+      getPageLynx().reportError(error as Error);
       result = {};
     }
 

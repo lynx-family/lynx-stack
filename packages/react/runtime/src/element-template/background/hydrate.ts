@@ -14,6 +14,7 @@ import {
 import type { BackgroundElementTemplateInstance } from './instance.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
 import { isMainThreadFunction } from '../../core/main-thread-function.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { hydrationMap } from '../hydration-map.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
@@ -137,7 +138,7 @@ function hydrateInstance(
     return hydrateCompiledInstance(serialized, instance);
   }
   if (__DEV__ && !isSerializedTypedListNode(serialized)) {
-    lynx.reportError(
+    getPageLynx().reportError(
       new Error(`ElementTemplate hydrate does not support serialized typed node '${serialized.tag}'.`),
     );
     return false;
@@ -231,13 +232,13 @@ function hydrateListInstance(
   instance: BackgroundListElementTemplateInstance,
 ): boolean {
   if (__DEV__ && (serialized.childSlots?.length ?? 0) > 0) {
-    lynx.reportError(new Error('ElementTemplate hydrate typed list does not support childSlots.'));
+    getPageLynx().reportError(new Error('ElementTemplate hydrate typed list does not support childSlots.'));
     return false;
   }
 
   const listChildren = getSerializedTypedListChildren(serialized);
   if (__DEV__ && !Array.isArray(listChildren)) {
-    lynx.reportError(new Error('ElementTemplate hydrate typed list requires options.listChildren.'));
+    getPageLynx().reportError(new Error('ElementTemplate hydrate typed list requires options.listChildren.'));
     return false;
   }
 
@@ -455,19 +456,19 @@ function collectRemovableSerializedSubtreeHandleIdsInto(
   }
 
   if (__DEV__ && !isSerializedTypedListNode(serialized)) {
-    lynx.reportError(
+    getPageLynx().reportError(
       new Error(`ElementTemplate hydrate does not support serialized typed node '${serialized.tag}'.`),
     );
     return false;
   }
   const serializedList = serialized as SerializedTypedListNode;
   if (__DEV__ && (serializedList.childSlots?.length ?? 0) > 0) {
-    lynx.reportError(new Error('ElementTemplate hydrate typed list does not support childSlots.'));
+    getPageLynx().reportError(new Error('ElementTemplate hydrate typed list does not support childSlots.'));
     return false;
   }
   const listChildren = getSerializedTypedListChildren(serializedList);
   if (__DEV__ && !Array.isArray(listChildren)) {
-    lynx.reportError(new Error('ElementTemplate hydrate typed list requires options.listChildren.'));
+    getPageLynx().reportError(new Error('ElementTemplate hydrate typed list requires options.listChildren.'));
     return false;
   }
   for (const child of listChildren) {
@@ -486,7 +487,7 @@ function getRemovableSerializedHandleId(serialized: SerializedEtNode): number | 
       || !Number.isInteger(handleId)
       || handleId === ELEMENT_TEMPLATE_PAGE_HANDLE_ID)
   ) {
-    lynx.reportError(
+    getPageLynx().reportError(
       new Error(`ElementTemplate hydrate remove received invalid uid ${String(handleId)}.`),
     );
     return null;
@@ -585,7 +586,7 @@ function bindHydrationHandleId(
       return true;
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
-      lynx.reportError(
+      getPageLynx().reportError(
         new Error(`ElementTemplate hydrate received invalid uid ${handleId} for '${templateKey}': ${reason}`),
       );
       return false;

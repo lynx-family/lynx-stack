@@ -4,6 +4,7 @@
 import { onWorkletCtxUpdate, retainWorkletCtx } from '@lynx-js/react/worklet-runtime/bindings';
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
+import { getPageLynx } from '../../core/page-lynx.js';
 import { describeInvalidValue } from '../debug/describeInvalidValue.js';
 import { isMainThreadHydrating } from '../lifecycle/patch/isMainThreadHydrating.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
@@ -29,7 +30,7 @@ function reportInvalidWorkletValue(
   const message = `"${eventAttr}" on <${elementTag}> (snapshot ${elementId} "${snapshotName}") expected `
     + 'a main-thread function but received '
     + `${describeInvalidValue(value)}. Did you forget to add a "main thread" directive to the handler?`;
-  lynx.reportError(new Error(message));
+  getPageLynx().reportError(new Error(message));
 }
 
 function updateWorkletEvent(

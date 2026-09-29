@@ -41,6 +41,7 @@ export const {
   __page,
   __pageId,
   __root,
+  createRoot,
   createSnapshot,
   getRuntimeVersion,
   loadDynamicJS,

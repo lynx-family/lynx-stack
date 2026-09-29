@@ -6,6 +6,7 @@ import type { RefObject } from 'react';
 import { useMemo } from './hooks/react.js';
 import { allocateMainThreadRefId, clearMainThreadRefIdsForTesting } from './main-thread-ref-id.js';
 import { addMainThreadRefInitValue } from './main-thread-ref-init-value.js';
+import { getPageLynx } from './page-lynx.js';
 import { WorkletEvents } from '../worklet-runtime/bindings/events.js';
 import type { WorkletRefImpl } from '../worklet-runtime/bindings/types.js';
 
@@ -51,8 +52,8 @@ export class MainThreadRef<T> {
     if (__JS__) {
       addMainThreadRefInitValue(this._wvid, initValue);
       const id = this._wvid;
-      this._lifecycleObserver = lynx.getNativeApp().createJSObjectDestructionObserver?.(() => {
-        lynx.getCoreContext().dispatchEvent({
+      this._lifecycleObserver = getPageLynx().getNativeApp().createJSObjectDestructionObserver?.(() => {
+        getPageLynx().getCoreContext().dispatchEvent({
           type: WorkletEvents.releaseWorkletRef,
           data: {
             id,
