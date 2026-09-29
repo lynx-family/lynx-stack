@@ -100,8 +100,9 @@ export abstract class MainThreadObjectHandle<I, O extends object> {
       );
 
       const id = this._wvid;
-      this._releaseObserver = getPageLynx().getNativeApp().createJSObjectDestructionObserver?.(() => {
-        getPageLynx().getCoreContext?.().dispatchEvent({
+      const pageLynx = getPageLynx();
+      this._releaseObserver = pageLynx.getNativeApp().createJSObjectDestructionObserver?.(() => {
+        pageLynx.getCoreContext?.().dispatchEvent({
           type: WorkletEvents.releaseWorkletRef,
           data: { id },
         });

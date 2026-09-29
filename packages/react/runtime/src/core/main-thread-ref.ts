@@ -52,8 +52,9 @@ export class MainThreadRef<T> {
     if (__JS__) {
       addMainThreadRefInitValue(this._wvid, initValue);
       const id = this._wvid;
-      this._lifecycleObserver = getPageLynx().getNativeApp().createJSObjectDestructionObserver?.(() => {
-        getPageLynx().getCoreContext().dispatchEvent({
+      const pageLynx = getPageLynx();
+      this._lifecycleObserver = pageLynx.getNativeApp().createJSObjectDestructionObserver?.(() => {
+        pageLynx.getCoreContext().dispatchEvent({
           type: WorkletEvents.releaseWorkletRef,
           data: {
             id,

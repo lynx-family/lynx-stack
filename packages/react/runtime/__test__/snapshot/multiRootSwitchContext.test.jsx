@@ -292,3 +292,271 @@ describe('createRoot app callbacks', () => {
     expect(renders).toEqual({ A: 1, B: 0 });
   });
 });
+
+function fakeContext() {
+  const listeners = new Map();
+  return {
+    addEventListener: vi.fn((type, fn) => {
+      if (!listeners.has(type)) listeners.set(type, new Set());
+      listeners.get(type).add(fn);
+    }),
+    removeEventListener: vi.fn((type, fn) => {
+      listeners.get(type)?.delete(fn);
+    }),
+    dispatchEvent: vi.fn(),
+    count: (type) => listeners.get(type)?.size ?? 0,
+    emit: (type, data) => {
+      for (const fn of listeners.get(type) ?? []) fn({ type, data });
+    },
+  };
+}
+
+function stubRuntimePage(from) {
+  const page = stubPage(from);
+  const coreContext = fakeContext();
+  const nativeApp = { callLepusMethod: vi.fn(), createJSObjectDestructionObserver: vi.fn((cb) => cb) };
+  const selectorQuery = { select: vi.fn(() => ({ invoke: () => ({ exec: vi.fn() }) })) };
+  Object.assign(page.pageLynx, {
+    getCoreContext: () => coreContext,
+    getNativeApp: () => nativeApp,
+    reportError: vi.fn(),
+    createSelectorQuery: vi.fn(() => selectorQuery),
+    performance: {
+      _generatePipelineOptions: () => ({ pipelineID: `pipeline-${from}` }),
+      _onPipelineStart: vi.fn(),
+      _bindPipelineIdWithTimingFlag: vi.fn(),
+      _markTiming: vi.fn(),
+    },
+  });
+  return { ...page, coreContext, nativeApp, selectorQuery };
+}
+
+describe('createRoot page isolation', () => {
+  afterEach(() => {
+    delete globalThis.__LYNX_GROUP_MODULE_SHARING__;
+    vi.resetModules();
+  });
+
+  it('reports a missing snapshot ctx on the page whose main thread sent it', async () => {
+    globalEnvManager.switchToBackground();
+    const { createRoot } = await importWithSharing();
+    const { ctxNotFoundType } = await import('../../src/snapshot/lifecycle/patch/error');
+    const a = stubRuntimePage('A');
+    const b = stubRuntimePage('B');
+    createRoot(a.pageLynx);
+    createRoot(b.pageLynx);
+
+    expect(a.coreContext.count(ctxNotFoundType)).toBe(1);
+    expect(b.coreContext.count(ctxNotFoundType)).toBe(1);
+
+    b.coreContext.emit(ctxNotFoundType, { id: 42 });
+    expect(b.pageLynx.reportError).toHaveBeenCalledTimes(1);
+    expect(a.pageLynx.reportError).not.toHaveBeenCalled();
+
+    a.app.callDestroyLifetimeFun();
+    expect(a.coreContext.count(ctxNotFoundType)).toBe(0);
+    expect(b.coreContext.count(ctxNotFoundType)).toBe(1);
+  });
+
+  it('gives class components and withInitDataInState the app and data of their own page', async () => {
+    globalEnvManager.switchToBackground();
+    const { createRoot } = await importWithSharing();
+    const { Component, withInitDataInState } = await import('../../src/index');
+    const seen = {};
+    class Page extends Component {
+      render() {
+        seen[this.props.name] = { emitter: this.GlobalEventEmitter, state: this.state };
+        return null;
+      }
+    }
+    const WithData = withInitDataInState(Page);
+    const a = stubRuntimePage('A');
+    const b = stubRuntimePage('B');
+    a.app.GlobalEventEmitter = { emit() {}, addListener() {}, removeListener() {} };
+    b.app.GlobalEventEmitter = { emit() {}, addListener() {}, removeListener() {} };
+    a.pageLynx.getJSModule = () => a.app.GlobalEventEmitter;
+    b.pageLynx.getJSModule = () => b.app.GlobalEventEmitter;
+    createRoot(a.pageLynx).render(<WithData name='A' />);
+    createRoot(b.pageLynx).render(<WithData name='B' />);
+
+    expect(seen.A.emitter).toBe(a.app.GlobalEventEmitter);
+    expect(seen.B.emitter).toBe(b.app.GlobalEventEmitter);
+    expect(seen.A.state).toEqual({ from: 'A' });
+    expect(seen.B.state).toEqual({ from: 'B' });
+  });
+});
+
+describe('per-page runtime state', () => {
+  let rc;
+  let a;
+  let b;
+  let ctxA;
+  let ctxB;
+
+  beforeEach(async () => {
+    globalEnvManager.switchToBackground();
+    rc = await import('../../src/render-context');
+    a = stubRuntimePage('A');
+    b = stubRuntimePage('B');
+    ctxA = rc.createRootContext(a.pageLynx);
+    ctxB = rc.createRootContext(b.pageLynx);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('keeps the reload version of each page apart', async () => {
+    const { getReloadVersion, increaseReloadVersion } = await import('../../src/core/reload-version');
+    rc.runInRootContext(ctxB, () => {
+      increaseReloadVersion();
+      increaseReloadVersion();
+    });
+    rc.runInRootContext(ctxA, () => increaseReloadVersion());
+
+    expect(rc.runInRootContext(ctxA, getReloadVersion)).toBe(1);
+    expect(rc.runInRootContext(ctxB, getReloadVersion)).toBe(2);
+  });
+
+  it('delays UI ops until the owning page hydrates and runs them against its lynx', async () => {
+    const { RefProxy, runDelayedUiOps } = await import('../../src/snapshot/lifecycle/ref/delay');
+    rc.runInRootContext(ctxA, () => {
+      new RefProxy([1, 0]).invoke({ method: 'boundingClientRect' }).exec();
+    });
+
+    rc.runInRootContext(ctxB, runDelayedUiOps);
+    expect(a.pageLynx.createSelectorQuery).not.toHaveBeenCalled();
+    expect(b.pageLynx.createSelectorQuery).not.toHaveBeenCalled();
+
+    rc.runInRootContext(ctxB, () => {
+      new RefProxy([2, 0]).invoke({ method: 'boundingClientRect' }).exec();
+    });
+    expect(b.pageLynx.createSelectorQuery).toHaveBeenCalledTimes(1);
+
+    rc.runInRootContext(ctxA, runDelayedUiOps);
+    expect(a.pageLynx.createSelectorQuery).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps pipeline timing and flush options per page', async () => {
+    const perf = await import('../../src/core/performance');
+    const { globalCommitContext } = await import('../../src/core/commit-context');
+
+    rc.runInRootContext(ctxA, () => {
+      perf.beginPipeline(true, perf.PipelineOrigins.updateTriggeredByBts);
+      globalCommitContext.flushOptions.triggerDataUpdated = true;
+    });
+
+    rc.runInRootContext(ctxB, () => {
+      expect(perf.globalPipelineOptions).toBeUndefined();
+      expect(globalCommitContext.flushOptions).toEqual({});
+      perf.markTiming('diffVdomStart', true);
+    });
+    expect(b.pageLynx.performance._markTiming).not.toHaveBeenCalled();
+
+    rc.runInRootContext(ctxA, () => {
+      perf.markTiming('diffVdomStart', true);
+      expect(globalCommitContext.flushOptions).toEqual({ triggerDataUpdated: true });
+    });
+    expect(a.pageLynx.performance._markTiming).toHaveBeenCalledWith('pipeline-A', 'diffVdomStart');
+  });
+
+  it('runs only the destroy tasks and takes only the main thread ref init values of its page', async () => {
+    const { registerDestroyTask, runDestroyTasks } = await import('../../src/core/runtime-destroy');
+    const { addMainThreadRefInitValue, takeMainThreadRefInitValuePatch } = await import(
+      '../../src/core/main-thread-ref-init-value'
+    );
+    const tasks = { A: vi.fn(), B: vi.fn() };
+    vi.stubGlobal('SystemInfo', { ...globalThis.SystemInfo, lynxSdkVersion: '999.999' });
+    rc.runInRootContext(ctxA, () => {
+      registerDestroyTask(tasks.A);
+      addMainThreadRefInitValue(1, 'A');
+    });
+    rc.runInRootContext(ctxB, () => {
+      registerDestroyTask(tasks.B);
+      addMainThreadRefInitValue(2, 'B');
+    });
+
+    rc.runInRootContext(ctxA, runDestroyTasks);
+    expect(tasks.A).toHaveBeenCalledTimes(1);
+    expect(tasks.B).not.toHaveBeenCalled();
+    expect(rc.runInRootContext(ctxB, takeMainThreadRefInitValuePatch)).toEqual([[2, 'B']]);
+  });
+
+  it('resolves runOnMainThread return values on the page that called it', async () => {
+    const { onFunctionCall } = await import('../../src/core/thread-function-call/return-value');
+    const { WorkletEvents } = await import('../../src/worklet-runtime/bindings/events');
+    const resolved = { A: vi.fn(), B: vi.fn() };
+    const idA = rc.runInRootContext(ctxA, () => onFunctionCall(resolved.A));
+    const idB = rc.runInRootContext(ctxB, () => onFunctionCall(resolved.B));
+
+    expect(a.coreContext.count(WorkletEvents.FunctionCallRet)).toBe(1);
+    expect(b.coreContext.count(WorkletEvents.FunctionCallRet)).toBe(1);
+
+    b.coreContext.emit(WorkletEvents.FunctionCallRet, JSON.stringify({ resolveId: idB, returnValue: 'b' }));
+    a.coreContext.emit(WorkletEvents.FunctionCallRet, JSON.stringify({ resolveId: idA, returnValue: 'a' }));
+    expect(resolved.A).toHaveBeenCalledWith('a');
+    expect(resolved.B).toHaveBeenCalledWith('b');
+  });
+
+  it('runs runOnBackground calls from each page and replies to that page', async () => {
+    const { registerBackgroundFunctionCtx } = await import('../../src/core/background-function/run-on-background');
+    const { WorkletEvents } = await import('../../src/worklet-runtime/bindings/events');
+    const fnA = vi.fn(() => 'a');
+    const fnB = vi.fn(() => 'b');
+    const workletA = { _jsFn: { f: { _jsFnId: 1, _fn: fnA } } };
+    const workletB = { _jsFn: { f: { _jsFnId: 1, _fn: fnB } } };
+    rc.runInRootContext(ctxA, () => registerBackgroundFunctionCtx(workletA));
+    rc.runInRootContext(ctxB, () => registerBackgroundFunctionCtx(workletB));
+
+    b.coreContext.emit(
+      WorkletEvents.runOnBackground,
+      JSON.stringify({ obj: { _execId: workletB._execId, _jsFnId: 1 }, params: [], resolveId: 7 }),
+    );
+
+    expect(fnB).toHaveBeenCalledTimes(1);
+    expect(fnA).not.toHaveBeenCalled();
+    expect(b.coreContext.dispatchEvent).toHaveBeenCalledWith({
+      type: WorkletEvents.FunctionCallRet,
+      data: JSON.stringify({ resolveId: 7, returnValue: 'b' }),
+    });
+    expect(a.coreContext.dispatchEvent).not.toHaveBeenCalled();
+  });
+
+  it('releases a main thread ref through the page that created it', async () => {
+    const { MainThreadRef } = await import('../../src/core/main-thread-ref');
+    const { WorkletEvents } = await import('../../src/worklet-runtime/bindings/events');
+    const ref = rc.runInRootContext(ctxA, () => new MainThreadRef(0));
+
+    rc.runInRootContext(ctxB, () => ref._lifecycleObserver());
+
+    expect(a.coreContext.dispatchEvent).toHaveBeenCalledWith({
+      type: WorkletEvents.releaseWorkletRef,
+      data: { id: ref._wvid },
+    });
+    expect(b.coreContext.dispatchEvent).not.toHaveBeenCalled();
+  });
+
+  it('keeps portals queued before hydration on their own page', async () => {
+    const portals = await import('../../src/snapshot/lynx/portalsPending');
+    rc.runInRootContext(ctxB, () => portals.pendingInsertBefore.push('container', 'child', undefined));
+
+    rc.runInRootContext(ctxA, () => expect(portals.pendingInsertBefore).toEqual([]));
+    rc.runInRootContext(ctxB, () => expect(portals.pendingInsertBefore).toEqual(['container', 'child', undefined]));
+  });
+
+  it('restores the previous context after a bound callback and after a render flush', async () => {
+    const bound = rc.runInRootContext(ctxA, () => rc.bindRootContext(() => rc.getCurrentRootContext()));
+    expect(bound()).toBe(ctxA);
+    expect(rc.getCurrentRootContext()).toBe(rc.defaultRootContext);
+
+    const { installContextSwitchHook } = await import('../../src/snapshot/lifecycle/contextSwitchHook');
+    installContextSwitchHook();
+    await new Promise((resolve) => {
+      options.debounceRendering(() => {
+        rc.switchRootContext(ctxB);
+        resolve();
+      });
+    });
+    expect(rc.getCurrentRootContext()).toBe(rc.defaultRootContext);
+  });
+});

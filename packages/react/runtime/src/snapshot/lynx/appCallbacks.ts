@@ -13,7 +13,7 @@ import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../core/thread-function-call/main-thread.js';
-import { getCurrentRootContext, switchRootContext } from '../../render-context.js';
+import { bindRootContext, getCurrentRootContext, switchRootContext } from '../../render-context.js';
 import { __root } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { CHILDREN } from '../../shared/render-constants.js';
@@ -40,32 +40,19 @@ import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.j
 
 export { runWithForce };
 
-function bindContext<T extends unknown[], R>(fn: (...args: T) => R): (...args: T) => R {
-  if (typeof __LYNX_GROUP_MODULE_SHARING__ === 'undefined' || !__LYNX_GROUP_MODULE_SHARING__) {
-    return fn;
-  }
-  const ctx = getCurrentRootContext();
-  return (...args: T) => {
-    switchRootContext(ctx);
-    return fn(...args);
-  };
-}
-
 function registerAppCallbacks(pageLynx: typeof lynx): void {
   const app = pageLynx.getApp();
-  app.OnLifecycleEvent = bindContext(onLifecycleEvent);
-  app.publishEvent = bindContext(delayedPublishEvent);
-  app.publicComponentEvent = bindContext(delayedPublicComponentEvent);
-  app.callDestroyLifetimeFun = bindContext(() => {
-    if (typeof __LYNX_GROUP_MODULE_SHARING__ === 'undefined' || !__LYNX_GROUP_MODULE_SHARING__) {
-      removeCtxNotFoundEventListener();
-    }
+  app.OnLifecycleEvent = bindRootContext(onLifecycleEvent);
+  app.publishEvent = bindRootContext(delayedPublishEvent);
+  app.publicComponentEvent = bindRootContext(delayedPublicComponentEvent);
+  app.callDestroyLifetimeFun = bindRootContext(() => {
+    removeCtxNotFoundEventListener();
     destroyWorklet();
     destroyBackground();
   });
-  app.updateGlobalProps = bindContext(updateGlobalProps);
-  app.updateCardData = bindContext(updateCardData);
-  app.onAppReload = bindContext(reloadBackground);
+  app.updateGlobalProps = bindRootContext(updateGlobalProps);
+  app.updateCardData = bindRootContext(updateCardData);
+  app.onAppReload = bindRootContext(reloadBackground);
   app.processCardConfig = () => {
     // used to updateTheme, no longer rely on this function
   };
@@ -173,8 +160,8 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
 
       {
         const app = getPageLynx().getApp();
-        app.publishEvent = bindContext(publishEvent);
-        app.publicComponentEvent = bindContext(publicComponentEvent);
+        app.publishEvent = bindRootContext(publishEvent);
+        app.publicComponentEvent = bindRootContext(publicComponentEvent);
       }
 
       // console.debug("********** After hydration:");
@@ -318,7 +305,7 @@ function updateGlobalProps(newData: Record<string, any>): void {
   updateGlobalPropsCore(newData, {
     // Snapshot force render consumes any sync setState dirty flags produced by
     // onGlobalPropsChanged listeners, avoiding an extra diff pass.
-    forceRerender: bindContext(() => {
+    forceRerender: bindRootContext(() => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       runWithForce(() => render(__root.__jsx, __root as any));
     }),

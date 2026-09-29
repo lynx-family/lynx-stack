@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { onRootContextSwitch } from '../../render-context.js';
 import { getPageLynx } from '../page-lynx.js';
 
 // Inlined rather than imported from `snapshot/` so this `core/` module stays
@@ -20,7 +21,14 @@ const PREPARE_LAZY_BUNDLE_MTS = 'rLynxPrepareLazyBundleMTS';
 // without re-fetching or re-triggering the main-thread prepare. Only populated
 // on success — a failed load stays out of the cache and can be retried, exactly
 // like `prepareLazyBundleMTS`'s main-thread cache.
-const fetchBundleBgCache = new Map<string, unknown>();
+let fetchBundleBgCache = new Map<string, unknown>();
+
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) => ctx.lazyBundleCache = fetchBundleBgCache,
+    (ctx) => fetchBundleBgCache = ctx.lazyBundleCache ??= new Map(),
+  );
+}
 
 /**
  * To make code below works
@@ -81,12 +89,12 @@ export type LazyBundleMode = 'sync' | 'async';
 // set to `entry` (restored after). The bundle's wrapper reads it once as
 // `g.globDynamicComponentEntry || '__Card__'`, so without this its modules — and
 // any nested `import()` it triggers — would resolve against the caller's host.
-function loadBackgroundBundle<T>(bundleName: string, entry: string): T {
+function loadBackgroundBundle<T>(pageLynx: typeof lynx, bundleName: string, entry: string): T {
   const g = globalThis as { globDynamicComponentEntry?: string | undefined };
   const previous = g.globDynamicComponentEntry;
   g.globDynamicComponentEntry = entry;
   try {
-    return getPageLynx().loadScript<T>(SECTION_BACKGROUND, { bundleName });
+    return pageLynx.loadScript<T>(SECTION_BACKGROUND, { bundleName });
   } finally {
     g.globDynamicComponentEntry = previous;
   }
@@ -149,12 +157,13 @@ export const loadLazyBundle: <
         );
       }
       const resolver = withSyncResolvers<T>();
+      const pageLynx = getPageLynx();
 
       const callback: (result: { code: number; detail: { schema: string } }) => void = result => {
         const { code, detail } = result;
         if (code === 0) {
           const { schema } = detail;
-          const exports = getPageLynx().getApp().getDynamicComponentExports(schema);
+          const exports = pageLynx.getApp().getDynamicComponentExports(schema);
           // `code === 0` means that the lazy bundle has been successfully parsed. However,
           // its javascript files may still fail to run, which would prevent the retrieval of the exports object.
           if (exports) {
@@ -168,7 +177,6 @@ export const loadLazyBundle: <
         e.cause = JSON.stringify(result);
         resolver.reject(e);
       };
-      const pageLynx = getPageLynx();
       if (typeof pageLynx.QueryComponent === 'function') {
         pageLynx.QueryComponent(source, callback);
       } else {
@@ -232,7 +240,9 @@ export const loadLazyBundle: <
       r.then = makeSyncThen(result);
       return r;
     } else if (__JS__) {
-      const cached = fetchBundleBgCache.get(source);
+      const pageLynx = getPageLynx();
+      const cache = fetchBundleBgCache;
+      const cached = cache.get(source);
       if (cached !== undefined) {
         const r: Promise<T> = Promise.resolve(cached as T);
         r.then = makeSyncThen(cached as T);
@@ -241,7 +251,7 @@ export const loadLazyBundle: <
       if (mode === 'sync') {
         let response;
         try {
-          response = getPageLynx().fetchBundle(source, {}).wait(
+          response = pageLynx.fetchBundle(source, {}).wait(
             LYNX_LAZY_SYNC_TIMEOUT_SECONDS,
           );
         } catch (e) {
@@ -255,7 +265,7 @@ export const loadLazyBundle: <
         }
         let result: T;
         try {
-          result = loadBackgroundBundle<T>(response.url, source);
+          result = loadBackgroundBundle<T>(pageLynx, response.url, source);
         } catch (e) {
           return Promise.reject(e instanceof Error ? e : new Error(String(e)));
         }
@@ -265,7 +275,7 @@ export const loadLazyBundle: <
         // "snapshot not found". Runs synchronously — the bundle is already in
         // the native cache — just like the async path below.
         try {
-          getPageLynx().getNativeApp().callLepusMethod(
+          pageLynx.getNativeApp().callLepusMethod(
             PREPARE_LAZY_BUNDLE_MTS,
             { url: source, host },
             () => {},
@@ -274,7 +284,7 @@ export const loadLazyBundle: <
           return Promise.reject(e instanceof Error ? e : new Error(String(e)));
         }
         // Fully loaded and prepared — cache so repeat loads skip the work above.
-        fetchBundleBgCache.set(source, result);
+        cache.set(source, result);
         const r: Promise<T> = Promise.resolve(result);
         r.then = makeSyncThen(result);
         return r;
@@ -284,7 +294,7 @@ export const loadLazyBundle: <
       return new Promise<T>((resolve, reject) => {
         let handler;
         try {
-          handler = getPageLynx().fetchBundle(source, {});
+          handler = pageLynx.fetchBundle(source, {});
         } catch (e) {
           reject(e instanceof Error ? e : new Error(String(e)));
           return;
@@ -299,7 +309,7 @@ export const loadLazyBundle: <
           }
           let btsResult: T;
           try {
-            btsResult = loadBackgroundBundle<T>(response.url, source);
+            btsResult = loadBackgroundBundle<T>(pageLynx, response.url, source);
           } catch (e) {
             reject(e instanceof Error ? e : new Error(String(e)));
             return;
@@ -308,13 +318,13 @@ export const loadLazyBundle: <
           // the whole prepare runs synchronously inside `Call`, meaning the
           // cb fires only after MT snapshots are registered.
           try {
-            getPageLynx().getNativeApp().callLepusMethod(
+            pageLynx.getNativeApp().callLepusMethod(
               PREPARE_LAZY_BUNDLE_MTS,
               { url: source, host },
               () => {
                 // Fully loaded and MT-prepared — cache so repeat loads skip
                 // the fetch / background eval / MT prepare above.
-                fetchBundleBgCache.set(source, btsResult);
+                cache.set(source, btsResult);
                 resolve(btsResult);
               },
             );

@@ -176,8 +176,9 @@ export abstract class SelectorRefProxy<TProxy extends SelectorRefProxy<TProxy>> 
   }
 
   exec(): void {
+    const pageLynx = getPageLynx();
     this.runOrDelay(() => {
-      this.task!(getPageLynx().createSelectorQuery().select(this.selector)).exec();
+      this.task!(pageLynx.createSelectorQuery().select(this.selector)).exec();
     });
   }
 }

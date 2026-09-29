@@ -391,6 +391,14 @@ class ReactWebpackPlugin {
       ReactWebpackPlugin.defaultOptions,
       this.options,
     );
+    if (
+      options.experimental_lynxGroupModuleSharing
+      && options.experimental_useElementTemplate
+    ) {
+      throw new Error(
+        '`experimental_lynxGroupModuleSharing` does not support `experimental_useElementTemplate` yet.',
+      );
+    }
     const { BannerPlugin, DefinePlugin, EnvironmentPlugin } = compiler.webpack;
 
     if (!options.experimental_isLazyBundle) {

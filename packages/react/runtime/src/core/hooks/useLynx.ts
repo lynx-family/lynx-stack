@@ -5,7 +5,8 @@ import { getPageLynx } from '../page-lynx.js';
 
 /**
  * Returns the `lynx` of the page this runtime was bound to by `createRoot`,
- * or the module-scope `lynx` without it.
+ * or the module-scope `lynx` without it. Call it while rendering and keep the
+ * result for timers and awaited callbacks, which do not know their page.
  *
  * @example
  *

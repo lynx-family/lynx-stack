@@ -15,6 +15,7 @@
 import type { NodesRef } from '@lynx-js/types';
 
 import { serializeNodesRef } from './nodesRef.js';
+import { onRootContextSwitch } from '../../render-context.js';
 import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 import type { BackgroundSnapshotInstance } from '../snapshot/backgroundSnapshot.js';
 import { reconstructInstanceTree } from '../snapshot/reconstructInstanceTree.js';
@@ -27,7 +28,14 @@ import { reconstructInstanceTree } from '../snapshot/reconstructInstanceTree.js'
  * here and replay during `clearPendingPortalInsertBefore` (called from
  * `hydrate()` once the global buffer is initialized).
  */
-export const pendingInsertBefore: unknown[] = [];
+export let pendingInsertBefore: unknown[] = [];
+
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) => ctx.pendingPortalInsertBefore = pendingInsertBefore,
+    (ctx) => pendingInsertBefore = ctx.pendingPortalInsertBefore ??= [],
+  );
+}
 
 export const clearPendingPortalInsertBefore = (): void => {
   let i = 0;

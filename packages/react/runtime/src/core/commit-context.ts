@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { onRootContextSwitch } from '../render-context.js';
+
 export interface GlobalCommitContext<Ops = unknown[]> {
   ops: Ops;
   flushOptions: FlushOptions;
@@ -12,6 +14,13 @@ export const globalCommitContext: GlobalCommitContext = {
   ops: [],
   flushOptions: {},
 };
+
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) => ctx.flushOptions = globalCommitContext.flushOptions,
+    (ctx) => globalCommitContext.flushOptions = ctx.flushOptions ?? {},
+  );
+}
 
 export function resetGlobalCommitContext(): void {
   globalCommitContext.ops = [];

@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { BackgroundFunctionExecMap } from './exec-map.js';
+import { bindRootContext, onRootContextSwitch } from '../../render-context.js';
 import { isSdkVersionGt } from '../../utils.js';
 import { delayRunOnBackground } from '../../worklet-runtime/bindings/bindings.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
@@ -25,6 +26,19 @@ let execIdMap: BackgroundFunctionExecMap | undefined;
 let cleanupBackgroundFunctionRuntime: (() => void) | undefined;
 let unregisterBackgroundFunctionCleanup: (() => void) | undefined;
 
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) =>
+      ctx.backgroundFunction = [execIdMap, cleanupBackgroundFunctionRuntime, unregisterBackgroundFunctionCleanup],
+    (ctx) =>
+      [execIdMap, cleanupBackgroundFunctionRuntime, unregisterBackgroundFunctionCleanup] = ctx.backgroundFunction ?? [
+        undefined,
+        undefined,
+        undefined,
+      ],
+  );
+}
+
 function initBackgroundFunctionRuntime(): void {
   'background only';
   if (execIdMap) {
@@ -33,12 +47,14 @@ function initBackgroundFunctionRuntime(): void {
 
   execIdMap = new BackgroundFunctionExecMap();
   const context = getPageLynx().getCoreContext();
-  context.addEventListener(WorkletEvents.runOnBackground, runBackgroundFunction);
-  context.addEventListener(WorkletEvents.releaseBackgroundWorkletCtx, releaseBackgroundFunctionCtx);
+  const onRun = bindRootContext(runBackgroundFunction);
+  const onRelease = bindRootContext(releaseBackgroundFunctionCtx);
+  context.addEventListener(WorkletEvents.runOnBackground, onRun);
+  context.addEventListener(WorkletEvents.releaseBackgroundWorkletCtx, onRelease);
 
   cleanupBackgroundFunctionRuntime = () => {
-    context.removeEventListener(WorkletEvents.runOnBackground, runBackgroundFunction);
-    context.removeEventListener(WorkletEvents.releaseBackgroundWorkletCtx, releaseBackgroundFunctionCtx);
+    context.removeEventListener(WorkletEvents.runOnBackground, onRun);
+    context.removeEventListener(WorkletEvents.releaseBackgroundWorkletCtx, onRelease);
     execIdMap = undefined;
     cleanupBackgroundFunctionRuntime = undefined;
   };

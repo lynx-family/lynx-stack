@@ -1,9 +1,11 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import type { Compiler } from '@rspack/core';
 import { describe, expect, it } from '@rstest/core';
 
 import {
+  ReactWebpackPlugin,
   collectElementTemplatesForChunkGroups,
   collectElementTemplatesForEntries,
   collectElementTemplatesFromModule,
@@ -298,5 +300,16 @@ describe('collectElementTemplatesForEntries', () => {
         () => [],
       ),
     ).toEqual({});
+  });
+});
+
+describe('ReactWebpackPlugin options', () => {
+  it('rejects experimental_lynxGroupModuleSharing with experimental_useElementTemplate', () => {
+    expect(() =>
+      new ReactWebpackPlugin({
+        experimental_lynxGroupModuleSharing: true,
+        experimental_useElementTemplate: true,
+      }).apply({} as Compiler)
+    ).toThrowError(/does not support `experimental_useElementTemplate`/);
   });
 });

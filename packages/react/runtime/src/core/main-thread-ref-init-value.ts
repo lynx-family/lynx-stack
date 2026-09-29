@@ -5,8 +5,16 @@
 import type { MainThreadRefInitValuePatch } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { isMtsEnabled } from './mts-capability.js';
+import { onRootContextSwitch } from '../render-context.js';
 
 let mainThreadRefInitValuePatch: MainThreadRefInitValuePatch = [];
+
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) => ctx.mainThreadRefInitValuePatch = mainThreadRefInitValuePatch,
+    (ctx) => mainThreadRefInitValuePatch = ctx.mainThreadRefInitValuePatch ?? [],
+  );
+}
 
 /**
  * @internal

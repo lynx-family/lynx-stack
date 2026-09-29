@@ -7,7 +7,7 @@ import { loadLazyBundle } from './core/lynx/lazy-bundle.js';
 import type { DataProcessorDefinition, Root } from './lynx-api.js';
 import { root } from './lynx-api.js';
 import { initBackgroundRuntimeForRoot, initBackgroundRuntimeGlobals } from './lynx.js';
-import { createRootContext, getCurrentRootContext, switchRootContext } from './render-context.js';
+import { createRootContext, runInRootContext } from './render-context.js';
 import { setRoot } from './root.js';
 import { installContextSwitchHook } from './snapshot/lifecycle/contextSwitchHook.js';
 import { renderBackground } from './snapshot/lynx/appCallbacks.js';
@@ -43,15 +43,7 @@ export function createRoot(pageLynx: typeof lynx): Root {
   installContextSwitchHook();
 
   const ctx = createRootContext(pageLynx);
-  const runInRoot = (fn: () => void): void => {
-    const prev = getCurrentRootContext();
-    switchRootContext(ctx);
-    try {
-      fn();
-    } finally {
-      switchRootContext(prev);
-    }
-  };
+  const runInRoot = (fn: () => void): void => runInRootContext(ctx, fn);
 
   runInRoot(() => {
     setRoot(new BackgroundSnapshotInstance('root'));

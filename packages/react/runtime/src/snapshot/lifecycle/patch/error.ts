@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { getPageLynx } from '../../../core/page-lynx.js';
+import { bindRootContext, onRootContextSwitch } from '../../../render-context.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot/backgroundSnapshot.js';
 import { snapshotManager } from '../../snapshot/definition.js';
 
@@ -11,6 +12,13 @@ export const ctxNotFoundType = 'Lynx.Error.CtxNotFound';
 const errorMsg = 'snapshotPatchApply failed: ctx not found';
 
 let ctxNotFoundEventListener: ((e: RuntimeProxy.Event) => void) | null = null;
+
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) => ctx.ctxNotFoundEventListener = ctxNotFoundEventListener,
+    (ctx) => ctxNotFoundEventListener = ctx.ctxNotFoundEventListener ?? null,
+  );
+}
 
 export interface CtxNotFoundData {
   id: number;
@@ -52,9 +60,9 @@ export function reportCtxNotFound(data: CtxNotFoundData): void {
 }
 
 export function addCtxNotFoundEventListener(): void {
-  ctxNotFoundEventListener = (e) => {
+  ctxNotFoundEventListener = bindRootContext((e: RuntimeProxy.Event) => {
     reportCtxNotFound(e.data as CtxNotFoundData);
-  };
+  });
   getPageLynx().getCoreContext?.().addEventListener(ctxNotFoundType, ctxNotFoundEventListener);
 }
 

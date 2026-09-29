@@ -657,3 +657,50 @@ describe('mode + QueryComponent — dev throw', () => {
     expect(() => loadLazyBundle('foo')).not.toThrow();
   });
 });
+
+describe('loadLazyBundle (FetchBundle) — pages sharing one runtime', () => {
+  function stubPageLynx() {
+    let finish;
+    const callLepusMethod = vi.fn((_name, _data, cb) => cb());
+    return {
+      finish: (response) => finish(response),
+      fetchBundle: vi.fn(() => ({ then: (cb) => finish = cb })),
+      loadScript: vi.fn(() => ({ default: 'BG' })),
+      callLepusMethod,
+      getNativeApp: () => ({ callLepusMethod }),
+    };
+  }
+
+  beforeEach(() => {
+    vi
+      .stubGlobal('__LYNX_GROUP_MODULE_SHARING__', true)
+      .stubGlobal('__LEPUS__', false)
+      .stubGlobal('__MAIN_THREAD__', false)
+      .stubGlobal('__BACKGROUND__', true)
+      .stubGlobal('__JS__', true);
+  });
+
+  test('loads and prepares the bundle on the page that imported it', async () => {
+    const a = stubPageLynx();
+    const b = stubPageLynx();
+    const rc = await import('../../../src/render-context');
+    const { loadLazyBundle } = await import('../../../src/core/lynx/lazy-bundle');
+    const ctxA = rc.createRootContext(a);
+    const ctxB = rc.createRootContext(b);
+
+    const loadedByA = rc.runInRootContext(ctxA, () => loadLazyBundle('foo'));
+    rc.runInRootContext(ctxB, () => a.finish({ code: 0, url: 'u' }));
+
+    await expect(loadedByA).resolves.toEqual({ default: 'BG' });
+    expect(a.loadScript).toHaveBeenCalledWith('background', { bundleName: 'u' });
+    expect(a.callLepusMethod).toHaveBeenCalledTimes(1);
+    expect(b.loadScript).not.toHaveBeenCalled();
+    expect(b.callLepusMethod).not.toHaveBeenCalled();
+
+    const loadedByB = rc.runInRootContext(ctxB, () => loadLazyBundle('foo'));
+    expect(b.fetchBundle).toHaveBeenCalledWith('foo', {});
+    b.finish({ code: 0, url: 'u' });
+    await expect(loadedByB).resolves.toEqual({ default: 'BG' });
+    expect(b.callLepusMethod).toHaveBeenCalledTimes(1);
+  });
+});

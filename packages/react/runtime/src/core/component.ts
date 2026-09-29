@@ -70,9 +70,17 @@ function installComponentCompat(): void {
   }
 
   const __Component = Component as any;
-  const reactAppInstance = getReactAppInstance();
 
-  __Component.prototype._reactAppInstance = reactAppInstance;
+  if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+    Object.defineProperties(__Component.prototype, {
+      _reactAppInstance: { get: getReactAppInstance, configurable: true },
+      GlobalEventEmitter: { get: () => getReactAppInstance().GlobalEventEmitter, configurable: true },
+    });
+  } else {
+    const reactAppInstance = getReactAppInstance();
+    __Component.prototype._reactAppInstance = reactAppInstance;
+    __Component.prototype.GlobalEventEmitter = reactAppInstance.GlobalEventEmitter;
+  }
 
   __Component.prototype.getNodeRef = function(a: string, b?: boolean) {
     reportRefDeprecationError('getNodeRef', 'lynx.createSelectorQuery');
@@ -128,8 +136,6 @@ function installComponentCompat(): void {
     reportRefDeprecationError('getElementById', 'lynx.getElementById');
     return getPageLynx().getElementById(id);
   };
-
-  __Component.prototype.GlobalEventEmitter = reactAppInstance.GlobalEventEmitter;
 
   __Component.prototype.createSelectorQuery = function() {
     reportRefDeprecationError('createSelectorQuery on component instance', 'lynx.createSelectorQuery');

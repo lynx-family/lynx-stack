@@ -5,7 +5,7 @@
 import { options } from 'preact';
 
 import type { RootContext } from '../../render-context.js';
-import { switchRootContext } from '../../render-context.js';
+import { getCurrentRootContext, switchRootContext } from '../../render-context.js';
 import { PARENT_DOM, RENDER_COMPONENT } from '../../shared/render-constants.js';
 import { hook } from '../../utils.js';
 
@@ -29,4 +29,15 @@ export function installContextSwitchHook(): void {
   }
   installed = true;
   hook(options, RENDER_COMPONENT, onRenderComponentHook);
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  const debounce = options.debounceRendering ?? ((cb: () => void) => void Promise.resolve().then(cb));
+  options.debounceRendering = (cb) =>
+    debounce(() => {
+      const prev = getCurrentRootContext();
+      try {
+        cb();
+      } finally {
+        switchRootContext(prev);
+      }
+    });
 }

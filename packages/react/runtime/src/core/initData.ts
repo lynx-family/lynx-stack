@@ -143,7 +143,7 @@ export function withInitDataInState<P, S>(App: ComponentClass<P, S>): ComponentC
       }
       this.state = {
         ...this.state,
-        ...lynx.__initData,
+        ...getPageLynx().__initData,
       };
 
       if (!__LEPUS__) {

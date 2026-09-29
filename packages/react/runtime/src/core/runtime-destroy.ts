@@ -2,9 +2,18 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { onRootContextSwitch } from '../render-context.js';
+
 type DestroyTask = () => void;
 
-const destroyTasks = new Set<DestroyTask>();
+let destroyTasks = new Set<DestroyTask>();
+
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) => ctx.destroyTasks = destroyTasks,
+    (ctx) => destroyTasks = ctx.destroyTasks ??= new Set(),
+  );
+}
 
 export function registerDestroyTask(task: DestroyTask): () => void {
   destroyTasks.add(task);
