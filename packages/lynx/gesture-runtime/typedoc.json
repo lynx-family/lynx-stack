@@ -1,0 +1,7 @@
+{
+  "intentionallyNotExported": [
+    "\"@lynx-js/types\".MainThread.Element",
+    "FiberElement",
+    "IBasicGestures"
+  ]
+}

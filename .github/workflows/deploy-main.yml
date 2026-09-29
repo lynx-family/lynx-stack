@@ -198,6 +198,9 @@ jobs:
         if: steps.changesets.outputs.mode == 'version'
         id: date
         run: echo "::set-output name=date::$(date -u +'%Y-%m-%d %H:%M:%S')"
+      - name: Add API reference changeset
+        if: steps.changesets.outputs.mode == 'version'
+        run: node .github/scripts/add-docs-changeset.cjs .changeset
       - name: Version packages
         if: steps.changesets.outputs.mode == 'version'
         uses: changesets/action/version@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1
@@ -261,6 +264,7 @@ jobs:
           # changesets-changelog-github requires a GITHUB_TOKEN
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          node .github/scripts/add-docs-changeset.cjs .changeset
           pnpm changeset status --output "$RUNNER_TEMP/changeset-status.json"
           if jq -e '.releases | length > 0' "$RUNNER_TEMP/changeset-status.json" > /dev/null; then
             pnpm changeset version --snapshot canary

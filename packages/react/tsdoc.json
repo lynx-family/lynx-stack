@@ -2,9 +2,15 @@
   "$schema": "https://developer.microsoft.com/json-schemas/tsdoc/v0/tsdoc.schema.json",
   "extends": ["@microsoft/api-extractor/extends/tsdoc-base.json"],
   "tagDefinitions": [
-    { "tagName": "@function", "syntaxKind": "modifier" }
+    { "tagName": "@function", "syntaxKind": "modifier" },
+    { "tagName": "@group", "syntaxKind": "block" },
+    { "tagName": "@groupDescription", "syntaxKind": "block" },
+    { "tagName": "@document", "syntaxKind": "block" }
   ],
   "supportForTags": {
-    "@function": true
+    "@function": true,
+    "@group": true,
+    "@groupDescription": true,
+    "@document": true
   }
 }

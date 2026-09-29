@@ -222,6 +222,8 @@ export interface Dev {
    *   },
    * })
    * ```
+   *
+   * @lynxDefaultChanged
    */
   writeToDisk?: boolean | ((filename: string) => boolean) | undefined
 

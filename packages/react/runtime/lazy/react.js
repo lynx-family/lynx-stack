@@ -20,6 +20,7 @@ export const {
   createContext,
   createElement,
   createRef,
+  defineMainThreadObjectType,
   forwardRef,
   isValidElement,
   lazy,
@@ -42,6 +43,7 @@ export const {
   useGlobalPropsChanged,
   useLayoutEffect,
   useMainThreadRef,
+  useMainThreadObject,
   useMemo,
   useReducer,
   useRef,
@@ -49,32 +51,5 @@ export const {
   useSyncExternalStore,
   withInitDataInState,
 } = target[sExportsReact];
-
-const { defineMainThreadObjectType: defineMainThreadObjectTypeImpl } = target[sExportsReact];
-const { useMainThreadObject: useMainThreadObjectImpl } = target[sExportsReact];
-
-export function defineMainThreadObjectType(definition) {
-  assertMainThreadObjectRuntimeExport(
-    defineMainThreadObjectTypeImpl,
-    'defineMainThreadObjectType',
-  );
-  return defineMainThreadObjectTypeImpl(definition);
-}
-
-export function useMainThreadObject(objectType, initialValue) {
-  assertMainThreadObjectRuntimeExport(
-    useMainThreadObjectImpl,
-    'useMainThreadObject',
-  );
-  return useMainThreadObjectImpl(objectType, initialValue);
-}
-
-function assertMainThreadObjectRuntimeExport(value, name) {
-  if (typeof value !== 'function') {
-    throw new Error(
-      `This lazy bundle requires ReactLynx runtime export ${name} for MainThreadObject. Upgrade the main template runtime or rebuild the lazy bundle with a compatible @lynx-js/react version.`,
-    );
-  }
-}
 
 export default target[sExportsReact]['default'];

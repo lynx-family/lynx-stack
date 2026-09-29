@@ -1,0 +1,90 @@
+---
+title: Directives
+group: Documents
+---
+
+# Directives
+
+## `'background only'`
+
+The `'background only'` directive allows you to mark functions that will only be executed on the background thread. In other threads, the function body of the marked function will be removed.
+
+To mark a function as background only, simply add the `'background only'` directive at the first line of the function body:
+
+```ts
+function bgOnlyAction(pureCallback) {
+  'background only';
+  lynx.getJSModule('GlobalEventEmitter').addListener('eventName', pureCallback);
+}
+```
+
+In the main thread portion of the generated output, this function will be replaced as follows:
+
+```ts
+function bgOnlyAction(pureCallback) {}
+```
+
+Typically, code with side effects should only be executed in the background thread, such as event listeners, JSB calls, etc. Marking such functions as `'background only'` can significantly reduce the bundle size.
+
+One way to use `'background only'` is in conjunction with custom hooks. For example, `useFirstRender` is a user-defined hook used to execute some logic when a component is first rendered. We want to use it to listen for events. The event listening logic should not and cannot be executed on the main thread. In this case, we can use the `'background only'` directive to mark this function, removing the event listening logic from the main thread.
+
+```ts
+import {useFirstRender} from './useFirstRender';
+
+function bgOnlyAction(pureCallback) {
+  'background only';
+  lynx.getJSModule('GlobalEventEmitter').addListener('eventName', pureCallback);
+}
+
+function Foo({ prop } ){
+  const ref = useRef(null);
+  useFirstRender(() => {
+    bgOnlyAction(() => {
+      // ...
+    });
+  });
+  return <view>;
+}
+```
+
+It is not only the code marked as `'background only'` that will be removed in other threads; ReactLynx will by default remove certain parts of the code, including the parameters of `useEffect`, `useLayoutEffect`, and some event handlers, among others. For these parts, you do not need to mark the corresponding functions as `'background only'`. For more details, refer to [Dual Runtime Code Splitting](https://lynxjs.org/react/thinking-in-reactlynx).
+
+## `'main thread'`
+
+The `'main thread'` directive allows you to mark main thread functions. Main thread functions are part of the [Main Thread Script](https://lynxjs.org/react/main-thread-script) system and can only be executed on the main thread. They are primarily used for smooth animations and gesture handling.
+
+To convert a background thread function into a main thread function, simply add the `'main thread'` directive at the first line of the function:
+
+```tsx {7}
+import { MainThread } from '@lynx-js/types';
+
+export default function App() {
+  const red = 'red';
+
+  function handleTap(event: MainThread.TouchEvent) {
+    'main thread';
+    event.currentTarget.setStyleProperty('background-color', red);
+  }
+
+  return (
+    <view main-thread:bindtap={handleTap}>
+      <text>Hello World!</text>
+    </view>
+  );
+}
+```
+
+A main thread function will automatically capture external variables from the background thread when defined, such as `red` in the example above.
+
+When using a main thread function as an event handler, the main thread function accepts an `event` parameter that contains basic information about the event. The `event.target` and `event.currentTarget` parameters differ from those in regular event handlers; they are [`MainThread.Element`](https://lynxjs.org/api/lynx-api/main-thread/main-thread-element) objects. This object allows you to conveniently synchronize the retrieval and setting of node properties, such as using [`setStyleProperty()`] in the example.
+
+Some important notes:
+
+- Main thread functions can and must only run on the main thread. Main thread functions can call each other.
+- Captured variables need to be passed between threads using `JSON.stringify()`, so they must be serializable to JSON.
+- Main thread functions can only execute after TTI (Time to Interactive). This means they cannot execute during the initial screen load.
+- Main thread functions do not support nested definitions.
+- The constructor, getter, and setter of class components do not support being specified as main thread functions.
+- You cannot modify variables captured from the external scope within a main thread function.
+
+[`setStyleProperty()`]: https://lynxjs.org/api/lynx-api/main-thread/main-thread-element.html#elementsetstyleproperty
