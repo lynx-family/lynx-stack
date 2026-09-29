@@ -343,6 +343,8 @@ test('persists and restores server generation time without relabeling legacy Age
   await send();
   await done([create, update('Shanghai')], {
     generationMs: 125,
+    artifactTransformMs: 12,
+    artifactUploadMs: 18,
     firstReasoningTokenMs: 30,
     firstTextTokenMs: 70,
     modelMs: 100,
@@ -356,6 +358,8 @@ test('persists and restores server generation time without relabeling legacy Age
   )!;
   expect(assistant.previewMetrics).toMatchObject({
     generationMs: 125,
+    artifactTransformMs: 12,
+    artifactUploadMs: 18,
     firstReasoningTokenMs: 30,
     firstTextTokenMs: 70,
     modelMs: 100,
@@ -367,6 +371,8 @@ test('persists and restores server generation time without relabeling legacy Age
   for (
     const [label, value] of [
       ['Generation', '125ms'],
+      ['Transform', '12ms'],
+      ['Upload', '18ms'],
       ['1st Reasoning', '30ms'],
       ['1st Text', '70ms'],
       ['Model', '100ms'],

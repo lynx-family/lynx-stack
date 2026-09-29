@@ -396,7 +396,7 @@ All requests receive an independent four-call image budget, sharing their
 existing RequestContext with search and protocol-specific tools. UI Judge
 scoring agents remain tool-free. Neither capability accepts client credentials.
 
-To publish short, shareable A2UI and OpenUI preview URLs, configure the
+To publish short, shareable A2UI, OpenUI, and Lynx XML preview URLs, configure the
 public-read Volcengine TOS bucket and server-only write credentials. All four
 variables are required; do not add fallback bucket or region values:
 
@@ -422,7 +422,9 @@ credentials. Optional overrides are `TOS_ENDPOINT`, `TOS_STORAGE_PREFIX`,
 `POST /lynx-xml/stream` uses a dedicated Vanilla Lynx agent and the shared text
 SSE route infrastructure. Stream raw model deltas so the Playground can show
 source growth, but normalize and validate the final document envelope before
-sending `done`. Preserve usage and finish-reason metadata when validation
+sending `done`. Upload the normalized document as
+`lynx-xml/preview/<uuid>/index.lynxml` and return its public `sourceUrl` in the
+`done.preview` object for share and native preview links. Preserve usage and finish-reason metadata when validation
 fails, and report `length` as an exhausted model output budget rather than only
 as a missing XML tag. The final artifact must start with lowercase
 `<!doctype lynx>`, use `<lynx engine-version="4.2">`, include exactly one main

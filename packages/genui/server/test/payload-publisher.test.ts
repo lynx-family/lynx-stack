@@ -2,13 +2,30 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { describe, expect, test } from '@rstest/core';
+import { afterEach, describe, expect, rstest, test } from '@rstest/core';
 
 import {
   buildTosObjectUrl,
   buildTosStoragePath,
+  publishLynxXmlArtifact,
   resolveTosStorageConfig,
 } from '../app/a2ui/payload-publisher.js';
+
+const { putObject } = rstest.hoisted(() => ({
+  putObject: rstest.fn(),
+}));
+
+rstest.mock('@volcengine/tos-sdk', () => ({
+  TosClient: class {
+    putObject = putObject;
+  },
+}));
+
+afterEach(() => {
+  putObject.mockReset();
+  rstest.restoreAllMocks();
+  rstest.unstubAllEnvs();
+});
 
 describe('Volcengine TOS payload publishing', () => {
   test('requires server-side credentials, bucket and region', () => {
@@ -111,6 +128,8 @@ describe('Volcengine TOS payload publishing', () => {
       .toBe('a2ui/preview/id/messages.json');
     expect(buildTosStoragePath('openui', 'preview', 'id', 'raw.txt'))
       .toBe('openui/preview/id/raw.txt');
+    expect(buildTosStoragePath('lynx-xml', 'preview', 'id', 'index.lynxml'))
+      .toBe('lynx-xml/preview/id/index.lynxml');
 
     for (
       const method of ['a2ui', 'openui', 'mcp-apps', 'lynx-xml', 'html']
@@ -119,5 +138,29 @@ describe('Volcengine TOS payload publishing', () => {
         buildTosStoragePath(method, 'conversation', 'id', 'messages.json'),
       ).toBe(`${method}/conversation/id/messages.json`);
     }
+  });
+
+  test('publishes Lynx XML as a directly loadable preview artifact', async () => {
+    rstest.stubEnv('TOS_ACCESS_KEY', 'ak');
+    rstest.stubEnv('TOS_SECRET_KEY', 'sk');
+    rstest.stubEnv('TOS_BUCKET', 'genui');
+    rstest.stubEnv('TOS_REGION', 'cn-beijing');
+    rstest.spyOn(crypto, 'randomUUID').mockReturnValue(
+      '00000000-0000-4000-8000-000000000000',
+    );
+    const source = '<!doctype lynx><lynx engine-version="4.2"></lynx>';
+
+    await expect(publishLynxXmlArtifact(source)).resolves.toEqual({
+      sourceUrl:
+        'https://genui.tos-cn-beijing.volces.com/lynx-xml/preview/00000000-0000-4000-8000-000000000000/index.lynxml',
+    });
+    expect(putObject).toHaveBeenCalledTimes(1);
+    expect(putObject).toHaveBeenCalledWith(expect.objectContaining({
+      body: Buffer.from(source),
+      bucket: 'genui',
+      cacheControl: 'public, max-age=1800',
+      contentType: 'application/xml; charset=utf-8',
+      key: 'lynx-xml/preview/00000000-0000-4000-8000-000000000000/index.lynxml',
+    }));
   });
 });
