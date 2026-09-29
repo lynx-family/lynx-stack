@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { getCurrentRootContext, onRootContextSwitch } from './render-context.js';
+import { onRootContextSwitch } from './render-context.js';
 import { BackgroundSnapshotInstance } from './snapshot/snapshot/backgroundSnapshot.js';
 import { SnapshotInstance } from './snapshot/snapshot/snapshot.js';
 
@@ -22,7 +22,6 @@ let __root: (SnapshotInstance | BackgroundSnapshotInstance) & {
 };
 
 function setRoot(root: typeof __root): void {
-  getCurrentRootContext().root = root;
   __root = root;
 
   // A fake ELEMENT_NODE to make preact/debug happy.
@@ -31,9 +30,12 @@ function setRoot(root: typeof __root): void {
   }
 }
 
-onRootContextSwitch(() => {
-  __root = getCurrentRootContext().root as typeof __root;
-});
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) => ctx.root = __root,
+    (ctx) => __root = ctx.root as typeof __root,
+  );
+}
 
 if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
   setRoot(new SnapshotInstance('root'));

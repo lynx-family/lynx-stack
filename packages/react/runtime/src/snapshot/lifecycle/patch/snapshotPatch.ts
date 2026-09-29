@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { getCurrentRootContext, onRootContextSwitch } from '../../../render-context.js';
+import { onRootContextSwitch } from '../../../render-context.js';
 
 /**
  * Defines the core patch operations for the snapshot system.
@@ -78,21 +78,19 @@ export const SnapshotOperationParams: Record<number, { name: string; params: str
 
 export type SnapshotPatch = unknown[];
 
-export let __globalSnapshotPatch: SnapshotPatch | undefined = getCurrentRootContext().snapshotPatch;
+export let __globalSnapshotPatch: SnapshotPatch | undefined;
 
-onRootContextSwitch(() => {
-  __globalSnapshotPatch = getCurrentRootContext().snapshotPatch;
-});
-
-function setGlobalSnapshotPatch(patch: SnapshotPatch | undefined): void {
-  getCurrentRootContext().snapshotPatch = patch;
-  __globalSnapshotPatch = patch;
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) => ctx.snapshotPatch = __globalSnapshotPatch,
+    (ctx) => __globalSnapshotPatch = ctx.snapshotPatch,
+  );
 }
 
 export function takeGlobalSnapshotPatch(): SnapshotPatch | undefined {
   if (__globalSnapshotPatch) {
     const list = __globalSnapshotPatch;
-    setGlobalSnapshotPatch([]);
+    __globalSnapshotPatch = [];
     return list;
   } else {
     return undefined;
@@ -100,9 +98,9 @@ export function takeGlobalSnapshotPatch(): SnapshotPatch | undefined {
 }
 
 export function initGlobalSnapshotPatch(): void {
-  setGlobalSnapshotPatch([]);
+  __globalSnapshotPatch = [];
 }
 
 export function deinitGlobalSnapshotPatch(): void {
-  setGlobalSnapshotPatch(undefined);
+  __globalSnapshotPatch = undefined;
 }

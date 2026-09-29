@@ -13,8 +13,7 @@ import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../core/thread-function-call/main-thread.js';
-import { defaultRootContext, getCurrentRootContext, switchRootContext } from '../../render-context.js';
-import type { RootContext } from '../../render-context.js';
+import { getCurrentRootContext, switchRootContext } from '../../render-context.js';
 import { __root } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { CHILDREN } from '../../shared/render-constants.js';
@@ -41,7 +40,11 @@ import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.j
 
 export { runWithForce };
 
-function bindContext<T extends unknown[], R>(ctx: RootContext, fn: (...args: T) => R): (...args: T) => R {
+function bindContext<T extends unknown[], R>(fn: (...args: T) => R): (...args: T) => R {
+  if (typeof __LYNX_GROUP_MODULE_SHARING__ === 'undefined' || !__LYNX_GROUP_MODULE_SHARING__) {
+    return fn;
+  }
+  const ctx = getCurrentRootContext();
   return (...args: T) => {
     switchRootContext(ctx);
     return fn(...args);
@@ -49,21 +52,20 @@ function bindContext<T extends unknown[], R>(ctx: RootContext, fn: (...args: T) 
 }
 
 function registerAppCallbacks(pageLynx: typeof lynx): void {
-  const ctx = getCurrentRootContext();
   const app = pageLynx.getApp();
-  app.OnLifecycleEvent = bindContext(ctx, onLifecycleEvent);
-  app.publishEvent = bindContext(ctx, delayedPublishEvent);
-  app.publicComponentEvent = bindContext(ctx, delayedPublicComponentEvent);
-  app.callDestroyLifetimeFun = bindContext(ctx, () => {
-    if (ctx === defaultRootContext) {
+  app.OnLifecycleEvent = bindContext(onLifecycleEvent);
+  app.publishEvent = bindContext(delayedPublishEvent);
+  app.publicComponentEvent = bindContext(delayedPublicComponentEvent);
+  app.callDestroyLifetimeFun = bindContext(() => {
+    if (typeof __LYNX_GROUP_MODULE_SHARING__ === 'undefined' || !__LYNX_GROUP_MODULE_SHARING__) {
       removeCtxNotFoundEventListener();
     }
     destroyWorklet();
     destroyBackground();
   });
-  app.updateGlobalProps = bindContext(ctx, updateGlobalProps);
-  app.updateCardData = bindContext(ctx, updateCardData);
-  app.onAppReload = bindContext(ctx, reloadBackground);
+  app.updateGlobalProps = bindContext(updateGlobalProps);
+  app.updateCardData = bindContext(updateCardData);
+  app.onAppReload = bindContext(reloadBackground);
   app.processCardConfig = () => {
     // used to updateTheme, no longer rely on this function
   };
@@ -103,8 +105,10 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       } catch (e) {
         processErr = e;
       }
-      // process() may render other roots via Preact's shared queue; re-assert ours.
-      switchRootContext(ctxBeforeProcess);
+      if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+        // process() may render other roots via Preact's shared queue; re-assert ours.
+        switchRootContext(ctxBeforeProcess);
+      }
       const { root: lepusSide, firstScreenEventIdSwap } = data as FirstScreenData;
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
         profileStart('ReactLynx::hydrate');
@@ -152,23 +156,25 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
 
       // TODO: It seems `delayedEvents` and `delayedLifecycleEvents` should be merged into one array to ensure the proper order of events.
       flushDelayedLifecycleEvents();
-      delayedEvents.forEach((args) => {
-        const [handlerName, data] = args;
-        // eslint-disable-next-line prefer-const
-        let [idStr, ...rest] = handlerName.split(':');
-        while (firstScreenEventIdSwap[idStr!]) idStr = firstScreenEventIdSwap[idStr!]?.toString();
-        try {
-          publishEvent([idStr, ...rest].join(':'), data);
-        } catch (e) {
-          getPageLynx().reportError(e as Error);
-        }
-      });
-      delayedEvents.length = 0;
+      if (delayedEvents) {
+        delayedEvents.forEach((args) => {
+          const [handlerName, data] = args;
+          // eslint-disable-next-line prefer-const
+          let [idStr, ...rest] = handlerName.split(':');
+          while (firstScreenEventIdSwap[idStr!]) idStr = firstScreenEventIdSwap[idStr!]?.toString();
+          try {
+            publishEvent([idStr, ...rest].join(':'), data);
+          } catch (e) {
+            getPageLynx().reportError(e as Error);
+          }
+        });
+        delayedEvents.length = 0;
+      }
 
       {
         const app = getPageLynx().getApp();
-        app.publishEvent = bindContext(ctxBeforeProcess, publishEvent);
-        app.publicComponentEvent = bindContext(ctxBeforeProcess, publicComponentEvent);
+        app.publishEvent = bindContext(publishEvent);
+        app.publicComponentEvent = bindContext(publicComponentEvent);
       }
 
       // console.debug("********** After hydration:");
@@ -312,7 +318,7 @@ function updateGlobalProps(newData: Record<string, any>): void {
   updateGlobalPropsCore(newData, {
     // Snapshot force render consumes any sync setState dirty flags produced by
     // onGlobalPropsChanged listeners, avoiding an extra diff pass.
-    forceRerender: bindContext(getCurrentRootContext(), () => {
+    forceRerender: bindContext(() => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       runWithForce(() => render(__root.__jsx, __root as any));
     }),

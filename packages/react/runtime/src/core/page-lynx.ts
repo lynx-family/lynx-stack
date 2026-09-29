@@ -8,5 +8,7 @@ export function hasPageLynx(): boolean {
 }
 
 export function getPageLynx(): typeof lynx {
-  return getCurrentRootContext().lynx ?? lynx;
+  return (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__)
+    ? getCurrentRootContext().lynx ?? lynx
+    : lynx;
 }

@@ -37,7 +37,7 @@ import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../../core/thread-function-call/main-thread.js';
-import { getCurrentRootContext, onRootContextSwitch } from '../../../render-context.js';
+import { onRootContextSwitch } from '../../../render-context.js';
 import { profileEnd, profileStart } from '../../../shared/profile.js';
 import { COMMIT } from '../../../shared/render-constants.js';
 import { hook, isEmptyObject } from '../../../utils.js';
@@ -47,11 +47,8 @@ import { applyQueuedRefs } from '../../snapshot/ref.js';
 import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValue.js';
 import { isRendering } from '../isRendering.js';
 
-let globalCommitTaskMap: Map<number, () => void> = getCurrentRootContext().commitTaskMap;
-
-onRootContextSwitch(() => {
-  globalCommitTaskMap = getCurrentRootContext().commitTaskMap;
-});
+let globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map<number, () => void>();
+let nextCommitTaskId = 1;
 
 /**
  * A single patch operation.
@@ -85,17 +82,26 @@ interface PatchOptions {
  * Allow to pass options to the patch operation
  */
 export type GlobalPatchOptions = Omit<PatchOptions, 'reloadVersion'>;
-export let globalPatchOptions: GlobalPatchOptions = getCurrentRootContext().patchOptions;
+export let globalPatchOptions: GlobalPatchOptions = {};
 
-onRootContextSwitch(() => {
-  globalPatchOptions = getCurrentRootContext().patchOptions;
-});
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) => {
+      ctx.commitTaskMap = globalCommitTaskMap;
+      ctx.nextCommitTaskId = nextCommitTaskId;
+      ctx.patchOptions = globalPatchOptions;
+    },
+    (ctx) => {
+      globalCommitTaskMap = ctx.commitTaskMap;
+      nextCommitTaskId = ctx.nextCommitTaskId;
+      globalPatchOptions = ctx.patchOptions;
+    },
+  );
+}
 
 function takeGlobalPatchOptions(): GlobalPatchOptions {
-  const ctx = getCurrentRootContext();
-  const res = ctx.patchOptions;
-  ctx.patchOptions = {};
-  globalPatchOptions = ctx.patchOptions;
+  const res = globalPatchOptions;
+  globalPatchOptions = {};
   return res;
 }
 
@@ -265,14 +271,14 @@ function commitPatchUpdate(patchList: PatchList, patchOptions: GlobalPatchOption
  * Generates a unique ID for commit tasks
  */
 function genCommitTaskId(): number {
-  return getCurrentRootContext().nextCommitTaskId++;
+  return nextCommitTaskId++;
 }
 
 /**
  * Resets the commit task ID counter
  */
 function clearCommitTaskId(): void {
-  getCurrentRootContext().nextCommitTaskId = 1;
+  nextCommitTaskId = 1;
 }
 
 /**

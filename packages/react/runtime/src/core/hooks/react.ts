@@ -130,9 +130,6 @@ const useState: typeof usePreactState = (__BACKGROUND__ && isProfiling)
 function withRootContext(
   useEffectImpl: (effect: EffectCallback, deps?: DependencyList) => void,
 ): (effect: EffectCallback, deps?: DependencyList) => void {
-  if (typeof __LYNX_GROUP_MODULE_SHARING__ === 'undefined' || !__LYNX_GROUP_MODULE_SHARING__ || !__BACKGROUND__) {
-    return useEffectImpl;
-  }
   return (effect, deps) => {
     const ctx = getCurrentRootContext();
     useEffectImpl(() => {
@@ -148,6 +145,8 @@ function withRootContext(
   };
 }
 
+const useEffectImpl = (__BACKGROUND__ && isProfiling) ? useEffectProfiled : usePreactEffect;
+
 /**
  * Accepts a function that contains imperative, possibly effectful code.
  * The effects run after main thread dom update without blocking it.
@@ -158,9 +157,12 @@ function withRootContext(
  * @function
  * @public
  */
-const useEffect: (effect: EffectCallback, deps?: DependencyList) => void = withRootContext(
-  (__BACKGROUND__ && isProfiling) ? useEffectProfiled : usePreactEffect,
-);
+const useEffect: (effect: EffectCallback, deps?: DependencyList) => void =
+  (__BACKGROUND__ && typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__)
+    ? withRootContext(useEffectImpl)
+    : useEffectImpl;
+
+const useLayoutEffectImpl = (__BACKGROUND__ && isProfiling) ? useLayoutEffectProfiled : usePreactEffect;
 
 /**
  * `useLayoutEffect` is now an alias of `useEffect`. Use `useEffect` instead.
@@ -175,9 +177,10 @@ const useEffect: (effect: EffectCallback, deps?: DependencyList) => void = withR
  *
  * @deprecated `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React.
  */
-const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) => void = withRootContext(
-  (__BACKGROUND__ && isProfiling) ? useLayoutEffectProfiled : usePreactEffect,
-);
+const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) => void =
+  (__BACKGROUND__ && typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__)
+    ? withRootContext(useLayoutEffectImpl)
+    : useLayoutEffectImpl;
 
 export {
   // preact
