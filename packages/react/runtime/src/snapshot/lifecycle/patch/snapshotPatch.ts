@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { onRootContextSwitch } from '../../../render-context.js';
+
 /**
  * Defines the core patch operations for the snapshot system.
  * The patch operations are designed to be serializable and minimal, allowing
@@ -77,6 +79,13 @@ export const SnapshotOperationParams: Record<number, { name: string; params: str
 export type SnapshotPatch = unknown[];
 
 export let __globalSnapshotPatch: SnapshotPatch | undefined;
+
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) => ctx.snapshotPatch = __globalSnapshotPatch,
+    (ctx) => __globalSnapshotPatch = ctx.snapshotPatch,
+  );
+}
 
 export function takeGlobalSnapshotPatch(): SnapshotPatch | undefined {
   if (__globalSnapshotPatch) {

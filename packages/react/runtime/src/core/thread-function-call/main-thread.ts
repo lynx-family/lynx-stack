@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { onFunctionCall } from './return-value.js';
+import { onRootContextSwitch } from '../../render-context.js';
 import { isSdkVersionGt } from '../../utils.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxData } from '../../worklet-runtime/bindings/events.js';
@@ -19,6 +20,13 @@ interface RunOnMainThreadOptions {
 export type RunOnMainThread = <R, Fn extends (...args: any[]) => R>(fn: Fn) => (...args: Parameters<Fn>) => Promise<R>;
 
 export let delayedRunOnMainThreadData: RunWorkletCtxData[] = [];
+
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) => ctx.delayedRunOnMainThreadData = delayedRunOnMainThreadData,
+    (ctx) => delayedRunOnMainThreadData = ctx.delayedRunOnMainThreadData,
+  );
+}
 
 export function enqueueDelayedRunOnMainThreadData(data: RunWorkletCtxData): void {
   delayedRunOnMainThreadData.push(data);

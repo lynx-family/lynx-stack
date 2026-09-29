@@ -37,6 +37,7 @@ import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../../core/thread-function-call/main-thread.js';
+import { onRootContextSwitch } from '../../../render-context.js';
 import { profileEnd, profileStart } from '../../../shared/profile.js';
 import { COMMIT } from '../../../shared/render-constants.js';
 import { hook, isEmptyObject } from '../../../utils.js';
@@ -46,7 +47,7 @@ import { applyQueuedRefs } from '../../snapshot/ref.js';
 import { sendMTRefInitValueToMainThread } from '../../worklet/ref/updateInitValue.js';
 import { isRendering } from '../isRendering.js';
 
-const globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map<number, () => void>();
+let globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map<number, () => void>();
 let nextCommitTaskId = 1;
 
 /**
@@ -82,6 +83,21 @@ interface PatchOptions {
  */
 export type GlobalPatchOptions = Omit<PatchOptions, 'reloadVersion'>;
 export let globalPatchOptions: GlobalPatchOptions = {};
+
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) => {
+      ctx.commitTaskMap = globalCommitTaskMap;
+      ctx.nextCommitTaskId = nextCommitTaskId;
+      ctx.patchOptions = globalPatchOptions;
+    },
+    (ctx) => {
+      globalCommitTaskMap = ctx.commitTaskMap;
+      nextCommitTaskId = ctx.nextCommitTaskId;
+      globalPatchOptions = ctx.patchOptions;
+    },
+  );
+}
 
 function takeGlobalPatchOptions(): GlobalPatchOptions {
   const res = globalPatchOptions;
@@ -129,13 +145,15 @@ function replaceCommitHook(): void {
       setGlobalBackgroundSnapshotInstancesToRemove([]);
 
       const commitTaskId = genCommitTaskId();
+      const commitTaskMap = globalCommitTaskMap;
+      const bsiValues = backgroundSnapshotInstanceManager.values;
 
       // Register the commit task
-      globalCommitTaskMap.set(commitTaskId, () => {
+      commitTaskMap.set(commitTaskId, () => {
         if (backgroundSnapshotInstancesToRemove.length) {
           setTimeout(() => {
             backgroundSnapshotInstancesToRemove.forEach(id => {
-              backgroundSnapshotInstanceManager.values.get(id)?.tearDown();
+              bsiValues.get(id)?.tearDown();
             });
           }, 10000);
         }
@@ -177,10 +195,10 @@ function replaceCommitHook(): void {
 
       // Send the update to the native layer
       getPageLynx().getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-        const commitTask = globalCommitTaskMap.get(commitTaskId);
+        const commitTask = commitTaskMap.get(commitTaskId);
         if (commitTask) {
           commitTask();
-          globalCommitTaskMap.delete(commitTaskId);
+          commitTaskMap.delete(commitTaskId);
         }
       });
 

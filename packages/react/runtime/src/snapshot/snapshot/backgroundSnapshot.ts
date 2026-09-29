@@ -26,6 +26,8 @@ import type { SerializedSnapshotInstance } from './types.js';
 import { isCloneSnapshot, isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
 import { getPageLynx } from '../../core/page-lynx.js';
 import { globalPipelineOptions } from '../../core/performance.js';
+import { getCurrentRootContext, onRootContextSwitch } from '../../render-context.js';
+import type { RootContext } from '../../render-context.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { clearSnapshotVNodeSource, getSnapshotVNodeSource, moveSnapshotVNodeSource } from '../debug/vnodeSource.js';
@@ -117,6 +119,13 @@ export const backgroundSnapshotInstanceManager: {
   },
 };
 
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) => ctx.bsiValues = backgroundSnapshotInstanceManager.values,
+    (ctx) => backgroundSnapshotInstanceManager.values = ctx.bsiValues,
+  );
+}
+
 function prepareWorkletForCommit(worklet: Worklet): Worklet | null {
   // Copy-on-commit: do not mutate the background-side worklet ctx.
   // `_execId` is injected into the payload object that will be sent to the main thread.
@@ -167,6 +176,9 @@ export class BackgroundSnapshotInstance {
         createRuntimeSnapshot(type);
       }
     }
+    if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+      this.__rootCtx = getCurrentRootContext();
+    }
     this.__snapshot_def = snapshotManager.values.get(type)!;
     const id = this.__id = backgroundSnapshotInstanceManager.nextId += 1;
     backgroundSnapshotInstanceManager.values.set(id, this);
@@ -175,6 +187,7 @@ export class BackgroundSnapshotInstance {
   }
 
   __id: number;
+  __rootCtx?: RootContext;
   __values: unknown[] | undefined;
   __snapshot_def: Snapshot;
   __listItemPlatformInfo?: PlatformInfo;
@@ -325,7 +338,9 @@ export class BackgroundSnapshotInstance {
       v.__parent = null;
       v.__previousSibling = null;
       v.__nextSibling = null;
-      backgroundSnapshotInstanceManager.values.delete(v.__id);
+      ((typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__)
+        ? v.__rootCtx!.bsiValues
+        : backgroundSnapshotInstanceManager.values).delete(v.__id);
     });
   }
 
