@@ -116,6 +116,18 @@ export interface PluginVanillaLynxOptions {
   entries?: Record<string, VanillaLynxEntry> | undefined
 
   /**
+   * Build each entry source for both the main and background threads.
+   *
+   * @remarks
+   * This is intended for framework integrations that compile one authored
+   * source into thread-specific behavior. An explicit `background` entry,
+   * including `false`, takes precedence.
+   *
+   * @defaultValue `false`
+   */
+  singleSource?: boolean | undefined
+
+  /**
    * Override the final `.bundle` filename.
    *
    * @remarks
@@ -155,6 +167,7 @@ interface ResolvedPluginVanillaLynxOptions {
   bundleFilename?: VanillaBundleFilename | undefined
   engineVersion: string
   entries?: Record<string, VanillaLynxEntry> | undefined
+  singleSource: boolean
 }
 
 interface VanillaEntryContext {
@@ -213,6 +226,7 @@ function resolvePluginOptions(
       ?? lynxConfig?.targetSdkVersion
       ?? DEFAULT_ENGINE_VERSION,
     entries: options.entries,
+    singleSource: options.singleSource ?? false,
   }
 }
 
@@ -237,7 +251,6 @@ function setupVanillaBundler(
   options: ResolvedPluginVanillaLynxOptions,
 ): void {
   api.modifyBundlerChain((chain, { environment }) => {
-    // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
     const lynxConfig = api.useExposed<LynxConfig>(S_LYNX_CONFIG)
 
     if (!lynxConfig) {
@@ -256,6 +269,7 @@ function setupVanillaBundler(
       api,
       chain.entryPoints.entries() ?? {},
       options.entries,
+      options.singleSource,
     )
     const entryContext: VanillaEntryContext = {
       bundleFilename: options.bundleFilename,
@@ -378,6 +392,7 @@ function resolveVanillaEntries(
   api: RsbuildPluginAPI,
   rawEntries: Record<string, { values(): unknown[] }>,
   configuredEntries: Record<string, VanillaLynxEntry> | undefined,
+  singleSource: boolean,
 ): [string, ResolvedVanillaEntry][] {
   if (configuredEntries) {
     return Object.entries(configuredEntries).map(([entryName, entry]) => {
@@ -393,6 +408,7 @@ function resolveVanillaEntries(
         backgroundSource: resolveOptionalSource(
           entry.background,
           entryDir ? path.join(entryDir, 'background.ts') : undefined,
+          singleSource ? entry.mainThread : undefined,
         ),
         mainThreadImports: [entry.mainThread],
         styleSource: resolveOptionalSource(
@@ -418,6 +434,7 @@ function resolveVanillaEntries(
       backgroundSource: resolveOptionalSource(
         undefined,
         entryDir ? path.join(entryDir, 'background.ts') : undefined,
+        singleSource ? mainThreadRequest : undefined,
       ),
       mainThreadImports: imports,
       styleSource: resolveOptionalSource(
@@ -523,6 +540,7 @@ function isFile(candidate: string): boolean {
 function resolveOptionalSource(
   source: string | false | undefined,
   conventionSource: string | undefined,
+  fallbackSource?: string,
 ): string | undefined {
   if (source === false) {
     return undefined
@@ -534,7 +552,7 @@ function resolveOptionalSource(
 
   return conventionSource && isFile(conventionSource)
     ? conventionSource
-    : undefined
+    : fallbackSource
 }
 
 function resolveVanillaBundleFilename(

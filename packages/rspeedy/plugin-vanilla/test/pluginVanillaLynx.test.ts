@@ -456,6 +456,51 @@ describe('pluginVanillaLynx configuration', () => {
     expect(result.plugins.has('lynx:vanilla:runtime-wrapper')).toBe(false)
   })
 
+  test('uses one source for both threads when singleSource is enabled', async () => {
+    const source = 'virtual-main-thread'
+    const result = await runPluginHarness({
+      pluginOptions: {
+        singleSource: true,
+      },
+      rawEntries: {
+        main: { values: () => [source] },
+      },
+    })
+
+    expect(result.entries.get('main__background')).toEqual({
+      filename: '.lynx/main/background.js',
+      import: source,
+      layer: vanilla.LAYERS.BACKGROUND,
+    })
+    expect(result.entries.get('main__main-thread')).toEqual({
+      filename: '.lynx/main/main-thread.js',
+      import: [source],
+      layer: vanilla.LAYERS.MAIN_THREAD,
+    })
+    expect(getTemplateOptions(result, 'main')).toMatchObject({
+      chunks: ['main__background', 'main__main-thread'],
+    })
+  })
+
+  test('keeps explicit background false ahead of singleSource', async () => {
+    const result = await runPluginHarness({
+      pluginOptions: {
+        entries: {
+          main: {
+            background: false,
+            mainThread: fixturePath('main-thread.ts'),
+          },
+        },
+        singleSource: true,
+      },
+    })
+
+    expect(result.entries.has('main__background')).toBe(false)
+    expect(getTemplateOptions(result, 'main')).toMatchObject({
+      chunks: ['main__main-thread'],
+    })
+  })
+
   test('supports main-thread-only entries and option functions', async () => {
     let filenameContext: unknown
     const result = await runPluginHarness({

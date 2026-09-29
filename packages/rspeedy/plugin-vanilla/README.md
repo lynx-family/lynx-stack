@@ -57,6 +57,10 @@ filesystem convention: it runs only when `mainThread` names an existing local
 file. When `mainThread` is an alias or package request, configure `background`
 and `css` explicitly when they are needed.
 
+Framework plugins can set `singleSource: true` to compile the main-thread entry
+as the background entry too. An explicit `background` value, including
+`background: false`, takes precedence over this fallback.
+
 The plugin emits one `.bundle` per logical entry, marks the main-thread asset for Lepus encoding, wraps only the native background asset, and enables the event-handler config required by Element PAPI listeners. HMR and live reload are disabled because Vanilla Lynx does not currently install a compatible hot-update runtime.
 
 When Rspeedy configures both `web` and `lynx` environments, the plugin emits a web-encoded `[name].web.bundle` and a native `[name].lynx.bundle`. Background JavaScript is runtime-wrapped only for native Lynx; the web encoder embeds the unwrapped background chunk for the web runtime.
