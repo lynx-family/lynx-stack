@@ -4,8 +4,8 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { root, useLynx } from '../../../src/index';
-import { createRoot } from '../../../src/internal';
+import { root } from '../../../src/index';
+import { createRoot, useLynx } from '../../../src/internal';
 import { globalEnvManager } from '../utils/envManager';
 
 function stubPage() {
@@ -16,8 +16,8 @@ function stubPage() {
 async function importWithSharing() {
   globalThis.__LYNX_GROUP_MODULE_SHARING__ = true;
   vi.resetModules();
-  const { createRoot } = await import('../../../src/internal');
-  return { ...(await import('../../../src/index')), createRoot };
+  const { createRoot, useLynx } = await import('../../../src/internal');
+  return { ...(await import('../../../src/index')), createRoot, useLynx };
 }
 
 beforeEach(() => {

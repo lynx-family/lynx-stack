@@ -10,6 +10,8 @@ import { getPageLynx } from '../page-lynx.js';
  * @example
  *
  * ```tsx
+ * import { useLynx } from '@lynx-js/react/internal'
+ *
  * function Popup() {
  *   const lynx = useLynx()
  *   return <view style={{ height: lynx.__globalProps.screenHeight }} />
