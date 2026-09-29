@@ -25,8 +25,6 @@ export default defineConfig({
       },
     }),
   ],
-  dev: { assetPrefix: 'http://127.0.0.1:3000/' },
-  server: { port: 3000 },
   source: {
     entry: {
       pageA: './src/pageA.tsx',
