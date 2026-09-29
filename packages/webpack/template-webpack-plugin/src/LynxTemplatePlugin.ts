@@ -1101,8 +1101,19 @@ class LynxTemplatePluginImpl {
         if (name === '') {
           continue;
         }
+        // Same ownership check as when collecting a lazy bundle's assets
+        // (see `#generateAsyncTemplate`): a chunk has a layout here only when
+        // every group in its `groupsIterable` is one of this bundle's own
+        // `chunkGroups`. The entry chunk `main` (groupsIterable `[main, ...]`)
+        // shared into a lazy bundle by `splitChunks` is dropped (#4044).
+        const ownChunkGroups = new Set(chunkGroups);
         for (const chunk of chunkGroups.flatMap(cg => cg.chunks)) {
           if (chunk.id === null || chunk.id === undefined) {
+            continue;
+          }
+          if (
+            ![...chunk.groupsIterable].every(group => ownChunkGroups.has(group))
+          ) {
             continue;
           }
           let layer: string | undefined;
@@ -1169,13 +1180,40 @@ class LynxTemplatePluginImpl {
 
           encodedTemplate.add(filenameTemplate);
 
+          // Keep only the chunks this lazy bundle owns. A chunk is owned
+          // when every group in its `groupsIterable` is one of this bundle's
+          // own `chunkGroups`. Example: entry `main` + `import('./PageA')`,
+          // with `splitChunks: { name: 'main', chunks: 'all' }` merging the
+          // shared module into `main`. Building lazy bundle `src_PageA.tsx`:
+          //   chunkGroups (own): [<PageA background>, <PageA main-thread>]
+          //   chunk id=528 files=[lazy-bundle/src_PageA.tsx/background.js]
+          //     groupsIterable=[<PageA background>]            -> keep
+          //   chunk id=384 files=[lazy-bundle/src_PageA.tsx/main-thread.js]
+          //     groupsIterable=[<PageA main-thread>]           -> keep
+          //   chunk id=889 name=main files=[main/background.js, main/main.css]
+          //     groupsIterable=[main, <PageA background>, ...] -> drop
+          // id=889 is the entry chunk; it also sits in `main`, a group outside
+          // this bundle, so inlining it would copy the entry into every lazy
+          // bundle (#4044).
+          const ownChunkGroups = new Set(chunkGroups);
           const asyncAssetsInfoByGroups = this.#getAssetsInformationByFilenames(
             compilation,
             // Merged chunk groups may share chunks, so dedupe the files.
-            Array.from(new Set(chunkGroups.flatMap(cg => cg.getFiles())))
-              .filter(chunkFile =>
-                predicateNonHotModuleReplacementAsset(chunkFile, compilation)
+            Array.from(
+              new Set(
+                chunkGroups.flatMap(cg =>
+                  cg.chunks
+                    .filter(chunk =>
+                      [...chunk.groupsIterable].every(group =>
+                        ownChunkGroups.has(group)
+                      )
+                    )
+                    .flatMap(chunk => [...chunk.files])
+                ),
               ),
+            ).filter(chunkFile =>
+              predicateNonHotModuleReplacementAsset(chunkFile, compilation)
+            ),
           );
 
           return this.#encodeByAssetsInformation(
