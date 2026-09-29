@@ -85,6 +85,7 @@ export {
 export { withInitDataInState } from './core/initData.js';
 
 export { createRoot } from './create-root.js';
+export { useLynx } from './core/hooks/useLynx.js';
 
 export { wrapWithLynxComponent } from './core/compat/lynxComponent.js';
 
