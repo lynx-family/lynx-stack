@@ -6,15 +6,20 @@
  * Global state shared across modules to avoid circular dependencies
  */
 
-import { getCurrentRootContext, onRootContextSwitch } from '../../../render-context.js';
+import { onRootContextSwitch } from '../../../render-context.js';
 
-export let globalBackgroundSnapshotInstancesToRemove: number[] = getCurrentRootContext().bgInstancesToRemove;
+/**
+ * List of background snapshot instances to remove during commit phase
+ */
+export let globalBackgroundSnapshotInstancesToRemove: number[] = [];
 
-onRootContextSwitch(() => {
-  globalBackgroundSnapshotInstancesToRemove = getCurrentRootContext().bgInstancesToRemove;
-});
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) => ctx.bgInstancesToRemove = globalBackgroundSnapshotInstancesToRemove,
+    (ctx) => globalBackgroundSnapshotInstancesToRemove = ctx.bgInstancesToRemove,
+  );
+}
 
 export function setGlobalBackgroundSnapshotInstancesToRemove(ids: number[]): void {
-  getCurrentRootContext().bgInstancesToRemove = ids;
   globalBackgroundSnapshotInstancesToRemove = ids;
 }

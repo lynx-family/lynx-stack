@@ -4,7 +4,12 @@
 import { options } from 'preact';
 import { describe, expect, it, vi } from 'vitest';
 
-import { defaultRootContext, getCurrentRootContext, RootContext, switchRootContext } from '../../src/render-context';
+import {
+  createRootContext,
+  defaultRootContext,
+  getCurrentRootContext,
+  switchRootContext,
+} from '../../src/render-context';
 import { installContextSwitchHook } from '../../src/snapshot/lifecycle/contextSwitchHook';
 import { PARENT_DOM } from '../../src/shared/render-constants';
 
@@ -27,7 +32,7 @@ describe('installContextSwitchHook', () => {
 
   it('switches to the context carried by the rendered component owner', () => {
     installContextSwitchHook();
-    const ctx = new RootContext();
+    const ctx = createRootContext();
     switchRootContext(defaultRootContext);
 
     const component = { [PARENT_DOM]: { __rootCtx: ctx } };

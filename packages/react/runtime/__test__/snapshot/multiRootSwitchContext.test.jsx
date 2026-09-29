@@ -1,62 +1,78 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { options } from 'preact';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { RootContext, defaultRootContext, getCurrentRootContext, switchRootContext } from '../../src/render-context';
-import {
-  __globalSnapshotPatch,
-  initGlobalSnapshotPatch,
-  takeGlobalSnapshotPatch,
-} from '../../src/snapshot/lifecycle/patch/snapshotPatch';
-import { replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
-import { backgroundSnapshotInstanceManager } from '../../src/snapshot';
 import { COMMIT } from '../../src/shared/render-constants';
-import { BackgroundSnapshotInstance } from '../../src/snapshot/snapshot/backgroundSnapshot';
 import { globalEnvManager } from './utils/envManager';
 
-beforeEach(() => {
+let options;
+let createRootContext;
+let defaultRootContext;
+let getCurrentRootContext;
+let switchRootContext;
+let snapshotPatch;
+let initGlobalSnapshotPatch;
+let takeGlobalSnapshotPatch;
+let replaceCommitHook;
+let backgroundSnapshotInstanceManager;
+let BackgroundSnapshotInstance;
+
+beforeEach(async () => {
   globalEnvManager.resetEnv();
+  globalThis.__LYNX_GROUP_MODULE_SHARING__ = true;
+  vi.resetModules();
+  ({ options } = await import('preact'));
+  ({ createRootContext, defaultRootContext, getCurrentRootContext, switchRootContext } = await import(
+    '../../src/render-context'
+  ));
+  snapshotPatch = await import('../../src/snapshot/lifecycle/patch/snapshotPatch');
+  ({ initGlobalSnapshotPatch, takeGlobalSnapshotPatch } = snapshotPatch);
+  ({ replaceCommitHook } = await import('../../src/snapshot/lifecycle/patch/commit'));
+  ({ backgroundSnapshotInstanceManager, BackgroundSnapshotInstance } = await import(
+    '../../src/snapshot/snapshot/backgroundSnapshot'
+  ));
 });
 
 afterEach(() => {
   switchRootContext(defaultRootContext);
+  delete globalThis.__LYNX_GROUP_MODULE_SHARING__;
+  vi.resetModules();
   vi.restoreAllMocks();
 });
 
 describe('switchRootContext', () => {
   it('routes per-render singletons to the current context and refreshes read aliases', () => {
-    const a = new RootContext();
-    const b = new RootContext();
+    const a = createRootContext();
+    const b = createRootContext();
 
     switchRootContext(a);
     initGlobalSnapshotPatch();
-    __globalSnapshotPatch.push(['A']);
+    snapshotPatch.__globalSnapshotPatch.push(['A']);
 
     switchRootContext(b);
     initGlobalSnapshotPatch();
-    __globalSnapshotPatch.push(['B']);
+    snapshotPatch.__globalSnapshotPatch.push(['B']);
 
     switchRootContext(a);
-    expect(__globalSnapshotPatch).toEqual([['A']]);
+    expect(snapshotPatch.__globalSnapshotPatch).toEqual([['A']]);
     switchRootContext(b);
-    expect(__globalSnapshotPatch).toEqual([['B']]);
+    expect(snapshotPatch.__globalSnapshotPatch).toEqual([['B']]);
 
     expect(a.snapshotPatch).toEqual([['A']]);
     expect(b.snapshotPatch).toEqual([['B']]);
   });
 
   it('takeGlobalSnapshotPatch only drains the current context', () => {
-    const a = new RootContext();
-    const b = new RootContext();
+    const a = createRootContext();
+    const b = createRootContext();
 
     switchRootContext(a);
     initGlobalSnapshotPatch();
-    __globalSnapshotPatch.push(['A']);
+    snapshotPatch.__globalSnapshotPatch.push(['A']);
     switchRootContext(b);
     initGlobalSnapshotPatch();
-    __globalSnapshotPatch.push(['B']);
+    snapshotPatch.__globalSnapshotPatch.push(['B']);
 
     switchRootContext(a);
     expect(takeGlobalSnapshotPatch()).toEqual([['A']]);
@@ -64,7 +80,7 @@ describe('switchRootContext', () => {
   });
 
   it('is a no-op when switching to the current context', () => {
-    const a = new RootContext();
+    const a = createRootContext();
     switchRootContext(a);
     const refresher = vi.fn();
     expect(getCurrentRootContext()).toBe(a);
@@ -76,8 +92,8 @@ describe('switchRootContext', () => {
 
 describe('per-root background snapshot instances', () => {
   it('registers each instance in its owner context and tears down only that owner', () => {
-    const a = new RootContext();
-    const b = new RootContext();
+    const a = createRootContext();
+    const b = createRootContext();
 
     switchRootContext(a);
     const nodeA = new BackgroundSnapshotInstance('root');
@@ -98,7 +114,7 @@ describe('per-root background snapshot instances', () => {
   });
 
   it('manager.values follows the current context', () => {
-    const a = new RootContext();
+    const a = createRootContext();
     switchRootContext(a);
     const nodeA = new BackgroundSnapshotInstance('root');
     expect(backgroundSnapshotInstanceManager.values.has(nodeA.__id)).toBe(true);
@@ -113,7 +129,7 @@ describe('commit callbacks', () => {
     globalEnvManager.switchToBackground();
     replaceCommitHook();
     const commitInContext = () => {
-      const ctx = new RootContext();
+      const ctx = createRootContext();
       let onPatchApplied;
       ctx.lynx = {
         ...lynx,

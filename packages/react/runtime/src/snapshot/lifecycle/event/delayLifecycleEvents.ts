@@ -1,20 +1,23 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { getCurrentRootContext, onRootContextSwitch } from '../../../render-context.js';
+import { onRootContextSwitch } from '../../../render-context.js';
 import type { LifecycleConstant } from '../../lifecycle/constant.js';
 
-let delayedLifecycleEvents: [type: LifecycleConstant, data: unknown][] = getCurrentRootContext().delayedLifecycleEvents;
+let delayedLifecycleEvents: [type: LifecycleConstant, data: unknown][] = [];
 
-onRootContextSwitch(() => {
-  delayedLifecycleEvents = getCurrentRootContext().delayedLifecycleEvents;
-});
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) => ctx.delayedLifecycleEvents = delayedLifecycleEvents,
+    (ctx) => delayedLifecycleEvents = ctx.delayedLifecycleEvents,
+  );
+}
 
 function delayLifecycleEvent(type: LifecycleConstant, data: unknown): void {
-  getCurrentRootContext().delayedLifecycleEvents.push([type, data]);
+  delayedLifecycleEvents.push([type, data]);
 }
 
 /**
  * @internal
  */
-export { delayedLifecycleEvents, delayLifecycleEvent };
+export { delayLifecycleEvent, delayedLifecycleEvents };
