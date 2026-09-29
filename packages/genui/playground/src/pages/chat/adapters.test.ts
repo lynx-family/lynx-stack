@@ -829,12 +829,21 @@ describe('chat protocol adapters', () => {
       data: {
         text: `Here is the artifact:\n${VALID_LYNX_XML}\n\`\`\``,
         usage: { inputTokens: 7, outputTokens: 11, totalTokens: 18 },
+        preview: {
+          sourceUrl: 'https://cdn.example.com/lynx-xml/preview/id/index.lynxml',
+        },
       },
     });
     expect(done.emissions).toEqual([
       {
         type: 'usage',
         usage: { promptTokens: 7, completionTokens: 11, totalTokens: 18 },
+      },
+      {
+        type: 'previewPayload',
+        value: {
+          sourceUrl: 'https://cdn.example.com/lynx-xml/preview/id/index.lynxml',
+        },
       },
       { type: 'final', output: { source: VALID_LYNX_XML } },
     ]);
@@ -930,10 +939,19 @@ describe('chat protocol adapters', () => {
         language: 'text',
       },
     ]);
-    const saved = LYNX_XML_CHAT_ADAPTER.persist(output);
+    const saved = LYNX_XML_CHAT_ADAPTER.persist(output, {
+      kind: 'create',
+      current: null,
+      previewPayloadUrls: {
+        sourceUrl: 'https://cdn.example.com/lynx-xml/preview/id/index.lynxml',
+      },
+    });
     expect(saved.assistantContent).toBe(VALID_LYNX_XML);
     expect(saved.lynxXmlFragment).toBe(xmlFragment);
     expect(saved.lynxXmlModelOutput).toBe(modelOutput);
+    expect(saved.previewPayloadUrls).toEqual({
+      sourceUrl: 'https://cdn.example.com/lynx-xml/preview/id/index.lynxml',
+    });
     const history = [{
       role: 'assistant' as const,
       content: saved.assistantContent,
@@ -997,7 +1015,11 @@ describe('chat protocol adapters', () => {
       { label: 'Original', text: VALID_LYNX_XML },
       { label: 'Transformed', text: source },
     ]);
-    expect(LYNX_XML_CHAT_ADAPTER.persist(output)).toMatchObject({
+    expect(LYNX_XML_CHAT_ADAPTER.persist(output, {
+      kind: 'create',
+      current: null,
+      previewPayloadUrls: null,
+    })).toMatchObject({
       assistantContent: source,
       lynxXmlModelOutput: VALID_LYNX_XML,
     });
@@ -1100,10 +1122,13 @@ describe('chat protocol adapters', () => {
     expect(LYNX_XML_CHAT_ADAPTER.preview.source(lynxXmlOutput, {
       protocol: PROTOCOLS['lynx-xml'],
       theme: 'dark',
-      previewPayloadUrls: null,
+      previewPayloadUrls: {
+        sourceUrl: 'https://cdn.example.com/lynx-xml/preview/id/index.lynxml',
+      },
     })).toEqual({
       kind: 'lynx-xml',
       source: VALID_LYNX_XML,
+      sourcePath: 'https://cdn.example.com/lynx-xml/preview/id/index.lynxml',
       theme: 'dark',
     });
     expect(LYNX_XML_CHAT_ADAPTER.preview.merge(null, lynxXmlOutput)).toBe(

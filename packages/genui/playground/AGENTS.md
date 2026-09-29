@@ -62,6 +62,10 @@ complete artifact directly. Do not route XML through bundled protocol
 renderers, init data, global props, or global events, or add per-example
 Rspeedy builds.
 
+For generated XML, consume `done.preview.sourceUrl` from the server, persist it
+with the assistant turn, and use it for Web-share and native LynxExplorer links.
+Keep the current Web preview on the in-memory final source.
+
 ### Template Examples
 
 Import examples as raw editor source. Keep `<template>`, styles, and an authored

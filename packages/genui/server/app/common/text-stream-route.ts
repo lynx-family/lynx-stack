@@ -58,6 +58,7 @@ export interface TextStreamRouteOptions {
   parseOptions?: (body: Record<string, unknown>) =>
     | { ok: true; options: ChatOptions }
     | { ok: false; error: string };
+  publishFinalText?: (value: string) => Promise<unknown>;
   scope: string;
   path: string;
   getService: () => TextStreamingService;
@@ -277,20 +278,39 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
             }
             throw error;
           }
+          const metrics = timing.finish();
+          if (config.publishFinalText) enqueue('metrics', { metrics });
+          let preview: unknown;
+          if (config.publishFinalText) {
+            const publishStartedAt = performance.now();
+            try {
+              preview = await config.publishFinalText(finalText);
+            } finally {
+              const artifactUploadMs = performance.now() - publishStartedAt;
+              timing.recordArtifactUpload(artifactUploadMs);
+              log('artifact.publish.completed', {
+                durationMs: artifactUploadMs,
+                published: preview !== undefined,
+              });
+            }
+          }
+          generationController.signal.throwIfAborted();
           log('done.enqueued', {
             finalTextLength: finalText.length,
             finishReason,
             hasUsage: usage !== undefined,
+            hasPreviewUrl: preview !== undefined,
             requestId,
           });
           enqueue('done', {
-            metrics: timing.finish(),
+            metrics,
             ok: true,
             text: finalText,
             ...(metadata ? { metadata } : {}),
             usage,
             tokenUsage: extractTokenUsage(usage),
             finishReason,
+            preview,
           });
         } catch (error: unknown) {
           if (

@@ -25,7 +25,7 @@ export const TOS_STORAGE_TYPES = ['preview', 'conversation'] as const;
 export type TosStorageType = typeof TOS_STORAGE_TYPES[number];
 
 export type TosStorageLocation =
-  | { method: 'a2ui' | 'openui'; type: 'preview' }
+  | { method: 'a2ui' | 'openui' | 'lynx-xml'; type: 'preview' }
   | { method: TosStorageMethod; type: 'conversation' };
 
 const A2UI_PREVIEW_LOCATION: TosStorageLocation = {
@@ -35,6 +35,11 @@ const A2UI_PREVIEW_LOCATION: TosStorageLocation = {
 
 const OPENUI_PREVIEW_LOCATION: TosStorageLocation = {
   method: 'openui',
+  type: 'preview',
+};
+
+const LYNX_XML_PREVIEW_LOCATION: TosStorageLocation = {
+  method: 'lynx-xml',
   type: 'preview',
 };
 
@@ -60,6 +65,10 @@ export interface A2UIPublishedPayload {
 
 export interface OpenUIPublishedPayload {
   rawTextUrl: string;
+}
+
+export interface LynxXmlPublishedArtifact {
+  sourceUrl: string;
 }
 
 function trimSlashes(value: string): string {
@@ -308,6 +317,42 @@ export async function publishOpenUIRawText(
   } catch (err) {
     console.warn(
       '[openui:payload-publisher] Volcengine TOS upload failed',
+      err,
+    );
+    return undefined;
+  }
+}
+
+export async function publishLynxXmlArtifact(
+  source: string,
+): Promise<LynxXmlPublishedArtifact | undefined> {
+  try {
+    const config = resolveTosStorageConfig();
+    if (!config) {
+      console.warn(
+        '[lynx-xml:payload-publisher] Volcengine TOS is not configured',
+      );
+      return undefined;
+    }
+    const client = createTosClient(config);
+    const id = crypto.randomUUID();
+    const sourcePath = buildTosStoragePath(
+      storageMethodPrefix(config, LYNX_XML_PREVIEW_LOCATION.method),
+      LYNX_XML_PREVIEW_LOCATION.type,
+      id,
+      'index.lynxml',
+    );
+    await uploadTosObject(
+      client,
+      config,
+      sourcePath,
+      source,
+      'application/xml; charset=utf-8',
+    );
+    return { sourceUrl: buildTosObjectUrl(sourcePath, config) };
+  } catch (err) {
+    console.warn(
+      '[lynx-xml:payload-publisher] Volcengine TOS upload failed',
       err,
     );
     return undefined;
