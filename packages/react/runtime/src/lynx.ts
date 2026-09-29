@@ -82,7 +82,6 @@ export function initBackgroundRuntimeGlobals(): void {
   options.document = document as unknown as Document;
   options.requestAnimationFrame = lynxQueueMicrotask;
   setupBackgroundDocument();
-  addCtxNotFoundEventListener();
 
   if (process.env['NODE_ENV'] === 'test') {}
   else {
@@ -98,6 +97,7 @@ export function initBackgroundRuntimeGlobals(): void {
 }
 
 export function initBackgroundRuntimeForRoot(): void {
+  addCtxNotFoundEventListener();
   registerAppCallbacks(getPageLynx());
   setupLynxEnv();
 }

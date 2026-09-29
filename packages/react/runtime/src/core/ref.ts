@@ -245,16 +245,17 @@ export abstract class SelectorRefProxy<TProxy extends SelectorRefProxy<TProxy>> 
   abstract get selector(): string;
 
   exec(): void {
+    const pageLynx = getPageLynx();
     if (__DEV__) {
       const execStack = new Error('ReactLynx ref exec() call stack').stack;
       this.runOrDelay(() => {
         const selector = this.selector;
-        this.task!(lynx.createSelectorQuery().select(selector), execStack, selector).exec();
+        this.task!(pageLynx.createSelectorQuery().select(selector), execStack, selector).exec();
       });
       return;
     }
     this.runOrDelay(() => {
-      this.task!(getPageLynx().createSelectorQuery().select(this.selector)).exec();
+      this.task!(pageLynx.createSelectorQuery().select(this.selector)).exec();
     });
   }
 }

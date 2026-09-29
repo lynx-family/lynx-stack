@@ -19,7 +19,7 @@ import type { DependencyList, EffectCallback } from 'react';
 
 import type { TraceOption } from '@lynx-js/types';
 
-import { getCurrentRootContext, switchRootContext } from '../../render-context.js';
+import { getCurrentRootContext, runInRootContext } from '../../render-context.js';
 import { isProfiling, profileEnd, profileFlowId, profileStart } from '../../shared/profile.js';
 
 type GenericSetState = Dispatch<StateUpdater<unknown>>;
@@ -133,13 +133,9 @@ function withRootContext(
   return (effect, deps) => {
     const ctx = getCurrentRootContext();
     useEffectImpl(() => {
-      switchRootContext(ctx);
-      const cleanup = effect();
+      const cleanup = runInRootContext(ctx, effect);
       return typeof cleanup === 'function'
-        ? () => {
-          switchRootContext(ctx);
-          cleanup();
-        }
+        ? () => runInRootContext(ctx, cleanup)
         : cleanup;
     }, deps);
   };
@@ -156,6 +152,8 @@ const useEffectImpl = (__BACKGROUND__ && isProfiling) ? useEffectProfiled : useP
  *
  * @function
  * @public
+ *
+ * @group Hooks
  */
 const useEffect: (effect: EffectCallback, deps?: DependencyList) => void =
   (__BACKGROUND__ && typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__)

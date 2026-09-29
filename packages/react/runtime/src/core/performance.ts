@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { options } from 'preact';
 
+import { onRootContextSwitch } from '../render-context.js';
 import { RENDER_COMPONENT, ROOT } from '../shared/render-constants.js';
 import { hook, isSdkVersionGt } from '../utils.js';
 import { getPageLynx } from './page-lynx.js';
@@ -48,6 +49,19 @@ let shouldMarkDiffVdomStart = false;
 let shouldMarkDiffVdomEnd = false;
 
 let globalPipelineOptions: PipelineOptions | undefined;
+
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) => ctx.timing = [timingFlag, shouldMarkDiffVdomStart, shouldMarkDiffVdomEnd, globalPipelineOptions],
+    (ctx) =>
+      [timingFlag, shouldMarkDiffVdomStart, shouldMarkDiffVdomEnd, globalPipelineOptions] = ctx.timing ?? [
+        undefined,
+        false,
+        false,
+        undefined,
+      ],
+  );
+}
 let activeTimingAPIOptions: TimingAPIOptions | undefined;
 let didInstallTimingAPIHooks = false;
 
