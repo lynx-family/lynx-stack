@@ -13,6 +13,7 @@ import { useMemo } from './hooks/react.js';
 import { getMainThreadObjectHandleType, registerMainThreadObjectHandle } from './main-thread-object-handle-registry.js';
 import { allocateMainThreadRefId } from './main-thread-ref-id.js';
 import { addMainThreadRefInitValue } from './main-thread-ref-init-value.js';
+import { getPageLynx } from './page-lynx.js';
 
 const mainThreadObjectTypeDefinitions = new WeakMap<
   object,
@@ -99,8 +100,8 @@ export abstract class MainThreadObjectHandle<I, O extends object> {
       );
 
       const id = this._wvid;
-      this._releaseObserver = lynx.getNativeApp().createJSObjectDestructionObserver?.(() => {
-        lynx.getCoreContext?.().dispatchEvent({
+      this._releaseObserver = getPageLynx().getNativeApp().createJSObjectDestructionObserver?.(() => {
+        getPageLynx().getCoreContext?.().dispatchEvent({
           type: WorkletEvents.releaseWorkletRef,
           data: { id },
         });
