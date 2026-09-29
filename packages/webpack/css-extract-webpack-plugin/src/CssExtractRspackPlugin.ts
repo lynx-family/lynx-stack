@@ -252,19 +252,78 @@ class CssExtractRspackPluginImpl {
             }, {});
 
             try {
-              const {
-                compilerOptions: {
-                  // remove the `templateDebugUrl` to avoid "emit different content to the same filename" error while chunk splitting is enabled, see #1481
-                  templateDebugUrl,
-                  ...restCompilerOptions
-                },
-              } = args.finalEncodeOptions;
-              const baseEncodeOptions = { ...args.finalEncodeOptions };
-              baseEncodeOptions.compilerOptions = restCompilerOptions;
-              delete baseEncodeOptions.elementTemplate;
+              // Only forward the encode inputs a CSS hot-update needs, field by
+              // field. Anything per-template (e.g. `templateDebugUrl`,
+              // `debugMetadataUrl`) or added later must not leak in, otherwise
+              // shared chunks emit different content to the same hot-update
+              // file, see #1481.
+              const finalEncodeOptions = args.finalEncodeOptions as Record<
+                string,
+                unknown
+              >;
+              const pick = <T>(
+                source: unknown,
+                keys: readonly string[],
+              ): Record<string, T> => {
+                const from = (source && typeof source === 'object'
+                  ? source
+                  : {}) as Record<string, T>;
+                const picked: Record<string, T> = {};
+                for (const key of keys) {
+                  if (from[key] !== undefined) {
+                    picked[key] = from[key]!;
+                  }
+                }
+                return picked;
+              };
+              const compilerOptions = pick<string | boolean>(
+                finalEncodeOptions['compilerOptions'],
+                [
+                  'enableFiberArch',
+                  'useLepusNG',
+                  'enableReuseContext',
+                  'bundleModuleMode',
+                  'debugInfoOutside',
+                  'defaultDisplayLinear',
+                  'enableCSSInvalidation',
+                  'enableCSSSelector',
+                  'enableLepusDebug',
+                  'enableRemoveCSSScope',
+                  'targetSdkVersion',
+                  'defaultOverflowVisible',
+                ],
+              );
+              const rawSourceContent = (finalEncodeOptions['sourceContent']
+                  && typeof finalEncodeOptions['sourceContent'] === 'object'
+                ? finalEncodeOptions['sourceContent']
+                : {}) as Record<string, unknown>;
+              const config = pick<unknown>(rawSourceContent['config'], [
+                'lepusStrict',
+                'useNewSwiper',
+                'enableNewIntersectionObserver',
+                'enableNativeList',
+                'enableNewSticky',
+                'enableFlexBasisZeroPercent',
+                'enableGridPlacementShorthands',
+                'syncXElementRegistry',
+                'enableA11y',
+                'enableAccessibilityElement',
+                'customCSSInheritanceList',
+                'enableCSSInheritance',
+                'enableNewGesture',
+                'removeDescendantSelectorScope',
+              ]);
               const { buffer } = await hooks.encode.promise({
                 encodeOptions: {
-                  ...baseEncodeOptions,
+                  compilerOptions,
+                  sourceContent: {
+                    dsl: rawSourceContent['dsl'],
+                    appType: rawSourceContent['appType'],
+                    config,
+                  },
+                  cardType: finalEncodeOptions['cardType'],
+                  appType: finalEncodeOptions['appType'],
+                  pageConfig: finalEncodeOptions['pageConfig'],
                   css,
                   lepusCode: {
                     root: undefined,

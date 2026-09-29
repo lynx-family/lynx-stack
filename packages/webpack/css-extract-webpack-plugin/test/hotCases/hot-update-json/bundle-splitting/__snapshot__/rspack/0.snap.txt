@@ -7,9 +7,9 @@
 - Bundle: async/common.js
 - Bundle: async/lazy.js
 - Bundle: entry.js
-- Manifest: async/common.css.hot-update.json, size: 1256
-- Manifest: async/lazy.css.hot-update.json, size: 1562
-- Manifest: entry.css.hot-update.json, size: 1830
+- Manifest: async/common.css.hot-update.json, size: 1228
+- Manifest: async/lazy.css.hot-update.json, size: 1534
+- Manifest: entry.css.hot-update.json, size: 1798
 
 ## Manifest
 
@@ -48,8 +48,7 @@
         "enableAccessibilityElement": false,
         "enableCSSInheritance": false,
         "enableNewGesture": false,
-        "removeDescendantSelectorScope": false,
-        "debugMetadataUrl": ""
+        "removeDescendantSelectorScope": false
       }
     },
     "css": {
@@ -104,8 +103,7 @@
         "enableAccessibilityElement": false,
         "enableCSSInheritance": false,
         "enableNewGesture": false,
-        "removeDescendantSelectorScope": false,
-        "debugMetadataUrl": ""
+        "removeDescendantSelectorScope": false
       }
     },
     "css": {
@@ -192,8 +190,7 @@
         "enableAccessibilityElement": false,
         "enableCSSInheritance": false,
         "enableNewGesture": false,
-        "removeDescendantSelectorScope": false,
-        "debugMetadataUrl": ""
+        "removeDescendantSelectorScope": false
       }
     },
     "css": {

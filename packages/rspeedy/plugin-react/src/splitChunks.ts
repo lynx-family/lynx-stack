@@ -117,7 +117,9 @@ export const applySplitChunksRule: (
     rspackConfig.optimization.splitChunks.chunks = function chunks(chunk) {
       // TODO: support `splitChunks.chunks: 'async'`
       // We don't want main thread to be split
-      return !chunk.name?.includes('__main-thread')
+      return !Array.from(chunk.runtime).every(runtime =>
+        runtime.endsWith('__main-thread')
+      )
     }
     return rspackConfig
   })
