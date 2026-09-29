@@ -32,6 +32,162 @@ function restoreCSSVarValue(decl: CSS.Declaration): string {
   );
 }
 
+function encodeKeyframesRule(node: CSS.KeyframesRule): Rule {
+  const rule = new Rule('KeyframesRule');
+
+  const keyframeNamePrelude = new RulePrelude();
+  const keyFrameNameSelector = new Selector();
+  const keyFrameName = node.name.value;
+  keyFrameNameSelector.push_one_selector_section(
+    'UnknownText',
+    keyFrameName,
+  );
+  keyframeNamePrelude.push_selector(keyFrameNameSelector);
+  rule.set_prelude(keyframeNamePrelude);
+
+  for (const keyframesStyle of node.styles) {
+    const keyFrameChildrenRule = new Rule('StyleRule');
+    const prelude = new RulePrelude();
+
+    const selector = new Selector();
+    selector.push_one_selector_section(
+      'UnknownText',
+      keyframesStyle.keyText.value,
+    );
+    prelude.push_selector(selector);
+
+    keyFrameChildrenRule.set_prelude(prelude);
+
+    for (
+      const [key, value] of Object.entries(keyframesStyle.variables ?? {})
+    ) {
+      keyFrameChildrenRule.push_declaration(key, value);
+    }
+
+    for (const decl of keyframesStyle.style) {
+      keyFrameChildrenRule.push_declaration(
+        decl.name,
+        restoreCSSVarValue(decl),
+      );
+    }
+    rule.push_rule_children(keyFrameChildrenRule);
+  }
+  return rule;
+}
+
+function encodeFontFaceRule(node: CSS.FontFaceRule): Rule {
+  const rule = new Rule('FontFaceRule');
+  for (const decl of node.style) {
+    rule.push_declaration(decl.name, restoreCSSVarValue(decl));
+  }
+  return rule;
+}
+
+function encodeStyleRule(node: CSS.StyleRule): Rule {
+  const rule = new Rule('StyleRule');
+
+  const prelude = new RulePrelude();
+
+  // Parse selectors
+  const ast = CSS.csstree.parse(
+    `${node.selectorText.value}{ --mocked-declaration:1;}`,
+  ) as CSS.csstree.StyleSheet;
+
+  const selectorList = (ast.children.first as CSS.csstree.Rule)
+    .prelude as CSS.csstree.SelectorList;
+
+  for (
+    const selectorNode of selectorList.children
+      .toArray() as CSS.csstree.Selector[]
+  ) {
+    const selector = new Selector();
+    for (const child of selectorNode.children.toArray()) {
+      if (child.type === 'AttributeSelector') {
+        selector.push_one_selector_section(
+          child.type,
+          CSS.csstree.generate(child),
+        );
+        continue;
+      }
+      if (child.type === 'PseudoClassSelector') {
+        selector.push_one_selector_section(
+          child.type,
+          CSS.csstree.generate(child).slice(1),
+        );
+        continue;
+      }
+      // @ts-expect-error
+      if (!child.name) {
+        throw new Error(
+          `Selector section of type ${child.type} is missing a name/value.`,
+        );
+      }
+      selector.push_one_selector_section(
+        child.type,
+        // @ts-expect-error
+        child.name as string,
+      );
+    }
+    prelude.push_selector(selector);
+  }
+
+  rule.set_prelude(prelude);
+
+  // Declarations
+  for (const decl of node.style) {
+    rule.push_declaration(decl.name, restoreCSSVarValue(decl));
+  }
+
+  // Variables
+  for (const [name, value] of Object.entries(node.variables)) {
+    rule.push_declaration(name, value);
+  }
+
+  return rule;
+}
+
+/**
+ * `@media` is carried as a `MediaRule` whose prelude is the query list, kept
+ * verbatim as one `UnknownText` section, and whose nested rules are encoded
+ * like top-level ones. The web runtime emits it as a native `@media` block, so
+ * the browser evaluates it against the viewport.
+ */
+function encodeMediaRule(node: CSS.MediaRule): Rule {
+  const rule = new Rule('MediaRule');
+  const prelude = new RulePrelude();
+  const selector = new Selector();
+  selector.push_one_selector_section('UnknownText', node.prelude.value);
+  prelude.push_selector(selector);
+  rule.set_prelude(prelude);
+  for (const child of node.rules) {
+    const childRule = encodeRule(child);
+    if (childRule) {
+      rule.push_rule_children(childRule);
+    }
+  }
+  return rule;
+}
+
+/**
+ * Encodes one rule, or returns `undefined` for a rule kind the style format
+ * cannot carry (`@supports`, `@layer`, and `@import`, which only exists at the
+ * top level of a stylesheet).
+ */
+function encodeRule(node: CSS.LynxStyleNode): Rule | undefined {
+  switch (node.type) {
+    case 'KeyframesRule':
+      return encodeKeyframesRule(node);
+    case 'FontFaceRule':
+      return encodeFontFaceRule(node);
+    case 'StyleRule':
+      return encodeStyleRule(node);
+    case 'MediaRule':
+      return encodeMediaRule(node);
+    default:
+      return undefined;
+  }
+}
+
 export function encodeCSS(
   cssMap: Record<string, CSS.LynxStyleNode[]>,
 ): Uint8Array {
@@ -56,114 +212,11 @@ export function encodeCSS(
         } else {
           rawStyleInfo.append_import(parsedCssId, importCssId);
         }
-      } else if (node.type === 'KeyframesRule') {
-        const rule = new Rule('KeyframesRule');
-
-        const keyframeNamePrelude = new RulePrelude();
-        const keyFrameNameSelector = new Selector();
-        const keyFrameName = node.name.value;
-        keyFrameNameSelector.push_one_selector_section(
-          'UnknownText',
-          keyFrameName,
-        );
-        keyframeNamePrelude.push_selector(keyFrameNameSelector);
-        rule.set_prelude(keyframeNamePrelude);
-
-        for (const keyframesStyle of node.styles) {
-          const keyFrameChildrenRule = new Rule('StyleRule');
-          const prelude = new RulePrelude();
-
-          const selector = new Selector();
-          selector.push_one_selector_section(
-            'UnknownText',
-            keyframesStyle.keyText.value,
-          );
-          prelude.push_selector(selector);
-
-          keyFrameChildrenRule.set_prelude(prelude);
-
-          for (
-            const [key, value] of Object.entries(keyframesStyle.variables ?? {})
-          ) {
-            keyFrameChildrenRule.push_declaration(key, value);
-          }
-
-          for (const decl of keyframesStyle.style) {
-            keyFrameChildrenRule.push_declaration(
-              decl.name,
-              restoreCSSVarValue(decl),
-            );
-          }
-          rule.push_rule_children(keyFrameChildrenRule);
+      } else {
+        const rule = encodeRule(node);
+        if (rule) {
+          rawStyleInfo.push_rule(parsedCssId, rule);
         }
-        rawStyleInfo.push_rule(parsedCssId, rule);
-      } else if (node.type === 'FontFaceRule') {
-        const rule = new Rule('FontFaceRule');
-        for (const decl of node.style) {
-          rule.push_declaration(decl.name, restoreCSSVarValue(decl));
-        }
-        rawStyleInfo.push_rule(parsedCssId, rule);
-      } else if (node.type === 'StyleRule') {
-        const rule = new Rule('StyleRule');
-
-        const prelude = new RulePrelude();
-
-        // Parse selectors
-        const ast = CSS.csstree.parse(
-          `${node.selectorText.value}{ --mocked-declaration:1;}`,
-        ) as CSS.csstree.StyleSheet;
-
-        const selectorList = (ast.children.first as CSS.csstree.Rule)
-          .prelude as CSS.csstree.SelectorList;
-
-        for (
-          const selectorNode of selectorList.children
-            .toArray() as CSS.csstree.Selector[]
-        ) {
-          const selector = new Selector();
-          for (const child of selectorNode.children.toArray()) {
-            if (child.type === 'AttributeSelector') {
-              selector.push_one_selector_section(
-                child.type,
-                CSS.csstree.generate(child),
-              );
-              continue;
-            }
-            if (child.type === 'PseudoClassSelector') {
-              selector.push_one_selector_section(
-                child.type,
-                CSS.csstree.generate(child).slice(1),
-              );
-              continue;
-            }
-            // @ts-expect-error
-            if (!child.name) {
-              throw new Error(
-                `Selector section of type ${child.type} is missing a name/value.`,
-              );
-            }
-            selector.push_one_selector_section(
-              child.type,
-              // @ts-expect-error
-              child.name as string,
-            );
-          }
-          prelude.push_selector(selector);
-        }
-
-        rule.set_prelude(prelude);
-
-        // Declarations
-        for (const decl of node.style) {
-          rule.push_declaration(decl.name, restoreCSSVarValue(decl));
-        }
-
-        // Variables
-        for (const [name, value] of Object.entries(node.variables)) {
-          rule.push_declaration(name, value);
-        }
-
-        rawStyleInfo.push_rule(parsedCssId, rule);
       }
     }
   }
