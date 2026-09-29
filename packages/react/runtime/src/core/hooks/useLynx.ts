@@ -19,6 +19,4 @@ import { getPageLynx } from '../page-lynx.js';
  * @experimental
  * @alpha
  */
-export function useLynx(): typeof lynx {
-  return getPageLynx();
-}
+export const useLynx: () => typeof lynx = getPageLynx;

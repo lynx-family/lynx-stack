@@ -226,7 +226,7 @@ export const useInitDataChanged: (callback: (data: InitData) => void) => void;
 export const useLayoutEffect: (effect: EffectCallback, deps?: DependencyList) => void;
 
 // @alpha
-export function useLynx(): typeof lynx;
+export const useLynx: () => typeof lynx;
 
 // @public
 export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(eventName: string, listener: T): void;
