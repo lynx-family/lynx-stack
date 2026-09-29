@@ -146,25 +146,4 @@ describe('core/main-thread-object definition', () => {
     expect(productionType.type).toBe('@test/production');
     expect(ownKeys).not.toHaveBeenCalled();
   });
-
-  it('diagnoses an incompatible main-thread runtime', () => {
-    const definition = {
-      type: '@test/incompatible-runtime',
-      create: value => ({ value }),
-    };
-    defineMainThreadObjectType(definition);
-    const refImpl = globalThis.lynxWorkletImpl._refImpl;
-    const register = refImpl.registerMainThreadObjectType;
-    delete refImpl.registerMainThreadObjectType;
-    vi.stubGlobal('__JS__', false);
-    vi.stubGlobal('__LEPUS__', true);
-
-    try {
-      expect(() => defineMainThreadObjectType(definition)).toThrow(
-        'MainThreadObject requires a newer ReactLynx main-thread runtime. Upgrade the main template runtime or rebuild the lazy bundle with a compatible @lynx-js/react version.',
-      );
-    } finally {
-      refImpl.registerMainThreadObjectType = register;
-    }
-  });
 });

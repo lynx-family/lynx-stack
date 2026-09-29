@@ -47,13 +47,7 @@ function registerMainThreadObjectType(
   type: string,
   create: ((initialValue: unknown) => object) | Worklet,
 ): void {
-  const refImpl = globalThis.lynxWorkletImpl?._refImpl;
-  if (!refImpl || typeof refImpl.registerMainThreadObjectType !== 'function') {
-    throw new Error(
-      'MainThreadObject requires a newer ReactLynx main-thread runtime. Upgrade the main template runtime or rebuild the lazy bundle with a compatible @lynx-js/react version.',
-    );
-  }
-  refImpl.registerMainThreadObjectType(type, create);
+  globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(type, create);
 }
 
 /**
