@@ -32,8 +32,8 @@
     "@rspress/plugin-typedoc": "2.0.21",
     "@types/react": "npm:@types/react@^19.2.18",
     "@types/react-dom": "^19.2.4",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "typedoc": "^0.28.20",
     "typedoc-plugin-markdown": "4.13.1",
     "typescript": "catalog:"
