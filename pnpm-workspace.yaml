@@ -18,6 +18,7 @@ packages:
   - packages/react/transform/swc-plugin-reactlynx-compat
   - packages/react-umd
   - packages/rspeedy/*
+  - packages/solid
   - packages/tailwind-preset
   - packages/testing-library/*
   - packages/testing-library/examples/*

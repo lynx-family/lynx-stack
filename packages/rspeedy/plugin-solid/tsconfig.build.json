@@ -1,0 +1,14 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./lib",
+    "rootDir": "./src",
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../plugin-vanilla/tsconfig.build.json" },
+    { "path": "../../lynx/element-template-runtime/tsconfig.build.json" },
+    { "path": "../../webpack/template-webpack-plugin/tsconfig.build.json" },
+  ],
+}

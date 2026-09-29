@@ -1,0 +1,21 @@
+{
+  "name": "@lynx-js/example-solid",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rsbuild build",
+    "dev": "rsbuild dev",
+    "test:type": "tsc6 --noEmit"
+  },
+  "dependencies": {
+    "@lynx-js/solid": "workspace:*",
+    "solid-js": "1.9.15"
+  },
+  "devDependencies": {
+    "@lynx-js/rsbuild-plugin": "workspace:*",
+    "@lynx-js/solid-rsbuild-plugin": "workspace:*",
+    "@lynx-js/types": "4.1.0",
+    "@rsbuild/core": "catalog:rsbuild"
+  }
+}

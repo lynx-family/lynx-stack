@@ -1,0 +1,86 @@
+{
+  "name": "@lynx-js/solid-rsbuild-plugin",
+  "version": "0.0.0",
+  "description": "An Rsbuild plugin for building SolidLynx applications.",
+  "keywords": [
+    "rsbuild",
+    "Lynx",
+    "SolidJS"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/rspeedy/plugin-solid"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Lynx Authors"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./lib/index.d.ts",
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rslib",
+    "test": "rstest",
+    "test:type": "tsc6 --noEmit"
+  },
+  "dependencies": {
+    "@babel/core": "7.29.7",
+    "@lynx-js/element-template-runtime": "workspace:*",
+    "@lynx-js/template-webpack-plugin": "workspace:*",
+    "@lynx-js/vanilla-rsbuild-plugin": "workspace:*",
+    "@rsbuild/plugin-babel": "2.1.0",
+    "@rsbuild/plugin-solid": "1.2.2",
+    "parse5": "8.0.1"
+  },
+  "devDependencies": {
+    "@lynx-js/rsbuild-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/solid": "workspace:*",
+    "@lynx-js/test-tools": "workspace:*",
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rspack/core": "catalog:rspack",
+    "@rstest/core": "catalog:rstest",
+    "@types/babel__core": "7.20.5",
+    "solid-js": "1.9.15"
+  },
+  "peerDependencies": {
+    "@lynx-js/rspeedy": "^0.17.0 || ^0.18.0",
+    "@lynx-js/solid": "0.0.0",
+    "@rsbuild/core": "^2.0.0",
+    "solid-js": "^1.9.0"
+  },
+  "peerDependenciesMeta": {
+    "@lynx-js/rspeedy": {
+      "optional": true
+    },
+    "@rsbuild/core": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "types": "./dist/index.d.ts"
+  }
+}

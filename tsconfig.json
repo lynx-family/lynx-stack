@@ -126,6 +126,9 @@
       "path": "./packages/react-signals"
     },
     {
+      "path": "./packages/solid"
+    },
+    {
       "path": "./packages/lynx"
     },
     {

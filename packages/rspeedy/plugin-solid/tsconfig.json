@@ -1,0 +1,15 @@
+{
+  "extends": ["./tsconfig.build.json"],
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "@lynx-js/solid",
+    "rootDir": ".",
+    "noEmit": true,
+  },
+  "include": ["src", "test", "rstest.config.ts"],
+  "references": [
+    { "path": "../plugin-lynx/tsconfig.build.json" },
+    { "path": "../plugin-vanilla/tsconfig.build.json" },
+    { "path": "../../webpack/template-webpack-plugin/tsconfig.build.json" },
+  ],
+}

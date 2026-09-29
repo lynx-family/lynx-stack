@@ -1,0 +1,94 @@
+{
+  "name": "@lynx-js/solid",
+  "version": "0.0.0",
+  "description": "SolidJS runtime adapter for Lynx.",
+  "keywords": [
+    "lynx",
+    "solid",
+    "solidjs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/solid"
+  },
+  "license": "Apache-2.0",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./background": {
+      "types": "./lib/background.d.ts",
+      "default": "./dist/background.js"
+    },
+    "./jsx-runtime": {
+      "types": "./lib/jsx-runtime.d.ts",
+      "default": "./dist/jsx-runtime.js"
+    },
+    "./main-thread": {
+      "types": "./lib/main-thread.d.ts",
+      "default": "./dist/main-thread.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./lib/index.d.ts",
+  "files": [
+    "CHANGELOG.md",
+    "README.md",
+    "dist"
+  ],
+  "scripts": {
+    "build": "rslib",
+    "dev": "rslib --watch",
+    "test": "vitest run",
+    "test:type": "tsc6 --project tsconfig.test.json --noEmit"
+  },
+  "dependencies": {
+    "@lynx-js/element-template-runtime": "workspace:*",
+    "@lynx-js/lynx-runtime": "workspace:*",
+    "solid-js": "1.9.15"
+  },
+  "devDependencies": {
+    "@lynx-js/type-element-api": "0.0.9",
+    "@lynx-js/types": "4.1.0"
+  },
+  "peerDependencies": {
+    "@lynx-js/types": "*"
+  },
+  "peerDependenciesMeta": {
+    "@lynx-js/types": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./background": {
+        "types": "./dist/background.d.ts",
+        "default": "./dist/background.js"
+      },
+      "./jsx-runtime": {
+        "types": "./dist/jsx-runtime.d.ts",
+        "default": "./dist/jsx-runtime.js"
+      },
+      "./main-thread": {
+        "types": "./dist/main-thread.d.ts",
+        "default": "./dist/main-thread.js"
+      },
+      "./package.json": "./package.json"
+    },
+    "types": "./dist/index.d.ts"
+  }
+}

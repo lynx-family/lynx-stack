@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "isolatedDeclarations": false,
+    "jsx": "preserve",
+    "jsxImportSource": "@lynx-js/solid",
+    "noEmit": true,
+  },
+  "include": ["src", "rsbuild.config.ts"],
+  "references": [
+    { "path": "../../packages/rspeedy/plugin-lynx/tsconfig.build.json" },
+    { "path": "../../packages/rspeedy/plugin-solid/tsconfig.build.json" },
+  ],
+}
