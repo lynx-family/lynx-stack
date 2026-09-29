@@ -30,6 +30,8 @@ import { useEffect, useMemo, useRef } from '@lynx-js/react/hooks';
  * @param eventName - Event name to listen
  * @param listener - Event handler
  * @public
+ *
+ * @group Hooks
  */
 export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(
   eventName: string,

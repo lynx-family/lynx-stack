@@ -84,7 +84,7 @@ Use the A2UI style entry when you want the packaged component styles:
 import '@lynx-js/genui/a2ui/styles/theme.css';
 ```
 
-See [`a2ui/README.md`](./a2ui/README.md) for catalog composition and custom
+See [`a2ui/README.md`](https://github.com/lynx-family/lynx-stack/blob/main/packages/genui/a2ui/README.md) for catalog composition and custom
 component details.
 
 ## OpenUI
@@ -130,7 +130,7 @@ The flag controls which definitions and groups belong to the Library. The main
 `openui/explicit` with individual catalog subpaths when omitted built-ins must
 stay outside the static dependency graph.
 
-See [`openui/README.md`](./openui/README.md) for streaming and custom library
+See [`openui/README.md`](https://github.com/lynx-family/lynx-stack/blob/main/packages/genui/openui/README.md) for streaming and custom library
 examples.
 
 ## CLI

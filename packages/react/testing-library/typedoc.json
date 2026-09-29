@@ -1,0 +1,22 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "@lynx-js/react/testing-library",
+  "entryPoints": [
+    "types/index.d.ts"
+  ],
+  "tsconfig": "tsconfig.docs.json",
+  "intentionallyNotExported": [
+    "ElementTreeGlobals",
+    "EventType_2",
+    "FireObject_2",
+    "Indent",
+    "LynxElement",
+    "LynxEnv",
+    "LynxGlobalThis",
+    "PluginOptions",
+    "Print",
+    "Test",
+    "ThemeReceived",
+    "initElementTree"
+  ]
+}
