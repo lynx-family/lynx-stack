@@ -15,6 +15,8 @@ export class ChunkLoadingWebpackPlugin {
 
 // @public
 export interface ChunkLoadingWebpackPluginOptions {
+    // @alpha
+    experimental_lynxGroupModuleSharing: boolean;
 }
 
 ```

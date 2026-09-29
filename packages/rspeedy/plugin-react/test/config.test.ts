@@ -935,6 +935,34 @@ describe('Config', () => {
       expect(experimental_lynxGroupModuleSharing).toBe(true)
     })
 
+    test('experimental_lynxGroupModuleSharing is passed to ChunkLoadingWebpackPlugin', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const initChunkLoadingOptions = async (
+        experimental_lynxGroupModuleSharing: boolean,
+      ) => {
+        const rsbuild = await createRspeedy({
+          rspeedyConfig: {
+            plugins: [
+              pluginReactLynx({ experimental_lynxGroupModuleSharing }),
+              pluginStubRspeedyAPI(),
+            ],
+          },
+        })
+        const [config] = await rsbuild.initConfigs()
+        const ChunkLoadingWebpackPlugin = config?.plugins?.find(p =>
+          p?.constructor.name === 'ChunkLoadingWebpackPlugin'
+        )
+        expect(ChunkLoadingWebpackPlugin).toBeDefined()
+        // @ts-expect-error private field
+        return ChunkLoadingWebpackPlugin?.options as Record<string, unknown>
+      }
+
+      expect(await initChunkLoadingOptions(true)).toEqual({
+        experimental_lynxGroupModuleSharing: true,
+      })
+      expect(await initChunkLoadingOptions(false)).toEqual({})
+    })
+
     test('globalPropsMode defaults to "reactive"', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
       const rsbuild = await createRspeedy({

@@ -45,6 +45,7 @@ export class ChunkLoadingWebpackPluginImpl {
     compiler.hooks.thisCompilation.tap(this.name, (compilation) => {
       const ChunkLoadingRuntimeModule = createChunkLoadingRuntimeModule(
         compiler.webpack,
+        this.options.experimental_lynxGroupModuleSharing,
       );
       // TODO(colinaaa): enable this after https://github.com/web-infra-dev/rspack/issues/9849 is fixed.
       // const onceForChunkSet = new WeakSet<Chunk>();
@@ -68,6 +69,9 @@ export class ChunkLoadingWebpackPluginImpl {
         if (!isEnabledForChunk(chunk)) return;
         runtimeRequirements.add(RuntimeGlobals.getChunkUpdateScriptFilename);
         runtimeRequirements.add(RuntimeGlobals.moduleFactoriesAddOnly);
+        if (this.options.experimental_lynxGroupModuleSharing) {
+          runtimeRequirements.add(RuntimeGlobals.moduleCache);
+        }
         runtimeRequirements.add(RuntimeGlobals.hasOwnProperty);
         runtimeRequirements.add(RuntimeGlobals.publicPath);
         runtimeRequirements.add(LynxRuntimeGlobals.lynxAsyncChunkIds);
