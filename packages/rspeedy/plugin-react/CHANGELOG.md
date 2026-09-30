@@ -1,5 +1,21 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.20.4
+
+### Patch Changes
+
+- Add typed `MainThreadObject` handles whose target factory is defined by a Main Thread Function, with identity-preserving capture and hydration, runtime-owned reference release, and exact-type handle downcasting for readonly creation-payload access. V1 intentionally exposes no user-land disposal API. Applications import the APIs from `@lynx-js/react`. ([#3788](https://github.com/lynx-family/lynx-stack/pull/3788))
+
+- Preserve MainThreadObject identity in member and nested captures, and support Main Thread object methods with receiver-bound captures. ([#3789](https://github.com/lynx-family/lynx-stack/pull/3789))
+- Updated dependencies [[`18327c5`](https://github.com/lynx-family/lynx-stack/commit/18327c5af18578b1fb17f92418f8b3f8b5a2c983), [`9484386`](https://github.com/lynx-family/lynx-stack/commit/94843864c1cba3b2408bca45905a1daddc31d49f)]:
+  - @lynx-js/react-webpack-plugin@0.12.1
+  - @lynx-js/react-alias-rsbuild-plugin@0.20.4
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.4.3
+  - @lynx-js/template-webpack-plugin@0.16.3
+  - @lynx-js/css-extract-webpack-plugin@0.11.0
+  - @lynx-js/rsbuild-plugin@0.1.4
+
 ## 0.20.3
 
 ### Patch Changes

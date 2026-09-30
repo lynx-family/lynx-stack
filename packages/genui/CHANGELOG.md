@@ -1,5 +1,13 @@
 # @lynx-js/genui
 
+## 0.5.1
+
+### Patch Changes
+
+- Keep dependency `@a2ui/web_core` to `0.10.6`. ([#4071](https://github.com/lynx-family/lynx-stack/pull/4071))
+- Updated dependencies [[`18327c5`](https://github.com/lynx-family/lynx-stack/commit/18327c5af18578b1fb17f92418f8b3f8b5a2c983)]:
+  - @lynx-js/react-signals@0.0.5
+
 ## 0.5.0
 
 ### Minor Changes

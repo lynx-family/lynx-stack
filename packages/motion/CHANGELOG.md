@@ -1,5 +1,13 @@
 # @lynx-js/motion
 
+## 0.0.7
+
+### Patch Changes
+
+- Updated dependency `motion-dom` to `13.4.2`. ([#3853](https://github.com/lynx-family/lynx-stack/pull/3853))
+
+- Updated dependency `motion` to `13.4.3`. ([#3852](https://github.com/lynx-family/lynx-stack/pull/3852))
+
 ## 0.0.6
 
 ### Patch Changes
