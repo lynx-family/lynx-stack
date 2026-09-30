@@ -2044,6 +2044,43 @@ describe('Config', () => {
         `)
     })
 
+    test('splitChunks excludes chunks by runtime', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+          splitChunks: {
+            preset: 'default',
+          },
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      if (config?.optimization?.splitChunks === undefined) {
+        expect.fail('should have config.optimization.splitChunks')
+      }
+      if (config.optimization.splitChunks === false) {
+        expect.unreachable('splitChunks is not false')
+      }
+      if (typeof config.optimization.splitChunks.chunks !== 'function') {
+        expect.fail('splitChunks.chunks should be a function')
+      }
+
+      const chunks = config.optimization.splitChunks.chunks
+      const createChunk = (runtime: string[]) =>
+        ({ runtime: new Set(runtime) }) as Parameters<typeof chunks>[0]
+
+      expect(chunks(createChunk(['main__main-thread']))).toBe(false)
+      expect(chunks(createChunk(['lazy-main-thread']))).toBe(true)
+      expect(chunks(createChunk(['main']))).toBe(true)
+      expect(chunks(createChunk(['main__main-thread', 'main']))).toBe(true)
+    })
+
     test('splitChunks.preset: "default"', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
