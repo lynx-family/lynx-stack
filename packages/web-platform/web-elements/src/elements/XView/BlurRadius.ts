@@ -22,13 +22,24 @@ export class BlurRadius
 
   @registerAttributeHandler('blur-radius', true)
   _handleBlurRadius(newVal: string | null) {
-    if (newVal) {
-      newVal = `blur(${parseFloat(newVal)}px)`;
-      this.#getDynamicStyle().innerHTML =
-        `:host { backdrop-filter: ${newVal}; -webkit-backdrop-filter: ${newVal}}`;
-    } else {
-      this.#getDynamicStyle().innerHTML = '';
+    const match = newVal?.trim().match(
+      /^([+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?)([a-z]*)$/i,
+    );
+    let filter = '';
+    if (match && Number.isFinite(Number(match[1])) && Number(match[1]) >= 0) {
+      const value = Number(match[1]);
+      const unit = match[2]!.toLowerCase() || 'px';
+      // Reuse the runtime's reactive viewport and physical-pixel units.
+      const radius = unit === 'rpx' || unit === 'ppx'
+        ? `calc(${value} * var(--${unit}-unit))`
+        : `${value}${unit}`;
+      if (CSS.supports('filter', `blur(${radius})`)) {
+        filter = `blur(${radius})`;
+      }
     }
+    this.#getDynamicStyle().textContent = filter
+      ? `:host { backdrop-filter: ${filter}; -webkit-backdrop-filter: ${filter}}`
+      : '';
   }
   constructor(dom: HTMLElement) {
     this.#dom = dom as XBlurView;
