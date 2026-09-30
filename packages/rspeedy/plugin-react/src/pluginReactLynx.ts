@@ -25,6 +25,10 @@ import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
 import { pluginAutoLynx } from './autoLynx.js'
 import { applyBackgroundOnly } from './backgroundOnly.js'
+import {
+  REACT_COMPILE_RESULT_EXPOSURE,
+  reactCompileResultExposure,
+} from './compileResult.js'
 import { applyCSS } from './css.js'
 import { applyEntry } from './entry.js'
 import { applyGenerator } from './generator.js'
@@ -438,6 +442,11 @@ export function pluginReactLynx(
       name: 'lynx:react',
       pre: ['lynx:rsbuild:plugin-api', 'lynx:config'],
       setup(api) {
+        api.expose(
+          REACT_COMPILE_RESULT_EXPOSURE,
+          reactCompileResultExposure,
+        )
+
         const isRslib = api.context.callerName === 'rslib'
         const isRstest = api.context.callerName === 'rstest'
 
