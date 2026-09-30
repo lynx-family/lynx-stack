@@ -6,8 +6,8 @@ import { Readable } from 'node:stream';
 
 import { beforeEach, describe, expect, rstest, test } from '@rstest/core';
 
-import { publishLynxXmlArtifact } from '../app/a2ui/payload-publisher.js';
-import * as publisher from '../app/a2ui/payload-publisher.js' with {
+import { publishLynxXmlArtifact } from '../app/lynx-xml/artifact-publisher.js';
+import * as publisher from '../app/lynx-xml/artifact-publisher.js' with {
   rstest: 'importActual',
 };
 import {
@@ -17,7 +17,7 @@ import {
 import type { LynxXmlChatOptions } from '../service/lynx-xml/lynx-xml-agent.js';
 import app from '../src/app.js';
 
-rstest.mock('../app/a2ui/payload-publisher.js', () => ({
+rstest.mock('../app/lynx-xml/artifact-publisher.js', () => ({
   ...publisher,
   publishLynxXmlArtifact: rstest.fn(),
 }));

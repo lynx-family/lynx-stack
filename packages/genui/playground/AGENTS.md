@@ -1,8 +1,9 @@
 # GenUI Playground
 
 This package provides the React DOM playground for `@lynx-js/genui`, supporting
-A2UI, OpenUI, MCP Apps, Lynx XML, and HTML. Keep shared UI in the Web shell and
-protocol rendering in its preview runtime. Detailed feature conventions live in
+A2UI, OpenUI, MCP Apps, ReactLynx, Lynx XML, and HTML. Keep shared UI in the Web
+shell and protocol rendering in its preview runtime. Detailed feature conventions
+live in
 [the Playground instructions](../../../.github/genui-playground.instructions.md).
 
 ## Runtime Architecture
@@ -10,23 +11,32 @@ protocol rendering in its preview runtime. Detailed feature conventions live in
 `src/entry.tsx` starts the Web shell. `PreviewViewport` selects the preview
 surface for each protocol:
 
-| Protocol | Web preview                                                | Renderer source           |
-| -------- | ---------------------------------------------------------- | ------------------------- |
-| A2UI     | `render.html` hosting `<lynx-view>`                        | `lynx-src/a2ui/`          |
-| OpenUI   | `render.html` hosting `<lynx-view>`                        | `lynx-src/openui/`        |
-| MCP Apps | `render.html` hosting `<lynx-view>`                        | `lynx-src/mcp-apps/`      |
-| Lynx XML | Direct `LynxXmlView`; `render.html` for example/share URLs | Complete `.lynxml` source |
-| HTML     | Sandboxed `HtmlView` iframe using `srcDoc`                 | Complete HTML source      |
+| Protocol  | Web preview                                                | Renderer source               |
+| --------- | ---------------------------------------------------------- | ----------------------------- |
+| A2UI      | `render.html` hosting `<lynx-view>`                        | `lynx-src/a2ui/`              |
+| OpenUI    | `render.html` hosting `<lynx-view>`                        | `lynx-src/openui/`            |
+| MCP Apps  | `render.html` hosting `<lynx-view>`                        | `lynx-src/mcp-apps/`          |
+| ReactLynx | `render.html` hosting `<lynx-view>`                        | Server-built ReactLynx bundle |
+| Lynx XML  | Direct `LynxXmlView`; `render.html` for example/share URLs | Complete `.lynxml` source     |
+| HTML      | Sandboxed `HtmlView` iframe using `srcDoc`                 | Complete HTML source          |
 
 For bundled protocols, `src/utils/renderUrl.ts` constructs the preview URL and
-payload. `src/render.tsx` registers Lynx for Web elements, loads the selected
-bundle, and delivers protocol data through `initData`, global props, and the
-existing playback bridges. A2UI uses `A2UI`, a message store, and a mock agent
+payload. `src/render/index.tsx` selects the protocol implementation from
+`src/render/`. Shared query parsing, metrics, and bundled view lifecycle live
+in `query.ts`, `metrics.ts`, and `bundled.ts`; protocol modules own their data
+loading and action bridges. A2UI uses `A2UI`, a message store, and a mock agent
 for playback and action responses in `lynx-src/a2ui/App.tsx`.
 
 Web and native previews share the same `lynx-src/<protocol>/` implementation.
 `lynx.config.ts` builds `www/<protocol>.web.js` and
 `www/<protocol>.lynx.js` for `a2ui`, `openui`, and `mcp-apps`.
+
+ReactLynx uses generated standalone bundles instead of a checked-in
+`lynx-src/` renderer. Current, historical, and shared previews fetch the
+published Web bundle directly from TOS. The TOS bucket must allow anonymous
+reads and CORS requests from every deployed Playground origin. The
+`render.html` ReactLynx renderer enforces the bundle size limit, creates a Blob
+URL, and loads it directly in `<lynx-view>`.
 
 ## File Ownership and Outputs
 
@@ -35,7 +45,7 @@ Web and native previews share the same `lynx-src/<protocol>/` implementation.
 | `src/pages/`                                     | Shared pages and protocol adapters              |
 | `src/components/PreviewViewport.tsx`             | Preview surface selection                       |
 | `src/components/LynxXmlView.tsx`, `HtmlView.tsx` | Direct source previews                          |
-| `src/utils/renderUrl.ts`, `src/render.tsx`       | Preview URLs and standalone Web runtime         |
+| `src/utils/renderUrl.ts`, `src/render/`          | Preview URLs and protocol-specific Web runtimes |
 | `lynx-src/<protocol>/index.tsx`, `App.tsx`       | Bundled Lynx renderers                          |
 | `src/mock/lynx-xml/*.lynxml`                     | Lynx XML examples                               |
 | `rsbuild.config.ts`                              | Web entries, raw XML imports, and asset copying |

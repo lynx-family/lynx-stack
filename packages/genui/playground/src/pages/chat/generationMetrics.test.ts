@@ -11,6 +11,7 @@ test('reads finite non-negative generation metrics independently', () => {
     metrics: {
       generationMs: 800,
       artifactTransformMs: 20,
+      artifactBuildMs: 300,
       artifactUploadMs: 45,
       firstReasoningTokenMs: 120,
       firstTextTokenMs: 260,
@@ -21,6 +22,7 @@ test('reads finite non-negative generation metrics independently', () => {
   })).toEqual({
     generationMs: 800,
     artifactTransformMs: 20,
+    artifactBuildMs: 300,
     artifactUploadMs: 45,
     firstReasoningTokenMs: 120,
     firstTextTokenMs: 260,
@@ -33,6 +35,7 @@ test('reads finite non-negative generation metrics independently', () => {
     metrics: {
       generationMs: -1,
       artifactTransformMs: -1,
+      artifactBuildMs: Number.NaN,
       artifactUploadMs: Number.POSITIVE_INFINITY,
       firstTextTokenMs: 25,
       modelMs: Number.NaN,

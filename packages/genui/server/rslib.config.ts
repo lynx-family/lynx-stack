@@ -24,7 +24,10 @@ export default defineConfig({
       output: {
         target: 'node',
         autoExternal: false,
-        externals: [/^@mastra\/core(?:\/.*)?$/u],
+        externals: [
+          /^@lynx-js\/genui-reactlynx$/u,
+          /^@mastra\/core(?:\/.*)?$/u,
+        ],
       },
     },
   ],

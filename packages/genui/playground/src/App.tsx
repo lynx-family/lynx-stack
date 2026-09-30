@@ -128,7 +128,9 @@ export function App() {
 
   const protocol = route.protocol;
   let tabs = GENUI_TABS;
-  if (protocol.name === 'html') {
+  if (protocol.name === 'reactlynx') {
+    tabs = [{ id: 'create', label: 'Create' }];
+  } else if (protocol.name === 'html') {
     tabs = HTML_TABS;
   } else if (protocol.name === 'mcp-apps') {
     tabs = CREATE_EXAMPLES_TABS;
@@ -169,7 +171,7 @@ export function App() {
   }, []);
 
   const handleProtocolSelect = useCallback((name: ProtocolName) => {
-    if (name === 'html') {
+    if (name === 'html' || name === 'reactlynx') {
       window.location.hash = buildRouteHash(name, 'create');
       return;
     }
@@ -206,7 +208,9 @@ export function App() {
       />
     );
 
-    if (protocol.name === 'html') return createPage;
+    if (protocol.name === 'html' || protocol.name === 'reactlynx') {
+      return createPage;
+    }
 
     if (protocol.name === 'mcp-apps') {
       if (route.tab !== 'examples') return createPage;
@@ -351,6 +355,7 @@ export function App() {
         <option value='mcp-apps'>
           MCP Apps v{PROTOCOLS['mcp-apps'].version}
         </option>
+        <option value='reactlynx'>ReactLynx</option>
         <option value='lynx-xml'>
           Lynx XML v{PROTOCOLS['lynx-xml'].version}
         </option>

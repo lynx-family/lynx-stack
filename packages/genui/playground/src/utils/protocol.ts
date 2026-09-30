@@ -6,6 +6,7 @@ export type ProtocolName =
   | 'a2ui'
   | 'openui'
   | 'mcp-apps'
+  | 'reactlynx'
   | 'lynx-xml'
   | 'html';
 
@@ -18,6 +19,7 @@ export const PROTOCOLS: Record<ProtocolName, Protocol> = {
   a2ui: { name: 'a2ui', version: '0.9' },
   openui: { name: 'openui', version: '0.5' },
   'mcp-apps': { name: 'mcp-apps', version: '2026-01-26' },
+  reactlynx: { name: 'reactlynx', version: '3' },
   'lynx-xml': { name: 'lynx-xml', version: '0.1' },
   html: { name: 'html', version: '5' },
 };
@@ -27,6 +29,7 @@ export const DEFAULT_PROTOCOL: Protocol = PROTOCOLS.a2ui;
 export function getProtocol(name: string | null | undefined): Protocol {
   if (name === 'openui') return PROTOCOLS.openui;
   if (name === 'mcp-apps') return PROTOCOLS['mcp-apps'];
+  if (name === 'reactlynx') return PROTOCOLS.reactlynx;
   if (name === 'lynx-xml') return PROTOCOLS['lynx-xml'];
   if (name === 'html') return PROTOCOLS.html;
   return PROTOCOLS.a2ui;

@@ -1466,6 +1466,40 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
+  packages/genui/reactlynx:
+    dependencies:
+      '@lynx-js/config-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../rspeedy/plugin-config
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../react
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../rspeedy/plugin-react
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../rspeedy/plugin-lynx
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.2.9(core-js@3.50.0)
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
+    devDependencies:
+      '@rslib/core':
+        specifier: catalog:rslib
+        version: 1.0.2(@microsoft/api-extractor@7.59.2(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+      '@types/node':
+        specifier: ^24.13.3
+        version: 24.13.3
+
   packages/genui/server:
     dependencies:
       '@ai-sdk/openai':
@@ -1486,6 +1520,9 @@ importers:
       '@lynx-js/genui-openui':
         specifier: workspace:*
         version: link:../openui
+      '@lynx-js/genui-reactlynx':
+        specifier: workspace:*
+        version: link:../reactlynx
       '@mastra/core':
         specifier: 1.70.0
         version: 1.70.0(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.5))(zod@4.6.5)

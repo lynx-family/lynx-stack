@@ -63,6 +63,16 @@ export interface TextStreamRouteOptions {
   path: string;
   getService: () => TextStreamingService;
   normalizeFinalText?: (value: string) => string;
+  postprocess?: (
+    text: string,
+    context: {
+      signal: AbortSignal;
+      requestUrl: string;
+      emit: (event: string, data: unknown) => boolean;
+      recordArtifactBuild: (durationMs: number) => void;
+      recordArtifactUpload: (durationMs: number) => void;
+    },
+  ) => Promise<Record<string, unknown>>;
 }
 
 async function postTextStream(req: Request, config: TextStreamRouteOptions) {
@@ -295,6 +305,18 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
             }
           }
           generationController.signal.throwIfAborted();
+          const postprocessMetadata = await config.postprocess?.(finalText, {
+            signal: generationController.signal,
+            requestUrl: req.url,
+            emit: enqueue,
+            recordArtifactBuild: durationMs => {
+              timing.recordArtifactBuild(durationMs);
+            },
+            recordArtifactUpload: durationMs => {
+              timing.recordArtifactUpload(durationMs);
+            },
+          });
+          generationController.signal.throwIfAborted();
           log('done.enqueued', {
             finalTextLength: finalText.length,
             finishReason,
@@ -306,7 +328,9 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
             metrics,
             ok: true,
             text: finalText,
-            ...(metadata ? { metadata } : {}),
+            ...(metadata || postprocessMetadata
+              ? { metadata: { ...metadata, ...postprocessMetadata } }
+              : {}),
             usage,
             tokenUsage: extractTokenUsage(usage),
             finishReason,

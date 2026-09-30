@@ -24,6 +24,7 @@ import mcpAppsStreamRoute from '../app/mcp-apps/stream/route.js';
 import modelsRoute from '../app/models/route.js';
 import openuiPayloadRoute from '../app/openui/payload/route.js';
 import openuiStreamRoute from '../app/openui/stream/route.js';
+import reactLynxStreamRoute from '../app/reactlynx/stream/route.js';
 
 const app = new Hono({ strict: false });
 
@@ -45,6 +46,7 @@ app.route('/mcp-apps/stream', mcpAppsStreamRoute);
 app.route('/models', modelsRoute);
 app.route('/openui/payload', openuiPayloadRoute);
 app.route('/openui/stream', openuiStreamRoute);
+app.route('/reactlynx/stream', reactLynxStreamRoute);
 
 const allowedMethodsByPath = new Map<string, Set<string>>();
 for (const { method, path } of app.routes) {
