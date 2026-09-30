@@ -1,0 +1,23 @@
+{
+  "name": "@lynx-js/example-react-lazy-bundle-split-repro",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "npm run build:baseline && npm run build:split",
+    "build:baseline": "NO_SPLIT=1 DIST_ROOT=dist/baseline rsbuild build",
+    "build:split": "DIST_ROOT=dist/split rsbuild build",
+    "build:split-background": "SPLIT_LAYER=background DIST_ROOT=dist/split-background rsbuild build",
+    "build:split-main-thread": "SPLIT_LAYER=main-thread DIST_ROOT=dist/split-main-thread rsbuild build",
+    "dev:split": "DIST_ROOT=dist/split rsbuild dev"
+  },
+  "dependencies": {
+    "@lynx-js/react": "workspace:*"
+  },
+  "devDependencies": {
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rsbuild-plugin": "workspace:*",
+    "@lynx-js/types": "4.1.0",
+    "@rsbuild/core": "catalog:rsbuild"
+  }
+}
