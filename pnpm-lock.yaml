@@ -877,6 +877,9 @@ importers:
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.2.9(core-js@3.50.0)
+      cross-env:
+        specifier: ^10.1.0
+        version: 10.1.0
 
   examples/react-lazy-bundle-standalone:
     dependencies:

@@ -19,6 +19,6 @@
     "@lynx-js/rsbuild-plugin": "workspace:*",
     "@lynx-js/types": "4.1.0",
     "@rsbuild/core": "catalog:rsbuild",
-    "cross-env": "catalog:"
+    "cross-env": "^10.1.0"
   }
 }
