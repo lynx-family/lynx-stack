@@ -16,6 +16,7 @@ import { __root, setRoot } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isEmptyObject } from '../../utils.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
+import { releaseReplacedTree } from '../list/list.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import { hydrate } from '../renderToOpcodes/hydrate.js';
 import { __page } from '../snapshot/definition.js';
@@ -47,8 +48,7 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   hydrate(oldRoot as SnapshotInstance, __root as SnapshotInstance, {
     skipUnRef: true,
   });
-  (oldRoot as SnapshotInstance).unRenderElements();
-  (oldRoot as SnapshotInstance).tearDown();
+  releaseReplacedTree(oldRoot as SnapshotInstance, __root as SnapshotInstance);
 
   // always call this before `__FlushElementTree`
   __pendingListUpdates.flush();

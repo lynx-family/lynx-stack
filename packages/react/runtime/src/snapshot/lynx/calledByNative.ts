@@ -16,6 +16,7 @@ import {
 } from '../lifecycle/event/firstScreenSync.js';
 import { reloadMainThread } from '../lifecycle/reload.js';
 import { renderMainThread } from '../lifecycle/render.js';
+import { releaseReplacedTree } from '../list/list.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import { hydrate } from '../renderToOpcodes/hydrate.js';
 import { ssrHydrateByOpcodes } from '../renderToOpcodes/opcodes.js';
@@ -150,8 +151,7 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
         __root as SnapshotInstance,
         { skipUnRef: true, swap: firstScreenEventIdSwap },
       );
-      (oldRoot as SnapshotInstance).unRenderElements();
-      (oldRoot as SnapshotInstance).tearDown();
+      releaseReplacedTree(oldRoot as SnapshotInstance, __root as SnapshotInstance);
 
       // always call this before `__FlushElementTree`
       __pendingListUpdates.flush();
