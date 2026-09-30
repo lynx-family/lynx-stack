@@ -2,4 +2,4 @@
 "@lynx-js/web-elements": patch
 ---
 
-Updated dependency `dompurify` to `^3.4.15`.
+Updated dependency `dompurify` to `^3.4.16`.
