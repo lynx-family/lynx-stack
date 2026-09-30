@@ -99,6 +99,11 @@ x-text[x-show-inline-truncation] > lynx-wrapper > inline-truncation {
   display: inline-flex;
 }
 
+/* overrides `x-text > lynx-wrapper > *` until x-text decides to show it */
+x-text:not([x-show-inline-truncation]) > lynx-wrapper > inline-truncation {
+  display: none;
+}
+
 x-text > inline-truncation:first-child,
 x-text > lynx-wrapper > inline-truncation:first-child {
   max-width: 100%;
@@ -194,8 +199,12 @@ x-text[x-text-clipped]:not([tail-color-convert="false"])::part(inner-box)::after
 }
 
 x-text[x-text-clipped]:has(> inline-truncation)::part(inner-box):after,
+x-text[x-text-clipped]:has(> lynx-wrapper
+  > inline-truncation)::part(inner-box):after,
 x-text[x-text-clipped][x-text-custom-overflow]::part(inner-box):after,
 x-text[x-text-clipped]:has(> inline-truncation)::part(inner-box)::after,
+x-text[x-text-clipped]:has(> lynx-wrapper
+  > inline-truncation)::part(inner-box)::after,
 x-text[x-text-clipped][x-text-custom-overflow]::part(inner-box)::after {
   content: "" !important;
 }
@@ -234,7 +243,8 @@ x-text[text-maxline="0"] {
 
 @supports selector(:has(> inline-truncation)) {
   /* text-wrap  chrome 114, firefox 121, safari 17.4*/
-  x-text[text-maxline="1"]:not([tail-color-convert="false"], :has(> inline-truncation))::part(inner-box) {
+  x-text[text-maxline="1"]:not([tail-color-convert="false"], :has(> inline-truncation), :has(> lynx-wrapper
+    > inline-truncation))::part(inner-box) {
     text-wrap: nowrap;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -254,6 +264,7 @@ x-text[text-maxline="1"]:not([tail-color-convert="false"])::part(inner-box) {
 
 x-text[text-maxline][x-text-custom-overflow]::part(inner-box),
 x-text[text-maxline]:has(> inline-truncation)::part(inner-box),
+x-text[text-maxline]:has(> lynx-wrapper > inline-truncation)::part(inner-box),
 x-text[text-maxline][tail-color-convert="false"]::part(inner-box) {
   display: block !important;
 }

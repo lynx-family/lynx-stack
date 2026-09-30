@@ -274,6 +274,43 @@ test.describe('web-elements test suite', () => {
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, 'index');
     });
+    test.describe('x-text/text-maxline-with-custom-truncation-in-lynx-wrapper', () => {
+      const fixture =
+        'x-text/text-maxline-with-custom-truncation-in-lynx-wrapper';
+      test('shows the wrapped truncation only when the text is clipped', async ({ page }) => {
+        await gotoWebComponentPage(page, fixture);
+        for (const id of ['long', 'maxline-1']) {
+          const text = page.locator(`#${id}`);
+          await expect(text).toHaveAttribute('x-text-clipped');
+          await expect(text).toHaveAttribute('x-show-inline-truncation');
+          const truncation = text.locator('inline-truncation');
+          await expect(truncation).toBeVisible();
+          const textBox = (await text.boundingBox())!;
+          const truncationBox = (await truncation.boundingBox())!;
+          expect(truncationBox.y + truncationBox.height).toBeLessThanOrEqual(
+            textBox.y + textBox.height + 1,
+          );
+          expect(truncationBox.x + truncationBox.width).toBeLessThanOrEqual(
+            textBox.x + textBox.width + 1,
+          );
+        }
+        const short = page.locator('#short');
+        await expect(short.locator('inline-truncation')).toBeHidden();
+        await expect(short).not.toHaveAttribute('x-text-clipped');
+        await expect(short).not.toHaveAttribute('x-show-inline-truncation');
+      });
+      test('restores the text once the wrapped truncation is removed', async ({ page }) => {
+        await gotoWebComponentPage(page, fixture);
+        const text = page.locator('#long');
+        await expect(text).toHaveAttribute('x-show-inline-truncation');
+        await text.evaluate((dom) => {
+          dom.querySelector('lynx-wrapper')!.replaceChildren();
+          dom.setAttribute('text-maxline', '-1');
+        });
+        await expect(text).not.toHaveAttribute('x-text-clipped');
+        await expect(text).toContainText('shown at the end of it.');
+      });
+    });
     test('x-text/avatar-text-inline', async ({ page }, { title }) => {
       await gotoWebComponentPage(page, title);
       await page.waitForFunction(() => {
