@@ -13,21 +13,13 @@ async function runMainThreadLoader(
   buildInfo: Record<string, unknown>,
 ): Promise<{ code: string; map?: string }> {
   return new Promise((resolve, reject) => {
-    const loaderPath = path.resolve(
-      __dirname,
-      '../lib/loaders/main-thread.js',
-    );
     const transformPath = path.resolve(
       __dirname,
       './fixtures/mock-main-thread-transform.cjs',
     );
 
-    import(loaderPath).then(
-      (
-        mod: {
-          default: (this: Record<string, unknown>, content: string) => void;
-        },
-      ) => {
+    import('../src/loaders/main-thread.js').then(
+      (mod) => {
         const loader = mod.default;
 
         const ctx: Record<string, unknown> = {
@@ -54,13 +46,64 @@ async function runMainThreadLoader(
           },
         };
 
-        loader.call(ctx, content);
+        void loader.call(ctx as ThisParameterType<typeof loader>, content);
       },
     ).catch(reject);
   });
 }
 
 describe('main-thread loader', () => {
+  it('replaces semantic runtime requirements when a rebuilt module changes', async () => {
+    const buildInfo: Record<string, unknown> = {};
+
+    await runMainThreadLoader(
+      '/* __mainThreadProgrammability */ export function App() { return null; }',
+      buildInfo,
+    );
+
+    expect(buildInfo['lynx:react-runtime-requirements']).toEqual({
+      mainThreadProgrammability: true,
+    });
+
+    await runMainThreadLoader(
+      'export function App() { return null; }',
+      buildInfo,
+    );
+
+    expect(buildInfo['lynx:react-runtime-requirements']).toEqual({
+      mainThreadProgrammability: false,
+    });
+  });
+
+  it('clears legacy runtime ownership when a module rebuilds with a modern or plain transform result', async () => {
+    const buildInfo: Record<string, unknown> = {};
+    for (
+      const modernSource of [
+        '/* __mainThreadProgrammability */',
+        'export const plain = true;',
+        '/* __legacyPlain */',
+      ]
+    ) {
+      await runMainThreadLoader('/* __legacyWorklet */', buildInfo);
+      expect(buildInfo['lynx:legacy-worklet-runtime']).toBe(true);
+      expect(buildInfo).not.toHaveProperty('lynx:react-runtime-requirements');
+
+      await runMainThreadLoader(modernSource, buildInfo);
+      expect(buildInfo).not.toHaveProperty('lynx:legacy-worklet-runtime');
+    }
+  });
+
+  it('rejects malformed semantic runtime requirements', async () => {
+    await expect(
+      runMainThreadLoader(
+        '/* __invalidRuntimeRequirements */ export function App() { return null; }',
+        {},
+      ),
+    ).rejects.toThrow(
+      'react-transform returned invalid runtimeRequirements.mainThreadProgrammability',
+    );
+  });
+
   it('clears stale element-template build info when recompilation stops emitting templates', async () => {
     const buildInfo: Record<string, unknown> = {};
 

@@ -125,18 +125,22 @@ describe('collected defines', () => {
         ],
         "definesForWorklet": [
           {
-            "code": "const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "d3dd:test:1", function(e) {
+            "code": "registerWorkletInternal("main-thread", "d3dd:test:1", function(e) {
           const onScroll = lynxWorkletImpl._workletMap["d3dd:test:1"].bind(this);
           let { label } = this["_c"];
-          'main thread';
           console.info(label, e);
       });
       ",
             "id": "d3dd:test:1",
+            "runtimeRequirements": {
+              "mainThreadProgrammability": true,
+            },
           },
         ],
         "errors": [],
+        "runtimeRequirements": {
+          "mainThreadProgrammability": false,
+        },
         "uiSourceMapRecords": [],
         "warnings": [],
       }
@@ -147,7 +151,11 @@ describe('collected defines', () => {
     const [worklet] = result.definesForWorklet;
     const [snapshot] = result.definesForSnapshot;
     expect(worklet.code).toContain('registerWorkletInternal');
-    expect(worklet.code).toContain('loadWorkletRuntime');
+    expect(worklet.code).not.toContain('loadWorkletRuntime');
+    expect(worklet.runtimeRequirements).toEqual({
+      mainThreadProgrammability: true,
+    });
+    expect(result.runtimeRequirements.mainThreadProgrammability).toBe(false);
     expect(worklet.code).toContain('this["_c"]');
     expect(snapshot.id).toMatch(/^__snapshot_/);
     expect(snapshot.code).toContain('ReactLynx.createSnapshot');
@@ -247,15 +255,16 @@ describe('legacy slot codegen', () => {
         ],
         "definesForWorklet": [
           {
-            "code": "const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "d3dd:test:1", function(e) {
+            "code": "registerWorkletInternal("main-thread", "d3dd:test:1", function(e) {
           const onScroll = lynxWorkletImpl._workletMap["d3dd:test:1"].bind(this);
           let { label } = this["_c"];
-          'main thread';
           console.info(label, e);
       });
       ",
             "id": "d3dd:test:1",
+            "runtimeRequirements": {
+              "mainThreadProgrammability": true,
+            },
           },
         ],
       }
@@ -289,13 +298,11 @@ function f() {
     const result = await transformReactLynx(sharedSource, options('LEPUS'));
 
     expect(result.code).toMatchInlineSnapshot(`
-      "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react/internal";
-      var loadWorkletRuntime = __loadWorkletRuntime;
+      "import "@lynx-js/react/worklet-runtime/init";
       import { Foo } from './foo.js' with {
           runtime: 'shared'
       };
-      const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "d3dd:test:1", function() {
+      registerWorkletInternal("main-thread", "d3dd:test:1", function() {
           lynxWorkletImpl._workletMap["d3dd:test:1"].bind(this);
           'main thread';
           return new Foo();

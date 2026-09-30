@@ -10,15 +10,16 @@ use gen_stmt::StmtGen;
 use hash::WorkletHash;
 use rustc_hash::FxHashSet;
 use serde::Deserialize;
+use std::cell::Cell;
 use std::collections::HashSet;
+use std::rc::Rc;
 use std::vec;
 use swc_core::common::util::take::Take;
 use swc_core::common::{errors::HANDLER, Span, Spanned, DUMMY_SP};
 use swc_core::ecma::ast::*;
-use swc_core::ecma::utils::{prepend_stmts, private_ident};
+use swc_core::ecma::utils::prepend_stmts;
 use swc_core::ecma::visit::VisitMutWith;
 use swc_core::ecma::visit::{noop_visit_mut_type, noop_visit_type, Visit, VisitMut, VisitWith};
-use swc_core::quote;
 use worklet_type::WorkletType;
 
 use swc_plugins_shared::{
@@ -53,7 +54,7 @@ impl Default for WorkletVisitorConfig {
       filename: "index.js".into(),
       target: TransformTarget::LEPUS,
       custom_global_ident_names: None,
-      runtime_pkg: "NoDiff".into(),
+      runtime_pkg: "@lynx-js/react/internal".into(),
     }
   }
 }
@@ -66,8 +67,8 @@ pub struct WorkletVisitor {
   named_imports: HashSet<String>,
   hasher: WorkletHash,
   shared_identifiers: FxHashSet<Id>,
-  worklet_runtime_loaded: bool,
-  worklet_runtime_loaded_ident: Ident,
+  requires_main_thread_runtime: bool,
+  main_thread_programmability: Option<Rc<Cell<bool>>>,
   defines_collector: Option<DefinesCollector>,
 }
 
@@ -121,7 +122,7 @@ impl VisitMut for WorkletVisitor {
       &mut collector,
       false,
       &mut self.named_imports,
-      self.worklet_runtime_loaded_ident.clone(),
+      &mut self.requires_main_thread_runtime,
       collect_main_thread,
     );
 
@@ -220,7 +221,7 @@ impl VisitMut for WorkletVisitor {
             &mut collector,
             true,
             &mut self.named_imports,
-            self.worklet_runtime_loaded_ident.clone(),
+            &mut self.requires_main_thread_runtime,
             collect_main_thread,
           );
 
@@ -355,7 +356,7 @@ impl VisitMut for WorkletVisitor {
             &mut collector,
             true,
             &mut self.named_imports,
-            self.worklet_runtime_loaded_ident.clone(),
+            &mut self.requires_main_thread_runtime,
             collect_main_thread,
           );
 
@@ -444,7 +445,7 @@ impl VisitMut for WorkletVisitor {
       &mut collector,
       false,
       &mut self.named_imports,
-      self.worklet_runtime_loaded_ident.clone(),
+      &mut self.requires_main_thread_runtime,
       collect_main_thread,
     );
 
@@ -530,7 +531,7 @@ impl VisitMut for WorkletVisitor {
             &mut collector,
             false,
             &mut self.named_imports,
-            self.worklet_runtime_loaded_ident.clone(),
+            &mut self.requires_main_thread_runtime,
             collect_main_thread,
           );
 
@@ -572,7 +573,7 @@ impl VisitMut for WorkletVisitor {
             &mut collector,
             false,
             &mut self.named_imports,
-            self.worklet_runtime_loaded_ident.clone(),
+            &mut self.requires_main_thread_runtime,
             collect_main_thread,
           );
 
@@ -659,7 +660,7 @@ impl VisitMut for WorkletVisitor {
       &mut collector,
       false,
       &mut self.named_imports,
-      self.worklet_runtime_loaded_ident.clone(),
+      &mut self.requires_main_thread_runtime,
       collect_main_thread,
     );
 
@@ -682,7 +683,7 @@ impl VisitMut for WorkletVisitor {
   }
 
   fn visit_mut_module(&mut self, n: &mut Module) {
-    // First process imports to detect shared-runtime modules
+    // First process imports to detect shared-runtime modules.
     for item in &n.body {
       if let ModuleItem::ModuleDecl(ModuleDecl::Import(import_decl)) = item {
         if is_shared_runtime_import(import_decl) {
@@ -707,87 +708,123 @@ impl VisitMut for WorkletVisitor {
 
     n.visit_mut_children_with(self);
 
-    // Add global loadWorkletRuntime call if needed
-    if self.named_imports.contains("loadWorkletRuntime") && !self.worklet_runtime_loaded {
-      self.stmts_to_insert_at_top_level.insert(
-        0,
-        quote!("const $loaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry)" as Stmt, loaded = self.worklet_runtime_loaded_ident.clone()),
-      );
-      self.worklet_runtime_loaded = true;
+    if self.requires_main_thread_runtime {
+      if let Some(result) = &self.main_thread_programmability {
+        result.set(true);
+      }
     }
 
     let mut specifiers = self.named_imports.iter().collect::<Vec<_>>();
+    let mut prepended_items = vec![];
+
+    if self.requires_main_thread_runtime {
+      let runtime_pkg = self
+        .cfg
+        .runtime_pkg
+        .strip_suffix("/internal")
+        // A scoped package named `internal` is a package root, not an entry.
+        .filter(|pkg| !pkg.starts_with('@') || pkg.contains('/'))
+        .unwrap_or(&self.cfg.runtime_pkg);
+      let runtime_init_request = format!("{runtime_pkg}/worklet-runtime/init");
+
+      // Recreate the init import after the visitor finishes instead of keeping
+      // an input copy. Earlier imports can be removed by downstream DCE, while
+      // this compiler-owned import is part of the generated registration
+      // contract. Removing exact input copies also makes repeated transforms
+      // and explicit user imports converge to one init edge.
+      n.body.retain(|item| {
+        !matches!(
+          item,
+          ModuleItem::ModuleDecl(ModuleDecl::Import(import_decl))
+            if import_decl.src.value == runtime_init_request.as_str()
+        )
+      });
+
+      // Runtime initialization must be part of the same main-thread module
+      // graph as its registrations. This also lets normal business transforms
+      // and source-map handling observe the runtime source.
+      prepended_items.push(ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+        span: DUMMY_SP,
+        phase: ImportPhase::Evaluation,
+        specifiers: vec![],
+        src: Box::new(Str {
+          span: DUMMY_SP,
+          raw: None,
+          value: runtime_init_request.into(),
+        }),
+        type_only: Default::default(),
+        with: Default::default(),
+      })));
+    }
 
     if !specifiers.is_empty() {
       // Sort to keep the output consistent
       specifiers.sort();
 
-      prepend_stmts(
-        &mut n.body,
-        vec![
-          ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
-            span: DUMMY_SP,
-            phase: ImportPhase::Evaluation,
-            specifiers: specifiers
-              .iter()
-              .map(|imported| {
-                ImportSpecifier::Named(ImportNamedSpecifier {
-                  span: DUMMY_SP,
-                  is_type_only: false,
-                  local: Ident {
-                    ctxt: Default::default(),
-                    span: DUMMY_SP,
-                    sym: format!("__{imported}").into(),
-                    optional: false,
-                  },
-                  imported: Some(ModuleExportName::Ident(Ident {
-                    ctxt: Default::default(),
-                    span: DUMMY_SP,
-                    sym: imported.as_str().into(),
-                    optional: false,
-                  })),
-                })
-              })
-              .collect::<Vec<_>>(),
-            src: Box::new(Str {
+      prepended_items.push(ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+        span: DUMMY_SP,
+        phase: ImportPhase::Evaluation,
+        specifiers: specifiers
+          .iter()
+          .map(|imported| {
+            ImportSpecifier::Named(ImportNamedSpecifier {
               span: DUMMY_SP,
-              raw: None,
-              value: self.cfg.runtime_pkg.clone().into(),
-            }),
-            type_only: Default::default(),
-            with: Default::default(),
-          })),
-          ModuleItem::Stmt(Stmt::Decl(Decl::Var(Box::new(VarDecl {
-            ctxt: Default::default(),
-            span: DUMMY_SP,
-            kind: VarDeclKind::Var,
-            declare: false,
-            decls: specifiers
-              .into_iter()
-              .map(|name| VarDeclarator {
+              is_type_only: false,
+              local: Ident {
+                ctxt: Default::default(),
                 span: DUMMY_SP,
-                name: Pat::Ident(
-                  Ident {
-                    ctxt: Default::default(),
-                    span: DUMMY_SP,
-                    sym: name.as_str().into(),
-                    optional: false,
-                  }
-                  .into(),
-                ),
-                init: Some(Box::new(Expr::Ident(Ident {
-                  ctxt: Default::default(),
-                  span: DUMMY_SP,
-                  sym: format!("__{name}").into(),
-                  optional: false,
-                }))),
-                definite: false,
-              })
-              .collect(),
-          })))),
-        ]
-        .into_iter(),
-      );
+                sym: format!("__{imported}").into(),
+                optional: false,
+              },
+              imported: Some(ModuleExportName::Ident(Ident {
+                ctxt: Default::default(),
+                span: DUMMY_SP,
+                sym: imported.as_str().into(),
+                optional: false,
+              })),
+            })
+          })
+          .collect::<Vec<_>>(),
+        src: Box::new(Str {
+          span: DUMMY_SP,
+          raw: None,
+          value: self.cfg.runtime_pkg.clone().into(),
+        }),
+        type_only: Default::default(),
+        with: Default::default(),
+      })));
+      prepended_items.push(ModuleItem::Stmt(Stmt::Decl(Decl::Var(Box::new(VarDecl {
+        ctxt: Default::default(),
+        span: DUMMY_SP,
+        kind: VarDeclKind::Var,
+        declare: false,
+        decls: specifiers
+          .into_iter()
+          .map(|name| VarDeclarator {
+            span: DUMMY_SP,
+            name: Pat::Ident(
+              Ident {
+                ctxt: Default::default(),
+                span: DUMMY_SP,
+                sym: name.as_str().into(),
+                optional: false,
+              }
+              .into(),
+            ),
+            init: Some(Box::new(Expr::Ident(Ident {
+              ctxt: Default::default(),
+              span: DUMMY_SP,
+              sym: format!("__{name}").into(),
+              optional: false,
+            }))),
+            definite: false,
+          })
+          .collect(),
+      })))));
+    }
+
+    if !prepended_items.is_empty() {
+      prepend_stmts(&mut n.body, prepended_items.into_iter());
     }
     // Add statements to insert at top level after processing all items
     n.body.extend(
@@ -928,6 +965,11 @@ impl WorkletVisitor {
     self
   }
 
+  pub fn with_main_thread_programmability(mut self, result: Rc<Cell<bool>>) -> Self {
+    self.main_thread_programmability = Some(result);
+    self
+  }
+
   pub fn new(mode: TransformMode, cfg: WorkletVisitorConfig) -> Self {
     WorkletVisitor {
       mode,
@@ -937,8 +979,8 @@ impl WorkletVisitor {
       hasher: WorkletHash::new(),
       named_imports: HashSet::default(),
       shared_identifiers: FxHashSet::default(),
-      worklet_runtime_loaded: false,
-      worklet_runtime_loaded_ident: private_ident!("__workletRuntimeLoaded"),
+      requires_main_thread_runtime: false,
+      main_thread_programmability: None,
       defines_collector: None,
     }
   }
@@ -961,15 +1003,11 @@ impl WorkletVisitor {
       collect_unmergeable_define(&self.defines_collector, DefineKind::Worklet, hash);
       return;
     }
-    let guard = quote!(
-      "const $loaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry)" as Stmt,
-      loaded = self.worklet_runtime_loaded_ident.clone(),
-    );
     collect_define(
       &self.defines_collector,
       DefineKind::Worklet,
       hash,
-      vec![ModuleItem::Stmt(guard), ModuleItem::Stmt(stmt)],
+      vec![ModuleItem::Stmt(stmt)],
     );
   }
 

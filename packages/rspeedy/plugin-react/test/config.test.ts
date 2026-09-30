@@ -2974,100 +2974,47 @@ describe('Config', () => {
     })
   })
 
-  test('worklet runtime (mode: production)', async () => {
-    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const rspeedy = await createRspeedy({
-      rspeedyConfig: {
-        mode: 'production',
-        plugins: [
-          pluginReactLynx(),
-          pluginStubRspeedyAPI(),
-        ],
-      },
-    })
+  test.each(
+    [
+      ['production', '@lynx-js/react/worklet-runtime'],
+      ['development', '@lynx-js/react/worklet-dev-runtime'],
+      ['none', '@lynx-js/react/worklet-runtime'],
+    ] as const,
+  )(
+    'configures the supported older-transform runtime fallback (mode: %s)',
+    async (mode, runtimeRequest) => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          mode,
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
 
-    const [config] = await rspeedy.initConfigs()
+      const [config] = await rspeedy.initConfigs()
 
-    const reactWebpackPluginInstance = config?.plugins?.find((
-      p,
-    ): p is ReactWebpackPlugin =>
-      !!(p && p.constructor.name === 'ReactWebpackPlugin')
-    )
+      const reactWebpackPluginInstance = config?.plugins?.find((
+        p,
+      ): p is ReactWebpackPlugin =>
+        !!(p && p.constructor.name === 'ReactWebpackPlugin')
+      )
 
-    if (!reactWebpackPluginInstance) {
-      expect.fail('Should have ReactWebpackPlugin instance')
-    }
+      if (!reactWebpackPluginInstance) {
+        expect.fail('Should have ReactWebpackPlugin instance')
+      }
 
-    // @ts-expect-error private property
-    expect(reactWebpackPluginInstance.options).toHaveProperty(
-      'workletRuntimePath',
-      require.resolve('@lynx-js/react/worklet-runtime'),
-    )
-  })
+      const require = createRequire(import.meta.url)
 
-  test('worklet runtime (mode: development)', async () => {
-    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const rspeedy = await createRspeedy({
-      rspeedyConfig: {
-        mode: 'development',
-        plugins: [
-          pluginReactLynx(),
-          pluginStubRspeedyAPI(),
-        ],
-      },
-    })
-
-    const [config] = await rspeedy.initConfigs()
-
-    const reactWebpackPluginInstance = config?.plugins?.find((
-      p,
-    ): p is ReactWebpackPlugin =>
-      !!(p && p.constructor.name === 'ReactWebpackPlugin')
-    )
-
-    if (!reactWebpackPluginInstance) {
-      expect.fail('Should have ReactWebpackPlugin instance')
-    }
-
-    // @ts-expect-error private property
-    expect(reactWebpackPluginInstance.options).toHaveProperty(
-      'workletRuntimePath',
-      require.resolve('@lynx-js/react/worklet-dev-runtime'),
-    )
-  })
-
-  test('worklet runtime (mode: none)', async () => {
-    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const rspeedy = await createRspeedy({
-      rspeedyConfig: {
-        mode: 'none',
-        plugins: [
-          pluginReactLynx(),
-          pluginStubRspeedyAPI(),
-        ],
-      },
-    })
-
-    const [config] = await rspeedy.initConfigs()
-
-    const reactWebpackPluginInstance = config?.plugins?.find((
-      p,
-    ): p is ReactWebpackPlugin =>
-      !!(p && p.constructor.name === 'ReactWebpackPlugin')
-    )
-
-    if (!reactWebpackPluginInstance) {
-      expect.fail('Should have ReactWebpackPlugin instance')
-    }
-
-    const require = createRequire(import.meta.url)
-
-    // @ts-expect-error private property
-    expect(reactWebpackPluginInstance.options).toHaveProperty(
-      'workletRuntimePath',
-      require.resolve('@lynx-js/react/worklet-runtime'),
-    )
-  })
+      // @ts-expect-error private property
+      expect(reactWebpackPluginInstance.options).toHaveProperty(
+        'workletRuntimePath',
+        require.resolve(runtimeRequest),
+      )
+    },
+  )
 
   test('worklet runtime bindings resolve to the runtime-owned build output', () => {
     const require = createRequire(import.meta.url)
@@ -3080,6 +3027,17 @@ describe('Config', () => {
           '/',
           path.sep,
         ),
+    )
+  })
+
+  test('main-thread programmability init resolves to the compiled runtime entry', () => {
+    const require = createRequire(import.meta.url)
+
+    expect(
+      require.resolve('@lynx-js/react/worklet-runtime/init'),
+    ).toContain(
+      '/packages/react/runtime/lib/worklet-runtime/init.js'
+        .replaceAll('/', path.sep),
     )
   })
 

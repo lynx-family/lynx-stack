@@ -1,5 +1,6 @@
-import { captureMainThreadObject as __captureMainThreadObject, loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-var captureMainThreadObject = __captureMainThreadObject, loadWorkletRuntime = __loadWorkletRuntime;
+import "@lynx-js/react/worklet-runtime/init";
+import { captureMainThreadObject as __captureMainThreadObject } from "@lynx-js/react";
+var captureMainThreadObject = __captureMainThreadObject;
 let X = {
     _c: {
         y1,
@@ -15,8 +16,7 @@ let X = {
     },
     _wkltId: "a77b:test:1"
 };
-const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-__workletRuntimeLoaded && registerWorkletInternal("main-thread", "a77b:test:1", function(event) {
+registerWorkletInternal("main-thread", "a77b:test:1", function(event) {
     const X = lynxWorkletImpl._workletMap["a77b:test:1"].bind(this);
     let { y1, y2, y3, y4, y8, y5, y6, y7 } = this["_c"];
     "main thread";

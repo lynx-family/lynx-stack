@@ -29,6 +29,12 @@ export function injectGlobals() {
 
   globalThis.requestAnimationFrame = setTimeout;
   globalThis.cancelAnimationFrame = clearTimeout;
+  globalThis.lynx.setTimeout = globalThis.setTimeout;
+  globalThis.lynx.setInterval = globalThis.setInterval;
+  globalThis.lynx.clearTimeout = globalThis.clearTimeout;
+  globalThis.lynx.clearInterval = globalThis.clearInterval;
+  globalThis.lynx.requestAnimationFrame = globalThis.requestAnimationFrame;
+  globalThis.lynx.cancelAnimationFrame = globalThis.cancelAnimationFrame;
   globalThis._ReportError = vi.fn();
 
   console.alog = vi.fn();
