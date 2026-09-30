@@ -70,14 +70,3 @@ Both bundles still contain their own copy of `SHARED_MODULE_BODY`, because
 `LynxEncodePlugin` inlines every manifest chunk for a `DynamicComponent`. That is
 problem 3: nothing is shared, and each bundle additionally pays for the
 chunk-loading runtime.
-
-## Runtime check
-
-`packages/lynx/headless-rust-test-runner/tests/lazy_bundle_split_chunks.rs`
-loads `dist/baseline` and `dist/split` in the headless runtime and asserts both
-pages render. It is `#[ignore]`d because the `dist/split` half fails today:
-
-```bash
-pnpm --filter @lynx-js/example-react-lazy-bundle-split-repro build
-cargo test -p lynx-headless-rust-test-runner --test lazy_bundle_split_chunks -- --ignored
-```
