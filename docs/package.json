@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/lynx-stack-docs",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "The Lynx Stack API reference as MDX pages: the build configuration, the Rsbuild plugins, ReactLynx and every @lynx-js package.",
   "keywords": [
     "Lynx",
