@@ -28,7 +28,10 @@ it('should not wrap the entry main-thread chunk in the dynamic component IIFE', 
     ),
   );
 
-  const wrappers = (tasmJSON.lepusCode.root ?? '').match(
+  const root = tasmJSON.lepusCode.root;
+  expect(typeof root).toBe('string');
+  expect(root.length).toBeGreaterThan(0);
+  const wrappers = root.match(
     /\(function \(globDynamicComponentEntry\) \{/g,
   );
   expect(wrappers).toBeNull();
