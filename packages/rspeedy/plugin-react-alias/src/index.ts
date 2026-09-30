@@ -174,6 +174,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           'internal',
           'legacy-react-runtime',
           'runtime-components',
+          'worklet-runtime/init',
           'worklet-runtime/bindings',
         ]
 
@@ -184,6 +185,13 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
             path.join(reactLynxDir, 'runtime/lazy/element-template-import.js'),
           )
         }
+        transformedEntryAliases.set(
+          'worklet-runtime/init',
+          path.join(
+            reactLynxDir,
+            'runtime/lib/worklet-runtime/init.js',
+          ),
+        )
 
         const resolvedTransformedEntryAliases = await Promise.all(
           transformedEntries.map(async entry => {
