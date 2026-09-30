@@ -4,8 +4,9 @@
 
 import { options } from 'preact';
 
-import { RENDER_COMPONENT, ROOT } from '../../shared/render-constants.js';
+import { CATCH_ERROR, RENDER_COMPONENT, ROOT } from '../../shared/render-constants.js';
 import { hook, lynxQueueMicrotask } from '../../utils.js';
+import { discardPendingRefAttachments } from '../prop-adapters/ref.js';
 
 let installed = false;
 let elementTemplateRendering = false;
@@ -32,6 +33,20 @@ export function installElementTemplateRenderScopeHooks(): void {
 
   hook(options, RENDER_COMPONENT, onPreactRenderHook);
   hook(options, ROOT, onPreactRenderHook);
+  hook(options, CATCH_ERROR, (old, ...args) => {
+    try {
+      old!(...args);
+    } catch (error) {
+      if (__BACKGROUND__ && elementTemplateRendering) {
+        // Error boundaries and Suspense return through the original hook. Only
+        // an unhandled render must lose its pending attaches; old refs still
+        // need their queued cleanup even if Preact abandons their host VNodes.
+        discardPendingRefAttachments();
+        clearElementTemplateRenderScope();
+      }
+      throw error;
+    }
+  });
 }
 
 function onPreactRenderHook<T extends unknown[]>(old: ((...args: T) => void) | undefined, ...args: T): void {

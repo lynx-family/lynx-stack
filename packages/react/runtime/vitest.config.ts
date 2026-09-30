@@ -122,6 +122,7 @@ export default defineConfig({
       },
     },
     coverage: {
+      reportsDirectory: './coverage/snapshot',
       exclude: [
         'debug',
         'jsx-runtime',
