@@ -8,6 +8,10 @@ const HTML_ROOT_END = '</html>';
 /**
  * Extract an HTML document from a model response, tolerating a short preamble
  * or a Markdown fence while keeping only the document sent to the browser.
+ *
+ * @remarks
+ * Partial documents are returned as soon as the doctype is present, allowing
+ * streaming clients to display source before the document is complete.
  */
 export function extractHtmlArtifact(value: string): string {
   const match = HTML_DOCTYPE_PATTERN.exec(value);
@@ -21,7 +25,33 @@ export function extractHtmlArtifact(value: string): string {
   ).trimEnd();
 }
 
-/** Validate the document envelope before the final source reaches srcDoc. */
+/**
+ * Check whether extracted source has the document envelope needed for preview.
+ *
+ * @remarks
+ * This lightweight check requires a leading doctype, HTML root, head and body
+ * opening tags, and a closing HTML tag. Use {@link normalizeHtmlArtifact} to
+ * validate the final model response, including head and body closing tags.
+ */
+export function isCompleteHtmlArtifact(source: string): boolean {
+  const doctype = HTML_DOCTYPE_PATTERN.exec(source);
+  if (!doctype || doctype.index !== 0) return false;
+  const documentSource = source.slice(doctype[0].length).trimStart();
+  return /^<html(?:\s|>)/iu.test(documentSource)
+    && /<head(?:\s|>)/iu.test(documentSource)
+    && /<body(?:\s|>)/iu.test(documentSource)
+    && source.trimEnd().toLowerCase().endsWith(HTML_ROOT_END);
+}
+
+/**
+ * Extract an HTML document and validate its final document envelope.
+ *
+ * @remarks
+ * Checks the doctype, HTML root, and head and body tag pairs. This is an
+ * envelope check, not HTML sanitization; the host owns execution isolation.
+ *
+ * @throws Error if the response contains no HTML document or is incomplete.
+ */
 export function normalizeHtmlArtifact(value: string): string {
   const source = extractHtmlArtifact(value);
   if (!source) {

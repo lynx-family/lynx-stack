@@ -49,6 +49,7 @@ export function parseRouteHash(hash: string): Route {
     || parts[0] === 'openui'
     || parts[0] === 'mcp-apps'
     || parts[0] === 'reactlynx'
+    || parts[0] === 'reactweb'
     || parts[0] === 'lynx-xml'
     || parts[0] === 'html'
   ) {

@@ -26,6 +26,7 @@ export default defineConfig({
         autoExternal: false,
         externals: [
           /^@lynx-js\/genui-reactlynx$/u,
+          /^@lynx-js\/genui-reactweb$/u,
           /^@mastra\/core(?:\/.*)?$/u,
         ],
       },

@@ -8,6 +8,7 @@ import { LYNX_XML_CHAT_ADAPTER } from './lynx-xml.js';
 import { MCP_APPS_CHAT_ADAPTER } from './mcp-apps.js';
 import { OPENUI_CHAT_ADAPTER } from './openui.js';
 import { REACTLYNX_CHAT_ADAPTER } from './reactlynx.js';
+import { REACTWEB_CHAT_ADAPTER } from './reactweb.js';
 import type { Protocol } from '../../utils/protocol.js';
 
 export interface ChatPageProps {
@@ -16,6 +17,15 @@ export interface ChatPageProps {
 }
 
 export function ChatPage(props: ChatPageProps) {
+  if (props.protocol.name === 'reactweb') {
+    return (
+      <ChatController
+        key='reactweb'
+        {...props}
+        adapter={REACTWEB_CHAT_ADAPTER}
+      />
+    );
+  }
   if (props.protocol.name === 'reactlynx') {
     return (
       <ChatController

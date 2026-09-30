@@ -137,6 +137,7 @@ export function resolveSharedConversationProtocol(
     || doc.protocol === 'openui'
     || doc.protocol === 'mcp-apps'
     || doc.protocol === 'reactlynx'
+    || doc.protocol === 'reactweb'
     || doc.protocol === 'lynx-xml'
     || doc.protocol === 'html'
   ) {

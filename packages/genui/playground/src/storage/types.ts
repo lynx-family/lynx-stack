@@ -8,6 +8,7 @@ export type ConversationProtocol =
   | 'openui'
   | 'mcp-apps'
   | 'reactlynx'
+  | 'reactweb'
   | 'lynx-xml'
   | 'html';
 

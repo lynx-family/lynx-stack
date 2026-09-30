@@ -303,7 +303,7 @@ describe('Hono application', () => {
     await expect(invalidMethod.json()).resolves.toEqual({
       ok: false,
       error:
-        'method must be one of: a2ui, openui, mcp-apps, reactlynx, lynx-xml, html',
+        'method must be one of: a2ui, openui, mcp-apps, reactlynx, reactweb, lynx-xml, html',
     });
 
     const mismatchedConversation = await app.request('/a2ui/payload', {

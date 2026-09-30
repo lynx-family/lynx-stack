@@ -128,7 +128,7 @@ export function App() {
 
   const protocol = route.protocol;
   let tabs = GENUI_TABS;
-  if (protocol.name === 'reactlynx') {
+  if (protocol.name === 'reactlynx' || protocol.name === 'reactweb') {
     tabs = [{ id: 'create', label: 'Create' }];
   } else if (protocol.name === 'html') {
     tabs = HTML_TABS;
@@ -171,7 +171,7 @@ export function App() {
   }, []);
 
   const handleProtocolSelect = useCallback((name: ProtocolName) => {
-    if (name === 'html' || name === 'reactlynx') {
+    if (name === 'html' || name === 'reactlynx' || name === 'reactweb') {
       window.location.hash = buildRouteHash(name, 'create');
       return;
     }
@@ -208,7 +208,10 @@ export function App() {
       />
     );
 
-    if (protocol.name === 'html' || protocol.name === 'reactlynx') {
+    if (
+      protocol.name === 'html' || protocol.name === 'reactlynx'
+      || protocol.name === 'reactweb'
+    ) {
       return createPage;
     }
 
@@ -359,6 +362,7 @@ export function App() {
         <option value='lynx-xml'>
           Lynx XML v{PROTOCOLS['lynx-xml'].version}
         </option>
+        <option value='reactweb'>ReactWeb</option>
         <option value='html'>HTML v{PROTOCOLS.html.version}</option>
       </select>
     </div>

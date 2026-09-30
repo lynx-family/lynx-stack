@@ -10,6 +10,7 @@ const DEFAULT_LYNX_XML_STORAGE_PREFIX = 'lynx-xml';
 const DEFAULT_MCP_APPS_STORAGE_PREFIX = 'mcp-apps';
 const DEFAULT_OPENUI_STORAGE_PREFIX = 'openui';
 const DEFAULT_REACTLYNX_STORAGE_PREFIX = 'reactlynx';
+const DEFAULT_REACTWEB_STORAGE_PREFIX = 'reactweb';
 
 type StorageEnvironment = Readonly<Record<string, string | undefined>>;
 
@@ -18,6 +19,7 @@ export const TOS_STORAGE_METHODS = [
   'openui',
   'mcp-apps',
   'reactlynx',
+  'reactweb',
   'lynx-xml',
   'html',
 ] as const;
@@ -40,6 +42,7 @@ export interface TosStorageConfig {
   mcpAppsPrefix: string;
   openuiPrefix: string;
   reactLynxPrefix: string;
+  reactWebPrefix: string;
 }
 
 function trimSlashes(value: string): string {
@@ -112,6 +115,10 @@ export function resolveTosStorageConfig(
       environment,
       'TOS_REACTLYNX_STORAGE_PREFIX',
     ) ?? DEFAULT_REACTLYNX_STORAGE_PREFIX,
+    reactWebPrefix: readNonEmpty(
+      environment,
+      'TOS_REACTWEB_STORAGE_PREFIX',
+    ) ?? DEFAULT_REACTWEB_STORAGE_PREFIX,
   };
 }
 
@@ -151,6 +158,8 @@ export function tosStoragePrefix(
       return config.openuiPrefix;
     case 'reactlynx':
       return config.reactLynxPrefix;
+    case 'reactweb':
+      return config.reactWebPrefix;
   }
 }
 

@@ -12,6 +12,7 @@ import { McpAppsRender } from './mcp-apps.js';
 import { OpenUIRender } from './openui.js';
 import { parseInitDataFromQuery, readRenderProtocol } from './query.js';
 import { ReactLynxRender } from './reactlynx.js';
+import { ReactWebRender } from './reactweb.js';
 
 function Render() {
   const protocol = readRenderProtocol(
@@ -19,6 +20,8 @@ function Render() {
   ) ?? parseInitDataFromQuery()?.protocol;
 
   switch (protocol) {
+    case 'reactweb':
+      return <ReactWebRender />;
     case 'reactlynx':
       return <ReactLynxRender />;
     case 'lynx-xml':
