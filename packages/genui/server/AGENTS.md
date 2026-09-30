@@ -303,7 +303,7 @@ When repairs make additional model calls, return their accumulated usage,
 including failed validation attempts. A dimension missing from any attempt
 remains unknown in the aggregate.
 
-All five generation agents optionally generate image assets through a shared
+All six generation agents optionally generate image assets through a shared
 server-side Volcengine Ark tool. To enable it, configure all three values:
 
 ```bash
@@ -335,9 +335,9 @@ are not supported by this minimum storage configuration.
 
 The hosting runtime must provide these variables before starting the server.
 
-A2UI, OpenUI, Lynx XML, HTML, and MCP Apps generation agents share the same
-optional web-search and image-search capability. Configure the server-side
-Doubao Search credential:
+A2UI, OpenUI, MCP Apps, ReactLynx, Lynx XML, and HTML generation agents share
+the same optional web-search and image-search capability. Configure the
+server-side Doubao Search credential:
 
 ```bash
 export SEARCH_INFINITY_API_KEY="..."
@@ -352,11 +352,11 @@ which supports
 subscription-plan and post-paid API keys. Web search returns at most five
 normalized text results. Image search returns at most five image URLs with
 source and quality metadata. The agent should prefer image search whenever a
-UI needs an existing image. All five generation agents also provide optional `generate_image`, used
-when search fails, has no suitable result, or the user explicitly asks for
-original generated artwork. If neither image tool is available or succeeds,
-use a non-image presentation. The two search tools may make at most three
-calls combined
+UI needs an existing image. All six generation agents also provide optional
+`generate_image`, used when search fails, has no suitable result, or the user
+explicitly asks for original generated artwork. If neither image tool is
+available or succeeds, use a non-image presentation. The two search tools may
+make at most three calls combined
 per HTTP request across the initial generation and all repair attempts.
 `SEARCH_INFINITY_REQUEST_TIMEOUT_MS` optionally overrides the 10-second
 request timeout and must be an integer from 1 through 60000. Keep the key
@@ -396,9 +396,10 @@ All requests receive an independent four-call image budget, sharing their
 existing RequestContext with search and protocol-specific tools. UI Judge
 scoring agents remain tool-free. Neither capability accepts client credentials.
 
-To publish short, shareable A2UI, OpenUI, and Lynx XML preview URLs, configure the
-public-read Volcengine TOS bucket and server-only write credentials. All four
-variables are required; do not add fallback bucket or region values:
+To publish short, shareable A2UI, OpenUI, ReactLynx, and Lynx XML preview URLs,
+configure the public-read Volcengine TOS bucket and server-only write
+credentials. All four variables are required; do not add fallback bucket or
+region values:
 
 ```bash
 export TOS_ACCESS_KEY="..."
@@ -408,14 +409,14 @@ export TOS_REGION="cn-beijing"
 ```
 
 Use a dedicated IAM identity with `tos:PutObject` access only to the configured
-`a2ui`, `openui`, `mcp-apps`, `lynx-xml`, and `html` prefixes. Preview objects use
-`<method>/preview/<uuid>/<file>`; shared conversations use
+`a2ui`, `openui`, `mcp-apps`, `reactlynx`, `lynx-xml`, and `html` prefixes.
+Preview objects use `<method>/preview/<uuid>/<file>`; shared conversations use
 `<method>/conversation/<uuid>/messages.json`. The server signs writes with
 these credentials; the browser reads the resulting public object URL without
 credentials. Optional overrides are `TOS_ENDPOINT`, `TOS_STORAGE_PREFIX`,
 `TOS_OPENUI_STORAGE_PREFIX`, `TOS_MCP_APPS_STORAGE_PREFIX`,
-`TOS_LYNX_XML_STORAGE_PREFIX`, `TOS_HTML_STORAGE_PREFIX`, and
-`TOS_SECURITY_TOKEN`.
+`TOS_REACTLYNX_STORAGE_PREFIX`, `TOS_LYNX_XML_STORAGE_PREFIX`,
+`TOS_HTML_STORAGE_PREFIX`, and `TOS_SECURITY_TOKEN`.
 
 ## Lynx XML Generation
 

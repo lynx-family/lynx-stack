@@ -105,6 +105,7 @@ Create and Bench also retain their URL query overrides for local diagnosis:
 ?a2uiEndpoint=http://localhost:3060/a2ui/stream
 ?openuiEndpoint=http://localhost:3060/openui/stream
 ?mcp-appsEndpoint=http://localhost:3060/mcp-apps/stream
+?reactlynxEndpoint=http://localhost:3060/reactlynx/stream
 ?lynx-xmlEndpoint=http://localhost:3060/lynx-xml/stream
 ?htmlEndpoint=http://localhost:3060/html/stream
 ?a2uiBenchEndpoint=http://localhost:3060/a2ui/bench/jobs
@@ -132,6 +133,7 @@ Create and Bench also retain their URL query overrides for local diagnosis:
 | `SEARCH_INFINITY_REQUEST_TIMEOUT_MS`                           | Search timeout in ms (integer from 1 through 60000) | `10000`             |
 | `UI_JUDGE_BUNDLE_URL`                                          | `a2ui.lynx.js` bundle rendered by UI Judge          | hosted GenUI bundle |
 | `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, `TOS_REGION` | Short, shareable preview URLs via Volcengine TOS    | disabled            |
+| `TOS_REACTLYNX_STORAGE_PREFIX`                                 | ReactLynx artifact object prefix                    | `reactlynx`         |
 
 The Create tab and Bench runner load their model selectors from the server's `GET /models`
 endpoint. Server-owned provider credentials, upstream model ids, and upstream

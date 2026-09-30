@@ -318,6 +318,11 @@ function MessageMetrics(props: { metrics: PreviewPerformanceMetrics }) {
       value: props.metrics.artifactTransformMs,
     },
     {
+      key: 'artifactBuildMs',
+      label: 'Build',
+      value: props.metrics.artifactBuildMs,
+    },
+    {
       key: 'artifactUploadMs',
       label: 'Upload',
       value: props.metrics.artifactUploadMs,
@@ -582,6 +587,7 @@ function mergeMetrics(
       'ttiMs',
       'generationMs',
       'artifactTransformMs',
+      'artifactBuildMs',
       'artifactUploadMs',
       'firstReasoningTokenMs',
       'firstTextTokenMs',
@@ -1639,6 +1645,7 @@ export function ChatController<
       ...metricsRef.current,
       generationMs: undefined,
       artifactTransformMs: undefined,
+      artifactBuildMs: undefined,
       artifactUploadMs: undefined,
       firstReasoningTokenMs: undefined,
       firstTextTokenMs: undefined,
@@ -1920,6 +1927,7 @@ export function ChatController<
         || output !== null
         || typeof metrics.generationMs === 'number'
         || typeof metrics.artifactTransformMs === 'number'
+        || typeof metrics.artifactBuildMs === 'number'
         || typeof metrics.artifactUploadMs === 'number'
         || typeof metrics.firstReasoningTokenMs === 'number'
         || typeof metrics.firstTextTokenMs === 'number'
@@ -1946,6 +1954,16 @@ export function ChatController<
               description:
                 'Server time spent transforming generated source into the final Lynx artifact.',
               value: metrics.artifactTransformMs,
+            }]
+            : []),
+          ...(typeof metrics.artifactBuildMs === 'number'
+            ? [{
+              key: 'artifactBuildMs',
+              label: 'Build',
+              title: 'Artifact build duration',
+              description:
+                'Server time spent compiling generated source into runnable artifacts.',
+              value: metrics.artifactBuildMs,
             }]
             : []),
           ...(typeof metrics.artifactUploadMs === 'number'
@@ -2023,6 +2041,7 @@ export function ChatController<
       metrics.firstReasoningTokenMs,
       metrics.firstTextTokenMs,
       metrics.artifactTransformMs,
+      metrics.artifactBuildMs,
       metrics.artifactUploadMs,
       metrics.generationMs,
       metrics.imageGenerationMs,

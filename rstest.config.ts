@@ -56,6 +56,7 @@ export default defineConfig({
     'packages/genui/mcp-apps/rstest.config.ts',
     'packages/genui/openui/rstest.config.ts',
     'packages/genui/playground/rstest.config.ts',
+    'packages/genui/reactlynx/rstest.config.ts',
     'packages/genui/server/rstest.config.ts',
     'packages/rspeedy/*/rstest.config.ts',
     'packages/web-platform/*/rstest.config.ts',

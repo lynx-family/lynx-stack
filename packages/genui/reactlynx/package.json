@@ -1,0 +1,45 @@
+{
+  "name": "@lynx-js/genui-reactlynx",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ReactLynx prompt, source validation, and build utilities for GenUI.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/genui/reactlynx"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rslib",
+    "test": "rstest"
+  },
+  "dependencies": {
+    "@lynx-js/config-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rsbuild-plugin": "workspace:*",
+    "@rsbuild/core": "catalog:rsbuild",
+    "typescript": "^6.0.3",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest",
+    "@types/node": "^24.13.3"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

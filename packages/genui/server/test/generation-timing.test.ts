@@ -5,19 +5,24 @@
 import { afterEach, expect, rstest, test } from '@rstest/core';
 
 import { BASIC_CATALOG } from '../agent/a2ui/a2ui-catalog.js';
-import {
-  publishA2UIPayload,
-  publishLynxXmlArtifact,
-} from '../app/a2ui/payload-publisher.js';
-import * as publisher from '../app/a2ui/payload-publisher.js' with {
+import { publishA2UIPayload } from '../app/a2ui/payload-publisher.js';
+import * as a2uiPublisher from '../app/a2ui/payload-publisher.js' with {
   rstest: 'importActual',
 };
 import { createGenerationTiming } from '../app/common/generation-timing.js';
+import { publishLynxXmlArtifact } from '../app/lynx-xml/artifact-publisher.js';
+import * as lynxXmlPublisher from '../app/lynx-xml/artifact-publisher.js' with {
+  rstest: 'importActual',
+};
 import app from '../src/app.js';
 
 rstest.mock('../app/a2ui/payload-publisher.js', () => ({
-  ...publisher,
+  ...a2uiPublisher,
   publishA2UIPayload: rstest.fn(),
+}));
+
+rstest.mock('../app/lynx-xml/artifact-publisher.js', () => ({
+  ...lynxXmlPublisher,
   publishLynxXmlArtifact: rstest.fn(),
 }));
 
@@ -111,6 +116,23 @@ test('omits unavailable generation details and freezes metrics at finish', () =>
 
   expect(metrics).toEqual({ generationMs: 15 });
   expect(timing.finish()).toBe(metrics);
+});
+
+test('records artifact build and upload after generation finishes', () => {
+  let now = 10;
+  rstest.spyOn(performance, 'now').mockImplementation(() => now);
+  const timing = createGenerationTiming();
+  now = 25;
+  const metrics = timing.finish();
+
+  timing.recordArtifactBuild(120);
+  timing.recordArtifactUpload(45);
+
+  expect(metrics).toEqual({
+    generationMs: 15,
+    artifactBuildMs: 120,
+    artifactUploadMs: 45,
+  });
 });
 
 const messages = [{

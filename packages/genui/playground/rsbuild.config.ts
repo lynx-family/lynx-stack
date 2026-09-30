@@ -248,7 +248,7 @@ export default defineConfig({
     },
     entry: {
       index: './src/entry.tsx',
-      render: './src/render.tsx',
+      render: './src/render/index.tsx',
     },
   },
   html: {

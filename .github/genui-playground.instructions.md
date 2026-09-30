@@ -6,6 +6,23 @@ applyTo: "packages/genui/playground/**"
 
 ## Runtime Boundaries
 
+Keep standalone preview implementations under `src/render/`, with
+`index.tsx` selecting A2UI, OpenUI, MCP Apps, ReactLynx, or Lynx XML.
+Share query parsing, metrics, and bundled `<lynx-view>` lifecycle there, while
+keeping A2UI message queues and OpenUI source/action/diagnostic bridges in
+their protocol modules. Preserve the shared playback control/progress channel
+used by both A2UI and OpenUI. Render ReactLynx directly in `render.html` after
+fetching and validating its published bundle, then load the bundle through a
+Blob URL on `<lynx-view>`. Do not leave forwarding files at the old render
+source paths.
+Build every local Web preview and share URL from the current Playground page
+URL so its protocol, hostname, and port remain unchanged. Do not rewrite a Web
+URL's hostname from the Rspeedy development bundle URL; use that URL only for
+native preview bundles.
+Keep ReactLynx immediately before Lynx XML in the protocol selector. Show its
+server compilation time as the `Build` metric, separately from generation,
+artifact transformation, publication, and preview rendering.
+
 ### Web and Native Host APIs
 
 When sharing GenUI playground code between web preview and native Lynx execution paths, do not use bare `window` access in code that may run in Lynx. Read web-only capabilities through optional `globalThis` host adapters, and pass native preview data through `globalProps` or bridge fields rather than relying on browser globals.
@@ -32,7 +49,7 @@ When serving the playground's native Lynx bundles as static Android test fixture
 
 Keep the Create starter section “Describe with a prompt · uses online agent” consistent across A2UI, OpenUI, MCP Apps, Lynx XML, and HTML. All adapters must use the shared `pages/chat/suggestions.ts` prompts derived from A2UI: Weather with Refresh, Product card with Buy, and Quiz card with actions, preserving identical labels, order, and input text.
 
-Display Create's Generation duration from the server's finite, non-negative `metrics.generationMs`, consuming A2UI's pre-upload `metrics` event and terminal `done`/`error` payloads in the shared controller. Show optional `artifactTransformMs`, `artifactUploadMs`, `firstReasoningTokenMs`, `firstTextTokenMs`, `modelMs`, `searchMs`, and `imageGenerationMs` beside it when reported, and persist and restore all eight fields on the assistant turn independently of render metrics. First-token fields are request-relative milestones; model, search and image-generation fields are cumulative across their calls and may exceed wall-clock Generation when calls overlap. Never substitute browser request-to-response time or summed sub-operation durations for `generationMs`; transformation and upload have their own server-reported metrics. Keep legacy `agentOutputMs` distinct and do not relabel old values as generation time. Reset timing for every Create/action invocation; missing server timing stays unavailable. Verify early metric delivery, upload completion and history restoration preserve the existing preview instance.
+Display Create's Generation duration from the server's finite, non-negative `metrics.generationMs`, consuming A2UI's pre-upload `metrics` event and terminal `done`/`error` payloads in the shared controller. Show optional `artifactTransformMs`, `artifactBuildMs`, `artifactUploadMs`, `firstReasoningTokenMs`, `firstTextTokenMs`, `modelMs`, `searchMs`, and `imageGenerationMs` beside it when reported, and persist and restore every field on the assistant turn independently of render metrics. First-token fields are request-relative milestones; model, search and image-generation fields are cumulative across their calls and may exceed wall-clock Generation when calls overlap. Never substitute browser request-to-response time or summed sub-operation durations for `generationMs`; transformation, build, and upload have their own server-reported metrics. Keep legacy `agentOutputMs` distinct and do not relabel old values as generation time. Reset timing for every Create/action invocation; missing server timing stays unavailable. Verify early metric delivery, build and upload completion, and history restoration preserve the existing preview instance.
 
 Keep Create's provider selectors in separate labeled controls with a wrapping options row below them; size this layout to its resizable composer instead of a fixed-width enclosing pill. Keep Design, Template, StylePreset, and ScriptReuse independent. All four default on for new Lynx XML records; Template must not disable or reset StylePreset or ScriptReuse.
 

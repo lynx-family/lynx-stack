@@ -17,6 +17,7 @@ export type PayloadStorageMethod =
   | 'a2ui'
   | 'openui'
   | 'mcp-apps'
+  | 'reactlynx'
   | 'lynx-xml'
   | 'html';
 

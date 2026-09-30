@@ -7,6 +7,7 @@ export type ConversationProtocol =
   | 'a2ui'
   | 'openui'
   | 'mcp-apps'
+  | 'reactlynx'
   | 'lynx-xml'
   | 'html';
 
@@ -50,6 +51,8 @@ export interface PreviewPerformanceMetrics {
   generationMs?: number;
   /** Server-side time spent transforming generated source into its final artifact. */
   artifactTransformMs?: number;
+  /** Server-side time spent compiling generated source into runnable artifacts. */
+  artifactBuildMs?: number;
   /** Server-side time spent publishing the finalized artifact for preview. */
   artifactUploadMs?: number;
   /** Time from generation start to the first non-empty reasoning delta. */
