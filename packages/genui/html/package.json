@@ -1,0 +1,33 @@
+{
+  "name": "@lynx-js/genui-html",
+  "version": "0.0.0",
+  "private": true,
+  "description": "HTML generation prompt and document validation utilities for GenUI.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/genui/html"
+  },
+  "license": "Apache-2.0",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rslib",
+    "test": "rstest"
+  },
+  "devDependencies": {
+    "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest",
+    "@types/node": "^24.13.3"
+  }
+}

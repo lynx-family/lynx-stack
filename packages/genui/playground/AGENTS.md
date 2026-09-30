@@ -1,7 +1,7 @@
 # GenUI Playground
 
 This package provides the React DOM playground for `@lynx-js/genui`, supporting
-A2UI, OpenUI, MCP Apps, ReactLynx, Lynx XML, and HTML. Keep shared UI in the Web
+A2UI, OpenUI, MCP Apps, ReactLynx, ReactWeb, Lynx XML, and HTML. Keep shared UI in the Web
 shell and protocol rendering in its preview runtime. Detailed feature conventions
 live in
 [the Playground instructions](../../../.github/genui-playground.instructions.md).
@@ -17,6 +17,7 @@ surface for each protocol:
 | OpenUI    | `render.html` hosting `<lynx-view>`                        | `lynx-src/openui/`            |
 | MCP Apps  | `render.html` hosting `<lynx-view>`                        | `lynx-src/mcp-apps/`          |
 | ReactLynx | `render.html` hosting `<lynx-view>`                        | Server-built ReactLynx bundle |
+| ReactWeb  | `render.html` hosting a sandboxed `HtmlView`               | Server-built React DOM HTML   |
 | Lynx XML  | Direct `LynxXmlView`; `render.html` for example/share URLs | Complete `.lynxml` source     |
 | HTML      | Sandboxed `HtmlView` iframe using `srcDoc`                 | Complete HTML source          |
 
@@ -96,6 +97,22 @@ background, and entry layout. For overflowing content, make that node a
 vertical scroll view. Explicitly set `display: flex` and the intended
 `flex-direction` in every layout container's class.
 
+## ReactWeb
+
+ReactWeb exposes Create and Web preview/share. Keep the hook-free adapter in
+`src/pages/chat/reactweb.ts` and stream from `/reactweb/stream`. Display source
+deltas, but preview only the completed published artifact. Persist both source
+files and `artifact.webUrl` with the assistant turn; omit artifact metadata from
+follow-up model history.
+
+Use `render.html?protocol=reactweb&sourceUrl=<artifact.webUrl>` for current,
+historical, and shared previews. Fetch the bounded document without credentials
+in the outer renderer, then use `HtmlView` with `sandbox="allow-scripts"`.
+The TOS bucket must allow public reads and CORS from the Playground origin.
+Keep Web URLs on the current Playground host. This protocol has no Lynx runtime,
+native output, or Bench adapter. See
+[ReactWeb instructions](../../../.github/genui-reactweb.instructions.md).
+
 ## HTML
 
 ### Create and Preview
@@ -104,6 +121,10 @@ HTML exposes Create and the shared Bench tab, with no Examples, Catalog, or
 native preview. Keep the hook-free adapter in `src/pages/chat/html.ts` and
 stream from `/html/stream`. Show partials beginning with the HTML doctype in
 the source viewer, but send only complete documents to preview.
+
+Use `extractHtmlArtifact` and `isCompleteHtmlArtifact` from
+`@lynx-js/genui-html` for streaming and history restoration. Keep document
+parsing in that package and UI/transport behavior in the Playground adapter.
 
 Render through `PreviewViewport` and `HtmlView` using iframe `srcDoc`. Keep
 the sandbox at `allow-scripts` without `allow-same-origin`. Do not route HTML

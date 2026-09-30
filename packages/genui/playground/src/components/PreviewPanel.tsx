@@ -145,6 +145,11 @@ export interface ReactLynxPreviewSource {
   nativeUrl: string;
 }
 
+export interface ReactWebPreviewSource {
+  kind: 'reactweb';
+  webUrl: string;
+}
+
 interface PlaceholderPreviewSource {
   kind: 'placeholder';
   item: PreviewQrItem;
@@ -157,6 +162,7 @@ export type PreviewPanelSource =
   | LynxXmlPreviewSource
   | HtmlPreviewSource
   | ReactLynxPreviewSource
+  | ReactWebPreviewSource
   | PlaceholderPreviewSource;
 
 export interface PreviewQrCard {
@@ -391,6 +397,16 @@ export function buildReactLynxWebRenderUrl(
   const url = new URL('render.html', baseUrl);
   url.searchParams.set('protocol', 'reactlynx');
   url.searchParams.set('bundleUrl', previewSource.webUrl);
+  return url.toString();
+}
+
+export function buildReactWebRenderUrl(
+  baseUrl: string,
+  previewSource: ReactWebPreviewSource,
+): string {
+  const url = new URL('render.html', baseUrl);
+  url.searchParams.set('protocol', 'reactweb');
+  url.searchParams.set('sourceUrl', previewSource.webUrl);
   return url.toString();
 }
 
@@ -975,6 +991,14 @@ export function PreviewPanel(props: PreviewPanelProps) {
     }
 
     localMessagesPayloadCache.clear();
+
+    if (previewSource.kind === 'reactweb') {
+      const url = buildReactWebRenderUrl(baseUrl, previewSource);
+      setRenderUrl(url);
+      setRenderShareUrl(url);
+      setLynxDevUrl('');
+      return;
+    }
 
     if (previewSource.kind === 'reactlynx') {
       const url = buildReactLynxWebRenderUrl(baseUrl, previewSource);

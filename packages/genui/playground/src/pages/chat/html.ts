@@ -3,6 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
+  extractHtmlArtifact,
+  isCompleteHtmlArtifact,
+} from '@lynx-js/genui-html';
+
+import {
   CHAT_PROVIDER_SETTINGS_ADAPTER,
   getChatEndpoint,
   parseTokenUsage,
@@ -31,9 +36,6 @@ export interface HtmlStreamState {
   source: string;
 }
 
-const HTML_DOCTYPE_PATTERN = /<!doctype\s+html\s*>/iu;
-const HTML_ROOT_END = '</html>';
-
 const WELCOME_MESSAGE: ChatMessageModel = {
   kind: 'assistant',
   text:
@@ -42,29 +44,6 @@ const WELCOME_MESSAGE: ChatMessageModel = {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-/** Keep partial source visible as soon as the HTML document begins. */
-export function extractHtmlSource(value: string): string {
-  const match = HTML_DOCTYPE_PATTERN.exec(value);
-  if (!match || match.index === undefined) return '';
-
-  const source = value.slice(match.index);
-  const end = source.toLowerCase().lastIndexOf(HTML_ROOT_END);
-  return source.slice(
-    0,
-    end === -1 ? undefined : end + HTML_ROOT_END.length,
-  ).trimEnd();
-}
-
-export function isCompleteHtmlSource(source: string): boolean {
-  const doctype = HTML_DOCTYPE_PATTERN.exec(source);
-  if (!doctype || doctype.index !== 0) return false;
-  const documentSource = source.slice(doctype[0].length).trimStart();
-  return /^<html(?:\s|>)/iu.test(documentSource)
-    && /<head(?:\s|>)/iu.test(documentSource)
-    && /<body(?:\s|>)/iu.test(documentSource)
-    && source.trimEnd().toLowerCase().endsWith(HTML_ROOT_END);
 }
 
 function readResponseText(value: unknown, fallback = ''): string {
@@ -89,8 +68,8 @@ function normalizeError(value: unknown): string {
 }
 
 function requireCompleteOutput(value: unknown, fallback = ''): HtmlOutput {
-  const source = extractHtmlSource(readResponseText(value, fallback));
-  if (!isCompleteHtmlSource(source)) {
+  const source = extractHtmlArtifact(readResponseText(value, fallback));
+  if (!isCompleteHtmlArtifact(source)) {
     throw new Error('The agent returned an incomplete HTML document');
   }
   return { source };
@@ -121,7 +100,7 @@ export const HTML_STREAM = {
         : '';
       if (!delta) return streamStep(state);
       const generatedText = state.generatedText + delta;
-      const source = extractHtmlSource(generatedText);
+      const source = extractHtmlArtifact(generatedText);
       const nextState = { generatedText, source };
       const emissions: ChatStreamEmission<HtmlOutput>[] = [
         { type: 'progress', text: source || generatedText },
@@ -156,7 +135,7 @@ export const HTML_STREAM = {
     );
   },
   finish(state: HtmlStreamState): HtmlOutput | null {
-    return isCompleteHtmlSource(state.source)
+    return isCompleteHtmlArtifact(state.source)
       ? { source: state.source }
       : null;
   },
@@ -207,8 +186,8 @@ function hydrate(
       });
       continue;
     }
-    const source = extractHtmlSource(message.content);
-    if (!isCompleteHtmlSource(source)) continue;
+    const source = extractHtmlArtifact(message.content);
+    if (!isCompleteHtmlArtifact(source)) continue;
     output = { source };
     messages.push({
       ...generatedStatus(),

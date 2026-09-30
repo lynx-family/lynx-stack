@@ -55,8 +55,8 @@ function readProtocol(value: unknown): InitData['protocol'] {
 
 export function readRenderProtocol(
   value: unknown,
-): InitData['protocol'] | 'lynx-xml' | 'reactlynx' {
-  return value === 'lynx-xml' || value === 'reactlynx'
+): InitData['protocol'] | 'lynx-xml' | 'reactlynx' | 'reactweb' {
+  return value === 'lynx-xml' || value === 'reactlynx' || value === 'reactweb'
     ? value
     : readProtocol(value);
 }

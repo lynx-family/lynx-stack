@@ -1292,6 +1292,18 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
+  packages/genui/html:
+    devDependencies:
+      '@rslib/core':
+        specifier: catalog:rslib
+        version: 1.0.2(@microsoft/api-extractor@7.59.2(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+      '@types/node':
+        specifier: ^24.13.3
+        version: 24.13.3
+
   packages/genui/lynx-xml:
     dependencies:
       '@lynx-js/skill-vanilla-lynx':
@@ -1371,6 +1383,9 @@ importers:
       '@lynx-js/genui':
         specifier: workspace:*
         version: link:..
+      '@lynx-js/genui-html':
+        specifier: workspace:*
+        version: link:../html
       '@lynx-js/luna-styles':
         specifier: 0.2.2
         version: 0.2.2
@@ -1500,6 +1515,37 @@ importers:
         specifier: ^24.13.3
         version: 24.13.3
 
+  packages/genui/reactweb:
+    dependencies:
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.2.9(core-js@3.50.0)
+      '@rsbuild/plugin-react':
+        specifier: 2.1.0
+        version: 2.1.0(@rsbuild/core@2.2.9(core-js@3.50.0))(@rspack/core@2.2.7(@swc/helpers@0.5.23))
+      react:
+        specifier: 19.3.0
+        version: 19.3.0
+      react-dom:
+        specifier: 19.3.0
+        version: 19.3.0(react@19.3.0)
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
+    devDependencies:
+      '@rslib/core':
+        specifier: catalog:rslib
+        version: 1.0.2(@microsoft/api-extractor@7.59.2(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+      '@types/node':
+        specifier: ^24.13.3
+        version: 24.13.3
+
   packages/genui/server:
     dependencies:
       '@ai-sdk/openai':
@@ -1511,6 +1557,9 @@ importers:
       '@hono/node-server':
         specifier: ^2.1.0
         version: 2.1.0(hono@4.13.9)
+      '@lynx-js/genui-html':
+        specifier: workspace:*
+        version: link:../html
       '@lynx-js/genui-lynx-xml':
         specifier: workspace:*
         version: link:../lynx-xml
@@ -1523,6 +1572,9 @@ importers:
       '@lynx-js/genui-reactlynx':
         specifier: workspace:*
         version: link:../reactlynx
+      '@lynx-js/genui-reactweb':
+        specifier: workspace:*
+        version: link:../reactweb
       '@mastra/core':
         specifier: 1.70.0
         version: 1.70.0(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.5))(zod@4.6.5)

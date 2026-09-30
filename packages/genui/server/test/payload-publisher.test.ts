@@ -64,6 +64,7 @@ describe('Volcengine TOS payload publishing', () => {
       mcpAppsPrefix: 'mcp-apps',
       openuiPrefix: 'openui',
       reactLynxPrefix: 'reactlynx',
+      reactWebPrefix: 'reactweb',
       region: 'cn-beijing',
       secure: true,
       securityToken: undefined,

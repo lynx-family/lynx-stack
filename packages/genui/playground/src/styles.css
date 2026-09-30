@@ -157,10 +157,15 @@ html[data-playground-entry="render"] #root {
 }
 
 .renderLynx,
+.reactWebRender,
 .lynxXmlRenderView {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+.reactWebRender {
+  border: 0;
 }
 
 .lynxXmlRenderError {

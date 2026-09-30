@@ -4,10 +4,7 @@
 
 import { describe, expect, test } from '@rstest/core';
 
-import {
-  extractHtmlArtifact,
-  normalizeHtmlArtifact,
-} from '../agent/html/html-output.js';
+import { extractHtmlArtifact, normalizeHtmlArtifact } from '../src/index.js';
 
 const VALID_ARTIFACT = [
   '<!doctype html>',
