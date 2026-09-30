@@ -1199,16 +1199,20 @@ class LynxTemplatePluginImpl {
           const asyncAssetsInfoByGroups = this.#getAssetsInformationByFilenames(
             compilation,
             // Merged chunk groups may share chunks, so dedupe the files.
+            // CSS files from shared chunks are included (they can be referenced
+            // by multiple lazy bundles), but non-CSS files are excluded (they
+            // stay on the default async path).
             Array.from(
               new Set(
                 chunkGroups.flatMap(cg =>
-                  cg.chunks
-                    .filter(chunk =>
-                      [...chunk.groupsIterable].every(group =>
-                        ownChunkGroups.has(group)
-                      )
-                    )
-                    .flatMap(chunk => [...chunk.files])
+                  cg.chunks.flatMap(chunk => {
+                    const isOwned = [...chunk.groupsIterable].every(group =>
+                      ownChunkGroups.has(group)
+                    );
+                    return [...chunk.files].filter(file =>
+                      isOwned || file.endsWith('.css')
+                    );
+                  })
                 ),
               ),
             ).filter(chunkFile =>
