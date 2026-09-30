@@ -4,7 +4,7 @@
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import { nativeModulesCallEndpoint } from '../../endpoints.js';
 import type { LynxViewInstance } from '../LynxViewInstance.js';
-import type { Cloneable } from '../../../types/index.js';
+import { createNativeModulesCallHandler } from '../nativeModules/createNativeModulesCallHandler.js';
 
 export function registerNativeModulesCallHandler(
   rpc: Rpc,
@@ -12,12 +12,6 @@ export function registerNativeModulesCallHandler(
 ) {
   rpc.registerHandler(
     nativeModulesCallEndpoint,
-    (name: string, data: Cloneable, moduleName: string) => {
-      return lynxViewInstance.parentDom.onNativeModulesCall?.(
-        name,
-        data,
-        moduleName,
-      );
-    },
+    createNativeModulesCallHandler(lynxViewInstance),
   );
 }
