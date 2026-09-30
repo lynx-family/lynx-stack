@@ -110,6 +110,46 @@ describe('legacy JSON CSS', () => {
     expect(css).not.toContain('x-input-ng:not([l-e-name])');
     expect(css).not.toContain('x-textarea-ng:not([l-e-name])');
   });
+
+  test('should keep @media groups', () => {
+    // The shape `genStyleInfo` emits for
+    // `.a{width:1px}@media (min-width:400px){.a{width:2px}@media (prefers-color-scheme:dark){view{width:3px}}}`
+    const styleInfo = {
+      '0': {
+        content: [],
+        rules: [
+          { sel: [[['.a'], [], [], []]], decl: [['width', '1px']] },
+          {
+            media: '(min-width:400px)',
+            rules: [
+              { sel: [[['.a'], [], [], []]], decl: [['width', '2px']] },
+              {
+                media: '(prefers-color-scheme:dark)',
+                rules: [
+                  {
+                    sel: [[['[lynx-tag="view"]'], [], [], []]],
+                    decl: [['width', '3px']],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    } as Parameters<typeof loadStyleFromJSON>[0];
+
+    const css = clientWasmInstance.get_style_content(
+      loadStyleFromJSON(styleInfo, true, false, false, false),
+    );
+
+    expect(css).toBe(
+      '.a:not([l-e-name]){width:1px;}'
+        + '@media (min-width:400px){'
+        + '.a:not([l-e-name]){width:2px;}'
+        + '@media (prefers-color-scheme:dark){x-view:not([l-e-name]){width:3px;}}'
+        + '}',
+    );
+  });
 });
 
 describe('encodeCSS', () => {
@@ -449,6 +489,103 @@ describe('encodeCSS', () => {
       decode_style_info(buffer, undefined, true),
     );
     expect(decodedString.trim()).toMatchSnapshot();
+  });
+
+  test('media-rule', () => {
+    const cssMap = {
+      '0': CSS.parse(`
+        .foo {
+          width: 100rpx;
+        }
+        @media (min-width: 400px) {
+          .foo, view {
+            width: 200rpx;
+          }
+        }
+        .bar {
+          height: 1px;
+        }
+      `).root,
+    };
+    const buffer = encodeCSS(cssMap);
+    const decodedString = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
+    expect(decodedString.trim()).toBe(
+      '.foo:not([l-e-name]){width:calc(100 * var(--rpx-unit));}'
+        + '@media (min-width:400px){'
+        + '.foo:not([l-e-name]),x-view:not([l-e-name]){width:calc(200 * var(--rpx-unit));}'
+        + '}'
+        + '.bar:not([l-e-name]){height:1px;}',
+    );
+  });
+
+  test('media-rule preludes', () => {
+    // The queries used by the lynx-examples `css/media_query` demo.
+    const queries = [
+      '(min-resolution: 2dppx)',
+      '(360px <= width < 400px)',
+      '(min-width: 400px)',
+      '(min-height: 700px)',
+      '(prefers-color-scheme: dark)',
+      'screen and (orientation: portrait), print',
+    ];
+    const cssMap = {
+      '0': CSS.parse(
+        queries.map((query) => `@media ${query} { .a { height: 1px; } }`)
+          .join('\n'),
+      ).root,
+    };
+    const decodedString = get_style_content(
+      decode_style_info(encodeCSS(cssMap), undefined, true),
+    );
+    const preludes = [...decodedString.matchAll(/@media ([^{]*)\{/g)].map((
+      [, prelude],
+    ) => prelude);
+    // Kept verbatim, whitespace aside; the web-core-e2e media query cases
+    // check that a browser evaluates them.
+    expect(preludes).toMatchSnapshot();
+  });
+
+  test('media-rule scoped by css id and entry name', () => {
+    const cssMap = {
+      '1': CSS.parse(`
+        @media (prefers-color-scheme: dark) {
+          .foo {
+            height: 1px;
+          }
+        }
+      `).root,
+    };
+    const decodedString = get_style_content(
+      decode_style_info(encodeCSS(cssMap), 'lazy', true),
+    );
+    expect(decodedString.trim()).toBe(
+      '@media (prefers-color-scheme:dark){.foo:where([l-css-id="1"])[l-e-name="lazy"]{height:1px;}}',
+    );
+  });
+
+  test('media-rule with css selector disabled', () => {
+    const cssMap = {
+      '0': CSS.parse(`
+        .foo {
+          height: 1px;
+        }
+        @media (min-height: 700px) {
+          .foo {
+            height: 2px;
+          }
+        }
+      `).root,
+    };
+    const decodedString = get_style_content(
+      decode_style_info(encodeCSS(cssMap), undefined, false),
+    );
+    // The unconditional rule goes through the CSS OG map; the conditional one
+    // has to stay a selector for the browser to evaluate the query.
+    expect(decodedString.trim()).toBe(
+      '{height:1px;}@media (min-height:700px){.foo:not([l-e-name]){height:2px;}}',
+    );
   });
 
   test('scoped css', () => {

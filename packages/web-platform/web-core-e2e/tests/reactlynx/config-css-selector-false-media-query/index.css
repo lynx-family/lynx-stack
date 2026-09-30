@@ -1,0 +1,23 @@
+/* Single-class rules take the CSS OG path when enableCSSSelector is false. */
+.target {
+  width: 100px;
+  height: 100px;
+  background-color: red;
+}
+
+.wide-only {
+  display: none;
+  width: 100px;
+  height: 100px;
+  background-color: blue;
+}
+
+@media (min-width: 400px) {
+  .target {
+    background-color: green;
+  }
+
+  .wide-only {
+    display: flex;
+  }
+}

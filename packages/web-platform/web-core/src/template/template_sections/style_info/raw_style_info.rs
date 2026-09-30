@@ -51,16 +51,22 @@ pub(super) enum RuleType {
   Declaration = 1,
   FontFace = 2,
   KeyFrames = 3,
+  /**
+   * A `@media` group. Appended last so the archived tags of the other kinds
+   * stay where older bundles put them.
+   */
+  Media = 4,
 }
 
 #[derive(Clone, Default, Archive, Deserialize)]
 #[cfg_attr(feature = "encode", derive(Serialize))]
 #[wasm_bindgen]
 /**
- * Either SelectorList or KeyFramesPrelude
+ * Either SelectorList, KeyFramesPrelude or MediaPrelude
  * Depending on the RuleType
  * If it is SelectorList, then selectors is a list of Selector
  * If it is KeyFramesPrelude, then selectors has only one selector which is Prelude text, its simple_selectors is empty
+ * If it is MediaPrelude, then selectors has only one selector holding the media query list as one UnknownText section
  * If the parent is FontFace, then selectors is empty
  */
 pub struct RulePrelude {
@@ -153,7 +159,7 @@ impl RawStyleInfo {
 impl Rule {
   /**
    * Creates a new Rule with the specified type.
-   * @param rule_type - The type of the rule (e.g., "StyleRule", "FontFaceRule", "KeyframesRule").
+   * @param rule_type - The type of the rule (e.g., "StyleRule", "FontFaceRule", "KeyframesRule", "MediaRule").
    */
   #[wasm_bindgen(constructor)]
   pub fn new(rule_type: String) -> Result<Rule, JsError> {
@@ -161,6 +167,7 @@ impl Rule {
       "StyleRule" => RuleType::Declaration,
       "FontFaceRule" => RuleType::FontFace,
       "KeyframesRule" => RuleType::KeyFrames,
+      "MediaRule" => RuleType::Media,
       _ => {
         return Err(JsError::new(&format!("Unknown rule type: {rule_type}")));
       }

@@ -1,4 +1,4 @@
-import type { Selector } from '../../encode/encodeCSS.js';
+import type { Rule, Selector } from '../../encode/encodeCSS.js';
 import type { RawStyleInfo } from '../../server/wasm.js';
 import { LYNX_TAG_TO_HTML_TAG_MAP } from '../../constants.js';
 import { wasmInstance } from '../wasm.js';
@@ -8,9 +8,17 @@ interface CSSRule {
   decl: [string, string][];
 }
 
+/**
+ * A `@media` group, see `genStyleInfo` in `@lynx-js/template-webpack-plugin`.
+ */
+interface CSSMediaRule {
+  media: string;
+  rules: (CSSRule | CSSMediaRule)[];
+}
+
 interface OneInfo {
   content: string[];
-  rules: CSSRule[];
+  rules: (CSSRule | CSSMediaRule)[];
   imports?: string[];
 }
 
@@ -47,57 +55,7 @@ export function loadStyleFromJSON(
 
     // Handle rules
     for (const rule of info.rules) {
-      const wasmRule = new wasmInstance.Rule('StyleRule');
-
-      // Declarations
-      for (const [prop, val] of rule.decl) {
-        wasmRule.push_declaration(prop, val);
-      }
-
-      // Selectors
-      const prelude = new wasmInstance.RulePrelude();
-      for (const selectorChain of rule.sel) {
-        const selector = new wasmInstance.Selector();
-
-        // Iterate in chunks of 4
-        for (let i = 0; i < selectorChain.length; i += 4) {
-          const plain = selectorChain[i] || [];
-          const pseudoClass = selectorChain[i + 1] || [];
-          const pseudoElement = selectorChain[i + 2] || [];
-          const combinator = selectorChain[i + 3] || [];
-
-          for (const s of plain) {
-            parseAndPushSelector(selector, s);
-          }
-          for (const s of pseudoClass) {
-            if (s === '::part(input)::placeholder') {
-              selector.push_one_selector_section(
-                'PseudoElementSelector',
-                'placeholder',
-              );
-            } else {
-              // Strip leading :
-              const val = s.startsWith(':') ? s.substring(1) : s;
-              selector.push_one_selector_section('PseudoClassSelector', val);
-            }
-          }
-          for (const s of pseudoElement) {
-            // Strip leading ::
-            const val = s.startsWith('::')
-              ? s.substring(2)
-              : s.startsWith(':')
-              ? s.substring(1)
-              : s;
-            selector.push_one_selector_section('PseudoElementSelector', val);
-          }
-          if (combinator.length > 0) {
-            selector.push_one_selector_section('Combinator', combinator[0]!);
-          }
-        }
-        prelude.push_selector(selector);
-      }
-      wasmRule.set_prelude(prelude);
-      rawStyleInfo.push_rule(cssId, wasmRule);
+      rawStyleInfo.push_rule(cssId, createRule(rule));
     }
   }
 
@@ -109,6 +67,72 @@ export function loadStyleFromJSON(
     transformVH,
     transformREM,
   );
+}
+
+function createRule(rule: CSSRule | CSSMediaRule): Rule {
+  if ('media' in rule) {
+    const wasmRule = new wasmInstance.Rule('MediaRule');
+    const prelude = new wasmInstance.RulePrelude();
+    const selector = new wasmInstance.Selector();
+    selector.push_one_selector_section('UnknownText', rule.media);
+    prelude.push_selector(selector);
+    wasmRule.set_prelude(prelude);
+    for (const child of rule.rules) {
+      wasmRule.push_rule_children(createRule(child));
+    }
+    return wasmRule;
+  }
+  const wasmRule = new wasmInstance.Rule('StyleRule');
+
+  // Declarations
+  for (const [prop, val] of rule.decl) {
+    wasmRule.push_declaration(prop, val);
+  }
+
+  // Selectors
+  const prelude = new wasmInstance.RulePrelude();
+  for (const selectorChain of rule.sel) {
+    const selector = new wasmInstance.Selector();
+
+    // Iterate in chunks of 4
+    for (let i = 0; i < selectorChain.length; i += 4) {
+      const plain = selectorChain[i] || [];
+      const pseudoClass = selectorChain[i + 1] || [];
+      const pseudoElement = selectorChain[i + 2] || [];
+      const combinator = selectorChain[i + 3] || [];
+
+      for (const s of plain) {
+        parseAndPushSelector(selector, s);
+      }
+      for (const s of pseudoClass) {
+        if (s === '::part(input)::placeholder') {
+          selector.push_one_selector_section(
+            'PseudoElementSelector',
+            'placeholder',
+          );
+        } else {
+          // Strip leading :
+          const val = s.startsWith(':') ? s.substring(1) : s;
+          selector.push_one_selector_section('PseudoClassSelector', val);
+        }
+      }
+      for (const s of pseudoElement) {
+        // Strip leading ::
+        const val = s.startsWith('::')
+          ? s.substring(2)
+          : s.startsWith(':')
+          ? s.substring(1)
+          : s;
+        selector.push_one_selector_section('PseudoElementSelector', val);
+      }
+      if (combinator.length > 0) {
+        selector.push_one_selector_section('Combinator', combinator[0]!);
+      }
+    }
+    prelude.push_selector(selector);
+  }
+  wasmRule.set_prelude(prelude);
+  return wasmRule;
 }
 
 function parseAndPushSelector(selector: Selector, s: string) {

@@ -38,7 +38,7 @@ export class Rule {
     /**
      *
      *   * Creates a new Rule with the specified type.
-     *   * @param rule_type - The type of the rule (e.g., "StyleRule", "FontFaceRule", "KeyframesRule").
+     *   * @param rule_type - The type of the rule (e.g., "StyleRule", "FontFaceRule", "KeyframesRule", "MediaRule").
      *
      */
     constructor(rule_type: string);
@@ -69,10 +69,11 @@ export class Rule {
 
 /**
  *
- * * Either SelectorList or KeyFramesPrelude
+ * * Either SelectorList, KeyFramesPrelude or MediaPrelude
  * * Depending on the RuleType
  * * If it is SelectorList, then selectors is a list of Selector
  * * If it is KeyFramesPrelude, then selectors has only one selector which is Prelude text, its simple_selectors is empty
+ * * If it is MediaPrelude, then selectors has only one selector holding the media query list as one UnknownText section
  * * If the parent is FontFace, then selectors is empty
  *
  */
