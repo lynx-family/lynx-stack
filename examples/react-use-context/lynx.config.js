@@ -13,12 +13,7 @@ export default defineConfig({
     pluginReactLynx({
       experimental_useElementTemplate: useElementTemplate,
     }),
-    pluginQRCode({
-      schema(url) {
-        // We use `?fullscreen=true` to open the page in LynxExplorer in full screen mode
-        return `${url}?fullscreen=true`;
-      },
-    }),
+    pluginQRCode({ fullscreen: true }),
     pluginLynxBundleAnalysisStats(),
   ],
   source: {
