@@ -1,14 +1,23 @@
-# Example: re-evaluate the main thread entry on reload
+# Example: re-evaluate the entry on reload
 
 `reloadTemplate` reuses the JSX produced when the entry was first evaluated, so
 module scoped state of the entry survives a reload. With
-`experimental_reloadEntryReeval`, the bundler wraps the main thread entry and
-the runtime re-runs it instead, which resets that state while the element tree
-is still reused through the existing hydrate path.
+`experimental_reloadEntryReeval`, both threads evaluate their entry again
+instead, which resets that state while the element tree is still reused through
+the existing hydrate path.
 
-`@lynx-js/react` has to stay outside the re-evaluated bundle, otherwise the
-re-run replaces the framework's own `__root`, `__page` and snapshot registry.
-This example therefore enables `pluginExternalBundle` for both variants.
+The two threads get there differently. On the main thread the bundler wraps the
+entry and the runtime re-runs the wrapper, so `@lynx-js/react` has to stay
+outside that bundle - otherwise the re-run replaces the framework's own
+`__root`, `__page` and snapshot registry. This example therefore enables
+`pluginExternalBundle` for both variants.
+
+On the background thread nothing is wrapped at all. Lynx core installs an
+`onAppReload` that drops the app and loads the card again, and the framework
+defers to it, so app-service.js and the bundles it pulls in are evaluated again
+with nothing framework-side on the stack. The background output is the same
+either way; what decides is the core underneath, and older ones keep the
+re-render while the main thread still re-evaluates.
 
 ## Build
 
@@ -36,5 +45,11 @@ agent-lynx evaluate "updatePage({}, { reloadTemplate: true })" --thread main
 ```
 
 `dist/baseline` keeps logging `main-thread entry eval #1`; `dist/reeval` counts
-up on every reload, and `module value` returns to `0` while the rendered rows
-keep their elements.
+up on every reload. The background counts up in both, given a core that reloads
+the card.
+
+The `entry eval #` and `module value` on screen settle on the background
+thread's copies, since the background render is what survives hydration. They
+are the ones to watch: they only move once the background entry is re-evaluated
+as well, and `module value` returning to `0` there is what says the reload
+actually reset the state the app mutates.
