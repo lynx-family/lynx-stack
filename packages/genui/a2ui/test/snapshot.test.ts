@@ -3,7 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 import { describe, expect, test } from '@rstest/core';
 
-import { compactA2UIMessagesToSnapshot } from '../src/snapshot/index.js';
+import {
+  compactA2UIMessagesToSnapshot,
+  generateReactLynxA2UIWrapperSource,
+  generateReactLynx3A2UIWrapperSource,
+} from '../src/snapshot/index.js';
 import type { ServerToClientMessage } from '../src/store/types.js';
 
 type SnapshotResult = ReturnType<typeof compactA2UIMessagesToSnapshot>;
@@ -642,5 +646,92 @@ describe('compactA2UIMessagesToSnapshot', () => {
 
     const next = compactA2UIMessagesToSnapshot(result.messages);
     expect(next.messages).toEqual(result.messages);
+  });
+});
+
+describe('generateReactLynxA2UIWrapperSource', () => {
+  const messages = [
+    {
+      version: 'v0.9',
+      createSurface: { surfaceId: 'main', catalogId: 'test' },
+    },
+    {
+      version: 'v0.9',
+      updateComponents: {
+        surfaceId: 'main',
+        components: [
+          {
+            id: 'root',
+            component: 'Column',
+            children: ['title', 'stale'],
+          },
+          { id: 'title', component: 'Text', text: 'Generated final' },
+          { id: 'stale', component: 'Text', text: 'Stale copy' },
+        ],
+      },
+    },
+    {
+      version: 'v0.9',
+      updateComponents: {
+        surfaceId: 'main',
+        components: [
+          {
+            id: 'root',
+            component: 'Column',
+            children: ['title'],
+          },
+        ],
+      },
+    },
+  ] as ServerToClientMessage[];
+
+  test('generates a ReactLynx TSX wrapper around compacted messages', () => {
+    const source = generateReactLynxA2UIWrapperSource(messages, {
+      componentName: 'GeneratedApp',
+    });
+
+    expect(source).toContain(
+      'import { useMemo } from \'@lynx-js/react\';',
+    );
+    expect(source).toContain(
+      'from "@lynx-js/genui/a2ui";',
+    );
+    expect(source).toContain('export function GeneratedApp(');
+    expect(source).toContain('createMessageStore({');
+    expect(source).toContain('initialMessages: generatedA2UIMessages');
+    expect(source).toContain('<A2UI');
+    expect(source).toContain('withManifest(Text as CatalogComponent');
+    expect(source).toContain('Generated final');
+    expect(source).not.toContain('Stale copy');
+  });
+
+  test('can preserve the raw stream and omit the theme import', () => {
+    const source = generateReactLynxA2UIWrapperSource(messages, {
+      compact: false,
+      includeThemeImport: false,
+      rootClassName: 'custom-root',
+      surfaceClassName: 'custom-surface',
+      surfaceWrapperClassName: 'custom-shell',
+    });
+
+    expect(source).toContain('Stale copy');
+    expect(source).not.toContain('/styles/theme.css');
+    expect(source).toContain('<view className="custom-root">');
+    expect(source).toContain('className="custom-surface"');
+    expect(source).toContain('<view className="custom-shell">');
+  });
+
+  test('rejects invalid generated component names', () => {
+    expect(() =>
+      generateReactLynxA2UIWrapperSource(messages, {
+        componentName: 'bad-name',
+      })
+    ).toThrowError(/Invalid ReactLynx component name/u);
+  });
+
+  test('exposes a ReactLynx3 alias', () => {
+    expect(generateReactLynx3A2UIWrapperSource).toBe(
+      generateReactLynxA2UIWrapperSource,
+    );
   });
 });
