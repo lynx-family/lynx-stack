@@ -4,8 +4,14 @@
 
 import { describe, expect, test } from 'vitest'
 
-import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from '@lynx-js/debug-metadata'
-import type { UiSourceMapRecord } from '@lynx-js/debug-metadata'
+import {
+  UI_SOURCE_MAP_RECORDS_BUILD_INFO,
+  remapUiTree,
+} from '@lynx-js/debug-metadata'
+import type {
+  DebugMetadataAsset,
+  UiSourceMapRecord,
+} from '@lynx-js/debug-metadata'
 
 import {
   collectUiSourceMapRecordsFromModule,
@@ -115,7 +121,7 @@ describe('createUiSourceMap', () => {
         uiSourceMap: 30,
       }),
     ]
-    expect(createUiSourceMap(records)).toEqual({
+    expect(createUiSourceMap(records, '/repo')).toEqual({
       version: 1,
       sources: ['a.tsx', 'b.tsx'],
       mappings: [
@@ -132,7 +138,7 @@ describe('createUiSourceMap', () => {
       createUiSourceMap([
         record({ filename: '' }),
         record({ filename: 'kept.tsx' }),
-      ]),
+      ], '/repo'),
     ).toEqual({
       version: 1,
       sources: ['kept.tsx'],
@@ -142,11 +148,91 @@ describe('createUiSourceMap', () => {
   })
 
   test('empty input yields an empty payload', () => {
-    expect(createUiSourceMap([])).toEqual({
+    expect(createUiSourceMap([], '/repo')).toEqual({
       version: 1,
       sources: [],
       mappings: [],
       uiMaps: [],
     })
+  })
+})
+
+describe('createUiSourceMap -> remapUiTree', () => {
+  // A CI build checks the repository out under a machine-specific prefix, so
+  // the loader hands the UI source map paths like
+  // `<rootDir>/apps/app/src/components/Badge/index.tsx`. A consumer can only
+  // reach the authored file if what it reads back is relative to the repo.
+  const rootDir = '/opt/build/src/git.example.com/acme/storefront'
+  const remoteUrl = 'https://git.example.com/acme/storefront'
+
+  const records: UiSourceMapRecord[] = [
+    {
+      uiSourceMap: 101,
+      filename: `${rootDir}/apps/app/src/common/themes.tsx`,
+      lineNumber: 635,
+      columnNumber: 11,
+    },
+    {
+      uiSourceMap: 202,
+      filename: `${rootDir}/apps/app/src/components/Badge/index.tsx`,
+      lineNumber: 21,
+      columnNumber: 7,
+    },
+  ]
+
+  test('a node resolves to a repo-relative source, not a build path', async () => {
+    const uiSourceMap = createUiSourceMap(records, rootDir)
+    expect(uiSourceMap.sources).toEqual([
+      'apps/app/src/common/themes.tsx',
+      'apps/app/src/components/Badge/index.tsx',
+    ])
+
+    const remapped = await remapUiTree(
+      {
+        nodeIndex: 101,
+        debugMetadataUrl: 'https://example.test/debug-metadata.json',
+        children: [
+          {
+            nodeIndex: 202,
+            debugMetadataUrl: 'https://example.test/debug-metadata.json',
+          },
+        ],
+      },
+      () =>
+        Promise.resolve({
+          artifacts: [],
+          uiSourceMap,
+          buildInfo: { git: { remoteUrl } },
+        } as unknown as DebugMetadataAsset),
+    )
+
+    expect(remapped).toMatchObject({
+      repo: 'acme/storefront',
+      source: 'apps/app/src/common/themes.tsx',
+      line: 635,
+      column: 11,
+      children: [
+        {
+          repo: 'acme/storefront',
+          source: 'apps/app/src/components/Badge/index.tsx',
+          line: 21,
+          column: 7,
+        },
+      ],
+    })
+  })
+
+  test('a path outside the repository root keeps its distance from it', () => {
+    expect(
+      createUiSourceMap(
+        [{
+          uiSourceMap: 1,
+          filename: '/opt/build/src/git.example.com/acme/shared/ui.tsx',
+          lineNumber: 1,
+          columnNumber: 0,
+        }],
+        rootDir,
+      ).sources,
+    ).toEqual(['../shared/ui.tsx'])
   })
 })
