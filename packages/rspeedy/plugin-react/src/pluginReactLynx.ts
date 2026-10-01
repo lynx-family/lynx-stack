@@ -353,6 +353,16 @@ export interface PluginReactLynxOptions {
   experimental_useElementTemplate?: boolean
 
   /**
+   * Re-evaluate the main thread entry on `reloadTemplate` instead of reusing
+   * the JSX of the previous render, so module scoped state of the entry is
+   * reset while the element tree is still reused.
+   *
+   * @defaultValue `false`
+   * @experimental
+   */
+  experimental_reloadEntryReeval?: boolean
+
+  /**
    * Optimize bundle size by removing unused code by Minify.mainThreadOptions and Minify.backgroundOptions.
    *
    * When optimizeBundleSize or optimizeBundleSize.mainThread is true, main-thread code will be optimized.
@@ -418,6 +428,7 @@ export function pluginReactLynx(
     experimental_isLazyBundle: false,
     experimental_transformBuiltinAttributeNames: false,
     experimental_useElementTemplate: false,
+    experimental_reloadEntryReeval: false,
     optimizeBundleSize: false,
     enableUiSourceMap: false,
   }
