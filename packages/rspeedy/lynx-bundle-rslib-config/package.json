@@ -39,7 +39,7 @@
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rsbuild-plugin": "workspace:*",
-    "@lynx-js/tasm": "0.0.49",
+    "@lynx-js/tasm": "0.0.52",
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/test-tools": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
