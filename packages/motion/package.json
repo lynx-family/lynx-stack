@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "motion": "13.4.3",
-    "motion-dom": "13.4.2",
+    "motion-dom": "13.4.5",
     "motion-utils": "13.0.0"
   },
   "devDependencies": {
