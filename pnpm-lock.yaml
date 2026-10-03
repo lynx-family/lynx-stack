@@ -1556,7 +1556,7 @@ importers:
         version: 3.0.6(zod@4.6.5)
       '@hono/node-server':
         specifier: ^2.1.0
-        version: 2.1.0(hono@4.13.9)
+        version: 2.1.0(hono@4.13.12)
       '@lynx-js/genui-html':
         specifier: workspace:*
         version: link:../html
@@ -1585,8 +1585,8 @@ importers:
         specifier: ^2.9.1
         version: 2.9.1(supports-color@10.2.2)
       hono:
-        specifier: 4.13.9
-        version: 4.13.9
+        specifier: 4.13.12
+        version: 4.13.12
       pngjs:
         specifier: ^7.0.0
         version: 7.0.0
@@ -9350,8 +9350,8 @@ packages:
     peerDependencies:
       hono: ^4.11.2
 
-  hono@4.13.9:
-    resolution: {integrity: sha512-7dMkQmZoC4E6F7AtaQSPhlWAdnBti+j7rreMZl8QB4jFiEhP9TWbGWUMi8WYzBCgmgulxuvLQupKqo+Co6Omyg==}
+  hono@4.13.12:
+    resolution: {integrity: sha512-6E2QDAc9Ick9Sq77ZrGS/dk2WUYni91aufTw6LJKpV7w8kW5/GxVUc650FOADOmlwg3K+f7Pun6XlV+pYmW6gw==}
     engines: {node: '>=16.9.0'}
 
   hookable@6.0.1:
@@ -14303,19 +14303,19 @@ snapshots:
       '@shikijs/types': 3.23.0
       '@shikijs/vscode-textmate': 10.0.2
 
-  '@hono/node-server@1.19.9(hono@4.13.9)':
+  '@hono/node-server@1.19.9(hono@4.13.12)':
     dependencies:
-      hono: 4.13.9
+      hono: 4.13.12
     optional: true
 
-  '@hono/node-server@2.1.0(hono@4.13.9)':
+  '@hono/node-server@2.1.0(hono@4.13.12)':
     dependencies:
-      hono: 4.13.9
+      hono: 4.13.12
 
-  '@hono/standard-validator@0.4.0(@standard-schema/spec@1.1.0)(hono@4.13.9)':
+  '@hono/standard-validator@0.4.0(@standard-schema/spec@1.1.0)(hono@4.13.12)':
     dependencies:
       '@standard-schema/spec': 1.1.0
-      hono: 4.13.9
+      hono: 4.13.12
 
   '@humanfs/core@0.19.2':
     dependencies:
@@ -15148,8 +15148,8 @@ snapshots:
       execa: 9.6.1
       fastq: 1.20.1
       gray-matter: 4.0.3
-      hono: 4.13.9
-      hono-openapi: 1.3.3(hono@4.13.9)(zod-to-json-schema@3.25.2(zod@4.6.5))(zod@4.6.5)
+      hono: 4.13.12
+      hono-openapi: 1.3.3(hono@4.13.12)(zod-to-json-schema@3.25.2(zod@4.6.5))(zod@4.6.5)
       ignore: 7.0.5
       jpeg-js: 0.4.4
       json-schema: 0.4.0
@@ -15285,7 +15285,7 @@ snapshots:
 
   '@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.6.5)':
     dependencies:
-      '@hono/node-server': 1.19.9(hono@4.13.9)
+      '@hono/node-server': 1.19.9(hono@4.13.12)
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
       content-type: 1.0.5
@@ -15295,7 +15295,7 @@ snapshots:
       eventsource-parser: 3.1.0
       express: 5.2.1(supports-color@10.2.2)
       express-rate-limit: 8.6.0(express@5.2.1(supports-color@10.2.2))(supports-color@10.2.2)
-      hono: 4.13.9
+      hono: 4.13.12
       jose: 6.2.10
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
@@ -19471,14 +19471,14 @@ snapshots:
       property-information: 7.0.0
       space-separated-tokens: 2.0.2
 
-  hono-openapi@1.3.3(hono@4.13.9)(zod-to-json-schema@3.25.2(zod@4.6.5))(zod@4.6.5):
+  hono-openapi@1.3.3(hono@4.13.12)(zod-to-json-schema@3.25.2(zod@4.6.5))(zod@4.6.5):
     dependencies:
-      '@hono/standard-validator': 0.4.0(@standard-schema/spec@1.1.0)(hono@4.13.9)
+      '@hono/standard-validator': 0.4.0(@standard-schema/spec@1.1.0)(hono@4.13.12)
       '@standard-community/standard-json': 0.3.6(@standard-schema/spec@1.1.0)(@types/json-schema@7.0.15)(zod-to-json-schema@3.25.2(zod@4.6.5))(zod@4.6.5)
       '@standard-community/standard-openapi': 0.2.10(@standard-community/standard-json@0.3.6(@standard-schema/spec@1.1.0)(@types/json-schema@7.0.15)(zod-to-json-schema@3.25.2(zod@4.6.5))(zod@4.6.5))(@standard-schema/spec@1.1.0)(openapi-types@12.1.3)(zod@4.6.5)
       '@standard-schema/spec': 1.1.0
       '@types/json-schema': 7.0.15
-      hono: 4.13.9
+      hono: 4.13.12
       openapi-types: 12.1.3
     transitivePeerDependencies:
       - '@valibot/to-json-schema'
@@ -19491,7 +19491,7 @@ snapshots:
       - zod-openapi
       - zod-to-json-schema
 
-  hono@4.13.9: {}
+  hono@4.13.12: {}
 
   hookable@6.0.1: {}
 
