@@ -30,8 +30,8 @@
   "devDependencies": {
     "@rspress/core": "2.0.21",
     "@rspress/plugin-typedoc": "2.0.21",
-    "@types/react": "npm:@types/react@^19.2.18",
-    "@types/react-dom": "^19.2.4",
+    "@types/react": "npm:@types/react@^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "typedoc": "^0.28.20",

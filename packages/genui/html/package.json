@@ -28,6 +28,6 @@
   "devDependencies": {
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
-    "@types/node": "^24.13.3"
+    "@types/node": "^24.19.0"
   }
 }
