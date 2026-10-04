@@ -16,7 +16,7 @@ interface StubCall {
 
 type Environments = Record<
   string,
-  { source: { entry: Record<string, unknown> } }
+  { source: { entry?: Record<string, unknown> } }
 >
 
 const DEFAULT_ENVIRONMENTS: Environments = {
@@ -69,10 +69,11 @@ function createStubServer(
 
 async function run(
   middleware: ReturnType<typeof createBundleResolveMiddleware>,
-  url: string,
+  url: string | undefined,
+  method = 'GET',
 ): Promise<StubCall> {
   return await new Promise((resolve) => {
-    const req = { method: 'GET', url } as IncomingMessage
+    const req = { method, url } as IncomingMessage
     const next = () => {
       resolve({ rewrittenUrl: req.url, nextCalled: true })
     }
@@ -214,5 +215,57 @@ describe('createBundleResolveMiddleware', () => {
     ).toThrowErrorMatchingInlineSnapshot(
       `[Error: Duplicate stripped bundle request path "main.bundle". Include [platform] in \`output.filename.bundle\`, or otherwise make the paths unique.]`,
     )
+  })
+
+  test('passes through requests that are not GET or HEAD', async () => {
+    const middleware = createBundleResolveMiddleware(
+      createStubApi(HASH_TEMPLATE),
+      createStubServer(['main.lynx.6e10a1f5.bundle']),
+    )
+
+    const call = await run(middleware, '/main.lynx.bundle', 'POST')
+
+    expect(call.nextCalled).toBe(true)
+    expect(call.rewrittenUrl).toBe('/main.lynx.bundle')
+  })
+
+  test('passes through a request without a URL', async () => {
+    const middleware = createBundleResolveMiddleware(
+      createStubApi(HASH_TEMPLATE),
+      createStubServer(['main.lynx.6e10a1f5.bundle']),
+    )
+
+    const call = await run(middleware, undefined)
+
+    expect(call.nextCalled).toBe(true)
+    expect(call.rewrittenUrl).toBeUndefined()
+  })
+
+  test('passes through when the environment is absent from the server', async () => {
+    const middleware = createBundleResolveMiddleware(
+      createStubApi(HASH_TEMPLATE),
+      // The environment the patterns were built for is not part of the
+      // running server.
+      createStubServer({ web: ['main.lynx.6e10a1f5.bundle'] }),
+    )
+
+    const call = await run(middleware, '/main.lynx.bundle')
+
+    expect(call.nextCalled).toBe(true)
+    expect(call.rewrittenUrl).toBe('/main.lynx.bundle')
+  })
+
+  test('does nothing for an environment without entries', async () => {
+    const middleware = createBundleResolveMiddleware(
+      createStubApi(HASH_TEMPLATE, {
+        lynx: { source: {} },
+      }),
+      createStubServer(['main.lynx.6e10a1f5.bundle']),
+    )
+
+    const call = await run(middleware, '/main.lynx.bundle')
+
+    expect(call.nextCalled).toBe(true)
+    expect(call.rewrittenUrl).toBe('/main.lynx.bundle')
   })
 })
