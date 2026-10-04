@@ -47,6 +47,10 @@ export function createBundleResolveMiddleware(
   const lynxConfig = getLynxConfig(api)
 
   const patterns: BundlePattern[] = []
+  // The printed URL of every environment, used to reject templates that
+  // would make one URL ambiguous: the middleware cannot tell which
+  // environment's bundle a duplicated path resolves to.
+  const strippedRequestPaths = new Set<string>()
   for (
     const [environmentName, environmentConfig] of Object.entries(
       api.getNormalizedConfig().environments,
@@ -60,11 +64,20 @@ export function createBundleResolveMiddleware(
       if (!hasHashPlaceholder(template)) {
         continue
       }
+      const strippedRequestPath = stripHashPlaceholders(template)
+      if (strippedRequestPaths.has(strippedRequestPath)) {
+        throw new Error(
+          `Duplicate stripped bundle request path "${strippedRequestPath}". `
+            + `Include [platform] in \`output.filename.bundle\`, or otherwise `
+            + `make the paths unique.`,
+        )
+      }
+      strippedRequestPaths.add(strippedRequestPath)
       const assetRE = hashPlaceholderToRegExp(template)
       for (
         const requestRE of [
           // The printed URL, with the hash placeholders stripped.
-          templateToRequestRegExp(stripHashPlaceholders(template)),
+          templateToRequestRegExp(strippedRequestPath),
           // The URL with the placeholder verbatim, as printed before the
           // placeholders were stripped.
           templateToRequestRegExp(template),

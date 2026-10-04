@@ -81,4 +81,13 @@ describe('hashPlaceholderToRegExp', () => {
     expect(regexp.test('main.lynx.beef.6e10a1f.bundle')).toBe(false)
     expect(regexp.test('main.lynx.bee.6e10a1f5.bundle')).toBe(false)
   })
+
+  test('matches the complete asset name only', () => {
+    const regexp = hashPlaceholderToRegExp('main.lynx.[contenthash:8].bundle')
+
+    // The bundle's source map shares the prefix but is a different asset.
+    expect(regexp.test('main.lynx.6e10a1f5.bundle.map')).toBe(false)
+    expect(regexp.test('xmain.lynx.6e10a1f5.bundle')).toBe(false)
+    expect(regexp.test('main.lynx.6e10a1f5.bundle.js')).toBe(false)
+  })
 })

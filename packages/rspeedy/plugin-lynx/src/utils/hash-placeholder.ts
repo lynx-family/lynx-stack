@@ -58,6 +58,9 @@ export function templateToRequestRegExp(template: string): RegExp {
  * that still contains hash placeholders, e.g.
  * `main.lynx.[contenthash:8].bundle` matches `main.lynx.6e10a1f5.bundle`.
  *
+ * The pattern is anchored, so it only matches an asset named exactly after
+ * the template (and never a longer name such as the bundle's source map).
+ *
  * The digest is lowercase hex: `LynxTemplatePlugin` computes it with
  * xxhash64 (rspack's default `output.hashFunction`) and
  * `compilation.getPath` renders it with `hex` encoding.
@@ -75,7 +78,7 @@ export function hashPlaceholderToRegExp(template: string): RegExp {
   }
   source.push(escapeRegExp(template.slice(lastIndex)))
 
-  return new RegExp(source.join(''))
+  return new RegExp(`^${source.join('')}$`)
 }
 
 function escapeRegExp(text: string): string {

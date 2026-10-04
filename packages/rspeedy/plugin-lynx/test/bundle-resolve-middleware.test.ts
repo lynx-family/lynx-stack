@@ -14,11 +14,27 @@ interface StubCall {
   nextCalled: boolean
 }
 
+type Environments = Record<
+  string,
+  { source: { entry: Record<string, unknown> } }
+>
+
+const DEFAULT_ENVIRONMENTS: Environments = {
+  lynx: {
+    source: {
+      entry: {
+        main: {},
+      },
+    },
+  },
+}
+
 function createStubApi(
   resolveBundleFilename: (context: {
     entryName: string
     platform: string
   }) => string,
+  environments: Environments = DEFAULT_ENVIRONMENTS,
 ): RsbuildPluginAPI {
   return {
     useExposed: (exposed: symbol) => {
@@ -26,30 +42,28 @@ function createStubApi(
       return { resolveBundleFilename }
     },
     getNormalizedConfig: () => ({
-      environments: {
-        lynx: {
-          source: {
-            entry: {
-              main: {},
-            },
-          },
-        },
-      },
+      environments,
     }),
   } as unknown as RsbuildPluginAPI
 }
 
-function createStubServer(assets: string[]): RsbuildDevServer {
+function createStubServer(
+  assets: string[] | Record<string, string[]>,
+): RsbuildDevServer {
+  const byEnvironment = Array.isArray(assets) ? { lynx: assets } : assets
   return {
-    environments: {
-      lynx: {
-        getStats: async () => ({
-          compilation: {
-            assets: Object.fromEntries(assets.map(name => [name, {}])),
-          },
-        }),
-      },
-    },
+    environments: Object.fromEntries(
+      Object.entries(byEnvironment).map(([environment, names]) => [
+        environment,
+        {
+          getStats: async () => ({
+            compilation: {
+              assets: Object.fromEntries(names.map(name => [name, {}])),
+            },
+          }),
+        },
+      ]),
+    ),
   } as unknown as RsbuildDevServer
 }
 
@@ -162,5 +176,43 @@ describe('createBundleResolveMiddleware', () => {
 
     expect(call.nextCalled).toBe(true)
     expect(call.rewrittenUrl).toBe('/main.lynx.bundle')
+  })
+
+  test('resolves each environment when the printed paths are unique', async () => {
+    const middleware = createBundleResolveMiddleware(
+      createStubApi(HASH_TEMPLATE, {
+        lynx: { source: { entry: { main: {} } } },
+        web: { source: { entry: { main: {} } } },
+      }),
+      createStubServer({
+        lynx: ['main.lynx.11111111.bundle'],
+        web: ['main.web.22222222.bundle'],
+      }),
+    )
+
+    const lynx = await run(middleware, '/main.lynx.bundle')
+    expect(lynx.rewrittenUrl).toBe('/main.lynx.11111111.bundle')
+
+    const web = await run(middleware, '/main.web.bundle')
+    expect(web.rewrittenUrl).toBe('/main.web.22222222.bundle')
+  })
+
+  test('rejects a template whose printed path collides across environments', () => {
+    // Both environments would print `/main.bundle`, so the middleware could
+    // not tell which environment's bundle a request resolves to.
+    expect(() =>
+      createBundleResolveMiddleware(
+        createStubApi(
+          context => `${context.entryName}.[contenthash:8].bundle`,
+          {
+            lynx: { source: { entry: { main: {} } } },
+            web: { source: { entry: { main: {} } } },
+          },
+        ),
+        createStubServer(['main.6e10a1f5.bundle']),
+      )
+    ).toThrowErrorMatchingInlineSnapshot(
+      `[Error: Duplicate stripped bundle request path "main.bundle". Include [platform] in \`output.filename.bundle\`, or otherwise make the paths unique.]`,
+    )
   })
 })
