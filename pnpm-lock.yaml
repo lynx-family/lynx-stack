@@ -1903,8 +1903,8 @@ importers:
         specifier: 19.3.0
         version: 19.3.0(react@19.3.0)
       react-resizable-panels:
-        specifier: ^4.13.3
-        version: 4.13.3(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        specifier: ^4.14.2
+        version: 4.14.2(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       tailwind-merge:
         specifier: ^3.7.0
         version: 3.7.0
@@ -11429,8 +11429,8 @@ packages:
     peerDependencies:
       react: '>=19'
 
-  react-resizable-panels@4.13.3:
-    resolution: {integrity: sha512-k41s4nP8IXiGjnso8TsZLzoRbuxBb6buTJUOrFWrYpmbV4PGH5GHYM2RvNWWBRIJ6e+Zxlf3m9Tubk8VoPU9Ww==}
+  react-resizable-panels@4.14.2:
+    resolution: {integrity: sha512-s35mfXhwpPEPnB+BKPCZJ9VZU0CHb1I9trm9tijEGBNv1Srl0HzIweENeXnsQvd0Xm9BeOBkEzDGVJOZM2mkEQ==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
@@ -21819,7 +21819,7 @@ snapshots:
       react: 19.3.0
       react-reconciler: 0.33.0(react@19.3.0)
 
-  react-resizable-panels@4.13.3(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
+  react-resizable-panels@4.14.2(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
     dependencies:
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
