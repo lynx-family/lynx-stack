@@ -1423,8 +1423,8 @@ importers:
         specifier: ^8.0.3
         version: 8.0.3
       lucide-react:
-        specifier: ^1.51.0
-        version: 1.51.0(@types/react@19.2.18)(react@19.3.0)
+        specifier: ^1.52.0
+        version: 1.52.0(@types/react@19.2.18)(react@19.3.0)
       qrcode:
         specifier: ^1.5.4
         version: 1.5.4
@@ -1894,8 +1894,8 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       lucide-react:
-        specifier: ^1.51.0
-        version: 1.51.0(@types/react@19.2.18)(react@19.3.0)
+        specifier: ^1.52.0
+        version: 1.52.0(@types/react@19.2.18)(react@19.3.0)
       react:
         specifier: 19.3.0
         version: 19.3.0
@@ -10206,8 +10206,8 @@ packages:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
     engines: {node: '>=10'}
 
-  lucide-react@1.51.0:
-    resolution: {integrity: sha512-9929jimol5y7VbXUlVKcgURMSeIxFJB7dtWCkRAaNnF7KiCRkSkhmqWPUmAmUFYPezNawFk6qvz3Mu0gEnfI4g==}
+  lucide-react@1.52.0:
+    resolution: {integrity: sha512-TUgPtl5ZI9WgxOcbu4ckaC5B3l1qxPQrCMgb6OfUB9owx/OvSJfcf93SMgUWAxRw5/1XDfh9uI5F5iNGXCcGDQ==}
     peerDependencies:
       '@types/react': '*'
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -20344,7 +20344,7 @@ snapshots:
     dependencies:
       yallist: 4.0.0
 
-  lucide-react@1.51.0(@types/react@19.2.18)(react@19.3.0):
+  lucide-react@1.52.0(@types/react@19.2.18)(react@19.3.0):
     dependencies:
       react: 19.3.0
     optionalDependencies:
