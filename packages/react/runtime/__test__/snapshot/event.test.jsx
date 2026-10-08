@@ -1156,7 +1156,7 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
                 "-5": -8,
                 "-6": -9,
               },
-              "root": "{"id":-7,"type":"root","children":[{"id":-8,"type":"__snapshot_a94a8_test_12","children":[{"id":-9,"type":"__snapshot_a94a8_test_11","values":["-9:0:"]}]}]}",
+              "root": "[1,["root","__snapshot_a94a8_test_12","__snapshot_a94a8_test_11"],[-7,0,8,[[-8,1,8,[[-9,2,1,["-9:0:"]]]]]]]",
             },
           ],
         ]
@@ -1265,7 +1265,7 @@ describe('call `root.render()` async', () => {
             "rLynxFirstScreen",
             {
               "firstScreenEventIdSwap": {},
-              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_14","children":[{"id":-3,"type":"__snapshot_a94a8_test_13","values":["-3:0:"]}]}]}",
+              "root": "[1,["root","__snapshot_a94a8_test_14","__snapshot_a94a8_test_13"],[-1,0,8,[[-2,1,8,[[-3,2,1,["-3:0:"]]]]]]]",
             },
           ],
         ]

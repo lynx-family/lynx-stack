@@ -203,39 +203,53 @@ test('setState triggered renderComponent should have correct slotIndex', async (
   });
 
   expect(JSON.stringify(JSON.parse(onLifecycleEventCalls[0][0][1]['root']), null, 2)).toMatchInlineSnapshot(`
-    "{
-      "id": -1,
-      "type": "root",
-      "children": [
-        {
-          "id": -2,
-          "type": "__snapshot_289e0_test_3",
-          "children": [
-            {
-              "id": -3,
-              "type": null,
-              "values": [
-                "parent"
-              ]
-            },
-            {
-              "id": -4,
-              "type": "__snapshot_289e0_test_4",
-              "children": [
-                {
-                  "id": -5,
-                  "type": null,
-                  "values": [
-                    0
-                  ]
-                }
+    "[
+      1,
+      [
+        "root",
+        "__snapshot_289e0_test_3",
+        null,
+        "__snapshot_289e0_test_4"
+      ],
+      [
+        -1,
+        0,
+        8,
+        [
+          [
+            -2,
+            1,
+            8,
+            [
+              [
+                -3,
+                2,
+                1,
+                [
+                  "parent"
+                ]
               ],
-              "slotIndex": 1
-            }
+              [
+                -4,
+                3,
+                24,
+                [
+                  [
+                    -5,
+                    2,
+                    1,
+                    [
+                      0
+                    ]
+                  ]
+                ],
+                1
+              ]
+            ]
           ]
-        }
+        ]
       ]
-    }"
+    ]"
   `);
 
   expect(elementTree).toMatchInlineSnapshot(`
