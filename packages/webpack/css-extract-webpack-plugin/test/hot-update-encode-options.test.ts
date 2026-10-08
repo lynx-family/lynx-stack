@@ -66,7 +66,6 @@ function runRspack(config: Configuration): Promise<Stats> {
 describe('CSS hot update encode options', () => {
   test('does not accept arbitrary per-template fields', async () => {
     const dist = mkdtempSync(path.join(tmpdir(), 'css-hot-update-options-'));
-
     const stats = await runRspack({
       context: CONTEXT,
       mode: 'development',

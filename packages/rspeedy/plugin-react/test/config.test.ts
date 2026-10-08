@@ -2073,7 +2073,9 @@ describe('Config', () => {
 
       const chunks = config.optimization.splitChunks.chunks
       const createChunk = (runtime: string[]) =>
-        ({ runtime: new Set(runtime) }) as Parameters<typeof chunks>[0]
+        ({ runtime: new Set(runtime) }) as unknown as Parameters<
+          typeof chunks
+        >[0]
 
       expect(chunks(createChunk(['main__main-thread']))).toBe(false)
       expect(chunks(createChunk(['lazy-main-thread']))).toBe(true)
