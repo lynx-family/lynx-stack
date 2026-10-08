@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { mkdtemp } from 'node:fs/promises'
+import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -11,9 +11,69 @@ import { describe, expect, test } from '@rstest/core'
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
+import type { ReactCompileResultExposureV1 } from '../src/compileResult.js'
 import type { LynxTemplatePlugin, TemplateHooks } from '../src/index.js'
 
+const REACT_COMPILE_RESULT_EXPOSURE = Symbol.for(
+  '@lynx-js/react/internal:compile-result',
+)
+
 describe('Expose', () => {
+  test.each(
+    [
+      ['fixtures/lazy-main-thread-programmability/index.tsx', true],
+      ['fixtures/basic.tsx', false],
+    ] as const,
+  )(
+    'reports final runtime requirements for %s',
+    async (fixture, mainThreadProgrammability) => {
+      let exposure: ReactCompileResultExposureV1 | undefined
+      const { pluginReactLynx } = await import('../src/index.js')
+      const consumeReactCompileResult: RsbuildPlugin = {
+        name: 'consume-react-compile-result',
+        setup(api) {
+          exposure = api.useExposed<ReactCompileResultExposureV1>(
+            REACT_COMPILE_RESULT_EXPOSURE,
+          )
+        },
+      }
+      const tmp = await mkdtemp(
+        path.join(tmpdir(), 'rspeedy-react-test-compile-result-'),
+      )
+      try {
+        const rsbuild = await createRspeedy({
+          rspeedyConfig: {
+            source: {
+              entry: {
+                main: fileURLToPath(new URL(fixture, import.meta.url)),
+              },
+            },
+            output: { distPath: { root: tmp } },
+            plugins: [
+              pluginReactLynx(),
+              pluginStubRspeedyAPI(),
+              consumeReactCompileResult,
+            ],
+          },
+        })
+
+        const result = await rsbuild.build()
+        try {
+          expect(exposure?.version).toBe(1)
+          expect(result.stats).toBeDefined()
+          expect(exposure?.getCompileResult(result.stats!)).toEqual({
+            version: 1,
+            runtimeRequirements: { mainThreadProgrammability },
+          })
+        } finally {
+          await result.close()
+        }
+      } finally {
+        await rm(tmp, { recursive: true, force: true })
+      }
+    },
+  )
+
   test('LynxTemplatePlugin', async () => {
     const { pluginReactLynx } = await import('../src/index.js')
 
