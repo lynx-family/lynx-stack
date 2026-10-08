@@ -139,6 +139,17 @@ export interface HtmlPreviewSource {
   theme?: 'light' | 'dark';
 }
 
+export interface ReactLynxPreviewSource {
+  kind: 'reactlynx';
+  webUrl: string;
+  nativeUrl: string;
+}
+
+export interface ReactWebPreviewSource {
+  kind: 'reactweb';
+  webUrl: string;
+}
+
 interface PlaceholderPreviewSource {
   kind: 'placeholder';
   item: PreviewQrItem;
@@ -150,6 +161,8 @@ export type PreviewPanelSource =
   | McpAppsPreviewSource
   | LynxXmlPreviewSource
   | HtmlPreviewSource
+  | ReactLynxPreviewSource
+  | ReactWebPreviewSource
   | PlaceholderPreviewSource;
 
 export interface PreviewQrCard {
@@ -377,6 +390,26 @@ function absoluteUrl(url: string, origin: string): string {
   }
 }
 
+export function buildReactLynxWebRenderUrl(
+  baseUrl: string,
+  previewSource: ReactLynxPreviewSource,
+): string {
+  const url = new URL('render.html', baseUrl);
+  url.searchParams.set('protocol', 'reactlynx');
+  url.searchParams.set('bundleUrl', previewSource.webUrl);
+  return url.toString();
+}
+
+export function buildReactWebRenderUrl(
+  baseUrl: string,
+  previewSource: ReactWebPreviewSource,
+): string {
+  const url = new URL('render.html', baseUrl);
+  url.searchParams.set('protocol', 'reactweb');
+  url.searchParams.set('sourceUrl', previewSource.webUrl);
+  return url.toString();
+}
+
 function shouldUseClientPayloadStore(): boolean {
   return __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__;
 }
@@ -580,20 +613,6 @@ export function PreviewPanel(props: PreviewPanelProps) {
 
   const rspeedyDevUrl = useRspeedyDevUrl();
   const baseUrl = useMemo(() => window.location.href.replace(/#.*$/, ''), []);
-  const shareBaseUrl = useMemo(() => {
-    const u = new URL(baseUrl);
-    if (
-      (u.hostname === 'localhost' || u.hostname === '127.0.0.1')
-      && rspeedyDevUrl
-    ) {
-      try {
-        u.hostname = new URL(rspeedyDevUrl).hostname;
-      } catch {
-        // ignore hostname rewrite failures and keep the original URL
-      }
-    }
-    return u.toString();
-  }, [baseUrl, rspeedyDevUrl]);
   const renderContext = useMemo<PreviewPanelRenderContextValue>(
     () => ({
       htmlSource: previewSource?.kind === 'html'
@@ -821,7 +840,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
           demoId,
           speed,
         },
-        shareBaseUrl,
+        baseUrl,
       );
       setRenderUrl(canInlineA2UIRenderUrl(url) ? url : '');
       setRenderShareUrl(
@@ -839,9 +858,9 @@ export function PreviewPanel(props: PreviewPanelProps) {
         uInline.searchParams.set('theme', previewSource.theme);
         let hasNativePayload = false;
         if (demoId) {
-          const demosBase = shareBaseUrl.endsWith('/')
-            ? shareBaseUrl
-            : `${shareBaseUrl}/`;
+          const demosBase = baseUrl.endsWith('/')
+            ? baseUrl
+            : `${baseUrl}/`;
           uInline.searchParams.set(
             'messagesUrl',
             new URL(
@@ -933,7 +952,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
               theme: previewSource.theme,
               speed,
             },
-            shareBaseUrl,
+            baseUrl,
           );
           setRenderShareUrl(
             canInlineA2UIRenderUrl(shortShareUrl) ? shortShareUrl : '',
@@ -973,6 +992,22 @@ export function PreviewPanel(props: PreviewPanelProps) {
 
     localMessagesPayloadCache.clear();
 
+    if (previewSource.kind === 'reactweb') {
+      const url = buildReactWebRenderUrl(baseUrl, previewSource);
+      setRenderUrl(url);
+      setRenderShareUrl(url);
+      setLynxDevUrl('');
+      return;
+    }
+
+    if (previewSource.kind === 'reactlynx') {
+      const url = buildReactLynxWebRenderUrl(baseUrl, previewSource);
+      setRenderUrl(url);
+      setRenderShareUrl(url);
+      setLynxDevUrl(previewSource.nativeUrl);
+      return;
+    }
+
     if (previewSource.kind === 'html') {
       // PreviewViewport writes source directly to a sandboxed srcDoc iframe.
       // Keep HTML out of the Lynx render bridge and native preview URLs.
@@ -1000,12 +1035,12 @@ export function PreviewPanel(props: PreviewPanelProps) {
 
       const shareSourceUrl = new URL(
         previewSource.sourcePath,
-        shareBaseUrl,
+        baseUrl,
       ).toString();
       setRenderShareUrl(buildLynxXmlRenderUrl({
         sourceUrl: shareSourceUrl,
         theme: previewSource.theme,
-      }, shareBaseUrl));
+      }, baseUrl));
       setLynxDevUrl(shareSourceUrl);
       return;
     }
@@ -1018,7 +1053,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
       setRenderShareUrl(buildMcpAppsRenderUrl({
         mcpAppData: previewSource.mcpAppData,
         theme: previewSource.theme,
-      }, shareBaseUrl));
+      }, baseUrl));
 
       if (!rspeedyDevUrl) {
         setLynxDevUrl('');
@@ -1051,7 +1086,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
       rawText: previewSource.rawText,
       theme: previewSource.theme,
       speed,
-    }, shareBaseUrl);
+    }, baseUrl);
     const canInline = canInlineOpenUIRenderUrl(inlineUrl)
       && canInlineOpenUIRenderUrl(inlineShareUrl);
 
@@ -1120,7 +1155,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
           rawTextUrl,
           theme: previewSource.theme,
           speed,
-        }, shareBaseUrl));
+        }, baseUrl));
       } catch (err) {
         console.warn('[openui] Failed to publish preview raw text', err);
       }
@@ -1130,7 +1165,6 @@ export function PreviewPanel(props: PreviewPanelProps) {
     localMessagesPayloadCache,
     previewSource,
     rspeedyDevUrl,
-    shareBaseUrl,
     speed,
   ]);
 

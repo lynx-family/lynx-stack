@@ -4,6 +4,12 @@
 
 export interface GenerationMetrics {
   generationMs: number;
+  /** Time spent assembling the final artifact from generated source. */
+  artifactTransformMs?: number;
+  /** Time spent compiling generated source into runnable artifacts. */
+  artifactBuildMs?: number;
+  /** Time spent publishing the finalized artifact for preview. */
+  artifactUploadMs?: number;
   firstReasoningTokenMs?: number;
   firstTextTokenMs?: number;
   /** Sum of completed model invocation durations; concurrent calls may overlap. */
@@ -26,6 +32,8 @@ export function createGenerationTiming() {
   const modelDurations = new Map<string, number>();
   const searchDurations = new Map<string, number>();
   const imageGenerationDurations = new Map<string, number>();
+  let artifactTransformMs: number | undefined;
+  let artifactBuildMs: number | undefined;
   let firstReasoningTokenMs: number | undefined;
   let firstTextTokenMs: number | undefined;
   let metrics: GenerationMetrics | undefined;
@@ -49,6 +57,10 @@ export function createGenerationTiming() {
 
     const durationMs = finiteDuration(details.durationMs);
     if (durationMs === undefined) return;
+    if (event === 'agent.artifact.assembled') {
+      artifactTransformMs = Math.max(artifactTransformMs ?? 0, durationMs);
+      return;
+    }
     const callId = typeof details.callId === 'string'
       ? details.callId
       : undefined;
@@ -115,6 +127,8 @@ export function createGenerationTiming() {
       );
       metrics = {
         generationMs: performance.now() - startedAt,
+        ...(artifactTransformMs === undefined ? {} : { artifactTransformMs }),
+        ...(artifactBuildMs === undefined ? {} : { artifactBuildMs }),
         ...(firstReasoningTokenMs === undefined
           ? {}
           : { firstReasoningTokenMs }),
@@ -125,6 +139,23 @@ export function createGenerationTiming() {
           ? {}
           : { imageGenerationMs }),
       };
+      return metrics;
+    },
+    recordArtifactBuild(durationMs: unknown) {
+      const value = finiteDuration(durationMs);
+      if (value === undefined) return metrics;
+      artifactBuildMs = value;
+      if (metrics) {
+        metrics.artifactBuildMs = value;
+      }
+      return metrics;
+    },
+    recordArtifactUpload(durationMs: unknown) {
+      const value = finiteDuration(durationMs);
+      if (value === undefined) return metrics;
+      if (metrics) {
+        metrics.artifactUploadMs = value;
+      }
       return metrics;
     },
   };

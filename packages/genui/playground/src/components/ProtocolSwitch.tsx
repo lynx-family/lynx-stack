@@ -12,6 +12,10 @@ export function ProtocolSwitch(props: {
     label = 'A2UI';
   } else if (protocol.name === 'openui') {
     label = 'OpenUI';
+  } else if (protocol.name === 'reactlynx') {
+    label = 'ReactLynx';
+  } else if (protocol.name === 'reactweb') {
+    label = 'ReactWeb';
   } else if (protocol.name === 'lynx-xml') {
     label = 'Lynx XML';
   } else if (protocol.name === 'html') {

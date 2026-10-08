@@ -6,6 +6,7 @@ import { normalizeLynxXmlArtifact } from '../../../agent/lynx-xml/lynx-xml-outpu
 import { getLynxXmlAgentService } from '../../../service/lynx-xml/lynx-xml-agent.js';
 import type { LynxXmlChatOptions } from '../../../service/lynx-xml/lynx-xml-agent.js';
 import { createTextStreamRoute } from '../../common/text-stream-route.js';
+import { publishLynxXmlArtifact } from '../artifact-publisher.js';
 
 export default createTextStreamRoute({
   scope: 'lynx-xml',
@@ -38,4 +39,5 @@ export default createTextStreamRoute({
     return { ok: true, options };
   },
   normalizeFinalText: normalizeLynxXmlArtifact,
+  publishFinalText: publishLynxXmlArtifact,
 });

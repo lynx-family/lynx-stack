@@ -70,6 +70,18 @@ describe('MCP Apps stream', () => {
           invocationId: 'mcp-routing',
           durationMs: 44,
         });
+        opts.onPerformanceEvent?.('agent.tool.completed', {
+          callId: 'mcp-search',
+          toolName: 'image_search',
+          durationMs: 75,
+          status: 'success',
+        });
+        opts.onPerformanceEvent?.('agent.tool.completed', {
+          callId: 'mcp-image-generation',
+          toolName: 'generate_image',
+          durationMs: 125,
+          status: 'error',
+        });
         return Promise.reject(new Error('Model failed'));
       },
     };
@@ -97,11 +109,15 @@ describe('MCP Apps stream', () => {
           generationMs: unknown;
           firstTextTokenMs: unknown;
           modelMs: unknown;
+          searchMs: unknown;
+          imageGenerationMs: unknown;
         };
       };
       expect(payload.metrics.generationMs).toBeTypeOf('number');
       expect(payload.metrics.firstTextTokenMs).toBeTypeOf('number');
       expect(payload.metrics.modelMs).toBe(44);
+      expect(payload.metrics.searchMs).toBe(75);
+      expect(payload.metrics.imageGenerationMs).toBe(125);
     } finally {
       global.__MCP_APPS_AGENT_SERVICE__ = previousService;
     }

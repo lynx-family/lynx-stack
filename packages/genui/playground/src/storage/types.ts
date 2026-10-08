@@ -7,6 +7,8 @@ export type ConversationProtocol =
   | 'a2ui'
   | 'openui'
   | 'mcp-apps'
+  | 'reactlynx'
+  | 'reactweb'
   | 'lynx-xml'
   | 'html';
 
@@ -30,10 +32,17 @@ export interface ConversationMeta {
   generationSettings?: ConversationGenerationSettings;
 }
 
-export interface PreviewPayloadUrls {
-  messagesUrl: string;
-  actionMocksUrl?: string;
-}
+export type PreviewPayloadUrls =
+  | {
+    messagesUrl: string;
+    actionMocksUrl?: string;
+    sourceUrl?: never;
+  }
+  | {
+    sourceUrl: string;
+    messagesUrl?: never;
+    actionMocksUrl?: never;
+  };
 
 export interface PreviewPerformanceMetrics {
   fcpMs?: number;
@@ -41,6 +50,12 @@ export interface PreviewPerformanceMetrics {
   ttiMs?: number;
   /** Server generation pipeline, including validation but excluding publishing. */
   generationMs?: number;
+  /** Server-side time spent transforming generated source into its final artifact. */
+  artifactTransformMs?: number;
+  /** Server-side time spent compiling generated source into runnable artifacts. */
+  artifactBuildMs?: number;
+  /** Server-side time spent publishing the finalized artifact for preview. */
+  artifactUploadMs?: number;
   /** Time from generation start to the first non-empty reasoning delta. */
   firstReasoningTokenMs?: number;
   /** Time from generation start to the first non-empty text delta. */

@@ -313,6 +313,21 @@ function MessageMetrics(props: { metrics: PreviewPerformanceMetrics }) {
       value: props.metrics.generationMs,
     },
     {
+      key: 'artifactTransformMs',
+      label: 'Transform',
+      value: props.metrics.artifactTransformMs,
+    },
+    {
+      key: 'artifactBuildMs',
+      label: 'Build',
+      value: props.metrics.artifactBuildMs,
+    },
+    {
+      key: 'artifactUploadMs',
+      label: 'Upload',
+      value: props.metrics.artifactUploadMs,
+    },
+    {
       key: 'firstReasoningTokenMs',
       label: '1st Reasoning',
       value: props.metrics.firstReasoningTokenMs,
@@ -571,6 +586,9 @@ function mergeMetrics(
       'fmpMs',
       'ttiMs',
       'generationMs',
+      'artifactTransformMs',
+      'artifactBuildMs',
+      'artifactUploadMs',
       'firstReasoningTokenMs',
       'firstTextTokenMs',
       'modelMs',
@@ -1626,6 +1644,9 @@ export function ChatController<
     metricsRef.current = {
       ...metricsRef.current,
       generationMs: undefined,
+      artifactTransformMs: undefined,
+      artifactBuildMs: undefined,
+      artifactUploadMs: undefined,
       firstReasoningTokenMs: undefined,
       firstTextTokenMs: undefined,
       modelMs: undefined,
@@ -1905,6 +1926,9 @@ export function ChatController<
       busy
         || output !== null
         || typeof metrics.generationMs === 'number'
+        || typeof metrics.artifactTransformMs === 'number'
+        || typeof metrics.artifactBuildMs === 'number'
+        || typeof metrics.artifactUploadMs === 'number'
         || typeof metrics.firstReasoningTokenMs === 'number'
         || typeof metrics.firstTextTokenMs === 'number'
         || typeof metrics.modelMs === 'number'
@@ -1920,6 +1944,36 @@ export function ChatController<
               description:
                 'Server generation time, including tools and validation; excludes artifact upload, client transport and rendering.',
               value: metrics.generationMs,
+            }]
+            : []),
+          ...(typeof metrics.artifactTransformMs === 'number'
+            ? [{
+              key: 'artifactTransformMs',
+              label: 'Transform',
+              title: 'Artifact transform duration',
+              description:
+                'Server time spent transforming generated source into the final Lynx artifact.',
+              value: metrics.artifactTransformMs,
+            }]
+            : []),
+          ...(typeof metrics.artifactBuildMs === 'number'
+            ? [{
+              key: 'artifactBuildMs',
+              label: 'Build',
+              title: 'Artifact build duration',
+              description:
+                'Server time spent compiling generated source into runnable artifacts.',
+              value: metrics.artifactBuildMs,
+            }]
+            : []),
+          ...(typeof metrics.artifactUploadMs === 'number'
+            ? [{
+              key: 'artifactUploadMs',
+              label: 'Upload',
+              title: 'Artifact upload duration',
+              description:
+                'Server time spent publishing the finalized preview artifact.',
+              value: metrics.artifactUploadMs,
             }]
             : []),
           ...(busy || typeof metrics.firstReasoningTokenMs === 'number'
@@ -1986,6 +2040,9 @@ export function ChatController<
       busy,
       metrics.firstReasoningTokenMs,
       metrics.firstTextTokenMs,
+      metrics.artifactTransformMs,
+      metrics.artifactBuildMs,
+      metrics.artifactUploadMs,
       metrics.generationMs,
       metrics.imageGenerationMs,
       metrics.modelMs,

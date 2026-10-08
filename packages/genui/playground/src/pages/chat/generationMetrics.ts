@@ -6,6 +6,9 @@ import type { PreviewPerformanceMetrics } from '../../storage/types.js';
 
 const GENERATION_METRIC_KEYS = [
   'generationMs',
+  'artifactTransformMs',
+  'artifactBuildMs',
+  'artifactUploadMs',
   'firstReasoningTokenMs',
   'firstTextTokenMs',
   'modelMs',

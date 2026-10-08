@@ -6,15 +6,24 @@ import { afterEach, expect, rstest, test } from '@rstest/core';
 
 import { BASIC_CATALOG } from '../agent/a2ui/a2ui-catalog.js';
 import { publishA2UIPayload } from '../app/a2ui/payload-publisher.js';
-import * as publisher from '../app/a2ui/payload-publisher.js' with {
+import * as a2uiPublisher from '../app/a2ui/payload-publisher.js' with {
   rstest: 'importActual',
 };
 import { createGenerationTiming } from '../app/common/generation-timing.js';
+import { publishLynxXmlArtifact } from '../app/lynx-xml/artifact-publisher.js';
+import * as lynxXmlPublisher from '../app/lynx-xml/artifact-publisher.js' with {
+  rstest: 'importActual',
+};
 import app from '../src/app.js';
 
 rstest.mock('../app/a2ui/payload-publisher.js', () => ({
-  ...publisher,
+  ...a2uiPublisher,
   publishA2UIPayload: rstest.fn(),
+}));
+
+rstest.mock('../app/lynx-xml/artifact-publisher.js', () => ({
+  ...lynxXmlPublisher,
+  publishLynxXmlArtifact: rstest.fn(),
 }));
 
 afterEach(() => {
@@ -78,10 +87,12 @@ test('collects first-token latency and cumulative model time', () => {
     toolName: 'generate_image',
     durationMs: 90,
   });
+  timing.observe('agent.artifact.assembled', { durationMs: 45 });
   now = 500;
 
   expect(timing.finish()).toEqual({
     generationMs: 400,
+    artifactTransformMs: 45,
     firstReasoningTokenMs: 40,
     firstTextTokenMs: 120,
     modelMs: 230,
@@ -105,6 +116,23 @@ test('omits unavailable generation details and freezes metrics at finish', () =>
 
   expect(metrics).toEqual({ generationMs: 15 });
   expect(timing.finish()).toBe(metrics);
+});
+
+test('records artifact build and upload after generation finishes', () => {
+  let now = 10;
+  rstest.spyOn(performance, 'now').mockImplementation(() => now);
+  const timing = createGenerationTiming();
+  now = 25;
+  const metrics = timing.finish();
+
+  timing.recordArtifactBuild(120);
+  timing.recordArtifactUpload(45);
+
+  expect(metrics).toEqual({
+    generationMs: 15,
+    artifactBuildMs: 120,
+    artifactUploadMs: 45,
+  });
 });
 
 const messages = [{
@@ -228,6 +256,83 @@ test.each(
     expect(now).toBe(repair ? 10_850 : 10_500);
   },
 );
+
+test('Lynx XML separately reports transform and artifact upload metrics', async () => {
+  let now = 1_000;
+  rstest.spyOn(performance, 'now').mockImplementation(() => now);
+  const source = [
+    '<!doctype lynx>',
+    '<lynx engine-version="4.2">',
+    '<script thread="main">globalThis.processData = () => {};</script>',
+    '</lynx>',
+  ].join('\n');
+  rstest.stubGlobal('__LYNX_XML_AGENT_SERVICE__', {
+    streamAsAsyncIterable(_messages: unknown, options: {
+      onPerformanceEvent?: (
+        event: string,
+        details?: Record<string, unknown>,
+      ) => void;
+    }) {
+      now += 100;
+      options.onPerformanceEvent?.('agent.artifact.assembled', {
+        durationMs: 40,
+      });
+      return Promise.resolve({
+        textStream: (async function*() {
+          await Promise.resolve();
+          now += 200;
+          yield source;
+        })(),
+        finalize() {
+          now += 50;
+          return Promise.resolve({
+            text: source,
+            finishReason: 'stop',
+          });
+        },
+      });
+    },
+  });
+  let releaseUpload: (() => void) | undefined;
+  const upload = new Promise<void>(resolve => {
+    releaseUpload = resolve;
+  });
+  rstest.mocked(publishLynxXmlArtifact).mockImplementation(async () => {
+    await upload;
+    now += 9_000;
+    return { sourceUrl: 'https://cdn.example.com/index.lynxml' };
+  });
+
+  const response = await request('/lynx-xml/stream');
+  const reader = response.body!.getReader();
+  const decoder = new TextDecoder();
+  let body = '';
+  try {
+    while (!body.includes('event: metrics\n')) {
+      const chunk = await reader.read();
+      expect(chunk.done).toBe(false);
+      body += decoder.decode(chunk.value);
+    }
+    expect(body).not.toContain('event: done');
+    expect(publishLynxXmlArtifact).toHaveBeenCalledWith(source);
+    expect(eventPayload(body, 'metrics').metrics).toEqual({
+      generationMs: 350,
+      artifactTransformMs: 40,
+    });
+  } finally {
+    releaseUpload?.();
+  }
+  while (true) {
+    const chunk = await reader.read();
+    if (chunk.done) break;
+    body += decoder.decode(chunk.value);
+  }
+  expect(eventPayload(body, 'done').metrics).toEqual({
+    ...eventPayload(body, 'metrics').metrics,
+    artifactUploadMs: 9_000,
+  });
+  expect(now).toBe(10_350);
+});
 
 test.each([
   ['/a2ui/stream', '__A2UI_AGENT_SERVICE__'],

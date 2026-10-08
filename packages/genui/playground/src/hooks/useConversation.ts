@@ -119,6 +119,9 @@ function clonePreviewPerformanceMetrics(
   for (
     const key of [
       'generationMs',
+      'artifactTransformMs',
+      'artifactBuildMs',
+      'artifactUploadMs',
       'firstReasoningTokenMs',
       'firstTextTokenMs',
       'modelMs',

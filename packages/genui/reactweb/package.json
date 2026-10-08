@@ -1,0 +1,43 @@
+{
+  "name": "@lynx-js/genui-reactweb",
+  "version": "0.0.0",
+  "private": true,
+  "description": "React DOM prompt, source validation, and build utilities for GenUI.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/genui/reactweb"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rslib",
+    "test": "rstest"
+  },
+  "dependencies": {
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rsbuild/plugin-react": "2.1.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "typescript": "^6.0.3",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest",
+    "@types/node": "^24.13.3"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
