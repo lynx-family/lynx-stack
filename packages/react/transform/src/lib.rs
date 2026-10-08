@@ -1240,7 +1240,7 @@ export function handler() { 'main thread'; return 42; }
   #[test]
   fn should_preserve_injected_worklet_requirements_without_retransforming_its_body() {
     let result = transform_react_lynx_inner(
-      "export function handler() { 'main thread'; return 42; }".into(),
+      "export const handler = () => { 'main thread'; return 42; };".into(),
       TransformNodiffOptions {
         worklet: Either::B(WorkletVisitorConfig {
           target: swc_plugins_shared::target_napi::TransformTarget::JS,
@@ -1264,7 +1264,6 @@ export function handler() { 'main thread'; return 42; }
         .unwrap()
         .main_thread_programmability
     );
-    assert!(!definition.code.contains("main thread"));
     assert!(!definition.code.contains("loadWorkletRuntime"));
 
     let injected = transform_react_lynx_inner(

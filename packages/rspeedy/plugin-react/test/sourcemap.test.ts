@@ -387,41 +387,40 @@ describe('Sourcemap', () => {
       // clean
       cssConsumer.destroy()
       consumer.destroy()
-    },
-    25_000,
-  )
 
-  test(
-    'inline runtime and lazy registrations stay in embedded source maps',
-    async () => {
-      const tmp = await buildSourcemapFixture(undefined)
-      const [mainMetadata, lazyMetadata] = await Promise.all([
-        readFile(
-          path.join(tmp, '.lynx/main/debug-metadata.json'),
-          'utf-8',
-        ).then(json => JSON.parse(json) as DebugMetadataAsset),
-        readFile(
-          path.join(
-            tmp,
-            '.lynx/lazy-bundle/fixtures_sourcemap_lazy-bundle-comp.tsx/debug-metadata.json',
+      const mainMap = findSourceMap(debugMetadata, {
+        filename: 'main-thread.js.map',
+      })!.map as RawSourceMap
+      const lazyMap = findSourceMap(asyncMetadata, {
+        filename: 'main-thread.js.map',
+      })!.map as RawSourceMap
+
+      const mainThreadSource = await readFile(
+        path.join(tmp, '.lynx/main/main-thread.js'),
+        'utf-8',
+      )
+      const runtimeStatement = 'globalThis.lynxWorkletImpl = {'
+      const runtimeOffset = mainThreadSource.indexOf(runtimeStatement)
+      expect(runtimeOffset).toBeGreaterThan(-1)
+      const runtimeSourceIndex = mainMap.sources.findIndex(source =>
+        normalizeSlashes(source).endsWith('/worklet-runtime/workletRuntime.ts')
+      )
+      expect(runtimeSourceIndex).toBeGreaterThan(-1)
+      const runtimeSourceContent = mainMap.sourcesContent?.[runtimeSourceIndex]
+      expect(runtimeSourceContent).toContain(runtimeStatement)
+      await SourceMapConsumer.with(mainMap, null, mainConsumer => {
+        const runtimePosition = mainConsumer.originalPositionFor(
+          generatedPositionAt(mainThreadSource, runtimeOffset),
+        )
+        expect(normalizeSlashes(runtimePosition.source!))
+          .toContain('/worklet-runtime/workletRuntime.ts')
+        expect(runtimePosition).toMatchObject(
+          generatedPositionAt(
+            runtimeSourceContent!,
+            runtimeSourceContent!.indexOf(runtimeStatement),
           ),
-          'utf-8',
-        ).then(json => JSON.parse(json) as DebugMetadataAsset),
-      ])
-      const mainMap = findSourceMap(mainMetadata, {
-        filename: 'main-thread.js.map',
-      })!.map as RawSourceMap
-      const lazyMap = findSourceMap(lazyMetadata, {
-        filename: 'main-thread.js.map',
-      })!.map as RawSourceMap
-
-      expect(
-        mainMap.sources.some(source =>
-          normalizeSlashes(source).endsWith(
-            '/worklet-runtime/workletRuntime.ts',
-          )
-        ),
-      ).toBe(true)
+        )
+      })
 
       const lazySource = await readFile(
         path.join(
@@ -443,31 +442,29 @@ describe('Sourcemap', () => {
         lazySource,
         registrationSourceOffset,
       )
-      const lazyConsumer = await new SourceMapConsumer(lazyMap)
-      const registrationSourcePosition = lazyConsumer.originalPositionFor(
-        registrationPosition,
-      )
-      const lazySourceIndex = lazyMap.sources.findIndex(source =>
-        normalizeSlashes(source).endsWith('/lazy-bundle-comp.tsx')
-      )
-      expect(lazySourceIndex).toBeGreaterThan(-1)
-      const lazySourceContent = lazyMap.sourcesContent?.[lazySourceIndex]
-      expect(lazySourceContent).toContain('\'main thread\'')
-      const authoredDirectivePosition = generatedPositionAt(
-        lazySourceContent!,
-        lazySourceContent!.indexOf('\'main thread\''),
-      )
-      expect(registrationPosition.line).toBeGreaterThan(0)
-      expect(registrationPosition.column).toBeGreaterThanOrEqual(0)
-      expect(registrationSourcePosition).toMatchObject({
-        source: new URL(
-          './fixtures/sourcemap/lazy-bundle-comp.tsx',
-          import.meta.url,
-        ).href,
-        line: authoredDirectivePosition.line,
-        column: authoredDirectivePosition.column,
+      await SourceMapConsumer.with(lazyMap, null, lazyConsumer => {
+        const registrationSourcePosition = lazyConsumer.originalPositionFor(
+          registrationPosition,
+        )
+        const lazySourceIndex = lazyMap.sources.findIndex(source =>
+          normalizeSlashes(source).endsWith('/lazy-bundle-comp.tsx')
+        )
+        expect(lazySourceIndex).toBeGreaterThan(-1)
+        const lazySourceContent = lazyMap.sourcesContent?.[lazySourceIndex]
+        expect(lazySourceContent).toContain('\'main thread\'')
+        const authoredDirectivePosition = generatedPositionAt(
+          lazySourceContent!,
+          lazySourceContent!.indexOf('\'main thread\''),
+        )
+        expect(registrationSourcePosition).toMatchObject({
+          source: new URL(
+            './fixtures/sourcemap/lazy-bundle-comp.tsx',
+            import.meta.url,
+          ).href,
+          line: authoredDirectivePosition.line,
+          column: authoredDirectivePosition.column,
+        })
       })
-      lazyConsumer.destroy()
     },
     25_000,
   )

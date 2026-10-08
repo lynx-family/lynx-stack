@@ -217,10 +217,13 @@ export const onTap = __MAIN_THREAD__ ? null : handler;`,
       };
     },
     async dispose() {
-      await new Promise<void>((resolve, reject) =>
-        compiler.close(error => error ? reject(error) : resolve())
-      );
-      await fs.rm(context, { recursive: true, force: true });
+      try {
+        await new Promise<void>((resolve, reject) =>
+          compiler.close(error => error ? reject(error) : resolve())
+        );
+      } finally {
+        await fs.rm(context, { recursive: true, force: true });
+      }
     },
   };
 }

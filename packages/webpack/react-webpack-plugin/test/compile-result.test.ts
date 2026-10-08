@@ -17,7 +17,7 @@ const REACT_COMPILATION_RESULT = Symbol.for(
 test('excludes a semantic candidate removed from the final chunk graph', async () => {
   const context = path.resolve(
     __dirname,
-    'cases',
+    'fixtures',
     'compile-result-tree-shaking',
   );
   const outputPath = await fs.mkdtemp(
@@ -79,7 +79,12 @@ test('excludes a semantic candidate removed from the final chunk graph', async (
       runtimeRequirements: { mainThreadProgrammability: false },
     });
   } finally {
-    await new Promise<void>(resolve => compiler.close(() => resolve()));
-    await fs.rm(outputPath, { recursive: true, force: true });
+    try {
+      await new Promise<void>((resolve, reject) =>
+        compiler.close(error => error ? reject(error) : resolve())
+      );
+    } finally {
+      await fs.rm(outputPath, { recursive: true, force: true });
+    }
   }
 });

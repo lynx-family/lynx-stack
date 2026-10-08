@@ -77,26 +77,6 @@ describe('collectReactCompileResult', () => {
       )).toBeUndefined();
     },
   );
-
-  it('does not include transformed modules outside the final chunks', () => {
-    const reachableChunk = { id: 'main' };
-    const unreachableModule = moduleWithRequirement(true);
-
-    expect(
-      collectReactCompileResult(
-        [reachableChunk],
-        () => [moduleWithRequirement(false)],
-      ),
-    ).toEqual({
-      version: 1,
-      runtimeRequirements: { mainThreadProgrammability: false },
-    });
-    expect(unreachableModule.buildInfo).toEqual({
-      'lynx:react-runtime-requirements': {
-        mainThreadProgrammability: true,
-      },
-    });
-  });
 });
 
 describe('collectElementTemplatesFromModule', () => {

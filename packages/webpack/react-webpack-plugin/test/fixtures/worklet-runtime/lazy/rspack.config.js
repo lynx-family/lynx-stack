@@ -5,7 +5,6 @@ import {
 } from '@lynx-js/template-webpack-plugin';
 
 const defaultConfig = createConfig({}, {
-  experimental_isLazyBundle: true,
   mainThreadChunks: ['main__main-thread.js'],
 }, {});
 
@@ -20,7 +19,6 @@ export default {
       chunks: ['main__main-thread', 'main__background'],
       filename: 'main/template.json',
       intermediate: '.rspeedy',
-      experimental_isLazyBundle: true,
     }),
   ],
 };

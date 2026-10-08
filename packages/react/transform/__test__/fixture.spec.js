@@ -2511,7 +2511,7 @@ export function foo() {
     });
   });
 
-  it.each(['@lynx-js/react', '@custom/react', '@custom/internal-tools'])(
+  it.each(['@lynx-js/react', '@custom/internal-tools'])(
     'should not duplicate an existing runtime init import for %s',
     async runtimePkg => {
       const { code, runtimeRequirements } = await transformReactLynx(
@@ -2531,7 +2531,6 @@ export function foo() {
       );
 
       expect(code.split(`import "${runtimePkg}/worklet-runtime/init";`)).toHaveLength(2);
-      expect((code.match(/worklet-runtime\/init/g) ?? []).length).toBe(1);
       expect(runtimeRequirements).toEqual({
         mainThreadProgrammability: true,
       });

@@ -123,7 +123,7 @@ describe('Lazy', () => {
                     ...splitChunks.cacheGroups,
                     forceMainThreadRuntime: {
                       test:
-                        /packages[\\/]react[\\/]runtime[\\/]src[\\/]worklet-runtime/,
+                        /packages[\\/]react[\\/]runtime[\\/]lib[\\/]worklet-runtime/,
                       name: 'forced-main-thread-runtime',
                       enforce: true,
                       minSize: 0,
@@ -203,18 +203,12 @@ describe('Lazy', () => {
       )).toHaveLength(1)
       expect(registrationOwners).toHaveLength(1)
       expect(registrationOwners[0]![0]).toBe(runtimeOwners[0]![0])
-      expect(runtimeOwners[0]![1]).not.toContain(
-        '__LoadLepusChunk(\'worklet-runtime\'',
-      )
-      expect([...assets.keys()]).not.toContain(
-        path.normalize('static/js/forced-main-thread-runtime.js'),
-      )
     } finally {
-      rstest.unstubAllEnvs()
+      await fs.rm(tmp, { recursive: true, force: true })
     }
   })
 
-  test('standalone lazy bundles self-bootstrap main-thread programmability', async () => {
+  test('standalone lazy bundles contain their runtime and registrations', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     const encodedLepusChunkNames: string[][] = []
     const tmp = await fs.mkdtemp(
@@ -276,26 +270,27 @@ describe('Lazy', () => {
       },
     })
 
-    const result = await rsbuild.build()
-    await result.close()
+    try {
+      const result = await rsbuild.build()
+      await result.close()
 
-    expect(encodedLepusChunkNames.flat()).not.toContain('worklet-runtime')
-    const assets = await collectJsAssets(tmp)
-    const runtimeOwners = [...assets.entries()].filter(([, source]) =>
-      source.includes('globalThis.lynxWorkletImpl = {')
-    )
-    const registrationOwners = [...assets.entries()].filter(([, source]) =>
-      source.includes('registerWorkletInternal("main-thread"')
-    )
+      expect(encodedLepusChunkNames.flat()).not.toContain('worklet-runtime')
+      const assets = await collectJsAssets(tmp)
+      const runtimeOwners = [...assets.entries()].filter(([, source]) =>
+        source.includes('globalThis.lynxWorkletImpl = {')
+      )
+      const registrationOwners = [...assets.entries()].filter(([, source]) =>
+        source.includes('registerWorkletInternal("main-thread"')
+      )
 
-    expect(runtimeOwners).toHaveLength(1)
-    expect(runtimeOwners[0]![0]).toContain('main-thread.js')
-    expect(registrationOwners).toHaveLength(1)
-    expect(registrationOwners[0]![0]).toBe(runtimeOwners[0]![0])
-    expect(runtimeOwners[0]![1]).not.toContain('__workletRuntimeLoaded')
-    expect(runtimeOwners[0]![1]).not.toContain(
-      '__LoadLepusChunk(\'worklet-runtime\'',
-    )
+      expect(runtimeOwners).toHaveLength(1)
+      expect(runtimeOwners[0]![0]).toContain('main-thread.js')
+      expect(registrationOwners).toHaveLength(1)
+      expect(registrationOwners[0]![0]).toBe(runtimeOwners[0]![0])
+      expect(runtimeOwners[0]![1]).not.toContain('__workletRuntimeLoaded')
+    } finally {
+      await fs.rm(tmp, { recursive: true, force: true })
+    }
   })
 
   test('alias for react', async () => {

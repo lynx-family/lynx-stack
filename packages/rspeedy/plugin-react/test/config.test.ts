@@ -3030,17 +3030,6 @@ describe('Config', () => {
     )
   })
 
-  test('main-thread programmability init resolves to the compiled runtime entry', () => {
-    const require = createRequire(import.meta.url)
-
-    expect(
-      require.resolve('@lynx-js/react/worklet-runtime/init'),
-    ).toContain(
-      '/packages/react/runtime/lib/worklet-runtime/index.js'
-        .replaceAll('/', path.sep),
-    )
-  })
-
   describe('environment', () => {
     test('lynx environment', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')

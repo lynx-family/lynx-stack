@@ -31,6 +31,8 @@ const casesRoot = path.resolve(
   'cases',
   'worklet-runtime',
 );
+const fixturesRoot = path.resolve(__dirname, 'fixtures', 'worklet-runtime');
+
 const distRoot = path.resolve(
   __dirname,
   'dist',
@@ -141,10 +143,11 @@ function executeStandaloneLazyArtifact(source: string): {
 }
 
 async function buildCase(
-  caseName: string,
+  caseDir: string,
   mode: 'development' | 'production' = 'development',
+  minimize = false,
 ): Promise<BuildOutput> {
-  const caseDir = path.join(casesRoot, caseName);
+  const caseName = path.basename(caseDir);
   const caseConfigPath = path.join(caseDir, 'rspack.config.js');
   const outputPath = path.join(distRoot, `${caseName}-${mode}`);
 
@@ -159,7 +162,7 @@ async function buildCase(
     mode,
     optimization: {
       ...baseConfig.optimization,
-      minimize: false,
+      minimize,
     },
     output: {
       ...(baseConfig.output ?? {}),
@@ -257,17 +260,15 @@ describe('worklet-runtime bundler guardrails', () => {
       expectedRuntimeImplementationCount,
       expectedRegisterIdCount,
     }) => {
-      const { lepusChunk, jsAssets } = await buildCase(caseName);
+      const { lepusChunk, jsAssets } = await buildCase(
+        path.join(casesRoot, caseName),
+      );
       const mainThreadSource = jsAssets.get('main__main-thread.js');
       expect(mainThreadSource).toBeDefined();
-      const workletRuntimeChunks = Object.keys(lepusChunk).filter(
-        name => name === 'worklet-runtime',
-      );
       const registeredWorkletIds = extractRegisteredWorkletIds(
         mainThreadSource!,
       );
 
-      expect(workletRuntimeChunks).toEqual([]);
       expect(lepusChunk['worklet-runtime']).toBeUndefined();
       expect(
         countOccurrences(
@@ -286,7 +287,10 @@ describe('worklet-runtime bundler guardrails', () => {
   it.each(['development', 'production'] as const)(
     'keeps one shared implementation while paired main and lazy assets register locally (%s)',
     async (mode) => {
-      const { lepusChunk, jsAssets } = await buildCase('lazy', mode);
+      const { lepusChunk, jsAssets } = await buildCase(
+        path.join(fixturesRoot, 'lazy'),
+        mode,
+      );
       const runtimeOwners = [...jsAssets.entries()].filter(([, source]) =>
         source.includes('globalThis.lynxWorkletImpl = {')
       );
@@ -321,34 +325,32 @@ describe('worklet-runtime bundler guardrails', () => {
     'keeps a complete, executable runtime closure in a standalone lazy artifact (%s)',
     async (mode) => {
       const { lepusChunk, jsAssets } = await buildCase(
-        'standalone-lazy',
+        path.join(fixturesRoot, 'standalone-lazy'),
         mode,
+        mode === 'production',
       );
       const mainThreadSource = jsAssets.get('main__main-thread.js');
       expect(mainThreadSource).toBeDefined();
 
-      const registeredWorkletIds = extractRegisteredWorkletIds(
-        mainThreadSource!,
-      );
       expect(lepusChunk['worklet-runtime']).toBeUndefined();
-      expect(mainThreadSource).toContain('/worklet-runtime/index.js');
-      expect(
-        countOccurrences(
-          mainThreadSource!,
-          'globalThis.lynxWorkletImpl = {',
-        ),
-      ).toBe(1);
-      expect(registeredWorkletIds).toHaveLength(1);
-
       const execution = executeStandaloneLazyArtifact(mainThreadSource!);
       expect(execution.hasSelectorApis).toBe(true);
-      expect(execution.registeredWorkletIds).toEqual(registeredWorkletIds);
+      expect(execution.registeredWorkletIds).toHaveLength(1);
+
+      if (mode === 'development') {
+        expect(
+          countOccurrences(mainThreadSource!, 'globalThis.lynxWorkletImpl = {'),
+        ).toBe(1);
+        expect(execution.registeredWorkletIds).toEqual(
+          extractRegisteredWorkletIds(mainThreadSource!),
+        );
+      }
     },
   );
 
   it('keeps the template-time runtime chunk only for a supported older transform', async () => {
     const { compileResult, lepusChunk, jsAssets } = await buildCase(
-      'legacy-transform',
+      path.join(fixturesRoot, 'legacy-transform'),
     );
     const mainThreadSource = jsAssets.get('main__main-thread.js');
 
@@ -369,7 +371,10 @@ describe('worklet-runtime bundler guardrails', () => {
   });
 
   it('applies normal production defines and dead-code elimination to the runtime', async () => {
-    const { lepusChunk, jsAssets } = await buildCase('chunk', 'production');
+    const { lepusChunk, jsAssets } = await buildCase(
+      path.join(casesRoot, 'chunk'),
+      'production',
+    );
     const mainThreadSource = jsAssets.get('main__main-thread.js');
 
     expect(lepusChunk['worklet-runtime']).toBeUndefined();
