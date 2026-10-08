@@ -77,7 +77,7 @@ export default defineConfig({
       { find: '@lynx-js/react/compat', replacement: path.resolve(__dirname, './compat/index.js') },
       {
         find: '@lynx-js/react/worklet-runtime/init',
-        replacement: path.resolve(__dirname, './src/worklet-runtime/init.ts'),
+        replacement: path.resolve(__dirname, './src/worklet-runtime/index.ts'),
       },
       {
         find: '@lynx-js/react/worklet-runtime/bindings',

@@ -189,7 +189,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           'worklet-runtime/init',
           path.join(
             reactLynxDir,
-            'runtime/lib/worklet-runtime/init.js',
+            'runtime/lib/worklet-runtime/index.js',
           ),
         )
 
