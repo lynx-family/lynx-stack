@@ -1394,7 +1394,7 @@
   "The factory function belongs to the input definition and is not exposed\nby the returned token. In the background runtime they compile to opaque\nMain Thread Function descriptors rather than bundling their implementation.": "工厂函数属于传入的定义，返回的令牌不会暴露它。在后台运行时中，它们会被编译为不透明的主线程函数描述符，而不会把实现打进产物。",
   "The fallback behavior for attribute names not listed in `rename` or\n`preserve`.": "未在 `rename` 或\n`preserve` 中列出的属性名的兜底行为。",
   "The field's name prop.": "字段的 name 属性。",
-  "The file path of `@lynx-js/react/worklet-runtime`.": "`@lynx-js/react/worklet-runtime` 的文件路径。",
+  "The file path of `@lynx-js/react/worklet-runtime` used only when a\nsupported older transform has no semantic runtime-requirements producer.": "`@lynx-js/react/worklet-runtime` 的文件路径，仅在受支持的旧版编译转换不生成运行时需求的语义信息时使用。",
   "The file to write the template to.\nSupports subdirectories eg: `assets/template.js`.\n[name] will be replaced by the entry name.\nSupports a function to generate the name.": "要写入模板的文件。\n支持子目录，例如：`assets/template.js`。\n[name] 会被替换为入口名称。\n支持使用函数来生成名称。",
   "The filename of the lazy bundle.": "懒加载 bundle 的文件名。",
   "The final Vanilla Lynx bundle filename.": "最终 Vanilla Lynx bundle 的文件名。",
