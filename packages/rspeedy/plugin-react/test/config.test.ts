@@ -3036,7 +3036,7 @@ describe('Config', () => {
     expect(
       require.resolve('@lynx-js/react/worklet-runtime/init'),
     ).toContain(
-      '/packages/react/runtime/lib/worklet-runtime/init.js'
+      '/packages/react/runtime/lib/worklet-runtime/index.js'
         .replaceAll('/', path.sep),
     )
   })

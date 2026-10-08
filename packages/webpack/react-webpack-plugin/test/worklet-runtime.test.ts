@@ -331,7 +331,7 @@ describe('worklet-runtime bundler guardrails', () => {
         mainThreadSource!,
       );
       expect(lepusChunk['worklet-runtime']).toBeUndefined();
-      expect(mainThreadSource).toContain('/worklet-runtime/init.js');
+      expect(mainThreadSource).toContain('/worklet-runtime/index.js');
       expect(
         countOccurrences(
           mainThreadSource!,
