@@ -17,29 +17,20 @@ import { mockLynxEncodePlugin } from './plugins.js';
 
 const CONTEXT = path.dirname(fileURLToPath(import.meta.url));
 
-function perTemplateEncodeOptionsPlugin() {
+// Sets `debugMetadataUrl` per template, as `LynxDebugMetadataPlugin` does.
+function debugMetadataUrlPlugin() {
   return {
-    name: 'PerTemplateEncodeOptionsPlugin',
+    name: 'DebugMetadataUrlPlugin',
     apply(compiler: Compiler) {
       compiler.hooks.thisCompilation.tap(
-        'PerTemplateEncodeOptionsPlugin',
+        'DebugMetadataUrlPlugin',
         (compilation) => {
           const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
             compilation,
           );
-          hooks.beforeEmit.tap('PerTemplateEncodeOptionsPlugin', (args) => {
-            args.finalEncodeOptions['futureTemplateField'] =
-              `future:${args.outputName}`;
-            args.finalEncodeOptions.compilerOptions['futureCompilerOption'] =
-              `future:${args.outputName}`;
-            const sourceContent = args.finalEncodeOptions[
-              'sourceContent'
-            ] as Record<string, unknown>;
-            sourceContent['futureSourceField'] = `future:${args.outputName}`;
-            const config = sourceContent['config'] as Record<string, unknown>;
-            config['debugMetadataUrl'] =
-              `https://example.test/${args.outputName}.json`;
-            config['futureConfigField'] = `future:${args.outputName}`;
+          hooks.beforeEncode.tap('DebugMetadataUrlPlugin', (args) => {
+            args.encodeData.sourceContent.config['debugMetadataUrl'] =
+              `https://example.test/${args.intermediate}.json`;
             return args;
           });
         },
@@ -64,8 +55,11 @@ function runRspack(config: Configuration): Promise<Stats> {
 }
 
 describe('CSS hot update encode options', () => {
-  test('does not accept arbitrary per-template fields', async () => {
+  test('does not include debugMetadataUrl', async () => {
     const dist = mkdtempSync(path.join(tmpdir(), 'css-hot-update-options-'));
+
+    // Two lazy bundle templates share one async CSS chunk and both write its
+    // hot-update file.
     const stats = await runRspack({
       context: CONTEXT,
       mode: 'development',
@@ -113,7 +107,7 @@ describe('CSS hot update encode options', () => {
           ...LynxTemplatePlugin.defaultOptions,
           intermediate: '.lynx/main',
         }),
-        perTemplateEncodeOptionsPlugin(),
+        debugMetadataUrlPlugin(),
         new CssExtractRspackPlugin({
           filename: '.lynx/main/[name].css',
           chunkFilename: '.lynx/async/[name]/[name].css',
@@ -135,18 +129,8 @@ describe('CSS hot update encode options', () => {
     ) as { content: string };
     const payload = JSON.parse(
       Buffer.from(hotUpdate.content, 'base64').toString('utf-8'),
-    ) as {
-      compilerOptions: Record<string, unknown>;
-      sourceContent: Record<string, unknown> & {
-        config: Record<string, unknown>;
-      };
-      futureTemplateField?: string;
-    };
+    ) as { sourceContent: { config: Record<string, unknown> } };
 
-    expect(payload.futureTemplateField).toBeUndefined();
-    expect(payload.compilerOptions['futureCompilerOption']).toBeUndefined();
-    expect(payload.sourceContent['futureSourceField']).toBeUndefined();
-    expect(payload.sourceContent.config['futureConfigField']).toBeUndefined();
     expect(payload.sourceContent.config['debugMetadataUrl']).toBeUndefined();
   });
 });
