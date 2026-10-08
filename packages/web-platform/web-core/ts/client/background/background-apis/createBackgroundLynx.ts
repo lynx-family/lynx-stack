@@ -71,8 +71,19 @@ export function createBackgroundLynx(
         },
       ) => void,
     ) => nativeApp.queryComponent(source, callback),
-    reload: () => {
-      mainThreadRpc.invoke(reloadEndpoint, []);
+    reload: (value?: Cloneable, callback?: () => void) => {
+      mainThreadRpc.invoke(reloadEndpoint, [value]);
+      if (callback) {
+        // The reload tears this background thread down (the worker is
+        // terminated and the RPC port closed), so nothing that runs here
+        // survives long enough to observe the reloaded page. Native keeps its
+        // JS runtime across a reload and can invoke the callback; web cannot,
+        // so say so instead of leaving a callback that silently never fires.
+        console.warn(
+          '[lynx-web] the `callback` of `lynx.reload()` is not supported on web: '
+            + 'reloading disposes the background thread the callback belongs to.',
+        );
+      }
     },
     fetchBundle(url: string) {
       return fetchExternalBundle(url);

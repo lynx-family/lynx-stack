@@ -252,7 +252,13 @@ export const updateBTSChunkEndpoint = createRpcEndpoint<
   void
 >('updateBTSChunkEndpoint', false, true);
 
+/**
+ * Fire-and-forget on purpose: the reload disposes the calling card's
+ * background thread (`BackgroundThread[Symbol.asyncDispose]` terminates the
+ * worker and closes the message port), so a reply sent once the reload has
+ * finished would arrive on a closed port and never be observed.
+ */
 export const reloadEndpoint = createRpcEndpoint<
-  [],
+  [value: Cloneable | undefined],
   void
 >('reload', false, false);
