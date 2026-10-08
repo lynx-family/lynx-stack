@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -410,6 +411,39 @@ describe('React - alias', () => {
         : preactHooks,
     ).toBe('preact/hooks/dist/hooks.mjs')
   })
+
+  test.each([false, true])(
+    'alias worklet-runtime init to the published module entry (lazy: %s)',
+    async (lazy) => {
+      rstest.stubEnv('NODE_ENV', 'development')
+      const { pluginReactAlias } = await import('../src/index.js')
+
+      const rsbuild = await createRsbuild({
+        rsbuildConfig: {
+          plugins: [
+            pluginReactAlias({
+              LAYERS,
+              lazy,
+            }),
+          ],
+        },
+        cwd: path.dirname(fileURLToPath(import.meta.url)),
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      if (!config?.resolve?.alias) {
+        expect.fail('should have config.resolve.alias')
+      }
+
+      const initPath = createRequire(import.meta.url).resolve(
+        '@lynx-js/react/worklet-runtime/init',
+      )
+      expect(
+        config.resolve.alias['@lynx-js/react/worklet-runtime/init$'],
+      ).toBe(initPath)
+    },
+  )
 
   test('applies aliases once per bundler chain', async () => {
     rstest.stubEnv('NODE_ENV', 'production')
