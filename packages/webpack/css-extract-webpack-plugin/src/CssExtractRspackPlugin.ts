@@ -261,6 +261,16 @@ class CssExtractRspackPluginImpl {
               } = args.finalEncodeOptions;
               const baseEncodeOptions = { ...args.finalEncodeOptions };
               baseEncodeOptions.compilerOptions = restCompilerOptions;
+              // `debugMetadataUrl` is per-template too since #2642
+              const sourceContent = args
+                .finalEncodeOptions['sourceContent'] as {
+                  config: Record<string, unknown>;
+                };
+              const { debugMetadataUrl, ...restConfig } = sourceContent.config;
+              baseEncodeOptions['sourceContent'] = {
+                ...sourceContent,
+                config: restConfig,
+              };
               delete baseEncodeOptions.elementTemplate;
               const { buffer } = await hooks.encode.promise({
                 encodeOptions: {
