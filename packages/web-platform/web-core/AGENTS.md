@@ -164,6 +164,13 @@ Built with `defineExternalBundleRslibConfig(userLibConfig, { target: 'web' })` f
 
 The external mts chunk is a webpack/rspack **library** that writes to bare `exports`. The bts chunk wrapper (`createBundleInitReturnObj`) passes `exports` as a parameter, so the bts chunk fits `Manifest` directly. But the `LepusCode` decode wrapper is `(function(){ const navigator=…; [module.exports=]CODE })()` — it provides the iframe `module` but **not** `exports`, and its lazy variant expects CODE to be an _expression_ (the shape lazy-component roots use). So the decode worker's `LepusCode` case has an **external variant** (gated on `config.isExternalBundle`) that prepends `var exports=(module.exports={});` to give the library chunk a CommonJS env. Don't try to make one wrapper serve both shapes — the lazy _expression_ form and the library _exports_ form are incompatible.
 
+### CSS `@media`
+
+`@media` is the only group at-rule the style format carries (`RuleType::Media`, appended after the other kinds so older bundles keep their archived tags; `@supports` / `@layer` are still dropped). The prelude is kept verbatim as a single `UnknownText` selector section and the nested rules are ordinary `Rule`s, so every producer builds the same shape: `encodeCSS` (binary), `genStyleInfo` in `@lynx-js/template-webpack-plugin` + `loadStyleFromJSON` (legacy JSON, `{ media, rules }` entries in `rules`), and `xmlToTasmJSON` (markup cards). `StyleInfoDecoder` emits a native `@media <prelude>{...}` block around the nested rules, so the browser evaluates it against the page viewport and re-evaluates it on resize, color-scheme or resolution changes with no runtime code. Two special cases in the decoder:
+
+- With `enableCSSSelector: false`, rules inside `@media` bypass the CSS OG map (which cannot express a condition) and stay real selectors.
+- A nested `@font-face` goes to the separate font-face buffer, so it is re-wrapped in its enclosing `@media` preludes there.
+
 ### Style-engine test gotcha
 
 When testing external/lazy stylesheets, assert **`background-color`**, not `color`: the web style transformer makes `color` cascade/inherit, so a `color` assertion can pass even when the stylesheet was never applied (false positive). `decode_style_info`'s `entryName` (set when `isLazy`) scopes selectors with `[l-e-name="<url>"]`; pass `isLazy: 'false'` to load an external bundle's CSS globally.
