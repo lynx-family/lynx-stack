@@ -202,11 +202,7 @@ export default defineConfig({
       enableUiSourceMap: true,
     }),
     pluginMockDebugMetadataUpload(),
-    pluginQRCode({
-      schema(url) {
-        return `${url}?fullscreen=true`;
-      },
-    }),
+    pluginQRCode({ fullscreen: true }),
   ],
   environments: {
     web: {},

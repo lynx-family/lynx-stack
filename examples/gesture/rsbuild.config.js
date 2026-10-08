@@ -21,11 +21,7 @@ export default defineConfig({
     pluginReactLynx({
       enableNewGesture: true,
     }),
-    pluginQRCode({
-      schema(url) {
-        return `${url}?fullscreen=true`;
-      },
-    }),
+    pluginQRCode({ fullscreen: true }),
   ],
   environments: {
     web: {},
