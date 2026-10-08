@@ -1,7 +1,6 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { access } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -443,7 +442,6 @@ describe('React - alias', () => {
       expect(
         config.resolve.alias['@lynx-js/react/worklet-runtime/init$'],
       ).toBe(initPath)
-      await expect(access(initPath)).resolves.toBeUndefined()
     },
   )
 

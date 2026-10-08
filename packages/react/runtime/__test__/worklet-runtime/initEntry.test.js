@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('worklet-runtime init entry', () => {
   let originalLynx;
+  let originalSystemInfo;
+  let jsContext;
   let originalSetTimeout;
   let originalSetInterval;
   let originalClearTimeout;
@@ -14,6 +16,8 @@ describe('worklet-runtime init entry', () => {
 
   beforeEach(() => {
     originalLynx = globalThis.lynx;
+    originalSystemInfo = globalThis.SystemInfo;
+    jsContext = { addEventListener: vi.fn() };
     originalSetTimeout = globalThis.setTimeout;
     originalSetInterval = globalThis.setInterval;
     originalClearTimeout = globalThis.clearTimeout;
@@ -31,6 +35,7 @@ describe('worklet-runtime init entry', () => {
     delete globalThis.runWorklet;
     globalThis.lynx = {
       ...originalLynx,
+      getJSContext: () => jsContext,
       setTimeout: originalSetTimeout,
       setInterval: originalSetInterval,
       clearTimeout: originalClearTimeout,
@@ -42,6 +47,7 @@ describe('worklet-runtime init entry', () => {
 
   afterEach(() => {
     globalThis.lynx = originalLynx;
+    globalThis.SystemInfo = originalSystemInfo;
     globalThis.setTimeout = originalSetTimeout;
     globalThis.setInterval = originalSetInterval;
     globalThis.clearTimeout = originalClearTimeout;
@@ -70,6 +76,8 @@ describe('worklet-runtime init entry', () => {
     const registerWorklet = globalThis.registerWorklet;
     const registerWorkletInternal = globalThis.registerWorkletInternal;
     const runWorklet = globalThis.runWorklet;
+    expect(jsContext.addEventListener).toHaveBeenCalled();
+    jsContext.addEventListener.mockClear();
 
     vi.resetModules();
     await import('@lynx-js/react/worklet-runtime/init');
@@ -78,5 +86,6 @@ describe('worklet-runtime init entry', () => {
     expect(globalThis.registerWorklet).toBe(registerWorklet);
     expect(globalThis.registerWorkletInternal).toBe(registerWorkletInternal);
     expect(globalThis.runWorklet).toBe(runWorklet);
+    expect(jsContext.addEventListener).not.toHaveBeenCalled();
   });
 });
