@@ -52,20 +52,24 @@ describe('react compile result exposure', () => {
       .toBeUndefined()
   })
 
-  it('aggregates all child compilations in MultiStats', () => {
+  it.each([
+    [false, false, false],
+    [false, true, true],
+    [true, false, true],
+  ])('aggregates %s and %s as %s', (first, second, expected) => {
     const multiStats = {
-      stats: [createStats(false), createStats(true)],
+      stats: [createStats(first), createStats(second)],
     } as unknown as Rspack.MultiStats
 
     expect(reactCompileResultExposure.getCompileResult(multiStats)).toEqual({
       version: 1,
-      runtimeRequirements: { mainThreadProgrammability: true },
+      runtimeRequirements: { mainThreadProgrammability: expected },
     })
   })
 
   it('returns unknown when any child compilation lacks the producer', () => {
     const multiStats = {
-      stats: [createStats(false), createStats(undefined)],
+      stats: [createStats(true), createStats(undefined)],
     } as unknown as Rspack.MultiStats
 
     expect(reactCompileResultExposure.getCompileResult(multiStats))

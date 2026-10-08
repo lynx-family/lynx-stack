@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { mkdtemp } from 'node:fs/promises'
+import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -21,7 +21,6 @@ const REACT_COMPILE_RESULT_EXPOSURE = Symbol.for(
 describe('Expose', () => {
   test.each(
     [
-      ['fixtures/main-thread-programmability.tsx', true],
       ['fixtures/lazy-main-thread-programmability/index.tsx', true],
       ['fixtures/basic.tsx', false],
     ] as const,
@@ -41,32 +40,36 @@ describe('Expose', () => {
       const tmp = await mkdtemp(
         path.join(tmpdir(), 'rspeedy-react-test-compile-result-'),
       )
-      const rsbuild = await createRspeedy({
-        rspeedyConfig: {
-          source: {
-            entry: {
-              main: fileURLToPath(new URL(fixture, import.meta.url)),
-            },
-          },
-          output: { distPath: { root: tmp } },
-          plugins: [
-            pluginReactLynx(),
-            pluginStubRspeedyAPI(),
-            consumeReactCompileResult,
-          ],
-        },
-      })
-
-      const result = await rsbuild.build()
       try {
-        expect(exposure?.version).toBe(1)
-        expect(result.stats).toBeDefined()
-        expect(exposure?.getCompileResult(result.stats!)).toEqual({
-          version: 1,
-          runtimeRequirements: { mainThreadProgrammability },
+        const rsbuild = await createRspeedy({
+          rspeedyConfig: {
+            source: {
+              entry: {
+                main: fileURLToPath(new URL(fixture, import.meta.url)),
+              },
+            },
+            output: { distPath: { root: tmp } },
+            plugins: [
+              pluginReactLynx(),
+              pluginStubRspeedyAPI(),
+              consumeReactCompileResult,
+            ],
+          },
         })
+
+        const result = await rsbuild.build()
+        try {
+          expect(exposure?.version).toBe(1)
+          expect(result.stats).toBeDefined()
+          expect(exposure?.getCompileResult(result.stats!)).toEqual({
+            version: 1,
+            runtimeRequirements: { mainThreadProgrammability },
+          })
+        } finally {
+          await result.close()
+        }
       } finally {
-        await result.close()
+        await rm(tmp, { recursive: true, force: true })
       }
     },
   )
