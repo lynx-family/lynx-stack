@@ -67,6 +67,10 @@ export function testingLibraryPlugin(
   if (runtimePkgName !== runtimeOSSPkgName) {
     runtimeAlias = generateAlias(runtimePkgName, runtimeDir, __dirname);
   }
+  const workletRuntimeInitAliases = [...new Set([runtimeOSSPkgName, runtimePkgName])].map(pkgName => ({
+    find: new RegExp('^' + pkgName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '/worklet-runtime/init$'),
+    replacement: require.resolve('../setupFiles/common/worklet-runtime-init.js'),
+  }));
   const preactAlias = generateAlias('preact', preactDir, runtimeOSSDir);
   preactAlias.forEach((alias) => {
     alias.replacement = alias.replacement.replace(/\.js$/, '.mjs');
@@ -314,7 +318,7 @@ export function testingLibraryPlugin(
           setupFiles: [
             require.resolve('../setupFiles/vitest'),
           ],
-          alias: [...runtimeOSSAlias, ...runtimeAlias, ...preactAlias, ...reactAlias],
+          alias: [...workletRuntimeInitAliases, ...runtimeOSSAlias, ...runtimeAlias, ...preactAlias, ...reactAlias],
           // Force any module that touches `preact` (or its forks like
           // `@lynx-js/internal-preact`, `@lynx-js/react-signals`) through Vite's
           // transform pipeline so the aliases above can redirect every

@@ -67,10 +67,12 @@ async function build(): Promise<string> {
 }
 
 async function readBundle(tmp: string, name: string): Promise<string> {
-  for await (const file of glob(path.join(tmp, '.lynx', '**', name))) {
-    return await readFile(file, 'utf8')
+  const matches: string[] = []
+  for await (const file of glob(path.join(tmp, '.lynx', name))) {
+    matches.push(file)
   }
-  throw new Error(`${name} not found`)
+  expect(matches).toHaveLength(1)
+  return await readFile(matches[0]!, 'utf8')
 }
 
 /**
@@ -83,8 +85,10 @@ async function readBundle(tmp: string, name: string): Promise<string> {
 async function expectLegacyWins(
   tmp: string,
   bundleName: string,
+  resolvedFilename: string,
   insideWrapper = false,
-) {
+  ownsMainThreadRuntime = false,
+): Promise<string> {
   const bundle = await readBundle(tmp, bundleName)
   const debugMetadata = bundle.indexOf('__DEBUG_METADATA_RELEASE__')
   const legacy = bundle.indexOf('__LEGACY_RELEASE__')
@@ -97,6 +101,14 @@ async function expectLegacyWins(
     expect(wrapperOpen).toBeGreaterThan(-1)
     expect(debugMetadata).toBeGreaterThan(wrapperOpen)
   }
+
+  expect(bundle.includes('globalThis.lynxWorkletImpl = {')).toBe(
+    ownsMainThreadRuntime,
+  )
+  expect(bundle).toContain(`file://${resolvedFilename}`)
+  expect(bundle).not.toContain('file://[name].js')
+
+  return bundle
 }
 
 describe('source-map release ordering', () => {
@@ -106,10 +118,26 @@ describe('source-map release ordering', () => {
   }, 60_000)
 
   test('background: legacy release wins, inside the wrapper', async () => {
-    await expectLegacyWins(tmp, 'background*.js', true)
+    await expectLegacyWins(tmp, 'main/background*.js', 'background.js', true)
   })
 
   test('main-thread: legacy release wins', async () => {
-    await expectLegacyWins(tmp, 'main-thread*.js')
+    await expectLegacyWins(
+      tmp,
+      'main/main-thread*.js',
+      'main-thread.js',
+      false,
+      true,
+    )
+  })
+
+  test('lazy main-thread: release handling stays with its registration', async () => {
+    const bundle = await expectLegacyWins(
+      tmp,
+      'lazy-bundle/**/main-thread*.js',
+      'main-thread.js',
+    )
+
+    expect(bundle).toContain('registerWorkletInternal("main-thread"')
   })
 })

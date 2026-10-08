@@ -208,35 +208,33 @@ function installMockWorkletRuntime(hydrateCtx = vi.fn()): {
   hydrateCtx: ReturnType<typeof vi.fn>;
   loadLepusChunk: ReturnType<typeof vi.fn>;
 } {
-  const loadLepusChunk = vi.fn().mockImplementation(() => {
-    globalThis.lynxWorkletImpl = {
-      _workletMap: {},
-      _eventDelayImpl: {
-        clearDelayedWorklets: vi.fn(),
-        runDelayedWorklet: vi.fn(),
-      },
-      _refImpl: {
-        _firstScreenWorkletRefMap: new Map(),
-        _workletRefMap: {},
-        clearFirstScreenWorkletRefMap: vi.fn(),
-        updateWorkletRef: vi.fn(),
-        updateWorkletRefInitValueChanges: vi.fn(),
-      },
-      _runOnBackgroundDelayImpl: {
-        delayRunOnBackground: vi.fn(),
-        runDelayedBackgroundFunctions: vi.fn(),
-      },
-      _hydrateCtx: hydrateCtx,
-      _eomImpl: {
-        setShouldFlush: vi.fn(),
-      },
-      _runRunOnMainThreadTask: vi.fn(),
-    };
-    globalThis.registerWorkletInternal = (_type, id, worklet) => {
-      globalThis.lynxWorkletImpl._workletMap[id] = worklet;
-    };
-    return true;
-  });
+  const loadLepusChunk = vi.fn();
+  globalThis.lynxWorkletImpl = {
+    _workletMap: {},
+    _eventDelayImpl: {
+      clearDelayedWorklets: vi.fn(),
+      runDelayedWorklet: vi.fn(),
+    },
+    _refImpl: {
+      _firstScreenWorkletRefMap: new Map(),
+      _workletRefMap: {},
+      clearFirstScreenWorkletRefMap: vi.fn(),
+      updateWorkletRef: vi.fn(),
+      updateWorkletRefInitValueChanges: vi.fn(),
+    },
+    _runOnBackgroundDelayImpl: {
+      delayRunOnBackground: vi.fn(),
+      runDelayedBackgroundFunctions: vi.fn(),
+    },
+    _hydrateCtx: hydrateCtx,
+    _eomImpl: {
+      setShouldFlush: vi.fn(),
+    },
+    _runRunOnMainThreadTask: vi.fn(),
+  };
+  globalThis.registerWorkletInternal = (_type, id, worklet) => {
+    globalThis.lynxWorkletImpl._workletMap[id] = worklet;
+  };
   vi.stubGlobal('__LoadLepusChunk', loadLepusChunk);
   return { hydrateCtx, loadLepusChunk };
 }
@@ -244,10 +242,8 @@ function installMockWorkletRuntime(hydrateCtx = vi.fn()): {
 function installRealWorkletRuntime(): {
   loadLepusChunk: ReturnType<typeof vi.fn>;
 } {
-  const loadLepusChunk = vi.fn().mockImplementation(() => {
-    initWorklet();
-    return true;
-  });
+  const loadLepusChunk = vi.fn();
+  initWorklet();
   vi.stubGlobal('__LoadLepusChunk', loadLepusChunk);
   return { loadLepusChunk };
 }
@@ -429,8 +425,8 @@ describe('Compiled direct event background updates', () => {
       enableWorkletTransform: true,
       target: 'LEPUS',
     });
-    expect(mainArtifact.code).toContain('from "@lynx-js/react/internal"');
-    expect(mainArtifact.code).toContain('loadWorkletRuntime');
+    expect(mainArtifact.code).toContain('import "@lynx-js/react/worklet-runtime/init"');
+    expect(mainArtifact.code).not.toContain('loadWorkletRuntime');
     expect(mainArtifact.code).toContain('adaptMTEventAttrSlot');
     expect(mainArtifact.code).not.toContain('registerWorkletOnBackground');
     expect(mainArtifact.code).not.toContain('transformToWorklet');
@@ -439,10 +435,7 @@ describe('Compiled direct event background updates', () => {
     const { loadLepusChunk } = installMockWorkletRuntime(hydrateCtx);
 
     const { backgroundModule, mainModule } = await loadCompiledMainThreadDirectEventFixture();
-    expect(loadLepusChunk).toHaveBeenCalledWith('worklet-runtime', {
-      dynamicComponentEntry: '__Card__',
-      chunkType: 0,
-    });
+    expect(loadLepusChunk).not.toHaveBeenCalled();
     expect(Object.keys(globalThis.lynxWorkletImpl._workletMap)).toHaveLength(1);
 
     const host = renderCompiledFixtureOnBackground(backgroundModule, envManager, { label: 'first' });
@@ -511,20 +504,14 @@ describe('Compiled direct event background updates', () => {
       enableWorkletTransform: true,
       target: 'JS',
     });
-    expect(mainArtifact.code).toContain('from "@lynx-js/react/internal"');
-    expect(mainArtifact.code).toContain('loadWorkletRuntime');
+    expect(mainArtifact.code).toContain('import "@lynx-js/react/worklet-runtime/init"');
+    expect(mainArtifact.code).not.toContain('loadWorkletRuntime');
     expect(mainArtifact.code).toContain('runOnBackground');
     expect(backgroundArtifact.code).toContain('transformToWorklet');
 
     const { loadLepusChunk } = installRealWorkletRuntime();
     const { backgroundModule, mainModule } = await loadCompiledMainThreadRunOnBackgroundEventFixture();
-    // Real main bundles define `globDynamicComponentEntry` as the `__Card__`
-    // sentinel via the webpack banner, so the compiled main thread forwards it
-    // to the worklet runtime loader (matching production for the main card).
-    expect(loadLepusChunk).toHaveBeenCalledWith('worklet-runtime', {
-      dynamicComponentEntry: '__Card__',
-      chunkType: 0,
-    });
+    expect(loadLepusChunk).not.toHaveBeenCalled();
     const onReport = vi.fn((label: string) => `reported:${label}`);
     const host = renderCompiledFixtureOnBackground(backgroundModule, envManager, { label: 'first', onReport });
     renderCompiledFixtureOnMainThread(mainModule, envManager, { label: 'first', onReport });

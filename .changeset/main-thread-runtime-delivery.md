@@ -1,0 +1,15 @@
+---
+"@lynx-js/react": patch
+"@lynx-js/react-umd": patch
+"@lynx-js/react-webpack-plugin": patch
+"@lynx-js/react-rsbuild-plugin": patch
+"@lynx-js/react-alias-rsbuild-plugin": patch
+---
+
+Deliver the main-thread runtime through the normal module graph, including background-only injected definitions. Compiler requirements follow the final chunk graph and are refreshed during watch rebuilds, so runtime code participates in business defines, source maps, and release processing.
+
+Combined lazy chunks share their paired main runtime, standalone lazy bundles bootstrap themselves, and output from older transforms retains the legacy runtime chunk fallback, including when mixed with newer transforms in the same build.
+
+The worklet init entry follows `worklet.runtimePkg`: remove a trailing `/internal`, if present, and append `/worklet-runtime/init`. Default worklet options use `@lynx-js/react/internal` for helpers.
+
+Testing-library initializes module-delivered worklets on its emulated main thread in Vitest and Rstest. Builds preserve the original runtime sources from the published package maps.

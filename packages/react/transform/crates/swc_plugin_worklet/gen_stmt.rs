@@ -47,7 +47,7 @@ struct RegisterWorkletParams<'a> {
   hash: Expr,
   is_class_member: bool,
   named_imports: &'a mut HashSet<String>,
-  worklet_runtime_loaded_ident: Ident,
+  requires_main_thread_runtime: &'a mut bool,
 }
 
 impl StmtGen {
@@ -62,7 +62,7 @@ impl StmtGen {
     ident_collector: &mut ExtractingIdentsCollector,
     is_class_member: bool,
     named_imports: &mut HashSet<String>,
-    worklet_runtime_loaded_ident: Ident,
+    requires_main_thread_runtime: &mut bool,
     collect_main_thread: bool,
   ) -> (Box<Expr>, Stmt, Option<Stmt>) {
     let hash = Expr::Lit(hash.into());
@@ -80,19 +80,25 @@ impl StmtGen {
     let extracted_js_fns = ident_collector.take_js_fns();
 
     let main_thread_stmt = collect_main_thread.then(|| {
+      // The injected definition passes through the main-thread transform again.
+      // Its function is already lowered; do not leave an authored directive
+      // that could turn an anonymous registration into a second worklet.
+      let mut collected_function = function.clone();
+      collected_function.body.as_mut().unwrap().stmts.remove(0);
       let mut collected_imports = HashSet::new();
+      let mut collected_runtime_requirement = false;
       StmtGen::gen_register_worklet_stmt(RegisterWorkletParams {
         mode,
         target: TransformTarget::LEPUS,
         worklet_type: worklet_type.clone(),
         function_name: function_name.clone(),
-        function: function.clone(),
+        function: collected_function,
         extracted_idents: extracted_idents.clone(),
         extracted_js_fns: extracted_js_fns.clone(),
         hash: hash.clone(),
         is_class_member,
         named_imports: &mut collected_imports,
-        worklet_runtime_loaded_ident: worklet_runtime_loaded_ident.clone(),
+        requires_main_thread_runtime: &mut collected_runtime_requirement,
       })
     });
 
@@ -124,7 +130,7 @@ impl StmtGen {
         hash,
         is_class_member,
         named_imports,
-        worklet_runtime_loaded_ident,
+        requires_main_thread_runtime,
       }),
       main_thread_stmt,
     )
@@ -407,7 +413,7 @@ impl StmtGen {
       hash,
       is_class_member,
       named_imports,
-      worklet_runtime_loaded_ident,
+      requires_main_thread_runtime,
     } = params;
 
     let function_to_register = Box::new(StmtGen::gen_function_to_register(
@@ -420,16 +426,20 @@ impl StmtGen {
     ));
 
     if target == TransformTarget::LEPUS {
-      named_imports.insert("loadWorkletRuntime".into());
-      quote!("$loaded && registerWorkletInternal($type_, $hash, $fn_)" as Stmt,
-        loaded: Expr = Expr::Ident(worklet_runtime_loaded_ident.clone()),
+      *requires_main_thread_runtime = true;
+      let registration = quote_expr!("registerWorkletInternal($type_, $hash, $fn_)",
         type_: Expr = Expr::Lit(worklet_type.type_str().into()),
         hash: Expr = hash,
         fn_: Expr = Expr::Fn(FnExpr {
               ident: None,
               function: function_to_register,
             }),
-      )
+      );
+      ExprStmt {
+        span: DUMMY_SP,
+        expr: registration,
+      }
+      .into()
     } else if mode == TransformMode::Development {
       named_imports.insert("registerWorkletOnBackground".into());
       quote!("registerWorkletOnBackground($type_, $hash, $fn_)" as Stmt,

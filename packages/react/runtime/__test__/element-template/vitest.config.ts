@@ -71,7 +71,7 @@ const config: UserConfigExport = defineConfig({
       '@lynx-js/react/compat': path.resolve(__dirname, '../../compat/index.js'),
       '@lynx-js/react/worklet-runtime/init': path.resolve(
         __dirname,
-        '../../src/worklet-runtime/init.ts',
+        '../../src/worklet-runtime/index.ts',
       ),
       '@lynx-js/react/worklet-runtime/bindings': path.resolve(
         __dirname,

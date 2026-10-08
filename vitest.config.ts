@@ -37,9 +37,14 @@ export default defineConfig({
         // prevents Codecov from merging that coverage with Vitest's unexecuted
         // V8 report for the same source file.
         'packages/rspeedy/core/src/plugins/rsdoctor.plugin.ts',
-        // This module is also covered by Rstest; an unexecuted V8 report would
+        // These modules are covered by Rstest; an unexecuted V8 report would
         // add uncovered lines when Codecov merges the two collectors.
         'packages/rspeedy/plugin-react-alias/src/index.ts',
+        'packages/webpack/react-webpack-plugin/src/Defines.ts',
+        'packages/webpack/react-webpack-plugin/src/DefinesInjection.ts',
+        'packages/webpack/react-webpack-plugin/src/ReactWebpackPlugin.ts',
+        'packages/webpack/react-webpack-plugin/src/loaders/main-thread.ts',
+        'packages/rspeedy/plugin-react/src/splitChunks.ts',
         'packages/rspeedy/plugin-lynx/**',
         'packages/web-platform/web-core-e2e/**',
         'packages/webpack/test-tools/**',

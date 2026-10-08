@@ -206,7 +206,7 @@ describe('render transform contract', () => {
     resetTemplateId();
   });
 
-  it('imports only the worklet runtime loader for direct main-thread events', async () => {
+  it('imports the runtime init entry for direct main-thread events', async () => {
     const result = await compileMainThreadElementTemplate(`
       function handleTap() {
         'main thread';
@@ -218,8 +218,9 @@ describe('render transform contract', () => {
     `);
     const code = result.code ?? '';
 
-    expect(code).toContain('from "@lynx-js/react/internal"');
-    expect(code).toContain('loadWorkletRuntime');
+    expect(code).toContain('import "@lynx-js/react/worklet-runtime/init"');
+    expect(code).not.toContain('loadWorkletRuntime');
+    expect(code).toContain('registerWorkletInternal("main-thread"');
     expect(code).toContain('adaptMTEventAttrSlot');
     expect(code).not.toContain('adaptEventAttrSlot');
     expect(code).not.toContain('registerWorkletOnBackground');

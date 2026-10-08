@@ -17,7 +17,11 @@ import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { applyDefinesInjection } from './DefinesInjection.js';
 import { LAYERS } from './layer.js';
-import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
+import {
+  ELEMENT_TEMPLATE_BUILD_INFO,
+  LEGACY_WORKLET_RUNTIME_BUILD_INFO,
+  REACT_RUNTIME_REQUIREMENTS_BUILD_INFO,
+} from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
 
 const require = createRequire(import.meta.url);
@@ -25,6 +29,96 @@ const require = createRequire(import.meta.url);
 interface ElementTemplateBuildInfo {
   templateId: string;
   compiledTemplate: Record<string, unknown>;
+}
+
+interface ReactRuntimeRequirements {
+  mainThreadProgrammability: boolean;
+}
+
+export interface ReactCompileResult {
+  version: 1;
+  runtimeRequirements: ReactRuntimeRequirements;
+}
+
+export interface ModuleWithReactRuntimeRequirementsBuildInfo {
+  buildInfo?: Record<string, unknown>;
+  modules?: Iterable<ModuleWithReactRuntimeRequirementsBuildInfo>;
+}
+
+const REACT_COMPILATION_RESULT = Symbol.for(
+  '@lynx-js/react/internal:compilation-result',
+);
+
+/**
+ * Aggregate semantic runtime requirements from modules that belong to final
+ * chunks. A transformed module outside these chunks (for example after tree
+ * shaking) cannot affect the result.
+ *
+ * @internal
+ */
+export function collectReactCompileResult<TChunk>(
+  chunks: Iterable<TChunk>,
+  getChunkModules: (
+    chunk: TChunk,
+  ) => Iterable<ModuleWithReactRuntimeRequirementsBuildInfo>,
+): ReactCompileResult | undefined {
+  const visited = new Set<ModuleWithReactRuntimeRequirementsBuildInfo>();
+  let hasSemanticProducer = false;
+  let hasLegacyWorklet = false;
+  let mainThreadProgrammability = false;
+
+  const collectFromModule = (
+    module: ModuleWithReactRuntimeRequirementsBuildInfo,
+  ): void => {
+    if (visited.has(module)) {
+      return;
+    }
+    visited.add(module);
+    hasLegacyWorklet ||= module.buildInfo?.[LEGACY_WORKLET_RUNTIME_BUILD_INFO]
+      === true;
+
+    const runtimeRequirements = module.buildInfo?.[
+      REACT_RUNTIME_REQUIREMENTS_BUILD_INFO
+    ] as ReactRuntimeRequirements | undefined;
+    if (runtimeRequirements !== undefined) {
+      hasSemanticProducer = true;
+      mainThreadProgrammability ||=
+        runtimeRequirements.mainThreadProgrammability;
+    }
+
+    if (module.modules) {
+      for (const nestedModule of module.modules) {
+        collectFromModule(nestedModule);
+      }
+    }
+  };
+
+  for (const chunk of chunks) {
+    for (const module of getChunkModules(chunk)) {
+      collectFromModule(module);
+    }
+  }
+
+  if (!hasSemanticProducer || hasLegacyWorklet) {
+    return undefined;
+  }
+
+  return {
+    version: 1,
+    runtimeRequirements: { mainThreadProgrammability },
+  };
+}
+
+function collectReactCompileResultFromCompilation(
+  compilation: Compilation,
+): ReactCompileResult | undefined {
+  return collectReactCompileResult(
+    compilation.chunks,
+    chunk =>
+      compilation.chunkGraph.getChunkModulesIterable(
+        chunk,
+      ) as Iterable<ModuleWithReactRuntimeRequirementsBuildInfo>,
+  );
 }
 
 export interface ModuleWithElementTemplateBuildInfo {
@@ -251,7 +345,8 @@ interface ReactWebpackPluginOptions {
   profile?: boolean | undefined;
 
   /**
-   * The file path of `@lynx-js/react/worklet-runtime`.
+   * The file path of `@lynx-js/react/worklet-runtime` used only when a
+   * supported older transform has no semantic runtime-requirements producer.
    */
   workletRuntimePath: string;
 
@@ -454,6 +549,18 @@ class ReactWebpackPlugin {
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
       const onceForChunkSet = new WeakSet<Chunk>();
 
+      compilation.hooks.afterSeal.tap(
+        `${this.constructor.name}.CompileResult`,
+        () => {
+          const result = collectReactCompileResultFromCompilation(compilation);
+          if (result !== undefined) {
+            (compilation as unknown as Record<symbol, unknown>)[
+              REACT_COMPILATION_RESULT
+            ] = result;
+          }
+        },
+      );
+
       compilation.hooks.runtimeRequirementInTree.for(
         compiler.webpack.RuntimeGlobals.ensureChunkHandlers,
       ).tap('ReactWebpackPlugin', (_, runtimeRequirements) => {
@@ -523,12 +630,23 @@ class ReactWebpackPlugin {
       );
 
       const { RawSource, ConcatSource } = compiler.webpack.sources;
+      const getModules = (chunk: Chunk) =>
+        compilation.chunkGraph.getChunkModulesIterable(chunk);
       hooks.beforeEncode.tap(
         this.constructor.name,
         (args) => {
+          const chunks = args.chunkGroups.flatMap(group => group.chunks);
+          // Semantic requirements describe modern modules only. A legacy
+          // registration in this artifact can run before a modern initializer.
+          if (
+            collectReactCompileResult(chunks, getModules) !== undefined
+          ) {
+            return args;
+          }
+
           const lepusCode = args.encodeData.lepusCode;
           if (
-            lepusCode.root?.source.source().toString()?.includes(
+            lepusCode.root?.source.source().toString().includes(
               'registerWorkletInternal',
             )
           ) {

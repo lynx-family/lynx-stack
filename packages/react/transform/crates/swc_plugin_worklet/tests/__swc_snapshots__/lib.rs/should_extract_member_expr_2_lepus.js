@@ -1,5 +1,6 @@
-import { captureMainThreadObject as __captureMainThreadObject, loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-var captureMainThreadObject = __captureMainThreadObject, loadWorkletRuntime = __loadWorkletRuntime;
+import "@lynx-js/react/worklet-runtime/init";
+import { captureMainThreadObject as __captureMainThreadObject } from "@lynx-js/react";
+var captureMainThreadObject = __captureMainThreadObject;
 let onTapLepus = {
     _c: {
         aaaa,
@@ -29,8 +30,7 @@ let onTapLepus = {
             })(this.mmmm)
     }
 };
-const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-__workletRuntimeLoaded && registerWorkletInternal("main-thread", "a123:test:1", function() {
+registerWorkletInternal("main-thread", "a123:test:1", function() {
     const onTapLepus = lynxWorkletImpl._workletMap["a123:test:1"].bind(this);
     let { aaaa, bbbb, eeee, ffff } = this["_c"];
     "main thread";
