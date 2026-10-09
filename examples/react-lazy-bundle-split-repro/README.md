@@ -3,6 +3,8 @@
 Minimal reproduction for [#4040](https://github.com/lynx-family/lynx-stack/issues/4040):
 chunk splitting misbehaves when two lazy bundles import the same module.
 
+The failures below describe the behavior before the fixes in #4104 and #4079.
+
 `src/PageA.tsx` and `src/PageB.tsx` are lazy-loaded from `src/index.tsx` and both
 import `src/shared.ts`, which they use from the background layer (JSX children)
 and from the main-thread layer (a `'main thread'` worklet). The cache group in
@@ -10,7 +12,7 @@ and from the main-thread layer (a `'main thread'` worklet). The cache group in
 
 ## Build modes
 
-| script                    | cache group            | result                                     |
+| script                    | cache group            | original failure                           |
 | ------------------------- | ---------------------- | ------------------------------------------ |
 | `build:baseline`          | none (`NO_SPLIT=1`)    | works                                      |
 | `build:split`             | unscoped               | builds, but the lazy bundles no longer run |
