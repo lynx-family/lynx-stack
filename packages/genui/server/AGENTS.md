@@ -520,6 +520,12 @@ top-down 32-bit BMP format. No server browser, Lynx bundle, or screenshot
 service URL is involved for HTML-only jobs. Keep shared scoring, cancellation,
 usage accounting, and report storage unchanged.
 
+ReactWeb Bench also uses `native` without a catalog. Its adapter generates
+App.tsx/App.css JSON, compiles it with `buildReactWeb`, and repairs source or
+compiler errors within the attempt budget. It retains source JSON in reports
+and sends compiled HTML through `browser/html`, without TOS publication.
+ReactWeb-only and mixed HTML/ReactWeb jobs require no screenshot service.
+
 PNG conversion preserves RGBA pixels and happens before model evaluation. Model
 inputs retain the full capture; Bench report storage separately applies its
 2 MiB per-image and 8 MiB per-job limits. A scoring failure makes the whole Judge

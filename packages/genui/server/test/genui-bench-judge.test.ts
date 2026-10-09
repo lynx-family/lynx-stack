@@ -107,41 +107,44 @@ describe('resolveGenuiBenchUiJudge', () => {
 });
 
 describe('runGenuiBenchUiJudge', () => {
-  test('captures HTML directly in the browser and scores PNG with the selected model', async () => {
-    const rawText =
-      '<!doctype html><html><head></head><body>Hello</body></html>';
-    const result = await runGenuiBenchUiJudge({
-      artifact: { protocol: 'html', rawText },
-      model: 'html-model',
-      scenario: { prompt: 'Build a greeting' },
-      session: { screenshotPath: 'browser/html' },
-      timeoutMs: 10_000,
-    }, (input, init) => {
-      expect(input.path).toBe('browser/html');
-      expect(input.source).toBe(rawText);
-      expect(input.timeoutMs).toBe(20000);
-      expect(init).toBeInstanceOf(AbortSignal);
-      expect(Object.entries(input.fields)).toEqual([
-        ['width', '390'],
-        ['height', '844'],
-      ]);
-      return Promise.resolve(evaluationResponse(geqiResponse(4)));
-    });
-    expect(result).toMatchObject({
-      status: 'complete',
-      score: 4,
-      geqiScore: 80,
-    });
-    expect(evaluateScreenshot).toHaveBeenLastCalledWith(
-      expect.objectContaining({
+  test.each(['html', 'reactweb'] as const)(
+    'captures %s HTML in the browser and scores PNG with the selected model',
+    async (protocol) => {
+      const rawText =
+        '<!doctype html><html><head></head><body>Hello</body></html>';
+      const result = await runGenuiBenchUiJudge({
+        artifact: { protocol, rawText },
         model: 'html-model',
-        task: 'Build a greeting',
-        screenshotDataUrl: expect.stringMatching(
-          /^data:image\/png;base64,/u,
-        ) as unknown,
-      }),
-    );
-  });
+        scenario: { prompt: 'Build a greeting' },
+        session: { screenshotPath: 'browser/html' },
+        timeoutMs: 10_000,
+      }, (input, init) => {
+        expect(input.path).toBe('browser/html');
+        expect(input.source).toBe(rawText);
+        expect(input.timeoutMs).toBe(20000);
+        expect(init).toBeInstanceOf(AbortSignal);
+        expect(Object.entries(input.fields)).toEqual([
+          ['width', '390'],
+          ['height', '844'],
+        ]);
+        return Promise.resolve(evaluationResponse(geqiResponse(4)));
+      });
+      expect(result).toMatchObject({
+        status: 'complete',
+        score: 4,
+        geqiScore: 80,
+      });
+      expect(evaluateScreenshot).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          model: 'html-model',
+          task: 'Build a greeting',
+          screenshotDataUrl: expect.stringMatching(
+            /^data:image\/png;base64,/u,
+          ) as unknown,
+        }),
+      );
+    },
+  );
 
   test('relays Lynx XML for browser ZIP upload and scores the converted PNG', async () => {
     const rawText =
@@ -571,10 +574,13 @@ mainThreadBridge.dispatchEvent({ type: "PatchFromBackground", data: { temp: 26, 
   });
 });
 
-test('HTML capture capability needs no Lynx bundle or sidecar configuration', async () => {
-  expect(
-    await resolveGenuiBenchUiJudge('html', {
-      env: { UI_JUDGE_ZIP_URL: 'invalid' },
-    }),
-  ).toEqual({ enabled: true, session: { screenshotPath: 'browser/html' } });
-});
+test.each(['html', 'reactweb'] as const)(
+  '%s capture capability needs no Lynx bundle or sidecar configuration',
+  async (protocol) => {
+    expect(
+      await resolveGenuiBenchUiJudge(protocol, {
+        env: { UI_JUDGE_ZIP_URL: 'invalid' },
+      }),
+    ).toEqual({ enabled: true, session: { screenshotPath: 'browser/html' } });
+  },
+);

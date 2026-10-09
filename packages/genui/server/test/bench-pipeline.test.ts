@@ -111,6 +111,10 @@ function artifact(protocol: BenchProtocol): ProtocolBenchRunArtifact {
       kind: 'html-source',
       rawText: '<!doctype html><html><body>Ready</body></html>',
     },
+    reactweb: {
+      kind: 'reactweb-html',
+      rawText: '<!doctype html><html><body>Ready</body></html>',
+    },
   } satisfies Record<BenchProtocol, ProtocolBenchRunArtifact['judgePayload']>;
   return {
     attempts: [{

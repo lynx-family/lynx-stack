@@ -23,7 +23,7 @@ export type ProtocolBenchJudgePayload =
     rawText: string;
   }
   | {
-    kind: 'lynx-xml-source' | 'html-source';
+    kind: 'lynx-xml-source' | 'html-source' | 'reactweb-html';
     rawText: string;
   };
 

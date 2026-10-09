@@ -12,6 +12,7 @@ import type { GenerationAgentOptions } from '../common/agent-capabilities.js';
 import { createLLMProvider } from '../common/openai-provider.js';
 
 export interface ReactWebAgent {
+  generate: (messages: unknown, options?: unknown) => unknown;
   stream: (messages: unknown, options?: unknown) => unknown;
 }
 

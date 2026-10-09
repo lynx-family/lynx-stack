@@ -5,6 +5,7 @@ import {
   DEFAULT_BENCH_SCENARIOS,
   DEFAULT_BENCH_SETTINGS,
   createDefaultBenchGroups,
+  isDocumentBenchProtocol,
 } from './benchData.js';
 import type {
   BenchGroup,
@@ -70,7 +71,7 @@ function isBenchVariable(value: unknown): value is BenchVariable {
 
 function isBenchProtocol(value: unknown): value is BenchProtocol {
   return value === 'a2ui' || value === 'openui' || value === 'lynx-xml'
-    || value === 'html';
+    || value === 'html' || value === 'reactweb';
 }
 
 function isBenchProfile(value: unknown): value is BenchProfile {
@@ -143,7 +144,7 @@ export function createBenchGroupsFromReport(
       name: item.name ?? `Group ${index + 1}`,
       variable: isBenchVariable(item.variable) ? item.variable : 'custom',
       model: item.model ?? fallbackModel,
-      catalog: protocol === 'lynx-xml' || protocol === 'html'
+      catalog: isDocumentBenchProtocol(protocol)
         ? 'none'
         : item.catalog ?? 'Full Catalog',
       extraInstruction: item.extraInstruction ?? '',

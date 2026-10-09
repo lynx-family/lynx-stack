@@ -99,7 +99,7 @@ vertical scroll view. Explicitly set `display: flex` and the intended
 
 ## ReactWeb
 
-ReactWeb exposes Create and Web preview/share. Keep the hook-free adapter in
+ReactWeb exposes Create, Web preview/share, and the shared Bench tab. Keep the hook-free adapter in
 `src/pages/chat/reactweb.ts` and stream from `/reactweb/stream`. Display source
 deltas, but preview only the completed published artifact. Persist both source
 files and `artifact.webUrl` with the assistant turn; omit artifact metadata from
@@ -109,8 +109,10 @@ Use `render.html?protocol=reactweb&sourceUrl=<artifact.webUrl>` for current,
 historical, and shared previews. Fetch the bounded document without credentials
 in the outer renderer, then use `HtmlView` with `sandbox="allow-scripts"`.
 The TOS bucket must allow public reads and CORS from the Playground origin.
-Keep Web URLs on the current Playground host. This protocol has no Lynx runtime,
-native output, or Bench adapter. See
+Keep Web URLs on the current Playground host. This protocol has no Lynx runtime
+or native output. Its native-profile Bench adapter compiles source to self-contained
+HTML and uses the shared browser Element Capture flow without TOS publication
+or a screenshot sidecar. See
 [ReactWeb instructions](../../../.github/genui-reactweb.instructions.md).
 
 ## HTML
