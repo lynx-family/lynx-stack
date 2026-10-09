@@ -218,6 +218,7 @@
     "types",
     "docs",
     "testing-library",
+    "!**/node_modules/**",
     "CHANGELOG.md",
     "internal.js",
     "README.md",
