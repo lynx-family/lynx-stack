@@ -57,6 +57,7 @@ import type {
 import { createHtmlBenchAdapter } from '../../html/html-bench-adapter.js';
 import { createLynxXmlBenchAdapter } from '../../lynx-xml/lynx-xml-bench-adapter.js';
 import { createOpenUIBenchAdapter } from '../../openui/openui-bench-adapter.js';
+import { createReactWebBenchAdapter } from '../../reactweb/reactweb-bench-adapter.js';
 import { buildGenerationRepairMessages } from '../generation-repair.js';
 import { defaultModelName, readModelConfig } from '../model-config.js';
 import { GenerationUpstreamError } from '../result.js';
@@ -456,11 +457,12 @@ async function runProtocolAdapterOne(
   const protocol = protocolForGroup(item.group);
   const profile = profileForGroup(item.group);
   const model = pickRunModel(request, item.group);
-  const catalogLabel = protocol === 'lynx-xml' || protocol === 'html'
-    ? 'none' as const
-    : (profile === 'matched-core'
-      ? 'matched-core' as const
-      : pickRunCatalog(item.group));
+  const catalogLabel =
+    protocol === 'lynx-xml' || protocol === 'html' || protocol === 'reactweb'
+      ? 'none' as const
+      : (profile === 'matched-core'
+        ? 'matched-core' as const
+        : pickRunCatalog(item.group));
 
   store.emit(jobId, 'run-start', {
     runId,
@@ -583,11 +585,12 @@ async function runProtocolAdapterOne(
               >,
             }
             : {
-              protocol: judgePayload.kind === 'lynx-xml-source'
-                ? 'lynx-xml' as const
-                : (judgePayload.kind === 'html-source'
-                  ? 'html' as const
-                  : 'openui' as const),
+              protocol: ({
+                'lynx-xml-source': 'lynx-xml',
+                'reactweb-html': 'reactweb',
+                'html-source': 'html',
+                'openui-text': 'openui',
+              } as const)[judgePayload.kind],
               rawText: judgePayload.rawText,
             },
         }
@@ -979,6 +982,7 @@ function resolveProtocolAdapters(
       openui: createOpenUIBenchAdapter,
       'lynx-xml': createLynxXmlBenchAdapter,
       html: createHtmlBenchAdapter,
+      reactweb: createReactWebBenchAdapter,
     };
     adapters[protocol] = overrides?.[protocol] ?? factories[protocol]();
   }

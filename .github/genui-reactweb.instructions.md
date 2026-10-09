@@ -18,7 +18,7 @@ remain relative to its own import.meta.url. Cache `dist/**` through Turbo.
 Inline React DOM, application JavaScript, and CSS in the published HTML.
 Inject scripts at the end of body, after the root mount element: inline scripts
 ignore defer and execute immediately during HTML parsing.
-Emit a successful final artifact only after publication completes. Preserve model
+In Create, emit a successful final artifact only after publication completes. Preserve model
 usage and build/upload timing on errors. Keep follow-up model history free of
 artifact metadata while persisting source files and the public URL together.
 
@@ -30,3 +30,12 @@ Do not route ReactWeb through Lynx bundles, init data, or native previews.
 Build the complete repository through Turbo before running tests. Verify real
 compiler output and browser React interactions as well as mocked route ordering,
 cancellation, publication failures, and history restoration.
+
+ReactWeb Bench uses the native profile without a catalog. Generate the same
+App.tsx/App.css source contract with search and image generation disabled,
+compile through buildReactWeb, and feed compiler diagnostics into bounded
+repair attempts. Keep source JSON as report evidence and compiled HTML as the
+Judge payload. Reuse browser/html screenshot tasks and Element Capture with
+the existing sandbox and CSP; do not publish Bench builds to TOS or require a
+Lynx screenshot sidecar. Preserve cancellation and model usage on compiler
+failures, and keep ReactWeb in plan sharing and history normalization.

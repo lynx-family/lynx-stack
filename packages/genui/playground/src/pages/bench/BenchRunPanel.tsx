@@ -109,9 +109,10 @@ export function BenchRunPanel(props: {
               )}
               {props.hasHtmlGroups && (
                 <p className='benchFieldHint'>
-                  HTML uses your browser's screenshot capability. When UI Judge
-                  is on, Start run asks you to share this tab. Use desktop
-                  Chrome 132+ and keep this page open until the run finishes.
+                  HTML and ReactWeb use your browser's screenshot capability.
+                  When UI Judge is on, Start run asks you to share this tab. Use
+                  desktop Chrome 132+ and keep this page open until the run
+                  finishes.
                 </p>
               )}
             </section>

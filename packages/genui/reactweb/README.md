@@ -44,8 +44,20 @@ Current, historical, and shared previews use
 downloads the HTML without credentials and renders it in `HtmlView` with
 `sandbox="allow-scripts"`. Sources and the artifact URL are persisted with the
 assistant turn; follow-up model context contains only the sources.
-ReactWeb currently supports Create and Web preview/share, without native
-Lynx output or Bench integration.
+ReactWeb supports Create, Web preview/share, and Bench, without native Lynx output.
+
+To compare ReactWeb with other protocols, open **Bench**, add a comparison group,
+and select **ReactWeb**. The group uses the `native` profile without a catalog.
+Bench generates the same two-file source contract, compiles it, and can repair
+source or compiler errors. Reports retain the source JSON and generation usage.
+Search and image generation are disabled during Bench runs.
+
+With UI Judge enabled, Bench captures the compiled HTML in a sandboxed browser
+iframe and scores it through the shared Judge pipeline. Use a browser that
+supports Element Capture and share the current tab when prompted by **Start run**.
+Keep the page open until the run finishes. ReactWeb-only and mixed HTML/ReactWeb
+runs need no screenshot sidecar or TOS publication. Groups using Lynx protocols
+still require the configured screenshot service.
 
 Keep this package external in the bundled server: `import.meta.url` must locate
 the adjacent worker and this package's dependencies at runtime. Production

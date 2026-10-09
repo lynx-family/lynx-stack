@@ -3,7 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 
 export type BenchRole = 'control' | 'experiment';
-export type BenchProtocol = 'a2ui' | 'openui' | 'lynx-xml' | 'html';
+export type BenchProtocol =
+  | 'a2ui'
+  | 'openui'
+  | 'lynx-xml'
+  | 'html'
+  | 'reactweb';
 export type BenchProfile = 'matched-core' | 'native';
 export type BenchVariable =
   | 'catalog'
@@ -65,10 +70,19 @@ export const BENCH_PROTOCOL_OPTIONS = [
     description: 'Self-contained Lynx XML page',
   },
   { value: 'html', label: 'HTML', description: 'Self-contained HTML page' },
+  {
+    value: 'reactweb',
+    label: 'ReactWeb',
+    description: 'Compiled React DOM page',
+  },
 ] as const;
 
 export function isDocumentBenchProtocol(protocol: BenchProtocol): boolean {
-  return protocol === 'lynx-xml' || protocol === 'html';
+  return protocol === 'lynx-xml' || usesBrowserBenchCapture(protocol);
+}
+
+export function usesBrowserBenchCapture(protocol: BenchProtocol): boolean {
+  return protocol === 'html' || protocol === 'reactweb';
 }
 
 export function getBenchProtocolLabel(

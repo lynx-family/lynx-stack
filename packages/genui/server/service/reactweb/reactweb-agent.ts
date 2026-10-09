@@ -13,11 +13,16 @@ import {
 } from '../common/messages.js';
 import { withTextModelInteraction } from '../common/model-interaction.js';
 import { ProviderAgentCache } from '../common/provider.js';
-import { finalizeResult, toAsyncIterable } from '../common/result.js';
+import {
+  extractGenerationResult,
+  finalizeResult,
+  toAsyncIterable,
+} from '../common/result.js';
 import type {
   ChatMessage,
   ChatOptions,
   ConversationContext,
+  MastraResult,
   MastraStreamResult,
 } from '../common/types.js';
 
@@ -25,6 +30,25 @@ class ReactWebAgentService {
   private readonly agentCache = new ProviderAgentCache<
     ReturnType<typeof createReactWebAgent>
   >();
+
+  async generateRaw(
+    messages: ChatMessage[],
+    opts: ChatOptions = {},
+    abortSignal?: AbortSignal,
+  ): Promise<{ text: string; usage: unknown; finishReason: unknown }> {
+    abortSignal?.throwIfAborted();
+    const createAgent = () =>
+      createReactWebAgent(pickAgentCapabilityConfig(opts));
+    const agent = opts.disableAgentCache
+      ? createAgent()
+      : await this.agentCache.get(opts, createAgent);
+    abortSignal?.throwIfAborted();
+    const result = await agent.generate(
+      toModelMessages(messages),
+      buildCapabilityRunOptions(opts, abortSignal, 'reactweb'),
+    ) as MastraResult;
+    return extractGenerationResult(result);
+  }
 
   async streamAsAsyncIterable(
     messages: ChatMessage[],

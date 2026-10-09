@@ -21,6 +21,7 @@ import {
   findComparableBaseline,
   getBenchProtocolLabel,
   inferBenchVariable,
+  usesBrowserBenchCapture,
   usesCatalog,
   withBenchGroupPatch,
   withBenchProtocol,
@@ -921,9 +922,11 @@ export function BenchPage({ sharedPlan }: { sharedPlan?: string }) {
     }
     return undefined;
   }, [activeGroups, env, settings.judgeEnabled, settings.uiJudgeModel]);
-  const hasHtmlGroups = activeGroups.some((group) => group.protocol === 'html');
+  const hasHtmlGroups = activeGroups.some((group) =>
+    usesBrowserBenchCapture(group.protocol)
+  );
   const needsScreenshotService = activeGroups.some((group) =>
-    group.protocol !== 'html'
+    !usesBrowserBenchCapture(group.protocol)
   );
   const uiJudgeServerUrlValidationError = useMemo(() => {
     if (!needsScreenshotService || !settings.judgeEnabled) return '';

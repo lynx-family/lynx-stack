@@ -105,7 +105,7 @@ describe('A2UI Bench request protocol groups', () => {
   });
   test('accepts Lynx XML native alongside both component protocols', () => {
     const normalized = normalizeBenchJobRequest(body(
-      ['a2ui', 'openui', 'lynx-xml', 'html'].map((protocol) => ({
+      ['a2ui', 'openui', 'lynx-xml', 'html', 'reactweb'].map((protocol) => ({
         id: protocol,
         protocol,
         catalog: 'Core Catalog',
@@ -121,6 +121,7 @@ describe('A2UI Bench request protocol groups', () => {
       ['openui', 'matched-core'],
       ['lynx-xml', 'native'],
       ['html', 'native'],
+      ['reactweb', 'native'],
     ]);
     expect(normalized.request.groups[2]).not.toHaveProperty('catalog');
     expect(normalized.request.groups[3]).not.toHaveProperty('catalog');
@@ -429,27 +430,30 @@ describe('A2UI Bench request protocol groups', () => {
   });
 });
 
-test('rejects matched-core for HTML and omits XML-only options', () => {
-  expect(
-    normalizeBenchJobRequest(
-      body([{ id: 'html', protocol: 'html', profile: 'matched-core' }]),
-    ),
-  ).toMatchObject({ ok: false });
-  const result = normalizeBenchJobRequest(
-    body([{
-      id: 'html',
-      protocol: 'html',
-      enableHtmlFragment: true,
-      catalog: 'Full Catalog',
-    }]),
-  );
-  expect(result.ok).toBe(true);
-  if (result.ok) {
-    expect(result.request.groups[0]).toMatchObject({
-      protocol: 'html',
-      profile: 'native',
-    });
-    expect(result.request.groups[0]).not.toHaveProperty('catalog');
-    expect(result.request.groups[0]).not.toHaveProperty('enableHtmlFragment');
-  }
-});
+test.each(['html', 'reactweb'])(
+  'rejects matched-core for %s and omits XML-only options',
+  (protocol) => {
+    expect(
+      normalizeBenchJobRequest(
+        body([{ id: 'html', protocol, profile: 'matched-core' }]),
+      ),
+    ).toMatchObject({ ok: false });
+    const result = normalizeBenchJobRequest(
+      body([{
+        id: 'html',
+        protocol,
+        enableHtmlFragment: true,
+        catalog: 'Full Catalog',
+      }]),
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.request.groups[0]).toMatchObject({
+        protocol,
+        profile: 'native',
+      });
+      expect(result.request.groups[0]).not.toHaveProperty('catalog');
+      expect(result.request.groups[0]).not.toHaveProperty('enableHtmlFragment');
+    }
+  },
+);
