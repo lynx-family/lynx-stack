@@ -21,6 +21,9 @@
 //! ```
 
 mod bmp;
+#[cfg(any(target_os = "linux", all(test, unix)))]
+#[path = "../../engine-bridge/tools/core_resources.rs"]
+mod core_resources;
 mod debug_router;
 mod error;
 mod fixture;
@@ -798,16 +801,16 @@ fn install_lynx_core_resource(source: Option<&Path>) -> Result<PathBuf> {
     executable_dir.join("lynx_core.js")
   };
 
-  let Some(source) = source.map(PathBuf::from) else {
-    return destination
-      .is_file()
-      .then_some(destination)
-      .ok_or(Error::MissingLynxCore);
-  };
-  if !source.is_file() {
-    return Err(Error::LynxCoreNotFound(source));
+  if let Some(source) = source {
+    if !source.is_file() {
+      return Err(Error::LynxCoreNotFound(source.to_path_buf()));
+    }
+    install_lynx_core_copy(source, &destination)?;
+  } else if !destination.is_file() {
+    return Err(Error::MissingLynxCore);
   }
-  install_lynx_core_copy(&source, &destination)?;
+  #[cfg(target_os = "linux")]
+  core_resources::install_lynx_core_dev_fallback(&destination)?;
   Ok(destination)
 }
 
