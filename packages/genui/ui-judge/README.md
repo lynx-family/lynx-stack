@@ -112,7 +112,7 @@ a named part; query parameters and the former raw request bodies are rejected.
 | `POST /screenshot/zip/upload`   | `file`: ZIP archive bytes            |
 | `POST /screenshot/zip/url`      | `url`: HTTP(S) ZIP URL               |
 
-All four source-specific routes accept these additional parts:
+All screenshot routes accept these additional parts:
 
 | Part          | Required | Value                                                                                                |
 | ------------- | -------- | ---------------------------------------------------------------------------------------------------- |
@@ -152,9 +152,12 @@ Width and height default to `DEFAULT_SCREENSHOT_WIDTH` and
 viewport defaults (390 × 844), with per-dimension overrides when configured.
 `initData` and `globalProps` are JSON objects encoded as text fields;
 XML supports `initData` but rejects `globalProps`. All screenshot endpoints share
-the Rust API's default 100 ms settling period. The ZIP endpoints and the legacy
-`/screenshot/template/url` endpoint retain their existing fields; they do not
-accept `screenshotSettleMs` or `timeoutMs`.
+the Rust API's default 100 ms settling period. Both ZIP endpoints also accept
+`screenshotSettleMs` as an optional non-negative integer multipart field in
+milliseconds (including `0`), but do not accept `timeoutMs`. The legacy
+`/screenshot/template/url` endpoint accepts neither option. The settling delay
+allows asynchronous page content time to render; it does not guarantee that all
+application work has completed.
 
 ```bash
 curl --request POST http://127.0.0.1:8080/screenshot/template \
@@ -196,6 +199,7 @@ directory, model options, or interaction steps:
 
 ```bash
 curl --request POST http://127.0.0.1:8080/screenshot/zip/upload \
+  --form-string 'screenshotSettleMs=3000' \
   --form-string 'entry=template.js' \
   --form 'file=@/absolute/path/to/page.zip;type=application/zip' \
   --form-string 'globalProps={"theme":"dark"}' \
@@ -215,6 +219,7 @@ To fetch a ZIP remotely, send its URL in `url`:
 
 ```bash
 curl --request POST http://127.0.0.1:8080/screenshot/zip/url \
+  --form-string 'screenshotSettleMs=3000' \
   --form-string 'entry=index.lynxml' \
   --form-string 'url=https://cdn.example.com/page.zip' \
   --form-string 'initData={"title":"Preview"}' \

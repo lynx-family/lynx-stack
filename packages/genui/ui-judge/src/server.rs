@@ -278,9 +278,17 @@ struct AppState {
   zip_capture_processes: ZipCaptureProcesses,
 }
 
+#[derive(Clone, Copy)]
+enum ScreenshotFormKind {
+  Page,
+  Zip,
+  LegacyTemplate,
+}
+
 #[derive(Debug)]
 struct ScreenshotForm {
   capture_request: Option<CapturePageRequest>,
+  screenshot_settle_ms: u64,
   entry: ScreenshotEntry,
   viewport: ScreenshotViewport,
   load_options: PageLoadOptions,
@@ -927,20 +935,20 @@ async fn read_page_screenshot_form(
   request: Request,
   source_name: &str,
 ) -> Result<ScreenshotForm, ApiError> {
-  read_screenshot_form_impl(request, source_name, true).await
+  read_screenshot_form_impl(request, source_name, ScreenshotFormKind::Page).await
 }
 
 async fn read_screenshot_form(
   request: Request,
   source_name: &str,
 ) -> Result<ScreenshotForm, ApiError> {
-  read_screenshot_form_impl(request, source_name, false).await
+  read_screenshot_form_impl(request, source_name, ScreenshotFormKind::Zip).await
 }
 
 async fn read_screenshot_form_impl(
   mut request: Request,
   source_name: &str,
-  page_options: bool,
+  kind: ScreenshotFormKind,
 ) -> Result<ScreenshotForm, ApiError> {
   if request.uri().query().is_some_and(|query| !query.is_empty()) {
     return Err(ApiError::new(
@@ -965,7 +973,7 @@ async fn read_screenshot_form_impl(
     .await
     .map_err(|error| ApiError::new(StatusCode::UNSUPPORTED_MEDIA_TYPE, error.to_string()))?;
   read_screenshot_form_with_deadline(
-    parse_screenshot_form(multipart, source_name, page_options),
+    parse_screenshot_form(multipart, source_name, kind),
     LYNXML_UPLOAD_TIMEOUT,
   )
   .await
@@ -986,7 +994,7 @@ async fn read_screenshot_form_with_deadline(
 async fn parse_screenshot_form(
   mut multipart: Multipart,
   source_name: &str,
-  page_options: bool,
+  kind: ScreenshotFormKind,
 ) -> Result<ScreenshotForm, ApiError> {
   let mut entry = None;
   let mut width = None;
@@ -1005,8 +1013,10 @@ async fn parse_screenshot_form(
       "height" => &mut height,
       "globalProps" => &mut global_props,
       "initData" => &mut init_data,
-      "screenshotSettleMs" if page_options => &mut screenshot_settle_ms,
-      "timeoutMs" if page_options => &mut timeout_ms,
+      "screenshotSettleMs" if !matches!(kind, ScreenshotFormKind::LegacyTemplate) => {
+        &mut screenshot_settle_ms
+      }
+      "timeoutMs" if matches!(kind, ScreenshotFormKind::Page) => &mut timeout_ms,
       name if name == source_name => &mut source,
       _ => {
         return Err(ApiError::new(
@@ -1051,7 +1061,12 @@ async fn parse_screenshot_form(
     ));
   }
   let source = required_form_field(source_name, source)?;
-  let capture_request = if page_options {
+  let screenshot_settle_ms = form_duration(
+    "screenshotSettleMs",
+    screenshot_settle_ms,
+    DEFAULT_SCREENSHOT_SETTLE_MS,
+  )?;
+  let capture_request = if matches!(kind, ScreenshotFormKind::Page) {
     let timeout_ms = form_duration("timeoutMs", timeout_ms, DEFAULT_TIMEOUT_MS)?;
     if timeout_ms == 0 {
       return Err(ApiError::new(
@@ -1061,11 +1076,7 @@ async fn parse_screenshot_form(
     }
     Some(CapturePageRequest {
       url: entry.url.clone(),
-      screenshot_settle: Duration::from_millis(form_duration(
-        "screenshotSettleMs",
-        screenshot_settle_ms,
-        DEFAULT_SCREENSHOT_SETTLE_MS,
-      )?),
+      screenshot_settle: Duration::from_millis(screenshot_settle_ms),
       timeout: Duration::from_millis(timeout_ms),
       ..CapturePageRequest::default()
     })
@@ -1074,6 +1085,7 @@ async fn parse_screenshot_form(
   };
   Ok(ScreenshotForm {
     capture_request,
+    screenshot_settle_ms,
     entry,
     viewport,
     load_options,
@@ -1152,7 +1164,7 @@ async fn screenshot_template_url(
     load_options,
     source,
     ..
-  } = read_screenshot_form(request, "url").await?;
+  } = read_screenshot_form_impl(request, "url", ScreenshotFormKind::LegacyTemplate).await?;
   if !entry.path.to_string_lossy().ends_with(".js") {
     return Err(ApiError::new(
       StatusCode::BAD_REQUEST,
@@ -1193,10 +1205,19 @@ async fn screenshot_zip_upload(
     entry,
     viewport,
     load_options,
+    screenshot_settle_ms,
     source,
     ..
   } = read_screenshot_form(request, "file").await?;
-  render_zip(&state, entry, source, viewport, load_options).await
+  render_zip(
+    &state,
+    entry,
+    source,
+    viewport,
+    load_options,
+    screenshot_settle_ms,
+  )
+  .await
 }
 
 async fn screenshot_zip_url(
@@ -1207,6 +1228,7 @@ async fn screenshot_zip_url(
     entry,
     viewport,
     load_options,
+    screenshot_settle_ms,
     source,
     ..
   } = read_screenshot_form(request, "url").await?;
@@ -1214,7 +1236,15 @@ async fn screenshot_zip_url(
   let resource = fetch_http_resource(&url, zip::MAX_ZIP_UPLOAD_BYTES, REMOTE_FETCH_TIMEOUT)
     .await
     .map_err(remote_fetch_api_error)?;
-  render_zip(&state, entry, resource.bytes, viewport, load_options).await
+  render_zip(
+    &state,
+    entry,
+    resource.bytes,
+    viewport,
+    load_options,
+    screenshot_settle_ms,
+  )
+  .await
 }
 
 async fn render_zip(
@@ -1223,6 +1253,7 @@ async fn render_zip(
   upload: Vec<u8>,
   viewport: ScreenshotViewport,
   load_options: PageLoadOptions,
+  screenshot_settle_ms: u64,
 ) -> Result<Response, ApiError> {
   let job_id = NEXT_ZIP_JOB_ID.fetch_add(1, Ordering::Relaxed);
   if upload.is_empty() {
@@ -1296,6 +1327,7 @@ async fn render_zip(
           IsolatedCaptureConfig {
             global_props_json: load_options.global_props_json,
             initial_data_json: load_options.initial_data_json,
+            screenshot_settle_ms,
             ..IsolatedCaptureConfig::default()
           },
         )
@@ -1313,7 +1345,10 @@ async fn render_zip(
       let capture_response = state
         .headless
         .capture_staged_zip(
-          staged_screenshot_request(&entry.url),
+          CapturePageRequest {
+            screenshot_settle: Duration::from_millis(screenshot_settle_ms),
+            ..staged_screenshot_request(&entry.url)
+          },
           PageLoadOptions {
             base_dir: Some(base_dir),
             ..load_options
@@ -2322,22 +2357,89 @@ mod tests {
   }
 
   #[tokio::test]
-  async fn page_screenshot_options_do_not_extend_zip_forms() {
+  async fn zip_screenshot_forms_accept_settling_but_reject_timeout() {
     for source_name in ["file", "url"] {
       let base: [(&str, &[u8]); 2] = [("entry", b"index.lynxml"), (source_name, b"archive")];
       let form = read_screenshot_form(multipart_request("zip", &base), source_name)
         .await
         .unwrap();
       assert!(form.capture_request.is_none());
-      for key in ["timeoutMs", "screenshotSettleMs"] {
+      assert_eq!(form.screenshot_settle_ms, DEFAULT_SCREENSHOT_SETTLE_MS);
+      for value in ["0", "3000"] {
         let mut fields = base.to_vec();
-        fields.push((key, b"1"));
-        let error = read_screenshot_form(multipart_request("zip", &fields), source_name)
+        fields.push(("screenshotSettleMs", value.as_bytes()));
+        let form = read_screenshot_form(multipart_request("zip", &fields), source_name)
           .await
-          .unwrap_err();
-        assert!(error.message.contains("Unexpected multipart field"));
+          .unwrap();
+        assert_eq!(form.screenshot_settle_ms, value.parse::<u64>().unwrap());
+      }
+      let mut fields = base.to_vec();
+      fields.push(("timeoutMs", b"1"));
+      let error = read_screenshot_form(multipart_request("zip", &fields), source_name)
+        .await
+        .unwrap_err();
+      assert!(error.message.contains("Unexpected multipart field"));
+    }
+  }
+
+  #[tokio::test]
+  async fn zip_routes_reject_invalid_and_duplicate_settling_before_capture() {
+    let headless = scripted_workers(|_| panic!("invalid settling must not reach capture"));
+    let state = AppState {
+      headless: Arc::clone(&headless),
+      zip_capture_backend: ZipCaptureBackend::SharedWorker,
+      zip_capture_processes: ZipCaptureProcesses::new(),
+    };
+    for source_name in ["file", "url"] {
+      for values in [
+        vec!["-1"],
+        vec!["1.5"],
+        vec![""],
+        vec!["abc"],
+        vec!["18446744073709551616"],
+        vec!["0", "3000"],
+      ] {
+        let mut fields: Vec<(&str, &[u8])> = vec![
+          ("entry", b"template.js"),
+          (source_name, b"https://example.com/archive.zip"),
+        ];
+        for value in &values {
+          fields.push(("screenshotSettleMs", value.as_bytes()));
+        }
+        let request = multipart_request("zip", &fields);
+        let error = if source_name == "file" {
+          screenshot_zip_upload(State(state.clone()), request).await
+        } else {
+          screenshot_zip_url(State(state.clone()), request).await
+        }
+        .unwrap_err();
+        assert_eq!(error.status, StatusCode::BAD_REQUEST);
+        assert!(error.message.contains("screenshotSettleMs"));
+        if values.len() == 2 {
+          assert!(error.message.contains("exactly once"));
+        }
       }
     }
+    headless.shutdown().unwrap();
+  }
+
+  #[tokio::test]
+  async fn legacy_template_route_rejects_settling_override() {
+    let error = read_screenshot_form_impl(
+      multipart_request(
+        "legacy",
+        &[
+          ("entry", b"template.js"),
+          ("url", b"https://example.com/template.js"),
+          ("screenshotSettleMs", b"3000"),
+        ],
+      ),
+      "url",
+      ScreenshotFormKind::LegacyTemplate,
+    )
+    .await
+    .unwrap_err();
+    assert!(error.message.contains("Unexpected multipart field"));
   }
 
   #[tokio::test]
@@ -2992,6 +3094,7 @@ mod tests {
         job.load_options.initial_data_json.as_deref(),
         Some(r#"{"ready":true}"#)
       );
+      assert_eq!(job.request.screenshot_settle, Duration::from_millis(3000));
       assert_eq!(job.request.url, "zip:///pages/template.js");
       let base_dir = job
         .load_options
@@ -3022,6 +3125,7 @@ mod tests {
         &[
           ("entry", b"zip:///pages/template.js"),
           ("file", &upload),
+          ("screenshotSettleMs", b"3000"),
           ("globalProps", br#"{"messages":[]}"#),
           ("initData", br#"{"ready":true}"#),
         ],
