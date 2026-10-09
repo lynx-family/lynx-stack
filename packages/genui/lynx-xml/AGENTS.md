@@ -1,8 +1,9 @@
 # Lynx XML Prompt
 
 Keep this package headless. It owns prompt construction for complete,
-zero-build `.lynxml` artifacts; model providers, agent runtimes, streaming,
-artifact extraction, and preview rendering belong in their consuming packages.
+zero-build `.lynxml` artifacts, artifact extraction, and document validation;
+model providers, agent runtimes, streaming, and preview rendering belong in
+their consuming packages.
 
 Use the pinned direct dependency on `@lynx-js/skill-vanilla-lynx` as the source
 of truth for shared Vanilla Lynx runtime guidance. Import selected Markdown

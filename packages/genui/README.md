@@ -3,7 +3,7 @@
 Generative UI primitives for Lynx applications.
 
 `@lynx-js/genui` is the single npm package for the GenUI toolchain. It exposes
-A2UI rendering, OpenUI rendering, A2UI prompt/catalog utilities, and the CLI
+A2UI rendering, OpenUI rendering, A2UI prompt/catalog utilities, Lynx XML utilities, and the CLI
 from one package while keeping implementation directories private to this
 monorepo.
 
@@ -45,7 +45,13 @@ import { createMessageStore } from '@lynx-js/genui/a2ui/store';
 import { createOpenUiLibrary } from '@lynx-js/genui/openui';
 import { buildA2UISystemPrompt } from '@lynx-js/genui/a2ui-prompt';
 import { extractCatalogComponents } from '@lynx-js/genui/a2ui-catalog-extractor';
+import { normalizeLynxXmlArtifact } from '@lynx-js/genui/lynx-xml';
 ```
+
+`@lynx-js/genui/lynx-xml` provides system prompts,
+deterministic artifact assembly, and `normalizeLynxXmlArtifact` for document
+normalization and validation. It is headless and does not require an agent or
+renderer.
 
 Catalog manifests are exported through a single public catalog entry:
 

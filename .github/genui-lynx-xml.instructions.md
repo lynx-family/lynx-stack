@@ -1,10 +1,20 @@
 ---
-applyTo: "packages/genui/lynx-xml/**,packages/genui/server/agent/lynx-xml/**,packages/genui/server/service/lynx-xml/**"
+applyTo: "packages/genui/lynx-xml/**,packages/genui/server/{agent,app,service}/lynx-xml/**,packages/genui/package.json"
 ---
 
-Keep provider-neutral prompts and deterministic fragment compilation in
+Keep provider-neutral prompts, artifact extraction, document validation, and deterministic fragment compilation in
 `packages/genui/lynx-xml`; keep model providers, Agent wiring, streaming, and
 request options in GenUI Server.
+
+Expose shared Lynx XML utilities through `@lynx-js/genui/lynx-xml`. Keep document
+extraction and normalization in `lynx-xml/src/output.ts`, expose only
+`normalizeLynxXmlArtifact` for document validation, and keep extraction internal
+to normalization and assembly. Server passes original model responses to
+`assembleLynxXmlArtifact`; routes and Bench adapters import normalization from
+the protocol package without old-path forwarding modules. Document-level validation does not establish JS,
+CSS, or runtime correctness. The public GenUI package must declare dependencies
+left external by the Lynx XML library, including `eslint-scope`, so this subpath
+works in production installs without workspace devDependencies.
 
 Keep `enableScriptReuse` opt-in at the API level and independent of Template and
 StylePreset. Like StylePreset, new Create records and Bench groups enable it by

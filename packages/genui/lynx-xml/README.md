@@ -4,8 +4,34 @@
 zero-build `.lynxml` artifacts with Vanilla Lynx and Element PAPI. It also
 compiles XML fragments into deterministic Element PAPI JavaScript.
 
-The package is headless. Consumers provide model calls, streaming, artifact
-extraction, and rendering.
+The package is headless. Consumers provide model calls, streaming, and rendering.
+Document normalization and validation are available through
+`@lynx-js/genui/lynx-xml`.
+
+## Normalize and validate a document
+
+```ts
+import { normalizeLynxXmlArtifact } from '@lynx-js/genui/lynx-xml';
+
+// Normalization returns the extracted document or throws on an invalid contract.
+const source = normalizeLynxXmlArtifact(modelOutput);
+```
+
+Normalization extracts the document from prose or Markdown fences and adds a
+missing `<!doctype lynx>` when a `<lynx>` root is present. It throws when no
+document is found or the document-level contract is invalid. Normalization
+requires `<lynx engine-version="...">`, a closing `</lynx>`, exactly one closed
+`<script thread="main">`, and no CDATA sections. Compile intermediate Template
+or ScriptReuse documents before normalizing the final artifact.
+
+`assembleLynxXmlArtifact` extracts intermediate documents internally, so callers
+can pass the original model response directly. Extraction is an internal utility
+and is not exported from the package entry point.
+
+These checks preserve the existing GenUI agent contract. They do not parse
+JavaScript or CSS, validate Element PAPI semantics, or establish rendering
+correctness. Assembly performs additional static checks for its enabled modes;
+the Lynx runtime remains responsible for execution and rendering.
 
 ## Generation modes
 
