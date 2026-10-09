@@ -20,9 +20,8 @@ function countOccurrences(source: string, value: string): number {
 }
 
 /**
- * Extract the raw Lynx XML document from a model response. This tolerates a
- * short prose preamble or Markdown fence while keeping the generated artifact
- * itself canonical for the runtime.
+ * Extract complete or partial source for internal normalization and assembly.
+ * @internal
  */
 export function extractLynxXmlArtifact(value: string): string {
   const doctypeStart = value.indexOf(LYNX_XML_DOCTYPE);
@@ -41,9 +40,19 @@ export function extractLynxXmlArtifact(value: string): string {
 }
 
 /**
- * Normalize and check the document-level contract before a generated artifact
- * is sent as the final SSE result. The Lynx runtime remains responsible for
- * parsing JavaScript and CSS inside the source sections.
+ * Extract, normalize, and validate the document-level contract of a Lynx XML artifact.
+ *
+ * Requires a closing Lynx root with an engine version, exactly one closed
+ * main-thread script, and no CDATA sections. Does not execute code or validate
+ * JavaScript, CSS, Element PAPI semantics, or rendering. Compile intermediate
+ * Template or ScriptReuse documents before validating the final artifact.
+ *
+ * @throws Error when the document-level contract is invalid.
+ * @example
+ * ```ts
+ * const source = normalizeLynxXmlArtifact(modelResponse);
+ * // Pass the normalized source to the renderer.
+ * ```
  */
 export function normalizeLynxXmlArtifact(value: string): string {
   const source = extractLynxXmlArtifact(value);

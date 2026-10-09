@@ -243,6 +243,7 @@
     "@a2ui/web_core": "0.10.6",
     "@lynx-js/react-signals": "workspace:*",
     "@openuidev/lang-core": "^0.3.0",
+    "eslint-scope": "^8.4.0",
     "typedoc": "^0.28.20",
     "zod": "^3.25.76 || ^4.0.0"
   },

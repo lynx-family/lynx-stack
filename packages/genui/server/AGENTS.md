@@ -13,6 +13,12 @@ directory; keep protocol services and Bench adapters in `service/<protocol>`.
 Reuse protocol package exports for extracted prompts, catalogs, parsers,
 validators, and build utilities.
 
+`@lynx-js/genui-lynx-xml` owns Lynx XML artifact extraction and document-level
+validation as well as prompts and deterministic assembly. Use its normalization
+API from routes, services, and Bench adapters and let assembly extract the
+original model response internally; keep their tests in
+`packages/genui/lynx-xml` instead of duplicating validation in the agent.
+
 `@lynx-js/genui-html` owns the HTML system prompt, source extraction, and
 document-envelope checks. Import it from the HTML agent factory, stream route,
 and Bench adapter. Keep model configuration, capabilities, design guidance,

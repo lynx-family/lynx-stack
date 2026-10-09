@@ -1179,6 +1179,9 @@ importers:
       '@openuidev/lang-core':
         specifier: ^0.3.0
         version: 0.3.0(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.6.5))(zod@4.6.5)
+      eslint-scope:
+        specifier: ^8.4.0
+        version: 8.4.0
       typedoc:
         specifier: ^0.28.20
         version: 0.28.20(typescript@6.0.3)

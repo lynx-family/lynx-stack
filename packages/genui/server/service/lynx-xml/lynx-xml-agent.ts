@@ -2,7 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { assembleLynxXmlArtifact } from '@lynx-js/genui-lynx-xml';
+import {
+  assembleLynxXmlArtifact,
+  normalizeLynxXmlArtifact,
+} from '@lynx-js/genui-lynx-xml';
 
 import { initializeArkImageGenerationRunScope } from '../../agent/common/ark-image-generation-tool.js';
 import { createSearchRunScope } from '../../agent/common/doubao-search-tool.js';
@@ -13,10 +16,6 @@ import type {
   LynxXmlAgent,
   LynxXmlFragmentOptions,
 } from '../../agent/lynx-xml/lynx-xml-agent.js';
-import {
-  extractLynxXmlArtifact,
-  normalizeLynxXmlArtifact,
-} from '../../agent/lynx-xml/lynx-xml-output.js';
 import { pickAgentCapabilityConfig } from '../common/agent-capabilities.js';
 import { createAgentStepLogger } from '../common/agent-step-logger.js';
 import {
@@ -90,7 +89,7 @@ function compileGeneration(
     const compiled =
       opts.enableHtmlFragment === true || opts.enableScriptReuse === true
         || opts.stylePreset
-        ? assembleLynxXmlArtifact(extractLynxXmlArtifact(result.text), {
+        ? assembleLynxXmlArtifact(result.text, {
           enableHtmlFragment: opts.enableHtmlFragment === true,
           enableScriptReuse: opts.enableScriptReuse === true,
           stylePreset: opts.stylePreset ?? false,
