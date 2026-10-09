@@ -21,6 +21,7 @@ interface ScreenshotRequest {
   fields: Record<string, string>;
   timeoutMs: number;
   source?: string;
+  templateFiles?: Record<string, string>;
 }
 
 function screenshotForm(
@@ -47,25 +48,64 @@ function screenshotForm(
     form.set(name, value);
   }
   if (upload) {
-    if (
-      request.fields.entry !== 'index.lynxml'
-      || typeof request.source !== 'string'
-      || request.source.trim().length === 0
-    ) {
-      throw new Error(
-        'XML screenshot task requires source and entry=index.lynxml.',
-      );
+    const files: Record<string, Uint8Array> = Object.create(null) as Record<
+      string,
+      Uint8Array
+    >;
+    if (request.templateFiles === undefined) {
+      if (
+        request.fields.entry !== 'index.lynxml'
+        || typeof request.source !== 'string'
+        || request.source.trim().length === 0
+      ) {
+        throw new Error(
+          'XML screenshot task requires source and entry=index.lynxml.',
+        );
+      }
+      if (request.source.length > MAX_CAPTURE_FORM_BYTES) {
+        throw new Error('Screenshot request exceeds the 10 MiB form limit.');
+      }
+      const source = strToU8(request.source);
+      if (bytes + source.byteLength > MAX_CAPTURE_FORM_BYTES) {
+        throw new Error('Screenshot request exceeds the 10 MiB form limit.');
+      }
+      files['index.lynxml'] = source;
+    } else {
+      if (
+        request.fields.entry !== 'main.lynx.js'
+        || request.source !== undefined
+        || !request.templateFiles || typeof request.templateFiles !== 'object'
+        || Array.isArray(request.templateFiles)
+        || !Object.keys(request.templateFiles).includes('main.lynx.js')
+        || Object.keys(request.templateFiles).length > 100
+      ) {
+        throw new Error('Invalid ReactLynx screenshot files or entry.');
+      }
+      let decodedBytes = bytes;
+      for (const [name, encoded] of Object.entries(request.templateFiles)) {
+        if (
+          !/^[\w.-]+(?:\/[\w.-]+)*$/u.test(name)
+          || name.split('/').some(part => part === '.' || part === '..')
+          || typeof encoded !== 'string'
+          || encoded.length > Math.ceil(MAX_CAPTURE_FORM_BYTES / 3) * 4
+          || encoded.length % 4 !== 0
+          || !/^[A-Za-z0-9+/]*={0,2}$/u.test(encoded)
+        ) {
+          throw new Error('Invalid ReactLynx screenshot asset.');
+        }
+        const decoded = atob(encoded);
+        decodedBytes += decoded.length;
+        if (decodedBytes > MAX_CAPTURE_FORM_BYTES) {
+          throw new Error('Screenshot request exceeds the 10 MiB form limit.');
+        }
+        files[name] = Uint8Array.from(decoded, char => char.charCodeAt(0));
+      }
+      if (files['main.lynx.js']?.length === 0) {
+        throw new Error('ReactLynx screenshot entry is empty.');
+      }
     }
-    if (request.source.length > MAX_CAPTURE_FORM_BYTES) {
-      throw new Error('Screenshot request exceeds the 10 MiB form limit.');
-    }
-    const source = strToU8(request.source);
-    if (bytes + source.byteLength > MAX_CAPTURE_FORM_BYTES) {
-      throw new Error('Screenshot request exceeds the 10 MiB form limit.');
-    }
-    // Store XML without compression to stay below UI Judge's archive ratio
-    // limit even for very repetitive generated source.
-    const archive = zipSync({ 'index.lynxml': source }, {
+    // Store files without compression to respect UI Judge's archive ratio limit.
+    const archive = zipSync(files, {
       level: 0,
       mtime: new Date(1980, 0, 1),
     });

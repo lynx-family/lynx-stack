@@ -8,7 +8,8 @@ export type BenchProtocol =
   | 'openui'
   | 'lynx-xml'
   | 'html'
-  | 'reactweb';
+  | 'reactweb'
+  | 'reactlynx';
 export type BenchProfile = 'matched-core' | 'native';
 export type BenchVariable =
   | 'catalog'
@@ -75,10 +76,16 @@ export const BENCH_PROTOCOL_OPTIONS = [
     label: 'ReactWeb',
     description: 'Compiled React DOM page',
   },
+  {
+    value: 'reactlynx',
+    label: 'ReactLynx',
+    description: 'Compiled native ReactLynx page',
+  },
 ] as const;
 
 export function isDocumentBenchProtocol(protocol: BenchProtocol): boolean {
-  return protocol === 'lynx-xml' || usesBrowserBenchCapture(protocol);
+  return protocol === 'lynx-xml' || protocol === 'reactlynx'
+    || usesBrowserBenchCapture(protocol);
 }
 
 export function usesBrowserBenchCapture(protocol: BenchProtocol): boolean {

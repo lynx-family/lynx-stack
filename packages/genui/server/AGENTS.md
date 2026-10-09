@@ -526,6 +526,14 @@ compiler errors within the attempt budget. It retains source JSON in reports
 and sends compiled HTML through `browser/html`, without TOS publication.
 ReactWeb-only and mixed HTML/ReactWeb jobs require no screenshot service.
 
+ReactLynx Bench uses `native` without a catalog and follows the same bounded
+source generation, compilation, and repair flow with `buildReactLynx`.
+Reports retain source JSON and build timing. Compiled files travel as base64
+in transient screenshot tasks; the browser packages them into an uncompressed
+ZIP with their relative paths intact and captures `main.lynx.js` through
+`/screenshot/zip/upload`. Reuse the A2UI screenshot service configuration, BMP
+relay, PNG conversion, and scoring. Bench requires no TOS publication.
+
 PNG conversion preserves RGBA pixels and happens before model evaluation. Model
 inputs retain the full capture; Bench report storage separately applies its
 2 MiB per-image and 8 MiB per-job limits. A scoring failure makes the whole Judge

@@ -369,14 +369,15 @@ export function normalizeBenchJobRequest(
 
   if (
     enabledGroups.some((group) =>
-      (group.protocol === 'html' || group.protocol === 'reactweb')
+      (group.protocol === 'html' || group.protocol === 'reactweb'
+        || group.protocol === 'reactlynx')
       && group.profile !== 'native'
     )
   ) {
     return {
       ok: false,
       status: 400,
-      error: 'html and reactweb groups require the "native" profile',
+      error: 'html, reactweb and reactlynx groups require the "native" profile',
     };
   }
 
@@ -400,6 +401,7 @@ export function normalizeBenchJobRequest(
         || group.protocol === 'lynx-xml'
         || group.protocol === 'html'
         || group.protocol === 'reactweb'
+        || group.protocol === 'reactlynx'
       ))
     && plannedGenerationAttempts > MAX_PLANNED_GENERATION_ATTEMPTS
   ) {

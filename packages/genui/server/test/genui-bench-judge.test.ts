@@ -584,3 +584,59 @@ test.each(['html', 'reactweb'] as const)(
     ).toEqual({ enabled: true, session: { screenshotPath: 'browser/html' } });
   },
 );
+
+test('ReactLynx captures compiled files through the browser ZIP relay and scores PNG', async () => {
+  const capability = await resolveGenuiBenchUiJudge('reactlynx', {
+    env: { UI_JUDGE_ZIP_URL: 'invalid', UI_JUDGE_OPENUI_ZIP_URL: 'invalid' },
+  });
+  expect(capability).toEqual({
+    enabled: true,
+    session: { screenshotPath: 'screenshot/zip/upload' },
+  });
+  const files = { 'main.lynx.js': 'AP8BgA==', 'chunks/shared.js': 'AQ==' };
+  const result = await runGenuiBenchUiJudge({
+    artifact: { protocol: 'reactlynx', rawText: '{"files":{}}', files },
+    model: 'lynx-model',
+    scenario: { prompt: 'Build a greeting' },
+    session: capability.session!,
+  }, (input) => {
+    expect(input).toMatchObject({
+      path: 'screenshot/zip/upload',
+      fields: { entry: 'main.lynx.js', width: '390', height: '844' },
+      templateFiles: files,
+    });
+    expect(input.source).toBeUndefined();
+    expect(Object.keys(input.fields)).toEqual(['entry', 'width', 'height']);
+    return Promise.resolve(evaluationResponse(geqiResponse(4)));
+  });
+  expect(result).toMatchObject({ status: 'complete', score: 4, geqiScore: 80 });
+  expect(evaluateScreenshot).toHaveBeenLastCalledWith(expect.objectContaining({
+    model: 'lynx-model',
+    screenshotDataUrl: expect.stringMatching(
+      /^data:image\/png;base64,/u,
+    ) as unknown,
+  }));
+});
+
+test.each([
+  'https://example.com/a.png',
+  'file:///tmp/a.png',
+  'openUrl("target")',
+])(
+  'rejects ReactLynx source containing untrusted resources before native capture: %s',
+  async (rawText) => {
+    const capture = rstest.fn();
+    const result = await runGenuiBenchUiJudge({
+      artifact: {
+        protocol: 'reactlynx',
+        rawText,
+        files: { 'main.lynx.js': 'AQ==' },
+      },
+      scenario: { prompt: 'Build a greeting' },
+      session: { screenshotPath: 'screenshot/zip/upload' },
+    }, capture);
+    expect(result.status).toBe('failed');
+    expect(result.errors[0]).toContain('ui-judge rejected ReactLynx');
+    expect(capture).not.toHaveBeenCalled();
+  },
+);

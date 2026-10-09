@@ -128,9 +128,10 @@ export function App() {
 
   const protocol = route.protocol;
   let tabs = GENUI_TABS;
-  if (protocol.name === 'reactlynx') {
-    tabs = [{ id: 'create', label: 'Create' }];
-  } else if (protocol.name === 'html' || protocol.name === 'reactweb') {
+  if (
+    protocol.name === 'reactlynx' || protocol.name === 'html'
+    || protocol.name === 'reactweb'
+  ) {
     tabs = HTML_TABS;
   } else if (protocol.name === 'mcp-apps') {
     tabs = CREATE_EXAMPLES_TABS;

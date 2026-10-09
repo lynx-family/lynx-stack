@@ -50,3 +50,16 @@ Use the public TOS `webUrl` as the `bundleUrl` without rewriting the Playground
 hostname. Do not route generated bundles through A2UI/OpenUI messages, init
 data, or action bridges. Relay the Lynx load event as `A2UI_RENDER_READY` with
 the render URL and navigation token for shared preview navigation.
+
+ReactLynx Bench uses the native profile with no catalog. Reuse the two-file
+source contract and compiler in bounded generation/repair attempts, retaining
+source JSON, model usage and build timing in reports. Unlike Create, Bench
+passes compiled assets directly to the browser screenshot relay without TOS
+publication. Keep every asset's relative path and base64-encode binary bytes
+in the transient task payload, never in persisted reports or SSE events.
+The browser validates paths and the aggregate size, packages the files as an
+uncompressed ZIP, and calls `/screenshot/zip/upload` with `entry=main.lynx.js`.
+Reuse the browser-owned sidecar URL and settle delay, BMP upload, PNG conversion,
+and selected-model scoring. Keep ReactLynx out of HTML Element Capture and
+A2UI/OpenUI globalProps. Preserve the native source resource checks before
+capture, and retain protocol identity in shared plans and restored reports.

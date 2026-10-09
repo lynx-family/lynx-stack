@@ -224,14 +224,18 @@ describe('A2UI Bench UI Judge integration', () => {
     },
   );
 
-  test.each(['html', 'reactweb'] as const)(
-    'routes %s HTML to Judge and preserves protocol results and summaries',
+  test.each(['html', 'reactweb', 'reactlynx'] as const)(
+    'routes %s artifacts to Judge and preserves protocol results and summaries',
     async (protocol) => {
       const rawText =
         '<!doctype html><html><head></head><body>Hello</body></html>';
       rstest.mocked(resolveGenuiBenchUiJudge).mockResolvedValueOnce({
         enabled: true,
-        session: { screenshotPath: 'browser/html' },
+        session: {
+          screenshotPath: protocol === 'reactlynx'
+            ? 'screenshot/zip/upload'
+            : 'browser/html',
+        },
       });
       rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
         errors: [],
@@ -274,12 +278,18 @@ describe('A2UI Bench UI Judge integration', () => {
                 finalValid: true,
                 finalText: rawText,
                 finalErrors: [],
-                judgePayload: {
-                  kind: protocol === 'reactweb'
-                    ? 'reactweb-html'
-                    : 'html-source',
-                  rawText,
-                },
+                judgePayload: protocol === 'reactlynx'
+                  ? {
+                    kind: 'reactlynx-bundle',
+                    rawText,
+                    files: { 'main.lynx.js': 'AQ==' },
+                  }
+                  : {
+                    kind: protocol === 'reactweb'
+                      ? 'reactweb-html'
+                      : 'html-source',
+                    rawText,
+                  },
               });
             },
           },
@@ -288,7 +298,13 @@ describe('A2UI Bench UI Judge integration', () => {
       expect(runGenuiBenchUiJudge).toHaveBeenLastCalledWith(
         expect.objectContaining({
           model: 'html-model',
-          artifact: { protocol, rawText },
+          artifact: {
+            protocol,
+            rawText,
+            ...(protocol === 'reactlynx'
+              ? { files: { 'main.lynx.js': 'AQ==' } }
+              : {}),
+          },
         }),
         expect.any(Function),
       );
