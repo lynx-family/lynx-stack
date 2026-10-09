@@ -105,6 +105,12 @@ runner checks `$LYNX_SDK_DIR/resources/lynx_core.js`; its build script downloads
 a missing script into that SDK location. Use `CUSTOM_LYNX_CORE_JS_URL` with
 `CUSTOM_LYNX_CORE_JS_SHA256` for a different build-time download.
 
+On Linux, the desktop runtime requests `lynx_core_dev.js` while DevTools is
+enabled. If that executable-side resource is absent, the runner installs a
+relative symlink to `lynx_core.js`. An existing dev resource is preserved.
+UI Judge includes this fallback in its Linux server bundle so a packaged
+server can start from a read-only installation directory.
+
 ## Tests
 
 Build the shared fixture before running the runtime-backed React test:

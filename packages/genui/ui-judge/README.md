@@ -72,6 +72,7 @@ to `dist/linux-amd64`:
 dist/linux-amd64/
 ├── ui-judge-server
 ├── lynx_core.js
+├── lynx_core_dev.js -> lynx_core.js
 ├── start.sh
 └── lib/
     └── libLynx_clay.so
