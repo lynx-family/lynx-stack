@@ -521,12 +521,16 @@ describe('snapshotPatchApply for nodesRef ops', () => {
     globalEnvManager.switchToMainThread();
     lynx.getJSContext().dispatchEvent.mockClear();
     expect(() =>
-      snapshotPatchApply([
-        SnapshotOperation.nodesRefInsertBefore,
-        '[react-ref-999-0]',
-        99999,
-        undefined,
-      ])
+      snapshotPatchApply(
+        [
+          SnapshotOperation.nodesRefInsertBefore,
+          '[react-ref-999-0]',
+          99999,
+          undefined,
+        ],
+        42,
+        false,
+      )
     ).not.toThrow();
     expect(lynx.getJSContext().dispatchEvent.mock.calls).toMatchInlineSnapshot(`
       [
@@ -534,6 +538,11 @@ describe('snapshotPatchApply for nodesRef ops', () => {
           {
             "data": {
               "id": 99999,
+              "options": {
+                "commitId": 42,
+                "isHydration": false,
+                "operation": "nodesRefInsertBefore",
+              },
             },
             "type": "Lynx.Error.CtxNotFound",
           },
@@ -546,11 +555,15 @@ describe('snapshotPatchApply for nodesRef ops', () => {
     globalEnvManager.switchToMainThread();
     lynx.getJSContext().dispatchEvent.mockClear();
     expect(() =>
-      snapshotPatchApply([
-        SnapshotOperation.nodesRefRemoveChild,
-        '[react-ref-999-0]',
-        99999,
-      ])
+      snapshotPatchApply(
+        [
+          SnapshotOperation.nodesRefRemoveChild,
+          '[react-ref-999-0]',
+          99999,
+        ],
+        43,
+        false,
+      )
     ).not.toThrow();
     expect(lynx.getJSContext().dispatchEvent.mock.calls).toMatchInlineSnapshot(`
       [
@@ -558,6 +571,11 @@ describe('snapshotPatchApply for nodesRef ops', () => {
           {
             "data": {
               "id": 99999,
+              "options": {
+                "commitId": 43,
+                "isHydration": false,
+                "operation": "nodesRefRemoveChild",
+              },
             },
             "type": "Lynx.Error.CtxNotFound",
           },
@@ -576,20 +594,28 @@ describe('snapshotPatchApply for nodesRef ops', () => {
   it('throws when host selector cannot be resolved on insert', () => {
     globalEnvManager.switchToMainThread();
     const childId = -9999;
-    snapshotPatchApply([
-      SnapshotOperation.CreateElement,
-      '__snapshot_a94a8_test_1',
-      childId,
-    ]);
+    snapshotPatchApply(
+      [
+        SnapshotOperation.CreateElement,
+        '__snapshot_a94a8_test_1',
+        childId,
+      ],
+      42,
+      false,
+    );
     expect(snapshotInstanceManager.values.has(childId)).toBe(true);
 
     expect(() =>
-      snapshotPatchApply([
-        SnapshotOperation.nodesRefInsertBefore,
-        '[no-such-attr]',
-        childId,
-        undefined,
-      ])
+      snapshotPatchApply(
+        [
+          SnapshotOperation.nodesRefInsertBefore,
+          '[no-such-attr]',
+          childId,
+          undefined,
+        ],
+        42,
+        false,
+      )
     ).toThrowErrorMatchingInlineSnapshot(
       `[Error: [createPortal] cannot resolve host for selector "[no-such-attr]". The host element does not exist on the main thread — check that the \`NodesRef\` passed to \`createPortal\` points at a currently mounted element.]`,
     );
@@ -600,21 +626,29 @@ describe('snapshotPatchApply for nodesRef ops', () => {
     // Materialize a child with an `__element_root` (the realistic state at
     // remove time — an earlier `nodesRefInsertBefore` op would have set it).
     const childId = -9998;
-    snapshotPatchApply([
-      SnapshotOperation.CreateElement,
-      '__snapshot_a94a8_test_1',
-      childId,
-    ]);
+    snapshotPatchApply(
+      [
+        SnapshotOperation.CreateElement,
+        '__snapshot_a94a8_test_1',
+        childId,
+      ],
+      42,
+      false,
+    );
     snapshotInstanceManager.values.get(childId).ensureElements();
 
     // Remove must not throw even when the host is gone — see the comment
     // on `applyNodesRefRemoveChild`. The portal child SI is still cleaned up.
     expect(() =>
-      snapshotPatchApply([
-        SnapshotOperation.nodesRefRemoveChild,
-        '[no-such-attr]',
-        childId,
-      ])
+      snapshotPatchApply(
+        [
+          SnapshotOperation.nodesRefRemoveChild,
+          '[no-such-attr]',
+          childId,
+        ],
+        42,
+        false,
+      )
     ).not.toThrow();
     expect(snapshotInstanceManager.values.has(childId)).toBe(false);
   });
@@ -637,11 +671,15 @@ describe('snapshotPatchApply for nodesRef ops', () => {
     expect(listElement.componentAtIndex).not.toBeNull();
 
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply([
-      SnapshotOperation.nodesRefRemoveChild,
-      '[no-such-attr]',
-      childId,
-    ]);
+    snapshotPatchApply(
+      [
+        SnapshotOperation.nodesRefRemoveChild,
+        '[no-such-attr]',
+        childId,
+      ],
+      42,
+      false,
+    );
     // After `snapshotDestroyList`, the cleanup trio replaces the real
     // callbacks: `componentAtIndex` returns `-1`, the others are no-ops.
     expect(listElement.componentAtIndex()).toBe(-1);

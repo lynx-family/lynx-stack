@@ -24,7 +24,7 @@ import { SnapshotInstance, snapshotCreatorMap, snapshotInstanceManager } from '.
  * This is the counterpart to the patch generation in the background thread.
  * Each operation in the patch is processed sequentially to update the DOM.
  */
-export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
+export function snapshotPatchApply(snapshotPatch: SnapshotPatch, commitId: number, isHydration: boolean): void {
   const length = snapshotPatch.length;
   for (let i = 0; i < length; ++i) {
     switch (snapshotPatch[i]) {
@@ -43,7 +43,14 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         const child = snapshotInstanceManager.values.get(childId);
         const existingNode = snapshotInstanceManager.values.get(beforeId!);
         if (!parent || !child) {
-          sendCtxNotFoundEventToBackground(parent ? childId : parentId);
+          sendCtxNotFoundEventToBackground(parent ? childId : parentId, {
+            operation: 'InsertBefore',
+            commitId,
+            isHydration,
+            parent: parentId,
+            child: childId,
+            missingNode: parent ? 2 : (child ? 1 : 3),
+          });
         } else {
           child.__slotIndex = __slotIndex;
           parent.insertBefore(child, existingNode);
@@ -56,7 +63,14 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         const parent = snapshotInstanceManager.values.get(parentId);
         const child = snapshotInstanceManager.values.get(childId);
         if (!parent || !child) {
-          sendCtxNotFoundEventToBackground(parent ? childId : parentId);
+          sendCtxNotFoundEventToBackground(parent ? childId : parentId, {
+            operation: 'RemoveChild',
+            commitId,
+            isHydration,
+            parent: parentId,
+            child: childId,
+            missingNode: parent ? 2 : (child ? 1 : 3),
+          });
         } else {
           parent.removeChild(child);
         }
@@ -70,7 +84,11 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         if (child) {
           applyNodesRefInsertBefore(identifier, child, beforeId);
         } else {
-          sendCtxNotFoundEventToBackground(childId);
+          sendCtxNotFoundEventToBackground(childId, {
+            operation: 'nodesRefInsertBefore',
+            commitId,
+            isHydration,
+          });
         }
         break;
       }
@@ -81,7 +99,11 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         if (child) {
           applyNodesRefRemoveChild(identifier, child);
         } else {
-          sendCtxNotFoundEventToBackground(childId);
+          sendCtxNotFoundEventToBackground(childId, {
+            operation: 'nodesRefRemoveChild',
+            commitId,
+            isHydration,
+          });
         }
         break;
       }
@@ -93,7 +115,7 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         if (si) {
           si.setAttribute(dynamicPartIndex, value);
         } else {
-          sendCtxNotFoundEventToBackground(id);
+          sendCtxNotFoundEventToBackground(id, { operation: 'SetAttribute', commitId, isHydration });
         }
         break;
       }
@@ -104,7 +126,7 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch): void {
         if (si) {
           si.setAttribute('values', values);
         } else {
-          sendCtxNotFoundEventToBackground(id);
+          sendCtxNotFoundEventToBackground(id, { operation: 'SetAttributes', commitId, isHydration });
         }
         break;
       }
