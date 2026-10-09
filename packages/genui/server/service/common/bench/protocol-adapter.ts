@@ -13,7 +13,14 @@ import type {
 
 export type { ProtocolBenchProviderConfig } from './protocol-types.js';
 
+export interface BenchBuildAsset {
+  name: string;
+  /** Base64 encoded compiler output, preserving relative asset paths. */
+  data: string;
+}
+
 export type ProtocolBenchJudgePayload =
+  | { kind: 'reactlynx-bundle'; rawText: string; assets: BenchBuildAsset[] }
   | {
     kind: 'a2ui-messages';
     messages: unknown[];

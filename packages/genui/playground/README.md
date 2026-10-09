@@ -198,9 +198,9 @@ exclude UI Judge. Comparison-group details use the same planned-run average as T
 Missing provider fields and unavailable historical breakdowns display `Not recorded`;
 cache and reasoning tokens are already included in input and output respectively.
 
-Bench supports A2UI, OpenUI, Lynx XML, HTML, and ReactWeb comparison groups. Lynx XML uses
+Bench supports A2UI, OpenUI, Lynx XML, HTML, ReactWeb, and ReactLynx comparison groups. Lynx XML uses
 the native profile without a component catalog, reuses the XML generation
-service, and submits the resulting source to UI Judge's `/screenshot/lynxml`
+service, and submits the resulting source to UI Judge's `/screenshot/zip/upload`
 endpoint for capture. Template and XML screenshot requests use multipart with
 shared viewport, timing, and initial-data fields. Search and image generation are disabled in all Bench
 groups. The same GenUI scoring and report pipeline evaluates each protocol;
@@ -233,8 +233,15 @@ sandboxed iframe for Judge screenshots. Start run asks you to share the current
 tab; keep it open until completion. These groups need no screenshot service, and
 ReactWeb Bench does not publish builds to TOS.
 
+ReactLynx uses the `native` profile without a catalog. Its adapter compiles
+`App.tsx` and `App.css` with the existing ReactLynx compiler and repairs source
+or compiler failures within the attempt budget. The browser packs emitted assets
+into a ZIP, preserving relative paths, and uploads it to the screenshot service
+with `entry=main.lynx.js`. Reports retain source and generation usage; compiled
+assets are transient capture inputs. ReactLynx Bench does not require TOS.
+
 Enter `UI_JUDGE_SERVER_URL` in Bench's inline run configuration when enabling UI
-Judge for A2UI, OpenUI, or Lynx XML groups. A credential-free HTTP(S) URL is saved only in browser local storage;
+Judge for A2UI, OpenUI, Lynx XML, or ReactLynx groups. A credential-free HTTP(S) URL is saved only in browser local storage;
 it is never sent to GenUI Server and has no server environment fallback. The
 Playground checks `/health`, requests each screenshot directly with multipart,
 and uploads the resulting BMP to GenUI Server for PNG conversion and model

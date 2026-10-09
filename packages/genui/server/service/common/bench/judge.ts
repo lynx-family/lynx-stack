@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { BenchJudgeScheduling } from './concurrency.js';
+import type { BenchBuildAsset } from './protocol-adapter.js';
 import type { BenchProtocol } from './protocol-types.js';
 import type { BenchScenarioRequest } from './types.js';
 import type { A2UIMessage } from '../../../agent/a2ui/a2ui-validator.js';
@@ -43,6 +44,7 @@ export type GenuiBenchProtocol = BenchProtocol;
 
 export type GenuiBenchJudgeArtifact =
   | { messages: A2UIMessage[]; protocol: 'a2ui' }
+  | { protocol: 'reactlynx'; rawText: string; assets: BenchBuildAsset[] }
   | { protocol: 'openui' | 'lynx-xml' | 'html' | 'reactweb'; rawText: string };
 
 export interface RunGenuiBenchUiJudgeOptions {
@@ -166,6 +168,12 @@ export async function resolveGenuiBenchUiJudge(
   if (protocol === 'html' || protocol === 'reactweb') {
     return { enabled: true, session: { screenshotPath: 'browser/html' } };
   }
+  if (protocol === 'reactlynx') {
+    return {
+      enabled: true,
+      session: { screenshotPath: 'screenshot/zip/upload' },
+    };
+  }
   const env = options.env ?? process.env;
   const zipUrl = protocol === 'a2ui'
     ? env.UI_JUDGE_A2UI_ZIP_URL?.trim()
@@ -222,7 +230,11 @@ export async function runGenuiBenchUiJudge(
       return {
         errors: [
           `ui-judge rejected ${
-            options.artifact.protocol === 'lynx-xml' ? 'Lynx XML' : 'OpenUI'
+            ({
+              'lynx-xml': 'Lynx XML',
+              openui: 'OpenUI',
+              reactlynx: 'ReactLynx',
+            } as const)[options.artifact.protocol]
           } output containing ${rejectionReason}.`,
         ],
         score: 0,
@@ -238,6 +250,9 @@ export async function runGenuiBenchUiJudge(
       runBenchUiJudgeRequest(
         {
           model: options.model,
+          ...(options.artifact.protocol === 'reactlynx'
+            ? { reactLynxAssets: options.artifact.assets }
+            : {}),
           ...(options.artifact.protocol === 'lynx-xml'
             ? { lynxXmlSource: rawText }
             : {}),

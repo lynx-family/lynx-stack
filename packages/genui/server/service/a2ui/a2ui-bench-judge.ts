@@ -31,6 +31,7 @@ export interface BenchScreenshotRequest {
   fields: Record<string, string>;
   timeoutMs: number;
   source?: string;
+  assets?: import('../common/bench/protocol-adapter.js').BenchBuildAsset[];
 }
 
 export interface BenchScreenshotTask {
@@ -130,6 +131,8 @@ export interface RunBenchUiJudgeRequestOptions {
   viewport?: { width?: number; height?: number };
   lynxXmlSource?: string;
   htmlSource?: string;
+  reactLynxAssets?:
+    import('../common/bench/protocol-adapter.js').BenchBuildAsset[];
   scenario: BenchUiJudgeScenario;
   includeScreenshot?: boolean;
   session: BenchUiJudgeSession;
@@ -398,7 +401,11 @@ export async function runBenchUiJudgeRequest(
     return await (pool ? pool.run(execute, options.signal) : execute());
   }
   const fields: Record<string, string> = {};
-  if (options.htmlSource === undefined && options.lynxXmlSource === undefined) {
+  if (options.reactLynxAssets !== undefined) {
+    fields.entry = 'main.lynx.js';
+  } else if (
+    options.htmlSource === undefined && options.lynxXmlSource === undefined
+  ) {
     fields.entry = 'template.js';
     if (options.session.zipUrl !== undefined) {
       fields.url = options.session.zipUrl;
@@ -481,6 +488,7 @@ export async function runBenchUiJudgeRequest(
         ...((options.htmlSource ?? options.lynxXmlSource) === undefined
           ? {}
           : { source: options.htmlSource ?? options.lynxXmlSource }),
+        ...(options.reactLynxAssets ? { assets: options.reactLynxAssets } : {}),
         timeoutMs: requestTimeoutMs,
       },
       options.signal

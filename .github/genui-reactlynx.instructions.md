@@ -28,7 +28,7 @@ completes, and retain model usage on compilation failures. Report the active
 server build interval as `metrics.artifactBuildMs`, excluding queue and
 publication time; report publication separately as `artifactUploadMs`.
 
-Require the existing TOS configuration and publish every build output under
+For Create, require the existing TOS configuration and publish every build output under
 `reactlynx/preview` before emitting `done`. Honor
 `TOS_REACTLYNX_STORAGE_PREFIX` as the optional prefix override. Missing
 configuration or any upload failure must fail the generation; do not add a
@@ -50,3 +50,11 @@ Use the public TOS `webUrl` as the `bundleUrl` without rewriting the Playground
 hostname. Do not route generated bundles through A2UI/OpenUI messages, init
 data, or action bridges. Relay the Lynx load event as `A2UI_RENDER_READY` with
 the render URL and navigation token for shared preview navigation.
+
+ReactLynx Bench uses the same source parser and compiler through a protocol
+adapter, with native profile and no catalog. Preserve source JSON in reports and
+send base64 compiler assets only through transient screenshot tasks. The browser
+packs every asset with its relative path into an uncompressed ZIP and posts it
+to UI Judge with `entry=main.lynx.js`. Validate archive paths, count, and size
+before upload. Bench does not publish to TOS or use browser HTML capture;
+require the user's screenshot service and keep judging in GenUI Server.

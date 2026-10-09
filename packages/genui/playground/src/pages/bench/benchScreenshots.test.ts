@@ -379,3 +379,79 @@ test.each([false, true])(
     if (fail) expect(upload.body).toContain('Sharing stopped');
   },
 );
+
+test('uploads all compiled ReactLynx assets with native entry and exact binary bytes', async () => {
+  const fetchImpl = rstest.fn<typeof fetch>()
+    .mockResolvedValueOnce(Response.json({
+      path: 'screenshot/zip/upload',
+      fields: { entry: 'main.lynx.js' },
+      timeoutMs: 1000,
+      assets: [{ name: 'main.lynx.js', data: 'AP8BgA==' }, {
+        name: 'chunks/helper.js',
+        data: 'aGVscGVy',
+      }],
+    }))
+    .mockResolvedValueOnce(
+      new Response('BM', { headers: { 'Content-Type': 'image/bmp' } }),
+    )
+    .mockResolvedValueOnce(Response.json({ ok: true }));
+  const onError = rstest.fn();
+  createBenchScreenshotRelay({
+    jobUrl,
+    serverUrl,
+    signal: new AbortController().signal,
+    onError,
+    fetch: fetchImpl,
+  })(captureId);
+  await expect.poll(() => fetchImpl.mock.calls.length).toBe(3);
+  const form = fetchImpl.mock.calls[1]?.[1]?.body as FormData;
+  expect(form.get('entry')).toBe('main.lynx.js');
+  const files = unzipSync(
+    new Uint8Array(await (form.get('file') as Blob).arrayBuffer()),
+  );
+  expect(files['main.lynx.js']).toEqual(new Uint8Array([0, 255, 1, 128]));
+  expect(strFromU8(files['chunks/helper.js']!)).toBe('helper');
+  expect(onError).not.toHaveBeenCalled();
+});
+
+test.each([
+  [{ name: '../main.lynx.js', data: 'AQID' }],
+  [{ name: '/main.lynx.js', data: 'AQID' }],
+  [{ name: 'main.lynx.js', data: 'AQID' }, {
+    name: 'main.lynx.js',
+    data: 'AQID',
+  }],
+  [{ name: 'main.web.js', data: 'AQID' }],
+  [{ name: 'main.lynx.js', data: '?' }],
+  [{ name: 'main.lynx.js', data: 'A'.repeat(14 * 1024 * 1024) }],
+].map(assets => ({ assets })))(
+  'rejects malformed or oversized native asset archives before contacting UI Judge: %#',
+  async ({ assets }) => {
+    const fetchImpl = rstest.fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        Response.json({
+          path: 'screenshot/zip/upload',
+          fields: { entry: 'main.lynx.js' },
+          timeoutMs: 1000,
+          assets,
+        }),
+      )
+      .mockResolvedValueOnce(Response.json({ ok: true }));
+    createBenchScreenshotRelay({
+      jobUrl,
+      serverUrl,
+      signal: new AbortController().signal,
+      onError: rstest.fn(),
+      fetch: fetchImpl,
+    })(captureId);
+    await expect.poll(() => fetchImpl.mock.calls.length).toBe(2);
+    expect(fetchImpl.mock.calls[1]?.[0]).toBe(
+      `${jobUrl}/screenshots/${captureId}`,
+    );
+    expect(fetchImpl.mock.calls[1]?.[1]?.headers).toMatchObject({
+      'Content-Type': 'application/json',
+    });
+    expect(JSON.parse(fetchImpl.mock.calls[1]?.[1]?.body as string))
+      .toHaveProperty('error');
+  },
+);

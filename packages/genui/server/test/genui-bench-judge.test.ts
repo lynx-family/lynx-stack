@@ -584,3 +584,43 @@ test.each(['html', 'reactweb'] as const)(
     ).toEqual({ enabled: true, session: { screenshotPath: 'browser/html' } });
   },
 );
+
+test('ReactLynx uploads compiled native assets and scores its screenshot without bundle configuration', async () => {
+  const capability = await resolveGenuiBenchUiJudge('reactlynx', { env: {} });
+  expect(capability).toEqual({
+    enabled: true,
+    session: { screenshotPath: 'screenshot/zip/upload' },
+  });
+  const assets = [{ name: 'main.lynx.js', data: 'AQID' }];
+  const capture = rstest.fn<
+    import('../service/a2ui/a2ui-bench-judge.js').BenchScreenshotCapture
+  >(() => Promise.resolve(evaluationResponse(geqiResponse(4))));
+  const result = await runGenuiBenchUiJudge({
+    artifact: { protocol: 'reactlynx', rawText: '{"files":{}}', assets },
+    scenario: { prompt: 'Hello' },
+    session: capability.session!,
+  }, capture);
+  expect(capture.mock.calls[0]?.[0]).toMatchObject({
+    path: 'screenshot/zip/upload',
+    assets,
+    fields: { entry: 'main.lynx.js', width: '390', height: '844' },
+  });
+  expect(result.status).toBe('complete');
+  expect(result.score).toBe(4);
+});
+
+test('ReactLynx rejects external source resources before native capture', async () => {
+  const capture = rstest.fn();
+  const result = await runGenuiBenchUiJudge({
+    artifact: {
+      protocol: 'reactlynx',
+      rawText: '<image src="https://example.com/a.png"/>',
+      assets: [],
+    },
+    scenario: { prompt: 'Hello' },
+    session: { screenshotPath: 'screenshot/zip/upload' },
+    retryDelayMs: 0,
+  }, capture);
+  expect(capture).not.toHaveBeenCalled();
+  expect(result.errors[0]).toContain('ui-judge rejected ReactLynx');
+});

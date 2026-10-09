@@ -224,8 +224,8 @@ describe('A2UI Bench UI Judge integration', () => {
     },
   );
 
-  test.each(['html', 'reactweb'] as const)(
-    'routes %s HTML to Judge and preserves protocol results and summaries',
+  test.each(['html', 'reactweb', 'reactlynx'] as const)(
+    'routes %s artifacts to Judge and preserves protocol results and summaries',
     async (protocol) => {
       const rawText =
         '<!doctype html><html><head></head><body>Hello</body></html>';
@@ -275,9 +275,12 @@ describe('A2UI Bench UI Judge integration', () => {
                 finalText: rawText,
                 finalErrors: [],
                 judgePayload: {
-                  kind: protocol === 'reactweb'
-                    ? 'reactweb-html'
-                    : 'html-source',
+                  kind: ({
+                    reactweb: 'reactweb-html',
+                    html: 'html-source',
+                    reactlynx: 'reactlynx-bundle',
+                  } as const)[protocol],
+                  assets: [{ name: 'main.lynx.js', data: 'AQID' }],
                   rawText,
                 },
               });
@@ -288,7 +291,13 @@ describe('A2UI Bench UI Judge integration', () => {
       expect(runGenuiBenchUiJudge).toHaveBeenLastCalledWith(
         expect.objectContaining({
           model: 'html-model',
-          artifact: { protocol, rawText },
+          artifact: {
+            protocol,
+            rawText,
+            ...(protocol === 'reactlynx'
+              ? { assets: [{ name: 'main.lynx.js', data: 'AQID' }] }
+              : {}),
+          },
         }),
         expect.any(Function),
       );

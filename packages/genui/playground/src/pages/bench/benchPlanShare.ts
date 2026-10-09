@@ -97,6 +97,7 @@ function readPlan(value: unknown): BenchSharedPlan {
           'lynx-xml',
           'html',
           'reactweb',
+          'reactlynx',
         ]),
         profile: option(group.profile, ['native', 'matched-core']),
         role: option(group.role, ['control', 'experiment']),
