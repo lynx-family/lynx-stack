@@ -70,6 +70,8 @@ async function runWorker(directory: string, signal: AbortSignal) {
   );
   const child = spawn(process.execPath, [
     '--max-old-space-size=1024',
+    // Workspace plugins expose their bundled entry under this condition.
+    '--conditions=production',
     fileURLToPath(worker),
     directory,
   ], {

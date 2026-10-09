@@ -20,6 +20,12 @@ The package must remain a runtime dependency of its server consumer so
 `dist/build-worker.js` stays beside `dist/index.js`. Do not bundle its public
 entry into a different output directory.
 
+The repository Dockerfile uses `pnpm deploy --prod` to install this package with
+its own production and peer dependencies at the existing workspace package path.
+The compiler worker enables Node's `production` export condition so workspace
+plugins load their bundled `dist` entries. Deployment requires no tarballs or
+manifest rewriting.
+
 ```ts
 import {
   buildReactLynx,

@@ -21,6 +21,7 @@
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
+      "production": "./dist/index.js",
       "import": "./lib/index.js"
     },
     "./package.json": "./package.json"
