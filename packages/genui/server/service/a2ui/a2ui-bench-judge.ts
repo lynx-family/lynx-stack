@@ -31,8 +31,6 @@ export interface BenchScreenshotRequest {
   fields: Record<string, string>;
   timeoutMs: number;
   source?: string;
-  /** Compiled files, base64-encoded with their build-relative paths. */
-  templateFiles?: Record<string, string>;
 }
 
 export interface BenchScreenshotTask {
@@ -132,7 +130,7 @@ export interface RunBenchUiJudgeRequestOptions {
   viewport?: { width?: number; height?: number };
   lynxXmlSource?: string;
   htmlSource?: string;
-  templateFiles?: Record<string, string>;
+  reactLynxZipUrl?: string;
   scenario: BenchUiJudgeScenario;
   includeScreenshot?: boolean;
   session: BenchUiJudgeSession;
@@ -401,8 +399,9 @@ export async function runBenchUiJudgeRequest(
     return await (pool ? pool.run(execute, options.signal) : execute());
   }
   const fields: Record<string, string> = {};
-  if (options.templateFiles !== undefined) {
+  if (options.reactLynxZipUrl !== undefined) {
     fields.entry = 'main.lynx.js';
+    fields.url = options.reactLynxZipUrl;
   } else if (
     options.htmlSource === undefined && options.lynxXmlSource === undefined
   ) {
@@ -485,9 +484,6 @@ export async function runBenchUiJudgeRequest(
       {
         path: options.session.screenshotPath,
         fields,
-        ...(options.templateFiles
-          ? { templateFiles: options.templateFiles }
-          : {}),
         ...((options.htmlSource ?? options.lynxXmlSource) === undefined
           ? {}
           : { source: options.htmlSource ?? options.lynxXmlSource }),

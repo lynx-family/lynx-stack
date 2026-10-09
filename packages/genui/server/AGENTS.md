@@ -422,7 +422,7 @@ Preview objects use `<method>/preview/<uuid>/<file>`; shared conversations use
 these credentials; the browser reads the resulting public object URL without
 credentials. Optional overrides are `TOS_ENDPOINT`, `TOS_STORAGE_PREFIX`,
 `TOS_OPENUI_STORAGE_PREFIX`, `TOS_MCP_APPS_STORAGE_PREFIX`,
-`TOS_REACTLYNX_STORAGE_PREFIX`, `TOS_REACTWEB_STORAGE_PREFIX`, `TOS_LYNX_XML_STORAGE_PREFIX`,
+`TOS_REACTLYNX_STORAGE_PREFIX`, `TOS_REACTLYNX_BENCH_STORAGE_PREFIX`, `TOS_REACTWEB_STORAGE_PREFIX`, `TOS_LYNX_XML_STORAGE_PREFIX`,
 `TOS_HTML_STORAGE_PREFIX`, and `TOS_SECURITY_TOKEN`.
 
 ## Lynx XML Generation
@@ -528,11 +528,14 @@ ReactWeb-only and mixed HTML/ReactWeb jobs require no screenshot service.
 
 ReactLynx Bench uses `native` without a catalog and follows the same bounded
 source generation, compilation, and repair flow with `buildReactLynx`.
-Reports retain source JSON and build timing. Compiled files travel as base64
-in transient screenshot tasks; the browser packages them into an uncompressed
-ZIP with their relative paths intact and captures `main.lynx.js` through
-`/screenshot/zip/upload`. Reuse the A2UI screenshot service configuration, BMP
-relay, PNG conversion, and scoring. Bench requires no TOS publication.
+The server packages all compiled files into a bounded uncompressed ZIP and
+publishes it through TOS to `reactlynx-bench/preview/<uuid>/bundle.zip`.
+`TOS_REACTLYNX_BENCH_STORAGE_PREFIX` overrides this independent storage prefix.
+Reports retain source JSON, build/upload timing, and the published ZIP URL.
+Storage failures fail the run without another model generation. Screenshot
+tasks pass the URL and `entry=main.lynx.js` to the browser for
+`/screenshot/zip/url`; reuse the A2UI screenshot service configuration, BMP
+relay, PNG conversion, and scoring.
 
 PNG conversion preserves RGBA pixels and happens before model evaluation. Model
 inputs retain the full capture; Bench report storage separately applies its

@@ -90,6 +90,11 @@ const protocols = [
     (options: ReactLynxBenchAdapterOptions) =>
       createReactLynxBenchAdapter({
         ...options,
+        publish: () =>
+          Promise.resolve({
+            id: 'id',
+            zipUrl: 'https://cdn.test/reactlynx-bench/preview/id/bundle.zip',
+          }),
         build: () =>
           Promise.resolve([{ name: 'main.lynx.js', data: Buffer.from([1]) }]),
       }),

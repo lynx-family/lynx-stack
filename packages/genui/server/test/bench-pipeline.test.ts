@@ -114,7 +114,7 @@ function artifact(protocol: BenchProtocol): ProtocolBenchRunArtifact {
     reactlynx: {
       kind: 'reactlynx-bundle',
       rawText: '{}',
-      files: { 'main.lynx.js': 'AQ==' },
+      zipUrl: 'https://cdn.test/reactlynx-bench/preview/id/bundle.zip',
     },
     reactweb: {
       kind: 'reactweb-html',

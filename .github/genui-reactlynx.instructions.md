@@ -53,12 +53,15 @@ the render URL and navigation token for shared preview navigation.
 
 ReactLynx Bench uses the native profile with no catalog. Reuse the two-file
 source contract and compiler in bounded generation/repair attempts, retaining
-source JSON, model usage and build timing in reports. Unlike Create, Bench
-passes compiled assets directly to the browser screenshot relay without TOS
-publication. Keep every asset's relative path and base64-encode binary bytes
-in the transient task payload, never in persisted reports or SSE events.
-The browser validates paths and the aggregate size, packages the files as an
-uncompressed ZIP, and calls `/screenshot/zip/upload` with `entry=main.lynx.js`.
+source JSON, model usage and build timing in reports. Package every compiled
+asset with its relative path intact into a bounded uncompressed ZIP on the
+server. Publish it through TOS under the independent
+`reactlynx-bench/preview/<uuid>/bundle.zip` namespace, configurable through
+`TOS_REACTLYNX_BENCH_STORAGE_PREFIX`; never reuse Create's publication directory.
+Complete publication before emitting a Judge payload, preserve upload timing
+and the ZIP URL in adapter metadata, and do not regenerate source after a
+storage failure. Screenshot tasks carry only the published ZIP URL and
+`entry=main.lynx.js` for `/screenshot/zip/url`, never binary/base64 assets.
 Reuse the browser-owned sidecar URL and settle delay, BMP upload, PNG conversion,
 and selected-model scoring. Keep ReactLynx out of HTML Element Capture and
 A2UI/OpenUI globalProps. Preserve the native source resource checks before

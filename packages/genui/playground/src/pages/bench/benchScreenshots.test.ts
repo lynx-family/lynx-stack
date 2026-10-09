@@ -421,12 +421,17 @@ test.each([
   },
 );
 
-test('uploads compiled ReactLynx files as a ZIP with intact binary bytes and paths', async () => {
+test('captures the published ReactLynx ZIP by URL without sending binary assets', async () => {
+  const zipUrl = 'https://cdn.test/reactlynx-bench/preview/id/bundle.zip';
   const fetchImpl = rstest.fn<typeof fetch>()
     .mockResolvedValueOnce(Response.json({
-      path: 'screenshot/zip/upload',
-      fields: { entry: 'main.lynx.js', width: '390', height: '844' },
-      templateFiles: { 'main.lynx.js': 'AP8BgA==', 'chunks/shared.js': 'AQ==' },
+      path: 'screenshot/zip/url',
+      fields: {
+        entry: 'main.lynx.js',
+        url: zipUrl,
+        width: '390',
+        height: '844',
+      },
       timeoutMs: 1000,
     }))
     .mockResolvedValueOnce(
@@ -445,85 +450,20 @@ test('uploads compiled ReactLynx files as a ZIP with intact binary bytes and pat
   relay(captureId);
   await expect.poll(() => fetchImpl.mock.calls.length).toBe(3);
   expect(fetchImpl.mock.calls[1]?.[0]).toEqual(
-    new URL('screenshot/zip/upload', serverUrl),
+    new URL('screenshot/zip/url', serverUrl),
   );
   const form = fetchImpl.mock.calls[1]?.[1]?.body as FormData;
   expect(form.get('entry')).toBe('main.lynx.js');
+  expect(form.get('url')).toBe(zipUrl);
   expect(form.get('screenshotSettleMs')).toBe('0');
   expect([...form.keys()].sort()).toEqual([
     'entry',
-    'file',
     'height',
     'screenshotSettleMs',
+    'url',
     'width',
   ]);
-  const archive = unzipSync(
-    new Uint8Array(await (form.get('file') as Blob).arrayBuffer()),
-  );
-  expect(archive).toEqual({
-    'main.lynx.js': new Uint8Array([0, 255, 1, 128]),
-    'chunks/shared.js': new Uint8Array([1]),
-  });
   expect(fetchImpl.mock.calls[2]?.[1]?.headers).toEqual({
     'Content-Type': 'image/bmp',
   });
 });
-
-test.each([
-  { files: {}, entry: 'main.lynx.js' },
-  {
-    files: {
-      'main.lynx.js': 'AQ==',
-      ...Object.fromEntries(
-        Array.from(
-          { length: 100 },
-          (_, index) => [`chunk-${index}.js`, 'AQ=='],
-        ),
-      ),
-    },
-    entry: 'main.lynx.js',
-  },
-  { files: { 'main.lynx.js': '' }, entry: 'main.lynx.js' },
-  { files: { 'main.lynx.js': 'AQ==' }, entry: 'template.js' },
-  {
-    files: { 'main.lynx.js': 'AQ==', '../escape.js': 'AQ==' },
-    entry: 'main.lynx.js',
-  },
-  {
-    files: { 'main.lynx.js': 'AQ==', '/absolute.js': 'AQ==' },
-    entry: 'main.lynx.js',
-  },
-  { files: { 'main.lynx.js': 'not base64' }, entry: 'main.lynx.js' },
-  {
-    files: { 'main.lynx.js': 'A'.repeat(14 * 1024 * 1024) },
-    entry: 'main.lynx.js',
-  },
-])(
-  'rejects malformed or oversized ReactLynx tasks before capture %#',
-  async ({ files, entry }) => {
-    const fetchImpl = rstest.fn<typeof fetch>()
-      .mockResolvedValueOnce(Response.json({
-        path: 'screenshot/zip/upload',
-        fields: { entry },
-        templateFiles: files,
-        timeoutMs: 1000,
-      }))
-      .mockResolvedValueOnce(Response.json({ ok: true }));
-    createBenchScreenshotRelay({
-      jobUrl,
-      serverUrl,
-      signal: new AbortController().signal,
-      onError: rstest.fn(),
-      fetch: fetchImpl,
-    })(captureId);
-    await expect.poll(() => fetchImpl.mock.calls.length).toBe(2);
-    expect(fetchImpl.mock.calls[1]?.[0]).toBe(
-      `${jobUrl}/screenshots/${captureId}`,
-    );
-    expect(fetchImpl.mock.calls[1]?.[1]?.headers).toEqual({
-      'Content-Type': 'application/json',
-    });
-    expect(JSON.parse(fetchImpl.mock.calls[1]?.[1]?.body as string))
-      .toHaveProperty('error');
-  },
-);

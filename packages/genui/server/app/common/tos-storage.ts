@@ -42,6 +42,7 @@ export interface TosStorageConfig {
   mcpAppsPrefix: string;
   openuiPrefix: string;
   reactLynxPrefix: string;
+  reactLynxBenchPrefix: string;
   reactWebPrefix: string;
 }
 
@@ -115,6 +116,10 @@ export function resolveTosStorageConfig(
       environment,
       'TOS_REACTLYNX_STORAGE_PREFIX',
     ) ?? DEFAULT_REACTLYNX_STORAGE_PREFIX,
+    reactLynxBenchPrefix: readNonEmpty(
+      environment,
+      'TOS_REACTLYNX_BENCH_STORAGE_PREFIX',
+    ) ?? 'reactlynx-bench',
     reactWebPrefix: readNonEmpty(
       environment,
       'TOS_REACTWEB_STORAGE_PREFIX',

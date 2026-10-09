@@ -5,6 +5,7 @@
 import { buildReactLynx, parseReactLynxSource } from '@lynx-js/genui-reactlynx';
 
 import { getReactLynxAgentService } from './reactlynx-agent.js';
+import { publishReactLynxBenchBuild } from './reactlynx-bench-artifacts.js';
 import type {
   ProtocolBenchAdapter,
   ProtocolBenchAdapterInput,
@@ -36,6 +37,7 @@ export interface ReactLynxBenchAdapterOptions {
     }
   >;
   build?: typeof buildReactLynx;
+  publish?: typeof publishReactLynxBenchBuild;
   retryDelayMs?: number;
   sleep?: BenchRetrySleep;
 }
@@ -79,7 +81,11 @@ export function createReactLynxBenchAdapter(
         ? Math.min(4, Math.max(1, Math.floor(input.maxAttempts)))
         : 1;
       let finalText = '';
-      let files: Record<string, string> = {};
+      let assets: Awaited<ReturnType<typeof buildReactLynx>> = [];
+      let published:
+        | Awaited<ReturnType<typeof publishReactLynxBenchBuild>>
+        | undefined;
+      let uploadMs = 0;
       let buildMs = 0;
       let finalErrors: string[] = [];
       let finalValid = false;
@@ -138,15 +144,12 @@ export function createReactLynxBenchAdapter(
           finalText = JSON.stringify(source);
           const buildStartedAt = performance.now();
           try {
-            const assets = await (options.build ?? buildReactLynx)(
+            assets = await (options.build ?? buildReactLynx)(
               source,
               signal ?? new AbortController().signal,
               () => undefined,
             );
             signal?.throwIfAborted();
-            files = Object.fromEntries(
-              assets.map(asset => [asset.name, asset.data.toString('base64')]),
-            );
           } finally {
             buildMs += performance.now() - buildStartedAt;
           }
@@ -183,18 +186,41 @@ export function createReactLynxBenchAdapter(
           });
         }
       }
+      // Publication failures must not cause another model generation or compile.
+      if (finalValid) {
+        const uploadStartedAt = performance.now();
+        try {
+          published = await (options.publish ?? publishReactLynxBenchBuild)(
+            assets,
+            signal ?? new AbortController().signal,
+          );
+          signal?.throwIfAborted();
+        } catch (error) {
+          signal?.throwIfAborted();
+          finalValid = false;
+          finalErrors = [
+            error instanceof Error ? error.message : String(error),
+          ];
+        } finally {
+          uploadMs = performance.now() - uploadStartedAt;
+        }
+      }
       return {
         attempts,
         finalValid,
         finalText,
         finalErrors,
-        metadata: { buildMs: Math.round(buildMs) },
-        ...(finalValid
+        metadata: {
+          buildMs: Math.round(buildMs),
+          uploadMs: Math.round(uploadMs),
+          ...(published ? { zipUrl: published.zipUrl } : {}),
+        },
+        ...(published && finalValid
           ? {
             judgePayload: {
               kind: 'reactlynx-bundle' as const,
               rawText: finalText,
-              files,
+              zipUrl: published.zipUrl,
             },
           }
           : {}),

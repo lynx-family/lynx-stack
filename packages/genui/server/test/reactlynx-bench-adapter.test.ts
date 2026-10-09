@@ -16,6 +16,10 @@ const SOURCE = JSON.stringify({
     'App.css': 'text { color: blue; }',
   },
 });
+const PUBLISHED = {
+  id: 'id',
+  zipUrl: 'https://cdn.test/reactlynx-bench/preview/id/bundle.zip',
+};
 const ASSETS = [{ name: 'main.lynx.js', data: Buffer.from([0, 255, 1, 128]) }];
 const INPUT: ProtocolBenchAdapterInput = {
   runId: 'reactlynx-run',
@@ -45,6 +49,7 @@ test('repairs compiler diagnostics, retains source and usage, and judges native 
     .mockRejectedValueOnce(new Error('Invalid JSX in App.tsx'))
     .mockResolvedValueOnce(ASSETS);
   const artifact = await createReactLynxBenchAdapter({
+    publish: () => Promise.resolve(PUBLISHED),
     generateRaw(messages, options, signal) {
       conversations.push([...messages]);
       expect(signal).toBe(controller.signal);
@@ -77,7 +82,7 @@ test('repairs compiler diagnostics, retains source and usage, and judges native 
     judgePayload: {
       kind: 'reactlynx-bundle',
       rawText: SOURCE,
-      files: { 'main.lynx.js': ASSETS[0]!.data.toString('base64') },
+      zipUrl: PUBLISHED.zipUrl,
     },
   });
 });
@@ -85,6 +90,7 @@ test('repairs compiler diagnostics, retains source and usage, and judges native 
 test('rejects invalid source before compilation and retains truncated usage', async () => {
   const build = rstest.fn();
   const artifact = await createReactLynxBenchAdapter({
+    publish: () => Promise.resolve(PUBLISHED),
     generateRaw: () =>
       Promise.resolve({ ...generated('{'), finishReason: 'length' }),
     build,
@@ -97,6 +103,7 @@ test('rejects invalid source before compilation and retains truncated usage', as
 
 test('never judges a failed build and preserves generation evidence', async () => {
   const artifact = await createReactLynxBenchAdapter({
+    publish: () => Promise.resolve(PUBLISHED),
     generateRaw: () => Promise.resolve(generated()),
     build: () => Promise.reject(new Error('Unsupported module')),
   }).generate({ ...INPUT, maxAttempts: 1 });
@@ -112,6 +119,7 @@ test('cancellation reaches the compiler and prevents repair', async () => {
   const generateRaw = rstest.fn(() => Promise.resolve(generated()));
   await expect(
     createReactLynxBenchAdapter({
+      publish: () => Promise.resolve(PUBLISHED),
       generateRaw,
       build: (_source, signal) => {
         controller.abort(new Error('Stop build'));
@@ -134,6 +142,7 @@ test('bounds upstream retries and preserves usage without compiling failed respo
     )
   );
   const artifact = await createReactLynxBenchAdapter({
+    publish: () => Promise.resolve(PUBLISHED),
     generateRaw,
     build,
     retryDelayMs: 0,
@@ -154,6 +163,7 @@ test(
   'compiles ReactLynx with the real compiler for browser capture',
   async () => {
     const artifact = await createReactLynxBenchAdapter({
+      publish: () => Promise.resolve(PUBLISHED),
       generateRaw: () => Promise.resolve(generated()),
     }).generate({ ...INPUT, maxAttempts: 1 });
     expect(artifact.finalErrors).toEqual([]);
@@ -162,10 +172,70 @@ test(
     expect(artifact.judgePayload).toMatchObject({
       kind: 'reactlynx-bundle',
       rawText: SOURCE,
-      files: expect.objectContaining({
-        'main.lynx.js': expect.any(String) as unknown,
-      }) as unknown,
+      zipUrl: PUBLISHED.zipUrl,
     });
   },
   30_000,
 );
+
+test('publishes only the successful build and records the CDN URL and upload timing', async () => {
+  const publish = rstest.fn(() => Promise.resolve(PUBLISHED));
+  const build = rstest.fn().mockRejectedValueOnce(new Error('Invalid JSX'))
+    .mockResolvedValueOnce(ASSETS);
+  const controller = new AbortController();
+  const artifact = await createReactLynxBenchAdapter({
+    generateRaw: () => Promise.resolve(generated()),
+    build,
+    publish,
+  }).generate(INPUT, controller.signal);
+  expect(publish).toHaveBeenCalledExactlyOnceWith(ASSETS, controller.signal);
+  expect(artifact.metadata).toMatchObject({
+    zipUrl: PUBLISHED.zipUrl,
+    uploadMs: expect.any(Number) as unknown,
+  });
+  expect(artifact.judgePayload).toEqual({
+    kind: 'reactlynx-bundle',
+    rawText: SOURCE,
+    zipUrl: PUBLISHED.zipUrl,
+  });
+});
+
+test('publication failure retains generation evidence without another model call or capture', async () => {
+  const generateRaw = rstest.fn(() => Promise.resolve(generated()));
+  const build = rstest.fn(() => Promise.resolve(ASSETS));
+  const publish = rstest.fn(() =>
+    Promise.reject(new Error('CDN upload failed'))
+  );
+  const artifact = await createReactLynxBenchAdapter({
+    generateRaw,
+    build,
+    publish,
+  }).generate(INPUT);
+  expect(generateRaw).toHaveBeenCalledTimes(1);
+  expect(build).toHaveBeenCalledTimes(1);
+  expect(publish).toHaveBeenCalledTimes(1);
+  expect(artifact).toMatchObject({
+    finalValid: false,
+    finalText: SOURCE,
+    finalErrors: ['CDN upload failed'],
+  });
+  expect(artifact.attempts[0]?.totalTokens).toBe(20);
+  expect(artifact.judgePayload).toBeUndefined();
+});
+
+test('cancellation during publication prevents Judge delivery and further generation', async () => {
+  const controller = new AbortController();
+  const generateRaw = rstest.fn(() => Promise.resolve(generated()));
+  await expect(
+    createReactLynxBenchAdapter({
+      generateRaw,
+      build: () => Promise.resolve(ASSETS),
+      publish: (_assets, signal) => {
+        expect(signal).toBe(controller.signal);
+        controller.abort(new Error('Cancel publication'));
+        return Promise.resolve(PUBLISHED);
+      },
+    }).generate(INPUT, controller.signal),
+  ).rejects.toThrow('Cancel publication');
+  expect(generateRaw).toHaveBeenCalledTimes(1);
+});

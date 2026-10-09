@@ -590,7 +590,7 @@ async function runProtocolAdapterOne(
               ? {
                 protocol: 'reactlynx' as const,
                 rawText: judgePayload.rawText,
-                files: judgePayload.files,
+                zipUrl: judgePayload.zipUrl,
               }
               : {
                 protocol: ({

@@ -17,7 +17,7 @@ export type ProtocolBenchJudgePayload =
   | {
     kind: 'reactlynx-bundle';
     rawText: string;
-    files: Record<string, string>;
+    zipUrl: string;
   }
   | {
     kind: 'a2ui-messages';

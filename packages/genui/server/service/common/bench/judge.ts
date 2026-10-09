@@ -42,7 +42,7 @@ function findUnsafeResourceMarker(rawText: string): string | null {
 export type GenuiBenchProtocol = BenchProtocol;
 
 export type GenuiBenchJudgeArtifact =
-  | { protocol: 'reactlynx'; rawText: string; files: Record<string, string> }
+  | { protocol: 'reactlynx'; rawText: string; zipUrl: string }
   | { messages: A2UIMessage[]; protocol: 'a2ui' }
   | { protocol: 'openui' | 'lynx-xml' | 'html' | 'reactweb'; rawText: string };
 
@@ -170,7 +170,7 @@ export async function resolveGenuiBenchUiJudge(
   if (protocol === 'reactlynx') {
     return {
       enabled: true,
-      session: { screenshotPath: 'screenshot/zip/upload' },
+      session: { screenshotPath: 'screenshot/zip/url' },
     };
   }
   const env = options.env ?? process.env;
@@ -250,7 +250,7 @@ export async function runGenuiBenchUiJudge(
         {
           model: options.model,
           ...(options.artifact.protocol === 'reactlynx'
-            ? { templateFiles: options.artifact.files }
+            ? { reactLynxZipUrl: options.artifact.zipUrl }
             : {}),
           ...(options.artifact.protocol === 'lynx-xml'
             ? { lynxXmlSource: rawText }

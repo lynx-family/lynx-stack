@@ -233,7 +233,7 @@ describe('A2UI Bench UI Judge integration', () => {
         enabled: true,
         session: {
           screenshotPath: protocol === 'reactlynx'
-            ? 'screenshot/zip/upload'
+            ? 'screenshot/zip/url'
             : 'browser/html',
         },
       });
@@ -282,7 +282,8 @@ describe('A2UI Bench UI Judge integration', () => {
                   ? {
                     kind: 'reactlynx-bundle',
                     rawText,
-                    files: { 'main.lynx.js': 'AQ==' },
+                    zipUrl:
+                      'https://cdn.test/reactlynx-bench/preview/id/bundle.zip',
                   }
                   : {
                     kind: protocol === 'reactweb'
@@ -302,7 +303,10 @@ describe('A2UI Bench UI Judge integration', () => {
             protocol,
             rawText,
             ...(protocol === 'reactlynx'
-              ? { files: { 'main.lynx.js': 'AQ==' } }
+              ? {
+                zipUrl:
+                  'https://cdn.test/reactlynx-bench/preview/id/bundle.zip',
+              }
               : {}),
           },
         }),
