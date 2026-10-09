@@ -12,7 +12,7 @@ Use separate builder and runtime stages. Keep Node, the installed workspace depe
 
 Set runtime `LYNX_LIB_PATH` and `LYNX_CORE_JS_PATH` to the copied assets. The headless runner otherwise retains Cargo-injected paths into the SDK cache removed during cleanup.
 
-Keep JavaScript builds workspace-wide through Turbo. Deployment changes must preserve published packages' dependency declarations and peer compatibility. Do not add hardcoded package lists, global hoisting, tarballs, or installed-manifest patches to Dockerfile. Workspace Rsbuild plugins expose their bundled `dist` entry under the standard `production` export condition, explicitly enabled by the GenUI compiler child process. `NODE_ENV=production` alone does not activate Node export conditions.
+Keep JavaScript builds workspace-wide through Turbo. Deployment changes must preserve published packages' dependency declarations and peer compatibility. Do not add hardcoded package lists, global hoisting, tarballs, or installed-manifest patches to Dockerfile. Keep workspace package entry points unchanged.
 
 When validating deployment changes, resolve the compiler from the server package and compile both Web and Native artifacts after a fresh full install, build-artifact cleanup, and relocation, without model credentials or publication.
 

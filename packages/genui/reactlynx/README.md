@@ -23,9 +23,9 @@ entry into a different output directory.
 The repository Dockerfile builds the workspace with Turbo and retains its full
 installed dependency graph, including development dependencies. This preserves
 the peer links used by workspace packages in the runtime compiler.
-The compiler worker enables Node's `production` export condition so workspace
-plugins load their bundled `dist` entries. Keeping the complete workspace layout
-increases image size but leaves published dependency declarations unchanged.
+Workspace packages keep their existing entry points. Keeping the complete
+workspace layout increases image size but leaves published dependency
+declarations unchanged.
 
 ```ts
 import {

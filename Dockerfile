@@ -94,9 +94,9 @@ RUN mkdir -p /out/native /out/sdk/lib \
     && strip --strip-unneeded /out/native/ui-judge-server \
         /out/native/lynx-headless-rust-test-runner /out/native/libreact_transform.so
 
-# Keep the installed workspace graph: runtime compilers use workspace packages
-# whose peer links are also development dependencies. A production-only reinstall
-# removes those links. Clean build artifacts without changing dependency layout.
+# Runtime compilers load workspace entries and their development dependencies,
+# including peer links. Keep the installed graph instead of reinstalling with
+# --prod, and clean build artifacts without changing the dependency layout.
 RUN find . -type d -name node_modules -prune -o \
         -type d \( -name target -o -name .turbo -o -name .swc \
         -o -name .rslib -o -name .generated \) -prune -exec rm -rf '{}' + \

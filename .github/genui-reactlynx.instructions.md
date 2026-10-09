@@ -36,10 +36,8 @@ are also declared as development dependencies. A production-only workspace
 reinstall removes those links. Keep the original workspace layout and accept the
 larger dependency layer rather than rewriting published dependency contracts.
 
-Workspace Rsbuild plugins expose `dist` through the `production` export condition;
-the compiler worker must pass `--conditions=production` explicitly because
-`NODE_ENV` does not activate it. Keep the default workspace development entries
-and published exports intact. Do not pack tarballs, patch installed manifests,
+Keep workspace entry points and published exports intact. Do not add export
+conditions solely for deployment. Do not pack tarballs, patch installed manifests,
 enable global hoisting, or maintain a manual dependency list for deployment.
 The compiler links its adjacent `node_modules` into temporary applications.
 Validate deployment changes with a model-free Web/Native compilation through the
