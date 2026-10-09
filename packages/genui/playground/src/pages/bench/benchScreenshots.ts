@@ -7,6 +7,10 @@
 import { strToU8, zipSync } from 'fflate';
 
 import type { BenchHtmlCapture } from './benchHtmlCapture.js';
+import {
+  DEFAULT_SCREENSHOT_SETTLE_MS,
+  isScreenshotSettleMs,
+} from './benchScreenshotDelay.js';
 
 const MAX_SCREENSHOT_BYTES = 10 * 1024 * 1024 + 1024;
 const MAX_CAPTURE_FORM_BYTES = 10 * 1024 * 1024;
@@ -19,7 +23,10 @@ interface ScreenshotRequest {
   source?: string;
 }
 
-function screenshotForm(request: ScreenshotRequest): FormData {
+function screenshotForm(
+  request: ScreenshotRequest,
+  screenshotSettleMs: number,
+): FormData {
   const upload = request.path === 'screenshot/zip/upload';
   const allowedFields = new Set([
     'entry',
@@ -29,7 +36,9 @@ function screenshotForm(request: ScreenshotRequest): FormData {
     ...(upload ? [] : ['url', 'globalProps']),
   ]);
   const form = new FormData();
-  let bytes = 0;
+  const delay = String(screenshotSettleMs);
+  form.set('screenshotSettleMs', delay);
+  let bytes = delay.length;
   for (const [name, value] of Object.entries(request.fields)) {
     if (!allowedFields.has(name) || typeof value !== 'string') {
       throw new Error('Invalid screenshot parameter.');
@@ -156,6 +165,7 @@ async function screenshotBlob(
 export function createBenchScreenshotRelay(options: {
   jobUrl: string;
   serverUrl: string;
+  screenshotSettleMs?: number;
   signal: AbortSignal;
   onError: (error: string) => void;
   fetch?: typeof fetch;
@@ -221,7 +231,12 @@ export function createBenchScreenshotRelay(options: {
           throw new Error('Invalid or oversized HTML screenshot.');
         }
       } else {
-        const form = screenshotForm(request);
+        const screenshotSettleMs = options.screenshotSettleMs
+          ?? DEFAULT_SCREENSHOT_SETTLE_MS;
+        if (!isScreenshotSettleMs(screenshotSettleMs)) {
+          throw new Error('Screenshot delay must be a non-negative integer.');
+        }
+        const form = screenshotForm(request, screenshotSettleMs);
         const screenshot = await fetchImpl(
           new URL(request.path, options.serverUrl),
           {

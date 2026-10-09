@@ -1491,6 +1491,7 @@ export function BenchPage({ sharedPlan }: { sharedPlan?: string }) {
         const captureScreenshot = createBenchScreenshotRelay({
           jobUrl: `${jobsEndpoint}/${encodeURIComponent(jobId)}`,
           serverUrl: normalizedUiJudgeServerUrl ?? '',
+          screenshotSettleMs: settings.screenshotSettleMs,
           signal: screenshotController.signal,
           captureHtml: captureResult.capture,
           onError: (text) => setRunMessage({ code: 'raw', text }),

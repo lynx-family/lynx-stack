@@ -262,3 +262,5 @@ conversation content so injected helpers do not consume input tokens again;
 fall back to saved content for older records without original output. Other
 modes continue using saved artifact content. Results with no source transformation show only Source;
 older converted results without model output must not fabricate a before view.
+
+Keep Bench screenshot delay as a browser-owned setting. Show Screenshot delay (ms) beside the screenshot service URL for Lynx groups, default missing settings to 100 ms, and preserve explicit zero. Persist valid non-negative safe integers in history and shared plans, then snapshot the selected value into the screenshot relay for both ZIP routes. Keep the value out of GenUI job requests and HTML capture; append it to the multipart form in the browser rather than trusting server task fields to override the user setting.

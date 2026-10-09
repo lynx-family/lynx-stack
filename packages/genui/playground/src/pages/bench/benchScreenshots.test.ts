@@ -157,9 +157,16 @@ test('checks screenshot service health directly from the browser', async () => {
   });
 });
 
-test.each(['a2ui', 'openui', 'lynx-xml'])(
-  'captures %s in the browser and uploads BMP, deduplicating SSE replay',
-  async (protocol) => {
+test.each(
+  ['a2ui', 'openui', 'lynx-xml'].flatMap(protocol =>
+    [undefined, 0, 3000].map(screenshotSettleMs => ({
+      protocol,
+      screenshotSettleMs,
+    }))
+  ),
+)(
+  'captures $protocol with delay $screenshotSettleMs and deduplicates SSE replay',
+  async ({ protocol, screenshotSettleMs }) => {
     const path = protocol === 'lynx-xml'
       ? 'screenshot/zip/upload'
       : 'screenshot/zip/url';
@@ -189,6 +196,7 @@ test.each(['a2ui', 'openui', 'lynx-xml'])(
     const relay = createBenchScreenshotRelay({
       jobUrl,
       serverUrl,
+      screenshotSettleMs,
       signal: new AbortController().signal,
       onError,
       fetch: fetchImpl,
@@ -215,7 +223,10 @@ test.each(['a2ui', 'openui', 'lynx-xml'])(
     } else {
       expect(form.get('file')).toBeNull();
     }
-    expect(Object.fromEntries(form.entries())).toEqual(fields);
+    expect(Object.fromEntries(form.entries())).toEqual({
+      ...fields,
+      screenshotSettleMs: String(screenshotSettleMs ?? 100),
+    });
     expect(init).toMatchObject({ credentials: 'omit', redirect: 'error' });
     const upload = fetchImpl.mock.calls[2];
     expect(upload?.[0]).toBe(`${jobUrl}/screenshots/${captureId}`);
@@ -377,5 +388,35 @@ test.each([false, true])(
       'Content-Type': fail ? 'application/json' : 'image/bmp',
     });
     if (fail) expect(upload.body).toContain('Sharing stopped');
+  },
+);
+
+test.each([
+  -1,
+  1.5,
+  Number.NaN,
+  Number.POSITIVE_INFINITY,
+  Number.MAX_SAFE_INTEGER + 1,
+])(
+  'rejects invalid browser screenshot delay %s before capture',
+  async screenshotSettleMs => {
+    const fetchImpl = rstest.fn<typeof fetch>()
+      .mockResolvedValueOnce(xmlTask())
+      .mockResolvedValueOnce(Response.json({ ok: true }));
+    const relay = createBenchScreenshotRelay({
+      jobUrl,
+      serverUrl,
+      screenshotSettleMs,
+      signal: new AbortController().signal,
+      onError: rstest.fn(),
+      fetch: fetchImpl,
+    });
+    relay(captureId);
+    await expect.poll(() => fetchImpl.mock.calls.length).toBe(2);
+    expect(fetchImpl.mock.calls[1]?.[0]).toBe(
+      `${jobUrl}/screenshots/${captureId}`,
+    );
+    expect(fetchImpl.mock.calls[1]?.[1]?.body)
+      .toContain('Screenshot delay must be a non-negative integer');
   },
 );
