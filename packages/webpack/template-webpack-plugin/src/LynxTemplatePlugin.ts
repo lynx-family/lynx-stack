@@ -835,7 +835,6 @@ class LynxTemplatePluginImpl {
       const LynxAsyncChunksRuntimeModule = createLynxAsyncChunksRuntimeModule(
         compiler.webpack,
       );
-
       const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
 
       compilation.hooks.runtimeRequirementInTree.for(
@@ -852,11 +851,16 @@ class LynxTemplatePluginImpl {
         compilation.addRuntimeModule(
           chunk,
           new LynxAsyncChunksRuntimeModule((asyncChunk) => {
+            const namedImportGroup = asyncChunk.name !== null
+              && asyncChunk.name !== undefined
+              && [...asyncChunk.groupsIterable].some(group =>
+                group.name === asyncChunk.name && group.origins.length > 0
+              );
             const filename =
               LynxTemplatePluginImpl.#getLazyBundleNameByChunkId(compilation)
                 .get(asyncChunk.id!)
-                ?? (asyncChunk.name !== null && asyncChunk.name !== undefined
-                  ? hooks.asyncChunkName.call(asyncChunk.name)
+                ?? (namedImportGroup
+                  ? hooks.asyncChunkName.call(asyncChunk.name!)
                   : undefined);
 
             if (filename === undefined || filename === '') {
@@ -990,8 +994,10 @@ class LynxTemplatePluginImpl {
       // A statically imported module goes to the initial chunk, leaving its
       // async chunk empty; `RemoveEmptyChunksPlugin` drops that chunk but
       // keeps the group, which would otherwise emit an empty lazy bundle.
+      // Named groups created only by `splitChunks` have no import block and
+      // must use ordinary async chunk loading, not a lazy bundle.
       compilation.chunkGroups.filter(cg =>
-        !cg.isInitial() && cg.chunks.length > 0
+        !cg.isInitial() && cg.chunks.length > 0 && resources.has(cg)
       ),
       cg => {
         // A `webpackChunkName` is user-provided (the react transform no longer
@@ -1004,7 +1010,7 @@ class LynxTemplatePluginImpl {
           return hooks.asyncChunkName.call(cg.name);
         }
         const chunkGroupResources = resources.get(cg);
-        if (chunkGroupResources) {
+        if (chunkGroupResources && chunkGroupResources.length > 0) {
           return resourcesToLazyBundleName(chunkGroupResources, context);
         }
         return '';
@@ -1040,8 +1046,15 @@ class LynxTemplatePluginImpl {
       const derived = chunkGroups.every(cg =>
         cg.name === null || cg.name === undefined
       );
+      const ownChunkGroups = getOwnedChunkGroups(compilation, chunkGroups);
       for (const chunk of chunkGroups.flatMap(cg => cg.chunks)) {
         if (chunk.id === null || chunk.id === undefined) {
+          continue;
+        }
+        if (
+          ![...chunk.groupsIterable].every(group => ownChunkGroups.has(group))
+        ) {
+          // Shared chunks stay on the default async loader.
           continue;
         }
         if (derived || !lazyBundleNames.has(chunk.id)) {
@@ -1101,12 +1114,13 @@ class LynxTemplatePluginImpl {
         if (name === '') {
           continue;
         }
-        // Same ownership check as when collecting a lazy bundle's assets
-        // (see `#generateAsyncTemplate`): a chunk has a layout here only when
-        // every group in its `groupsIterable` is one of this bundle's own
-        // `chunkGroups`. The entry chunk `main` (groupsIterable `[main, ...]`)
-        // shared into a lazy bundle by `splitChunks` is dropped (#4044).
-        const ownChunkGroups = new Set(chunkGroups);
+        const derived = chunkGroups.every(cg =>
+          cg.name === null || cg.name === undefined
+        );
+        // Use the same ownership check as the lazy template and runtime map.
+        // Other groups importing the same resource count as this bundle;
+        // entry and cross-bundle shared chunks keep their default layout.
+        const ownChunkGroups = getOwnedChunkGroups(compilation, chunkGroups);
         for (const chunk of chunkGroups.flatMap(cg => cg.chunks)) {
           if (chunk.id === null || chunk.id === undefined) {
             continue;
@@ -1129,7 +1143,9 @@ class LynxTemplatePluginImpl {
           if (layer === undefined) {
             continue;
           }
-          layouts.set(chunk.id, { name, layer });
+          if (derived || !layouts.has(chunk.id)) {
+            layouts.set(chunk.id, { name, layer });
+          }
         }
       }
       LynxTemplatePluginImpl.#asyncChunkLayouts.set(compilation, layouts);
@@ -1180,9 +1196,9 @@ class LynxTemplatePluginImpl {
 
           encodedTemplate.add(filenameTemplate);
 
-          // Keep only the chunks this lazy bundle owns. A chunk is owned
-          // when every group in its `groupsIterable` is one of this bundle's
-          // own `chunkGroups`. Example: entry `main` + `import('./PageA')`,
+          // Keep only the chunks this lazy bundle owns. Groups importing the
+          // same resolved module count as this bundle. Example: entry `main`
+          // + `import('./PageA')`,
           // with `splitChunks: { name: 'main', chunks: 'all' }` merging the
           // shared module into `main`. Building lazy bundle `src_PageA.tsx`:
           //   chunkGroups (own): [<PageA background>, <PageA main-thread>]
@@ -1195,7 +1211,7 @@ class LynxTemplatePluginImpl {
           // id=889 is the entry chunk; it also sits in `main`, a group outside
           // this bundle, so inlining it would copy the entry into every lazy
           // bundle (#4044).
-          const ownChunkGroups = new Set(chunkGroups);
+          const ownChunkGroups = getOwnedChunkGroups(compilation, chunkGroups);
           const asyncAssetsInfoByGroups = this.#getAssetsInformationByFilenames(
             compilation,
             // Merged chunk groups may share chunks, so dedupe the files.
@@ -1615,6 +1631,11 @@ export function isRsdoctor(): boolean {
   return process.env['RSDOCTOR'] === 'true';
 }
 
+const chunkGroupResourcesCache = new WeakMap<
+  Compilation,
+  Map<ChunkGroup, string[]>
+>();
+
 /**
  * Collect the resolved module paths of the dynamic imports that create each
  * chunk group, by traversing the `AsyncDependenciesBlock`s of all modules.
@@ -1622,6 +1643,11 @@ export function isRsdoctor(): boolean {
 function collectChunkGroupResources(
   compilation: Compilation,
 ): Map<ChunkGroup, string[]> {
+  const cached = chunkGroupResourcesCache.get(compilation);
+  if (cached) {
+    return cached;
+  }
+
   const { chunkGraph, moduleGraph } = compilation;
   const resources = new Map<ChunkGroup, Set<string>>();
 
@@ -1630,6 +1656,13 @@ function collectChunkGroupResources(
       const chunkGroup = chunkGraph.getBlockChunkGroup(block);
       if (!chunkGroup) {
         continue;
+      }
+      // Keep named context-import groups even when none of their dependencies
+      // has a resolved resource path.
+      let chunkGroupResources = resources.get(chunkGroup);
+      if (!chunkGroupResources) {
+        chunkGroupResources = new Set();
+        resources.set(chunkGroup, chunkGroupResources);
       }
       for (const dependency of block.dependencies) {
         // `nameForCondition()` is the resource path of a `NormalModule`. It is
@@ -1640,17 +1673,12 @@ function collectChunkGroupResources(
         if (!resource) {
           continue;
         }
-        let chunkGroupResources = resources.get(chunkGroup);
-        if (!chunkGroupResources) {
-          chunkGroupResources = new Set();
-          resources.set(chunkGroup, chunkGroupResources);
-        }
         chunkGroupResources.add(resource);
       }
     }
   }
 
-  return new Map(
+  const result = new Map(
     Array.from(
       resources,
       ([chunkGroup, chunkGroupResources]) => [
@@ -1659,6 +1687,33 @@ function collectChunkGroupResources(
       ],
     ),
   );
+  chunkGroupResourcesCache.set(compilation, result);
+  return result;
+}
+
+/** Treat chunk groups importing the same resolved module as one lazy bundle. */
+function getOwnedChunkGroups(
+  compilation: Compilation,
+  chunkGroups: ChunkGroup[],
+): Set<ChunkGroup> {
+  const resources = collectChunkGroupResources(compilation);
+  const owned = new Set(chunkGroups);
+  const resourceKeys = new Set(
+    chunkGroups
+      .map(group => resources.get(group))
+      .filter((paths): paths is string[] =>
+        paths !== undefined && paths.length > 0
+      )
+      .map(paths => JSON.stringify(paths)),
+  );
+
+  for (const [group, paths] of resources) {
+    if (paths.length > 0 && resourceKeys.has(JSON.stringify(paths))) {
+      owned.add(group);
+    }
+  }
+
+  return owned;
 }
 
 const LAZY_BUNDLE_NAME_LIMIT = 100;

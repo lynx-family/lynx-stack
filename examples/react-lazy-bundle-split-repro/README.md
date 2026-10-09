@@ -19,6 +19,12 @@ and from the main-thread layer (a `'main thread'` worklet). The cache group in
 | `build:split-background`  | `layer: /background/`  | builds, every bundle gets bigger           |
 | `build:split-main-thread` | `layer: /main-thread/` | build fails                                |
 
+For a native device, set `REPRO_ASSET_PREFIX` to an absolute URL reachable by
+the device before building (for example, `http://127.0.0.1:54173/` with an
+`adb reverse` port forward). The default root-relative asset URLs are only
+useful for inspecting the build output; the native loader cannot resolve them
+against the main bundle's URL.
+
 ## What each mode shows
 
 ### `build:split` — one chunk for both layers, and it replaces the main thread

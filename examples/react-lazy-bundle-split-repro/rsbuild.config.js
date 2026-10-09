@@ -5,6 +5,7 @@ import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 const layer = process.env['SPLIT_LAYER'];
 const noSplit = process.env['NO_SPLIT'] === '1';
 const distRoot = process.env['DIST_ROOT'] ?? 'dist';
+const assetPrefix = process.env['REPRO_ASSET_PREFIX'];
 
 export default defineConfig({
   source: {
@@ -16,6 +17,7 @@ export default defineConfig({
     distPath: {
       root: distRoot,
     },
+    ...(assetPrefix ? { assetPrefix } : {}),
   },
   plugins: [pluginReactLynx()],
   ...(noSplit

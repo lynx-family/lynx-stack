@@ -65,7 +65,7 @@ async function buildLazyBundle(
   }
 }
 
-function buildLazySharedSplit(): Promise<
+function buildLazySharedSplit(name?: string): Promise<
   { files: string[], root: string }
 > {
   return buildLazyBundle(
@@ -82,6 +82,7 @@ function buildLazySharedSplit(): Promise<
         cacheGroups: {
           shared: {
             test: /[\\/]shared\.ts$/,
+            ...(name ? { name } : {}),
             minChunks: 2,
             minSize: 0,
             priority: 10,
@@ -121,6 +122,30 @@ describe('lazy bundle chunk filename', () => {
       'utf-8',
     )
     expect(pageABundle).not.toContain('PageB')
+
+    const mainBundle = await fs.readFile(
+      path.join(root, '.lynx/main/background.js'),
+      'utf-8',
+    )
+    const lazyChunkIds =
+      (/__webpack_require__\.lynx_aci = \{([^}]*)\}/.exec(mainBundle))?.[1]
+    expect(lazyChunkIds).toBeDefined()
+    expect(lazyChunkIds).not.toMatch(/"shared[^"]*":/)
+  })
+
+  test('does not route a named shared chunk to a lazy bundle', async () => {
+    const { files, root } = await buildLazySharedSplit('shared')
+
+    expect(files).toContain('static/js/async/shared.js')
+
+    const mainBundle = await fs.readFile(
+      path.join(root, '.lynx/main/background.js'),
+      'utf-8',
+    )
+    const lazyChunkIds =
+      (/__webpack_require__\.lynx_aci = \{([^}]*)\}/.exec(mainBundle))?.[1]
+    expect(lazyChunkIds).toBeDefined()
+    expect(lazyChunkIds).not.toMatch(/"shared":/)
   })
 
   test('follows the entry filename hash in production', async () => {
