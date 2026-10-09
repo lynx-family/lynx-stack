@@ -94,18 +94,10 @@ RUN mkdir -p /out/native /out/sdk/lib \
     && strip --strip-unneeded /out/native/ui-judge-server \
         /out/native/lynx-headless-rust-test-runner /out/native/libreact_transform.so
 
-# Give the compiler its own production and peer dependency graph.
-RUN corepack pnpm --filter @lynx-js/genui-reactlynx deploy \
-        --prod --prefer-offline --ignore-scripts /out/reactlynx
-
-# pnpm prune does not prune an entire workspace. Reinstall production dependencies
-# using cached packages when available, fetching any missing package snapshots.
-# Preserve workspace links and generated package files.
-RUN find . -type d -name node_modules -prune -exec rm -rf '{}' + \
-    && corepack pnpm install --prod --prefer-offline --frozen-lockfile --ignore-scripts \
-    && rm -rf packages/genui/reactlynx \
-    && mv /out/reactlynx packages/genui/reactlynx \
-    && find . -type d -name node_modules -prune -o \
+# Keep the installed workspace graph: runtime compilers use workspace packages
+# whose peer links are also development dependencies. A production-only reinstall
+# removes those links. Clean build artifacts without changing dependency layout.
+RUN find . -type d -name node_modules -prune -o \
         -type d \( -name target -o -name .turbo -o -name .swc \
         -o -name .rslib -o -name .generated \) -prune -exec rm -rf '{}' + \
     && find . -type f \( -name '*.tsbuildinfo' -o -name '*.js.map' \
@@ -124,8 +116,8 @@ RUN mkdir -p /out/dependencies \
     && rm /tmp/runtime-node-modules \
     && rm -rf /out/dependencies/node_modules/.cache \
         /out/dependencies/node_modules/.pnpm-store \
-    && find /out/dependencies -type f \( -name .modules.yaml \
-        -o -name .pnpm-workspace-state-v1.json \) -delete \
+    && rm -f /out/dependencies/node_modules/.modules.yaml \
+        /out/dependencies/node_modules/.pnpm-workspace-state-v1.json \
     && TZ=UTC find /out/dependencies /out/sdk /out/native /workspace \
         -exec touch -h -t 197001010000.00 '{}' +
 

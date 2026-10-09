@@ -28,29 +28,22 @@ completes, and retain model usage on compilation failures. Report the active
 server build interval as `metrics.artifactBuildMs`, excluding queue and
 publication time; report publication separately as `artifactUploadMs`.
 
-Changing only the compiler worker's direct external imports to plugin `dist`
-entries does not make a production-only workspace install complete. The React
-plugin's published bundle still imports the React alias plugin by package name,
-which selects its workspace `lib` entry and can fail on the omitted development
-dependency `semver`. Even redirecting transitive Rsbuild plugins to their published
-entries leaves peer resolution to validate: a production workspace install can
-omit the template plugin link required by `react-webpack-plugin`. Validate the
-complete runtime dependency graph with a real production-only install and a
-Web/Native compilation; do not treat successful worker bundling as proof that the
-deployed compiler works.
+Keep deployment fixes local to the repository and private applications. Preserve
+public packages' dependency declarations and peer compatibility for external
+consumers. The Docker image retains the full installed workspace dependency graph,
+including development dependencies: runtime compiler packages use peer links that
+are also declared as development dependencies. A production-only workspace
+reinstall removes those links. Keep the original workspace layout and accept the
+larger dependency layer rather than rewriting published dependency contracts.
 
-The Docker build uses `pnpm deploy --prod` for the compiler's production and
-peer dependency graph, then places it at the workspace package path after the
-production reinstall. Workspace Rsbuild plugins expose `dist` through the
-`production` export condition; the compiler worker must pass
-`--conditions=production` explicitly because `NODE_ENV` does not activate it.
-Keep the default workspace development entries and published exports intact.
-Do not pack tarballs, patch installed manifests, or maintain a manual dependency
-list for deployment.
-Keep this deployment at the package root: the compiler links its adjacent
-`node_modules` into temporary applications. Do not move it into a nested dependency
-location without revisiting that assumption. Validate deployment changes with a
-model-free Web/Native compilation through the server's package resolution.
+Workspace Rsbuild plugins expose `dist` through the `production` export condition;
+the compiler worker must pass `--conditions=production` explicitly because
+`NODE_ENV` does not activate it. Keep the default workspace development entries
+and published exports intact. Do not pack tarballs, patch installed manifests,
+enable global hoisting, or maintain a manual dependency list for deployment.
+The compiler links its adjacent `node_modules` into temporary applications.
+Validate deployment changes with a model-free Web/Native compilation through the
+server's package resolution after dependency splitting and relocation.
 
 Require the existing TOS configuration and publish every build output under
 `reactlynx/preview` before emitting `done`. Honor
