@@ -30,6 +30,10 @@ export async function build(
   const shouldExit = process.env['RSDOCTOR'] !== 'true' || isCI()
   const isWatch = buildOptions.watch ?? false
 
+  if (buildOptions.logLevel) {
+    logger.level = buildOptions.logLevel
+  }
+
   let onBeforeRestart: (() => Promise<void>)[] = []
   try {
     const { rspeedyConfig, configPath, createRspeedyOptions } = await init(
