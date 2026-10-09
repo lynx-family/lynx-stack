@@ -28,6 +28,21 @@ completes, and retain model usage on compilation failures. Report the active
 server build interval as `metrics.artifactBuildMs`, excluding queue and
 publication time; report publication separately as `artifactUploadMs`.
 
+Keep deployment fixes local to the repository and private applications. Preserve
+public packages' dependency declarations and peer compatibility for external
+consumers. The Docker image retains the full installed workspace dependency graph,
+including development dependencies: runtime compiler packages use peer links that
+are also declared as development dependencies. A production-only workspace
+reinstall removes those links. Keep the original workspace layout and accept the
+larger dependency layer rather than rewriting published dependency contracts.
+
+Keep workspace entry points and published exports intact. Do not add export
+conditions solely for deployment. Do not pack tarballs, patch installed manifests,
+enable global hoisting, or maintain a manual dependency list for deployment.
+The compiler links its adjacent `node_modules` into temporary applications.
+Validate deployment changes with a model-free Web/Native compilation through the
+server's package resolution after dependency splitting and relocation.
+
 Require the existing TOS configuration and publish every build output under
 `reactlynx/preview` before emitting `done`. Honor
 `TOS_REACTLYNX_STORAGE_PREFIX` as the optional prefix override. Missing

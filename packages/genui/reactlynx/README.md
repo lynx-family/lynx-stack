@@ -20,6 +20,13 @@ The package must remain a runtime dependency of its server consumer so
 `dist/build-worker.js` stays beside `dist/index.js`. Do not bundle its public
 entry into a different output directory.
 
+The repository Dockerfile builds the workspace with Turbo and retains its full
+installed dependency graph, including development dependencies. This preserves
+the peer links used by workspace packages in the runtime compiler.
+Workspace packages keep their existing entry points. Keeping the complete
+workspace layout increases image size but leaves published dependency
+declarations unchanged.
+
 ```ts
 import {
   buildReactLynx,

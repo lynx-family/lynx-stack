@@ -94,12 +94,10 @@ RUN mkdir -p /out/native /out/sdk/lib \
     && strip --strip-unneeded /out/native/ui-judge-server \
         /out/native/lynx-headless-rust-test-runner /out/native/libreact_transform.so
 
-# pnpm prune does not prune an entire workspace. Reinstall production dependencies
-# using cached packages when available, fetching any missing package snapshots.
-# Preserve workspace links and generated package files.
-RUN find . -type d -name node_modules -prune -exec rm -rf '{}' + \
-    && corepack pnpm install --prod --prefer-offline --frozen-lockfile --ignore-scripts \
-    && find . -type d -name node_modules -prune -o \
+# Runtime compilers load workspace entries and their development dependencies,
+# including peer links. Keep the installed graph instead of reinstalling with
+# --prod, and clean build artifacts without changing the dependency layout.
+RUN find . -type d -name node_modules -prune -o \
         -type d \( -name target -o -name .turbo -o -name .swc \
         -o -name .rslib -o -name .generated \) -prune -exec rm -rf '{}' + \
     && find . -type f \( -name '*.tsbuildinfo' -o -name '*.js.map' \
