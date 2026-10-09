@@ -13,6 +13,7 @@ import {
   withBenchProtocol,
 } from './benchData.js';
 import {
+  createBenchSettingsFromReport,
   migrateBenchHistoryEntries,
   serializeBenchHistoryEntries,
 } from './benchHistory.js';
@@ -791,6 +792,7 @@ test('HTML-only Judge shows current-tab sharing guidance without requiring a sid
   }));
   expect(markup).toContain('share this tab');
   expect(markup).not.toContain('UI_JUDGE_SERVER_URL');
+  expect(markup).not.toContain('Screenshot delay (ms)');
 });
 
 test('UI Judge selects from the complete model list and defaults to the first model', () => {
@@ -819,3 +821,24 @@ test('UI Judge selects from the complete model list and defaults to the first mo
   );
   expect(dedicatedMarkup).toContain('value="judge-model"');
 });
+
+test.each([undefined, 0, 3000])(
+  'restores screenshot delay %s and displays it in the locked plan',
+  screenshotSettleMs => {
+    const settings = createBenchSettingsFromReport({
+      settings: { ...DEFAULT_BENCH_SETTINGS, screenshotSettleMs },
+    });
+    expect(settings.screenshotSettleMs).toBe(screenshotSettleMs);
+    const markup = renderToStaticMarkup(React.createElement(BenchRunPanel, {
+      locked: true,
+      settings,
+      uiJudgeServerUrl: '',
+      onSettingsChange: noop,
+      onUiJudgeServerUrlChange: noop,
+    }));
+    expect(markup).toContain('Screenshot delay (ms)');
+    expect(markup).toContain(`value="${screenshotSettleMs ?? 100}"`);
+    expect(markup).toContain('min="0"');
+    expect(markup).toContain('step="1"');
+  },
+);

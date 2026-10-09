@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { MAX_BENCH_GROUPS } from './benchData.js';
 import type { BenchGroup, BenchScenario, BenchSettings } from './benchData.js';
+import { isScreenshotSettleMs } from './benchScreenshotDelay.js';
 import { normalizeBenchUiJudgeServerUrl } from './benchUiJudgeServerUrl.js';
 import { decodeBase64Url, encodeBase64Url } from '../../utils/base64url.js';
 
@@ -69,6 +70,12 @@ function readPlan(value: unknown): BenchSharedPlan {
   const plan = record(value);
   if (plan.version !== 1) throw new Error(INVALID_PLAN);
   const settings = record(plan.settings);
+  if (
+    settings.screenshotSettleMs !== undefined
+    && !isScreenshotSettleMs(settings.screenshotSettleMs)
+  ) {
+    throw new Error(INVALID_PLAN);
+  }
   const repeats = number(settings.repeats);
   if (!Number.isInteger(repeats) || repeats < 1 || repeats > 10) {
     throw new Error(INVALID_PLAN);
@@ -138,6 +145,9 @@ function readPlan(value: unknown): BenchSharedPlan {
     }),
     settings: {
       repeats,
+      ...(settings.screenshotSettleMs === undefined ? {} : {
+        screenshotSettleMs: settings.screenshotSettleMs,
+      }),
       repairEnabled: boolean(settings.repairEnabled),
       judgeEnabled: boolean(settings.judgeEnabled),
       collectLiveRenderMetrics: boolean(settings.collectLiveRenderMetrics),

@@ -160,6 +160,7 @@ export interface BenchSettings {
   repairEnabled: boolean;
   repeats: number;
   uiJudgeModel?: string;
+  screenshotSettleMs?: number;
 }
 
 export const BENCH_CATALOG_OPTIONS = [

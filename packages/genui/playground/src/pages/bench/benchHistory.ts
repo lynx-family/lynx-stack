@@ -17,6 +17,7 @@ import type {
 } from './benchData.js';
 import { sanitizeBenchReportValue } from './benchReportSerialization.js';
 import type { BenchReport } from './benchReportTypes.js';
+import { isScreenshotSettleMs } from './benchScreenshotDelay.js';
 import { CUSTOM_PROVIDER_MODEL } from '../chat/shared.js';
 
 function createId(prefix: string): string {
@@ -94,6 +95,9 @@ export function createBenchSettingsFromReport(
       reportSettings.judgeEnabled,
       DEFAULT_BENCH_SETTINGS.judgeEnabled,
     ),
+    ...(isScreenshotSettleMs(reportSettings.screenshotSettleMs)
+      ? { screenshotSettleMs: reportSettings.screenshotSettleMs }
+      : {}),
     ...(typeof reportSettings.uiJudgeModel === 'string'
         && reportSettings.uiJudgeModel.trim().length > 0
       ? { uiJudgeModel: reportSettings.uiJudgeModel.trim() }

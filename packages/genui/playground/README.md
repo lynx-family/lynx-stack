@@ -249,3 +249,9 @@ for the server-side bucket setup and local toggles.
 | `pnpm build`   | Production build                                         |
 | `pnpm preview` | Serve the production build locally                       |
 | `pnpm test`    | Run the `rstest` suite                                   |
+
+Bench exposes **Screenshot delay (ms)** under UI Judge for Lynx captures. It defaults
+to 100 ms and accepts non-negative integer values, including 0. Increase it for
+asynchronously rendered content. The value is saved with Bench history and shared
+parameters and sent as `screenshotSettleMs` to both ZIP screenshot routes. It does
+not affect HTML capture or guarantee that all application work has completed.

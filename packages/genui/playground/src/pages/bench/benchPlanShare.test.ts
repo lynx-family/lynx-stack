@@ -38,6 +38,7 @@ function fixture() {
       ...DEFAULT_BENCH_SETTINGS,
       repeats: 4,
       uiJudgeModel: 'judge-model',
+      screenshotSettleMs: 3000,
     },
   };
 }
@@ -166,3 +167,34 @@ test('rejects malformed, oversized, unsupported, and ambiguous plans', () => {
     })
   ).toThrow('too large');
 });
+
+test.each([undefined, 0, 3000])(
+  'preserves screenshot delay %s in shared plans',
+  screenshotSettleMs => {
+    const plan = fixture();
+    const settings = { ...plan.settings, screenshotSettleMs };
+    const restored = readBenchPlanShare(
+      encodeBase64Url(JSON.stringify({ version: 1, ...plan, settings })),
+    );
+    expect(restored.settings.screenshotSettleMs).toBe(screenshotSettleMs);
+  },
+);
+
+test.each([-1, 1.5, '3000', null, Number.MAX_SAFE_INTEGER + 1])(
+  'rejects invalid shared screenshot delay %s',
+  screenshotSettleMs => {
+    const plan = fixture();
+    expect(() =>
+      readBenchPlanShare(
+        encodeBase64Url(
+          JSON.stringify({
+            version: 1,
+            ...plan,
+            settings: { ...plan.settings, screenshotSettleMs },
+          }),
+        ),
+      )
+    )
+      .toThrow('invalid or unsupported');
+  },
+);

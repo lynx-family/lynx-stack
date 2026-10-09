@@ -1,12 +1,15 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { DEFAULT_SCREENSHOT_SETTLE_MS } from './benchScreenshotDelay.js';
+
 export interface BenchRunPanelSettings {
   collectLiveRenderMetrics: boolean;
   judgeEnabled: boolean;
   repairEnabled: boolean;
   repeats: number;
   uiJudgeModel?: string;
+  screenshotSettleMs?: number;
 }
 
 function clampNumber(value: number, min: number, max: number): number {
@@ -97,6 +100,34 @@ export function BenchRunPanel(props: {
                     Your browser connects to this service and uploads
                     screenshots for scoring. The address is saved in this
                     browser and included when sharing Bench parameters.
+                  </p>
+                  <label className='benchField'>
+                    <span className='benchFieldLabel'>
+                      Screenshot delay (ms)
+                    </span>
+                    <input
+                      className='benchInput'
+                      type='number'
+                      min={0}
+                      step={1}
+                      max={Number.MAX_SAFE_INTEGER}
+                      value={props.settings.screenshotSettleMs
+                        ?? DEFAULT_SCREENSHOT_SETTLE_MS}
+                      readOnly={props.locked}
+                      onChange={(event) =>
+                        props.onSettingsChange({
+                          screenshotSettleMs: clampNumber(
+                            Number(event.target.value),
+                            0,
+                            Number.MAX_SAFE_INTEGER,
+                          ),
+                        })}
+                    />
+                  </label>
+                  <p className='benchFieldHint'>
+                    Wait before capturing Lynx content. Default: 100 ms.
+                    Increase this for content that loads asynchronously; 0 skips
+                    the extra wait.
                   </p>
                   {props.uiJudgeServerUrlValidationError
                     ? (
