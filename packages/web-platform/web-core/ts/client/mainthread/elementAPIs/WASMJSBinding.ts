@@ -101,6 +101,15 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     return undefined;
   }
 
+  #reportErrorAfterWasmUnwinds(error: unknown): void {
+    queueMicrotask(() => {
+      this.lynxViewInstance.mainThreadGlobalThis._ReportError(
+        error as Error,
+        undefined,
+      );
+    });
+  }
+
   runWorklet(
     handler: { value: unknown },
     eventObject: LynxCrossThreadEvent,
@@ -130,9 +139,14 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
     eventObject.target.elementRefptr = resolvedTarget;
     // @ts-expect-error
     eventObject.currentTarget.elementRefptr = currentTarget;
-    this.lynxViewInstance.mainThreadGlobalThis.runWorklet?.(handler.value, [
-      eventObject,
-    ]);
+    try {
+      this.lynxViewInstance.mainThreadGlobalThis.runWorklet?.(handler.value, [
+        eventObject,
+      ]);
+    } catch (error) {
+      this.#reportErrorAfterWasmUnwinds(error);
+      throw error;
+    }
   }
 
   /**
@@ -206,17 +220,22 @@ export class WASMJSBinding implements RustMainthreadContextBinding {
       currentTarget as DecoratedHTMLElement,
       currentTargetDataset,
     );
-    if (parentComponentId) {
-      this.lynxViewInstance?.backgroundThread.publicComponentEvent(
-        parentComponentId,
-        handlerName,
-        eventObject,
-      );
-    } else {
-      this.lynxViewInstance.backgroundThread.publishEvent(
-        handlerName,
-        eventObject,
-      );
+    try {
+      if (parentComponentId) {
+        this.lynxViewInstance?.backgroundThread.publicComponentEvent(
+          parentComponentId,
+          handlerName,
+          eventObject,
+        );
+      } else {
+        this.lynxViewInstance.backgroundThread.publishEvent(
+          handlerName,
+          eventObject,
+        );
+      }
+    } catch (error) {
+      this.#reportErrorAfterWasmUnwinds(error);
+      throw error;
     }
   }
 
