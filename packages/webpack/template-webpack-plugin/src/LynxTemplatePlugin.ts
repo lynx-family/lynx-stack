@@ -851,10 +851,19 @@ class LynxTemplatePluginImpl {
         compilation.addRuntimeModule(
           chunk,
           new LynxAsyncChunksRuntimeModule((asyncChunk) => {
+            // A chunk name can come from `splitChunks.cacheGroups.name` too.
+            // A named import has a matching group whose `origins` records the
+            // import site. Check ownership as well: splitChunks may reuse that
+            // named chunk for another import group.
             const namedImportGroup = asyncChunk.name !== null
               && asyncChunk.name !== undefined
               && [...asyncChunk.groupsIterable].some(group =>
-                group.name === asyncChunk.name && group.origins.length > 0
+                group.name === asyncChunk.name
+                && group.origins.length > 0
+                && isOwnedByLazyBundle(
+                  asyncChunk,
+                  getOwnedChunkGroups(compilation, [group]),
+                )
               );
             const filename =
               LynxTemplatePluginImpl.#getLazyBundleNameByChunkId(compilation)
