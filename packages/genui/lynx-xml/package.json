@@ -19,7 +19,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README*.md",
+    "docs/*.md"
   ],
   "scripts": {
     "build": "rslib",
