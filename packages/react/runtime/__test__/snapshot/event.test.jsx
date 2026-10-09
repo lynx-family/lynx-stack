@@ -221,7 +221,7 @@ describe('eventUpdate', () => {
       ]
     `);
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(__root.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -324,7 +324,7 @@ describe('eventUpdate', () => {
       ]
     `);
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(__root.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -437,7 +437,7 @@ describe('eventUpdate', () => {
     patch = takeGlobalSnapshotPatch();
     expect(patch).toMatchInlineSnapshot(`[]`);
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     globalEnvManager.switchToBackground();
 
     lynx.getApp().publishEvent('-2:0:', 'data3');
@@ -616,7 +616,7 @@ describe('eventUpdate', () => {
       ]
     `);
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(__root.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -784,7 +784,7 @@ describe('event in spread', () => {
       ]
     `);
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(__root.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -858,7 +858,7 @@ describe('event in spread', () => {
     `);
 
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(__root.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -953,7 +953,7 @@ describe('event in spread', () => {
       ]
     `);
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(__root.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"

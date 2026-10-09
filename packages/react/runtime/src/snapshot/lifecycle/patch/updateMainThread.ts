@@ -66,10 +66,10 @@ function updateMainThread(
     setMainThreadHydrating(true);
   }
   try {
-    for (const { snapshotPatch } of patchList) {
+    for (const { snapshotPatch, id } of patchList) {
       __pendingListUpdates.clearAttachedLists();
       if (snapshotPatch) {
-        snapshotPatchApply(snapshotPatch);
+        snapshotPatchApply(snapshotPatch, id, patchOptions.isHydration === true);
       }
       __pendingListUpdates.flush();
       // console.debug('********** Lepus updatePatch:');
