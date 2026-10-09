@@ -1051,9 +1051,7 @@ class LynxTemplatePluginImpl {
         if (chunk.id === null || chunk.id === undefined) {
           continue;
         }
-        if (
-          ![...chunk.groupsIterable].every(group => ownChunkGroups.has(group))
-        ) {
+        if (!isOwnedByLazyBundle(chunk, ownChunkGroups)) {
           // Shared chunks stay on the default async loader.
           continue;
         }
@@ -1125,9 +1123,7 @@ class LynxTemplatePluginImpl {
           if (chunk.id === null || chunk.id === undefined) {
             continue;
           }
-          if (
-            ![...chunk.groupsIterable].every(group => ownChunkGroups.has(group))
-          ) {
+          if (!isOwnedByLazyBundle(chunk, ownChunkGroups)) {
             continue;
           }
           let layer: string | undefined;
@@ -1196,21 +1192,7 @@ class LynxTemplatePluginImpl {
 
           encodedTemplate.add(filenameTemplate);
 
-          // Keep only the chunks this lazy bundle owns. Groups importing the
-          // same resolved module count as this bundle. Example: entry `main`
-          // + `import('./PageA')`,
-          // with `splitChunks: { name: 'main', chunks: 'all' }` merging the
-          // shared module into `main`. Building lazy bundle `src_PageA.tsx`:
-          //   chunkGroups (own): [<PageA background>, <PageA main-thread>]
-          //   chunk id=528 files=[lazy-bundle/src_PageA.tsx/background.js]
-          //     groupsIterable=[<PageA background>]            -> keep
-          //   chunk id=384 files=[lazy-bundle/src_PageA.tsx/main-thread.js]
-          //     groupsIterable=[<PageA main-thread>]           -> keep
-          //   chunk id=889 name=main files=[main/background.js, main/main.css]
-          //     groupsIterable=[main, <PageA background>, ...] -> drop
-          // id=889 is the entry chunk; it also sits in `main`, a group outside
-          // this bundle, so inlining it would copy the entry into every lazy
-          // bundle (#4044).
+          // Match the ownership used for layout and runtime routing.
           const ownChunkGroups = getOwnedChunkGroups(compilation, chunkGroups);
           const asyncAssetsInfoByGroups = this.#getAssetsInformationByFilenames(
             compilation,
@@ -1222,9 +1204,7 @@ class LynxTemplatePluginImpl {
               new Set(
                 chunkGroups.flatMap(cg =>
                   cg.chunks.flatMap(chunk => {
-                    const isOwned = [...chunk.groupsIterable].every(group =>
-                      ownChunkGroups.has(group)
-                    );
+                    const isOwned = isOwnedByLazyBundle(chunk, ownChunkGroups);
                     return [...chunk.files].filter(file =>
                       isOwned || file.endsWith('.css')
                     );
@@ -1714,6 +1694,25 @@ function getOwnedChunkGroups(
   }
 
   return owned;
+}
+
+/**
+ * A lazy bundle includes a chunk only when all its groups belong to that
+ * bundle. For PageA, `ownedGroups` contains its background and main-thread
+ * groups, plus any group importing the same resolved module:
+ *
+ * | chunk | `groupsIterable` | owned? |
+ * | --- | --- | --- |
+ * | PageA background | [PageA background] | yes |
+ * | PageA main-thread | [PageA main-thread] | yes |
+ * | common JS | [PageA background, PageB background] | no |
+ * | entry main | [main, PageA background] | no |
+ */
+function isOwnedByLazyBundle(
+  chunk: Chunk,
+  ownedGroups: Set<ChunkGroup>,
+): boolean {
+  return [...chunk.groupsIterable].every(group => ownedGroups.has(group));
 }
 
 const LAZY_BUNDLE_NAME_LIMIT = 100;

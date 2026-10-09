@@ -890,12 +890,15 @@ importers:
         specifier: ^10.1.0
         version: 10.1.0
 
-  examples/react-lazy-bundle-split-repro:
+  examples/react-lazy-bundle-share-common-chunks:
     dependencies:
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../packages/react
     devDependencies:
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-qrcode
       '@lynx-js/react-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-react
@@ -908,10 +911,6 @@ importers:
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.2.9(core-js@3.50.0)
-      cross-env:
-        specifier: ^10.1.0
-        version: 10.1.0
-
   examples/react-lazy-bundle-standalone:
     dependencies:
       '@lynx-js/react':

@@ -1,4 +1,4 @@
-# react-lazy-bundle-split-repro
+# react-lazy-bundle-share-common-chunks
 
 Minimal reproduction for [#4040](https://github.com/lynx-family/lynx-stack/issues/4040):
 chunk splitting misbehaves when two lazy bundles import the same module.
@@ -8,16 +8,19 @@ The failures below describe the behavior before the fixes in #4104 and #4079.
 `src/PageA.tsx` and `src/PageB.tsx` are lazy-loaded from `src/index.tsx` and both
 import `src/shared.ts`, which they use from the background layer (JSX children)
 and from the main-thread layer (a `'main thread'` worklet). The cache group in
-`rsbuild.config.js` puts `src/shared.ts` into a chunk named `shared`.
+`rsbuild.config.ts` puts `src/shared.ts` into a chunk named `shared`.
 
-## Build modes
+## Run
 
-| script                    | cache group            | original failure                           |
-| ------------------------- | ---------------------- | ------------------------------------------ |
-| `build:baseline`          | none (`NO_SPLIT=1`)    | works                                      |
-| `build:split`             | unscoped               | builds, but the lazy bundles no longer run |
-| `build:split-background`  | `layer: /background/`  | builds, every bundle gets bigger           |
-| `build:split-main-thread` | `layer: /main-thread/` | build fails                                |
+```bash
+pnpm build
+pnpm dev # scan the QR code with LynxExplorer
+```
+
+The `shared` cache group is enabled by default. To compare with a build without
+chunk splitting, remove `splitChunks` from `rsbuild.config.ts`; to try a
+layer-specific split, add `layer: /background/` or `layer: /main-thread/` to
+the cache group.
 
 For a native device, set `REPRO_ASSET_PREFIX` to an absolute URL reachable by
 the device before building (for example, `http://127.0.0.1:54173/` with an
@@ -25,11 +28,11 @@ the device before building (for example, `http://127.0.0.1:54173/` with an
 useful for inspecting the build output; the native loader cannot resolve them
 against the main bundle's URL.
 
-## What each mode shows
+## What failed before the fixes
 
-### `build:split` — one chunk for both layers, and it replaces the main thread
+### Unscoped cache group — one chunk for both layers
 
-`dist/split/.lynx/lazy-bundle/src_PageA.tsx/background.<hash>.js` holds _both_
+`dist/.lynx/lazy-bundle/src_PageA.tsx/background.<hash>.js` held _both_
 copies of `shared.ts` — the background one and the main-thread one:
 
 ```text
@@ -47,7 +50,7 @@ That is problem 1: `splitChunks.chunks` only excludes chunks whose name contains
 `__main-thread`, and a lazy bundle's main-thread chunk has no such name.
 
 The chunk is then picked as the lazy bundle's main-thread root. In
-`dist/split/.lynx/lazy-bundle/*/tasm.json`, `lepusCode.root` is the 1232-byte
+`dist/.lynx/lazy-bundle/*/tasm.json`, `lepusCode.root` was the 1232-byte
 shared chunk instead of the bundle's own 1684-byte `main-thread.js`, and the
 shared chunk is missing from `manifest`. Both bundles fail to load at runtime:
 
@@ -55,7 +58,7 @@ shared chunk is missing from `manifest`. Both bundles fail to load at runtime:
 unhandled rejection: Lazy bundle load failed, schema: /lazy-bundle/src_PageA.tsx.<hash>.bundle
 ```
 
-### `build:split-main-thread` — filename conflict
+### `layer: /main-thread/` — filename conflict
 
 With the cache group restricted to the main-thread layer, the split chunk
 contains only main-thread modules, so `getAsyncChunkLayoutName` maps it onto the
@@ -67,12 +70,12 @@ unhashed `main-thread.js` of whichever bundle it was attributed to:
 
 That is problem 2.
 
-### `build:split-background` — splitting makes every bundle bigger
+### `layer: /background/` — splitting makes every bundle bigger
 
-|                          | `src_PageA.tsx.bundle` | `src_PageB.tsx.bundle` |
-| ------------------------ | ---------------------- | ---------------------- |
-| `build:baseline`         | 17274 B                | 17279 B                |
-| `build:split-background` | 18623 B                | 18628 B                |
+|                       | `src_PageA.tsx.bundle` | `src_PageB.tsx.bundle` |
+| --------------------- | ---------------------- | ---------------------- |
+| no `splitChunks`      | 17274 B                | 17279 B                |
+| `layer: /background/` | 18623 B                | 18628 B                |
 
 Both bundles still contain their own copy of `SHARED_MODULE_BODY`, because
 `LynxEncodePlugin` inlines every manifest chunk for a `DynamicComponent`. That is
