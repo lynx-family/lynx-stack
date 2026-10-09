@@ -150,6 +150,13 @@ local request ID; never forward provider request/response bodies or all headers.
 If the provider supplies no reason, report an upstream failure rather than a
 missing artifact. Keep Bench usage for failed model attempts.
 
+Classify upstream timeouts through bounded SDK cause/lastError chains, preserving
+the transport timeout reason and distinguishing connection, response-header, and
+response-body timeouts. Return `UPSTREAM_TIMEOUT` in public generation errors
+without inventing an upstream HTTP status for connection failures. Keep existing
+model/request secret redaction and usage metadata, and do not classify ordinary
+connection failures or client cancellation as timeouts.
+
 When diagnosing streamed generation failures, distinguish the local SSE HTTP
 status from upstream model success. Aggregate usage and duplicate client error
 entries do not establish the number of upstream calls; use
