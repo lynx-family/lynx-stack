@@ -343,9 +343,16 @@ test.each([
   },
 );
 
-test.each([false, true])(
-  'HTML capture bypasses the sidecar and uploads pixels or capture errors: %s',
-  async (fail) => {
+test.each(
+  [false, true].flatMap(fail =>
+    [undefined, 0, 3000].map(screenshotSettleMs => ({
+      fail,
+      screenshotSettleMs,
+    }))
+  ),
+)(
+  'HTML/ReactWeb capture forwards delay $screenshotSettleMs without a sidecar (failure: $fail)',
+  async ({ fail, screenshotSettleMs }) => {
     const captureHtml = rstest.fn().mockImplementation(() =>
       fail
         ? Promise.reject(new Error('Sharing stopped'))
@@ -366,6 +373,7 @@ test.each([false, true])(
     const relay = createBenchScreenshotRelay({
       jobUrl,
       serverUrl: '',
+      screenshotSettleMs,
       signal: new AbortController().signal,
       captureHtml,
       fetch: fetchImpl,
@@ -376,7 +384,11 @@ test.each([false, true])(
     await expect.poll(() => fetchImpl.mock.calls.length).toBe(2);
     expect(captureHtml).toHaveBeenCalledTimes(1);
     expect(captureHtml).toHaveBeenCalledWith(
-      expect.objectContaining({ width: 390, height: 844 }),
+      expect.objectContaining({
+        width: 390,
+        height: 844,
+        screenshotSettleMs: screenshotSettleMs ?? 100,
+      }),
       expect.any(AbortSignal),
     );
     expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([
@@ -397,16 +409,32 @@ test.each([
   Number.NaN,
   Number.POSITIVE_INFINITY,
   Number.MAX_SAFE_INTEGER + 1,
-])(
-  'rejects invalid browser screenshot delay %s before capture',
-  async screenshotSettleMs => {
+].flatMap(screenshotSettleMs =>
+  ['screenshot/zip/upload', 'browser/html'].map(path => ({
+    path,
+    screenshotSettleMs,
+  }))
+))(
+  'rejects invalid delay $screenshotSettleMs before $path capture',
+  async ({ screenshotSettleMs, path }) => {
+    const captureHtml = rstest.fn();
     const fetchImpl = rstest.fn<typeof fetch>()
-      .mockResolvedValueOnce(xmlTask())
+      .mockResolvedValueOnce(
+        path === 'browser/html'
+          ? Response.json({
+            path,
+            fields: { width: '390', height: '844' },
+            source: '<!doctype html><html></html>',
+            timeoutMs: 1000,
+          })
+          : xmlTask(),
+      )
       .mockResolvedValueOnce(Response.json({ ok: true }));
     const relay = createBenchScreenshotRelay({
       jobUrl,
       serverUrl,
       screenshotSettleMs,
+      captureHtml,
       signal: new AbortController().signal,
       onError: rstest.fn(),
       fetch: fetchImpl,
@@ -418,6 +446,7 @@ test.each([
     );
     expect(fetchImpl.mock.calls[1]?.[1]?.body)
       .toContain('Screenshot delay must be a non-negative integer');
+    expect(captureHtml).not.toHaveBeenCalled();
   },
 );
 

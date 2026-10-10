@@ -101,34 +101,6 @@ export function BenchRunPanel(props: {
                     screenshots for scoring. The address is saved in this
                     browser and included when sharing Bench parameters.
                   </p>
-                  <label className='benchField'>
-                    <span className='benchFieldLabel'>
-                      Screenshot delay (ms)
-                    </span>
-                    <input
-                      className='benchInput'
-                      type='number'
-                      min={0}
-                      step={1}
-                      max={Number.MAX_SAFE_INTEGER}
-                      value={props.settings.screenshotSettleMs
-                        ?? DEFAULT_SCREENSHOT_SETTLE_MS}
-                      readOnly={props.locked}
-                      onChange={(event) =>
-                        props.onSettingsChange({
-                          screenshotSettleMs: clampNumber(
-                            Number(event.target.value),
-                            0,
-                            Number.MAX_SAFE_INTEGER,
-                          ),
-                        })}
-                    />
-                  </label>
-                  <p className='benchFieldHint'>
-                    Wait before capturing Lynx content. Default: 100 ms.
-                    Increase this for content that loads asynchronously; 0 skips
-                    the extra wait.
-                  </p>
                   {props.uiJudgeServerUrlValidationError
                     ? (
                       <p className='benchFieldError' role='alert'>
@@ -138,6 +110,33 @@ export function BenchRunPanel(props: {
                     : null}
                 </>
               )}
+              <label className='benchField'>
+                <span className='benchFieldLabel'>
+                  Screenshot delay (ms)
+                </span>
+                <input
+                  className='benchInput'
+                  type='number'
+                  min={0}
+                  step={1}
+                  max={Number.MAX_SAFE_INTEGER}
+                  value={props.settings.screenshotSettleMs
+                    ?? DEFAULT_SCREENSHOT_SETTLE_MS}
+                  readOnly={props.locked}
+                  onChange={(event) =>
+                    props.onSettingsChange({
+                      screenshotSettleMs: clampNumber(
+                        Number(event.target.value),
+                        0,
+                        Number.MAX_SAFE_INTEGER,
+                      ),
+                    })}
+                />
+              </label>
+              <p className='benchFieldHint'>
+                Wait before capturing content. Default: 100 ms. Increase this
+                for content that loads asynchronously; 0 skips the extra wait.
+              </p>
               {props.hasHtmlGroups && (
                 <p className='benchFieldHint'>
                   HTML and ReactWeb use your browser's screenshot capability.
