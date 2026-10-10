@@ -2634,6 +2634,7 @@ describe('Config', () => {
         "enableCSSInvalidation": true,
         "enableCSSSelector": true,
         "enableNewGesture": false,
+        "enableReloadCardOnAppReload": false,
         "enableRemoveCSSScope": true,
         "experimental_isLazyBundle": false,
         "filename": "main.lynx.bundle",
@@ -2643,6 +2644,32 @@ describe('Config', () => {
         "targetSdkVersion": "3.2",
       }
     `)
+  })
+
+  test('enables card reload for experimental entry re-evaluation', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx({
+            experimental_reEvalJSOnReload: true,
+          }),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+    const templatePlugin = config?.plugins?.find((
+      p,
+    ): p is LynxTemplatePlugin => p?.constructor.name === 'LynxTemplatePlugin')
+
+    expect(templatePlugin).toBeDefined()
+    const templateOptions = (templatePlugin as unknown as {
+      options: { enableReloadCardOnAppReload?: boolean }
+    }).options
+    expect(templateOptions.enableReloadCardOnAppReload).toBe(true)
   })
 
   test('targetSdkVersion', async () => {

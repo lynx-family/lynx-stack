@@ -111,6 +111,8 @@ export interface LynxTemplatePluginOptions {
     enableCSSInvalidation: boolean;
     enableCSSSelector: boolean;
     enableNewGesture: boolean;
+    // (undocumented)
+    enableReloadCardOnAppReload?: boolean | undefined;
     enableRemoveCSSScope: boolean;
     enableSectionBytecode?: boolean | undefined;
     excludeChunks?: string[];

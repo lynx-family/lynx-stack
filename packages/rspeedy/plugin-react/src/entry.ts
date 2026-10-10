@@ -62,6 +62,7 @@ export function applyEntry(
 
     experimental_isLazyBundle,
     experimental_transformBuiltinAttributeNames,
+    experimental_reEvalJSOnReload,
   } = options
 
   const lazyBundleFetcher = resolveLazyBundleFetcher(targetSdkVersion)
@@ -242,6 +243,7 @@ export function applyEntry(
             experimental_isLazyBundle,
             lazyBundleFetcher,
             cssPlugins: [],
+            enableReloadCardOnAppReload: experimental_reEvalJSOnReload,
           }])
           .end()
       })
@@ -322,6 +324,7 @@ export function applyEntry(
         profile: getDefaultProfile(),
         lazyBundleFetcher,
         runtimeVersion,
+        experimental_reEvalJSOnReload,
       }])
 
     // Runtime config belongs to the page host. Standalone lazy bundles and

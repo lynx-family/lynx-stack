@@ -7,6 +7,7 @@ import { runWithForce } from './runWithForce.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { updateCardData } from '../../core/lynx-update-data.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../../core/performance.js';
+import { increaseReloadVersion } from '../../core/reload-version.js';
 import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
@@ -24,6 +25,7 @@ import { delayLifecycleEvent, delayedLifecycleEvents } from '../lifecycle/event/
 import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../lifecycle/patch/commit.js';
 import type { PatchList } from '../lifecycle/patch/commit.js';
 import { removeCtxNotFoundEventListener } from '../lifecycle/patch/error.js';
+import { deinitGlobalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 import { runDelayedUiOps } from '../lifecycle/ref/delay.js';
 import { reloadBackground } from '../lifecycle/reload.js';
 import {
@@ -49,7 +51,16 @@ function injectTt(): void {
   };
   tt.updateGlobalProps = updateGlobalProps;
   tt.updateCardData = updateCardData;
-  tt.onAppReload = reloadBackground;
+  if (typeof __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__ !== 'undefined' && __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__) {
+    const oldOnAppReload = tt.onAppReload;
+    tt.onAppReload = (...args) => {
+      deinitGlobalSnapshotPatch();
+      increaseReloadVersion();
+      oldOnAppReload.apply(tt, args);
+    };
+  } else {
+    tt.onAppReload = reloadBackground;
+  }
   tt.processCardConfig = () => {
     // used to updateTheme, no longer rely on this function
   };
