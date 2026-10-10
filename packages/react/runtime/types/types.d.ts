@@ -35,6 +35,7 @@ declare global {
   declare const __GLOBAL_PROPS_MODE__: 'reactive' | 'event' | undefined;
   declare const __LAZY_BUNDLE_FETCHER__: 'FetchBundle' | 'QueryComponent';
   declare const __RUNTIME_VERSION__: string | undefined;
+  declare const __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__: boolean | undefined;
   declare function __CreatePage(componentId: string, cssId: number): FiberElement;
   declare function __CreateElement(
     tag: string,

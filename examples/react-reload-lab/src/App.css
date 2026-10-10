@@ -1,0 +1,409 @@
+:root {
+  background-color: #0b1220;
+}
+
+.Page {
+  height: 100vh;
+  background-color: #0b1220;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 16px 30px;
+}
+
+.Hero {
+  background-color: #14233b;
+  border-color: #263d5b;
+  border-radius: 20px;
+  border-width: 1px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 14px;
+  padding: 20px 18px 16px;
+}
+
+.Eyebrow {
+  color: #67dfd1;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.Title {
+  color: #f5f8ff;
+  font-size: 30px;
+  font-weight: 800;
+  margin-top: 7px;
+}
+
+.Subtitle {
+  color: #aab9cf;
+  font-size: 13px;
+  line-height: 1.4;
+  margin-top: 6px;
+}
+
+.HeroFooter {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+.FeaturePill {
+  background-color: #17433f;
+  border-radius: 20px;
+  color: #8bf2de;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 6px 10px;
+}
+
+.RuntimeLabel {
+  color: #d7e2f0;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.Metrics {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 20px;
+}
+
+.MetricCard {
+  background-color: #121e31;
+  border-color: #253752;
+  border-radius: 15px;
+  border-width: 1px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  margin-right: 7px;
+  min-width: 0;
+  padding: 11px 10px;
+}
+
+.MetricCard:last-child {
+  margin-right: 0;
+}
+
+.MetricLabel {
+  color: #9eb0c9;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.MetricValue {
+  color: #f7fbff;
+  font-size: 25px;
+  font-weight: 800;
+  margin-top: 5px;
+}
+
+.MetricHint {
+  color: #72839a;
+  font-size: 9px;
+  margin-top: 3px;
+}
+
+.SectionHeading {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: 2px 2px 9px;
+}
+
+.SectionTitle {
+  color: #8da2bd;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.SectionHint {
+  color: #63768f;
+  font-size: 10px;
+}
+
+.CheckCard {
+  background-color: #121e31;
+  border-color: #253752;
+  border-radius: 16px;
+  border-width: 1px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 9px;
+  padding: 13px;
+}
+
+.CardHeader {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 11px;
+}
+
+.Step {
+  align-items: center;
+  background-color: #1e3c65;
+  border-radius: 10px;
+  display: flex;
+  height: 34px;
+  justify-content: center;
+  margin-right: 10px;
+  width: 34px;
+}
+
+.Step--mint {
+  background-color: #17433f;
+}
+
+.Step--violet {
+  background-color: #352c59;
+}
+
+.StepText {
+  color: #d8e8ff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.CardHeading {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.CardTitle {
+  color: #f2f6fc;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.CardDescription {
+  color: #8fa2bc;
+  font-size: 11px;
+  line-height: 1.3;
+  margin-top: 3px;
+}
+
+.ActionButton {
+  align-items: center;
+  border-radius: 11px;
+  display: flex;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 12px;
+}
+
+.ActionButton--blue {
+  background-color: #315f9f;
+}
+
+.ActionButton--mint {
+  background-color: #67dfd1;
+}
+
+.ActionButton--quiet {
+  background-color: #202e43;
+  border-color: #344862;
+  border-width: 1px;
+}
+
+.ActionText {
+  color: #f6f9ff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ActionText--dark {
+  color: #0c2525;
+}
+
+.RefBadge {
+  background-color: #3a334d;
+  border-radius: 10px;
+  color: #dccaff;
+  font-size: 9px;
+  font-weight: 800;
+  margin-left: 6px;
+  padding: 5px 7px;
+}
+
+.RefBadge--attached {
+  background-color: #17433f;
+  color: #8bf2de;
+}
+
+.RefBadge--detached {
+  background-color: #563535;
+  color: #ffc0b7;
+}
+
+.TraceSummary {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.TraceSummaryText {
+  color: #d6e2f2;
+  flex: 1;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.TraceButton {
+  align-items: center;
+  background-color: #24405d;
+  border-color: #365777;
+  border-radius: 8px;
+  border-width: 1px;
+  display: flex;
+  height: 30px;
+  justify-content: center;
+  margin-left: 8px;
+  padding: 0 10px;
+}
+
+.TraceButtonText {
+  color: #d9ecff;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.TraceList {
+  background-color: #0b1423;
+  border-color: #263752;
+  border-radius: 9px;
+  border-width: 1px;
+  display: flex;
+  flex-direction: column;
+  margin-top: 9px;
+  padding: 8px;
+}
+
+.TraceCycle {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.TraceCycle:last-child {
+  margin-bottom: 0;
+}
+
+.TraceCycleTitle {
+  color: #75d9c8;
+  font-size: 10px;
+  font-weight: 800;
+  margin-bottom: 5px;
+}
+
+.TraceLine {
+  color: #b8c9df;
+  font-family: monospace;
+  font-size: 9px;
+  line-height: 13px;
+  margin-bottom: 3px;
+}
+
+.TraceOverflow {
+  color: #8fa5c2;
+  font-size: 9px;
+  margin-top: 3px;
+}
+
+.ReloadPanel {
+  align-items: center;
+  background-color: #16352f;
+  border-color: #286459;
+  border-radius: 17px;
+  border-width: 1px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-top: 4px;
+  padding: 14px;
+}
+
+.ReloadCopy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  margin-right: 10px;
+}
+
+.ReloadTitle {
+  color: #e8fff9;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.ReloadHint {
+  color: #9cc9be;
+  font-size: 10px;
+  line-height: 1.3;
+  margin-top: 4px;
+}
+
+.ReloadButton {
+  align-items: center;
+  background-color: #74ead8;
+  border-radius: 12px;
+  display: flex;
+  height: 42px;
+  justify-content: center;
+  width: 86px;
+}
+
+.ReloadButtonText {
+  color: #0c2926;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.ResultBar {
+  align-items: center;
+  background-color: #111c2c;
+  border-color: #26354b;
+  border-radius: 12px;
+  border-width: 1px;
+  display: flex;
+  flex-direction: row;
+  margin-top: 12px;
+  padding: 10px 11px;
+}
+
+.LiveDot {
+  background-color: #67dfd1;
+  border-radius: 5px;
+  height: 7px;
+  margin-right: 7px;
+  width: 7px;
+}
+
+.ResultLabel {
+  color: #8da2bd;
+  font-size: 9px;
+  font-weight: 800;
+  margin-right: 7px;
+}
+
+.ResultText {
+  color: #edf4ff;
+  flex: 1;
+  font-size: 10px;
+}
+
+.FooterNote {
+  color: #697b93;
+  font-size: 10px;
+  line-height: 1.35;
+  margin: 12px 3px 0;
+  text-align: center;
+}
