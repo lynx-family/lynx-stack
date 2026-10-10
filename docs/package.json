@@ -28,8 +28,8 @@
     "preview": "rspress preview"
   },
   "devDependencies": {
-    "@rspress/core": "2.0.21",
-    "@rspress/plugin-typedoc": "2.0.21",
+    "@rspress/core": "2.0.23",
+    "@rspress/plugin-typedoc": "2.0.23",
     "@types/react": "npm:@types/react@^19.2.18",
     "@types/react-dom": "^19.2.4",
     "react": "19.3.0",
