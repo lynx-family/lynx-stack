@@ -678,6 +678,51 @@ describe('Worklet', () => {
     });
   });
 
+  it('event object should preserve target metadata', () => {
+    initWorklet();
+    const fn = vi.fn(function(event) {
+      globalThis.lynxWorkletImpl._workletMap['1'].bind(this);
+
+      expect(event.target).toBeInstanceOf(Element);
+      expect(event.target.element).toBe('target-element');
+      expect(event.currentTarget).toBeInstanceOf(Element);
+      expect(event.currentTarget.element).toBe('current-target-element');
+      expect(JSON.parse(JSON.stringify(event.target))).toEqual({
+        id: 'target',
+        uid: 1,
+        dataset: { item: 'target' },
+        nodeIndex: 2,
+      });
+      expect(JSON.parse(JSON.stringify(event.currentTarget))).toEqual({
+        id: 'current-target',
+        uid: 3,
+        dataset: { item: 'current-target' },
+        nodeIndex: 4,
+      });
+    });
+    globalThis.registerWorklet('main-thread', '1', fn);
+    globalThis.runWorklet({ _wkltId: '1' }, [{
+      target: {
+        elementRefptr: 'target-element',
+        id: 'target',
+        uid: 1,
+        dataset: { item: 'target' },
+        nodeIndex: 2,
+      },
+      currentTarget: {
+        elementRefptr: 'current-target-element',
+        id: 'current-target',
+        uid: 3,
+        dataset: { item: 'current-target' },
+        nodeIndex: 4,
+      },
+    }], {
+      source: RunWorkletSource.EVENT,
+    });
+
+    expect(fn).toHaveBeenCalledOnce();
+  });
+
   it('event object should have returnValue wrapped', async () => {
     initWorklet();
     const fn = vi.fn(function() {
