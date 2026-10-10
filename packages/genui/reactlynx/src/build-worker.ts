@@ -69,18 +69,20 @@ const rsbuild = await createRsbuild({
                   if (
                     data.contextInfo.issuer?.split('?')[0] !== appPath
                   ) return;
+                  // Authored imports were validated before compilation. These
+                  // extra requests are injected by the ReactLynx/SWC loaders.
                   if (
                     ![
                       '@lynx-js/react',
+                      '@lynx-js/react/internal',
                       '@lynx-js/react/jsx-runtime',
                       '@lynx-js/react/jsx-dev-runtime',
-                      // The trusted ReactLynx transform injects these imports.
-                      // The source policy still rejects them in authored code.
-                      '@lynx-js/react/internal',
                       '@lynx-js/react/lepus',
                       '@lynx-js/react/lepus/jsx-runtime',
+                      '@lynx-js/react/lepus/jsx-dev-runtime',
                       '@lynx-js/react/runtime-components',
                     ].includes(data.request)
+                    && !/^@swc\/helpers\/_\/_[a-z0-9_]+$/u.test(data.request)
                   ) {
                     throw new Error(
                       `Generated source requested an unsupported module: ${data.request}`,
