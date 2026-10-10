@@ -9,6 +9,7 @@ import {
   collectElementTemplatesFromModule,
   mergeElementTemplate,
   mergeElementTemplatesFromModule,
+  shouldWrapChunkFile,
 } from '../src/ReactWebpackPlugin.js';
 import type { ModuleWithElementTemplateBuildInfo } from '../src/ReactWebpackPlugin.js';
 
@@ -298,5 +299,62 @@ describe('collectElementTemplatesForEntries', () => {
         () => [],
       ),
     ).toEqual({});
+  });
+});
+
+describe('shouldWrapChunkFile', () => {
+  it('wraps a dynamic-import main-thread chunk', () => {
+    expect(
+      shouldWrapChunkFile({
+        isDynamicImport: true,
+        canBeInitial: false,
+        isLazyBundle: false,
+        isMainThreadChunkFile: false,
+      }),
+    ).toBe(true);
+  });
+
+  it('does not wrap an initial (entry) chunk of a dynamic import (#4044)', () => {
+    expect(
+      shouldWrapChunkFile({
+        isDynamicImport: true,
+        canBeInitial: true,
+        isLazyBundle: false,
+        isMainThreadChunkFile: false,
+      }),
+    ).toBe(false);
+  });
+
+  it('does not wrap a non-dynamic-import chunk', () => {
+    expect(
+      shouldWrapChunkFile({
+        isDynamicImport: false,
+        canBeInitial: false,
+        isLazyBundle: false,
+        isMainThreadChunkFile: false,
+      }),
+    ).toBe(false);
+  });
+
+  it('wraps a lazy bundle main-thread chunk file', () => {
+    expect(
+      shouldWrapChunkFile({
+        isDynamicImport: false,
+        canBeInitial: true,
+        isLazyBundle: true,
+        isMainThreadChunkFile: true,
+      }),
+    ).toBe(true);
+  });
+
+  it('does not wrap a lazy bundle file that is not a main-thread chunk', () => {
+    expect(
+      shouldWrapChunkFile({
+        isDynamicImport: false,
+        canBeInitial: false,
+        isLazyBundle: true,
+        isMainThreadChunkFile: false,
+      }),
+    ).toBe(false);
   });
 });

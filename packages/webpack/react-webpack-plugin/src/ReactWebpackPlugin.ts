@@ -192,6 +192,30 @@ export function collectElementTemplatesForChunkGroups<TChunk>(
 }
 
 /**
+ * Decide whether a chunk's JS file should be wrapped in the dynamic component
+ * IIFE (`(function (globDynamicComponentEntry) { ... })`).
+ *
+ * A dynamic-import (lazy bundle) main-thread chunk group is wrapped, except for
+ * the entry chunk it may reference when `splitChunks` merges a shared module
+ * into the entry: wrapping the entry's own main-thread file would stop the
+ * entry from running, so an initial chunk is never wrapped (see #4044). Lazy
+ * bundles additionally wrap their configured main-thread chunk files.
+ *
+ * @internal
+ */
+export function shouldWrapChunkFile(args: {
+  isDynamicImport: boolean;
+  canBeInitial: boolean;
+  isLazyBundle: boolean;
+  isMainThreadChunkFile: boolean;
+}): boolean {
+  const { isDynamicImport, canBeInitial, isLazyBundle, isMainThreadChunkFile } =
+    args;
+  return (isDynamicImport && !canBeInitial)
+    || (isLazyBundle && isMainThreadChunkFile);
+}
+
+/**
  * The options for ReactWebpackPlugin
  *
  * @public
@@ -588,9 +612,18 @@ class ReactWebpackPlugin {
                     continue;
                   }
 
-                  const shouldInjectWrapper = isDynamicImport
-                    || (options.experimental_isLazyBundle
-                      && options.mainThreadChunks?.includes(file));
+                  // A dynamic-import chunk group can reference the entry chunk
+                  // (e.g. when `splitChunks` merges a shared module into the
+                  // entry). Wrapping the entry's own main-thread file in the
+                  // dynamic component IIFE stops the entry from running, so an
+                  // initial chunk must never be wrapped, see #4044.
+                  const shouldInjectWrapper = shouldWrapChunkFile({
+                    isDynamicImport,
+                    canBeInitial: chunk.canBeInitial(),
+                    isLazyBundle: options.experimental_isLazyBundle ?? false,
+                    isMainThreadChunkFile:
+                      options.mainThreadChunks?.includes(file) ?? false,
+                  });
                   if (!shouldInjectWrapper) {
                     continue;
                   }
