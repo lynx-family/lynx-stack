@@ -1721,8 +1721,8 @@ importers:
         specifier: 13.4.2
         version: 13.4.2
       motion-utils:
-        specifier: 13.5.0
-        version: 13.5.0
+        specifier: 14.0.0
+        version: 14.0.0
     devDependencies:
       '@lynx-js/react':
         specifier: workspace:*
@@ -10590,6 +10590,9 @@ packages:
 
   motion-utils@13.5.0:
     resolution: {integrity: sha512-Hqe/sqjIKliPZg8sVjWAkdySDPJNIeKH+euVkDOG8ri3DUUU7ZjndmHsGqEPz2iHpiyVaV5I22iguCMHU2he+Q==}
+
+  motion-utils@14.0.0:
+    resolution: {integrity: sha512-jBsyjVxTTRZNeuvd/v+btVXr90LQkYl4HhRu9T2ARc+PMnvkmjsjRVeAg4Qm10b6TlTw+kykWI8gu/6LuvpLSQ==}
 
   motion@13.4.3:
     resolution: {integrity: sha512-Js4rk+VUxSRMKOFT4hOMyMKlxyF11ee9jomiLT3uuwMOU88EoSro0ZEbTYes4m457pqZQ2G3RsLdHQzoEDyBCQ==}
@@ -20900,6 +20903,8 @@ snapshots:
   motion-utils@12.39.0: {}
 
   motion-utils@13.5.0: {}
+
+  motion-utils@14.0.0: {}
 
   motion@13.4.3(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
     dependencies:
