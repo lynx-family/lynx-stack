@@ -38,9 +38,20 @@ export default function generateDevUrls(
     platform: 'lynx',
   })
 
+  // The hash placeholders are stripped from the printed URL: the hash changes
+  // on every recompile, so the stable name — which the dev server resolves to
+  // the latest emitted bundle — is the only one that keeps working. A
+  // placeholder usually joins two segments (`…lynx.[contenthash:8].bundle`),
+  // so it is removed together with the dot that follows it. Kept in sync with
+  // `stripHashPlaceholders` in `@lynx-js/rsbuild-plugin`: this package
+  // intentionally has no runtime dependency on it.
+  const pathname = name
+    .replace(/\[(?:contenthash|fullhash|chunkhash|hash)(?::\d+)?\]\./g, '')
+    .replace(/\[(?:contenthash|fullhash|chunkhash|hash)(?::\d+)?\]/g, '')
+
   const customSchema = schemaFn(
     new URL(
-      name,
+      pathname,
       // <port> is supported in `dev.assetPrefix`, we should replace it with the real port
       assetPrefix.replaceAll('<port>', String(port)),
     ).toString(),

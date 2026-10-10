@@ -11,6 +11,8 @@ import color from 'picocolors'
 
 import { getLynxConfig } from '../config.js'
 import { debug } from '../debug.js'
+import { createBundleResolveMiddleware } from '../middleware/bundle-resolve.js'
+import { stripHashPlaceholders } from '../utils/hash-placeholder.js'
 import { isLynx } from '../utils/is-lynx.js'
 import { ProvidePlugin } from '../webpack/ProvidePlugin.js'
 
@@ -50,6 +52,8 @@ export function pluginDev(): RsbuildPlugin {
             createWebVirtualFilesMiddleware('/__web_preview'),
           )
         }
+
+        server.middlewares.use(createBundleResolveMiddleware(api, server))
       })
 
       api.modifyRsbuildConfig({
@@ -200,7 +204,13 @@ export function pluginDev(): RsbuildPlugin {
                       environmentConfig.source.entry ?? {},
                     )
                   ) {
-                    const pathname = resolveName(entry, environmentName)
+                    // The hash placeholders are stripped from the printed URL:
+                    // the hash changes on every recompile, so the stable name
+                    // — which the dev server resolves to the latest emitted
+                    // bundle — is the only one that keeps working.
+                    const pathname = stripHashPlaceholders(
+                      resolveName(entry, environmentName),
+                    )
                     finalUrls.push({
                       label: environmentName,
                       url: new URL(pathname, baseForUrls).toString(),

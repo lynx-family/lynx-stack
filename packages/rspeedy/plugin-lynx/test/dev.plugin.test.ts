@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import http from 'node:http'
 import { isIP, isIPv4 } from 'node:net'
 import type { AddressInfo } from 'node:net'
 import path from 'node:path'
@@ -69,6 +70,25 @@ function capturePrintUrls(
   })
 
   return printed
+}
+
+// `http.get` sends the path verbatim, keeping the brackets of a placeholder
+// unescaped, exactly like the printed URL reads.
+function httpGet(url: string): Promise<{
+  status: number | undefined
+  body: Buffer
+}> {
+  return new Promise((resolve, reject) => {
+    http.get(url, (res) => {
+      const chunks: Buffer[] = []
+      res.on('data', (chunk: Buffer) => chunks.push(chunk))
+      res.on('end', () =>
+        resolve({
+          status: res.statusCode,
+          body: Buffer.concat(chunks),
+        }))
+    }).on('error', reject)
+  })
 }
 
 describe('pluginDev', () => {
@@ -1480,6 +1500,106 @@ describe('pluginDev', () => {
     expect(printed.urls).toContainEqual({
       label: 'Lynx',
       url: 'http://example.com:8096/main.lynx.custom.bundle',
+    })
+  })
+
+  describe('filename.bundle with hash placeholders', () => {
+    const TEMPLATE_BYTES = 'fake-template-bytes'
+
+    // `pluginLynx` alone does not apply `LynxTemplatePlugin` (the React
+    // plugin does), so the tests emit a fake template asset to stand in for
+    // the one the template plugin would produce.
+    function emitTemplateAsset(name: string): RsbuildPlugin {
+      return {
+        name: 'test:emit-template',
+        setup(api) {
+          api.onAfterCreateCompiler(({ compiler }) => {
+            // The stub only creates the `lynx` environment: a single compiler.
+            if (!('webpack' in compiler)) return
+            compiler.hooks.thisCompilation.tap(
+              'test:emit-template',
+              (compilation) => {
+                compilation.hooks.processAssets.tap(
+                  {
+                    name: 'test:emit-template',
+                    stage: compiler.webpack.Compilation
+                      .PROCESS_ASSETS_STAGE_ADDITIONAL,
+                  },
+                  () => {
+                    compilation.emitAsset(
+                      name,
+                      new compiler.webpack.sources.RawSource(TEMPLATE_BYTES),
+                    )
+                  },
+                )
+              },
+            )
+          })
+        },
+      }
+    }
+
+    test('serves the printed URL although the hash is unknown at startup', async () => {
+      const rsbuild = await createDevStubRsbuild({
+        source: {
+          entry: {
+            main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+          },
+        },
+        server: {
+          port: 8102,
+        },
+        plugins: [emitTemplateAsset('main.lynx.6e10a1f5.bundle')],
+      }, {
+        output: {
+          filename: { bundle: '[name].[platform].[contenthash:8].bundle' },
+        },
+      })
+
+      const printed = capturePrintUrls(rsbuild)
+
+      await using server = await rsbuild.usingDevServer()
+      await server.waitDevCompileDone()
+
+      // The printed URL has the hash placeholders stripped: the hash changes
+      // on every recompile, so only a stable name keeps working.
+      expect(printed.urls).toContainEqual({
+        label: 'Lynx',
+        // The hostname comes from the `networkInterfaces` mock of the
+        // enclosing `beforeEach`.
+        url: `http://192.168.1.1:${server.port}/main.lynx.bundle`,
+      })
+
+      // The dev server resolves the printed URL to the emitted template...
+      const stripped = await httpGet(
+        `http://127.0.0.1:${server.port}/main.lynx.bundle`,
+      )
+      expect(stripped.status).toBe(200)
+      expect(stripped.body.toString()).toBe(TEMPLATE_BYTES)
+
+      // ...and so does the URL with the placeholder verbatim, as printed
+      // before the placeholders were stripped. The request may arrive with
+      // raw brackets...
+      const verbatim = await httpGet(
+        `http://127.0.0.1:${server.port}/main.lynx.[contenthash:8].bundle`,
+      )
+      expect(verbatim.status).toBe(200)
+      expect(verbatim.body.toString()).toBe(TEMPLATE_BYTES)
+
+      // ...or percent-encoded ones, depending on the client.
+      const encoded = await httpGet(
+        `http://127.0.0.1:${server.port}/main.lynx.%5Bcontenthash:8%5D.bundle`,
+      )
+      expect(encoded.status).toBe(200)
+      expect(encoded.body.toString()).toBe(TEMPLATE_BYTES)
+
+      // The plain filename matches no emitted asset (the template is hashed),
+      // so a request for a name nothing emits falls through to the default
+      // 404.
+      const missing = await httpGet(
+        `http://127.0.0.1:${server.port}/main.lynx.nomatch.bundle`,
+      )
+      expect(missing.status).toBe(404)
     })
   })
 })
