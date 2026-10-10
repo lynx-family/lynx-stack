@@ -63,7 +63,7 @@
     "empathic": "^2.1.0",
     "event-target-polyfill": "^0.0.4",
     "magic-string": "^1.4.2",
-    "tinybench": "^6.2.0"
+    "tinybench": "^6.2.1"
   },
   "devDependencies": {
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
