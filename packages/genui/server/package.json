@@ -22,7 +22,7 @@
     "@lynx-js/genui-openui": "workspace:*",
     "@lynx-js/genui-reactlynx": "workspace:*",
     "@lynx-js/genui-reactweb": "workspace:*",
-    "@mastra/core": "1.70.0",
+    "@mastra/core": "1.75.0",
     "@openuidev/lang-core": "^0.3.0",
     "@volcengine/tos-sdk": "^2.9.1",
     "fflate": "0.8.3",
