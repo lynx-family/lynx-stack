@@ -58,8 +58,8 @@ describe('CSS hot update encode options', () => {
   test('does not include debugMetadataUrl', async () => {
     const dist = mkdtempSync(path.join(tmpdir(), 'css-hot-update-options-'));
 
-    // `entry.js` imports `page.js` under two names, so two lazy bundle
-    // templates share one async CSS chunk and both write its hot-update file.
+    // Two lazy bundle templates share one async CSS chunk and both write its
+    // hot-update file.
     const stats = await runRspack({
       context: CONTEXT,
       mode: 'development',
@@ -86,6 +86,20 @@ describe('CSS hot update encode options', () => {
           },
         ],
       },
+      optimization: {
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            shared: {
+              test: /[\\/]shared\.css$/,
+              name: 'shared',
+              minChunks: 2,
+              minSize: 0,
+              priority: 10,
+            },
+          },
+        },
+      },
       plugins: [
         new rspack.HotModuleReplacementPlugin(),
         mockLynxEncodePlugin(),
@@ -103,12 +117,11 @@ describe('CSS hot update encode options', () => {
 
     const { assets = [] } = stats.toJson({ assets: true });
     const hotUpdateAsset = assets.find(asset =>
-      asset.name.endsWith('/background.css.hot-update.json')
-      && asset.name.startsWith('.lynx/lazy-bundle/')
+      asset.name.endsWith('/shared.css.hot-update.json')
     );
 
     expect(hotUpdateAsset?.name).toBe(
-      '.lynx/lazy-bundle/page/background.css.hot-update.json',
+      '.lynx/async/shared/shared.css.hot-update.json',
     );
 
     const hotUpdate = JSON.parse(
