@@ -1,5 +1,23 @@
 # @lynx-js/react
 
+## 0.127.0
+
+### Minor Changes
+
+- Add typed `MainThreadObject` handles whose target factory is defined by a Main Thread Function, with identity-preserving capture and hydration, runtime-owned reference release, and exact-type handle downcasting for readonly creation-payload access. V1 intentionally exposes no user-land disposal API. Applications import the APIs from `@lynx-js/react`. ([#3788](https://github.com/lynx-family/lynx-stack/pull/3788))
+
+### Patch Changes
+
+- Exclude nested `node_modules` symlinks from published packages. ([#4117](https://github.com/lynx-family/lynx-stack/pull/4117))
+
+- Preserve MainThreadObject identity in member and nested captures, and support Main Thread object methods with receiver-bound captures. ([#3789](https://github.com/lynx-family/lynx-stack/pull/3789))
+
+- Forward MainThreadObject APIs directly from the host runtime in standalone lazy bundles without feature-specific mismatch assertions. ([#4064](https://github.com/lynx-family/lynx-stack/pull/4064))
+
+- Support MainThreadObject APIs and captures when using Element Template. ([#3788](https://github.com/lynx-family/lynx-stack/pull/3788))
+
+- Include operation type and commit ID in the ctx-not-found diagnostic message. ([#4111](https://github.com/lynx-family/lynx-stack/pull/4111))
+
 ## 0.126.2
 
 ### Patch Changes

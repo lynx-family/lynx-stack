@@ -1,5 +1,11 @@
 # @lynx-js/css-extract-webpack-plugin
 
+## 0.11.1
+
+### Patch Changes
+
+- Fix `Conflict: Multiple assets emit different content to the same filename` on a CSS hot-update file shared by several lazy bundles in development, caused by the per-template `debugMetadataUrl` leaking into it. ([#4105](https://github.com/lynx-family/lynx-stack/pull/4105))
+
 ## 0.11.0
 
 ### Minor Changes
