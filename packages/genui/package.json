@@ -257,7 +257,7 @@
     "@rsbuild/core": "catalog:rsbuild",
     "eslint-scope": "^8.4.0",
     "typedoc": "^0.28.20",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "zod": "^3.25.76 || ^4.0.0"
   },
   "devDependencies": {
