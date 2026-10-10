@@ -254,10 +254,10 @@ importers:
         version: 2.2.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@rstest/coverage-istanbul':
         specifier: catalog:rstest
-        version: 0.12.1(@rstest/core@0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0))(supports-color@10.2.2)
+        version: 0.12.1(@rstest/core@0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2))(supports-color@10.2.2)
       '@svitejs/changesets-changelog-github-compact':
         specifier: ^1.2.0
         version: 1.2.0
@@ -350,7 +350,7 @@ importers:
         version: 8.70.1(eslint@9.39.5(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
       vitest:
         specifier: ^3.2.7
-        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(happy-dom@20.14.0)(jiti@2.7.0)(jsdom@30.1.0)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(happy-dom@20.14.0)(jiti@2.7.0)(jsdom@30.1.2)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
       yaml:
         specifier: ^2.9.0
         version: 2.9.0
@@ -581,7 +581,7 @@ importers:
         version: 2.2.9(core-js@3.50.0)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@types/react':
         specifier: ^19.2.18
         version: 19.2.18
@@ -1264,7 +1264,7 @@ importers:
         version: 4.1.0
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@types/react':
         specifier: ^19.2.18
         version: 19.2.18
@@ -1277,7 +1277,7 @@ importers:
     devDependencies:
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
@@ -1302,7 +1302,7 @@ importers:
     devDependencies:
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
@@ -1317,7 +1317,7 @@ importers:
         version: 1.0.2(@microsoft/api-extractor@7.59.2(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
@@ -1345,7 +1345,7 @@ importers:
         version: 1.0.2(@microsoft/api-extractor@7.59.2(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@types/eslint-scope':
         specifier: ^3.7.7
         version: 3.7.7
@@ -1363,7 +1363,7 @@ importers:
         version: 4.1.0
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
 
   packages/genui/openui:
     dependencies:
@@ -1385,7 +1385,7 @@ importers:
         version: 4.1.0
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@types/react':
         specifier: ^19.2.18
         version: 19.2.18
@@ -1482,7 +1482,7 @@ importers:
         version: 2.1.0(@rsbuild/core@2.2.9(core-js@3.50.0))(@rspack/core@2.2.7(@swc/helpers@0.5.23))
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@types/qrcode':
         specifier: ^1.5.6
         version: 1.5.6
@@ -1528,7 +1528,7 @@ importers:
         version: 1.0.2(@microsoft/api-extractor@7.59.2(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
@@ -1559,7 +1559,7 @@ importers:
         version: 1.0.2(@microsoft/api-extractor@7.59.2(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
@@ -1620,7 +1620,7 @@ importers:
         version: 1.0.2(@microsoft/api-extractor@7.59.2(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
@@ -1848,10 +1848,10 @@ importers:
         version: 2.2.9(core-js@3.50.0)
       '@rstest/adapter-rsbuild':
         specifier: catalog:rstest
-        version: 0.12.1(@rsbuild/core@2.2.9(core-js@3.50.0))(@rstest/core@0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0))
+        version: 0.12.1(@rsbuild/core@2.2.9(core-js@3.50.0))(@rstest/core@0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2))
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -2011,7 +2011,7 @@ importers:
         version: 2.0.1(@rsbuild/core@2.2.9(core-js@3.50.0))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@swc/core':
         specifier: ^1.15.47
         version: 1.15.47(@swc/helpers@0.5.23)
@@ -2102,10 +2102,10 @@ importers:
         version: 1.0.2(@microsoft/api-extractor@7.59.2(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       '@rstest/adapter-rslib':
         specifier: catalog:rstest
-        version: 0.12.1(@rslib/core@1.0.2(@microsoft/api-extractor@7.59.2(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3))(@rstest/core@0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@27.4.0(supports-color@10.2.2)))(typescript@6.0.3)
+        version: 0.12.1(@rslib/core@1.0.2(@microsoft/api-extractor@7.59.2(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3))(@rstest/core@0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2))(typescript@6.0.3)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@27.4.0(supports-color@10.2.2))
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -2119,8 +2119,8 @@ importers:
         specifier: 20.14.0
         version: 20.14.0
       jsdom:
-        specifier: ^27.4.0
-        version: 27.4.0(supports-color@10.2.2)
+        specifier: ^30.1.2
+        version: 30.1.2
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -2133,7 +2133,7 @@ importers:
     devDependencies:
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
 
   packages/rspeedy/lynx-bundle-rslib-config:
     devDependencies:
@@ -2163,7 +2163,7 @@ importers:
         version: 1.0.2(@microsoft/api-extractor@7.59.2(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
 
   packages/rspeedy/plugin-config:
     dependencies:
@@ -2191,7 +2191,7 @@ importers:
         version: 2.2.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@types/object.pick':
         specifier: ^1.3.4
         version: 1.3.4
@@ -2293,7 +2293,7 @@ importers:
         version: 2.2.9(core-js@3.50.0)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@swc/core':
         specifier: ^1.15.47
         version: 1.15.47(@swc/helpers@0.5.23)
@@ -2402,7 +2402,7 @@ importers:
         version: 1.2.4(@rsbuild/core@2.2.9(core-js@3.50.0))
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       rsbuild-plugin-arethetypeswrong:
         specifier: 0.4.0
         version: 0.4.0(@rsbuild/core@2.2.9(core-js@3.50.0))(typescript@6.0.3)
@@ -2450,7 +2450,7 @@ importers:
         version: 2.2.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@types/semver':
         specifier: ^7.8.0
         version: 7.8.0
@@ -2481,7 +2481,7 @@ importers:
         version: 2.2.9(core-js@3.50.0)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
 
   packages/rspeedy/upgrade-rspeedy:
     devDependencies:
@@ -2804,7 +2804,7 @@ importers:
         version: 6.0.3
       vitest:
         specifier: ^3.2.7
-        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(happy-dom@20.14.0)(jiti@2.7.0)(jsdom@30.1.0)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(happy-dom@20.14.0)(jiti@2.7.0)(jsdom@30.1.2)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
 
   packages/testing-library/testing-environment:
     devDependencies:
@@ -2909,7 +2909,7 @@ importers:
         version: 1.0.2(@microsoft/api-extractor@7.59.2(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@27.4.0(supports-color@10.2.2))
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
@@ -2923,8 +2923,8 @@ importers:
         specifier: ^0.5.8
         version: 0.5.8
       jsdom:
-        specifier: ^27.4.0
-        version: 27.4.0(supports-color@10.2.2)
+        specifier: ^30.1.2
+        version: 30.1.2
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -2966,7 +2966,7 @@ importers:
         version: 1.0.2(@microsoft/api-extractor@7.59.2(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       nyc:
         specifier: ^18.0.0
         version: 18.0.0(supports-color@10.2.2)
@@ -2975,7 +2975,7 @@ importers:
         version: 3.9.6
       vitest:
         specifier: ^3.2.7
-        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(happy-dom@20.14.0)(jiti@2.7.0)(jsdom@30.1.0)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(happy-dom@20.14.0)(jiti@2.7.0)(jsdom@30.1.2)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
 
   packages/web-platform/web-elements:
     dependencies:
@@ -3058,7 +3058,7 @@ importers:
         version: 2.2.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@types/loader-utils':
         specifier: ^3.0.0
         version: 3.0.0(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25)
@@ -3079,7 +3079,7 @@ importers:
         version: 2.2.9(core-js@3.50.0)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       rsbuild-plugin-arethetypeswrong:
         specifier: 0.4.0
         version: 0.4.0(@rsbuild/core@2.2.9(core-js@3.50.0))(typescript@6.0.3)
@@ -3091,7 +3091,7 @@ importers:
     devDependencies:
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
 
   packages/webpack/cache-events-webpack-plugin:
     dependencies:
@@ -3110,7 +3110,7 @@ importers:
         version: 2.2.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
 
   packages/webpack/chunk-loading-webpack-plugin:
     dependencies:
@@ -3129,7 +3129,7 @@ importers:
         version: 2.2.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       css-loader:
         specifier: ^7.1.4
         version: 7.1.4(@rspack/core@2.2.7(@swc/helpers@0.5.23))(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
@@ -3153,7 +3153,7 @@ importers:
         version: 2.2.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       css-loader:
         specifier: ^7.1.4
         version: 7.1.4(@rspack/core@2.2.7(@swc/helpers@0.5.23))(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
@@ -3171,7 +3171,7 @@ importers:
         version: 2.2.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       bar:
         specifier: ./test/helpers/external-bundle-mock/bar
         version: link:test/helpers/external-bundle-mock/bar
@@ -3207,7 +3207,7 @@ importers:
         version: 1.1.5
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
@@ -3250,7 +3250,7 @@ importers:
         version: 1.1.5
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       css-loader:
         specifier: ^7.1.4
         version: 7.1.4(@rspack/core@2.2.7(@swc/helpers@0.5.23))(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
@@ -3272,7 +3272,7 @@ importers:
         version: 2.2.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
 
   packages/webpack/runtime-wrapper-webpack-plugin:
     dependencies:
@@ -3291,7 +3291,7 @@ importers:
         version: 2.2.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
@@ -3337,7 +3337,7 @@ importers:
         version: 2.2.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@types/css-tree':
         specifier: ^3.2.0
         version: 3.2.0
@@ -3361,7 +3361,7 @@ importers:
         version: 2.2.7(@rspack/core@2.2.7(@swc/helpers@0.5.23))(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25)(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       '@types/fs-extra':
         specifier: 11.0.4
         version: 11.0.4
@@ -3403,7 +3403,7 @@ importers:
         version: 2.2.7(@swc/helpers@0.5.23)
       '@rstest/core':
         specifier: catalog:rstest
-        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+        version: 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
 
   website:
     dependencies:
@@ -3549,9 +3549,6 @@ packages:
   '@a2ui/web_core@0.10.6':
     resolution: {integrity: sha512-kTwir93Fk5eupl4FZ6CkhJDrisR2fnQgEIlDCTp06uzx2PvUhItbq1E+h7hFyeHGTu/NMci9Tqn7Is1IVRpufw==}
 
-  '@acemir/cssom@0.9.30':
-    resolution: {integrity: sha512-9CnlMCI0LmCIq0olalQqdWrJHPzm0/tw3gzOA9zJSgvFX7Xau3D24mAGa4BtwxwY69nsuJW6kQqqCzf/mEcQgg==}
-
   '@adobe/css-tools@4.4.2':
     resolution: {integrity: sha512-baYZExFpsdkBNuvGKTKWCwKH57HRZLVtycZS05WTQNVOiXVSeAki3nU35zlRbToeMW8aHlJfyS+1C4BOv27q0A==}
 
@@ -3623,22 +3620,13 @@ packages:
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
     engines: {node: '>=6.0.0'}
 
-  '@asamuzakjp/css-color@4.1.1':
-    resolution: {integrity: sha512-B0Hv6G3gWGMn0xKJ0txEi/jM5iFpT3MfDxmhZFb4W047GvytCf1DHQ1D69W3zHI4yWe2aTZAA0JnbMZ7Xc8DuQ==}
-
-  '@asamuzakjp/css-color@7.0.0':
-    resolution: {integrity: sha512-IxddtGnnoidVSO6O/aiTueptbTThHvi2qGHu9/AWuD1J7i86Ox+jl+Y5SXcDH1RixzQlP2cjH/PjnlImZiAurQ==}
+  '@asamuzakjp/css-color@7.1.3':
+    resolution: {integrity: sha512-1t1U8Cm3RBl9vh3RAZhjkPaduzLSvQJRToRrxpGR/eDRW99mOREleuu+mWfiFa795bUzjwht7NgphCKTs2ianQ==}
     engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
 
-  '@asamuzakjp/dom-selector@6.7.6':
-    resolution: {integrity: sha512-hBaJER6A9MpdG3WgdlOolHmbOYvSk46y7IQN/1+iqiCuUu6iWdQrs9DGKF8ocqsEqWujWf/V7b7vaDgiUmIvUg==}
-
-  '@asamuzakjp/dom-selector@9.2.1':
-    resolution: {integrity: sha512-NT4s3yZLjovPpliRpTvdsdzyPjqRqiCZj9MxnarBihbaY5MbAG7DWAJcrLlhmC7xKTNCXsTELcqB8YsqpLnUFQ==}
+  '@asamuzakjp/dom-selector@9.2.4':
+    resolution: {integrity: sha512-YnVzxDxLaqL0t7Q4wfcgHZjg55Wm6y5EaO7Bhu3q9J7wq/8iw3PhsnWiOQhYekx4VexnbkgWpTT6n+QIV7kczw==}
     engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
-
-  '@asamuzakjp/nwsapi@2.3.9':
-    resolution: {integrity: sha512-n8GuYSrI9bF7FFZ/SjhwevlHc8xaVlb/7HmHelnc/PZXBD2ZR49NnN9sMMuDdEGPeeRQ5d0hqlSlEpgCX3Wl0Q==}
 
   '@ast-grep/napi-darwin-arm64@0.45.3':
     resolution: {integrity: sha512-rMZJ6frSpR/xSbeV4hiA9WR5hHqk3rVYX8lOqEoUCaUnjEuFXvHdGN4WawJ8pVDq/IqM1UnTtsDSYgUdVmO5DA==}
@@ -4206,68 +4194,40 @@ packages:
   '@croct/json@2.1.0':
     resolution: {integrity: sha512-UrWfjNQVlBxN+OVcFwHmkjARMW55MBN04E9KfGac8ac8z1QnFVuiOOFtMWXCk3UwsyRqhsNaFoYLZC+xxqsVjQ==}
 
-  '@csstools/color-helpers@5.1.0':
-    resolution: {integrity: sha512-S11EXWJyy0Mz5SYvRmY8nJYTFFd1LCNV+7cXyAgQtOOuzb4EsgfqDufL+9esx72/eLhsRdGZwaldu/h+E4t4BA==}
-    engines: {node: '>=18'}
-
-  '@csstools/color-helpers@6.1.1':
-    resolution: {integrity: sha512-gLNsunvwf3mCi5u5o46/Z/JcJMnhbHSaZ69rkgPzNM3J4s8hWwpPUQB6/tt0EDFyCiWzxANlx+2LJwpYj4zS1w==}
+  '@csstools/color-helpers@6.1.2':
+    resolution: {integrity: sha512-grhRy3OKmniaAEKXMjua5z/EODX0MSqBGjunw8+j/3HQjOnahs2AGhvEOIYVUWcU6ScApbhLhVrQTX8XqrMrow==}
     engines: {node: '>=20.19.0'}
 
-  '@csstools/css-calc@2.1.4':
-    resolution: {integrity: sha512-3N8oaj+0juUw/1H3YwmDDJXCgTB1gKU6Hc/bB502u9zR0q2vd786XJH9QfrKIEgFlZmhZiq6epXl4rHqhzsIgQ==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@csstools/css-parser-algorithms': ^3.0.5
-      '@csstools/css-tokenizer': ^3.0.4
-
-  '@csstools/css-calc@3.3.0':
-    resolution: {integrity: sha512-c5ihYsPkdG6JCkU2zTMm4+k6r7RXuGxtWYhu5DHMIiF1FHzrfmHL5so11AoFpUv/tu61xfcmT4AmKoFfMPoqdQ==}
+  '@csstools/css-calc@3.4.3':
+    resolution: {integrity: sha512-iex20d8CHVkyvg6B7UKV7uHnI2Bqo9g+EFfT9E0y+GvTvhZ/DwONJ+9aKb1dlqm0ZiGsL5RXjp0fCoJYnkeDjA==}
     engines: {node: '>=20.19.0'}
     peerDependencies:
-      '@csstools/css-parser-algorithms': ^4.0.0
-      '@csstools/css-tokenizer': ^4.0.0
+      '@csstools/css-parser-algorithms': ^4.0.2
+      '@csstools/css-tokenizer': ^4.0.2
 
-  '@csstools/css-color-parser@3.1.0':
-    resolution: {integrity: sha512-nbtKwh3a6xNVIp/VRuXV64yTKnb1IjTAEEh3irzS+HkKjAOYLTGNb9pmVNntZ8iVBHcWDA2Dof0QtPgFI1BaTA==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@csstools/css-parser-algorithms': ^3.0.5
-      '@csstools/css-tokenizer': ^3.0.4
-
-  '@csstools/css-color-parser@4.2.2':
-    resolution: {integrity: sha512-3QKjR/vxyjcSXBLgb6lP0S3MGdvwbmqSsvLPbYdVORqPDc8FX1HAJ0Spk38bxaRXgvENTA47tlhhbb5Z2e8hEg==}
+  '@csstools/css-color-parser@4.2.6':
+    resolution: {integrity: sha512-iiPQ3iRWwnJkeEn6RIu6SJPr7hYrLz6XZ9s/QZl+2/LI5KQVjpl2fdmDSZKuD4xP6GMmMPgHFFXg6k1Wkz0Trg==}
     engines: {node: '>=20.19.0'}
     peerDependencies:
-      '@csstools/css-parser-algorithms': ^4.0.0
-      '@csstools/css-tokenizer': ^4.0.0
+      '@csstools/css-parser-algorithms': ^4.0.2
+      '@csstools/css-tokenizer': ^4.0.2
 
-  '@csstools/css-parser-algorithms@3.0.5':
-    resolution: {integrity: sha512-DaDeUkXZKjdGhgYaHNJTV9pV7Y9B3b644jCLs9Upc3VeNGg6LWARAT6O+Q+/COo+2gg/bM5rhpMAtf70WqfBdQ==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@csstools/css-tokenizer': ^3.0.4
-
-  '@csstools/css-parser-algorithms@4.0.0':
-    resolution: {integrity: sha512-+B87qS7fIG3L5h3qwJ/IFbjoVoOe/bpOdh9hAjXbvx0o8ImEmUsGXN0inFOnk2ChCFgqkkGFQ+TpM5rbhkKe4w==}
+  '@csstools/css-parser-algorithms@4.0.2':
+    resolution: {integrity: sha512-40cSKyMvK+tq4qz6Awrlye2WGuOKt3FwPgtGg6KTfbHOWNw+Rk1rzbAtZnZ6IBhsY491HLRnDXwoyBAijmmILA==}
     engines: {node: '>=20.19.0'}
     peerDependencies:
-      '@csstools/css-tokenizer': ^4.0.0
+      '@csstools/css-tokenizer': ^4.0.2
 
-  '@csstools/css-syntax-patches-for-csstree@1.1.14':
-    resolution: {integrity: sha512-HpbVXyrofRXpHpgkNIjU/3EWR4WJvOkO3emNK/L6X/mTJU7bGUI3AkkpoTNXznQLp0KRjLHELTGeKI5dIkI9JQ==}
+  '@csstools/css-syntax-patches-for-csstree@1.1.15':
+    resolution: {integrity: sha512-J0u7HkVl2nzSlhsiTOp4AmwcUQ3D+mGEEKfBy/7To5/y7F2OHwyLrXfrhR0SMgr4p5Lo+eaMVSeai24zUcBIxA==}
     peerDependencies:
       css-tree: ^3.2.1
     peerDependenciesMeta:
       css-tree:
         optional: true
 
-  '@csstools/css-tokenizer@3.0.4':
-    resolution: {integrity: sha512-Vd/9EVDiu6PPJt9yAh6roZP6El1xHrdvIVGjyBsHR0RYwNHgL7FJPyIIW4fANJNG6FtyZfvlRPpFI4ZM/lubvw==}
-    engines: {node: '>=18'}
-
-  '@csstools/css-tokenizer@4.0.0':
-    resolution: {integrity: sha512-QxULHAm7cNu72w97JUNCBFODFaXpbDg+dP8b/oWFAZ2MTRppA3U00Y2L1HqaS4J6yBqxwa/Y3nMBaxVKbB/NsA==}
+  '@csstools/css-tokenizer@4.0.2':
+    resolution: {integrity: sha512-OoKoR0f76dCY666JlcbhmVTs2drYj1GUXZTYTcbUgJjh9Nv41aFfZ21bPQTERm5+L5cBDo466NltB2lplS5GBw==}
     engines: {node: '>=20.19.0'}
 
   '@dprint/android-arm64@0.55.2':
@@ -4581,8 +4541,8 @@ packages:
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@exodus/bytes@1.15.1':
-    resolution: {integrity: sha512-S6mL0yNB/Abt9Ei4tq8gDhcczc4S3+vQ4ra7vxnAf+YHC02srtqxKKZghx2Dq6p0e66THKwR6r8N6P95wEty7Q==}
+  '@exodus/bytes@1.16.0':
+    resolution: {integrity: sha512-IcpW84uEn3N7ETtNZMlxKhfl6Pec8rUNGOTBtWbK1FKhJxIFAptZyVrvVRVBimAJxJCgc3PxepxkdWWG4DVzfA==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
     peerDependencies:
       '@noble/hashes': ^1.8.0 || ^2.0.0
@@ -7635,10 +7595,6 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
-  agent-base@7.1.3:
-    resolution: {integrity: sha512-jRR5wdylq8CkOe6hei19GGZnxM6rBGwFl3Bg0YItGDimvjGtAvdZk4Pu6Cl4u4Igsws4a1fd1Vq3ezrhn4KmFw==}
-    engines: {node: '>= 14'}
-
   aggregate-error@3.1.0:
     resolution: {integrity: sha512-4I7Td01quW/RpocfNayFdFVk1qSuoh0E7JrbRJ16nH01HhKFQ88INq9Sd+nd72zqRySlr9BmDA8xlEJ6vJMrYA==}
     engines: {node: '>=8'}
@@ -8316,23 +8272,15 @@ packages:
     resolution: {integrity: sha512-0LrrStPOdJj+SPCCrGhzryycLjwcgUSHBtxNA8aIDxf0GLsRh1cKYhB00Gd1lDOS4yGH69+SNn13+TWbVHETFQ==}
     engines: {node: ^10 || ^12.20.0 || ^14.13.0 || >=15.0.0, npm: '>=7.0.0'}
 
-  cssstyle@5.3.5:
-    resolution: {integrity: sha512-GlsEptulso7Jg0VaOZ8BXQi3AkYM5BOJKEO/rjMidSCq70FkIC5y0eawrCXeYzxgt3OCf4Ls+eoxN+/05vN0Ag==}
-    engines: {node: '>=20'}
-
   csstype@3.1.3:
     resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
 
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
 
-  data-urls@6.0.0:
-    resolution: {integrity: sha512-BnBS08aLUM+DKamupXs3w2tJJoqU+AkaE/+6vQxi/G/DPmIZFJJp9Dkb1kM03AZx8ADehDUZgsNxju3mPXZYIA==}
-    engines: {node: '>=20'}
-
-  data-urls@7.0.0:
-    resolution: {integrity: sha512-23XHcCF+coGYevirZceTVD7NdJOqVn+49IHyxgszm+JIiHLoB2TkmPtsYkNWT1pvRSGkc35L6NHs0yHkN2SumA==}
-    engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
+  data-urls@8.0.0:
+    resolution: {integrity: sha512-JQUCCK+/CAGbGGx618PlFZMXH81Jtj7t73CHv9dd/zVWvxgGT2zLFRjnKb+Ng46GIwcy+f7f88qd4duqllK+WQ==}
+    engines: {node: ^22.14.0 || >=24.0.0}
 
   data-view-buffer@1.0.2:
     resolution: {integrity: sha512-EmKO5V3OLXh1rtK2wgXRansaK1/mtVdTUEiEI0W8RkvgT05kfxaH29PliLnpLP73yYO6142Q72QNa8Wx/A5CqQ==}
@@ -9319,9 +9267,9 @@ packages:
   htm@3.1.1:
     resolution: {integrity: sha512-983Vyg8NwUE7JkZ6NmOqpCZ+sh1bKv2iYTlUkzlWmA5JD2acKoxd4KVxbMmxX/85mtfdnDmTFoNKcg5DGAvxNQ==}
 
-  html-encoding-sniffer@6.0.0:
-    resolution: {integrity: sha512-CV9TW3Y3f8/wT0BRFc1/KAVQ3TUHiXmaAb6VW9vtiMFf7SLoMd1PdAc4W3KFOFETBJUb90KatHqlsZMWV+R9Gg==}
-    engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
+  html-encoding-sniffer@7.0.0:
+    resolution: {integrity: sha512-UikN5yr7xsCDAq87Or5or0PAlD3HJJOKVzM05az588WnpDJ4Ux7a2A53Qi6gofGg2/EtvF/H4hCi/TXfCW4Y6w==}
+    engines: {node: ^22.13.0 || >=24.0.0}
 
   html-escaper@2.0.2:
     resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
@@ -9339,10 +9287,6 @@ packages:
     resolution: {integrity: sha512-4FbRdAX+bSdmo4AUFuS0WNiPz8NgFt+r8ThgNWmlrjQjt1Q7ZR9+zTlce2859x4KSXrwIsaeTqDoKQmtP8pLmQ==}
     engines: {node: '>= 0.8'}
 
-  http-proxy-agent@7.0.2:
-    resolution: {integrity: sha512-T1gkAiYYDWYx3V5Bmyu7HcfcvL7mUrTWiM6yOfa3PIphViJ/gFPbvidQ+veqSOHci/PxBcDabeUNCzpOODJZig==}
-    engines: {node: '>= 14'}
-
   http-proxy-middleware@2.0.10:
     resolution: {integrity: sha512-RKzRWNPxUZqbuk3BC5mGVJbBnWgr+diEnjJexIOytFbBzDy88Fbh/YvBr3DsNrl1jYAfjWfpATEv0NO35FDuPQ==}
     engines: {node: '>=12.0.0'}
@@ -9355,10 +9299,6 @@ packages:
   http-proxy@1.18.1:
     resolution: {integrity: sha512-7mz/721AbnJwIVbnaSv1Cz3Am0ZLT/UBwkC92VlxhXv/k/BBQfM2fXElQNC27BVGr0uwUpplYPQM9LnaBMR5NQ==}
     engines: {node: '>=8.0.0'}
-
-  https-proxy-agent@7.0.6:
-    resolution: {integrity: sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==}
-    engines: {node: '>= 14'}
 
   human-id@4.2.0:
     resolution: {integrity: sha512-K3GbkIWqyvvlpfhBPlbEvD97TtqBpAYA4kt+cn2lD2x2HuohzZCibcA2nOlnJT6exqvJLggoB5nv2dNf192nEA==}
@@ -9831,17 +9771,8 @@ packages:
     resolution: {integrity: sha512-iZ8Bdb84lWRuGHamRXFyML07r21pcwBrLkHEuHgEY5UbCouBwv7ECknDRKzsQIXMiqpPymqtIf8TC/shYKB5rw==}
     engines: {node: '>=12.0.0'}
 
-  jsdom@27.4.0:
-    resolution: {integrity: sha512-mjzqwWRD9Y1J1KUi7W97Gja1bwOOM5Ug0EZ6UDK3xS7j7mndrkwozHtSblfomlzyB4NepioNt+B2sOSzczVgtQ==}
-    engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
-    peerDependencies:
-      canvas: ^3.0.0
-    peerDependenciesMeta:
-      canvas:
-        optional: true
-
-  jsdom@30.1.0:
-    resolution: {integrity: sha512-h/Q+H+KmlGf49ITw3TrykSVbg04S75S2O7ZtJc9gMGOWBrQRZmx5AJIKLtJ01e6Kszl+/tpFthCVqxNifxhoqg==}
+  jsdom@30.1.2:
+    resolution: {integrity: sha512-0FFE/jE1rppmVfUrJUgxqXjcwolZYIGtAgj1pTussMhNZxIxi7W/PvfWaMNroGi2B36X1IKHbexpZ9DhkoOPiQ==}
     engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
     peerDependencies:
       canvas: ^3.2.3
@@ -12244,9 +12175,6 @@ packages:
   swc-plugin-coverage-instrument@0.0.33:
     resolution: {integrity: sha512-zM17DgG3jURPNOrEHye0MtrkrsZ9BtCMf3W5osQTHAtlNolfDUtZl7740wdx7XhUSL322qdph//DgHzZe62wHg==}
 
-  symbol-tree@3.2.4:
-    resolution: {integrity: sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==}
-
   sync-child-process@1.0.2:
     resolution: {integrity: sha512-8lD+t2KrrScJ/7KXCSyfhT3/hRq78rC0wBFqNJXv3mZyn6hW2ypM05JmlSvtqRbeq6jqA94oHbxAr2vYsJ8vDA==}
     engines: {node: '>=16.0.0'}
@@ -12430,9 +12358,9 @@ packages:
   tr46@0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
 
-  tr46@6.0.0:
-    resolution: {integrity: sha512-bLVMLPtstlZ4iMQHpFHTR7GAGj2jxi8Dg0s2h2MafAE4uSWF98FC/3MomU51iQAMf8/qDUbKWf5GxuvvVcXEhw==}
-    engines: {node: '>=20'}
+  tr46@7.0.0:
+    resolution: {integrity: sha512-BcDSDW+SIGWVOns1Zm6Yg91q9AEj7eaID0QDY9oIqJD1A8dscNwMcl9Sms2DeuWCNov1X0/oXanHGYQBSLwZsg==}
+    engines: {node: ^22.14.0 || >=24.0.0}
 
   tree-dump@1.1.0:
     resolution: {integrity: sha512-rMuvhU4MCDbcbnleZTFezWsaZXRFemSqAM+7jPnzUl1fo9w3YEKOxAeui0fz3OI4EU4hf23iyA7uQRVko+UaBA==}
@@ -12610,8 +12538,8 @@ packages:
     resolution: {integrity: sha512-IDxfleLmmbSskfWSUATiN1nfn2rDuvnMOqb5CWR92iIfojA0Ud+ulOAAEQ57LPr9rWmsreUyf5lwyao+7GNNVw==}
     engines: {node: '>=20.18.1'}
 
-  undici@8.10.2:
-    resolution: {integrity: sha512-/y4/bH9YNU5hi9NIrpOuvGXFcxrj3CMrV+/AYpowAYTpHn8gX/XPFjNy766FPoYY0miQhdW977JFWKGNhBdwyQ==}
+  undici@8.11.2:
+    resolution: {integrity: sha512-u4UB2/IrKdU6lFxumHmmo1a3fCQO5tzQllRorfoRS63txhrB7xTpSn1PftwC4qEHkOaqP95fCWW4lJzwErwzhQ==}
     engines: {node: '>=22.19.0'}
 
   unhead@2.1.17:
@@ -12851,9 +12779,9 @@ packages:
   w3c-keyname@2.2.8:
     resolution: {integrity: sha512-dpojBhNsCNN7T82Tm7k26A6G9ML3NkhDsnw9n/eoxSRlVBB4CEtIQ/KTCLI2Fwf3ataSXRhYFkQi3SlnFwPvPQ==}
 
-  w3c-xmlserializer@5.0.0:
-    resolution: {integrity: sha512-o8qghlI8NZHU1lLPrpi2+Uq7abh4GGPpYANlalzWxyWteJOCsr/P+oPBA49TOLu5FTZO4d3F9MnWJfiMo4BkmA==}
-    engines: {node: '>=18'}
+  w3c-xmlserializer@6.0.0:
+    resolution: {integrity: sha512-4Nsy8K5Tr6SPDH9jhKJOHf7ChDrc1zufZTVSF7x72hwuEXBqxqk9G6cK+K2NRUtB3iELRJqjXb4JPDMBjMTl2Q==}
+    engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
 
   wabt@1.0.0-nightly.20180421:
     resolution: {integrity: sha512-bsu9zk672KACjoabONcAS94IS20prRm05IbiIUGfa8eBpRLjWZv8ugocdinV/ONh0mFMfXrVWkvF1/BNtwIfUw==}
@@ -12903,24 +12831,12 @@ packages:
     resolution: {integrity: sha512-nt+N2dzIutVRxARx1nghPKGv1xHikU7HKdfafKkLNLindmPU/ch3U31NOCGGA/dmPcmb1VlofO0vnKAcsm0o/Q==}
     engines: {node: '>=12'}
 
-  whatwg-mimetype@4.0.0:
-    resolution: {integrity: sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg==}
-    engines: {node: '>=18'}
-
   whatwg-mimetype@5.0.0:
     resolution: {integrity: sha512-sXcNcHOC51uPGF0P/D4NVtrkjSU2fNsm9iog4ZvZJsL3rjoDAzXZhkm2MWt1y+PUdggKAYVoMAIYcs78wJ51Cw==}
     engines: {node: '>=20'}
 
-  whatwg-url@15.1.0:
-    resolution: {integrity: sha512-2ytDk0kiEj/yu90JOAp44PVPUkO9+jVhyf+SybKlRHSDlvOOZhdPIrr7xTH64l4WixO2cP+wQIcgujkGBPPz6g==}
-    engines: {node: '>=20'}
-
-  whatwg-url@16.0.1:
-    resolution: {integrity: sha512-1to4zXBxmXHV3IiSSEInrreIlu02vUOvrhxJJH5vcxYTBDAx51cqZiKdyTxlecdKNSjj8EcxGBxNf6Vg+945gw==}
-    engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
-
-  whatwg-url@17.1.1:
-    resolution: {integrity: sha512-ohjk1mdUebJVadRt3bAhQhx8lSnISq+GDttK79LFl8EHQkAPvzwctoasC4hs8tBt6kLAncBWWyq1N52qEfKvDw==}
+  whatwg-url@17.2.0:
+    resolution: {integrity: sha512-IhLIHNcBrzIixC5XXsbr4DxdjajyA5vQ5RwGZMtrUp+GbtE5Nrsge9QKau7jXrC0aTXLYGV0xiW7Tb4YS2aomw==}
     engines: {node: ^22.14.0 || >=24.0.0}
 
   whatwg-url@5.0.0:
@@ -13118,8 +13034,6 @@ snapshots:
       zod: 3.25.76
       zod-to-json-schema: 3.25.2(zod@3.25.76)
 
-  '@acemir/cssom@0.9.30': {}
-
   '@adobe/css-tools@4.4.2': {}
 
   '@ai-sdk/openai@4.0.53(zod@4.6.5)':
@@ -13198,38 +13112,20 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.13
       '@jridgewell/trace-mapping': 0.3.31
 
-  '@asamuzakjp/css-color@4.1.1':
+  '@asamuzakjp/css-color@7.1.3':
     dependencies:
-      '@csstools/css-calc': 2.1.4(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)
-      '@csstools/css-color-parser': 3.1.0(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)
-      '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
-      '@csstools/css-tokenizer': 3.0.4
+      '@csstools/css-calc': 3.4.3(@csstools/css-parser-algorithms@4.0.2(@csstools/css-tokenizer@4.0.2))(@csstools/css-tokenizer@4.0.2)
+      '@csstools/css-color-parser': 4.2.6(@csstools/css-parser-algorithms@4.0.2(@csstools/css-tokenizer@4.0.2))(@csstools/css-tokenizer@4.0.2)
+      '@csstools/css-parser-algorithms': 4.0.2(@csstools/css-tokenizer@4.0.2)
+      '@csstools/css-tokenizer': 4.0.2
       lru-cache: 11.5.3
 
-  '@asamuzakjp/css-color@7.0.0':
-    dependencies:
-      '@csstools/css-calc': 3.3.0(@csstools/css-parser-algorithms@4.0.0(@csstools/css-tokenizer@4.0.0))(@csstools/css-tokenizer@4.0.0)
-      '@csstools/css-color-parser': 4.2.2(@csstools/css-parser-algorithms@4.0.0(@csstools/css-tokenizer@4.0.0))(@csstools/css-tokenizer@4.0.0)
-      '@csstools/css-parser-algorithms': 4.0.0(@csstools/css-tokenizer@4.0.0)
-      '@csstools/css-tokenizer': 4.0.0
-      lru-cache: 11.5.3
-
-  '@asamuzakjp/dom-selector@6.7.6':
-    dependencies:
-      '@asamuzakjp/nwsapi': 2.3.9
-      bidi-js: 1.1.0
-      css-tree: 3.2.1
-      is-potential-custom-element-name: 1.0.1
-      lru-cache: 11.5.3
-
-  '@asamuzakjp/dom-selector@9.2.1':
+  '@asamuzakjp/dom-selector@9.2.4':
     dependencies:
       bidi-js: 1.1.0
       css-tree: 3.2.1
       is-potential-custom-element-name: 1.0.1
       lru-cache: 11.5.3
-
-  '@asamuzakjp/nwsapi@2.3.9': {}
 
   '@ast-grep/napi-darwin-arm64@0.45.3':
     optional: true
@@ -13950,7 +13846,7 @@ snapshots:
       '@codspeed/core': 5.7.1(debug@4.4.3(supports-color@10.2.2))
       tinybench: 6.2.0
       vite: 7.3.6(@types/node@24.13.3)(jiti@2.7.0)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.48.0)(yaml@2.9.0)
-      vitest: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(happy-dom@20.14.0)(jiti@2.7.0)(jsdom@30.1.0)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
+      vitest: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(happy-dom@20.14.0)(jiti@2.7.0)(jsdom@30.1.2)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
     transitivePeerDependencies:
       - debug
 
@@ -13960,49 +13856,29 @@ snapshots:
 
   '@croct/json@2.1.0': {}
 
-  '@csstools/color-helpers@5.1.0': {}
+  '@csstools/color-helpers@6.1.2': {}
 
-  '@csstools/color-helpers@6.1.1': {}
-
-  '@csstools/css-calc@2.1.4(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)':
+  '@csstools/css-calc@3.4.3(@csstools/css-parser-algorithms@4.0.2(@csstools/css-tokenizer@4.0.2))(@csstools/css-tokenizer@4.0.2)':
     dependencies:
-      '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
-      '@csstools/css-tokenizer': 3.0.4
+      '@csstools/css-parser-algorithms': 4.0.2(@csstools/css-tokenizer@4.0.2)
+      '@csstools/css-tokenizer': 4.0.2
 
-  '@csstools/css-calc@3.3.0(@csstools/css-parser-algorithms@4.0.0(@csstools/css-tokenizer@4.0.0))(@csstools/css-tokenizer@4.0.0)':
+  '@csstools/css-color-parser@4.2.6(@csstools/css-parser-algorithms@4.0.2(@csstools/css-tokenizer@4.0.2))(@csstools/css-tokenizer@4.0.2)':
     dependencies:
-      '@csstools/css-parser-algorithms': 4.0.0(@csstools/css-tokenizer@4.0.0)
-      '@csstools/css-tokenizer': 4.0.0
+      '@csstools/color-helpers': 6.1.2
+      '@csstools/css-calc': 3.4.3(@csstools/css-parser-algorithms@4.0.2(@csstools/css-tokenizer@4.0.2))(@csstools/css-tokenizer@4.0.2)
+      '@csstools/css-parser-algorithms': 4.0.2(@csstools/css-tokenizer@4.0.2)
+      '@csstools/css-tokenizer': 4.0.2
 
-  '@csstools/css-color-parser@3.1.0(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)':
+  '@csstools/css-parser-algorithms@4.0.2(@csstools/css-tokenizer@4.0.2)':
     dependencies:
-      '@csstools/color-helpers': 5.1.0
-      '@csstools/css-calc': 2.1.4(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)
-      '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
-      '@csstools/css-tokenizer': 3.0.4
+      '@csstools/css-tokenizer': 4.0.2
 
-  '@csstools/css-color-parser@4.2.2(@csstools/css-parser-algorithms@4.0.0(@csstools/css-tokenizer@4.0.0))(@csstools/css-tokenizer@4.0.0)':
-    dependencies:
-      '@csstools/color-helpers': 6.1.1
-      '@csstools/css-calc': 3.3.0(@csstools/css-parser-algorithms@4.0.0(@csstools/css-tokenizer@4.0.0))(@csstools/css-tokenizer@4.0.0)
-      '@csstools/css-parser-algorithms': 4.0.0(@csstools/css-tokenizer@4.0.0)
-      '@csstools/css-tokenizer': 4.0.0
-
-  '@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4)':
-    dependencies:
-      '@csstools/css-tokenizer': 3.0.4
-
-  '@csstools/css-parser-algorithms@4.0.0(@csstools/css-tokenizer@4.0.0)':
-    dependencies:
-      '@csstools/css-tokenizer': 4.0.0
-
-  '@csstools/css-syntax-patches-for-csstree@1.1.14(css-tree@3.2.1)':
+  '@csstools/css-syntax-patches-for-csstree@1.1.15(css-tree@3.2.1)':
     optionalDependencies:
       css-tree: 3.2.1
 
-  '@csstools/css-tokenizer@3.0.4': {}
-
-  '@csstools/css-tokenizer@4.0.0': {}
+  '@csstools/css-tokenizer@4.0.2': {}
 
   '@dprint/android-arm64@0.55.2':
     optional: true
@@ -14227,7 +14103,7 @@ snapshots:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
-  '@exodus/bytes@1.15.1': {}
+  '@exodus/bytes@1.16.0': {}
 
   '@floating-ui/core@1.7.5':
     dependencies:
@@ -16133,7 +16009,7 @@ snapshots:
       iconv-lite: 0.7.3
       javascript-stringify: 2.1.0
       jest-diff: 30.5.2
-      jsdom: 30.1.0
+      jsdom: 30.1.2
       memfs: 4.74.0
       path-serializer: 0.7.0
       pretty-format: 30.5.1
@@ -16237,45 +16113,33 @@ snapshots:
 
   '@rstackjs/create-toolkit@2.2.7': {}
 
-  '@rstest/adapter-rsbuild@0.12.1(@rsbuild/core@2.2.9(core-js@3.50.0))(@rstest/core@0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0))':
+  '@rstest/adapter-rsbuild@0.12.1(@rsbuild/core@2.2.9(core-js@3.50.0))(@rstest/core@0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2))':
     dependencies:
       '@rsbuild/core': 2.2.9(core-js@3.50.0)
-      '@rstest/core': 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+      '@rstest/core': 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
 
-  '@rstest/adapter-rslib@0.12.1(@rslib/core@1.0.2(@microsoft/api-extractor@7.59.2(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3))(@rstest/core@0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@27.4.0(supports-color@10.2.2)))(typescript@6.0.3)':
+  '@rstest/adapter-rslib@0.12.1(@rslib/core@1.0.2(@microsoft/api-extractor@7.59.2(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3))(@rstest/core@0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2))(typescript@6.0.3)':
     dependencies:
       '@rslib/core': 1.0.2(@microsoft/api-extractor@7.59.2(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
-      '@rstest/core': 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@27.4.0(supports-color@10.2.2))
+      '@rstest/core': 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
     optionalDependencies:
       typescript: 6.0.3
 
-  '@rstest/core@0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@27.4.0(supports-color@10.2.2))':
+  '@rstest/core@0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)':
     dependencies:
       '@rsbuild/core': 2.2.9(core-js@3.50.0)
       '@types/chai': 5.2.3
       cjs-module-lexer: 2.2.1
     optionalDependencies:
       happy-dom: 20.14.0
-      jsdom: 27.4.0(supports-color@10.2.2)
+      jsdom: 30.1.2
     transitivePeerDependencies:
       - '@module-federation/runtime-tools'
       - core-js
 
-  '@rstest/core@0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)':
+  '@rstest/coverage-istanbul@0.12.1(@rstest/core@0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2))(supports-color@10.2.2)':
     dependencies:
-      '@rsbuild/core': 2.2.9(core-js@3.50.0)
-      '@types/chai': 5.2.3
-      cjs-module-lexer: 2.2.1
-    optionalDependencies:
-      happy-dom: 20.14.0
-      jsdom: 30.1.0
-    transitivePeerDependencies:
-      - '@module-federation/runtime-tools'
-      - core-js
-
-  '@rstest/coverage-istanbul@0.12.1(@rstest/core@0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0))(supports-color@10.2.2)':
-    dependencies:
-      '@rstest/core': 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.0)
+      '@rstest/core': 0.12.1(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.1.2)
       istanbul-lib-coverage: 3.2.2
       istanbul-lib-report: 3.0.1
       istanbul-lib-source-maps: 5.0.6(supports-color@10.2.2)
@@ -17159,7 +17023,7 @@ snapshots:
       std-env: 3.10.0
       test-exclude: 7.0.2
       tinyrainbow: 2.0.0
-      vitest: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(happy-dom@20.14.0)(jiti@2.7.0)(jsdom@30.1.0)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
+      vitest: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(happy-dom@20.14.0)(jiti@2.7.0)(jsdom@30.1.2)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -17171,7 +17035,7 @@ snapshots:
     optionalDependencies:
       '@typescript-eslint/eslint-plugin': 8.70.1(@typescript-eslint/parser@8.70.1(eslint@9.39.5(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint@9.39.5(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
       typescript: 6.0.3
-      vitest: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(happy-dom@20.14.0)(jiti@2.7.0)(jsdom@30.1.0)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
+      vitest: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(happy-dom@20.14.0)(jiti@2.7.0)(jsdom@30.1.2)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -17220,7 +17084,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.17
       tinyrainbow: 2.0.0
-      vitest: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(happy-dom@20.14.0)(jiti@2.7.0)(jsdom@30.1.0)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
+      vitest: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(happy-dom@20.14.0)(jiti@2.7.0)(jsdom@30.1.2)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0)
 
   '@vitest/utils@3.2.7':
     dependencies:
@@ -17377,8 +17241,6 @@ snapshots:
       acorn: 8.18.0
 
   acorn@8.18.0: {}
-
-  agent-base@7.1.3: {}
 
   aggregate-error@3.1.0:
     dependencies:
@@ -18081,25 +17943,14 @@ snapshots:
     dependencies:
       css-tree: 2.2.1
 
-  cssstyle@5.3.5:
-    dependencies:
-      '@asamuzakjp/css-color': 4.1.1
-      '@csstools/css-syntax-patches-for-csstree': 1.1.14(css-tree@3.2.1)
-      css-tree: 3.2.1
-
   csstype@3.1.3: {}
 
   csstype@3.2.3: {}
 
-  data-urls@6.0.0:
-    dependencies:
-      whatwg-mimetype: 4.0.0
-      whatwg-url: 15.1.0
-
-  data-urls@7.0.0:
+  data-urls@8.0.0:
     dependencies:
       whatwg-mimetype: 5.0.0
-      whatwg-url: 16.0.1
+      whatwg-url: 17.2.0
     transitivePeerDependencies:
       - '@noble/hashes'
 
@@ -19356,9 +19207,9 @@ snapshots:
 
   htm@3.1.1: {}
 
-  html-encoding-sniffer@6.0.0:
+  html-encoding-sniffer@7.0.0:
     dependencies:
-      '@exodus/bytes': 1.15.1
+      '@exodus/bytes': 1.16.0
     transitivePeerDependencies:
       - '@noble/hashes'
 
@@ -19379,13 +19230,6 @@ snapshots:
       toidentifier: 1.0.1
     optional: true
 
-  http-proxy-agent@7.0.2(supports-color@10.2.2):
-    dependencies:
-      agent-base: 7.1.3
-      debug: 4.4.3(supports-color@10.2.2)
-    transitivePeerDependencies:
-      - supports-color
-
   http-proxy-middleware@2.0.10(debug@4.4.3(supports-color@10.2.2)):
     dependencies:
       '@types/http-proxy': 1.17.17
@@ -19403,13 +19247,6 @@ snapshots:
       requires-port: 1.0.0
     transitivePeerDependencies:
       - debug
-
-  https-proxy-agent@7.0.6(supports-color@10.2.2):
-    dependencies:
-      agent-base: 7.1.3
-      debug: 4.4.3(supports-color@10.2.2)
-    transitivePeerDependencies:
-      - supports-color
 
   human-id@4.2.0: {}
 
@@ -19886,55 +19723,27 @@ snapshots:
 
   jsdoc-type-pratt-parser@4.8.0: {}
 
-  jsdom@27.4.0(supports-color@10.2.2):
+  jsdom@30.1.2:
     dependencies:
-      '@acemir/cssom': 0.9.30
-      '@asamuzakjp/dom-selector': 6.7.6
-      '@exodus/bytes': 1.15.1
-      cssstyle: 5.3.5
-      data-urls: 6.0.0
-      decimal.js: 10.6.0
-      html-encoding-sniffer: 6.0.0
-      http-proxy-agent: 7.0.2(supports-color@10.2.2)
-      https-proxy-agent: 7.0.6(supports-color@10.2.2)
-      is-potential-custom-element-name: 1.0.1
-      parse5: 8.0.1
-      saxes: 6.0.0
-      symbol-tree: 3.2.4
-      tough-cookie: 6.0.2
-      w3c-xmlserializer: 5.0.0
-      webidl-conversions: 8.0.1
-      whatwg-mimetype: 4.0.0
-      whatwg-url: 15.1.0
-      ws: 8.21.3
-      xml-name-validator: 5.0.0
-    transitivePeerDependencies:
-      - '@noble/hashes'
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-
-  jsdom@30.1.0:
-    dependencies:
-      '@asamuzakjp/css-color': 7.0.0
-      '@asamuzakjp/dom-selector': 9.2.1
+      '@asamuzakjp/css-color': 7.1.3
+      '@asamuzakjp/dom-selector': 9.2.4
       '@bramus/specificity': 2.4.2
-      '@csstools/css-syntax-patches-for-csstree': 1.1.14(css-tree@3.2.1)
-      '@exodus/bytes': 1.15.1
+      '@csstools/css-syntax-patches-for-csstree': 1.1.15(css-tree@3.2.1)
+      '@exodus/bytes': 1.16.0
       css-tree: 3.2.1
-      data-urls: 7.0.0
+      data-urls: 8.0.0
       decimal.js: 10.6.0
-      html-encoding-sniffer: 6.0.0
+      html-encoding-sniffer: 7.0.0
       is-potential-custom-element-name: 1.0.1
       lru-cache: 11.5.3
       parse5: 8.0.1
       saxes: 6.0.0
       tough-cookie: 6.0.2
-      undici: 8.10.2
-      w3c-xmlserializer: 5.0.0
+      undici: 8.11.2
+      w3c-xmlserializer: 6.0.0
       webidl-conversions: 8.0.1
       whatwg-mimetype: 5.0.0
-      whatwg-url: 17.1.1
+      whatwg-url: 17.2.0
       xml-name-validator: 5.0.0
     transitivePeerDependencies:
       - '@noble/hashes'
@@ -22630,8 +22439,6 @@ snapshots:
 
   swc-plugin-coverage-instrument@0.0.33: {}
 
-  symbol-tree@3.2.4: {}
-
   sync-child-process@1.0.2:
     dependencies:
       sync-message-port: 1.1.3
@@ -22785,7 +22592,7 @@ snapshots:
 
   tr46@0.0.3: {}
 
-  tr46@6.0.0:
+  tr46@7.0.0:
     dependencies:
       punycode: 2.3.1
 
@@ -23002,7 +22809,7 @@ snapshots:
 
   undici@7.29.0: {}
 
-  undici@8.10.2: {}
+  undici@8.11.2: {}
 
   unhead@2.1.17:
     dependencies:
@@ -23213,7 +23020,7 @@ snapshots:
       terser: 5.48.0
       yaml: 2.9.0
 
-  vitest@3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(happy-dom@20.14.0)(jiti@2.7.0)(jsdom@30.1.0)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0):
+  vitest@3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)(@vitest/ui@3.2.7)(happy-dom@20.14.0)(jiti@2.7.0)(jsdom@30.1.2)(less@4.8.0(supports-color@10.2.2))(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(supports-color@10.2.2)(terser@5.48.0)(yaml@2.9.0):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.7
@@ -23243,7 +23050,7 @@ snapshots:
       '@types/node': 24.13.3
       '@vitest/ui': 3.2.7(vitest@3.2.7)
       happy-dom: 20.14.0
-      jsdom: 30.1.0
+      jsdom: 30.1.2
     transitivePeerDependencies:
       - jiti
       - less
@@ -23260,7 +23067,7 @@ snapshots:
 
   w3c-keyname@2.2.8: {}
 
-  w3c-xmlserializer@5.0.0:
+  w3c-xmlserializer@6.0.0:
     dependencies:
       xml-name-validator: 5.0.0
 
@@ -23332,27 +23139,12 @@ snapshots:
 
   whatwg-mimetype@3.0.0: {}
 
-  whatwg-mimetype@4.0.0: {}
-
   whatwg-mimetype@5.0.0: {}
 
-  whatwg-url@15.1.0:
+  whatwg-url@17.2.0:
     dependencies:
-      tr46: 6.0.0
-      webidl-conversions: 8.0.1
-
-  whatwg-url@16.0.1:
-    dependencies:
-      '@exodus/bytes': 1.15.1
-      tr46: 6.0.0
-      webidl-conversions: 8.0.1
-    transitivePeerDependencies:
-      - '@noble/hashes'
-
-  whatwg-url@17.1.1:
-    dependencies:
-      '@exodus/bytes': 1.15.1
-      tr46: 6.0.0
+      '@exodus/bytes': 1.16.0
+      tr46: 7.0.0
       webidl-conversions: 8.0.1
     transitivePeerDependencies:
       - '@noble/hashes'
