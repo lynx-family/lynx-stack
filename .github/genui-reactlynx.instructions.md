@@ -14,6 +14,12 @@ model-authored build configuration, install requested packages, or evaluate
 generated JavaScript on the server. Keep generated imports restricted to
 `@lynx-js/react`, validate source syntax and module requests in the compiler
 worker, and disable CSS filesystem resolution through the Rsbuild plugin API.
+Canonicalize the worker's project directory before comparing it with Rspack
+issuers so symlinked temporary directories use the same module checks as CI.
+Keep authored imports limited to the public package while allowing the exact
+internal runtime modules injected by the trusted ReactLynx transform after
+source validation. Verify real Web and Native compilation with canonical
+temporary paths as well as the host's default temporary directory.
 
 Keep `dist/build-worker.js` beside `dist/index.js` in
 `@lynx-js/genui-reactlynx`, and keep that package external in the server build
@@ -65,3 +71,19 @@ Use the public TOS `webUrl` as the `bundleUrl` without rewriting the Playground
 hostname. Do not route generated bundles through A2UI/OpenUI messages, init
 data, or action bridges. Relay the Lynx load event as `A2UI_RENDER_READY` with
 the render URL and navigation token for shared preview navigation.
+
+ReactLynx Bench uses the native profile with no catalog. Reuse the two-file
+source contract and compiler in bounded generation/repair attempts, retaining
+source JSON, model usage and build timing in reports. Package every compiled
+asset with its relative path intact into a bounded uncompressed ZIP on the
+server. Publish it through TOS under the independent
+`reactlynx-bench/preview/<uuid>/bundle.zip` namespace, configurable through
+`TOS_REACTLYNX_BENCH_STORAGE_PREFIX`; never reuse Create's publication directory.
+Complete publication before emitting a Judge payload, preserve upload timing
+and the ZIP URL in adapter metadata, and do not regenerate source after a
+storage failure. Screenshot tasks carry only the published ZIP URL and
+`entry=main.lynx.js` for `/screenshot/zip/url`, never binary/base64 assets.
+Reuse the browser-owned sidecar URL and settle delay, BMP upload, PNG conversion,
+and selected-model scoring. Keep ReactLynx out of HTML Element Capture and
+A2UI/OpenUI globalProps. Preserve the native source resource checks before
+capture, and retain protocol identity in shared plans and restored reports.

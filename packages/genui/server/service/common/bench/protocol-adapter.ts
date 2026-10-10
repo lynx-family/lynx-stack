@@ -15,6 +15,11 @@ export type { ProtocolBenchProviderConfig } from './protocol-types.js';
 
 export type ProtocolBenchJudgePayload =
   | {
+    kind: 'reactlynx-bundle';
+    rawText: string;
+    zipUrl: string;
+  }
+  | {
     kind: 'a2ui-messages';
     messages: unknown[];
   }

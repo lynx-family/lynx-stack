@@ -31,6 +31,19 @@ test('rejects imports outside the generated source boundary', () => {
   ).toThrow('App.tsx may only import @lynx-js/react');
 });
 
+test.each([
+  '@lynx-js/react/internal',
+  '@lynx-js/react/lepus',
+  '@lynx-js/react/lepus/jsx-runtime',
+  '@lynx-js/react/runtime-components',
+])('rejects authored imports of compiler-only module %s', module => {
+  expect(() =>
+    validateReactLynxAppSource(
+      `import * as runtime from '${module}'; export default runtime;`,
+    )
+  ).toThrow('App.tsx may only import @lynx-js/react');
+});
+
 test('rejects dynamic module access', () => {
   expect(() =>
     validateReactLynxAppSource(`export default import('@lynx-js/react');`)

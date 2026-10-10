@@ -105,7 +105,9 @@ describe('A2UI Bench request protocol groups', () => {
   });
   test('accepts Lynx XML native alongside both component protocols', () => {
     const normalized = normalizeBenchJobRequest(body(
-      ['a2ui', 'openui', 'lynx-xml', 'html', 'reactweb'].map((protocol) => ({
+      ['a2ui', 'openui', 'lynx-xml', 'html', 'reactweb', 'reactlynx'].map((
+        protocol,
+      ) => ({
         id: protocol,
         protocol,
         catalog: 'Core Catalog',
@@ -122,6 +124,7 @@ describe('A2UI Bench request protocol groups', () => {
       ['lynx-xml', 'native'],
       ['html', 'native'],
       ['reactweb', 'native'],
+      ['reactlynx', 'native'],
     ]);
     expect(normalized.request.groups[2]).not.toHaveProperty('catalog');
     expect(normalized.request.groups[3]).not.toHaveProperty('catalog');
@@ -430,7 +433,7 @@ describe('A2UI Bench request protocol groups', () => {
   });
 });
 
-test.each(['html', 'reactweb'])(
+test.each(['html', 'reactweb', 'reactlynx'])(
   'rejects matched-core for %s and omits XML-only options',
   (protocol) => {
     expect(

@@ -584,3 +584,68 @@ test.each(['html', 'reactweb'] as const)(
     ).toEqual({ enabled: true, session: { screenshotPath: 'browser/html' } });
   },
 );
+
+test('ReactLynx captures the CDN ZIP through the browser relay and scores PNG', async () => {
+  const capability = await resolveGenuiBenchUiJudge('reactlynx', {
+    env: { UI_JUDGE_ZIP_URL: 'invalid', UI_JUDGE_OPENUI_ZIP_URL: 'invalid' },
+  });
+  expect(capability).toEqual({
+    enabled: true,
+    session: { screenshotPath: 'screenshot/zip/url' },
+  });
+  const zipUrl = 'https://cdn.test/reactlynx-bench/preview/id/bundle.zip';
+  const result = await runGenuiBenchUiJudge({
+    artifact: { protocol: 'reactlynx', rawText: '{"files":{}}', zipUrl },
+    model: 'lynx-model',
+    scenario: { prompt: 'Build a greeting' },
+    session: capability.session!,
+  }, (input) => {
+    expect(input).toMatchObject({
+      path: 'screenshot/zip/url',
+      fields: {
+        entry: 'main.lynx.js',
+        url: zipUrl,
+        width: '390',
+        height: '844',
+      },
+    });
+    expect(input.source).toBeUndefined();
+    expect(Object.keys(input.fields)).toEqual([
+      'entry',
+      'url',
+      'width',
+      'height',
+    ]);
+    return Promise.resolve(evaluationResponse(geqiResponse(4)));
+  });
+  expect(result).toMatchObject({ status: 'complete', score: 4, geqiScore: 80 });
+  expect(evaluateScreenshot).toHaveBeenLastCalledWith(expect.objectContaining({
+    model: 'lynx-model',
+    screenshotDataUrl: expect.stringMatching(
+      /^data:image\/png;base64,/u,
+    ) as unknown,
+  }));
+});
+
+test.each([
+  'https://example.com/a.png',
+  'file:///tmp/a.png',
+  'openUrl("target")',
+])(
+  'rejects ReactLynx source containing untrusted resources before native capture: %s',
+  async (rawText) => {
+    const capture = rstest.fn();
+    const result = await runGenuiBenchUiJudge({
+      artifact: {
+        protocol: 'reactlynx',
+        rawText,
+        zipUrl: 'https://cdn.test/reactlynx-bench/preview/id/bundle.zip',
+      },
+      scenario: { prompt: 'Build a greeting' },
+      session: { screenshotPath: 'screenshot/zip/url' },
+    }, capture);
+    expect(result.status).toBe('failed');
+    expect(result.errors[0]).toContain('ui-judge rejected ReactLynx');
+    expect(capture).not.toHaveBeenCalled();
+  },
+);

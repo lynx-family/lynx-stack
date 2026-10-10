@@ -75,9 +75,12 @@ function screenshotForm(
       new Blob([new Uint8Array(archive)], { type: 'application/zip' }),
       'page.zip',
     );
-  } else if (request.fields.entry !== 'template.js' || !request.fields.url) {
+  } else if (
+    !['template.js', 'main.lynx.js'].includes(request.fields.entry ?? '')
+    || !request.fields.url
+  ) {
     throw new Error(
-      'Template screenshot task requires a ZIP URL and entry=template.js.',
+      'Template screenshot task requires a ZIP URL and a supported entry.',
     );
   }
   if (bytes > MAX_CAPTURE_FORM_BYTES) {

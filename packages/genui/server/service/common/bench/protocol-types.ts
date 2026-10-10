@@ -8,6 +8,7 @@ export const BENCH_PROTOCOLS = [
   'lynx-xml',
   'html',
   'reactweb',
+  'reactlynx',
 ] as const;
 
 export type BenchProtocol = (typeof BENCH_PROTOCOLS)[number];

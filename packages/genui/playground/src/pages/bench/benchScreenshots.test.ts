@@ -420,3 +420,50 @@ test.each([
       .toContain('Screenshot delay must be a non-negative integer');
   },
 );
+
+test('captures the published ReactLynx ZIP by URL without sending binary assets', async () => {
+  const zipUrl = 'https://cdn.test/reactlynx-bench/preview/id/bundle.zip';
+  const fetchImpl = rstest.fn<typeof fetch>()
+    .mockResolvedValueOnce(Response.json({
+      path: 'screenshot/zip/url',
+      fields: {
+        entry: 'main.lynx.js',
+        url: zipUrl,
+        width: '390',
+        height: '844',
+      },
+      timeoutMs: 1000,
+    }))
+    .mockResolvedValueOnce(
+      new Response('BM', { headers: { 'Content-Type': 'image/bmp' } }),
+    )
+    .mockResolvedValueOnce(Response.json({ ok: true }));
+  const relay = createBenchScreenshotRelay({
+    jobUrl,
+    serverUrl,
+    screenshotSettleMs: 0,
+    signal: new AbortController().signal,
+    onError: rstest.fn(),
+    fetch: fetchImpl,
+  });
+  relay(captureId);
+  relay(captureId);
+  await expect.poll(() => fetchImpl.mock.calls.length).toBe(3);
+  expect(fetchImpl.mock.calls[1]?.[0]).toEqual(
+    new URL('screenshot/zip/url', serverUrl),
+  );
+  const form = fetchImpl.mock.calls[1]?.[1]?.body as FormData;
+  expect(form.get('entry')).toBe('main.lynx.js');
+  expect(form.get('url')).toBe(zipUrl);
+  expect(form.get('screenshotSettleMs')).toBe('0');
+  expect([...form.keys()].sort()).toEqual([
+    'entry',
+    'height',
+    'screenshotSettleMs',
+    'url',
+    'width',
+  ]);
+  expect(fetchImpl.mock.calls[2]?.[1]?.headers).toEqual({
+    'Content-Type': 'image/bmp',
+  });
+});

@@ -15,6 +15,8 @@ import { GenerationUpstreamError } from '../service/common/result.js';
 import { createHtmlBenchAdapter } from '../service/html/html-bench-adapter.js';
 import { createLynxXmlBenchAdapter } from '../service/lynx-xml/lynx-xml-bench-adapter.js';
 import { createOpenUIBenchAdapter } from '../service/openui/openui-bench-adapter.js';
+import { createReactLynxBenchAdapter } from '../service/reactlynx/reactlynx-bench-adapter.js';
+import type { ReactLynxBenchAdapterOptions } from '../service/reactlynx/reactlynx-bench-adapter.js';
 
 const model = 'bench-retry-model';
 const baseURL = 'https://bench-retry.example/v1';
@@ -83,6 +85,28 @@ function a2uiSource(matchedCore = true): string {
 }
 
 const protocols = [
+  [
+    'reactlynx',
+    (options: ReactLynxBenchAdapterOptions) =>
+      createReactLynxBenchAdapter({
+        ...options,
+        publish: () =>
+          Promise.resolve({
+            id: 'id',
+            zipUrl: 'https://cdn.test/reactlynx-bench/preview/id/bundle.zip',
+          }),
+        build: () =>
+          Promise.resolve([{ name: 'main.lynx.js', data: Buffer.from([1]) }]),
+      }),
+    () =>
+      JSON.stringify({
+        files: {
+          'App.tsx':
+            'export default function App() { return <text>Hello</text>; }',
+          'App.css': '',
+        },
+      }),
+  ],
   ['a2ui', createA2UIBenchAdapter, a2uiSource],
   ['openui', createOpenUIBenchAdapter, () => 'root = Column([Text("Hello")])'],
   [

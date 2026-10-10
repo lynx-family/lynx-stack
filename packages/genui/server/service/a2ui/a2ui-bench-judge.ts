@@ -130,6 +130,7 @@ export interface RunBenchUiJudgeRequestOptions {
   viewport?: { width?: number; height?: number };
   lynxXmlSource?: string;
   htmlSource?: string;
+  reactLynxZipUrl?: string;
   scenario: BenchUiJudgeScenario;
   includeScreenshot?: boolean;
   session: BenchUiJudgeSession;
@@ -398,7 +399,12 @@ export async function runBenchUiJudgeRequest(
     return await (pool ? pool.run(execute, options.signal) : execute());
   }
   const fields: Record<string, string> = {};
-  if (options.htmlSource === undefined && options.lynxXmlSource === undefined) {
+  if (options.reactLynxZipUrl !== undefined) {
+    fields.entry = 'main.lynx.js';
+    fields.url = options.reactLynxZipUrl;
+  } else if (
+    options.htmlSource === undefined && options.lynxXmlSource === undefined
+  ) {
     fields.entry = 'template.js';
     if (options.session.zipUrl !== undefined) {
       fields.url = options.session.zipUrl;

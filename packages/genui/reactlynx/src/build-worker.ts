@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 // This is a separate Node entrypoint. Only package-owned configuration executes.
-import { readFile } from 'node:fs/promises';
+import { readFile, realpath } from 'node:fs/promises';
 import path from 'node:path';
 
 import { createRsbuild } from '@rsbuild/core';
@@ -15,8 +15,10 @@ import { pluginLynx } from '@lynx-js/rsbuild-plugin';
 
 import { validateReactLynxAppSource } from './source-policy.js';
 
-const cwd = process.argv[2];
-if (!cwd) throw new Error('Missing build directory');
+const directory = process.argv[2];
+if (!directory) throw new Error('Missing build directory');
+// Rspack resolves symlinks in issuers, including macOS temporary directories.
+const cwd = await realpath(directory);
 const appPath = path.join(cwd, 'App.tsx');
 validateReactLynxAppSource(await readFile(appPath, 'utf8'));
 
@@ -72,10 +74,16 @@ const rsbuild = await createRsbuild({
                       '@lynx-js/react',
                       '@lynx-js/react/jsx-runtime',
                       '@lynx-js/react/jsx-dev-runtime',
+                      // The trusted ReactLynx transform injects these imports.
+                      // The source policy still rejects them in authored code.
+                      '@lynx-js/react/internal',
+                      '@lynx-js/react/lepus',
+                      '@lynx-js/react/lepus/jsx-runtime',
+                      '@lynx-js/react/runtime-components',
                     ].includes(data.request)
                   ) {
                     throw new Error(
-                      'Generated source requested an unsupported module',
+                      `Generated source requested an unsupported module: ${data.request}`,
                     );
                   }
                 });
