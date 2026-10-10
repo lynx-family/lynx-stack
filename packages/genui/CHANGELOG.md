@@ -1,5 +1,19 @@
 # @lynx-js/genui
 
+## 0.6.0
+
+### Minor Changes
+
+- Expose `normalizeLynxXmlArtifact` through `@lynx-js/genui/lynx-xml` for reusable document normalization and validation. ([#4122](https://github.com/lynx-family/lynx-stack/pull/4122))
+
+### Patch Changes
+
+- Improve streamed OpenUI previews and clarify generation prompts for positional arguments and valid media sources. ([#4125](https://github.com/lynx-family/lynx-stack/pull/4125))
+
+- Keep dependency `@a2ui/web_core` to `0.10.6`. ([#4071](https://github.com/lynx-family/lynx-stack/pull/4071))
+- Updated dependencies [[`18327c5`](https://github.com/lynx-family/lynx-stack/commit/18327c5af18578b1fb17f92418f8b3f8b5a2c983)]:
+  - @lynx-js/react-signals@0.0.5
+
 ## 0.5.0
 
 ### Minor Changes
