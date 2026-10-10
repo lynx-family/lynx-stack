@@ -543,9 +543,13 @@ const DEFAULT_COMPONENT_GROUPS: ComponentGroup[] = [
   },
 ];
 
+const ENUM_ARGUMENT_RULE =
+  'Treat every component enum as a closed set: use only the exact values listed for that argument. Do not borrow enum values from another component or from the broader upstream UI or icon library. If no value fits, use another available component instead of inventing a value.';
+
 const DEFAULT_ADDITIONAL_RULES = [
   'Use the built-in OpenUI components exactly as listed; do not invent component names or named-argument syntax.',
   'Arguments are positional. Omit optional arguments only from the end; use null for every skipped optional slot before a later argument. Never shift later values into earlier slots.',
+  ENUM_ARGUMENT_RULE,
   'Prefer compact, mobile-friendly layouts. Use Stack, Row, Column, List, and Card for structure, CardHeader for titles, and Text/TextContent for text.',
   'Use Tabs for alternate views, Modal for tap-to-open details, and List for repeated or grouped items.',
   'For List, use List(children, null, direction, align, gap, divider) when supplying layout options; the second items argument must remain null when children is supplied. Only use TemplateChildren when the host provides template data.',
@@ -587,6 +591,7 @@ const DEFAULT_EXAMPLES = [
 const RESTRICTED_COMPONENT_RULES = [
   'Use only the components listed in this prompt; do not invent component names or named-argument syntax.',
   'Arguments are positional. Omit optional arguments only from the end; use null for every skipped optional slot before a later argument. Never shift later values into earlier slots.',
+  ENUM_ARGUMENT_RULE,
   'Prefer compact, mobile-friendly layouts built from the available layout and content components.',
   'Return only OpenUI Lang code unless inlineMode is explicitly enabled.',
 ];

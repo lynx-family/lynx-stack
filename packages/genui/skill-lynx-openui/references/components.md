@@ -23,6 +23,11 @@ optional argument only when every later argument is also omitted. If an optional
 argument precedes a required one, supply it so later positions do not shift. The
 signatures include exact argument types and allowed enum values.
 
+Treat every enum as a closed set: use only the exact values listed for that
+argument. Do not borrow values from another component or from the broader
+upstream UI or icon library. If no value fits, use another available component
+instead of inventing a value.
+
 ## Shared Types
 
 - `StringLike`: string, number, boolean, or a v0.5 expression that resolves to
