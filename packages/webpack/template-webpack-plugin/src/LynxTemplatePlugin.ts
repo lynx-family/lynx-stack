@@ -352,6 +352,8 @@ export interface LynxTemplatePluginOptions {
    * plugins passed to parser
    */
   cssPlugins: CSS.Plugin[];
+
+  enableReloadCardOnAppReload?: boolean | undefined;
 }
 
 interface EncodeRawData {
@@ -477,6 +479,7 @@ export class LynxTemplatePlugin {
       experimental_isLazyBundle: false,
       lazyBundleFetcher: 'QueryComponent',
       cssPlugins: [],
+      enableReloadCardOnAppReload: false,
     });
 
   /**
@@ -1217,6 +1220,7 @@ class LynxTemplatePluginImpl {
       defaultOverflowVisible,
       dsl,
       cssPlugins,
+      enableReloadCardOnAppReload,
     } = this.#options;
 
     const isDev = process.env['NODE_ENV'] === 'development'
@@ -1272,6 +1276,9 @@ class LynxTemplatePluginImpl {
           removeDescendantSelectorScope,
           // Will be filled later in `@lynx-js/debug-metadata-rsbuild-plugin`
           debugMetadataUrl: '',
+          ...(enableReloadCardOnAppReload
+            ? { enableReloadCardOnAppReload: true }
+            : {}),
         },
       },
       css: {

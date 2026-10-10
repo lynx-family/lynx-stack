@@ -367,6 +367,16 @@ export interface PluginReactLynxOptions {
       mainThread?: boolean
       background?: boolean
     }
+
+  /**
+   * Re-evaluate the whole JS bundle on `reloadTemplate` instead of reusing
+   * the JSX of the previous render, so module scoped state of the entry is
+   * reset while the element tree is still reused.
+   *
+   * @defaultValue `false`
+   * @experimental
+   */
+  experimental_reEvalJSOnReload?: boolean
 }
 
 /**
@@ -420,6 +430,7 @@ export function pluginReactLynx(
     experimental_useElementTemplate: false,
     optimizeBundleSize: false,
     enableUiSourceMap: false,
+    experimental_reEvalJSOnReload: false,
   }
   const resolvedOptions = Object.assign(defaultOptions, userOptions, {
     // Use `engineVersion` to override the default values

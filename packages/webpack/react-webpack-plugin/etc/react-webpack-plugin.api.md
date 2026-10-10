@@ -53,6 +53,7 @@ export interface ReactWebpackPluginOptions {
     }>;
     // @alpha
     experimental_isLazyBundle?: boolean;
+    experimental_reEvalJSOnReload?: boolean;
     experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions;
     experimental_useElementTemplate?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
