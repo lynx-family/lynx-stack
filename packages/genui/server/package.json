@@ -33,7 +33,7 @@
   "devDependencies": {
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
-    "@types/node": "^24.13.3",
+    "@types/node": "^24.19.1",
     "@types/pngjs": "^6.0.5",
     "ajv": "^8.20.0",
     "typescript": "^6.0.3"
