@@ -29,6 +29,10 @@ export function createGenUIGuideReadmeDocs(options: {
     options.repositoryRoot,
     'packages/genui/openui',
   );
+  const lynxXmlPackageRoot = path.join(
+    options.repositoryRoot,
+    'packages/genui/lynx-xml',
+  );
   const enGuideRoot = path.join(
     options.websiteRoot,
     'docs/en/guide/genui',
@@ -164,6 +168,54 @@ export function createGenUIGuideReadmeDocs(options: {
     sourceFile: path.join(openuiPackageRoot, 'docs/system-prompts_zh.md'),
   });
 
+  removeGeneratedDoc(path.join(enGuideRoot, 'lynx-xml'));
+  syncReadme({
+    languageSwitch: 'English | <a href="/zh/guide/genui/lynx-xml">简体中文</a>',
+    outFile: path.join(enGuideRoot, 'lynx-xml.md'),
+    replacements: LYNX_XML_EN_LINK_REPLACEMENTS,
+    sourceFile: path.join(lynxXmlPackageRoot, 'README.md'),
+    switchPattern: /^English \| \[简体中文\]\(\.\/README_zh\.md\)$/m,
+  });
+  syncDoc({
+    outFile: path.join(enGuideRoot, 'lynx-xml/overview.md'),
+    replacements: LYNX_XML_EN_LINK_REPLACEMENTS,
+    sourceFile: path.join(lynxXmlPackageRoot, 'docs/overview.md'),
+  });
+  syncDoc({
+    outFile: path.join(enGuideRoot, 'lynx-xml/artifact-guide.md'),
+    replacements: LYNX_XML_EN_LINK_REPLACEMENTS,
+    sourceFile: path.join(lynxXmlPackageRoot, 'docs/artifact-guide.md'),
+  });
+  syncDoc({
+    outFile: path.join(enGuideRoot, 'lynx-xml/system-prompts.md'),
+    replacements: LYNX_XML_EN_LINK_REPLACEMENTS,
+    sourceFile: path.join(lynxXmlPackageRoot, 'docs/system-prompts.md'),
+  });
+
+  removeGeneratedDoc(path.join(zhGuideRoot, 'lynx-xml'));
+  syncReadme({
+    languageSwitch: '<a href="/guide/genui/lynx-xml">English</a> | 简体中文',
+    outFile: path.join(zhGuideRoot, 'lynx-xml.md'),
+    replacements: LYNX_XML_ZH_LINK_REPLACEMENTS,
+    sourceFile: path.join(lynxXmlPackageRoot, 'README_zh.md'),
+    switchPattern: /^\[English\]\(\.\/README\.md\) \| 简体中文$/m,
+  });
+  syncDoc({
+    outFile: path.join(zhGuideRoot, 'lynx-xml/overview.md'),
+    replacements: LYNX_XML_ZH_LINK_REPLACEMENTS,
+    sourceFile: path.join(lynxXmlPackageRoot, 'docs/overview_zh.md'),
+  });
+  syncDoc({
+    outFile: path.join(zhGuideRoot, 'lynx-xml/artifact-guide.md'),
+    replacements: LYNX_XML_ZH_LINK_REPLACEMENTS,
+    sourceFile: path.join(lynxXmlPackageRoot, 'docs/artifact-guide_zh.md'),
+  });
+  syncDoc({
+    outFile: path.join(zhGuideRoot, 'lynx-xml/system-prompts.md'),
+    replacements: LYNX_XML_ZH_LINK_REPLACEMENTS,
+    sourceFile: path.join(lynxXmlPackageRoot, 'docs/system-prompts_zh.md'),
+  });
+
   removeGeneratedDoc(
     path.join(
       options.websiteRoot,
@@ -194,6 +246,10 @@ export function createGenUIGuideReadmeDocs(options: {
           items: OPENUI_EN_SIDEBAR_ITEMS,
         },
         {
+          text: 'Lynx XML',
+          items: LYNX_XML_EN_SIDEBAR_ITEMS,
+        },
+        {
           text: 'Playground',
           link: '/genui',
         },
@@ -213,6 +269,10 @@ export function createGenUIGuideReadmeDocs(options: {
         {
           text: 'OpenUI',
           items: OPENUI_ZH_SIDEBAR_ITEMS,
+        },
+        {
+          text: 'Lynx XML',
+          items: LYNX_XML_ZH_SIDEBAR_ITEMS,
         },
         {
           text: 'Playground',
@@ -299,6 +359,44 @@ export const OPENUI_ZH_NAV_ITEMS = [
   },
 ];
 
+export const LYNX_XML_EN_NAV_ITEMS = [
+  {
+    text: 'Introduction README',
+    link: '/guide/genui/lynx-xml',
+  },
+  {
+    text: 'Overview & Architecture',
+    link: '/guide/genui/lynx-xml/overview',
+  },
+  {
+    text: 'Artifacts & Validation',
+    link: '/guide/genui/lynx-xml/artifact-guide',
+  },
+  {
+    text: 'System Prompts',
+    link: '/guide/genui/lynx-xml/system-prompts',
+  },
+];
+
+export const LYNX_XML_ZH_NAV_ITEMS = [
+  {
+    text: '简介 README',
+    link: '/zh/guide/genui/lynx-xml',
+  },
+  {
+    text: '概览与架构',
+    link: '/zh/guide/genui/lynx-xml/overview',
+  },
+  {
+    text: '产物与校验',
+    link: '/zh/guide/genui/lynx-xml/artifact-guide',
+  },
+  {
+    text: 'System Prompts',
+    link: '/zh/guide/genui/lynx-xml/system-prompts',
+  },
+];
+
 export const GENUI_EN_NAV_ITEMS = [
   {
     text: 'GenUI Overview',
@@ -313,6 +411,11 @@ export const GENUI_EN_NAV_ITEMS = [
     text: 'OpenUI',
     link: '/guide/genui/openui',
     items: OPENUI_EN_NAV_ITEMS.slice(1),
+  },
+  {
+    text: 'Lynx XML',
+    link: '/guide/genui/lynx-xml',
+    items: LYNX_XML_EN_NAV_ITEMS.slice(1),
   },
   {
     text: 'Playground',
@@ -339,6 +442,36 @@ const OPENUI_ZH_SIDEBAR_ITEMS = OPENUI_ZH_NAV_ITEMS.map(item => ({
   ...item,
   text: item.text.replace(' README', ''),
 }));
+
+const LYNX_XML_EN_SIDEBAR_ITEMS = LYNX_XML_EN_NAV_ITEMS.map(item => ({
+  ...item,
+  text: item.text.replace(' README', ''),
+}));
+
+const LYNX_XML_EN_LINK_REPLACEMENTS = [
+  ['./docs/overview.md', '/guide/genui/lynx-xml/overview'],
+  ['./overview.md', '/guide/genui/lynx-xml/overview'],
+  ['./docs/artifact-guide.md', '/guide/genui/lynx-xml/artifact-guide'],
+  ['./artifact-guide.md', '/guide/genui/lynx-xml/artifact-guide'],
+  ['./docs/system-prompts.md', '/guide/genui/lynx-xml/system-prompts'],
+  ['./system-prompts.md', '/guide/genui/lynx-xml/system-prompts'],
+  ['../README.md', '/guide/genui/lynx-xml'],
+] as const;
+
+const LYNX_XML_ZH_SIDEBAR_ITEMS = LYNX_XML_ZH_NAV_ITEMS.map(item => ({
+  ...item,
+  text: item.text.replace(' README', ''),
+}));
+
+const LYNX_XML_ZH_LINK_REPLACEMENTS = [
+  ['./docs/overview_zh.md', '/zh/guide/genui/lynx-xml/overview'],
+  ['./overview_zh.md', '/zh/guide/genui/lynx-xml/overview'],
+  ['./docs/artifact-guide_zh.md', '/zh/guide/genui/lynx-xml/artifact-guide'],
+  ['./artifact-guide_zh.md', '/zh/guide/genui/lynx-xml/artifact-guide'],
+  ['./docs/system-prompts_zh.md', '/zh/guide/genui/lynx-xml/system-prompts'],
+  ['./system-prompts_zh.md', '/zh/guide/genui/lynx-xml/system-prompts'],
+  ['../README_zh.md', '/zh/guide/genui/lynx-xml'],
+] as const;
 
 const A2UI_EN_LINK_REPLACEMENTS = [
   ['./docs/overview.md', '/guide/genui/a2ui/overview'],
