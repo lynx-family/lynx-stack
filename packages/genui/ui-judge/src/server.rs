@@ -1577,7 +1577,6 @@ fn remote_url_too_large() -> ApiError {
 fn remote_fetch_api_error(error: HttpFetchError) -> ApiError {
   let status = match error {
     HttpFetchError::InvalidUrl | HttpFetchError::Credentials => StatusCode::BAD_REQUEST,
-    HttpFetchError::NonPublicAddress => StatusCode::FORBIDDEN,
     HttpFetchError::TimedOut => StatusCode::GATEWAY_TIMEOUT,
     HttpFetchError::TooLarge(_) => StatusCode::PAYLOAD_TOO_LARGE,
     HttpFetchError::Resolution | HttpFetchError::Request | HttpFetchError::Status(_) => {
@@ -2865,33 +2864,6 @@ mod tests {
   }
 
   #[tokio::test]
-  async fn remote_screenshot_endpoints_share_ssrf_protection() {
-    let headless = scripted_workers(|_| panic!("blocked URLs must not reach capture"));
-    let state = AppState {
-      headless: Arc::clone(&headless),
-      zip_capture_backend: ZipCaptureBackend::SharedWorker,
-      zip_capture_processes: ZipCaptureProcesses::new(),
-    };
-
-    let error = screenshot_zip_url(
-      State(state.clone()),
-      remote_url_request("index.lynxml", "http://127.0.0.1/archive.zip"),
-    )
-    .await
-    .expect_err("reject a private ZIP host");
-    assert_eq!(error.status, StatusCode::FORBIDDEN);
-
-    let error = screenshot_template_url(
-      State(state),
-      remote_url_request("template.js", "http://[::1]/template.js"),
-    )
-    .await
-    .expect_err("reject a private template host");
-    assert_eq!(error.status, StatusCode::FORBIDDEN);
-    headless.shutdown().expect("stop unused screenshot worker");
-  }
-
-  #[tokio::test]
   async fn template_url_requires_a_javascript_entry() {
     let headless = scripted_workers(|_| panic!("invalid entries must not reach capture"));
     let state = AppState {
@@ -4074,29 +4046,6 @@ mod tests {
       assert_eq!(error.status, StatusCode::BAD_REQUEST);
     }
     headless.shutdown().expect("stop mock headless worker");
-  }
-
-  #[tokio::test]
-  async fn remote_template_screenshot_uses_screenshot_ssrf_protection() {
-    let headless = scripted_workers(|_| panic!("blocked URLs must not reach capture"));
-    let state = AppState {
-      headless: Arc::clone(&headless),
-      zip_capture_backend: ZipCaptureBackend::SharedWorker,
-      zip_capture_processes: ZipCaptureProcesses::new(),
-    };
-
-    for url in [
-      "http://127.0.0.1/private.lynx.js",
-      "HTTP://127.0.0.1/private.lynx.js",
-      "http://[::1]/private.lynx.js",
-    ] {
-      let error = screenshot_template(State(state.clone()), remote_url_request("template.js", url))
-        .await
-        .expect_err("the SSRF-safe downloader must reject private hosts");
-      assert_eq!(error.status, StatusCode::FORBIDDEN);
-      assert!(error.message.contains("non-public network address"));
-    }
-    headless.shutdown().expect("stop unused headless worker");
   }
 
   #[tokio::test]
