@@ -697,6 +697,15 @@
   font-size: 11px;
 }
 
+.chatAgentInteractionRaw pre {
+  margin: 6px 0;
+  max-height: 240px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+}
+
 .chatAgentInteractionNotice {
   margin: 6px 0;
   color: var(--geist-secondary);

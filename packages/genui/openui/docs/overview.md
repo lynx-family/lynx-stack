@@ -60,6 +60,98 @@ OpenUI uses positional arguments. The parser maps them to named props in the
 order of each component's Zod schema. Forward references are allowed, so the
 root can refer to statements that appear later in the response.
 
+## Stream model output
+
+Pass the accumulated model text as `response` and the generation state as
+`isStreaming`. Reuse existing React or conversation state if your application
+already owns both; no separate parser is needed.
+
+- `response` is the full text received so far, not the latest delta. Append deltas;
+  replace the text when your transport sends a cumulative snapshot.
+- Keep `isStreaming={true}` throughout generation. Partial UI renders, while
+  Query execution, mutation registration, and built-in interactions wait.
+- On successful completion, apply the authoritative final text and set
+  `isStreaming={false}` together. Its default is `false`; static or persisted
+  complete responses can omit it.
+
+### Connect your transport
+
+Keep text and generation state in one state object so they update together.
+The handlers below illustrate connecting a transport that emits deltas or full
+snapshots; use the handler matching your transport's text format:
+
+```tsx
+import { createOpenUiLibrary, OpenUiRenderer } from '@lynx-js/genui/openui';
+import { useMemo, useState } from '@lynx-js/react';
+
+export function GeneratedView() {
+  const library = useMemo(() => createOpenUiLibrary(), []);
+  const [output, setOutput] = useState({
+    response: null as string | null,
+    isStreaming: false,
+  });
+
+  function onStart() {
+    setOutput({ response: '', isStreaming: true });
+  }
+
+  function onDelta(delta: string) {
+    setOutput((current) => ({
+      response: (current.response ?? '') + delta,
+      isStreaming: true,
+    }));
+  }
+
+  function onSnapshot(fullText: string) {
+    setOutput({ response: fullText, isStreaming: true });
+  }
+
+  function onDone(finalText: string) {
+    setOutput({ response: finalText, isStreaming: false });
+  }
+
+  function onFailureOrCancel() {
+    setOutput({ response: null, isStreaming: false });
+  }
+
+  // Connect these handlers to your transport.
+  return <OpenUiRenderer library={library} {...output} />;
+}
+```
+
+If completion provides no final text, keep the accumulated response and update
+only the flag: `setOutput(current => ({ ...current, isStreaming: false }))`.
+Even when final text equals the last partial, the flag must change to enable
+queries, completion diagnostics, and interactions. Custom interactive components
+should honor `useIsStreaming()` too.
+
+### How incremental parsing works
+
+The renderer retains a streaming parser while `library` stays the same. Although
+`response` supplies the full accumulated text, the parser detects appended text,
+caches completed statements, and reparses the unfinished tail to preview partial
+output. Forward references become renderable when their targets arrive. Changing
+or shortening previously received text resets the parser's cache; keep Library
+identity stable with `useMemo` or a module constant.
+
+This is statement-level incremental parsing: preprocessing and result rebuilding
+still run on each text update, and one long unfinished statement can be reparsed
+repeatedly. It does not provide a component-patch protocol. Changing only
+`isStreaming` with unchanged text does not rerun parsing.
+
+### Completion, cancellation, and new sessions
+
+For SSE, finish only after the successful `done` event, using its authoritative
+text. A connection closing by itself does not confirm success.
+
+On failure or cancellation, clear incomplete text with
+`{ response: null, isStreaming: false }`; do not enable queries or actions for an
+unfinished result. State updates do not cancel network requests: your transport
+owns cancellation and error reporting. Before starting another generation, stop
+the old request and reject late events, then reset the text. Clearing response
+does not reset runtime form state; use a new renderer `key` when a fresh session
+should reset that state.
+
 ## The mental model
 
 In ordinary React, your source code chooses a component and passes props:
@@ -139,7 +231,7 @@ input ─┼─► Transport ──prompt/action──► Agent service     │
        │      └──────────────────────────────┘             │
        │      │                                            │
        │      ▼                                            │
-       │ <OpenUiRenderer response={text}>                  │
+       │ <OpenUiRenderer response={text} ...>               │
        │      │                                            │
        │      ├─ parser ─► AST ─► evaluator ─► UI tree     │
        │      ├─ Store ($state + form state)               │
@@ -152,11 +244,11 @@ input ─┼─► Transport ──prompt/action──► Agent service     │
 1. Your transport sends the user request to an Agent service.
 2. The service calls a model with an OpenUI system prompt built from the same
    component contract the client supports.
-3. The transport appends chunks to one accumulated `response` string and passes
-   it to `<OpenUiRenderer>`.
+3. The transport accumulates text deltas as `response` and passes it with
+   `isStreaming` to `<OpenUiRenderer>`.
 4. The streaming parser validates completed statements and resolves references.
-5. The runtime initializes state, evaluates expressions, and runs complete
-   Queries through your `toolProvider`.
+5. The runtime initializes state and evaluates expressions. After generation
+   completes, it runs Queries through your `toolProvider`.
 6. The renderer walks the evaluated root and mounts trusted ReactLynx
    components from the Library.
 7. User interactions execute action steps. Host-facing actions leave through
@@ -164,7 +256,8 @@ input ─┼─► Transport ──prompt/action──► Agent service     │
 
 ## Inside the client
 
-The raw `response` path creates the complete v0.5 runtime:
+`response` creates the complete v0.5 runtime, with `isStreaming` controlling
+when queries and interactions become available:
 
 ```text
 response text
@@ -193,15 +286,15 @@ Important runtime behavior:
 - **Stable Library.** Create the Library once with `useMemo` or outside the
   component. Changing its identity creates a new parser and can reset parsing
   work.
-- **Streaming guard.** Pass `isStreaming` while generation is active. Query and
-  mutation execution waits for stable output, and built-in interactions are
-  disabled.
+- **Streaming guard.** Pass `isStreaming={true}` while generation is active.
+  Query execution and mutation registration wait for stable output, and built-in
+  interactions are disabled.
 - **Reactive state.** `$variables` and form values live in one external Store.
   `onStateUpdate` can persist its snapshots; `$`-prefixed values in
   `initialState` hydrate reactive declarations.
 - **Queries and mutations.** Query defaults and prefetched
   `initialQueryResults` participate in the first synchronous render after their
-  statements are complete. A configured tool provider revalidates Queries
+  response finishes streaming. A configured tool provider revalidates Queries
   after commit and whenever referenced state changes. Mutations are registered
   but run only when an action calls `@Run(mutationRef)`.
 - **Sequential actions.** `@Run`, `@Set`, `@Reset`, `@ToAssistant`, and
@@ -212,19 +305,21 @@ Important runtime behavior:
 
 ## Who owns what
 
-| Piece              | Runs in                 | Owner                      | Responsibility                                                                                            |
-| ------------------ | ----------------------- | -------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Agent service      | Server                  | Your application           | Produces raw OpenUI Lang using the system prompt and component/tool contract.                             |
-| Transport adapter  | Client shell            | Your application           | Streams accumulated response text, handles cancellation, and forwards conversation actions.               |
-| `Library`          | Client + Agent contract | Shared                     | Names components, fixes positional prop order, provides JSON Schema, and maps names to trusted renderers. |
-| Parser/evaluator   | Client                  | This package + `lang-core` | Parses statements, validates props, resolves state/data expressions, and reports structured errors.       |
-| Store/QueryManager | Client                  | This package + `lang-core` | Owns reactive/form state and executes tool-backed Query/Mutation statements.                              |
-| `<OpenUiRenderer>` | Client                  | This package               | Renders the evaluated root and wires state, tools, and actions to ReactLynx components.                   |
-| `toolProvider`     | Client integration      | Your application           | Maps tool names to async functions or an MCP-compatible client.                                           |
+| Piece              | Runs in                 | Owner                      | Responsibility                                                                                              |
+| ------------------ | ----------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Agent service      | Server                  | Your application           | Produces raw OpenUI Lang using the system prompt and component/tool contract.                               |
+| Transport adapter  | Client shell            | Your application           | Delivers deltas or snapshots, confirms completion, handles cancellation, and forwards conversation actions. |
+| Message store      | Client                  | This package               | Accumulates OpenUI text and exposes generation state to the renderer.                                       |
+| `Library`          | Client + Agent contract | Shared                     | Names components, fixes positional prop order, provides JSON Schema, and maps names to trusted renderers.   |
+| Parser/evaluator   | Client                  | This package + `lang-core` | Parses statements, validates props, resolves state/data expressions, and reports structured errors.         |
+| Store/QueryManager | Client                  | This package + `lang-core` | Owns reactive/form state and executes tool-backed Query/Mutation statements.                                |
+| `<OpenUiRenderer>` | Client                  | This package               | Renders the evaluated root and wires state, tools, and actions to ReactLynx components.                     |
+| `toolProvider`     | Client integration      | Your application           | Maps tool names to async functions or an MCP-compatible client.                                             |
 
 ## `<OpenUiRenderer>` props
 
-Use the raw response form for all new integrations.
+Pass the full accumulated `response` and set `isStreaming={true}` during
+generation. `isStreaming` defaults to `false` for complete responses.
 
 | Prop                  | Type                                       | Required | Purpose                                                                  |
 | --------------------- | ------------------------------------------ | -------- | ------------------------------------------------------------------------ |

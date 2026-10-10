@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { createA2UISourcePolicy } from './a2ui-source-policy.js';
+import { createSourcePolicy } from '../common/source-policy.js';
 
 interface A2UIURLSourceMessage {
   role: unknown;
@@ -25,7 +25,7 @@ export function createA2UIOpenURLPolicy(
   providedValues: readonly unknown[],
   dynamicSources: () => readonly string[] = () => [],
 ): (source: string) => boolean {
-  return createA2UISourcePolicy(
+  return createSourcePolicy(
     providedValues,
     normalizeHTTPURL,
     dynamicSources,

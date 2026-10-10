@@ -128,15 +128,21 @@ export function ChatAgentInteraction(props: {
               });
             })()}
           </ol>
-          {log.rawOutput
+          {log.rawOutput && !log.entries.some(entry => entry.event === 'delta')
             ? (
               <div className='chatAgentInteractionRaw'>
                 <div className='chatAgentInteractionRawSummary'>
                   {rawOutputSummary}
                 </div>
-                <p className='chatAgentInteractionNotice'>
-                  View the full content in the generated output.
-                </p>
+                <pre>{log.rawOutput.detail}</pre>
+                {log.rawOutput.truncated
+                  ? (
+                    <p className='chatAgentInteractionNotice'>
+                      Response truncated. View the full content in the generated
+                      output.
+                    </p>
+                  )
+                  : null}
               </div>
             )
             : null}

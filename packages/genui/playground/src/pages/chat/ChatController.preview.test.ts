@@ -12,6 +12,12 @@ import type { Root } from 'react-dom/client';
 import { A2UI_CHAT_ADAPTER } from './a2ui.js';
 import type { A2UIAction, A2UIOutput, A2UIStreamState } from './a2ui.js';
 import { ChatController } from './ChatController.js';
+import { OPENUI_CHAT_ADAPTER } from './openui.js';
+import type {
+  OpenUIActionEvent,
+  OpenUIOutput,
+  OpenUIStreamState,
+} from './openui.js';
 import type { ProviderSettings } from './shared.js';
 import {
   getActiveConversationId,
@@ -78,7 +84,18 @@ beforeEach(async () => {
       });
     }
     if (url === '/__rspeedy_url') return Promise.resolve({ ok: false });
-    if (!url.endsWith('/a2ui/stream') && !url.endsWith('/a2ui/action/stream')) {
+    if (url.endsWith('/openui/payload')) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          preview: { rawTextUrl: 'https://cdn.example.com/final.openui' },
+        }),
+      });
+    }
+    if (
+      !url.endsWith('/a2ui/stream') && !url.endsWith('/a2ui/action/stream')
+      && !url.endsWith('/openui/stream')
+    ) {
       throw new Error(`Unexpected request: ${url}`);
     }
     return Promise.resolve({
@@ -138,6 +155,20 @@ function button(text: string) {
   );
   if (!node) throw new Error(`Missing ${text}`);
   return node;
+}
+
+function rawOutputEntries() {
+  return [...container.querySelectorAll('.chatAgentInteractionEvent')]
+    .filter(entry =>
+      entry.querySelector('.chatAgentInteractionEventHeader')?.textContent
+        ?.startsWith('Raw output')
+    );
+}
+
+function rawOutputChunks() {
+  return rawOutputEntries().map(entry =>
+    entry.querySelector('pre')?.textContent
+  );
 }
 
 async function send() {
@@ -256,6 +287,154 @@ test('keeps the rendered iframe and avoids replay when the final surface matches
     type: 'A2UI_LIVE_MESSAGES',
     messages: [create, update('Next turn')],
   }, new URL(nextFrame.src).origin);
+});
+
+async function mountOpenUI() {
+  window.history.replaceState(null, '', '/#/openui/create');
+  await React.act(async () =>
+    root.render(React.createElement(
+      ChatController<
+        OpenUIOutput,
+        OpenUIStreamState,
+        ProviderSettings,
+        (typeof OPENUI_CHAT_ADAPTER.examples.items)[number],
+        OpenUIActionEvent,
+        OpenUIStreamState
+      >,
+      {
+        key: 'openui',
+        adapter: OPENUI_CHAT_ADAPTER,
+        protocol: PROTOCOLS.openui,
+        theme: 'light',
+      },
+    ))
+  );
+  await rstest.waitFor(async () => {
+    await React.act(async () => {
+      await getActiveConversationId('openui');
+    });
+    expect(container.querySelector('textarea')!.disabled).toBe(false);
+  });
+}
+
+test('shows sixteen OpenUI chunks separately in the interaction timeline', async () => {
+  await mountOpenUI();
+  await send();
+  await emit('model', { status: 'started' });
+  const chunks = [
+    'root = Stack([\n',
+    ...Array.from({ length: 14 }, (_, index) => `Text("Line ${index + 1}"),\n`),
+    '])',
+  ];
+  for (const text of chunks) await emit('delta', { text });
+  const rawEntries = rawOutputEntries();
+  expect(rawEntries).toHaveLength(16);
+  expect(rawEntries.map(entry => entry.querySelector('pre')?.textContent))
+    .toEqual(chunks);
+  expect(
+    rawEntries.every(entry => entry.querySelector('.chatAgentInteractionTime')),
+  ).toBe(true);
+  expect(container.textContent).toContain(
+    'Agent interaction · 1 model request',
+  );
+  expect(container.querySelector('.chatAgentInteractionRaw')).toBeNull();
+  await emit('done', { text: chunks.join('') }, true);
+  await rstest.waitFor(() =>
+    expect(container.querySelector('textarea')!.disabled).toBe(false)
+  );
+  expect(
+    rawOutputEntries().map(entry => entry.querySelector('pre')?.textContent),
+  ).toEqual(chunks);
+});
+
+test('delivers OpenUI partials and final streaming state without navigating the live iframe', async () => {
+  await mountOpenUI();
+  const frame = await send();
+  const src = frame.src;
+  expect(new URL(src).searchParams.get('rawText')).toBe('');
+  expect(new URL(src).searchParams.get('liveStream')).toBe('1');
+  const post = await ready(frame);
+  await emit('delta', { text: 'root = Text("实' });
+  expect(post).toHaveBeenLastCalledWith({
+    type: 'A2UI_LIVE_MESSAGES',
+    messages: [{ rawText: 'root = Text("实', isStreaming: true }],
+  }, window.location.origin);
+  await emit('delta', { text: '时输出")' });
+  expect(rawOutputChunks()).toEqual(['root = Text("实', '时输出")']);
+  expect(post).toHaveBeenLastCalledWith({
+    type: 'A2UI_LIVE_MESSAGES',
+    messages: [{ rawText: 'root = Text("实时输出")', isStreaming: true }],
+  }, window.location.origin);
+  await emit('done', {
+    text: 'root = Text("实时输出")',
+    metrics: { generationMs: 125 },
+  }, true);
+  await rstest.waitFor(() =>
+    expect(container.querySelector('textarea')!.disabled).toBe(false)
+  );
+  expect(post).toHaveBeenLastCalledWith({
+    type: 'A2UI_REPLAY_MESSAGES',
+    messages: [{ rawText: 'root = Text("实时输出")', isStreaming: false }],
+  }, window.location.origin);
+  expect(container.querySelectorAll('iframe')).toHaveLength(1);
+  expect(container.querySelector('iframe')).toBe(frame);
+  expect(frame.src).toBe(src);
+  expect(container.textContent).toContain('Generation');
+  expect(rawOutputChunks()).toEqual(['root = Text("实', '时输出")']);
+  expect(container.querySelector('.chatAgentInteractionRaw')).toBeNull();
+
+  const previousStream = stream;
+  await React.act(async () =>
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        source: frame.contentWindow,
+        origin: window.location.origin,
+        data: {
+          type: 'OPENUI_USER_ACTION',
+          action: {
+            type: 'refresh',
+            params: {},
+            humanFriendlyMessage: 'Refresh',
+          },
+        },
+      }),
+    )
+  );
+  await waitForStream(previousStream);
+  await emit('delta', { text: 'root = Text("更新")' });
+  expect(post).toHaveBeenLastCalledWith({
+    type: 'A2UI_ACTION_RESPONSE',
+    messages: [{ rawText: 'root = Text("更新")', isStreaming: true }],
+  }, window.location.origin);
+  await emit('done', { text: 'root = Text("更新")' }, true);
+  await rstest.waitFor(() =>
+    expect(container.querySelector('textarea')!.disabled).toBe(false)
+  );
+  expect(post).toHaveBeenLastCalledWith({
+    type: 'A2UI_REPLAY_MESSAGES',
+    messages: [{ rawText: 'root = Text("更新")', isStreaming: false }],
+  }, window.location.origin);
+  expect(container.querySelector('iframe')).toBe(frame);
+  expect(frame.src).toBe(src);
+});
+
+test('replays the authoritative OpenUI result when the runtime becomes ready after completion', async () => {
+  await mountOpenUI();
+  const frame = await send();
+  const src = frame.src;
+  const finalText = `root = Text("${'最终稿'.repeat(2000)}")`;
+  await emit('delta', { text: 'root = Text("初稿")' });
+  await emit('done', { text: finalText }, true);
+  await rstest.waitFor(() =>
+    expect(container.querySelector('textarea')!.disabled).toBe(false)
+  );
+  const post = await ready(frame);
+  expect(post).toHaveBeenLastCalledWith({
+    type: 'A2UI_REPLAY_MESSAGES',
+    messages: [{ rawText: finalText, isStreaming: false }],
+  }, window.location.origin);
+  expect(container.querySelector('iframe')).toBe(frame);
+  expect(frame.src).toBe(src);
 });
 
 test('applies a corrected final result without navigating to its published payload', async () => {

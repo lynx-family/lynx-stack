@@ -8,5 +8,6 @@ import { createTextStreamRoute } from '../../common/text-stream-route.js';
 export default createTextStreamRoute({
   scope: 'openui',
   path: '/openui/stream',
+  deltaFraming: 'line',
   getService: getOpenUIAgentService,
 });

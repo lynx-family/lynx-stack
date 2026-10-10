@@ -8,13 +8,13 @@ const LEADING_PROSE_PUNCTUATION = /^[\u005b({（【]+/u;
 const TRAILING_PROSE_PUNCTUATION = /[\]),.;!?}，。；！？：）】]+$/u;
 const MAX_SOURCE_COLLECTION_DEPTH = 40;
 
-export type A2UISourceNormalizer = (
+export type SourceNormalizer = (
   source: string,
 ) => string | undefined;
 
 function collectStringSources(
   source: string,
-  normalizeSource: A2UISourceNormalizer,
+  normalizeSource: SourceNormalizer,
   collected: Set<string>,
   seen: WeakSet<object>,
   depth: number,
@@ -60,7 +60,7 @@ function collectStringSources(
 
 function collectSources(
   value: unknown,
-  normalizeSource: A2UISourceNormalizer,
+  normalizeSource: SourceNormalizer,
   collected: Set<string>,
   seen: WeakSet<object>,
   depth: number,
@@ -91,9 +91,9 @@ function collectSources(
   }
 }
 
-export function createA2UISourcePolicy(
+export function createSourcePolicy(
   providedValues: readonly unknown[],
-  normalizeSource: A2UISourceNormalizer,
+  normalizeSource: SourceNormalizer,
   dynamicSources: () => readonly string[] = () => [],
 ): (source: string) => boolean {
   const providedSources = new Set<string>();

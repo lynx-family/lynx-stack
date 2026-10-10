@@ -95,7 +95,10 @@ export function useBundledRender() {
       navigationToken: previewNavigationToken,
     }, '*');
     scheduleFcpFallbackMetric();
-    if (initDataRef.current?.protocol !== 'a2ui') {
+    if (
+      initDataRef.current?.protocol !== 'a2ui'
+      && !initDataRef.current?.liveStream
+    ) {
       scheduleFmpMetric();
       scheduleTtiMetric(TTI_READY_FALLBACK_MS);
     }

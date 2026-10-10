@@ -270,8 +270,12 @@ const parser = createParser(library.toJSONSchema(), library.root);
 const result = parser.parse('root = Stack([TextContent("Hello")])');
 ```
 
-流式文本使用 `createStreamingParser`。如果 UI 保存累计 response，可以调用
+在 renderer 外解析流式文本时，使用 `createStreamingParser`。如果 UI 保存累计 response，可以调用
 `set(fullText)`；如果只传新增 delta，则调用 `push(chunk)`。
+
+渲染模型输出时，传入累计 `response` 和 `isStreaming`；renderer 已经管理自己的
+streaming parser，无需另行解析同一份文本。接入方式见
+[流式模型输出](./overview_zh.md#流式模型输出)。
 
 如果同一 response 已经交给 renderer，优先使用它的 `onParseResult` callback，避免
 为了检查 `root`、`stateDeclarations`、data statements 或 `meta` diagnostics 而

@@ -109,6 +109,24 @@ export function OpenUIScreen() {
 }
 ```
 
+For streamed model output, pass the full accumulated text and generation state:
+
+```tsx
+<OpenUiRenderer
+  response={accumulatedText}
+  isStreaming={isGenerating}
+  library={library}
+/>;
+```
+
+Append each delta to your application state; replace it when receiving a full
+snapshot. The renderer caches completed statements and previews the unfinished
+tail. Keep `isStreaming` true until successful completion, then apply the final
+text and set it false together, even if the text is unchanged. On failure or
+cancellation, clear the partial response. See the
+[streaming guide](https://github.com/lynx-family/lynx-stack/blob/main/packages/genui/openui/README.md#stream-model-output) for transport handlers
+and session lifecycle.
+
 Import the optional OpenUI theme tokens once in your app:
 
 ```ts

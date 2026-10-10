@@ -118,6 +118,7 @@ interface OpenUIPreviewSource {
   theme?: 'light' | 'dark';
   liveAction?: boolean;
   playbackMode?: boolean;
+  liveStream?: boolean;
 }
 
 export interface McpAppsPreviewSource {
@@ -1076,7 +1077,8 @@ export function PreviewPanel(props: PreviewPanelProps) {
     }
 
     const inlineUrl = buildOpenUIRenderUrl({
-      rawText: previewSource.rawText,
+      rawText: previewSource.liveStream ? '' : previewSource.rawText,
+      liveStream: previewSource.liveStream,
       theme: previewSource.theme,
       speed,
       liveAction: previewSource.liveAction,
@@ -1090,8 +1092,8 @@ export function PreviewPanel(props: PreviewPanelProps) {
     const canInline = canInlineOpenUIRenderUrl(inlineUrl)
       && canInlineOpenUIRenderUrl(inlineShareUrl);
 
-    setRenderUrl(canInline ? inlineUrl : '');
-    setRenderShareUrl(canInline ? inlineShareUrl : '');
+    setRenderUrl(previewSource.liveStream || canInline ? inlineUrl : '');
+    setRenderShareUrl(canInline && previewSource.rawText ? inlineShareUrl : '');
 
     const setOpenUILynxDevUrl = (
       payload: { rawText: string } | { rawTextUrl: string },
@@ -1144,13 +1146,15 @@ export function PreviewPanel(props: PreviewPanelProps) {
         if (seq !== buildSeqRef.current) return;
 
         setOpenUILynxDevUrl({ rawTextUrl });
-        setRenderUrl(buildOpenUIRenderUrl({
-          rawTextUrl,
-          theme: previewSource.theme,
-          speed,
-          liveAction: previewSource.liveAction,
-          playbackMode: previewSource.playbackMode,
-        }, baseUrl));
+        if (!previewSource.liveStream) {
+          setRenderUrl(buildOpenUIRenderUrl({
+            rawTextUrl,
+            theme: previewSource.theme,
+            speed,
+            liveAction: previewSource.liveAction,
+            playbackMode: previewSource.playbackMode,
+          }, baseUrl));
+        }
         setRenderShareUrl(buildOpenUIRenderUrl({
           rawTextUrl,
           theme: previewSource.theme,
