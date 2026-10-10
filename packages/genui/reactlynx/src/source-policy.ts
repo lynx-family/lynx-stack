@@ -19,7 +19,25 @@ export function validateReactLynxAppSource(source: string): void {
       && (!ts.isStringLiteral(node.moduleSpecifier)
         || node.moduleSpecifier.text !== '@lynx-js/react')
     ) {
-      throw new Error('App.tsx may only import @lynx-js/react');
+      const specifier = node.moduleSpecifier;
+      const request = ts.isStringLiteral(specifier)
+        ? specifier.text
+        : specifier.getText(ast);
+      const { line, character } = ast.getLineAndCharacterOfPosition(
+        specifier.getStart(ast),
+      );
+      const guidance = request === './App.css'
+        ? 'Remove this import; the host imports App.css automatically.'
+        : (request === 'react'
+          ? 'Import ReactLynx hooks and types from @lynx-js/react instead.'
+          : 'Keep components and helpers in App.tsx without importing other modules.');
+      throw new Error(
+        `App.tsx:${line + 1}:${
+          character + 1
+        }: App.tsx may only import @lynx-js/react; unsupported module ${
+          JSON.stringify(request)
+        }. ${guidance}`,
+      );
     }
     if (
       ts.isImportEqualsDeclaration(node) || ts.isMetaProperty(node)

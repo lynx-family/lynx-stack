@@ -4,7 +4,10 @@
 
 import { afterEach, expect, rstest, test } from '@rstest/core';
 
-import { parseReactLynxSource } from '@lynx-js/genui-reactlynx';
+import {
+  normalizeReactLynxSource,
+  parseReactLynxSource,
+} from '@lynx-js/genui-reactlynx';
 
 import { createTextStreamRoute } from '../app/common/text-stream-route.js';
 import { publishReactLynxBuild } from '../app/reactlynx/artifacts.js';
@@ -44,19 +47,21 @@ function route(
       | ((event: string, details?: Record<string, unknown>) => void)
       | undefined,
   ) => void,
+  generatedText = JSON.stringify(source),
 ) {
   return createTextStreamRoute({
     scope: 'test:reactlynx',
     path: '/reactlynx/stream',
+    normalizeFinalText: normalizeReactLynxSource,
     getService: () => ({
       streamAsAsyncIterable: (_messages, options) => {
         emitPerformanceEvents?.(options.onPerformanceEvent);
         return Promise.resolve({
           textStream: (async function*() {
-            yield await Promise.resolve(JSON.stringify(source));
+            yield await Promise.resolve(generatedText);
           })(),
           finalize: async () => ({
-            text: JSON.stringify(source),
+            text: generatedText,
             usage,
             finishReason: 'stop',
           }),
@@ -76,6 +81,28 @@ function request(app: ReturnType<typeof route>) {
     }),
   });
 }
+
+test.each([1, 2])(
+  'normalizes %i missing source braces before compilation',
+  async count => {
+    const canonical = JSON.stringify(source);
+    const build = rstest.fn((text: string) => {
+      expect(text).toBe(canonical);
+      expect(parseReactLynxSource(text)).toEqual(source);
+      return Promise.resolve({
+        artifact: { webUrl: 'https://example.com/main.web.js' },
+      });
+    });
+    const response = await request(
+      route(build, undefined, canonical.slice(0, -count)),
+    );
+    const body = await response.text();
+    expect(build).toHaveBeenCalledTimes(1);
+    expect(body).toContain('event: done');
+    expect(body).not.toContain('event: error');
+    expect(body).toContain('"usage":{"inputTokens":12,"outputTokens":24}');
+  },
+);
 
 test('build events precede done and preserve generation usage', async () => {
   const app = route((_text, {

@@ -14,6 +14,10 @@ pnpm add @lynx-js/genui @lynx-js/react
 
 ## Generate and build
 
+Source parsing can complete one or two missing closing braces when both file
+strings are already complete. It then applies the same strict two-file schema
+and size limits. Incomplete strings and other malformed JSON remain errors.
+
 ```ts
 import {
   buildReactLynx,

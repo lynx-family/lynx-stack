@@ -26,6 +26,53 @@ test('parses the bounded two-file artifact', () => {
   );
 });
 
+test.each([1, 2])(
+  'completes %i missing enclosing braces after both file strings',
+  count => {
+    const incomplete = JSON.stringify(source).slice(0, -count);
+    expect(parseReactLynxSource(incomplete)).toEqual(source);
+    expect(normalizeReactLynxSource(incomplete)).toBe(JSON.stringify(source));
+  },
+);
+
+test.each([
+  JSON.stringify(source).slice(0, -3),
+  '{"files":{"App.tsx":"unfinished',
+  '{"files":{"App.tsx":"complete" "App.css":""}',
+  '{"files":{"App.tsx":"unescaped "quote"","App.css":""}',
+])('rejects incomplete or malformed file strings: %s', text => {
+  expect(() => parseReactLynxSource(text)).toThrow(SyntaxError);
+});
+
+test('still requires exactly two files when completing the envelope', () => {
+  expect(() =>
+    parseReactLynxSource(
+      JSON.stringify({ files: { 'App.tsx': source.files['App.tsx'] } }).slice(
+        0,
+        -1,
+      ),
+    )
+  ).toThrow();
+  expect(() =>
+    parseReactLynxSource(
+      JSON.stringify({ files: { ...source.files, 'extra.ts': 'escape' } })
+        .slice(0, -1),
+    )
+  ).toThrow();
+});
+
+test('counts the completed envelope toward the JSON size limit', () => {
+  const incomplete = JSON.stringify({
+    files: { 'App.tsx': '"'.repeat(255_000), 'App.css': '' },
+  }).slice(0, -1);
+  const padded = incomplete.replace(
+    '{',
+    `{${' '.repeat(512_000 - incomplete.length)}`,
+  );
+  expect(padded).toHaveLength(512_000);
+  expect(() => parseReactLynxSource(padded)).toThrow(SyntaxError);
+});
+
 test('rejects additional and path-traversing files', () => {
   expect(() =>
     parseReactLynxSource(JSON.stringify({

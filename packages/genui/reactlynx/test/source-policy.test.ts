@@ -32,6 +32,28 @@ test('rejects imports outside the generated source boundary', () => {
 });
 
 test.each([
+  [
+    `import { useState } from 'react';`,
+    'App.tsx:2:26: App.tsx may only import @lynx-js/react; unsupported module "react". Import ReactLynx hooks and types from @lynx-js/react instead.',
+  ],
+  [
+    `import './App.css';`,
+    'App.tsx:2:8: App.tsx may only import @lynx-js/react; unsupported module "./App.css". Remove this import; the host imports App.css automatically.',
+  ],
+  [
+    `export { value } from './local.js';`,
+    'App.tsx:2:23: App.tsx may only import @lynx-js/react; unsupported module "./local.js". Keep components and helpers in App.tsx without importing other modules.',
+  ],
+])(
+  'reports the unsupported request and its location for %s',
+  (source, diagnostic) => {
+    expect(() => validateReactLynxAppSource(`// App\n${source}`)).toThrow(
+      diagnostic,
+    );
+  },
+);
+
+test.each([
   '@lynx-js/react/internal',
   '@lynx-js/react/lepus',
   '@lynx-js/react/lepus/jsx-runtime',

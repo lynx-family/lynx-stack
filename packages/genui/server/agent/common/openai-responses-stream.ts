@@ -36,8 +36,8 @@ interface ReasoningItem {
   parts: Map<number, ReasoningPart>;
 }
 
-/** Adapt provider-returned text only; never request or reconstruct hidden reasoning. */
-export function createResponsesReasoningStream(): TransformStream<
+/** Adapt compatible SSE events without reconstructing hidden reasoning. */
+export function createResponsesCompatStream(): TransformStream<
   string,
   string
 > {
@@ -49,7 +49,19 @@ export function createResponsesReasoningStream(): TransformStream<
   const normalizeEvent = (
     value: unknown,
   ): Record<string, unknown>[] | undefined => {
-    if (!isRecord(value) || typeof value.item_id !== 'string') return;
+    if (!isRecord(value)) return;
+    if (
+      value.type === 'response.output_item.added'
+      && isRecord(value.item) && value.item.type === 'function_call'
+      && value.item.arguments === undefined
+    ) {
+      // Parameters arrive in later deltas. Compatible providers can omit the
+      // initial empty string required by the SDK's function-call schema.
+      // Keep explicit invalid values and missing completed arguments invalid.
+      value.item.arguments = '';
+      return [value];
+    }
+    if (typeof value.item_id !== 'string') return;
     const type = value.type;
     const summary = typeof type === 'string'
       && type.startsWith('response.reasoning_summary_');

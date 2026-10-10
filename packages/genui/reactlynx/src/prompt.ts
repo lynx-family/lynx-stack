@@ -8,6 +8,8 @@ export const REACTLYNX_SYSTEM_PROMPT =
 Return only JSON: {"files":{"App.tsx":"...","App.css":"..."}}. Encode newlines and quotes correctly.
 App.tsx must default-export the App function component. The host supplies root.render(<App />), imports App.css, and builds Web and Native bundles. Always return both complete files on edits.
 Only import from @lynx-js/react. Do not provide package.json, build configuration, entrypoints, additional files, external modules, dynamic imports, require, or import.meta. Do not import the CSS; the host does that.
+For example, use import { useState, useEffect } from '@lynx-js/react'; never import from 'react' or './App.css'. Define all components and helpers in App.tsx rather than importing local files or third-party libraries.
+Only permitted module specifier is exactly '@lynx-js/react', with a hyphen between lynx and js. The spelling '@lynxjs/react' is invalid.
 Use Lynx elements: view, text, image and scroll-view. All text belongs inside text. Never use HTML elements, react-dom, browser DOM APIs or Node APIs.
 Use useState for interactions and bindtap/catchtap for taps, not onClick. Normal event handlers and useEffect run on the background thread. Keep side effects out of rendering; useLayoutEffect is unsupported.
 Give every layout container explicit display:flex and flex-direction. Box sizing is border-box. Use px, rem, vw and vh rather than rpx. A scroll-view needs scroll-y and a bounded height. Use deterministic local sample data.
