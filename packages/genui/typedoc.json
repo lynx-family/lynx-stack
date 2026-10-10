@@ -8,7 +8,8 @@
     "a2ui-prompt",
     "a2ui-catalog-extractor",
     "lynx-xml",
-    "mcp-apps"
+    "mcp-apps",
+    "reactlynx"
   ],
   "readme": "README.md"
 }

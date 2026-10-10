@@ -1,5 +1,5 @@
 ---
-applyTo: "packages/genui/reactlynx/**,packages/genui/server/**,packages/genui/playground/**"
+applyTo: "packages/genui/package.json,packages/genui/index.ts,packages/genui/reactlynx/**,packages/genui/server/**,packages/genui/playground/**"
 ---
 
 ReactLynx Create uses `/reactlynx/stream` and the shared provider, conversation,
@@ -96,3 +96,18 @@ Reuse the browser-owned sidecar URL and settle delay, BMP upload, PNG conversion
 and selected-model scoring. Keep ReactLynx out of HTML Element Capture and
 A2UI/OpenUI globalProps. Preserve the native source resource checks before
 capture, and retain protocol identity in shared plans and restored reports.
+
+Publish the ReactLynx prompt, source helpers, compiler, and types through
+`@lynx-js/genui/reactlynx` and the umbrella root. Include `reactlynx/dist/**`,
+especially the adjacent compiler worker, in the umbrella tarball and declare
+its external compiler dependencies on the published package. Resolve temporary
+project node_modules from the nearest installed ancestor that provides
+`@lynx-js/react`; the published nested directory has no private workspace
+node_modules. Keep bilingual guides package-owned and synchronize ReactLynx
+routes through `website/sidebars/genui.ts`.
+
+Run the ReactLynx package suite from the repository root with
+`pnpm exec rstest --project genui/reactlynx` after the full Turbo build.
+The root `pnpm test` command uses Vitest and does not include this Rstest project.
+Keep a real Web/Native compilation regression for the published nested umbrella
+layout, with dependencies on the umbrella rather than a private package directory.

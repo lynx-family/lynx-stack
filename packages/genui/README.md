@@ -3,7 +3,7 @@
 Generative UI primitives for Lynx applications.
 
 `@lynx-js/genui` is the single npm package for the GenUI toolchain. It exposes
-A2UI rendering, OpenUI rendering, A2UI prompt/catalog utilities, Lynx XML utilities, and the CLI
+A2UI rendering, OpenUI rendering, A2UI prompt/catalog utilities, Lynx XML utilities, ReactLynx generation/build utilities, and the CLI
 from one package while keeping implementation directories private to this
 monorepo.
 
@@ -36,6 +36,7 @@ The root entry point exports the stable APIs most applications and tools need:
 - OpenUI parser, library, and renderer APIs.
 - A2UI prompt builders.
 - A2UI catalog extraction utilities.
+- ReactLynx generation prompts, source validation, and Node.js compilation.
 
 Focused subpaths are also available:
 
@@ -46,6 +47,11 @@ import { createOpenUiLibrary } from '@lynx-js/genui/openui';
 import { buildA2UISystemPrompt } from '@lynx-js/genui/a2ui-prompt';
 import { extractCatalogComponents } from '@lynx-js/genui/a2ui-catalog-extractor';
 import { normalizeLynxXmlArtifact } from '@lynx-js/genui/lynx-xml';
+import {
+  buildReactLynx,
+  parseReactLynxSource,
+  REACTLYNX_SYSTEM_PROMPT,
+} from '@lynx-js/genui/reactlynx';
 ```
 
 `@lynx-js/genui/lynx-xml` provides system prompts,
@@ -156,6 +162,16 @@ stay outside the static dependency graph.
 
 See [`openui/README.md`](https://github.com/lynx-family/lynx-stack/blob/main/packages/genui/openui/README.md) for streaming and custom library
 examples.
+
+## ReactLynx
+
+Generate complete `App.tsx` and `App.css` files with `REACTLYNX_SYSTEM_PROMPT`,
+validate the response with `parseReactLynxSource`, and compile it on Node.js with
+`buildReactLynx`. Publish all returned assets before loading the Web or Native
+bundle in your host. Keep `@lynx-js/genui/reactlynx` external in server bundles
+so its compiler worker remains beside its entry point.
+
+See the [ReactLynx guide](https://github.com/lynx-family/lynx-stack/blob/main/packages/genui/reactlynx/README.md).
 
 ## CLI
 

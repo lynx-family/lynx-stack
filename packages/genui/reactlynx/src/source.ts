@@ -11,8 +11,22 @@ const sourceSchema = z.object({
   }).strict(),
 }).strict();
 
-export type ReactLynxSource = z.infer<typeof sourceSchema>;
+/** Complete generated ReactLynx source containing only `App.tsx` and `App.css`. */
+export interface ReactLynxSource {
+  /** The complete component and stylesheet files. */
+  files: {
+    /** Non-empty TSX source that default-exports the App function component. */
+    'App.tsx': string;
+    /** Plain CSS loaded by the host entry point; may be empty. */
+    'App.css': string;
+  };
+}
 
+/**
+ * Parse JSON or a JSON code fence and validate the two-file source contract.
+ *
+ * @throws When JSON is invalid, files are missing or extra, or source limits are exceeded.
+ */
 export function parseReactLynxSource(text: string): ReactLynxSource {
   const json = text.trim().replace(/^```(?:json)?\s*/u, '').replace(
     /\s*```$/u,
@@ -24,6 +38,7 @@ export function parseReactLynxSource(text: string): ReactLynxSource {
   return sourceSchema.parse(JSON.parse(json));
 }
 
+/** Validate generated source and serialize it as canonical two-file JSON. */
 export function normalizeReactLynxSource(text: string): string {
   return JSON.stringify(parseReactLynxSource(text));
 }
