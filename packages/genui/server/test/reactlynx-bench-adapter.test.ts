@@ -2,6 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { realpath } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+
 import { expect, rstest, test } from '@rstest/core';
 
 import type { ProtocolBenchAdapterInput } from '../service/common/bench/protocol-adapter.js';
@@ -11,8 +14,11 @@ import { createReactLynxBenchAdapter } from '../service/reactlynx/reactlynx-benc
 
 const SOURCE = JSON.stringify({
   files: {
-    'App.tsx':
-      'export default function App() { return <view><text>Hello</text></view>; }',
+    'App.tsx': `import { useState } from '@lynx-js/react';
+export default function App() {
+  const [count] = useState(0);
+  return <list><list-item item-key="greeting"><text>Hello {count}</text></list-item></list>;
+}`,
     'App.css': 'text { color: blue; }',
   },
 });
@@ -159,21 +165,37 @@ test('bounds upstream retries and preserves usage without compiling failed respo
   expect(artifact.judgePayload).toBeUndefined();
 });
 
-test(
-  'compiles ReactLynx with the real compiler for browser capture',
-  async () => {
-    const artifact = await createReactLynxBenchAdapter({
-      publish: () => Promise.resolve(PUBLISHED),
-      generateRaw: () => Promise.resolve(generated()),
-    }).generate({ ...INPUT, maxAttempts: 1 });
-    expect(artifact.finalErrors).toEqual([]);
-    expect(artifact.finalValid).toBe(true);
-    expect(artifact.finalText).toBe(SOURCE);
-    expect(artifact.judgePayload).toMatchObject({
-      kind: 'reactlynx-bundle',
-      rawText: SOURCE,
-      zipUrl: PUBLISHED.zipUrl,
-    });
+test.each(['default', 'canonical'])(
+  'compiles ReactLynx for browser capture with a %s temporary path',
+  async temporaryPath => {
+    if (temporaryPath === 'canonical') {
+      const directory = await realpath(tmpdir());
+      // Node uses different temporary-directory variables on Windows and POSIX.
+      for (const name of ['TMPDIR', 'TMP', 'TEMP']) {
+        rstest.stubEnv(name, directory);
+      }
+    }
+    try {
+      const artifact = await createReactLynxBenchAdapter({
+        publish: assets => {
+          expect(assets.map(asset => asset.name)).toEqual(
+            expect.arrayContaining(['main.lynx.js', 'main.web.js']),
+          );
+          return Promise.resolve(PUBLISHED);
+        },
+        generateRaw: () => Promise.resolve(generated()),
+      }).generate({ ...INPUT, maxAttempts: 1 });
+      expect(artifact.finalErrors).toEqual([]);
+      expect(artifact.finalValid).toBe(true);
+      expect(artifact.finalText).toBe(SOURCE);
+      expect(artifact.judgePayload).toMatchObject({
+        kind: 'reactlynx-bundle',
+        rawText: SOURCE,
+        zipUrl: PUBLISHED.zipUrl,
+      });
+    } finally {
+      rstest.unstubAllEnvs();
+    }
   },
   30_000,
 );

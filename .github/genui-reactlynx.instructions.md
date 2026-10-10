@@ -14,6 +14,12 @@ model-authored build configuration, install requested packages, or evaluate
 generated JavaScript on the server. Keep generated imports restricted to
 `@lynx-js/react`, validate source syntax and module requests in the compiler
 worker, and disable CSS filesystem resolution through the Rsbuild plugin API.
+Canonicalize the worker's project directory before comparing it with Rspack
+issuers so symlinked temporary directories use the same module checks as CI.
+Keep authored imports limited to the public package while allowing the exact
+internal runtime modules injected by the trusted ReactLynx transform after
+source validation. Verify real Web and Native compilation with canonical
+temporary paths as well as the host's default temporary directory.
 
 Keep `dist/build-worker.js` beside `dist/index.js` in
 `@lynx-js/genui-reactlynx`, and keep that package external in the server build
