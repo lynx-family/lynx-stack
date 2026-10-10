@@ -21,6 +21,15 @@ internal runtime modules injected by the trusted ReactLynx transform after
 source validation. Verify real Web and Native compilation with canonical
 temporary paths as well as the host's default temporary directory.
 
+The resolver sees imports after the ReactLynx transforms run. Keep the authored
+source policy separate from the compiler runtime allowlist: JSX compilation adds
+`@lynx-js/react/internal` and `@lynx-js/react/lepus/jsx-runtime`, and SWC adds
+`@swc/helpers/_/_*` helper imports for downlevel syntax, even when the app only
+imports `@lynx-js/react`. Compare the issuer against the real path of
+`App.tsx`, since Rspack canonicalizes symlinked temporary directories. Exercise
+the shipped worker with a real Web/Native build in regression tests; source
+policy tests alone do not catch rejected compiler-injected imports.
+
 Keep `dist/build-worker.js` beside `dist/index.js` in
 `@lynx-js/genui-reactlynx`, and keep that package external in the server build
 so `import.meta.url` resolves the worker correctly. Declare `dist/**` as the
