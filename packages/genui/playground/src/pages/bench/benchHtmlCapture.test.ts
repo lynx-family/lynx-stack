@@ -11,6 +11,7 @@ import {
 } from './benchHtmlCapture.js';
 
 afterEach(() => {
+  rstest.useRealTimers();
   rstest.unstubAllGlobals();
 });
 
@@ -90,7 +91,15 @@ function mockBrowser() {
   const stream = { getVideoTracks: () => [track], getTracks: () => [track] };
   const getDisplayMedia = rstest.fn().mockResolvedValue(stream);
   const remove = rstest.fn();
+  const iframe = {
+    style: {},
+    setAttribute: rstest.fn(),
+    onload: undefined as (() => void) | null | undefined,
+  };
+  const drawImage = rstest.fn();
   rstest.stubGlobal('window', {
+    addEventListener: rstest.fn(),
+    removeEventListener: rstest.fn(),
     RestrictionTarget: { fromElement: () => Promise.resolve({}) },
     BrowserCaptureMediaStreamTrack: {
       prototype: { restrictTo: track.restrictTo },
@@ -100,11 +109,28 @@ function mockBrowser() {
   rstest.stubGlobal('HTMLVideoElement', {
     prototype: { requestVideoFrameCallback: rstest.fn() },
   });
+  rstest.stubGlobal('innerWidth', 800);
+  rstest.stubGlobal('innerHeight', 600);
   rstest.stubGlobal('document', {
     createElement: (name: string) => {
-      if (name !== 'video') return { style: {}, remove };
+      if (name === 'iframe') return iframe;
+      if (name === 'canvas') {
+        return {
+          getContext: () => ({
+            drawImage,
+            getImageData: () => ({
+              width: 1,
+              height: 1,
+              data: new Uint8ClampedArray(4),
+            }),
+          }),
+        };
+      }
+      if (name !== 'video') return { style: {}, remove, append: rstest.fn() };
       let onFrame: (() => void) | undefined;
       return {
+        videoWidth: 1,
+        videoHeight: 1,
         pause: rstest.fn(),
         play: () => {
           // A static source delivers exactly one frame, as playback starts.
@@ -120,8 +146,66 @@ function mockBrowser() {
     },
     body: { append: rstest.fn() },
   });
-  return { getDisplayMedia, track, stream, remove };
+  return { getDisplayMedia, track, stream, remove, iframe, drawImage };
 }
+
+test.each([undefined, 0, 500])(
+  'waits for iframe load and screenshot delay %s before reading pixels',
+  async screenshotSettleMs => {
+    rstest.useFakeTimers();
+    const { iframe, drawImage, track } = mockBrowser();
+    const controller = new AbortController();
+    const capture = await startBenchHtmlCapture(controller.signal);
+    const pending = capture({
+      source: HTML,
+      width: 1,
+      height: 1,
+      screenshotSettleMs,
+    }, controller.signal);
+    await rstest.advanceTimersByTimeAsync(1000);
+    expect(drawImage).not.toHaveBeenCalled();
+    iframe.onload?.();
+    await rstest.advanceTimersByTimeAsync(0);
+    const delay = screenshotSettleMs ?? 100;
+    if (delay > 0) {
+      await rstest.advanceTimersByTimeAsync(delay - 1);
+      expect(drawImage).not.toHaveBeenCalled();
+      expect(track.restrictTo).toHaveBeenCalledTimes(1);
+      await rstest.advanceTimersByTimeAsync(1);
+    }
+    const result = await pending;
+    expect(result.type).toBe('image/bmp');
+    expect(drawImage).toHaveBeenCalledTimes(1);
+    expect(track.restrictTo).toHaveBeenCalledTimes(2);
+    controller.abort();
+  },
+);
+
+test('cancels a long settle delay and releases the timer and capture target', async () => {
+  rstest.useFakeTimers();
+  const { iframe, drawImage, remove, track } = mockBrowser();
+  const controller = new AbortController();
+  const capture = await startBenchHtmlCapture(controller.signal);
+  const pending = capture({
+    source: HTML,
+    width: 1,
+    height: 1,
+    screenshotSettleMs: Number.MAX_SAFE_INTEGER,
+  }, controller.signal);
+  await rstest.advanceTimersByTimeAsync(0);
+  iframe.onload?.();
+  await rstest.advanceTimersByTimeAsync(1000);
+  expect(drawImage).not.toHaveBeenCalled();
+  const rejection = expect(pending).rejects.toMatchObject({
+    name: 'AbortError',
+  });
+  controller.abort();
+  await rejection;
+  expect(rstest.getTimerCount()).toBe(0);
+  expect(remove).toHaveBeenCalledTimes(2);
+  expect(track.stop).toHaveBeenCalledTimes(1);
+  expect(drawImage).not.toHaveBeenCalled();
+});
 
 test('requests native capture synchronously, validates this tab and stops on cancellation', async () => {
   const { getDisplayMedia, track, remove } = mockBrowser();

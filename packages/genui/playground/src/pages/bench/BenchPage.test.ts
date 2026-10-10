@@ -792,7 +792,8 @@ test('HTML-only Judge shows current-tab sharing guidance without requiring a sid
   }));
   expect(markup).toContain('share this tab');
   expect(markup).not.toContain('UI_JUDGE_SERVER_URL');
-  expect(markup).not.toContain('Screenshot delay (ms)');
+  expect(markup).toContain('Screenshot delay (ms)');
+  expect(markup).toContain('value="100"');
 });
 
 test('UI Judge selects from the complete model list and defaults to the first model', () => {

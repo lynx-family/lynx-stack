@@ -214,6 +214,11 @@ export function createBenchScreenshotRelay(options: {
         options.signal,
         AbortSignal.timeout(Math.min(1_200_000, request.timeoutMs)),
       ]);
+      const screenshotSettleMs = options.screenshotSettleMs
+        ?? DEFAULT_SCREENSHOT_SETTLE_MS;
+      if (!isScreenshotSettleMs(screenshotSettleMs)) {
+        throw new Error('Screenshot delay must be a non-negative integer.');
+      }
       if (request.path === 'browser/html') {
         if (
           !options.captureHtml || typeof request.source !== 'string'
@@ -229,16 +234,12 @@ export function createBenchScreenshotRelay(options: {
           source: request.source,
           width: Number(request.fields.width),
           height: Number(request.fields.height),
+          screenshotSettleMs,
         }, signal);
         if (body.type !== 'image/bmp' || body.size > MAX_SCREENSHOT_BYTES) {
           throw new Error('Invalid or oversized HTML screenshot.');
         }
       } else {
-        const screenshotSettleMs = options.screenshotSettleMs
-          ?? DEFAULT_SCREENSHOT_SETTLE_MS;
-        if (!isScreenshotSettleMs(screenshotSettleMs)) {
-          throw new Error('Screenshot delay must be a non-negative integer.');
-        }
         const form = screenshotForm(request, screenshotSettleMs);
         const screenshot = await fetchImpl(
           new URL(request.path, options.serverUrl),
