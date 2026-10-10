@@ -89,3 +89,86 @@ test('the default List layout example parses against the renderer contract', () 
   expect(result.meta.unresolved).toEqual([]);
   expect(result.meta.incomplete).toBe(false);
 });
+
+test.each([
+  { componentNames: undefined },
+  { componentNames: ['Stack', 'TextContent', 'Icon'] },
+  { componentNames: ['Stack'] },
+])(
+  'teaches closed component enums with component selection %s',
+  ({ componentNames }) => {
+    const prompt = buildOpenUiSystemPrompt(
+      componentNames ? { componentNames } : {},
+    );
+    expect(prompt).toContain('Treat every component enum as a closed set');
+    expect(prompt).toContain(
+      'use only the exact values listed for that argument',
+    );
+    expect(prompt).toContain(
+      'Do not borrow enum values from another component',
+    );
+    expect(prompt).toContain('or from the broader upstream UI or icon library');
+    expect(prompt).toContain(
+      'use another available component instead of inventing a value',
+    );
+  },
+);
+
+test.each(['renderer', 'prompt'])(
+  '%s distinguishes TextContent size from Text variant for footer notes',
+  kind => {
+    const library = kind === 'renderer'
+      ? createOpenUiLibrary()
+      : createOpenUiPromptLibrary();
+    const parse = (call: string) =>
+      createParser(library.toJSONSchema(), library.root).parse(
+        `root = Stack([footerNote])\nfooterNote = ${call}`,
+      );
+    const invalid = parse('TextContent("Footer note", "caption")');
+    expect(
+      invalid.meta.errors.map(error => ({
+        code: error.code,
+        path: error.path,
+      })),
+    ).toEqual([{ code: 'type-mismatch', path: '/size' }]);
+
+    for (
+      const call of [
+        'TextContent("Footer note", "small")',
+        'Text("Footer note", "caption")',
+      ]
+    ) {
+      const valid = parse(call);
+      expect(valid.root).not.toBeNull();
+      expect(valid.meta.errors).toEqual([]);
+      expect(valid.meta.unresolved).toEqual([]);
+      expect(valid.meta.incomplete).toBe(false);
+    }
+  },
+);
+
+test.each(['renderer', 'prompt'])(
+  '%s rejects unsupported flight icons and accepts supported names',
+  kind => {
+    const library = kind === 'renderer'
+      ? createOpenUiLibrary()
+      : createOpenUiPromptLibrary();
+    const parse = (name: string) =>
+      createParser(library.toJSONSchema(), library.root).parse(
+        `root = Stack([headerTop])\nheaderTop = Icon("${name}")`,
+      );
+    const invalid = parse('flight');
+    expect(
+      invalid.meta.errors.map(error => ({
+        code: error.code,
+        path: error.path,
+      })),
+    ).toEqual([{ code: 'type-mismatch', path: '/name' }]);
+
+    const valid = parse('location_on');
+    expect(valid.root).not.toBeNull();
+    expect(valid.meta.errors).toEqual([]);
+    expect(valid.meta.unresolved).toEqual([]);
+    expect(valid.meta.incomplete).toBe(false);
+  },
+);
