@@ -31,7 +31,7 @@
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rsbuild-plugin": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "zod": "^4.6.5"
   },
   "devDependencies": {
