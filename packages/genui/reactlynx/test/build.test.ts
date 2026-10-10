@@ -41,6 +41,7 @@ test('builds Web and Native JSX with compiler-injected imports', async () => {
 
 test.each([
   ['node:fs', `import fs from 'node:fs';`],
+  ['React', `import { useState } from 'react';`],
   ['runtime internals', `import * as runtime from '@lynx-js/react/internal';`],
   ['SWC helpers', `import { _ } from '@swc/helpers/_/_object_spread';`],
   ['local files', `import './App.css';`],
@@ -57,5 +58,9 @@ test.each([
       new AbortController().signal,
       () => undefined,
     ),
-  ).rejects.toThrow(/App.tsx may only import|Dynamic modules/u);
+  ).rejects.toThrow(
+    request.startsWith('const')
+      ? 'Dynamic modules and import.meta are not supported'
+      : /App.tsx:1:\d+: App.tsx may only import @lynx-js\/react; unsupported module/u,
+  );
 }, 30_000);

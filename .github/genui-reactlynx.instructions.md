@@ -29,6 +29,13 @@ imports `@lynx-js/react`. Compare the issuer against the real path of
 `App.tsx`, since Rspack canonicalizes symlinked temporary directories. Exercise
 the shipped worker with a real Web/Native build in regression tests; source
 policy tests alone do not catch rejected compiler-injected imports.
+Source-policy errors should identify the rejected module and its App.tsx line
+and column so generated code can be corrected from build diagnostics. Explain
+that React hooks come from `@lynx-js/react` and the host already imports
+`App.css`; keep these examples in the generation prompt.
+When recovering a generated source envelope, only append up to two closing
+braces after complete file strings and retain the strict two-file schema and
+size limits. Do not complete truncated strings or rewrite code and escapes.
 
 Keep `dist/build-worker.js` beside `dist/index.js` in
 `@lynx-js/genui-reactlynx`, and keep that package external in the server build

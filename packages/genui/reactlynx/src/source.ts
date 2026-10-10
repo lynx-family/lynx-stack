@@ -22,6 +22,24 @@ export interface ReactLynxSource {
   };
 }
 
+function parseSourceJson(json: string): unknown {
+  try {
+    return JSON.parse(json) as unknown;
+  } catch (error) {
+    // The model can finish both file strings but omit the enclosing braces.
+    // Appending braces cannot complete a truncated string or fix invalid code.
+    for (const suffix of ['}', '}}']) {
+      if (json.length + suffix.length > 512_000) break;
+      try {
+        return JSON.parse(json + suffix) as unknown;
+      } catch {
+        // Keep the original parse error if neither complete envelope is valid.
+      }
+    }
+    throw error;
+  }
+}
+
 /**
  * Parse JSON or a JSON code fence and validate the two-file source contract.
  *
@@ -35,7 +53,7 @@ export function parseReactLynxSource(text: string): ReactLynxSource {
   if (json.length > 512_000) {
     throw new Error('ReactLynx source exceeds the 512 KB limit');
   }
-  return sourceSchema.parse(JSON.parse(json));
+  return sourceSchema.parse(parseSourceJson(json));
 }
 
 /** Validate generated source and serialize it as canonical two-file JSON. */

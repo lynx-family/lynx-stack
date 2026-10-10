@@ -14,6 +14,9 @@ pnpm add @lynx-js/genui @lynx-js/react
 
 ## 生成与构建
 
+当两个文件字符串均已完整时，源码解析器可以补齐末尾缺失的一个或两个大括号，
+随后继续严格校验双文件结构和大小限制。不完整的字符串及其他 JSON 格式错误仍会被拒绝。
+
 ```ts
 import {
   buildReactLynx,

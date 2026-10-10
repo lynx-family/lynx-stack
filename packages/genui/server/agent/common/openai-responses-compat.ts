@@ -3,9 +3,9 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
-  createResponsesReasoningStream,
+  createResponsesCompatStream,
   normalizeReasoningItem,
-} from './openai-responses-reasoning.js';
+} from './openai-responses-stream.js';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -104,7 +104,7 @@ export function createResponsesCompatFetch(
       headers.delete('content-encoding');
       return new Response(
         response.body.pipeThrough(new TextDecoderStream())
-          .pipeThrough(createResponsesReasoningStream())
+          .pipeThrough(createResponsesCompatStream())
           .pipeThrough(new TextEncoderStream()),
         { status: response.status, statusText: response.statusText, headers },
       );
