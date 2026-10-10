@@ -27,6 +27,8 @@ export function createAgentCapabilities(
     tools: { ...search.tools, ...imageGeneration.tools },
     instructions: [search.instructions, imageGeneration.instructions].filter(
       Boolean,
-    ).join('\n\n'),
+    ).concat([
+      'Use only image URLs explicitly supplied by the user or host, or returned by image_search or generate_image in this request. Never invent image URLs, including example.com placeholders. If no authorized image is available, use Icon, text, or another non-image presentation.',
+    ]).join('\n\n'),
   };
 }

@@ -114,7 +114,7 @@ test('bounds reasoning independently and does not fabricate text from token coun
   expect(log.reasoning?.truncated).toBe(true);
 });
 
-test('collects interleaved deltas in one raw output without duplicating timeline entries', () => {
+test('keeps interleaved chunks as separate timeline entries without repeating the final text', () => {
   const start = appendChatInteraction(
     { entries: [], omittedEntries: 0 },
     'request',
@@ -156,7 +156,7 @@ test('collects interleaved deltas in one raw output without duplicating timeline
     elapsedMs: 20,
     truncated: false,
   });
-  expect(message.entries[1]?.detail).toBe(
+  expect(message.entries[3]?.detail).toBe(
     'createSurface · main\n'
       + 'updateComponents · main · 2 components (1 loading): Text, Loading\n'
       + 'updateDataModel · main · /weather\n'
@@ -169,9 +169,33 @@ test('collects interleaved deltas in one raw output without duplicating timeline
   expect(serializeChatInteraction(message)).not.toContain('catalog-url');
   expect(done.entries.map((entry) => entry.event)).toEqual([
     'request',
+    'delta',
+    'delta',
     'message',
+    'delta',
     'done',
   ]);
+  expect(done.entries.filter(entry => entry.event === 'delta')).toEqual([
+    {
+      event: 'delta',
+      elapsedMs: 20,
+      detail: 'Hello ',
+      count: 1,
+      truncated: false,
+    },
+    {
+      event: 'delta',
+      elapsedMs: 30,
+      detail: 'world',
+      count: 1,
+      truncated: false,
+    },
+    { event: 'delta', elapsedMs: 50, detail: '!', count: 1, truncated: false },
+  ]);
+  const exportedLog = JSON.parse(
+    serializeChatInteraction(done),
+  ) as ChatInteractionLog;
+  expect(exportedLog.entries).toEqual(done.entries);
   expect(done.rawOutput).toMatchObject({
     detail: 'Hello world!',
     count: 3,
@@ -185,11 +209,12 @@ test('collects interleaved deltas in one raw output without duplicating timeline
     rawOutput?: unknown;
   };
   expect(exported.rawOutput).toEqual({
+    detail: 'Hello world!',
     elapsedMs: 20,
     count: 3,
     truncated: false,
   });
-  expect(serializeChatInteraction(usage)).not.toContain('Hello world!');
+  expect(serializeChatInteraction(usage)).toContain('Hello world!');
   expect(serializeChatInteraction(usage).match(/totalTokens/g)).toHaveLength(1);
 });
 
@@ -203,7 +228,7 @@ test('bounds long streams while retaining request context and the terminal failu
   }
   log = appendChatInteraction(log, 'error', 200, 'Stream disconnected');
   expect(log.entries).toHaveLength(80);
-  expect(log.omittedEntries).toBe(23);
+  expect(log.omittedEntries).toBe(24);
   expect(log.entries.slice(0, 2).map((entry) => entry.event)).toEqual([
     'start',
     'request',
@@ -227,7 +252,16 @@ test('bounds long streams while retaining request context and the terminal failu
     truncated: true,
   });
   expect(log.rawOutput?.detail).toHaveLength(12_000);
-  expect(log.entries[log.entries.length - 1]?.event).toBe('error');
+  expect(log.entries.slice(-3).map(entry => entry.event)).toEqual([
+    'error',
+    'delta',
+    'delta',
+  ]);
+  expect(log.entries[log.entries.length - 2]).toMatchObject({
+    detail: 'y'.repeat(12_000),
+    elapsedMs: 210,
+    truncated: true,
+  });
 });
 
 test('keeps final validation diagnostics readable without mutating the full response', () => {
@@ -252,9 +286,13 @@ test('keeps final validation diagnostics readable without mutating the full resp
     100,
     payload,
   );
-  expect(log.entries.map((entry) => entry.event)).toEqual(['message', 'done']);
-  expect(log.entries[1]?.truncated).toBe(false);
-  expect(JSON.parse(log.entries[1]!.detail)).toEqual({
+  expect(log.entries.map((entry) => entry.event)).toEqual([
+    'message',
+    'delta',
+    'done',
+  ]);
+  expect(log.entries[2]?.truncated).toBe(false);
+  expect(JSON.parse(log.entries[2]!.detail)).toEqual({
     finishReason: 'length',
     validation: {
       ok: false,
@@ -275,8 +313,8 @@ test('preserves JSON-only text and summarizes its protocol messages', () => {
     finishReason: 'stop',
     usage: { totalTokens: 12 },
   });
-  expect(textLog.entries).toHaveLength(1);
-  expect(JSON.parse(textLog.entries[0]!.detail)).toEqual({
+  expect(textLog.entries.map(entry => entry.event)).toEqual(['delta', 'json']);
+  expect(JSON.parse(textLog.entries[1]!.detail)).toEqual({
     ok: true,
     finishReason: 'stop',
   });

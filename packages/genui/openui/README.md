@@ -95,18 +95,18 @@ data = Query("tool_name", { argument: $variable }, { fallback: true })
 | ----------------------- | ---------------- | ------------------------------------------------------------------------------------------------------- |
 | `@lynx-js/genui/openui` | This package     | OpenUI parser/runtime adapter, ReactLynx renderer, built-in library, state/actions, and prompt helpers. |
 | Your Agent service      | Your application | Calls a model with the OpenUI system prompt and returns raw OpenUI Lang text.                           |
-| Your transport adapter  | Your application | Streams or sets the accumulated response text and cancels stale requests.                               |
+| Your transport adapter  | Your application | Delivers text deltas or snapshots, handles completion, errors, and request cancellation.                |
 | Your tool provider      | Your application | Implements the tools referenced by `Query()` and `Mutation()`.                                          |
 | Your host shell         | Your application | Persists state and handles assistant/open-URL actions emitted by the renderer.                          |
 
 ## First things to know
 
-- Prefer `<OpenUiRenderer response={...}>` for OpenUI v0.5. The legacy
+- Use `<OpenUiRenderer response={...}>` for OpenUI v0.5. The legacy
   `result={parseResult}` path renders pre-parsed static trees but does not own
   the v0.5 query, mutation, or reactive-state runtime.
-- While a model is streaming, pass the accumulated response together with
-  `isStreaming`. The incremental parser keeps completed statements renderable,
-  and built-in interactions stay disabled until the stream finishes.
+- For streaming, pass the accumulated `response` together with `isStreaming`.
+  The renderer incrementally parses text; queries and built-in interactions wait
+  until generation completes.
 - Query defaults and `initialQueryResults` are available during the first
   synchronous render after a response completes. Prefetched results are keyed
   by Query assignment name, not tool name. If you also pass a `toolProvider`,
@@ -125,6 +125,98 @@ data = Query("tool_name", { argument: $variable }, { fallback: true })
   outside that graph, import `createOpenUiLibrary` from
   `@lynx-js/genui/openui/explicit` and each retained built-in from its component
   subpath, such as `@lynx-js/genui/openui/catalog/Stack`.
+
+## Stream model output
+
+Pass the accumulated model text as `response` and the generation state as
+`isStreaming`. Reuse existing React or conversation state if your application
+already owns both; no separate parser is needed.
+
+- `response` is the full text received so far, not the latest delta. Append deltas;
+  replace the text when your transport sends a cumulative snapshot.
+- Keep `isStreaming={true}` throughout generation. Partial UI renders, while
+  Query execution, mutation registration, and built-in interactions wait.
+- On successful completion, apply the authoritative final text and set
+  `isStreaming={false}` together. Its default is `false`; static or persisted
+  complete responses can omit it.
+
+### Connect your transport
+
+Keep text and generation state in one state object so they update together.
+The handlers below illustrate connecting a transport that emits deltas or full
+snapshots; use the handler matching your transport's text format:
+
+```tsx
+import { createOpenUiLibrary, OpenUiRenderer } from '@lynx-js/genui/openui';
+import { useMemo, useState } from '@lynx-js/react';
+
+export function GeneratedView() {
+  const library = useMemo(() => createOpenUiLibrary(), []);
+  const [output, setOutput] = useState({
+    response: null as string | null,
+    isStreaming: false,
+  });
+
+  function onStart() {
+    setOutput({ response: '', isStreaming: true });
+  }
+
+  function onDelta(delta: string) {
+    setOutput((current) => ({
+      response: (current.response ?? '') + delta,
+      isStreaming: true,
+    }));
+  }
+
+  function onSnapshot(fullText: string) {
+    setOutput({ response: fullText, isStreaming: true });
+  }
+
+  function onDone(finalText: string) {
+    setOutput({ response: finalText, isStreaming: false });
+  }
+
+  function onFailureOrCancel() {
+    setOutput({ response: null, isStreaming: false });
+  }
+
+  // Connect these handlers to your transport.
+  return <OpenUiRenderer library={library} {...output} />;
+}
+```
+
+If completion provides no final text, keep the accumulated response and update
+only the flag: `setOutput(current => ({ ...current, isStreaming: false }))`.
+Even when final text equals the last partial, the flag must change to enable
+queries, completion diagnostics, and interactions. Custom interactive components
+should honor `useIsStreaming()` too.
+
+### How incremental parsing works
+
+The renderer retains a streaming parser while `library` stays the same. Although
+`response` supplies the full accumulated text, the parser detects appended text,
+caches completed statements, and reparses the unfinished tail to preview partial
+output. Forward references become renderable when their targets arrive. Changing
+or shortening previously received text resets the parser's cache; keep Library
+identity stable with `useMemo` or a module constant.
+
+This is statement-level incremental parsing: preprocessing and result rebuilding
+still run on each text update, and one long unfinished statement can be reparsed
+repeatedly. It does not provide a component-patch protocol. Changing only
+`isStreaming` with unchanged text does not rerun parsing.
+
+### Completion, cancellation, and new sessions
+
+For SSE, finish only after the successful `done` event, using its authoritative
+text. A connection closing by itself does not confirm success.
+
+On failure or cancellation, clear incomplete text with
+`{ response: null, isStreaming: false }`; do not enable queries or actions for an
+unfinished result. State updates do not cancel network requests: your transport
+owns cancellation and error reporting. Before starting another generation, stop
+the old request and reject late events, then reset the text. Clearing response
+does not reset runtime form state; use a new renderer `key` when a fresh session
+should reset that state.
 
 ## More docs
 

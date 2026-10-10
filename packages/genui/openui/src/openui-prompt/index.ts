@@ -208,7 +208,7 @@ const List = defineComponent({
     divider: z.boolean().optional(),
   }),
   description:
-    'List container for repeated children. Pass child components as the first argument.',
+    'List container for repeated children. Pass child components first. The second argument is the optional items alias; pass null there before direction, align, gap, or divider: List(children, null, "vertical", "stretch", "s", false).',
   component: () => null,
 });
 
@@ -545,12 +545,14 @@ const DEFAULT_COMPONENT_GROUPS: ComponentGroup[] = [
 
 const DEFAULT_ADDITIONAL_RULES = [
   'Use the built-in OpenUI components exactly as listed; do not invent component names or named-argument syntax.',
+  'Arguments are positional. Omit optional arguments only from the end; use null for every skipped optional slot before a later argument. Never shift later values into earlier slots.',
   'Prefer compact, mobile-friendly layouts. Use Stack, Row, Column, List, and Card for structure, CardHeader for titles, and Text/TextContent for text.',
   'Use Tabs for alternate views, Modal for tap-to-open details, and List for repeated or grouped items.',
-  'For List, pass the child component array as the first argument; only use TemplateChildren when the host provides template data.',
+  'For List, use List(children, null, direction, align, gap, divider) when supplying layout options; the second items argument must remain null when children is supplied. Only use TemplateChildren when the host provides template data.',
   'For Tabs, each tab entry is an object like { value: "summary", title: "Summary", child: summaryContent }.',
   'For Modal, pass trigger first and content second: Modal(triggerButton, modalContent, "Title").',
   'When no real tool list is provided, use realistic Query() defaults or static data instead of inventing external tool behavior.',
+  'Use media URLs only when supplied by the user or host or returned by a host image tool. Never invent placeholder URLs. Use Icon or text when no image is available.',
   'Return only OpenUI Lang code unless inlineMode is explicitly enabled.',
 ];
 
@@ -571,19 +573,20 @@ const DEFAULT_EXAMPLES = [
     'header = Row([Icon("location_on", "md", "primary"), Text("Trip Plan", "h3")], "start", "center", "s")',
     'tabs = Tabs([{ value: "summary", title: "Summary", child: summary }, { value: "details", title: "Details", child: details }])',
     'summary = Card([CardHeader("Friday", "Downtown route"), TextContent("Three stops, light walking, dinner at 7 PM.")], "card", "column", false, "s")',
-    'details = List([Text("Museum tickets confirmed.", "body"), DateTimeInput("2026-07-10T19:00", true, true, "2026-07-10T18:00", "2026-07-10T21:00", "Dinner reservation")])',
-    'media = Row([Image("https://example.com/map.png", "cover", "smallFeature"), Video("https://example.com/preview.mp4", "Route preview")], "start", "center", "s", true)',
+    'details = List([Text("Museum tickets confirmed.", "body"), DateTimeInput("2026-07-10T19:00", true, true, "2026-07-10T18:00", "2026-07-10T21:00", "Dinner reservation")], null, "vertical", "stretch", "s", false)',
+    'media = Row([Icon("location_on", "md", "primary"), Text("Downtown walking route", "body")], "start", "center", "s", true)',
   ].join('\n'),
   [
     'root = Stack([filters, list, detailsModal], "column", false, "m", "stretch", "start")',
     'filters = ChoicePicker("Priority", ["High", "Normal", "Low"], "Normal", "card", "chips")',
-    'list = List([Card([Text("Inbox triage", "h4"), TextContent("12 items need review."), AudioPlayer("https://example.com/briefing.mp3", "Briefing audio")], "card", "column", false, "s")])',
+    'list = List([Card([Text("Inbox triage", "h4"), TextContent("12 items need review."), TextContent("Briefing audio is unavailable.")], "card", "column", false, "s")])',
     'detailsModal = Modal(Button("Open details", Action([@ToAssistant("Open inbox details")]), "secondary"), Card([CardHeader("Details"), TextContent("Use actions to confirm or defer items.")]), "Inbox details")',
   ].join('\n'),
 ];
 
 const RESTRICTED_COMPONENT_RULES = [
   'Use only the components listed in this prompt; do not invent component names or named-argument syntax.',
+  'Arguments are positional. Omit optional arguments only from the end; use null for every skipped optional slot before a later argument. Never shift later values into earlier slots.',
   'Prefer compact, mobile-friendly layouts built from the available layout and content components.',
   'Return only OpenUI Lang code unless inlineMode is explicitly enabled.',
 ];

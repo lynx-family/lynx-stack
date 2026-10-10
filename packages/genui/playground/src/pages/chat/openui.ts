@@ -35,6 +35,7 @@ import type { PreviewPerformanceMetrics } from '../../storage/types.js';
 export interface OpenUIOutput {
   rawText: string;
   scenarioTitle: string;
+  isStreaming?: boolean;
 }
 
 export interface OpenUIStreamState {
@@ -241,10 +242,16 @@ function createOpenUIStreamAdapter(
         if (typeof data.text !== 'string') return streamStep(state);
         const generatedText = state.generatedText + data.text;
         const nextState = { ...state, generatedText };
-        return streamStep(nextState, [{
-          type: 'progress',
-          text: generatedText,
-        }]);
+        return streamStep(nextState, [
+          { type: 'progress', text: generatedText },
+          {
+            type: 'partial',
+            output: {
+              ...createOutput(generatedText, scenarioTitle),
+              isStreaming: true,
+            },
+          },
+        ]);
       }
 
       if (frame.event !== 'done') return streamStep(state);
@@ -287,8 +294,8 @@ function createOpenUIStreamAdapter(
       return streamStep({ generatedText: finalText, finalText }, emissions);
     },
     finish(state) {
-      const finalText = state.finalText ?? state.generatedText;
-      return finalText.trim() ? createOutput(finalText, scenarioTitle) : null;
+      const finalText = state.finalText;
+      return finalText?.trim() ? createOutput(finalText, scenarioTitle) : null;
     },
     error: normalizeErrorPayload,
   };
@@ -457,7 +464,12 @@ export const OPENUI_CHAT_ADAPTER = {
     },
   },
   preview: {
-    delivery: 'reload',
+    delivery: 'live-message',
+    initialOutput: (): OpenUIOutput => ({
+      rawText: '',
+      scenarioTitle: 'Agent response',
+      isStreaming: true,
+    }),
     source(output, context) {
       return output
         ? {
@@ -465,17 +477,28 @@ export const OPENUI_CHAT_ADAPTER = {
           rawText: output.rawText,
           theme: context.theme,
           liveAction: true,
+          liveStream: true,
         }
         : undefined;
     },
     artifact: createArtifact,
+    livePayload(output) {
+      return [{
+        rawText: output.rawText,
+        isStreaming: output.isStreaming === true,
+      }];
+    },
+    isEquivalent(current, next) {
+      return current.rawText === next.rawText
+        && current.isStreaming === next.isStreaming;
+    },
     merge(_current, next) {
       return next;
     },
     emptyTitle: 'Send a prompt to generate OpenUI',
     emptySubtitle: 'Generated OpenUI output will be previewed here',
     generatingHint:
-      'Streaming OpenUI output from the GenUI server. The preview will appear when the response is complete.',
+      'Streaming OpenUI output from the GenUI server into the live preview.',
     emptyHint:
       'No OpenUI output yet. Send a prompt or load a local scenario to preview it.',
   },

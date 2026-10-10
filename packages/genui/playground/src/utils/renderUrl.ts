@@ -47,6 +47,8 @@ export interface OpenUIRenderInit {
   /** When true, actions are forwarded to the parent frame for live agent handling. */
   liveAction?: boolean;
   playbackMode?: boolean;
+  /** Receive real model snapshots through the live preview bridge. */
+  liveStream?: boolean;
 }
 
 export interface McpAppsRenderInit {
@@ -362,6 +364,7 @@ export function buildOpenUIRenderUrl(
   const url = new URL('render.html', baseUrl);
   url.searchParams.set('protocol', 'openui');
   url.searchParams.set('demoUrl', './openui.web.js');
+  if (init.liveStream) url.searchParams.set('liveStream', '1');
 
   if (init.theme) {
     url.searchParams.set('theme', init.theme);

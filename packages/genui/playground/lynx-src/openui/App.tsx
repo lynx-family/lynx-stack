@@ -13,6 +13,7 @@ import {
   useState,
 } from '@lynx-js/react';
 
+import { readOpenUILiveResponse } from './liveResponse.js';
 import { OPENUI_SCENARIOS } from './mockData.js';
 import {
   OPENUI_RENDER_ERRORS_MESSAGE_TYPE,
@@ -43,6 +44,7 @@ function readTheme(value: unknown): Theme | null {
 export function App() {
   const globalProps = useGlobalProps() as Record<string, unknown> | null;
   const openUiLibrary = useMemo(() => createOpenUiLibrary(), []);
+  const liveStream = globalProps?.liveStream === true;
   const openUiToolProvider = useMemo<
     Record<string, (args: Record<string, unknown>) => unknown>
   >(() => ({
@@ -92,11 +94,11 @@ export function App() {
   // Read rawText from globalProps; fall back to hardcoded mock data.
   const rawText = useMemo(() => {
     const text = globalProps?.rawText;
-    if (typeof text === 'string' && text.length > 0) {
+    if (typeof text === 'string' && (text.length > 0 || liveStream)) {
       return text;
     }
     return OPENUI_SCENARIOS[0].raw;
-  }, [globalProps]);
+  }, [globalProps, liveStream]);
 
   const instant = useMemo(() => {
     const value = globalProps?.instant;
@@ -132,8 +134,10 @@ export function App() {
     return DEFAULT_STREAM_DELAY_MS / speed;
   }, [globalProps]);
 
-  const [response, setResponse] = useState<string>('');
-  const [isStreaming, setIsStreaming] = useState(false);
+  const [{ response, isStreaming }, setOutput] = useState({
+    response: '',
+    isStreaming: false,
+  });
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [playbackTargetCount, setPlaybackTargetCount] = useState(0);
@@ -141,6 +145,7 @@ export function App() {
   const playbackChunks = useMemo(() => chunkOpenUIResponse(rawText), [rawText]);
 
   const onOpenUiError = useCallback((errors: OpenUIError[]) => {
+    'background only';
     const firstError = formatOpenUIRenderErrors(errors.slice(0, 1));
     setError(
       errors.length > 1
@@ -153,6 +158,19 @@ export function App() {
       () => undefined,
     );
   }, []);
+
+  useLynxGlobalEventListener('OPENUI_LIVE_RESPONSE', (payload: unknown) => {
+    'background only';
+    if (!liveStream) return;
+    const next = readOpenUILiveResponse(payload);
+    if (!next) return;
+    onOpenUiError([]);
+    setOutput({
+      response: next.rawText,
+      isStreaming: next.isStreaming,
+    });
+    setLoading(false);
+  });
 
   useEffect(() => {
     setPlaybackTargetCount(0);
@@ -183,13 +201,19 @@ export function App() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    setIsStreaming(true);
+    setOutput({ response: '', isStreaming: true });
     onOpenUiError([]);
-    setResponse('');
+
+    if (liveStream) {
+      setOutput({ response: rawText, isStreaming: true });
+      setLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
 
     if (instant) {
-      setResponse(rawText);
-      setIsStreaming(false);
+      setOutput({ response: rawText, isStreaming: false });
       setLoading(false);
       return () => {
         cancelled = true;
@@ -198,8 +222,10 @@ export function App() {
 
     if (playbackMode) {
       const next = playbackChunks.slice(0, playbackTargetCount).join('');
-      setResponse(next);
-      setIsStreaming(playbackTargetCount < playbackChunks.length);
+      setOutput({
+        response: next,
+        isStreaming: playbackTargetCount < playbackChunks.length,
+      });
       setLoading(false);
       return () => {
         cancelled = true;
@@ -211,18 +237,21 @@ export function App() {
     const tick = () => {
       if (cancelled) return;
       if (offset >= rawText.length) {
-        setIsStreaming(false);
+        setOutput(current => ({ ...current, isStreaming: false }));
         return;
       }
 
       try {
         const chunk = rawText.slice(offset, offset + DEFAULT_CHUNK_SIZE);
         offset += DEFAULT_CHUNK_SIZE;
-        setResponse((prev) => prev + chunk);
+        setOutput(current => ({
+          response: current.response + chunk,
+          isStreaming: true,
+        }));
         setLoading(false);
       } catch (e) {
         setError(String(e));
-        setIsStreaming(false);
+        setOutput({ response: '', isStreaming: false });
         setLoading(false);
         return;
       }
@@ -237,6 +266,7 @@ export function App() {
     };
   }, [
     instant,
+    liveStream,
     onOpenUiError,
     openUiLibrary,
     playbackChunks,
@@ -246,7 +276,12 @@ export function App() {
     streamDelay,
   ]);
 
+  useEffect(() => {
+    NativeModules.bridge?.call?.('OPENUI_RUNTIME_READY', {}, () => undefined);
+  }, []);
+
   const onOpenUiAction = useCallback((event: ActionEvent) => {
+    'background only';
     if (!liveAction) return;
     NativeModules.bridge?.call?.(
       'OPENUI_USER_ACTION',
@@ -273,16 +308,16 @@ export function App() {
         )
         : null}
 
-      {response
+      {liveStream || response
         ? (
           <scroll-view scroll-y className='openui-scroll'>
             <OpenUiRenderer
               response={response}
+              isStreaming={isStreaming}
               library={openUiLibrary}
               toolProvider={openUiToolProvider}
               onAction={onOpenUiAction}
               onError={onOpenUiError}
-              isStreaming={isStreaming}
             />
           </scroll-view>
         )

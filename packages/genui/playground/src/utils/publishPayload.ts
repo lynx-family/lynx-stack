@@ -4,6 +4,37 @@
 
 import { buildGenuiServerUrl } from '../config/genuiServer.js';
 
+declare const __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__: boolean;
+
+export function usesLocalPayloadStore(): boolean {
+  return typeof __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__ !== 'undefined'
+    && __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__;
+}
+
+/** Development payloads expire after thirty minutes and are never cached as durable shares. */
+export function isLocalPayloadUrl(value: string): boolean {
+  try {
+    return new URL(value).pathname.startsWith('/__a2ui/');
+  } catch {
+    return false;
+  }
+}
+
+export async function publishLocalConversation(
+  messages: unknown,
+): Promise<string> {
+  const res = await window.fetch('/__a2ui_payload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages }),
+  });
+  const data = await res.json() as { messagesUrl?: unknown };
+  if (!res.ok || typeof data.messagesUrl !== 'string') {
+    throw new Error('Failed to publish the local conversation');
+  }
+  return new URL(data.messagesUrl, window.location.origin).toString();
+}
+
 export interface PublishedPayload {
   messagesUrl: string;
   actionMocksUrl?: string;

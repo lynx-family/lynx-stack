@@ -55,6 +55,8 @@ interface TextStreamingService {
 }
 
 export interface TextStreamRouteOptions {
+  /** Emit complete text lines, preserving the final unterminated line. */
+  deltaFraming?: 'line';
   parseOptions?: (body: Record<string, unknown>) =>
     | { ok: true; options: ChatOptions }
     | { ok: false; error: string };
@@ -236,6 +238,7 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
           let streamedText = '';
           let chunkCount = 0;
           let firstChunkLogged = false;
+          let pendingDelta = '';
           log('upstream.stream.started');
 
           for await (const chunk of textStream) {
@@ -249,8 +252,19 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
               });
             }
             streamedText += chunk;
-            if (!enqueue('delta', { text: chunk })) break;
+            if (config.deltaFraming === 'line') {
+              pendingDelta += chunk;
+              let newline: number;
+              while ((newline = pendingDelta.indexOf('\n')) !== -1) {
+                const text = pendingDelta.slice(0, newline + 1);
+                pendingDelta = pendingDelta.slice(newline + 1);
+                if (!enqueue('delta', { text })) break;
+              }
+              if (closed) break;
+            } else if (!enqueue('delta', { text: chunk })) break;
           }
+
+          if (pendingDelta) enqueue('delta', { text: pendingDelta });
 
           generationController.signal.throwIfAborted();
           log('upstream.stream.ended', {

@@ -14,13 +14,13 @@ export function useCopyToast(timeoutMs = 1400) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showCopyToast = useCallback(
-    (ok: boolean) => {
+    (ok: boolean, message?: string) => {
       if (timeoutRef.current) {
         window.clearTimeout(timeoutRef.current);
       }
       setToast({
         id: Date.now(),
-        message: ok ? 'Copy succeeded' : 'Copy failed',
+        message: message ?? (ok ? 'Copy succeeded' : 'Copy failed'),
         tone: ok ? 'success' : 'error',
       });
       timeoutRef.current = window.setTimeout(() => {

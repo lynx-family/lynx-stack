@@ -182,18 +182,29 @@ export function appendChatInteraction(
 
   const detail = interactionText(event, data);
   if (event === 'delta' && !detail) return log;
-  const previous = event === 'delta' ? log.rawOutput : undefined;
-  const text = previous ? previous.detail + detail : detail;
   const entry = {
     event,
-    elapsedMs: previous?.elapsedMs ?? elapsedMs,
-    detail: text.slice(0, MAX_DETAIL_LENGTH),
-    count: previous ? previous.count + 1 : 1,
-    truncated: (previous?.truncated ?? false)
-      || text.length > MAX_DETAIL_LENGTH,
+    elapsedMs,
+    detail: detail.slice(0, MAX_DETAIL_LENGTH),
+    count: 1,
+    truncated: detail.length > MAX_DETAIL_LENGTH,
     ...(isModelStart ? { modelStart: true } : {}),
   };
-  if (event === 'delta') return { ...log, rawOutput: entry };
+  if (event === 'delta') {
+    const previous = log.rawOutput;
+    const text = (previous?.detail ?? '') + detail;
+    log = {
+      ...log,
+      rawOutput: {
+        ...entry,
+        elapsedMs: previous?.elapsedMs ?? elapsedMs,
+        detail: text.slice(0, MAX_DETAIL_LENGTH),
+        count: (previous?.count ?? 0) + 1,
+        truncated: (previous?.truncated ?? false)
+          || text.length > MAX_DETAIL_LENGTH,
+      },
+    };
+  }
 
   const entries = [...log.entries, entry];
   const overflow = Math.max(0, entries.length - MAX_ENTRIES);
@@ -218,6 +229,7 @@ export function serializeChatInteraction(log: ChatInteractionLog): string {
       ...(log.rawOutput
         ? {
           rawOutput: {
+            detail: log.rawOutput.detail,
             elapsedMs: log.rawOutput.elapsedMs,
             count: log.rawOutput.count,
             truncated: log.rawOutput.truncated,
@@ -264,6 +276,8 @@ export function chatInteractionLabel(event: string): string {
       return 'Server response';
     case 'message':
       return 'Protocol messages';
+    case 'delta':
+      return 'Raw output';
     case 'model':
       return 'Model interaction';
     case 'done':

@@ -51,11 +51,26 @@ export type ToolProviderInput =
  * actions, and query execution.
  */
 export interface OpenUiRendererRuntimeProps {
-  /** Raw openui-lang response text. This enables v0.5 runtime features. */
+  /**
+   * Full accumulated OpenUI Lang text, or null to clear the rendered output.
+   * Append model deltas before passing this prop; completed statements are
+   * cached by the renderer's incremental parser. Replacing text resets parsing.
+   * Clearing text does not reset form state; use a new key for a fresh session.
+   * @example
+   * ```tsx
+   * <OpenUiRenderer response={accumulatedText} isStreaming={isGenerating} library={library} />
+   * ```
+   */
   response: string | null;
   /** Component library from createOpenUiLibrary(). */
   library: Library;
-  /** Whether the LLM is still streaming; disables interactions while true. */
+  /**
+   * Whether model generation is active. Partial output renders while Query
+   * execution, mutation registration, and built-in interactions wait.
+   * Set false only after successful completion, even if response is unchanged.
+   * On failure or cancellation, clear response instead of completing partial text.
+   * @defaultValue false
+   */
   isStreaming?: boolean;
   /** Callback when a component triggers a host action. */
   onAction?: (event: ActionEvent) => void;
@@ -506,9 +521,7 @@ function ParsedOpenUiRenderer(
   );
 }
 
-/**
- * Render OpenUI language output using a ReactLynx component library.
- */
+/** Render OpenUI language output using a ReactLynx component library. */
 export function OpenUiRenderer(props: OpenUiRendererProps) {
   if ('response' in props) {
     return <RuntimeOpenUiRenderer {...props} />;

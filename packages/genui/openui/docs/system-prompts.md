@@ -23,6 +23,16 @@ The prompt-side Library and client renderer Library must agree on every
 component name and positional prop order. If they drift, the model can produce
 valid text for one side that the other side rejects.
 
+Arguments are positional. Omit optional arguments only from the end; use `null`
+for a skipped slot before later arguments. For example, List's second argument
+is the optional `items` alias, so a list supplied through `children` uses:
+
+```text
+root = List([Text("Hello")], null, "vertical", "stretch", "s", false)
+```
+
+The argument order is `children, items, direction, align, gap, divider`.
+
 ## 1. CLI
 
 Generate the default built-in OpenUI prompt to a file:

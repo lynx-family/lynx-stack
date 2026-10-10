@@ -281,9 +281,13 @@ const parser = createParser(library.toJSONSchema(), library.root);
 const result = parser.parse('root = Stack([TextContent("Hello")])');
 ```
 
-For streamed text, use `createStreamingParser`. Its `set(fullText)` method is
+For parsing streamed text outside the renderer, use `createStreamingParser`. Its `set(fullText)` method is
 convenient when your UI stores the accumulated response; `push(chunk)` accepts
 only the new delta.
+
+For rendering model output, pass the accumulated `response` and `isStreaming`;
+the renderer already owns its streaming parser. Do not parse the same response
+separately. See [Stream model output](./overview.md#stream-model-output).
 
 Use the renderer's `onParseResult` callback when you already render the same
 response. That avoids creating a second parser just to inspect `root`,

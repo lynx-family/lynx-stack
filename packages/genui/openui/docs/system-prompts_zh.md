@@ -21,6 +21,16 @@ OpenUI system prompt 会描述：
 Prompt 侧 Library 与 client renderer Library 必须在每个组件名和位置 prop 顺序上
 保持一致。如果两者发生漂移，模型可能为其中一侧生成合法、却被另一侧拒绝的文本。
 
+参数按位置传入。可选参数只能从末尾省略；跳过中间参数而继续提供后续参数时，
+必须用 `null` 占位。例如 List 的第二个参数是可选的 `items` 别名，
+通过 `children` 提供内容时应写成：
+
+```text
+root = List([Text("Hello")], null, "vertical", "stretch", "s", false)
+```
+
+参数顺序是 `children, items, direction, align, gap, divider`。
+
 ## 1. CLI
 
 把默认内置 OpenUI prompt 生成到文件：

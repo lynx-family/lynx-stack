@@ -4,12 +4,12 @@
 
 import { describe, expect, test } from '@rstest/core';
 
-import { createA2UISourcePolicy } from '../agent/a2ui/a2ui-source-policy.js';
+import { createSourcePolicy } from '../agent/common/source-policy.js';
 
-describe('createA2UISourcePolicy', () => {
+describe('createSourcePolicy', () => {
   test('uses the supplied normalizer for nested, embedded, and dynamic sources', () => {
     const dynamicSources: string[] = [];
-    const policy = createA2UISourcePolicy(
+    const policy = createSourcePolicy(
       [
         'Use [the primary source](source:ONE).',
         { nested: JSON.stringify({ value: 'source:TWO' }) },
@@ -36,7 +36,7 @@ describe('createA2UISourcePolicy', () => {
     };
     cyclic.self = cyclic;
 
-    const policy = createA2UISourcePolicy(
+    const policy = createSourcePolicy(
       [cyclic],
       (source) => source.startsWith('source:') ? source : undefined,
     );

@@ -74,6 +74,7 @@ import {
 } from '../../utils/modelPricing.js';
 import type { GenerationUsageRecord } from '../../utils/modelPricing.js';
 import type { Protocol } from '../../utils/protocol.js';
+import { isLocalPayloadUrl } from '../../utils/publishPayload.js';
 import {
   buildConversationShareUrl,
   clearImportConversationParam,
@@ -1540,16 +1541,19 @@ export function ChatController<
       }
       const cached = record.snapshot?.sharePayload;
       let conversationUrl = cached?.updatedAt === record.meta.updatedAt
+          && !isLocalPayloadUrl(cached.url)
         ? cached.url
         : undefined;
       if (!conversationUrl) {
         const doc = serializeConversation(record, protocol.name);
         conversationUrl = await publishConversation(doc);
-        await saveConversationSharePayload(
-          id,
-          conversationUrl,
-          record.meta.updatedAt,
-        );
+        if (!isLocalPayloadUrl(conversationUrl)) {
+          await saveConversationSharePayload(
+            id,
+            conversationUrl,
+            record.meta.updatedAt,
+          );
+        }
       }
       const link = buildConversationShareUrl(
         conversationUrl,
@@ -1557,8 +1561,11 @@ export function ChatController<
         protocol.name,
       );
       showCopyToast(await copyToClipboard(link));
-    } catch {
-      showCopyToast(false);
+    } catch (error) {
+      showCopyToast(
+        false,
+        `Unable to share conversation: ${getErrorMessage(error)}`,
+      );
     }
   }, [host.baseUrl, protocol.name, showCopyToast]);
 

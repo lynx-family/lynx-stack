@@ -2,7 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { publishA2UIPayload } from './publishPayload.js';
+import {
+  publishA2UIPayload,
+  publishLocalConversation,
+  usesLocalPayloadStore,
+} from './publishPayload.js';
 import { resolveSharedConversationProtocol } from '../storage/sharedConversation.js';
 import type { SharedConversationDoc } from '../storage/sharedConversation.js';
 
@@ -19,6 +23,7 @@ export async function publishConversation(
 ): Promise<string> {
   const method = resolveSharedConversationProtocol(doc);
   if (!method) throw new Error('Unsupported conversation protocol');
+  if (usesLocalPayloadStore()) return publishLocalConversation(doc);
   const { messagesUrl } = await publishA2UIPayload(doc, undefined, {
     method,
     type: 'conversation',

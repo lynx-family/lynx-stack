@@ -58,6 +58,89 @@ OpenUI 使用位置参数。Parser 按每个组件 Zod schema 的字段顺序，
 具名 props。它允许 forward references，所以 root 可以引用 response 后面才声明的
 statements。
 
+## 流式模型输出
+
+把累计模型文本作为 `response`，把生成状态作为 `isStreaming` 传给 renderer。
+如果业务已经有 React 状态或会话状态，直接复用即可，无需另外创建 parser。
+
+- `response` 是截至当前收到的完整文本，不是最新一个 delta。收到 delta 时追加；
+  transport 下发累计快照时，直接替换文本。
+- 整个生成期间保持 `isStreaming={true}`。UI 会逐步展示，Query 执行、mutation
+  注册和内置交互会等待生成完成。
+- 成功结束时，把最终权威文本和 `isStreaming={false}` 一起更新。该标记默认是
+  `false`，展示静态或已完成的历史 response 时可以省略。
+
+### 接入 transport
+
+把文本和生成状态放在同一个 state 对象中，确保一起更新。下面展示 transport 的
+回调接法；根据服务返回的是 delta 还是累计快照，选择对应的文本回调：
+
+```tsx
+import { createOpenUiLibrary, OpenUiRenderer } from '@lynx-js/genui/openui';
+import { useMemo, useState } from '@lynx-js/react';
+
+export function GeneratedView() {
+  const library = useMemo(() => createOpenUiLibrary(), []);
+  const [output, setOutput] = useState({
+    response: null as string | null,
+    isStreaming: false,
+  });
+
+  function onStart() {
+    setOutput({ response: '', isStreaming: true });
+  }
+
+  function onDelta(delta: string) {
+    setOutput((current) => ({
+      response: (current.response ?? '') + delta,
+      isStreaming: true,
+    }));
+  }
+
+  function onSnapshot(fullText: string) {
+    setOutput({ response: fullText, isStreaming: true });
+  }
+
+  function onDone(finalText: string) {
+    setOutput({ response: finalText, isStreaming: false });
+  }
+
+  function onFailureOrCancel() {
+    setOutput({ response: null, isStreaming: false });
+  }
+
+  // 把这些回调接到已有 transport。
+  return <OpenUiRenderer library={library} {...output} />;
+}
+```
+
+如果完成事件没有最终文本，保留累计 response，只更新标记：
+`setOutput(current => ({ ...current, isStreaming: false }))`。
+即使最终文本和最后一次增量相同，也必须切换标记，才能启用 Query、完成后的错误报告
+和交互。自定义交互组件也应遵循 `useIsStreaming()`。
+
+### 增量解析是怎么工作的
+
+只要 `library` 对象不变，renderer 就会复用同一个 streaming parser。
+虽然每次传入累计全文，parser 会识别追加的文本、缓存已完成的语句，并重新解析
+尚未完成的尾部以预览部分输出。Forward references 在目标声明到达后变为可渲染状态。
+改写或缩短之前收到的文本会重置解析缓存；用 `useMemo` 或模块常量保持 Library 稳定。
+
+这是语句级增量解析：每次文本更新仍会做预处理和结果重建，一条很长但尚未完成的语句
+也可能被反复解析。它没有提供组件级 patch 协议。文本不变、只切换 `isStreaming`
+时，不会重新解析。
+
+### 完成、取消与新会话
+
+使用 SSE 时，只有成功的 `done` 事件才代表完成，并应以其中的最终文本为准。
+连接关闭本身不代表成功。
+
+异常或取消时，用 `{ response: null, isStreaming: false }` 清空未完成文本，
+避免为半成品启用 Query 或交互。更新状态不会取消网络请求；transport 负责取消和错误
+报告。开始下一次生成前，停止旧请求、拒绝其迟到事件，再重置文本。
+清空 response 不会重置运行时表单状态；新会话需要重置这些状态时，为 renderer
+使用新的 `key`。
+
 ## 心智模型
 
 在普通 React 中，是你的源码选择组件并传入 props：
@@ -132,7 +215,7 @@ input ─┼─► Transport ──prompt/action──► Agent service     │
        │      └──────────────────────────────┘             │
        │      │                                            │
        │      ▼                                            │
-       │ <OpenUiRenderer response={text}>                  │
+       │ <OpenUiRenderer response={text} ...>               │
        │      │                                            │
        │      ├─ parser ─► AST ─► evaluator ─► UI tree     │
        │      ├─ Store ($state + form state)               │
@@ -144,17 +227,17 @@ input ─┼─► Transport ──prompt/action──► Agent service     │
 
 1. 你的 transport 把用户请求发送给 Agent 服务。
 2. 服务使用由同一 client component contract 构建的 OpenUI system prompt 调用模型。
-3. Transport 把 chunks 追加到同一个累计 `response` 字符串，再传给
+3. Transport 累积文本 delta，并把 `response` 和 `isStreaming` 传给
    `<OpenUiRenderer>`。
 4. Streaming parser 校验已完成的 statements，并解析引用关系。
-5. Runtime 初始化状态、求值表达式，并通过你的 `toolProvider` 执行完整 Queries。
+5. Runtime 初始化状态并求值表达式。生成完成后，通过你的 `toolProvider` 执行 Queries。
 6. Renderer 遍历求值后的 root，挂载 Library 中可信的 ReactLynx 组件。
 7. 用户交互触发 action steps。宿主 actions 通过 `onAction` 抛出；状态和 tool
    steps 留在 runtime 内执行。
 
 ## Client 内部
 
-原始 `response` 路径会创建完整的 v0.5 runtime：
+`response` 创建完整的 v0.5 runtime；`isStreaming` 控制何时启用 Query 和交互：
 
 ```text
 response text
@@ -181,12 +264,12 @@ RenderNode ──name lookup──► library.components[name].component
   Forward references 在目标到达后变为可渲染状态。
 - **稳定的 Library。** 用 `useMemo` 或组件外常量只创建一次 Library。改变其对象
   identity 会创建新 parser，并可能丢失已有解析工作。
-- **Streaming guard。** 生成期间传入 `isStreaming`。Query/mutation 会等待输出
-  稳定，内置交互也保持禁用。
+- **Streaming guard。** 生成期间传入 `isStreaming={true}`。Query 执行和 mutation
+  注册会等待输出稳定，内置交互也保持禁用。
 - **响应式状态。** `$variables` 和 form values 位于同一个外部 Store 中。
   `onStateUpdate` 可以持久化 snapshots；`initialState` 中以 `$` 开头的值会 hydrate
   响应式 declarations。
-- **Queries 与 mutations。** Query statement 完整后，它的 defaults 和预取的
+- **Queries 与 mutations。** Response 完成流式生成后，Query 的 defaults 和预取的
   `initialQueryResults` 会进入第一次同步渲染。如果配置了 tool provider，Query 会在
   commit 后重新校验，并在引用状态变化时重新执行。Mutation 只注册定义，直到 action
   调用 `@Run(mutationRef)` 才执行。
@@ -201,7 +284,7 @@ RenderNode ──name lookup──► library.components[name].component
 | 部分               | 运行位置                | 负责人               | 职责                                                                            |
 | ------------------ | ----------------------- | -------------------- | ------------------------------------------------------------------------------- |
 | Agent 服务         | Server                  | 你的应用             | 使用 system prompt 和 component/tool contract 生成原始 OpenUI Lang。            |
-| Transport adapter  | Client shell            | 你的应用             | 流式传入累计 response 文本、处理取消，并转发 conversation actions。             |
+| Transport adapter  | Client shell            | 你的应用             | 传入 delta 或快照、确认完成、处理取消，并转发 conversation actions。            |
 | `Library`          | Client + Agent contract | 双方共享             | 命名组件、固定位置参数顺序、提供 JSON Schema，并把名称映射为可信 renderer。     |
 | Parser/evaluator   | Client                  | 这个包 + `lang-core` | 解析 statements、校验 props、解析 state/data expressions，并报告结构化 errors。 |
 | Store/QueryManager | Client                  | 这个包 + `lang-core` | 管理响应式/form state，并执行工具支持的 Query/Mutation statements。             |
@@ -210,7 +293,8 @@ RenderNode ──name lookup──► library.components[name].component
 
 ## `<OpenUiRenderer>` props
 
-所有新接入都应使用原始 response 形式。
+传入累计全文 `response`，生成期间显式设置 `isStreaming={true}`。
+`isStreaming` 默认为 `false`，用于已完成的 response。
 
 | Prop                  | 类型                                       | 必填 | 用途                                               |
 | --------------------- | ------------------------------------------ | ---- | -------------------------------------------------- |

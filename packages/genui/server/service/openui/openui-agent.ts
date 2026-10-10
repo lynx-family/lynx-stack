@@ -2,7 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { createOpenUIImageGuard } from './image-sources.js';
 import { generateJevOpenUI, streamJevOpenUI } from './jev-composition.js';
+import { createSearchRunScope } from '../../agent/common/doubao-search-tool.js';
+import type { SearchRunScope } from '../../agent/common/doubao-search-tool.js';
 import { createOpenUIAgent } from '../../agent/openui/openui-agent.js';
 import type {
   OpenUIAgent,
@@ -24,6 +27,7 @@ import {
   createStableValueHash,
 } from '../common/provider.js';
 import {
+  GenerationPostprocessError,
   extractGenerationResult,
   finalizeResult,
   toAsyncIterable,
@@ -97,6 +101,7 @@ export default class OpenUIAgentService {
     messages: ChatMessage[],
     opts: OpenUIChatOptions = {},
     abortSignal?: AbortSignal,
+    capabilityScope?: SearchRunScope,
   ): Promise<MastraStreamResult> {
     abortSignal?.throwIfAborted();
     if (resolveJevModel(opts)) {
@@ -137,7 +142,7 @@ export default class OpenUIAgentService {
     opts.onPerformanceEvent?.('agent.stream.invoke.started');
     const result = await agent.stream(
       modelMessages,
-      buildCapabilityRunOptions(opts, abortSignal, 'openui'),
+      buildCapabilityRunOptions(opts, abortSignal, 'openui', capabilityScope),
     ) as MastraStreamResult;
     opts.onPerformanceEvent?.('agent.stream.invoke.completed', {
       durationMs: performance.now() - streamStartedAt,
@@ -183,14 +188,54 @@ export default class OpenUIAgentService {
       opts.onModelInteraction,
       abortSignal,
       async () => {
+        const scope = createSearchRunScope();
         const streamResult = await this.stream(
           preparedMessages,
           opts,
           abortSignal,
+          scope,
+        );
+        const safeImages = createOpenUIImageGuard(
+          [
+            ...messages.filter(message => message.role !== 'assistant'),
+            ...(conversation?.history.filter(message => message.role === 'user')
+              ?? []),
+            conversation?.dataModel,
+          ],
+          scope,
+          opts,
         );
         return {
-          textStream: toAsyncIterable(streamResult.textStream),
-          finalize: () => finalizeResult(streamResult),
+          textStream: (async function*() {
+            let text = '';
+            let pending = '';
+            for await (
+              const chunk of toAsyncIterable(streamResult.textStream)
+            ) {
+              text += chunk;
+              pending += chunk;
+              if (
+                !/\bImage\s*\(/u.test(text)
+                || (chunk.includes('\n') && safeImages(text))
+              ) {
+                yield pending;
+                pending = '';
+              }
+            }
+            if (pending && safeImages(text)) yield pending;
+          })(),
+          finalize: async () => {
+            const result = await finalizeResult(streamResult);
+            if (result.text && !safeImages(result.text)) {
+              throw new GenerationPostprocessError(
+                new Error(
+                  'OpenUI image source was not supplied by the user or host, or returned by an image tool. Use an Icon or text when no image is available.',
+                ),
+                { ...result, text: result.text },
+              );
+            }
+            return result;
+          },
         };
       },
     );
@@ -208,6 +253,7 @@ export default class OpenUIAgentService {
     }
     const agent = await this.getAgent(opts);
     abortSignal?.throwIfAborted();
+    const runOptions = buildCapabilityRunOptions(opts, abortSignal, 'openui');
     const result = await agent.generate(
       toModelMessages(
         buildConversationMessages(
@@ -216,9 +262,28 @@ export default class OpenUIAgentService {
           buildDataModelSystemMessage,
         ),
       ),
-      buildCapabilityRunOptions(opts, abortSignal, 'openui'),
+      runOptions,
     ) as MastraResult;
-    return extractGenerationResult(result);
+    const extracted = await extractGenerationResult(result);
+    const safeImages = createOpenUIImageGuard(
+      [
+        ...messages.filter(message => message.role !== 'assistant'),
+        ...(conversation?.history.filter(message => message.role === 'user')
+          ?? []),
+        conversation?.dataModel,
+      ],
+      runOptions,
+      opts,
+    );
+    if (!safeImages(extracted.text)) {
+      throw new GenerationPostprocessError(
+        new Error(
+          'OpenUI image source was not supplied by the user or host, or returned by an image tool. Use an Icon or text when no image is available.',
+        ),
+        extracted,
+      );
+    }
+    return extracted;
   }
 }
 

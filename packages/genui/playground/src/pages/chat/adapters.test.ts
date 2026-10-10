@@ -1108,6 +1108,7 @@ describe('chat protocol adapters', () => {
       rawText: openuiOutput.rawText,
       theme: 'dark',
       liveAction: true,
+      liveStream: true,
     });
     expect(OPENUI_CHAT_ADAPTER.preview.merge(null, openuiOutput)).toBe(
       openuiOutput,

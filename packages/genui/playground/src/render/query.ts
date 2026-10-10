@@ -20,6 +20,7 @@ export interface InitData {
   rawTextUrl?: string;
   playbackPaused?: boolean;
   liveAction?: boolean;
+  liveStream?: boolean;
   mcpAppData?: unknown;
 }
 
@@ -92,6 +93,7 @@ function readInitDataParam(raw: string | null): InitData | null {
   initData.rawTextUrl = readString(record.rawTextUrl);
   initData.playbackPaused = readBoolean(record.playbackPaused);
   initData.liveAction = readBoolean(record.liveAction);
+  initData.liveStream = readBoolean(record.liveStream);
   if ('mcpAppData' in record) initData.mcpAppData = record.mcpAppData;
   return initData;
 }
@@ -142,6 +144,9 @@ export function parseInitDataFromQuery(): InitData | null {
     liveAction: params.get('liveAction') === '1'
       ? true
       : baseInitData?.liveAction,
+    liveStream: params.get('liveStream') === '1'
+      ? true
+      : baseInitData?.liveStream,
     mcpAppData: baseInitData?.mcpAppData,
   };
   if (messages) {
@@ -198,6 +203,7 @@ export function buildGlobalPropsFromInitData(
     out.playbackPaused = initData.playbackPaused;
   }
   if (initData.liveAction !== undefined) out.liveAction = initData.liveAction;
+  if (initData.liveStream !== undefined) out.liveStream = initData.liveStream;
   if (initData.mcpAppData !== undefined) {
     out.mcpAppData = initData.mcpAppData;
   }
