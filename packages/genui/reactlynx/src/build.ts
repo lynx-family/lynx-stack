@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import {
   mkdtemp,
   readFile,
@@ -18,11 +19,15 @@ import { fileURLToPath } from 'node:url';
 
 import type { ReactLynxSource } from './source.js';
 
+/** One emitted Web or Native build asset, ready for host-owned publication. */
 export interface ReactLynxBuildAsset {
+  /** Output-relative asset path with forward slashes. */
   name: string;
+  /** Complete emitted asset bytes. */
   data: Buffer;
 }
 
+/** Build progress reported while waiting for a slot or running the compiler. */
 export type ReactLynxBuildStatus = 'queued' | 'building';
 
 const MAX_BUILD_BYTES = 16 * 1024 * 1024;
@@ -130,6 +135,30 @@ async function runWorker(directory: string, signal: AbortSignal) {
   }
 }
 
+function resolveBuildNodeModules(): string {
+  let directory = path.dirname(fileURLToPath(import.meta.url));
+  while (true) {
+    const nodeModules = path.join(directory, 'node_modules');
+    if (existsSync(path.join(nodeModules, '@lynx-js/react'))) {
+      return nodeModules;
+    }
+    const parent = path.dirname(directory);
+    if (parent === directory) {
+      throw new Error('ReactLynx build dependencies could not be resolved');
+    }
+    directory = parent;
+  }
+}
+
+/**
+ * Compile generated source into Web and Native assets in an isolated Node.js process.
+ *
+ * @param source - Complete two-file source validated by {@link parseReactLynxSource}.
+ * @param signal - Cancels queued or running compilation.
+ * @param onStatus - Receives queue and compiler progress.
+ * @returns Every emitted asset, including `main.web.js` and `main.lynx.js`.
+ * @remarks Keep this entry external when bundling your server so its adjacent worker remains available.
+ */
 export async function buildReactLynx(
   source: ReactLynxSource,
   signal: AbortSignal,
@@ -161,9 +190,7 @@ export async function buildReactLynx(
       }),
     );
     await symlink(
-      fileURLToPath(
-        new URL(/* webpackIgnore: true */ '../node_modules', import.meta.url),
-      ),
+      resolveBuildNodeModules(),
       path.join(directory, 'node_modules'),
       'dir',
     );

@@ -168,6 +168,42 @@ export function createGenUIGuideReadmeDocs(options: {
     sourceFile: path.join(openuiPackageRoot, 'docs/system-prompts_zh.md'),
   });
 
+  for (
+    const [locale, guideRoot] of [['en', enGuideRoot], [
+      'zh',
+      zhGuideRoot,
+    ]] as const
+  ) {
+    const suffix = locale === 'zh' ? '_zh' : '';
+    const route = `${locale === 'zh' ? '/zh' : ''}/guide/genui/reactlynx`;
+    const replacements = ['overview', 'source-guide', 'system-prompts'].flatMap(
+      page => [
+        [`./docs/${page}${suffix}.md`, `${route}/${page}`] as const,
+        [`./${page}${suffix}.md`, `${route}/${page}`] as const,
+      ],
+    );
+    const packageRoot = path.join(genuiPackageRoot, 'reactlynx');
+    removeGeneratedDoc(path.join(guideRoot, 'reactlynx'));
+    syncReadme({
+      languageSwitch: locale === 'zh'
+        ? '<a href="/guide/genui/reactlynx">English</a> | 简体中文'
+        : 'English | <a href="/zh/guide/genui/reactlynx">简体中文</a>',
+      outFile: path.join(guideRoot, 'reactlynx.md'),
+      replacements,
+      sourceFile: path.join(packageRoot, `README${suffix}.md`),
+      switchPattern: locale === 'zh'
+        ? /^\[English\]\(\.\/README\.md\) \| 简体中文$/m
+        : /^English \| \[简体中文\]\(\.\/README_zh\.md\)$/m,
+    });
+    for (const page of ['overview', 'source-guide', 'system-prompts']) {
+      syncDoc({
+        outFile: path.join(guideRoot, `reactlynx/${page}.md`),
+        replacements,
+        sourceFile: path.join(packageRoot, `docs/${page}${suffix}.md`),
+      });
+    }
+  }
+
   removeGeneratedDoc(path.join(enGuideRoot, 'lynx-xml'));
   syncReadme({
     languageSwitch: 'English | <a href="/zh/guide/genui/lynx-xml">简体中文</a>',
@@ -246,6 +282,10 @@ export function createGenUIGuideReadmeDocs(options: {
           items: OPENUI_EN_SIDEBAR_ITEMS,
         },
         {
+          text: 'ReactLynx',
+          items: REACTLYNX_EN_NAV_ITEMS,
+        },
+        {
           text: 'Lynx XML',
           items: LYNX_XML_EN_SIDEBAR_ITEMS,
         },
@@ -269,6 +309,10 @@ export function createGenUIGuideReadmeDocs(options: {
         {
           text: 'OpenUI',
           items: OPENUI_ZH_SIDEBAR_ITEMS,
+        },
+        {
+          text: 'ReactLynx',
+          items: REACTLYNX_ZH_NAV_ITEMS,
         },
         {
           text: 'Lynx XML',
@@ -359,6 +403,20 @@ export const OPENUI_ZH_NAV_ITEMS = [
   },
 ];
 
+export const REACTLYNX_EN_NAV_ITEMS = [
+  { text: 'Introduction', link: '/guide/genui/reactlynx' },
+  { text: 'Overview & Architecture', link: '/guide/genui/reactlynx/overview' },
+  { text: 'Source & Builds', link: '/guide/genui/reactlynx/source-guide' },
+  { text: 'System Prompts', link: '/guide/genui/reactlynx/system-prompts' },
+];
+
+export const REACTLYNX_ZH_NAV_ITEMS = [
+  { text: '简介', link: '/zh/guide/genui/reactlynx' },
+  { text: '概览与架构', link: '/zh/guide/genui/reactlynx/overview' },
+  { text: '源码与构建', link: '/zh/guide/genui/reactlynx/source-guide' },
+  { text: 'System Prompts', link: '/zh/guide/genui/reactlynx/system-prompts' },
+];
+
 export const LYNX_XML_EN_NAV_ITEMS = [
   {
     text: 'Introduction README',
@@ -411,6 +469,11 @@ export const GENUI_EN_NAV_ITEMS = [
     text: 'OpenUI',
     link: '/guide/genui/openui',
     items: OPENUI_EN_NAV_ITEMS.slice(1),
+  },
+  {
+    text: 'ReactLynx',
+    link: '/guide/genui/reactlynx',
+    items: REACTLYNX_EN_NAV_ITEMS.slice(1),
   },
   {
     text: 'Lynx XML',

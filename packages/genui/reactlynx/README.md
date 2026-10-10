@@ -1,41 +1,48 @@
 # GenUI ReactLynx
 
-`@lynx-js/genui-reactlynx` owns the ReactLynx generation contract and the
-restricted server-side compiler used by GenUI.
+English | [简体中文](./README_zh.md)
 
-The package exports:
+ReactLynx generation turns a request into a complete interactive Lynx page. The
+model returns `App.tsx` and `App.css`; your Node.js backend validates the response,
+compiles Web and Native bundles, and publishes all emitted assets for your host.
 
-- `REACTLYNX_SYSTEM_PROMPT`, the model instructions for the two-file artifact.
-- `parseReactLynxSource` and `normalizeReactLynxSource`, which accept exactly
-  `App.tsx` and `App.css` within their configured limits.
-- `buildReactLynx`, which builds Web and Native bundles in an isolated child
-  process and returns every emitted asset.
+## Install
 
-The compiler accepts imports from `@lynx-js/react` only. It owns the generated
-entry point and Rsbuild configuration, disables CSS URL and import resolution,
-and never executes model-authored build configuration. Builds have bounded
-concurrency, queue depth, diagnostics, output size, lifetime, and heap size.
+```bash
+pnpm add @lynx-js/genui @lynx-js/react
+```
 
-The package must remain a runtime dependency of its server consumer so
-`dist/build-worker.js` stays beside `dist/index.js`. Do not bundle its public
-entry into a different output directory.
-
-The repository Dockerfile builds the workspace with Turbo and retains its full
-installed dependency graph, including development dependencies. This preserves
-the peer links used by workspace packages in the runtime compiler.
-Workspace packages keep their existing entry points. Keeping the complete
-workspace layout increases image size but leaves published dependency
-declarations unchanged.
+## Generate and build
 
 ```ts
 import {
   buildReactLynx,
   parseReactLynxSource,
   REACTLYNX_SYSTEM_PROMPT,
-} from '@lynx-js/genui-reactlynx';
+} from '@lynx-js/genui/reactlynx';
 
+// Supply REACTLYNX_SYSTEM_PROMPT as the system message to your model.
+// modelOutput is the complete response text from your model integration.
 const source = parseReactLynxSource(modelOutput);
-const assets = await buildReactLynx(source, signal, status => {
-  console.log(status);
+const controller = new AbortController();
+const assets = await buildReactLynx(source, controller.signal, status => {
+  console.log(status); // queued, then building
 });
 ```
+
+These APIs are also exported from `@lynx-js/genui`. Use the focused subpath in
+Node.js tools and servers. Keep `@lynx-js/genui/reactlynx` external when bundling
+those servers so its compiler worker stays beside its entry point.
+
+Publish every asset using its `name` as a relative path and `data` as the bytes.
+Load `main.web.js` with Lynx for Web or `main.lynx.js` with a Native Lynx host.
+Compilation returns assets; storage, URLs, model calls, and transport belong to
+your application. Render the completed bundle after compilation and publication.
+
+## Guides
+
+- [Overview and architecture](./docs/overview.md)
+- [Source and builds](./docs/source-guide.md)
+- [System prompts](./docs/system-prompts.md)
+
+Try generation and preview in the [GenUI Playground](https://lynx-stack.dev/genui/).

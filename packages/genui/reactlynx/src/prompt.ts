@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+/** Model instructions for generating complete ReactLynx TSX and CSS source. */
 export const REACTLYNX_SYSTEM_PROMPT =
   `Create or revise a complete ReactLynx interface.
 Return only JSON: {"files":{"App.tsx":"...","App.css":"..."}}. Encode newlines and quotes correctly.
