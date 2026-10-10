@@ -173,7 +173,11 @@ const transformWorkletInner = (
     }
 
     if (/** isEventTarget */ 'elementRefptr' in subObj) {
-      obj[key] = new Element(subObj.elementRefptr as ElementNode);
+      const { elementRefptr, ...eventTargetInfo } = subObj;
+      obj[key] = Object.assign(
+        new Element(elementRefptr as ElementNode),
+        eventTargetInfo,
+      );
       continue;
     } else if (subObj instanceof Element) {
       continue;
