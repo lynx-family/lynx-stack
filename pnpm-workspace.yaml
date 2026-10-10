@@ -132,25 +132,25 @@ catalogs:
 
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "2.2.9"
+    "@rsbuild/core": "2.2.12"
 
   # Rslib monorepo packages
   rslib:
-    "@rslib/core": "1.0.2"
+    "@rslib/core": "1.0.3"
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "2.2.7"
-    "@rspack/core": "2.2.7"
+    "@rspack/cli": "2.2.8"
+    "@rspack/core": "2.2.8"
     "@rspack/dev-server": "2.2.1"
     "@rspack/test-tools": "2.2.7"
 
   # Rstest monorepo packages
   rstest:
-    "@rstest/adapter-rsbuild": "0.12.1"
-    "@rstest/adapter-rslib": "0.12.1"
-    "@rstest/coverage-istanbul": "0.12.1"
-    "@rstest/core": "0.12.1"
+    "@rstest/adapter-rsbuild": "0.12.3"
+    "@rstest/adapter-rslib": "0.12.3"
+    "@rstest/coverage-istanbul": "0.12.3"
+    "@rstest/core": "0.12.3"
 
 overrides:
   # Published @lynx-js/lynx-ui-* (pulled in by packages/genui/a2ui) peer-depend on
