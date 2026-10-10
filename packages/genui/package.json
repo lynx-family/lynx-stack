@@ -248,7 +248,7 @@
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true});\""
   },
   "dependencies": {
-    "@a2ui/web_core": "0.10.6",
+    "@a2ui/web_core": "0.12.0",
     "@lynx-js/config-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:^",
     "@lynx-js/react-signals": "workspace:*",
