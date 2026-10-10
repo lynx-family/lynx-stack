@@ -204,6 +204,7 @@ describe('BenchPage report recovery', () => {
       groups: createDefaultBenchGroups('test-model').map(group => ({
         ...group,
         name: 'Shared group',
+        reasoningEffort: 'high' as const,
         enableDesignGuidance: false,
         protocol: 'lynx-xml' as const,
         catalog: 'none',
@@ -263,6 +264,20 @@ describe('BenchPage report recovery', () => {
       .toBe(plan.uiJudgeServerUrl);
     expect(reloadedHistory[0]!.id).toBe(draftId);
     expect(reloadedHistory).toHaveLength(2);
+    const reasoning = container.querySelector<HTMLButtonElement>(
+      '[aria-label="Shared group Reasoning"]',
+    )!;
+    expect(reasoning.textContent).toBe('high');
+    await React.act(async () => reasoning.click());
+    const none = [...container.querySelectorAll<HTMLButtonElement>(
+      '[role="group"][aria-label="Shared group Reasoning"] button',
+    )].find(button => button.textContent === 'none')!;
+    await React.act(async () => none.click());
+    expect(reasoning.textContent).toBe('none');
+    await rstest.waitFor(async () => {
+      const history = await readBenchHistory();
+      expect(history[0]?.config.groups[0]?.reasoningEffort).toBe('none');
+    });
     const start = [...container.querySelectorAll('button')].find(button =>
       button.textContent === 'Start run'
     )!;
@@ -273,7 +288,9 @@ describe('BenchPage report recovery', () => {
       scenarios: unknown;
       settings: unknown;
     };
-    expect(body.groups).toMatchObject(plan.groups);
+    expect(body.groups).toMatchObject(
+      plan.groups.map(group => ({ ...group, reasoningEffort: 'none' })),
+    );
     expect(body.scenarios).toEqual(plan.scenarios);
     expect(body.settings).toMatchObject({
       repeats: 3,

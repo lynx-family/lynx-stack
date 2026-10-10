@@ -43,7 +43,10 @@ class ReactWebAgentService {
       ? createAgent()
       : await this.agentCache.get(opts, createAgent);
     abortSignal?.throwIfAborted();
-    const result = await agent.generate(
+    const generate = opts.streamRawGeneration
+      ? agent.stream.bind(agent)
+      : agent.generate.bind(agent);
+    const result = await generate(
       toModelMessages(messages),
       buildCapabilityRunOptions(opts, abortSignal, 'reactweb'),
     ) as MastraResult;

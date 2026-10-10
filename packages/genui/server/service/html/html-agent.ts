@@ -118,7 +118,10 @@ export default class HtmlAgentService {
     abortSignal?.throwIfAborted();
     const agent = await this.getAgent(opts);
     abortSignal?.throwIfAborted();
-    const result = await agent.generate(
+    const generate = opts.streamRawGeneration
+      ? agent.stream.bind(agent)
+      : agent.generate.bind(agent);
+    const result = await generate(
       toModelMessages(buildConversationMessages(messages, conversation)),
       buildCapabilityRunOptions(opts, abortSignal, 'html'),
     ) as MastraResult;

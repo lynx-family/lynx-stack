@@ -138,6 +138,85 @@ function captureRequests(
 }
 
 for (const api of ['chat', 'responses'] as const) {
+  test(`observes first text before raw ${api} generation completes`, async () => {
+    captureRequests(api);
+    let releaseCompletion!: () => void;
+    const completionGate = new Promise<void>(resolve => {
+      releaseCompletion = resolve;
+    });
+    let observeFirstText!: () => void;
+    const firstText = new Promise<void>(resolve => {
+      observeFirstText = resolve;
+    });
+    rstest.mocked(globalThis.fetch).mockImplementation(async () => {
+      const data = await modelResponse(api, true, content).text();
+      const boundary = data.lastIndexOf('data: ');
+      return new Response(
+        new ReadableStream({
+          async start(controller) {
+            controller.enqueue(
+              new TextEncoder().encode(data.slice(0, boundary)),
+            );
+            await completionGate;
+            controller.enqueue(new TextEncoder().encode(data.slice(boundary)));
+            controller.close();
+          },
+        }),
+        { headers: { 'Content-Type': 'text/event-stream' } },
+      );
+    });
+    let completed = false;
+    const generation = new HtmlAgentService().generateRaw(messages, {
+      model: 'Fast',
+      streamRawGeneration: true,
+      reasoningEffort: 'none',
+      enableWebSearch: false,
+      enableImageGeneration: false,
+      onPerformanceEvent(event) {
+        if (event === 'agent.model.first_text_token') observeFirstText();
+      },
+    }).then(result => {
+      completed = true;
+      return result;
+    });
+    try {
+      await firstText;
+      expect(completed).toBe(false);
+    } finally {
+      releaseCompletion();
+    }
+    const result = await generation;
+    expect(result.text).toBe(content);
+  });
+
+  test.each(services.filter(([name]) => name !== 'mcp-apps'))(
+    `%s streams raw Bench generation with an explicit reasoning override over ${api}`,
+    async (name, create) => {
+      const output = name === 'lynx-xml' ? lynxXmlTestText(content) : content;
+      const requests = captureRequests(api, output);
+      const log = rstest.fn();
+      const generated = await create().generateRaw(messages, {
+        model: 'Fast',
+        enableWebSearch: false,
+        enableImageGeneration: false,
+        streamRawGeneration: true,
+        reasoningEffort: 'high',
+        onPerformanceEvent: log,
+      });
+      expect(generated.text).toBe(output);
+      expect(requests).toHaveLength(1);
+      expect(requests[0]?.stream).toBe(true);
+      expect(
+        api === 'chat' ? requests[0]?.reasoning_effort : requests[0]?.reasoning,
+      )
+        .toEqual(api === 'chat' ? 'high' : { effort: 'high' });
+      expect(log).toHaveBeenCalledWith(
+        'agent.model.first_text_token',
+        expect.any(Object),
+      );
+    },
+  );
+
   test.each(services)(
     `%s sends configured effort through real Mastra ${api} generation and streaming`,
     async (name, create) => {

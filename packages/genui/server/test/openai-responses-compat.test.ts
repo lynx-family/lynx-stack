@@ -59,6 +59,29 @@ function responseBody(text: string, extra: Record<string, unknown> = {}) {
   };
 }
 
+function streamingResponse(text: string) {
+  const response = responseBody(text);
+  const item = response.output[1];
+  const chunks = [
+    { type: 'response.created', response },
+    { type: 'response.output_item.added', output_index: 0, item },
+    {
+      type: 'response.output_text.delta',
+      output_index: 0,
+      item_id: item.id,
+      delta: text,
+    },
+    { type: 'response.output_item.done', output_index: 0, item },
+    { type: 'response.completed', response },
+  ];
+  return new Response(
+    chunks.map(chunk => `data: ${JSON.stringify(chunk)}\n\n`).join(''),
+    {
+      headers: { 'Content-Type': 'text/event-stream' },
+    },
+  );
+}
+
 function configureProvider(baseURL = endpoint) {
   rstest.stubEnv(
     GENUI_MODEL_CONFIG_ENV,
@@ -106,7 +129,8 @@ test.each(
         const body = JSON.parse(init.body) as Record<string, unknown>;
         expect(body.model).toBe('opaque-model');
         expect(body.reasoning).toEqual({ effort: 'low' });
-        return Promise.resolve(Response.json(responseBody(source)));
+        expect(body.stream).toBe(true);
+        return Promise.resolve(streamingResponse(source));
       },
     );
     const result = await create().generate(input);
@@ -158,7 +182,7 @@ test.each(['native', 'matched-core'] as const)(
           reasoning: unknown;
         };
         expect(body.model).toBe('opaque-model');
-        expect(body.reasoning).toEqual({ effort: 'low' });
+        expect(body.reasoning).toEqual({ effort: 'high' });
         conversations.push(body.input);
         const missingField = ['type', 'status'].find(field =>
           body.input.some(item =>
@@ -174,9 +198,9 @@ test.each(['native', 'matched-core'] as const)(
             },
           }, { status: 400 }));
         }
-        return Promise.resolve(Response.json(
-          responseBody(conversations.length === 1 ? 'invalid' : source),
-        ));
+        return Promise.resolve(
+          streamingResponse(conversations.length === 1 ? 'invalid' : source),
+        );
       },
     );
     const request: BenchJobRequest = {
@@ -187,6 +211,7 @@ test.each(['native', 'matched-core'] as const)(
         role: 'control',
         variable: 'custom',
         model: 'Compatible',
+        reasoningEffort: 'high',
         protocol: 'a2ui',
         profile,
       }],

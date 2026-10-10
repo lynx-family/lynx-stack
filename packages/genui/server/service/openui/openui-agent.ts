@@ -254,7 +254,10 @@ export default class OpenUIAgentService {
     const agent = await this.getAgent(opts);
     abortSignal?.throwIfAborted();
     const runOptions = buildCapabilityRunOptions(opts, abortSignal, 'openui');
-    const result = await agent.generate(
+    const generate = opts.streamRawGeneration
+      ? agent.stream.bind(agent)
+      : agent.generate.bind(agent);
+    const result = await generate(
       toModelMessages(
         buildConversationMessages(
           messages,

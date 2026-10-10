@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { MAX_BENCH_GROUPS } from './benchData.js';
+import { BENCH_REASONING_EFFORTS, MAX_BENCH_GROUPS } from './benchData.js';
 import type { BenchGroup, BenchScenario, BenchSettings } from './benchData.js';
 import { isScreenshotSettleMs } from './benchScreenshotDelay.js';
 import { normalizeBenchUiJudgeServerUrl } from './benchUiJudgeServerUrl.js';
@@ -98,6 +98,9 @@ function readPlan(value: unknown): BenchSharedPlan {
         id: string(group.id),
         name: string(group.name),
         model: string(group.model),
+        reasoningEffort: group.reasoningEffort === undefined
+          ? 'default'
+          : option(group.reasoningEffort, BENCH_REASONING_EFFORTS),
         protocol: option(group.protocol, [
           'a2ui',
           'openui',

@@ -17,6 +17,7 @@ import { createLynxXmlBenchAdapter } from '../service/lynx-xml/lynx-xml-bench-ad
 import { createOpenUIBenchAdapter } from '../service/openui/openui-bench-adapter.js';
 import { createReactLynxBenchAdapter } from '../service/reactlynx/reactlynx-bench-adapter.js';
 import type { ReactLynxBenchAdapterOptions } from '../service/reactlynx/reactlynx-bench-adapter.js';
+import { createReactWebBenchAdapter } from '../service/reactweb/reactweb-bench-adapter.js';
 
 const model = 'bench-retry-model';
 const baseURL = 'https://bench-retry.example/v1';
@@ -85,6 +86,23 @@ function a2uiSource(matchedCore = true): string {
 }
 
 const protocols = [
+  [
+    'reactweb',
+    (options: ReactLynxBenchAdapterOptions) =>
+      createReactWebBenchAdapter({
+        ...options,
+        build: () =>
+          Promise.resolve('<!doctype html><html><body>Hello</body></html>'),
+      }),
+    () =>
+      JSON.stringify({
+        files: {
+          'App.tsx':
+            'export default function App() { return <div>Hello</div>; }',
+          'App.css': '',
+        },
+      }),
+  ],
   [
     'reactlynx',
     (options: ReactLynxBenchAdapterOptions) =>
@@ -251,6 +269,55 @@ function modelResponse(
 }
 
 for (const api of ['chat', 'responses'] as const) {
+  test.each(['default', 'none'] as const)(
+    `native A2UI ${api} resolves %s without sending default upstream`,
+    async reasoningEffort => {
+      configure(api);
+      const fetch = rstest.spyOn(globalThis, 'fetch').mockImplementation(
+        (_url, init) => {
+          const body = JSON.parse(init!.body as string) as Record<
+            string,
+            unknown
+          >;
+          const expected = reasoningEffort === 'default' ? 'low' : 'none';
+          expect(api === 'chat' ? body.reasoning_effort : body.reasoning)
+            .toEqual(api === 'chat' ? expected : { effort: expected });
+          return Promise.resolve(modelResponse(api, a2uiSource(false), true));
+        },
+      );
+      const job = createNativeJob(0);
+      job.request.groups[0]!.reasoningEffort = reasoningEffort;
+      await runBenchJob(job.id);
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(job.report?.results[0]?.ok).toBe(true);
+      expect(job.report?.groups[0]?.reasoningEffort).toBe(reasoningEffort);
+    },
+  );
+
+  test.each(protocols)(
+    `%s ${api} still sends an explicit none override`,
+    async (_name, create, output) => {
+      configure(api);
+      const fetch = rstest.spyOn(globalThis, 'fetch').mockImplementation(
+        (_url, init) => {
+          const body = JSON.parse(init!.body as string) as Record<
+            string,
+            unknown
+          >;
+          expect(api === 'chat' ? body.reasoning_effort : body.reasoning)
+            .toEqual(api === 'chat' ? 'none' : { effort: 'none' });
+          return Promise.resolve(modelResponse(api, output(), true));
+        },
+      );
+      const result = await create({}).generate({
+        ...input,
+        reasoningEffort: 'none',
+      });
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(result.finalValid).toBe(true);
+    },
+  );
+
   test(`native A2UI ${api} owns retries for 500 and 429 without multiplying SDK calls`, async () => {
     configure(api);
     const calls: string[] = [];
@@ -266,6 +333,7 @@ for (const api of ['chat', 'responses'] as const) {
       calls.push(init.body);
       const body = JSON.parse(init.body) as Record<string, unknown>;
       expect(body.model).toBe(model);
+      expect(body.stream).toBe(true);
       expect(api === 'chat' ? body.reasoning_effort : body.reasoning).toEqual(
         api === 'chat' ? 'low' : { effort: 'low' },
       );
@@ -284,6 +352,9 @@ for (const api of ['chat', 'responses'] as const) {
     const job = createNativeJob();
     await runBenchJob(job.id);
     expect(calls).toHaveLength(3);
+    expect(job.report?.results[0]?.firstTextTokenMs).toEqual(
+      expect.any(Number),
+    );
     expect(waits).toEqual([1_000, 3_000]);
     expect(calls.every(body => body === calls[0])).toBe(true);
     expect(job.report?.results[0]).toMatchObject({
@@ -338,7 +409,7 @@ for (const api of ['chat', 'responses'] as const) {
     const sleep = rstest.spyOn(benchRetry, 'waitForBenchRetry')
       .mockResolvedValue(undefined);
     const fetch = rstest.spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(modelResponse(api, 'invalid', false))
+      .mockResolvedValueOnce(modelResponse(api, 'invalid', true))
       .mockResolvedValueOnce(
         Response.json({ error: { message: 'Internal error' } }, {
           status: 500,
@@ -423,7 +494,20 @@ for (const api of ['chat', 'responses'] as const) {
           return Promise.resolve();
         },
       });
-      const result = await adapter.generate(input);
+      const events: string[] = [];
+      const result = await adapter.generate({
+        ...input,
+        onPerformanceEvent: event => {
+          events.push(event);
+        },
+      });
+      expect(events.filter(event => event === 'agent.model.first_text_token'))
+        .toHaveLength(1);
+      expect(
+        calls.every(body =>
+          (JSON.parse(body) as { stream?: boolean }).stream === true
+        ),
+      ).toBe(true);
       expect(calls).toHaveLength(3);
       expect(waits).toEqual([3_000, 2_000]);
       expect(result.finalErrors).toEqual([]);

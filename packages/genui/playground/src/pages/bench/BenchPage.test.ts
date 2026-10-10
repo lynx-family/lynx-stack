@@ -60,6 +60,7 @@ test('renders a Lynx XML comparison with native capability and no catalog', () =
       onDesignGuidanceChange: noop,
       onEnabledChange: noop,
       onModelChange: noop,
+      onReasoningChange: noop,
       onNameChange: noop,
       onPromptChange: noop,
       onProtocolChange: noop,
@@ -67,6 +68,9 @@ test('renders a Lynx XML comparison with native capability and no catalog', () =
     }),
   );
   expect(markup).toContain('Lynx XML');
+  expect(markup).toMatch(
+    /aria-label="Baseline Reasoning"><span>default<\/span>/u,
+  );
   expect(markup).toMatch(
     /aria-label="Baseline Template"><span>On<\/span>/u,
   );
@@ -233,6 +237,7 @@ describe('BenchPage', () => {
         onDesignGuidanceChange: noop,
         onEnabledChange: noop,
         onModelChange: noop,
+        onReasoningChange: noop,
         onNameChange: noop,
         onPromptChange: noop,
         onProtocolChange: noop,
@@ -285,6 +290,7 @@ describe('BenchPage', () => {
         onDesignGuidanceChange: noop,
         onEnabledChange: noop,
         onModelChange: noop,
+        onReasoningChange: noop,
         onNameChange: noop,
         onPromptChange: noop,
         onProtocolChange: noop,

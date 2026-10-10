@@ -4,6 +4,7 @@
 import { expect, test } from '@rstest/core';
 
 import {
+  BENCH_REASONING_EFFORTS,
   DEFAULT_BENCH_SCENARIOS,
   DEFAULT_BENCH_SETTINGS,
   createBenchPresetGroups,
@@ -42,6 +43,39 @@ function fixture() {
     },
   };
 }
+
+test('preserves independent reasoning choices and defaults legacy plans to default', () => {
+  const plan = fixture();
+  for (const reasoningEffort of BENCH_REASONING_EFFORTS) {
+    const groups = plan.groups.map((group, index) => ({
+      ...group,
+      reasoningEffort: index === 0 ? reasoningEffort : 'none' as const,
+    }));
+    const restored = readBenchPlanShare(encodeBase64Url(JSON.stringify({
+      version: 1,
+      ...plan,
+      groups,
+    })));
+    expect(restored.groups).toEqual(groups);
+  }
+  const restored = readBenchPlanShare(encodeBase64Url(JSON.stringify({
+    version: 1,
+    ...plan,
+    groups: plan.groups.map(group => ({
+      ...group,
+      reasoningEffort: undefined,
+    })),
+  })));
+  expect(restored.groups.every(group => group.reasoningEffort === 'default'))
+    .toBe(true);
+  expect(() =>
+    readBenchPlanShare(encodeBase64Url(JSON.stringify({
+      version: 1,
+      ...plan,
+      groups: [{ ...plan.groups[0], reasoningEffort: 'auto' }],
+    })))
+  ).toThrow('invalid or unsupported');
+});
 
 test.each([false, 'default'] as const)(
   'round-trips independent options in a deployment-relative Bench link (preset=%s)',

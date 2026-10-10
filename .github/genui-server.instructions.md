@@ -2,7 +2,7 @@
 applyTo: "packages/genui/server/**"
 ---
 
-Apply the selected model's `reasoningEffort` through the shared run options for all generation agents, including streaming, tool continuations, and Bench repair attempts. Leave it omitted when unconfigured; never force a global effort default or inherit server model settings into a complete custom provider. For compatible providers with configured effort, enable the SDK's reasoning-model override so opaque upstream model aliases retain the parameter, preserve the system-message role, and do not implicitly request reasoning summaries. Log the resolved effort with the shared agent diagnostics, and verify serialized Chat Completions and Responses requests with deterministic provider mocks.
+Apply the selected model's `reasoningEffort` through the shared run options for generation agents, including streaming and tool continuations. Bench generation and repairs use the group's effort selection, with `default` inheriting the selected model configuration and explicit efforts overriding it; keep Judge on its selected model configuration. Outside Bench, leave effort omitted when unconfigured; never force a global effort default or inherit server model settings into a complete custom provider. For compatible providers with configured effort, enable the SDK's reasoning-model override so opaque upstream model aliases retain the parameter, preserve the system-message role, and do not implicitly request reasoning summaries. Log the resolved effort with the shared agent diagnostics, and verify serialized Chat Completions and Responses requests with deterministic provider mocks.
 
 # GenUI Server Architecture
 

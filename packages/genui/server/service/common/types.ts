@@ -35,6 +35,8 @@ export interface ChatOptions
   model?: string | undefined;
   api?: 'chat' | 'responses' | undefined;
   reasoningEffort?: OpenAIReasoningEffort | undefined;
+  /** Stream raw generation internally to measure first text arrival. Defaults to false. */
+  streamRawGeneration?: boolean | undefined;
   /** Extra SDK retries per model call; defaults to zero. Bench owns retries. */
   maxRetries?: number | undefined;
   /** Do not retain request-scoped provider credentials in the shared cache. */

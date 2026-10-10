@@ -478,6 +478,7 @@ function createBenchRequestGroups(
     name: group.name,
     variable: group.variable,
     model: group.model,
+    reasoningEffort: group.reasoningEffort ?? 'default',
     catalog: group.catalog,
     ...(group.enableDesignGuidance === false
       ? { enableDesignGuidance: false }
@@ -526,6 +527,7 @@ function createBenchPlanSignature(
       profile: group.profile,
       name: group.name,
       model: group.model,
+      reasoningEffort: group.reasoningEffort ?? 'default',
       catalog: usesCatalog(group) ? group.catalog : undefined,
       enableDesignGuidance: group.enableDesignGuidance !== false,
       ...(group.protocol === 'lynx-xml'
@@ -2073,6 +2075,11 @@ export function BenchPage({ sharedPlan }: { sharedPlan?: string }) {
                   updateGroup(id, groupPatch('enabled', enabled))}
                 onModelChange={(id, model) =>
                   updateGroup(id, groupPatch('model', model))}
+                onReasoningChange={(id, reasoningEffort) =>
+                  updateGroup(
+                    id,
+                    groupPatch('reasoningEffort', reasoningEffort),
+                  )}
                 onNameChange={(id, name) => updateGroup(id, { name })}
                 onPromptChange={(id, extraInstruction) =>
                   updateGroup(
