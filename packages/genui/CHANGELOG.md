@@ -1,5 +1,19 @@
 # @lynx-js/genui
 
+## 0.7.0
+
+### Minor Changes
+
+- Export ReactLynx generation prompts, source validation, and Web/Native build utilities through the root and `/reactlynx` entry points. Include the compiler worker and runtime dependencies in the published package, and add bilingual ReactLynx guides. ([#4127](https://github.com/lynx-family/lynx-stack/pull/4127))
+
+### Patch Changes
+
+- Support per-group reasoning effort selection in Bench, defaulting to the selected model configuration, and report first text latency from streamed generation across protocols. ([#4134](https://github.com/lynx-family/lynx-stack/pull/4134))
+
+- Recover missing closing braces after complete ReactLynx source files while preserving strict validation and size limits. Report unsupported imports with source locations and correction guidance, and clarify the exact permitted module name in generation prompts. ([#4132](https://github.com/lynx-family/lynx-stack/pull/4132))
+
+- Add shared closed enum guidance to full and reduced OpenUI generation prompts and skill references. Require exact argument values and avoid borrowing values from other components or upstream libraries. ([#4133](https://github.com/lynx-family/lynx-stack/pull/4133))
+
 ## 0.6.0
 
 ### Minor Changes
