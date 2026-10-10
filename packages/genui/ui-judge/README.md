@@ -138,7 +138,7 @@ The server does not expose the former generic screenshot route, `POST /screensho
 `POST /screenshot/template` and `POST /screenshot/lynxml` both accept
 `multipart/form-data`. Template capture requires `entry` (ending in `.js`) and
 `url`; XML capture requires `entry` (ending in `.lynxml`) and `source`. JSON
-request bodies are not accepted. Template URLs retain the existing SSRF-safe
+request bodies are not accepted. Template URLs use the shared HTTP
 download and private staging path; XML source is staged locally. Both return BMP.
 
 In addition to the shared fields above, these two endpoints accept:
@@ -242,11 +242,11 @@ For large JSON objects, read the part from a file, for example
 `--form 'globalProps=</absolute/path/to/global-props.json;type=application/json'`.
 Let your HTTP client generate the multipart boundary and `Content-Type` header.
 
-Both URL routes use the shared SSRF-safe downloader. It accepts only HTTP(S)
-URLs without credentials, disables redirects and ambient proxies, resolves DNS
-before connecting, pins the validated addresses for the request, and rejects
-any host that resolves to a non-public address. Remote responses are limited
-to 10 MiB; `url` parts are limited to 8 KiB.
+The template and ZIP URL routes use the shared HTTP downloader. It accepts only
+HTTP(S) URLs without credentials, disables redirects and ambient proxies, resolves DNS
+before connecting, pins the resolved addresses for the request, and allows
+public, private, and loopback addresses, including domains resolving to internal
+networks. Remote responses are limited to 10 MiB; `url` parts are limited to 8 KiB.
 
 To run only the deterministic image alignment and pixel comparison, upload the
 two BMP images as `multipart/form-data`:
@@ -267,9 +267,8 @@ It decodes each BMP once and compares RGBA buffers on the bounded Rayon pool;
 `diffImageBase64` contains base64-encoded BMP bytes without a data-URL prefix.
 Clients that display the diff as a data URL must use `data:image/bmp;base64,`.
 
-Remote-source routes reject non-HTTP(S) URLs with `400` and non-public network
-addresses with `403`. The source-specific
-screenshot routes return `422` with a JSON error when rendering cannot produce
+Remote-source routes reject non-HTTP(S) URLs and URL credentials with `400`.
+The source-specific screenshot routes return `422` with a JSON error when rendering cannot produce
 a frame. Uploads and remote responses return `413` when they exceed 10 MiB.
 Invalid upload media types return `415`. Body reading and isolated rendering
 return `408` when they exceed their deadlines; remote fetches return `504`. ZIP
