@@ -7,7 +7,7 @@ import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BasicBG } from './reloadBG';
-import { BasicMT, ListMT } from './reloadMT';
+import { BasicMT, ListKeysMT, ListMT } from './reloadMT';
 import { destroyBackground } from '../../../src/snapshot/lifecycle/destroy';
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
@@ -132,6 +132,35 @@ describe('reload does not retain the old tree', () => {
     } finally {
       globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
     }
+  });
+
+  it('retires a replaced list child the list still holds and releases the rest', function() {
+    globalEnvManager.switchToMainThread();
+    __root.__jsx = ListKeysMT;
+    renderPage({ keys: [0, 1, 2] });
+
+    const oldNodes = collect(__root);
+    const oldList = oldNodes.find(node => node.__snapshot_def.isListHolder);
+    const oldChildren = oldList.childNodes;
+    expect(oldChildren).toHaveLength(3);
+    const listRef = oldList.__elements[0];
+    elementTree.triggerComponentAtIndex(listRef, 0);
+
+    updatePage({ keys: [1, 2] }, { reloadTemplate: true });
+
+    // Item 0 is dropped while native still shows it: the same state
+    // `removeChild` leaves a list child in, torn down by `componentAtIndex`
+    // once its elements have been reused. Items 1 and 2 were never
+    // materialized, so nothing holds them.
+    expect(oldChildren[0].__id).toBe(0);
+    expect(oldChildren[0].__element_root).toBeDefined();
+    for (const child of oldChildren.slice(1)) {
+      expect(child.__id).not.toBe(0);
+      expect(child.__element_root).toBeUndefined();
+      expect(child.parentNode?.type ?? null).toBeNull();
+    }
+    const stillRegistered = oldNodes.filter(node => snapshotInstanceManager.values.get(node.__id) === node);
+    expect(stillRegistered).toHaveLength(0);
   });
 
   it('keeps rendering through reloads after the old tree is torn down', function() {

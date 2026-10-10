@@ -4,11 +4,13 @@
 import { maybePromise } from '../../utils.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
+import { traverseSnapshotInstance } from '../snapshot/utils.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
 
 export const gSignMap: Record<number, Map<number, SnapshotInstance>> = {};
 export const gRecycleMap: Record<number, Map<string, Map<number, SnapshotInstance>>> = {};
 const gParentWeakMap: WeakMap<SnapshotInstance, unknown> = /*#__PURE__*/ new WeakMap();
+export const destroyLifetimeHandlerMap: Map<number, () => void> = /*#__PURE__*/ new Map();
 const resolvedPromise = /* @__PURE__ */ Promise.resolve();
 
 export function clearListGlobal(): void {
@@ -18,6 +20,78 @@ export function clearListGlobal(): void {
   for (const key in gRecycleMap) {
     delete gRecycleMap[key];
   }
+}
+
+export function snapshotDestroyList(si: SnapshotInstance): void {
+  const [, elementIndex] = si.__snapshot_def.slot[0]!;
+  const list = si.__elements?.[elementIndex];
+  // `takeElements` and hydration transfer the rendered elements to a new
+  // SnapshotInstance while leaving the old instance tree available for
+  // teardown. Only the instance that still owns the list element may clean up
+  // its callbacks and recycling state.
+  if (list === undefined) {
+    return;
+  }
+  const listID = __GetElementUniqueID(list);
+
+  __UpdateListCallbacks(list, () => -1, () => {}, () => {});
+
+  if (typeof lynx !== 'undefined' && typeof lynx.getNative === 'function') {
+    const cb = destroyLifetimeHandlerMap.get(listID);
+    if (cb) {
+      lynx.getNative()?.removeEventListener('__DestroyLifetime', cb);
+      destroyLifetimeHandlerMap.delete(listID);
+    }
+  }
+
+  delete gSignMap[listID];
+  delete gRecycleMap[listID];
+}
+
+function listElementOf(holder: SnapshotInstance): FiberElement | undefined {
+  const [, elementIndex] = holder.__snapshot_def.slot[0]!;
+  return holder.__elements?.[elementIndex];
+}
+
+function releaseLists(node: SnapshotInstance, live: Set<FiberElement>): void {
+  if (!node.__snapshot_def.isListHolder) {
+    node.childNodes.forEach(child => releaseLists(child, live));
+    return;
+  }
+  // An old item the list still shows or pools is kept for one reuse, as
+  // `removeChild` does; the rest of the old children go with the tree. A
+  // list the new tree dropped keeps nothing.
+  const held = new Set<SnapshotInstance>();
+  const list = listElementOf(node);
+  if (list !== undefined && live.has(list)) {
+    const listID = __GetElementUniqueID(list);
+    gSignMap[listID]!.forEach(ctx => held.add(ctx));
+    gRecycleMap[listID]!.forEach(pool => pool.forEach(ctx => held.add(ctx)));
+  } else {
+    snapshotDestroyList(node);
+  }
+  for (const child of node.childNodes) {
+    if (held.has(child)) {
+      child.__id = 0;
+    } else {
+      releaseLists(child, live);
+      child.unRenderElements();
+      child.tearDown();
+    }
+  }
+}
+
+export function releaseReplacedTree(oldRoot: SnapshotInstance, newRoot: SnapshotInstance): void {
+  const live = new Set<FiberElement>();
+  traverseSnapshotInstance(newRoot, node => {
+    const list = node.__snapshot_def.isListHolder ? listElementOf(node) : undefined;
+    if (list) {
+      live.add(list);
+    }
+  });
+  releaseLists(oldRoot, live);
+  oldRoot.unRenderElements();
+  oldRoot.tearDown();
 }
 
 export function componentAtIndexFactory(
@@ -151,15 +225,17 @@ export function componentAtIndexFactory(
       const [sign, oldCtx] = first!;
       recycleSignMap.delete(sign);
       hydrateFunction(oldCtx, childCtx);
-      oldCtx.unRenderElements();
-      if (!oldCtx.__id) {
-        oldCtx.tearDown();
-      } else if (oldCtx.__extraProps?.['isReady'] === 1) {
-        // send a event to background to recycle the list-item
-        __OnLifecycleEvent([LifecycleConstant.publishEvent, {
-          handlerName: `${oldCtx.__id}:__extraProps:onRecycleComponent`,
-          data: {},
-        }]);
+      if (oldCtx.__id) {
+        oldCtx.unRenderElements();
+        if (oldCtx.__extraProps?.['isReady'] === 1) {
+          // send a event to background to recycle the list-item
+          __OnLifecycleEvent([LifecycleConstant.publishEvent, {
+            handlerName: `${oldCtx.__id}:__extraProps:onRecycleComponent`,
+            data: {},
+          }]);
+        }
+      } else {
+        releaseReplacedTree(oldCtx, childCtx);
       }
       const root = childCtx.__element_root!;
       applyRefQueue();
