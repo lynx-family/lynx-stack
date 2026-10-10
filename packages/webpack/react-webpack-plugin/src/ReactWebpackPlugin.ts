@@ -401,7 +401,10 @@ class ReactWebpackPlugin {
       }).apply(compiler);
     }
 
-    if (options.experimental_reEvalJSOnReload) {
+    if (
+      options.experimental_reEvalJSOnReload
+      && !options.experimental_isLazyBundle
+    ) {
       const reloader =
         `lynx[Symbol.for('__LYNX_MAIN_THREAD_ENTRY_RELOADER__')]`;
       new BannerPlugin({
