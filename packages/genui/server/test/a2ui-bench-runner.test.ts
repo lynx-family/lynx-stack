@@ -169,6 +169,7 @@ describe('A2UI Bench UI Judge integration', () => {
           model,
           protocol: 'openui',
           profile: 'matched-core',
+          reasoningEffort: 'default',
         }];
         benchRequest.scenarios = [{
           ...benchRequest.scenarios[0]!,
@@ -180,7 +181,8 @@ describe('A2UI Bench UI Judge integration', () => {
           adapters: {
             openui: {
               protocol: 'openui',
-              generate: () => {
+              generate: input => {
+                expect(input.reasoningEffort).toBeUndefined();
                 if (!success) throw new Error(`${model} private-key`);
                 return Promise.resolve({
                   attempts: [],
@@ -469,6 +471,22 @@ describe('A2UI Bench UI Judge integration', () => {
     expect(summary.avgJudgeGeqiScore).toBe(80 / 3);
     expect(summary.judgeRunCount).toBe(1);
     expect(summary.plannedRuns).toBe(3);
+  });
+
+  test('averages only recorded first text timings, including failed runs', () => {
+    const runs = [
+      { ...result('first', 'complete', 4), firstTextTokenMs: 0 },
+      { ...result('failed', 'failed', 0), ok: false, firstTextTokenMs: 300 },
+      result('legacy', 'skipped', 0),
+      { ...result('invalid', 'skipped', 0), firstTextTokenMs: Number.NaN },
+    ];
+    expect(summarizeGroup(group, runs)).toMatchObject({
+      avgFirstTextTokenMs: 150,
+      firstTextRunCount: 2,
+    });
+    expect(summarizeGroup(group, [runs[2]!])).not.toHaveProperty(
+      'avgFirstTextTokenMs',
+    );
   });
 
   test('marks a matched-core run failed when Judge fails', async () => {

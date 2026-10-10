@@ -281,7 +281,10 @@ export default class LynxXmlAgentService {
     const agent = await this.getAgent(opts);
     abortSignal?.throwIfAborted();
     const scope = createLynxXmlRunScope();
-    const result = await agent.generate(
+    const generate = opts.streamRawGeneration
+      ? agent.stream.bind(agent)
+      : agent.generate.bind(agent);
+    const result = await generate(
       toModelMessages(buildConversationMessages(messages, conversation)),
       buildLynxXmlScopedRunOptions(opts, abortSignal, scope),
     ) as MastraResult;

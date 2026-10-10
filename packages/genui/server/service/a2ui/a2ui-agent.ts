@@ -54,6 +54,7 @@ import {
   resolveReasoningEffort,
 } from '../common/provider.js';
 import {
+  extractGenerationResult,
   extractSuspension,
   extractText,
   finalizeResult,
@@ -385,17 +386,18 @@ export default class A2UIAgentService {
     imageGenerationScope: ArkImageGenerationRunScope,
   ): Promise<CompletedA2UIRun> {
     abortSignal?.throwIfAborted();
-    let result = await agent.generate(
+    const generate = opts.streamRawGeneration
+      ? agent.stream.bind(agent)
+      : agent.generate.bind(agent);
+    let result = await generate(
       modelMessages,
       buildA2UIRunOptions(opts, abortSignal, imageGenerationScope),
     ) as MastraResult;
     const phaseTexts: string[] = [];
 
     while (true) {
-      const [text, metadata] = await Promise.all([
-        extractText(result),
-        finalizeResult(result),
-      ]);
+      const metadata = await extractGenerationResult(result);
+      const text = metadata.text;
       if (text) phaseTexts.push(text);
       abortSignal?.throwIfAborted();
       if (!isSuspended(metadata.finishReason)) {

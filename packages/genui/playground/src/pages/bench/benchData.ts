@@ -22,6 +22,7 @@ export type BenchComparisonDirection = Extract<
   'model' | 'prompt' | 'protocol'
 >;
 export interface BenchGroup {
+  reasoningEffort?: BenchReasoningEffort;
   enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
   enableScriptReuse?: boolean;
@@ -36,6 +37,23 @@ export interface BenchGroup {
   protocol: BenchProtocol;
   role: BenchRole;
   variable: BenchVariable;
+}
+
+export const BENCH_REASONING_EFFORTS = [
+  'default',
+  'none',
+  'minimal',
+  'low',
+  'medium',
+  'high',
+  'xhigh',
+] as const;
+export type BenchReasoningEffort = typeof BENCH_REASONING_EFFORTS[number];
+
+export function isBenchReasoningEffort(
+  value: unknown,
+): value is BenchReasoningEffort {
+  return BENCH_REASONING_EFFORTS.includes(value as BenchReasoningEffort);
 }
 
 export interface BenchScenario {
@@ -240,6 +258,7 @@ export function createDefaultBenchGroups(model: string): BenchGroup[] {
       name: 'Baseline',
       variable: 'custom',
       model,
+      reasoningEffort: 'default',
       catalog: 'Full Catalog',
       extraInstruction: '',
       enabled: true,

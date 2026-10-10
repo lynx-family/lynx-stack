@@ -129,8 +129,8 @@ export class ProviderAgentCache<TAgent> {
   }
 }
 
-function parseReasoningEffort(
-  value: string | undefined,
+export function parseReasoningEffort(
+  value: unknown,
 ): OpenAIReasoningEffort | undefined {
   return REASONING_EFFORTS.has(value as OpenAIReasoningEffort)
     ? value as OpenAIReasoningEffort

@@ -26,6 +26,39 @@ function body(groups: unknown[]) {
 }
 
 describe('A2UI Bench request protocol groups', () => {
+  test.each([
+    undefined,
+    'default',
+    'none',
+    'minimal',
+    'low',
+    'medium',
+    'high',
+    'xhigh',
+  ])(
+    'normalizes generation reasoning %s independently for every protocol',
+    reasoningEffort => {
+      const result = normalizeBenchJobRequest(body(
+        ['a2ui', 'openui', 'lynx-xml', 'html', 'reactweb', 'reactlynx'].map(
+          protocol => ({ id: protocol, protocol, reasoningEffort }),
+        ),
+      ));
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.request.groups.map(group => group.reasoningEffort))
+          .toEqual(Array(6).fill(reasoningEffort ?? 'default'));
+      }
+    },
+  );
+
+  test.each(['auto', '', null, 1, true])(
+    'rejects invalid generation reasoning %s',
+    reasoningEffort => {
+      expect(normalizeBenchJobRequest(body([{ id: 'group', reasoningEffort }])))
+        .toMatchObject({ ok: false, status: 400 });
+    },
+  );
+
   test.each([undefined, false, true, 'true'])(
     'validates ScriptReuse: %s',
     enableScriptReuse => {

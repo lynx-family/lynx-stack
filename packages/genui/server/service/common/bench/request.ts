@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { MAX_BENCH_GROUPS } from './concurrency.js';
+import { BENCH_PROTOCOLS } from './protocol-types.js';
 import type {
   BenchCatalogLabel,
   BenchGroupRequest,
@@ -15,7 +16,7 @@ import type {
   BenchVariable,
 } from './types.js';
 import { configuredModelName } from '../model-config.js';
-import { BENCH_PROTOCOLS } from './protocol-types.js';
+import { parseReasoningEffort } from '../provider.js';
 
 const MAX_SCENARIOS = 20;
 const MAX_REPEATS = 10;
@@ -178,6 +179,8 @@ function normalizeGroups(
           : {}),
         profile,
         ...(model ? { model } : {}),
+        reasoningEffort: parseReasoningEffort(item.reasoningEffort)
+          ?? 'default',
         ...(protocol === 'a2ui' && profile === 'native'
           ? { catalog: readCatalog(item.catalog) }
           : {}),
@@ -279,6 +282,21 @@ export function normalizeBenchJobRequest(
     };
   }
   const groups = normalizeGroups(value.groups);
+  if (
+    Array.isArray(value.groups)
+    && value.groups.some(group =>
+      isRecord(group) && group.reasoningEffort !== undefined
+      && group.reasoningEffort !== 'default'
+      && parseReasoningEffort(group.reasoningEffort) === undefined
+    )
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      error:
+        'reasoningEffort must be default, none, minimal, low, medium, high, or xhigh',
+    };
+  }
   if (
     Array.isArray(value.groups)
     && value.groups.some(group =>

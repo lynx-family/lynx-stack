@@ -5,6 +5,7 @@ import {
   DEFAULT_BENCH_SCENARIOS,
   DEFAULT_BENCH_SETTINGS,
   createDefaultBenchGroups,
+  isBenchReasoningEffort,
   isDocumentBenchProtocol,
 } from './benchData.js';
 import type {
@@ -148,6 +149,9 @@ export function createBenchGroupsFromReport(
       name: item.name ?? `Group ${index + 1}`,
       variable: isBenchVariable(item.variable) ? item.variable : 'custom',
       model: item.model ?? fallbackModel,
+      reasoningEffort: isBenchReasoningEffort(item.reasoningEffort)
+        ? item.reasoningEffort
+        : 'default',
       catalog: isDocumentBenchProtocol(protocol)
         ? 'none'
         : item.catalog ?? 'Full Catalog',
