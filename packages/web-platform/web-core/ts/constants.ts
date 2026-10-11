@@ -119,6 +119,7 @@ export const LYNX_TAG_TO_HTML_TAG_MAP: Record<string, string> =
       'scroll-coordinator-toolbar': 'x-foldview-toolbar-ng',
       'svg': 'x-svg',
       'frame': 'lynx-view',
+      'video': 'x-video',
     }),
   );
 
@@ -175,6 +176,8 @@ export const LYNX_TAG_TO_DYNAMIC_LOAD_TAG_ID: Record<string, number> =
         'x-overlay-ng': 7,
         'x-viewpager-ng': 8,
         'x-viewpager-item-ng': 8,
+        'x-video': 9,
+        'video': 9,
       }),
     );
 
