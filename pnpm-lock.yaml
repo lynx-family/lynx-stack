@@ -1573,8 +1573,8 @@ importers:
         specifier: 3.0.6
         version: 3.0.6(zod@4.6.5)
       '@hono/node-server':
-        specifier: ^2.1.0
-        version: 2.1.0(hono@4.13.9)
+        specifier: ^2.1.4
+        version: 2.1.4(hono@4.13.9)
       '@lynx-js/genui-html':
         specifier: workspace:*
         version: link:../html
@@ -4614,11 +4614,11 @@ packages:
     peerDependencies:
       hono: ^4
 
-  '@hono/node-server@2.1.0':
-    resolution: {integrity: sha512-XovyyCCnBzW+zKu+z/zq8hwNs4KOR5rEMAOxo2f40Q5xoOI37IMm6MIg2COOUtUApo0i6850MTBKH2u4QLGIqg==}
+  '@hono/node-server@2.1.4':
+    resolution: {integrity: sha512-2g1qeHl4BduwDn6L8nkAvDrPUWPMlkQ//a5NhP/zIyaXKMjZNRV+cG9Csu+BiJFf6+68pqzjf4Hi5sJGKHuS1g==}
     engines: {node: '>=20'}
     peerDependencies:
-      hono: ^4
+      hono: ^4 || ^5.0.0-0
 
   '@hono/standard-validator@0.4.0':
     resolution: {integrity: sha512-MxOm1asDh9j7c1D0KiWwppSbFgAQxTRO4YEhjMrJn3lF1BIcXenPdgjSGKDRfQmZdaTaMA8slQLETgVOKyJxFw==}
@@ -14259,7 +14259,7 @@ snapshots:
       hono: 4.13.9
     optional: true
 
-  '@hono/node-server@2.1.0(hono@4.13.9)':
+  '@hono/node-server@2.1.4(hono@4.13.9)':
     dependencies:
       hono: 4.13.9
 
