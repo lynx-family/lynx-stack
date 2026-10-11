@@ -122,6 +122,8 @@ describe('remapUiTree', () => {
       sign: 1,
       tag: 'page',
       repo: 'acme/app',
+      remoteUrl: 'git@github.com:acme/app.git',
+      commit: 'deadbeef',
       source: 'src/App.tsx',
       line: 3,
       column: 1,
@@ -129,6 +131,8 @@ describe('remapUiTree', () => {
     // resolved child
     expect(output.children?.[0]).toMatchObject({
       repo: 'acme/app',
+      remoteUrl: 'git@github.com:acme/app.git',
+      commit: 'deadbeef',
       source: 'src/Button.tsx',
       line: 12,
       column: 4,
@@ -157,6 +161,8 @@ describe('remapUiTree', () => {
       'debugMetadataUrl',
       'children',
       'repo',
+      'remoteUrl',
+      'commit',
       'source',
       'line',
       'column',
@@ -189,6 +195,53 @@ describe('remapUiTree', () => {
         () => Promise.resolve(malformed),
       ),
     ).rejects.toThrow(/Invalid debug-metadata loaded from "[^"]+"/);
+  });
+
+  test('keeps remoteUrl distinguishing two hosts that normalizeRepo folds together', async () => {
+    // An internal mirror and its public counterpart share an `owner/repo`
+    // path, so `repo` alone can't tell a consumer which host `source` came
+    // from. `remoteUrl` is what's left to reach the exact file.
+    const internal = metadata('https://git.internal.example/acme/app', {
+      version: 1,
+      sources: ['src/App.tsx'],
+      mappings: [[0, 3, 1]],
+      uiMaps: [9000],
+    });
+    const output = await remapUiTree(
+      { nodeIndex: 9000, debugMetadataUrl: META_URL },
+      () => Promise.resolve(internal),
+    );
+
+    expect(output).toMatchObject({
+      repo: 'acme/app',
+      remoteUrl: 'https://git.internal.example/acme/app',
+    });
+  });
+
+  test('reports a missing commit as null rather than an empty string', async () => {
+    const noCommit: DebugMetadataAsset = {
+      artifacts: [],
+      uiSourceMap: {
+        version: 1,
+        sources: ['src/App.tsx'],
+        mappings: [[0, 3, 1]],
+        uiMaps: [9000],
+      },
+      buildInfo: {
+        git: {
+          commit: '',
+          rootDir: null,
+          remoteUrl: 'git@github.com:acme/app.git',
+          commitUrl: null,
+        },
+      },
+    };
+    const output = await remapUiTree(
+      { nodeIndex: 9000, debugMetadataUrl: META_URL },
+      () => Promise.resolve(noCommit),
+    );
+
+    expect(output).toMatchObject({ repo: 'acme/app', commit: null });
   });
 
   test('passes nodes without source mapping through, never loading metadata', async () => {
