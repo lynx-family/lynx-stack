@@ -50,4 +50,17 @@ describe('Parse Inline Style', () => {
       await formatMessages(result.warnings, { kind: 'warning', color: false }),
     ).toMatchInlineSnapshot(`[]`);
   });
+
+  it('should compile flex number in style object to string value', async () => {
+    const result = await transformReactLynx(
+      `\
+const style = flag ? { flex: 1, width: '100px' } : { flex: 2 };
+<view style={style} />`,
+    );
+
+    expect(result.code).toMatch(/flex:\s*['"]1['"]/);
+    expect(result.code).toMatch(/flex:\s*['"]2['"]/);
+    expect(result.code).not.toMatch(/flex:\s*1([,}\s])/);
+    expect(result.code).not.toMatch(/flex:\s*2([,}\s])/);
+  });
 });
