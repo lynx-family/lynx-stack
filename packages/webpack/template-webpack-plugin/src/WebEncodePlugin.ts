@@ -203,18 +203,22 @@ export class WebEncodePlugin {
 /**
  * Routes the custom sections of a bundle into the slots a web bundle carries.
  * The `JsBytecode` tag says which section is the main thread one; on web it
- * only selects the slot, the section stays raw source.
+ * only selects the slot, the section stays raw source. A `CSS` section rides
+ * the `StyleInfo` section and also stays a custom section, the others are
+ * moved.
  *
  * @public
  */
 export function routeSections(
   customSections: NonNullable<EncodeOptions['customSections']>,
-): Pick<TasmJSONInfo, 'styleInfo' | 'lepusCode' | 'manifest'> & {
-  customSections: Record<string, never>;
-} {
+): Pick<
+  TasmJSONInfo,
+  'styleInfo' | 'lepusCode' | 'manifest' | 'customSections'
+> {
   const styleInfo: TasmJSONInfo['styleInfo'] = {};
   const lepusCode: TasmJSONInfo['lepusCode'] = {};
   const manifest: TasmJSONInfo['manifest'] = {};
+  const cssSections: TasmJSONInfo['customSections'] = {};
   let cssId = 0;
 
   for (const [name, section] of Object.entries(customSections)) {
@@ -222,6 +226,12 @@ export function routeSections(
       const { ruleList } = section.content as { ruleList?: LynxStyleNode[] };
       // `encodeCSS` requires numeric css-id keys.
       styleInfo[String(cssId++)] = ruleList ?? [];
+      // The section is also kept under its name: the web encoder writes it to
+      // the `CustomSectionsStyleInfo` section. The styles are carried twice.
+      cssSections[name] = {
+        encoding: 'CSS',
+        content: section.content as Record<string, unknown>,
+      };
     } else if (section.encoding === 'JsBytecode') {
       lepusCode[name] = section.content as string;
     } else {
@@ -231,7 +241,7 @@ export function routeSections(
     }
   }
 
-  return { styleInfo, lepusCode, manifest, customSections: {} };
+  return { styleInfo, lepusCode, manifest, customSections: cssSections };
 }
 
 function last<T>(array: T[]): T | undefined {

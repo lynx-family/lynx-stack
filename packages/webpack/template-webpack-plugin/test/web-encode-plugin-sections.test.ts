@@ -20,12 +20,16 @@ describe('WebEncodePlugin: routes the sections of a bundle without a root', () =
   });
 
   test('the styles ride the StyleInfo section under numeric ids', () => {
-    const { styleInfo, lepusCode, manifest } = routeSections({
+    const { styleInfo, lepusCode, manifest, customSections } = routeSections({
       'utils:CSS': { encoding: 'CSS', content: { ruleList: [] } },
     });
 
     expect(styleInfo).toStrictEqual({ 0: [] });
     expect(lepusCode).toStrictEqual({});
     expect(manifest).toStrictEqual({});
+    // Kept under its name too, for the `CustomSectionsStyleInfo` section.
+    expect(customSections).toStrictEqual({
+      'utils:CSS': { encoding: 'CSS', content: { ruleList: [] } },
+    });
   });
 });
