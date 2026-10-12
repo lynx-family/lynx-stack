@@ -5,7 +5,7 @@ $savedBudget = ""
 $savedPriority = ""
 root = Column([intro, focalGuide, currentGear, recommendations, whySony, focalExperiment, preferences, conclusion], "start", "stretch", "xl")
 
-intro = Column([Text("旅行相机，怎么选？", "h2"), Text("人和大景同框 · 环境人像 · 一机一镜", "caption"), TextContent("我想买一台适合旅行拍照的相机，主要拍人和山、人和大树、人和寺庙、人和街巷、人和海边。目前已有 Sony ZV-1M2、富士 X100F、DJI Pocket 3 和 iPhone 17 Pro。"), TextContent("结合你的拍摄需求和已有设备，我会把下一台相机的重点放在旅行静态摄影、高画质和可换镜头能力上。"), TextContent("你需要的是一套擅长环境人像（Environmental Portrait）的摄影系统。", "large-heavy"), TextContent("让人、建筑与自然共同构成画面：站在巨大山脊下显得渺小，在古寺门前呈现建筑的尺度，或者在街巷里成为城市故事的一部分。")], "start", "stretch", "m")
+intro = Column([Text("旅行相机，怎么选？", "h2"), Text("人和大景同框 · 环境人像 · 一机一镜", "caption"), TextContent("结合你的拍摄需求和已有设备，我会把下一台相机的重点放在旅行静态摄影、高画质和可换镜头能力上。"), TextContent("你需要的是一套擅长环境人像（Environmental Portrait）的摄影系统。", "large-heavy"), TextContent("让人、建筑与自然共同构成画面：站在巨大山脊下显得渺小，在古寺门前呈现建筑的尺度，或者在街巷里成为城市故事的一部分。")], "start", "stretch", "m")
 
 focalGuide = Column([Text("一、你的拍摄风格，适合什么焦段？", "h4"), sceneRowOne, sceneRowTwo, Text("以下图片为拍摄风格参考，并非特定相机实拍样张。", "caption"), TextContent("核心焦段：20–35mm（全画幅等效），并希望能够延伸到 50–70mm。", "large-heavy"), focalNotes, TextContent("先配一支旅行变焦镜头，比再买一台固定 28mm 或 35mm 镜头的相机更灵活。")], "start", "stretch", "m")
 sceneRowOne = Row([mountainScene, forestScene], "start", "stretch", "s")
