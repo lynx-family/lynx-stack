@@ -6,6 +6,8 @@ applyTo: "packages/lynx/engine-bridge/**"
 
 Runtime-backed tests require a Lynx runtime and matching `lynx_core.js` locally and in CI. Package `build.rs` files should prepare default, SHA-256-verified artifacts for supported targets under `target/lynx-engine-bridge-sdk`, inject `LYNX_SDK_DIR` and `LYNX_CORE_JS_PATH`, and never keep a copied core script in a test fixture; avoid separate downloader scripts unless they are needed outside Cargo. Do not add a separate engine-bridge CI job while `lynx` remains in the root Cargo workspace; let the main Rust workflow run it with the rest of the workspace. The Linux workspace test job should install the `libepoxy0` system package before loading `libLynx_clay.so`. Missing runtime configuration should fail runtime integration tests instead of skipping them.
 
+Update default runtime URLs and their matching SHA-256 values in `tools/runtime_build.rs`, which is shared by the engine bridge, headless runner, and UI Judge Server packaging. Download object names may differ from the installed names; preserve `libLynx_clay.so` and `resources/lynx_core.js` as the Linux SDK destinations.
+
 When `LYNX_CORE_JS_PATH` is absent, resolve the core script from `$LYNX_SDK_DIR/resources/lynx_core.js`; reuse an existing explicitly configured SDK resource and download a missing one into that same SDK directory. Keep runtime environment overrides ahead of Cargo-injected build defaults.
 
 The desktop runtime resolves `lynx_core.js` from the current executable's platform-standard resource location. Runtime-backed test binaries must install the resolved SDK artifact there before creating a view; treat that target output as generated runtime state, never as a checked-in fixture.
