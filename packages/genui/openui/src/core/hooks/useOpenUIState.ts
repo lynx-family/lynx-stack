@@ -22,7 +22,6 @@ import type {
   Store,
   ToolProvider,
 } from '@openuidev/lang-core';
-import type React from 'react';
 
 import {
   useCallback,
@@ -31,6 +30,7 @@ import {
   useRef,
   useSyncExternalStore,
 } from '@lynx-js/react';
+import type { ReactNode } from '@lynx-js/react';
 
 import type { LegacyActionConfig } from '../../catalog/Action/index.jsx';
 import type { OpenUIContextValue } from '../context.jsx';
@@ -141,7 +141,7 @@ export function useOpenUIState(
     toolProvider,
     onError,
   }: UseOpenUIStateOptions,
-  renderDeep: (value: unknown) => React.ReactNode,
+  renderDeep: (value: unknown) => ReactNode,
 ): OpenUIState {
   // ─── Streaming parser (incremental — caches completed statements) ───
   const sp = useMemo(
