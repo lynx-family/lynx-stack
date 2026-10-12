@@ -3862,6 +3862,7 @@ mod tests {
     });
   </script>
 </lynx>"#;
+    let lynxml_store = ScreenshotStore::in_memory();
     let response = runtime
       .block_on(screenshot_lynxml(
         State(AppState {
@@ -3869,7 +3870,7 @@ mod tests {
 
           zip_capture_backend: ZipCaptureBackend::IsolatedProcess,
           zip_capture_processes: ZipCaptureProcesses::new(),
-          screenshot_store: ScreenshotStore::in_memory(),
+          screenshot_store: lynxml_store.clone(),
         }),
         multipart_request(
           "screenshot",
@@ -3883,9 +3884,7 @@ mod tests {
         ),
       ))
       .expect("render raw LynXML source");
-    let bmp = runtime
-      .block_on(axum::body::to_bytes(response.into_body(), MAX_IMAGE_BYTES))
-      .expect("read LynXML screenshot response");
+    let bmp = runtime.block_on(uploaded_screenshot(&lynxml_store, response));
     let rgb = image::load_from_memory(&bmp)
       .expect("decode LynXML screenshot")
       .to_rgb8();
@@ -3934,6 +3933,7 @@ mod tests {
         ("images/relative.png", relative_png),
         ("images/absolute.png", absolute_png),
       ]);
+      let store = ScreenshotStore::in_memory();
       let response = runtime
         .block_on(screenshot_zip_upload(
           State(AppState {
@@ -3941,15 +3941,12 @@ mod tests {
 
             zip_capture_backend: ZipCaptureBackend::IsolatedProcess,
             zip_capture_processes: ZipCaptureProcesses::new(),
-            screenshot_store: ScreenshotStore::in_memory(),
+            screenshot_store: store.clone(),
           }),
           zip_request("zip:///index.lynxml", upload),
         ))
         .expect("render ZIP image resources");
-      assert_eq!(response.status(), StatusCode::OK);
-      let bmp = runtime
-        .block_on(axum::body::to_bytes(response.into_body(), MAX_IMAGE_BYTES))
-        .expect("read ZIP screenshot response");
+      let bmp = runtime.block_on(uploaded_screenshot(&store, response));
       let rgb = image::load_from_memory(&bmp)
         .expect("decode ZIP screenshot")
         .to_rgb8();

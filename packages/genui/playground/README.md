@@ -237,10 +237,12 @@ Enter `UI_JUDGE_SERVER_URL` in Bench's inline run configuration when enabling UI
 Judge for A2UI, OpenUI, or Lynx XML groups. A credential-free HTTP(S) URL is saved only in browser local storage;
 it is never sent to GenUI Server and has no server environment fallback. The
 Playground checks `/health`, requests each screenshot directly with multipart,
-and uploads the resulting BMP to GenUI Server for PNG conversion and model
-scoring. Keep the Bench page open during evaluation. The screenshot service or
-its gateway must permit the Playground origin through CORS, and its URL must
-be reachable under the browser's HTTPS and local-network policies. See
+downloads the BMP from the TOS URL the service returns, and uploads it to
+GenUI Server for PNG conversion and model scoring. Keep the Bench page open
+during evaluation. The screenshot service or its gateway must permit the
+Playground origin through CORS, the TOS bucket that stores the screenshots must
+allow CORS reads from it as well, and both URLs must be reachable under the
+browser's HTTPS and local-network policies. See
 [`../ui-judge/README.md`](../ui-judge/README.md#http-server) for service startup.
 
 Conversation **share** links and Web / Native Preview upload through the GenUI

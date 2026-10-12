@@ -14,6 +14,7 @@ import {
 
 const MAX_SCREENSHOT_BYTES = 10 * 1024 * 1024 + 1024;
 const MAX_CAPTURE_FORM_BYTES = 10 * 1024 * 1024;
+const MAX_SCREENSHOT_RESPONSE_CHARS = 4096;
 const CAPTURE_ID = /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/iu;
 
 interface ScreenshotRequest {
@@ -164,6 +165,73 @@ async function screenshotBlob(
   }
 }
 
+function mediaType(response: Response): string | undefined {
+  return response.headers.get('content-type')?.split(';')[0]?.trim()
+    .toLowerCase();
+}
+
+/** Extracts the HTTP(S) object URL from the screenshot service's JSON reply. */
+function screenshotUrl(text: string): string {
+  let reply: unknown;
+  try {
+    reply = JSON.parse(text);
+  } catch {
+    reply = undefined;
+  }
+  const url = typeof reply === 'object' && reply !== null && 'url' in reply
+    ? (reply as { url?: unknown }).url
+    : undefined;
+  if (typeof url === 'string') {
+    try {
+      const parsed = new URL(url);
+      if (
+        (parsed.protocol === 'https:' || parsed.protocol === 'http:')
+        && !parsed.username
+        && !parsed.password
+      ) {
+        return parsed.href;
+      }
+    } catch {
+      // Fall through to the shared error.
+    }
+  }
+  throw new Error('Screenshot service returned an invalid screenshot URL.');
+}
+
+/**
+ * UI Judge uploads each capture to object storage and answers with its public
+ * URL, so the BMP is downloaded from there. The storage bucket must allow CORS
+ * reads from the Playground origin.
+ */
+async function downloadScreenshot(
+  response: Response,
+  fetchImpl: typeof fetch,
+  signal: AbortSignal,
+): Promise<Blob> {
+  if (mediaType(response) !== 'application/json') {
+    await response.body?.cancel().catch(() => undefined);
+    throw new Error('Screenshot service did not return a screenshot URL.');
+  }
+  const text = await response.text();
+  if (text.length > MAX_SCREENSHOT_RESPONSE_CHARS) {
+    throw new Error('Screenshot service returned an oversized response.');
+  }
+  const image = await fetchImpl(screenshotUrl(text), {
+    credentials: 'omit',
+    redirect: 'error',
+    signal,
+  });
+  if (!image.ok) {
+    await image.body?.cancel().catch(() => undefined);
+    throw new Error(`Screenshot download returned HTTP ${image.status}.`);
+  }
+  if (mediaType(image) !== 'image/bmp') {
+    await image.body?.cancel().catch(() => undefined);
+    throw new Error('The stored screenshot is not a BMP image.');
+  }
+  return screenshotBlob(image, signal);
+}
+
 /** One browser-owned capture worker per live Bench, safe across SSE replay. */
 export function createBenchScreenshotRelay(options: {
   jobUrl: string;
@@ -259,14 +327,7 @@ export function createBenchScreenshotRelay(options: {
             }`,
           );
         }
-        if (
-          screenshot.headers.get('content-type')?.split(';')[0]?.trim()
-            !== 'image/bmp'
-        ) {
-          await screenshot.body?.cancel().catch(() => undefined);
-          throw new Error('Screenshot service did not return a BMP image.');
-        }
-        body = await screenshotBlob(screenshot, signal);
+        body = await downloadScreenshot(screenshot, fetchImpl, signal);
       }
       contentType = 'image/bmp';
     } catch (error) {

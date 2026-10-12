@@ -129,7 +129,8 @@ Objects are written to `<prefix>/<uuid>/screenshot.bmp` with
 `Content-Type: image/bmp` and `Cache-Control: public, max-age=1800`; the server
 sets no object ACL. Grant the credential only `tos:PutObject` on that prefix.
 The bucket policy must allow public reads, because the returned URL is unsigned,
-and should expire the prefix with a lifecycle rule, since the server never
+and browser callers such as the Playground also need CORS reads enabled on it. It
+should expire the prefix with a lifecycle rule, since the server never
 deletes objects. The credentials stay in the server process; isolated render
 children do not inherit them.
 Use `GET /health` for a readiness check returning `{"status":"ok"}`. Use `POST /compare` to compare two uploaded images without rendering a

@@ -24,6 +24,18 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
+const screenshotUrl = 'https://assets.test/screenshot/6f1c/screenshot.bmp';
+
+/** UI Judge answers with the public URL of the BMP it uploaded. */
+function uploadedScreenshot() {
+  return Response.json({ url: screenshotUrl });
+}
+
+/** The BMP as object storage serves it. */
+function storedBmp(bytes: BodyInit = 'BM') {
+  return new Response(bytes, { headers: { 'Content-Type': 'image/bmp' } });
+}
+
 function xmlTask() {
   return Response.json({
     path: 'screenshot/zip/upload',
@@ -41,11 +53,11 @@ test('queues announced IDs immediately but fetches and captures only after the p
   const fetchImpl = rstest.fn<typeof fetch>()
     .mockResolvedValueOnce(xmlTask())
     .mockImplementationOnce(() => captured.promise)
+    .mockResolvedValueOnce(storedBmp())
     .mockImplementationOnce(() => uploaded.promise)
     .mockResolvedValueOnce(xmlTask())
-    .mockResolvedValueOnce(
-      new Response('BM', { headers: { 'Content-Type': 'image/bmp' } }),
-    )
+    .mockResolvedValueOnce(uploadedScreenshot())
+    .mockResolvedValueOnce(storedBmp())
     .mockResolvedValueOnce(Response.json({ ok: true }));
   const controller = new AbortController();
   const relay = createBenchScreenshotRelay({
@@ -64,17 +76,16 @@ test('queues announced IDs immediately but fetches and captures only after the p
       url === `${jobUrl}/screenshots/${nextId}`
     ),
   ).toBe(false);
-  captured.resolve(
-    new Response('BM', { headers: { 'Content-Type': 'image/bmp' } }),
-  );
-  await expect.poll(() => fetchImpl.mock.calls.length).toBe(3);
-  expect(fetchImpl.mock.calls[2]?.[1]?.method).toBe('POST');
+  captured.resolve(uploadedScreenshot());
+  await expect.poll(() => fetchImpl.mock.calls.length).toBe(4);
+  expect(fetchImpl.mock.calls[2]?.[0]).toBe(screenshotUrl);
+  expect(fetchImpl.mock.calls[3]?.[1]?.method).toBe('POST');
   uploaded.resolve(Response.json({ ok: true }));
-  await expect.poll(() => fetchImpl.mock.calls.length).toBe(6);
-  expect(fetchImpl.mock.calls[3]?.[0]).toBe(`${jobUrl}/screenshots/${nextId}`);
+  await expect.poll(() => fetchImpl.mock.calls.length).toBe(8);
+  expect(fetchImpl.mock.calls[4]?.[0]).toBe(`${jobUrl}/screenshots/${nextId}`);
   relay(captureId);
   relay(nextId);
-  expect(fetchImpl).toHaveBeenCalledTimes(6);
+  expect(fetchImpl).toHaveBeenCalledTimes(8);
   expect(onError).not.toHaveBeenCalled();
   controller.abort();
 });
@@ -189,9 +200,8 @@ test.each(
           timeoutMs: 1000,
         }),
       )
-      .mockResolvedValueOnce(
-        new Response(bytes, { headers: { 'Content-Type': 'image/bmp' } }),
-      )
+      .mockResolvedValueOnce(uploadedScreenshot())
+      .mockResolvedValueOnce(storedBmp(bytes))
       .mockResolvedValueOnce(Response.json({ ok: true }));
     const relay = createBenchScreenshotRelay({
       jobUrl,
@@ -203,7 +213,7 @@ test.each(
     });
     relay(captureId);
     relay(captureId);
-    await expect.poll(() => fetchImpl.mock.calls.length).toBe(3);
+    await expect.poll(() => fetchImpl.mock.calls.length).toBe(4);
     expect((fetchImpl.mock.calls[1]?.[0] as URL).href).toBe(
       `${serverUrl}${path}`,
     );
@@ -228,7 +238,14 @@ test.each(
       screenshotSettleMs: String(screenshotSettleMs ?? 100),
     });
     expect(init).toMatchObject({ credentials: 'omit', redirect: 'error' });
-    const upload = fetchImpl.mock.calls[2];
+    const download = fetchImpl.mock.calls[2];
+    expect(download?.[0]).toBe(screenshotUrl);
+    expect(download?.[1]).toMatchObject({
+      credentials: 'omit',
+      redirect: 'error',
+    });
+    expect(download?.[1]?.method).toBeUndefined();
+    const upload = fetchImpl.mock.calls[3];
     expect(upload?.[0]).toBe(`${jobUrl}/screenshots/${captureId}`);
     expect(upload?.[1]?.headers).toEqual({ 'Content-Type': 'image/bmp' });
     expect(new Uint8Array(await (upload?.[1]?.body as Blob).arrayBuffer()))
@@ -274,9 +291,8 @@ test('retries upload without recapturing and ignores work after cancellation', a
         timeoutMs: 1000,
       }),
     )
-    .mockResolvedValueOnce(
-      new Response('BM', { headers: { 'Content-Type': 'image/bmp' } }),
-    )
+    .mockResolvedValueOnce(uploadedScreenshot())
+    .mockResolvedValueOnce(storedBmp())
     .mockRejectedValueOnce(new TypeError('Lost upload acknowledgement'))
     .mockResolvedValueOnce(new Response(null, { status: 409 }));
   const relay = createBenchScreenshotRelay({
@@ -287,13 +303,13 @@ test('retries upload without recapturing and ignores work after cancellation', a
     fetch: fetchImpl,
   });
   relay(captureId);
-  await expect.poll(() => fetchImpl.mock.calls.length).toBe(4);
-  expect(fetchImpl.mock.calls[3]?.[1]?.body).toBe(
-    fetchImpl.mock.calls[2]?.[1]?.body,
+  await expect.poll(() => fetchImpl.mock.calls.length).toBe(5);
+  expect(fetchImpl.mock.calls[4]?.[1]?.body).toBe(
+    fetchImpl.mock.calls[3]?.[1]?.body,
   );
   controller.abort();
   relay('22345678-1234-1234-1234-123456789abc');
-  expect(fetchImpl).toHaveBeenCalledTimes(4);
+  expect(fetchImpl).toHaveBeenCalledTimes(5);
 });
 
 test.each([
@@ -463,9 +479,8 @@ test('captures the published ReactLynx ZIP by URL without sending binary assets'
       },
       timeoutMs: 1000,
     }))
-    .mockResolvedValueOnce(
-      new Response('BM', { headers: { 'Content-Type': 'image/bmp' } }),
-    )
+    .mockResolvedValueOnce(uploadedScreenshot())
+    .mockResolvedValueOnce(storedBmp())
     .mockResolvedValueOnce(Response.json({ ok: true }));
   const relay = createBenchScreenshotRelay({
     jobUrl,
@@ -477,7 +492,7 @@ test('captures the published ReactLynx ZIP by URL without sending binary assets'
   });
   relay(captureId);
   relay(captureId);
-  await expect.poll(() => fetchImpl.mock.calls.length).toBe(3);
+  await expect.poll(() => fetchImpl.mock.calls.length).toBe(4);
   expect(fetchImpl.mock.calls[1]?.[0]).toEqual(
     new URL('screenshot/zip/url', serverUrl),
   );
@@ -492,7 +507,134 @@ test('captures the published ReactLynx ZIP by URL without sending binary assets'
     'url',
     'width',
   ]);
-  expect(fetchImpl.mock.calls[2]?.[1]?.headers).toEqual({
+  expect(fetchImpl.mock.calls[2]?.[0]).toBe(screenshotUrl);
+  expect(fetchImpl.mock.calls[3]?.[1]?.headers).toEqual({
     'Content-Type': 'image/bmp',
   });
 });
+
+test.each([
+  {
+    name: 'a bare BMP',
+    reply: () => storedBmp(),
+    error: 'did not return a screenshot URL',
+  },
+  {
+    name: 'invalid JSON',
+    reply: () =>
+      new Response('{', { headers: { 'Content-Type': 'application/json' } }),
+    error: 'invalid screenshot URL',
+  },
+  { name: 'no URL', reply: () => Response.json({}), error: 'invalid' },
+  {
+    name: 'a non-string URL',
+    reply: () => Response.json({ url: 5 }),
+    error: 'invalid',
+  },
+  {
+    name: 'a relative URL',
+    reply: () => Response.json({ url: '/screenshot.bmp' }),
+    error: 'invalid',
+  },
+  {
+    name: 'a non-HTTP(S) URL',
+    reply: () => Response.json({ url: 'ftp://assets.test/screenshot.bmp' }),
+    error: 'invalid',
+  },
+  {
+    name: 'a URL with credentials',
+    reply: () =>
+      Response.json({ url: 'https://user:pass@assets.test/screenshot.bmp' }),
+    error: 'invalid',
+  },
+  {
+    name: 'an oversized body',
+    reply: () =>
+      Response.json({ url: `https://assets.test/${'a'.repeat(5000)}` }),
+    error: 'oversized',
+  },
+])(
+  'uploads a capture failure when the screenshot service returns $name',
+  async ({ reply, error }) => {
+    const fetchImpl = rstest.fn<typeof fetch>()
+      .mockResolvedValueOnce(xmlTask())
+      .mockResolvedValueOnce(reply())
+      .mockResolvedValueOnce(Response.json({ ok: true }));
+    const relay = createBenchScreenshotRelay({
+      jobUrl,
+      serverUrl,
+      signal: new AbortController().signal,
+      onError: rstest.fn(),
+      fetch: fetchImpl,
+    });
+    relay(captureId);
+    await expect.poll(() => fetchImpl.mock.calls.length).toBe(3);
+    // Nothing is downloaded unless the reply names a safe URL.
+    expect(fetchImpl.mock.calls[2]?.[0]).toBe(
+      `${jobUrl}/screenshots/${captureId}`,
+    );
+    const failure = JSON.parse(
+      fetchImpl.mock.calls[2]?.[1]?.body as string,
+    ) as { error: string };
+    expect(failure.error).toContain('Browser screenshot failed:');
+    expect(failure.error).toContain(error);
+  },
+);
+
+test.each([
+  {
+    name: 'an HTTP error',
+    image: () => new Response('denied', { status: 403 }),
+    error: 'Screenshot download returned HTTP 403',
+  },
+  {
+    name: 'a non-BMP content type',
+    image: () =>
+      new Response('<html/>', { headers: { 'Content-Type': 'text/html' } }),
+    error: 'not a BMP image',
+  },
+  {
+    name: 'an oversized object',
+    image: () =>
+      new Response('BM', {
+        headers: {
+          'Content-Type': 'image/bmp',
+          'Content-Length': String(10 * 1024 * 1024 + 2048),
+        },
+      }),
+    error: 'exceeds the upload size limit',
+  },
+  {
+    name: 'a network error',
+    image: (): Response => {
+      throw new TypeError('Failed to fetch');
+    },
+    error: 'Failed to fetch',
+  },
+])(
+  'uploads a capture failure when the stored screenshot download fails with $name',
+  async ({ image, error }) => {
+    const fetchImpl = rstest.fn<typeof fetch>()
+      .mockResolvedValueOnce(xmlTask())
+      .mockResolvedValueOnce(uploadedScreenshot())
+      .mockImplementationOnce(() => Promise.resolve().then(image))
+      .mockResolvedValueOnce(Response.json({ ok: true }));
+    const relay = createBenchScreenshotRelay({
+      jobUrl,
+      serverUrl,
+      signal: new AbortController().signal,
+      onError: rstest.fn(),
+      fetch: fetchImpl,
+    });
+    relay(captureId);
+    await expect.poll(() => fetchImpl.mock.calls.length).toBe(4);
+    expect(fetchImpl.mock.calls[2]?.[0]).toBe(screenshotUrl);
+    expect(fetchImpl.mock.calls[3]?.[1]?.headers).toEqual({
+      'Content-Type': 'application/json',
+    });
+    const failure = JSON.parse(
+      fetchImpl.mock.calls[3]?.[1]?.body as string,
+    ) as { error: string };
+    expect(failure.error).toContain(error);
+  },
+);

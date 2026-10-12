@@ -509,8 +509,10 @@ must never read it or access the screenshot service. The browser checks
 For each `screenshot-requested` SSE task, it fetches the pending task's capture
 fields from `/a2ui/bench/jobs/:jobId/screenshots/:captureId`, requests multipart
 `/screenshot/template` or `/screenshot/lynxml` directly from the configured service,
-and posts raw BMP or a JSON capture error to the task endpoint. Bound uploads,
-timeouts, replay, and cancellation. The deployment must allow browser CORS.
+downloads the BMP from the TOS URL in its JSON reply, and posts raw BMP or a JSON
+capture error to the task endpoint. Bound downloads, uploads, timeouts, replay,
+and cancellation. The deployment must allow browser CORS, including on the TOS
+bucket that stores the screenshots.
 GenUI Server validates the uploaded BMP, converts
 the capture to PNG and runs visual-correctness and four GEQI evaluations with
 the Bench group's selected model, or the GenUI default. Reuse
