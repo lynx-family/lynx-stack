@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { useCallback, useEffect, useRef } from 'react';
+import { createElement, useCallback, useEffect, useRef, useState } from 'react';
 
 import { useBundledRender } from './bundled.js';
 import type { OpenUILiveResponse } from '../../lynx-src/openui/liveResponse.js';
@@ -21,6 +21,10 @@ export function OpenUIRender() {
     lynxViewRef,
     previewNavigationToken,
   } = runtime;
+  const sourcePending = !!initData?.rawTextUrl
+    && initData.rawText === undefined
+    && !initData.liveStream;
+  const [sourceError, setSourceError] = useState('');
 
   const readyRef = useRef(false);
   const pendingRef = useRef<
@@ -85,10 +89,12 @@ export function OpenUIRender() {
     const rawTextUrl = initData?.rawTextUrl;
     if (!rawTextUrl) return;
     let cancelled = false;
+    setSourceError('');
     void (async () => {
       try {
         const res = await window.fetch(rawTextUrl);
-        if (!res.ok || cancelled) return;
+        if (cancelled) return;
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const rawText = await res.text();
         if (!cancelled) {
           setInitData(prev =>
@@ -97,8 +103,10 @@ export function OpenUIRender() {
               : prev
           );
         }
-      } catch {
-        // ignore; the Lynx app will keep its fallback scenario
+      } catch (error) {
+        if (!cancelled) {
+          setSourceError(`Unable to load OpenUI source: ${String(error)}`);
+        }
       }
     })();
     return () => {
@@ -107,6 +115,7 @@ export function OpenUIRender() {
   }, [initData?.rawTextUrl, setInitData]);
 
   useEffect(() => {
+    if (sourcePending) return;
     const lynxView = lynxViewRef.current;
     if (!lynxView) return;
     lynxView.onNativeModulesCall = (name, data, moduleName) => {
@@ -134,7 +143,7 @@ export function OpenUIRender() {
     return () => {
       lynxView.onNativeModulesCall = undefined;
     };
-  }, [lynxViewRef, markReady, previewNavigationToken]);
+  }, [lynxViewRef, markReady, previewNavigationToken, sourcePending]);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent<unknown>) => {
@@ -150,5 +159,6 @@ export function OpenUIRender() {
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  return view;
+  if (sourceError) return createElement('p', { role: 'alert' }, sourceError);
+  return sourcePending ? null : view;
 }

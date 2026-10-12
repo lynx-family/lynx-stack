@@ -115,6 +115,7 @@ interface A2UIPreviewSource {
 interface OpenUIPreviewSource {
   kind: 'openui';
   rawText: string;
+  sourcePath?: string;
   theme?: 'light' | 'dark';
   liveAction?: boolean;
   playbackMode?: boolean;
@@ -1076,18 +1077,25 @@ export function PreviewPanel(props: PreviewPanelProps) {
       return;
     }
 
+    const sourceUrl = previewSource.sourcePath
+      ? new URL(previewSource.sourcePath, baseUrl).toString()
+      : undefined;
     const inlineUrl = buildOpenUIRenderUrl({
       rawText: previewSource.liveStream ? '' : previewSource.rawText,
+      rawTextUrl: previewSource.liveStream ? undefined : sourceUrl,
       liveStream: previewSource.liveStream,
       theme: previewSource.theme,
       speed,
       liveAction: previewSource.liveAction,
       playbackMode: previewSource.playbackMode,
+      instant: !!sourceUrl && !previewSource.playbackMode,
     }, baseUrl);
     const inlineShareUrl = buildOpenUIRenderUrl({
       rawText: previewSource.rawText,
+      rawTextUrl: sourceUrl,
       theme: previewSource.theme,
       speed,
+      instant: !!sourceUrl,
     }, baseUrl);
     const canInline = canInlineOpenUIRenderUrl(inlineUrl)
       && canInlineOpenUIRenderUrl(inlineShareUrl);
@@ -1121,7 +1129,11 @@ export function PreviewPanel(props: PreviewPanelProps) {
     };
 
     if (canInline) {
-      setOpenUILynxDevUrl({ rawText: previewSource.rawText });
+      setOpenUILynxDevUrl(
+        sourceUrl
+          ? { rawTextUrl: sourceUrl }
+          : { rawText: previewSource.rawText },
+      );
       return;
     }
 

@@ -18,7 +18,7 @@ export default defineConfig({
       module: {
         rules: [
           {
-            test: /\.lynxml$/,
+            test: /\.(?:lynxml|openui)$/,
             resourceQuery: /raw/,
             type: 'asset/source',
           },

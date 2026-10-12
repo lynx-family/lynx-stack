@@ -1,0 +1,62 @@
+$budget = "¥15,000–25,000"
+$priority = "两者平衡，重量最好控制在 1kg 内"
+$submitted = false
+$savedBudget = ""
+$savedPriority = ""
+root = Column([intro, focalGuide, currentGear, recommendations, whySony, focalExperiment, preferences, conclusion], "start", "stretch", "xl")
+
+intro = Column([Text("旅行相机，怎么选？", "h2"), Text("人和大景同框 · 环境人像 · 一机一镜", "caption"), TextContent("我想买一台适合旅行拍照的相机，主要拍人和山、人和大树、人和寺庙、人和街巷、人和海边。目前已有 Sony ZV-1M2、富士 X100F、DJI Pocket 3 和 iPhone 17 Pro。"), TextContent("结合你的拍摄需求和已有设备，我会把下一台相机的重点放在旅行静态摄影、高画质和可换镜头能力上。"), TextContent("你需要的是一套擅长环境人像（Environmental Portrait）的摄影系统。", "large-heavy"), TextContent("让人、建筑与自然共同构成画面：站在巨大山脊下显得渺小，在古寺门前呈现建筑的尺度，或者在街巷里成为城市故事的一部分。")], "start", "stretch", "m")
+
+focalGuide = Column([Text("一、你的拍摄风格，适合什么焦段？", "h4"), sceneRowOne, sceneRowTwo, Text("以下图片为拍摄风格参考，并非特定相机实拍样张。", "caption"), TextContent("核心焦段：20–35mm（全画幅等效），并希望能够延伸到 50–70mm。", "large-heavy"), focalNotes, TextContent("先配一支旅行变焦镜头，比再买一台固定 28mm 或 35mm 镜头的相机更灵活。")], "start", "stretch", "m")
+sceneRowOne = Row([mountainScene, forestScene], "start", "stretch", "s")
+mountainScene = Column([Image("./demos/openui/travel-camera/mountain.jpg", "cover", "largeFeature"), TextContent("人 × 山川", "small-heavy"), Text("20–28mm：展现空间、山势和人物的渺小感。", "caption")], "start", "stretch", "xs")
+forestScene = Column([Image("./demos/openui/travel-camera/forest.jpg", "cover", "largeFeature"), TextContent("人 × 巨树", "small-heavy"), Text("20–35mm：强调树冠、树干和人的尺度对比。", "caption")], "start", "stretch", "xs")
+sceneRowTwo = Row([templeScene, streetScene], "start", "stretch", "s")
+templeScene = Column([Image("./demos/openui/travel-camera/temple.jpg", "cover", "largeFeature"), TextContent("人 × 寺庙", "small-heavy"), Text("24–35mm：兼顾建筑结构和人物比例。", "caption")], "start", "stretch", "xs")
+streetScene = Column([Image("./demos/openui/travel-camera/street.jpg", "cover", "largeFeature"), TextContent("人 × 街巷", "small-heavy"), Text("28–50mm：自然透视，富有街头叙事感。", "caption")], "start", "stretch", "xs")
+focalNotes = List([TextContent("• 16–20mm：适合宏大的空间，注意边缘人物的拉伸变形。"), TextContent("• 24–28mm：最值得练习的环境人像焦段。"), TextContent("• 35mm：适合自然、克制、有叙事感的旅行照片。"), TextContent("• 50–70mm：表现远山层次、压缩感和更突出的主体。")], null, "vertical", "stretch", "s")
+
+currentGear = Column([Text("二、你现有四台设备，究竟缺什么？", "h4"), gearTable, TextContent("你的 ZV-1M2 已经覆盖 18–50mm 等效。", "large-heavy"), TextContent("需要补足的是照片质感、复杂光线下的表现、镜头选择和可长期使用的摄影系统。升级的价值应该明显高于手头的 ZV-1M2 和 X100F。")], "start", "stretch", "m")
+gearTable = List([gearHeader, gearSony, gearFuji, gearDji, gearPhone], null, "vertical", "stretch", "s", true)
+gearHeader = Row([Column([TextContent("设备", "small-heavy")]), Column([TextContent("已有优势", "small-heavy")]), Column([TextContent("主要限制", "small-heavy")])], "start", "start", "s")
+gearSony = Row([Column([Text("Sony ZV-1M2", "caption")]), Column([Text("18–50mm 等效，焦段契合", "caption")]), Column([Text("1 英寸传感器，复杂光线下有差距", "caption")])], "start", "start", "s")
+gearFuji = Row([Column([Text("富士 X100F", "caption")]), Column([Text("APS-C、35mm 等效、色彩与街拍", "caption")]), Column([Text("固定焦距，大寺庙与山谷不够灵活", "caption")])], "start", "start", "s")
+gearDji = Row([Column([Text("DJI Pocket 3", "caption")]), Column([Text("旅行动态影像、边走边拍", "caption")]), Column([Text("更擅长视频，静态照片并非强项", "caption")])], "start", "start", "s")
+gearPhone = Row([Column([Text("iPhone 17 Pro", "caption")]), Column([Text("超广角、计算摄影、随手拍", "caption")]), Column([Text("自然细节与后期调整空间有限", "caption")])], "start", "start", "s")
+
+recommendations = Column([Text("三、我最推荐的三套相机", "h4"), TextContent("按一机一镜来选，旅行时不用背三四支镜头。"), sonyKit, Divider(), fujiLightKit, Divider(), fujiOutdoorKit, Text("重量为机身含电池与镜头的近似合计，不含遮光罩及其他附件。", "caption"), Text("三套方案的核心对比", "h5"), comparison, Text("防护不代表防水，雨雪环境仍需保护。", "caption"), TextContent("希望画质有明显跃升：Sony A7C II。\n希望走一整天也愿意带：富士 X-T50。\n喜欢拨盘、取景器和摄影过程：富士 X-T5。"), TextContent("你已有 X100F，富士的色彩系统会更熟悉；从设备互补性看，我仍更偏向 A7C II。")], "start", "stretch", "m")
+sonyKit = Row([Image("./demos/openui/travel-camera/sony-a7c-ii.jpg", "contain", "smallFeature"), sonyDescription], "start", "start", "m")
+sonyDescription = Column([Tag("综合首选"), Text("Sony A7C II + FE 20–70mm F4 G", "h5"), Text("3300 万像素全画幅 · 约 1.00kg", "caption"), TextContent("最适合：山川、海岸、寺庙、街巷全部覆盖。", "small-heavy"), TextContent("20mm 拍恢宏自然景观，35mm 拍环境人像，70mm 拍人物与远山的关系。对焦稳定，宽容度和后期空间充足。", "small"), Text("取舍：镜头相对明显，徒步时没有 X100F 那么轻巧。", "caption")], "start", "stretch", "s")
+fujiLightKit = Row([Image("./demos/openui/travel-camera/fujifilm-x-t50.jpg", "contain", "smallFeature"), fujiLightDescription], "start", "start", "m")
+fujiLightDescription = Column([Text("Fujifilm X-T50 + XF 16–50mm", "h5"), Text("4020 万像素 APS-C · 约 678g", "caption"), TextContent("最适合：轻量旅行、随走随拍、偏胶片感的照片。", "small-heavy"), TextContent("等效 24–76mm，体积和重量控制出色。胶片模拟适合人文、建筑与自然题材。", "small"), Text("取舍：广角端只有等效 24mm，机身防护定位不及 X-T5。", "caption")], "start", "stretch", "s")
+fujiOutdoorKit = Row([Image("./demos/openui/travel-camera/fujifilm-x-t5.jpg", "contain", "smallFeature"), fujiOutdoorDescription], "start", "start", "m")
+fujiOutdoorDescription = Column([Text("Fujifilm X-T5 + XF 16–50mm", "h5"), Text("4020 万像素 APS-C · 约 797g", "caption"), TextContent("最适合：摄影体验优先、徒步风景、人文与纪实。", "small-heavy"), TextContent("更完整的实体操控、防护和双卡槽，三向翻折屏适合竖构图和低角度取景。喜欢 X100F 的拍照过程，会比较容易接受它。", "small"), Text("取舍：更大、更重，核心成像能力与 X-T50 接近。", "caption")], "start", "stretch", "s")
+comparison = List([comparisonHeader, lensRow, rangeRow, qualityRow, weightRow, colorRow, weatherRow, focusRow, complementRow], null, "vertical", "stretch", "s", true)
+comparisonHeader = Row([Column([TextContent("维度", "small-heavy")]), Column([TextContent("A7C II", "small-heavy")]), Column([TextContent("X-T50", "small-heavy")]), Column([TextContent("X-T5", "small-heavy")])], "start", "start", "xs")
+lensRow = Row([Column([Text("推荐镜头", "caption")]), Column([Text("20–70mm F4", "caption")]), Column([Text("16–50mm", "caption")]), Column([Text("16–50mm", "caption")])], "start", "start", "xs")
+rangeRow = Row([Column([Text("等效焦段", "caption")]), Column([Text("20–70mm", "caption")]), Column([Text("24–76mm", "caption")]), Column([Text("24–76mm", "caption")])], "start", "start", "xs")
+qualityRow = Row([Column([Text("画质潜力", "caption")]), Column([Text("全画幅优势", "caption")]), Column([Text("高像素 APS-C", "caption")]), Column([Text("高像素 APS-C", "caption")])], "start", "start", "xs")
+weightRow = Row([Column([Text("旅行轻便性", "caption")]), Column([Text("中", "caption")]), Column([Text("最好", "caption")]), Column([Text("较好", "caption")])], "start", "start", "xs")
+colorRow = Row([Column([Text("直出色彩", "caption")]), Column([Text("较少", "caption")]), Column([Text("丰富", "caption")]), Column([Text("丰富", "caption")])], "start", "start", "xs")
+weatherRow = Row([Column([Text("徒步与天气", "caption")]), Column([Text("有一定防护", "caption")]), Column([Text("更需注意", "caption")]), Column([Text("更适合", "caption")])], "start", "start", "xs")
+focusRow = Row([Column([Text("对焦追踪", "caption")]), Column([Text("非常强", "caption")]), Column([Text("良好", "caption")]), Column([Text("良好", "caption")])], "start", "start", "xs")
+complementRow = Row([Column([Text("设备互补", "caption")]), Column([Text("最明显", "caption")]), Column([Text("比较明显", "caption")]), Column([Text("比较明显", "caption")])], "start", "start", "xs")
+
+whySony = Column([Text("四、为什么更偏向 A7C II + 20–70mm？", "h4"), TextContent("这套组合最有可能帮你拍出现有设备难以稳定实现的画面。"), inspiration, TextContent("1. 20mm 是这套组合的独特价值", "large-heavy"), TextContent("许多旅行变焦镜头从 24mm 或 28mm 开始，20mm 对巨大建筑、山谷和海岸线尤其有用。站在狭窄广场或巨树下面，你未必有足够空间后退。"), TextContent("ZV-1M2 也能拍到 18mm；升级的价值是在广视角下获得更强的原始画质与后期余地。"), TextContent("2. 你不一定需要大光圈人像镜头", "large-heavy"), TextContent("你的目标是让环境参与叙事。白天 F4–F8 往往就足够，比起光圈，我更看重焦段、边缘成像、对焦和重量。"), TextContent("3. 新相机不会完全替代现有设备", "large-heavy"), deviceRoles, TextContent("ZV-1M2 与这套系统的功能重合较明显，未来可以根据实际使用频率决定是否保留。")], "start", "stretch", "m")
+inspiration = Row([Column([Image("./demos/openui/travel-camera/wide-mountain.jpg", "cover", "header")]), Column([Image("./demos/openui/travel-camera/wide-village.jpg", "cover", "header")]), Column([Image("./demos/openui/travel-camera/wide-coast.jpg", "cover", "header")])], "start", "stretch", "xs")
+deviceRoles = List([Row([TextContent("Sony A7C II", "small-heavy"), Text("旅行摄影主机", "caption")], "between", "center", "s", true), Row([TextContent("Fujifilm X100F", "small-heavy"), Text("城市街拍、胶片模拟", "caption")], "between", "center", "s", true), Row([TextContent("DJI Pocket 3", "small-heavy"), Text("旅行视频、动态记录", "caption")], "between", "center", "s", true), Row([TextContent("iPhone 17 Pro", "small-heavy"), Text("即时记录、随手分享", "caption")], "between", "center", "s", true)], null, "vertical", "stretch", "m", true)
+
+focalExperiment = Column([Text("五、买之前，先做一个焦段实验", "h4"), TextContent("用手头的 ZV-1M2，在下次出行时试拍同一个主题。"), Card([Text("旅行环境人像焦段实验", "h5"), focalTabs, Text("以上均为全画幅等效焦距。比较取景和人物比例，而不是只比较锐度。", "caption")], "card", "column", false, "m", "stretch", "start"), TextContent("如果你最喜欢 24mm、28mm、35mm，X-T50 这样的轻量系统可能更适合；如果 20mm 以下不可替代，A7C II + 20–70mm 的价值会更大。")], "start", "stretch", "m")
+focalTabs = Tabs([{ value: "18", title: "18mm", child: focal18 }, { value: "24", title: "24mm", child: focal24 }, { value: "35", title: "35mm", child: focal35 }, { value: "50", title: "50mm", child: focal50 }], "24")
+focal18 = TextContent("把大山、巨树和建筑都放进画面，强调人与环境的尺度。人物尽量靠近画面中间，留意边缘拉伸。")
+focal24 = TextContent("很适合把人物和环境都交代清楚，是最值得重点尝试的焦段。")
+focal35 = TextContent("自然、克制，更适合街巷与日常叙事。往后退几步，观察环境在画面中所占的比例。")
+focal50 = TextContent("收紧构图，让人物和远处的山、建筑更有层次。比较背景压缩感，而不只是人物大小。")
+
+preferences = Column([Divider(), Text("六、购买方向，再确认两点", "h4"), TextContent("既然已有四台设备，新相机应该带来你愿意一直带在身上的提升。"), preferenceForm, selectionResult], "start", "stretch", "m")
+preferenceForm = Card([TextContent("1. 预算（机身 + 镜头）", "small-heavy"), budgetPicker, Divider(), TextContent("2. 拍摄体验的第一优先级", "small-heavy"), priorityPicker, submitSelection], "card", "column", false, "m", "stretch", "start")
+budgetPicker = RadioGroup(["¥8,000–12,000", "¥12,000–15,000", "¥15,000–25,000", "¥25,000 以上"], $budget, "default", null, "$budget")
+priorityPicker = RadioGroup(["轻便第一，长途徒步也能携带", "画质第一，希望明显超越现有设备", "两者平衡，重量最好控制在 1kg 内"], $priority, "default", null, "$priority")
+submitSelection = Button("按我的预算继续筛选 →", Action([@Set($savedBudget, $budget), @Set($savedPriority, $priority), @Set($submitted, true)]), "primary")
+selectionResult = Column([TextContent($submitted ? "你的筛选结果" : "初步建议", "large-heavy"), Text($submitted ? "预算：" + $savedBudget + " · " + $savedPriority : "选择预算与偏好后，可以在这里查看进一步建议。", "caption"), TextContent($submitted ? ($savedBudget == "¥8,000–12,000" ? "先用现有设备完成焦段实验，再比较二手或促销套装；优先保证镜头覆盖和实际携带体验。" : ($savedPriority == "轻便第一，长途徒步也能携带" ? "优先试背 Fujifilm X-T50 + XF 16–50mm。约 678g 的组合更适合长途步行，也保留熟悉的富士色彩。" : ($savedPriority == "画质第一，希望明显超越现有设备" ? "优先试拍 Sony A7C II + FE 20–70mm F4 G。重点比较逆光、广角边缘与后期空间，再核对整套报价。" : "优先比较 Sony A7C II 与 Fujifilm X-T5 两套组合。带着镜头试背；偏画质与 20mm 选 Sony，偏操控与徒步选 X-T5。"))) : "Sony A7C II + FE 20–70mm F4 G；如果未来有连续数天的山地徒步，我会认真考虑更轻的富士组合。"), Text($submitted ? "这是按示例偏好给出的本地筛选建议，实际价格以购买时的整套报价为准。" : "", "caption")], "start", "stretch", "s")
+conclusion = TextContent("你愿意一直背在身上的相机，才是能拍到好照片的相机。", "large-heavy")

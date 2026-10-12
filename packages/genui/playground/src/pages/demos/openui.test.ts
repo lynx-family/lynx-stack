@@ -93,4 +93,67 @@ describe('OpenUI demo previews', () => {
       playbackMode: true,
     });
   });
+
+  test.each([
+    'https://lynx-stack.dev/genui/',
+    'https://lynx-stack.dev/zh/genui/',
+  ])('loads the camera example from a short URL under %s', (baseUrl) => {
+    const scenario = OPENUI_DEMOS_LIST_SOURCE.scenarios.find(
+      ({ id }) => id === 'travel-camera-guide',
+    );
+    expect(scenario).toBeDefined();
+    if (!scenario) return;
+
+    const url = new URL(OPENUI_DEMOS_LIST_SOURCE.createPreviewUrl({
+      baseUrl,
+      protocol: PROTOCOLS.openui,
+      scenario,
+      theme: 'light',
+    }));
+    expect(url.searchParams.get('rawTextUrl')).toBe(
+      `${baseUrl}demos/openui/travel-camera.openui`,
+    );
+    expect(url.searchParams.has('rawText')).toBe(false);
+    expect(url.toString().length).toBeLessThan(500);
+  });
+
+  test('uses the static source only while the camera example is unchanged', () => {
+    const scenario = OPENUI_DEMOS_PAGE_SOURCE.findScenario(
+      'travel-camera-guide',
+    );
+    expect(scenario).toBeDefined();
+    if (!scenario) return;
+
+    const initialInput = OPENUI_DEMOS_PAGE_SOURCE.createScenarioPreviewInput(
+      scenario,
+    );
+    const unchanged = OPENUI_DEMOS_PAGE_SOURCE.commit({
+      editorValue: scenario.raw,
+      editorEdited: false,
+      scenario,
+    });
+    expect(unchanged).toHaveProperty('value.previewInput', initialInput);
+
+    const edited = OPENUI_DEMOS_PAGE_SOURCE.commit({
+      editorValue: 'root = Text("Edited recommendation")',
+      editorEdited: true,
+      scenario,
+    });
+    expect(edited).toHaveProperty('value.previewInput', {
+      rawText: 'root = Text("Edited recommendation")',
+      sourcePath: undefined,
+    });
+
+    expect(OPENUI_DEMOS_PAGE_SOURCE.createPreviewSource({
+      input: initialInput,
+      isPlaybackActive: true,
+      protocol: PROTOCOLS.openui,
+      theme: 'dark',
+    })).toMatchObject({
+      kind: 'openui',
+      sourcePath: scenario.sourcePath,
+      theme: 'dark',
+      playbackMode: true,
+    });
+  });
 });

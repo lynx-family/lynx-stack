@@ -8,8 +8,11 @@ import { act, createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { OpenUIRender } from './openui.js';
+import type { InitData } from './query.js';
 
 const mock = rstest.hoisted(() => ({
+  initData: { liveStream: true } as InitData,
+  setInitData: rstest.fn(),
   view: {
     sendGlobalEvent: rstest.fn(),
     onNativeModulesCall: undefined as
@@ -24,14 +27,71 @@ const mock = rstest.hoisted(() => ({
 rstest.mock('./bundled.js', () => ({
   useBundledRender: () => ({
     ...mock,
-    view: null,
-    initData: { liveStream: true },
-    setInitData: rstest.fn(),
+    view: createElement('div', { 'data-testid': 'lynx-view' }),
     lynxViewRef: { current: mock.view },
     previewNavigationToken: 'test',
     initDataRef: { current: { liveStream: true } },
   }),
 }));
+
+test('waits for static source before mounting the Lynx preview', async () => {
+  rstest.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  mock.initData = { rawTextUrl: '/demos/openui/travel-camera.openui' };
+  mock.setInitData.mockClear();
+  let resolveSource!: () => void;
+  const sourceReady = new Promise<void>((resolve) => {
+    resolveSource = resolve;
+  });
+  rstest.stubGlobal(
+    'fetch',
+    rstest.fn(async () => {
+      await sourceReady;
+      return { ok: true, text: () => Promise.resolve('root = Text("Camera")') };
+    }),
+  );
+  const container = document.createElement('div');
+  const root = createRoot(container);
+  try {
+    await act(async () => root.render(createElement(OpenUIRender)));
+    expect(container.querySelector('[data-testid="lynx-view"]')).toBeNull();
+    await act(async () => resolveSource());
+    const update = mock.setInitData.mock.calls[0]?.[0] as
+      | ((previous: InitData) => InitData)
+      | undefined;
+    expect(update).toBeDefined();
+    if (!update) return;
+    mock.initData = update(mock.initData);
+    expect(mock.initData.rawText).toBe('root = Text("Camera")');
+    await act(async () => root.render(createElement(OpenUIRender)));
+    expect(container.querySelector('[data-testid="lynx-view"]')).not.toBeNull();
+  } finally {
+    await act(async () => root.unmount());
+    mock.initData = { liveStream: true };
+    rstest.unstubAllGlobals();
+  }
+});
+
+test('reports a missing static source instead of displaying a fallback example', async () => {
+  rstest.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  rstest.stubGlobal(
+    'fetch',
+    rstest.fn().mockResolvedValue({ ok: false, status: 404 }),
+  );
+  mock.initData = { rawTextUrl: '/missing.openui' };
+  const container = document.createElement('div');
+  const root = createRoot(container);
+  try {
+    await act(async () => root.render(createElement(OpenUIRender)));
+    expect(container.querySelector('[data-testid="lynx-view"]')).toBeNull();
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain(
+      'HTTP 404',
+    );
+  } finally {
+    await act(async () => root.unmount());
+    mock.initData = { liveStream: true };
+    rstest.unstubAllGlobals();
+  }
+});
 
 async function post(
   rawText: string,
