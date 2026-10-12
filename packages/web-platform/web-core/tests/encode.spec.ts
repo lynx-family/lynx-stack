@@ -2,6 +2,7 @@ import './jsdom.js';
 import { describe, test, expect } from '@rstest/core';
 import {
   encodeCSS,
+  encodeCSSMap,
   RawStyleInfo,
   Rule,
   Selector,
@@ -604,5 +605,78 @@ describe('webEncoder', () => {
       }
       offset += length;
     }
+  });
+
+  function readSections(buffer: Uint8Array): Map<number, Uint8Array> {
+    const view = new DataView(buffer.buffer);
+    const sections = new Map<number, Uint8Array>();
+    let offset = 8 + 4; // Magic + Version
+    while (offset < buffer.byteLength) {
+      const label = view.getUint32(offset, true);
+      offset += 4;
+      const length = view.getUint32(offset, true);
+      offset += 4;
+      sections.set(label, buffer.subarray(offset, offset + length));
+      offset += length;
+    }
+    expect(offset).toBe(buffer.byteLength);
+    return sections;
+  }
+
+  function readCustomSections(
+    sections: Map<number, Uint8Array>,
+  ): Record<string, unknown> {
+    return JSON.parse(
+      new TextDecoder('utf-16le').decode(
+        sections.get(TemplateSectionLabel.CustomSections),
+      ),
+    );
+  }
+
+  test('should encode the CSS custom sections with the css encoder', () => {
+    const ruleListMap = {
+      foo: CSS.parse('.foo { background-color: red; }').root,
+      bar: CSS.parse('.bar { background-color: green; }').root,
+    };
+    const sections = readSections(encode({
+      styleInfo: {},
+      manifest: {},
+      cardType: 'card',
+      appType: 'card',
+      pageConfig: {},
+      lepusCode: {},
+      customSections: {
+        foo: { encoding: 'CSS', content: { ruleList: ruleListMap.foo } },
+        bar: { encoding: 'CSS', content: { ruleList: ruleListMap.bar } },
+        baz: { content: 'baz' },
+        qux: { encoding: 'JsBytecode', content: 'qux' },
+      },
+      elementTemplates: {},
+    }));
+
+    expect(readCustomSections(sections)).toEqual({
+      baz: { content: 'baz' },
+      qux: { encoding: 'JsBytecode', content: 'qux' },
+    });
+    expect(sections.get(TemplateSectionLabel.CustomSectionsStyleInfo))
+      .toEqual(encodeCSSMap(ruleListMap));
+  });
+
+  test('should skip the custom sections style info if there is no CSS custom section', () => {
+    const sections = readSections(encode({
+      styleInfo: {},
+      manifest: {},
+      cardType: 'card',
+      appType: 'card',
+      pageConfig: {},
+      lepusCode: {},
+      customSections: { baz: { content: 'baz' } },
+      elementTemplates: {},
+    }));
+
+    expect(readCustomSections(sections)).toEqual({ baz: { content: 'baz' } });
+    expect(sections.has(TemplateSectionLabel.CustomSectionsStyleInfo)).toBe(
+      false,
+    );
   });
 });
