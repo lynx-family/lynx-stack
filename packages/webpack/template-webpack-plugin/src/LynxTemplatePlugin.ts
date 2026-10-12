@@ -1277,7 +1277,11 @@ class LynxTemplatePluginImpl {
           // Will be filled later in `@lynx-js/debug-metadata-rsbuild-plugin`
           debugMetadataUrl: '',
           ...(enableReloadCardOnAppReload
-            ? { enableReloadCardOnAppReload: true }
+            ? {
+              enableReloadCardOnAppReload: true,
+              // avoid extra loadScript, just re-use the `init` function
+              enableReuseLoadScriptExports: true,
+            }
             : {}),
         },
       },

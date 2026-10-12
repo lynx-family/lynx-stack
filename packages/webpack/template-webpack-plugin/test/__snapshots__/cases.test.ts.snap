@@ -36,3 +36,24 @@ exports[`template > templateCases-cases/defaults/config > should pass 1`] = `
   useNewSwiper: true,
 }
 `;
+
+exports[`template > templateCases-cases/defaults/reload-card > should pass 1`] = `
+{
+  debugMetadataUrl: ,
+  enableA11y: true,
+  enableAccessibilityElement: false,
+  enableCSSInheritance: false,
+  enableFlexBasisZeroPercent: true,
+  enableGridPlacementShorthands: true,
+  enableNativeList: true,
+  enableNewGesture: false,
+  enableNewIntersectionObserver: true,
+  enableNewSticky: true,
+  enableReloadCardOnAppReload: true,
+  enableReuseLoadScriptExports: true,
+  lepusStrict: true,
+  removeDescendantSelectorScope: false,
+  syncXElementRegistry: true,
+  useNewSwiper: true,
+}
+`;
