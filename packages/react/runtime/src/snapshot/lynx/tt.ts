@@ -48,6 +48,9 @@ function injectTt(): void {
     removeCtxNotFoundEventListener();
     destroyWorklet();
     destroyBackground();
+    if (typeof __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__ !== 'undefined' && __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__) {
+      Reflect.deleteProperty(lynx, Symbol.for('__LYNX_EXTERNAL_GLOBAL__'));
+    }
   };
   tt.updateGlobalProps = updateGlobalProps;
   tt.updateCardData = updateCardData;
