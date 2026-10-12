@@ -13,9 +13,12 @@ crate-type = ["rlib"]
 [features]
 default = []
 server = [
+  "dep:async-trait",
   "dep:axum",
   "dep:socket2",
   "dep:tempfile",
+  "dep:uuid",
+  "dep:ve-tos-rust-sdk",
   "dep:zip",
   "tokio/io-util",
   "tokio/net",
@@ -25,6 +28,7 @@ server = [
 ]
 
 [dependencies]
+async-trait = { version = "0.1.89", optional = true }
 axum = { version = "0.8.9", optional = true, features = ["multipart"] }
 base64 = "0.23.0"
 image = { version = "0.25.10", default-features = false, features = ["bmp"] }
@@ -37,7 +41,12 @@ socket2 = { version = "0.6.5", optional = true }
 tempfile = { version = "3.27.0", optional = true }
 thiserror = "2.0.19"
 tokio = { workspace = true, features = ["macros", "rt", "sync", "time"] }
+uuid = { version = "1.24.0", optional = true, features = ["v4"] }
+ve-tos-rust-sdk = { version = "2.9.20", optional = true }
 zip = { version = "8.6.0", optional = true, default-features = false, features = ["deflate-flate2-zlib-rs"] }
+
+[dev-dependencies]
+crc64fast = "1.1.0"
 
 [build-dependencies]
 fs2 = "0.4.3"

@@ -6,6 +6,8 @@ mod capture;
 mod headless;
 #[cfg(feature = "server")]
 mod ssrf;
+#[cfg(feature = "server")]
+mod tos;
 mod visual;
 
 #[cfg(feature = "server")]
