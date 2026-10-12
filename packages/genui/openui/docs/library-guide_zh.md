@@ -40,6 +40,24 @@ const library = useMemo(() => createOpenUiLibrary(), []);
 `@lynx-js/genui/openui/catalog` 导出，也可以通过
 `@lynx-js/genui/openui/catalog/Stack` 等逐组件子路径导入。
 
+服务端生成 schema 或 prompt 时，可从
+`@lynx-js/genui/openui/catalog/agent`（或
+`@lynx-js/genui-openui/catalog/agent`）导入使用 null renderer 的组件定义。
+该入口与 ReactLynx catalog 共享名称、描述、schema 和组件 ref，无需加载 JSX、
+CSS、ReactLynx 或 Lynx UI。`createOpenUiPromptLibrary()` 直接复用这些定义。
+
+按需引入单个定义时，使用 `@lynx-js/genui/openui/catalog/agent/Stack`（或
+`@lynx-js/genui-openui/catalog/agent/Stack`）。每个子路径导出与 Agent 聚合入口
+相同的组件名，只加载该组件定义及其 schema 依赖。
+
+```ts
+import { Stack, Text } from '@lynx-js/genui/openui/catalog/agent';
+import { createLibrary } from '@openuidev/lang-core';
+
+const library = createLibrary({ root: 'Stack', components: [Stack, Text] });
+const prompt = library.prompt();
+```
+
 ### 布局
 
 | 组件     | 用途                                                             |

@@ -1,14 +1,97 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { execFileSync } from 'node:child_process';
+
 import { createParser } from '@openuidev/lang-core';
 import { expect, test } from '@rstest/core';
 
+import { actionPropSchema } from '../src/catalog/Action/schema.js';
+import * as agentCatalog from '../src/catalog/agent.js';
 import { createOpenUiLibrary } from '../src/core/createLibrary.jsx';
 import {
   buildOpenUiSystemPrompt,
   createOpenUiPromptLibrary,
+  openUiPromptActionPropSchema,
 } from '../src/openui-prompt/index.js';
+
+test('renderer and prompt reuse the agent catalog schemas and refs', () => {
+  const renderer = createOpenUiLibrary();
+  const prompt = createOpenUiPromptLibrary();
+
+  expect(Object.keys(prompt.components).sort()).toEqual(
+    Object.keys(agentCatalog).sort(),
+  );
+  expect(Object.keys(renderer.components).sort()).toEqual(
+    Object.keys(agentCatalog).sort(),
+  );
+  for (const definition of Object.values(agentCatalog)) {
+    const rendered = renderer.components[definition.name]!;
+    expect(prompt.components[definition.name]).toBe(definition);
+    expect(rendered.props).toBe(definition.props);
+    expect(rendered.ref).toBe(definition.ref);
+    expect(rendered.description).toBe(definition.description);
+    expect(rendered.component).not.toBe(definition.component);
+    expect(definition.component()).toBeNull();
+  }
+  expect(openUiPromptActionPropSchema).toBe(actionPropSchema);
+});
+
+test('published agent catalog and prompt entries load in Node without renderer dependencies', () => {
+  const output = execFileSync(process.execPath, [
+    '--input-type=module',
+    '-e',
+    `
+      import assert from 'node:assert/strict';
+      import { existsSync } from 'node:fs';
+      import { registerHooks } from 'node:module';
+      const loaded = [];
+      registerHooks({
+        resolve(specifier, context, nextResolve) {
+          assert(!specifier.startsWith('@lynx-js/react'));
+          assert(!specifier.startsWith('@lynx-js/lynx-ui'));
+          return nextResolve(specifier, context);
+        },
+        load(url, context, nextLoad) {
+          assert(!url.endsWith('.jsx'));
+          assert(!url.endsWith('.css'));
+          loaded.push(url);
+          return nextLoad(url, context);
+        },
+      });
+      const { Stack } = await import('@lynx-js/genui/openui/catalog/agent/Stack');
+      assert.deepEqual(
+        loaded.filter(url => url.includes('/catalog/') && url.endsWith('/definition.js'))
+          .map(url => url.slice(url.lastIndexOf('/catalog/'))),
+        ['/catalog/Stack/definition.js'],
+      );
+      const catalog = await import('@lynx-js/genui/openui/catalog/agent');
+      assert.equal(catalog.Stack, Stack);
+      const direct = await import('@lynx-js/genui-openui/catalog/agent');
+      const { createOpenUiPromptLibrary } = await import('@lynx-js/genui/openui/prompt');
+      const library = createOpenUiPromptLibrary();
+      assert.equal(Object.keys(catalog).length, 26);
+      for (const definition of Object.values(catalog)) {
+        assert.equal(direct[definition.name], definition);
+        assert.equal(library.components[definition.name], definition);
+        assert.equal(definition.component(), null);
+        for (const prefix of ['@lynx-js/genui/openui', '@lynx-js/genui-openui']) {
+          const single = await import(prefix + '/catalog/agent/' + definition.name);
+          assert.equal(single[definition.name], definition);
+          const url = import.meta.resolve(prefix + '/catalog/' + definition.name);
+          assert(url.endsWith('/' + definition.name + '/index.jsx'));
+          assert(existsSync(new URL(url)));
+        }
+      }
+      assert(library.prompt().includes('Stack'));
+      console.log('agent catalog loaded');
+    `,
+  ], {
+    cwd: new URL('../../', import.meta.url),
+    encoding: 'utf8',
+  });
+  expect(output.trim()).toBe('agent catalog loaded');
+});
 
 test.each(['renderer', 'prompt'])(
   '%s List preserves the optional items slot before layout arguments',

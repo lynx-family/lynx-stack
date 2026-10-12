@@ -3,21 +3,19 @@
 // LICENSE file in the root directory of this source tree.
 
 import { ACTION_STEPS, BuiltinActionType } from '@openuidev/lang-core';
-import { z } from 'zod/v4';
+import type { z } from 'zod/v4';
 
 import { Button as LynxUIButton } from '@lynx-js/lynx-ui';
-import type { ReactNode } from '@lynx-js/react';
 
+import { Button as ButtonDefinition } from './definition.js';
 import {
   useFormName,
   useIsStreaming,
   useTriggerAction,
 } from '../../core/context.jsx';
 import { useFormValidation } from '../../core/hooks/index.js';
-import { defineComponent } from '../../core/library.jsx';
-import { actionPropSchema } from '../Action/index.jsx';
+import type { DefinedComponent } from '../../core/library.jsx';
 import type { ActionLike } from '../Action/index.jsx';
-import { asArray } from '../utils.js';
 
 import '../../../styles/catalog/Button.css';
 
@@ -26,15 +24,7 @@ const CONTINUE_CONVERSATION_ACTION = String(
 );
 const OPEN_URL_ACTION = String(BuiltinActionType.OpenUrl);
 
-const buttonPropsSchema = z.object({
-  label: z.string(),
-  action: actionPropSchema.optional(),
-  variant: z.enum(['primary', 'secondary', 'tertiary']).optional(),
-  type: z.enum(['normal', 'destructive']).optional(),
-  size: z.enum(['extra-small', 'small', 'medium', 'large']).optional(),
-});
-
-type ButtonProps = z.infer<typeof buttonPropsSchema>;
+type ButtonProps = z.infer<typeof ButtonDefinition.props>;
 
 function ButtonRenderer({ props }: { props: ButtonProps }) {
   const triggerAction = useTriggerAction();
@@ -101,31 +91,7 @@ function ButtonRenderer({ props }: { props: ButtonProps }) {
   );
 }
 
-export const Button = defineComponent({
-  name: 'Button',
-  props: buttonPropsSchema,
-  description: 'Clickable button',
+export const Button: DefinedComponent<typeof ButtonDefinition.props> = {
+  ...ButtonDefinition,
   component: ButtonRenderer,
-});
-
-function ButtonsRenderer(
-  { props, renderNode }: {
-    props: { buttons: unknown[] };
-    renderNode: (v: unknown) => ReactNode;
-  },
-) {
-  return (
-    <view className='OpenUIButtonGroup'>
-      {renderNode(asArray(props.buttons))}
-    </view>
-  );
-}
-
-export const Buttons = defineComponent({
-  name: 'Buttons',
-  props: z.object({
-    buttons: z.array(Button.ref),
-  }),
-  description: 'Button group',
-  component: ButtonsRenderer,
-});
+};

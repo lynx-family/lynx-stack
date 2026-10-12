@@ -1,11 +1,4 @@
 /* ===== Button ===== */
-.OpenUIButtonGroup {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 10rpx;
-}
-
 .OpenUIButton {
   padding: 10rpx 14rpx;
   border-radius: 12rpx;

@@ -43,6 +43,26 @@ definitions are exported from the aggregate `@lynx-js/genui/openui/catalog`
 entry and from individual subpaths such as
 `@lynx-js/genui/openui/catalog/Stack`.
 
+For server-side schema or prompt generation, import the same definitions with
+null renderers from `@lynx-js/genui/openui/catalog/agent` (or
+`@lynx-js/genui-openui/catalog/agent`). This entry shares names, descriptions,
+schemas, and component refs with the ReactLynx catalog without importing JSX,
+CSS, ReactLynx, or Lynx UI. `createOpenUiPromptLibrary()` uses these definitions
+directly.
+
+Use `@lynx-js/genui/openui/catalog/agent/Stack` (or
+`@lynx-js/genui-openui/catalog/agent/Stack`) to load just one definition. Each
+subpath exports the same component name as the aggregate Agent catalog, and
+loads only that definition and its schema dependencies.
+
+```ts
+import { Stack, Text } from '@lynx-js/genui/openui/catalog/agent';
+import { createLibrary } from '@openuidev/lang-core';
+
+const library = createLibrary({ root: 'Stack', components: [Stack, Text] });
+const prompt = library.prompt();
+```
+
 ### Layout
 
 | Component | Purpose                                                                                                   |

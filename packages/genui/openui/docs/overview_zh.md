@@ -360,14 +360,16 @@ orders = Query("list_orders", { status: "open" }, { rows: [] })
 
 ## Exports
 
-| 导入                                        | 你得到什么                                                                               |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `@lynx-js/genui/openui`                     | Renderer、parser/runtime、hooks、公共 types，以及由默认 catalog 支持的 Library factory。 |
-| `@lynx-js/genui/openui/explicit`            | Runtime surface，以及用于显式选择 definitions 的无 catalog Library factory。             |
-| `@lynx-js/genui/openui/catalog`             | 所有内置 component definitions 的聚合再导出。                                            |
-| `@lynx-js/genui/openui/catalog/<Component>` | 单个内置 definition 及其组件级依赖，例如 `catalog/Stack`。                               |
-| `@lynx-js/genui/openui/prompt`              | Headless prompt Library、prompt builder、默认 prompt 和 prompt-specific types。          |
-| `@lynx-js/genui/openui/styles/theme.css`    | 可选的 light/dark CSS custom-property tokens。                                           |
+| 导入                                              | 你得到什么                                                                               |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `@lynx-js/genui/openui`                           | Renderer、parser/runtime、hooks、公共 types，以及由默认 catalog 支持的 Library factory。 |
+| `@lynx-js/genui/openui/explicit`                  | Runtime surface，以及用于显式选择 definitions 的无 catalog Library factory。             |
+| `@lynx-js/genui/openui/catalog`                   | 所有内置 component definitions 的聚合再导出。                                            |
+| `@lynx-js/genui/openui/catalog/agent`             | 使用 null renderer 的内置定义，供 Node 服务端生成 schema 和 prompt。                     |
+| `@lynx-js/genui/openui/catalog/agent/<Component>` | 单个服务端组件定义及其 schema 依赖。                                                     |
+| `@lynx-js/genui/openui/catalog/<Component>`       | 单个内置 definition 及其组件级依赖，例如 `catalog/Stack`。                               |
+| `@lynx-js/genui/openui/prompt`                    | Headless prompt Library、prompt builder、默认 prompt 和 prompt-specific types。          |
+| `@lynx-js/genui/openui/styles/theme.css`          | 可选的 light/dark CSS custom-property tokens。                                           |
 
 组件样式、core renderer stylesheet 和 Material Icons font 都是由对应模块自动引入的
 实现细节。不要导入 `styles/catalog` 或 `dist/core` 下的私有文件。

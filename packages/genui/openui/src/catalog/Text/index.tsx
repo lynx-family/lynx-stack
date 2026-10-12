@@ -1,22 +1,12 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { z } from 'zod/v4';
 
-import { defineComponent } from '../../core/library.jsx';
-import { stringLikeSchema, stringifyValue } from '../utils.js';
+import { Text as TextDefinition, textVariants } from './definition.js';
+import type { DefinedComponent } from '../../core/library.jsx';
+import { stringifyValue } from '../utils.js';
 
 import '../../../styles/catalog/Text.css';
-
-const textVariants = [
-  'h1',
-  'h2',
-  'h3',
-  'h4',
-  'h5',
-  'caption',
-  'body',
-] as const;
 
 function getVariantClass(variant: typeof textVariants[number]): string {
   switch (variant) {
@@ -37,13 +27,8 @@ function getVariantClass(variant: typeof textVariants[number]): string {
   }
 }
 
-export const Text = defineComponent({
-  name: 'Text',
-  props: z.object({
-    text: stringLikeSchema,
-    variant: z.enum(textVariants).optional(),
-  }),
-  description: 'Plain text with display variants.',
+export const Text: DefinedComponent<typeof TextDefinition.props> = {
+  ...TextDefinition,
   component: ({ props }) => {
     const variant = props.variant ?? 'body';
     return (
@@ -52,4 +37,4 @@ export const Text = defineComponent({
       </text>
     );
   },
-});
+};

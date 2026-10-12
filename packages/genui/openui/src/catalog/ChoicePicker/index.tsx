@@ -1,32 +1,18 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { z } from 'zod/v4';
+import type { z } from 'zod/v4';
 
 import { useEffect, useRef, useState } from '@lynx-js/react';
 
+import { ChoicePicker as ChoicePickerDefinition } from './definition.js';
 import { useIsStreaming } from '../../core/context.jsx';
-import { defineComponent } from '../../core/library.jsx';
-import {
-  booleanLikeSchema,
-  booleanValue,
-  isPathBinding,
-  stringLikeSchema,
-  stringifyValue,
-} from '../utils.js';
+import type { DefinedComponent } from '../../core/library.jsx';
+import { booleanValue, isPathBinding, stringifyValue } from '../utils.js';
 
 import '../../../styles/catalog/ChoicePicker.css';
 
-const choicePickerPropsSchema = z.object({
-  label: stringLikeSchema.optional(),
-  options: z.union([z.array(stringLikeSchema), stringLikeSchema]),
-  value: stringLikeSchema.optional(),
-  variant: z.enum(['default', 'card']).optional(),
-  displayStyle: z.enum(['list', 'chips', 'dropdown']).optional(),
-  filterable: booleanLikeSchema.optional(),
-});
-
-type ChoicePickerProps = z.infer<typeof choicePickerPropsSchema>;
+type ChoicePickerProps = z.infer<typeof ChoicePickerDefinition.props>;
 
 function ChoicePickerRenderer({ props }: { props: ChoicePickerProps }) {
   const isStreaming = useIsStreaming();
@@ -99,10 +85,9 @@ function ChoicePickerRenderer({ props }: { props: ChoicePickerProps }) {
   );
 }
 
-export const ChoicePicker = defineComponent({
-  name: 'ChoicePicker',
-  props: choicePickerPropsSchema,
-  description:
-    'Choice picker rendered as selectable chips, list items, or a dropdown-like field.',
+export const ChoicePicker: DefinedComponent<
+  typeof ChoicePickerDefinition.props
+> = {
+  ...ChoicePickerDefinition,
   component: ChoicePickerRenderer,
-});
+};

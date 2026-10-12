@@ -125,6 +125,10 @@ data = Query("tool_name", { argument: $variable }, { fallback: true })
   outside that graph, import `createOpenUiLibrary` from
   `@lynx-js/genui/openui/explicit` and each retained built-in from its component
   subpath, such as `@lynx-js/genui/openui/catalog/Stack`.
+- `@lynx-js/genui/openui/catalog/agent` exports the built-in definitions with
+  null renderers for Node schema and prompt generation. The prompt library and
+  ReactLynx catalog share the same schemas, descriptions, and refs.
+  Import individual definitions from `catalog/agent/<Component>` when needed.
 
 ## Stream model output
 

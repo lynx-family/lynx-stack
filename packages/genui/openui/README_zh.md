@@ -117,6 +117,10 @@ data = Query("tool_name", { argument: $variable }, { fallback: true })
   内置组件不应进入依赖图，请从 `@lynx-js/genui/openui/explicit` 导入
   `createOpenUiLibrary`，并通过逐组件子路径导入保留的内置组件，例如
   `@lynx-js/genui/openui/catalog/Stack`。
+- `@lynx-js/genui/openui/catalog/agent` 导出使用 null renderer 的内置组件定义，
+  用于 Node 服务端生成 schema 和 prompt。Prompt library 和 ReactLynx catalog
+  共享同一套 schema、描述和 ref。
+  可通过 `catalog/agent/<Component>` 按需导入单个组件定义。
 
 ## 流式模型输出
 

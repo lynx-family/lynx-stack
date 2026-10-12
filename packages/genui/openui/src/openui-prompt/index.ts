@@ -6,20 +6,45 @@
  * @module prompt
  */
 
-import {
-  createLibrary,
-  defineComponent,
-  tagSchemaId,
-} from '@openuidev/lang-core';
+import { createLibrary } from '@openuidev/lang-core';
 import type {
   ComponentGroup,
   DefinedComponent,
   Library,
   PromptOptions,
 } from '@openuidev/lang-core';
-import { z } from 'zod/v4';
 
-import { OPENUI_GAP_VALUES } from '../shared/layout.js';
+import {
+  AudioPlayer,
+  Button,
+  Buttons,
+  Card,
+  CardHeader,
+  CheckBox,
+  ChoicePicker,
+  Column,
+  DateTimeInput,
+  Divider,
+  Icon,
+  Image,
+  List,
+  Loading,
+  Modal,
+  RadioGroup,
+  Row,
+  Separator,
+  Slider,
+  Stack,
+  Tabs,
+  Tag,
+  Text,
+  TextContent,
+  TextField,
+  Video,
+} from '../catalog/agent.js';
+
+/** Shared action prop schema exposed to prompt signatures as `ActionExpression`. */
+export { actionPropSchema as openUiPromptActionPropSchema } from '../catalog/Action/schema.js';
 
 type HeadlessRenderer = () => null;
 
@@ -49,436 +74,6 @@ export interface BuildOpenUiSystemPromptOptions
   promptOptions?: PromptOptions;
   appendix?: string;
 }
-
-const ICON_NAMES = [
-  'account_circle',
-  'add',
-  'arrow_back',
-  'arrow_forward',
-  'camera',
-  'check',
-  'close',
-  'delete',
-  'edit',
-  'error',
-  'favorite',
-  'help',
-  'home',
-  'info',
-  'location_on',
-  'lock',
-  'mail',
-  'menu',
-  'more_vert',
-  'pause',
-  'person',
-  'play_arrow',
-  'refresh',
-  'search',
-  'send',
-  'settings',
-  'share',
-  'star',
-  'warning',
-] as const;
-
-const ALIGN_VALUES = ['start', 'center', 'end', 'stretch'] as const;
-const STACK_JUSTIFY_VALUES = ['start', 'center', 'end', 'between'] as const;
-const EXTENDED_JUSTIFY_VALUES = [
-  'start',
-  'center',
-  'end',
-  'between',
-  'around',
-  'evenly',
-  'spaceBetween',
-  'spaceAround',
-  'spaceEvenly',
-  'stretch',
-] as const;
-const TEXT_VARIANTS = [
-  'h1',
-  'h2',
-  'h3',
-  'h4',
-  'h5',
-  'caption',
-  'body',
-] as const;
-
-const pathBindingSchema = z.object({
-  path: z.string(),
-});
-tagSchemaId(pathBindingSchema, 'PathBinding');
-
-const stringLikeSchema = z.union([
-  z.string(),
-  z.number(),
-  z.boolean(),
-  pathBindingSchema,
-]);
-tagSchemaId(stringLikeSchema, 'StringLike');
-
-const booleanLikeSchema = z.union([
-  z.boolean(),
-  pathBindingSchema,
-]);
-tagSchemaId(booleanLikeSchema, 'BooleanLike');
-
-const templateChildrenSchema = z.object({
-  componentId: z.string(),
-  path: z.string(),
-});
-tagSchemaId(templateChildrenSchema, 'TemplateChildren');
-
-const listChildrenSchema = z.union([
-  z.array(z.any()),
-  templateChildrenSchema,
-]);
-
-const actionStepSchema = z.looseObject({
-  type: z.string(),
-});
-
-const actionPlanSchema = z.object({
-  steps: z.array(actionStepSchema),
-});
-
-const legacyActionSchema = z.object({
-  type: z.string().optional(),
-  params: z.record(z.string(), z.any()).optional(),
-  url: z.string().optional(),
-  context: z.string().optional(),
-});
-
-/** Shared action prop schema exposed to prompt signatures as `ActionExpression`. */
-export const openUiPromptActionPropSchema = z.union([
-  actionPlanSchema,
-  legacyActionSchema,
-]);
-tagSchemaId(openUiPromptActionPropSchema, 'ActionExpression');
-
-const Stack = defineComponent({
-  name: 'Stack',
-  props: z.object({
-    children: z.array(z.any()),
-    direction: z.enum(['row', 'column']).optional(),
-    wrap: z.boolean().optional(),
-    gap: z.enum(OPENUI_GAP_VALUES).optional(),
-    align: z.enum(ALIGN_VALUES).optional(),
-    justify: z.enum(STACK_JUSTIFY_VALUES).optional(),
-  }),
-  description: 'Flex layout container.',
-  component: () => null,
-});
-
-const Row = defineComponent({
-  name: 'Row',
-  props: z.object({
-    children: z.array(z.any()),
-    justify: z.enum(EXTENDED_JUSTIFY_VALUES).optional(),
-    align: z.enum(ALIGN_VALUES).optional(),
-    gap: z.enum(OPENUI_GAP_VALUES).optional(),
-    wrap: z.boolean().optional(),
-  }),
-  description: 'Horizontal flex layout container.',
-  component: () => null,
-});
-
-const Column = defineComponent({
-  name: 'Column',
-  props: z.object({
-    children: z.array(z.any()),
-    justify: z.enum(EXTENDED_JUSTIFY_VALUES).optional(),
-    align: z.enum(ALIGN_VALUES).optional(),
-    gap: z.enum(OPENUI_GAP_VALUES).optional(),
-  }),
-  description: 'Vertical flex layout container.',
-  component: () => null,
-});
-
-const List = defineComponent({
-  name: 'List',
-  props: z.object({
-    children: listChildrenSchema.optional(),
-    items: listChildrenSchema.optional(),
-    direction: z.enum(['vertical', 'horizontal']).optional(),
-    align: z.enum(ALIGN_VALUES).optional(),
-    gap: z.enum(OPENUI_GAP_VALUES).optional(),
-    divider: z.boolean().optional(),
-  }),
-  description:
-    'List container for repeated children. Pass child components first. The second argument is the optional items alias; pass null there before direction, align, gap, or divider: List(children, null, "vertical", "stretch", "s", false).',
-  component: () => null,
-});
-
-const Card = defineComponent({
-  name: 'Card',
-  props: z.object({
-    children: z.array(z.any()),
-    variant: z.enum(['card', 'sunk', 'clear']).optional(),
-    direction: z.enum(['row', 'column']).optional(),
-    wrap: z.boolean().optional(),
-    gap: z.enum(OPENUI_GAP_VALUES).optional(),
-    align: z.enum(ALIGN_VALUES).optional(),
-    justify: z.enum(STACK_JUSTIFY_VALUES).optional(),
-  }),
-  description:
-    'Styled container (card/sunk/clear). Accepts Stack layout parameters.',
-  component: () => null,
-});
-
-const CardHeader = defineComponent({
-  name: 'CardHeader',
-  props: z.object({
-    title: z.string(),
-    subtitle: z.string().optional(),
-  }),
-  description: 'Card header with title and optional subtitle.',
-  component: () => null,
-});
-
-const TextContent = defineComponent({
-  name: 'TextContent',
-  props: z.object({
-    text: z.union([z.string(), z.number(), z.boolean()]),
-    size: z.enum(['small', 'default', 'large', 'small-heavy', 'large-heavy'])
-      .optional(),
-  }),
-  description: 'Text content with optional size.',
-  component: () => null,
-});
-
-const Text = defineComponent({
-  name: 'Text',
-  props: z.object({
-    text: stringLikeSchema,
-    variant: z.enum(TEXT_VARIANTS).optional(),
-  }),
-  description:
-    'Plain text with semantic variants h1, h2, h3, h4, h5, caption, and body.',
-  component: () => null,
-});
-
-const Separator = defineComponent({
-  name: 'Separator',
-  props: z.object({}),
-  description: 'Visual separator.',
-  component: () => null,
-});
-
-const Divider = defineComponent({
-  name: 'Divider',
-  props: z.object({
-    axis: z.enum(['horizontal', 'vertical']).optional(),
-  }),
-  description: 'Horizontal or vertical divider.',
-  component: () => null,
-});
-
-const Button = defineComponent({
-  name: 'Button',
-  props: z.object({
-    label: z.string(),
-    action: openUiPromptActionPropSchema.optional(),
-    variant: z.enum(['primary', 'secondary', 'tertiary']).optional(),
-    type: z.enum(['normal', 'destructive']).optional(),
-    size: z.enum(['extra-small', 'small', 'medium', 'large']).optional(),
-  }),
-  description: 'Clickable button.',
-  component: () => null,
-});
-
-const Buttons = defineComponent({
-  name: 'Buttons',
-  props: z.object({
-    buttons: z.array(Button.ref),
-  }),
-  description: 'Button group.',
-  component: () => null,
-});
-
-const Tag = defineComponent({
-  name: 'Tag',
-  props: z.object({
-    text: z.string(),
-  }),
-  description: 'Compact label or status tag.',
-  component: () => null,
-});
-
-const Image = defineComponent({
-  name: 'Image',
-  props: z.object({
-    url: stringLikeSchema,
-    fit: z.enum(['contain', 'cover', 'fill', 'none', 'scale-down']).optional(),
-    variant: z.enum([
-      'icon',
-      'avatar',
-      'smallFeature',
-      'mediumFeature',
-      'largeFeature',
-      'header',
-    ]).optional(),
-  }),
-  description: 'Image with optional fit and variant sizing.',
-  component: () => null,
-});
-
-const Icon = defineComponent({
-  name: 'Icon',
-  props: z.object({
-    name: z.enum(ICON_NAMES),
-    size: z.enum(['sm', 'md', 'lg']).optional(),
-    color: z.enum(['primary', 'muted', 'inherit']).optional(),
-  }),
-  description: 'Material icon.',
-  component: () => null,
-});
-
-const Loading = defineComponent({
-  name: 'Loading',
-  props: z.object({
-    variant: z.enum(['inline', 'block']).optional(),
-  }),
-  description: 'Skeleton placeholder while content loads.',
-  component: () => null,
-});
-
-const AudioPlayer = defineComponent({
-  name: 'AudioPlayer',
-  props: z.object({
-    url: stringLikeSchema,
-    description: stringLikeSchema.optional(),
-  }),
-  description: 'Audio attachment placeholder with URL and description.',
-  component: () => null,
-});
-
-const Video = defineComponent({
-  name: 'Video',
-  props: z.object({
-    url: stringLikeSchema,
-    title: stringLikeSchema.optional(),
-  }),
-  description: 'Video attachment placeholder with URL and optional title.',
-  component: () => null,
-});
-
-const CheckBox = defineComponent({
-  name: 'CheckBox',
-  props: z.object({
-    label: z.string(),
-    value: z.boolean().optional(),
-    action: openUiPromptActionPropSchema.optional(),
-    name: z.string().optional(),
-  }),
-  description:
-    'Toggleable checkbox. Use name when it participates in a form or stateful flow.',
-  component: () => null,
-});
-
-const RadioGroup = defineComponent({
-  name: 'RadioGroup',
-  props: z.object({
-    items: z.array(z.string()),
-    value: z.string().optional(),
-    usageHint: z.enum(['default', 'card', 'row']).optional(),
-    action: openUiPromptActionPropSchema.optional(),
-    name: z.string().optional(),
-  }),
-  description: 'Single-choice radio group.',
-  component: () => null,
-});
-
-const ChoicePicker = defineComponent({
-  name: 'ChoicePicker',
-  props: z.object({
-    label: stringLikeSchema.optional(),
-    options: z.union([z.array(stringLikeSchema), stringLikeSchema]),
-    value: stringLikeSchema.optional(),
-    variant: z.enum(['default', 'card']).optional(),
-    displayStyle: z.enum(['list', 'chips', 'dropdown']).optional(),
-    filterable: booleanLikeSchema.optional(),
-  }),
-  description:
-    'Choice picker rendered as selectable chips, list items, or a dropdown-like field.',
-  component: () => null,
-});
-
-const Slider = defineComponent({
-  name: 'Slider',
-  props: z.object({
-    label: z.string().optional(),
-    min: z.number().optional(),
-    max: z.number().optional(),
-    value: z.number().optional(),
-    step: z.number().optional(),
-    action: openUiPromptActionPropSchema.optional(),
-    name: z.string().optional(),
-  }),
-  description: 'Continuous-value slider.',
-  component: () => null,
-});
-
-const DateTimeInput = defineComponent({
-  name: 'DateTimeInput',
-  props: z.object({
-    value: stringLikeSchema,
-    enableDate: booleanLikeSchema.optional(),
-    enableTime: booleanLikeSchema.optional(),
-    min: stringLikeSchema.optional(),
-    max: stringLikeSchema.optional(),
-    label: stringLikeSchema.optional(),
-  }),
-  description:
-    'Date/time value display with optional label, min/max, and enabled date/time hints.',
-  component: () => null,
-});
-
-const TextField = defineComponent({
-  name: 'TextField',
-  props: z.object({
-    label: z.string(),
-    value: z.string().optional(),
-    variant: z.enum(['longText', 'number', 'shortText', 'obscured'])
-      .optional(),
-    validationRegexp: z.string().optional(),
-    action: openUiPromptActionPropSchema.optional(),
-    name: z.string().optional(),
-  }),
-  description:
-    'Single-line or multi-line text input with optional regex validation.',
-  component: () => null,
-});
-
-const Modal = defineComponent({
-  name: 'Modal',
-  props: z.object({
-    trigger: z.any(),
-    content: z.any(),
-    title: stringLikeSchema.optional(),
-    closeOnAction: z.boolean().optional(),
-  }),
-  description:
-    'Tap-triggered modal container. Pass the trigger component first and content second.',
-  component: () => null,
-});
-
-const Tabs = defineComponent({
-  name: 'Tabs',
-  props: z.object({
-    tabs: z.array(z.object({
-      value: z.string(),
-      title: stringLikeSchema,
-      child: z.any(),
-    })),
-    value: z.string().optional(),
-  }),
-  description:
-    'Tabbed content switcher. Each tab item is an object with value, title, and child.',
-  component: () => null,
-});
 
 const DEFAULT_COMPONENTS: OpenUiPromptComponent[] = [
   Stack,
