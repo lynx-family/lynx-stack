@@ -484,7 +484,10 @@ class ReactWebpackPlugin {
       new BannerPlugin({
         // TODO: handle cases that do not have `'use strict'`
         banner:
-          `'use strict';var globDynamicComponentEntry=globDynamicComponentEntry||'__Card__';`,
+          `'use strict';var globDynamicComponentEntry=globDynamicComponentEntry||'__Card__';`
+          + (options.experimental_reEvalJSOnReload
+            ? `lynx[Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__')] = true;`
+            : ''),
         raw: true,
         test: options.mainThreadChunks!,
       }).apply(compiler);

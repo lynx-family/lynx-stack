@@ -54,7 +54,12 @@ function injectTt(): void {
   };
   tt.updateGlobalProps = updateGlobalProps;
   tt.updateCardData = updateCardData;
-  if (typeof __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__ !== 'undefined' && __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__) {
+  if (
+    typeof __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__ !== 'undefined'
+    && __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__
+    && (lynx as unknown as Record<symbol, unknown>)[Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__')] === true
+    && typeof tt.onAppReload === 'function'
+  ) {
     const oldOnAppReload = tt.onAppReload;
     tt.onAppReload = (...args) => {
       deinitGlobalSnapshotPatch();

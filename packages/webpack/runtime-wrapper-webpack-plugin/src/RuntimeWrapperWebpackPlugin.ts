@@ -43,6 +43,13 @@ interface RuntimeWrapperWebpackPluginOptions {
    * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle}
    */
   experimental_isLazyBundle?: boolean;
+
+  /**
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_reEvalJSOnReload}
+   *
+   * @defaultValue false
+   */
+  experimental_reEvalJSOnReload?: boolean;
 }
 
 const defaultInjectVars = [
@@ -111,6 +118,7 @@ class RuntimeWrapperWebpackPlugin {
     bannerType: () => 'script',
     injectVars: defaultInjectVars,
     experimental_isLazyBundle: false,
+    experimental_reEvalJSOnReload: false,
   });
 
   /**
@@ -154,7 +162,11 @@ class RuntimeWrapperWebpackPluginImpl {
     const iife = compiler.options.output.iife ?? true;
 
     const wrapperHeader = (
-      { chunk, filename }: { chunk: Chunk; filename: string },
+      { chunk, filename, supportsReEval }: {
+        chunk: Chunk;
+        filename: string;
+        supportsReEval: boolean;
+      },
     ) => {
       const banner = this.#getBannerType(filename) === 'script'
         ? loadScriptBanner()
@@ -168,6 +180,7 @@ class RuntimeWrapperWebpackPluginImpl {
           moduleId: '[name].js',
           targetSdkVersion,
           iife,
+          supportsReEval,
         })
         // In standalone lazy bundle mode, the lazy bundle will
         // also has chunk.id "main", it will be conflict with the
@@ -210,7 +223,14 @@ class RuntimeWrapperWebpackPluginImpl {
               if (compilation.getAsset(filename)?.info['lynx:main-thread']) {
                 continue;
               }
-              const data = { chunk, filename };
+              const data = {
+                chunk,
+                filename,
+                supportsReEval: Boolean(
+                  options.experimental_reEvalJSOnReload
+                    && !experimental_isLazyBundle,
+                ),
+              };
               const header = compilation.getPath(wrapperHeader(data), data);
               const footer = compilation.getPath(wrapperFooter(filename), data);
               compilation.updateAsset(
@@ -284,12 +304,14 @@ const amdBanner = ({
   overrideRuntimePromise,
   targetSdkVersion,
   iife,
+  supportsReEval,
 }: {
   injectStr: string;
   moduleId: string;
   overrideRuntimePromise: boolean;
   targetSdkVersion: string;
   iife: boolean;
+  supportsReEval: boolean;
 }) => {
   const iifeWrapper = iife ? '' : `
 // This needs to be wrapped in an IIFE because it needs to be isolated against Lynx injected variables.
@@ -302,7 +324,11 @@ lynx = lynx || {};
 lynx.targetSdkVersion=lynx.targetSdkVersion||${
       JSON.stringify(targetSdkVersion)
     };
-${overrideRuntimePromise ? `var Promise = lynx.Promise;` : ''}
+${
+      supportsReEval
+        ? `lynx[Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__')] = true;\n`
+        : ''
+    }${overrideRuntimePromise ? `var Promise = lynx.Promise;` : ''}
 fetch = fetch || lynx.fetch;
 requestAnimationFrame = requestAnimationFrame || lynx.requestAnimationFrame;
 cancelAnimationFrame = cancelAnimationFrame || lynx.cancelAnimationFrame;

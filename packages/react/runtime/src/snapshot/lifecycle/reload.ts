@@ -107,6 +107,8 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   if (
     typeof __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__ !== 'undefined'
     && __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__
+    && lynxSymbols[Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__')] === true
+    && typeof lynxSymbols[mainThreadEntryReloaderKey] === 'function'
   ) {
     // Keep the old tree until the new runtime has rendered, then let that
     // runtime own renderMainThread/hydrate and the rest of the reload.

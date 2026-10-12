@@ -278,6 +278,7 @@ export function applyEntry(
           },
           targetSdkVersion,
           experimental_isLazyBundle,
+          experimental_reEvalJSOnReload,
         }])
         .end()
         .plugin(`${LynxEncodePlugin.name}`)

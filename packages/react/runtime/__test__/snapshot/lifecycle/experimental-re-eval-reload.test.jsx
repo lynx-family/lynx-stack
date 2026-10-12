@@ -17,12 +17,12 @@ import { globalEnvManager } from '../utils/envManager';
 import { elementTree, nativeMethodQueue, waitSchedule } from '../utils/nativeMethod';
 
 const mainThreadEntryReloaderKey = Symbol.for('__LYNX_MAIN_THREAD_ENTRY_RELOADER__');
+const entrySupportsReEvalKey = Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__');
 const mainThreadReloadCompleterKey = Symbol.for('__LYNX_MAIN_THREAD_RELOAD_COMPLETER__');
 const reloadVersionKey = Symbol.for('__LYNX_RELOAD_VERSION__');
 let nextMtsRefId = 0;
 
 beforeAll(() => {
-  setupPage(__CreatePage('0', 0));
   replaceCommitHook();
   injectUpdateMainThread();
 });
@@ -30,10 +30,13 @@ beforeAll(() => {
 beforeEach(() => {
   nextMtsRefId = 0;
   globalEnvManager.resetEnv();
+  elementTree.root = undefined;
+  setupPage(__CreatePage('0', 0));
   globalThis.runWorklet = vi.fn();
 });
 
 afterEach(() => {
+  delete lynx[entrySupportsReEvalKey];
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   delete globalThis.__reloadStateTestOnTap;
@@ -123,6 +126,45 @@ function getElementTreeUiSigns(element) {
 }
 
 describe('experimental re-eval reload', () => {
+  it.each(['missing entry support', 'missing entry reloader'])(
+    'falls back to legacy reload with %s',
+    (missing) => {
+      const jsx = (
+        <view>
+          <text>legacy entry</text>
+        </view>
+      );
+      __root.__jsx = jsx;
+      renderPage();
+      const treeBeforeReload = elementTree.toTree();
+      const uiSigns = getElementTreeUiSigns(treeBeforeReload);
+      const previousReloader = lynx[mainThreadEntryReloaderKey];
+      const reloader = vi.fn();
+      vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
+
+      if (missing === 'missing entry support') {
+        lynx[mainThreadEntryReloaderKey] = reloader;
+      } else {
+        lynx[entrySupportsReEvalKey] = true;
+        delete lynx[mainThreadEntryReloaderKey];
+      }
+
+      try {
+        reloadMainThread({}, { reloadTemplate: true });
+        expect(reloader).not.toHaveBeenCalled();
+        expect(__root.__jsx).toBe(jsx);
+        expect(getElementTreeUiSigns(elementTree.toTree())).toEqual(uiSigns);
+        expect(elementTree.toTree()).toEqual(treeBeforeReload);
+      } finally {
+        if (previousReloader === undefined) {
+          delete lynx[mainThreadEntryReloaderKey];
+        } else {
+          lynx[mainThreadEntryReloaderKey] = previousReloader;
+        }
+      }
+    },
+  );
+
   it('resets React state, preserves MTS element mutations, and reattaches refs and events', async () => {
     const firstEntry = createEntry();
     __root.__jsx = firstEntry.jsx;
@@ -199,6 +241,7 @@ describe('experimental re-eval reload', () => {
     const completer = vi.fn(handoff => completeReload(handoff));
 
     lynxSymbols[mainThreadEntryReloaderKey] = reloader;
+    lynxSymbols[entrySupportsReEvalKey] = true;
     lynxSymbols[mainThreadReloadCompleterKey] = completer;
     vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
 
