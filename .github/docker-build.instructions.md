@@ -12,6 +12,8 @@ Use separate builder and runtime stages. Keep Node, the installed workspace depe
 
 Set runtime `LYNX_LIB_PATH` and `LYNX_CORE_JS_PATH` to the copied assets. The headless runner otherwise retains Cargo-injected paths into the SDK cache removed during cleanup.
 
+Keep only the bundled standalone `Noto Sans CJK SC` Regular font in `/usr/share/fonts`, moving any preinstalled font directory aside. The pinned Linux Lynx runtime uses Skia's directory font manager without Fontconfig aliases or character fallback, so installing a CJK font alongside preferred Western families does not ensure Chinese text renders. Preserve the font license, check the internal family name with `fc-scan`, and validate actual selection with a Chinese screenshot without `font-family`. Remove the duplicate `docker/fonts` source directory from the exported workspace after installing the resources in `base`.
+
 Keep JavaScript builds workspace-wide through Turbo. Deployment changes must preserve published packages' dependency declarations and peer compatibility. Do not add hardcoded package lists, global hoisting, tarballs, or installed-manifest patches to Dockerfile. Keep workspace package entry points unchanged.
 
 When validating deployment changes, resolve the compiler from the server package and compile both Web and Native artifacts after a fresh full install, build-artifact cleanup, and relocation, without model credentials or publication.

@@ -12,11 +12,26 @@ RUN if [ -n "$UBUNTU_MIRROR" ]; then \
     && apt-get update --error-on=any \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
+        fontconfig \
         libepoxy0 \
         libexpat1 \
         libgcc-s1 \
         libstdc++6 \
     && rm -rf /var/lib/apt/lists/*
+
+# The pinned Lynx runtime scans this directory without Fontconfig aliases or
+# character fallback. Expose one CJK-capable family so it becomes the default.
+RUN if [ -d /usr/share/fonts ]; then \
+        mv /usr/share/fonts /usr/share/fonts.original; \
+    fi \
+    && mkdir -p /usr/share/fonts/noto
+COPY docker/fonts/NotoSansCJKsc-Regular.otf /usr/share/fonts/noto/
+COPY docker/fonts/LICENSE.txt /usr/share/doc/lynx-fonts/LICENSE.txt
+RUN chmod 755 /usr/share/fonts /usr/share/fonts/noto \
+    && chmod 644 /usr/share/fonts/noto/NotoSansCJKsc-Regular.otf \
+    && test "$(fc-scan -f '%{family}' /usr/share/fonts/noto/NotoSansCJKsc-Regular.otf)" = 'Noto Sans CJK SC'
+
+ENV LANG=C.UTF-8
 
 FROM base AS builder
 
@@ -103,7 +118,7 @@ RUN find . -type d -name node_modules -prune -o \
     && find . -type f \( -name '*.tsbuildinfo' -o -name '*.js.map' \
         -o -name '*.mjs.map' -o -name '*.cjs.map' -o -name '*.css.map' \
         -o -name '*.d.ts.map' \) -delete \
-    && rm -rf .github .changeset .vscode .idea .agents .volcengine
+    && rm -rf .github .changeset .vscode .idea .agents .volcengine docker/fonts
 
 # Keep dependency paths and workspace symlinks intact when splitting the layers.
 # Install bookkeeping and timestamps must not give unchanged dependencies a new digest.
