@@ -39,6 +39,8 @@ export interface RenderInit {
 
 export interface OpenUIRenderInit {
   initialQueryResults?: Record<string, unknown>;
+  /** Explicit catalog selection; omitted values use the existing Stack library. */
+  openuiLibrary?: 'stack' | 'chat';
   rawText?: string;
   rawTextUrl?: string;
   /** Keep the previous UI for text-only inline chat replies. */
@@ -374,6 +376,9 @@ export function buildOpenUIRenderUrl(
     );
   }
   if (init.inlineMode) url.searchParams.set('inlineMode', '1');
+  if (init.openuiLibrary) {
+    url.searchParams.set('openuiLibrary', init.openuiLibrary);
+  }
   if (init.liveStream) url.searchParams.set('liveStream', '1');
 
   if (init.theme) {

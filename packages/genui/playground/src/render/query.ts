@@ -18,6 +18,7 @@ export interface InitData {
   theme?: 'light' | 'dark';
   initialQueryResults?: Record<string, unknown>;
   rawText?: string;
+  openuiLibrary?: 'stack' | 'chat';
   rawTextUrl?: string;
   inlineMode?: boolean;
   playbackPaused?: boolean;
@@ -68,6 +69,10 @@ export function readTheme(value: unknown): InitData['theme'] {
   return value === 'dark' ? 'dark' : (value === 'light' ? 'light' : undefined);
 }
 
+function readOpenUILibrary(value: unknown): InitData['openuiLibrary'] {
+  return value === 'chat' || value === 'stack' ? value : undefined;
+}
+
 function readSpeed(value: unknown): number | undefined {
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
     return undefined;
@@ -102,6 +107,7 @@ function readInitDataParam(raw: string | null): InitData | null {
     >;
   }
   initData.rawText = readString(record.rawText);
+  initData.openuiLibrary = readOpenUILibrary(record.openuiLibrary);
   initData.rawTextUrl = readString(record.rawTextUrl);
   initData.inlineMode = readBoolean(record.inlineMode);
   initData.playbackPaused = readBoolean(record.playbackPaused);
@@ -156,6 +162,8 @@ export function parseInitDataFromQuery(): InitData | null {
     playbackMode: playbackMode === '1' ? true : baseInitData?.playbackMode,
     theme: readTheme(theme) ?? baseInitData?.theme,
     rawText: rawText ?? baseInitData?.rawText,
+    openuiLibrary: readOpenUILibrary(params.get('openuiLibrary'))
+      ?? baseInitData?.openuiLibrary,
     rawTextUrl: rawTextUrl ?? baseInitData?.rawTextUrl,
     initialQueryResults: initialQueryResults !== null
         && typeof initialQueryResults === 'object'
@@ -222,6 +230,9 @@ export function buildGlobalPropsFromInitData(
   }
   if (initData.theme !== undefined) out.theme = initData.theme;
   if (initData.rawText !== undefined) out.rawText = initData.rawText;
+  if (initData.openuiLibrary !== undefined) {
+    out.openuiLibrary = initData.openuiLibrary;
+  }
   if (initData.rawTextUrl !== undefined) out.rawTextUrl = initData.rawTextUrl;
   if (initData.initialQueryResults !== undefined) {
     out.initialQueryResults = initData.initialQueryResults;

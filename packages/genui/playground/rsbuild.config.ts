@@ -269,6 +269,11 @@ export default defineConfig({
     assetPrefix: process.env.ASSET_PREFIX,
     copy: [
       {
+        from: 'src/mock/openui/chat',
+        to: 'demos/openui/chat',
+        globOptions: { ignore: ['**/README.md'] },
+      },
+      {
         from: 'src/mock/basic/*.json',
         to: 'demos/[name][ext]',
       },
@@ -293,7 +298,7 @@ export default defineConfig({
       module: {
         rules: [
           {
-            test: /\.lynxml$/,
+            test: /\.(lynxml|openui)$/,
             resourceQuery: /raw/,
             type: 'asset/source',
           },

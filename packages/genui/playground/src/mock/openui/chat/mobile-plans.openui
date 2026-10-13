@@ -1,0 +1,3 @@
+root = Card([table, advice])
+table = Table([Col("套餐", ["A", "B"]), Col("月费（元）", [40, 75], "number"), Col("包含流量（GB）", [20, 60], "number"), Col("套餐折算单价（元/GB）", [2, 1.25], "number")])
+advice = TextContent("**每月20GB以内选A，月费省35元；需要20–60GB时，B的包含流量足够，但还要核对A补足流量的费用再比较。** B的套餐折算单价更低。没有超量计费、叠加包或限速规则，无法计算盈亏平衡用量。")

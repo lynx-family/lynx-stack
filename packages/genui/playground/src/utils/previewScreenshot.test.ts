@@ -77,6 +77,28 @@ test('captures OpenUI text directly without a browser payload URL or playback', 
   });
 });
 
+test('preserves the Chat catalog when capturing Markdown with fenced OpenUI', () => {
+  const rawText =
+    '# Trip\n\n```openui\nroot = Card([TextContent("Hello")])\n```';
+  expect(buildPreviewScreenshotSource({
+    kind: 'openui',
+    rawText,
+    openuiLibrary: 'chat',
+    inlineMode: true,
+  }, nativeBundleUrl)).toEqual({
+    route: 'template',
+    entry: 'openui.lynx.js',
+    url: 'https://playground.test/app/openui.lynx.js',
+    globalProps: {
+      rawText,
+      openuiLibrary: 'chat',
+      inlineMode: true,
+      theme: 'light',
+      instant: true,
+    },
+  });
+});
+
 test('passes MCP Apps host data to the native renderer', () => {
   const mcpAppData = { renderer: 'weather', input: { city: 'Shanghai' } };
   expect(buildPreviewScreenshotSource({

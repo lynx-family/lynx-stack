@@ -184,7 +184,7 @@ Keep the A2UI and OpenUI component catalog pages visually identical by rendering
 
 ### Catalog Preview Payloads
 
-Use the headless OpenUI component library's real JSON schema for Playground DSL parsing in Catalog, Examples, and Chat. Keep the shared `parseOpenUIScenario` helpers backed by `createOpenUiPromptLibrary`, and always derive editor JSON from the current source rather than a scenario's stored `parsed` snapshot. Do not reintroduce a hand-written schema with empty prop fragments, because it hides type and enum errors that the Lynx renderer reports.
+Use the headless OpenUI component library's real JSON schema for Playground DSL parsing in Catalog, Examples, and Chat. Keep the shared `parseOpenUIScenario` helpers backed by `createOpenUiPromptLibrary` for Stack and `createOpenUiChatPromptLibrary` for explicitly selected Chat scenarios, and always derive editor JSON from the current source rather than a scenario's stored `parsed` snapshot. Do not reintroduce a hand-written schema with empty prop fragments, because it hides type and enum errors that the Lynx renderer reports.
 
 Send editable OpenUI usage DSL through `buildOpenUIRenderUrl` with `instant: true`, and forward the playground theme so the Lynx preview matches the surrounding catalog page.
 

@@ -93,6 +93,9 @@ export function buildPreviewScreenshotSource(
     globalProps = {
       rawText: previewSource.rawText,
       inlineMode: previewSource.inlineMode ?? false,
+      ...(previewSource.openuiLibrary
+        ? { openuiLibrary: previewSource.openuiLibrary }
+        : {}),
       theme: previewSource.theme ?? 'light',
       instant: true,
     };

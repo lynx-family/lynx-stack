@@ -1,0 +1,4 @@
+root = Card([verdict, product, alternative])
+verdict = TextContent("**优先选示例A，把预算用于日常训练。** 这次更看重跑步使用，B的日常定位不是你的首要需求。")
+product = ProductFeature("./demos/openui/chat/assets/product.png", "示例A正面商品图", "示例A训练T恤", "训练优先的候选", ["商家描述为聚酯速干，定位日常训练；本次没有独立实测，不能保证具体排汗表现。", "已确认159元固定价，在200元预算内。尺码需要按商品页尺码表核对。"], "159元 · 固定价", "./demos/openui/chat/references.html#a")
+alternative = TextContent("如果日常穿着的比重更大，再考虑199元棉质示例B；这次不把它排在训练款前面。")

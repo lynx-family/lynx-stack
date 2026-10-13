@@ -15,6 +15,7 @@ import {
   OPENUI_RENDER_ERRORS_MESSAGE_TYPE,
   readOpenUIRenderErrors,
 } from '../../lynx-src/openui/renderErrors.js';
+import { resolveOpenUIExampleAssets } from '../mock/openui-chat-assets.js';
 import {
   executeOpenUIDataTool,
   restoreOpenUIData,
@@ -110,7 +111,10 @@ export function OpenUIRender() {
       try {
         const res = await window.fetch(rawTextUrl);
         if (!res.ok || cancelled) return;
-        const rawText = await res.text();
+        const rawText = resolveOpenUIExampleAssets(
+          await res.text(),
+          window.location.href,
+        );
         if (!cancelled) {
           setInitData(prev =>
             prev && prev.rawTextUrl === rawTextUrl

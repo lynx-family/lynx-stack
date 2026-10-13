@@ -4,8 +4,10 @@
 import { createParser } from '@openuidev/lang-core';
 import type { ParseResult } from '@openuidev/lang-core';
 
+import { createOpenUiChatPromptLibrary } from '@lynx-js/genui/openui/chat/agent';
 import { createOpenUiPromptLibrary } from '@lynx-js/genui/openui/prompt';
 
+import { OPENUI_CHAT_CASES } from './openui-chat-scenarios.js';
 import { splitOpenUiResponse } from '../../lynx-src/openui/inlineResponse.js';
 import { OPENUI_INLINE_TRIP_RAW } from '../../lynx-src/openui/mockData.js';
 import { OPENUI_TODO_RAW } from '../../lynx-src/openui/todo.js';
@@ -15,6 +17,8 @@ export interface OpenUIScenario {
   title: string;
   badge?: string;
   inlineMode?: boolean;
+  library?: 'stack' | 'chat';
+  sourcePath?: string;
   raw: string;
   parsed: string;
 }
@@ -25,24 +29,33 @@ const openUiScenarioParser = createParser(
   openUiLibrary.root,
 );
 
-export function parseOpenUIScenario(raw: string): ParseResult {
-  return openUiScenarioParser.parse(raw);
+const chatLibrary = createOpenUiChatPromptLibrary();
+const chatParser = createParser(chatLibrary.toJSONSchema(), chatLibrary.root);
+
+export function parseOpenUIScenario(
+  raw: string,
+  library: 'stack' | 'chat' = 'stack',
+): ParseResult {
+  return (library === 'chat' ? chatParser : openUiScenarioParser).parse(raw);
 }
 
-export function parseOpenUIScenarioRaw(raw: string): string {
+export function parseOpenUIScenarioRaw(
+  raw: string,
+  library: 'stack' | 'chat' = 'stack',
+): string {
   const parts = splitOpenUiResponse(raw);
   if (parts.some(part => part.kind === 'code')) {
     return JSON.stringify(
       parts.map(part =>
         part.kind === 'code'
-          ? { ...part, result: parseOpenUIScenario(part.content) }
+          ? { ...part, result: parseOpenUIScenario(part.content, library) }
           : part
       ),
       null,
       2,
     );
   }
-  return JSON.stringify(parseOpenUIScenario(raw), null, 2);
+  return JSON.stringify(parseOpenUIScenario(raw, library), null, 2);
 }
 
 const V05_QUERY_WEATHER_RAW = `$city = "Seattle"
@@ -113,6 +126,10 @@ audioCard = Card([CardHeader("Podcast Preview", "AudioPlayer placeholder"), Audi
 videoCard = Card([CardHeader("Launch Walkthrough", "Video placeholder"), Video("https://example.com/openui-launch.mp4", "OpenUI component walkthrough"), List([Text("Covers layout primitives", "body"), Text("Shows tabs and modal", "body"), Text("Highlights media cards", "body")], null, "vertical", "stretch", "xs", true)], "card", "column", false, "m", "stretch", "start")`;
 
 export const OPENUI_SCENARIOS: OpenUIScenario[] = [
+  ...OPENUI_CHAT_CASES.map(scenario => ({
+    ...scenario,
+    parsed: parseOpenUIScenarioRaw(scenario.raw, 'chat'),
+  })),
   {
     id: 'inline-winter-trip',
     title: 'Inline Winter Trip',

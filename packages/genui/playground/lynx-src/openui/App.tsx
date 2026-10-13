@@ -5,6 +5,7 @@ import type { ParseResult } from '@openuidev/lang-core';
 
 import { OpenUiRenderer, createOpenUiLibrary } from '@lynx-js/genui/openui';
 import type { ActionEvent, OpenUIError } from '@lynx-js/genui/openui';
+import { createOpenUiChatLibrary } from '@lynx-js/genui/openui/chat';
 import {
   useCallback,
   useEffect,
@@ -24,6 +25,7 @@ import {
   OPENUI_RENDER_ERRORS_MESSAGE_TYPE,
   formatOpenUIRenderErrors,
 } from './renderErrors.js';
+import { loadOpenUIResponse } from './source.js';
 
 const DEFAULT_CHUNK_SIZE = 8;
 const DEFAULT_STREAM_DELAY_MS = 30;
@@ -50,8 +52,12 @@ export function App() {
   const globalProps = useGlobalProps() as Record<string, unknown> | null;
   const inlineMode = globalProps?.inlineMode === true
     || globalProps?.inlineMode === '1';
-  const openUiLibrary = useMemo(() => createOpenUiLibrary(), []);
   const Renderer = inlineMode ? InlineOpenUiRenderer : OpenUiRenderer;
+  const useChatLibrary = globalProps?.openuiLibrary === 'chat';
+  const openUiLibrary = useMemo(
+    () => useChatLibrary ? createOpenUiChatLibrary() : createOpenUiLibrary(),
+    [useChatLibrary],
+  );
   const liveStream = globalProps?.liveStream === true;
   const liveAction = useMemo(() => {
     const value = globalProps?.liveAction;
@@ -81,6 +87,13 @@ export function App() {
         }
       });
     }), []);
+  const rawTextUrl = typeof globalProps?.rawTextUrl === 'string'
+    ? globalProps.rawTextUrl
+    : undefined;
+  const hasInlineSource = typeof globalProps?.rawText === 'string';
+  const [remoteSource, setRemoteSource] = useState<
+    { url: string; text: string } | null
+  >(null);
   const openUiToolProvider = useMemo<
     Record<string, (args: Record<string, unknown>) => unknown>
   >(() => {
@@ -130,21 +143,28 @@ export function App() {
     };
   }, [dataTools]);
 
-  // Read rawText from globalProps; fall back to hardcoded mock data.
+  // Keep host-restored Query values with inline and remotely loaded sources.
   const initialData = useMemo(() => {
     const text = globalProps?.rawText;
+    const initial = globalProps?.initialQueryResults;
+    const restoredData = initial !== null && typeof initial === 'object'
+        && !Array.isArray(initial)
+      ? { initialQueryResults: initial as Record<string, unknown> }
+      : {};
     if (typeof text === 'string' && (text.length > 0 || liveStream)) {
-      const initial = globalProps?.initialQueryResults;
       return {
         rawText: text,
-        ...(initial !== null && typeof initial === 'object'
-            && !Array.isArray(initial)
-          ? { initialQueryResults: initial as Record<string, unknown> }
-          : {}),
+        ...restoredData,
       };
     }
-    return { rawText: OPENUI_SCENARIOS[0].raw };
-  }, [globalProps, liveStream]);
+    if (rawTextUrl) {
+      return {
+        rawText: remoteSource?.url === rawTextUrl ? remoteSource.text : '',
+        ...restoredData,
+      };
+    }
+    return { rawText: OPENUI_SCENARIOS[0].raw, ...restoredData };
+  }, [globalProps, liveStream, rawTextUrl, remoteSource]);
   const rawText = initialData.rawText;
 
   const instant = useMemo(() => {
@@ -190,6 +210,18 @@ export function App() {
   });
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  useEffect(() => {
+    if (!rawTextUrl || hasInlineSource) return;
+    let active = true;
+    void loadOpenUIResponse(rawTextUrl).then(text => {
+      if (active) setRemoteSource({ url: rawTextUrl, text });
+    }).catch(error => {
+      if (active) setError(String(error));
+    });
+    return () => {
+      active = false;
+    };
+  }, [rawTextUrl, hasInlineSource]);
   const [playbackTargetCount, setPlaybackTargetCount] = useState(0);
   const playbackPausedRef = useRef(false);
   const playbackChunks = useMemo(() => chunkOpenUIResponse(rawText), [rawText]);

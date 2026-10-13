@@ -122,6 +122,8 @@ interface A2UIPreviewSource {
 interface OpenUIPreviewSource {
   kind: 'openui';
   inlineMode?: boolean;
+  rawTextUrl?: string;
+  openuiLibrary?: 'stack' | 'chat';
   rawText: string;
   theme?: 'light' | 'dark';
   liveAction?: boolean;
@@ -1160,8 +1162,13 @@ export function PreviewPanel(props: PreviewPanelProps) {
       return;
     }
 
+    const exampleRawTextUrl = previewSource.rawTextUrl
+      ? new URL(previewSource.rawTextUrl, baseUrl).href
+      : undefined;
     const inlineUrl = buildOpenUIRenderUrl({
+      openuiLibrary: previewSource.openuiLibrary,
       rawText: previewSource.liveStream ? '' : previewSource.rawText,
+      rawTextUrl: previewSource.liveStream ? undefined : exampleRawTextUrl,
       liveStream: previewSource.liveStream,
       theme: previewSource.theme,
       inlineMode: previewSource.inlineMode,
@@ -1170,7 +1177,9 @@ export function PreviewPanel(props: PreviewPanelProps) {
       playbackMode: previewSource.playbackMode,
     }, baseUrl);
     const inlineShareUrl = buildOpenUIRenderUrl({
+      openuiLibrary: previewSource.openuiLibrary,
       rawText: previewSource.rawText,
+      rawTextUrl: exampleRawTextUrl,
       theme: previewSource.theme,
       inlineMode: previewSource.inlineMode,
       speed,
@@ -1195,6 +1204,9 @@ export function PreviewPanel(props: PreviewPanelProps) {
       } else {
         u.searchParams.delete('inlineMode');
       }
+      if (previewSource.openuiLibrary) {
+        u.searchParams.set('openuiLibrary', previewSource.openuiLibrary);
+      }
       if (previewSource.theme) {
         u.searchParams.set('theme', previewSource.theme);
       }
@@ -1212,7 +1224,15 @@ export function PreviewPanel(props: PreviewPanelProps) {
     };
 
     if (canInline) {
-      setOpenUILynxDevUrl({ rawText: previewSource.rawText });
+      setOpenUILynxDevUrl(
+        exampleRawTextUrl
+          ? {
+            rawTextUrl: previewSource.rawTextUrl && rspeedyDevUrl
+              ? new URL(previewSource.rawTextUrl, rspeedyDevUrl).href
+              : exampleRawTextUrl,
+          }
+          : { rawText: previewSource.rawText },
+      );
       return;
     }
 
@@ -1239,6 +1259,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
         setOpenUILynxDevUrl({ rawTextUrl });
         if (!previewSource.liveStream) {
           setRenderUrl(buildOpenUIRenderUrl({
+            openuiLibrary: previewSource.openuiLibrary,
             rawTextUrl,
             theme: previewSource.theme,
             inlineMode: previewSource.inlineMode,
@@ -1248,6 +1269,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
           }, baseUrl));
         }
         setRenderShareUrl(buildOpenUIRenderUrl({
+          openuiLibrary: previewSource.openuiLibrary,
           rawTextUrl,
           theme: previewSource.theme,
           inlineMode: previewSource.inlineMode,

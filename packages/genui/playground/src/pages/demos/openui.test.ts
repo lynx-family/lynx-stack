@@ -4,6 +4,7 @@
 import { createParser } from '@openuidev/lang-core';
 import { describe, expect, test } from '@rstest/core';
 
+import { createOpenUiChatPromptLibrary } from '@lynx-js/genui/openui/chat/agent';
 import { createOpenUiPromptLibrary } from '@lynx-js/genui/openui/prompt';
 
 import {
@@ -16,6 +17,8 @@ import { PROTOCOLS } from '../../utils/protocol.js';
 
 const library = createOpenUiPromptLibrary();
 const parser = createParser(library.toJSONSchema(), library.root);
+const chatLibrary = createOpenUiChatPromptLibrary();
+const chatParser = createParser(chatLibrary.toJSONSchema(), chatLibrary.root);
 
 describe('OpenUI demo previews', () => {
   test.each(NATIVE_OPENUI_SCENARIOS)(
@@ -32,7 +35,7 @@ describe('OpenUI demo previews', () => {
 
   test.each(OPENUI_DEMOS_LIST_SOURCE.scenarios)(
     '$id satisfies the component schemas used by the renderer',
-    ({ raw }) => {
+    ({ raw, library }) => {
       const blocks = splitOpenUiResponse(raw).filter(part =>
         part.kind === 'code'
       );
@@ -41,7 +44,7 @@ describe('OpenUI demo previews', () => {
           ? blocks.map(block => block.content)
           : [raw]
       ) {
-        const parsed = parser.parse(code);
+        const parsed = (library === 'chat' ? chatParser : parser).parse(code);
         expect(parsed.root).not.toBeNull();
         expect(parsed.meta.incomplete).toBe(false);
         expect(parsed.meta.unresolved).toEqual([]);

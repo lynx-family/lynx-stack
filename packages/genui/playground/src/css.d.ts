@@ -7,3 +7,8 @@ declare module '*.lynxml?raw' {
   const source: string;
   export default source;
 }
+
+declare module '*.openui?raw' {
+  const source: string;
+  export default source;
+}
