@@ -15,12 +15,13 @@
  *
  * ## Unsupported at-rules are discarded, deliberately
  *
- * Lynx's binary style format has three rule kinds - `Declaration`, `FontFace`
- * and `KeyFrames` (`raw_style_info.rs`). There is no representation for a
- * conditional group, so `@media`, `@supports` and `@layer` are not Lynx
- * features: a ReactLynx card cannot use them either, on any platform. Discarding
- * them here is what keeps a markup card's capabilities equal to a built card's,
- * rather than giving web-only cards a feature native does not have.
+ * Lynx's binary style format has four rule kinds - `Declaration`, `FontFace`,
+ * `KeyFrames` and `Media` (`raw_style_info.rs`). `@media` is carried like in a
+ * ReactLynx build, but there is no representation for the other groups, so
+ * `@supports` and `@layer` are not Lynx features: a ReactLynx card cannot use
+ * them either, on any platform. Discarding them here is what keeps a markup
+ * card's capabilities equal to a built card's, rather than giving web-only cards
+ * a feature native does not have.
  *
  * `@lynx-js/css-serializer` already discards most of the rest before this module
  * sees anything - `@container`, `@scope`, `@starting-style`, `@property`,
@@ -97,14 +98,16 @@ const markupPageConfig: Record<string, string> = {
  * A construct the bundle format cannot carry, reported rather than hidden.
  */
 export interface DiscardedAtRule {
-  /** The at-rule's name, with its `@`, e.g. `@media`. */
+  /** The at-rule's name, with its `@`, e.g. `@supports`. */
   name: string;
   /**
    * Why it cannot be carried.
    *
    * `unrepresentable` - Lynx's style format has no rule kind for it.
-   * `unsupported` - the CSS parser has no case for it, so it never even reached
-   * this module. Its contents are gone with it.
+   * `unsupported` - the CSS parser has no case for it where it was written, so
+   * it never even reached this module: an unknown at-rule anywhere, or an
+   * at-rule other than a group nested in another at-rule, e.g. `@font-face`
+   * inside `@media`. Its contents are gone with it.
    * `unresolvable` - the construct exists in the format but this document cannot
    * express it, which currently means only `@import` with a URL.
    */
@@ -127,13 +130,19 @@ const parsedAtRules = new Set([
 /**
  * The at-rules that parse but have no rule kind in the binary style format.
  */
-const unrepresentableAtRules = new Set(['media', 'supports', 'layer']);
+const unrepresentableAtRules = new Set(['supports', 'layer']);
+
+/**
+ * The at-rules `css-serializer` turns into nodes when they are nested in a
+ * group. It skips any other at-rule there, e.g. `@font-face` inside `@media`.
+ */
+const parsedNestedAtRules = new Set(['media', 'supports', 'layer']);
 
 /**
  * Finds every at-rule in `source` that will not survive into the bundle.
  *
  * Needed because the two kinds of loss are invisible from different places: an
- * `@media` node reaches {@link stripUnrepresentable} and can be counted there,
+ * `@supports` node reaches {@link stripUnrepresentable} and can be counted there,
  * but a `@property` never becomes a node at all, so the only way to know it was
  * written is to look at the source. `css-serializer` re-exports the `css-tree`
  * it already depends on, so this costs a parse but no new dependency.
@@ -157,22 +166,34 @@ export function diagnoseDiscardedAtRules(source: string): DiscardedAtRule[] {
   }
 
   const seen = new Map<string, DiscardedAtRule>();
-  CSS.csstree.walk(ast, (node) => {
-    if (node.type !== 'Atrule') {
-      return;
-    }
-    const reason = !parsedAtRules.has(node.name)
-      ? 'unsupported'
-      : unrepresentableAtRules.has(node.name)
-      ? 'unrepresentable'
-      : undefined;
-    if (reason === undefined) {
-      return;
-    }
-    const name = `@${node.name}`;
-    if (!seen.has(name)) {
-      seen.set(name, { name, reason });
-    }
+  // How many at-rules enclose the node being visited.
+  let atRuleDepth = 0;
+  CSS.csstree.walk(ast, {
+    enter(node: CSS.csstree.CssNode) {
+      if (node.type !== 'Atrule') {
+        return;
+      }
+      const nested = atRuleDepth > 0;
+      atRuleDepth++;
+      const reason = !parsedAtRules.has(node.name)
+          || (nested && !parsedNestedAtRules.has(node.name))
+        ? 'unsupported'
+        : unrepresentableAtRules.has(node.name)
+        ? 'unrepresentable'
+        : undefined;
+      if (reason === undefined) {
+        return;
+      }
+      const name = `@${node.name}`;
+      if (!seen.has(name)) {
+        seen.set(name, { name, reason });
+      }
+    },
+    leave(node: CSS.csstree.CssNode) {
+      if (node.type === 'Atrule') {
+        atRuleDepth--;
+      }
+    },
   });
   return [...seen.values()];
 }
@@ -182,7 +203,7 @@ export function diagnoseDiscardedAtRules(source: string): DiscardedAtRule[] {
  *
  * Two of them, and both would otherwise be worse than a drop:
  *
- * - a group at-rule (`@media` / `@supports` / `@layer`) falls through
+ * - a group at-rule other than `@media` (`@supports` / `@layer`) falls through
  *   `encodeCSS`'s dispatch and is dropped there anyway, silently;
  * - an `@import` whose href is not a numeric css id makes `encodeCSS` **throw**,
  *   which would fail the whole build. A hand-written `@import url("theme.css")`
@@ -199,10 +220,7 @@ function stripUnrepresentable(
 ): { nodes: CSS.LynxStyleNode[]; droppedURLImport: boolean } {
   let droppedURLImport = false;
   const kept = nodes.filter((node) => {
-    if (
-      node.type === 'MediaRule' || node.type === 'SupportsRule'
-      || node.type === 'LayerRule'
-    ) {
+    if (node.type === 'SupportsRule' || node.type === 'LayerRule') {
       return false;
     }
     if (node.type === 'ImportRule') {
