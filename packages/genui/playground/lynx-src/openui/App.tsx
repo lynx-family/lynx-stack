@@ -20,6 +20,7 @@ import {
   OPENUI_RENDER_ERRORS_MESSAGE_TYPE,
   formatOpenUIRenderErrors,
 } from './renderErrors.js';
+import { TodoStore } from './todoStore.js';
 
 const DEFAULT_CHUNK_SIZE = 8;
 const DEFAULT_STREAM_DELAY_MS = 30;
@@ -51,49 +52,53 @@ export function App() {
   const liveStream = globalProps?.liveStream === true;
   const openUiToolProvider = useMemo<
     Record<string, (args: Record<string, unknown>) => unknown>
-  >(() => ({
-    get_weather(args) {
-      const city = typeof args.city === 'string' ? args.city : 'Seattle';
-      if (city === 'San Francisco') {
+  >(() => {
+    const store = new TodoStore();
+    return {
+      ...store.tools,
+      get_weather(args) {
+        const city = typeof args.city === 'string' ? args.city : 'Seattle';
+        if (city === 'San Francisco') {
+          return {
+            city,
+            temp: 64,
+            condition: 'Fog clearing',
+            high: 68,
+            low: 55,
+            humidity: '72%',
+            wind: '11 mph',
+            updated: 'mocked just now',
+            alerts: ['Marine layer expected this evening.'],
+          };
+        }
         return {
-          city,
-          temp: 64,
-          condition: 'Fog clearing',
-          high: 68,
-          low: 55,
-          humidity: '72%',
-          wind: '11 mph',
+          city: 'Seattle',
+          temp: 71,
+          condition: 'Partly cloudy',
+          high: 76,
+          low: 58,
+          humidity: '61%',
+          wind: '8 mph',
           updated: 'mocked just now',
-          alerts: ['Marine layer expected this evening.'],
+          alerts: [],
         };
-      }
-      return {
-        city: 'Seattle',
-        temp: 71,
-        condition: 'Partly cloudy',
-        high: 76,
-        low: 58,
-        humidity: '61%',
-        wind: '8 mph',
-        updated: 'mocked just now',
-        alerts: [],
-      };
-    },
-    get_release_queue() {
-      return {
-        count: 3,
-        next: 'Ship OpenUI v0.5 playground cases',
-        owner: 'GenUI',
-      };
-    },
-    save_release_note(args) {
-      return {
-        ok: true,
-        id: 'release-note-openui-v05',
-        saved: args,
-      };
-    },
-  }), []);
+      },
+      get_release_queue() {
+        return {
+          count: 3,
+          next: 'Ship OpenUI v0.5 playground cases',
+          owner: 'GenUI',
+        };
+      },
+      save_release_note(args) {
+        return {
+          ok: true,
+          id: 'release-note-openui-v05',
+          saved: args,
+        };
+      },
+    };
+  }, []);
 
   // Read rawText from globalProps; fall back to hardcoded mock data.
   const rawText = useMemo(() => {

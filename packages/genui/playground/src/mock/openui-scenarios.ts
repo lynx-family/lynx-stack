@@ -8,6 +8,7 @@ import { createOpenUiPromptLibrary } from '@lynx-js/genui/openui/prompt';
 
 import { splitOpenUiResponse } from '../../lynx-src/openui/inlineResponse.js';
 import { OPENUI_INLINE_TRIP_RAW } from '../../lynx-src/openui/mockData.js';
+import { OPENUI_TODO_RAW } from '../../lynx-src/openui/todo.js';
 
 export interface OpenUIScenario {
   id: string;
@@ -119,6 +120,13 @@ export const OPENUI_SCENARIOS: OpenUIScenario[] = [
     raw: OPENUI_INLINE_TRIP_RAW,
     badge: 'Markdown + UI',
     parsed: parseOpenUIScenarioRaw(OPENUI_INLINE_TRIP_RAW),
+  },
+  {
+    id: 'todo-list',
+    title: 'Todo List',
+    badge: 'Action + Mutation',
+    raw: OPENUI_TODO_RAW,
+    parsed: parseOpenUIScenarioRaw(OPENUI_TODO_RAW),
   },
   {
     id: 'new-layout-showcase',

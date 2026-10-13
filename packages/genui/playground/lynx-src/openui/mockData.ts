@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { OPENUI_TODO_RAW } from './todo.js';
+
 export const OPENUI_INLINE_TRIP_RAW = `## Hokkaido winter itinerary
 
 An eight-day trip works well with **Sapporo → Noboribetsu → Hakodate → Sapporo**.
@@ -83,6 +85,11 @@ audioCard = Card([CardHeader("Podcast Preview", "AudioPlayer placeholder"), Audi
 videoCard = Card([CardHeader("Launch Walkthrough", "Video placeholder"), Video("https://example.com/openui-launch.mp4", "OpenUI component walkthrough"), List([Text("Covers layout primitives", "body"), Text("Shows tabs and modal", "body"), Text("Highlights media cards", "body")], null, "vertical", "stretch", "xs", true)], "card", "column", false, "m", "stretch", "start")`;
 
 export const OPENUI_SCENARIOS: OpenUIScenario[] = [
+  {
+    id: 'todo-list',
+    title: 'Todo List',
+    raw: OPENUI_TODO_RAW,
+  },
   {
     id: 'new-layout-showcase',
     title: 'New Layout Showcase',
