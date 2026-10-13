@@ -278,7 +278,10 @@ export function applyEntry(
           },
           targetSdkVersion,
           experimental_isLazyBundle,
-          experimental_reEvalJSOnReload,
+          // External libraries share the host Lynx object and must not mark
+          // a legacy application entry as supporting re-evaluation.
+          experimental_reEvalJSOnReload: experimental_reEvalJSOnReload
+            && isApplication,
         }])
         .end()
         .plugin(`${LynxEncodePlugin.name}`)

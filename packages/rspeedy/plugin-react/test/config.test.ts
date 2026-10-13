@@ -2672,6 +2672,40 @@ describe('Config', () => {
     expect(templateOptions.enableReloadCardOnAppReload).toBe(true)
   })
 
+  test.each([
+    { callerName: 'rspeedy', expectedEntrySupport: true },
+    { callerName: 'rslib', expectedEntrySupport: false },
+  ])(
+    'marks re-evaluation entry support only for applications: $callerName',
+    async ({
+      callerName,
+      expectedEntrySupport,
+    }) => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        callerName,
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx({ experimental_reEvalJSOnReload: true }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+      const [config] = await rsbuild.initConfigs()
+      const wrapper = config?.plugins?.find(plugin =>
+        plugin?.constructor.name === 'RuntimeWrapperWebpackPlugin'
+      ) as unknown as { options: { experimental_reEvalJSOnReload: boolean } }
+      const react = config?.plugins?.find(plugin =>
+        plugin?.constructor.name === 'ReactWebpackPlugin'
+      ) as unknown as { options: { experimental_reEvalJSOnReload: boolean } }
+
+      expect(wrapper.options.experimental_reEvalJSOnReload).toBe(
+        expectedEntrySupport,
+      )
+      expect(react.options.experimental_reEvalJSOnReload).toBe(true)
+    },
+  )
+
   test('targetSdkVersion', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
