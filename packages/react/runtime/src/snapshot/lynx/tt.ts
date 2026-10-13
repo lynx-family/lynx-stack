@@ -49,6 +49,7 @@ function injectTt(): void {
     destroyWorklet();
     destroyBackground();
     if (typeof __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__ !== 'undefined' && __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__) {
+      __root.__jsx = undefined;
       Reflect.deleteProperty(lynx, Symbol.for('__LYNX_EXTERNAL_GLOBAL__'));
     }
   };
