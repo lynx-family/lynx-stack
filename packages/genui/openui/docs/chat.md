@@ -19,7 +19,7 @@ const response =
 />;
 ```
 
-The host handles `OpenUrl` and conversation actions through `onAction`; the components do not assume a browser or a backend. Markdown renders as native Lynx elements, and raw HTML is displayed as text. Citations are one-based indices into `Card.sources`.
+The host handles `OpenUrl` and conversation actions through `onAction`; the components do not assume a browser or a backend. Markdown renders as native Lynx elements, and raw HTML is displayed as text. The native main-thread first frame displays plain text; background hydration applies Markdown, keeping Unicode-dependent parsing out of the main-thread VM. Citations are one-based indices into `Card.sources`.
 
 For server-side prompt generation and validation:
 

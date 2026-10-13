@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { BuiltinActionType } from '@openuidev/lang-core';
 
+import type { Context } from '@lynx-js/react';
 import { createContext, useContext } from '@lynx-js/react';
 
 import { useIsStreaming, useTriggerAction } from '../core/context.jsx';
@@ -13,7 +14,9 @@ interface Source {
   sourceName: string;
 }
 
-export const SourcesContext = createContext<readonly Source[]>([]);
+export const SourcesContext: Context<readonly Source[]> = createContext<
+  readonly Source[]
+>([]);
 
 /** Route links through the host action callback, on native and Web alike. */
 export function useOpenLink() {

@@ -58,7 +58,8 @@ export default defineConfig({
     'packages/genui/html/rstest.config.ts',
     'packages/genui/lynx-xml/rstest.config.ts',
     'packages/genui/mcp-apps/rstest.config.ts',
-    'packages/genui/openui/rstest.config.ts',
+    // OpenUI's ReactLynx compiler changes shared bundler transforms. CI runs
+    // that project separately, after this aggregate suite (see test.yml).
     'packages/genui/playground/rstest.config.ts',
     'packages/genui/reactlynx/rstest.config.ts',
     'packages/genui/server/rstest.config.ts',

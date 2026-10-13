@@ -200,7 +200,12 @@ function Blocks({ tokens }: { tokens: Token[] }) {
 export function Markdown(
   { text, size = 'default' }: { text: string; size?: string },
 ) {
-  const tokens = useMemo(() => Lexer.lex(text, { gfm: true }), [text]);
+  const tokens = useMemo<Token[]>(() => {
+    // Marked uses Unicode property escapes unsupported by the native main-thread
+    // VM. Initial rendering keeps the text; background hydration adds Markdown.
+    if (__BACKGROUND__) return Lexer.lex(text, { gfm: true });
+    return [{ type: 'paragraph', raw: text, text }];
+  }, [text]);
   return (
     <view className={`OpenUIChatMarkdown OpenUIChatMarkdown-${size}`}>
       <Blocks tokens={tokens} />

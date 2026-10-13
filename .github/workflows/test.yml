@@ -417,6 +417,10 @@ jobs:
         --coverage
         --testTimeout=50000
         --hookTimeout=50000
+        && pnpm --filter @lynx-js/genui-openui exec rstest run
+        --coverage
+        --testTimeout=50000
+        --hookTimeout=50000
   test-rstest-windows:
     needs: build-windows
     uses: ./.github/workflows/workflow-test.yml
@@ -427,6 +431,10 @@ jobs:
       run: >
         pnpm exec rstest run
         -c rstest.config.ts
+        --coverage
+        --testTimeout=50000
+        --hookTimeout=50000
+        && pnpm --filter @lynx-js/genui-openui exec rstest run
         --coverage
         --testTimeout=50000
         --hookTimeout=50000
