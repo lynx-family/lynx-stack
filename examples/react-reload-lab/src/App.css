@@ -190,6 +190,16 @@
   margin-top: 3px;
 }
 
+.GlobalPropsValue {
+  background-color: #0b1220;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+}
+
 .ActionButton {
   align-items: center;
   border-radius: 11px;
@@ -211,6 +221,10 @@
   background-color: #202e43;
   border-color: #344862;
   border-width: 1px;
+}
+
+.GlobalPropsButton {
+  margin-top: 8px;
 }
 
 .ActionText {

@@ -12,6 +12,7 @@ export default defineConfig({
   plugins: [
     pluginReactLynx({
       experimental_reEvalJSOnReload: true,
+      globalPropsMode: 'reactive',
     }),
     pluginQRCode({
       schema(url) {

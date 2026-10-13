@@ -2,10 +2,11 @@ import {
   runOnBackground,
   runOnMainThread,
   useCallback,
+  useGlobalProps,
   useMainThreadRef,
   useState,
 } from '@lynx-js/react';
-import type { MainThread } from '@lynx-js/types';
+import type { MainThread, NodesRef } from '@lynx-js/types';
 
 import './App.css';
 import {
@@ -15,6 +16,7 @@ import {
 import type { ElementPapiTraceSnapshot } from './element-papi-trace.js';
 
 interface LynxTestModule {
+  updateGlobalProps: (props: Record<string, unknown>) => void;
   reloadTemplate: (
     data: Record<string, unknown>,
     props: Record<string, unknown>,
@@ -33,7 +35,25 @@ function getLynxTestModule(): LynxTestModule | undefined {
     .LynxTestModule;
 }
 
+function formatGlobalPropsTime(timestamp: number | undefined): string {
+  if (timestamp === undefined) return 'Not set';
+  const date = new Date(timestamp);
+  const pad = (value: number) => String(value).padStart(2, '0');
+  const day = [date.getFullYear(), date.getMonth() + 1, date.getDate()].map(
+    value => pad(value),
+  )
+    .join('-');
+  const time = [date.getHours(), date.getMinutes(), date.getSeconds()].map(
+    value => pad(value),
+  )
+    .join(':');
+  return `${day} ${time}.${String(date.getMilliseconds()).padStart(3, '0')}`;
+}
+
 export function App() {
+  const { reloadLabGlobalPropsTick } = useGlobalProps() as {
+    reloadLabGlobalPropsTick?: number;
+  };
   const [backgroundTaps, setBackgroundTaps] = useState(0);
   const [moduleTaps, setModuleTaps] = useState(0);
   const [mtsTaps, setMtsTaps] = useState(0);
@@ -75,9 +95,15 @@ export function App() {
     })(1);
   }, []);
 
-  const bindProbeRef = useCallback((node: unknown) => {
+  const bindProbeRef = useCallback((node: NodesRef | null) => {
     'background-only';
     setRefStatus(node ? 'attached' : 'detached');
+    if (node) {
+      node.invoke({
+        method: 'boundingClientRect',
+        params: {},
+      }).exec();
+    }
   }, []);
 
   const reload = useCallback(() => {
@@ -155,6 +181,58 @@ export function App() {
 
       <view className='CheckCard'>
         <view className='CardHeader'>
+          <view className='Step Step--violet'>
+            <text className='StepText'>GP</text>
+          </view>
+          <view className='CardHeading'>
+            <text className='CardTitle'>Native globalProps and reload</text>
+            <text className='CardDescription'>
+              Check that native globalProps updates survive reloadTemplate.
+            </text>
+          </view>
+        </view>
+        <view className='GlobalPropsValue'>
+          <text className='MetricLabel'>reloadLabGlobalPropsTick</text>
+          <text className='RuntimeLabel'>
+            {formatGlobalPropsTime(reloadLabGlobalPropsTick)}
+          </text>
+        </view>
+        <view
+          className='ActionButton ActionButton--quiet'
+          bindtap={() => {
+            'background-only';
+            const props = { reloadLabGlobalPropsTick: Date.now() };
+            getLynxTestModule()?.updateGlobalProps(props);
+          }}
+        >
+          <text className='ActionText'>Update native globalProps</text>
+        </view>
+        <view
+          className='GlobalPropsButton ActionButton ActionButton--blue'
+          bindtap={() => {
+            'background-only';
+            const testModule = getLynxTestModule();
+            const props = { reloadLabGlobalPropsTick: Date.now() };
+            testModule?.updateGlobalProps(props);
+            testModule?.reloadTemplate({}, {});
+          }}
+        >
+          <text className='ActionText'>Native props + reloadTemplate</text>
+        </view>
+        <view
+          className='GlobalPropsButton ActionButton ActionButton--quiet'
+          bindtap={() => {
+            'background-only';
+            const props = { reloadLabGlobalPropsTick: Date.now() };
+            getLynxTestModule()?.reloadTemplate({}, props);
+          }}
+        >
+          <text className='ActionText'>reloadTemplate with globalProps</text>
+        </view>
+      </view>
+
+      <view className='CheckCard'>
+        <view className='CardHeader'>
           <view className='Step'>
             <text className='StepText'>01</text>
           </view>
@@ -226,7 +304,8 @@ export function App() {
           <view className='CardHeading'>
             <text className='CardTitle'>Ref attachment</text>
             <text className='CardDescription'>
-              The callback ref should attach to the new tree.
+              Call boundingClientRect on every ref attach. Native errors expose
+              stale refs after reload.
             </text>
           </view>
           <text className={`RefBadge RefBadge--${refStatus}`}>{refStatus}</text>
