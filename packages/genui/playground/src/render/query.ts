@@ -18,6 +18,7 @@ export interface InitData {
   theme?: 'light' | 'dark';
   rawText?: string;
   rawTextUrl?: string;
+  inlineMode?: boolean;
   playbackPaused?: boolean;
   liveAction?: boolean;
   liveStream?: boolean;
@@ -91,6 +92,7 @@ function readInitDataParam(raw: string | null): InitData | null {
   initData.theme = readTheme(record.theme);
   initData.rawText = readString(record.rawText);
   initData.rawTextUrl = readString(record.rawTextUrl);
+  initData.inlineMode = readBoolean(record.inlineMode);
   initData.playbackPaused = readBoolean(record.playbackPaused);
   initData.liveAction = readBoolean(record.liveAction);
   initData.liveStream = readBoolean(record.liveStream);
@@ -141,6 +143,9 @@ export function parseInitDataFromQuery(): InitData | null {
     theme: readTheme(theme) ?? baseInitData?.theme,
     rawText: rawText ?? baseInitData?.rawText,
     rawTextUrl: rawTextUrl ?? baseInitData?.rawTextUrl,
+    inlineMode: params.get('inlineMode') === '1'
+      ? true
+      : baseInitData?.inlineMode,
     liveAction: params.get('liveAction') === '1'
       ? true
       : baseInitData?.liveAction,
@@ -199,6 +204,7 @@ export function buildGlobalPropsFromInitData(
   if (initData.theme !== undefined) out.theme = initData.theme;
   if (initData.rawText !== undefined) out.rawText = initData.rawText;
   if (initData.rawTextUrl !== undefined) out.rawTextUrl = initData.rawTextUrl;
+  if (initData.inlineMode !== undefined) out.inlineMode = initData.inlineMode;
   if (initData.playbackPaused !== undefined) {
     out.playbackPaused = initData.playbackPaused;
   }

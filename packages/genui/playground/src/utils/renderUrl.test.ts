@@ -214,6 +214,14 @@ describe('A2UI render payloads', () => {
 });
 
 describe('OpenUI render URLs', () => {
+  test('enables inline response handling only when selected', () => {
+    const base = 'https://lynx-stack.dev/genui/';
+    const selected = new URL(buildOpenUIRenderUrl({ inlineMode: true }, base));
+    expect(selected.searchParams.get('inlineMode')).toBe('1');
+    expect(
+      new URL(buildOpenUIRenderUrl({}, base)).searchParams.has('inlineMode'),
+    ).toBe(false);
+  });
   test('marks oversized inline rawText URLs as unsafe', () => {
     const rawText = 'root = Stack([])\n'.repeat(600);
     const url = buildOpenUIRenderUrl({

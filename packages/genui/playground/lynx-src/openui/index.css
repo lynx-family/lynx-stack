@@ -60,6 +60,21 @@
   box-sizing: border-box;
 }
 
+.OpenUIInlineResponse {
+  width: 100%;
+  min-width: 0;
+  padding: 24rpx 48rpx 48rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  box-sizing: border-box;
+}
+
+.OpenUIInlineResponse .OpenUIRenderer {
+  width: 100%;
+  min-width: 0;
+}
+
 .openui-editorial .OpenUICard {
   padding: 0;
   border-radius: 0;

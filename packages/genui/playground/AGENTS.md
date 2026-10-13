@@ -43,6 +43,7 @@ URL, and loads it directly in `<lynx-view>`.
 
 | Location                                         | Responsibility                                  |
 | ------------------------------------------------ | ----------------------------------------------- |
+| `public/lynx-genui-stream.html`                  | Minimal standalone source and renderer preview  |
 | `src/pages/`                                     | Shared pages and protocol adapters              |
 | `src/components/PreviewViewport.tsx`             | Preview surface selection                       |
 | `src/components/LynxXmlView.tsx`, `HtmlView.tsx` | Direct source previews                          |
@@ -56,6 +57,10 @@ URL, and loads it directly in `<lynx-view>`.
 Rspeedy outputs bundles to `www/`. Rsbuild serves that directory during
 development and copies it into the Web output in `dist/` during builds.
 XML example sources are copied unchanged to `dist/demos/lynx-xml/`.
+Static pages in `public/` are served directly in development and copied unchanged
+to the build root. Maintain the minimal standalone preview in `public/lynx-genui-stream.html`,
+with inline styles and scripts. Keep catalogs, system prompts and agent/transport
+configuration out of this page; do not add a separate Web entry for it.
 
 ## Lynx XML
 

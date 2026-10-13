@@ -58,3 +58,7 @@ ReactLynx 生成 `App.tsx` 与 `App.css`，编译为 Web 和 Native bundle 后�
 
 可以通过 [GenUI Playground](https://lynx-stack.dev/genui/) 查看内置的 A2UI 和
 OpenUI 组件集，也可以生成并预览 ReactLynx 页面和 Lynx XML 产物。
+
+如果希望搭建自己的预览应用，可以阅读[快速搭建 Playground](/zh/guide/genui/playground)，
+直接复用在线 Web renderer 和原生 Lynx bundle。同一份 A2UI 消息可用于两种预览，
+无需在本地编译 renderer。

@@ -60,3 +60,7 @@ validation, and Node.js compiler; your backend publishes the emitted assets.
 
 Use the [GenUI Playground](https://lynx-stack.dev/genui/) to inspect the built-in
 A2UI and OpenUI component sets, or generate and preview ReactLynx pages and Lynx XML artifacts.
+
+To build your own preview app with the hosted Web renderer and native Lynx bundles,
+follow [Build a playground](/guide/genui/playground). The quick start uses the same
+A2UI messages for both previews, without compiling a renderer locally.

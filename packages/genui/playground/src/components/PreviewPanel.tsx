@@ -114,6 +114,7 @@ interface A2UIPreviewSource {
 
 interface OpenUIPreviewSource {
   kind: 'openui';
+  inlineMode?: boolean;
   rawText: string;
   theme?: 'light' | 'dark';
   liveAction?: boolean;
@@ -1080,6 +1081,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
       rawText: previewSource.liveStream ? '' : previewSource.rawText,
       liveStream: previewSource.liveStream,
       theme: previewSource.theme,
+      inlineMode: previewSource.inlineMode,
       speed,
       liveAction: previewSource.liveAction,
       playbackMode: previewSource.playbackMode,
@@ -1087,6 +1089,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
     const inlineShareUrl = buildOpenUIRenderUrl({
       rawText: previewSource.rawText,
       theme: previewSource.theme,
+      inlineMode: previewSource.inlineMode,
       speed,
     }, baseUrl);
     const canInline = canInlineOpenUIRenderUrl(inlineUrl)
@@ -1104,6 +1107,11 @@ export function PreviewPanel(props: PreviewPanelProps) {
       }
       const u = new URL(rspeedyDevUrl);
       u.pathname = u.pathname.replace('a2ui.lynx', 'openui.lynx');
+      if (previewSource.inlineMode) {
+        u.searchParams.set('inlineMode', '1');
+      } else {
+        u.searchParams.delete('inlineMode');
+      }
       if (previewSource.theme) {
         u.searchParams.set('theme', previewSource.theme);
       }
@@ -1150,6 +1158,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
           setRenderUrl(buildOpenUIRenderUrl({
             rawTextUrl,
             theme: previewSource.theme,
+            inlineMode: previewSource.inlineMode,
             speed,
             liveAction: previewSource.liveAction,
             playbackMode: previewSource.playbackMode,
@@ -1158,6 +1167,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
         setRenderShareUrl(buildOpenUIRenderUrl({
           rawTextUrl,
           theme: previewSource.theme,
+          inlineMode: previewSource.inlineMode,
           speed,
         }, baseUrl));
       } catch (err) {

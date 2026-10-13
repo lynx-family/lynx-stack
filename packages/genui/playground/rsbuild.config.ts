@@ -309,6 +309,11 @@ export default defineConfig({
     },
     publicDir: [
       {
+        name: 'public',
+        copyOnBuild: true,
+        watch: true,
+      },
+      {
         name: 'www',
         copyOnBuild: true,
         watch: true,

@@ -4,6 +4,12 @@ applyTo: "packages/genui/playground/**"
 
 # GenUI Playground
 
+Maintain `public/lynx-genui-stream.html` as one minimal static HTML with inline JavaScript and CSS. Keep it limited to protocol selection, source editing, immediate or simulated streaming rendering, stop and reset; omit catalogs, system prompts and agent/transport configuration. Do not add a separate `src/stream/` entry or custom packaging; the existing publicDir copies this page unchanged and its renderer loads from the same deployment.
+
+Expose supported components through a link to the selected protocol's hosted Playground catalog, without embedding the catalog in the standalone preview. Keep the source and preview title bars at the same height. Simulated streaming waits for runtime readiness, sends A2UI messages in order and cumulative OpenUI text with `isStreaming: true`, then marks only a completed reply as final. Cancel playback on reset or protocol changes and clear unfinished OpenUI text on stop.
+
+When streaming test fixtures split a word into chunks, derive typo-prone fragments by slicing the complete word so the spellchecker can recognize it while preserving the original chunk boundaries.
+
 ## Runtime Boundaries
 
 Keep standalone preview implementations under `src/render/`, with

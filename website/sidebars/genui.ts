@@ -51,6 +51,15 @@ export function createGenUIGuideReadmeDocs(options: {
     sourceFile: path.join(genuiPackageRoot, 'docs/overview_zh.md'),
   });
 
+  syncDoc({
+    outFile: path.join(enGuideRoot, 'playground.md'),
+    sourceFile: path.join(genuiPackageRoot, 'docs/playground.md'),
+  });
+  syncDoc({
+    outFile: path.join(zhGuideRoot, 'playground.md'),
+    sourceFile: path.join(genuiPackageRoot, 'docs/playground_zh.md'),
+  });
+
   removeGeneratedDoc(path.join(enGuideRoot, 'a2ui'));
   removeGeneratedDoc(path.join(zhGuideRoot, 'a2ui'));
 
@@ -290,8 +299,8 @@ export function createGenUIGuideReadmeDocs(options: {
           items: LYNX_XML_EN_SIDEBAR_ITEMS,
         },
         {
-          text: 'Playground',
-          link: '/genui',
+          text: 'Playground Experience',
+          link: '/guide/genui/playground',
         },
       ],
     },
@@ -319,8 +328,8 @@ export function createGenUIGuideReadmeDocs(options: {
           items: LYNX_XML_ZH_SIDEBAR_ITEMS,
         },
         {
-          text: 'Playground',
-          link: '/zh/genui',
+          text: 'Playground 体验',
+          link: '/zh/guide/genui/playground',
         },
       ],
     },
@@ -483,6 +492,10 @@ export const GENUI_EN_NAV_ITEMS = [
   {
     text: 'Playground',
     link: '/genui',
+  },
+  {
+    text: 'Build a playground',
+    link: '/guide/genui/playground',
   },
 ];
 

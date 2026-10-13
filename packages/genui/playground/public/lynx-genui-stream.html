@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<!-- Copyright 2026 The Lynx Authors. Licensed under the Apache License, Version 2.0. -->
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GenUI 渲染预览</title>
+    <style>
+    /* Copyright 2026 The Lynx Authors. Licensed under the Apache License, Version 2.0. */
+    :root {
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #21312d;
+      background: #f3f6f4;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    [hidden] {
+      display: none !important;
+    }
+    body {
+      margin: 0;
+    }
+    main {
+      max-width: 1200px;
+      margin: auto;
+      padding: 24px;
+    }
+    header, .controls, .bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    header, .bar {
+      justify-content: space-between;
+    }
+    header {
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 24px;
+      margin: 0;
+    }
+    h2 {
+      font-size: 15px;
+      line-height: 24px;
+      margin: 0;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 20px;
+      align-items: stretch;
+    }
+    section {
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border: 1px solid #dbe5df;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .bar {
+      flex-shrink: 0;
+      padding: 14px 16px;
+    }
+    .panel-heading {
+      height: 64px;
+      flex-wrap: nowrap;
+    }
+    #catalog-link {
+      color: #18845d;
+      font-size: 13px;
+      text-underline-offset: 3px;
+    }
+    button, select {
+      font: inherit;
+    }
+    button, select {
+      border: 1px solid #d6e2da;
+      border-radius: 7px;
+      padding: 8px 12px;
+      background: #fff;
+      color: #294139;
+      font-size: 13px;
+    }
+    button {
+      cursor: pointer;
+    }
+    button:hover {
+      background: #f0f6f2;
+    }
+    button:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+    #stream {
+      background: #18845d;
+      color: #fff;
+      border-color: #18845d;
+    }
+    :focus-visible {
+      outline: 3px solid #8ed3b6;
+      outline-offset: 2px;
+    }
+    label, #status {
+      font-size: 13px;
+    }
+    textarea {
+      display: block;
+      flex-grow: 1;
+      width: calc(100% - 32px);
+      height: 520px;
+      margin: 0 16px;
+      padding: 12px;
+      resize: vertical;
+      border: 1px solid #d6e2da;
+      border-radius: 7px;
+      background: #fafcfb;
+      color: #21312d;
+      font: 13px/1.65 ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+    #error {
+      margin: 0;
+      padding: 0 16px 16px;
+      color: #b42318;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font-size: 13px;
+    }
+    #error:empty {
+      padding: 0;
+    }
+    #status {
+      color: #667b72;
+    }
+    .device-stage {
+      display: flex;
+      flex-grow: 1;
+      justify-content: center;
+      padding: 20px;
+      background: #edf2ef;
+    }
+    iframe {
+      width: 390px;
+      max-width: 100%;
+      height: 680px;
+      border: 1px solid #dbe5df;
+      border-radius: 12px;
+      background: #fff;
+    }
+    @media (max-width: 820px) {
+      main {
+        padding: 16px;
+      }
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      textarea {
+        height: 300px;
+      }
+    }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>GenUI 渲染预览</h1>
+        <div class="controls">
+          <label for="protocol">协议</label>
+          <select id="protocol">
+            <option value="openui">OpenUI</option>
+            <option value="a2ui">A2UI</option>
+          </select>
+          <label id="inline-control">
+            <input id="inline-mode" type="checkbox" /> inlineMode
+          </label>
+          <a
+            id="catalog-link"
+            href="https://lynx-stack.dev/genui/#/openui/catalog"
+            target="_blank"
+            rel="noopener noreferrer"
+          >支持的组件</a>
+        </div>
+      </header>
+      <div class="layout">
+        <section aria-labelledby="input-title">
+          <div class="bar panel-heading">
+            <h2 id="input-title">源码输入</h2>
+            <button id="example" type="button">载入示例</button>
+          </div>
+          <textarea
+            id="editor"
+            spellcheck="false"
+            aria-label="OpenUI 回复"
+          ></textarea>
+          <div class="bar">
+            <button id="render" type="button">渲染</button>
+            <button id="stream" type="button">流式渲染</button>
+            <button id="stop" type="button" disabled>停止</button>
+            <button id="reset" type="button">清空并重置</button>
+          </div>
+          <p id="error" role="alert"></p>
+        </section>
+        <section aria-labelledby="preview-title">
+          <div class="bar panel-heading">
+            <h2 id="preview-title">预览</h2>
+            <span id="status" role="status" aria-live="polite"
+            >Renderer 加载中</span>
+          </div>
+          <div class="device-stage">
+            <iframe
+              id="frame"
+              title="OpenUI 预览"
+              allow="clipboard-write"
+            ></iframe>
+          </div>
+        </section>
+      </div>
+    </main>
+    <script>
+    'use strict';
+      const a2uiExample = [
+        {
+          version: 'v0.9',
+          createSurface: {
+            surfaceId: 'demo',
+            catalogId:
+              'https://a2ui.org/specification/v0_9/basic_catalog.json',
+          },
+        },
+        {
+          version: 'v0.9',
+          updateComponents: {
+            surfaceId: 'demo',
+            components: [{
+              id: 'root',
+              component: 'Text',
+              text: { path: '/text' },
+            }],
+          },
+        },
+        {
+          version: 'v0.9',
+          updateDataModel: {
+            surfaceId: 'demo',
+            path: '/text',
+            value: '你好，Lynx！',
+          },
+        },
+      ];
+      const openuiExample = [
+        '$count = 0',
+        'root = Stack([CardHeader("Hello, OpenUI", "点击按钮更新计数"), TextContent("源码驱动界面"), Button("点击次数：" + $count, Action([@Set($count, $count + 1)]), "primary")])',
+      ].join('\n');
+      function exampleText(protocol, inlineMode) {
+        if (protocol === 'a2ui') {
+          return JSON.stringify(a2uiExample, null, 2);
+        }
+        return inlineMode
+          ? '下面是一张交互卡片：\n\n```openui\n' + openuiExample
+            + '\n```'
+          : openuiExample;
+      }
+
+      const operations = [
+        'createSurface',
+        'updateComponents',
+        'updateDataModel',
+        'deleteSurface',
+      ];
+      function normalize(input) {
+        const wrapper = input;
+        const messages = Array.isArray(input)
+          ? input
+          : Array.isArray(wrapper?.messages)
+          ? wrapper.messages
+          : [input];
+        for (const inputMessage of messages) {
+          const message = inputMessage;
+          const keys = message && typeof message === 'object'
+            ? operations.filter(key => key in message)
+            : [];
+          const payload = message?.[keys[0]];
+          if (
+            keys.length !== 1 || message?.version !== 'v0.9'
+            || typeof payload?.surfaceId !== 'string'
+            || !payload.surfaceId
+          ) {
+            throw new Error(
+              '每条消息需包含 version: "v0.9"、一个 A2UI 操作及非空 surfaceId。',
+            );
+          }
+        }
+        return messages;
+      }
+      function parsePreviewSource(source, protocol) {
+        const text = source.trim();
+        if (!text) {
+          throw new Error(
+            protocol === 'openui'
+              ? '请先输入 OpenUI 回复。'
+              : '请先输入 A2UI 消息。',
+          );
+        }
+        if (protocol === 'openui') {
+          return [{ rawText: text, isStreaming: false }];
+        }
+        let parsed;
+        try {
+          parsed = JSON.parse(text);
+        } catch {
+          return text.split(/\r?\n/).filter(line => line.trim()).flatMap(
+            (line, index) => {
+              try {
+                return normalize(JSON.parse(line));
+              } catch (error) {
+                throw new Error(
+                  `JSON / NDJSON 第 ${index + 1} 行解析失败：${
+                    error instanceof Error ? error.message : String(error)
+                  }`,
+                );
+              }
+            },
+          );
+        }
+        return normalize(parsed);
+      }
+
+      function createRendererBridge({ frame, onReady, onError }) {
+        let ready = false;
+        let navigationToken = '';
+        let pending;
+        let readyTimer;
+        function flush() {
+          if (!ready || !pending) {
+            return;
+          }
+          frame.contentWindow.postMessage({
+            type: 'A2UI_LIVE_MESSAGES',
+            messages: pending,
+          }, location.origin);
+          pending = undefined;
+        }
+        function onMessage(event) {
+          if (
+            event.origin !== location.origin
+            || event.source !== frame.contentWindow
+          ) {
+            return;
+          }
+          const data = event.data;
+          if (!data || typeof data !== 'object') {
+            return;
+          }
+          if (data.type === 'A2UI_RENDER_READY') {
+            if (
+              data.navigationToken !== navigationToken
+              || (data.frameUrl && data.frameUrl !== frame.src)
+            ) {
+              return;
+            }
+            if (data.runtimeReady !== true || ready) {
+              return;
+            }
+            ready = true;
+            clearTimeout(readyTimer);
+            onReady();
+            flush();
+          } else if (
+            data.type === 'OPENUI_RENDER_ERRORS'
+            && data.navigationToken === navigationToken
+          ) {
+            onError(
+              (Array.isArray(data.errors) ? data.errors : []).map(error =>
+                error.message ?? error.code
+              ).join('\n'),
+            );
+          }
+        }
+        window.addEventListener('message', onMessage);
+        return {
+          get ready() {
+            return ready;
+          },
+          reset(protocol, inlineMode) {
+            clearTimeout(readyTimer);
+            ready = false;
+            pending = undefined;
+            navigationToken = String(Date.now()) + '-'
+              + Math.random().toString(36).slice(2);
+            const url = new URL('./render.html', location.href);
+            const params = {
+              protocol,
+              ...(protocol === 'openui'
+                ? {
+                  demoUrl: './openui.web.js',
+                  rawText: '',
+                  liveStream: '1',
+                  inlineMode: inlineMode ? '1' : '0',
+                }
+                : { messages: '[]' }),
+              instant: '1',
+              theme: 'light',
+              liveAction: '1',
+              previewNavigationToken: navigationToken,
+            };
+            for (const [key, value] of Object.entries(params)) {
+              url.searchParams.set(key, value);
+            }
+            frame.src = url.href;
+            readyTimer = setTimeout(() => {
+              if (!ready) {
+                onError(
+                  'Renderer 30 秒内未就绪，请检查 render.html 和 bundle 后重试。',
+                );
+              }
+            }, 30000);
+          },
+          render(messages) {
+            pending = messages;
+            flush();
+          },
+          dispose() {
+            clearTimeout(readyTimer);
+            window.removeEventListener('message', onMessage);
+          },
+        };
+      }
+
+      function element(id) {
+        const node = document.getElementById(id);
+        if (!node) {
+          throw new Error(`Missing preview element: ${id}`);
+        }
+        return node;
+      }
+      const editor = element('editor');
+      const protocolSelect = element('protocol');
+      const inlineCheckbox = element('inline-mode');
+      const frame = element('frame');
+      const status = element('status');
+      const error = element('error');
+      const stopButton = element('stop');
+      let playback = null;
+      const pageParams = new URLSearchParams(location.search);
+      let protocol = pageParams.get('protocol') === 'a2ui'
+        ? 'a2ui'
+        : 'openui';
+      protocolSelect.value = protocol;
+      inlineCheckbox.checked = pageParams.get('inlineMode') === '1';
+      const drafts = {
+        a2ui: exampleText('a2ui', false),
+        openui: exampleText('openui', inlineCheckbox.checked),
+      };
+      const bridge = createRendererBridge({
+        frame,
+        onReady() {
+          status.textContent = 'Renderer 已就绪';
+        },
+        onError(message) {
+          if (message) stop();
+          error.textContent = message;
+        },
+      });
+      function inlineMode() {
+        return protocol === 'openui' && inlineCheckbox.checked;
+      }
+      function reset() {
+        stop();
+        error.textContent = '';
+        status.textContent = 'Renderer 加载中';
+        bridge.reset(protocol, inlineMode());
+      }
+      function render() {
+        try {
+          const messages = parsePreviewSource(editor.value, protocol);
+          reset();
+          bridge.render(messages);
+        } catch (cause) {
+          error.textContent = cause instanceof Error
+            ? cause.message
+            : String(cause);
+        }
+      }
+      function stop() {
+        if (!playback) return;
+        const run = playback;
+        playback = null;
+        run.controller.abort();
+        // An interrupted OpenUI reply must not become a completed, interactive UI.
+        if (run.protocol === 'openui') {
+          bridge.render([{ rawText: '', isStreaming: false }]);
+        }
+        stopButton.disabled = true;
+        status.textContent = '已停止';
+      }
+      function pause(ms, signal) {
+        return new Promise((resolve, reject) => {
+          const abort = () => {
+            clearTimeout(timer);
+            reject(new DOMException('已停止', 'AbortError'));
+          };
+          const timer = setTimeout(() => {
+            signal.removeEventListener('abort', abort);
+            resolve();
+          }, ms);
+          if (signal.aborted) abort();
+          else signal.addEventListener('abort', abort, { once: true });
+        });
+      }
+      async function stream() {
+        let messages;
+        try {
+          messages = parsePreviewSource(editor.value, protocol);
+        } catch (cause) {
+          error.textContent = cause.message;
+          return;
+        }
+        reset();
+        const run = { controller: new AbortController(), protocol };
+        playback = run;
+        const { signal } = run.controller;
+        stopButton.disabled = false;
+        try {
+          while (!bridge.ready) await pause(50, signal);
+          status.textContent = '流式渲染中';
+          if (run.protocol === 'openui') {
+            const text = messages[0].rawText;
+            const characters = Array.from(text);
+            for (let end = 24; end < characters.length; end += 24) {
+              signal.throwIfAborted();
+              bridge.render([{
+                rawText: characters.slice(0, end).join(''),
+                isStreaming: true,
+              }]);
+              await pause(80, signal);
+            }
+            signal.throwIfAborted();
+            bridge.render(messages);
+          } else {
+            for (const [index, message] of messages.entries()) {
+              signal.throwIfAborted();
+              bridge.render([message]);
+              if (index < messages.length - 1) await pause(500, signal);
+            }
+          }
+          status.textContent = '渲染完成';
+        } catch (cause) {
+          if (!signal.aborted) {
+            stop();
+            error.textContent = cause.message;
+          }
+        } finally {
+          if (playback === run) {
+            playback = null;
+            stopButton.disabled = true;
+          }
+        }
+      }
+      function updateControls() {
+        element('inline-control').hidden = protocol !== 'openui';
+        element('catalog-link').href =
+          `https://lynx-stack.dev/genui/#/${protocol}/catalog`;
+        editor.setAttribute(
+          'aria-label',
+          protocol === 'openui' ? 'OpenUI 回复' : 'A2UI 消息',
+        );
+        frame.title = protocol === 'openui' ? 'OpenUI 预览' : 'A2UI 预览';
+      }
+      protocolSelect.addEventListener('change', () => {
+        drafts[protocol] = editor.value;
+        protocol = protocolSelect.value;
+        editor.value = drafts[protocol];
+        updateControls();
+        reset();
+      });
+      inlineCheckbox.addEventListener('change', () => {
+        const previousExample = exampleText(
+          'openui',
+          !inlineCheckbox.checked,
+        );
+        if (editor.value === previousExample) {
+          editor.value = exampleText('openui', inlineMode());
+        }
+        render();
+      });
+      element('example').addEventListener('click', () => {
+        editor.value = exampleText(protocol, inlineMode());
+      });
+      element('render').addEventListener('click', render);
+      element('stream').addEventListener('click', () => {
+        void stream();
+      });
+      stopButton.addEventListener('click', stop);
+      element('reset').addEventListener('click', reset);
+      window.addEventListener('pagehide', () => {
+        stop();
+        bridge.dispose();
+      });
+      editor.value = drafts[protocol];
+      updateControls();
+      render();
+    </script>
+  </body>
+</html>

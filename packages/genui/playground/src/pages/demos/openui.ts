@@ -14,6 +14,7 @@ import { buildOpenUIRenderUrl } from '../../utils/renderUrl.js';
 
 interface OpenUIPreviewInput {
   rawText: string;
+  inlineMode?: boolean;
 }
 
 const OPENUI_PLAYBACK_CHUNK_SIZE = 240;
@@ -35,6 +36,7 @@ export const OPENUI_DEMOS_LIST_SOURCE = {
   createPreviewUrl({ baseUrl, scenario, theme }) {
     return buildOpenUIRenderUrl({
       rawText: scenario.raw,
+      inlineMode: scenario.inlineMode,
       theme,
       instant: true,
     }, baseUrl);
@@ -68,13 +70,19 @@ export const OPENUI_DEMOS_PAGE_SOURCE = {
     return scenario.raw;
   },
   createScenarioPreviewInput(scenario) {
-    return { rawText: scenario.raw };
+    return {
+      rawText: scenario.raw,
+      ...(scenario.inlineMode ? { inlineMode: true } : {}),
+    };
   },
-  commit({ editorValue }) {
+  commit({ editorValue, scenario }) {
     if (!editorValue.trim()) return { error: 'Raw output is empty.' };
     return {
       value: {
-        previewInput: { rawText: editorValue },
+        previewInput: {
+          rawText: editorValue,
+          ...(scenario?.inlineMode ? { inlineMode: true } : {}),
+        },
         playbackChunks: chunkOpenUI(editorValue),
         meta: undefined,
       },
@@ -84,6 +92,7 @@ export const OPENUI_DEMOS_PAGE_SOURCE = {
     return {
       kind: 'openui',
       rawText: input.rawText,
+      ...(input.inlineMode ? { inlineMode: true } : {}),
       theme,
       playbackMode: isPlaybackActive,
     };

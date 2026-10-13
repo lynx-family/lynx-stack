@@ -13,6 +13,7 @@ import {
   useState,
 } from '@lynx-js/react';
 
+import { InlineOpenUiRenderer } from './InlineOpenUiRenderer.jsx';
 import { readOpenUILiveResponse } from './liveResponse.js';
 import { OPENUI_SCENARIOS } from './mockData.js';
 import {
@@ -43,7 +44,10 @@ function readTheme(value: unknown): Theme | null {
 
 export function App() {
   const globalProps = useGlobalProps() as Record<string, unknown> | null;
+  const inlineMode = globalProps?.inlineMode === true
+    || globalProps?.inlineMode === '1';
   const openUiLibrary = useMemo(() => createOpenUiLibrary(), []);
+  const Renderer = inlineMode ? InlineOpenUiRenderer : OpenUiRenderer;
   const liveStream = globalProps?.liveStream === true;
   const openUiToolProvider = useMemo<
     Record<string, (args: Record<string, unknown>) => unknown>
@@ -119,7 +123,9 @@ export function App() {
     return readTheme(globalProps?.theme) ?? 'light';
   }, [globalProps]);
   const benchMode = globalProps?.benchMode === true;
-  const layoutClassName = benchMode ? 'openui-bench' : 'openui-editorial';
+  const layoutClassName = benchMode
+    ? 'openui-bench'
+    : (inlineMode ? 'openui-inline' : 'openui-editorial');
   const themeClassName = theme === 'dark'
     ? `openui-page ${layoutClassName} openui-dark luna-dark`
     : `openui-page ${layoutClassName} openui-light luna-light`;
@@ -311,7 +317,7 @@ export function App() {
       {liveStream || response
         ? (
           <scroll-view scroll-y className='openui-scroll'>
-            <OpenUiRenderer
+            <Renderer
               response={response}
               isStreaming={isStreaming}
               library={openUiLibrary}

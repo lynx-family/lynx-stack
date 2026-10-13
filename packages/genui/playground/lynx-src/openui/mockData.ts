@@ -2,9 +2,50 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+export const OPENUI_INLINE_TRIP_RAW = `## Hokkaido winter itinerary
+
+An eight-day trip works well with **Sapporo → Noboribetsu → Hakodate → Sapporo**.
+Keep the first day relaxed, then choose the stops you want to include below.
+
+\`\`\`openui id=winter-trip
+root = Card([hero], "card", "column", false, "m", "stretch", "start")
+hero = Column([CardHeader("Hokkaido · 8 days", "Snow, hot springs and city walks"), Row([Tag("Winter escape"), Tag("7 nights")], "start", "center", "s", true)], "start", "stretch", "m")
+\`\`\`
+
+### Choose your route
+
+Start with three nights in **Sapporo**, including day trips to Otaru and the zoo.
+Then head south for hot springs and Hakodate's evening views.
+
+\`\`\`openui-lang id=route
+root = Card([itinerary], "card", "column", false, "m", "stretch", "start")
+itinerary = Column([CardHeader("Your route", "A relaxed pace with two day trips"), List([Text("Days 1–3 · Sapporo, Otaru canal and Asahiyama Zoo", "body"), Text("Day 4 · Noboribetsu hot springs", "body"), Text("Days 5–6 · Hakodate market and evening views", "body"), Text("Days 7–8 · Return to Sapporo and fly home", "body")], null, "vertical", "stretch", "s", true)], "start", "stretch", "m")
+\`\`\`
+
+### Get ready for winter
+
+Use the checklist to prepare your essentials, then save the itinerary.
+Train times and hotel availability should be checked before booking.
+
+\`\`\`openui id=packing
+$saved = false
+root = Card([packing, actions], "card", "column", false, "m", "stretch", "start")
+packing = Column([CardHeader("Before you go", "Select what you have prepared"), CheckBox("Waterproof boots and warm layers", false), CheckBox("Reserve the hot spring hotel", false), CheckBox("Check train times for day trips", false)], "start", "stretch", "s")
+actions = Column([Button($saved ? "Itinerary saved" : "Save itinerary", Action([@Set($saved, true)]), "primary"), Text($saved ? "Ready to plan your winter escape." : "You can adjust the checklist before saving.", "caption")], "start", "stretch", "s")
+\`\`\`
+
+### Planning notes
+
+- Stay near Sapporo Station for easier day trips.
+- Reserve one night in Noboribetsu for the hot springs.
+- Leave room for weather changes on the return journey.
+
+The itinerary is in the preview; this explanation stays in the conversation.`;
+
 export interface OpenUIScenario {
   id: string;
   title: string;
+  inlineMode?: boolean;
   raw: string;
 }
 
@@ -46,6 +87,12 @@ export const OPENUI_SCENARIOS: OpenUIScenario[] = [
     id: 'new-layout-showcase',
     title: 'New Layout Showcase',
     raw: NEW_LAYOUT_SHOWCASE_RAW,
+  },
+  {
+    id: 'inline-winter-trip',
+    title: 'Inline Winter Trip',
+    inlineMode: true,
+    raw: OPENUI_INLINE_TRIP_RAW,
   },
   {
     id: 'new-interactive-controls',

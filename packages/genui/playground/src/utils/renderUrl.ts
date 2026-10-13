@@ -40,6 +40,8 @@ export interface RenderInit {
 export interface OpenUIRenderInit {
   rawText?: string;
   rawTextUrl?: string;
+  /** Keep the previous UI for text-only inline chat replies. */
+  inlineMode?: boolean;
   /** Theme forwarded to the OpenUI preview runtime. */
   theme?: 'light' | 'dark';
   speed?: number;
@@ -364,6 +366,7 @@ export function buildOpenUIRenderUrl(
   const url = new URL('render.html', baseUrl);
   url.searchParams.set('protocol', 'openui');
   url.searchParams.set('demoUrl', './openui.web.js');
+  if (init.inlineMode) url.searchParams.set('inlineMode', '1');
   if (init.liveStream) url.searchParams.set('liveStream', '1');
 
   if (init.theme) {

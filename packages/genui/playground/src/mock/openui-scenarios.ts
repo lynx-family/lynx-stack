@@ -6,10 +6,14 @@ import type { ParseResult } from '@openuidev/lang-core';
 
 import { createOpenUiPromptLibrary } from '@lynx-js/genui/openui/prompt';
 
+import { splitOpenUiResponse } from '../../lynx-src/openui/inlineResponse.js';
+import { OPENUI_INLINE_TRIP_RAW } from '../../lynx-src/openui/mockData.js';
+
 export interface OpenUIScenario {
   id: string;
   title: string;
   badge?: string;
+  inlineMode?: boolean;
   raw: string;
   parsed: string;
 }
@@ -25,6 +29,18 @@ export function parseOpenUIScenario(raw: string): ParseResult {
 }
 
 export function parseOpenUIScenarioRaw(raw: string): string {
+  const parts = splitOpenUiResponse(raw);
+  if (parts.some(part => part.kind === 'code')) {
+    return JSON.stringify(
+      parts.map(part =>
+        part.kind === 'code'
+          ? { ...part, result: parseOpenUIScenario(part.content) }
+          : part
+      ),
+      null,
+      2,
+    );
+  }
   return JSON.stringify(parseOpenUIScenario(raw), null, 2);
 }
 
@@ -96,6 +112,14 @@ audioCard = Card([CardHeader("Podcast Preview", "AudioPlayer placeholder"), Audi
 videoCard = Card([CardHeader("Launch Walkthrough", "Video placeholder"), Video("https://example.com/openui-launch.mp4", "OpenUI component walkthrough"), List([Text("Covers layout primitives", "body"), Text("Shows tabs and modal", "body"), Text("Highlights media cards", "body")], null, "vertical", "stretch", "xs", true)], "card", "column", false, "m", "stretch", "start")`;
 
 export const OPENUI_SCENARIOS: OpenUIScenario[] = [
+  {
+    id: 'inline-winter-trip',
+    title: 'Inline Winter Trip',
+    inlineMode: true,
+    raw: OPENUI_INLINE_TRIP_RAW,
+    badge: 'Markdown + UI',
+    parsed: parseOpenUIScenarioRaw(OPENUI_INLINE_TRIP_RAW),
+  },
   {
     id: 'new-layout-showcase',
     title: 'New Layout Showcase',
