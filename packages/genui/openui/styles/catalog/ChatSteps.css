@@ -1,0 +1,34 @@
+.OpenUIChatSteps {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+.OpenUIChatStep {
+  display: flex;
+  flex-direction: row;
+  gap: 16rpx;
+}
+.OpenUIChatStepNumber {
+  font-size: 24rpx;
+  line-height: 36rpx;
+  text-align: center;
+  color: var(--openui-color-primary);
+  background-color: var(--openui-color-primary-surface);
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 18rpx;
+  flex-shrink: 0;
+}
+.OpenUIChatStepBody {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 10rpx;
+}
+.OpenUIChatStepTitle {
+  font-size: 26rpx;
+  line-height: 1.5;
+  color: var(--openui-color-text);
+  font-weight: 700;
+}

@@ -177,11 +177,15 @@ function renderDeep(value: unknown): ReactNode {
   }
 
   if (Array.isArray(value)) {
-    return value.map((v, i) => (
-      <Fragment key={keyFrom(v, i)}>
-        {renderDeep(v)}
-      </Fragment>
-    ));
+    const occurrences = new Map<string, number>();
+    return value.map((v, i) => {
+      const identity = keyFrom(v, i);
+      const occurrence = occurrences.get(identity) ?? 0;
+      occurrences.set(identity, occurrence + 1);
+      return (
+        <Fragment key={`${identity}:${occurrence}`}>{renderDeep(v)}</Fragment>
+      );
+    });
   }
 
   if (isElementNode(value)) {

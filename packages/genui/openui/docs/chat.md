@@ -30,6 +30,15 @@ const prompt = library.prompt();
 const schema = library.toJSONSchema();
 ```
 
-Currently supported: `Card`, `TextContent`, `Text`, `BoldText`, `Button`, `Buttons`. This is an explicit subset of the upstream Chat library; unknown components are reported by the parser. Skipped optional positional arguments must remain `null` when supplying a later argument.
+Supported components:
+
+- Content: `Card`, `TextContent`, `Text`, `BoldText`, `Button`, `Buttons`, `ImageText`.
+- Collections: `ListBlock`, `ListItem`, `Steps`, `StepsItem`, `SectionBlock`, `SectionItem`, `Table`, `Col`.
+- Cards: `CompositeCardBlock`, `CompositeCardItem`.
+- Document extension: `ProductFeature(src, alt, title, subtitle, paragraphs, price, url)`. This is not an upstream OpenUI Chat component.
+
+This is an explicit subset of the upstream Chat library; unknown components are reported by the parser. Composite headers support ImageText and Text; bodies support Text, BoldText and ListBlock, with BoldText prices and Button footers. Skipped optional positional arguments must remain `null` when supplying a later argument.
+
+Sections support streaming expansion and `isFoldable=false`. Their contents stay mounted while folded. Named component declarations retain their identity across array changes; repeat references are also supported. Table column data can contain both scalar values and registered component nodes, and short columns leave empty cells. Grid and carousel layouts share the same CompositeCardItem contract. A card block action includes the selected item context; footer buttons dispatch their own action.
 
 Contracts are pinned to [thesysdev/openui](https://github.com/thesysdev/openui/tree/86da07f6266887ff819cd5a8e295c75b2edc8251/packages/react-ui/src/genui-lib). See `THIRD_PARTY_NOTICES.md` for attribution.

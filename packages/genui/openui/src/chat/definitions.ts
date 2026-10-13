@@ -2,6 +2,18 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 export { Card } from './Card/definition.js';
+export { ImageText } from './ImageText/definition.js';
+export { ListItem } from './ListItem/definition.js';
+export { ListBlock } from './ListBlock/definition.js';
+export { StepsItem } from './StepsItem/definition.js';
+export { Steps } from './Steps/definition.js';
+export { SectionItem } from './SectionItem/definition.js';
+export { SectionBlock } from './SectionBlock/definition.js';
+export { Col } from './Col/definition.js';
+export { Table } from './Table/definition.js';
+export { CompositeCardItem } from './CompositeCardItem/definition.js';
+export { CompositeCardBlock } from './CompositeCardBlock/definition.js';
+export { ProductFeature } from './ProductFeature/definition.js';
 export { Text } from './Text/definition.js';
 export { BoldText } from './BoldText/definition.js';
 export { TextContent } from './TextContent/definition.js';

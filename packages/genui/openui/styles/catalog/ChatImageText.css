@@ -1,0 +1,34 @@
+.OpenUIChatImageText {
+  display: flex;
+  flex-direction: row;
+  gap: 16rpx;
+  align-items: center;
+}
+.OpenUIChatImageTextVertical {
+  flex-direction: column;
+  align-items: stretch;
+}
+.OpenUIChatImageTextImage {
+  flex-shrink: 0;
+  border-radius: 12rpx;
+}
+.OpenUIChatImageTextLabels {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 6rpx;
+}
+.OpenUIChatImageTextTitle {
+  font-size: 26rpx;
+  color: var(--openui-color-text);
+  line-height: 1.4;
+}
+.OpenUIChatImageTextBold {
+  font-weight: 700;
+}
+.OpenUIChatImageTextSubtitle {
+  font-size: 22rpx;
+  color: var(--openui-color-text-muted);
+  line-height: 1.5;
+}
