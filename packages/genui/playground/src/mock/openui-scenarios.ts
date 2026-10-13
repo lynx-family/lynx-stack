@@ -6,12 +6,15 @@ import type { ParseResult } from '@openuidev/lang-core';
 
 import { createOpenUiPromptLibrary } from '@lynx-js/genui/openui/prompt';
 
+import travelCameraRaw from './openui/travel-camera.openui?raw';
+
 export interface OpenUIScenario {
   id: string;
   title: string;
   badge?: string;
   raw: string;
   parsed: string;
+  sourcePath?: string;
 }
 
 const openUiLibrary = createOpenUiPromptLibrary();
@@ -96,6 +99,14 @@ audioCard = Card([CardHeader("Podcast Preview", "AudioPlayer placeholder"), Audi
 videoCard = Card([CardHeader("Launch Walkthrough", "Video placeholder"), Video("https://example.com/openui-launch.mp4", "OpenUI component walkthrough"), List([Text("Covers layout primitives", "body"), Text("Shows tabs and modal", "body"), Text("Highlights media cards", "body")], null, "vertical", "stretch", "xs", true)], "card", "column", false, "m", "stretch", "start")`;
 
 export const OPENUI_SCENARIOS: OpenUIScenario[] = [
+  {
+    id: 'travel-camera-guide',
+    title: 'Travel Camera Guide',
+    badge: 'Interactive',
+    raw: travelCameraRaw,
+    parsed: parseOpenUIScenarioRaw(travelCameraRaw),
+    sourcePath: 'demos/openui/travel-camera.openui',
+  },
   {
     id: 'new-layout-showcase',
     title: 'New Layout Showcase',

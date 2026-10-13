@@ -280,6 +280,10 @@ export default defineConfig({
         from: 'src/mock/lynx-xml/*.lynxml',
         to: 'demos/lynx-xml/[name][ext]',
       },
+      {
+        from: 'src/mock/openui',
+        to: 'demos/openui',
+      },
       ...(HAS_PHASE_TWO_SCREENSHOTS
         ? [{
           from: 'src/pages/bench/assets/phase-two/screenshots/*.png',
@@ -293,7 +297,7 @@ export default defineConfig({
       module: {
         rules: [
           {
-            test: /\.lynxml$/,
+            test: /\.(?:lynxml|openui)$/,
             resourceQuery: /raw/,
             type: 'asset/source',
           },

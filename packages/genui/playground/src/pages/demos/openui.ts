@@ -14,6 +14,7 @@ import { buildOpenUIRenderUrl } from '../../utils/renderUrl.js';
 
 interface OpenUIPreviewInput {
   rawText: string;
+  sourcePath?: string;
 }
 
 const OPENUI_PLAYBACK_CHUNK_SIZE = 240;
@@ -34,7 +35,9 @@ export const OPENUI_DEMOS_LIST_SOURCE = {
   ],
   createPreviewUrl({ baseUrl, scenario, theme }) {
     return buildOpenUIRenderUrl({
-      rawText: scenario.raw,
+      ...(scenario.sourcePath
+        ? { rawTextUrl: new URL(scenario.sourcePath, baseUrl).toString() }
+        : { rawText: scenario.raw }),
       theme,
       instant: true,
     }, baseUrl);
@@ -68,13 +71,18 @@ export const OPENUI_DEMOS_PAGE_SOURCE = {
     return scenario.raw;
   },
   createScenarioPreviewInput(scenario) {
-    return { rawText: scenario.raw };
+    return { rawText: scenario.raw, sourcePath: scenario.sourcePath };
   },
-  commit({ editorValue }) {
+  commit({ editorValue, scenario }) {
     if (!editorValue.trim()) return { error: 'Raw output is empty.' };
     return {
       value: {
-        previewInput: { rawText: editorValue },
+        previewInput: {
+          rawText: editorValue,
+          sourcePath: editorValue === scenario?.raw
+            ? scenario.sourcePath
+            : undefined,
+        },
         playbackChunks: chunkOpenUI(editorValue),
         meta: undefined,
       },
@@ -84,6 +92,7 @@ export const OPENUI_DEMOS_PAGE_SOURCE = {
     return {
       kind: 'openui',
       rawText: input.rawText,
+      ...(input.sourcePath ? { sourcePath: input.sourcePath } : {}),
       theme,
       playbackMode: isPlaybackActive,
     };
