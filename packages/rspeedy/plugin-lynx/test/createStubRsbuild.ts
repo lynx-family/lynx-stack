@@ -1,6 +1,8 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -11,7 +13,7 @@ import type {
   RsbuildInstance,
   Rspack,
 } from '@rsbuild/core'
-import { rstest } from '@rstest/core'
+import { onTestFinished, rstest } from '@rstest/core'
 
 import { pluginLynx } from '../src/index.js'
 import type { LynxPluginOptions } from '../src/index.js'
@@ -49,6 +51,16 @@ export async function createStubRsbuild(
     },
 
     async usingDevServer() {
+      const distPath = await mkdtemp(
+        path.join(tmpdir(), 'rsbuild-plugin-dev-'),
+      )
+      onTestFinished(() => rm(distPath, { recursive: true, force: true }))
+      // Concurrent test files must not clean another live compiler's output.
+      rsbuild.modifyRsbuildConfig((config, { mergeRsbuildConfig }) =>
+        mergeRsbuildConfig(config, {
+          output: { cleanDistPath: true, distPath: { root: distPath } },
+        })
+      )
       let done = false
       rsbuild.onAfterDevCompile({
         handler: () => {

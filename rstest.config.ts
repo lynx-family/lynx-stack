@@ -48,6 +48,9 @@ export default defineConfig({
     exclude: ['**/web-elements/dist/**'],
   },
   reporters,
+  // Compiler suites spawn their own native thread pools and child servers.
+  // Bound CI file concurrency so cold server startup can make progress.
+  pool: { maxWorkers: process.env.CI ? 4 : undefined },
   projects: [
     'packages/genui/a2ui/rstest.config.ts',
     'packages/genui/a2ui-catalog-extractor/rstest.config.ts',

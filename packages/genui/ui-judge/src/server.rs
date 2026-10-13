@@ -3943,7 +3943,15 @@ mod tests {
             zip_capture_processes: ZipCaptureProcesses::new(),
             screenshot_store: store.clone(),
           }),
-          zip_request("zip:///index.lynxml", upload),
+          // Image decode and presentation run after the first page frame.
+          multipart_request(
+            "screenshot",
+            &[
+              ("entry", b"zip:///index.lynxml"),
+              ("file", &upload),
+              ("screenshotSettleMs", b"1000"),
+            ],
+          ),
         ))
         .expect("render ZIP image resources");
       let bmp = runtime.block_on(uploaded_screenshot(&store, response));

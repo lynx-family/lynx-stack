@@ -3,12 +3,22 @@
 // LICENSE file in the root directory of this source tree.
 
 import fs from 'node:fs'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { createRslib } from '@rslib/core'
 import type { RslibConfig, Rspack, rsbuild } from '@rslib/core'
-import { afterAll, beforeAll, describe, expect, it, rstest } from '@rstest/core'
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  onTestFinished,
+  rstest,
+} from '@rstest/core'
 
 import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
 import { pluginLynx } from '@lynx-js/rsbuild-plugin'
@@ -38,11 +48,33 @@ async function inspectRspackConfig(
 }
 
 async function build(rslibConfig: RslibConfig) {
+  const cacheDirectory = await mkdtemp(
+    path.join(tmpdir(), 'external-bundle-cache-'),
+  )
+  onTestFinished(() => rm(cacheDirectory, { recursive: true, force: true }))
+  // Different compilers in this suite must not share a cache transaction.
+  rslibConfig = {
+    ...rslibConfig,
+    lib: rslibConfig.lib.map(lib => ({
+      ...lib,
+      performance: {
+        ...lib.performance,
+        buildCache: lib.performance?.buildCache === false ? false : {
+          ...(typeof lib.performance?.buildCache === 'object'
+            ? lib.performance.buildCache
+            : {}),
+          cacheDirectory,
+        },
+      },
+    })),
+  }
   const rslib = await createRslib({
     config: rslibConfig,
     cwd: __dirname,
   })
-  return await rslib.build()
+  const result = await rslib.build()
+  await result.close()
+  return result
 }
 
 function resolveExternal(
