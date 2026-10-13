@@ -35,10 +35,26 @@ Supported components:
 - Content: `Card`, `TextContent`, `Text`, `BoldText`, `Button`, `Buttons`, `ImageText`.
 - Collections: `ListBlock`, `ListItem`, `Steps`, `StepsItem`, `SectionBlock`, `SectionItem`, `Table`, `Col`.
 - Cards: `CompositeCardBlock`, `CompositeCardItem`.
+- Forms: `Form`, `FormControl`, `Input`, `RadioGroup`, `RadioItem`, `CheckBoxGroup`, `CheckBoxItem`, `Slider`.
 - Document extension: `ProductFeature(src, alt, title, subtitle, paragraphs, price, url)`. This is not an upstream OpenUI Chat component.
 
 This is an explicit subset of the upstream Chat library; unknown components are reported by the parser. Composite headers support ImageText and Text; bodies support Text, BoldText and ListBlock, with BoldText prices and Button footers. Skipped optional positional arguments must remain `null` when supplying a later argument.
 
 Sections support streaming expansion and `isFoldable=false`. Their contents stay mounted while folded. Named component declarations retain their identity across array changes; repeat references are also supported. Table column data can contain both scalar values and registered component nodes, and short columns leave empty cells. Grid and carousel layouts share the same CompositeCardItem contract. A card block action includes the selected item context; footer buttons dispatch their own action.
+
+Forms use `Form(name, buttons, fields)` and `FormControl(label, input, hint?)`. `Input`, `RadioGroup`, `CheckBoxGroup` and `Slider` accept an optional reactive binding in their last position. Without one, the field name identifies its value within the enclosing form. Use stable, unique field names and named component declarations when inserting, deleting or reordering fields.
+
+```scss
+root = Card([form, progress])
+$ready = {passport: false, boots: false}
+form = Form("trip", Buttons([Button("Continue")]), [documents, clothing])
+documents = FormControl("Documents", CheckBoxGroup("ready", [CheckBoxItem("Passport", "Check expiry", "passport")], {required: true}, $ready))
+clothing = FormControl("Clothing", CheckBoxGroup("ready", [CheckBoxItem("Boots", "Pack footwear", "boots")], {required: true}, $ready))
+progress = TextContent("Ready: " + ($ready.passport ? 1 : 0) + " / " + ($ready.boots ? 1 : 0))
+```
+
+Checkbox groups sharing a binding merge their changes into the complete object; validation checks only each group's own items. Defaults initialize missing values without overwriting hydrated or edited state. Streaming disables editing and submission. Structured validation rules run before button actions, which receive the current form state.
+
+Slider state and `defaultValue` use arrays even for a single value, matching Chat expressions such as `@First($budget)`. Multiple values render as separate bounded Lynx slider controls, constrained to preserve their order. Native rendering differs from the upstream multi-thumb track; the positional and state contracts remain the same.
 
 Contracts are pinned to [thesysdev/openui](https://github.com/thesysdev/openui/tree/86da07f6266887ff819cd5a8e295c75b2edc8251/packages/react-ui/src/genui-lib). See `THIRD_PARTY_NOTICES.md` for attribution.
