@@ -25,30 +25,35 @@ export const Table: DefinedComponent<typeof definition.props> = {
     const count = Math.max(0, ...columns.map(col => col.data.length));
     return (
       <scroll-view scroll-orientation='horizontal' className='OpenUIChatTable'>
-        <view className='OpenUIChatTableRow'>
-          {columns.map(col => (
-            <view className='OpenUIChatTableCell' key={col.key}>
-              <text className='OpenUIChatTableHeader'>{col.label}</text>
-            </view>
-          ))}
+        <view
+          className='OpenUIChatTableContent'
+          style={{ width: `${columns.length * 240}rpx` }}
+        >
+          <view className='OpenUIChatTableRow'>
+            {columns.map(col => (
+              <view className='OpenUIChatTableCell' key={col.key}>
+                <text className='OpenUIChatTableHeader'>{col.label}</text>
+              </view>
+            ))}
+          </view>
+          {Array.from(
+            { length: count },
+            (_, index) => (
+              <view className='OpenUIChatTableRow' key={index}>
+                {columns.map(col => (
+                  <view
+                    className={`OpenUIChatTableCell ${
+                      col.type === 'number' ? 'OpenUIChatTableNumber' : ''
+                    }`}
+                    key={col.key}
+                  >
+                    {renderNode(col.data[index])}
+                  </view>
+                ))}
+              </view>
+            ),
+          )}
         </view>
-        {Array.from(
-          { length: count },
-          (_, index) => (
-            <view className='OpenUIChatTableRow' key={index}>
-              {columns.map(col => (
-                <view
-                  className={`OpenUIChatTableCell ${
-                    col.type === 'number' ? 'OpenUIChatTableNumber' : ''
-                  }`}
-                  key={col.key}
-                >
-                  {renderNode(col.data[index])}
-                </view>
-              ))}
-            </view>
-          ),
-        )}
       </scroll-view>
     );
   },

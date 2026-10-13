@@ -7,8 +7,15 @@
   display: flex;
   flex-direction: row;
 }
+.OpenUIChatTableContent {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  min-width: 100%;
+}
 .OpenUIChatTableCell {
   width: 240rpx;
+  flex-grow: 1;
   flex-shrink: 0;
   padding: 16rpx;
   border-bottom: 1rpx solid var(--openui-color-border);
