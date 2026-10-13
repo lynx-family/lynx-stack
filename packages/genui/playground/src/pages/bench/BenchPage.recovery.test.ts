@@ -364,6 +364,33 @@ describe('BenchPage report recovery', () => {
     );
   });
 
+  test.each([null, 'https://saved-judge.example.com/', ''])(
+    'restores the screenshot URL across remounts, defaulting only when unsaved (%s)',
+    async savedUrl => {
+      if (savedUrl !== null) {
+        window.localStorage.setItem(
+          'genui-bench-ui-judge-server-url',
+          savedUrl,
+        );
+      }
+      const expectedUrl = savedUrl ?? 'https://server-render.lynx-stack.dev/';
+      await mountPage();
+      expect(
+        container.querySelector<HTMLInputElement>('input[type="url"]')?.value,
+      ).toBe(expectedUrl);
+      expect(window.localStorage.getItem('genui-bench-ui-judge-server-url'))
+        .toBe(expectedUrl);
+
+      await React.act(async () => root.unmount());
+      root = createRoot(container);
+      await mountPage();
+      expect(
+        container.querySelector<HTMLInputElement>('input[type="url"]')?.value,
+      ).toBe(expectedUrl);
+      expect(benchRequests()).toHaveLength(0);
+    },
+  );
+
   test.each([undefined, ''])(
     'preserves the local screenshot URL for legacy links and clears it for an explicit empty URL (%s)',
     async uiJudgeServerUrl => {
@@ -382,7 +409,13 @@ describe('BenchPage report recovery', () => {
       )
         .toBe(uiJudgeServerUrl ?? localUrl);
       expect(window.localStorage.getItem('genui-bench-ui-judge-server-url'))
-        .toBe(uiJudgeServerUrl === '' ? null : localUrl);
+        .toBe(uiJudgeServerUrl ?? localUrl);
+      await React.act(async () => root.unmount());
+      root = createRoot(container);
+      await mountPage();
+      expect(
+        container.querySelector<HTMLInputElement>('input[type="url"]')?.value,
+      ).toBe(uiJudgeServerUrl ?? localUrl);
       expect(benchRequests()).toHaveLength(0);
     },
   );
