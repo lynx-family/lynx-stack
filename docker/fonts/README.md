@@ -26,12 +26,14 @@ Build from the repository root:
 
 ```bash
 docker build --platform linux/amd64 -t lynx-stack:cjk .
-docker run --rm -p 127.0.0.1:8080:8080 lynx-stack:cjk ui-judge-server
 ```
+
+Start `ui-judge-server` in the image with the environment variables described in
+the [screenshot storage setup](../../packages/genui/ui-judge/README.md#screenshot-storage).
 
 The build checks the installed font's internal family name with `fc-scan`.
 This checks the resource, not Lynx's font selection. Submit a LynXML page
 containing `你好, Lynx!` to `/screenshot/lynxml` without setting `font-family`,
 following the [UI Judge HTTP API](../../packages/genui/ui-judge/README.md#http-server).
-Confirm that the returned screenshot contains Chinese glyphs rather than
+Open the screenshot at the returned URL and confirm that it contains Chinese glyphs rather than
 missing-glyph boxes. `fc-match` is not an end-to-end check for this runtime.
