@@ -25,14 +25,19 @@ import {
   wrapPrintUrlsWithFullscreen,
 } from '../src/index.js'
 
+type LynxPluginOptions = Parameters<typeof pluginLynx>[0]
+
 const exit = vi.fn()
 
 // `pluginQRCode` reads the Lynx config the build engine exposes, so the stub
 // applies the engine's config plugin the way a real Lynx build does.
-const exposeLynxConfig = (api: RsbuildPluginAPI): void => {
+const exposeLynxConfig = (
+  api: RsbuildPluginAPI,
+  lynxOptions?: LynxPluginOptions,
+): void => {
   let lynx: unknown
 
-  for (const plugin of pluginLynx()) {
+  for (const plugin of pluginLynx(lynxOptions)) {
     void plugin.setup({
       expose(_id: string | symbol, value: unknown) {
         lynx = value
@@ -47,7 +52,10 @@ const exposeLynxConfig = (api: RsbuildPluginAPI): void => {
   api.expose(Symbol.for('@lynx-js/rsbuild-plugin:config'), lynx)
 }
 
-const pluginStubRspeedyAPI = (config: Config = {}): RsbuildPlugin => ({
+const pluginStubRspeedyAPI = (
+  config: Config = {},
+  lynxOptions?: LynxPluginOptions,
+): RsbuildPlugin => ({
   name: 'lynx:rsbuild:api',
   setup(api) {
     api.expose<ExposedAPI>(Symbol.for('rspeedy.api'), {
@@ -58,7 +66,7 @@ const pluginStubRspeedyAPI = (config: Config = {}): RsbuildPlugin => ({
       version: '1.0.0',
     })
 
-    exposeLynxConfig(api)
+    exposeLynxConfig(api, lynxOptions)
   },
 })
 
@@ -141,6 +149,63 @@ describe('Plugins - Terminal', () => {
 
       expect(renderUnicodeCompact).toBeCalledTimes(1)
 
+      expect(renderUnicodeCompact).toBeCalledWith(
+        `--http://example.com/foo/main.lynx.bundle--`,
+      )
+    })
+
+    test('custom schema with hash placeholders in filename.bundle', async () => {
+      vi.stubEnv('NODE_ENV', 'development')
+      const { renderUnicodeCompact } = await import('uqr')
+      vi.mocked(renderUnicodeCompact).mockReturnValueOnce('<data>')
+      const rsbuild = await createRsbuild(
+        {
+          rsbuildConfig: {
+            dev: {
+              assetPrefix: 'http://example.com/foo/',
+            },
+            environments: {
+              lynx: {},
+            },
+            server: {
+              port: getRandomNumberInRange(3000, 60000),
+            },
+            source: {
+              entry: {
+                main: join(
+                  dirname(fileURLToPath(import.meta.url)),
+                  'fixtures',
+                  'hello-world',
+                ),
+              },
+            },
+            plugins: [
+              pluginStubRspeedyAPI({}, {
+                output: {
+                  filename: {
+                    bundle: '[name].[platform].[contenthash:8].bundle',
+                  },
+                },
+              }),
+              pluginQRCode({
+                fullscreen: false,
+                schema(url) {
+                  return `--${url}--`
+                },
+              }),
+            ],
+          },
+        },
+      )
+
+      await using server = await usingDevServer(rsbuild)
+
+      await server.waitDevCompileDone()
+
+      // The QRCode encodes the URL with the hash placeholders stripped: the
+      // hash changes on every recompile, so the stable name — which the dev
+      // server resolves to the latest emitted bundle — is the only one that
+      // keeps working.
       expect(renderUnicodeCompact).toBeCalledWith(
         `--http://example.com/foo/main.lynx.bundle--`,
       )
