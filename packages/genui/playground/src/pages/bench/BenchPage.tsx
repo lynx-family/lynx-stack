@@ -15,6 +15,7 @@ import {
   BENCH_CATALOG_OPTIONS,
   DEFAULT_BENCH_SCENARIOS,
   DEFAULT_BENCH_SETTINGS,
+  DEFAULT_BENCH_UI_JUDGE_SERVER_URL,
   MAX_BENCH_GROUPS,
   createBenchPresetGroups,
   createCustomBenchScenario,
@@ -244,11 +245,12 @@ const LOCAL_A2UI_SERVER_PORT = '3060';
 const UI_JUDGE_SERVER_URL_STORAGE_KEY = 'genui-bench-ui-judge-server-url';
 
 export function readBenchUiJudgeServerUrl(): string {
-  if (typeof window === 'undefined') return '';
+  if (typeof window === 'undefined') return DEFAULT_BENCH_UI_JUDGE_SERVER_URL;
   try {
-    return window.localStorage.getItem(UI_JUDGE_SERVER_URL_STORAGE_KEY) ?? '';
+    return window.localStorage.getItem(UI_JUDGE_SERVER_URL_STORAGE_KEY)
+      ?? DEFAULT_BENCH_UI_JUDGE_SERVER_URL;
   } catch {
-    return '';
+    return DEFAULT_BENCH_UI_JUDGE_SERVER_URL;
   }
 }
 
@@ -817,14 +819,10 @@ export function BenchPage({ sharedPlan }: { sharedPlan?: string }) {
     const normalized = normalizeBenchUiJudgeServerUrl(uiJudgeServerUrl);
     if (normalized === null) return;
     try {
-      if (normalized) {
-        window.localStorage.setItem(
-          UI_JUDGE_SERVER_URL_STORAGE_KEY,
-          normalized,
-        );
-      } else {
-        window.localStorage.removeItem(UI_JUDGE_SERVER_URL_STORAGE_KEY);
-      }
+      window.localStorage.setItem(
+        UI_JUDGE_SERVER_URL_STORAGE_KEY,
+        normalized,
+      );
     } catch {
       // The field remains usable when localStorage is unavailable.
     }

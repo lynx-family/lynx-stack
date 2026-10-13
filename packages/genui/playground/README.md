@@ -233,8 +233,11 @@ sandboxed iframe for Judge screenshots. Start run asks you to share the current
 tab; keep it open until completion. These groups need no screenshot service, and
 ReactWeb Bench does not publish builds to TOS.
 
-Enter `UI_JUDGE_SERVER_URL` in Bench's inline run configuration when enabling UI
-Judge for A2UI, OpenUI, or Lynx XML groups. A credential-free HTTP(S) URL is saved only in browser local storage;
+Configure `UI_JUDGE_SERVER_URL` in Bench's inline run configuration when enabling UI
+Judge for A2UI, OpenUI, or Lynx XML groups. It defaults to
+`https://server-render.lynx-stack.dev/` when no value has been saved; saved values,
+including an explicitly cleared field, are preserved.
+A credential-free HTTP(S) URL is saved only in browser local storage;
 it is never sent to GenUI Server and has no server environment fallback. The
 Playground checks `/health`, requests each screenshot directly with multipart,
 downloads the BMP from the TOS URL the service returns, and uploads it to
