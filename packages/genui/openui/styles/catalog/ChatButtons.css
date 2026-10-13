@@ -1,0 +1,10 @@
+.OpenUIChatButtons {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+.OpenUIChatButtonsColumn {
+  flex-direction: column;
+  flex-wrap: nowrap;
+}

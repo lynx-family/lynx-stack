@@ -232,3 +232,5 @@ pnpm -C packages/genui pack --dry-run
 ## License
 
 Apache-2.0
+
+The opt-in [OpenUI Chat library](https://github.com/lynx-family/lynx-stack/blob/main/packages/genui/openui/docs/chat.md) uses the official Chat positional contracts and provides a server-safe schema entry.

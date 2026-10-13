@@ -115,6 +115,14 @@
     "./reactlynx": {
       "types": "./reactlynx/dist/index.d.ts",
       "default": "./reactlynx/dist/index.js"
+    },
+    "./openui/chat": {
+      "types": "./openui/dist/chat/index.d.ts",
+      "default": "./openui/dist/chat/index.js"
+    },
+    "./openui/chat/agent": {
+      "types": "./openui/dist/chat/agent.d.ts",
+      "default": "./openui/dist/chat/agent.js"
     }
   },
   "main": "./dist/index.js",
@@ -168,6 +176,7 @@
     "@openuidev/lang-core": "^0.3.0",
     "@rsbuild/core": "catalog:rsbuild",
     "eslint-scope": "^8.4.0",
+    "marked": "^14.0.0",
     "typedoc": "^0.28.20",
     "typescript": "^6.0.3",
     "zod": "^3.25.76 || ^4.0.0"

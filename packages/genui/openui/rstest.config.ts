@@ -4,6 +4,7 @@
 import { defineConfig } from '@rstest/core';
 
 import { withDefaultConfig } from '@lynx-js/react/testing-library/rstest-config';
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 
 export default defineConfig({
   extends: withDefaultConfig({
@@ -12,20 +13,7 @@ export default defineConfig({
         ...config,
         name: 'genui/openui',
         include: ['test/**/*.test.{ts,tsx}'],
-        tools: {
-          ...config.tools,
-          swc: {
-            jsc: {
-              transform: {
-                react: {
-                  importSource: '@lynx-js/react',
-                  runtime: 'automatic',
-                  throwIfNamespace: false,
-                },
-              },
-            },
-          },
-        },
+        plugins: [pluginReactLynx()],
       };
     },
   }),

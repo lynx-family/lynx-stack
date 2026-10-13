@@ -1,0 +1,25 @@
+.OpenUIChatCard {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  width: 100%;
+  padding: 24rpx;
+  border-radius: 20rpx;
+  background-color: var(--openui-color-surface);
+}
+.OpenUIChatSources {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid var(--openui-color-border);
+}
+.OpenUIChatSource {
+  font-size: 22rpx;
+  line-height: 1.5;
+  color: var(--openui-color-text-muted);
+}
+.OpenUIChatLink {
+  color: var(--openui-color-primary);
+  text-decoration: underline;
+}

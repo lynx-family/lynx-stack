@@ -48,3 +48,32 @@
 .OpenUIButtonSecondary .OpenUIButtonText {
   color: var(--secondary-content, var(--openui-color-text));
 }
+
+.OpenUIButtonSize-extra-small {
+  padding: 4rpx 8rpx;
+}
+.OpenUIButtonSize-extra-small .OpenUIButtonText {
+  font-size: 18rpx;
+}
+.OpenUIButtonSize-small {
+  padding: 6rpx 12rpx;
+}
+.OpenUIButtonSize-small .OpenUIButtonText {
+  font-size: 20rpx;
+}
+.OpenUIButtonSize-large {
+  padding: 16rpx 22rpx;
+}
+.OpenUIButtonSize-large .OpenUIButtonText {
+  font-size: 28rpx;
+}
+.OpenUIButtonDestructive {
+  border-color: var(--openui-color-error);
+}
+.OpenUIButtonDestructive.OpenUIButtonPrimary {
+  background-color: var(--openui-color-error);
+}
+.OpenUIButtonDestructive.OpenUIButtonSecondary .OpenUIButtonText,
+.OpenUIButtonDestructive.OpenUIButtonGhost .OpenUIButtonText {
+  color: var(--openui-color-error);
+}

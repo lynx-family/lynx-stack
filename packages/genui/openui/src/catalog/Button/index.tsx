@@ -43,6 +43,9 @@ function ButtonRenderer({ props }: { props: ButtonProps }) {
     className = 'OpenUIButton OpenUIButtonGhost';
   }
 
+  className += ` OpenUIButtonSize-${props.size ?? 'medium'}`;
+  if (props.type === 'destructive') className += ' OpenUIButtonDestructive';
+
   const onTap = () => {
     const legacyAction = action && !('steps' in action) ? action : undefined;
     const actionType = legacyAction?.type ?? CONTINUE_CONVERSATION_ACTION;

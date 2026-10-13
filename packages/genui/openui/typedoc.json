@@ -6,7 +6,9 @@
     "src/core/explicit.ts",
     "src/catalog/agent.ts",
     "src/openui-prompt/index.ts",
-    "src/data-tools/index.ts"
+    "src/data-tools/index.ts",
+    "src/chat/index.ts",
+    "src/chat/agent.ts"
   ],
   "tsconfig": "tsconfig.build.json",
   "intentionallyNotExported": [
