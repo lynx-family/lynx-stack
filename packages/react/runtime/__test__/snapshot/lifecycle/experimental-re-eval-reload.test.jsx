@@ -11,7 +11,7 @@ import { reloadMainThread } from '../../../src/snapshot/lifecycle/reload';
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
 import { __root, setRoot } from '../../../src/root';
-import { SnapshotInstance } from '../../../src/snapshot/snapshot/snapshot';
+import { SnapshotInstance, snapshotInstanceManager } from '../../../src/snapshot/snapshot/snapshot';
 import { setupPage } from '../../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree, nativeMethodQueue, waitSchedule } from '../utils/nativeMethod';
@@ -20,6 +20,7 @@ const mainThreadEntryReloaderKey = Symbol.for('__LYNX_MAIN_THREAD_ENTRY_RELOADER
 const entrySupportsReEvalKey = Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__');
 const mainThreadReloadCompleterKey = Symbol.for('__LYNX_MAIN_THREAD_RELOAD_COMPLETER__');
 const reloadVersionKey = Symbol.for('__LYNX_RELOAD_VERSION__');
+const externalCacheKey = Symbol.for('__LYNX_EXTERNAL_GLOBAL__');
 let nextMtsRefId = 0;
 
 beforeAll(() => {
@@ -37,6 +38,7 @@ beforeEach(() => {
 
 afterEach(() => {
   delete lynx[entrySupportsReEvalKey];
+  delete lynx[externalCacheKey];
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   delete globalThis.__reloadStateTestOnTap;
@@ -126,6 +128,70 @@ function getElementTreeUiSigns(element) {
 }
 
 describe('experimental re-eval reload', () => {
+  it('reinitializes main-thread external exports and reuses elements across repeated reloads', () => {
+    const renderEntry = () =>
+      root.render(
+        <view test-state='fresh'>
+          <text>re-evaluated entry</text>
+        </view>,
+      );
+    renderEntry();
+    renderPage();
+    expect(elementTree).toMatchInlineSnapshot(`
+      "<page
+        cssId="default-entry-from-native:0"
+      >
+        <view
+          test-state="fresh"
+        >
+          <text>
+            <raw-text
+              text="re-evaluated entry"
+            />
+          </text>
+        </view>
+      </page>"
+    `);
+    const treeBeforeReload = elementTree.toTree();
+    const uiSigns = getElementTreeUiSigns(treeBeforeReload);
+    lynx[externalCacheKey] = { reactLynx: { root: __root } };
+    const previousReloader = lynx[mainThreadEntryReloaderKey];
+    const initializeExternal = vi.fn(() => {
+      const root = new SnapshotInstance('root');
+      setRoot(root);
+      return { root };
+    });
+    lynx[mainThreadEntryReloaderKey] = () => {
+      const external = lynx[externalCacheKey] ??= {};
+      external.reactLynx ??= initializeExternal();
+      renderEntry();
+    };
+    lynx[entrySupportsReEvalKey] = true;
+    vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
+
+    try {
+      for (const reload of [1, 2, 3]) {
+        const oldRoot = __root;
+        nativeMethodQueue.clear();
+        reloadMainThread({}, { reloadTemplate: true });
+
+        expect(initializeExternal).toHaveBeenCalledTimes(reload);
+        expect(__root).not.toBe(oldRoot);
+        expect(__root.childNodes).toHaveLength(1);
+        expect(snapshotInstanceManager.values.get(__root.__id)).toBe(__root);
+        expect(elementTree.toTree()).toEqual(treeBeforeReload);
+        expect(getElementTreeUiSigns(elementTree.toTree())).toEqual(uiSigns);
+        expect(nativeMethodQueue.filter(([name]) => name.startsWith('__Create'))).toEqual([]);
+      }
+    } finally {
+      if (previousReloader === undefined) {
+        delete lynx[mainThreadEntryReloaderKey];
+      } else {
+        lynx[mainThreadEntryReloaderKey] = previousReloader;
+      }
+    }
+  });
+
   it.each(['missing entry support', 'missing entry reloader'])(
     'falls back to legacy reload with %s',
     (missing) => {

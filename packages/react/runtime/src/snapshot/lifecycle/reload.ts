@@ -119,6 +119,7 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
       firstScreenSyncState: getFirstScreenSyncState(),
     } satisfies MainThreadReloadHandoff;
 
+    Reflect.deleteProperty(lynx, Symbol.for('__LYNX_EXTERNAL_GLOBAL__'));
     (lynxSymbols[mainThreadEntryReloaderKey] as () => void)();
     (lynxSymbols[mainThreadReloadCompleterKey] as (handoff: MainThreadReloadHandoff) => void)(
       handoff,

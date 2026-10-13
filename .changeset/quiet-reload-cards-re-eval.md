@@ -7,3 +7,5 @@
 ---
 
 Add the experimental `experimental_reEvalJSOnReload` option to re-evaluate the ReactLynx entry on `reloadTemplate` while reusing the existing element tree.
+
+Invalidate main-thread external exports before re-evaluating the entry so reload initializes a fresh runtime while preserving the existing element tree.
