@@ -536,12 +536,10 @@ export class XMarkdownAttributes {
   #pendingRender = false;
   #content = '';
   #renderedContent = '';
+  #renderedNodes: Node[] = [];
   #contentId?: string;
   #eventsAttached = false;
   #selectionEventAttached = false;
-  #appendRemainder = '';
-  #appendFlushTimer?: ReturnType<typeof setTimeout>;
-  #appendFlushDelay = 60;
   #currentMarkdownCss = '';
   #textSelection = false;
   #selectionSyncTimer?: ReturnType<typeof setTimeout>;
@@ -582,7 +580,6 @@ export class XMarkdownAttributes {
   }
 
   dispose() {
-    this.#clearAppendFlushTimer();
     this.#stopTypewriterTimer();
     clearTimeout(this.#selectionSyncTimer);
     this.#selectionSyncTimer = undefined;
@@ -712,12 +709,12 @@ export class XMarkdownAttributes {
       this.#resetTypewriterState();
       root.innerHTML = '';
       this.#renderedContent = '';
-      this.#appendRemainder = '';
-      this.#clearAppendFlushTimer();
+      this.#renderedNodes = [];
       return;
     }
-    // Typewriter animation takes precedence over incremental append
+    // Typewriter animation owns its DOM independently of content updates.
     if (this.#animationType === 'typewriter') {
+      this.#renderedNodes = [];
       this.#renderTypewriter(root);
       return;
     }
@@ -728,72 +725,42 @@ export class XMarkdownAttributes {
         : this.#content;
       root.textContent = content;
       this.#renderedContent = content;
-      this.#appendRemainder = '';
-      this.#clearAppendFlushTimer();
-      return;
-    }
-    if (this.#canAppendIncrementally()) {
-      this.#appendIncrementally(root);
+      this.#renderedNodes = [];
       return;
     }
     const content = this.#contentRange
       ? this.#content.slice(this.#contentRange[0], this.#contentRange[1])
       : this.#content;
+    // Parse the complete source: appended text can finish an earlier heading,
+    // list, fence, or even a reference link elsewhere in the document.
     const rendered = renderMarkdown(parser, content);
-    root.innerHTML = sanitizeHtml(preprocessInlineView(rendered));
+    const template = document.createElement('template');
+    template.innerHTML = sanitizeHtml(preprocessInlineView(rendered));
+    const nextNodes = Array.from(template.content.childNodes);
+    let unchanged = 0;
+    if (
+      this.#renderedContent && content.startsWith(this.#renderedContent)
+      && content.length > this.#renderedContent.length
+    ) {
+      while (
+        unchanged < this.#renderedNodes.length
+        && nextNodes[unchanged]?.isEqualNode(this.#renderedNodes[unchanged]!)
+      ) {
+        unchanged++;
+      }
+    }
+    // Compare pristine parser output, since inline views and render policies
+    // decorate the live DOM. Keep completed, unchanged nodes (and their state).
+    this.#renderedNodes = nextNodes.map(node => node.cloneNode(true));
+    this.#removeTruncationMarker();
+    for (const node of Array.from(root.childNodes).slice(unchanged)) {
+      node.remove();
+    }
+    root.append(...nextNodes.slice(unchanged));
     this.#injectInlineViews(root);
     this.#renderedContent = content;
-    this.#appendRemainder = '';
-    this.#clearAppendFlushTimer();
     this.#dispatchParseEnd();
     this.#applyPostRenderPolicies(root);
-  }
-
-  #canAppendIncrementally() {
-    if (!this.#renderedContent) return false;
-    if (!this.#content.startsWith(this.#renderedContent)) return false;
-    if (this.#content.length === this.#renderedContent.length) return false;
-    return true;
-  }
-
-  #appendIncrementally(root: HTMLElement) {
-    const delta = this.#content.slice(this.#renderedContent.length);
-    if (!delta) return;
-    const lastNewlineIndex = delta.lastIndexOf('\n');
-    if (lastNewlineIndex === -1) {
-      this.#appendRemainder = delta;
-      this.#scheduleAppendFlush();
-      return;
-    }
-    const chunk = delta.slice(0, lastNewlineIndex + 1);
-    if (chunk) {
-      const parser = getMarkdownParser();
-      if (!parser) return;
-      const html = renderMarkdown(parser, chunk);
-      this.#appendHtml(root, html);
-      this.#renderedContent += chunk;
-    }
-    this.#appendRemainder = delta.slice(lastNewlineIndex + 1);
-    if (this.#appendRemainder) {
-      this.#scheduleAppendFlush();
-    } else {
-      this.#clearAppendFlushTimer();
-    }
-  }
-
-  #scheduleAppendFlush() {
-    this.#clearAppendFlushTimer();
-    this.#appendFlushTimer = setTimeout(() => {
-      this.#appendFlushTimer = undefined;
-      this.#flushAppendRemainder();
-    }, this.#appendFlushDelay);
-  }
-
-  #clearAppendFlushTimer() {
-    if (this.#appendFlushTimer) {
-      clearTimeout(this.#appendFlushTimer);
-      this.#appendFlushTimer = undefined;
-    }
   }
 
   #resetTypewriterState() {
@@ -802,31 +769,6 @@ export class XMarkdownAttributes {
     this.#animationStep = 0;
     this.#maxAnimationStep = 0;
     this.#removeTypewriterCursor();
-  }
-
-  #flushAppendRemainder() {
-    if (!this.#appendRemainder) return;
-    if (!this.#content.startsWith(this.#renderedContent)) return;
-    const expectedLength = this.#renderedContent.length
-      + this.#appendRemainder.length;
-    if (this.#content.length !== expectedLength) return;
-    const root = this.#root();
-    const parser = getMarkdownParser();
-    if (!parser) return;
-    const html = renderMarkdown(parser, this.#appendRemainder);
-    this.#appendHtml(root, html);
-    this.#renderedContent += this.#appendRemainder;
-    this.#appendRemainder = '';
-    this.#dispatchParseEnd();
-    this.#applyPostRenderPolicies(this.#root());
-  }
-
-  #appendHtml(root: HTMLElement, html: string) {
-    const template = document.createElement('template');
-    template.innerHTML = sanitizeHtml(preprocessInlineView(html));
-    root.append(template.content);
-    this.#applyPostRenderPolicies(root);
-    this.#injectInlineViews(root);
   }
 
   #applyMarkdownEffect(root: HTMLElement) {
