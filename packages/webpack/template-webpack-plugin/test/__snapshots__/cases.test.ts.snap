@@ -49,7 +49,6 @@ exports[`template > templateCases-cases/defaults/reload-card > should pass 1`] =
   enableNewGesture: false,
   enableNewIntersectionObserver: true,
   enableNewSticky: true,
-  enableReloadCardOnAppReload: true,
   enableReuseLoadScriptExports: true,
   lepusStrict: true,
   removeDescendantSelectorScope: false,

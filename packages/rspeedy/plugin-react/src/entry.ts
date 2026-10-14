@@ -243,7 +243,7 @@ export function applyEntry(
             experimental_isLazyBundle,
             lazyBundleFetcher,
             cssPlugins: [],
-            enableReloadCardOnAppReload: experimental_reEvalJSOnReload,
+            enableReuseLoadScriptExports: experimental_reEvalJSOnReload,
           }])
           .end()
       })

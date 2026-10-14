@@ -11,7 +11,7 @@ export default {
     new LynxEncodePlugin(),
     new LynxTemplatePlugin({
       intermediate: '.rspeedy/main',
-      enableReloadCardOnAppReload: true,
+      enableReuseLoadScriptExports: true,
     }),
   ],
 };

@@ -2634,8 +2634,8 @@ describe('Config', () => {
         "enableCSSInvalidation": true,
         "enableCSSSelector": true,
         "enableNewGesture": false,
-        "enableReloadCardOnAppReload": false,
         "enableRemoveCSSScope": true,
+        "enableReuseLoadScriptExports": false,
         "experimental_isLazyBundle": false,
         "filename": "main.lynx.bundle",
         "intermediate": ".lynx/main",
@@ -2646,7 +2646,7 @@ describe('Config', () => {
     `)
   })
 
-  test('enables card reload for experimental entry re-evaluation', async () => {
+  test('reuses loadScript exports for experimental entry re-evaluation', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
     const rsbuild = await createRspeedy({
@@ -2667,9 +2667,9 @@ describe('Config', () => {
 
     expect(templatePlugin).toBeDefined()
     const templateOptions = (templatePlugin as unknown as {
-      options: { enableReloadCardOnAppReload?: boolean }
+      options: { enableReuseLoadScriptExports?: boolean }
     }).options
-    expect(templateOptions.enableReloadCardOnAppReload).toBe(true)
+    expect(templateOptions.enableReuseLoadScriptExports).toBe(true)
   })
 
   test.each([
