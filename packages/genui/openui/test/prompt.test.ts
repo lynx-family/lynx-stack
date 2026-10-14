@@ -2,13 +2,20 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 
-import { createParser } from '@openuidev/lang-core';
+import {
+  createParser,
+  evaluate,
+  evaluateElementProps,
+} from '@openuidev/lang-core';
+import type { ElementNode, OpenUIError } from '@openuidev/lang-core';
 import { expect, test } from '@rstest/core';
 
 import { actionPropSchema } from '../src/catalog/Action/schema.js';
 import * as agentCatalog from '../src/catalog/agent.js';
 import { createOpenUiLibrary } from '../src/core/createLibrary.jsx';
+import { DATA_GENERATION_RULES } from '../src/data-tools/data-rules.js';
 import {
   buildOpenUiSystemPrompt,
   createOpenUiPromptLibrary,
@@ -255,3 +262,171 @@ test.each(['renderer', 'prompt'])(
     expect(valid.meta.incomplete).toBe(false);
   },
 );
+
+test.each(['renderer', 'prompt'])(
+  '%s evaluates the minimal Query and Mutation prompt example',
+  kind => {
+    const library = kind === 'renderer'
+      ? createOpenUiLibrary()
+      : createOpenUiPromptLibrary();
+    const source = DATA_GENERATION_RULES.split('Example:\n')[1]!;
+    const parsed = createParser(library.toJSONSchema(), library.root).parse(
+      source,
+    );
+    expect(parsed.meta.errors).toEqual([]);
+    expect(parsed.meta.unresolved).toEqual([]);
+    expect(parsed.meta.incomplete).toBe(false);
+    const ctx = { getState: () => null, resolveRef: () => 2 };
+    const errors: OpenUIError[] = [];
+    const root = evaluateElementProps(parsed.root!, {
+      library,
+      store: null,
+      ctx,
+      errors,
+    });
+    const children = root.props.children as ElementNode[];
+    expect(children[0]!.props.text).toBe('Count: 2');
+    expect(children[1]!.props.action).toEqual({
+      steps: [
+        { type: 'run', statementId: 'increment', refType: 'mutation' },
+        { type: 'run', statementId: 'counter', refType: 'query' },
+      ],
+    });
+    expect(evaluate(parsed.mutationStatements[0]!.argsAST, ctx)).toEqual({
+      key: 'counter',
+      value: 3,
+    });
+    expect(errors).toEqual([]);
+  },
+);
+
+test('todo fixture renders default rows and edits numeric or string IDs', () => {
+  const source = readFileSync(
+    new URL('./fixtures/todo.openui', import.meta.url),
+    'utf8',
+  );
+  const library = createOpenUiPromptLibrary();
+  const parsed = createParser(library.toJSONSchema(), library.root).parse(
+    source,
+  );
+  expect(parsed.meta.errors).toEqual([]);
+  expect(parsed.meta.unresolved).toEqual([]);
+  expect(parsed.meta.incomplete).toBe(false);
+  const state: Record<string, unknown> = { ...parsed.stateDeclarations };
+  const query = parsed.queryStatements[0]!;
+  const data = evaluate(query.defaultsAST!, {
+    getState: name => state[name],
+    resolveRef: () => null,
+  });
+  const errors: OpenUIError[] = [];
+  const ctx = {
+    getState: (name: string) => state[name],
+    resolveRef: () => data,
+  };
+  const render = () =>
+    evaluateElementProps(parsed.root!, { library, store: null, ctx, errors });
+  const section = (render().props.children as ElementNode[])[1]!.props
+    .children as ElementNode[];
+  expect(section[0]!.props.text).toBe('共 3 项 · 未完成 2');
+  const rows = section[1]!.props.children as ElementNode[];
+  expect(rows.map(row => (row.props.children as ElementNode[])[0]!.props.text))
+    .toEqual(['买牛奶', '写周报', '预约牙医']);
+  const items = (data as {
+    items: { id: string | number; text: string; completed: boolean }[];
+  }).items;
+  for (const id of [2, 'string-id']) {
+    items[1]!.id = id;
+    Object.assign(state, {
+      $selectedId: id,
+      $editText: '修改后的任务',
+      $nextCompleted: true,
+    });
+    const editor = (render().props.children as ElementNode[])[2]!;
+    expect(editor.typeName).toBe('Card');
+    const fields = editor.props.children as ElementNode[];
+    expect(fields[1]!.props.value).toBe('修改后的任务');
+    const buttons = fields[2]!.props.buttons as ElementNode[];
+    expect(buttons[0]!.props.action).toEqual({
+      steps: [
+        { type: 'run', statementId: 'saveTask', refType: 'mutation' },
+        { type: 'run', statementId: 'tasks', refType: 'query' },
+        { type: 'reset', targets: ['$selectedId', '$editText'] },
+      ],
+    });
+    for (const name of ['saveTask', 'toggleTask', 'deleteTask']) {
+      const mutation = parsed.mutationStatements.find(item =>
+        item.statementId === name
+      )!;
+      const expectedItems = name === 'deleteTask'
+        ? items.filter(item => item.id !== id)
+        : items.map(item =>
+          item.id === id
+            ? {
+              ...item,
+              ...(name === 'saveTask'
+                ? { text: state.$editText }
+                : { completed: true }),
+            }
+            : item
+        );
+      expect(evaluate(mutation.argsAST, ctx)).toEqual({
+        key: 'tasks',
+        value: { items: expectedItems },
+      });
+    }
+  }
+  expect(errors).toEqual([]);
+});
+
+test.each([
+  undefined,
+  { toolCalls: true },
+  { tools: [] },
+  { tools: ['get_weather'] },
+  { tools: ['openui_query'] },
+  { tools: ['openui_mutation'] },
+  { tools: ['openui_query', 'openui_mutation'], toolCalls: false },
+])(
+  'omits the local data contract unless both runtime tools are available: %j',
+  promptOptions => {
+    const prompt = buildOpenUiSystemPrompt({
+      ...(promptOptions ? { promptOptions } : {}),
+    });
+    expect(prompt).not.toContain(
+      'The host provides two tools for persistent data',
+    );
+    expect(prompt).not.toContain('Mutation("openui_mutation", { key:');
+  },
+);
+
+test.each([
+  ['openui_query', 'openui_mutation'],
+  [
+    { name: 'openui_query', inputSchema: {}, outputSchema: {} },
+    { name: 'openui_mutation', inputSchema: {}, outputSchema: {} },
+  ],
+].map(tools => ({ tools })))(
+  'includes the local data contract for registered names or descriptors: %j',
+  ({ tools }) => {
+    const prompt = buildOpenUiSystemPrompt({ promptOptions: { tools } });
+    expect(prompt).toContain('The host provides two tools for persistent data');
+    expect(prompt).toContain('Mutation("openui_mutation", { key:');
+  },
+);
+
+test('keeps local data guidance disabled for restricted prompts unless tool calls are explicitly enabled', () => {
+  const options = {
+    componentNames: ['Stack', 'TextContent'],
+    promptOptions: { tools: ['openui_query', 'openui_mutation'] },
+  };
+  expect(buildOpenUiSystemPrompt(options)).not.toContain(
+    'The host provides two tools for persistent data',
+  );
+  expect(
+    buildOpenUiSystemPrompt({
+      ...options,
+      promptOptions: { ...options.promptOptions, toolCalls: true },
+    }),
+  )
+    .toContain('The host provides two tools for persistent data');
+});

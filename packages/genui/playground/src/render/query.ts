@@ -16,6 +16,7 @@ export interface InitData {
   instant?: boolean;
   playbackMode?: boolean;
   theme?: 'light' | 'dark';
+  initialQueryResults?: Record<string, unknown>;
   rawText?: string;
   rawTextUrl?: string;
   inlineMode?: boolean;
@@ -90,6 +91,16 @@ function readInitDataParam(raw: string | null): InitData | null {
   initData.instant = readBoolean(record.instant);
   initData.playbackMode = readBoolean(record.playbackMode);
   initData.theme = readTheme(record.theme);
+  const initialQueryResults = record.initialQueryResults;
+  if (
+    initialQueryResults !== null && typeof initialQueryResults === 'object'
+    && !Array.isArray(initialQueryResults)
+  ) {
+    initData.initialQueryResults = initialQueryResults as Record<
+      string,
+      unknown
+    >;
+  }
   initData.rawText = readString(record.rawText);
   initData.rawTextUrl = readString(record.rawTextUrl);
   initData.inlineMode = readBoolean(record.inlineMode);
@@ -128,6 +139,9 @@ export function parseInitDataFromQuery(): InitData | null {
   const protocolValue = readProtocol(protocol);
   const speedRaw = params.get('speed');
   const speedVal = speedRaw === null ? undefined : Number(speedRaw);
+  const initialQueryResults = parseJsonParam(
+    params.get('initialQueryResults') ?? 'null',
+  );
   const initData: InitData = {
     ...baseInitData,
     protocol: protocolValue ?? baseInitData?.protocol,
@@ -143,6 +157,11 @@ export function parseInitDataFromQuery(): InitData | null {
     theme: readTheme(theme) ?? baseInitData?.theme,
     rawText: rawText ?? baseInitData?.rawText,
     rawTextUrl: rawTextUrl ?? baseInitData?.rawTextUrl,
+    initialQueryResults: initialQueryResults !== null
+        && typeof initialQueryResults === 'object'
+        && !Array.isArray(initialQueryResults)
+      ? initialQueryResults as Record<string, unknown>
+      : baseInitData?.initialQueryResults,
     inlineMode: params.get('inlineMode') === '1'
       ? true
       : baseInitData?.inlineMode,
@@ -204,6 +223,9 @@ export function buildGlobalPropsFromInitData(
   if (initData.theme !== undefined) out.theme = initData.theme;
   if (initData.rawText !== undefined) out.rawText = initData.rawText;
   if (initData.rawTextUrl !== undefined) out.rawTextUrl = initData.rawTextUrl;
+  if (initData.initialQueryResults !== undefined) {
+    out.initialQueryResults = initData.initialQueryResults;
+  }
   if (initData.inlineMode !== undefined) out.inlineMode = initData.inlineMode;
   if (initData.playbackPaused !== undefined) {
     out.playbackPaused = initData.playbackPaused;

@@ -1,6 +1,8 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { OPENUI_DATA_TOOL_NAMES } from '@lynx-js/genui/openui/data-tools';
+
 import {
   createProviderSettingsAdapter,
   getChatEndpoint,
@@ -25,11 +27,13 @@ import type {
   ConversationContext,
   ModelChatMessage,
 } from '../../hooks/useConversation.js';
-import {
-  OPENUI_SCENARIOS,
-  parseOpenUIScenarioRaw,
-} from '../../mock/openui-scenarios.js';
+import { OPENUI_SCENARIOS } from '../../mock/openui-scenarios.js';
 import type { OpenUIScenario } from '../../mock/openui-scenarios.js';
+import {
+  readOpenUIParsedJSON,
+  readOpenUIQueryDefaults,
+} from '../../openui/inspector.js';
+import { createOpenUILocalDataView } from '../../openui/localDataView.js';
 import type { PreviewPerformanceMetrics } from '../../storage/types.js';
 
 export interface OpenUIOutput {
@@ -213,6 +217,7 @@ function createOpenUIRequest(
     },
     body: {
       resourceId: 'openui-create',
+      tools: [...OPENUI_DATA_TOOL_NAMES],
       messages: [{ role: 'user' as const, content: prompt }],
       conversation,
       ...providerOptions,
@@ -349,13 +354,6 @@ function actionUserText(action: OpenUIActionEvent): string {
 }
 
 function createArtifact(output: OpenUIOutput): ChatArtifact {
-  let parsedText: string;
-  try {
-    parsedText = parseOpenUIScenarioRaw(output.rawText);
-  } catch (error) {
-    parsedText = `Unable to parse OpenUI DSL:\n${String(error)}`;
-  }
-
   return {
     title: 'Generated OpenUI Output',
     meta: output.scenarioTitle,
@@ -369,9 +367,27 @@ function createArtifact(output: OpenUIOutput): ChatArtifact {
       {
         id: 'json',
         label: 'JSON',
-        text: parsedText,
+        get text() {
+          return readOpenUIParsedJSON(output.rawText);
+        },
         language: 'json',
       },
+      {
+        id: 'data',
+        label: 'Query data',
+        get text() {
+          return JSON.stringify(
+            readOpenUIQueryDefaults(output.rawText),
+            null,
+            2,
+          );
+        },
+        language: 'json',
+      },
+      createOpenUILocalDataView(
+        output.rawText,
+        () => readOpenUIQueryDefaults(output.rawText),
+      ),
     ],
   };
 }

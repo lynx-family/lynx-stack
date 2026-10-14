@@ -1,6 +1,8 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import type { ParseResult } from '@openuidev/lang-core';
+
 import { OpenUiRenderer, createOpenUiLibrary } from '@lynx-js/genui/openui';
 import type { ActionEvent, OpenUIError } from '@lynx-js/genui/openui';
 import {
@@ -13,14 +15,15 @@ import {
   useState,
 } from '@lynx-js/react';
 
+import { OPENUI_DATA_TOOL, createDataTools } from './dataTools.js';
 import { InlineOpenUiRenderer } from './InlineOpenUiRenderer.jsx';
+import type { OpenUILiveResponse } from './liveResponse.js';
 import { readOpenUILiveResponse } from './liveResponse.js';
 import { OPENUI_SCENARIOS } from './mockData.js';
 import {
   OPENUI_RENDER_ERRORS_MESSAGE_TYPE,
   formatOpenUIRenderErrors,
 } from './renderErrors.js';
-import { TodoStore } from './todoStore.js';
 
 const DEFAULT_CHUNK_SIZE = 8;
 const DEFAULT_STREAM_DELAY_MS = 30;
@@ -50,12 +53,39 @@ export function App() {
   const openUiLibrary = useMemo(() => createOpenUiLibrary(), []);
   const Renderer = inlineMode ? InlineOpenUiRenderer : OpenUiRenderer;
   const liveStream = globalProps?.liveStream === true;
+  const liveAction = useMemo(() => {
+    const value = globalProps?.liveAction;
+    return value === true || value === '1' || value === 1;
+  }, [globalProps]);
+
+  const dataTools = useMemo(() =>
+    createDataTools(request => {
+      'background only';
+      return new Promise((resolve, reject) => {
+        if (!NativeModules.bridge?.call) {
+          reject(new Error('OpenUI local storage bridge is unavailable'));
+          return;
+        }
+        const timer = setTimeout(
+          () => reject(new Error('OpenUI local storage request timed out')),
+          5000,
+        );
+        try {
+          NativeModules.bridge.call(OPENUI_DATA_TOOL, { ...request }, reply => {
+            clearTimeout(timer);
+            resolve(reply);
+          });
+        } catch (error) {
+          clearTimeout(timer);
+          reject(error instanceof Error ? error : new Error(String(error)));
+        }
+      });
+    }), []);
   const openUiToolProvider = useMemo<
     Record<string, (args: Record<string, unknown>) => unknown>
   >(() => {
-    const store = new TodoStore();
     return {
-      ...store.tools,
+      ...dataTools.tools,
       get_weather(args) {
         const city = typeof args.city === 'string' ? args.city : 'Seattle';
         if (city === 'San Francisco') {
@@ -98,16 +128,24 @@ export function App() {
         };
       },
     };
-  }, []);
+  }, [dataTools]);
 
   // Read rawText from globalProps; fall back to hardcoded mock data.
-  const rawText = useMemo(() => {
+  const initialData = useMemo(() => {
     const text = globalProps?.rawText;
     if (typeof text === 'string' && (text.length > 0 || liveStream)) {
-      return text;
+      const initial = globalProps?.initialQueryResults;
+      return {
+        rawText: text,
+        ...(initial !== null && typeof initial === 'object'
+            && !Array.isArray(initial)
+          ? { initialQueryResults: initial as Record<string, unknown> }
+          : {}),
+      };
     }
-    return OPENUI_SCENARIOS[0].raw;
+    return { rawText: OPENUI_SCENARIOS[0].raw };
   }, [globalProps, liveStream]);
+  const rawText = initialData.rawText;
 
   const instant = useMemo(() => {
     const value = globalProps?.instant;
@@ -116,11 +154,6 @@ export function App() {
 
   const playbackMode = useMemo(() => {
     const value = globalProps?.playbackMode;
-    return value === true || value === '1' || value === 1;
-  }, [globalProps]);
-
-  const liveAction = useMemo(() => {
-    const value = globalProps?.liveAction;
     return value === true || value === '1' || value === 1;
   }, [globalProps]);
 
@@ -145,7 +178,13 @@ export function App() {
     return DEFAULT_STREAM_DELAY_MS / speed;
   }, [globalProps]);
 
-  const [{ response, isStreaming }, setOutput] = useState({
+  const [{ response, isStreaming, initialQueryResults }, setOutput] = useState<
+    {
+      response: string;
+      isStreaming: boolean;
+      initialQueryResults?: Record<string, unknown>;
+    }
+  >({
     response: '',
     isStreaming: false,
   });
@@ -175,10 +214,14 @@ export function App() {
     if (!liveStream) return;
     const next = readOpenUILiveResponse(payload);
     if (!next) return;
+    dataTools.setScope(next.rawText);
     onOpenUiError([]);
     setOutput({
       response: next.rawText,
       isStreaming: next.isStreaming,
+      ...(next.initialQueryResults
+        ? { initialQueryResults: next.initialQueryResults }
+        : {}),
     });
     setLoading(false);
   });
@@ -211,12 +254,32 @@ export function App() {
 
   useEffect(() => {
     let cancelled = false;
+    const initial: OpenUILiveResponse = {
+      rawText,
+      isStreaming: !instant,
+      ...(initialData.initialQueryResults
+        ? { initialQueryResults: initialData.initialQueryResults }
+        : {}),
+    };
+    dataTools.setScope(initial.rawText);
     setLoading(true);
-    setOutput({ response: '', isStreaming: true });
+    setOutput({
+      response: '',
+      isStreaming: true,
+      ...(initialData.initialQueryResults
+        ? { initialQueryResults: initialData.initialQueryResults }
+        : {}),
+    });
     onOpenUiError([]);
 
     if (liveStream) {
-      setOutput({ response: rawText, isStreaming: true });
+      setOutput({
+        response: rawText,
+        isStreaming: true,
+        ...(initialData.initialQueryResults
+          ? { initialQueryResults: initialData.initialQueryResults }
+          : {}),
+      });
       setLoading(false);
       return () => {
         cancelled = true;
@@ -224,7 +287,13 @@ export function App() {
     }
 
     if (instant) {
-      setOutput({ response: rawText, isStreaming: false });
+      setOutput({
+        response: rawText,
+        isStreaming: false,
+        ...(initialData.initialQueryResults
+          ? { initialQueryResults: initialData.initialQueryResults }
+          : {}),
+      });
       setLoading(false);
       return () => {
         cancelled = true;
@@ -236,6 +305,9 @@ export function App() {
       setOutput({
         response: next,
         isStreaming: playbackTargetCount < playbackChunks.length,
+        ...(initialData.initialQueryResults
+          ? { initialQueryResults: initialData.initialQueryResults }
+          : {}),
       });
       setLoading(false);
       return () => {
@@ -256,6 +328,7 @@ export function App() {
         const chunk = rawText.slice(offset, offset + DEFAULT_CHUNK_SIZE);
         offset += DEFAULT_CHUNK_SIZE;
         setOutput(current => ({
+          ...current,
           response: current.response + chunk,
           isStreaming: true,
         }));
@@ -276,6 +349,8 @@ export function App() {
       cancelled = true;
     };
   }, [
+    initialData,
+    dataTools,
     instant,
     liveStream,
     onOpenUiError,
@@ -290,6 +365,16 @@ export function App() {
   useEffect(() => {
     NativeModules.bridge?.call?.('OPENUI_RUNTIME_READY', {}, () => undefined);
   }, []);
+
+  const onParseResult = useCallback((result: ParseResult | null) => {
+    'background only';
+    if (!result || !response) return;
+    // Playback tools use the full artifact identity, not the current text prefix.
+    const source = liveStream ? response : rawText;
+    dataTools.publishParseResult(source, result, response);
+  }, [dataTools, liveStream, rawText, response]);
+
+  useEffect(() => () => dataTools.dispose(), [dataTools]);
 
   const onOpenUiAction = useCallback((event: ActionEvent) => {
     'background only';
@@ -326,7 +411,9 @@ export function App() {
               response={response}
               isStreaming={isStreaming}
               library={openUiLibrary}
+              initialQueryResults={initialQueryResults}
               toolProvider={openUiToolProvider}
+              onParseResult={onParseResult}
               onAction={onOpenUiAction}
               onError={onOpenUiError}
             />

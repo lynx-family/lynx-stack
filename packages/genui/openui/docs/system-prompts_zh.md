@@ -76,6 +76,11 @@ import { buildOpenUiSystemPrompt } from '@lynx-js/genui/openui/prompt';
 const systemPrompt = buildOpenUiSystemPrompt();
 ```
 
+通用数据处理工具按需启用：`promptOptions.tools` 同时声明 `openui_query` 和
+`openui_mutation`，且启用工具调用时，共享 prompt 才会加入对应规则。
+配置示例、宿主工具注册及 Agent 与 Renderer 的协作流程见
+[通用数据处理工具](./query-data_zh.md)。
+
 加入应用策略和工具描述：
 
 ```ts

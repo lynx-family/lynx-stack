@@ -207,6 +207,25 @@ inputs use declared local state, and buttons request assistant UI updates.
 Keep entered state/form values local rather than in Jev prompts. OpenUI Create
 and action continuations both use `/openui/stream` and emit model diagnostics.
 
+### OpenUI preview data
+
+The shared `@lynx-js/genui-openui/openui-prompt` builder includes local data tool
+guidance only when promptOptions.tools declares both local tools and Query/Mutation
+tool calls are enabled. The OpenUI stream route validates the host-provided tools
+name array and forwards it to promptOptions.tools; these are runtime capabilities,
+not server-side agent tool registrations. The preview host supplies
+`openui_query` and `openui_mutation` as local-storage tools. Bench disables tool
+calls and omits this guidance. Keep the defaults in the shared prompt library
+rather than the server Agent, route options or a system appendix. Generation returns only DSL, with initial business
+data in Query defaults.
+The client extracts defaults when consuming Queries and restores persisted local
+values through `initialQueryResults`; do not duplicate defaults in server metadata,
+history or shares. Mutations declare `{ key, value }` with a complete replacement computed by existing
+OpenUI expressions. They run in
+local storage and refresh the Query without a server/model request or a new
+conversation turn. `@ToAssistant` continues the conversation through the ordinary
+OpenUI stream request and returns new DSL; it does not execute local mutations.
+
 ### Text generation models
 
 To provide server-owned model choices, configure the provider credentials,

@@ -38,6 +38,7 @@ export interface RenderInit {
 }
 
 export interface OpenUIRenderInit {
+  initialQueryResults?: Record<string, unknown>;
   rawText?: string;
   rawTextUrl?: string;
   /** Keep the previous UI for text-only inline chat replies. */
@@ -366,6 +367,12 @@ export function buildOpenUIRenderUrl(
   const url = new URL('render.html', baseUrl);
   url.searchParams.set('protocol', 'openui');
   url.searchParams.set('demoUrl', './openui.web.js');
+  if (init.initialQueryResults) {
+    url.searchParams.set(
+      'initialQueryResults',
+      JSON.stringify(init.initialQueryResults),
+    );
+  }
   if (init.inlineMode) url.searchParams.set('inlineMode', '1');
   if (init.liveStream) url.searchParams.set('liveStream', '1');
 

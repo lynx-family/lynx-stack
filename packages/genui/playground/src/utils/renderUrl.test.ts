@@ -355,3 +355,15 @@ describe('Lynx XML render URLs', () => {
     expect(url.searchParams.has('initData')).toBe(false);
   });
 });
+
+test('preserves falsy OpenUI prefetch values in render URLs', () => {
+  const url = new URL(buildOpenUIRenderUrl({
+    rawText: 'root = Stack([])',
+    initialQueryResults: { count: 0, enabled: false, empty: null },
+  }, 'https://playground.example/'));
+  expect(JSON.parse(url.searchParams.get('initialQueryResults')!)).toEqual({
+    count: 0,
+    enabled: false,
+    empty: null,
+  });
+});

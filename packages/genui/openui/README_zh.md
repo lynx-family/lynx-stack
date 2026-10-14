@@ -210,5 +210,6 @@ export function GeneratedView() {
 - [概览与架构](./docs/overview_zh.md)
 - [Libraries、内置组件与自定义组件](./docs/library-guide_zh.md)
 - [System Prompts](./docs/system-prompts_zh.md)
+- [通用数据处理工具](./docs/query-data_zh.md)
 - [打开 GenUI Playground](https://lynx-stack.dev/genui/#/openui)
 - [阅读 OpenUI Lang v0.5 规范](https://www.openui.com/docs/openui-lang/specification-v05)

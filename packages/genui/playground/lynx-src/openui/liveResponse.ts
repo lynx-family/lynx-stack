@@ -5,6 +5,7 @@
 export interface OpenUILiveResponse {
   rawText: string;
   isStreaming: boolean;
+  initialQueryResults?: Record<string, unknown>;
 }
 
 export function readOpenUILiveResponse(
@@ -17,6 +18,14 @@ export function readOpenUILiveResponse(
   const payload = response as Partial<OpenUILiveResponse>;
   return typeof payload.rawText === 'string'
       && typeof payload.isStreaming === 'boolean'
-    ? { rawText: payload.rawText, isStreaming: payload.isStreaming }
+    ? {
+      rawText: payload.rawText,
+      isStreaming: payload.isStreaming,
+      ...(payload.initialQueryResults !== null
+          && typeof payload.initialQueryResults === 'object'
+          && !Array.isArray(payload.initialQueryResults)
+        ? { initialQueryResults: payload.initialQueryResults }
+        : {}),
+    }
     : null;
 }

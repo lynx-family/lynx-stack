@@ -1,5 +1,5 @@
 ---
-applyTo: "website/sidebars/genui.ts,packages/genui/lynx-xml/**/*.md,packages/genui/docs/*.md"
+applyTo: "website/sidebars/genui.ts,packages/genui/lynx-xml/**/*.md,packages/genui/openui/**/*.md,packages/genui/docs/*.md"
 ---
 
 Expose the website GenUI guide through package-owned Markdown: `packages/genui/docs` for the protocol chooser, `packages/genui/a2ui` for A2UI, `packages/genui/a2ui-catalog-extractor/README.md` and `readme.zh_cn.md` for the A2UI Catalog Extractor, `packages/genui/openui` for OpenUI, and `packages/genui/lynx-xml` for Lynx XML. Give each integration an introduction, architecture overview, capability guide, and system-prompt guide; Lynx XML uses an artifact/validation guide rather than a component catalog. Keep English and Simplified Chinese source pairs there, then synchronize them into `website/docs/{en,zh}/guide/genui` from `website/sidebars/genui.ts` so package and website documentation cannot drift. Keep the Catalog Extractor as an unlisted supporting page under the A2UI route: link to it from the Catalog Guide, but do not add it as a standalone navbar or sidebar entry. Rewrite package-relative cross-links to the corresponding website routes instead of GitHub URLs.
@@ -17,3 +17,7 @@ Link the Playground quick start to `https://lynx-stack.dev/genui/lynx-genui-stre
 The standalone preview defaults to OpenUI and queues its initial example until the renderer is ready. Keep it limited to protocol selection, source editing, immediate or simulated streaming rendering, stop and reset, without component catalogs, system prompts or agent/transport configuration. Resolve render.html relative to the served page so both the Playground root and deployed /genui/ path work. Keep the page and renderer on the same origin; file:// access and custom rendererUrl overrides are outside its current scope. Validate renderer readiness against its window, origin and current navigation token before delivering source.
 
 Before validation builds, back up pre-existing edits to generated files such as `docs/i18n/zh.json`. A Turbo cache hit can overwrite those edits when restoring build outputs, even when the current change does not modify API documentation.
+
+When adding a package-owned guide, register both language sources in the website synchronization and rewrite links from both README (`./docs/page.md`) and sibling guides (`./page.md`). Chinese source filenames ending in `_zh.md` must map to the normalized page route under `/zh/`. Add navigation entries for public guides and validate with `pnpm turbo build:docs --filter website` from the repository root; the separate API documentation build does not check these website links.
+
+Use `text` fences for OpenUI DSL examples in synchronized guides. The website highlighter does not register an `openui` language, so that fence label fails the documentation build.

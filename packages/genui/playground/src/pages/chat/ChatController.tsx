@@ -1,7 +1,14 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import type { KeyboardEvent } from 'react';
 
 import { ChatAgentInteraction } from './ChatAgentInteraction.js';
@@ -54,6 +61,7 @@ import { SourceTokenCount } from '../../components/SourceTokenCount.js';
 import { useConversation } from '../../hooks/useConversation.js';
 import type { ModelChatMessage } from '../../hooks/useConversation.js';
 import { useResizablePanels } from '../../hooks/useResizablePanels.js';
+import { receiveOpenUIQueryDefaults } from '../../openui/inspector.js';
 import {
   loadConversation,
   saveConversationSharePayload,
@@ -473,6 +481,11 @@ function MessageList(props: {
   );
 }
 
+const unsubscribeStaticArtifact = () => {
+  // Static views have no external store to unsubscribe from.
+};
+const subscribeStaticArtifact = () => unsubscribeStaticArtifact;
+
 function ArtifactViewer(props: {
   artifact: ChatArtifact;
   onCopy: (text: string) => void;
@@ -484,6 +497,10 @@ function ArtifactViewer(props: {
   );
   const activeView = artifact.views.find((view) => view.id === activeViewId)
     ?? artifact.views[0];
+  const liveText = useSyncExternalStore(
+    activeView?.liveText?.subscribe ?? subscribeStaticArtifact,
+    activeView?.liveText?.getSnapshot ?? (() => activeView?.text ?? ''),
+  );
 
   useEffect(() => {
     if (artifact.views.some((view) => view.id === activeViewId)) return;
@@ -492,8 +509,8 @@ function ArtifactViewer(props: {
 
   if (!activeView) return null;
   const displayedText = showFormatted
-    ? activeView.formattedText ?? activeView.text
-    : activeView.text;
+    ? activeView.formattedText ?? liveText
+    : liveText;
   return (
     <div className='chatGeneratedJson chatArtifact'>
       <div className='chatGeneratedJsonTitle chatArtifactHeader'>
@@ -1865,12 +1882,19 @@ export function ChatController<
       const frame = previewFrameRef.current;
       if (!frame?.contentWindow || event.source !== frame.contentWindow) return;
       if (event.origin !== targetOriginForUrl(frame.src, host)) return;
+      if (
+        adapter.id === 'openui' && event.data && typeof event.data === 'object'
+        && 'navigationToken' in event.data
+        && event.data.navigationToken
+          === readLivePreviewNavigationToken(frame.src)
+        && receiveOpenUIQueryDefaults(event.data)
+      ) return;
       const action = actionAdapter.parseWindowMessage(event.data);
       if (action !== null) handleAction(action);
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [adapter.action, handleAction, host]);
+  }, [adapter.id, adapter.action, handleAction, host]);
 
   const lastUserMessage = persistedMessages[persistedMessages.length - 2];
   const retryMessage = !busy && messages[messages.length - 1]?.tone === 'error'

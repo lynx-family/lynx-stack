@@ -23,6 +23,10 @@
       "types": "./dist/core/explicit.d.ts",
       "default": "./dist/core/explicit.js"
     },
+    "./data-tools": {
+      "types": "./dist/data-tools/index.d.ts",
+      "default": "./dist/data-tools/index.js"
+    },
     "./catalog": {
       "types": "./dist/catalog/index.d.ts",
       "default": "./dist/catalog/index.js"

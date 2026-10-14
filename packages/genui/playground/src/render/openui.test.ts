@@ -8,6 +8,7 @@ import { act, createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { OpenUIRender } from './openui.js';
+import { OPENUI_DATA_TOOL } from '../../lynx-src/openui/dataTools.js';
 
 const mock = rstest.hoisted(() => ({
   view: {
@@ -90,3 +91,86 @@ test('coalesces boot-time snapshots then forwards streaming and terminal state t
     rstest.unstubAllGlobals();
   }
 });
+
+test('handles local mutations in storage without forwarding an agent action', async () => {
+  rstest.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  window.localStorage.clear();
+  const postMessage = rstest.spyOn(window.parent, 'postMessage');
+  const container = document.createElement('div');
+  const root = createRoot(container);
+  const request = {
+    rawText:
+      'counter = Query("openui_query", { key: "counter" }, 0)\nroot = Stack([])',
+    args: { key: 'counter' },
+  };
+  try {
+    await act(async () => root.render(createElement(OpenUIRender)));
+    expect(mock.view.onNativeModulesCall!(OPENUI_DATA_TOOL, {
+      ...request,
+      operation: 'initialize',
+      args: { defaults: { counter: 0 } },
+    }, 'bridge')).toEqual({ ok: true });
+    expect(mock.view.onNativeModulesCall!(OPENUI_DATA_TOOL, {
+      ...request,
+      operation: 'mutation',
+      args: {
+        key: 'counter',
+        value: 1,
+      },
+    }, 'bridge')).toEqual({ ok: true, value: { ok: true } });
+    expect(mock.view.onNativeModulesCall!(OPENUI_DATA_TOOL, {
+      ...request,
+      operation: 'query',
+    }, 'bridge')).toEqual({ ok: true, value: 1 });
+    expect(window.localStorage.length).toBe(1);
+    expect(postMessage).not.toHaveBeenCalled();
+  } finally {
+    await act(async () => root.unmount());
+    postMessage.mockRestore();
+    window.localStorage.clear();
+    rstest.unstubAllGlobals();
+  }
+});
+
+test.each([false, true])(
+  'injects persisted local data before delivery (streaming=%s)',
+  async (isStreaming) => {
+    rstest.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    window.localStorage.clear();
+    const rawText =
+      'counter = Query("openui_query", { key: "counter" }, 0)\nroot = Stack([])';
+    const root = createRoot(document.createElement('div'));
+    try {
+      await act(async () => root.render(createElement(OpenUIRender)));
+      mock.view.onNativeModulesCall!(OPENUI_DATA_TOOL, {
+        rawText,
+        operation: 'initialize',
+        args: { defaults: { counter: 0 } },
+      }, 'bridge');
+      mock.view.onNativeModulesCall!(OPENUI_DATA_TOOL, {
+        rawText,
+        operation: 'mutation',
+        args: {
+          key: 'counter',
+          value: 5,
+        },
+      }, 'bridge');
+      await act(async () =>
+        mock.view.onNativeModulesCall!('OPENUI_RUNTIME_READY', {}, 'bridge')
+      );
+      await post(rawText, isStreaming);
+      expect(mock.view.sendGlobalEvent).toHaveBeenLastCalledWith(
+        'OPENUI_LIVE_RESPONSE',
+        [{
+          rawText,
+          isStreaming,
+          initialQueryResults: { counter: 5 },
+        }],
+      );
+    } finally {
+      await act(async () => root.unmount());
+      window.localStorage.clear();
+      rstest.unstubAllGlobals();
+    }
+  },
+);

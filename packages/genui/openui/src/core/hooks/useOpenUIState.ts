@@ -33,6 +33,7 @@ import {
 import type { ReactNode } from '@lynx-js/react';
 
 import type { LegacyActionConfig } from '../../catalog/Action/index.jsx';
+import type { InitialQueryResults } from '../../data-tools/types.js';
 import type { OpenUIContextValue } from '../context.jsx';
 import type { Library } from '../library.jsx';
 
@@ -86,8 +87,7 @@ function evaluateRecord(
     : {};
 }
 
-/** Prefetched Query results keyed by Query assignment name (statement ID). */
-export type InitialQueryResults = Readonly<Record<string, unknown>>;
+export type { InitialQueryResults } from '../../data-tools/types.js';
 
 /** Inputs used to parse OpenUI text and build renderer state. */
 export interface UseOpenUIStateOptions {

@@ -57,3 +57,49 @@ test('rejects malformed live snapshots and accepts the empty streaming bootstrap
     expect(readOpenUILiveResponse(value)).toBeNull();
   }
 });
+
+test('consumes DSL defaults without copying query data into transport, history or shares', () => {
+  const stream = OPENUI_CHAT_ADAPTER.stream;
+  const rawText =
+    'data = Query("openui_query", { key: "data" }, { count: 0 })\nroot = Stack([])';
+  const completed = stream.reduce(stream.initial(), {
+    event: 'done',
+    data: { text: rawText },
+  });
+  const output = stream.finish(completed.state)!;
+  expect(output).not.toHaveProperty('initialQueryResults');
+  expect(
+    readOpenUILiveResponse(OPENUI_CHAT_ADAPTER.preview.livePayload(output)),
+  )
+    .toEqual({ rawText, isStreaming: false });
+  const persisted = OPENUI_CHAT_ADAPTER.persist(output);
+  expect(persisted.assistantContent).toBe(rawText);
+  const restored = OPENUI_CHAT_ADAPTER.hydrate({
+    history: [{ role: 'assistant', content: persisted.assistantContent }],
+  });
+  expect(restored.output).toMatchObject({ rawText });
+  const artifact = OPENUI_CHAT_ADAPTER.preview.artifact(restored.output!);
+  expect(JSON.parse(artifact.views.find(view => view.id === 'data')!.text))
+    .toEqual({ data: { count: 0 } });
+
+  // A runtime snapshot must never leak into conversation persistence or shares.
+  const withLocalSnapshot = {
+    ...output,
+    initialQueryResults: { data: { count: 42 } },
+  };
+  expect(OPENUI_CHAT_ADAPTER.persist(withLocalSnapshot)).toEqual(persisted);
+  expect(OPENUI_CHAT_ADAPTER.preview.source(withLocalSnapshot, {
+    protocol: 'openui',
+    theme: 'light',
+    previewPayloadUrls: null,
+  })).toEqual({
+    kind: 'openui',
+    rawText,
+    theme: 'light',
+    liveAction: true,
+    liveStream: true,
+  });
+  expect(OPENUI_CHAT_ADAPTER.preview.livePayload(withLocalSnapshot)).toEqual([
+    { rawText, isStreaming: false },
+  ]);
+});

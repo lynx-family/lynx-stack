@@ -80,6 +80,11 @@ import { buildOpenUiSystemPrompt } from '@lynx-js/genui/openui/prompt';
 const systemPrompt = buildOpenUiSystemPrompt();
 ```
 
+Data processing tools are opt-in: the shared prompt includes their rules when
+`promptOptions.tools` declares both `openui_query` and `openui_mutation` and tool
+calls are enabled. For configuration examples, host tool registration, and the
+Agent-to-renderer workflow, see [Data processing tools](./query-data.md).
+
 Add application policy and tool descriptions:
 
 ```ts

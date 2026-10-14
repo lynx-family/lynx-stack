@@ -42,6 +42,7 @@ import {
   TextField,
   Video,
 } from '../catalog/agent.js';
+import { DATA_GENERATION_RULES } from '../data-tools/data-rules.js';
 
 /** Shared action prop schema exposed to prompt signatures as `ActionExpression`. */
 export { actionPropSchema as openUiPromptActionPropSchema } from '../catalog/Action/schema.js';
@@ -198,12 +199,20 @@ function withDefaultPromptOptions(
   const defaultRules = restrictedComponents
     ? RESTRICTED_COMPONENT_RULES
     : DEFAULT_ADDITIONAL_RULES;
+  const toolNames = new Set(
+    options?.tools?.map(tool => typeof tool === 'string' ? tool : tool.name),
+  );
+  const dataRules = (options?.toolCalls ?? !restrictedComponents)
+      && toolNames.has('openui_query') && toolNames.has('openui_mutation')
+    ? [DATA_GENERATION_RULES]
+    : [];
   return {
     bindings: true,
     toolCalls: !restrictedComponents,
     ...options,
     additionalRules: [
       ...defaultRules,
+      ...dataRules,
       ...(options?.additionalRules ?? []),
     ],
     examples: options?.examples

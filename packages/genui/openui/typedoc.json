@@ -5,7 +5,8 @@
     "src/core/index.ts",
     "src/core/explicit.ts",
     "src/catalog/agent.ts",
-    "src/openui-prompt/index.ts"
+    "src/openui-prompt/index.ts",
+    "src/data-tools/index.ts"
   ],
   "tsconfig": "tsconfig.build.json",
   "intentionallyNotExported": [

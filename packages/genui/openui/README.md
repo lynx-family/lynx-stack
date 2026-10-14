@@ -227,5 +227,6 @@ should reset that state.
 - [Overview and architecture](./docs/overview.md)
 - [Libraries, built-ins, and custom components](./docs/library-guide.md)
 - [System prompts](./docs/system-prompts.md)
+- [Data processing tools](./docs/query-data.md)
 - [Open the GenUI playground](https://lynx-stack.dev/genui/#/openui)
 - [Read the OpenUI Lang v0.5 specification](https://www.openui.com/docs/openui-lang/specification-v05)

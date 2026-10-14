@@ -1,6 +1,8 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import type { ParseResult } from '@openuidev/lang-core';
+
 import { OpenUiRenderer } from '@lynx-js/genui/openui';
 import type {
   OpenUIError,
@@ -14,16 +16,38 @@ import { Markdown } from './Markdown/index.jsx';
 type ReportBlockErrors = (id: string, errors: OpenUIError[]) => void;
 
 const OpenUiBlock = memo(function OpenUiBlock(
-  { blockId, reportErrors, ...props }: OpenUiRendererRuntimeProps & {
-    blockId: string;
-    reportErrors?: ReportBlockErrors;
-  },
+  { blockId, reportErrors, onParseResult, ...props }:
+    & OpenUiRendererRuntimeProps
+    & {
+      blockId: string;
+      reportErrors?: ReportBlockErrors;
+    },
 ) {
+  const parsedRef = useRef<ParseResult | null>(null);
+  const reportedToRef = useRef(onParseResult);
+  const reportParse = useCallback((result: ParseResult | null) => {
+    parsedRef.current = result;
+    reportedToRef.current = onParseResult;
+    onParseResult?.(result);
+  }, [onParseResult]);
+  useEffect(() => {
+    // The outer source can advance while this completed block stays unchanged.
+    // Reuse its parse result for the new host callback without parsing it again.
+    if (reportedToRef.current === onParseResult) return;
+    reportedToRef.current = onParseResult;
+    onParseResult?.(parsedRef.current);
+  }, [onParseResult]);
   const onError = useCallback((errors: OpenUIError[]) => {
     reportErrors?.(blockId, errors);
   }, [blockId, reportErrors]);
   useEffect(() => () => reportErrors?.(blockId, []), [blockId, reportErrors]);
-  return <OpenUiRenderer {...props} {...(reportErrors ? { onError } : {})} />;
+  return (
+    <OpenUiRenderer
+      {...props}
+      onParseResult={reportParse}
+      {...(reportErrors ? { onError } : {})}
+    />
+  );
 });
 
 /** Render ordinary Markdown and independent OpenUI programs in response order. */

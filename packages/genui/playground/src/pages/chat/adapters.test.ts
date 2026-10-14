@@ -1683,7 +1683,10 @@ test('offers custom Jev in A2UI and OpenUI and forwards its connection without p
       settings,
       host,
     }).body,
-  ).toMatchObject(connection);
+  ).toMatchObject({
+    ...connection,
+    tools: ['openui_query', 'openui_mutation'],
+  });
   expect(
     OPENUI_CHAT_ADAPTER.action.request({
       action: {
@@ -1695,7 +1698,10 @@ test('offers custom Jev in A2UI and OpenUI and forwards its connection without p
       settings,
       host,
     }).body,
-  ).toMatchObject(connection);
+  ).toMatchObject({
+    ...connection,
+    tools: ['openui_query', 'openui_mutation'],
+  });
   expect(OPENUI_CHAT_ADAPTER.settings.serialize(settings)).toEqual({
     provider: CUSTOM_PROVIDER_ID,
     enableDesignGuidance: false,

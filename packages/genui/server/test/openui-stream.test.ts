@@ -127,3 +127,67 @@ test('withholds invented images and retains usage in the terminal error', async 
     mockAgent.stream.mockReset();
   }
 });
+
+test.each(
+  [undefined, [], ['openui_query'], ['openui_query', 'openui_mutation']].map(
+    tools => ({ tools }),
+  ),
+)(
+  'forwards declared runtime tools to prompt options: %j',
+  async ({ tools }) => {
+    const global = globalThis as typeof globalThis & {
+      __OPENUI_AGENT_SERVICE__?: OpenUIAgentService;
+    };
+    const previous = global.__OPENUI_AGENT_SERVICE__;
+    const service = new OpenUIAgentService();
+    const stream = rstest.spyOn(service, 'streamAsAsyncIterable')
+      .mockResolvedValue({
+        textStream: (async function*() {
+          yield await Promise.resolve('root = Stack([])');
+        })(),
+        finalize: async () => ({
+          text: 'root = Stack([])',
+          usage: {},
+          finishReason: 'stop',
+        }),
+      });
+    global.__OPENUI_AGENT_SERVICE__ = service;
+    try {
+      const response = await route.request('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: 'Create a card' }],
+          tools,
+        }),
+      });
+      expect(response.status).toBe(200);
+      await response.text();
+      const options = stream.mock.calls[0]![1];
+      if (tools === undefined) {
+        expect(options).not.toHaveProperty('promptOptions');
+      } else expect(options).toMatchObject({ promptOptions: { tools } });
+    } finally {
+      stream.mockRestore();
+      global.__OPENUI_AGENT_SERVICE__ = previous;
+    }
+  },
+);
+
+test.each(['openui_query', [null], ['']].map(tools => ({ tools })))(
+  'rejects malformed runtime tool lists: %j',
+  async ({ tools }) => {
+    const response = await route.request('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'Create a card' }],
+        tools,
+      }),
+    });
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      error: 'tools must be an array of nonempty tool names',
+    });
+  },
+);

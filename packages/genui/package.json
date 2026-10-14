@@ -73,6 +73,10 @@
       "types": "./openui/dist/core/explicit.d.ts",
       "default": "./openui/dist/core/explicit.js"
     },
+    "./openui/data-tools": {
+      "types": "./openui/dist/data-tools/index.d.ts",
+      "default": "./openui/dist/data-tools/index.js"
+    },
     "./openui/catalog": {
       "types": "./openui/dist/catalog/index.d.ts",
       "default": "./openui/dist/catalog/index.js"

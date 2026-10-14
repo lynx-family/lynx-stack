@@ -65,7 +65,9 @@ function isPlaybackControlMessage(
 
 // The bundled protocols share a view lifecycle and the legacy playback channel.
 // Each protocol component installs its own payload and action bridges.
-export function useBundledRender() {
+export function useBundledRender(
+  prepareData?: (data: InitData) => InitData,
+) {
   const initial = useMemo(() => ({
     initData: parseInitDataFromQuery(),
     globalProps: parseGlobalPropsFromQuery(),
@@ -147,24 +149,26 @@ export function useBundledRender() {
     if (!lynxView) return;
     lynxView.initData = { ...(initData ?? {}) };
     // Align with native: prefer globalProps as the payload channel.
-    lynxView.globalProps = globalProps
+    const props = globalProps
       ? { ...globalProps }
       : buildGlobalPropsFromInitData(initData) ?? {};
+    lynxView.globalProps = prepareData ? prepareData(props) : props;
     lynxView.reload?.();
     postRenderReady();
-  }, [globalProps, initData, postRenderReady]);
+  }, [globalProps, initData, postRenderReady, prepareData]);
 
   useEffect(() => {
     const lynxView = lynxViewRef.current;
     if (!lynxView) return;
     lynxView.initData = { ...(initData ?? {}), playbackPaused, playbackMode };
-    lynxView.globalProps = globalProps
+    const props = globalProps
       ? { ...globalProps, playbackPaused, playbackMode }
       : buildGlobalPropsFromInitData({
         ...(initData ?? {}),
         playbackPaused,
         playbackMode,
       }) ?? {};
+    lynxView.globalProps = prepareData ? prepareData(props) : props;
     if (lastPlaybackPausedRef.current !== playbackPaused) {
       lastPlaybackPausedRef.current = playbackPaused;
       lynxView.sendGlobalEvent?.('A2UI_PLAYBACK_CONTROL', [
@@ -172,7 +176,14 @@ export function useBundledRender() {
       ]);
     }
     postRenderReady();
-  }, [globalProps, initData, playbackMode, playbackPaused, postRenderReady]);
+  }, [
+    globalProps,
+    initData,
+    playbackMode,
+    playbackPaused,
+    postRenderReady,
+    prepareData,
+  ]);
 
   const view = createElement('lynx-view', {
     ref: lynxViewRef,
