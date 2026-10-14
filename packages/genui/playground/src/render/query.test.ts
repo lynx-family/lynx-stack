@@ -27,6 +27,7 @@ test.each(['rawText', 'rawTextUrl'] as const)(
     rstest.stubGlobal('window', { location: new URL(url) });
     const init = parseInitDataFromQuery();
     expect(init?.openuiLibrary).toBe('chat');
+    expect(init?.inlineMode).toBe(true);
     expect(buildGlobalPropsFromInitData(init)?.openuiLibrary).toBe('chat');
     expect(buildGlobalPropsFromInitData(init)).toMatchObject({
       inlineMode: true,

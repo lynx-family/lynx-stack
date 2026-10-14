@@ -157,6 +157,21 @@ test('required fields block submission until valid and send named form data', as
   });
 });
 
+test('inputs preserve declared defaults when mounted after an empty live response', async () => {
+  const response =
+    'root = Card([Input("city", null, "text", null, $city), TextContent("City " + $city)])\n$city = "Kyoto"';
+  const view = render(<OpenUiRenderer library={library} response='' />);
+  view.rerender(<OpenUiRenderer library={library} response={response} />);
+  await waitFor(() => expect(controls.inputs.get('city')?.value).toBe('Kyoto'));
+  expect(view.getByText('City Kyoto')).toBeTruthy();
+  await enter('city', 'Osaka');
+  view.rerender(
+    <OpenUiRenderer library={library} response={response + '\nunused = 1'} />,
+  );
+  await waitFor(() => expect(controls.inputs.get('city')?.value).toBe('Osaka'));
+  expect(view.getByText('City Osaka')).toBeTruthy();
+});
+
 test('slider array bindings update dependent calculations with the configured step', async () => {
   const response =
     'root = Card([Form("budget", Buttons([]), [FormControl("Budget", Slider("amount", "discrete", 100, 1000, 10, [500], "Budget", null, $amount))]), TextContent("Amount " + @First($amount))])\n$amount = [500]';
