@@ -29,6 +29,8 @@ use ve_tos_rust_sdk::object::PutObjectFromBufferInput;
 
 const DEFAULT_SCREENSHOT_PREFIX: &str = "screenshot";
 const SCREENSHOT_FILE: &str = "screenshot.bmp";
+const PARAMETERS_FILE: &str = "screenshot.json";
+const PARAMETERS_CONTENT_TYPE: &str = "application/json";
 const SCREENSHOT_CONTENT_TYPE: &str = "image/bmp";
 // Matches GenUI Server's uploadTosObject cache policy.
 const OBJECT_CACHE_CONTROL: &str = "public, max-age=1800";
@@ -146,11 +148,11 @@ impl TosConfig {
     }
   }
 
-  fn object_key(&self, id: &Uuid) -> String {
+  fn object_key(&self, id: &Uuid, filename: &str) -> String {
     if self.prefix.is_empty() {
-      format!("{id}/{SCREENSHOT_FILE}")
+      format!("{id}/{filename}")
     } else {
-      format!("{}/{id}/{SCREENSHOT_FILE}", self.prefix)
+      format!("{}/{id}/{filename}", self.prefix)
     }
   }
 
@@ -302,18 +304,38 @@ impl TosUploader {
     Ok(Self { client, config })
   }
 
-  async fn put_bmp(&self, bmp: Vec<u8>) -> Result<String, TosUploadError> {
+  async fn put_bmp(&self, bmp: Vec<u8>, parameters: Vec<u8>) -> Result<String, TosUploadError> {
     let config = &self.config;
-    let key = config.object_key(&Uuid::new_v4());
-    let mut input =
-      PutObjectFromBufferInput::new_with_content(config.bucket.as_str(), key.as_str(), &bmp);
-    input.set_content_type(SCREENSHOT_CONTENT_TYPE);
-    input.set_cache_control(OBJECT_CACHE_CONTROL);
-    tokio::time::timeout(UPLOAD_DEADLINE, self.client.put_object_from_buffer(&input))
-      .await
-      .map_err(|_| TosUploadError::Client("the upload timed out".into()))?
-      .map_err(upload_error)?;
+    let id = Uuid::new_v4();
+    let key = config.object_key(&id, SCREENSHOT_FILE);
+    let parameters_key = config.object_key(&id, PARAMETERS_FILE);
+    tokio::time::timeout(UPLOAD_DEADLINE, async {
+      self
+        .put_object(&parameters_key, &parameters, PARAMETERS_CONTENT_TYPE)
+        .await?;
+      self.put_object(&key, &bmp, SCREENSHOT_CONTENT_TYPE).await
+    })
+    .await
+    .map_err(|_| TosUploadError::Client("the upload timed out".into()))??;
     Ok(config.object_url(&object_path(&key)))
+  }
+
+  async fn put_object(
+    &self,
+    key: &str,
+    bytes: &[u8],
+    content_type: &str,
+  ) -> Result<(), TosUploadError> {
+    let mut input =
+      PutObjectFromBufferInput::new_with_content(self.config.bucket.as_str(), key, bytes);
+    input.set_content_type(content_type);
+    input.set_cache_control(OBJECT_CACHE_CONTROL);
+    self
+      .client
+      .put_object_from_buffer(&input)
+      .await
+      .map_err(upload_error)?;
+    Ok(())
   }
 }
 
@@ -360,12 +382,16 @@ impl ScreenshotStore {
     })
   }
 
-  /// Stores one BMP and returns its public URL.
-  pub(crate) async fn put_bmp(&self, bmp: Vec<u8>) -> Result<String, TosUploadError> {
+  /// Stores the input JSON and BMP together and returns the BMP public URL.
+  pub(crate) async fn put_bmp(
+    &self,
+    bmp: Vec<u8>,
+    parameters: Vec<u8>,
+  ) -> Result<String, TosUploadError> {
     match self.backend.as_ref() {
-      Backend::Tos(uploader) => uploader.put_bmp(bmp).await,
+      Backend::Tos(uploader) => uploader.put_bmp(bmp, parameters).await,
       #[cfg(test)]
-      Backend::Memory(store) => store.put_bmp(bmp),
+      Backend::Memory(store) => store.put_bmp(bmp, parameters),
     }
   }
 }
@@ -383,7 +409,11 @@ mod memory {
   }
 
   impl MemoryStore {
-    pub(super) fn put_bmp(&self, bmp: Vec<u8>) -> Result<String, TosUploadError> {
+    pub(super) fn put_bmp(
+      &self,
+      bmp: Vec<u8>,
+      parameters: Vec<u8>,
+    ) -> Result<String, TosUploadError> {
       if let Some(status) = self.fail_with_status {
         return Err(TosUploadError::Rejected {
           status,
@@ -392,9 +422,12 @@ mod memory {
       }
       let mut objects = self.objects.lock().unwrap();
       let id = uuid::Uuid::from_u128(objects.len() as u128 + 1);
-      let path = super::object_path(&self.config.object_key(&id));
+      let path = super::object_path(&self.config.object_key(&id, super::SCREENSHOT_FILE));
       let url = self.config.object_url(&path);
       objects.push((url.clone(), bmp));
+      let parameters_path =
+        super::object_path(&self.config.object_key(&id, super::PARAMETERS_FILE));
+      objects.push((self.config.object_url(&parameters_path), parameters));
       Ok(url)
     }
   }
@@ -429,7 +462,7 @@ mod memory {
       }
     }
 
-    /// Every stored `(url, bmp)` pair, oldest first.
+    /// Every stored `(url, bytes)` pair, oldest capture first.
     pub(crate) fn stored_objects(&self) -> Vec<(String, Vec<u8>)> {
       match self.backend.as_ref() {
         Backend::Memory(store) => store.objects.lock().unwrap().clone(),
@@ -522,7 +555,7 @@ mod tests {
     assert!(config.secure);
     assert_eq!(config.endpoint_host, "tos-cn-shanghai.volces.com");
     assert_eq!(
-      config.object_key(&Uuid::from_u128(1)),
+      config.object_key(&Uuid::from_u128(1), SCREENSHOT_FILE),
       "00000000-0000-0000-0000-000000000001/screenshot.bmp",
     );
   }
@@ -603,11 +636,24 @@ mod tests {
   /// A one-route stand-in for TOS that records requests and answers `status`.
   /// Like TOS, it echoes the CRC64 of a stored object, which the SDK verifies.
   async fn fake_tos(status: StatusCode, reply: String) -> (SocketAddr, Log) {
+    fake_tos_for_file(status, reply, None).await
+  }
+
+  async fn fake_tos_for_file(
+    status: StatusCode,
+    reply: String,
+    filename: Option<&'static str>,
+  ) -> (SocketAddr, Log) {
     async fn record(
-      State((log, status, reply)): State<(Log, StatusCode, String)>,
+      State((log, status, reply, filename)): State<(Log, StatusCode, String, Option<&'static str>)>,
       request: Request,
     ) -> Response {
       let (parts, body) = request.into_parts();
+      let status = if filename.is_none_or(|filename| parts.uri.path().ends_with(filename)) {
+        status
+      } else {
+        StatusCode::OK
+      };
       let body = axum::body::to_bytes(body, usize::MAX)
         .await
         .unwrap()
@@ -630,9 +676,10 @@ mod tests {
       response
     }
     let log = Log::default();
-    let app = Router::new()
-      .fallback(any(record))
-      .with_state((Arc::clone(&log), status, reply));
+    let app =
+      Router::new()
+        .fallback(any(record))
+        .with_state((Arc::clone(&log), status, reply, filename));
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let address = listener.local_addr().unwrap();
     tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
@@ -659,10 +706,27 @@ mod tests {
     let (address, log) = fake_tos(StatusCode::OK, String::new()).await;
     let uploader = uploader_for(address, &[("TOS_SECURITY_TOKEN", "STS-TOKEN-VALUE")]);
 
-    let url = uploader.put_bmp(b"BM-pixels".to_vec()).await.unwrap();
+    let url = uploader
+      .put_bmp(
+        b"BM-pixels".to_vec(),
+        br#"{"entry":"index.lynxml"}"#.to_vec(),
+      )
+      .await
+      .unwrap();
 
     let received = log.lock().unwrap();
-    let request = received.last().expect("the stand-in received one request");
+    assert_eq!(received.len(), 2);
+    let parameters = &received[0];
+    let request = &received[1];
+    assert_eq!(parameters.method, "PUT");
+    assert_eq!(
+      parameters.path,
+      request.path.replace("screenshot.bmp", "screenshot.json")
+    );
+    assert_eq!(parameters.body, br#"{"entry":"index.lynxml"}"#);
+    assert_eq!(parameters.headers["content-type"], "application/json");
+    assert_eq!(parameters.headers["cache-control"], OBJECT_CACHE_CONTROL);
+    assert!(!parameters.headers.contains_key("x-tos-acl"));
     assert_eq!(request.method, "PUT");
     assert_eq!(request.body, b"BM-pixels");
     assert!(
@@ -692,9 +756,32 @@ mod tests {
   async fn every_upload_gets_a_distinct_object_key() {
     let (address, _) = fake_tos(StatusCode::OK, String::new()).await;
     let uploader = uploader_for(address, &[]);
-    let first = uploader.put_bmp(vec![1]).await.unwrap();
-    let second = uploader.put_bmp(vec![1]).await.unwrap();
+    let first = uploader.put_bmp(vec![1], b"{}".to_vec()).await.unwrap();
+    let second = uploader.put_bmp(vec![1], b"{}".to_vec()).await.unwrap();
     assert_ne!(first, second);
+  }
+
+  #[tokio::test]
+  async fn either_object_upload_failure_fails_the_capture_upload() {
+    for (filename, requests) in [(PARAMETERS_FILE, 1), (SCREENSHOT_FILE, 2)] {
+      let (address, log) = fake_tos_for_file(
+        StatusCode::FORBIDDEN,
+        tos_error_body("AccessDenied", "denied"),
+        Some(filename),
+      )
+      .await;
+      let error = uploader_for(address, &[])
+        .put_bmp(b"BM-pixels".to_vec(), b"{}".to_vec())
+        .await
+        .unwrap_err();
+      assert!(matches!(
+        error,
+        TosUploadError::Rejected { status: 403, .. }
+      ));
+      let received = log.lock().unwrap();
+      assert_eq!(received.len(), requests);
+      assert!(received.last().unwrap().path.ends_with(filename));
+    }
   }
 
   #[tokio::test]
@@ -706,7 +793,7 @@ mod tests {
     )
     .await;
     let error = uploader_for(address, &[])
-      .put_bmp(vec![0])
+      .put_bmp(vec![0], b"{}".to_vec())
       .await
       .unwrap_err();
     match error {
@@ -725,7 +812,7 @@ mod tests {
   async fn upload_does_not_follow_redirects() {
     let (address, log) = fake_tos(StatusCode::TEMPORARY_REDIRECT, String::new()).await;
     let error = uploader_for(address, &[])
-      .put_bmp(vec![0])
+      .put_bmp(vec![0], b"{}".to_vec())
       .await
       .unwrap_err();
     assert!(
@@ -743,7 +830,7 @@ mod tests {
     )
     .await;
     let error = uploader_for(address, &[])
-      .put_bmp(vec![0])
+      .put_bmp(vec![0], b"{}".to_vec())
       .await
       .unwrap_err();
     assert!(
@@ -759,7 +846,10 @@ mod tests {
     let closed = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
     let dead = closed.local_addr().unwrap();
     drop(closed);
-    let error = uploader_for(dead, &[]).put_bmp(vec![0]).await.unwrap_err();
+    let error = uploader_for(dead, &[])
+      .put_bmp(vec![0], b"{}".to_vec())
+      .await
+      .unwrap_err();
     assert!(matches!(error, TosUploadError::Client(_)), "{error}");
   }
 }

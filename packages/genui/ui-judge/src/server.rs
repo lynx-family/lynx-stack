@@ -21,6 +21,7 @@ use axum::http::{
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
+use base64::prelude::{Engine, BASE64_STANDARD};
 use lynx_headless_rust_test_runner::{
   ContainerOptions, GotoOptions, LynxContainer, ScreenshotOptions,
 };
@@ -292,12 +293,30 @@ enum ScreenshotFormKind {
 
 #[derive(Debug)]
 struct ScreenshotForm {
+  parameters: ScreenshotParameters,
   capture_request: Option<CapturePageRequest>,
   screenshot_settle_ms: u64,
   entry: ScreenshotEntry,
   viewport: ScreenshotViewport,
   load_options: PageLoadOptions,
   source: Vec<u8>,
+}
+
+/// One persisted input schema for every screenshot route. Source fields that
+/// do not apply are null; binary ZIP uploads use standard Base64.
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ScreenshotParameters {
+  entry: String,
+  width: usize,
+  height: usize,
+  global_props: Option<Value>,
+  init_data: Option<Value>,
+  screenshot_settle_ms: u64,
+  timeout_ms: u64,
+  url: Option<String>,
+  source: Option<String>,
+  file_base64: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -934,15 +953,21 @@ async fn render_page_screenshot(
     &request,
   )
   .await?;
-  screenshot_response(state, capture.into_bmp()).await
+  screenshot_response(state, capture.into_bmp(), &form.parameters).await
 }
 
 /// Uploads a finished capture to TOS and answers with its public URL. This runs
 /// after the render slot is released, so a slow upload never holds a renderer.
-async fn screenshot_response(state: &AppState, bmp: Vec<u8>) -> Result<Response, ApiError> {
+async fn screenshot_response(
+  state: &AppState,
+  bmp: Vec<u8>,
+  parameters: &ScreenshotParameters,
+) -> Result<Response, ApiError> {
+  let parameters = serde_json::to_vec_pretty(parameters)
+    .expect("screenshot parameters contain only JSON-compatible values");
   let url = state
     .screenshot_store
-    .put_bmp(bmp)
+    .put_bmp(bmp, parameters)
     .await
     .map_err(screenshot_upload_api_error)?;
   Ok(([(CACHE_CONTROL, "no-store")], Json(json!({ "url": url }))).into_response())
@@ -1071,7 +1096,9 @@ async fn parse_screenshot_form(
     }
     *slot = Some(bytes);
   }
-  let entry = ScreenshotEntry::parse(form_text("entry", &required_form_field("entry", entry)?)?)?;
+  let entry_bytes = required_form_field("entry", entry)?;
+  let entry_text = form_text("entry", &entry_bytes)?;
+  let entry = ScreenshotEntry::parse(entry_text)?;
   let viewport = ScreenshotViewport::new(
     form_dimension("width", width, DEFAULT_SCREENSHOT_WIDTH)?,
     form_dimension("height", height, DEFAULT_SCREENSHOT_HEIGHT)?,
@@ -1110,7 +1137,37 @@ async fn parse_screenshot_form(
   } else {
     None
   };
+  let page_data = |data: &Option<String>| {
+    data
+      .as_deref()
+      .map(|data| serde_json::from_str(data).expect("page data was validated as a JSON object"))
+  };
+  let parameters = ScreenshotParameters {
+    entry: entry_text.to_string(),
+    width: viewport.width,
+    height: viewport.height,
+    global_props: page_data(&load_options.global_props_json),
+    init_data: page_data(&load_options.initial_data_json),
+    screenshot_settle_ms,
+    timeout_ms: capture_request
+      .as_ref()
+      .map_or(DEFAULT_TIMEOUT_MS, |request| {
+        request.timeout.as_millis() as u64
+      }),
+    url: if source_name == "url" {
+      Some(form_text("url", &source)?.to_string())
+    } else {
+      None
+    },
+    source: if source_name == "source" {
+      Some(form_text("source", &source)?.to_string())
+    } else {
+      None
+    },
+    file_base64: (source_name == "file").then(|| BASE64_STANDARD.encode(&source)),
+  };
   Ok(ScreenshotForm {
+    parameters,
     capture_request,
     screenshot_settle_ms,
     entry,
@@ -1186,6 +1243,7 @@ async fn screenshot_template_url(
   request: Request,
 ) -> Result<Response, ApiError> {
   let ScreenshotForm {
+    parameters,
     entry,
     viewport,
     load_options,
@@ -1207,6 +1265,7 @@ async fn screenshot_template_url(
     StagedSourceKind::Template,
     viewport,
     load_options,
+    parameters,
   )
   .await
 }
@@ -1229,6 +1288,7 @@ async fn screenshot_zip_upload(
   request: Request,
 ) -> Result<Response, ApiError> {
   let ScreenshotForm {
+    parameters,
     entry,
     viewport,
     load_options,
@@ -1243,6 +1303,7 @@ async fn screenshot_zip_upload(
     viewport,
     load_options,
     screenshot_settle_ms,
+    parameters,
   )
   .await
 }
@@ -1252,6 +1313,7 @@ async fn screenshot_zip_url(
   request: Request,
 ) -> Result<Response, ApiError> {
   let ScreenshotForm {
+    parameters,
     entry,
     viewport,
     load_options,
@@ -1270,6 +1332,7 @@ async fn screenshot_zip_url(
     viewport,
     load_options,
     screenshot_settle_ms,
+    parameters,
   )
   .await
 }
@@ -1281,6 +1344,7 @@ async fn render_zip(
   viewport: ScreenshotViewport,
   load_options: PageLoadOptions,
   screenshot_settle_ms: u64,
+  parameters: ScreenshotParameters,
 ) -> Result<Response, ApiError> {
   let job_id = NEXT_ZIP_JOB_ID.fetch_add(1, Ordering::Relaxed);
   if upload.is_empty() {
@@ -1400,7 +1464,7 @@ async fn render_zip(
       capture.into_bmp()
     }
   };
-  screenshot_response(state, bmp).await
+  screenshot_response(state, bmp, &parameters).await
 }
 
 async fn render_staged_source(
@@ -1410,6 +1474,7 @@ async fn render_staged_source(
   kind: StagedSourceKind,
   viewport: ScreenshotViewport,
   load_options: PageLoadOptions,
+  parameters: ScreenshotParameters,
 ) -> Result<Response, ApiError> {
   let request = staged_screenshot_request(&entry.url);
   let capture = capture_staged_source(
@@ -1422,7 +1487,7 @@ async fn render_staged_source(
     &request,
   )
   .await?;
-  screenshot_response(state, capture.into_bmp()).await
+  screenshot_response(state, capture.into_bmp(), &parameters).await
 }
 
 async fn capture_staged_source(
@@ -2131,7 +2196,6 @@ mod tests {
   use axum::extract::FromRequest;
   use axum::http::header::CONTENT_TYPE;
   use axum::http::Request;
-  use base64::prelude::{Engine, BASE64_STANDARD};
   use image::{DynamicImage, ImageFormat, Rgba, RgbaImage};
 
   use super::*;
@@ -2157,9 +2221,22 @@ mod tests {
     );
     let url = body["url"].as_str().expect("response carries a URL");
     let mut objects = store.stored_objects();
-    assert_eq!(objects.len(), 1, "one capture uploads exactly one object");
+    assert_eq!(
+      objects.len(),
+      2,
+      "one capture uploads a BMP and its input JSON"
+    );
     let (stored_url, bmp) = objects.remove(0);
     assert_eq!(url, stored_url);
+    let (parameters_url, parameters) = objects.remove(0);
+    assert_eq!(
+      parameters_url,
+      url.replace("screenshot.bmp", "screenshot.json")
+    );
+    let parameters: Value = serde_json::from_slice(&parameters).expect("stored inputs are JSON");
+    assert!(parameters["entry"].is_string());
+    assert!(parameters["width"].is_number());
+    assert!(parameters["height"].is_number());
     assert!(
       url.starts_with("https://screenshots.tos-cn-beijing.volces.com/screenshot/")
         && url.ends_with("/screenshot.bmp"),
@@ -2183,7 +2260,12 @@ mod tests {
     let state = state_with_store(store.clone());
     let bmp = vec![b'B', b'M', 1, 2, 3];
 
-    let response = screenshot_response(&state, bmp.clone()).await.unwrap();
+    let form = read_page_screenshot_form(lynxml_request("index.lynxml", b"<lynx/>"), "source")
+      .await
+      .unwrap();
+    let response = screenshot_response(&state, bmp.clone(), &form.parameters)
+      .await
+      .unwrap();
 
     assert_eq!(uploaded_screenshot(&store, response).await, bmp);
     state.headless.shutdown().unwrap();
@@ -2194,7 +2276,12 @@ mod tests {
     let store = ScreenshotStore::failing_with_status(403);
     let state = state_with_store(store.clone());
 
-    let error = screenshot_response(&state, vec![0; 8]).await.unwrap_err();
+    let form = read_page_screenshot_form(lynxml_request("index.lynxml", b"<lynx/>"), "source")
+      .await
+      .unwrap();
+    let error = screenshot_response(&state, vec![0; 8], &form.parameters)
+      .await
+      .unwrap_err();
 
     assert_eq!(error.status, StatusCode::BAD_GATEWAY);
     assert_eq!(
@@ -2388,6 +2475,101 @@ mod tests {
         form.capture_request.as_ref().unwrap().timeout,
         Duration::from_millis(2345)
       );
+    }
+  }
+
+  #[tokio::test]
+  async fn all_screenshot_sources_persist_the_same_input_schema() {
+    for (kind, source_name, source) in [
+      (
+        ScreenshotFormKind::Page,
+        "url",
+        b"https://example.com/template.js".as_slice(),
+      ),
+      (ScreenshotFormKind::Page, "source", b"<lynx/>".as_slice()),
+      (
+        ScreenshotFormKind::LegacyTemplate,
+        "url",
+        b"https://example.com/template.js".as_slice(),
+      ),
+      (
+        ScreenshotFormKind::Zip,
+        "url",
+        b"https://example.com/page.zip".as_slice(),
+      ),
+      (ScreenshotFormKind::Zip, "file", b"PK\x00\xff".as_slice()),
+    ] {
+      let entry = if source_name == "source" {
+        "index.lynxml"
+      } else {
+        "zip:///pages/template.js"
+      };
+      let mut fields = vec![("entry", entry.as_bytes()), (source_name, source)];
+      let defaults =
+        read_screenshot_form_impl(multipart_request("inputs", &fields), source_name, kind)
+          .await
+          .unwrap();
+      let defaults = serde_json::to_value(defaults.parameters).unwrap();
+      assert_eq!(defaults["width"], 800);
+      assert_eq!(defaults["height"], 600);
+      assert_eq!(defaults["screenshotSettleMs"], 100);
+      assert_eq!(defaults["timeoutMs"], 60000);
+      assert!(defaults["initData"].is_null());
+      assert!(defaults["globalProps"].is_null());
+
+      fields.extend_from_slice(&[
+        ("width", b"375"),
+        ("height", b"812"),
+        ("initData", br#"{"ready":true}"#),
+      ]);
+      if source_name != "source" {
+        fields.push(("globalProps", br#"{"nested":{"name":"test"}}"#));
+      }
+      if !matches!(kind, ScreenshotFormKind::LegacyTemplate) {
+        fields.push(("screenshotSettleMs", b"0"));
+      }
+      if matches!(kind, ScreenshotFormKind::Page) {
+        fields.push(("timeoutMs", b"1234"));
+      }
+      let mut form =
+        read_screenshot_form_impl(multipart_request("inputs", &fields), source_name, kind)
+          .await
+          .unwrap();
+      // Downloads replace source bytes before rendering; persist the original URL.
+      if source_name == "url" {
+        form.source = b"downloaded bytes".to_vec();
+      }
+      let state = state_with_store(ScreenshotStore::in_memory());
+      let response = screenshot_response(&state, b"BM-pixels".to_vec(), &form.parameters)
+        .await
+        .unwrap();
+      uploaded_screenshot(&state.screenshot_store, response).await;
+      let objects = state.screenshot_store.stored_objects();
+      let parameters: Value = serde_json::from_slice(&objects[1].1).unwrap();
+      assert_eq!(
+        parameters,
+        json!({
+          "entry": entry,
+          "width": 375,
+          "height": 812,
+          "globalProps": if source_name == "source" { Value::Null } else { json!({"nested":{"name":"test"}}) },
+          "initData": {"ready": true},
+          "screenshotSettleMs": if matches!(kind, ScreenshotFormKind::LegacyTemplate) { 100 } else { 0 },
+          "timeoutMs": if matches!(kind, ScreenshotFormKind::Page) { 1234 } else { 60000 },
+          "url": if source_name == "url" { Some(std::str::from_utf8(source).unwrap()) } else { None },
+          "source": if source_name == "source" { Some(std::str::from_utf8(source).unwrap()) } else { None },
+          "fileBase64": if source_name == "file" { Some(BASE64_STANDARD.encode(source)) } else { None },
+        })
+      );
+      if source_name == "file" {
+        assert_eq!(
+          BASE64_STANDARD
+            .decode(parameters["fileBase64"].as_str().unwrap())
+            .unwrap(),
+          source
+        );
+      }
+      state.headless.shutdown().unwrap();
     }
   }
 
@@ -3018,6 +3200,10 @@ mod tests {
 
     let uploaded = uploaded_screenshot(&store, response).await;
     assert_eq!(uploaded.as_slice(), expected_bmp.as_slice());
+    let inputs: Value = serde_json::from_slice(&store.stored_objects()[1].1).unwrap();
+    assert_eq!(inputs["entry"], "pages/index.lynxml");
+    assert_eq!(inputs["source"], std::str::from_utf8(source).unwrap());
+    assert_eq!(inputs["initData"], json!({"ready": true}));
     let staged_path = staged_path
       .lock()
       .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -3111,6 +3297,7 @@ mod tests {
       StagedSourceKind::Template,
       form.viewport,
       form.load_options,
+      form.parameters,
     )
     .await
     .expect("render a staged template with multipart page data");
@@ -3186,6 +3373,15 @@ mod tests {
 
     let uploaded = uploaded_screenshot(&store, response).await;
     assert_eq!(uploaded.as_slice(), expected_bmp.as_slice());
+    let inputs: Value = serde_json::from_slice(&store.stored_objects()[1].1).unwrap();
+    assert_eq!(inputs["entry"], "zip:///pages/template.js");
+    assert_eq!(inputs["screenshotSettleMs"], 3000);
+    assert_eq!(
+      BASE64_STANDARD
+        .decode(inputs["fileBase64"].as_str().unwrap())
+        .unwrap(),
+      upload
+    );
     let staged_path = staged_path
       .lock()
       .unwrap_or_else(|poisoned| poisoned.into_inner())

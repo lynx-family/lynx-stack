@@ -133,6 +133,37 @@ and browser callers such as the Playground also need CORS reads enabled on it. I
 should expire the prefix with a lifecycle rule, since the server never
 deletes objects. The credentials stay in the server process; isolated render
 children do not inherit them.
+Every screenshot route also writes `<prefix>/<uuid>/screenshot.json` beside the
+BMP with `Content-Type: application/json` and the same cache policy. Both objects
+must upload successfully before the route returns the BMP URL. Either upload
+failure returns `502`; partial uploads remain subject to the bucket lifecycle rule.
+
+All five screenshot routes use this JSON structure, including effective defaults
+for omitted capture options:
+
+```json
+{
+  "entry": "pages/template.js",
+  "width": 800,
+  "height": 600,
+  "globalProps": null,
+  "initData": { "ready": true },
+  "screenshotSettleMs": 100,
+  "timeoutMs": 60000,
+  "url": "https://example.com/template.js",
+  "source": null,
+  "fileBase64": null
+}
+```
+
+`entry` retains the submitted relative path or `zip://` URL. `globalProps` and
+`initData` are JSON objects when supplied and `null` when omitted. URL routes keep
+the original `url`; the LynXML route stores its UTF-8 text in `source`; ZIP uploads
+store the complete archive as standard Base64 in `fileBase64`. Unused source
+fields are `null`. To read the inputs for a screenshot, replace `screenshot.bmp`
+with `screenshot.json` in its URL. The JSON has the same bucket read policy as the
+image and contains the supplied page data and source.
+
 Use `GET /health` for a readiness check returning `{"status":"ok"}`. Use `POST /compare` to compare two uploaded images without rendering a
 page or calling the VLM. Screenshot capture uses four source-specific routes:
 
