@@ -498,7 +498,7 @@ describe('React - alias', () => {
       )
     }
 
-    expect(layerGetter).toBeCalledTimes(4)
+    expect(layerGetter).toBeCalledTimes(8)
   })
 
   describe('with environments', () => {
