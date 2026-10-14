@@ -48,3 +48,10 @@ not call the JS app's update or destruction callbacks directly.
 5. After each reload, tap **SHOW LOG** in Element PAPI trace. It captures the
    create, update, insert, remove and flush calls for that cycle and keeps the
    last three reloads for comparison.
+6. Scroll to **LazyComponent** and tap **counter +1**. After native reload,
+   both the main and lazy bundle counters should reset to zero. Tap the
+   **Background-only card** again to check its main-thread worklet still runs.
+
+The `reloadLab::main-bundle-eval` and `reloadLab::lazy-bundle-eval` trace slices
+mark module counter initialization. They indicate module factory execution,
+which can happen again even when core reuses cached lazy bundle exports.

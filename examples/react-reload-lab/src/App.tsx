@@ -1,4 +1,6 @@
 import {
+  Suspense,
+  lazy,
   runOnBackground,
   runOnMainThread,
   useCallback,
@@ -15,6 +17,8 @@ import {
 } from './element-papi-trace.js';
 import type { ElementPapiTraceSnapshot } from './element-papi-trace.js';
 
+const LazyComponent = lazy(() => import('./LazyComponent.js'));
+
 interface LynxTestModule {
   updateGlobalProps: (props: Record<string, unknown>) => void;
   reloadTemplate: (
@@ -28,7 +32,9 @@ const lynxSymbols = lynx as unknown as Record<symbol, number | undefined>;
 lynxSymbols[runtimeEpochKey] = (lynxSymbols[runtimeEpochKey] ?? 0) + 1;
 const runtimeEpoch = lynxSymbols[runtimeEpochKey] ?? 1;
 
-let moduleTapCount = 0;
+lynx.performance.profileStart('reloadLab::main-bundle-eval');
+let mainBundleCounter = 0;
+lynx.performance.profileEnd();
 
 function getLynxTestModule(): LynxTestModule | undefined {
   return (NativeModules as unknown as { LynxTestModule?: LynxTestModule })
@@ -69,9 +75,9 @@ export function App() {
 
   const onBackgroundTap = useCallback(() => {
     'background-only';
-    moduleTapCount += 1;
+    mainBundleCounter += 1;
     setBackgroundTaps(count => count + 1);
-    setModuleTaps(moduleTapCount);
+    setModuleTaps(mainBundleCounter);
     setLastAction('Background event handled once');
   }, []);
 
@@ -163,7 +169,7 @@ export function App() {
           <text className='MetricHint'>resets on reload</text>
         </view>
         <view className='MetricCard'>
-          <text className='MetricLabel'>Module variable</text>
+          <text className='MetricLabel'>Main bundle counter</text>
           <text className='MetricValue'>{moduleTaps}</text>
           <text className='MetricHint'>fresh module starts at 0</text>
         </view>
@@ -387,6 +393,10 @@ export function App() {
         Repeat reloads, then confirm each background and MTS tap increments
         once.
       </text>
+
+      <Suspense fallback={<text>Loading...</text>}>
+        <LazyComponent />
+      </Suspense>
     </scroll-view>
   );
 }
