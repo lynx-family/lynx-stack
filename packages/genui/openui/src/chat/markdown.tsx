@@ -163,21 +163,26 @@ function Blocks({ tokens }: { tokens: Token[] }) {
                 scroll-orientation='horizontal'
                 className='OpenUIChatMarkdownTable'
               >
-                {[table.header, ...table.rows].map((row, i) => (
-                  <view key={i} className='OpenUIChatMarkdownTableRow'>
-                    {row.map((cell, j) => (
-                      <view key={j} className='OpenUIChatMarkdownCell'>
-                        <text
-                          className={`OpenUIChatMarkdownText ${
-                            i === 0 ? 'OpenUIChatMarkdown-strong' : ''
-                          }`}
-                        >
-                          <Inline tokens={cell.tokens} />
-                        </text>
-                      </view>
-                    ))}
-                  </view>
-                ))}
+                <view
+                  className='OpenUIChatMarkdownTableContent'
+                  style={{ width: `${table.header.length * 220}rpx` }}
+                >
+                  {[table.header, ...table.rows].map((row, i) => (
+                    <view key={i} className='OpenUIChatMarkdownTableRow'>
+                      {row.map((cell, j) => (
+                        <view key={j} className='OpenUIChatMarkdownCell'>
+                          <text
+                            className={`OpenUIChatMarkdownText ${
+                              i === 0 ? 'OpenUIChatMarkdown-strong' : ''
+                            }`}
+                          >
+                            <Inline tokens={cell.tokens} />
+                          </text>
+                        </view>
+                      ))}
+                    </view>
+                  ))}
+                </view>
               </scroll-view>
             );
           }

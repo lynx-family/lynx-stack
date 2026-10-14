@@ -80,12 +80,19 @@
 .OpenUIChatMarkdownTable {
   width: 100%;
 }
+.OpenUIChatMarkdownTableContent {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  min-width: 100%;
+}
 .OpenUIChatMarkdownTableRow {
   display: flex;
   flex-direction: row;
 }
 .OpenUIChatMarkdownCell {
   width: 220rpx;
+  flex-grow: 1;
   flex-shrink: 0;
   padding: 12rpx;
   border-bottom: 1rpx solid var(--openui-color-border);
