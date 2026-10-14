@@ -2369,6 +2369,8 @@ export function ChatController<
       preview={{
         title: protocol.name === 'html' ? 'Web Preview' : 'Lynx Preview',
         showPreviewModeSwitch: true,
+        showImagePreview: protocol.name !== 'html'
+          && protocol.name !== 'reactweb',
         showSimulationBar: false,
         previewSource,
         previewInfoHint,

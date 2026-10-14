@@ -49,6 +49,8 @@ Treat Bench as a protocol-neutral, English-only page in the regular GenUI top-le
 
 ### Native Test Bundles
 
+Keep the Lynx preview's Image mode after Phone and Full. Measure the Phone content viewport for initial screenshot dimensions, default the UI Judge endpoint to `https://server-render.lynx-stack.dev/` and settling delay to 2000 ms, and let users edit capture settings without exposing a template URL field. Build screenshot requests from the current protocol source and native `.lynx.js` bundle or ReactLynx `nativeUrl`, never from `render.html`, `demoUrl`, or a Web bundle. Pass A2UI messages, OpenUI text, and MCP Apps data as `globalProps`; disable playback and render the supplied content immediately. Submit current Lynx XML text through `/screenshot/lynxml` without `globalProps`, including local edits. Preserve the Web preview instance when switching to Image, cancel obsolete captures, and label retained screenshots as outdated when their source or settings change.
+
 When serving the playground's native Lynx bundles as static Android test fixtures, keep HMR/React refresh out of `a2ui.lynx.js` and `openui.lynx.js`. The Android Lynx runtime does not provide globals such as `__prefresh_utils__` or Node's `process`, so normalize `process.env.NODE_ENV` at build time and disable HMR for these bundles instead of relying on the caller's `NODE_ENV`.
 
 ## Chat Page Architecture

@@ -796,6 +796,7 @@ function DemosPageContent<
           className='previewPanel examplesPreviewPanel'
           title='Lynx Preview'
           showPreviewModeSwitch
+          showImagePreview
           showSimulationBar={playbackEnabled}
           speed={playbackSpeed}
           onSpeedChange={setPlaybackSpeed}

@@ -931,6 +931,18 @@ html[data-theme="dark"] .phoneHomeIndicator {
   justify-content: stretch;
 }
 
+.previewPanelImageBody {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+}
+
+.previewPanelBody[hidden],
+.previewPanelImageBody[hidden] {
+  display: none;
+}
+
 /* ── Preview Metrics ── */
 .previewMetricStack {
   flex-shrink: 0;
