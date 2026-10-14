@@ -22,6 +22,14 @@ export const LAYERS: {
 };
 
 // @public
+export interface ReactCompileResult {
+    runtimeRequirements: {
+        mainThreadProgrammability: boolean;
+    };
+    version: 1;
+}
+
+// @public
 export interface ReactLoaderOptions {
     compat?: CompatVisitorConfig | undefined;
     defineDCE?: DefineDceVisitorConfig | undefined;

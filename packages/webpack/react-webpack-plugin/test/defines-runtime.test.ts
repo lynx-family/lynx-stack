@@ -15,7 +15,12 @@ import { expect, it } from '@rstest/core';
 import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin';
 import { LAYERS } from '@lynx-js/react-webpack-plugin';
 
+import type { ReactCompileResult } from '../src/ReactWebpackPlugin.js';
+
 const require = createRequire(import.meta.url);
+const compileResultKey = Symbol.for(
+  '@lynx-js/react/internal:compilation-result',
+);
 const workletSource = `export const handler = () => {
   'main thread';
   return 'injected-worklet';
@@ -30,6 +35,7 @@ interface Artifact {
 }
 
 interface BuildResult {
+  compileResult: ReactCompileResult | undefined;
   artifacts: Artifact[];
   workletIds: string[];
 }
@@ -162,6 +168,12 @@ export const onTap = __MAIN_THREAD__ ? null : handler;`,
         );
       }
       return {
+        compileResult: (stats.compilation as unknown as Record<
+          symbol,
+          ReactCompileResult | undefined
+        >)[
+          compileResultKey
+        ],
         artifacts,
         workletIds: [...stats.compilation.modules].flatMap(module => {
           if (module.layer !== LAYERS.BACKGROUND) {
@@ -235,6 +247,10 @@ function execute(
 }
 
 function expectRuntime(result: BuildResult, required: boolean, lazy: boolean) {
+  expect(result.compileResult).toEqual({
+    version: 1,
+    runtimeRequirements: { mainThreadProgrammability: required },
+  });
   expect(result.artifacts.filter(artifact => artifact.async)).toHaveLength(
     lazy ? 1 : 0,
   );
@@ -331,7 +347,7 @@ export const load = () => import('./boundary.js');
   }
 });
 
-it('removes injected async worklets on a watch rebuild', async () => {
+it('removes injected async worklets and their requirements on a watch rebuild', async () => {
   const fixture = await createFixture(true);
   try {
     await new Promise<void>((resolve, reject) => {

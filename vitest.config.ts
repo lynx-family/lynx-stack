@@ -45,6 +45,8 @@ export default defineConfig({
         'packages/webpack/react-webpack-plugin/src/ReactWebpackPlugin.ts',
         'packages/webpack/react-webpack-plugin/src/loaders/main-thread.ts',
         'packages/rspeedy/plugin-react/src/splitChunks.ts',
+        'packages/rspeedy/plugin-react/src/compileResult.ts',
+        'packages/rspeedy/plugin-react/src/pluginReactLynx.ts',
         'packages/rspeedy/plugin-lynx/**',
         'packages/web-platform/web-core-e2e/**',
         'packages/webpack/test-tools/**',

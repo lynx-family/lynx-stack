@@ -6,7 +6,9 @@
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin';
 import type { LynxTemplatePlugin as LynxTemplatePlugin_2 } from '@lynx-js/template-webpack-plugin';
+import { ReactCompileResult } from '@lynx-js/react-webpack-plugin';
 import type { RsbuildPlugin } from '@rsbuild/core';
+import type { Rspack } from '@rsbuild/core';
 import type { TemplateHooks } from '@lynx-js/template-webpack-plugin';
 
 // @public
@@ -95,6 +97,14 @@ export interface PluginReactLynxOptions {
     shake?: Partial<ShakeVisitorConfig> | undefined;
     // @deprecated
     targetSdkVersion?: string;
+}
+
+export { ReactCompileResult }
+
+// @public
+export interface ReactCompileResultExposureV1 {
+    getCompileResult(stats: Rspack.Stats | Rspack.MultiStats): ReactCompileResult | undefined;
+    version: 1;
 }
 
 // @public

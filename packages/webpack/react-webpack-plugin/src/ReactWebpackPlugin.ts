@@ -16,7 +16,11 @@ import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { applyDefinesInjection } from './DefinesInjection.js';
 import { LAYERS } from './layer.js';
-import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
+import {
+  ELEMENT_TEMPLATE_BUILD_INFO,
+  REACT_RUNTIME_REQUIREMENTS_BUILD_INFO,
+} from './loaders/main-thread.js';
+import type { ReactRuntimeRequirementsBuildInfo } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
 
 const require = createRequire(import.meta.url);
@@ -24,6 +28,98 @@ const require = createRequire(import.meta.url);
 interface ElementTemplateBuildInfo {
   templateId: string;
   compiledTemplate: Record<string, unknown>;
+}
+
+/**
+ * Semantic runtime requirements collected from the final emitted React chunks.
+ *
+ * @public
+ */
+export interface ReactCompileResult {
+  /** The compilation-result protocol version. */
+  version: 1;
+  /** Capabilities required by the compiled output. */
+  runtimeRequirements: {
+    /** Whether the output requires main-thread programmability. */
+    mainThreadProgrammability: boolean;
+  };
+}
+
+export interface ModuleWithReactRuntimeRequirementsBuildInfo {
+  buildInfo?: Record<string, unknown>;
+  modules?: Iterable<ModuleWithReactRuntimeRequirementsBuildInfo>;
+}
+
+const REACT_COMPILATION_RESULT = Symbol.for(
+  '@lynx-js/react/internal:compilation-result',
+);
+
+/**
+ * Aggregate semantic runtime requirements from modules that belong to final
+ * chunks. A transformed module outside these chunks (for example after tree
+ * shaking) cannot affect the result.
+ *
+ * @internal
+ */
+export function collectReactCompileResult<TChunk>(
+  chunks: Iterable<TChunk>,
+  getChunkModules: (
+    chunk: TChunk,
+  ) => Iterable<ModuleWithReactRuntimeRequirementsBuildInfo>,
+): ReactCompileResult | undefined {
+  const visited = new Set<ModuleWithReactRuntimeRequirementsBuildInfo>();
+  let hasSemanticProducer = false;
+  let mainThreadProgrammability = false;
+
+  const collectFromModule = (
+    module: ModuleWithReactRuntimeRequirementsBuildInfo,
+  ): void => {
+    if (visited.has(module)) {
+      return;
+    }
+    visited.add(module);
+    const runtimeRequirements = module.buildInfo?.[
+      REACT_RUNTIME_REQUIREMENTS_BUILD_INFO
+    ] as ReactRuntimeRequirementsBuildInfo | undefined;
+    if (runtimeRequirements !== undefined) {
+      hasSemanticProducer = true;
+      mainThreadProgrammability ||=
+        runtimeRequirements.mainThreadProgrammability === true;
+    }
+
+    if (module.modules) {
+      for (const nestedModule of module.modules) {
+        collectFromModule(nestedModule);
+      }
+    }
+  };
+
+  for (const chunk of chunks) {
+    for (const module of getChunkModules(chunk)) {
+      collectFromModule(module);
+    }
+  }
+
+  if (!hasSemanticProducer) {
+    return undefined;
+  }
+
+  return {
+    version: 1,
+    runtimeRequirements: { mainThreadProgrammability },
+  };
+}
+
+function collectReactCompileResultFromCompilation(
+  compilation: Compilation,
+): ReactCompileResult | undefined {
+  return collectReactCompileResult(
+    compilation.chunks,
+    chunk =>
+      compilation.chunkGraph.getChunkModulesIterable(
+        chunk,
+      ) as Iterable<ModuleWithReactRuntimeRequirementsBuildInfo>,
+  );
 }
 
 export interface ModuleWithElementTemplateBuildInfo {
@@ -446,6 +542,18 @@ class ReactWebpackPlugin {
 
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
       const onceForChunkSet = new WeakSet<Chunk>();
+
+      compilation.hooks.afterSeal.tap(
+        `${this.constructor.name}.CompileResult`,
+        () => {
+          const result = collectReactCompileResultFromCompilation(compilation);
+          if (result !== undefined) {
+            (compilation as unknown as Record<symbol, unknown>)[
+              REACT_COMPILATION_RESULT
+            ] = result;
+          }
+        },
+      );
 
       compilation.hooks.runtimeRequirementInTree.for(
         compiler.webpack.RuntimeGlobals.ensureChunkHandlers,
