@@ -141,19 +141,29 @@ function translate(
 /**
  * The Chinese dictionary in `i18n/zh.json`. English pages record the strings
  * they contain; Chinese pages look them up; {@link Translations.save} writes
- * back only the strings that are still used.
+ * back used strings and existing nonempty translations, excluding entries
+ * supplied unchanged by an optional base dictionary.
  */
 export class Translations {
   readonly #file: string;
   readonly #dictionary: Dictionary;
+  readonly #base: Dictionary;
   readonly #used = new Set<string>();
   readonly #missing = new Set<string>();
 
-  constructor(file: string) {
+  constructor(files: string[]) {
+    const file = files.at(-1);
+    if (!file) throw new Error('At least one translation file is required.');
     this.#file = file;
-    this.#dictionary = existsSync(file)
+    this.#base = {};
+    for (const baseFile of files.slice(0, -1)) {
+      const base = JSON.parse(readFileSync(baseFile, 'utf8')) as Dictionary;
+      Object.assign(this.#base, base);
+    }
+    const local = existsSync(file)
       ? JSON.parse(readFileSync(file, 'utf8')) as Dictionary
       : {};
+    this.#dictionary = { ...this.#base, ...local };
   }
 
   translate(markdown: string, locale: string): string {
@@ -179,7 +189,9 @@ export class Translations {
     ]);
     const next: Dictionary = {};
     for (const en of [...entries].sort()) {
-      next[en] = this.#dictionary[en] ?? '';
+      const value = this.#dictionary[en] ?? '';
+      if (this.#base[en] && value === this.#base[en]) continue;
+      next[en] = value;
     }
     writeFileSync(this.#file, `${JSON.stringify(next, null, 2)}\n`);
   }

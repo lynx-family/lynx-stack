@@ -259,7 +259,9 @@ function sidebar(items: SidebarItem[], dir: string): SidebarItem[] {
  */
 export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
   const content = contentDir(site);
-  const translations = new Translations(join(site.docs, 'i18n/zh.json'));
+  const translations = new Translations(
+    site.translations ?? [join(site.docs, 'i18n/zh.json')],
+  );
   const all = publicPackages(site.root);
   const packages = site.packages?.(all) ?? all;
   const rendered = [

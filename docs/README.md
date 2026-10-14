@@ -25,7 +25,7 @@ The content comes from TSDoc only: a package introduction is its `@packageDocume
 
 ## Chinese
 
-The Chinese pages are rendered again with TypeDoc's `lang: 'zh'`. Their prose is translated through `i18n/zh.json`, which maps each English paragraph or table cell to its Chinese text. A build adds new English strings with an empty value and drops strings that no longer appear. Commit `i18n/zh.json`; CI fails while a value is empty or the file is out of date.
+The Chinese pages are rendered again with TypeDoc's `lang: 'zh'`. Their prose is translated through `i18n/zh.json`, which maps each English paragraph or table cell to its Chinese text. A build adds new English strings with an empty value. Existing nonempty translations are retained even when a build does not render them. Commit `i18n/zh.json`; CI fails while a value is empty or the file is out of date.
 
 ## Sync to lynxjs.org
 
@@ -45,3 +45,10 @@ export default defineConfig({ plugins: pluginApiReference(IN_HOUSE) });
 `Site` in `plugins/site.ts` holds everything that belongs to a repository rather than to the reference: the directory the pages are written to and the workspace they are read from, where its source and its published packages are browsed, the packages with a section of their own, how the rest are grouped, the navigation, and — when it has one — where its configuration reference comes from. `packages` narrows what the workspace publishes to what to document, and `wrappers` names a module after the package that re-exports it, for a workspace that vendors another one and publishes thin packages over it.
 
 The plugins resolve TypeDoc and Rspress from this directory, so the workspace of the other repository has to include it.
+
+A consuming site can set `Site.translations` to an array of dictionary file
+paths, ordered from lowest to highest precedence. The generator writes only
+the last file, saving additions and overrides while removing translations
+identical to a nonempty value from the preceding files. Missing translations
+are collected in that last file and still fail production builds. When omitted,
+the generator uses `[join(site.docs, 'i18n/zh.json')]`.

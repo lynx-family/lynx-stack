@@ -17,6 +17,8 @@ import type { Locale, WorkspacePackage } from './workspace.ts';
 export interface Site {
   /** The package the pages, the dictionary and the manifest are written to. */
   docs: string;
+  /** Translation files in precedence order; only the last saves additions and overrides. */
+  translations?: string[];
   /** The root of the workspace the packages are read from. */
   root: string;
   /** Where the source of a package is browsed. */
