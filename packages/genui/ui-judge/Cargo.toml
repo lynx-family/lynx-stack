@@ -15,6 +15,9 @@ default = []
 server = [
   "dep:async-trait",
   "dep:axum",
+  "dep:chrono",
+  "dep:hmac",
+  "dep:sha2",
   "dep:socket2",
   "dep:tempfile",
   "dep:uuid",
@@ -31,12 +34,15 @@ server = [
 async-trait = { version = "0.1.89", optional = true }
 axum = { version = "0.8.9", optional = true, features = ["multipart"] }
 base64 = "0.23.0"
+chrono = { version = "0.4.45", optional = true, default-features = false, features = ["clock"] }
+hmac = { version = "0.12.1", optional = true }
 image = { version = "0.25.10", default-features = false, features = ["bmp"] }
 lynx-headless-rust-test-runner = { path = "../../lynx/headless-rust-test-runner" }
 rayon = "1.12.0"
 reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["preserve_order"] }
+sha2 = { version = "0.10.9", optional = true }
 socket2 = { version = "0.6.5", optional = true }
 tempfile = { version = "3.27.0", optional = true }
 thiserror = "2.0.19"

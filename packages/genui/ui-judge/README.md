@@ -108,15 +108,16 @@ return its public URL instead of the image bytes. The server reads the same
 variables are set and every optional one is valid, so a misconfigured
 deployment fails at startup rather than on every screenshot.
 
-| Variable                        | Required | Description                                                      |
-| ------------------------------- | -------- | ---------------------------------------------------------------- |
-| `TOS_ACCESS_KEY`                | Yes      | Access key ID                                                    |
-| `TOS_SECRET_KEY`                | Yes      | Secret access key                                                |
-| `TOS_BUCKET`                    | Yes      | Bucket name                                                      |
-| `TOS_REGION`                    | Yes      | Region, such as `cn-beijing`                                     |
-| `TOS_ENDPOINT`                  | No       | HTTP(S) endpoint host; defaults to `tos-{TOS_REGION}.volces.com` |
-| `TOS_SECURITY_TOKEN`            | No       | STS session token when using temporary credentials               |
-| `TOS_SCREENSHOT_STORAGE_PREFIX` | No       | Object key prefix; defaults to `screenshot`                      |
+| Variable                        | Required | Description                                                         |
+| ------------------------------- | -------- | ------------------------------------------------------------------- |
+| `TOS_ACCESS_KEY`                | Yes      | Access key ID                                                       |
+| `TOS_SECRET_KEY`                | Yes      | Secret access key                                                   |
+| `TOS_BUCKET`                    | Yes      | Bucket name                                                         |
+| `TOS_REGION`                    | Yes      | Region, such as `cn-beijing`                                        |
+| `TOS_ENDPOINT`                  | No       | HTTP(S) endpoint host; defaults to `tos-{TOS_REGION}.volces.com`    |
+| `TOS_SECURITY_TOKEN`            | No       | STS session token when using temporary credentials                  |
+| `TOS_OVERRIDE_REQUEST_HEADER`   | No       | Use internal TOS V1 authentication: `true`/`1`; default `false`/`0` |
+| `TOS_SCREENSHOT_STORAGE_PREFIX` | No       | Object key prefix; defaults to `screenshot`                         |
 
 Uploads use the official [`ve-tos-rust-sdk`](https://crates.io/crates/ve-tos-rust-sdk),
 the Rust counterpart of the `@volcengine/tos-sdk` package GenUI Server uses. It
@@ -124,6 +125,16 @@ verifies the object's CRC64, retries transient failures up to twice, does not
 follow redirects, and ignores `HTTP_PROXY`-style environment variables. It
 also rejects the S3-compatible `tos-s3-*` endpoints at startup; use the regular
 `tos-<region>` endpoint.
+
+For an internal TOS endpoint that requires V1 authentication, set
+`TOS_OVERRIDE_REQUEST_HEADER=true` and configure its `TOS_ENDPOINT` and
+`TOS_REGION`. This generates an `X-Tos-Signature` header for each upload through
+the SDK's custom request-header API, without adding a V4 `Authorization` header.
+The signature lasts ten minutes, covering the 100-second upload deadline and
+its retries. Optional `TOS_SECURITY_TOKEN` is forwarded in both modes. Unset,
+empty, `false`, or `0` keeps the existing SDK V4 signing; `true` or `1` enables
+the override. Boolean words are case-insensitive and whitespace is trimmed;
+other values fail startup. This switch applies only to UI Judge.
 
 Objects are written to `<prefix>/<uuid>/screenshot.bmp` with
 `Content-Type: image/bmp` and `Cache-Control: public, max-age=1800`; the server
@@ -476,7 +487,8 @@ free-form judging task.
   listens on both IPv4 and IPv6 unspecified addresses.
 - `LYNX_USE_PORT`: HTTP server port; defaults to `8080`.
 - `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, `TOS_REGION`, and the optional
-  `TOS_ENDPOINT`, `TOS_SECURITY_TOKEN`, and `TOS_SCREENSHOT_STORAGE_PREFIX`:
+  `TOS_ENDPOINT`, `TOS_SECURITY_TOKEN`, `TOS_OVERRIDE_REQUEST_HEADER`, and
+  `TOS_SCREENSHOT_STORAGE_PREFIX`:
   screenshot storage; see [Screenshot storage](#screenshot-storage).
 - `LYNX_LIB_PATH` or `LYNX_SDK_DIR`: override the Lynx runtime library or SDK.
   Without `LYNX_CORE_JS_PATH`, an SDK also supplies

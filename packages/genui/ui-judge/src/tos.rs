@@ -9,9 +9,10 @@
 //! environment variable names of GenUI Server's `app/common/tos-storage.ts`, so
 //! one set of credentials configures both services. Uploads go through the
 //! official `ve-tos-rust-sdk` crate, the Rust counterpart of the
-//! `@volcengine/tos-sdk` package that GenUI Server uses, so request signing,
-//! retries, and CRC64 verification are the vendor's.
+//! `@volcengine/tos-sdk` package that GenUI Server uses. The SDK handles retries
+//! and CRC64 verification; internal TOS V1 authentication is opt-in.
 
+use std::collections::HashMap;
 use std::fmt;
 use std::future::Future;
 use std::pin::Pin;
@@ -19,6 +20,10 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use async_trait::async_trait;
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+use chrono::{DateTime, Utc};
+use hmac::{Hmac, Mac};
+use sha2::Sha256;
 use thiserror::Error;
 use uuid::Uuid;
 use ve_tos_rust_sdk::asynchronous::object::ObjectAPI;
@@ -40,6 +45,8 @@ const REQUEST_TIMEOUT_MS: isize = 30_000;
 // timeout they stay inside UPLOAD_DEADLINE, which is the hard bound.
 const MAX_RETRIES: isize = 2;
 const UPLOAD_DEADLINE: Duration = Duration::from_secs(100);
+// One signature covers the entire bounded SDK retry sequence.
+const SIGNATURE_LIFETIME_SECONDS: i64 = 600;
 const MAX_ERROR_DETAIL_CHARS: usize = 512;
 
 /// Environment variables that must all be set for screenshots to be stored.
@@ -58,6 +65,8 @@ pub enum TosConfigError {
   InvalidEndpoint,
   #[error("TOS_SCREENSHOT_STORAGE_PREFIX must not contain empty, \".\", or \"..\" path segments")]
   InvalidPrefix,
+  #[error("TOS_OVERRIDE_REQUEST_HEADER must be true, false, 1, or 0")]
+  InvalidOverrideRequestHeader,
   #[error("the TOS client could not be created: {0}")]
   Client(String),
 }
@@ -76,6 +85,7 @@ pub(crate) struct TosConfig {
   access_key: String,
   secret_key: String,
   security_token: Option<String>,
+  override_request_header: bool,
   bucket: String,
   region: String,
   secure: bool,
@@ -92,6 +102,7 @@ impl fmt::Debug for TosConfig {
       .field("region", &self.region)
       .field("endpoint_host", &self.endpoint_host)
       .field("prefix", &self.prefix)
+      .field("override_request_header", &self.override_request_header)
       .finish_non_exhaustive()
   }
 }
@@ -127,6 +138,15 @@ impl TosConfig {
       access_key: read("TOS_ACCESS_KEY").expect("checked above"),
       secret_key: read("TOS_SECRET_KEY").expect("checked above"),
       security_token: read("TOS_SECURITY_TOKEN"),
+      override_request_header: match read("TOS_OVERRIDE_REQUEST_HEADER")
+        .as_deref()
+        .map(str::to_ascii_lowercase)
+        .as_deref()
+      {
+        None | Some("false" | "0") => false,
+        Some("true" | "1") => true,
+        _ => return Err(TosConfigError::InvalidOverrideRequestHeader),
+      },
       bucket: read("TOS_BUCKET").expect("checked above"),
       region,
       secure,
@@ -165,6 +185,34 @@ impl TosConfig {
       self.bucket,
       self.endpoint_host
     )
+  }
+
+  /// Internal TOS V1 signature for a plain object PUT with no query parameters
+  /// or signed headers. Sign the raw object key, before URL percent-encoding.
+  fn put_request_headers(&self, key: &str, now: DateTime<Utc>) -> HashMap<String, String> {
+    let expiration = now.timestamp() + SIGNATURE_LIFETIME_SECONDS;
+    let canonical = format!("PUT\n/{}/{key}\n\n{expiration}", self.bucket);
+    let mut mac = Hmac::<Sha256>::new_from_slice(self.secret_key.as_bytes())
+      .expect("HMAC accepts any key length");
+    mac.update(canonical.as_bytes());
+    let signature = URL_SAFE_NO_PAD.encode(mac.finalize().into_bytes());
+    let credentials = format!(
+      "{}/{}/{}/tos/sig_request",
+      self.access_key,
+      now.format("%Y%m%d"),
+      self.region,
+    );
+    let mut headers = HashMap::from([(
+      "X-Tos-Signature".into(),
+      format!(
+        "TOS-HMAC-SHA256 expiration={expiration},signame=,signature={},credentials={credentials}",
+        &signature[..30],
+      ),
+    )]);
+    if let Some(token) = &self.security_token {
+      headers.insert("x-tos-security-token".into(), token.clone());
+    }
+    headers
   }
 }
 
@@ -281,8 +329,6 @@ impl TosUploader {
   fn build(config: TosConfig, custom_domain: bool) -> Result<Self, TosConfigError> {
     let endpoint = format!("{}://{}", config.scheme(), config.endpoint_host);
     let mut builder = tos::builder::<TokioRuntime>()
-      .ak(config.access_key.clone())
-      .sk(config.secret_key.clone())
       .region(config.region.clone())
       .endpoint(endpoint.clone())
       // Only object uploads are used, but the SDK insists that the control
@@ -295,8 +341,15 @@ impl TosUploader {
       // A redirect would resend the request to a host the caller never named.
       .follow_redirect_times(0)
       .is_custom_domain(custom_domain);
-    if let Some(token) = &config.security_token {
-      builder = builder.security_token(token.clone());
+    // In override mode authentication comes exclusively from the per-upload
+    // V1 header. Supplying SDK credentials would also add a V4 Authorization.
+    if !config.override_request_header {
+      builder = builder
+        .ak(config.access_key.clone())
+        .sk(config.secret_key.clone());
+      if let Some(token) = &config.security_token {
+        builder = builder.security_token(token.clone());
+      }
     }
     let client = builder
       .build()
@@ -330,6 +383,9 @@ impl TosUploader {
       PutObjectFromBufferInput::new_with_content(self.config.bucket.as_str(), key, bytes);
     input.set_content_type(content_type);
     input.set_cache_control(OBJECT_CACHE_CONTROL);
+    if self.config.override_request_header {
+      input.set_request_header(self.config.put_request_headers(key, Utc::now()));
+    }
     self
       .client
       .put_object_from_buffer(&input)
@@ -525,6 +581,53 @@ mod tests {
     );
     assert_eq!(config.prefix, "screenshot");
     assert_eq!(config.security_token, None);
+    assert!(!config.override_request_header);
+  }
+
+  #[test]
+  fn config_validates_the_request_header_override() {
+    for value in ["true", "1", " TRUE "] {
+      assert!(
+        config(&with(&[("TOS_OVERRIDE_REQUEST_HEADER", value)]))
+          .unwrap()
+          .override_request_header
+      );
+    }
+    for value in ["false", "0", " FALSE ", "", " "] {
+      assert!(
+        !config(&with(&[("TOS_OVERRIDE_REQUEST_HEADER", value)]))
+          .unwrap()
+          .override_request_header
+      );
+    }
+    for value in ["yes", "2", "treu"] {
+      assert_eq!(
+        config(&with(&[("TOS_OVERRIDE_REQUEST_HEADER", value)])).unwrap_err(),
+        TosConfigError::InvalidOverrideRequestHeader
+      );
+    }
+  }
+
+  #[test]
+  fn v1_signature_matches_fixed_vectors_for_raw_object_keys() {
+    let config = config(&BASE).unwrap();
+    let now = DateTime::from_timestamp(1_735_689_600, 0).unwrap();
+    // Expected digests were calculated independently with Python hmac/hashlib.
+    for (key, signature) in [
+      (
+        "shots/example/screenshot.bmp",
+        "B3pDV8wIcEYZHvKo6Vm_hAPaLADI0b",
+      ),
+      ("a b/ü/(x)!*'~_.bmp", "5Ynec0Nkhd_T9MHYRjZ7sDhoJ4il0B"),
+    ] {
+      let headers = config.put_request_headers(key, now);
+      assert_eq!(headers.len(), 1);
+      assert_eq!(headers["X-Tos-Signature"], format!("TOS-HMAC-SHA256 expiration=1735690200,signame=,signature={signature},credentials=AKTESTACCESSKEY/20250101/cn-beijing/tos/sig_request"));
+      assert_ne!(
+        headers,
+        config.put_request_headers(key, now + chrono::Duration::seconds(1))
+      );
+    }
   }
 
   #[test]
@@ -749,7 +852,80 @@ mod tests {
       header("authorization"),
     );
     assert!(!request.headers.contains_key("x-tos-acl"));
+    assert!(!request.headers.contains_key("x-tos-signature"));
     assert!(!header("authorization").contains("SKTESTSECRETKEY"));
+  }
+
+  #[tokio::test]
+  async fn override_upload_uses_only_v1_authentication_and_preserves_object_headers() {
+    let (address, log) = fake_tos(StatusCode::OK, String::new()).await;
+    let uploader = uploader_for(
+      address,
+      &[
+        ("TOS_OVERRIDE_REQUEST_HEADER", "true"),
+        ("TOS_SECURITY_TOKEN", "STS-TOKEN-VALUE"),
+        ("TOS_SCREENSHOT_STORAGE_PREFIX", "shots with spaces/ü"),
+      ],
+    );
+    let before = Utc::now().timestamp();
+    let url = uploader
+      .put_bmp(b"BM-pixels".to_vec(), b"{}".to_vec())
+      .await
+      .unwrap();
+    let after = Utc::now().timestamp();
+    let received = log.lock().unwrap();
+    assert_eq!(received.len(), 2);
+    assert_eq!(received[0].body, b"{}");
+    assert_eq!(received[0].headers["content-type"], "application/json");
+    assert_eq!(received[1].body, b"BM-pixels");
+    assert_eq!(received[1].headers["content-type"], "image/bmp");
+    assert_eq!(
+      received[0].path,
+      received[1]
+        .path
+        .replace("screenshot.bmp", "screenshot.json")
+    );
+    assert_eq!(
+      url,
+      format!(
+        "http://genui.localhost:{}{}",
+        address.port(),
+        received[1].path
+      )
+    );
+    assert_ne!(
+      received[0].headers["x-tos-signature"],
+      received[1].headers["x-tos-signature"]
+    );
+    for request in received.iter() {
+      assert_eq!(request.method, "PUT");
+      assert_eq!(request.headers["cache-control"], OBJECT_CACHE_CONTROL);
+      assert_eq!(request.headers["x-tos-security-token"], "STS-TOKEN-VALUE");
+      assert!(!request.headers.contains_key("authorization"));
+      assert!(!request.headers.contains_key("x-tos-acl"));
+      let encoded_prefix = "/shots%20with%20spaces/%C3%BC/";
+      let suffix = request.path.strip_prefix(encoded_prefix).unwrap();
+      let key = format!("shots with spaces/ü/{suffix}");
+      let signature = request.headers["x-tos-signature"].to_str().unwrap();
+      let expiration: i64 = signature
+        .strip_prefix("TOS-HMAC-SHA256 expiration=")
+        .unwrap()
+        .split(',')
+        .next()
+        .unwrap()
+        .parse()
+        .unwrap();
+      assert!(
+        (before + SIGNATURE_LIFETIME_SECONDS..=after + SIGNATURE_LIFETIME_SECONDS)
+          .contains(&expiration)
+      );
+      assert!(expiration > after + UPLOAD_DEADLINE.as_secs() as i64);
+      let signed_at = DateTime::from_timestamp(expiration - SIGNATURE_LIFETIME_SECONDS, 0).unwrap();
+      assert_eq!(
+        signature,
+        uploader.config.put_request_headers(&key, signed_at)["X-Tos-Signature"]
+      );
+    }
   }
 
   #[tokio::test]
@@ -824,20 +1000,40 @@ mod tests {
 
   #[tokio::test]
   async fn upload_retries_server_errors_a_bounded_number_of_times() {
-    let (address, log) = fake_tos(
-      StatusCode::SERVICE_UNAVAILABLE,
-      tos_error_body("ServiceUnavailable", "busy"),
-    )
-    .await;
-    let error = uploader_for(address, &[])
-      .put_bmp(vec![0], b"{}".to_vec())
-      .await
-      .unwrap_err();
-    assert!(
-      matches!(error, TosUploadError::Rejected { status: 503, .. }),
-      "{error}"
-    );
-    assert_eq!(log.lock().unwrap().len(), 1 + MAX_RETRIES as usize);
+    for override_header in ["false", "true"] {
+      let (address, log) = fake_tos(
+        StatusCode::SERVICE_UNAVAILABLE,
+        tos_error_body("ServiceUnavailable", "busy"),
+      )
+      .await;
+      let error = uploader_for(address, &[("TOS_OVERRIDE_REQUEST_HEADER", override_header)])
+        .put_bmp(vec![0], b"{}".to_vec())
+        .await
+        .unwrap_err();
+      assert!(
+        matches!(error, TosUploadError::Rejected { status: 503, .. }),
+        "{error}"
+      );
+      let received = log.lock().unwrap();
+      assert_eq!(received.len(), 1 + MAX_RETRIES as usize);
+      for request in received.iter() {
+        assert_eq!(
+          request.headers.contains_key("authorization"),
+          override_header == "false"
+        );
+        assert_eq!(
+          request.headers.contains_key("x-tos-signature"),
+          override_header == "true"
+        );
+        assert!(!request.headers.contains_key("x-tos-security-token"));
+        assert_eq!(
+          request.headers.get("x-tos-signature"),
+          received[0].headers.get("x-tos-signature")
+        );
+        assert_eq!(request.path, received[0].path);
+        assert_eq!(request.body, b"{}");
+      }
+    }
   }
 
   #[tokio::test]
