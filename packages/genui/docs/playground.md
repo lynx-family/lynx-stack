@@ -13,10 +13,12 @@ to switch between A2UI and OpenUI, edit source, and render it immediately or
 simulate streaming. The page uses the renderer and bundles from the same Playground deployment.
 The page opens the [Hokkaido example](https://lynx-stack.dev/genui/lynx-genui-stream.html?inlineMode=1)
 using OpenUI Chat, with packaged images and interactive forms. Enable **Markdown + OpenUI**
-to render prose and fenced UI together. This is the page's only OpenUI example;
-the full component examples remain in the main Playground. A2UI starts with a minimal
-message sequence and accepts message arrays or NDJSON. Source drafts are saved
-separately for each protocol and inline mode.
+to render prose and fenced UI together. The example selector also offers a basic
+OpenUI example; **Reset example** beside it restores the selected example's source
+and interaction state. Hokkaido is the only travel case; the full component examples
+remain in the main Playground. A2UI starts with a minimal message sequence and accepts
+message arrays or NDJSON. Source drafts are saved separately for each protocol,
+example, and inline mode.
 
 ## Choose preview resources
 

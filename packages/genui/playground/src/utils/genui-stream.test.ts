@@ -117,6 +117,8 @@ const chat: Selection = {
 test.each([
   chat,
   { ...chat, inlineMode: true },
+  { ...chat, id: 'basic' },
+  { ...chat, id: 'basic', inlineMode: true },
 ])(
   'renders valid $library examples with inlineMode=$inlineMode and case=$id',
   selection => {
@@ -232,6 +234,22 @@ test('keeps protocol, catalog, case and inline drafts independent, including emp
   ).toBe('a2ui');
 });
 
+test('restores basic and Hokkaido selections while explicit links override saved selections', () => {
+  const { core } = loadCore();
+  const url = 'https://example.com/genui/lynx-genui-stream.html';
+  const basic = { ...chat, id: 'basic', inlineMode: true };
+  const storage = { getItem: () => JSON.stringify(basic) };
+  expect(core.readSelection(url, storage)).toEqual(basic);
+  expect(core.readSelection(`${url}?case=basic&inlineMode=1`)).toEqual(basic);
+  expect(core.readSelection(`${url}?library=chat&case=basic`)).toEqual({
+    ...basic,
+    inlineMode: false,
+  });
+  expect(core.readSelection(`${url}?case=${chat.id}`, storage)).toEqual(chat);
+  expect(core.readSelection(`${url}?protocol=a2ui&case=${chat.id}`, storage))
+    .toEqual({ ...chat, protocol: 'a2ui', id: 'basic' });
+});
+
 test('uses Hokkaido for default and retired OpenUI case links without loading their drafts', () => {
   const { core } = loadCore();
   const url = 'https://example.com/genui/lynx-genui-stream.html';
@@ -241,7 +259,14 @@ test('uses Hokkaido for default and retired OpenUI case links without loading th
     [core.draftKey(retired), 'root = Stack([])'],
   ]);
   const storage = { getItem: (key: string) => saved.get(key) ?? null };
-  for (const href of [url, `${url}?library=stack&case=basic`]) {
+  expect(core.readSelection(url)).toEqual(chat);
+  for (
+    const href of [
+      url,
+      `${url}?library=stack&case=basic`,
+      `${url}?library=chat&case=six-day-trip`,
+    ]
+  ) {
     const selection = core.readSelection(href, storage);
     expect(selection).toEqual(chat);
     expect(core.readDraft(storage, selection)).toBeNull();

@@ -10,8 +10,9 @@
 编辑源码，直接渲染或模拟流式渲染。页面使用同一 Playground 部署中的 renderer 和 bundle。
 页面默认打开使用 OpenUI Chat 的[北海道示例](https://lynx-stack.dev/genui/lynx-genui-stream.html?inlineMode=1)，
 包含随页面打包的图片与交互表单。开启 **Markdown + OpenUI** 即可混合显示文字和 UI 代码块。
-这是本页唯一的 OpenUI 示例；完整组件示例仍在主 Playground 中。A2UI 提供最小消息示例，
-支持消息数组和 NDJSON。草稿按协议和 inline 模式分别保存。
+示例下拉框也提供基础 OpenUI 示例，旁边的 **重置示例** 可恢复当前示例源码和交互状态。
+旅行 case 仅保留北海道；完整组件示例仍在主 Playground 中。A2UI 提供最小消息示例，
+支持消息数组和 NDJSON。草稿按协议、示例和 inline 模式分别保存。
 
 ## 选择预览资源
 

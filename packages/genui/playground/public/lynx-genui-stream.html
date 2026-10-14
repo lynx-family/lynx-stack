@@ -129,10 +129,9 @@
       position: relative;
       min-width: 0;
     }
-    #example-title {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+    .example-field {
+      flex: 1 1 140px;
+      max-width: 240px;
     }
     .select-field select {
       appearance: none;
@@ -487,7 +486,7 @@
     }
 
     .protocol-field {
-      flex: 0 0 94px;
+      flex: 0 0 100px;
     }
     .playback-controls {
       display: flex;
@@ -531,9 +530,6 @@
       .source-options {
         gap: 6px;
       }
-      .protocol-field {
-        flex-basis: 86px;
-      }
       .playback-controls button {
         font-size: 11px;
         padding-inline: 8px;
@@ -562,7 +558,16 @@
               <option value="a2ui">A2UI</option>
             </select>
           </label>
-          <span id="example-title">北海道旅行攻略 · OpenUI Chat</span>
+          <label for="example" class="select-field example-field">
+            <span class="visually-hidden">示例</span>
+            <select id="example" disabled>
+              <option value="basic">基础示例</option>
+              <option value="doc-hokkaido-turbo-v12">北海道旅行攻略</option>
+            </select>
+          </label>
+          <button id="restore-source" type="button" disabled>
+            重置示例
+          </button>
         </div>
         <div class="editor" id="editor">
           <div class="line-gutter" aria-hidden="true">
@@ -594,14 +599,6 @@
               type="checkbox"
               disabled
             > Markdown + OpenUI</label>
-          <button
-            id="restore-source"
-            type="button"
-            class="text-button"
-            disabled
-          >
-            恢复示例
-          </button>
           <button id="stream" type="button" disabled>流式渲染</button>
           <button id="stop" type="button" disabled>停止</button>
           <button id="clear-source" type="button" disabled>清空</button>
@@ -681,6 +678,17 @@
     <script id="preview-core">
     'use strict';
       const MAX_SOURCE_LENGTH = 500_000;
+      const openuiBasicExample =
+        `root = Card([heading, description, form, greeting])
+$count = 0
+$name = "朋友"
+heading = TextContent("# Hello, OpenUI")
+description = TextContent("在左侧修改代码，右侧实时更新。")
+nameField = FormControl("你的名字", Input("name", "请输入名字", "text", null, $name))
+greeting = Text("text", "你好，" + $name, null, null, "lg")
+increment = Action([@Set($count, $count + 1)])
+counter = Button("点击次数：" + $count, increment)
+form = Form("welcome", Buttons([counter]), [nameField])`;
       const a2uiExample = [
         {
           version: 'v0.9',
@@ -812,9 +820,10 @@
         if (selection.protocol === 'a2ui') {
           return JSON.stringify(a2uiExample, null, 2);
         }
-        const raw = trip;
+        const basic = selection.id === 'basic';
+        const raw = basic ? openuiBasicExample : trip;
         if (!selection.inlineMode) return raw;
-        const title = '北海道冬日旅行';
+        const title = basic ? 'Hello, GenUI' : '北海道冬日旅行';
         return `# ${title}\n\n这是一段 **Markdown**，下面的 OpenUI 卡片可以直接交互。\n\n\`\`\`openui\n${raw}\n\`\`\`\n\n### 继续阅读\n\n- 文字和卡片按回复顺序显示。\n- 流式播放完成后，可以操作卡片中的表单和按钮。\n`;
       }
       function readSelection(location, storage) {
@@ -830,14 +839,18 @@
         const input = explicit
           ? {
             protocol: params.get('protocol'),
+            library: params.get('library'),
+            id: params.get('case'),
             inlineMode: params.get('inlineMode') === '1',
           }
           : saved;
         const protocol = input?.protocol === 'a2ui' ? 'a2ui' : 'openui';
+        const basic = input?.id === 'basic'
+          && (input?.library == null || input.library === 'chat');
         return {
           protocol,
           library: 'chat',
-          id: protocol === 'openui'
+          id: protocol === 'openui' && !basic
             ? 'doc-hokkaido-turbo-v12'
             : 'basic',
           inlineMode: input?.inlineMode === true,
@@ -1200,9 +1213,11 @@
         element('protocol').value = selection.protocol;
         element('inline-mode').checked = selection.inlineMode;
         const openui = selection.protocol === 'openui';
-        element('example-title').textContent = openui
-          ? '北海道旅行攻略 · OpenUI Chat'
-          : 'A2UI 基础消息';
+        const example = element('example');
+        example.options[1].hidden = !openui;
+        example.options[1].disabled = !openui;
+        example.value = selection.id;
+        example.disabled = !openui;
         element('inline-control').hidden = !openui;
         element('protocol-title').textContent = openui
           ? 'OpenUI'
@@ -1287,6 +1302,9 @@
           true,
           custom,
         );
+      });
+      element('example').addEventListener('change', () => {
+        selectExample({ ...selection, id: element('example').value });
       });
       element('restore-source').addEventListener('click', () => {
         setSource(exampleText(selection, trip));
@@ -1380,6 +1398,7 @@
           const id of [
             'raw-editor',
             'protocol',
+            'example',
             'inline-mode',
             'copy-source',
             'download-source',
