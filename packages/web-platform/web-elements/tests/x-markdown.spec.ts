@@ -520,15 +520,79 @@ test.describe('x-markdown', () => {
     expect(await isFirstChildSame(page)).toBe(false);
   });
 
-  test('should batch append by newline boundary', async ({ page }) => {
+  test('should continue an unfinished paragraph across newlines', async ({ page }) => {
     await goto(page, 'x-markdown/incremental');
-    expect(await getShadowCount(page, 'p')).toBe(1);
+    await expectMarkdownText(page, 'p', 'Line 1');
     await appendContent(page, 'Line 2');
-    await page.waitForTimeout(20);
-    expect(await getShadowCount(page, 'p')).toBe(1);
-    await page.waitForTimeout(80);
-    expect(await getShadowCount(page, 'p')).toBe(2);
+    const paragraphs = page.locator('x-markdown').locator('p');
+    await expect(paragraphs).toHaveCount(1);
+    await expect(paragraphs).toHaveText('Line 1\nLine 2');
   });
+
+  test('should continue a heading across eight-character chunks', async ({ page }) => {
+    await goto(page, 'x-markdown/basic');
+    await expectMarkdownText(page, 'h1', 'Title');
+    const markdown = page.locator('x-markdown');
+    const heading = '## Hokkaido winter itinerary';
+    await markdown.evaluate(
+      (el, value) => el.setAttribute('content', value),
+      heading.slice(0, 8),
+    );
+    await expect(markdown.locator('h2')).toHaveText(heading.slice(3, 8));
+    for (let end = 16; end < heading.length + 8; end += 8) {
+      await markdown.evaluate(
+        (el, value) => el.setAttribute('content', value),
+        heading.slice(0, end),
+      );
+      await expect(markdown.locator('h2')).toHaveText(heading.slice(3, end));
+      await expect(markdown.locator('p')).toHaveCount(0);
+    }
+  });
+
+  for (
+    const [name, content] of [
+      ['inline formatting', 'Hello **bold** and [link](https://example.com).'],
+      ['lists', '- first item\n- second item\n  - nested item\n'],
+      ['fenced code', '```text\nfirst line\n\nsecond line\n```\n'],
+      ['tables', '| Name | Value |\n| --- | --- |\n| first | second |\n'],
+      [
+        'reference links',
+        '[Guide][docs]\n\nMore text.\n\n[docs]: https://example.com\n',
+      ],
+    ] as const
+  ) {
+    test(`should match complete parsing while streaming ${name}`, async ({ page }) => {
+      await goto(page, 'x-markdown/basic');
+      await expectMarkdownText(page, 'h1', 'Title');
+      const markdown = page.locator('#markdown');
+      for (let end = 8; end < content.length + 8; end += 8) {
+        const prefix = content.slice(0, end);
+        // Use a fresh element as the one-shot rendering reference for each prefix.
+        const expected = await page.evaluate(async (value) => {
+          const reference = document.createElement('x-markdown');
+          document.body.append(reference);
+          await new Promise<void>((resolve) => {
+            reference.addEventListener('bindparseEnd', () => resolve(), {
+              once: true,
+            });
+            reference.setAttribute('content', value);
+          });
+          const html =
+            reference.shadowRoot!.querySelector('#markdown-root')!.innerHTML;
+          reference.remove();
+          return html;
+        }, prefix);
+        await markdown.evaluate(
+          (el, value) => el.setAttribute('content', value),
+          prefix,
+        );
+        await expect(markdown.locator('#markdown-root')).toHaveJSProperty(
+          'innerHTML',
+          expected,
+        );
+      }
+    });
+  }
 
   test('should render tables', async ({ page }) => {
     await goto(page, 'x-markdown/table');
@@ -699,6 +763,12 @@ test.describe('x-markdown', () => {
       ) ?? false;
     });
     expect(projected).toBe(true);
+    await captureFirstChild(page);
+    await appendContent(page, '\n\nMore content');
+    await expect(page.locator('x-markdown').locator('p').last()).toHaveText(
+      'More content',
+    );
+    expect(await isFirstChildSame(page)).toBe(true);
   });
 
   test('should not create img for inline view in typewriter mode', async ({ page }) => {
