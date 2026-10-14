@@ -15,12 +15,6 @@ const getShadowText = async (page: Page, selector: string) =>
     return element?.shadowRoot?.querySelector(value)?.textContent ?? '';
   }, selector);
 
-const getShadowCount = async (page: Page, selector: string) =>
-  page.evaluate((value) => {
-    const element = document.querySelector('x-markdown');
-    return element?.shadowRoot?.querySelectorAll(value).length ?? 0;
-  }, selector);
-
 const hasEmptyMarkdownRoot = async (page: Page) =>
   page.locator('x-markdown').evaluate((element) => {
     const root = element.shadowRoot?.querySelector('#markdown-root');
@@ -520,14 +514,13 @@ test.describe('x-markdown', () => {
     expect(await isFirstChildSame(page)).toBe(false);
   });
 
-  test('should batch append by newline boundary', async ({ page }) => {
+  test('should reparse an unfinished paragraph when content is appended', async ({ page }) => {
     await goto(page, 'x-markdown/incremental');
-    expect(await getShadowCount(page, 'p')).toBe(1);
+    await expectMarkdownText(page, 'p', 'Line 1');
     await appendContent(page, 'Line 2');
-    await page.waitForTimeout(20);
-    expect(await getShadowCount(page, 'p')).toBe(1);
-    await page.waitForTimeout(80);
-    expect(await getShadowCount(page, 'p')).toBe(2);
+    await expect(page.locator('x-markdown').locator('p')).toHaveText(
+      'Line 1\nLine 2',
+    );
   });
 
   test('should render tables', async ({ page }) => {
