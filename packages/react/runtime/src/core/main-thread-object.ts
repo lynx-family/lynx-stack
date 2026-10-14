@@ -2,11 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import {
-  WorkletEvents,
-  loadWorkletRuntime,
-  registerMainThreadObjectType,
-} from '@lynx-js/react/worklet-runtime/bindings';
+import { WorkletEvents, registerMainThreadObjectType } from '@lynx-js/react/worklet-runtime/bindings';
 import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { useMemo } from './hooks/react.js';
@@ -228,9 +224,6 @@ function registerMainThreadObjectDefinition<I, O extends object>(
     return;
   }
 
-  const schema = (globalThis as { globDynamicComponentEntry?: string })
-    .globDynamicComponentEntry;
-  loadWorkletRuntime(schema);
   registerMainThreadObjectType(
     definition.type,
     definition.create as ((initialValue: unknown) => object) | Worklet,

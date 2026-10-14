@@ -311,34 +311,11 @@ function createPolyfills() {
       'JSContext',
     );
 
-  function __LoadLepusChunk(
-    chunkName: string,
-    _options,
-  ) {
-    const isBackground = !__MAIN_THREAD__;
-    globalThis.lynxTestingEnv.switchToMainThread();
-
-    let ans;
-    if (chunkName === 'worklet-runtime') {
-      ans = globalThis.onInitWorkletRuntime?.();
-    } else {
-      throw new Error(`__LoadLepusChunk: Unknown chunk name: ${chunkName}`);
-    }
-
-    // restore the original thread state
-    if (isBackground) {
-      globalThis.lynxTestingEnv.switchToBackgroundThread();
-    }
-
-    return ans;
-  }
-
   return {
     app,
     performance,
     mainThreadContexts,
     backgroundThreadContexts,
-    __LoadLepusChunk,
   };
 }
 
@@ -348,7 +325,6 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   const {
     performance,
     mainThreadContexts,
-    __LoadLepusChunk,
   } = polyfills || {};
   if (typeof target === 'undefined') {
     target = globalThis;
@@ -424,8 +400,6 @@ function injectMainThreadGlobals(target?: any, polyfills?: any) {
   // @ts-expect-error Lynx has console.alog
   target.console.alog = console.alog = () => {};
 
-  target.__LoadLepusChunk = __LoadLepusChunk;
-
   globalThis.onInjectMainThreadGlobals?.(target);
 }
 
@@ -493,7 +467,6 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
     app,
     performance,
     backgroundThreadContexts,
-    __LoadLepusChunk,
   } = polyfills || {};
   if (typeof target === 'undefined') {
     target = globalThis;
@@ -595,8 +568,6 @@ function injectBackgroundThreadGlobals(target?: any, polyfills?: any) {
     'runtimeType': 'quickjs',
     'lynxSdkVersion': '3.0',
   };
-
-  target.__LoadLepusChunk = __LoadLepusChunk;
 
   globalThis.onInjectBackgroundThreadGlobals?.(target);
 }

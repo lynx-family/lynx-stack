@@ -34,6 +34,12 @@ export default defineConfig({
 })
 ```
 
+## Version compatibility
+
+Upgrade this plugin and `@lynx-js/react` together. The module-delivery release requires `@lynx-js/react@^0.128.0`, which includes both the runtime and its matching transform. Custom transforms must implement the same registration-import and semantic runtime-requirements protocol.
+
+Main-thread functions import `@lynx-js/react/worklet-runtime/init` through the application module graph. Rebuild libraries and lazy bundles with the matching toolchain; precompiled output that calls `loadWorkletRuntime` or relies on the old runtime chunk is unsupported.
+
 ## Documentation
 
 Visit [Lynx Website](https://lynxjs.org/api/rspeedy/react-rsbuild-plugin.pluginreactlynx.html) to view the full documentation.

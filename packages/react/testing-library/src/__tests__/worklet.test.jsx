@@ -17,6 +17,23 @@ const guardedClassCaptureType = defineMainThreadObjectType({
 });
 
 describe('worklet', () => {
+  it('resolves the registration owner when a MIXED module imports the init entry on BTS', async () => {
+    expect(__MAIN_THREAD__).toBe(false);
+    const { registerWorklet } = await import('@lynx-js/react/worklet-runtime/init');
+    expect(__MAIN_THREAD__).toBe(false);
+
+    const owner = vi.spyOn(globalThis, 'registerWorkletInternal');
+    const worklet = vi.fn(() => 42);
+    try {
+      registerWorklet('main-thread', 'mixed-init-entry', worklet);
+      expect(owner).toHaveBeenCalledWith('main-thread', 'mixed-init-entry', worklet);
+      expect(globalThis.lynxWorkletImpl._workletMap['mixed-init-entry']).toBe(worklet);
+    } finally {
+      owner.mockRestore();
+      delete globalThis.lynxWorkletImpl._workletMap['mixed-init-entry'];
+    }
+  });
+
   it('main-thread script should work', async () => {
     const cb = vi.fn();
     const Comp = () => {
@@ -62,9 +79,8 @@ describe('worklet', () => {
     `);
   });
   it('main-thread script should not throw when enable background thread', async () => {
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
-    const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
-    expect(callLepusMethodCalls).toMatchInlineSnapshot(`[]`);
+    const callLepusMethod = vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    expect(callLepusMethod.mock.calls).toMatchInlineSnapshot(`[]`);
 
     globalThis.cb = vi.fn();
     const mainThreadFn = () => {
@@ -87,7 +103,7 @@ describe('worklet', () => {
       enableBackgroundThread: true,
     });
 
-    expect(callLepusMethodCalls).toMatchInlineSnapshot(`
+    expect(callLepusMethod.mock.calls).toMatchInlineSnapshot(`
       [
         [
           "rLynxChange",
@@ -130,9 +146,8 @@ describe('worklet', () => {
     vi.resetAllMocks();
   });
   it('main-thread script should not update MTS function when enable background', async () => {
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
-    const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
-    expect(callLepusMethodCalls).toMatchInlineSnapshot(`[]`);
+    const callLepusMethod = vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    expect(callLepusMethod.mock.calls).toMatchInlineSnapshot(`[]`);
 
     globalThis.cb = vi.fn();
     const mainThreadFn = (e) => {
@@ -169,7 +184,7 @@ describe('worklet', () => {
       enableBackgroundThread: true,
     });
 
-    expect(callLepusMethodCalls).toMatchInlineSnapshot(`
+    expect(callLepusMethod.mock.calls).toMatchInlineSnapshot(`
       [
         [
           "rLynxChange",
@@ -220,9 +235,8 @@ describe('worklet', () => {
   });
 
   it('main thread script props', () => {
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
-    const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
-    expect(callLepusMethodCalls).toMatchInlineSnapshot(`[]`);
+    const callLepusMethod = vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    expect(callLepusMethod.mock.calls).toMatchInlineSnapshot(`[]`);
 
     globalThis.cb = vi.fn();
     const mainThreadFn = (e) => {
@@ -259,7 +273,7 @@ describe('worklet', () => {
       </page>
     `);
 
-    expect(callLepusMethodCalls).toMatchInlineSnapshot(`
+    expect(callLepusMethod.mock.calls).toMatchInlineSnapshot(`
       [
         [
           "rLynxChange",
@@ -295,9 +309,8 @@ describe('worklet', () => {
   });
 
   it('runOnMainThread works', async () => {
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
-    const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
-    expect(callLepusMethodCalls).toMatchInlineSnapshot(`[]`);
+    const callLepusMethod = vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    expect(callLepusMethod.mock.calls).toMatchInlineSnapshot(`[]`);
     const Comp = () => {
       return (
         <view
@@ -326,9 +339,8 @@ describe('worklet', () => {
   });
 
   it('runOnBackground works', async () => {
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
-    const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
-    expect(callLepusMethodCalls).toMatchInlineSnapshot(`[]`);
+    const callLepusMethod = vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    expect(callLepusMethod.mock.calls).toMatchInlineSnapshot(`[]`);
 
     const cb = vi.fn();
     globalThis.receiveRunOnBackgroundResp = vi.fn();
@@ -353,7 +365,7 @@ describe('worklet', () => {
       enableMainThread: true,
       enableBackgroundThread: true,
     });
-    expect(callLepusMethodCalls).toMatchInlineSnapshot(`
+    expect(callLepusMethod.mock.calls).toMatchInlineSnapshot(`
       [
         [
           "rLynxChange",
@@ -408,9 +420,8 @@ describe('worklet', () => {
   });
 
   it('worklet ref should work', async () => {
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
-    const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
-    expect(callLepusMethodCalls).toMatchInlineSnapshot(`[]`);
+    const callLepusMethod = vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    expect(callLepusMethod.mock.calls).toMatchInlineSnapshot(`[]`);
     globalThis.cb = vi.fn();
     const Comp = () => {
       const ref = useMainThreadRef(null);
@@ -451,7 +462,7 @@ describe('worklet', () => {
         </view>
       </page>
     `);
-    expect(callLepusMethodCalls).toMatchInlineSnapshot(`
+    expect(callLepusMethod.mock.calls).toMatchInlineSnapshot(`
       [
         [
           "rLynxChangeRefInitValue",
@@ -493,9 +504,8 @@ describe('worklet', () => {
   });
 
   it('nest runOnMainThread->runOnBackground works', async () => {
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
-    const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
-    expect(callLepusMethodCalls).toMatchInlineSnapshot(`[]`);
+    const callLepusMethod = vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    expect(callLepusMethod.mock.calls).toMatchInlineSnapshot(`[]`);
     const Comp = () => {
       return (
         <view
@@ -568,9 +578,8 @@ describe('worklet', () => {
   });
 
   it('multiple main-thread worklets should work together when background thread is enabled', () => {
-    vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
-    const callLepusMethodCalls = lynx.getNativeApp().callLepusMethod.mock.calls;
-    expect(callLepusMethodCalls).toMatchInlineSnapshot(`[]`);
+    const callLepusMethod = vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
+    expect(callLepusMethod.mock.calls).toMatchInlineSnapshot(`[]`);
 
     globalThis.firstCb = vi.fn();
     globalThis.secondCb = vi.fn();
@@ -603,10 +612,10 @@ describe('worklet', () => {
       enableBackgroundThread: true,
     });
 
-    expect(callLepusMethodCalls).toHaveLength(1);
-    expect(callLepusMethodCalls[0][0]).toBe('rLynxChange');
+    expect(callLepusMethod.mock.calls).toHaveLength(1);
+    expect(callLepusMethod.mock.calls[0][0]).toBe('rLynxChange');
 
-    const patchData = JSON.parse(callLepusMethodCalls[0][1].data);
+    const patchData = JSON.parse(callLepusMethod.mock.calls[0][1].data);
     const workletIds = patchData.patchList
       .flatMap(item => Array.isArray(item.snapshotPatch) ? item.snapshotPatch : [])
       .filter(item => typeof item === 'object' && item !== null && '_wkltId' in item)

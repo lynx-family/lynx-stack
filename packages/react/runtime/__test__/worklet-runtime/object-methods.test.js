@@ -43,10 +43,9 @@ it('resolves a compiler-generated object method through whole-object captures', 
     },
   );
   const source = new Function(
-    '__loadWorkletRuntime',
-    'registerWorkletInternal',
+    '__registerWorklet',
     `${result.code.replace(/^import .*;$/gm, '').replace('export const source', 'const source')}\nreturn source;`,
-  )(() => true, registerWorklet);
+  )(registerWorklet);
   registerWorklet('main-thread', 'parent', function() {
     return this._c.source.method;
   });

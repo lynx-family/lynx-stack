@@ -45,11 +45,9 @@ describe('object method captures', () => {
     );
     const functions = new Map();
     const valueType = new Function(
-      '__loadWorkletRuntime',
-      'registerWorkletInternal',
+      '__registerWorklet',
       `${result.code.replace(/^import .*;$/gm, '').replace(/^export /gm, '')}\nreturn valueType;`,
     )(
-      () => true,
       (_type, id, fn) => functions.set(id, fn),
     );
     expect(valueType.create._c).toEqual({ nestedName: 'read' });

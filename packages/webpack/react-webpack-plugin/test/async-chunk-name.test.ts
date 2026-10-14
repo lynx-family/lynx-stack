@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { mkdtempSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,7 +14,6 @@ import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import { ReactWebpackPlugin } from '../src/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const require = createRequire(import.meta.url);
 
 function stripSuffix(name: string): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -29,11 +27,7 @@ function stripSuffix(name: string): Promise<string> {
         filename: '[name].js',
       },
       plugins: [
-        new ReactWebpackPlugin({
-          workletRuntimePath: require.resolve(
-            '@lynx-js/react/worklet-dev-runtime',
-          ),
-        }),
+        new ReactWebpackPlugin({}),
         (compiler: import('@rspack/core').Compiler) => {
           compiler.hooks.thisCompilation.tap('test', (compilation) => {
             const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(

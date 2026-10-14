@@ -34,7 +34,6 @@ export const {
   captureMainThreadObject,
   loadDynamicJS,
   loadLazyBundle,
-  loadWorkletRuntime,
   options,
   process,
   registerRuntimeBackend,

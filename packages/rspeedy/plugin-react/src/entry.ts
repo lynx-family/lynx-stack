@@ -298,9 +298,8 @@ export function applyEntry(
       extractStr = false
     }
 
-    const { resolve, version: runtimeVersion } = api.useExposed<
+    const { version: runtimeVersion } = api.useExposed<
       {
-        resolve: (request: string) => Promise<string>
         version: string
       }
     >(Symbol.for('@lynx-js/react/internal:resolve'))!
@@ -321,9 +320,6 @@ export function applyEntry(
         experimental_useElementTemplate:
           options.experimental_useElementTemplate,
         profile: getDefaultProfile(),
-        workletRuntimePath: await resolve(
-          `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,
-        ),
         lazyBundleFetcher,
         runtimeVersion,
       }])

@@ -61,31 +61,49 @@ describe('worklet-runtime init entry', () => {
   });
 
   it('initializes the main-thread runtime through the public entry', async () => {
-    await import('@lynx-js/react/worklet-runtime/init');
+    const { registerWorklet } = await import('@lynx-js/react/worklet-runtime/init');
 
     expect(globalThis.lynxWorkletImpl).toBeDefined();
     expect(globalThis.registerWorklet).toBeTypeOf('function');
     expect(globalThis.registerWorkletInternal).toBeTypeOf('function');
     expect(globalThis.runWorklet).toBeTypeOf('function');
+    expect(registerWorklet).toBe(globalThis.registerWorkletInternal);
+
+    const worklet = vi.fn(value => value + 1);
+    registerWorklet('main-thread', 'cold-entry', worklet);
+    expect(globalThis.lynxWorkletImpl._workletMap['cold-entry']).toBe(worklet);
+    expect(globalThis.runWorklet({ _wkltId: 'cold-entry' }, [41])).toBe(42);
   });
 
-  it('does not replace a runtime that is already initialized', async () => {
-    await import('@lynx-js/react/worklet-runtime/init');
+  it('preserves runtime state when the init entry is evaluated again', async () => {
+    const initialEntry = await import('@lynx-js/react/worklet-runtime/init');
+    expect(initialEntry.registerWorklet).toBe(globalThis.registerWorkletInternal);
 
     const workletImpl = globalThis.lynxWorkletImpl;
     const registerWorklet = globalThis.registerWorklet;
-    const registerWorkletInternal = globalThis.registerWorkletInternal;
+    const registerWorkletInternal = vi.fn(globalThis.registerWorkletInternal);
+    globalThis.registerWorkletInternal = registerWorkletInternal;
     const runWorklet = globalThis.runWorklet;
+    const existingWorklet = vi.fn();
+    registerWorklet('main-thread', 'existing', existingWorklet);
     expect(jsContext.addEventListener).toHaveBeenCalled();
     jsContext.addEventListener.mockClear();
 
     vi.resetModules();
-    await import('@lynx-js/react/worklet-runtime/init');
+    const entry = await import('@lynx-js/react/worklet-runtime/init');
 
     expect(globalThis.lynxWorkletImpl).toBe(workletImpl);
     expect(globalThis.registerWorklet).toBe(registerWorklet);
     expect(globalThis.registerWorkletInternal).toBe(registerWorkletInternal);
     expect(globalThis.runWorklet).toBe(runWorklet);
     expect(jsContext.addEventListener).not.toHaveBeenCalled();
+    expect(entry.registerWorklet).toBe(registerWorkletInternal);
+
+    const worklet = vi.fn(() => 42);
+    entry.registerWorklet('main-thread', 'warm-entry', worklet);
+    expect(registerWorkletInternal).toHaveBeenCalledWith('main-thread', 'warm-entry', worklet);
+    expect(workletImpl._workletMap.existing).toBe(existingWorklet);
+    expect(workletImpl._workletMap['warm-entry']).toBe(worklet);
+    expect(runWorklet({ _wkltId: 'warm-entry' }, [])).toBe(42);
   });
 });

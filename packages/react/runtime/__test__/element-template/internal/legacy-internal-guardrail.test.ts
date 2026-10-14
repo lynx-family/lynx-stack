@@ -19,7 +19,7 @@ describe('legacy internal guardrail', () => {
   });
 
   it('keeps the ET main-thread event loader surface minimal', () => {
-    expect(ElementTemplateInternal.loadWorkletRuntime).toBeTypeOf('function');
+    expect('loadWorkletRuntime' in ElementTemplateInternal).toBe(false);
     expect('loadWorkletRuntime' in ElementTemplateRuntime).toBe(false);
 
     expect(ElementTemplateInternal.captureMainThreadObject({ value: 1 })).toBeUndefined();

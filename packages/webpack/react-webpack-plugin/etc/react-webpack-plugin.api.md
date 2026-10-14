@@ -62,7 +62,6 @@ export interface ReactWebpackPluginOptions {
     mainThreadChunks?: string[] | undefined;
     profile?: boolean | undefined;
     runtimeVersion?: string | undefined;
-    workletRuntimePath: string;
 }
 
 ```

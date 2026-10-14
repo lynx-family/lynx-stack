@@ -2,7 +2,7 @@ import type { ExtendConfig, ExtendConfigFn } from '@rstest/core';
 import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import type { RsbuildConfig } from '@rsbuild/core';
+import type { RsbuildConfig, RsbuildPlugin } from '@rsbuild/core';
 
 export interface LynxConfigOptions {
   /**
@@ -43,6 +43,20 @@ const require = createRequire(import.meta.url);
 function createDefaultRstestConfig(): ExtendConfig {
   return {
     testEnvironment: 'jsdom',
+    plugins: [
+      {
+        name: 'lynx:testing-runtime-init',
+        pre: ['lynx:react-alias'],
+        setup(api) {
+          api.modifyBundlerChain(chain => {
+            chain.resolve.alias.set(
+              '@lynx-js/react/worklet-runtime/init$',
+              require.resolve('./setupFiles/common/worklet-runtime-init.js'),
+            );
+          });
+        },
+      } satisfies RsbuildPlugin,
+    ],
     setupFiles: [require.resolve('./setupFiles/rstest')],
     globals: true,
   };
@@ -153,6 +167,7 @@ export function withLynxConfig(
       ...defaultConfig,
       plugins: [
         ...(rstestConfig.plugins || []),
+        ...(defaultConfig.plugins || []),
         {
           name: 'lynx-adapter:remove-useless-plugins',
           // `lynx:rsbuild:target` builds for Lynx, but the tests run in jsdom

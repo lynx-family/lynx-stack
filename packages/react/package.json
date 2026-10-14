@@ -103,17 +103,9 @@
         "default": "./transform/main.js"
       }
     },
-    "./worklet-runtime": {
-      "types": "./runtime/lib/worklet-runtime/index.d.ts",
-      "default": "./runtime/worklet-runtime/main.js"
-    },
     "./worklet-runtime/init": {
       "types": "./runtime/lib/worklet-runtime/index.d.ts",
       "default": "./runtime/lib/worklet-runtime/index.js"
-    },
-    "./worklet-dev-runtime": {
-      "types": "./runtime/lib/worklet-runtime/index.d.ts",
-      "default": "./runtime/worklet-runtime/dev.js"
     },
     "./worklet-runtime/bindings": {
       "types": "./runtime/lib/worklet-runtime/bindings/index.d.ts",
@@ -200,13 +192,7 @@
       "runtime-components": [
         "./components/lib/index.d.ts"
       ],
-      "worklet-runtime": [
-        "./runtime/lib/worklet-runtime/index.d.ts"
-      ],
       "worklet-runtime/init": [
-        "./runtime/lib/worklet-runtime/index.d.ts"
-      ],
-      "worklet-dev-runtime": [
         "./runtime/lib/worklet-runtime/index.d.ts"
       ],
       "worklet-runtime/bindings": [
@@ -232,8 +218,7 @@
     "README.zh.md"
   ],
   "scripts": {
-    "api-extractor": "api-extractor run --verbose",
-    "build": "rslib"
+    "api-extractor": "api-extractor run --verbose"
   },
   "dependencies": {
     "preact": "catalog:lynxjs"

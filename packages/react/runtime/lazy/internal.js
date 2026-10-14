@@ -46,7 +46,6 @@ export const {
   getRuntimeVersion,
   loadDynamicJS,
   loadLazyBundle,
-  loadWorkletRuntime,
   options,
   preactCloneElement,
   process,
