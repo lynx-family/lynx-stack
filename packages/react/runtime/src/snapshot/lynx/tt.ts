@@ -59,13 +59,13 @@ function injectTt(): void {
     typeof __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__ !== 'undefined'
     && __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__
     && (lynx as unknown as Record<symbol, unknown>)[Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__')] === true
-    && typeof tt.onAppReload === 'function'
+    && typeof tt.reloadCard === 'function'
   ) {
-    const oldOnAppReload = tt.onAppReload;
-    tt.onAppReload = (...args) => {
+    tt.onAppReload = (updateData: Record<string, unknown>, options?: Record<string, unknown>) => {
       deinitGlobalSnapshotPatch();
       increaseReloadVersion();
-      oldOnAppReload.apply(tt, args);
+      tt.callDestroyLifetimeFun();
+      tt.reloadCard!(updateData, options);
     };
   } else {
     tt.onAppReload = reloadBackground;
