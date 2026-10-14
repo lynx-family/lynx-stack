@@ -34,7 +34,7 @@ import { PackageManagerTabs } from '@theme';
 # dev
 RSDOCTOR=true rspeedy dev
 
-# prod
+# build
 RSDOCTOR=true rspeedy build
 ```
 
@@ -50,7 +50,7 @@ import { defineConfig } from '@lynx-js/rspeedy';
 export default defineConfig({
   tools: {
     rsdoctor: {
-      disableClientServer: true,
+      output: { mode: 'brief' },
     },
   },
 });
@@ -60,7 +60,7 @@ export default defineConfig({
 
 1. 安装 Rsdoctor 插件
 
-<PackageManagerTabs command="add @rsdoctor/rspack-plugin -D" />
+<PackageManagerTabs command="add @rsdoctor/core@2.0.0-rc.1 -D" />
 
 2. 添加 `RsdoctorRspackPlugin` 到 `lynx.config.ts`
 
@@ -72,7 +72,7 @@ export default defineConfig({
 :::
 
 ```ts title="lynx.config.ts"
-import { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin';
+import { RsdoctorRspackPlugin } from '@rsdoctor/core';
 
 export default {
   tools: {
