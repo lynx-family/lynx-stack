@@ -36,6 +36,7 @@ test(
   'rapid append should preserve visible typewriter progress',
   async ({ page }, testInfo) => {
     await goto(page);
+    const visiblePrefix = 'Hello'.slice(0, 3);
     const streamed = page.locator('#streamed');
     await streamed.evaluate((element) => {
       element.setAttribute('animation-type', 'typewriter');
@@ -43,7 +44,9 @@ test(
       element.setAttribute('content-complete', 'false');
       element.setAttribute('content', 'Hello');
     });
-    await expect(streamed.locator('#markdown-root')).toContainText('Hel');
+    await expect(streamed.locator('#markdown-root')).toContainText(
+      visiblePrefix,
+    );
 
     const samples = await streamed.evaluate(async (element) => {
       const texts: string[] = [];
@@ -60,7 +63,7 @@ test(
       body: JSON.stringify(samples),
       contentType: 'application/json',
     });
-    expect(samples.every(text => text.startsWith('Hel'))).toBe(true);
+    expect(samples.every(text => text.startsWith(visiblePrefix))).toBe(true);
     await expect(streamed.locator('p')).toContainText(
       `Hello${'x'.repeat(40)}`,
       {

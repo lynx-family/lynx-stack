@@ -6,4 +6,6 @@ When testing x-markdown streaming, wait for a parsed Markdown node before append
 
 For typewriter streaming, verify that already visible text survives content appends while the stream is active. Waiting only for the final text after input stops misses animation progress being reset on each update.
 
+Derive partial-word typewriter expectations by slicing complete strings so the repository spelling check does not mistake intentionally incomplete text for a typo.
+
 Markdown appends can change earlier blocks, including through reference definitions. Parse the complete selected source and preserve unchanged leading DOM nodes instead of parsing appended lines independently. Typewriter appends should preserve the current step and restart a stopped timer when new text arrives, while replacements and clearing content reset progress.
