@@ -35,8 +35,7 @@ class JsFunctionLifecycleManager {
     this.registry.register(objToRef, key);
   }
 
-  removeRef(id: number | string): void {
-    const execId = typeof id === 'number' ? `0:${id}` : id;
+  removeRef(execId: string): void {
     const rc = this.execIdRefCount.get(execId)!;
     if (rc > 1) {
       this.execIdRefCount.set(execId, rc - 1);

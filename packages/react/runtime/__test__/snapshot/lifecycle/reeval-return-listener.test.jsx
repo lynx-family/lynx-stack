@@ -3,6 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, expect, it, vi } from 'vitest';
 
+vi.hoisted(() => {
+  vi.resetModules();
+  vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
+});
+
 import { runOnBackground } from '../../../src/core/background-function/run-on-background';
 import { WorkletEvents } from '../../../src/worklet-runtime/bindings/events';
 import { reloadMainThread } from '../../../src/snapshot/lifecycle/reload';
@@ -10,6 +15,9 @@ import { __root, setRoot } from '../../../src/root';
 import { SnapshotInstance } from '../../../src/snapshot/snapshot/snapshot';
 import { setupPage } from '../../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
+import { __injectElementApi } from '../utils/inject';
+import '../utils/runtimeProxy';
+import '../../../src/lynx';
 import { elementTree } from '../utils/nativeMethod';
 
 const reloaderKey = Symbol.for('__LYNX_MAIN_THREAD_ENTRY_RELOADER__');
@@ -25,6 +33,7 @@ afterEach(() => {
 });
 
 it('retires the old return listener before the Snapshot entry handoff runs cleanup', async () => {
+  __injectElementApi();
   globalEnvManager.resetEnv();
   globalEnvManager.switchToMainThread();
   vi.stubGlobal('SystemInfo', { ...SystemInfo, lynxSdkVersion: '999.999' });

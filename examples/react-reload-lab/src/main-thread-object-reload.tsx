@@ -34,7 +34,7 @@ export function App() {
       });
     })().then(value => {
       console.info('[mto-reload-probe]', value);
-      setResult(value);
+      setResult(String(value));
     }).catch(error => setResult(String(error)));
   }, [probe]);
   const reload = useCallback(() => {

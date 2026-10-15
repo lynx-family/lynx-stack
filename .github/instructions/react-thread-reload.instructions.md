@@ -7,3 +7,5 @@ Cross-thread function handles must retain the reloadVersion of their registered 
 MainThreadObject factory definitions live in the shared worklet runtime. When a type is registered after reloadVersion changes, replace its definition so resolvedCreate cannot retain the previous entry's module dependencies. Preserve cached factories for duplicate registrations within one reloadVersion, and preserve the branding and identity of already-realized objects.
 
 Re-evaluation must retire each entry's FunctionCallRet listener and return table before old cleanup callbacks can register calls under the new reloadVersion. Keep reset reusable for ordinary reload, but make destruction terminal for that module instance. Test with multiple listeners on the same event context and delayed old calls/results across the actual Snapshot handoff.
+
+Register entry re-evaluation completers only when the experimental compile-time option is enabled, so ordinary bundles can eliminate the handoff implementation. Keep ordinary reload completion independent of re-evaluation-only state capture.

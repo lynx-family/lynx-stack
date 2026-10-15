@@ -27,8 +27,8 @@ interface ReloadHandoff {
   options: UpdatePageOption;
 }
 
-const completerKey = Symbol.for('__LYNX_ET_RELOAD_COMPLETER__');
-const reloaderKey = Symbol.for('__LYNX_MAIN_THREAD_ENTRY_RELOADER__');
+const completerKey = /*#__PURE__*/ Symbol.for('__LYNX_ET_RELOAD_COMPLETER__');
+const reloaderKey = /*#__PURE__*/ Symbol.for('__LYNX_MAIN_THREAD_ENTRY_RELOADER__');
 const lynxSymbols = lynx as unknown as Record<symbol, unknown>;
 
 function completeReload({ page, data, options }: ReloadHandoff): void {
@@ -38,7 +38,10 @@ function completeReload({ page, data, options }: ReloadHandoff): void {
   __FlushElementTree(undefined, options);
 }
 
-if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
+if (
+  typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__
+  && typeof __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__ !== 'undefined' && __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__
+) {
   lynxSymbols[completerKey] = completeReload;
 }
 
@@ -65,11 +68,6 @@ export function reloadMainThread(data: unknown, options: UpdatePageOption): void
       }
       deleteMainThreadDynamicAttrStateForSubtree(removedHandleIds);
     }
-    elementTemplateRegistry.clear();
-    clearMainThreadDynamicAttrState();
-    resetElementTemplateMainThreadBackgroundFunctionRuntime();
-    resetTemplateId();
-
     if (
       typeof __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__ !== 'undefined'
       && __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__
@@ -84,6 +82,11 @@ export function reloadMainThread(data: unknown, options: UpdatePageOption): void
       (lynxSymbols[completerKey] as (handoff: ReloadHandoff) => void)(handoff);
       return;
     }
+
+    elementTemplateRegistry.clear();
+    clearMainThreadDynamicAttrState();
+    resetElementTemplateMainThreadBackgroundFunctionRuntime();
+    resetTemplateId();
 
     const oldRoot = __root;
     setRoot({ __jsx: oldRoot.__jsx });

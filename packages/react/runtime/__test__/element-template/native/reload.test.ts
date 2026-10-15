@@ -120,6 +120,16 @@ vi.mock('preact', () => ({
 }));
 
 describe('ElementTemplate reloadMainThread', () => {
+  it.each([false, undefined])('does not install a re-evaluation completer when disabled: %s', async enabled => {
+    vi.stubGlobal('__MAIN_THREAD__', true);
+    vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', enabled);
+    const symbols = lynx as unknown as Record<symbol, unknown>;
+    const completerKey = Symbol.for('__LYNX_ET_RELOAD_COMPLETER__');
+    delete symbols[completerKey];
+    vi.resetModules();
+    await import('../../../src/element-template/native/reload-main-thread.js');
+    expect(symbols[completerKey]).toBeUndefined();
+  });
   it('renders the new entry on the existing page with merged reload data', async () => {
     vi.stubGlobal('__MAIN_THREAD__', true);
     vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);

@@ -95,6 +95,7 @@ describe('ReactWebpackPlugin: experimental re-evaluation', () => {
     expect(mainThread).not.toContain(ENTRY_SUPPORT);
     expect(background).not.toContain(ENTRY_SUPPORT);
     expect(mainThread).not.toContain(RELOADER);
+    expect(mainThread).not.toContain('__LYNX_MAIN_THREAD_RELOAD_COMPLETER__');
   });
 
   test('installs the entry reloader for a regular bundle', async () => {

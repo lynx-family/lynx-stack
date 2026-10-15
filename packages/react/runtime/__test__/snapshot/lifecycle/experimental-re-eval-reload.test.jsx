@@ -5,6 +5,11 @@
 */
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.hoisted(() => {
+  vi.resetModules();
+  vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
+});
+
 import { root, useState } from '../../../src/index';
 import { BackgroundSnapshotInstance } from '../../../src/snapshot/snapshot/backgroundSnapshot';
 import { reloadBackground, reloadMainThread } from '../../../src/snapshot/lifecycle/reload';
@@ -16,6 +21,8 @@ import { setupLynxEnv } from '../../../src/snapshot/lynx/env';
 import { restoreListState } from '../../../src/snapshot/list/list';
 import { setupPage } from '../../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
+import { __injectElementApi } from '../utils/inject';
+import '../utils/runtimeProxy';
 import { elementTree, nativeMethodQueue, waitSchedule } from '../utils/nativeMethod';
 
 const mainThreadEntryReloaderKey = Symbol.for('__LYNX_MAIN_THREAD_ENTRY_RELOADER__');
@@ -32,6 +39,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   nextMtsRefId = 0;
+  __injectElementApi();
   globalEnvManager.resetEnv();
   elementTree.root = undefined;
   setupPage(__CreatePage('0', 0));

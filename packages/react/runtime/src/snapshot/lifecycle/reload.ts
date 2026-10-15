@@ -26,6 +26,7 @@ import { applyRefQueue } from '../snapshot/workletRef.js';
 import {
   clearFirstScreenEventIdSwap,
   getFirstScreenSyncState,
+  isFirstScreenSynced,
   restoreFirstScreenSyncState,
 } from './event/firstScreenSync.js';
 import type { FirstScreenSyncState } from './event/firstScreenSync.js';
@@ -41,10 +42,10 @@ interface MainThreadReloadHandoff {
   initData: Record<string, unknown>;
 }
 
-const mainThreadReloadCompleterKey = Symbol.for(
+const mainThreadReloadCompleterKey = /*#__PURE__*/ Symbol.for(
   '__LYNX_MAIN_THREAD_RELOAD_COMPLETER__',
 );
-const mainThreadEntryReloaderKey = Symbol.for(
+const mainThreadEntryReloaderKey = /*#__PURE__*/ Symbol.for(
   '__LYNX_MAIN_THREAD_ENTRY_RELOADER__',
 );
 
@@ -55,12 +56,10 @@ function completeMainThreadReload(handoff: MainThreadReloadHandoff): void {
   restoreListState(handoff.listState);
   lynx.__initData = handoff.initData;
   restoreFirstScreenSyncState(handoff.firstScreenSyncState);
-  finishMainThreadReload(handoff);
+  finishMainThreadReload(handoff.oldRoot, handoff.options);
 }
 
-function finishMainThreadReload(handoff: MainThreadReloadHandoff): void {
-  const { oldRoot, options, firstScreenSyncState } = handoff;
-
+function finishMainThreadReload(oldRoot: SnapshotInstance, options: UpdatePageOption): void {
   renderMainThread();
   hydrate(oldRoot, __root as SnapshotInstance, {
     skipUnRef: true,
@@ -74,7 +73,7 @@ function finishMainThreadReload(handoff: MainThreadReloadHandoff): void {
     lepusng_gc();
   }
 
-  if (firstScreenSyncState.isFirstScreenSynced) {
+  if (isFirstScreenSynced) {
     __OnLifecycleEvent([
       LifecycleConstant.firstScreen, /* FIRST_SCREEN */
       {
@@ -90,7 +89,10 @@ function finishMainThreadReload(handoff: MainThreadReloadHandoff): void {
   }
 }
 
-if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
+if (
+  typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__
+  && typeof __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__ !== 'undefined' && __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__
+) {
   lynxSymbols[mainThreadReloadCompleterKey] = completeMainThreadReload;
 }
 
@@ -138,15 +140,7 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
 
   setRoot(new SnapshotInstance('root'));
   __root.__jsx = oldRoot.__jsx;
-  finishMainThreadReload({
-    oldRoot: oldRoot as SnapshotInstance,
-    page: __page,
-    options,
-    firstScreenSyncState: getFirstScreenSyncState(),
-    listState: captureListState(),
-    initData: lynx.__initData,
-  });
-  return;
+  finishMainThreadReload(oldRoot as SnapshotInstance, options);
 }
 
 function reloadBackground(updateData: Record<string, any>): void {
