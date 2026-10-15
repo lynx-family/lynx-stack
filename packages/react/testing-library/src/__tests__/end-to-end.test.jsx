@@ -50,7 +50,7 @@ test('state change will cause re-render', async () => {
       },
     }
   `);
-  expect(snapshotInstanceManager.nextId).toMatchInlineSnapshot(`-1`);
+  expect(snapshotInstanceManager.counter.nextId).toMatchInlineSnapshot(`-1`);
   render(<ComponentWithLoader />);
   expect(elementTree.root).toMatchInlineSnapshot(`
     <page>
@@ -167,7 +167,7 @@ test('it waits for the data to be loaded', async () => {
       },
     }
   `);
-  expect(snapshotInstanceManager.nextId).toMatchInlineSnapshot(`-1`);
+  expect(snapshotInstanceManager.counter.nextId).toMatchInlineSnapshot(`-1`);
   render(<ComponentWithLoader />);
   expect(elementTree.root).toMatchInlineSnapshot(`
     <page>
