@@ -15,7 +15,7 @@ beforeEach(() => {
   // snapshotManager.values.clear();
   __pendingListUpdates.clearAttachedLists();
   snapshotInstanceManager.clear();
-  snapshotInstanceManager.nextId = 0;
+  snapshotInstanceManager.counter.nextId = 0;
 });
 
 afterEach(() => {

@@ -159,7 +159,7 @@ describe('backgroundSnapshot profile', () => {
     beforeEach(() => {
       render(null, __root);
       snapshotInstanceManager.clear();
-      snapshotInstanceManager.nextId = 0;
+      snapshotInstanceManager.counter.nextId = 0;
       backgroundSnapshotInstanceManager.clear();
       backgroundSnapshotInstanceManager.nextId = 0;
     });
@@ -225,7 +225,7 @@ describe('backgroundSnapshot profile', () => {
     beforeEach(() => {
       originalProfileFlag = globalThis.__PROFILE__;
       snapshotInstanceManager.clear();
-      snapshotInstanceManager.nextId = 0;
+      snapshotInstanceManager.counter.nextId = 0;
       backgroundSnapshotInstanceManager.clear();
       backgroundSnapshotInstanceManager.nextId = 0;
     });

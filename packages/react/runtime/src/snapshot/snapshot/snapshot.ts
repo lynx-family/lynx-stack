@@ -168,7 +168,7 @@ export class SnapshotInstance {
     }
     this.__snapshot_def = snapshotManager.values.get(type)!;
 
-    id ??= snapshotInstanceManager.nextId -= 1;
+    id ??= snapshotInstanceManager.counter.nextId -= 1;
     this.__id = id;
     snapshotInstanceManager.values.set(id, this);
   }

@@ -230,7 +230,7 @@ describe('experimental re-eval reload', () => {
     globalEnvManager.switchToMainThread();
     const oldReloader = lynx[mainThreadEntryReloaderKey];
     lynx[mainThreadEntryReloaderKey] = () => {
-      snapshotInstanceManager.nextId = freshManager.nextId;
+      snapshotInstanceManager.counter.nextId = freshManager.counter.nextId;
       setRoot(new SnapshotInstance('root'));
       __root.__jsx = entry.jsx;
     };
