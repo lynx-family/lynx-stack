@@ -112,8 +112,11 @@ persist complete replacement values through host-owned storage. For example,
 removes a selected row. Preserve all other fields explicitly when replacing an
 object. Use arithmetic and `@Each` to compute other updates. `@Set` and `@Reset`
 operate on input and selection state, not Query results. Natural-language
-instructions and op/path operation batches are unsupported. The current language
-has no array append builtin; insertion requires an appropriate host tool.
+instructions and op/path operation batches are unsupported. Use the Lynx OpenUI
+builtin `@Append(tasks.items, newItem)` to add one item without modifying the
+input. Save the resulting complete value through Mutation and refresh the Query.
+Append has no fixed capacity, generates no IDs, and provides no atomic concurrency
+control across clients.
 
 ## Mutation
 
@@ -158,6 +161,10 @@ Use only these built-ins:
   `">"`, `"<"`, `">="`, `"<="`, or `"contains"`
 - `@Round(number, decimals?)`, `@Abs(number)`, `@Floor(number)`, `@Ceil(number)`
 - `@Each(array, variableName, inlineTemplate)`
+- `@Append(array, item)` returns a new array with exactly one item appended; an
+  array item stays nested. It requires exactly two arguments and rejects a
+  non-array first argument. This builtin is registered by the Lynx OpenUI runtime
+  and its prompt library.
 
 Keep the `@Each` loop variable inside the inline template:
 

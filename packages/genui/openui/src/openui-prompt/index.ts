@@ -43,6 +43,7 @@ import {
   Video,
 } from '../catalog/agent.js';
 import { DATA_GENERATION_RULES } from '../data-tools/data-rules.js';
+import { registerOpenUIBuiltins } from '../shared/builtins.js';
 
 /** Shared action prop schema exposed to prompt signatures as `ActionExpression`. */
 export { actionPropSchema as openUiPromptActionPropSchema } from '../catalog/Action/schema.js';
@@ -229,6 +230,7 @@ function withDefaultPromptOptions(
 export function createOpenUiPromptLibrary(
   options: CreateOpenUiPromptLibraryOptions = {},
 ): OpenUiPromptLibrary {
+  registerOpenUIBuiltins();
   const root = options.root ?? 'Stack';
   const componentNames = options.componentNames
     ? new Set([...options.componentNames, root])
