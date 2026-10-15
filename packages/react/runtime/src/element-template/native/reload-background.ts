@@ -41,3 +41,11 @@ export function reloadBackground(updateData: unknown): void {
     }
   }
 }
+
+export function reloadBackgroundEntry(updateData: Record<string, unknown>, options?: Record<string, unknown>): void {
+  const tt = lynx.getApp();
+  const data = Object.assign({}, lynx.__initData, updateData);
+  increaseReloadVersion();
+  tt.callDestroyLifetimeFun();
+  tt.reloadCard!(data, options);
+}

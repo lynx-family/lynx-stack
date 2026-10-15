@@ -120,6 +120,47 @@ vi.mock('preact', () => ({
 }));
 
 describe('ElementTemplate reloadMainThread', () => {
+  it('renders the new entry on the existing page with merged reload data', async () => {
+    vi.stubGlobal('__MAIN_THREAD__', true);
+    vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
+    const symbols = lynx as unknown as Record<symbol, unknown>;
+    const reloader = Symbol.for('__LYNX_MAIN_THREAD_ENTRY_RELOADER__');
+    const entry = Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__');
+    symbols[entry] = true;
+    const page = mockedState.page;
+    const oldJsx = { type: 'OldEntry' };
+    const nextJsx = { type: 'NewEntry' };
+    mockedState.root = { __jsx: oldJsx };
+    lynx.__initData = { retained: 'initial', count: 1 };
+    vi.mocked(mockRender).mockReturnValue({ pageAttributes: null, rootRefs: [], rootSubtreeHandles: [] });
+    // Model entry evaluation installing a fresh runtime completer, rather than
+    // invoking the old runtime's closure after the module cache was replaced.
+    vi.resetModules();
+    const nextRuntime = await import('../../../src/element-template/native/reload-main-thread.js');
+    const completerKey = Symbol.for('__LYNX_ET_RELOAD_COMPLETER__');
+    const complete = symbols[completerKey] as (handoff: unknown) => void;
+    const nextCompleter = vi.fn(complete);
+    symbols[completerKey] = () => {
+      throw new Error('Old runtime still owns reload');
+    };
+    symbols[reloader] = () => {
+      mockedState.page = undefined;
+      lynx.__initData = {};
+      mockedState.root = { __jsx: nextJsx };
+      symbols[completerKey] = nextCompleter;
+    };
+    const options = { reloadTemplate: true };
+    nextRuntime.reloadMainThread({ count: 2 }, options);
+    expect(nextCompleter).toHaveBeenCalledOnce();
+    expect(mockedState.root.__jsx).toBe(nextJsx);
+    expect(mockedState.page).toBe(page);
+    expect(lynx.__initData).toEqual({ retained: 'initial', count: 2 });
+    expect(mockRender).toHaveBeenLastCalledWith(nextJsx, undefined);
+    expect(__FlushElementTree).toHaveBeenLastCalledWith(undefined, options);
+    delete symbols[entry];
+    delete symbols[reloader];
+    delete symbols[Symbol.for('__LYNX_ET_RELOAD_COMPLETER__')];
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     mockedState.page = { type: 'page', id: '0', children: [] };

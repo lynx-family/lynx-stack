@@ -19,6 +19,8 @@ import {
 import type { ElementPapiTraceSnapshot } from './element-papi-trace.js';
 import { ListExample } from './ListExample.js';
 
+declare const __RELOAD_LAB_ET__: boolean;
+
 const LazyComponent = lazy(() => import('./LazyComponent.js'));
 
 interface LynxTestModule {
@@ -465,7 +467,8 @@ export function App() {
         once.
       </text>
 
-      <ListExample onReload={reload} />
+      {/* TODO: remove __RELOAD_LAB_ET__ when list is supported in ET */}
+      {!__RELOAD_LAB_ET__ && <ListExample onReload={reload} />}
 
       <Suspense fallback={<text>Loading...</text>}>
         <LazyComponent />

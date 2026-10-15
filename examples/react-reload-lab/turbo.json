@@ -1,0 +1,8 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "env": ["RELOAD_LAB_ET"]
+    }
+  }
+}

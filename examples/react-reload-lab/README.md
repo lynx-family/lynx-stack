@@ -15,6 +15,18 @@ Open the QR code in LynxExplorer. The client must expose
 `NativeModules.LynxTestModule.reloadTemplate`; without it, the reload control
 reports that the module is unavailable.
 
+### Element Template
+
+Snapshot is the default. To enable Element Template with entry re-evaluation:
+
+```sh
+RELOAD_LAB_ET=true pnpm --filter @lynx-js/example-react-reload-lab dev
+```
+
+The same variable works with `build`. Restart the dev server after changing it.
+List checks are hidden in ET mode until the client supports ET List; the other
+reload, data, globalProps, event and ref controls remain available.
+
 ## Native globalProps checks
 
 This example uses reactive globalProps and the native test module APIs. The
