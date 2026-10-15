@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import { createRsbuild } from '@rsbuild/core';
 import { describe, expect, it } from 'vitest';
 
@@ -56,7 +58,7 @@ describe('testing runtime init ordering', () => {
       });
       const [config] = await rsbuild.initConfigs();
       expect(config.resolve.alias['@lynx-js/react/worklet-runtime/init$'])
-        .toContain('/setupFiles/common/worklet-runtime-init.js');
+        .toContain(join('setupFiles', 'common', 'worklet-runtime-init.js'));
     },
   );
 });
