@@ -29,8 +29,6 @@ describe('Plugins - Rsdoctor', () => {
       ],
     })
 
-    expect(options.supports.banner).toBe(true)
-
     expect(options).not.toHaveProperty('experiments.enableNativePlugin')
   })
 
@@ -122,7 +120,6 @@ describe('Plugins - Rsdoctor', () => {
 
     expect(plugin.options.server.port).toBe(4400)
     expect(plugin.options.output.mode).toBe('normal')
-    expect(plugin.options.supports.banner).toBe(true)
     expect(plugin.options.linter.rules['ecma-version-check']).toEqual([
       'Warn',
       { ecmaVersion: 2019 },
@@ -210,7 +207,7 @@ describe('Plugins - Rsdoctor', () => {
     })
   })
 
-  test('supports.banner', async () => {
+  test('supports.brotli', async () => {
     rstest.stubEnv('RSDOCTOR', 'true')
 
     const { createStubRspeedy } = await import('../createStubRspeedy.js')
@@ -219,7 +216,7 @@ describe('Plugins - Rsdoctor', () => {
       tools: {
         rsdoctor: {
           supports: {
-            banner: false,
+            brotli: { brotliLevel: 4 },
           },
         },
       },
@@ -233,6 +230,6 @@ describe('Plugins - Rsdoctor', () => {
           && plugin?.['isRsdoctorPlugin'] === true),
       ) as RsdoctorRspackPlugin<[]>
 
-    expect(options.supports.banner).toBe(false)
+    expect(options.supports.brotli).toEqual({ brotliLevel: 4 })
   })
 })

@@ -91,7 +91,6 @@ describe('Rsdoctor 2 registration', () => {
     )
     expect(createPlugin).toHaveBeenCalledWith(expect.objectContaining({
       disableClientServer: expected,
-      supports: { banner: true },
       linter: {
         rules: { 'ecma-version-check': ['Warn', { ecmaVersion: 2019 }] },
       },

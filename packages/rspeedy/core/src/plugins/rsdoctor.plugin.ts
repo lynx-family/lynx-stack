@@ -49,10 +49,6 @@ export function pluginRsdoctor(
             // But it can be overridden by `tools.rsdoctor`.
             disableClientServer: isCI(),
 
-            supports: {
-              banner: true, // We must enable `supports.banner` since we have runtime wrapper enabled
-            },
-
             linter: {
               rules: {
                 'ecma-version-check':
