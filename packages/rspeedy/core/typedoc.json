@@ -1,3 +1,4 @@
 {
+  "tsconfig": "./tsconfig.build.json",
   "excludeExternals": true
 }

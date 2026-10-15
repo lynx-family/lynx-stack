@@ -44,7 +44,7 @@ export function pluginApiSection(
         entryPoints: ['src/index.ts'],
         excludeProtected: true,
         excludeInternal: true,
-        skipErrorChecking: true,
+        skipErrorChecking: false,
         readme: 'none',
       });
       if (section.name) app.options.setValue('name', section.name);

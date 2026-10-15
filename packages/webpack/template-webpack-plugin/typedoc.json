@@ -1,4 +1,5 @@
 {
+  "tsconfig": "./tsconfig.build.json",
   "intentionallyNotExported": [
     "EncodeRawData",
     "InlineChunkConfig"
