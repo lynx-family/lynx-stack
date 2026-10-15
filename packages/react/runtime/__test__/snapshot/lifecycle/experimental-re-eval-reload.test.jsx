@@ -12,6 +12,8 @@ import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit'
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
 import { __root, setRoot } from '../../../src/root';
 import { SnapshotInstance, snapshotInstanceManager } from '../../../src/snapshot/snapshot/snapshot';
+import { setupLynxEnv } from '../../../src/snapshot/lynx/env';
+import { clearListGlobal } from '../../../src/snapshot/list/list';
 import { setupPage } from '../../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree, nativeMethodQueue, waitSchedule } from '../utils/nativeMethod';
@@ -129,6 +131,77 @@ function getElementTreeUiSigns(element) {
 }
 
 describe('experimental re-eval reload', () => {
+  it('restores accumulated data before the re-evaluated entry renders and attaches refs', () => {
+    const observedData = [];
+    function DataPage() {
+      observedData.push({ ...lynx.__initData });
+      return <text>{String(lynx.__initData.dataCnt ?? 0)}</text>;
+    }
+    __root.__jsx = <DataPage />;
+    renderPage({ dataCnt: 1, retained: 'keep' });
+    const previousReloader = lynx[mainThreadEntryReloaderKey];
+    lynx[entrySupportsReEvalKey] = true;
+    vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
+    lynx[mainThreadEntryReloaderKey] = () => {
+      setupLynxEnv();
+      setRoot(new SnapshotInstance('root'));
+      __root.__jsx = <DataPage />;
+    };
+    try {
+      for (const [update, expected] of [[{ dataCnt: 2 }, 2], [{}, 2], [{ dataCnt: 3 }, 3]]) {
+        reloadMainThread(update, { reloadTemplate: true });
+        expect(observedData.at(-1)).toEqual({ dataCnt: expected, retained: 'keep' });
+        expect(lynx.__initData).toEqual({ dataCnt: expected, retained: 'keep' });
+        expect(elementTree.toTree().children[0].children[0].props.text).toBe(String(expected));
+      }
+    } finally {
+      lynx[mainThreadEntryReloaderKey] = previousReloader;
+    }
+  });
+
+  it('hydrates rendered and recycled list rows across entry re-evaluation', () => {
+    const page = (
+      <list list-type='single'>
+        {[1, 2, 3].map(id => (
+          <list-item key={id} item-key={`row-${id}`} reuse-identifier='row'>
+            <text>{`Row ${id}`}</text>
+          </list-item>
+        ))}
+      </list>
+    );
+    __root.__jsx = page;
+    renderPage();
+    const list = elementTree.toTree().children[0];
+    const first = elementTree.triggerComponentAtIndex(list, 0);
+    elementTree.triggerComponentAtIndex(list, 1);
+    elementTree.triggerEnqueueComponent(list, first);
+    const previousReloader = lynx[mainThreadEntryReloaderKey];
+    lynx[entrySupportsReEvalKey] = true;
+    vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
+    lynx[mainThreadEntryReloaderKey] = () => {
+      // A re-evaluated module starts with empty List registries, although
+      // native still owns its displayed cells and recycling pool.
+      clearListGlobal();
+      setRoot(new SnapshotInstance('root'));
+      __root.__jsx = page;
+    };
+    try {
+      for (let reload = 0; reload < 3; reload++) {
+        expect(() => reloadMainThread({}, { reloadTemplate: true })).not.toThrow();
+        expect(elementTree.toTree().children[0]).toBe(list);
+        const visible = elementTree.triggerComponentAtIndex(list, 0);
+        expect(visible).toBeGreaterThan(0);
+        elementTree.triggerEnqueueComponent(list, visible);
+        // An already displayed row and a newly requested row must both work.
+        const second = elementTree.triggerComponentAtIndex(list, 1);
+        elementTree.triggerEnqueueComponent(list, second);
+        expect(() => elementTree.triggerComponentAtIndex(list, 2)).not.toThrow();
+      }
+    } finally {
+      lynx[mainThreadEntryReloaderKey] = previousReloader;
+    }
+  });
+
   it('keeps the hydrated page clickable after the previous reload removal task runs', async () => {
     const entry = createEntry();
     __root.__jsx = entry.jsx;

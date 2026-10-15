@@ -62,10 +62,11 @@ function injectTt(): void {
     && typeof tt.reloadCard === 'function'
   ) {
     tt.onAppReload = (updateData: Record<string, unknown>, options?: Record<string, unknown>) => {
+      const data = Object.assign({}, lynx.__initData, updateData);
       deinitGlobalSnapshotPatch();
       increaseReloadVersion();
       tt.callDestroyLifetimeFun();
-      tt.reloadCard!(updateData, options);
+      tt.reloadCard!(data, options);
     };
   } else {
     tt.onAppReload = reloadBackground;

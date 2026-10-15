@@ -5,6 +5,7 @@ import {
   runOnMainThread,
   useCallback,
   useGlobalProps,
+  useInitData,
   useMainThreadRef,
   useState,
 } from '@lynx-js/react';
@@ -16,6 +17,7 @@ import {
   readElementPapiCapture,
 } from './element-papi-trace.js';
 import type { ElementPapiTraceSnapshot } from './element-papi-trace.js';
+import { ListExample } from './ListExample.js';
 
 const LazyComponent = lazy(() => import('./LazyComponent.js'));
 
@@ -57,9 +59,27 @@ function formatGlobalPropsTime(timestamp: number | undefined): string {
 }
 
 export function App() {
+  const reloadData = useInitData() as {
+    dataCnt?: number;
+    reloadLabDataRetained?: string;
+  };
   const { reloadLabGlobalPropsTick } = useGlobalProps() as {
     reloadLabGlobalPropsTick?: number;
   };
+  const [mainThreadDataCnt, setMainThreadDataCnt] = useState<number | null>(
+    null,
+  );
+  const readMainThreadData = useCallback(
+    (element: MainThread.Element | null) => {
+      'main thread';
+      if (element) {
+        void runOnBackground(setMainThreadDataCnt)(
+          Number((lynx.__initData as { dataCnt?: number }).dataCnt ?? 0),
+        );
+      }
+    },
+    [],
+  );
   const [backgroundTaps, setBackgroundTaps] = useState(0);
   const [moduleTaps, setModuleTaps] = useState(0);
   const [mtsTaps, setMtsTaps] = useState(0);
@@ -183,6 +203,54 @@ export function App() {
       <view className='SectionHeading'>
         <text className='SectionTitle'>INTERACTION CHECKS</text>
         <text className='SectionHint'>Tap, reload, then tap again</text>
+      </view>
+
+      <view className='CheckCard'>
+        <text className='CardTitle'>Native reload data</text>
+        <text className='CardDescription'>
+          Check data updates and omitted fields across reloads.
+        </text>
+        <text className='ResultText' main-thread:ref={readMainThreadData}>
+          {`Main-thread dataCnt: ${mainThreadDataCnt ?? 'pending'}`}
+        </text>
+        <text className='ResultText'>
+          {`Background dataCnt: ${reloadData.dataCnt ?? 0}`}
+        </text>
+        <text className='ResultText'>
+          {`Retained field: ${reloadData.reloadLabDataRetained ?? 'Not set'}`}
+        </text>
+        <view
+          className='GlobalPropsButton ActionButton ActionButton--blue'
+          bindtap={() => {
+            'background-only';
+            getLynxTestModule()?.reloadTemplate({
+              dataCnt: (reloadData.dataCnt ?? 0) + 1,
+              reloadLabDataRetained: 'Set by data reload',
+            }, {});
+          }}
+        >
+          <text className='ActionText'>Reload with dataCnt +1</text>
+        </view>
+        <view
+          className='GlobalPropsButton ActionButton ActionButton--quiet'
+          bindtap={() => {
+            'background-only';
+            getLynxTestModule()?.reloadTemplate({
+              dataCnt: (reloadData.dataCnt ?? 0) + 1,
+            }, {});
+          }}
+        >
+          <text className='ActionText'>Update dataCnt only (+1)</text>
+        </view>
+        <view
+          className='GlobalPropsButton ActionButton ActionButton--quiet'
+          bindtap={() => {
+            'background-only';
+            getLynxTestModule()?.reloadTemplate({}, {});
+          }}
+        >
+          <text className='ActionText'>Reload with empty data</text>
+        </view>
       </view>
 
       <view className='CheckCard'>
@@ -393,6 +461,8 @@ export function App() {
         Repeat reloads, then confirm each background and MTS tap increments
         once.
       </text>
+
+      <ListExample onReload={reload} />
 
       <Suspense fallback={<text>Loading...</text>}>
         <LazyComponent />

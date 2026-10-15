@@ -11,6 +11,15 @@ export const gRecycleMap: Record<number, Map<string, Map<number, SnapshotInstanc
 const gParentWeakMap: WeakMap<SnapshotInstance, unknown> = /*#__PURE__*/ new WeakMap();
 const resolvedPromise = /* @__PURE__ */ Promise.resolve();
 
+export function captureListState(): { signMap: typeof gSignMap; recycleMap: typeof gRecycleMap } {
+  return { signMap: { ...gSignMap }, recycleMap: { ...gRecycleMap } };
+}
+
+export function restoreListState(state: ReturnType<typeof captureListState>): void {
+  Object.assign(gSignMap, state.signMap);
+  Object.assign(gRecycleMap, state.recycleMap);
+}
+
 export function clearListGlobal(): void {
   for (const key in gSignMap) {
     delete gSignMap[key];

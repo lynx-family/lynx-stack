@@ -55,3 +55,21 @@ not call the JS app's update or destruction callbacks directly.
 The `reloadLab::main-bundle-eval` and `reloadLab::lazy-bundle-eval` trace slices
 mark module counter initialization. They indicate module factory execution,
 which can happen again even when core reuses cached lazy bundle exports.
+
+## List reload checks
+
+The **List reload** section uses a native single-column list with 40 keyed rows
+and a shared reuse identifier. Scroll to later rows and tap them; **Selected**
+and **Taps** should update once per tap. Use **Reverse** and **Remove first** to
+check keyed updates. Tap its **Reload** button, wait at least 12 seconds, and
+check that all 40 rows return in their original order, selection and tap count
+reset, and visible and recycled rows still respond to taps. Scroll offset is
+not asserted by this example.
+
+## Reload data checks
+
+**Native reload data** displays `dataCnt` from `useInitData()` on the background
+thread and from a main-thread ref callback reading `lynx.__initData`. Use
+**Reload with dataCnt +1** followed by **Update dataCnt only (+1)**: both counters
+should advance together, and the retained field should remain set. **Reload
+with empty data** should preserve both counters and the retained field.

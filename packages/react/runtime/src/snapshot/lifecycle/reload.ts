@@ -16,6 +16,7 @@ import { __root, setRoot } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isEmptyObject } from '../../utils.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
+import { captureListState, restoreListState } from '../list/list.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import { hydrate } from '../renderToOpcodes/hydrate.js';
 import { __page, setupPage } from '../snapshot/definition.js';
@@ -35,6 +36,8 @@ interface MainThreadReloadHandoff {
   page: FiberElement;
   options: UpdatePageOption;
   firstScreenSyncState: FirstScreenSyncState;
+  listState: ReturnType<typeof captureListState>;
+  initData: Record<string, unknown>;
 }
 
 const mainThreadReloadCompleterKey = Symbol.for(
@@ -48,6 +51,8 @@ const lynxSymbols = lynx as unknown as Record<symbol, unknown>;
 
 function completeMainThreadReload(handoff: MainThreadReloadHandoff): void {
   setupPage(handoff.page);
+  restoreListState(handoff.listState);
+  lynx.__initData = handoff.initData;
   restoreFirstScreenSyncState(handoff.firstScreenSyncState);
   finishMainThreadReload(handoff);
 }
@@ -117,6 +122,8 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
       page: __page,
       options,
       firstScreenSyncState: getFirstScreenSyncState(),
+      listState: captureListState(),
+      initData: lynx.__initData,
     } satisfies MainThreadReloadHandoff;
 
     Reflect.deleteProperty(lynx, Symbol.for('__LYNX_EXTERNAL_GLOBAL__'));
@@ -134,6 +141,8 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
     page: __page,
     options,
     firstScreenSyncState: getFirstScreenSyncState(),
+    listState: captureListState(),
+    initData: lynx.__initData,
   });
   return;
 }
