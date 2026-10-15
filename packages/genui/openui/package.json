@@ -71,7 +71,7 @@
   },
   "dependencies": {
     "@openuidev/lang-core": "^0.3.0",
-    "marked": "^14.0.0",
+    "marked": "^14.1.4",
     "zod": "^3.25.76 || ^4.0.0"
   },
   "devDependencies": {
