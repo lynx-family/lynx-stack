@@ -74,7 +74,10 @@ export function App() {
       'main thread';
       if (element) {
         void runOnBackground(setMainThreadDataCnt)(
-          Number((lynx.__initData as { dataCnt?: number }).dataCnt ?? 0),
+          Number(
+            (lynx as unknown as { __initData: { dataCnt?: number } }).__initData
+              .dataCnt ?? 0,
+          ),
         );
       }
     },

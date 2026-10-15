@@ -8,14 +8,25 @@ import { applyRefQueue } from '../snapshot/workletRef.js';
 
 export const gSignMap: Record<number, Map<number, SnapshotInstance>> = {};
 export const gRecycleMap: Record<number, Map<string, Map<number, SnapshotInstance>>> = {};
+export let destroyLifetimeHandlerMap: Map<number, () => void> = new Map();
 const gParentWeakMap: WeakMap<SnapshotInstance, unknown> = /*#__PURE__*/ new WeakMap();
 const resolvedPromise = /* @__PURE__ */ Promise.resolve();
 
-export function captureListState(): { signMap: typeof gSignMap; recycleMap: typeof gRecycleMap } {
-  return { signMap: { ...gSignMap }, recycleMap: { ...gRecycleMap } };
+export function captureListState(): {
+  signMap: typeof gSignMap;
+  recycleMap: typeof gRecycleMap;
+  destroyLifetimeHandlers: typeof destroyLifetimeHandlerMap;
+} {
+  return {
+    signMap: { ...gSignMap },
+    recycleMap: { ...gRecycleMap },
+    destroyLifetimeHandlers: destroyLifetimeHandlerMap,
+  };
 }
 
 export function restoreListState(state: ReturnType<typeof captureListState>): void {
+  // Old native listeners and the new owner must remove from the same registry.
+  destroyLifetimeHandlerMap = state.destroyLifetimeHandlers;
   Object.assign(gSignMap, state.signMap);
   Object.assign(gRecycleMap, state.recycleMap);
 }

@@ -4,7 +4,7 @@
 
 import { afterEach, expect, it, vi } from 'vitest';
 
-import '../src/worklet-runtime/global.js';
+import '../../src/worklet-runtime/global.js';
 
 afterEach(() => {
   vi.useRealTimers();
@@ -43,11 +43,11 @@ it.each(['before hydration', 'after hydration'])(
     for (let generation = 0; generation < 3; generation++) {
       // Both thread entries are evaluated afresh, sharing only the native Lynx.
       vi.resetModules();
-      const { MainThreadRef } = await import('../src/core/main-thread-ref.js');
-      const { takeMainThreadRefInitValuePatch } = await import('../src/core/main-thread-ref-init-value.js');
-      const { initWorklet } = await import('../src/worklet-runtime/workletRuntime.js');
-      const { initEventListeners } = await import('../src/worklet-runtime/listeners.js');
-      const { updateWorkletRefInitValueChanges } = await import('../src/worklet-runtime/workletRef.js');
+      const { MainThreadRef } = await import('../../src/core/main-thread-ref.js');
+      const { takeMainThreadRefInitValuePatch } = await import('../../src/core/main-thread-ref-init-value.js');
+      const { initWorklet } = await import('../../src/worklet-runtime/workletRuntime.js');
+      const { initEventListeners } = await import('../../src/worklet-runtime/listeners.js');
+      const { updateWorkletRefInitValueChanges } = await import('../../src/worklet-runtime/workletRef.js');
       vi.stubGlobal('__JS__', false);
       const firstScreenRef = new MainThreadRef(null);
       initWorklet();
