@@ -10,7 +10,9 @@ This also refreshes existing event bindings when a dependency changes without
 changing the function's worklet ID. No additional application API is required.
 
 The main thread loads versioned updates through Native `fetchBundle` and
-`loadScript`. A failed update on either thread, or a missing main-thread
+`loadScript`. Background bundles do not carry worklet implementations for
+cross-thread HMR; the compiler supplies their definitions to the main-thread
+bundle. A failed update on either thread, or a missing main-thread
 completion, triggers a full page reload. Pending updates from the old page are
 discarded. Compatible component updates preserve `useState`; memoized values,
 including `useMainThreadRef`, follow the existing Fast Refresh reset behavior.

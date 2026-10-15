@@ -5,7 +5,6 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { globalEnvManager } from './utils/envManager';
 import { elementTree } from './utils/nativeMethod';
-import { registerWorkletOnBackground } from '../../src/internal';
 import { addCtxNotFoundEventListener } from '../../src/snapshot/lifecycle/patch/error';
 import {
   SnapshotOperation,
@@ -1634,38 +1633,6 @@ describe('DEV_ONLY_addSnapshot', () => {
     expect(__webpack_require__).toBeCalledWith('foo');
 
     vi.unstubAllGlobals();
-  });
-});
-
-describe.skip('DEV_ONLY_RegisterWorklet', () => {
-  beforeEach(() => {
-    initGlobalSnapshotPatch();
-  });
-
-  it('basic', () => {
-    registerWorkletOnBackground('main-thread', 'hash-1', () => 'fn-1');
-    globalThis.registerWorklet = vi.fn();
-
-    const patch = takeGlobalSnapshotPatch();
-
-    expect(patch).toMatchInlineSnapshot(`
-      [
-        101,
-        "hash-1",
-        "() => "fn-1"",
-      ]
-    `);
-
-    // Apply patches in main thread
-    snapshotPatchApply(patch, 42, false);
-
-    expect(globalThis.registerWorklet).toBeCalledTimes(1);
-    expect(globalThis.registerWorklet.mock.calls[0][0]).toMatch('main-thread');
-    expect(globalThis.registerWorklet.mock.calls[0][1]).toMatch('hash-1');
-    expect(globalThis.registerWorklet.mock.calls[0][2]()).toMatch('fn-1');
-
-    registerWorkletOnBackground('main-thread', 'hash-1', () => 'fn-1');
-    expect(globalThis.registerWorklet).toBeCalledTimes(1);
   });
 });
 
