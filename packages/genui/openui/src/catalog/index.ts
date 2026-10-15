@@ -4,6 +4,7 @@
 export { AudioPlayer } from './AudioPlayer/index.jsx';
 export { Button } from './Button/index.jsx';
 export { Buttons } from './Buttons/index.jsx';
+export { Canvas } from './Canvas/index.jsx';
 export { Card } from './Card/index.jsx';
 export { CardHeader } from './CardHeader/index.jsx';
 export { CheckBox } from './CheckBox/index.jsx';

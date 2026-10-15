@@ -505,6 +505,17 @@ export function useOpenUIState(
       // ActionPlan path (v0.5) — sequential steps with halt-on-mutation-failure
       const actionPlan = action;
       if (actionPlan?.steps) {
+        // Actions may follow a field update or another Set in the same turn.
+        // Render snapshots do not include those writes until the next render.
+        const actionContext: EvaluationContext = {
+          ...evaluationContext,
+          getState: name => {
+            const snapshot = store.getSnapshot();
+            return hasOwn(snapshot, name)
+              ? unwrapFieldValue(snapshot[name])
+              : evaluationContext.getState(name);
+          },
+        };
         for (const step of actionPlan.steps) {
           switch (step.type) {
             case ACTION_STEPS.Run: {
@@ -513,7 +524,7 @@ export function useOpenUIState(
                   (m) => m.statementId === step.statementId,
                 );
                 const evaluatedArgs = mn?.argsAST
-                  ? evaluateRecord(mn.argsAST, evaluationContext)
+                  ? evaluateRecord(mn.argsAST, actionContext)
                   : {};
                 const ok = await queryManager.fireMutation(
                   step.statementId,
@@ -540,7 +551,7 @@ export function useOpenUIState(
               ));
               break;
             case ACTION_STEPS.Set: {
-              const value = evaluate(step.valueAST, evaluationContext);
+              const value = evaluate(step.valueAST, actionContext);
               store.set(step.target, value);
               break;
             }

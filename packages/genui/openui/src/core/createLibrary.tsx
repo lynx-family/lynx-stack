@@ -23,6 +23,7 @@ const DEFAULT_COMPONENTS: DefinedComponent<any>[] = [
   c.Buttons,
   c.Tag,
   c.Image,
+  c.Canvas,
   c.Icon,
   c.Video,
   c.AudioPlayer,
@@ -53,7 +54,15 @@ const DEFAULT_COMPONENT_GROUPS: ComponentGroup[] = [
   { name: 'Buttons', components: ['Button', 'Buttons'] },
   {
     name: 'Data Display',
-    components: ['Tag', 'Image', 'Icon', 'Video', 'AudioPlayer', 'Loading'],
+    components: [
+      'Tag',
+      'Image',
+      'Canvas',
+      'Icon',
+      'Video',
+      'AudioPlayer',
+      'Loading',
+    ],
   },
   { name: 'Overlays', components: ['Tabs', 'Modal'] },
   {

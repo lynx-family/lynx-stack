@@ -77,7 +77,7 @@ test('published agent catalog and prompt entries load in Node without renderer d
       const direct = await import('@lynx-js/genui-openui/catalog/agent');
       const { createOpenUiPromptLibrary } = await import('@lynx-js/genui/openui/prompt');
       const library = createOpenUiPromptLibrary();
-      assert.equal(Object.keys(catalog).length, 26);
+      assert.equal(Object.keys(catalog).length, 27);
       for (const definition of Object.values(catalog)) {
         assert.equal(direct[definition.name], definition);
         assert.equal(library.components[definition.name], definition);

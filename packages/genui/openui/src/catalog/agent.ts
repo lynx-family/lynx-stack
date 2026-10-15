@@ -10,6 +10,7 @@
 export { AudioPlayer } from './AudioPlayer/definition.js';
 export { Button } from './Button/definition.js';
 export { Buttons } from './Buttons/definition.js';
+export { Canvas } from './Canvas/definition.js';
 export { Card } from './Card/definition.js';
 export { CardHeader } from './CardHeader/definition.js';
 export { CheckBox } from './CheckBox/definition.js';

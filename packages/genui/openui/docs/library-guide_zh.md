@@ -95,6 +95,7 @@ const prompt = library.prompt();
 | `Video`       | 带 URL 和可选标题的视频附件占位。                   |
 | `AudioPlayer` | 带 URL 和描述的音频附件占位。                       |
 | `Loading`     | Inline 或 block skeleton/loading feedback。         |
+| `Canvas`      | 通过字符串或流式代码片段绘制 Web Canvas 2D。        |
 
 ### 浮层
 

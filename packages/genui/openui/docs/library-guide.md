@@ -92,14 +92,15 @@ const prompt = library.prompt();
 
 ### Data display and media
 
-| Component     | Purpose                                                    |
-| ------------- | ---------------------------------------------------------- |
-| `Tag`         | Compact label or status tag.                               |
-| `Image`       | Remote image with fit and semantic size variants.          |
-| `Icon`        | Bundled Material Icons glyph with size and color variants. |
-| `Video`       | Video attachment placeholder with URL and optional title.  |
-| `AudioPlayer` | Audio attachment placeholder with URL and description.     |
-| `Loading`     | Inline or block skeleton/loading feedback.                 |
+| Component     | Purpose                                                      |
+| ------------- | ------------------------------------------------------------ |
+| `Tag`         | Compact label or status tag.                                 |
+| `Image`       | Remote image with fit and semantic size variants.            |
+| `Icon`        | Bundled Material Icons glyph with size and color variants.   |
+| `Video`       | Video attachment placeholder with URL and optional title.    |
+| `AudioPlayer` | Audio attachment placeholder with URL and description.       |
+| `Loading`     | Inline or block skeleton/loading feedback.                   |
+| `Canvas`      | Web Canvas 2D drawing from a string or streamed code chunks. |
 
 ### Overlays
 

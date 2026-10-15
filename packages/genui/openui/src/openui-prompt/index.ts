@@ -18,6 +18,7 @@ import {
   AudioPlayer,
   Button,
   Buttons,
+  Canvas,
   Card,
   CardHeader,
   CheckBox,
@@ -82,6 +83,7 @@ const DEFAULT_COMPONENTS: OpenUiPromptComponent[] = [
   Row,
   Column,
   List,
+  Canvas,
   Card,
   CardHeader,
   Text,
@@ -126,7 +128,7 @@ const DEFAULT_COMPONENT_GROUPS: ComponentGroup[] = [
   },
   { name: 'Buttons', components: ['Button', 'Buttons'] },
   { name: 'Data Display', components: ['Tag', 'Icon', 'Loading'] },
-  { name: 'Media', components: ['Image', 'AudioPlayer', 'Video'] },
+  { name: 'Media', components: ['Image', 'Canvas', 'AudioPlayer', 'Video'] },
   {
     name: 'Inputs',
     components: [

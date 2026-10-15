@@ -78,6 +78,7 @@ for a button group.
 
 - `Tag(text: string)`
 - `Icon(name: "account_circle" | "add" | "arrow_back" | "arrow_forward" | "camera" | "check" | "close" | "delete" | "edit" | "error" | "favorite" | "help" | "home" | "info" | "location_on" | "lock" | "mail" | "menu" | "more_vert" | "pause" | "person" | "play_arrow" | "refresh" | "search" | "send" | "settings" | "share" | "star" | "warning", size?: "sm" | "md" | "lg", color?: "primary" | "muted" | "inherit")`
+- `Canvas(code: string | string[], width?: number, height?: number, name?: string, action?: ActionExpression)`
 - `Loading(variant?: "inline" | "block")`
 
 ## Media

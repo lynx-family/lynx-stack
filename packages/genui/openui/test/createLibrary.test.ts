@@ -30,6 +30,7 @@ test('includes the built-in components and groups by default', () => {
     'Buttons',
     'Tag',
     'Image',
+    'Canvas',
     'Icon',
     'Video',
     'AudioPlayer',

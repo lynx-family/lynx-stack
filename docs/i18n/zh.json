@@ -1272,6 +1272,7 @@
   "Server-safe OpenUI definition for TextContent, with a null renderer.": "TextContent 的服务端 OpenUI 定义，使用 null renderer。",
   "Server-safe OpenUI definition for TextField, with a null renderer.": "TextField 的服务端 OpenUI 定义，使用 null renderer。",
   "Server-safe OpenUI definition for Video, with a null renderer.": "Video 的服务端 OpenUI 定义，使用 null renderer。",
+  "Server-safe OpenUI definition for a programmable Web Canvas 2D surface.": "可在服务端使用的可编程 Web Canvas 2D 绘图组件 OpenUI 定义。",
   "Server-safe ProductFeature component contract.": "可在服务端使用的 ProductFeature 组件约定。",
   "Server-safe RadioGroup component contract.": "可在服务端使用的 RadioGroup 组件约定。",
   "Server-safe RadioItem component contract.": "可在服务端使用的 RadioItem 组件约定。",

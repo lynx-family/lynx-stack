@@ -7,6 +7,12 @@ import type { ParseResult } from '@openuidev/lang-core';
 import { createOpenUiChatPromptLibrary } from '@lynx-js/genui/openui/chat/agent';
 import { createOpenUiPromptLibrary } from '@lynx-js/genui/openui/prompt';
 
+import {
+  OPENUI_CANVAS_RELATIVITY_RAW,
+  OPENUI_CANVAS_STREAM_RAW,
+  OPENUI_GOMOKU_RAW,
+  OPENUI_SLIDER_ICON_RAW,
+} from './openui-canvas.js';
 import { OPENUI_CHAT_CASES } from './openui-chat-scenarios.js';
 import { splitOpenUiResponse } from '../../lynx-src/openui/inlineResponse.js';
 import { OPENUI_INLINE_TRIP_RAW } from '../../lynx-src/openui/mockData.js';
@@ -2054,5 +2060,33 @@ actionRow = Stack([Buttons([Button("Cancel", Action([@ToAssistant("Cancel order"
       null,
       2,
     ),
+  },
+  {
+    id: 'canvas-streaming',
+    title: 'Canvas Streaming',
+    badge: 'Canvas · Streaming',
+    raw: OPENUI_CANVAS_STREAM_RAW,
+    parsed: parseOpenUIScenarioRaw(OPENUI_CANVAS_STREAM_RAW),
+  },
+  {
+    id: 'canvas-relativity',
+    title: 'General Relativity',
+    badge: 'Canvas · Physics',
+    raw: OPENUI_CANVAS_RELATIVITY_RAW,
+    parsed: parseOpenUIScenarioRaw(OPENUI_CANVAS_RELATIVITY_RAW),
+  },
+  {
+    id: 'canvas-gomoku',
+    title: 'Canvas Gomoku',
+    badge: 'Canvas · Interactive',
+    raw: OPENUI_GOMOKU_RAW,
+    parsed: parseOpenUIScenarioRaw(OPENUI_GOMOKU_RAW),
+  },
+  {
+    id: 'canvas-slider-icon',
+    title: 'Canvas Icon Studio',
+    badge: 'Canvas + Slider',
+    raw: OPENUI_SLIDER_ICON_RAW,
+    parsed: parseOpenUIScenarioRaw(OPENUI_SLIDER_ICON_RAW),
   },
 ];

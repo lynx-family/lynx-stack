@@ -78,7 +78,7 @@ function DemosPageContent<
   );
 
   const [playState, setPlayState] = useState<PlayState>('idle');
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [playbackSpeed, setPlaybackSpeed] = useState(4);
   const [deliveredCount, setDeliveredCount] = useState(0);
   const [playbackPanelHeight, setPlaybackPanelHeight] = useState(
     PLAYBACK_PANEL_IDLE_HEIGHT,
