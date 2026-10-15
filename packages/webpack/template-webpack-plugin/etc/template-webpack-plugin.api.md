@@ -111,9 +111,9 @@ export interface LynxTemplatePluginOptions {
     enableCSSInvalidation: boolean;
     enableCSSSelector: boolean;
     enableNewGesture: boolean;
+    enableRemoveCSSScope: boolean;
     // (undocumented)
     enableReuseLoadScriptExports?: boolean | undefined;
-    enableRemoveCSSScope: boolean;
     enableSectionBytecode?: boolean | undefined;
     excludeChunks?: string[];
     // @alpha
