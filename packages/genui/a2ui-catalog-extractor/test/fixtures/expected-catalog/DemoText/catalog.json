@@ -4,9 +4,6 @@
       "text": {
         "oneOf": [
           {
-            "type": "string"
-          },
-          {
             "type": "object",
             "properties": {
               "path": {
@@ -17,6 +14,9 @@
               "path"
             ],
             "additionalProperties": false
+          },
+          {
+            "type": "string"
           }
         ],
         "description": "Literal text or data path binding."

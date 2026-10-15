@@ -4,9 +4,6 @@
       "title": {
         "oneOf": [
           {
-            "type": "string"
-          },
-          {
             "type": "object",
             "properties": {
               "path": {
@@ -17,6 +14,9 @@
               "path"
             ],
             "additionalProperties": false
+          },
+          {
+            "type": "string"
           }
         ],
         "description": "Main title."
@@ -24,8 +24,8 @@
       "tone": {
         "type": "string",
         "enum": [
-          "neutral",
-          "accent"
+          "accent",
+          "neutral"
         ],
         "description": "Visual tone."
       },
@@ -57,13 +57,13 @@
         "additionalProperties": {
           "oneOf": [
             {
-              "type": "string"
+              "type": "boolean"
             },
             {
               "type": "number"
             },
             {
-              "type": "boolean"
+              "type": "string"
             }
           ]
         },
