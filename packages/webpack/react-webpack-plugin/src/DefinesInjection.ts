@@ -13,6 +13,7 @@ import {
   renderDefinesModule,
   selectMissingDefines,
 } from './Defines.js';
+import { MAIN_THREAD_HMR } from './hmr/enabled.js';
 import { LAYERS } from './layer.js';
 import {
   boundaryKey,
@@ -180,7 +181,12 @@ export function applyDefinesInjection(
           );
           virtualModules.writeModule(
             request,
-            renderDefinesModule(missingSnapshot, missingWorklet),
+            renderDefinesModule(missingSnapshot, missingWorklet)
+              + ((compiler as unknown as Record<symbol, unknown>)[
+                  MAIN_THREAD_HMR
+                ]
+                ? '\nif (module.hot) module.hot.accept();'
+                : ''),
           );
           // Updating the virtual file does not invalidate a module already
           // reused by this compilation. Rebuild it before reusing its imports.

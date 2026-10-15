@@ -17,6 +17,7 @@ import {
 } from './defines-import-by-boundary.js';
 import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
+import { MAIN_THREAD_HMR } from '../hmr/enabled.js';
 
 export const ELEMENT_TEMPLATE_BUILD_INFO = 'lynx:element-templates';
 export const REACT_RUNTIME_REQUIREMENTS_BUILD_INFO =
@@ -155,6 +156,17 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     null,
     result.code
       + (definesImport ? `\nimport ${JSON.stringify(definesImport)};` : '')
+      + (
+        this.hot
+          && (this._compiler as unknown as Record<symbol, unknown>)
+            ?.[MAIN_THREAD_HMR]
+          && (
+            (result.definesForSnapshot?.length ?? 0) > 0
+            || (result.definesForWorklet?.length ?? 0) > 0
+          )
+          ? '\nif (module.hot) module.hot.accept();'
+          : ''
+      )
       + (
         this.hot
           // TODO: temporary fix LEPUS error `$RefreshReg$ is not defined`
