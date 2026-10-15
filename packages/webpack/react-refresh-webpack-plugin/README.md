@@ -14,7 +14,10 @@ added to a background-only module within an async scope.
 Each thread loads its own versioned update bundle through Native `fetchBundle`
 and `loadScript`. The shared HMR loader reads a manifest section and the sections
 for the requested update chunks. Background sections retain the existing SDK
-runtime wrapper and app scope; normal lazy loading keeps its existing loader. A failed update on either thread, or a missing main-thread
+runtime wrapper and app scope; normal lazy loading keeps its existing loader.
+Background bundles do not carry worklet implementations for cross-thread HMR;
+the compiler supplies their definitions to the main-thread bundle.
+A failed update on either thread, or a missing main-thread
 completion, triggers a full page reload. Coordinated updates allow up to ten
 seconds for main-thread completion, then up to ten seconds for background
 application. Pending updates from the old page are discarded. Compatible component updates preserve `useState`; memoized values,

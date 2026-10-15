@@ -48,12 +48,6 @@ export { transformToWorklet } from './runtime/template/main-thread-background-fu
 
 export { captureMainThreadObject } from '../core/capture-main-thread-object.js';
 
-export function registerWorkletOnBackground(
-  _type: string,
-  _hash: string,
-  _fn: (...args: unknown[]) => unknown,
-): void {}
-
 export {
   __etAttrPlanMap,
   adaptEventAttrSlot,

@@ -161,16 +161,6 @@ export function snapshotPatchApply(snapshotPatch: SnapshotPatch, commitId: numbe
         }
         break;
       }
-        // case SnapshotOperation.DEV_ONLY_RegisterWorklet: {
-        //   // HMR-related
-        //   if (__DEV__) {
-        //     const hash: string = snapshotPatch[++i];
-        //     const fnStr: string = snapshotPatch[++i];
-        //     const fn = evaluate<(ctx: SnapshotInstance) => FiberElement[]>(fnStr);
-        //     registerWorklet('main-thread', hash, fn);
-        //   }
-        //   break;
-        // }
     }
   }
 }
