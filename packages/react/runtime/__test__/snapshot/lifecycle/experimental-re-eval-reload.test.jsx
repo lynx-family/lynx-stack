@@ -7,7 +7,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { root, useState } from '../../../src/index';
 import { BackgroundSnapshotInstance } from '../../../src/snapshot/snapshot/backgroundSnapshot';
-import { reloadMainThread } from '../../../src/snapshot/lifecycle/reload';
+import { reloadBackground, reloadMainThread } from '../../../src/snapshot/lifecycle/reload';
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
 import { __root, setRoot } from '../../../src/root';
@@ -37,6 +37,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   delete lynx[entrySupportsReEvalKey];
   delete lynx[externalCacheKey];
   vi.restoreAllMocks();
@@ -128,6 +129,72 @@ function getElementTreeUiSigns(element) {
 }
 
 describe('experimental re-eval reload', () => {
+  it('keeps the hydrated page clickable after the previous reload removal task runs', async () => {
+    const entry = createEntry();
+    __root.__jsx = entry.jsx;
+    renderPage();
+    globalEnvManager.switchToBackground();
+    root.render(entry.jsx, __root);
+    await waitSchedule();
+    lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls.at(-1));
+    globalEnvManager.switchToMainThread();
+    applyLatestNativeUpdate();
+
+    // The background runtime stays alive, as with a new entry on an old core.
+    // Reload unmounts its old tree and schedules its deferred commit cleanup.
+    globalEnvManager.switchToBackground();
+    vi.useFakeTimers();
+    reloadBackground({});
+    await vi.advanceTimersByTimeAsync(0);
+    expect(vi.getTimerCount()).toBeGreaterThan(0);
+
+    // Re-evaluate the entry's allocator, while retaining the shared native/mock
+    // document used by this two-thread test harness.
+    vi.resetModules();
+    const { snapshotInstanceManager: freshManager } = await import(
+      '../../../src/snapshot/snapshot/snapshotInstanceManager.js'
+    );
+    globalEnvManager.switchToMainThread();
+    const oldReloader = lynx[mainThreadEntryReloaderKey];
+    lynx[mainThreadEntryReloaderKey] = () => {
+      snapshotInstanceManager.nextId = freshManager.nextId;
+      setRoot(new SnapshotInstance('root'));
+      __root.__jsx = entry.jsx;
+    };
+    lynx[entrySupportsReEvalKey] = true;
+    vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
+    try {
+      reloadMainThread({}, { reloadTemplate: true });
+      globalEnvManager.switchToBackground();
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls.at(-1));
+      globalEnvManager.switchToMainThread();
+      applyLatestNativeUpdate();
+      const tree = elementTree.toTree();
+      const tap = tree.children[0].children[1].props.event['bindEvent:tap'];
+
+      // Verify hydration installed the handler before the old cleanup runs.
+      globalEnvManager.switchToBackground();
+      lynx.getApp().publishEvent(tap, {});
+      await vi.advanceTimersByTimeAsync(0);
+      globalEnvManager.switchToMainThread();
+      applyLatestNativeUpdate();
+      expectViewState(1, 'idle');
+
+      // The old 10s cleanup must not erase handlers belonging to the new tree.
+      await vi.advanceTimersByTimeAsync(10000);
+      globalEnvManager.switchToBackground();
+      lynx.getApp().publishEvent(tap, {});
+      await vi.runAllTimersAsync();
+      globalEnvManager.switchToMainThread();
+      applyLatestNativeUpdate();
+      expectViewState(2, 'idle');
+      expect(entry.getModuleTapCount()).toBe(2);
+    } finally {
+      lynx[mainThreadEntryReloaderKey] = oldReloader;
+      vi.useRealTimers();
+    }
+  });
+
   it('reinitializes main-thread external exports and reuses elements across repeated reloads', () => {
     const renderEntry = () =>
       root.render(
