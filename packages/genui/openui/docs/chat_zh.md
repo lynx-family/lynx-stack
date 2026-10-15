@@ -78,17 +78,17 @@ const prompt = library.prompt();
 
 支持的组件：
 
-- 内容：`Card`、`TextContent`、`Text`、`BoldText`、`Button`、`Buttons`、`ImageText`。
+- 内容：`Card`、`CardHeader`、`InlineHeader`、`Callout`、`TextContent`、`Text`、`BoldText`、`Button`、`Buttons`、`Image`、`ImageBlock`、`ImageText`、`Separator`。
 - 集合：`ListBlock`、`ListItem`、`Steps`、`StepsItem`、`SectionBlock`、`SectionItem`、`Table`、`Col`。
 - 卡片：`CompositeCardBlock`、`CompositeCardItem`。
-- 表单：`Form`、`FormControl`、`Input`、`RadioGroup`、`RadioItem`、`CheckBoxGroup`、`CheckBoxItem`、`Slider`。
+- 表单：`Form`、`FormControl`、`Input`、`TextArea`、`RadioGroup`、`RadioItem`、`CheckBoxGroup`、`CheckBoxItem`、`Slider`。
 - 扩展组件：`ProductFeature(src, alt, title, subtitle, paragraphs, price, url)`。它不是上游 OpenUI Chat 组件。
 
-这里支持的是上游 Chat Library 的明确子集；解析器会报告未知组件。组合卡片的头部支持 ImageText 和 Text，主体支持 Text、BoldText 和 ListBlock，价格使用 BoldText，底部按钮使用 Button。传入靠后的位置参数时，跳过的可选参数必须保留为 `null`。
+这里支持的是上游 Chat Library 的明确子集；解析器会报告未知组件。组合卡片的头部支持 ImageText、Text 和 Image，主体支持 Text、BoldText、ListBlock 和 Image，价格使用 BoldText，底部按钮使用 Button。传入靠后的位置参数时，跳过的可选参数必须保留为 `null`。
 
 Section 支持流式展开和 `isFoldable=false`，折叠时内容仍保持挂载。命名组件声明在数组变化时保持身份稳定，也支持重复引用。Table 的列数据既可以包含标量，也可以包含已注册的组件节点；较短的列会保留空单元格。网格和轮播布局使用同一套 CompositeCardItem 约定。卡片块的 action 会携带所选条目的上下文，底部按钮则独立派发自己的 action。
 
-表单使用 `Form(name, buttons, fields)` 和 `FormControl(label, input, hint?)`。`Input`、`RadioGroup`、`CheckBoxGroup` 和 `Slider` 的最后一个参数可以传入响应式绑定；未传入时，通过字段名定位所属表单中的值。插入、删除或重排字段时，请使用稳定且唯一的字段名和命名组件声明。
+表单使用 `Form(name, buttons, fields)` 和 `FormControl(label, input, hint?)`。`Input`、`TextArea`、`RadioGroup`、`CheckBoxGroup` 和 `Slider` 的最后一个参数可以传入响应式绑定；未传入时，通过字段名定位所属表单中的值。插入、删除或重排字段时，请使用稳定且唯一的字段名和命名组件声明。
 
 ```text
 root = Card([form, progress])
@@ -102,5 +102,25 @@ progress = TextContent("Ready: " + ($ready.passport ? 1 : 0) + " / " + ($ready.b
 共享绑定的复选框组会把修改合并到完整对象中，校验只检查各组自己的条目。默认值只初始化缺失的值，不会覆盖恢复的状态或用户编辑。流式生成期间禁止编辑和提交。按钮 action 执行前会运行结构化校验规则，action 接收当前表单状态。
 
 Slider 的状态和 `defaultValue` 即使只有一个值也使用数组，与 `@First($budget)` 等 Chat 表达式保持一致。多个值会渲染为独立、有边界且保持顺序的 Lynx 滑块。原生呈现与上游的多滑块轨道不同，但位置参数和状态约定相同。
+
+## 内容组件与多行输入
+
+以下 Chat 签名保留上游的参数顺序及可选参数位置：
+
+- `CardHeader(title?, subtitle?)`：标题和副标题均可省略。
+- `InlineHeader(heading, description?)`：支持 Markdown 的紧凑标题和说明。
+- `Callout(variant, title, description, visible?)`：`variant` 支持 `info`、`warning`、`error`、`success` 和 `neutral`，说明支持 Markdown。`visible` 绑定布尔状态时，提示会在三秒后将该状态设为 `false`；未提供响应式绑定时持续显示。
+- `Image(alt, src?)`：以 3:2 画框显示图片。**第一个参数是替代文本**，与默认 Stack 库的 `Image(url, fit?, variant?)` 不同。
+- `ImageBlock(src, alt?)`：提供加载和错误状态，并保持已加载图片的宽高比；没有图片地址时不显示。
+- `Separator(orientation?, decorative?)`：默认值为 `horizontal` 和 `true`，也支持 `vertical`。
+- `TextArea(name, placeholder?, rows?, rules?, value?)`：多行表单输入，`rows` 默认 3，只控制可见高度，不限制输入行数。校验、状态恢复、响应式绑定和流式行为与 `Input` 一致。
+
+```text
+root = Card([CardHeader("旅行笔记"), notice, form])
+$notice = true
+$notes = ""
+notice = Callout("info", "提示", "在这里记录**重要信息**。", $notice)
+form = Form("trip", Buttons([Button("保存")]), [FormControl("笔记", TextArea("notes", "填写笔记", 4, {required: true}, $notes))])
+```
 
 组件约定固定参考 [thesysdev/openui](https://github.com/thesysdev/openui/tree/86da07f6266887ff819cd5a8e295c75b2edc8251/packages/react-ui/src/genui-lib)。版权与来源说明见 `THIRD_PARTY_NOTICES.md`。

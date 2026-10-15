@@ -8,13 +8,20 @@ import { CheckBoxGroup } from '../CheckBoxGroup/definition.js';
 import { Input } from '../Input/definition.js';
 import { RadioGroup } from '../RadioGroup/definition.js';
 import { Slider } from '../Slider/definition.js';
+import { TextArea } from '../TextArea/definition.js';
 
 /** Server-safe FormControl component contract. */
 export const FormControl = defineComponent({
   name: 'FormControl',
   props: z.object({
     label: z.string(),
-    input: z.union([Input.ref, Slider.ref, CheckBoxGroup.ref, RadioGroup.ref]),
+    input: z.union([
+      Input.ref,
+      TextArea.ref,
+      Slider.ref,
+      CheckBoxGroup.ref,
+      RadioGroup.ref,
+    ]),
     hint: z.string().optional(),
   }),
   description:

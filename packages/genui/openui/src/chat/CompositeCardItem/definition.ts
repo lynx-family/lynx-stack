@@ -6,6 +6,7 @@ import { z } from 'zod/v4';
 
 import { Button } from '../../catalog/Button/definition.js';
 import { BoldText } from '../BoldText/definition.js';
+import { Image } from '../Image/definition.js';
 import { ImageText } from '../ImageText/definition.js';
 import { ListBlock } from '../ListBlock/definition.js';
 import { Text } from '../Text/definition.js';
@@ -15,8 +16,9 @@ export const CompositeCardItem = defineComponent({
   name: 'CompositeCardItem',
   props: z.object({
     id: z.string().optional(),
-    header: z.union([ImageText.ref, Text.ref]).optional(),
-    body: z.array(z.union([Text.ref, BoldText.ref, ListBlock.ref])).default([]),
+    header: z.union([ImageText.ref, Text.ref, Image.ref]).optional(),
+    body: z.array(z.union([Text.ref, BoldText.ref, ListBlock.ref, Image.ref]))
+      .default([]),
     footer: z.object({
       price: z.optional(BoldText.ref),
       button: z.optional(Button.ref),

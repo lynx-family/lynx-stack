@@ -1,0 +1,9 @@
+.OpenUIChatInlineHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+.OpenUIChatInlineHeaderHeading .OpenUIChatMarkdownText {
+  font-size: 30rpx;
+  font-weight: 700;
+}

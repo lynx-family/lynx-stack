@@ -8,7 +8,7 @@ import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 import { createRspeedy } from '@lynx-js/rspeedy';
 
 const results = {};
-for (const example of ['selected', 'markdown', 'full']) {
+for (const example of ['selected', 'markdown', 'compatibility', 'full']) {
   const report = results[example] = {};
   const rspeedy = await createRspeedy({
     cwd: process.cwd(),

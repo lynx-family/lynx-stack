@@ -78,17 +78,17 @@ These entries load neither ReactLynx nor CSS. Both component and agent subpaths 
 
 Supported components:
 
-- Content: `Card`, `TextContent`, `Text`, `BoldText`, `Button`, `Buttons`, `ImageText`.
+- Content: `Card`, `CardHeader`, `InlineHeader`, `Callout`, `TextContent`, `Text`, `BoldText`, `Button`, `Buttons`, `Image`, `ImageBlock`, `ImageText`, `Separator`.
 - Collections: `ListBlock`, `ListItem`, `Steps`, `StepsItem`, `SectionBlock`, `SectionItem`, `Table`, `Col`.
 - Cards: `CompositeCardBlock`, `CompositeCardItem`.
-- Forms: `Form`, `FormControl`, `Input`, `RadioGroup`, `RadioItem`, `CheckBoxGroup`, `CheckBoxItem`, `Slider`.
+- Forms: `Form`, `FormControl`, `Input`, `TextArea`, `RadioGroup`, `RadioItem`, `CheckBoxGroup`, `CheckBoxItem`, `Slider`.
 - Document extension: `ProductFeature(src, alt, title, subtitle, paragraphs, price, url)`. This is not an upstream OpenUI Chat component.
 
-This is an explicit subset of the upstream Chat library; unknown components are reported by the parser. Composite headers support ImageText and Text; bodies support Text, BoldText and ListBlock, with BoldText prices and Button footers. Skipped optional positional arguments must remain `null` when supplying a later argument.
+This is an explicit subset of the upstream Chat library; unknown components are reported by the parser. Composite headers support ImageText, Text and Image; bodies support Text, BoldText, ListBlock and Image, with BoldText prices and Button footers. Skipped optional positional arguments must remain `null` when supplying a later argument.
 
 Sections support streaming expansion and `isFoldable=false`. Their contents stay mounted while folded. Named component declarations retain their identity across array changes; repeat references are also supported. Table column data can contain both scalar values and registered component nodes, and short columns leave empty cells. Grid and carousel layouts share the same CompositeCardItem contract. A card block action includes the selected item context; footer buttons dispatch their own action.
 
-Forms use `Form(name, buttons, fields)` and `FormControl(label, input, hint?)`. `Input`, `RadioGroup`, `CheckBoxGroup` and `Slider` accept an optional reactive binding in their last position. Without one, the field name identifies its value within the enclosing form. Use stable, unique field names and named component declarations when inserting, deleting or reordering fields.
+Forms use `Form(name, buttons, fields)` and `FormControl(label, input, hint?)`. `Input`, `TextArea`, `RadioGroup`, `CheckBoxGroup` and `Slider` accept an optional reactive binding in their last position. Without one, the field name identifies its value within the enclosing form. Use stable, unique field names and named component declarations when inserting, deleting or reordering fields.
 
 ```text
 root = Card([form, progress])
@@ -102,5 +102,25 @@ progress = TextContent("Ready: " + ($ready.passport ? 1 : 0) + " / " + ($ready.b
 Checkbox groups sharing a binding merge their changes into the complete object; validation checks only each group's own items. Defaults initialize missing values without overwriting hydrated or edited state. Streaming disables editing and submission. Structured validation rules run before button actions, which receive the current form state.
 
 Slider state and `defaultValue` use arrays even for a single value, matching Chat expressions such as `@First($budget)`. Multiple values render as separate bounded Lynx slider controls, constrained to preserve their order. Native rendering differs from the upstream multi-thumb track; the positional and state contracts remain the same.
+
+## Additional content and multiline input
+
+These Chat signatures preserve the upstream argument order, including optional slots:
+
+- `CardHeader(title?, subtitle?)`: either text can be omitted.
+- `InlineHeader(heading, description?)`: compact Markdown heading and description.
+- `Callout(variant, title, description, visible?)`: `variant` is `info`, `warning`, `error`, `success` or `neutral`; the description supports Markdown. When `visible` is bound to a boolean state, the banner sets that state to `false` after three seconds. Without a reactive binding it remains visible.
+- `Image(alt, src?)`: displays an image in a 3:2 frame. The alt text is the **first** argument, unlike the default Stack catalog's `Image(url, fit?, variant?)`.
+- `ImageBlock(src, alt?)`: shows loading and error states and preserves the loaded image's aspect ratio. It renders nothing until a source is available.
+- `Separator(orientation?, decorative?)`: defaults to `horizontal` and `true`; `vertical` is also supported.
+- `TextArea(name, placeholder?, rows?, rules?, value?)`: multiline form input; `rows` defaults to 3 and controls visible height, not the allowed number of lines. Validation, hydration, reactive binding and streaming behavior match `Input`.
+
+```text
+root = Card([CardHeader("Trip notes"), notice, form])
+$notice = true
+$notes = ""
+notice = Callout("info", "Tip", "Keep **important details** here.", $notice)
+form = Form("trip", Buttons([Button("Save")]), [FormControl("Notes", TextArea("notes", "Your notes", 4, {required: true}, $notes))])
+```
 
 Contracts are pinned to [thesysdev/openui](https://github.com/thesysdev/openui/tree/86da07f6266887ff819cd5a8e295c75b2edc8251/packages/react-ui/src/genui-lib). See `THIRD_PARTY_NOTICES.md` for attribution.

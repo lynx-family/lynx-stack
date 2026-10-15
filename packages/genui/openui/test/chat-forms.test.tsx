@@ -8,7 +8,11 @@ import { beforeEach, expect, rstest, test } from '@rstest/core';
 import * as actualLynxUI from '@lynx-js/lynx-ui' with {
   rstest: 'importActual',
 };
-import type { InputProps, SliderRootProps } from '@lynx-js/lynx-ui';
+import type {
+  InputProps,
+  SliderRootProps,
+  TextAreaProps,
+} from '@lynx-js/lynx-ui';
 import { useEffect } from '@lynx-js/react';
 import type { ReactNode } from '@lynx-js/react';
 import {
@@ -25,6 +29,7 @@ import { OpenUiRenderer } from '../src/core/renderer.jsx';
 // typed value/callback boundary, exercising our parser, adapters, store and forms.
 const controls = rstest.hoisted(() => ({
   inputs: new Map<string, InputProps>(),
+  textareas: new Map<string, TextAreaProps>(),
   mounts: new Map<string, number>(),
   sliders: [] as SliderRootProps[],
 }));
@@ -42,6 +47,10 @@ rstest.mock('@lynx-js/lynx-ui', () => {
       }, [id]);
       return <text>{`${id}: ${props.value ?? ''}`}</text>;
     },
+    TextArea: (props: TextAreaProps) => {
+      controls.textareas.set(props.id ?? '', props);
+      return <text>{`${props.id}: ${props.value ?? ''}`}</text>;
+    },
     SliderRoot: (props: SliderRootProps) => {
       controls.sliders.push(props);
       return <view>{props.children}</view>;
@@ -54,10 +63,81 @@ rstest.mock('@lynx-js/lynx-ui', () => {
 
 beforeEach(() => {
   controls.inputs.clear();
+  controls.textareas.clear();
   controls.mounts.clear();
   controls.sliders.length = 0;
 });
+
 const library = createOpenUiChatLibrary();
+const notesField = () => controls.textareas.get('notes')!;
+
+test('multiline fields validate and submit named form data without limiting input to rows', async () => {
+  const response =
+    'root = Card([Form("feedback", Buttons([Button("Send")]), [FormControl("Notes", TextArea("notes", "Write here", 2, {required:true,minLength:8}), "More details")])])';
+  const onAction = rstest.fn<(event: ActionEvent) => void>();
+  const view = render(
+    <OpenUiRenderer
+      library={library}
+      response={response}
+      onAction={onAction}
+    />,
+  );
+  expect(notesField().placeholder).toBe('Write here');
+  expect(notesField().style).toEqual({ height: '80rpx' });
+  expect(notesField().maxLength).toBe(-1);
+  expect(notesField().maxLines).toBeGreaterThan(2);
+  fireEvent.tap(view.getByText('Send'));
+  expect(onAction).not.toHaveBeenCalled();
+  await act(() => notesField().onInput?.('short', 5, 5, false));
+  fireEvent.tap(view.getByText('Send'));
+  expect(onAction).not.toHaveBeenCalled();
+  const value = 'First line\nSecond line\nThird line';
+  await act(() =>
+    notesField().onInput?.(value, value.length, value.length, false)
+  );
+  fireEvent.tap(view.getByText('Send'));
+  await waitFor(() => expect(onAction).toHaveBeenCalledTimes(1));
+  expect(onAction.mock.calls[0]?.[0].formState).toMatchObject({
+    feedback: { notes: { value } },
+  });
+});
+
+test('multiline reactive bindings preserve hydration and block edits during streaming', async () => {
+  const response =
+    'root = Card([TextArea("notes", null, null, null, $notes), TextContent($notes)])\n$notes = "Declared notes"';
+  const initialState = { $notes: 'Restored notes' };
+  const view = render(
+    <OpenUiRenderer
+      library={library}
+      response=''
+      initialState={initialState}
+    />,
+  );
+  view.rerender(
+    <OpenUiRenderer
+      library={library}
+      response={response}
+      initialState={initialState}
+    />,
+  );
+  expect(notesField().value).toBe('Restored notes');
+  expect(notesField().style).toEqual({ height: '120rpx' });
+  await act(() => notesField().onInput?.('Edited\nnotes', 12, 12, false));
+  await waitFor(() => expect(notesField().value).toBe('Edited\nnotes'));
+  view.rerender(
+    <OpenUiRenderer
+      library={library}
+      response={response}
+      initialState={initialState}
+      isStreaming
+    />,
+  );
+  expect(notesField().readonly).toBe(true);
+  // A new streaming session restores the runtime's supplied initial state.
+  expect(notesField().value).toBe('Restored notes');
+  await act(() => notesField().onInput?.('Discarded', 9, 9, false));
+  expect(notesField().value).toBe('Restored notes');
+});
 
 async function enter(name: string, value: string) {
   const input = controls.inputs.get(name);

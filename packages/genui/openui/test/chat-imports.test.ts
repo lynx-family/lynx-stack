@@ -137,14 +137,15 @@ test(
     const results = JSON.parse(
       stdout.split('CHAT_BUNDLES:')[1]!.trim(),
     ) as Record<
-      'selected' | 'markdown' | 'full',
+      'selected' | 'markdown' | 'compatibility' | 'full',
       Record<'web' | 'lynx', { css: string; modules: string[]; bytes: number }>
     >;
     for (const platform of ['web', 'lynx'] as const) {
       const selected = results.selected[platform];
       const markdown = results.markdown[platform];
+      const compatibility = results.compatibility[platform];
       const full = results.full[platform];
-      for (const result of [selected, markdown, full]) {
+      for (const result of [selected, markdown, compatibility, full]) {
         expect(result.bytes).toBeGreaterThan(0);
         expect(result.css).toContain('.OpenUIChatCard');
         expect(result.modules.join('\n')).not.toMatch(/openui\/src\//u);
@@ -160,6 +161,32 @@ test(
         'ChatCard.css',
         'ChatMarkdown.css',
       ]);
+      expect(componentStyles(compatibility.modules)).toEqual([
+        'ChatCallout.css',
+        'ChatCard.css',
+        'ChatCardHeader.css',
+        'ChatImage.css',
+        'ChatInlineHeader.css',
+        'ChatMarkdown.css',
+        'ChatSeparator.css',
+        'ChatTextArea.css',
+      ]);
+      for (
+        const name of [
+          'Callout',
+          'CardHeader',
+          'Image',
+          'InlineHeader',
+          'Separator',
+          'TextArea',
+        ]
+      ) {
+        expect(compatibility.css).toContain(`.OpenUIChat${name}`);
+        expect(full.css).toContain(`.OpenUIChat${name}`);
+      }
+      expect(compatibility.modules.join('\n')).not.toMatch(
+        /chat\/(?:index|components)\.js|catalog\/index\.js/u,
+      );
       expect(selected.css).not.toMatch(
         /OpenUIChat(?:Markdown|Slider|Table|Form|ImageText)/u,
       );
