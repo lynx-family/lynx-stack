@@ -90,7 +90,7 @@ Sections support streaming expansion and `isFoldable=false`. Their contents stay
 
 Forms use `Form(name, buttons, fields)` and `FormControl(label, input, hint?)`. `Input`, `RadioGroup`, `CheckBoxGroup` and `Slider` accept an optional reactive binding in their last position. Without one, the field name identifies its value within the enclosing form. Use stable, unique field names and named component declarations when inserting, deleting or reordering fields.
 
-```scss
+```text
 root = Card([form, progress])
 $ready = {passport: false, boots: false}
 form = Form("trip", Buttons([Button("Continue")]), [documents, clothing])

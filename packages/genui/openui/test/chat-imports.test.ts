@@ -7,6 +7,7 @@ import {
   mkdir,
   mkdtemp,
   readdir,
+  realpath,
   rm,
   symlink,
 } from 'node:fs/promises';
@@ -23,7 +24,6 @@ const fixtures = fileURLToPath(
   new URL('./fixtures/chat-imports/', import.meta.url),
 );
 let directory: string;
-let packageRoot: string;
 
 async function copyDirectory(source: string, target: string): Promise<void> {
   await mkdir(target, { recursive: true });
@@ -47,7 +47,7 @@ function componentStyles(modules: string[]): string[] {
 
 beforeAll(async () => {
   directory = await mkdtemp(path.join(tmpdir(), 'openui-chat-imports-'));
-  packageRoot = path.join(directory, 'node_modules/@lynx-js/genui');
+  const packageRoot = path.join(directory, 'node_modules/@lynx-js/genui');
   const privateRoot = path.join(
     directory,
     'node_modules/@lynx-js/genui-openui',
@@ -70,20 +70,37 @@ beforeAll(async () => {
         path.join(target, nested, folder),
       );
     }
-    // Match the published umbrella: no nested private package.json or node_modules.
-    await symlink(
-      path.join(source, 'node_modules'),
-      path.join(target, 'node_modules'),
-      linkType,
-    );
   }
-  await symlink(
-    path.join(genuiRoot, 'node_modules/@lynx-js/react'),
-    path.join(directory, 'node_modules/@lynx-js/react'),
-    linkType,
-  );
+  // Resolve each dependency before linking it into the isolated consumer.
+  // Whole node_modules junctions do not reliably resolve pnpm links on Windows.
+  for (
+    const [source, dependencies] of [
+      [genuiRoot, [
+        '@lynx-js/react-rsbuild-plugin',
+        '@lynx-js/rspeedy',
+        'typescript',
+      ]],
+      [path.join(genuiRoot, 'openui'), [
+        '@lynx-js/lynx-ui',
+        '@lynx-js/react',
+        '@openuidev/lang-core',
+        'marked',
+        'zod',
+      ]],
+    ] as const
+  ) {
+    for (const dependency of dependencies) {
+      const target = path.join(directory, 'node_modules', dependency);
+      await mkdir(path.dirname(target), { recursive: true });
+      await symlink(
+        await realpath(path.join(source, 'node_modules', dependency)),
+        target,
+        linkType,
+      );
+    }
+  }
   for (const file of ['check-exports.mjs', 'build.mjs']) {
-    await copyFile(path.join(fixtures, file), path.join(packageRoot, file));
+    await copyFile(path.join(fixtures, file), path.join(directory, file));
   }
   await copyDirectory(path.join(fixtures, 'app'), path.join(directory, 'app'));
 });
@@ -96,7 +113,7 @@ test(
   'all published and workspace Chat subpaths resolve with types and headless contracts',
   async () => {
     const { stdout } = await runNode(process.execPath, [
-      path.join(packageRoot, 'check-exports.mjs'),
+      path.join(directory, 'check-exports.mjs'),
     ], {
       cwd: directory,
       timeout: 30_000,
@@ -110,7 +127,7 @@ test(
   'production Web and Native bundles retain only selected Chat styles and dependencies',
   async () => {
     const { stdout } = await runNode(process.execPath, [
-      path.join(packageRoot, 'build.mjs'),
+      path.join(directory, 'build.mjs'),
     ], {
       cwd: directory,
       env: { ...process.env, NODE_ENV: 'production' },

@@ -237,4 +237,4 @@ should reset that state.
 - [Open the GenUI playground](https://lynx-stack.dev/genui/#/openui)
 - [Read the OpenUI Lang v0.5 specification](https://www.openui.com/docs/openui-lang/specification-v05)
 
-The opt-in [OpenUI Chat library](https://github.com/lynx-family/lynx-stack/blob/main/packages/genui/openui/docs/chat.md) uses the official Chat positional contracts and provides a server-safe schema entry.
+The opt-in [OpenUI Chat library](./docs/chat.md) uses the official Chat positional contracts and provides a server-safe schema entry.

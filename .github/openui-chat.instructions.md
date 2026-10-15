@@ -6,6 +6,8 @@ OpenUI Chat uses a separate vocabulary from the default Lynx Stack catalog. In p
 
 Keep chat/* renderer and chat/agent/* definition subpaths aligned in both the private OpenUI workspace and the published @lynx-js/genui umbrella. Every component in the Chat barrel must resolve through both subpaths, including Button's forwarding modules. Keep CSS private and imported by its owning renderer; schema refs must not import renderer CSS. Validate selected imports with production Web and Native builds from the published package layout, checking retained CSS and excluded catalog modules as well as package export resolution. Use openui/explicit when assembling a reduced Chat library; the full Chat factory deliberately registers all components.
 
+Keep package-import test scripts at the temporary consumer root, outside the copied packages. Link their toolchain and runtime dependencies individually using resolved real paths, with junctions on Windows, instead of linking an entire workspace node_modules directory. This avoids unresolved pnpm links and prevents the umbrella's workspace dependencies from shadowing the copied private package under test.
+
 When extending withDefaultConfig, append compiler plugins to config.plugins instead of replacing them. The testing library's default plugins route the worklet-runtime init entry through the emulated main thread; dropping them can overwrite test timers during runtime initialization.
 
 Markdown tables and the Chat Table component have independent renderers. Validate both paths when fixing table layout: a horizontal scroll-view needs a single vertical content view with a shared row width. Check row and column geometry on narrow and wide viewports; parser and text-content assertions do not verify layout.

@@ -125,7 +125,7 @@ data = Query("tool_name", { argument: $variable }, { fallback: true })
   服务端对应使用 `openui/chat/agent/<Component>`。从 `openui/explicit` 创建
   Library，设置 `root: 'Card'`、`includeDefaultComponents: false`，并传入所选组件。
   每个组件自动引入自身和必要的共享样式；`createOpenUiChatLibrary()` 仍然注册整套
-  Chat 组件。完整示例见 [Chat 按需导入](./docs/chat.md#import-selected-components)。
+  Chat 组件。完整示例见 [Chat 按需导入](./docs/chat_zh.md#按需导入组件)。
 
 ## 流式模型输出
 

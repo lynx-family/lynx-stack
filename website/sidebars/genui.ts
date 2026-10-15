@@ -186,6 +186,16 @@ export function createGenUIGuideReadmeDocs(options: {
     replacements: OPENUI_ZH_LINK_REPLACEMENTS,
     sourceFile: path.join(openuiPackageRoot, 'docs/query-data_zh.md'),
   });
+  syncDoc({
+    outFile: path.join(enGuideRoot, 'openui/chat.md'),
+    replacements: OPENUI_EN_LINK_REPLACEMENTS,
+    sourceFile: path.join(openuiPackageRoot, 'docs/chat.md'),
+  });
+  syncDoc({
+    outFile: path.join(zhGuideRoot, 'openui/chat.md'),
+    replacements: OPENUI_ZH_LINK_REPLACEMENTS,
+    sourceFile: path.join(openuiPackageRoot, 'docs/chat_zh.md'),
+  });
 
   for (
     const [locale, guideRoot] of [['en', enGuideRoot], [
@@ -405,6 +415,10 @@ export const OPENUI_EN_NAV_ITEMS = [
     text: 'Data Processing Tools',
     link: '/guide/genui/openui/query-data',
   },
+  {
+    text: 'Chat Components',
+    link: '/guide/genui/openui/chat',
+  },
 ];
 
 export const OPENUI_ZH_NAV_ITEMS = [
@@ -427,6 +441,10 @@ export const OPENUI_ZH_NAV_ITEMS = [
   {
     text: '通用数据处理工具',
     link: '/zh/guide/genui/openui/query-data',
+  },
+  {
+    text: 'Chat 组件',
+    link: '/zh/guide/genui/openui/chat',
   },
 ];
 
@@ -600,10 +618,12 @@ const OPENUI_EN_LINK_REPLACEMENTS = [
   ['./docs/library-guide.md', '/guide/genui/openui/library-guide'],
   ['./docs/system-prompts.md', '/guide/genui/openui/system-prompts'],
   ['./docs/query-data.md', '/guide/genui/openui/query-data'],
+  ['./docs/chat.md', '/guide/genui/openui/chat'],
   ['./overview.md', '/guide/genui/openui/overview'],
   ['./library-guide.md', '/guide/genui/openui/library-guide'],
   ['./system-prompts.md', '/guide/genui/openui/system-prompts'],
   ['./query-data.md', '/guide/genui/openui/query-data'],
+  ['./chat.md', '/guide/genui/openui/chat'],
   ['../README.md', '/guide/genui/openui'],
 ] as const;
 
@@ -612,10 +632,12 @@ const OPENUI_ZH_LINK_REPLACEMENTS = [
   ['./docs/library-guide_zh.md', '/zh/guide/genui/openui/library-guide'],
   ['./docs/system-prompts_zh.md', '/zh/guide/genui/openui/system-prompts'],
   ['./docs/query-data_zh.md', '/zh/guide/genui/openui/query-data'],
+  ['./docs/chat_zh.md', '/zh/guide/genui/openui/chat'],
   ['./overview_zh.md', '/zh/guide/genui/openui/overview'],
   ['./library-guide_zh.md', '/zh/guide/genui/openui/library-guide'],
   ['./system-prompts_zh.md', '/zh/guide/genui/openui/system-prompts'],
   ['./query-data_zh.md', '/zh/guide/genui/openui/query-data'],
+  ['./chat_zh.md', '/zh/guide/genui/openui/chat'],
   ['../README_zh.md', '/zh/guide/genui/openui'],
 ] as const;
 
