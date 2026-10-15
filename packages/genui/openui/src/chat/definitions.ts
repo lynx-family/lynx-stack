@@ -26,4 +26,4 @@ export { Text } from './Text/definition.js';
 export { BoldText } from './BoldText/definition.js';
 export { TextContent } from './TextContent/definition.js';
 export { Buttons } from './Buttons/definition.js';
-export { Button } from '../catalog/Button/definition.js';
+export { Button } from './Button/definition.js';

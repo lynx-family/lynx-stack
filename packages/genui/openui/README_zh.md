@@ -121,6 +121,11 @@ data = Query("tool_name", { argument: $variable }, { fallback: true })
   用于 Node 服务端生成 schema 和 prompt。Prompt library 和 ReactLynx catalog
   共享同一套 schema、描述和 ref。
   可通过 `catalog/agent/<Component>` 按需导入单个组件定义。
+- OpenUI Chat 支持通过 `@lynx-js/genui/openui/chat/<Component>` 按组件导入，
+  服务端对应使用 `openui/chat/agent/<Component>`。从 `openui/explicit` 创建
+  Library，设置 `root: 'Card'`、`includeDefaultComponents: false`，并传入所选组件。
+  每个组件自动引入自身和必要的共享样式；`createOpenUiChatLibrary()` 仍然注册整套
+  Chat 组件。完整示例见 [Chat 按需导入](./docs/chat.md#import-selected-components)。
 
 ## 流式模型输出
 

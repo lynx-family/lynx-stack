@@ -81,6 +81,8 @@ export default tseslint.config(
       'packages/{rspeedy,webpack}/*/test/**/hotCases/**',
       'packages/{rspeedy,webpack}/*/test/**/diagnostic/**',
       'packages/{rspeedy,webpack}/*/test/**/fixtures/**',
+      // These fixtures resolve imports against a temporary published package.
+      'packages/genui/openui/test/fixtures/chat-imports/**',
       'packages/webpack/**/runtime/**',
       'packages/webpack/css-extract-webpack-plugin/test/js/**',
       'packages/webpack/css-extract-webpack-plugin/test/rspack-js/**',

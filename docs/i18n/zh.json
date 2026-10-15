@@ -1767,6 +1767,7 @@
   "This allows you to use some third-party libraries that directly uses `react` as dependencies in ReactLynx.": "这样就可以在 ReactLynx 中使用一些直接依赖 `react` 的第三方库。",
   "This behavior can be configured by using one of the following options:": "可以通过以下选项之一配置该行为：",
   "This does not create or access the realized main-thread object.": "该操作不会创建或访问实际的主线程对象。",
+  "This factory registers the entire Chat catalog and includes its component styles.\nTo include only selected components and their styles, import each component from\n`@lynx-js/genui/openui/chat/<Component>` and assemble the library with\n`createOpenUiLibrary` from `@lynx-js/genui/openui/explicit`.": "此工厂注册整套 Chat 组件并引入其样式。\n若只需引入所选组件及其样式，请从 `@lynx-js/genui/openui/chat/<Component>`\n逐个导入组件，再使用 `@lynx-js/genui/openui/explicit` 中的\n`createOpenUiLibrary` 组装组件库。",
   "This feature is experimental and may be changed in the future.": "该功能目前为实验性功能，未来可能会发生变化。",
   "This flag controls when MainThread (Lepus) transfers control to Background after the first screen": "此标志控制首屏之后主线程（Lepus）何时将控制权移交给后台线程",
   "This flag has three options:": "此标志有三个选项：",

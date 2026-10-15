@@ -54,6 +54,14 @@
     "./chat/agent": {
       "types": "./dist/chat/agent.d.ts",
       "default": "./dist/chat/agent.js"
+    },
+    "./chat/agent/*": {
+      "types": "./dist/chat/*/definition.d.ts",
+      "default": "./dist/chat/*/definition.js"
+    },
+    "./chat/*": {
+      "types": "./dist/chat/*/index.d.ts",
+      "default": "./dist/chat/*/index.jsx"
     }
   },
   "main": "./dist/core/index.js",
