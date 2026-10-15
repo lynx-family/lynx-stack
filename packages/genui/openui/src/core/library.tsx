@@ -17,6 +17,8 @@ import type { $ZodObject } from 'zod/v4/core';
 
 import type { ReactElement, ReactNode } from '@lynx-js/react';
 
+import { registerOpenUIBuiltins } from '../shared/builtins.js';
+
 // Re-export framework-agnostic types unchanged
 export type {
   ComponentGroup,
@@ -73,6 +75,7 @@ export function defineComponent<T extends $ZodObject>(config: {
  * @internal
  */
 export function createLibrary(input: LibraryDefinition): Library {
+  registerOpenUIBuiltins();
   return coreCreateLibrary<ComponentRenderer<any>>(input) as Library;
 }
 

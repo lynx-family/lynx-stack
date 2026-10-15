@@ -24,7 +24,7 @@ const parsed = createParser(library.toJSONSchema(), library.root).parse(
 const initial = getQueryDefaults(parsed);
 
 interface TodoData {
-  items: { id: string; title: string; done: boolean }[];
+  items: { id: string | number; title: string; done: boolean }[];
 }
 
 function setup(saved = new Map<string, string>(), failWrites = false) {
@@ -113,6 +113,115 @@ test('every Todo Query and Mutation uses a registered shared tool', () => {
   runtime.dispose();
 });
 
+test('Todo additions persist, preserve existing rows and work after deleting all tasks', async () => {
+  const { saved, storage, runtime, query, run } = setup();
+  try {
+    await run('addTodo', { $newTitle: 'New task' });
+    await run('addTodo', { $newTitle: 'Another task' });
+    const added = await query();
+    expect(added.items.slice(0, 2)).toEqual((initial.todos as TodoData).items);
+    expect(added.items.slice(2)).toEqual([
+      { id: 1, title: 'New task', done: false },
+      { id: 2, title: 'Another task', done: false },
+    ]);
+    const summary = render(added).find(child => child?.typeName === 'Row')!
+      .props.children as ElementNode[];
+    expect(summary.map(child => child.props.text))
+      .toEqual(['4 tasks', '3 open', '1 completed']);
+    expect(restoreOpenUIData({ rawText: OPENUI_TODO_RAW }, storage))
+      .toMatchObject({ initialQueryResults: { todos: added } });
+    const reopened = setup(saved);
+    try {
+      expect(await reopened.query()).toEqual(added);
+      await reopened.run('saveTodo', {
+        $selectedId: 1,
+        $editTitle: 'Edited new task',
+      });
+      await reopened.run('toggleTodo', { $selectedId: 1, $nextDone: true });
+      const edited = await reopened.query();
+      expect(edited.items[2]).toEqual({
+        id: 1,
+        title: 'Edited new task',
+        done: true,
+      });
+      for (const item of added.items) {
+        await reopened.run('deleteTodo', { $deleteId: item.id });
+      }
+      await reopened.run('addTodo', { $newTitle: 'Start again' });
+      expect(await reopened.query()).toEqual({
+        items: [{ id: 1, title: 'Start again', done: false }],
+      });
+    } finally {
+      reopened.runtime.dispose();
+    }
+  } finally {
+    runtime.dispose();
+  }
+});
+
+test('Todo creation binds the draft and refreshes before closing the form', () => {
+  const children = render(initial.todos, {
+    $adding: true,
+    $newTitle: 'New task',
+  });
+  const creator = children.find(child =>
+    child?.typeName === 'Card'
+    && (child.props.children as ElementNode[])[0]?.props.text === 'Add task'
+  )!;
+  const fields = creator.props.children as ElementNode[];
+  expect(fields[1]!.props).toMatchObject({
+    name: '$newTitle',
+    value: 'New task',
+  });
+  const buttons = fields[2]!.props.buttons as ElementNode[];
+  expect(buttons[0]!.props.action).toEqual({
+    steps: [
+      { type: 'run', statementId: 'addTodo', refType: 'mutation' },
+      { type: 'run', statementId: 'todos', refType: 'query' },
+      { type: 'reset', targets: ['$adding', '$newTitle'] },
+    ],
+  });
+  expect(buttons[1]!.props.action).toEqual({
+    steps: [{ type: 'reset', targets: ['$adding', '$newTitle'] }],
+  });
+  const blankCreator = render(initial.todos, { $adding: true }).find(child =>
+    child?.typeName === 'Card'
+    && (child.props.children as ElementNode[])[0]?.props.text === 'Add task'
+  )!;
+  const blankButtons = (blankCreator.props.children as ElementNode[])[2]!
+    .props.buttons as ElementNode[];
+  expect(blankButtons[0]!.props.action).toEqual({ steps: [] });
+});
+
+test('Todo additions have no fixed capacity and preserve unique current IDs', async () => {
+  const { runtime, query, run } = setup();
+  try {
+    for (let index = 0; index < 12; index++) {
+      await run('addTodo', { $newTitle: `Task ${index}` });
+    }
+    await run('addTodo', { $newTitle: '' });
+    const added = await query();
+    expect(added.items).toHaveLength(14);
+    expect(
+      render(added).some(child =>
+        child?.typeName === 'Button' && child.props.label === 'Add task'
+      ),
+    ).toBe(true);
+    await run('deleteTodo', { $deleteId: 1 });
+    await run('addTodo', { $newTitle: 'Replacement task' });
+    const replaced = await query();
+    expect(replaced.items).toHaveLength(14);
+    expect(replaced.items[13]).toEqual({
+      id: 13,
+      title: 'Replacement task',
+      done: false,
+    });
+    expect(new Set(replaced.items.map(item => item.id)).size).toBe(14);
+  } finally {
+    runtime.dispose();
+  }
+});
+
 test('Todo actions edit, toggle and delete through shared tools and restore on reload', async () => {
   const { saved, storage, runtime, query, run } = setup();
   try {
@@ -197,8 +306,9 @@ test('Todo edits use a separate selection action and refresh the Query after sav
 test('Todo mutations propagate persistence failures without changing data', async () => {
   const { runtime, run, query } = setup(new Map(), true);
   try {
-    for (const name of ['saveTodo', 'toggleTodo', 'deleteTodo']) {
+    for (const name of ['addTodo', 'saveTodo', 'toggleTodo', 'deleteTodo']) {
       await expect(run(name, {
+        $newTitle: 'Unsaved new task',
         $selectedId: 'todos-1',
         $editTitle: 'Unsaved',
         $nextDone: true,

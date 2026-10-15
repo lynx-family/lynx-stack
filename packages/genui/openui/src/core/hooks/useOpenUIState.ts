@@ -34,6 +34,7 @@ import type { ReactNode } from '@lynx-js/react';
 
 import type { LegacyActionConfig } from '../../catalog/Action/index.jsx';
 import type { InitialQueryResults } from '../../data-tools/types.js';
+import { registerOpenUIBuiltins } from '../../shared/builtins.js';
 import type { OpenUIContextValue } from '../context.jsx';
 import type { Library } from '../library.jsx';
 
@@ -143,6 +144,7 @@ export function useOpenUIState(
   }: UseOpenUIStateOptions,
   renderDeep: (value: unknown) => ReactNode,
 ): OpenUIState {
+  registerOpenUIBuiltins();
   // ─── Streaming parser (incremental — caches completed statements) ───
   const sp = useMemo(
     () => createStreamingParser(library.toJSONSchema(), library.root),

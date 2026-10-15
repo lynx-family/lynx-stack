@@ -119,9 +119,28 @@ Persist and restore results by statement ID for initialQueryResults. Clear these
 associations on scope changes and reject ambiguous keys; never infer an alias from
 the only default or parse source again inside a tool call.
 
-Local Mutation tools persist complete values without an op interpreter or field merging. Reuse arithmetic, `@Each` and `@Filter` for transformations; keep `@Set` and `@Reset` scoped to UI state. Do not introduce array append syntax or ID generation that the language does not support.
+Local Mutation tools persist complete values without an op interpreter or field merging. Reuse arithmetic, `@Append`, `@Each` and `@Filter` for transformations; keep `@Set` and `@Reset` scoped to UI state. Use the registered `@Append(array, item)` builtin for one-item addition; do not invent spread syntax or ID generation.
 
 Keep the Todo List example's seed items in its DSL Query defaults. Use only the
 shared data tools for persistence and initialQueryResults restoration; do not add
 a separate Todo store or Todo-specific tool provider. Express updates with
 supported DSL operations and keep application-specific logic out of the host.
+Use `@Append(items, item)` for Todo additions without a fixed list capacity.
+Keep registration in `openui/src/shared/builtins.ts`, using lang-core's exported
+BUILTINS and BUILTIN_NAMES registries for parsing, evaluation and generated prompt
+signatures. Invoke registration from both library factories and the renderer hook
+so default, explicit, headless and custom-library runtimes agree, without a
+side-effect-only import that bundlers can remove. Registration must be idempotent
+and preserve existing upstream definitions. Append returns a new array, keeps an
+array item nested, and rejects non-array input or argument counts other than two.
+It does not generate IDs or provide atomic cross-client writes. Numeric IDs
+derived from `@Max(items.id) + 1` must remain compatible with string seed IDs.
+Close and reset the creation form after a successful Mutation and Query refresh
+so the TextField remounts with an empty draft.
+
+Keep the English and Chinese data tool guides behaviorally aligned. Provide
+complete DSL examples for persisted operations and derived views, and validate
+their parsing, evaluated row props, and Mutation values against the headless
+library. Distinguish complete Query replacement from UI-state reset and view-only
+transformations; document Append and snapshot semantics without inventing
+spread syntax or host-side operation interpreters.
