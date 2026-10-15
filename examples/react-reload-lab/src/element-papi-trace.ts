@@ -12,6 +12,12 @@ const elementPapiNames = [
   '__CreateView',
   '__CreateRawText',
   '__CreateList',
+  '__CreateElementTemplate',
+  '__CreateTypedElementTemplate',
+  '__SetAttributeOfElementTemplate',
+  '__InsertNodeToElementTemplate',
+  '__RemoveNodeFromElementTemplate',
+  '__SerializeElementTemplate',
   '__AppendElement',
   '__InsertElementBefore',
   '__RemoveElement',
@@ -53,6 +59,8 @@ const createElementPapiNames = new Set<string>([
   '__CreateView',
   '__CreateRawText',
   '__CreateList',
+  '__CreateElementTemplate',
+  '__CreateTypedElementTemplate',
 ]);
 
 export interface ElementPapiTraceState {
@@ -171,6 +179,19 @@ export function installElementPapiInterceptor(): void {
       }
 
       if (createElementPapiNames.has(apiName)) {
+        if (typeof result === 'object' && result !== null) {
+          if (apiName === '__CreateElementTemplate') {
+            state.elementLabels.set(
+              result,
+              `${String(args[0])}#${String(args[4])}`,
+            );
+          } else if (apiName === '__CreateTypedElementTemplate') {
+            state.elementLabels.set(
+              result,
+              `${String(args[0])}#${String(args[3])}`,
+            );
+          }
+        }
         formatElementResult(result, state, getTagFn, getUniqueIdFn);
       }
       if (state.recording) {

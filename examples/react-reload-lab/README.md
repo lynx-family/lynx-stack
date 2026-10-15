@@ -3,7 +3,8 @@
 A small device example for `experimental_reEvalJSOnReload`. It checks that app
 state and module-local state restart, main-thread event bindings remain usable,
 and callback refs attach to the reloaded tree. It also shows a main-thread
-Element PAPI mutation that persists across reload while React state resets.
+Element PAPI mutation that persists across Snapshot reload while React state resets.
+Element Template reload rebuilds the page children and resets that mutation.
 
 ## Run
 
@@ -51,15 +52,19 @@ not call the JS app's update or destruction callbacks directly.
 1. Tap **Increment background state**. Both counters should increase once.
 2. Tap **MTS state: idle**. Its label should change to **MTS state: tapped**.
 3. Tap **RELOAD**. The runtime epoch should advance, React counters should
-   reset, and the callback ref should return to `attached`. The MTS label stays
-   **tapped**: direct Element PAPI mutations are outside React state and are not
-   reset by reload (a current limitation).
+   reset, and the callback ref should return to `attached`. With Snapshot, the
+   MTS label stays **tapped**: direct Element PAPI mutations are outside React
+   state and are not reset by reload (a current limitation). With Element
+   Template, the label returns to **idle** because reload retains the page root
+   but removes and rebuilds its children.
 4. Repeat reload several times, then tap the background and MTS → BTS controls
    again. Each tap should update its counter once, with no stale event handler
    or ref.
 5. After each reload, tap **SHOW LOG** in Element PAPI trace. It captures the
    create, update, insert, remove and flush calls for that cycle and keeps the
-   last three reloads for comparison.
+   last three reloads for comparison. ET logs include template creation,
+   attribute updates, node insertion/removal and serialization. Expect child
+   removal and creation in ET; Snapshot can reuse existing native nodes.
 6. Scroll to **LazyComponent** and tap **counter +1**. After native reload,
    both the main and lazy bundle counters should reset to zero. Tap the
    **Background-only card** again to check its main-thread worklet still runs.
