@@ -5,11 +5,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   getFromWorkletRefMap,
+  hydrateWorkletValue,
   isHydratedWorkletValue,
   removeValueFromWorkletRefMap,
   updateWorkletRefInitValueChanges,
 } from '../../src/worklet-runtime/workletRef';
 import { initWorklet } from '../../src/worklet-runtime/workletRuntime';
+import { increaseReloadVersion } from '../../src/core/reload-version';
 
 const originalDev = globalThis.__DEV__;
 
@@ -27,6 +29,62 @@ afterEach(() => {
 });
 
 describe('MainThreadObject registry and realization', () => {
+  it.each(['worklet', 'function'])(
+    'uses the new %s factory after reload without invalidating retained objects',
+    kind => {
+      const register = lynxWorkletImpl._refImpl.registerMainThreadObjectType;
+      const type = '@test/reload-factory';
+      const evaluateModule = generation => {
+        let created = 0;
+        return initial => ({ generation, created: ++created, initial });
+      };
+      const registerEntry = generation => {
+        const factory = evaluateModule(generation);
+        const definition = kind === 'worklet' ? { _wkltId: 'reload-factory' } : factory;
+        register(type, definition);
+        // Compiler-appended worklet registration follows type registration.
+        if (kind === 'worklet') {
+          globalThis.registerWorklet('main-thread', 'reload-factory', factory);
+        }
+      };
+
+      registerEntry(1);
+      updateWorkletRefInitValueChanges([[71, 42, type]]);
+      const retained = getFromWorkletRefMap({ _wvid: 71 });
+      expect(retained).toEqual({ generation: 1, created: 1, initial: 42 });
+
+      for (const generation of [2, 3]) {
+        increaseReloadVersion();
+        registerEntry(generation);
+        updateWorkletRefInitValueChanges([[71 + generation, 43, type]]);
+        expect(getFromWorkletRefMap({ _wvid: 71 + generation }))
+          .toEqual({ generation, created: 1, initial: 43 });
+      }
+
+      removeValueFromWorkletRefMap(71);
+      expect(() => hydrateWorkletValue({ _wvid: 80, _type: type }, retained)).not.toThrow();
+      expect(getFromWorkletRefMap({ _wvid: 80 })).toBe(retained);
+      expect(retained).toEqual({ generation: 1, created: 1, initial: 42 });
+    },
+  );
+
+  it('keeps the resolved factory for duplicate registrations in the same reload', () => {
+    const descriptor = { _wkltId: 'same-reload-factory' };
+    const factory = vi.fn(initial => ({ initial }));
+    const lookup = vi.fn(() => factory);
+    Object.defineProperty(lynxWorkletImpl._workletMap, descriptor._wkltId, { get: lookup });
+    const register = lynxWorkletImpl._refImpl.registerMainThreadObjectType;
+
+    register('@test/same-reload', descriptor);
+    updateWorkletRefInitValueChanges([[81, 'first', '@test/same-reload']]);
+    register('@test/same-reload', { ...descriptor });
+    updateWorkletRefInitValueChanges([[82, 'second', '@test/same-reload']]);
+
+    expect(getFromWorkletRefMap({ _wvid: 82 })).toEqual({ initial: 'second' });
+    expect(factory).toHaveBeenCalledTimes(2);
+    expect(lookup).toHaveBeenCalledOnce();
+  });
+
   it('creates registered main-thread objects from typed patches', () => {
     const value = { get: () => 42 };
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(

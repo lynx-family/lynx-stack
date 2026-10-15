@@ -12,6 +12,7 @@ export default defineConfig({
     },
     entry: {
       main: './src/index.tsx',
+      'main-thread-object-reload': './src/main-thread-object-reload.tsx',
       'stale-main-thread-return': './src/stale-main-thread-return.tsx',
       'stale-background-callback': './src/stale-background-callback.tsx',
     },
