@@ -10,12 +10,18 @@
 import { emitter as hotEmitter } from '@rspack/core/hot/emitter.js';
 
 import { startHotDevServer } from './startHotDevServer.js';
+import type { HotUpdateCoordinator } from './startHotDevServer.js';
+
+declare const __webpack_require__: {
+  lynxHMR?: HotUpdateCoordinator;
+};
 
 if (import.meta.webpackHot) {
   startHotDevServer(
     import.meta.webpackHot,
     hotEmitter,
     () => __webpack_hash__,
+    __webpack_require__.lynxHMR,
   );
 } else {
   throw new Error('[HMR] Hot Module Replacement is disabled.');

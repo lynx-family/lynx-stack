@@ -11,8 +11,10 @@
 
 export default function() {
   function loadUpdateChunk(chunkId, updatedModulesList) {
+    var load = __webpack_require__.lynxHMRLoad
+      || lynx.requireModuleAsync.bind(lynx);
     return new Promise((resolve, reject) => {
-      lynx.requireModuleAsync(
+      load(
         $RuntimeGlobals_publicPath$
           + $RuntimeGlobals_getChunkUpdateScriptFilename$(chunkId),
         (err, update) => {
@@ -23,6 +25,13 @@ export default function() {
 
           var updatedModules = update.modules;
           var runtime = update.runtime;
+          // MTS-only changes still need fresh BTS worklet contexts. Reuse the
+          // loaded owner's factory through normal HMR / Fast Refresh apply.
+          (update.lynxRefreshModules || []).forEach(function(moduleId) {
+            if (__webpack_require__.c[moduleId] && !updatedModules[moduleId]) {
+              updatedModules[moduleId] = __webpack_require__.m[moduleId];
+            }
+          });
           for (var moduleId in updatedModules) {
             if ($RuntimeGlobals_hasOwnProperty$(updatedModules, moduleId)) {
               currentUpdate[moduleId] = updatedModules[moduleId];
