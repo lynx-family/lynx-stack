@@ -237,10 +237,9 @@ export function applyMainThreadHMR(
     });
 
     compilation.hooks.afterSeal.tap(name, () => {
-      if (compilation.errors.length === 0) {
-        previousHash = compilation.hash ?? undefined;
-        previousModules = currentModules;
-      }
+      // Rspack advances its HMR records even when the build has diagnostics.
+      previousHash = compilation.hash ?? undefined;
+      previousModules = currentModules;
     });
   });
 }

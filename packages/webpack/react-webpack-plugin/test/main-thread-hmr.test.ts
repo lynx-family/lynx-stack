@@ -22,11 +22,24 @@ import type { EncodeOptions } from '@lynx-js/template-webpack-plugin';
 
 // @ts-expect-error Existing JavaScript fixture has no declaration file.
 import { createConfig as untypedCreateConfig } from './create-react-config.js';
+import { ReactWebpackPlugin } from '../src/ReactWebpackPlugin.js';
 
-const createConfig = untypedCreateConfig as (
+const createConfig = (
   loaderOptions: { engineVersion?: string },
   pluginOptions?: { entryPairs: { mainThread: string; background: string }[] },
-) => Configuration;
+): Configuration => {
+  const config = untypedCreateConfig(
+    loaderOptions,
+    pluginOptions,
+  ) as Configuration;
+  // Instrument the plugin executed by the watch fixture; loaders still use
+  // the built package, as they do in the application compiler.
+  config.plugins![0] = new ReactWebpackPlugin({
+    mainThreadChunks: ['main__main-thread.js'],
+    ...pluginOptions,
+  });
+  return config;
+};
 
 const syntheticApp = (value: number) => `
     const label = __BACKGROUND__ ? require('./bhelper.js').label : '';
@@ -36,9 +49,13 @@ const syntheticApp = (value: number) => `
     }
   `;
 
-it.each([false, true])(
-  'updates native worklets and owners (BTS-only source=%s)',
-  async (synthetic) => {
+it.each([
+  { synthetic: false, recover: false },
+  { synthetic: true, recover: false },
+  { synthetic: false, recover: true },
+])(
+  'updates native worklets and owners (BTS-only source=$synthetic, diagnostic recovery=$recover)',
+  async ({ synthetic, recover }) => {
     const tempRoot = path.resolve(
       __dirname,
       '../../../../.tmp/main-thread-hmr',
@@ -135,6 +152,17 @@ it.each([false, true])(
             void (async () => {
               try {
                 if (error) throw error;
+                if (recover && hashes.length === 3) {
+                  expect(stats!.hasErrors()).toBe(true);
+                  expect(stats!.toString({ all: false, errors: true }))
+                    .toContain('missing.js');
+                  hashes.push(stats!.hash!);
+                  await fs.writeFile(
+                    path.join(context, 'mhelper.js'),
+                    `export const helper = x => x * 7;`,
+                  );
+                  return;
+                }
                 if (stats!.hasErrors()) {
                   throw new Error(
                     stats!.toString({ all: false, errors: true }),
@@ -166,6 +194,15 @@ it.each([false, true])(
                   expect(encoded['sourceContent']).toMatchObject({
                     appType: 'DynamicComponent',
                   });
+                  const manifest = compilation.getAsset(
+                    `main__main-thread.${oldHash}.hot-update.json`,
+                  )!;
+                  expect(
+                    runInContext(
+                      encoded.customSections['manifest']!.content as string,
+                      createContext(),
+                    ),
+                  ).toEqual(JSON.parse(manifest.source.source().toString()));
                   const updates = runInContext(
                     `(${encoded.customSections['updates']!.content as string})`,
                     createContext(),
@@ -233,7 +270,14 @@ it.each([false, true])(
                         'exports.lynxRefreshModules=["(react:background)/./app.jsx"]',
                       );
                     }
-                    watcher.close(resolve);
+                    if (recover && n === 3) {
+                      await fs.writeFile(
+                        path.join(context, 'mhelper.js'),
+                        `import './missing.js'; export const helper = x => x * 5;`,
+                      );
+                    } else {
+                      watcher.close(resolve);
+                    }
                   }
                 }
               } catch (error) {
