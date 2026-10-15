@@ -4,6 +4,8 @@
 
 import { afterEach, expect, it, vi } from 'vitest';
 
+import '../src/worklet-runtime/global.js';
+
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
@@ -50,12 +52,16 @@ it.each(['before hydration', 'after hydration'])(
       const firstScreenRef = new MainThreadRef(null);
       initWorklet();
       initEventListeners();
-      globalThis.registerWorklet('main-thread', 'tap', function() {
-        this._c.ref.current.setAttribute('test-state', 'tapped');
-      });
+      globalThis.registerWorklet(
+        'main-thread',
+        'tap',
+        function(this: { _c: { ref: { current: { setAttribute(name: string, value: string): void } } } }) {
+          this._c.ref.current.setAttribute('test-state', 'tapped');
+        },
+      );
       const firstScreenTap = { _wkltId: 'tap', _c: { ref: firstScreenRef } };
       const element = { generation };
-      globalThis.lynxWorkletImpl._refImpl.updateWorkletRef(firstScreenRef, element);
+      globalThis.lynxWorkletImpl._refImpl.updateWorkletRef({ ...firstScreenRef.toJSON(), _initValue: null }, element);
       globalThis.runWorklet(firstScreenTap, []);
 
       vi.stubGlobal('__JS__', true);

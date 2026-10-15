@@ -62,7 +62,8 @@ describe('tt.onAppReload with experimental entry re-evaluation', () => {
     const data = { value: 'original', retained: 'keep' };
     lynx.__initData = data;
     const app = lynx.getApp();
-    app.reloadCard = vi.fn(() => true);
+    const reloadCard = vi.fn((_data?: object, _options?: Record<string, unknown>) => true);
+    app.reloadCard = reloadCard;
     vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
     (lynx as unknown as Record<symbol, unknown>)[entrySupportsReEvalKey] = true;
     injectTt();
@@ -74,7 +75,7 @@ describe('tt.onAppReload with experimental entry re-evaluation', () => {
       app.onAppReload(updateData, options);
       expect(app.reloadCard).toHaveBeenCalledWith({ ...data, ...updateData }, options);
       expect(data).toEqual({ value: 'original', retained: 'keep' });
-      expect(app.reloadCard.mock.calls[0][0]).not.toBe(data);
+      expect(reloadCard.mock.calls[0]![0]).not.toBe(data);
     } finally {
       lynx.__initData = originalData;
     }
