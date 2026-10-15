@@ -214,9 +214,11 @@ const transformWorkletInner = (
     const isJsFn = '_jsFnId' in subObj;
     if (isJsFn) {
       (subObj as Record<string, ClosureValueType>)['_execId'] = (ctx as Worklet)._execId;
+      (subObj as Record<string, ClosureValueType>)['_reloadVersion'] = (ctx as Worklet)._reloadVersion;
       lynxWorkletImpl._jsFunctionLifecycleManager?.addRef(
         (ctx as Worklet)._execId!,
         subObj,
+        (ctx as Worklet)._reloadVersion,
       );
       continue;
     }

@@ -133,6 +133,7 @@ describe('WorkletRef', () => {
           [
             {
               "_execId": 1,
+              "_reloadVersion": 0,
               "_unmount": undefined,
               "_wkltId": 233,
             },
@@ -174,6 +175,7 @@ describe('WorkletRef', () => {
           [
             {
               "_execId": 1,
+              "_reloadVersion": 0,
               "_unmount": undefined,
               "_wkltId": 233,
             },
@@ -278,7 +280,7 @@ describe('WorkletRef', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"snapshotPatch":[3,-2,0,{"_wvid":1},3,-3,0,{"_wkltId":233,"_execId":2},3,-4,0,{"_wkltId":233,"_execId":3}],"id":6}]}",
+              "data": "{"patchList":[{"snapshotPatch":[3,-2,0,{"_wvid":1},3,-3,0,{"_wkltId":233,"_execId":2,"_reloadVersion":0},3,-4,0,{"_wkltId":233,"_execId":3,"_reloadVersion":0}],"id":6}]}",
               "patchOptions": {
                 "isHydration": true,
                 "pipelineOptions": {
@@ -346,6 +348,7 @@ describe('WorkletRef', () => {
           [
             {
               "_execId": 2,
+              "_reloadVersion": 0,
               "_unmount": undefined,
               "_wkltId": 233,
             },
@@ -360,6 +363,7 @@ describe('WorkletRef', () => {
           [
             {
               "_execId": 3,
+              "_reloadVersion": 0,
               "_unmount": undefined,
               "_wkltId": 233,
             },
@@ -386,7 +390,7 @@ describe('WorkletRef', () => {
           [
             "rLynxChange",
             {
-              "data": "{"patchList":[{"id":7,"snapshotPatch":[3,-2,0,{"_wvid":2},3,-3,0,{"_wvid":3},3,-4,0,{"_wkltId":233,"_execId":4}]}]}",
+              "data": "{"patchList":[{"id":7,"snapshotPatch":[3,-2,0,{"_wvid":2},3,-3,0,{"_wvid":3},3,-4,0,{"_wkltId":233,"_execId":4,"_reloadVersion":0}]}]}",
               "patchOptions": {
                 "reloadVersion": 0,
               },
@@ -432,6 +436,7 @@ describe('WorkletRef', () => {
           [
             {
               "_execId": 3,
+              "_reloadVersion": 0,
               "_unmount": undefined,
               "_wkltId": 233,
             },
@@ -442,6 +447,7 @@ describe('WorkletRef', () => {
           [
             {
               "_execId": 4,
+              "_reloadVersion": 0,
               "_unmount": undefined,
               "_wkltId": 233,
             },
@@ -532,6 +538,7 @@ describe('WorkletRef', () => {
           [
             {
               "_execId": 5,
+              "_reloadVersion": 0,
               "_unmount": undefined,
               "_wkltId": 233,
             },
@@ -578,6 +585,7 @@ describe('WorkletRef', () => {
           [
             {
               "_execId": 5,
+              "_reloadVersion": 0,
               "_unmount": undefined,
               "_wkltId": 233,
             },

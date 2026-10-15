@@ -38,7 +38,7 @@ export function onWorkletCtxUpdate(
 
 export function retainWorkletCtx(worklet: Worklet): void {
   if (worklet._execId !== undefined) {
-    globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager?.addRef(worklet._execId, worklet);
+    globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager?.addRef(worklet._execId, worklet, worklet._reloadVersion);
   }
 }
 

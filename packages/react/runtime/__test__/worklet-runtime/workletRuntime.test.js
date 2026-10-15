@@ -245,6 +245,7 @@ describe('Worklet', () => {
         {
           "_execId": 666,
           "_jsFnId": 1,
+          "_reloadVersion": undefined,
         }
       `);
     });

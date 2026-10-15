@@ -1,8 +1,34 @@
 {
-  "extends": ["//"],
+  "extends": [
+    "//"
+  ],
   "tasks": {
     "build": {
-      "env": ["RELOAD_LAB_ET"]
+      "env": [
+        "RELOAD_LAB_ET"
+      ]
+    },
+    "build:et-probes": {
+      "dependsOn": [
+        "^build"
+      ],
+      "env": [
+        "RELOAD_LAB_ET"
+      ],
+      "outputs": [
+        "dist-et-probes/**"
+      ]
+    },
+    "build:snapshot-probes": {
+      "dependsOn": [
+        "^build"
+      ],
+      "env": [
+        "RELOAD_LAB_ET"
+      ],
+      "outputs": [
+        "dist-snapshot-probes/**"
+      ]
     }
   }
 }

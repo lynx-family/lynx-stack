@@ -12,6 +12,8 @@ export default defineConfig({
     },
     entry: {
       main: './src/index.tsx',
+      'stale-main-thread-return': './src/stale-main-thread-return.tsx',
+      'stale-background-callback': './src/stale-background-callback.tsx',
     },
   },
   plugins: [

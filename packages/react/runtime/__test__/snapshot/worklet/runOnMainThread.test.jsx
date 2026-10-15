@@ -1,3 +1,6 @@
+import { increaseReloadVersion, getReloadVersion } from '../../../src/core/reload-version';
+import { runRunOnMainThreadTask } from '../../../src/worklet-runtime/runOnMainThread';
+import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
@@ -90,7 +93,7 @@ describe('runOnMainThread', () => {
       [
         [
           {
-            "data": "{"worklet":{"_wkltId":"835d:450ef:2"},"params":[1,["args"]],"resolveId":1}",
+            "data": "{"worklet":{"_wkltId":"835d:450ef:2"},"params":[1,["args"]],"resolveId":1,"reloadVersion":0}",
             "type": "Lynx.Worklet.runWorkletCtx",
           },
         ],
@@ -399,4 +402,30 @@ describe('runOnMainThread', () => {
       expect(lynx.getCoreContext().dispatchEvent.mock.calls).toMatchInlineSnapshot(`[]`);
     }
   });
+});
+
+it('preserves the caller version when a post-reload call is delivered in a Snapshot patch', async () => {
+  globalEnvManager.switchToBackground();
+  increaseReloadVersion();
+  const version = getReloadVersion();
+  const promise = new Promise(resolve => {
+    const resolveId = onFunctionCall(resolve);
+    globalEnvManager.switchToMainThread();
+    injectUpdateMainThread();
+    runWorklet.mockImplementationOnce(() => 'fresh');
+    lynxWorkletImpl._runRunOnMainThreadTask.mockImplementationOnce(runRunOnMainThreadTask);
+    globalThis.rLynxChange({
+      data: JSON.stringify({
+        patchList: [],
+        delayedRunOnMainThreadData: [{
+          worklet: { _wkltId: 'post-reload' },
+          params: [],
+          resolveId,
+          reloadVersion: version,
+        }],
+      }),
+      patchOptions: { reloadVersion: version },
+    });
+  });
+  await expect(promise).resolves.toBe('fresh');
 });

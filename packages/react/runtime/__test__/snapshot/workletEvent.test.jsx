@@ -108,6 +108,7 @@ describe('WorkletEvent', () => {
                     "type": "worklet",
                     "value": {
                       "_execId": 1,
+                      "_reloadVersion": 0,
                       "_wkltId": "835d:450ef:1",
                       "_workletType": "main-thread",
                     },
@@ -215,6 +216,7 @@ describe('WorkletEvent', () => {
                     "type": "worklet",
                     "value": {
                       "_execId": 3,
+                      "_reloadVersion": 0,
                       "_wkltId": "835d:450ef:2",
                       "_workletType": "main-thread",
                     },
@@ -404,6 +406,7 @@ describe('WorkletEvent', () => {
                     "type": "worklet",
                     "value": {
                       "_execId": 5,
+                      "_reloadVersion": 0,
                       "_wkltId": "835d:450ef:1",
                       "_workletType": "main-thread",
                     },
@@ -638,6 +641,7 @@ describe('WorkletEvent in spread', () => {
                     "type": "worklet",
                     "value": {
                       "_execId": 6,
+                      "_reloadVersion": 0,
                       "_wkltId": "835d:450ef:1",
                       "_workletType": "main-thread",
                     },
@@ -749,6 +753,7 @@ describe('WorkletEvent in spread', () => {
                     "type": "worklet",
                     "value": {
                       "_execId": 8,
+                      "_reloadVersion": 0,
                       "_wkltId": "835d:450ef:1",
                       "_workletType": "main-thread",
                     },
@@ -943,6 +948,7 @@ describe('WorkletEvent in spread', () => {
                     "type": "worklet",
                     "value": {
                       "_execId": 10,
+                      "_reloadVersion": 0,
                       "_wkltId": "835d:450ef:1",
                       "_workletType": "main-thread",
                     },
@@ -1098,6 +1104,7 @@ describe('WorkletEvent in list', () => {
                       "type": "worklet",
                       "value": {
                         "_execId": 11,
+                        "_reloadVersion": 0,
                         "_wkltId": "835d:450ef:0",
                         "_workletType": "main-thread",
                       },
@@ -1116,6 +1123,7 @@ describe('WorkletEvent in list', () => {
                       "type": "worklet",
                       "value": {
                         "_execId": 12,
+                        "_reloadVersion": 0,
                         "_wkltId": "835d:450ef:1",
                         "_workletType": "main-thread",
                       },
@@ -1175,6 +1183,7 @@ describe('WorkletEvent in list', () => {
                       "type": "worklet",
                       "value": {
                         "_execId": 13,
+                        "_reloadVersion": 0,
                         "_wkltId": "835d:450ef:2",
                         "_workletType": "main-thread",
                       },
@@ -1193,6 +1202,7 @@ describe('WorkletEvent in list', () => {
                       "type": "worklet",
                       "value": {
                         "_execId": 12,
+                        "_reloadVersion": 0,
                         "_wkltId": "835d:450ef:1",
                         "_workletType": "main-thread",
                       },
@@ -1252,6 +1262,7 @@ describe('WorkletEvent in list', () => {
                       "type": "worklet",
                       "value": {
                         "_execId": 13,
+                        "_reloadVersion": 0,
                         "_wkltId": "835d:450ef:2",
                         "_workletType": "main-thread",
                       },
@@ -1270,6 +1281,7 @@ describe('WorkletEvent in list', () => {
                       "type": "worklet",
                       "value": {
                         "_execId": 12,
+                        "_reloadVersion": 0,
                         "_wkltId": "835d:450ef:1",
                         "_workletType": "main-thread",
                       },

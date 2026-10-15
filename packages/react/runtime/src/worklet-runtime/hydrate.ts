@@ -24,7 +24,8 @@ import { hydrateWorkletValue, isHydratedWorkletValue } from './workletRef.js';
  */
 export function hydrateCtx(ctx: Worklet, firstScreenCtx: Worklet): void {
   profile('hydrateCtx', () => {
-    hydrateCtxImpl(ctx, firstScreenCtx, ctx._execId!);
+    firstScreenCtx._reloadVersion = ctx._reloadVersion ?? 0;
+    hydrateCtxImpl(ctx, firstScreenCtx, ctx._execId!, ctx._reloadVersion ?? 0);
   });
 }
 
@@ -32,6 +33,7 @@ function hydrateCtxImpl(
   ctx: ClosureValueType,
   firstScreenCtx: ClosureValueType,
   execId: number,
+  reloadVersion: number,
 ): void {
   if (
     !ctx || typeof ctx !== 'object' || !firstScreenCtx
@@ -63,12 +65,13 @@ function hydrateCtxImpl(
         ctxObj[key] as Record<string, JsFnHandle>,
         firstScreenCtxObj[key] as Record<string, JsFnHandle>,
         execId,
+        reloadVersion,
       );
     } else {
       const firstScreenValue = typeof firstScreenCtxObj[key] === 'function'
         ? (firstScreenCtxObj[key] as { boundCtx?: object }).boundCtx as ClosureValueType
         : firstScreenCtxObj[key];
-      hydrateCtxImpl(ctxObj[key], firstScreenValue, execId);
+      hydrateCtxImpl(ctxObj[key], firstScreenValue, execId, reloadVersion);
     }
   }
 }
@@ -121,9 +124,11 @@ function hydrateDelayRunOnBackgroundTasks(
   fnObjs: Record<string, JsFnHandle>, // example: {"_jsFn1":{"_jsFnId":1}}
   firstScreenFnObjs: Record<string, JsFnHandle>, // example: {"_jsFn1":{"_isFirstScreen":true,"_delayIndices":[0]}}
   execId: number,
+  reloadVersion: number,
 ) {
   for (const fnName in fnObjs) {
     const fnObj = fnObjs[fnName]!;
+    fnObj._reloadVersion = reloadVersion;
     const firstScreenFnObj: JsFnHandle | undefined = firstScreenFnObjs[fnName];
     if (!firstScreenFnObj?._delayIndices) {
       if (firstScreenFnObj) {

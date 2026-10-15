@@ -102,7 +102,7 @@ export function installElementTemplatePatchListener(): void {
       try {
         for (const data of delayedRunOnMainThreadData) {
           try {
-            runRunOnMainThreadTask(data.worklet, data.params as ClosureValueType[], data.resolveId);
+            runRunOnMainThreadTask(data.worklet, data.params as ClosureValueType[], data.resolveId, data.reloadVersion);
           } catch (error) {
             lynx.reportError(error as Error);
           }

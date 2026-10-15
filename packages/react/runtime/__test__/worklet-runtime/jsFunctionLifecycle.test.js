@@ -37,7 +37,10 @@ describe('jsFunctionLifecycle', () => {
     expect(events[0]).toMatchInlineSnapshot(`
       {
         "data": [
-          3,
+          {
+            "execId": 3,
+            "reloadVersion": 0,
+          },
         ],
         "type": "Lynx.Worklet.releaseBackgroundWorkletCtx",
       }
@@ -63,7 +66,10 @@ describe('jsFunctionLifecycle', () => {
     expect(events[0]).toMatchInlineSnapshot(`
       {
         "data": [
-          3,
+          {
+            "execId": 3,
+            "reloadVersion": 0,
+          },
         ],
         "type": "Lynx.Worklet.releaseBackgroundWorkletCtx",
       }
@@ -80,7 +86,10 @@ describe('jsFunctionLifecycle', () => {
     expect(events[0]).toMatchInlineSnapshot(`
       {
         "data": [
-          3,
+          {
+            "execId": 3,
+            "reloadVersion": 0,
+          },
         ],
         "type": "Lynx.Worklet.releaseBackgroundWorkletCtx",
       }

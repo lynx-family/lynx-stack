@@ -37,7 +37,7 @@ describe('runOnMainThread', () => {
       [
         [
           {
-            "data": "{"resolveId":10,"returnValue":"ret"}",
+            "data": "{"resolveId":10,"reloadVersion":0,"returnValue":"ret"}",
             "type": "Lynx.Worklet.FunctionCallRet",
           },
         ],
@@ -56,7 +56,7 @@ describe('runOnMainThread', () => {
       [
         [
           {
-            "data": "{"resolveId":10}",
+            "data": "{"resolveId":10,"reloadVersion":0}",
             "type": "Lynx.Worklet.FunctionCallRet",
           },
         ],

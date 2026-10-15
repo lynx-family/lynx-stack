@@ -1084,6 +1084,7 @@ describe('ElementTemplate patch stream (apply)', () => {
         mainThreadWorklet,
         ['from-hydrate'],
         7,
+        undefined,
       );
       expect(callOrder).toEqual([
         'hydrate',
@@ -1430,7 +1431,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
       expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('target handle 404 not found');
       expect(runDelayedBackgroundFunctions).toHaveBeenCalledTimes(1);
-      expect(runRunOnMainThreadTask).toHaveBeenCalledWith(worklet, [], 9);
+      expect(runRunOnMainThreadTask).toHaveBeenCalledWith(worklet, [], 9, undefined);
       expect(setShouldFlush.mock.calls).toEqual([[false], [true]]);
       expect(mockFlushElementTree).toHaveBeenCalledTimes(1);
     } finally {

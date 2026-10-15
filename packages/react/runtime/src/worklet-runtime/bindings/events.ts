@@ -13,12 +13,14 @@ const enum WorkletEvents {
 
 interface RunWorkletCtxData {
   resolveId: number;
+  reloadVersion?: number;
   worklet: Worklet;
   params: unknown[];
 }
 
 interface RunWorkletCtxRetData {
   resolveId: number;
+  reloadVersion?: number;
   returnValue: unknown;
 }
 
