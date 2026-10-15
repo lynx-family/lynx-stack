@@ -12,6 +12,7 @@ import { render } from 'preact';
 import { destroyBackground } from './destroy.js';
 import { renderMainThread } from './render.js';
 import { increaseReloadVersion } from '../../core/reload-version.js';
+import { destroyRuntime } from '../../core/runtime-destroy.js';
 import { __root, setRoot } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isEmptyObject } from '../../utils.js';
@@ -115,6 +116,7 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
     && lynxSymbols[Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__')] === true
     && typeof lynxSymbols[mainThreadEntryReloaderKey] === 'function'
   ) {
+    destroyRuntime();
     // Keep the old tree until the new runtime has rendered, then let that
     // runtime own renderMainThread/hydrate and the rest of the reload.
     const handoff = {

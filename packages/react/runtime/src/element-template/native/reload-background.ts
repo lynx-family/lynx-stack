@@ -7,6 +7,7 @@ import { render } from 'preact';
 
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
 import { increaseReloadVersion } from '../../core/reload-version.js';
+import { destroyRuntime } from '../../core/runtime-destroy.js';
 import { destroyElementTemplateBackgroundRuntime } from '../background/destroy.js';
 import { setupBackgroundElementTemplateDocument } from '../background/document.js';
 import { installElementTemplateHydrationListener } from '../background/hydration-listener.js';
@@ -43,6 +44,7 @@ export function reloadBackground(updateData: unknown): void {
 }
 
 export function reloadBackgroundEntry(updateData: Record<string, unknown>, options?: Record<string, unknown>): void {
+  destroyRuntime();
   const tt = lynx.getApp();
   const data = Object.assign({}, lynx.__initData, updateData);
   increaseReloadVersion();

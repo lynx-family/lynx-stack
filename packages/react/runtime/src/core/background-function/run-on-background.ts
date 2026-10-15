@@ -9,7 +9,7 @@ import { delayRunOnBackground } from '../../worklet-runtime/bindings/bindings.js
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxRetData } from '../../worklet-runtime/bindings/events.js';
 import type { ClosureValueType, JsFnHandle, Worklet } from '../../worklet-runtime/bindings/types.js';
-import { registerDestroyTask } from '../runtime-destroy.js';
+import { isRuntimeDestroyed, registerDestroyTask } from '../runtime-destroy.js';
 import { onFunctionCall } from '../thread-function-call/return-value.js';
 
 /**
@@ -138,6 +138,7 @@ export function runOnBackground<R, Fn extends (...args: any[]) => R>(
   }
   return async (...params: ClosureValueType[]): Promise<R> => {
     return new Promise((resolve) => {
+      if (isRuntimeDestroyed()) return;
       const resolveId = onFunctionCall(resolve);
       const reloadVersion = getReloadVersion();
 

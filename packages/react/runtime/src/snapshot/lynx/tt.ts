@@ -8,6 +8,7 @@ import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalPro
 import { updateCardData } from '../../core/lynx-update-data.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../../core/performance.js';
 import { increaseReloadVersion } from '../../core/reload-version.js';
+import { destroyRuntime } from '../../core/runtime-destroy.js';
 import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
@@ -63,6 +64,7 @@ function injectTt(): void {
   ) {
     tt.onAppReload = (updateData: Record<string, unknown>, options?: Record<string, unknown>) => {
       const data = Object.assign({}, lynx.__initData, updateData);
+      destroyRuntime();
       deinitGlobalSnapshotPatch();
       increaseReloadVersion();
       tt.callDestroyLifetimeFun();

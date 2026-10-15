@@ -5,6 +5,7 @@
 import { onMtsDestruction } from './mts-destroy.js';
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
 import { increaseReloadVersion } from '../../core/reload-version.js';
+import { destroyRuntime } from '../../core/runtime-destroy.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX } from '../protocol/page.js';
 import type { SerializedEtNode, SerializedPageRoot } from '../protocol/types.js';
@@ -76,6 +77,7 @@ export function reloadMainThread(data: unknown, options: UpdatePageOption): void
       && typeof lynxSymbols[reloaderKey] === 'function'
     ) {
       const handoff: ReloadHandoff = { page: __page, data: lynx.__initData, options };
+      destroyRuntime();
       onMtsDestruction();
       Reflect.deleteProperty(lynx, Symbol.for('__LYNX_EXTERNAL_GLOBAL__'));
       (lynxSymbols[reloaderKey] as () => void)();

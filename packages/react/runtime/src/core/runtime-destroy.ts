@@ -5,6 +5,18 @@
 type DestroyTask = () => void;
 
 const destroyTasks = new Set<DestroyTask>();
+let destroyed = false;
+
+// Retained closures must not send new calls or retain Promise resolvers after retirement.
+export function isRuntimeDestroyed(): boolean {
+  return destroyed;
+}
+
+/** Retire an entry permanently; ordinary reload only runs reusable cleanup. */
+export function destroyRuntime(): void {
+  destroyed = true;
+  runDestroyTasks();
+}
 
 export function registerDestroyTask(task: DestroyTask): () => void {
   destroyTasks.add(task);

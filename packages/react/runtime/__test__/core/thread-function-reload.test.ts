@@ -2,17 +2,27 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Queue real protocol messages so reload can happen before their delivery.
 function setupContexts() {
-  const listeners = new Map<string, (event: RuntimeProxy.Event) => void>();
+  const listeners = new Map<string, Set<(event: RuntimeProxy.Event) => void>>();
   const replies: RuntimeProxy.Event[] = [];
   const context = {
-    addEventListener: (type: string, listener: (event: RuntimeProxy.Event) => void) => listeners.set(type, listener),
-    removeEventListener: (type: string) => listeners.delete(type),
+    addEventListener: (type: string, listener: (event: RuntimeProxy.Event) => void) => {
+      if (!listeners.has(type)) listeners.set(type, new Set());
+      listeners.get(type)!.add(listener);
+    },
+    removeEventListener: (type: string, listener: (event: RuntimeProxy.Event) => void) => {
+      listeners.get(type)?.delete(listener);
+    },
     dispatchEvent: (event: RuntimeProxy.Event) => replies.push(event),
   };
   vi.stubGlobal('lynx', { getCoreContext: () => context, getJSContext: () => context });
   vi.stubGlobal('SystemInfo', { lynxSdkVersion: '999.999' });
   vi.stubGlobal('__JS__', false);
-  return { deliver: (event: RuntimeProxy.Event) => listeners.get(event.type)?.(event), replies };
+  return {
+    deliver: (event: RuntimeProxy.Event) => {
+      for (const listener of [...(listeners.get(event.type) ?? [])]) listener(event);
+    },
+    replies,
+  };
 }
 
 function worklet(fn: () => string) {
@@ -22,6 +32,44 @@ function worklet(fn: () => string) {
 describe('cross-thread messages arriving after reload', () => {
   beforeEach(() => vi.resetModules());
   afterEach(() => vi.unstubAllGlobals());
+
+  it('does not restart calls or old continuations after the entry is destroyed', async () => {
+    const { deliver, replies } = setupContexts();
+    vi.stubGlobal('__LEPUS__', false);
+    const oldReturns = await import('../../src/core/thread-function-call/return-value.js');
+    const { destroyRuntime } = await import('../../src/core/runtime-destroy.js');
+    const { increaseReloadVersion } = await import('../../src/core/reload-version.js');
+    const { runOnBackground } = await import('../../src/core/background-function/run-on-background.js');
+    const { createRunOnMainThread } = await import('../../src/core/thread-function-call/main-thread.js');
+    const oldContinuation = vi.fn();
+    const oldCall = runOnBackground({ _jsFnId: 1, _execId: 1, _reloadVersion: 0 } as unknown as () => string);
+    void oldCall().then(oldContinuation);
+    replies.length = 0;
+
+    increaseReloadVersion();
+    destroyRuntime();
+    // Reset is reusable cleanup, but must not undo a permanent destroy.
+    oldReturns.resetFunctionCallReturnListener();
+    void oldCall().then(oldContinuation);
+    vi.stubGlobal('__JS__', true);
+    const oldMainCall = createRunOnMainThread({ shouldDispatchRunOnMainThreadDirectly: () => true });
+    void oldMainCall({ _wkltId: 'old' } as unknown as () => string)().then(oldContinuation);
+    expect(replies).toHaveLength(0);
+
+    vi.resetModules();
+    vi.stubGlobal('__JS__', false);
+    const fresh = await import('../../src/core/background-function/run-on-background.js');
+    const newFn = vi.fn(() => 'new-result');
+    fresh.registerBackgroundFunctionCtx(worklet(newFn));
+    const result = fresh.runOnBackground(
+      { _jsFnId: 1, _execId: 1, _reloadVersion: 1 } as unknown as () => string,
+    )();
+    deliver(replies.shift()!);
+    deliver(replies.shift()!);
+    await expect(result).resolves.toBe('new-result');
+    expect(oldContinuation).not.toHaveBeenCalled();
+    expect(newFn).toHaveBeenCalledOnce();
+  });
 
   it('ignores an old unmount call instead of calling a new function with the same IDs', async () => {
     const { deliver, replies } = setupContexts();

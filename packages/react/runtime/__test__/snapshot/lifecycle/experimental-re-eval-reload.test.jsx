@@ -13,7 +13,7 @@ import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/up
 import { __root, setRoot } from '../../../src/root';
 import { SnapshotInstance, snapshotInstanceManager } from '../../../src/snapshot/snapshot/snapshot';
 import { setupLynxEnv } from '../../../src/snapshot/lynx/env';
-import { clearListGlobal } from '../../../src/snapshot/list/list';
+import { restoreListState } from '../../../src/snapshot/list/list';
 import { setupPage } from '../../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree, nativeMethodQueue, waitSchedule } from '../utils/nativeMethod';
@@ -179,9 +179,9 @@ describe('experimental re-eval reload', () => {
     lynx[entrySupportsReEvalKey] = true;
     vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
     lynx[mainThreadEntryReloaderKey] = () => {
-      // A re-evaluated module starts with empty List registries, although
-      // native still owns its displayed cells and recycling pool.
-      clearListGlobal();
+      // A fresh module has new bindings; it must not clear the shared registry
+      // still owned by the old native cells and reload handoff.
+      restoreListState({ signMap: {}, recycleMap: {}, destroyLifetimeHandlers: new Map() });
       setRoot(new SnapshotInstance('root'));
       __root.__jsx = page;
     };
