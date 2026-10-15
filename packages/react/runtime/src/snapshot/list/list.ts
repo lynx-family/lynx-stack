@@ -6,8 +6,8 @@ import { LifecycleConstant } from '../lifecycle/constant.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
 
-export const gSignMap: Record<number, Map<number, SnapshotInstance>> = {};
-export const gRecycleMap: Record<number, Map<string, Map<number, SnapshotInstance>>> = {};
+export let gSignMap: Record<number, Map<number, SnapshotInstance>> = {};
+export let gRecycleMap: Record<number, Map<string, Map<number, SnapshotInstance>>> = {};
 export let destroyLifetimeHandlerMap: Map<number, () => void> = new Map();
 const gParentWeakMap: WeakMap<SnapshotInstance, unknown> = /*#__PURE__*/ new WeakMap();
 const resolvedPromise = /* @__PURE__ */ Promise.resolve();
@@ -18,17 +18,17 @@ export function captureListState(): {
   destroyLifetimeHandlers: typeof destroyLifetimeHandlerMap;
 } {
   return {
-    signMap: { ...gSignMap },
-    recycleMap: { ...gRecycleMap },
+    signMap: gSignMap,
+    recycleMap: gRecycleMap,
     destroyLifetimeHandlers: destroyLifetimeHandlerMap,
   };
 }
 
 export function restoreListState(state: ReturnType<typeof captureListState>): void {
-  // Old native listeners and the new owner must remove from the same registry.
+  // Old instances and native callbacks must observe removals by the new owner.
   destroyLifetimeHandlerMap = state.destroyLifetimeHandlers;
-  Object.assign(gSignMap, state.signMap);
-  Object.assign(gRecycleMap, state.recycleMap);
+  gSignMap = state.signMap;
+  gRecycleMap = state.recycleMap;
 }
 
 export function clearListGlobal(): void {
