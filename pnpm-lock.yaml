@@ -403,6 +403,135 @@ importers:
 
   docs:
     devDependencies:
+      '@lynx-js/autolink-codegen':
+        specifier: workspace:*
+        version: link:../packages/lynx/autolink-codegen
+      '@lynx-js/cache-events-webpack-plugin':
+        specifier: workspace:*
+        version: link:../packages/webpack/cache-events-webpack-plugin
+      '@lynx-js/chunk-loading-webpack-plugin':
+        specifier: workspace:*
+        version: link:../packages/webpack/chunk-loading-webpack-plugin
+      '@lynx-js/config-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../packages/rspeedy/plugin-config
+      '@lynx-js/create-lynx':
+        specifier: workspace:*
+        version: link:../packages/rspeedy/create-lynx
+      '@lynx-js/css-extract-webpack-plugin':
+        specifier: workspace:*
+        version: link:../packages/webpack/css-extract-webpack-plugin
+      '@lynx-js/css-serializer':
+        specifier: workspace:*
+        version: link:../packages/tools/css-serializer
+      '@lynx-js/debug-metadata':
+        specifier: workspace:*
+        version: link:../packages/tools/debug-metadata
+      '@lynx-js/debug-metadata-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../packages/rspeedy/plugin-debug-metadata
+      '@lynx-js/external-bundle-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../packages/rspeedy/plugin-external-bundle
+      '@lynx-js/externals-loading-webpack-plugin':
+        specifier: workspace:*
+        version: link:../packages/webpack/externals-loading-webpack-plugin
+      '@lynx-js/genui':
+        specifier: workspace:*
+        version: link:../packages/genui
+      '@lynx-js/genui-a2ui':
+        specifier: workspace:*
+        version: link:../packages/genui/a2ui
+      '@lynx-js/genui-a2ui-catalog-extractor':
+        specifier: workspace:*
+        version: link:../packages/genui/a2ui-catalog-extractor
+      '@lynx-js/genui-a2ui-prompt':
+        specifier: workspace:*
+        version: link:../packages/genui/a2ui-prompt
+      '@lynx-js/genui-lynx-xml':
+        specifier: workspace:*
+        version: link:../packages/genui/lynx-xml
+      '@lynx-js/genui-mcp-apps':
+        specifier: workspace:*
+        version: link:../packages/genui/mcp-apps
+      '@lynx-js/genui-openui':
+        specifier: workspace:*
+        version: link:../packages/genui/openui
+      '@lynx-js/genui-reactlynx':
+        specifier: workspace:*
+        version: link:../packages/genui/reactlynx
+      '@lynx-js/gesture-runtime':
+        specifier: workspace:*
+        version: link:../packages/lynx/gesture-runtime
+      '@lynx-js/i18next-translation-dedupe':
+        specifier: workspace:*
+        version: link:../packages/i18n/i18next-translation-dedupe
+      '@lynx-js/kitten-lynx-test-infra':
+        specifier: workspace:*
+        version: link:../packages/testing-library/kitten-lynx
+      '@lynx-js/lynx-bundle-rslib-config':
+        specifier: workspace:*
+        version: link:../packages/rspeedy/lynx-bundle-rslib-config
+      '@lynx-js/motion':
+        specifier: workspace:*
+        version: link:../packages/motion
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../packages/rspeedy/plugin-qrcode
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../packages/react
+      '@lynx-js/react-alias-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../packages/rspeedy/plugin-react-alias
+      '@lynx-js/react-refresh-webpack-plugin':
+        specifier: workspace:*
+        version: link:../packages/webpack/react-refresh-webpack-plugin
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../packages/rspeedy/plugin-react
+      '@lynx-js/react-signals':
+        specifier: workspace:*
+        version: link:../packages/react-signals
+      '@lynx-js/react-webpack-plugin':
+        specifier: workspace:*
+        version: link:../packages/webpack/react-webpack-plugin
+      '@lynx-js/reactlynx-testing-library':
+        specifier: workspace:*
+        version: link:../packages/react/testing-library
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../packages/rspeedy/plugin-lynx
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../packages/rspeedy/core
+      '@lynx-js/runtime-config-webpack-plugin':
+        specifier: workspace:*
+        version: link:../packages/webpack/runtime-config-webpack-plugin
+      '@lynx-js/runtime-wrapper-webpack-plugin':
+        specifier: workspace:*
+        version: link:../packages/webpack/runtime-wrapper-webpack-plugin
+      '@lynx-js/template-webpack-plugin':
+        specifier: workspace:*
+        version: link:../packages/webpack/template-webpack-plugin
+      '@lynx-js/testing-environment':
+        specifier: workspace:*
+        version: link:../packages/testing-library/testing-environment
+      '@lynx-js/vanilla-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../packages/rspeedy/plugin-vanilla
+      '@lynx-js/web-platform-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../packages/web-platform/web-rsbuild-plugin
+      '@lynx-js/web-worker-rpc':
+        specifier: workspace:*
+        version: link:../packages/web-platform/web-worker-rpc
+      '@lynx-js/webpack-runtime-globals':
+        specifier: workspace:*
+        version: link:../packages/webpack/webpack-runtime-globals
+      '@lynx-js/websocket':
+        specifier: workspace:*
+        version: link:../packages/rspeedy/websocket
       '@rspress/core':
         specifier: 2.0.21
         version: 2.0.21(@rspack/core@2.2.7(@swc/helpers@0.5.23))(core-js@3.50.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
@@ -415,6 +544,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.4
         version: 19.2.4(@types/react@19.2.18)
+      create-lynx-library:
+        specifier: workspace:*
+        version: link:../packages/lynx/create-lynx-library
       react:
         specifier: 19.3.0
         version: 19.3.0

@@ -4,6 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import type { Site } from './site.ts';
 import { ROOT, hasEntryPoint } from './workspace.ts';
 import type { WorkspacePackage } from './workspace.ts';
 
@@ -65,4 +66,15 @@ export function packagesSection(
       .filter(pkg => !(pkg.name in ownSections) && hasEntryPoint(pkg.dir))
       .map(pkg => pkg.dir),
   };
+}
+
+/** The exact sections rendered by a site, shared with dependency validation. */
+export function referenceSections(
+  site: Site,
+  packages: WorkspacePackage[],
+): Section[] {
+  return [
+    ...site.sections(),
+    packagesSection(packages, site.ownSections),
+  ];
 }

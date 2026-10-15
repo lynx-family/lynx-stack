@@ -21,6 +21,8 @@ pnpm turbo dev --filter @lynx-js/lynx-stack-docs      # http://localhost:3000
 
 Each package is converted with TypeDoc's `packages` strategy, from `src/index.ts` unless its own `typedoc.json` says otherwise. A package without an API gets a page with its links and `package.json` description. The build fails on any TypeDoc warning.
 
+Documented workspace packages must be listed in this package's `devDependencies`; Turbo's `^build` builds their dependencies before conversion. Run `pnpm --filter @lynx-js/lynx-stack-docs check:dependencies` after adding a package or section. CI runs this check even when the documentation build is cached, using the same section selection as the generator. Packages with separate production and test projects should set `tsconfig` in their `typedoc.json` to the production configuration. TypeScript diagnostics remain enabled.
+
 The content comes from TSDoc only: a package introduction is its `@packageDocumentation`, ReactLynx guides such as the directives are `@document` pages under `packages/react/docs`, and a configuration option is tagged `@lynxDefaultChanged` when `pluginLynx` changes its Rsbuild default. When a page is wrong, change the TSDoc.
 
 ## Chinese

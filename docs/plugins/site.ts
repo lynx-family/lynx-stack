@@ -45,7 +45,7 @@ export interface Site {
   /** The packages to document, out of the ones the workspace publishes. */
   packages?: (all: WorkspacePackage[]) => WorkspacePackage[];
   /** The sections rendered before the one that lists every package. */
-  sections: (packages: WorkspacePackage[]) => Section[];
+  sections: () => Section[];
 }
 
 /** The reference this repository generates for itself. */

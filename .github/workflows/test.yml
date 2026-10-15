@@ -223,6 +223,7 @@ jobs:
     with:
       runs-on: lynx-ubuntu-26.04-medium
       run: |
+        pnpm --filter @lynx-js/lynx-stack-docs check:dependencies
         pnpm turbo build --filter @lynx-js/lynx-stack-docs
         if test "$(git status --porcelain -- docs/i18n | wc -l)" -gt 0 ; then
           echo "::error::API Docs Translations Changed"

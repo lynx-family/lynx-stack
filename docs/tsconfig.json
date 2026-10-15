@@ -10,5 +10,5 @@
     "lib": ["DOM", "ES2023"],
     "types": ["node"],
   },
-  "include": ["plugins", "rspress.config.ts"],
+  "include": ["plugins", "rspress.config.ts", "check-dependencies.ts"],
 }

@@ -7,21 +7,14 @@
     "build": {
       "dependsOn": [
         "//#build",
-        "@lynx-js/reactlynx-testing-library#build"
+        "^build"
       ],
       "env": [
         "NODE_ENV"
       ],
       "inputs": [
         "$TURBO_DEFAULT$",
-        "../packages/**/src/**",
-        "../packages/**/types/**",
-        "../packages/**/docs/**",
-        "../packages/**/package.json",
-        "../packages/**/README.md",
-        "../packages/**/typedoc.json",
-        "../packages/**/tsdoc.json",
-        "../packages/**/tsconfig*.json",
+        "../packages/**/{docs/**,package.json,README.md,typedoc.json,tsdoc.json,tsconfig*.json}",
         "!../packages/**/node_modules/**"
       ],
       "outputs": [
@@ -35,7 +28,7 @@
     "dev": {
       "dependsOn": [
         "//#build",
-        "@lynx-js/reactlynx-testing-library#build"
+        "^build"
       ],
       "env": [
         "NODE_ENV"

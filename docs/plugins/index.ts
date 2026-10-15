@@ -15,7 +15,7 @@ import type { RspressPlugin } from '@rspress/core';
 
 import { renderConfigReference } from './config.ts';
 import { packageGroups, pluginPackagePages } from './packages.ts';
-import { packagesSection } from './sections.ts';
+import { referenceSections } from './sections.ts';
 import { LYNX_STACK, contentDir } from './site.ts';
 import type { Site } from './site.ts';
 import { Translations } from './translate.ts';
@@ -264,10 +264,7 @@ export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
   );
   const all = publicPackages(site.root);
   const packages = site.packages?.(all) ?? all;
-  const rendered = [
-    ...site.sections(packages),
-    packagesSection(packages, site.ownSections),
-  ];
+  const rendered = referenceSections(site, packages);
   return [
     {
       name: 'lynx:api-reference-clean',
