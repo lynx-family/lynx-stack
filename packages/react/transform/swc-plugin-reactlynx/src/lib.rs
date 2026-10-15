@@ -303,10 +303,7 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
       config,
     ),
     Either::B(config) => Optional::new(
-      visit_mut_pass(
-        WorkletVisitor::new(options.mode.unwrap_or(TransformMode::Production), config)
-          .with_content_hash(content_hash),
-      ),
+      visit_mut_pass(WorkletVisitor::new(config).with_content_hash(content_hash)),
       true,
     ),
   };
