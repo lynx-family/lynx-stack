@@ -873,7 +873,7 @@ fn transform_react_lynx_inner(
       }
       Either::B(config) => {
         let visitor =
-          WorkletVisitor::new(options.mode.unwrap_or(TransformMode::Production), config)
+          WorkletVisitor::new(config)
             .with_content_hash(content_hash);
         let visitor =
           visitor

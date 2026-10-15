@@ -175,6 +175,21 @@ describe('collected defines', () => {
     expect(result.code).not.toContain('__CreateView');
   });
 
+  it.each(['development', 'production'])(
+    'keeps worklet implementations in main-thread definitions in %s builds',
+    async mode => {
+      const result = await transformReactLynx(source, options('JS', { mode }));
+
+      expect(result.errors).toEqual([]);
+      expect(result.code).not.toContain('registerWorkletOnBackground');
+      expect(result.code).not.toContain('console.info');
+      expect(result.code).toContain('_wkltId');
+      expect(result.definesForWorklet).toHaveLength(1);
+      expect(result.definesForWorklet[0].code).toContain('__registerWorklet');
+      expect(result.definesForWorklet[0].code).toContain('console.info');
+    },
+  );
+
   it('collects the same definitions the main-thread transform would emit', async () => {
     const fromBackground = await transformReactLynx(
       source,
@@ -331,6 +346,21 @@ describe('legacy slot codegen', () => {
       }
     `);
   });
+
+  it.each(['development', 'production'])(
+    'keeps worklet implementations in main-thread definitions in %s builds',
+    async mode => {
+      const result = await transformReactLynx(source, { ...legacy('JS'), mode });
+
+      expect(result.errors).toEqual([]);
+      expect(result.code).not.toContain('registerWorkletOnBackground');
+      expect(result.code).not.toContain('console.info');
+      expect(result.code).toContain('_wkltId');
+      expect(result.definesForWorklet).toHaveLength(1);
+      expect(result.definesForWorklet[0].code).toContain('__registerWorklet');
+      expect(result.definesForWorklet[0].code).toContain('console.info');
+    },
+  );
 
   it('collects the same definitions the main-thread transform would emit', async () => {
     const fromBackground = await transformReactLynx(source, legacy('JS'));

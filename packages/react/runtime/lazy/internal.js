@@ -51,7 +51,6 @@ export const {
   process,
   registerRuntimeBackend,
   registerRuntimeVersion,
-  registerWorkletOnBackground,
   snapshotCreateList,
   snapshotManager,
   snapshotCreatorMap,
