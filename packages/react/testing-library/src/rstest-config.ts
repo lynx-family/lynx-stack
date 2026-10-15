@@ -46,7 +46,8 @@ function createDefaultRstestConfig(): ExtendConfig {
     plugins: [
       {
         name: 'lynx:testing-runtime-init',
-        pre: ['lynx:react-alias'],
+        // Integrations can embed the alias plugin inside a React wrapper.
+        pre: ['lynx:react', 'lynx:react-alias'],
         setup(api) {
           api.modifyBundlerChain(chain => {
             chain.resolve.alias.set(
