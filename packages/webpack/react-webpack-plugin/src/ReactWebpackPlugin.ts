@@ -11,7 +11,10 @@ import type {
   ExtractStrConfig,
   TransformBuiltinAttributeNamesOptions,
 } from '@lynx-js/react/transform';
-import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+import {
+  LynxEncodePlugin,
+  LynxTemplatePlugin,
+} from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { applyDefinesInjection } from './DefinesInjection.js';
@@ -22,6 +25,7 @@ import {
 } from './loaders/main-thread.js';
 import type { ReactRuntimeRequirementsBuildInfo } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
+import { applyMainThreadHMR } from './MainThreadHMR.js';
 
 const require = createRequire(import.meta.url);
 
@@ -538,6 +542,17 @@ class ReactWebpackPlugin {
     const entryPairs = options.entryPairs ?? [];
     if (entryPairs.length > 0) {
       applyDefinesInjection(compiler, entryPairs, this.constructor.name);
+      if (
+        isDev && !options.experimental_isLazyBundle
+        && compiler.options.plugins.some(plugin =>
+          plugin instanceof compiler.webpack.HotModuleReplacementPlugin
+        )
+        && compiler.options.plugins.some(plugin =>
+          plugin instanceof LynxEncodePlugin
+        )
+      ) {
+        applyMainThreadHMR(compiler, entryPairs);
+      }
     }
 
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
