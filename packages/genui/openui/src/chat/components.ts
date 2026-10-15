@@ -2,6 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 export { Card } from './Card/index.jsx';
+export { Input } from './Input/index.jsx';
+export { RadioItem } from './RadioItem/index.jsx';
+export { RadioGroup } from './RadioGroup/index.jsx';
+export { CheckBoxItem } from './CheckBoxItem/index.jsx';
+export { CheckBoxGroup } from './CheckBoxGroup/index.jsx';
+export { Slider } from './Slider/index.jsx';
+export { FormControl } from './FormControl/index.jsx';
+export { Form } from './Form/index.jsx';
 export { ImageText } from './ImageText/index.jsx';
 export { ListItem } from './ListItem/index.jsx';
 export { ListBlock } from './ListBlock/index.jsx';
