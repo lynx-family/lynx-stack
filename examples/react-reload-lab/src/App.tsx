@@ -20,6 +20,7 @@ import type { ElementPapiTraceSnapshot } from './element-papi-trace.js';
 import { ListExample } from './ListExample.js';
 
 declare const __RELOAD_LAB_ET__: boolean;
+declare const __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__: boolean;
 
 const LazyComponent = lazy(() => import('./LazyComponent.js'));
 
@@ -182,7 +183,9 @@ export function App() {
           reloadTemplate.
         </text>
         <view className='HeroFooter'>
-          <text className='FeaturePill'>ENTRY RE-EVAL ON</text>
+          <text className='FeaturePill'>
+            ENTRY RE-EVAL {__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__ ? 'ON' : 'OFF'}
+          </text>
           <text className='RuntimeLabel'>RUNTIME #{runtimeEpoch}</text>
         </view>
       </view>
