@@ -21,7 +21,36 @@ const response =
 
 The host handles `OpenUrl` and conversation actions through `onAction`; the components do not assume a browser or a backend. Markdown renders as native Lynx elements, and raw HTML is displayed as text. The native main-thread first frame displays plain text; background hydration applies Markdown, keeping Unicode-dependent parsing out of the main-thread VM. Citations are one-based indices into `Card.sources`.
 
-For server-side prompt generation and validation:
+## Import selected components
+
+`createOpenUiChatLibrary()` registers the entire Chat catalog, including all of its component styles. It does not remove styles based on which components occur in a response. To keep unused components and their styles out of an application, use the individual component entry points and the catalog-free factory:
+
+```tsx
+import {
+  createOpenUiLibrary,
+  OpenUiRenderer,
+} from '@lynx-js/genui/openui/explicit';
+import { Card } from '@lynx-js/genui/openui/chat/Card';
+import { Text } from '@lynx-js/genui/openui/chat/Text';
+import { Button } from '@lynx-js/genui/openui/chat/Button';
+import '@lynx-js/luna-styles/index.css';
+import '@lynx-js/genui/openui/styles/theme.css';
+
+const library = createOpenUiLibrary({
+  root: 'Card',
+  includeDefaultComponents: false,
+  components: [Card, Text, Button],
+});
+
+<OpenUiRenderer
+  library={library}
+  response={'root = Card([Text("text", "Hello"), Button("Continue")])'}
+/>;
+```
+
+Each component imports its own CSS automatically; there is no separate component stylesheet to import. Shared implementation styles remain included where needed: `BoldText` uses the `Text` styles, and `TextContent` uses the Chat Markdown styles. Theme tokens remain a host-level import. Schema-only items such as `Col` have no renderer styles. Prefer the component subpaths over the aggregate `openui/chat` entry when unused modules must stay outside the dependency graph.
+
+## Server-side prompt generation and validation
 
 ```ts
 import { createOpenUiChatPromptLibrary } from '@lynx-js/genui/openui/chat/agent';
@@ -29,6 +58,23 @@ const library = createOpenUiChatPromptLibrary();
 const prompt = library.prompt();
 const schema = library.toJSONSchema();
 ```
+
+For a reduced client library, use the matching headless component subpaths so the Agent generates the same vocabulary:
+
+```ts
+import { createLibrary } from '@openuidev/lang-core';
+import { Card } from '@lynx-js/genui/openui/chat/agent/Card';
+import { Text } from '@lynx-js/genui/openui/chat/agent/Text';
+import { Button } from '@lynx-js/genui/openui/chat/agent/Button';
+
+const library = createLibrary({
+  root: 'Card',
+  components: [Card, Text, Button],
+});
+const prompt = library.prompt();
+```
+
+These entries load neither ReactLynx nor CSS. Both component and agent subpaths cover every component listed below, including the shared `Button`.
 
 Supported components:
 

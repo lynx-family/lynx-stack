@@ -8,6 +8,11 @@
 
 也可以直接[打开渲染预览](https://lynx-stack.dev/genui/lynx-genui-stream.html)，切换 A2UI 和 OpenUI，
 编辑源码，直接渲染或模拟流式渲染。页面使用同一 Playground 部署中的 renderer 和 bundle。
+页面默认打开使用 OpenUI Chat 的[北海道示例](https://lynx-stack.dev/genui/lynx-genui-stream.html?inlineMode=1)，
+包含随页面打包的图片与交互表单。开启 **Markdown + OpenUI** 即可混合显示文字和 UI 代码块。
+示例下拉框也提供基础 OpenUI 示例，旁边的 **重置示例** 可恢复当前示例源码和交互状态。
+旅行 case 仅保留北海道；完整组件示例仍在主 Playground 中。A2UI 提供最小消息示例，
+支持消息数组和 NDJSON。草稿按协议、示例和 inline 模式分别保存。
 
 ## 选择预览资源
 
@@ -178,7 +183,10 @@ Web 应用可以在收到来自预览 iframe 的 `A2UI_RENDER_READY` 且 `runtim
 - **OpenUI**：使用 `render.html?protocol=openui&demoUrl=./openui.web.js`，通过 `rawText` 或 `rawTextUrl`
   传入 OpenUI Lang 文本；原生宿主加载
   [`openui.lynx.js`](https://lynx-stack.dev/genui/openui.lynx.js)，通过
-  `globalProps.rawText` 传入文本。原生 renderer 不读取 `rawTextUrl`，宿主应先获取文本。
+  `globalProps.rawText` 传入文本，也可在宿主提供 `fetch` 时将绝对源码 URL 传入
+  `globalProps.rawTextUrl`。直接传入的 `rawText` 优先于 URL。
+  Web URL 使用 `openuiLibrary=chat`、原生宿主使用 `globalProps.openuiLibrary: 'chat'`
+  选择 Chat 组件库；省略时使用 Lynx Stack。
   处理混合聊天回复时，Web URL 添加 `inlineMode=1`，原生宿主设置
   `globalProps.inlineMode: true`。`lynx-src/openui/` 中的 Playground 适配层将普通
   Markdown 组件和独立 OpenUI 渲染块按回复顺序穿插展示；Markdown 不注册到 OpenUI

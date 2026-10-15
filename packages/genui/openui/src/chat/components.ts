@@ -26,4 +26,4 @@ export { Text } from './Text/index.jsx';
 export { BoldText } from './BoldText/index.jsx';
 export { TextContent } from './TextContent/index.jsx';
 export { Buttons } from './Buttons/index.jsx';
-export { Button } from '../catalog/Button/index.jsx';
+export { Button } from './Button/index.jsx';

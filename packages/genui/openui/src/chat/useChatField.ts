@@ -1,7 +1,11 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { parseStructuredRules, resolveStateField } from '@openuidev/lang-core';
+import {
+  isReactiveAssign,
+  parseStructuredRules,
+  resolveStateField,
+} from '@openuidev/lang-core';
 import type { StateField } from '@openuidev/lang-core';
 
 import { useEffect, useMemo, useRef, useState } from '@lynx-js/react';
@@ -24,6 +28,11 @@ export function useChatField<T>(
   const form = useFormName();
   const streaming = useIsStreaming();
   const field = useStateField(name, binding as StateField<T | undefined>);
+  // Controls can mount before the renderer's store-initialization effect.
+  // Declaration and hydration fallbacks must win over a control's empty default.
+  const bindingDefault = isReactiveAssign(binding)
+    ? ctx.evaluationContext?.getState(binding.target) as T | undefined
+    : undefined;
   const validation = useFormValidation();
   const [controlId] = useState(() => ++nextValidationId);
   const validationName = `${name}:${controlId}`;
@@ -39,7 +48,7 @@ export function useChatField<T>(
       key => ctx.getFieldValue(form, key),
       (key, value) => ctx.setFieldValue(form, undefined, key, value),
     );
-  const read = () => current().value ?? defaultValue;
+  const read = () => current().value ?? bindingDefault ?? defaultValue;
   const readRef = useRef(read);
   readRef.current = read;
   const normalizeRef = useRef(normalize);
@@ -60,11 +69,12 @@ export function useChatField<T>(
   useEffect(() => {
     const latest = current();
     if (
-      !streaming && latest.value === undefined && defaultValue !== undefined
+      !streaming && latest.value === undefined && bindingDefault === undefined
+      && defaultValue !== undefined
     ) latest.setValue(defaultValue);
   });
   return {
-    value: field.value ?? defaultValue,
+    value: field.value ?? bindingDefault ?? defaultValue,
     read,
     streaming,
     error: validation?.getFieldError(validationName),

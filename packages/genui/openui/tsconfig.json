@@ -11,5 +11,6 @@
     "types": ["@rstest/core/globals"],
   },
   "include": ["src", "test", "rstest.config.ts"],
+  "exclude": ["test/fixtures/chat-imports"],
   "references": [],
 }

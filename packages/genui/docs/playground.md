@@ -11,6 +11,14 @@ To try generation, component sets, and examples first, open the
 You can also [open the renderer preview](https://lynx-stack.dev/genui/lynx-genui-stream.html)
 to switch between A2UI and OpenUI, edit source, and render it immediately or
 simulate streaming. The page uses the renderer and bundles from the same Playground deployment.
+The page opens the [Hokkaido example](https://lynx-stack.dev/genui/lynx-genui-stream.html?inlineMode=1)
+using OpenUI Chat, with packaged images and interactive forms. Enable **Markdown + OpenUI**
+to render prose and fenced UI together. The example selector also offers a basic
+OpenUI example; **Reset example** beside it restores the selected example's source
+and interaction state. Hokkaido is the only travel case; the full component examples
+remain in the main Playground. A2UI starts with a minimal message sequence and accepts
+message arrays or NDJSON. Source drafts are saved separately for each protocol,
+example, and inline mode.
 
 ## Choose preview resources
 
@@ -196,8 +204,10 @@ Agent to implement it.
 - **OpenUI**: Use `render.html?protocol=openui&demoUrl=./openui.web.js` with OpenUI Lang text in `rawText`
   or `rawTextUrl`. Native hosts load
   [`openui.lynx.js`](https://lynx-stack.dev/genui/openui.lynx.js) and pass text in
-  `globalProps.rawText`. The native renderer does not read `rawTextUrl`; the host
-  must fetch the text first.
+  `globalProps.rawText`, or set `globalProps.rawTextUrl` to an absolute source URL
+  when the host provides `fetch`. Inline `rawText` takes precedence over the URL.
+  Select the Chat vocabulary with `openuiLibrary=chat` in the Web URL or
+  `globalProps.openuiLibrary: 'chat'` on native. Omitted values use Lynx Stack.
   For mixed chat replies, add `inlineMode=1` to the Web URL or set
   `globalProps.inlineMode: true` in the native host. The Playground adapter in
   `lynx-src/openui/` renders ordinary Markdown components and independent OpenUI

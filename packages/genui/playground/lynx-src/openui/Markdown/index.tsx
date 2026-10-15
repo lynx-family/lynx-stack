@@ -10,8 +10,12 @@ export const Markdown = memo(
   function Markdown({ content }: { content: string }) {
     return (
       <view className='OpenUIMarkdown'>
+        {
+          /* A delta can complete earlier Markdown syntax. Reparse this text
+            element while keeping neighbouring interactive UI blocks mounted. */
+        }
         {/* @ts-expect-error x-markdown is provided by the host. */}
-        <x-markdown content={content} />
+        <x-markdown key={content} content={content} />
       </view>
     );
   },

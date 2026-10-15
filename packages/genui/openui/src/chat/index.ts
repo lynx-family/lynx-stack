@@ -14,6 +14,13 @@ export * from './components.js';
 /**
  * Create a library for OpenUI Chat responses rooted at Card.
  * Create once and pass the same instance to OpenUiRenderer across renders.
+ *
+ * @remarks
+ * This factory registers the entire Chat catalog and includes its component styles.
+ * To include only selected components and their styles, import each component from
+ * `@lynx-js/genui/openui/chat/<Component>` and assemble the library with
+ * `createOpenUiLibrary` from `@lynx-js/genui/openui/explicit`.
+ *
  * @example
  * ```tsx
  * const library = createOpenUiChatLibrary();

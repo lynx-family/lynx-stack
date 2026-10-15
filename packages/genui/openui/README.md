@@ -129,6 +129,12 @@ data = Query("tool_name", { argument: $variable }, { fallback: true })
   null renderers for Node schema and prompt generation. The prompt library and
   ReactLynx catalog share the same schemas, descriptions, and refs.
   Import individual definitions from `catalog/agent/<Component>` when needed.
+- OpenUI Chat supports the same component-level imports through
+  `@lynx-js/genui/openui/chat/<Component>` and headless definitions through
+  `openui/chat/agent/<Component>`. Use `openui/explicit` with `root: 'Card'`,
+  `includeDefaultComponents: false`, and the selected components. Each component
+  brings its own styles and any shared styles it needs; `createOpenUiChatLibrary()`
+  intentionally includes the whole Chat catalog. See [Chat imports](./docs/chat.md#import-selected-components).
 
 ## Stream model output
 

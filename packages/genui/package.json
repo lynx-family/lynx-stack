@@ -123,6 +123,14 @@
     "./openui/chat/agent": {
       "types": "./openui/dist/chat/agent.d.ts",
       "default": "./openui/dist/chat/agent.js"
+    },
+    "./openui/chat/agent/*": {
+      "types": "./openui/dist/chat/*/definition.d.ts",
+      "default": "./openui/dist/chat/*/definition.js"
+    },
+    "./openui/chat/*": {
+      "types": "./openui/dist/chat/*/index.d.ts",
+      "default": "./openui/dist/chat/*/index.jsx"
     }
   },
   "main": "./dist/index.js",
