@@ -6,7 +6,7 @@ import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin';
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 import { defineConfig } from '@lynx-js/rspeedy';
 
-import { pluginMarkedUnicode } from './scripts/marked-compat/plugin.cjs';
+import { pluginMarkedUnicode } from './scripts/marked-compat/plugin.js';
 
 const LYNX_NODE_ENV = process.env.NODE_ENV === 'development'
   ? 'development'

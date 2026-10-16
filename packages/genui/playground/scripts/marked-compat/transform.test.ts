@@ -3,47 +3,56 @@
 // LICENSE file in the root directory of this source tree.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { createRequire } from 'node:module';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 
 import { test } from '@rstest/core';
+import type { Lexer, MarkedOptions } from 'marked';
 
-import loader from './loader.cjs';
-import { transformMarked } from './transform.cjs';
+import { transformMarkedModule } from './plugin.js';
+import { transformMarked } from './transform.js';
 
-const require = createRequire(import.meta.url);
-
-const packageFile = require.resolve('marked/package.json');
+const packageFile = fileURLToPath(
+  new URL('../../node_modules/marked/package.json', import.meta.url),
+);
 const filename = path.join(path.dirname(packageFile), 'lib/marked.esm.js');
 const source = fs.readFileSync(filename, 'utf8');
-const { version } = JSON.parse(fs.readFileSync(packageFile, 'utf8'));
+const { version } = JSON.parse(fs.readFileSync(packageFile, 'utf8')) as {
+  version: string;
+};
 const patched = transformMarked(source, version, filename);
 
 // Model the missing constructor feature only. Real PrimJS validation is still
 // required; regex literals are transformed separately by the Lynx compiler.
 const withoutPropertyEscapes = new Proxy(RegExp, {
-  construct(target, args) {
-    if (/\\p\{/i.test(String(args[0])) && /[uv]/.test(args[1] ?? '')) {
+  construct(target, args: unknown[]) {
+    const [pattern, flags] = args as ConstructorParameters<RegExpConstructor>;
+    if (/\\p\{/i.test(String(pattern)) && /[uv]/.test(flags ?? '')) {
       throw new SyntaxError('Unicode property escapes are unavailable');
     }
-    return Reflect.construct(target, args);
+    return Reflect.construct(target, args) as RegExp;
   },
 });
 
-function load(code, RegExpConstructor) {
+function load(
+  code: string,
+  RegExpConstructor?: RegExpConstructor,
+): typeof Lexer {
   const exportStart = code.lastIndexOf('\nexport {');
   assert.notEqual(exportStart, -1);
-  const context = RegExpConstructor ? { RegExp: RegExpConstructor } : {};
+  const context: { RegExp?: RegExpConstructor; lexer?: typeof Lexer } =
+    RegExpConstructor ? { RegExp: RegExpConstructor } : {};
   vm.runInNewContext(
     code.slice(0, exportStart) + '\nglobalThis.lexer = _Lexer;',
     context,
     { timeout: 5000 },
   );
+  assert.ok(context.lexer);
   return context.lexer;
 }
 
-function tokens(lexer, input, options) {
+function tokens(lexer: typeof Lexer, input: string, options: MarkedOptions) {
   const result = lexer.lex(input, { ...options });
   return JSON.stringify({ tokens: result, links: result.links });
 }
@@ -102,7 +111,7 @@ test('preserves all five rule patterns including captures and supplementary char
     'emStrongRDelimAst',
     'emStrongRDelimUnd',
     'anyPunctuation',
-  ];
+  ] as const;
   for (const name of names) {
     const before = original[name];
     const after = compatible[name];
@@ -168,23 +177,20 @@ test('fails closed on dependency upgrades, source drift and double patching', ()
   );
 });
 
-test('loader tracks the package version and supplies a source map', () => {
-  const dependencies = [];
-  let output;
-  loader.call({
+test('transform tracks the package version and supplies a source map', () => {
+  const dependencies: string[] = [];
+  const output = transformMarkedModule({
+    code: source,
     resourcePath: filename,
     addDependency(file) {
       dependencies.push(file);
     },
-    callback(error, code, map) {
-      assert.equal(error, null);
-      output = { code, map };
-    },
-  }, source);
+  });
   assert.deepEqual(dependencies, [packageFile]);
   assert.equal(output.code, patched.code);
-  assert.deepEqual(output.map.sourcesContent, [source]);
-  assert.equal(output.map.sources.length, 1);
-  assert.ok(output.map.mappings.length > 0);
+  assert.equal(output.map, patched.map.toString());
+  assert.deepEqual(patched.map.sourcesContent, [source]);
+  assert.equal(patched.map.sources.length, 1);
+  assert.ok(patched.map.mappings.length > 0);
   assert.equal(fs.readFileSync(filename, 'utf8'), source);
 });
