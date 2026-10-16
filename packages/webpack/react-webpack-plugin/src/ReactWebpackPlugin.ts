@@ -551,7 +551,13 @@ class ReactWebpackPlugin {
           plugin instanceof LynxEncodePlugin
         )
       ) {
-        applyMainThreadHMR(compiler, entryPairs);
+        // ET template structure HMR is unsupported, so retain its existing
+        // acceptance boundaries instead of adding a root fallback.
+        applyMainThreadHMR(
+          compiler,
+          entryPairs,
+          !options.experimental_useElementTemplate,
+        );
       }
     }
 
