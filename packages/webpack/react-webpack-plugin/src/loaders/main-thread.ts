@@ -164,7 +164,7 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
             (result.definesForSnapshot?.length ?? 0) > 0
             || (result.definesForWorklet?.length ?? 0) > 0
           )
-          ? '\nif (module.hot) module.hot.accept();'
+          ? '\nif (module.hot && !module.hot._selfAccepted && !module.hot._selfDeclined) module.hot.accept();'
           : ''
       )
       + (

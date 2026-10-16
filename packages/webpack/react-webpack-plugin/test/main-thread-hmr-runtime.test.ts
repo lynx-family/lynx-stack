@@ -12,21 +12,73 @@ import { expect, it } from '@rstest/core';
 import backgroundRuntime from '../src/runtime/hmr-background.js';
 import mainThreadRuntime from '../src/runtime/hmr-main-thread.js';
 
-function runtimeSource(runtime: () => void): string {
+function runtimeSource(
+  runtime: () => void,
+  entryModules: string[] = [],
+): string {
   return `(${
     runtime.toString()
       .replaceAll('$METHOD$', '"applyUpdate"')
       .replaceAll('$EVENT$', '"ready"')
       .replaceAll('$HOT_MODULE$', '"entry"')
+      .replaceAll('$ENTRY_MODULES$', JSON.stringify(entryModules))
   })();`;
 }
+
+const handler = () => undefined;
+
+it.each(['default', 'accepted', 'declined', 'throwing', 'dependency'])(
+  'preserves %s entry behavior when installing the root fallback',
+  behavior => {
+    const interceptors: ((
+      options: {
+        id: string;
+        factory: () => void;
+        module: { hot: typeof hot };
+      },
+    ) => void)[] = [];
+    const hot = {
+      _selfAccepted: false as boolean | (() => void),
+      _selfDeclined: false,
+      accept: () => {
+        hot._selfAccepted = true;
+      },
+    };
+    const context = createContext({ __webpack_require__: { i: interceptors } });
+    runInContext(runtimeSource(mainThreadRuntime, ['entry']), context);
+    const options = {
+      id: behavior === 'dependency' ? 'helper' : 'entry',
+      module: { hot },
+      factory: () => {
+        if (behavior === 'accepted') hot._selfAccepted = handler;
+        if (behavior === 'declined') hot._selfDeclined = true;
+        if (behavior === 'throwing') throw new Error('entry failure');
+      },
+    };
+    interceptors[0]!(options);
+    if (behavior === 'throwing') {
+      expect(() => options.factory()).toThrow('entry failure');
+    } else options.factory();
+    expect(hot._selfAccepted).toBe(
+      behavior === 'default'
+        ? true
+        : (behavior === 'accepted' ? handler : false),
+    );
+    expect(hot._selfDeclined).toBe(behavior === 'declined');
+  },
+);
 
 it('loads a versioned Native bundle and evaluates the update section only once for multiple chunks', async () => {
   const fetched: string[] = [];
   const loaded: string[] = [];
   const context = createContext({
     Promise,
-    __webpack_require__: { p: 'http://localhost/', c: {}, h: () => 'old' },
+    __webpack_require__: {
+      i: [],
+      p: 'http://localhost/',
+      c: {},
+      h: () => 'old',
+    },
     lynx: {
       fetchBundle: (url: string) => ({
         then: (resolve: (value: unknown) => void) => {
@@ -69,6 +121,7 @@ it('reports a mismatched MTS version without applying and acknowledges the actua
   const context = createContext({
     Promise,
     __webpack_require__: {
+      i: [],
       p: '/',
       h: () => hash,
       c: {
