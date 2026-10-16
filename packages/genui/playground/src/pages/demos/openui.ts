@@ -31,6 +31,7 @@ export const OPENUI_DEMOS_LIST_SOURCE = {
     {
       id: 'chat',
       title: 'OpenUI Chat',
+      hideScenarioBadges: true,
       scenarios: OPENUI_SCENARIOS.filter(scenario =>
         scenario.library === 'chat'
       ),
@@ -40,7 +41,16 @@ export const OPENUI_DEMOS_LIST_SOURCE = {
       id: 'examples',
       title: 'Stack Examples',
       scenarios: OPENUI_SCENARIOS.filter(scenario =>
-        scenario.library !== 'chat'
+        scenario.library !== 'chat' && !scenario.id.startsWith('canvas-')
+      ),
+      layout: 'flow',
+    },
+    {
+      id: 'canvas',
+      title: 'Canvas · Web only',
+      hideScenarioBadges: true,
+      scenarios: OPENUI_SCENARIOS.filter(scenario =>
+        scenario.id.startsWith('canvas-')
       ),
       layout: 'flow',
     },
@@ -80,6 +90,7 @@ function chunkOpenUI(rawText: string): string[] {
 
 export const OPENUI_DEMOS_PAGE_SOURCE = {
   scenarios: OPENUI_SCENARIOS,
+  sections: OPENUI_DEMOS_LIST_SOURCE.sections,
   findScenario: findDetailScenario,
   getEditorValue(scenario) {
     return scenario.raw;

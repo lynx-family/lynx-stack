@@ -43,6 +43,19 @@ export function OpenUIRender() {
 
   const queryDefaultsRef = useRef(new Map<string, Record<string, unknown>>());
   const readyRef = useRef(false);
+  const pendingSourceRef = useRef<{ url: string; rawText: string } | null>(
+    null,
+  );
+  const flushSource = useCallback(() => {
+    const source = pendingSourceRef.current;
+    if (!readyRef.current || !source) return;
+    pendingSourceRef.current = null;
+    setInitData(prev =>
+      prev?.rawTextUrl === source.url
+        ? { ...prev, rawText: source.rawText }
+        : prev
+    );
+  }, [setInitData]);
   const pendingRef = useRef<
     { response: OpenUILiveResponse; startedAt: number } | null
   >(null);
@@ -67,6 +80,7 @@ export function OpenUIRender() {
   ]);
   const markReady = useCallback(() => {
     readyRef.current = true;
+    flushSource();
     flush();
     if (window.parent === window) return;
     window.parent.postMessage({
@@ -75,7 +89,7 @@ export function OpenUIRender() {
       frameUrl: window.location.href,
       navigationToken: previewNavigationToken,
     }, '*');
-  }, [flush, previewNavigationToken]);
+  }, [flush, flushSource, previewNavigationToken]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: Changed init data reloads the runtime and invalidates readiness.
   useEffect(() => {
     readyRef.current = false;
@@ -116,11 +130,9 @@ export function OpenUIRender() {
           window.location.href,
         );
         if (!cancelled) {
-          setInitData(prev =>
-            prev && prev.rawTextUrl === rawTextUrl
-              ? { ...prev, rawText }
-              : prev
-          );
+          // Updating initData during runtime boot calls updateData too early.
+          pendingSourceRef.current = { url: rawTextUrl, rawText };
+          flushSource();
         }
       } catch {
         // ignore; the Lynx app will keep its fallback scenario
@@ -129,7 +141,7 @@ export function OpenUIRender() {
     return () => {
       cancelled = true;
     };
-  }, [initData?.rawTextUrl, setInitData]);
+  }, [initData?.rawTextUrl, flushSource]);
 
   useEffect(() => {
     const lynxView = lynxViewRef.current;

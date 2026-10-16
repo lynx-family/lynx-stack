@@ -196,8 +196,12 @@ export function ExamplePreviewCard(props: {
       </div>
       <div className='exampleCardBody'>
         <div className='exampleCardTop'>
-          <div className='exampleCardTitle'>{scenario.title}</div>
-          {badge ? <span className='exampleCardBadge'>{badge}</span> : null}
+          <div className='exampleCardTitle' title={scenario.title}>
+            {scenario.title}
+          </div>
+          {badge
+            ? <span className='exampleCardBadge' title={badge}>{badge}</span>
+            : null}
         </div>
       </div>
     </div>

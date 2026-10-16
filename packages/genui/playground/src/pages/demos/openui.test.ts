@@ -14,6 +14,10 @@ import {
 import { splitOpenUiResponse } from '../../../lynx-src/openui/inlineResponse.js';
 import { OPENUI_SCENARIOS as NATIVE_OPENUI_SCENARIOS } from '../../../lynx-src/openui/mockData.js';
 import { PROTOCOLS } from '../../utils/protocol.js';
+import {
+  buildOpenUIRenderUrl,
+  canInlineOpenUIRenderUrl,
+} from '../../utils/renderUrl.js';
 
 const library = createOpenUiPromptLibrary();
 const parser = createParser(library.toJSONSchema(), library.root);
@@ -21,6 +25,65 @@ const chatLibrary = createOpenUiChatPromptLibrary();
 const chatParser = createParser(chatLibrary.toJSONSchema(), chatLibrary.root);
 
 describe('OpenUI demo previews', () => {
+  test('loads relativity from a static source under the deployment prefix', () => {
+    const scenario = OPENUI_DEMOS_PAGE_SOURCE.findScenario(
+      'canvas-relativity',
+    )!;
+    const baseUrl = 'https://lynx-stack.dev/genui/';
+    expect(canInlineOpenUIRenderUrl(buildOpenUIRenderUrl({
+      rawText: scenario.raw,
+    }, baseUrl))).toBe(false);
+
+    const listUrl = new URL(OPENUI_DEMOS_LIST_SOURCE.createPreviewUrl({
+      baseUrl,
+      protocol: PROTOCOLS.openui,
+      scenario,
+      theme: 'dark',
+    }));
+    expect(listUrl.searchParams.get('rawTextUrl')).toBe(
+      `${baseUrl}demos/openui/canvas-relativity.txt`,
+    );
+    expect(listUrl.searchParams.has('rawText')).toBe(false);
+    expect(canInlineOpenUIRenderUrl(listUrl.href)).toBe(true);
+
+    const input = OPENUI_DEMOS_PAGE_SOURCE.createScenarioPreviewInput(scenario);
+    const preview = OPENUI_DEMOS_PAGE_SOURCE.createPreviewSource({
+      input,
+      isPlaybackActive: false,
+      protocol: PROTOCOLS.openui,
+      theme: 'dark',
+    });
+    const detailUrl = new URL(buildOpenUIRenderUrl({
+      ...preview,
+      rawTextUrl: new URL(preview.rawTextUrl!, baseUrl).href,
+    }, baseUrl));
+    expect(detailUrl.searchParams.get('rawTextUrl')).toBe(
+      listUrl.searchParams.get('rawTextUrl'),
+    );
+    expect(detailUrl.searchParams.has('rawText')).toBe(false);
+    expect(detailUrl.searchParams.has('instant')).toBe(false);
+    expect(canInlineOpenUIRenderUrl(detailUrl.href)).toBe(true);
+  });
+
+  test('uses the static relativity source only while the editor is unchanged', () => {
+    const scenario = OPENUI_DEMOS_PAGE_SOURCE.findScenario(
+      'canvas-relativity',
+    )!;
+    for (const editorValue of [scenario.raw, `${scenario.raw}\n`]) {
+      const result = OPENUI_DEMOS_PAGE_SOURCE.commit({
+        editorValue,
+        editorEdited: true,
+        scenario,
+      });
+      expect('value' in result).toBe(true);
+      if (!('value' in result)) return;
+      expect(result.value.previewInput.rawTextUrl).toBe(
+        editorValue === scenario.raw ? scenario.sourcePath : undefined,
+      );
+      expect(result.value.playbackChunks.join('')).toBe(editorValue);
+    }
+  });
+
   test.each(NATIVE_OPENUI_SCENARIOS)(
     '$id native fallback matches the validated web example',
     ({ id, raw }) => {

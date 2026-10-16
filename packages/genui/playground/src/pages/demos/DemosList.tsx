@@ -28,6 +28,7 @@ export interface DemosListSection<
   scenarios: readonly TScenario[];
   layout?: 'columns' | 'flow';
   badge?: string;
+  hideScenarioBadges?: boolean;
 }
 
 interface DemosListSourceArgs {
@@ -139,7 +140,9 @@ export function DemosList<TScenario extends DemosListScenario>(props: {
                     key={scenario.id}
                     scenario={scenario}
                     previewUrl={previewUrls.get(scenario.id)}
-                    badge={section.badge ?? scenario.badge}
+                    badge={section.hideScenarioBadges
+                      ? undefined
+                      : section.badge ?? scenario.badge}
                     onOpen={handleOpenExample}
                     onKeyDown={handleCardKeyDown}
                   />

@@ -7,6 +7,7 @@ import type { ParseResult } from '@openuidev/lang-core';
 import { createOpenUiChatPromptLibrary } from '@lynx-js/genui/openui/chat/agent';
 import { createOpenUiPromptLibrary } from '@lynx-js/genui/openui/prompt';
 
+import { OPENUI_CANVAS_MATH_RAW } from './openui-canvas-math.js';
 import {
   OPENUI_CANVAS_RELATIVITY_RAW,
   OPENUI_CANVAS_STREAM_RAW,
@@ -2072,8 +2073,16 @@ actionRow = Stack([Buttons([Button("Cancel", Action([@ToAssistant("Cancel order"
     id: 'canvas-relativity',
     title: 'General Relativity',
     badge: 'Canvas · Physics',
+    sourcePath: 'demos/openui/canvas-relativity.txt',
     raw: OPENUI_CANVAS_RELATIVITY_RAW,
     parsed: parseOpenUIScenarioRaw(OPENUI_CANVAS_RELATIVITY_RAW),
+  },
+  {
+    id: 'canvas-sine-wave',
+    title: 'Sine Wave Lab',
+    badge: 'Canvas · Math',
+    raw: OPENUI_CANVAS_MATH_RAW,
+    parsed: parseOpenUIScenarioRaw(OPENUI_CANVAS_MATH_RAW),
   },
   {
     id: 'canvas-gomoku',

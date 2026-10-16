@@ -168,6 +168,7 @@ function compileEditorSource(
 
 export const LYNX_XML_DEMOS_PAGE_SOURCE = {
   scenarios: LYNX_XML_SCENARIOS,
+  sections: LYNX_XML_DEMOS_LIST_SOURCE.sections,
   findScenario,
   getEditorValue(scenario) {
     return scenario.templateSource ?? scenario.source;

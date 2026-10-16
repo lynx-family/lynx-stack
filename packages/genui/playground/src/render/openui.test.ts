@@ -11,6 +11,11 @@ import { OpenUIRender } from './openui.js';
 import { OPENUI_DATA_TOOL } from '../../lynx-src/openui/dataTools.js';
 
 const mock = rstest.hoisted(() => ({
+  initData: { liveStream: true } as {
+    liveStream: boolean;
+    rawTextUrl?: string;
+  },
+  setInitData: rstest.fn(),
   view: {
     sendGlobalEvent: rstest.fn(),
     onNativeModulesCall: undefined as
@@ -26,13 +31,46 @@ rstest.mock('./bundled.js', () => ({
   useBundledRender: () => ({
     ...mock,
     view: null,
-    initData: { liveStream: true },
-    setInitData: rstest.fn(),
+    initData: mock.initData,
+    setInitData: mock.setInitData,
     lynxViewRef: { current: mock.view },
     previewNavigationToken: 'test',
     initDataRef: { current: { liveStream: true } },
   }),
 }));
+
+test('defers fetched source updates until the Web runtime is ready', async () => {
+  rstest.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  mock.initData.rawTextUrl = './example.txt';
+  mock.setInitData.mockClear();
+  const rawText = 'root = Text("Loaded source")';
+  rstest.stubGlobal(
+    'fetch',
+    rstest.fn(async () => ({
+      ok: true,
+      text: async () => rawText,
+    })),
+  );
+  const root = createRoot(document.createElement('div'));
+  try {
+    await act(async () => root.render(createElement(OpenUIRender)));
+    expect(mock.setInitData).not.toHaveBeenCalled();
+    await act(async () =>
+      mock.view.onNativeModulesCall!('OPENUI_RUNTIME_READY', {}, 'bridge')
+    );
+    expect(mock.setInitData).toHaveBeenCalledTimes(1);
+    const update = mock.setInitData.mock.calls[0]![0] as (
+      previous: typeof mock.initData,
+    ) => unknown;
+    expect(update(mock.initData)).toEqual({ ...mock.initData, rawText });
+    const differentSource = { liveStream: true, rawTextUrl: './other.txt' };
+    expect(update(differentSource)).toBe(differentSource);
+  } finally {
+    await act(async () => root.unmount());
+    delete mock.initData.rawTextUrl;
+    rstest.unstubAllGlobals();
+  }
+});
 
 async function post(
   rawText: string,
