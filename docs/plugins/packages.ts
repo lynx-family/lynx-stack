@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { existsSync, rmSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 
 import type { RspressPlugin } from '@rspress/core';
@@ -106,7 +106,14 @@ function writePackagePages(
     if (pkg.name in site.ownSections) continue;
     if (hasEntryPoint(pkg.dir)) continue;
     const page = [`# ${pkg.name}`, '', packageLinks(pkg, site), ''];
-    if (pkg.description) page.push(pkg.description, '');
+    if (pkg.description) {
+      page.push(pkg.description, '');
+    } else {
+      const readme = join(pkg.dir, 'README.md');
+      if (existsSync(readme)) {
+        page.push(readFileSync(readme, 'utf8').replace(/^# .*\r?\n/, ''), '');
+      }
+    }
     write(
       join(content, locale, 'api', `${packageRoute(pkg, site)}.mdx`),
       text(page.join('\n')),
