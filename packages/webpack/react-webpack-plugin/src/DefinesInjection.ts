@@ -13,6 +13,7 @@ import {
   renderDefinesModule,
   selectMissingDefines,
 } from './Defines.js';
+import { MAIN_THREAD_HMR } from './hmr/enabled.js';
 import { LAYERS } from './layer.js';
 import {
   boundaryKey,
@@ -143,6 +144,7 @@ export function applyDefinesInjection(
         ancestors: ReadonlySet<string>,
         request: string,
         inject: (request: string) => Promise<void>,
+        keepEmpty = false,
       ): Promise<void> => {
         const background = traverse(backgroundRoots);
         const mainThread = traverse(mainThreadRoots);
@@ -174,13 +176,20 @@ export function applyDefinesInjection(
             } and they cannot be merged: they close over shared-runtime imports. Make the owning module reachable from the main thread, or avoid closing over a shared import inside the worklet.`,
           );
         }
-        if (missingSnapshot.length > 0 || missingWorklet.length > 0) {
+        if (
+          keepEmpty || missingSnapshot.length > 0 || missingWorklet.length > 0
+        ) {
           const previousModule = [...compilation.modules].find(module =>
             (module as ModuleWithMeta).resource === request
           );
           virtualModules.writeModule(
             request,
-            renderDefinesModule(missingSnapshot, missingWorklet),
+            renderDefinesModule(missingSnapshot, missingWorklet)
+              + ((compiler as unknown as Record<symbol, unknown>)[
+                  MAIN_THREAD_HMR
+                ]
+                ? '\nif (module.hot) module.hot.accept();'
+                : ''),
           );
           // Updating the virtual file does not invalidate a module already
           // reused by this compilation. Rebuild it before reusing its imports.
@@ -255,6 +264,11 @@ export function applyDefinesInjection(
                 await addEntry(originalRequest);
               }
             },
+            // HMR only reexecutes cached self-accepted modules. Keep the root
+            // definition module executed even before its first definition.
+            Boolean(
+              (compiler as unknown as Record<symbol, unknown>)[MAIN_THREAD_HMR],
+            ),
           );
         }),
       );
