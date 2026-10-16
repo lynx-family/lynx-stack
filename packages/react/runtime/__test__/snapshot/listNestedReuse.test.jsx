@@ -99,7 +99,9 @@ describe('a list item with a nested list, removed and then reused', () => {
     expect(retired.parentNode?.type ?? null).toBeNull();
     expect(retiredInner.__elements).toBeUndefined();
     expect(retiredInner.parentNode?.type ?? null).toBeNull();
-    for (const innerItem of retiredInner.childNodes) {
+    const innerItems = retiredInner.childNodes;
+    for (const innerItem of innerItems) {
+      expect(innerItem.__id).toBe(0);
       expect(innerItem.__element_root).toBeDefined();
       expect(innerItem.childNodes).toHaveLength(2);
     }
@@ -109,5 +111,11 @@ describe('a list item with a nested list, removed and then reused', () => {
     elementTree.triggerComponentAtIndex(innerRef, 1);
     expect(renderedTexts(nested[1].inner.childNodes[0])).toEqual(['1-0-a', '1-0-b']);
     expect(renderedTexts(nested[1].inner.childNodes[1])).toEqual(['1-1-a', '1-1-b']);
+
+    // Reused once, the nested items are torn down like any removed child.
+    for (const innerItem of innerItems) {
+      expect(innerItem.__element_root).toBeUndefined();
+      expect(innerItem.parentNode?.type ?? null).toBeNull();
+    }
   });
 });
