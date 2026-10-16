@@ -39,8 +39,11 @@ export default function(): void {
   __webpack_require__.lynxHMRLoad = function(name, callback) {
     if (name.endsWith('.json')) {
       updates = undefined;
-      new Promise(function(resolve) {
-        lynx.fetchBundle(name.slice(0, -5) + '.bundle', {}).then(resolve);
+      new Promise(function(resolve, reject) {
+        lynx.fetchBundle(name.slice(0, -5) + '.bundle', {}).then(
+          resolve,
+          reject,
+        );
       }).then(function(response) {
         if (response.code !== 0) throw new Error(JSON.stringify(response));
         bundleName = response.url;
