@@ -318,6 +318,7 @@ export function renderConfigReference(
   locale: Locale,
   translations: Translations,
   reference: ConfigReference,
+  docs: string = DOCS,
 ): void {
   let inRsbuild: ((path: string[]) => boolean) | undefined;
   app.converter.on(
@@ -335,7 +336,7 @@ export function renderConfigReference(
     MarkdownRendererEvent.END,
     (event: MarkdownRendererEvent) => {
       const prefix = locale === 'en' ? '' : `/${locale}`;
-      const out = join(DOCS, 'content', locale, 'api/build');
+      const out = join(docs, 'content', locale, 'api/build');
       const text = (en: string) => translations.translate(en, locale);
       const options = collectOptions(event.project, inRsbuild!, reference);
       const theme = app.renderer.theme as MarkdownTheme;

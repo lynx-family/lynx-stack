@@ -34,7 +34,7 @@ function writeNav(locale: Locale, content: string, site: Site): void {
     json(
       site.nav.map(item => ({
         text: item.text[locale],
-        link: `${prefix}/${item.route}/`,
+        link: `/${item.route}/`,
         activeMatch: `^${prefix}/${item.active ?? item.route}/`,
       })),
     ),
@@ -293,6 +293,7 @@ export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
                 locale,
                 translations,
                 site.configReference!,
+                site.docs,
               )
             : undefined,
         )
