@@ -86,6 +86,15 @@ const onSocketMessage = {
       // We only need this once when reconnecting
       status.isReconnecting = false;
 
+      // A coordinated update must advance both runtimes by applying modules.
+      // Reconnection alone cannot make the background runtime match the server.
+      // @ts-expect-error internal HMR runtime extension
+      if (__webpack_require__.lynxHMR) {
+        status.previousHash = __webpack_hash__;
+        status.currentHash = hash;
+        return;
+      }
+
       // Here, we not only override the currentHash, but also override the
       // previousHash and the hash in webpack runtime.
       // In this way, we reset all the hash-related runtime status to match
