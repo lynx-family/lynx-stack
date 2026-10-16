@@ -25,19 +25,27 @@ export default function() {
 
           var updatedModules = update.modules;
           var runtime = update.runtime;
-          // MTS-only changes still need fresh BTS worklet contexts. Reuse the
-          // loaded owner's factory through normal HMR / Fast Refresh apply.
-          (update.lynxRefreshModules || []).forEach(function(moduleId) {
-            if (__webpack_require__.c[moduleId] && !updatedModules[moduleId]) {
-              updatedModules[moduleId] = __webpack_require__.m[moduleId];
-            }
-          });
           for (var moduleId in updatedModules) {
             if ($RuntimeGlobals_hasOwnProperty$(updatedModules, moduleId)) {
+              if (
+                updatedModulesList
+                && !$RuntimeGlobals_hasOwnProperty$(currentUpdate, moduleId)
+              ) updatedModulesList.push(moduleId);
               currentUpdate[moduleId] = updatedModules[moduleId];
-              if (updatedModulesList) updatedModulesList.push(moduleId);
             }
           }
+          // Owners unchanged on BTS still need fresh worklet contexts. Cached
+          // factories are only fallbacks; any downloaded factory takes priority
+          // regardless of which update chunk finishes loading first.
+          (update.lynxRefreshModules || []).forEach(function(moduleId) {
+            if (
+              __webpack_require__.c[moduleId]
+              && !$RuntimeGlobals_hasOwnProperty$(currentUpdate, moduleId)
+            ) {
+              currentUpdate[moduleId] = __webpack_require__.m[moduleId];
+              if (updatedModulesList) updatedModulesList.push(moduleId);
+            }
+          });
           if (runtime) currentUpdateRuntime.push(runtime);
           resolve();
         },
