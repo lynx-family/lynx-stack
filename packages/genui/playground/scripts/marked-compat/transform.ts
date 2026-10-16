@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import MagicString from 'magic-string';
+import { MagicString } from 'magic-string';
 import rewritePattern from 'regexpu-core';
 
 const MARKED_VERSION = '14.0.0';
@@ -19,6 +19,15 @@ const replacement = `const _punctuation = ${
   JSON.stringify(expanded.slice(1, -1))
 };`;
 
+/**
+ * Expand Marked's shared Unicode punctuation properties into character ranges.
+ *
+ * @param source - Unmodified Marked ESM source.
+ * @param version - Installed Marked version, checked against the supported version.
+ * @param filename - Source filename to retain in the generated source map.
+ * @returns Transformed source and a source map containing the original source.
+ * @throws If the version or declaration differs, including already patched input.
+ */
 export function transformMarked(
   source: string,
   version: string,

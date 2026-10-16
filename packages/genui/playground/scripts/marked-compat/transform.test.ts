@@ -26,6 +26,7 @@ const patched = transformMarked(source, version, filename);
 // Model the missing constructor feature only. Real PrimJS validation is still
 // required; regex literals are transformed separately by the Lynx compiler.
 const withoutPropertyEscapes = new Proxy(RegExp, {
+  /** Reject dynamic Unicode properties to model the missing PrimJS feature. */
   construct(target, args: unknown[]) {
     const [pattern, flags] = args as ConstructorParameters<RegExpConstructor>;
     if (/\\p\{/i.test(String(pattern)) && /[uv]/.test(flags ?? '')) {
@@ -35,6 +36,7 @@ const withoutPropertyEscapes = new Proxy(RegExp, {
   },
 });
 
+/** Evaluate the lexer in isolation with an optional RegExp constructor override. */
 function load(
   code: string,
   RegExpConstructor?: RegExpConstructor,
@@ -52,6 +54,7 @@ function load(
   return context.lexer;
 }
 
+/** Serialize tokens and reference links for cross-context lexer comparisons. */
 function tokens(lexer: typeof Lexer, input: string, options: MarkedOptions) {
   const result = lexer.lex(input, { ...options });
   return JSON.stringify({ tokens: result, links: result.links });

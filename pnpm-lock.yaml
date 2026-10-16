@@ -1628,10 +1628,10 @@ importers:
         specifier: ^6.2.5
         version: 6.2.5
       magic-string:
-        specifier: 0.30.21
-        version: 0.30.21
+        specifier: ^1.4.3
+        version: 1.4.3
       marked:
-        specifier: 14.0.0
+        specifier: ^14.0.0
         version: 14.0.0
       regexpu-core:
         specifier: 6.4.0
