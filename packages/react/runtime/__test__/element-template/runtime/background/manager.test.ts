@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   BackgroundElementTemplateInstance,
   BackgroundPageRootInstance,
@@ -138,5 +138,41 @@ describe('BackgroundElementTemplateInstanceManager', () => {
     backgroundElementTemplateInstanceManager.clear();
     expect(backgroundElementTemplateInstanceManager.get(instance.instanceId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.values.size).toBe(0);
+  });
+
+  it('announces a re-keyed instance to devtools through GlobalEventEmitter', () => {
+    const emit = vi.fn();
+    const getJSModule = vi.spyOn(lynx, 'getJSModule').mockReturnValue({ emit } as never);
+    try {
+      const instance = new BackgroundElementTemplateInstance('view');
+      const oldId = instance.instanceId;
+
+      backgroundElementTemplateInstanceManager.updateId(oldId, -5);
+
+      expect(getJSModule).toHaveBeenCalledWith('GlobalEventEmitter');
+      expect(emit).toHaveBeenCalledWith('onBackgroundElementTemplateInstanceUpdateId', [{ oldId, newId: -5 }]);
+    } finally {
+      getJSModule.mockRestore();
+    }
+  });
+
+  it('only announces re-keyed instances outside development when REACT_DEVTOOL is enabled', () => {
+    const emit = vi.fn();
+    const getJSModule = vi.spyOn(lynx, 'getJSModule').mockReturnValue({ emit } as never);
+    vi.stubGlobal('__DEV__', false);
+    try {
+      const silent = new BackgroundElementTemplateInstance('view');
+      backgroundElementTemplateInstanceManager.updateId(silent.instanceId, -6);
+      expect(emit).not.toHaveBeenCalled();
+
+      vi.stubGlobal('__REACT_DEVTOOL__', true);
+      const announced = new BackgroundElementTemplateInstance('view');
+      const oldId = announced.instanceId;
+      backgroundElementTemplateInstanceManager.updateId(oldId, -7);
+      expect(emit).toHaveBeenCalledWith('onBackgroundElementTemplateInstanceUpdateId', [{ oldId, newId: -7 }]);
+    } finally {
+      vi.unstubAllGlobals();
+      getJSModule.mockRestore();
+    }
   });
 });
