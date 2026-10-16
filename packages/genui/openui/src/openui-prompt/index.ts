@@ -14,37 +14,14 @@ import type {
   PromptOptions,
 } from '@openuidev/lang-core';
 
-import {
-  AudioPlayer,
-  Button,
-  Buttons,
-  Canvas,
-  Card,
-  CardHeader,
-  CheckBox,
-  ChoicePicker,
-  Column,
-  DateTimeInput,
-  Divider,
-  Icon,
-  Image,
-  List,
-  Loading,
-  Modal,
-  RadioGroup,
-  Row,
-  Separator,
-  Slider,
-  Stack,
-  Tabs,
-  Tag,
-  Text,
-  TextContent,
-  TextField,
-  Video,
-} from '../catalog/agent.js';
+import * as catalog from '../catalog/agent.js';
 import { DATA_GENERATION_RULES } from '../data-tools/data-rules.js';
 import { registerOpenUIBuiltins } from '../shared/builtins.js';
+import {
+  DEFAULT_COMPONENT_GROUPS,
+  getDefaultComponents,
+} from '../shared/defaultCatalog.js';
+import { resolveLibraryOptions } from '../shared/libraryOptions.js';
 
 /** Shared action prop schema exposed to prompt signatures as `ActionExpression`. */
 export { actionPropSchema as openUiPromptActionPropSchema } from '../catalog/Action/schema.js';
@@ -58,13 +35,26 @@ export type OpenUiPromptLibrary = Library<HeadlessRenderer>;
  * Options for creating the headless OpenUI prompt library.
  */
 export interface CreateOpenUiPromptLibraryOptions {
-  /** Override the root component name. Defaults to `'Stack'`. */
+  /**
+   * Root component name; supply its definition when defaults are disabled.
+   * @defaultValue `'Stack'`
+   */
   root?: string;
-  /** Limit built-ins to these names. Custom `components` are still appended. */
+  /**
+   * Whether to include the built-in components and component groups.
+   * @defaultValue `true`
+   */
+  includeDefaultComponents?: boolean;
+  /**
+   * Limit built-ins to these names, retaining the selected root automatically.
+   * Custom components are always appended. Ignored when defaults are disabled.
+   * @defaultValue All built-in components.
+   * @example `componentNames: ['Stack', 'Text']`
+   */
   componentNames?: readonly string[];
-  /** Replace or extend the built-in component set. */
+  /** Additional components, or the complete set when defaults are disabled. */
   components?: OpenUiPromptComponent[];
-  /** Replace or extend the built-in component groups. */
+  /** Additional groups, or the complete set when defaults are disabled. */
   componentGroups?: ComponentGroup[];
 }
 
@@ -77,70 +67,6 @@ export interface BuildOpenUiSystemPromptOptions
   promptOptions?: PromptOptions;
   appendix?: string;
 }
-
-const DEFAULT_COMPONENTS: OpenUiPromptComponent[] = [
-  Stack,
-  Row,
-  Column,
-  List,
-  Canvas,
-  Card,
-  CardHeader,
-  Text,
-  TextContent,
-  Separator,
-  Divider,
-  Button,
-  Buttons,
-  Tag,
-  Image,
-  Icon,
-  Loading,
-  AudioPlayer,
-  Video,
-  CheckBox,
-  RadioGroup,
-  ChoicePicker,
-  Slider,
-  DateTimeInput,
-  TextField,
-  Modal,
-  Tabs,
-];
-
-const DEFAULT_COMPONENT_GROUPS: ComponentGroup[] = [
-  {
-    name: 'Layout',
-    components: [
-      'Stack',
-      'Row',
-      'Column',
-      'List',
-      'Tabs',
-      'Modal',
-      'Separator',
-      'Divider',
-    ],
-  },
-  {
-    name: 'Content',
-    components: ['Card', 'CardHeader', 'Text', 'TextContent'],
-  },
-  { name: 'Buttons', components: ['Button', 'Buttons'] },
-  { name: 'Data Display', components: ['Tag', 'Icon', 'Loading'] },
-  { name: 'Media', components: ['Image', 'Canvas', 'AudioPlayer', 'Video'] },
-  {
-    name: 'Inputs',
-    components: [
-      'CheckBox',
-      'RadioGroup',
-      'ChoicePicker',
-      'Slider',
-      'DateTimeInput',
-      'TextField',
-    ],
-  },
-];
 
 const ENUM_ARGUMENT_RULE =
   'Treat every component enum as a closed set: use only the exact values listed for that argument. Do not borrow enum values from another component or from the broader upstream UI or icon library. If no value fits, use another available component instead of inventing a value.';
@@ -233,33 +159,10 @@ export function createOpenUiPromptLibrary(
   options: CreateOpenUiPromptLibraryOptions = {},
 ): OpenUiPromptLibrary {
   registerOpenUIBuiltins();
-  const root = options.root ?? 'Stack';
-  const componentNames = options.componentNames
-    ? new Set([...options.componentNames, root])
-    : null;
-  const defaultComponents = componentNames
-    ? DEFAULT_COMPONENTS.filter((component) =>
-      componentNames.has(component.name)
-    )
-    : DEFAULT_COMPONENTS;
-  const defaultComponentGroups = componentNames
-    ? DEFAULT_COMPONENT_GROUPS
-      .map((group) => ({
-        ...group,
-        components: group.components.filter((name) => componentNames.has(name)),
-      }))
-      .filter((group) => group.components.length > 0)
-    : DEFAULT_COMPONENT_GROUPS;
-
-  return createLibrary<HeadlessRenderer>({
-    root,
-    components: options.components
-      ? [...defaultComponents, ...options.components]
-      : defaultComponents,
-    componentGroups: options.componentGroups
-      ? [...defaultComponentGroups, ...options.componentGroups]
-      : defaultComponentGroups,
-  });
+  return createLibrary<HeadlessRenderer>(resolveLibraryOptions(options, {
+    components: getDefaultComponents(catalog),
+    componentGroups: DEFAULT_COMPONENT_GROUPS,
+  }));
 }
 
 /**
@@ -271,6 +174,9 @@ export function buildOpenUiSystemPrompt(
   const libraryOptions: CreateOpenUiPromptLibraryOptions = {};
   if (options.root !== undefined) {
     libraryOptions.root = options.root;
+  }
+  if (options.includeDefaultComponents !== undefined) {
+    libraryOptions.includeDefaultComponents = options.includeDefaultComponents;
   }
   if (options.componentNames !== undefined) {
     libraryOptions.componentNames = options.componentNames;
@@ -285,7 +191,8 @@ export function buildOpenUiSystemPrompt(
   const prompt = library.prompt(
     withDefaultPromptOptions(
       options.promptOptions,
-      options.componentNames !== undefined,
+      options.componentNames !== undefined
+        || options.includeDefaultComponents === false,
     ),
   );
   return options.appendix ? `${prompt}\n\n${options.appendix}` : prompt;

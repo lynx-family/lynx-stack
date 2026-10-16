@@ -50,6 +50,30 @@ schemas, and component refs with the ReactLynx catalog without importing JSX,
 CSS, ReactLynx, or Lynx UI. `createOpenUiPromptLibrary()` uses these definitions
 directly.
 
+The two factories share component order, groups, and option handling. With
+matching options and custom definitions, they produce the same `toJSONSchema()`,
+`toSpec()`, and `.prompt()` output. The runtime library supplies ReactLynx
+renderers; the prompt library supplies null renderers and can load in Node.
+
+Both accept `componentNames` to select built-ins (automatically retaining the
+selected root) and `includeDefaultComponents: false` to use only caller-provided
+components and groups. Custom components are always appended, and later
+definitions with the same name override earlier ones. When defaults are
+disabled, `componentNames` has no effect and callers must supply the root.
+Selection controls the Library vocabulary; use `openui/explicit` and individual
+component imports when you also need to exclude unselected renderer modules.
+
+```ts
+// Use the same selection on the server and client.
+const options = { componentNames: ['Stack', 'Text'] };
+const promptLibrary = createOpenUiPromptLibrary(options);
+const rendererLibrary = createOpenUiLibrary(options);
+```
+
+`buildOpenUiSystemPrompt()` additionally supplies generation rules and examples;
+it is separate from the lower-level `.prompt()` parity above. Restricted
+libraries omit default examples and rules that assume unavailable components.
+
 Use `@lynx-js/genui/openui/catalog/agent/Stack` (or
 `@lynx-js/genui-openui/catalog/agent/Stack`) to load just one definition. Each
 subpath exports the same component name as the aggregate Agent catalog, and

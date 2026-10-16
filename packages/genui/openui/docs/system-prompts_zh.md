@@ -140,6 +140,8 @@ appendix：
 | Option                          | 用途                                                                                    |
 | ------------------------------- | --------------------------------------------------------------------------------------- |
 | `root`                          | 覆盖必需的 root component 名称；该组件必须同时存在于 prompt Library 和 client Library。 |
+| `includeDefaultComponents`      | 默认包含内置组件和分组；设为 `false` 后需提供完整组件集合，包括 root。                  |
+| `componentNames`                | 筛选内置组件并保留 root，自定义定义仍会追加；禁用默认组件时不生效。                     |
 | `components`                    | 追加 headless component definitions；后加入的同名 definition 覆盖默认值。               |
 | `componentGroups`               | 追加 prompt 分组 metadata。                                                             |
 | `promptOptions.preamble`        | 替换或扩展语言规则前的产品 framing。                                                    |

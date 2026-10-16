@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 
 import {
   createParser,
+  defineComponent,
   evaluate,
   evaluateElementProps,
 } from '@openuidev/lang-core';
@@ -21,6 +22,68 @@ import {
   createOpenUiPromptLibrary,
   openUiPromptActionPropSchema,
 } from '../src/openui-prompt/index.js';
+import type { BuildOpenUiSystemPromptOptions } from '../src/openui-prompt/index.js';
+
+const SYSTEM_PROMPT_CASES: [string, BuildOpenUiSystemPromptOptions][] = [
+  ['default', {}],
+  ['selected-list', { componentNames: ['Stack', 'List', 'Text'] }],
+  ['selected-icons', { componentNames: ['Stack', 'TextContent', 'Icon'] }],
+  ['root-only', { componentNames: ['Stack'] }],
+  ['disabled-defaults', {
+    root: 'Text',
+    includeDefaultComponents: false,
+    components: [agentCatalog.Text],
+  }],
+  ['tool-calls-enabled', { promptOptions: { toolCalls: true } }],
+  ['empty-tools', { promptOptions: { tools: [] } }],
+  ['external-tool', { promptOptions: { tools: ['get_weather'] } }],
+  ['query-only', { promptOptions: { tools: ['openui_query'] } }],
+  ['mutation-only', { promptOptions: { tools: ['openui_mutation'] } }],
+  ['tool-calls-disabled', {
+    promptOptions: {
+      tools: ['openui_query', 'openui_mutation'],
+      toolCalls: false,
+    },
+  }],
+  ['local-data-tools', {
+    promptOptions: { tools: ['openui_query', 'openui_mutation'] },
+  }],
+  ['local-data-tool-descriptors', {
+    promptOptions: {
+      tools: [
+        { name: 'openui_query', inputSchema: {}, outputSchema: {} },
+        { name: 'openui_mutation', inputSchema: {}, outputSchema: {} },
+      ],
+    },
+  }],
+  ['restricted-local-data', {
+    componentNames: ['Stack', 'TextContent'],
+    promptOptions: { tools: ['openui_query', 'openui_mutation'] },
+  }],
+  ['restricted-local-data-enabled', {
+    componentNames: ['Stack', 'TextContent'],
+    promptOptions: {
+      tools: ['openui_query', 'openui_mutation'],
+      toolCalls: true,
+    },
+  }],
+];
+
+test.each(SYSTEM_PROMPT_CASES)(
+  'matches the complete system prompt for %s',
+  async (name, options) => {
+    // Preserve the exact model input, including section order and whitespace.
+    await expect(buildOpenUiSystemPrompt(options)).toMatchFileSnapshot(
+      `./__snapshots__/prompt/${name}.md`,
+    );
+  },
+);
+
+test('matches the default library prompt', async () => {
+  await expect(createOpenUiPromptLibrary().prompt()).toMatchFileSnapshot(
+    './__snapshots__/prompt/library.md',
+  );
+});
 
 test('renderer and prompt reuse the agent catalog schemas and refs', () => {
   const renderer = createOpenUiLibrary();
@@ -42,6 +105,103 @@ test('renderer and prompt reuse the agent catalog schemas and refs', () => {
     expect(definition.component()).toBeNull();
   }
   expect(openUiPromptActionPropSchema).toBe(actionPropSchema);
+  expectMatchingContracts(renderer, prompt);
+});
+
+function expectMatchingContracts(
+  renderer: ReturnType<typeof createOpenUiLibrary>,
+  prompt: ReturnType<typeof createOpenUiPromptLibrary>,
+) {
+  expect(Object.keys(prompt.components)).toEqual(
+    Object.keys(renderer.components),
+  );
+  expect(prompt.root).toBe(renderer.root);
+  expect(prompt.componentGroups).toEqual(renderer.componentGroups);
+  expect(prompt.toJSONSchema()).toEqual(renderer.toJSONSchema());
+  expect(prompt.toSpec()).toEqual(renderer.toSpec());
+  expect(prompt.prompt()).toBe(renderer.prompt());
+}
+
+test.each([
+  { options: { componentNames: [] }, names: ['Stack'] },
+  {
+    options: { componentNames: ['Text', 'Text', 'unknown'] },
+    names: ['Stack', 'Text'],
+  },
+  {
+    options: { root: 'Column', componentNames: ['Text'] },
+    names: ['Column', 'Text'],
+  },
+])('selects the same built-ins and root with %j', ({ options, names }) => {
+  const renderer = createOpenUiLibrary(options);
+  const prompt = createOpenUiPromptLibrary(options);
+  expectMatchingContracts(renderer, prompt);
+  expect(Object.keys(prompt.components)).toEqual(names);
+  expect(prompt.componentGroups?.flatMap(group => group.components)).toEqual(
+    names,
+  );
+});
+
+test.each([true, false])(
+  'aligns custom roots, overrides and groups with defaults %s',
+  includeDefaultComponents => {
+    const defaults = createOpenUiLibrary();
+    const Page = defineComponent({
+      name: 'Page',
+      props: agentCatalog.Stack.props,
+      description: 'A custom root.',
+      component: () => null,
+    });
+    const Text = {
+      ...agentCatalog.Text,
+      description: 'Application-specific text.',
+    };
+    const options = {
+      root: 'Page',
+      includeDefaultComponents,
+      componentNames: ['Text'],
+      componentGroups: [{ name: 'Application', components: ['Page'] }],
+    };
+    const renderer = createOpenUiLibrary({
+      ...options,
+      components: [
+        { ...Page, component: defaults.components.Stack!.component },
+        { ...Text, component: defaults.components.Text!.component },
+      ],
+    });
+    const prompt = createOpenUiPromptLibrary({
+      ...options,
+      components: [Page, Text],
+    });
+    expectMatchingContracts(renderer, prompt);
+    expect(prompt.components.Text).toBe(Text);
+    expect(prompt.components.Page).toBe(Page);
+    expect(Object.keys(prompt.components)).toEqual(
+      includeDefaultComponents ? ['Text', 'Page'] : ['Page', 'Text'],
+    );
+    if (!includeDefaultComponents) {
+      expect(prompt.componentGroups).toEqual(options.componentGroups);
+    }
+  },
+);
+
+test('disabled defaults omit groups and require an explicitly supplied root in both libraries', () => {
+  const renderer = createOpenUiLibrary({
+    includeDefaultComponents: false,
+    components: [createOpenUiLibrary().components.Stack!],
+  });
+  const prompt = createOpenUiPromptLibrary({
+    includeDefaultComponents: false,
+    components: [agentCatalog.Stack],
+  });
+  expectMatchingContracts(renderer, prompt);
+  expect(prompt.componentGroups).toBeUndefined();
+  for (const create of [createOpenUiLibrary, createOpenUiPromptLibrary]) {
+    expect(() =>
+      create({ includeDefaultComponents: false, componentNames: ['Stack'] })
+    )
+      .toThrow('Root component "Stack" was not found in components');
+  }
 });
 
 test('published agent catalog and prompt entries load in Node without renderer dependencies', () => {
@@ -146,24 +306,6 @@ test.each(['renderer', 'prompt'])(
   },
 );
 
-test.each([
-  { componentNames: undefined },
-  { componentNames: ['Stack', 'List', 'Text'] },
-])(
-  'teaches null placeholders with component selection %s',
-  ({ componentNames }) => {
-    const prompt = buildOpenUiSystemPrompt(
-      componentNames ? { componentNames } : {},
-    );
-    expect(prompt).toContain(
-      'use null for every skipped optional slot before a later argument',
-    );
-    expect(prompt).toContain(
-      'List(children, null, "vertical", "stretch", "s", false)',
-    );
-  },
-);
-
 test('the default List layout example parses against the renderer contract', () => {
   const line = buildOpenUiSystemPrompt().split('\n').find(text =>
     text.startsWith('details = List(')
@@ -179,30 +321,6 @@ test('the default List layout example parses against the renderer contract', () 
   expect(result.meta.unresolved).toEqual([]);
   expect(result.meta.incomplete).toBe(false);
 });
-
-test.each([
-  { componentNames: undefined },
-  { componentNames: ['Stack', 'TextContent', 'Icon'] },
-  { componentNames: ['Stack'] },
-])(
-  'teaches closed component enums with component selection %s',
-  ({ componentNames }) => {
-    const prompt = buildOpenUiSystemPrompt(
-      componentNames ? { componentNames } : {},
-    );
-    expect(prompt).toContain('Treat every component enum as a closed set');
-    expect(prompt).toContain(
-      'use only the exact values listed for that argument',
-    );
-    expect(prompt).toContain(
-      'Do not borrow enum values from another component',
-    );
-    expect(prompt).toContain('or from the broader upstream UI or icon library');
-    expect(prompt).toContain(
-      'use another available component instead of inventing a value',
-    );
-  },
-);
 
 test.each(['renderer', 'prompt'])(
   '%s distinguishes TextContent size from Text variant for footer notes',
@@ -376,57 +494,4 @@ test('todo fixture renders default rows and edits numeric or string IDs', () => 
     }
   }
   expect(errors).toEqual([]);
-});
-
-test.each([
-  undefined,
-  { toolCalls: true },
-  { tools: [] },
-  { tools: ['get_weather'] },
-  { tools: ['openui_query'] },
-  { tools: ['openui_mutation'] },
-  { tools: ['openui_query', 'openui_mutation'], toolCalls: false },
-])(
-  'omits the local data contract unless both runtime tools are available: %j',
-  promptOptions => {
-    const prompt = buildOpenUiSystemPrompt({
-      ...(promptOptions ? { promptOptions } : {}),
-    });
-    expect(prompt).not.toContain(
-      'The host provides two tools for persistent data',
-    );
-    expect(prompt).not.toContain('Mutation("openui_mutation", { key:');
-  },
-);
-
-test.each([
-  ['openui_query', 'openui_mutation'],
-  [
-    { name: 'openui_query', inputSchema: {}, outputSchema: {} },
-    { name: 'openui_mutation', inputSchema: {}, outputSchema: {} },
-  ],
-].map(tools => ({ tools })))(
-  'includes the local data contract for registered names or descriptors: %j',
-  ({ tools }) => {
-    const prompt = buildOpenUiSystemPrompt({ promptOptions: { tools } });
-    expect(prompt).toContain('The host provides two tools for persistent data');
-    expect(prompt).toContain('Mutation("openui_mutation", { key:');
-  },
-);
-
-test('keeps local data guidance disabled for restricted prompts unless tool calls are explicitly enabled', () => {
-  const options = {
-    componentNames: ['Stack', 'TextContent'],
-    promptOptions: { tools: ['openui_query', 'openui_mutation'] },
-  };
-  expect(buildOpenUiSystemPrompt(options)).not.toContain(
-    'The host provides two tools for persistent data',
-  );
-  expect(
-    buildOpenUiSystemPrompt({
-      ...options,
-      promptOptions: { ...options.promptOptions, toolCalls: true },
-    }),
-  )
-    .toContain('The host provides two tools for persistent data');
 });

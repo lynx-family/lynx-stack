@@ -46,6 +46,26 @@ const library = useMemo(() => createOpenUiLibrary(), []);
 该入口与 ReactLynx catalog 共享名称、描述、schema 和组件 ref，无需加载 JSX、
 CSS、ReactLynx 或 Lynx UI。`createOpenUiPromptLibrary()` 直接复用这些定义。
 
+两个工厂共用组件顺序、分组和选项处理逻辑。配置和自定义组件定义对应时，
+`toJSONSchema()`、`toSpec()` 和 `.prompt()` 输出相同。渲染库提供真实的 ReactLynx
+组件；Prompt 库提供返回 null 的 renderer，可以在 Node 中加载。
+
+两端都支持用 `componentNames` 筛选内置组件，并自动保留选定的 root；也支持
+`includeDefaultComponents: false`，仅使用调用方传入的组件和分组。自定义组件始终
+追加在内置组件后，同名定义以后者为准。禁用默认组件时，`componentNames` 不生效，
+调用方必须自行提供 root。筛选仅控制 Library 的组件集合；若还需要排除未选组件的
+模块依赖，使用 `openui/explicit` 配合逐组件导入。
+
+```ts
+// 服务端和客户端使用相同的筛选配置。
+const options = { componentNames: ['Stack', 'Text'] };
+const promptLibrary = createOpenUiPromptLibrary(options);
+const rendererLibrary = createOpenUiLibrary(options);
+```
+
+`buildOpenUiSystemPrompt()` 会额外添加生成规则和示例，与上述底层 `.prompt()` 的
+一致性约定不同。组件集合受限时，不添加依赖其他默认组件的规则和示例。
+
 按需引入单个定义时，使用 `@lynx-js/genui/openui/catalog/agent/Stack`（或
 `@lynx-js/genui-openui/catalog/agent/Stack`）。每个子路径导出与 Agent 聚合入口
 相同的组件名，只加载该组件定义及其 schema 依赖。
