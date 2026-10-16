@@ -93,6 +93,7 @@ export class LynxViewElement extends HTMLElement {
   #connected = false;
   #url?: string;
 
+  #nativeModulesMap?: NativeModulesMap;
   /**
    * @public
    * @property nativeModulesMap
@@ -100,7 +101,12 @@ export class LynxViewElement extends HTMLElement {
    * A `LynxConsoleModule` whose factory returns a Console-like object provides
    * the lexical `console` for this view's background bundles.
    */
-  nativeModulesMap: NativeModulesMap | undefined;
+  get nativeModulesMap(): NativeModulesMap | undefined {
+    return this.#nativeModulesMap;
+  }
+  set nativeModulesMap(val: NativeModulesMap | undefined) {
+    this.#nativeModulesMap = val;
+  }
 
   /**
    * @param
@@ -576,6 +582,7 @@ export class LynxViewElement extends HTMLElement {
    * @private
    */
   connectedCallback() {
+    this.#upgradeProperty('nativeModulesMap');
     this.#upgradeProperty('url');
     this.#upgradeProperty('src');
     this.#upgradeProperty('globalProps');
