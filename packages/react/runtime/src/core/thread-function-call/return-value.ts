@@ -5,9 +5,10 @@
 import { IndexMap } from '../../shared/index-map.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxRetData } from '../../worklet-runtime/bindings/events.js';
+import { getReloadVersion } from '../reload-version.js';
 import { registerDestroyTask } from '../runtime-destroy.js';
 
-let resolveMap: IndexMap<(value: any) => void> | undefined;
+let resolveMap: IndexMap<{ resolve: (value: any) => void; reloadVersion: number }> | undefined;
 let cleanupReturnValueListener: (() => void) | undefined;
 let unregisterReturnValueCleanup: (() => void) | undefined;
 
@@ -32,7 +33,7 @@ export function onFunctionCall(resolve: (value: any) => void): number {
   if (!resolveMap) {
     initReturnValueListener();
   }
-  return resolveMap!.add(resolve);
+  return resolveMap!.add({ resolve, reloadVersion: getReloadVersion() });
 }
 
 function ensureFunctionCallReturnCleanup(): void {
@@ -68,10 +69,10 @@ function onFunctionCallRet(event: RuntimeProxy.Event): void {
   if (!map) {
     return;
   }
-  const resolve = map.get(data.resolveId);
-  if (!resolve) {
+  const entry = map.get(data.resolveId);
+  if (!entry || (data.reloadVersion ?? 0) !== entry.reloadVersion) {
     return;
   }
   map.remove(data.resolveId);
-  resolve(data.returnValue);
+  entry.resolve(data.returnValue);
 }

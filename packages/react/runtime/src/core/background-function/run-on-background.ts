@@ -2,13 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { getReloadVersion } from '../reload-version.js';
 import { BackgroundFunctionExecMap } from './exec-map.js';
 import { isSdkVersionGt } from '../../utils.js';
 import { delayRunOnBackground } from '../../worklet-runtime/bindings/bindings.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxRetData } from '../../worklet-runtime/bindings/events.js';
 import type { ClosureValueType, JsFnHandle, Worklet } from '../../worklet-runtime/bindings/types.js';
-import { registerDestroyTask } from '../runtime-destroy.js';
+import { isRuntimeDestroyed, registerDestroyTask } from '../runtime-destroy.js';
 import { onFunctionCall } from '../thread-function-call/return-value.js';
 
 /**
@@ -18,6 +19,7 @@ interface RunOnBackgroundData {
   obj: JsFnHandle;
   params: unknown[];
   resolveId: number;
+  reloadVersion?: number;
 }
 
 let execIdMap: BackgroundFunctionExecMap | undefined;
@@ -49,6 +51,7 @@ function initBackgroundFunctionRuntime(): void {
 export function runBackgroundFunction(event: RuntimeProxy.Event): void {
   'background only';
   const data = JSON.parse(event.data as string) as RunOnBackgroundData;
+  if ((data.obj._reloadVersion ?? 0) !== getReloadVersion()) return;
   const obj = execIdMap!.findJsFnHandle(data.obj._execId!, data.obj._jsFnId!);
   const f = obj?._fn;
   if (!f) {
@@ -59,6 +62,7 @@ export function runBackgroundFunction(event: RuntimeProxy.Event): void {
     type: WorkletEvents.FunctionCallRet,
     data: JSON.stringify({
       resolveId: data.resolveId,
+      reloadVersion: data.reloadVersion,
       returnValue,
     } as RunWorkletCtxRetData),
   });
@@ -66,8 +70,9 @@ export function runBackgroundFunction(event: RuntimeProxy.Event): void {
 
 function releaseBackgroundFunctionCtx(event: RuntimeProxy.Event): void {
   'background only';
-  for (const id of event.data) {
-    execIdMap!.remove(id as number);
+  for (const item of event.data as (number | { execId: number; reloadVersion: number })[]) {
+    const { execId, reloadVersion } = typeof item === 'number' ? { execId: item, reloadVersion: 0 } : item;
+    if (reloadVersion === getReloadVersion()) execIdMap!.remove(execId);
   }
 }
 
@@ -133,16 +138,25 @@ export function runOnBackground<R, Fn extends (...args: any[]) => R>(
   }
   return async (...params: ClosureValueType[]): Promise<R> => {
     return new Promise((resolve) => {
+      if (isRuntimeDestroyed()) return;
       const resolveId = onFunctionCall(resolve);
+      const reloadVersion = getReloadVersion();
 
       if (obj._isFirstScreen) {
-        delayRunOnBackground(obj, (fnId: number, execId: number) => {
-          dispatchRunBackgroundFunctionEvent(fnId, params, execId, resolveId);
+        delayRunOnBackground(obj, (fnId: number, execId: number, ownerVersion?: number) => {
+          dispatchRunBackgroundFunctionEvent(fnId, params, execId, resolveId, ownerVersion, reloadVersion);
         });
         return;
       }
 
-      dispatchRunBackgroundFunctionEvent(obj._jsFnId!, params, obj._execId!, resolveId);
+      dispatchRunBackgroundFunctionEvent(
+        obj._jsFnId!,
+        params,
+        obj._execId!,
+        resolveId,
+        obj._reloadVersion,
+        reloadVersion,
+      );
     });
   };
 }
@@ -152,6 +166,8 @@ function dispatchRunBackgroundFunctionEvent(
   params: ClosureValueType[],
   execId: number,
   resolveId: number,
+  ownerVersion: number | undefined,
+  reloadVersion: number,
 ): void {
   lynx.getJSContext().dispatchEvent({
     type: WorkletEvents.runOnBackground,
@@ -159,9 +175,11 @@ function dispatchRunBackgroundFunctionEvent(
       obj: {
         _jsFnId: fnId,
         _execId: execId,
+        _reloadVersion: ownerVersion,
       },
       params,
       resolveId,
+      reloadVersion,
     } as RunOnBackgroundData),
   });
 }

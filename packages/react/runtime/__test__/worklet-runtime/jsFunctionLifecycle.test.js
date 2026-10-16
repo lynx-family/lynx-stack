@@ -32,12 +32,15 @@ describe('jsFunctionLifecycle', () => {
   it('should add and remove', () => {
     const manager = new JsFunctionLifecycleManager();
     manager.addRef(3, {});
-    manager.removeRef(3);
+    manager.removeRef('0:3');
     manager.fire();
     expect(events[0]).toMatchInlineSnapshot(`
       {
         "data": [
-          3,
+          {
+            "execId": 3,
+            "reloadVersion": 0,
+          },
         ],
         "type": "Lynx.Worklet.releaseBackgroundWorkletCtx",
       }
@@ -48,7 +51,7 @@ describe('jsFunctionLifecycle', () => {
     const manager = new JsFunctionLifecycleManager();
     manager.addRef(3, {});
     manager.addRef(3, {});
-    manager.removeRef(3);
+    manager.removeRef('0:3');
     manager.fire();
     expect(events[0]).toMatchInlineSnapshot(`
       {
@@ -58,12 +61,15 @@ describe('jsFunctionLifecycle', () => {
     `);
 
     events = [];
-    manager.removeRef(3);
+    manager.removeRef('0:3');
     manager.fire();
     expect(events[0]).toMatchInlineSnapshot(`
       {
         "data": [
-          3,
+          {
+            "execId": 3,
+            "reloadVersion": 0,
+          },
         ],
         "type": "Lynx.Worklet.releaseBackgroundWorkletCtx",
       }
@@ -75,12 +81,15 @@ describe('jsFunctionLifecycle', () => {
     const target = {};
     manager.addRef(3, target);
     manager.addRef(3, target);
-    manager.removeRef(3);
+    manager.removeRef('0:3');
     manager.fire();
     expect(events[0]).toMatchInlineSnapshot(`
       {
         "data": [
-          3,
+          {
+            "execId": 3,
+            "reloadVersion": 0,
+          },
         ],
         "type": "Lynx.Worklet.releaseBackgroundWorkletCtx",
       }

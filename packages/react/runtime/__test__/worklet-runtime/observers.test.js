@@ -49,7 +49,7 @@ describe('MTFObservers', () => {
 
     retainWorkletCtx(mtf);
 
-    expect(addRef).toHaveBeenCalledWith(8, mtf);
+    expect(addRef).toHaveBeenCalledWith(8, mtf, undefined);
   });
 
   it('should not add lifecycle refs during element updates', () => {

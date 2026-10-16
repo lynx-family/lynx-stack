@@ -9,7 +9,7 @@ import { callDestroyLifetimeFun } from './callDestroyLifetimeFun.js';
 import { injectCalledByNative } from './main-thread-api.js';
 import { installOnMtsDestruction } from './mts-destroy.js';
 import { installElementTemplatePatchListener } from './patch-listener.js';
-import { reloadBackground } from './reload-background.js';
+import { reloadBackground, reloadBackgroundEntry } from './reload-background.js';
 import { runWithForceRootRender } from '../../core/forceRootRender.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { installMainThreadHooks } from '../../core/hooks/mainThreadImpl.js';
@@ -79,7 +79,13 @@ function init(): void {
     lynx.getApp().publicComponentEvent = publicComponentEvent;
     lynx.getApp().updateGlobalProps = updateGlobalProps;
     lynx.getApp().updateCardData = updateCardData;
-    lynx.getApp().onAppReload = reloadBackground;
+    const tt = lynx.getApp();
+    tt.onAppReload = typeof __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__ !== 'undefined'
+        && __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__
+        && (lynx as unknown as Record<symbol, unknown>)[Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__')] === true
+        && typeof tt.reloadCard === 'function'
+      ? reloadBackgroundEntry
+      : reloadBackground;
     installElementTemplateRenderScopeHooks();
     installElementTemplateCommitHook();
     if (process.env['NODE_ENV'] !== 'test') {

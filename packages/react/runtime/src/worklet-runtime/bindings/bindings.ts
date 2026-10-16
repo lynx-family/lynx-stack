@@ -71,7 +71,10 @@ function registerWorklet(type: string, id: string, worklet: (...args: unknown[])
  *
  * @internal
  */
-function delayRunOnBackground(fnObj: JsFnHandle, fn: (fnId: number, execId: number) => void): void {
+function delayRunOnBackground(
+  fnObj: JsFnHandle,
+  fn: (fnId: number, execId: number, reloadVersion?: number) => void,
+): void {
   globalThis.lynxWorkletImpl?._runOnBackgroundDelayImpl.delayRunOnBackground(fnObj, fn);
 }
 
@@ -89,8 +92,13 @@ function setEomShouldFlushElementTree(value: boolean) {
  *
  * @internal
  */
-function runRunOnMainThreadTask(task: Worklet, params: ClosureValueType[], resolveId: number): void {
-  globalThis.lynxWorkletImpl?._runRunOnMainThreadTask(task, params, resolveId);
+function runRunOnMainThreadTask(
+  task: Worklet,
+  params: ClosureValueType[],
+  resolveId: number,
+  reloadVersion?: number,
+): void {
+  globalThis.lynxWorkletImpl?._runRunOnMainThreadTask(task, params, resolveId, reloadVersion);
 }
 
 export {

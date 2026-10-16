@@ -265,7 +265,7 @@ describe('main-thread dynamic attr state', () => {
         value: ctx,
       }]);
 
-      expect(addRef).toHaveBeenCalledWith(99, ctx);
+      expect(addRef).toHaveBeenCalledWith(99, ctx, undefined);
     } finally {
       restore();
     }
@@ -278,7 +278,7 @@ describe('main-thread dynamic attr state', () => {
     try {
       setMTEventSlot(17, 3, { type: 'worklet', value: ctx });
 
-      expect(addRef).toHaveBeenCalledWith(100, ctx);
+      expect(addRef).toHaveBeenCalledWith(100, ctx, undefined);
     } finally {
       restore();
     }
@@ -295,7 +295,7 @@ describe('main-thread dynamic attr state', () => {
         value: callback,
       });
 
-      expect(addRef).toHaveBeenCalledWith(101, callback);
+      expect(addRef).toHaveBeenCalledWith(101, callback, undefined);
     } finally {
       restore();
     }

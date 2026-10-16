@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { getReloadVersion } from '../reload-version.js';
+import { isRuntimeDestroyed } from '../runtime-destroy.js';
 import { onFunctionCall } from './return-value.js';
 import { isSdkVersionGt } from '../../utils.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
@@ -44,12 +46,14 @@ export function createRunOnMainThread(
     }
     return async (...params: Parameters<Fn>): Promise<R> => {
       return new Promise((resolve) => {
+        if (isRuntimeDestroyed()) return;
         const worklet = fn as unknown as Worklet;
         prepareMainThreadFunctionCtx(worklet);
         const data = {
           worklet,
           params,
           resolveId: onFunctionCall(resolve),
+          reloadVersion: getReloadVersion(),
         } as RunWorkletCtxData;
 
         if (options.shouldDispatchRunOnMainThreadDirectly()) {

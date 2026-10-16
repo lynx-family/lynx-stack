@@ -60,6 +60,7 @@ describe('ElementTemplate runOnMainThread', () => {
         worklet,
         params: ['hello'],
         resolveId: 1,
+        reloadVersion: 0,
       }),
     });
 
@@ -68,6 +69,7 @@ describe('ElementTemplate runOnMainThread', () => {
       type: WorkletEvents.FunctionCallRet,
       data: JSON.stringify({
         resolveId: 1,
+        reloadVersion: 0,
         returnValue: 'world',
       }),
     });
@@ -91,6 +93,7 @@ describe('ElementTemplate runOnMainThread', () => {
         worklet,
         params: ['hello'],
         resolveId: 1,
+        reloadVersion: 0,
       },
     ]);
 
@@ -99,6 +102,7 @@ describe('ElementTemplate runOnMainThread', () => {
       type: WorkletEvents.FunctionCallRet,
       data: JSON.stringify({
         resolveId: 1,
+        reloadVersion: 0,
         returnValue: 'queued result',
       }),
     });
@@ -131,6 +135,7 @@ describe('ElementTemplate runOnMainThread', () => {
           worklet,
           params: ['from-render'],
           resolveId: 1,
+          reloadVersion: 0,
         },
       ],
     });
@@ -180,6 +185,7 @@ describe('ElementTemplate runOnMainThread', () => {
             worklet,
             params: ['from-state-render'],
             resolveId: 1,
+            reloadVersion: 0,
           },
         ],
       });
@@ -208,6 +214,7 @@ describe('ElementTemplate runOnMainThread', () => {
         worklet,
         params: ['from-layout-effect'],
         resolveId: 1,
+        reloadVersion: 0,
       }),
     });
     expect(takeDelayedRunOnMainThreadData()).toEqual([]);
@@ -252,6 +259,7 @@ describe('ElementTemplate runOnMainThread', () => {
         worklet,
         params: [],
         resolveId: 1,
+        reloadVersion: 0,
       },
     ]);
     void runOnMainThread({ _wkltId: 'pending-before-destroy-2' } as unknown as () => void)();

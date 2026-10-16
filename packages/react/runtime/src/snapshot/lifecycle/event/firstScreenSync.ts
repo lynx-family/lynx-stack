@@ -14,6 +14,29 @@ let firstScreenEventIdSwap: Record<string | number, number> = {};
 let isMarkedFirstScreenSyncReady = false;
 let isFirstScreenTreeReady = false;
 
+export interface FirstScreenSyncState {
+  isFirstScreenSynced: boolean;
+  firstScreenEventIdSwap: Record<string | number, number>;
+  isMarkedFirstScreenSyncReady: boolean;
+  isFirstScreenTreeReady: boolean;
+}
+
+function getFirstScreenSyncState(): FirstScreenSyncState {
+  return {
+    isFirstScreenSynced,
+    firstScreenEventIdSwap,
+    isMarkedFirstScreenSyncReady,
+    isFirstScreenTreeReady,
+  };
+}
+
+function restoreFirstScreenSyncState(state: FirstScreenSyncState): void {
+  isFirstScreenSynced = state.isFirstScreenSynced;
+  firstScreenEventIdSwap = state.firstScreenEventIdSwap;
+  isMarkedFirstScreenSyncReady = state.isMarkedFirstScreenSyncReady;
+  isFirstScreenTreeReady = state.isFirstScreenTreeReady;
+}
+
 function syncFirstScreen(): void {
   isFirstScreenSynced = true;
 
@@ -89,6 +112,8 @@ export {
   syncFirstScreen,
   isFirstScreenSynced,
   firstScreenEventIdSwap,
+  getFirstScreenSyncState,
+  restoreFirstScreenSyncState,
   clearFirstScreenEventIdSwap,
   resetFirstScreenSyncState,
   onFirstScreenSyncReady,

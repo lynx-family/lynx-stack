@@ -2,11 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { Worklet, WorkletRefImpl } from './bindings/types.js';
+import { getReloadVersion } from '../core/reload-version.js';
 
 type MainThreadObjectFactory = (initialValue: unknown) => object;
 interface MainThreadObjectDefinition {
   create: MainThreadObjectFactory | Worklet;
   resolvedCreate?: MainThreadObjectFactory;
+  reloadVersion: number;
 }
 
 const mainThreadObjectDefinitions = new Map<string, MainThreadObjectDefinition>();
@@ -24,6 +26,7 @@ function registerMainThreadObjectType(
     );
   }
   const registered = mainThreadObjectDefinitions.get(type);
+  const reloadVersion = getReloadVersion();
   if (registered) {
     if (
       getFactoryRegistrationIdentity(registered.create)
@@ -33,9 +36,13 @@ function registerMainThreadObjectType(
         `Conflicting MainThreadObject registration for type "${type}". A type key must always use the same create function.`,
       );
     }
-    return;
+    if (registered.reloadVersion === reloadVersion) {
+      return;
+    }
   }
-  mainThreadObjectDefinitions.set(type, { create });
+  // The shared worklet runtime outlives the entry. Resolve factories again after
+  // reload without clearing the branding of objects that are still retained.
+  mainThreadObjectDefinitions.set(type, { create, reloadVersion });
 }
 
 function getFactoryRegistrationIdentity(

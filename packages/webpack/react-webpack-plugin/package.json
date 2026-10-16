@@ -56,7 +56,7 @@
   },
   "peerDependencies": {
     "@lynx-js/react": "^0.128.0",
-    "@lynx-js/template-webpack-plugin": "^0.13.0 || ^0.14.0 || ^0.15.0 || ^0.16.0"
+    "@lynx-js/template-webpack-plugin": "^0.17.0"
   },
   "peerDependenciesMeta": {
     "@lynx-js/react": {

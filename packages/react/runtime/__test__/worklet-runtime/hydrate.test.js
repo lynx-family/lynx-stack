@@ -86,7 +86,7 @@ describe.each([0, 1, 2])('hydration at nesting depth %i', (depth) => {
     onWorkletCtxUpdate(background, firstScreen, true, {});
     onHydrationFinished();
 
-    expect(task).toHaveBeenCalledExactlyOnceWith(3, 8);
+    expect(task).toHaveBeenCalledExactlyOnceWith(3, 8, 0);
     expect(globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.delayedBackgroundFunctionArray).toHaveLength(0);
   });
 });

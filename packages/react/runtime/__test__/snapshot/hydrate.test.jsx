@@ -14,7 +14,7 @@ beforeEach(() => {
   backgroundSnapshotInstanceManager.clear();
   backgroundSnapshotInstanceManager.nextId = 0;
   snapshotInstanceManager.clear();
-  snapshotInstanceManager.nextId = 0;
+  snapshotInstanceManager.counter.nextId = 0;
 });
 
 afterEach(() => {

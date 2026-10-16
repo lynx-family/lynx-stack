@@ -5,12 +5,17 @@
 import type { SnapshotInstance } from './snapshot.js';
 import { clearSnapshotVNodeSource } from '../debug/vnodeSource.js';
 
+// Old removal tasks can outlive an entry re-evaluation, so IDs must not restart.
+const counterKey = Symbol.for('__LYNX_SNAPSHOT_ID_COUNTER__');
+const lynxSymbols = lynx as unknown as Record<symbol, { nextId: number }>;
+const counter = lynxSymbols[counterKey] ??= { nextId: 0 };
+
 export const snapshotInstanceManager: {
-  nextId: number;
+  counter: { nextId: number };
   values: Map<number, SnapshotInstance>;
   clear(): void;
 } = {
-  nextId: 0,
+  counter,
   values: /* @__PURE__ */ new Map<number, SnapshotInstance>(),
   clear() {
     // not resetting `nextId` to prevent id collision

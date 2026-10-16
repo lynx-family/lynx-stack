@@ -12,39 +12,56 @@ import { render } from 'preact';
 import { destroyBackground } from './destroy.js';
 import { renderMainThread } from './render.js';
 import { increaseReloadVersion } from '../../core/reload-version.js';
+import { destroyRuntime } from '../../core/runtime-destroy.js';
 import { __root, setRoot } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isEmptyObject } from '../../utils.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
+import { captureListState, restoreListState } from '../list/list.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import { hydrate } from '../renderToOpcodes/hydrate.js';
-import { __page } from '../snapshot/definition.js';
+import { __page, setupPage } from '../snapshot/definition.js';
 import { SnapshotInstance, snapshotInstanceManager } from '../snapshot/snapshot.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
-import { clearFirstScreenEventIdSwap, isFirstScreenSynced } from './event/firstScreenSync.js';
+import {
+  clearFirstScreenEventIdSwap,
+  getFirstScreenSyncState,
+  isFirstScreenSynced,
+  restoreFirstScreenSyncState,
+} from './event/firstScreenSync.js';
+import type { FirstScreenSyncState } from './event/firstScreenSync.js';
 import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
 import { shouldDelayUiOps } from './ref/delay.js';
 
-function reloadMainThread(data: unknown, options: UpdatePageOption): void {
-  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-    profileStart('ReactLynx::reloadMainThread');
-  }
+interface MainThreadReloadHandoff {
+  oldRoot: SnapshotInstance;
+  page: FiberElement;
+  options: UpdatePageOption;
+  firstScreenSyncState: FirstScreenSyncState;
+  listState: ReturnType<typeof captureListState>;
+  initData: Record<string, unknown>;
+}
 
-  increaseReloadVersion();
+const mainThreadReloadCompleterKey = /*#__PURE__*/ Symbol.for(
+  '__LYNX_MAIN_THREAD_RELOAD_COMPLETER__',
+);
+const mainThreadEntryReloaderKey = /*#__PURE__*/ Symbol.for(
+  '__LYNX_MAIN_THREAD_ENTRY_RELOADER__',
+);
 
-  if (typeof data == 'object' && data !== null && !isEmptyObject(data)) {
-    Object.assign(lynx.__initData, data);
-  }
+const lynxSymbols = lynx as unknown as Record<symbol, unknown>;
 
-  snapshotInstanceManager.clear();
-  __pendingListUpdates.clearAttachedLists();
-  clearFirstScreenEventIdSwap();
+function completeMainThreadReload(handoff: MainThreadReloadHandoff): void {
+  setupPage(handoff.page);
+  restoreListState(handoff.listState);
+  lynx.__initData = handoff.initData;
+  restoreFirstScreenSyncState(handoff.firstScreenSyncState);
+  finishMainThreadReload(handoff.oldRoot, handoff.options);
+}
 
-  const oldRoot = __root;
-  setRoot(new SnapshotInstance('root'));
-  __root.__jsx = oldRoot.__jsx;
+function finishMainThreadReload(oldRoot: SnapshotInstance, options: UpdatePageOption): void {
   renderMainThread();
-  hydrate(oldRoot as SnapshotInstance, __root as SnapshotInstance, {
+  hydrate(oldRoot, __root as SnapshotInstance, {
     skipUnRef: true,
   });
 
@@ -70,7 +87,60 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
-  return;
+}
+
+if (
+  typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__
+  && typeof __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__ !== 'undefined' && __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__
+) {
+  lynxSymbols[mainThreadReloadCompleterKey] = completeMainThreadReload;
+}
+
+function reloadMainThread(data: unknown, options: UpdatePageOption): void {
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
+    profileStart('ReactLynx::reloadMainThread');
+  }
+
+  increaseReloadVersion();
+
+  if (typeof data == 'object' && data !== null && !isEmptyObject(data)) {
+    Object.assign(lynx.__initData, data);
+  }
+
+  snapshotInstanceManager.clear();
+  __pendingListUpdates.clearAttachedLists();
+  clearFirstScreenEventIdSwap();
+
+  const oldRoot = __root;
+  if (
+    typeof __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__ !== 'undefined'
+    && __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__
+    && lynxSymbols[Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__')] === true
+    && typeof lynxSymbols[mainThreadEntryReloaderKey] === 'function'
+  ) {
+    destroyRuntime();
+    // Keep the old tree until the new runtime has rendered, then let that
+    // runtime own renderMainThread/hydrate and the rest of the reload.
+    const handoff = {
+      oldRoot: oldRoot as SnapshotInstance,
+      page: __page,
+      options,
+      firstScreenSyncState: getFirstScreenSyncState(),
+      listState: captureListState(),
+      initData: lynx.__initData,
+    } satisfies MainThreadReloadHandoff;
+
+    Reflect.deleteProperty(lynx, Symbol.for('__LYNX_EXTERNAL_GLOBAL__'));
+    (lynxSymbols[mainThreadEntryReloaderKey] as () => void)();
+    (lynxSymbols[mainThreadReloadCompleterKey] as (handoff: MainThreadReloadHandoff) => void)(
+      handoff,
+    );
+    return;
+  }
+
+  setRoot(new SnapshotInstance('root'));
+  __root.__jsx = oldRoot.__jsx;
+  finishMainThreadReload(oldRoot as SnapshotInstance, options);
 }
 
 function reloadBackground(updateData: Record<string, any>): void {

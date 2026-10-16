@@ -1,3 +1,4 @@
+import { getReloadVersion } from '../../../../src/core/reload-version.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
@@ -205,6 +206,7 @@ describe('ElementTemplate hydration listener', () => {
       worklet: { _wkltId: 'clean-hydrate-main-thread-function' },
       params: ['from-hydrate'],
       resolveId: 1,
+      reloadVersion: getReloadVersion(),
     };
     enqueueDelayedRunOnMainThreadData(delayedData);
 
@@ -328,6 +330,7 @@ describe('ElementTemplate hydration listener', () => {
           worklet,
           params: [],
           resolveId: 1,
+          reloadVersion: getReloadVersion(),
         },
       ]);
       void runOnMainThread(worklet as unknown as () => void)();

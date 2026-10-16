@@ -14,7 +14,7 @@ function initEventListeners(): void {
     WorkletEvents.runWorkletCtx,
     (event: Event) => {
       const data = JSON.parse(event.data as string) as RunWorkletCtxData;
-      runRunOnMainThreadTask(data.worklet, data.params as ClosureValueType[], data.resolveId);
+      runRunOnMainThreadTask(data.worklet, data.params as ClosureValueType[], data.resolveId, data.reloadVersion);
     },
   );
   jsContext.addEventListener(

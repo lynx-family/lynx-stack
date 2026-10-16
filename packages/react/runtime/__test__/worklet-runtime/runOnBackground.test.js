@@ -131,6 +131,7 @@ describe('runOnBackground', () => {
           "jsFnHandle": {
             "_execId": 8,
             "_jsFnId": 1,
+            "_reloadVersion": 0,
           },
           "task": [MockFunction spy],
         },
@@ -144,6 +145,7 @@ describe('runOnBackground', () => {
         [
           1,
           8,
+          0,
         ],
       ]
     `);

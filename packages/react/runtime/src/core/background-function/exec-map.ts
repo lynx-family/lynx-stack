@@ -4,6 +4,7 @@
 
 import { IndexMap } from '../../shared/index-map.js';
 import type { JsFnHandle, Worklet } from '../../worklet-runtime/bindings/types.js';
+import { getReloadVersion } from '../reload-version.js';
 
 /**
  * Keeps the background-thread worklet ctx alive while main thread still holds
@@ -13,6 +14,7 @@ export class BackgroundFunctionExecMap extends IndexMap<Worklet> {
   public override add(worklet: Worklet): number {
     const execId = super.add(worklet);
     worklet._execId = execId;
+    worklet._reloadVersion = getReloadVersion();
     return execId;
   }
 

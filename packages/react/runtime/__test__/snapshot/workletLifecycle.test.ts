@@ -44,7 +44,7 @@ describe('worklet lifecycle without elements', () => {
     updateWorkletEvent(createSnapshot(worklet), 0, undefined as any, 0, 'main-thread', 'bindEvent', 'tap');
 
     expect(addRef).toHaveBeenCalledTimes(1);
-    expect(addRef).toHaveBeenCalledWith(1, worklet);
+    expect(addRef).toHaveBeenCalledWith(1, worklet, undefined);
   });
 
   it('retains main-thread ref worklet ctx before elements are materialized', () => {
@@ -56,7 +56,7 @@ describe('worklet lifecycle without elements', () => {
     updateWorkletRef(createSnapshot(worklet), 0, undefined, 0, 'main-thread');
 
     expect(addRef).toHaveBeenCalledTimes(1);
-    expect(addRef).toHaveBeenCalledWith(2, worklet);
+    expect(addRef).toHaveBeenCalledWith(2, worklet, undefined);
   });
 
   it('retains main-thread gesture callbacks before elements are materialized', () => {
@@ -76,7 +76,7 @@ describe('worklet lifecycle without elements', () => {
     updateGesture(createSnapshot(gesture), 0, undefined, 0, 'main-thread');
 
     expect(addRef).toHaveBeenCalledTimes(1);
-    expect(addRef).toHaveBeenCalledWith(3, callback);
+    expect(addRef).toHaveBeenCalledWith(3, callback, undefined);
   });
 
   it('retains main-thread spread worklet ctx before elements are materialized', () => {
@@ -113,9 +113,9 @@ describe('worklet lifecycle without elements', () => {
     );
 
     expect(addRef.mock.calls).toEqual([
-      [4, eventWorklet],
-      [6, gestureCallback],
-      [5, refWorklet],
+      [4, eventWorklet, undefined],
+      [6, gestureCallback, undefined],
+      [5, refWorklet, undefined],
     ]);
   });
 

@@ -12,29 +12,30 @@ import { isSdkVersionGt } from './utils/version.js';
  * resulting a de-ref to the js function in JS context.
  */
 class JsFunctionLifecycleManager {
-  private execIdRefCount = new Map<number, number>();
-  private execIdSetToFire = new Set<number>();
+  private execIdRefCount = new Map<string, number>();
+  private execIdSetToFire = new Set<string>();
   private retainedObjects = new WeakSet<object>();
   private willFire = false;
-  private registry: FinalizationRegistry<number>;
+  private registry: FinalizationRegistry<string>;
 
   constructor() {
-    this.registry = new FinalizationRegistry<number>(this.removeRef.bind(this));
+    this.registry = new FinalizationRegistry<string>(key => this.removeRef(key));
   }
 
-  addRef(execId: number, objToRef: object): void {
+  addRef(execId: number, objToRef: object, reloadVersion = 0): void {
+    const key = `${reloadVersion}:${execId}`;
     if (this.retainedObjects.has(objToRef)) {
       return;
     }
     this.retainedObjects.add(objToRef);
     this.execIdRefCount.set(
-      execId,
-      (this.execIdRefCount.get(execId) ?? 0) + 1,
+      key,
+      (this.execIdRefCount.get(key) ?? 0) + 1,
     );
-    this.registry.register(objToRef, execId);
+    this.registry.register(objToRef, key);
   }
 
-  removeRef(execId: number): void {
+  removeRef(execId: string): void {
     const rc = this.execIdRefCount.get(execId)!;
     if (rc > 1) {
       this.execIdRefCount.set(execId, rc - 1);
@@ -54,7 +55,10 @@ class JsFunctionLifecycleManager {
     profile('JsFunctionLifecycleManager.fire', () => {
       lynx.getJSContext().dispatchEvent({
         type: WorkletEvents.releaseBackgroundWorkletCtx,
-        data: Array.from(this.execIdSetToFire),
+        data: Array.from(this.execIdSetToFire, key => {
+          const [reloadVersion, execId] = key.split(':').map(Number);
+          return { execId, reloadVersion };
+        }),
       });
       this.execIdSetToFire.clear();
       this.willFire = false;

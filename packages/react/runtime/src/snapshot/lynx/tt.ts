@@ -7,6 +7,8 @@ import { runWithForce } from './runWithForce.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { updateCardData } from '../../core/lynx-update-data.js';
 import { PerformanceTimingFlags, PipelineOrigins, beginPipeline, markTiming } from '../../core/performance.js';
+import { increaseReloadVersion } from '../../core/reload-version.js';
+import { destroyRuntime } from '../../core/runtime-destroy.js';
 import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
@@ -24,6 +26,7 @@ import { delayLifecycleEvent, delayedLifecycleEvents } from '../lifecycle/event/
 import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../lifecycle/patch/commit.js';
 import type { PatchList } from '../lifecycle/patch/commit.js';
 import { removeCtxNotFoundEventListener } from '../lifecycle/patch/error.js';
+import { deinitGlobalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 import { runDelayedUiOps } from '../lifecycle/ref/delay.js';
 import { reloadBackground } from '../lifecycle/reload.js';
 import {
@@ -46,10 +49,30 @@ function injectTt(): void {
     removeCtxNotFoundEventListener();
     destroyWorklet();
     destroyBackground();
+    if (typeof __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__ !== 'undefined' && __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__) {
+      __root.__jsx = undefined;
+      Reflect.deleteProperty(lynx, Symbol.for('__LYNX_EXTERNAL_GLOBAL__'));
+    }
   };
   tt.updateGlobalProps = updateGlobalProps;
   tt.updateCardData = updateCardData;
-  tt.onAppReload = reloadBackground;
+  if (
+    typeof __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__ !== 'undefined'
+    && __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__
+    && (lynx as unknown as Record<symbol, unknown>)[Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__')] === true
+    && typeof tt.reloadCard === 'function'
+  ) {
+    tt.onAppReload = (updateData: Record<string, unknown>, options?: Record<string, unknown>) => {
+      const data = Object.assign({}, lynx.__initData, updateData);
+      destroyRuntime();
+      deinitGlobalSnapshotPatch();
+      increaseReloadVersion();
+      tt.callDestroyLifetimeFun();
+      tt.reloadCard!(data, options);
+    };
+  } else {
+    tt.onAppReload = reloadBackground;
+  }
   tt.processCardConfig = () => {
     // used to updateTheme, no longer rely on this function
   };

@@ -16,6 +16,7 @@ describe('element-template native index wiring', () => {
   afterEach(() => {
     process.env['NODE_ENV'] = originalNodeEnv;
     globalThis.__ALOG_ELEMENT_API__ = undefined;
+    vi.unstubAllGlobals();
     vi.resetModules();
     vi.doUnmock('../../../src/element-template/native/main-thread-api.js');
     vi.doUnmock('../../../src/element-template/native/patch-listener.js');
@@ -110,8 +111,17 @@ describe('element-template native index wiring', () => {
     expect(initTimingAPI).not.toHaveBeenCalled();
   });
 
-  it('installs background wiring only on background thread', async () => {
+  it.each([
+    { flag: undefined, entry: true, api: true, reEval: false },
+    { flag: false, entry: true, api: true, reEval: false },
+    { flag: true, entry: false, api: true, reEval: false },
+    { flag: true, entry: true, api: false, reEval: false },
+    { flag: true, entry: true, api: true, reEval: true },
+  ])('installs background reload wiring: $flag/$entry/$api', async ({ flag, entry, api, reEval }) => {
     envManager.resetEnv('background');
+    vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', flag);
+    (lynx as unknown as Record<symbol, unknown>)[Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__')] = entry;
+    Object.assign(lynx.getApp(), { reloadCard: api ? vi.fn() : undefined });
     process.env['NODE_ENV'] = 'production';
     globalThis.lynx.performance.isProfileRecording = vi.fn(() => true);
 
@@ -132,6 +142,7 @@ describe('element-template native index wiring', () => {
     const updateCardData = vi.fn();
     const updateGlobalProps = vi.fn();
     const reloadBackground = vi.fn();
+    const reloadBackgroundEntry = vi.fn();
     class MockBackgroundElementTemplateInstance {
       constructor(public type: string) {}
     }
@@ -191,6 +202,7 @@ describe('element-template native index wiring', () => {
     }));
     vi.doMock('../../../src/element-template/native/reload-background.js', () => ({
       reloadBackground,
+      reloadBackgroundEntry,
     }));
 
     await import('../../../src/element-template/native/index.js');
@@ -209,7 +221,7 @@ describe('element-template native index wiring', () => {
     expect(globalThis.lynx.getApp().publicComponentEvent).toBe(publicComponentEvent);
     expect(globalThis.lynx.getApp().updateGlobalProps).toEqual(expect.any(Function));
     expect(globalThis.lynx.getApp().updateCardData).toBe(updateCardData);
-    expect(globalThis.lynx.getApp().onAppReload).toBe(reloadBackground);
+    expect(globalThis.lynx.getApp().onAppReload).toBe(reEval ? reloadBackgroundEntry : reloadBackground);
 
     globalThis.lynx.getApp().updateGlobalProps({ theme: 'light' });
     expect(updateGlobalProps).toHaveBeenCalledWith(

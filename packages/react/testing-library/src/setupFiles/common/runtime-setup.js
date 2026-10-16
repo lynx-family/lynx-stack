@@ -58,7 +58,7 @@ globalThis.onInjectMainThreadGlobals = (target) => {
   }
 
   snapshotInstanceManager.clear();
-  snapshotInstanceManager.nextId = 0;
+  snapshotInstanceManager.counter.nextId = 0;
   target.__root = new SnapshotInstance('root');
 
   target._document = {};

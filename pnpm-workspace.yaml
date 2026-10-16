@@ -81,6 +81,8 @@ peerDependencyRules:
     "@lynx-js/react-rsbuild-plugin@0.20.4>@lynx-js/react": "0.127.0"
     "@lynx-js/react-alias-rsbuild-plugin@0.20.4>@lynx-js/react": "0.127.0"
     "@lynx-js/react-webpack-plugin@0.12.1>@lynx-js/react": "0.127.0"
+    # The workspace template implementation includes the unreleased 0.17 API.
+    "@lynx-js/react-webpack-plugin@0.12.1>@lynx-js/template-webpack-plugin": "0.16.3"
     # `vite-plugin-babel` only calls `loadOptions`, `loadPartialConfig` and
     # `transformAsync`, which all still exist in Babel 8; its `^7.0.0` range
     # predates the release. Verified by building and testing the one package

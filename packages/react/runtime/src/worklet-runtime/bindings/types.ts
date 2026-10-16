@@ -41,6 +41,7 @@ export interface Worklet {
   _workletType?: string;
   _c?: Record<string, ClosureValueType>;
   _execId?: number;
+  _reloadVersion?: number;
   _jsFn?: Record<string, string>;
   _unmount?: () => void;
   [key: string]: ClosureValueType;
@@ -56,6 +57,7 @@ export interface JsFnHandle {
   _jsFnId?: number;
   _fn?: (...args: unknown[]) => unknown;
   _execId?: number;
+  _reloadVersion?: number;
   _error?: string;
   _isFirstScreen?: boolean;
   /**

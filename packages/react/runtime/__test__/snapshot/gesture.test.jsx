@@ -134,6 +134,7 @@ describe('Gesture', () => {
                       {
                         "callback": {
                           "_execId": 1,
+                          "_reloadVersion": 0,
                           "_wkltId": "bdd4:dd564:2",
                         },
                         "name": "onUpdate",
@@ -269,6 +270,7 @@ describe('Gesture', () => {
                       {
                         "callback": {
                           "_execId": 3,
+                          "_reloadVersion": 0,
                           "_wkltId": "bdd4:dd564:2",
                         },
                         "name": "onUpdate",
@@ -361,6 +363,7 @@ describe('Gesture', () => {
                       {
                         "callback": {
                           "_execId": 4,
+                          "_reloadVersion": 0,
                           "_wkltId": "bdd4:dd564:2",
                         },
                         "name": "onUpdate",
@@ -413,6 +416,7 @@ describe('Gesture', () => {
                       {
                         "callback": {
                           "_execId": 5,
+                          "_reloadVersion": 0,
                           "_wkltId": "bdd4:dd564:2",
                         },
                         "name": "onUpdate",
@@ -534,6 +538,7 @@ describe('Gesture', () => {
                       {
                         "callback": {
                           "_execId": 6,
+                          "_reloadVersion": 0,
                           "_wkltId": "bdd4:dd564:2",
                         },
                         "name": "onUpdate",
@@ -640,6 +645,7 @@ describe('Gesture', () => {
                       {
                         "callback": {
                           "_execId": 7,
+                          "_reloadVersion": 0,
                           "_wkltId": "bdd4:dd564:2",
                         },
                         "name": "onUpdate",
@@ -778,6 +784,7 @@ describe('Gesture in spread', () => {
                       {
                         "callback": {
                           "_execId": 8,
+                          "_reloadVersion": 0,
                           "_wkltId": "bdd4:dd564:2",
                         },
                         "name": "onUpdate",
@@ -1011,6 +1018,7 @@ describe('Gesture in spread', () => {
                       {
                         "callback": {
                           "_execId": 11,
+                          "_reloadVersion": 0,
                           "_wkltId": "bdd4:dd564:2",
                         },
                         "name": "onUpdate",

@@ -1,0 +1,654 @@
+/*
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+*/
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.hoisted(() => {
+  vi.resetModules();
+  vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
+});
+
+import { root, useState } from '../../../src/index';
+import { BackgroundSnapshotInstance } from '../../../src/snapshot/snapshot/backgroundSnapshot';
+import { reloadBackground, reloadMainThread } from '../../../src/snapshot/lifecycle/reload';
+import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
+import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
+import { __root, setRoot } from '../../../src/root';
+import { SnapshotInstance, snapshotInstanceManager } from '../../../src/snapshot/snapshot/snapshot';
+import { setupLynxEnv } from '../../../src/snapshot/lynx/env';
+import { restoreListState } from '../../../src/snapshot/list/list';
+import { setupPage } from '../../../src/snapshot';
+import { globalEnvManager } from '../utils/envManager';
+import { __injectElementApi } from '../utils/inject';
+import '../utils/runtimeProxy';
+import { elementTree, nativeMethodQueue, waitSchedule } from '../utils/nativeMethod';
+
+const mainThreadEntryReloaderKey = Symbol.for('__LYNX_MAIN_THREAD_ENTRY_RELOADER__');
+const entrySupportsReEvalKey = Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__');
+const mainThreadReloadCompleterKey = Symbol.for('__LYNX_MAIN_THREAD_RELOAD_COMPLETER__');
+const reloadVersionKey = Symbol.for('__LYNX_RELOAD_VERSION__');
+const externalCacheKey = Symbol.for('__LYNX_EXTERNAL_GLOBAL__');
+let nextMtsRefId = 0;
+
+beforeAll(() => {
+  replaceCommitHook();
+  injectUpdateMainThread();
+});
+
+beforeEach(() => {
+  nextMtsRefId = 0;
+  __injectElementApi();
+  globalEnvManager.resetEnv();
+  elementTree.root = undefined;
+  setupPage(__CreatePage('0', 0));
+  globalThis.runWorklet = vi.fn();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+  delete lynx[entrySupportsReEvalKey];
+  delete lynx[externalCacheKey];
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  delete globalThis.__reloadStateTestOnTap;
+  delete globalThis.__reloadStateTestMtsTap;
+  globalEnvManager.resetEnv();
+});
+
+function createEntry() {
+  const entryId = nextMtsRefId++;
+  const mtsRef = { _wkltId: `reload-mts-ref-${entryId}` };
+  let moduleTapCount = 0;
+  let mtsTapCount = 0;
+  let renderedCount = 0;
+  let onTap = () => {};
+
+  function App() {
+    const [count, setCount] = useState(0);
+    renderedCount = count;
+    onTap = () => {
+      moduleTapCount += 1;
+      setCount(value => value + 1);
+    };
+    globalThis.__reloadStateTestOnTap = onTap;
+    const onMtsTap = (event) => {
+      'main thread';
+      mtsTapCount += 1;
+      event.currentTarget.setAttribute('test-state', 'tapped');
+    };
+    globalThis.__reloadStateTestMtsTap = onMtsTap;
+    return (
+      <view main-thread:ref={mtsRef} test-state='idle'>
+        <text>{count}</text>
+        <text bindtap={onTap}>tap</text>
+        <text main-thread:bindtap={onMtsTap}>MTS tap</text>
+      </view>
+    );
+  }
+
+  return {
+    jsx: <App />,
+    mtsRef,
+    getModuleTapCount: () => moduleTapCount,
+    getMtsTapCount: () => mtsTapCount,
+    getRenderedCount: () => renderedCount,
+  };
+}
+
+function triggerMtsTap() {
+  const element = elementTree.toTree().children[0];
+  globalThis.__reloadStateTestMtsTap({
+    currentTarget: {
+      setAttribute(name, value) {
+        __SetAttribute(element, name, value);
+        __FlushElementTree();
+      },
+    },
+  });
+}
+
+function getView() {
+  return elementTree.toTree().children[0];
+}
+
+function expectViewState(count, mtsState) {
+  const view = getView();
+  expect(view.props['test-state']).toBe(mtsState);
+  expect(view.children[0].children[0].props.text).toBe(count);
+}
+
+function applyLatestNativeUpdate() {
+  const [method, args] = lynx.getNativeApp().callLepusMethod.mock.calls.at(-1);
+  globalThis[method](args);
+}
+
+async function waitForBackgroundUpdate() {
+  await waitSchedule();
+  globalEnvManager.switchToMainThread();
+  applyLatestNativeUpdate();
+}
+
+function getElementTreeUiSigns(element) {
+  if (!element) return [];
+  return [
+    element.$$uiSign,
+    ...(element.children ?? []).flatMap(getElementTreeUiSigns),
+  ];
+}
+
+describe('experimental re-eval reload', () => {
+  it('restores accumulated data before the re-evaluated entry renders and attaches refs', () => {
+    const observedData = [];
+    function DataPage() {
+      observedData.push({ ...lynx.__initData });
+      return <text>{String(lynx.__initData.dataCnt ?? 0)}</text>;
+    }
+    __root.__jsx = <DataPage />;
+    renderPage({ dataCnt: 1, retained: 'keep' });
+    const previousReloader = lynx[mainThreadEntryReloaderKey];
+    lynx[entrySupportsReEvalKey] = true;
+    vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
+    lynx[mainThreadEntryReloaderKey] = () => {
+      setupLynxEnv();
+      setRoot(new SnapshotInstance('root'));
+      __root.__jsx = <DataPage />;
+    };
+    try {
+      for (const [update, expected] of [[{ dataCnt: 2 }, 2], [{}, 2], [{ dataCnt: 3 }, 3]]) {
+        reloadMainThread(update, { reloadTemplate: true });
+        expect(observedData.at(-1)).toEqual({ dataCnt: expected, retained: 'keep' });
+        expect(lynx.__initData).toEqual({ dataCnt: expected, retained: 'keep' });
+        expect(elementTree.toTree().children[0].children[0].props.text).toBe(String(expected));
+      }
+    } finally {
+      lynx[mainThreadEntryReloaderKey] = previousReloader;
+    }
+  });
+
+  it('hydrates rendered and recycled list rows across entry re-evaluation', () => {
+    const page = (
+      <list list-type='single'>
+        {[1, 2, 3].map(id => (
+          <list-item key={id} item-key={`row-${id}`} reuse-identifier='row'>
+            <text>{`Row ${id}`}</text>
+          </list-item>
+        ))}
+      </list>
+    );
+    __root.__jsx = page;
+    renderPage();
+    const list = elementTree.toTree().children[0];
+    const first = elementTree.triggerComponentAtIndex(list, 0);
+    elementTree.triggerComponentAtIndex(list, 1);
+    elementTree.triggerEnqueueComponent(list, first);
+    const previousReloader = lynx[mainThreadEntryReloaderKey];
+    lynx[entrySupportsReEvalKey] = true;
+    vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
+    lynx[mainThreadEntryReloaderKey] = () => {
+      // A fresh module has new bindings; it must not clear the shared registry
+      // still owned by the old native cells and reload handoff.
+      restoreListState({ signMap: {}, recycleMap: {}, destroyLifetimeHandlers: new Map() });
+      setRoot(new SnapshotInstance('root'));
+      __root.__jsx = page;
+    };
+    try {
+      for (let reload = 0; reload < 3; reload++) {
+        expect(() => reloadMainThread({}, { reloadTemplate: true })).not.toThrow();
+        expect(elementTree.toTree().children[0]).toBe(list);
+        const visible = elementTree.triggerComponentAtIndex(list, 0);
+        expect(visible).toBeGreaterThan(0);
+        elementTree.triggerEnqueueComponent(list, visible);
+        // An already displayed row and a newly requested row must both work.
+        const second = elementTree.triggerComponentAtIndex(list, 1);
+        elementTree.triggerEnqueueComponent(list, second);
+        expect(() => elementTree.triggerComponentAtIndex(list, 2)).not.toThrow();
+      }
+    } finally {
+      lynx[mainThreadEntryReloaderKey] = previousReloader;
+    }
+  });
+
+  it('keeps the hydrated page clickable after the previous reload removal task runs', async () => {
+    const entry = createEntry();
+    __root.__jsx = entry.jsx;
+    renderPage();
+    globalEnvManager.switchToBackground();
+    root.render(entry.jsx, __root);
+    await waitSchedule();
+    lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls.at(-1));
+    globalEnvManager.switchToMainThread();
+    applyLatestNativeUpdate();
+
+    // The background runtime stays alive, as with a new entry on an old core.
+    // Reload unmounts its old tree and schedules its deferred commit cleanup.
+    globalEnvManager.switchToBackground();
+    vi.useFakeTimers();
+    reloadBackground({});
+    await vi.advanceTimersByTimeAsync(0);
+    expect(vi.getTimerCount()).toBeGreaterThan(0);
+
+    // Re-evaluate the entry's allocator, while retaining the shared native/mock
+    // document used by this two-thread test harness.
+    vi.resetModules();
+    const { snapshotInstanceManager: freshManager } = await import(
+      '../../../src/snapshot/snapshot/snapshotInstanceManager.js'
+    );
+    globalEnvManager.switchToMainThread();
+    const oldReloader = lynx[mainThreadEntryReloaderKey];
+    lynx[mainThreadEntryReloaderKey] = () => {
+      snapshotInstanceManager.counter.nextId = freshManager.counter.nextId;
+      setRoot(new SnapshotInstance('root'));
+      __root.__jsx = entry.jsx;
+    };
+    lynx[entrySupportsReEvalKey] = true;
+    vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
+    try {
+      reloadMainThread({}, { reloadTemplate: true });
+      globalEnvManager.switchToBackground();
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls.at(-1));
+      globalEnvManager.switchToMainThread();
+      applyLatestNativeUpdate();
+      const tree = elementTree.toTree();
+      const tap = tree.children[0].children[1].props.event['bindEvent:tap'];
+
+      // Verify hydration installed the handler before the old cleanup runs.
+      globalEnvManager.switchToBackground();
+      lynx.getApp().publishEvent(tap, {});
+      await vi.advanceTimersByTimeAsync(0);
+      globalEnvManager.switchToMainThread();
+      applyLatestNativeUpdate();
+      expectViewState(1, 'idle');
+
+      // The old 10s cleanup must not erase handlers belonging to the new tree.
+      await vi.advanceTimersByTimeAsync(10000);
+      globalEnvManager.switchToBackground();
+      lynx.getApp().publishEvent(tap, {});
+      await vi.runAllTimersAsync();
+      globalEnvManager.switchToMainThread();
+      applyLatestNativeUpdate();
+      expectViewState(2, 'idle');
+      expect(entry.getModuleTapCount()).toBe(2);
+    } finally {
+      lynx[mainThreadEntryReloaderKey] = oldReloader;
+      vi.useRealTimers();
+    }
+  });
+
+  it('reinitializes main-thread external exports and reuses elements across repeated reloads', () => {
+    const renderEntry = () =>
+      root.render(
+        <view test-state='fresh'>
+          <text>re-evaluated entry</text>
+        </view>,
+      );
+    renderEntry();
+    renderPage();
+    expect(elementTree).toMatchInlineSnapshot(`
+      "<page
+        cssId="default-entry-from-native:0"
+      >
+        <view
+          test-state="fresh"
+        >
+          <text>
+            <raw-text
+              text="re-evaluated entry"
+            />
+          </text>
+        </view>
+      </page>"
+    `);
+    const treeBeforeReload = elementTree.toTree();
+    const uiSigns = getElementTreeUiSigns(treeBeforeReload);
+    lynx[externalCacheKey] = { reactLynx: { root: __root } };
+    const previousReloader = lynx[mainThreadEntryReloaderKey];
+    const initializeExternal = vi.fn(() => {
+      const root = new SnapshotInstance('root');
+      setRoot(root);
+      return { root };
+    });
+    lynx[mainThreadEntryReloaderKey] = () => {
+      const external = lynx[externalCacheKey] ??= {};
+      external.reactLynx ??= initializeExternal();
+      renderEntry();
+    };
+    lynx[entrySupportsReEvalKey] = true;
+    vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
+
+    try {
+      for (const reload of [1, 2, 3]) {
+        const oldRoot = __root;
+        nativeMethodQueue.clear();
+        reloadMainThread({}, { reloadTemplate: true });
+
+        expect(initializeExternal).toHaveBeenCalledTimes(reload);
+        expect(__root).not.toBe(oldRoot);
+        expect(__root.childNodes).toHaveLength(1);
+        expect(snapshotInstanceManager.values.get(__root.__id)).toBe(__root);
+        expect(elementTree.toTree()).toEqual(treeBeforeReload);
+        expect(getElementTreeUiSigns(elementTree.toTree())).toEqual(uiSigns);
+        expect(nativeMethodQueue.filter(([name]) => name.startsWith('__Create'))).toEqual([]);
+      }
+    } finally {
+      if (previousReloader === undefined) {
+        delete lynx[mainThreadEntryReloaderKey];
+      } else {
+        lynx[mainThreadEntryReloaderKey] = previousReloader;
+      }
+    }
+  });
+
+  it.each(['missing entry support', 'missing entry reloader'])(
+    'falls back to legacy reload with %s',
+    (missing) => {
+      const jsx = (
+        <view>
+          <text>legacy entry</text>
+        </view>
+      );
+      __root.__jsx = jsx;
+      renderPage();
+      const treeBeforeReload = elementTree.toTree();
+      const uiSigns = getElementTreeUiSigns(treeBeforeReload);
+      const previousReloader = lynx[mainThreadEntryReloaderKey];
+      const reloader = vi.fn();
+      vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
+
+      if (missing === 'missing entry support') {
+        lynx[mainThreadEntryReloaderKey] = reloader;
+      } else {
+        lynx[entrySupportsReEvalKey] = true;
+        delete lynx[mainThreadEntryReloaderKey];
+      }
+
+      try {
+        reloadMainThread({}, { reloadTemplate: true });
+        expect(reloader).not.toHaveBeenCalled();
+        expect(__root.__jsx).toBe(jsx);
+        expect(getElementTreeUiSigns(elementTree.toTree())).toEqual(uiSigns);
+        expect(elementTree.toTree()).toEqual(treeBeforeReload);
+      } finally {
+        if (previousReloader === undefined) {
+          delete lynx[mainThreadEntryReloaderKey];
+        } else {
+          lynx[mainThreadEntryReloaderKey] = previousReloader;
+        }
+      }
+    },
+  );
+
+  it('resets React state, preserves MTS element mutations, and reattaches refs and events', async () => {
+    const firstEntry = createEntry();
+    __root.__jsx = firstEntry.jsx;
+    renderPage();
+    expect(elementTree).toMatchInlineSnapshot(`
+      "<page
+        cssId="default-entry-from-native:0"
+      >
+        <view
+          has-react-ref={true}
+          test-state="idle"
+        >
+          <text>
+            <raw-text
+              text={0}
+            />
+          </text>
+          <text
+            event={
+              Object {
+                "bindEvent:tap": "-2:1:",
+              }
+            }
+          >
+            <raw-text
+              text="tap"
+            />
+          </text>
+          <text>
+            <raw-text
+              text="MTS tap"
+            />
+          </text>
+        </view>
+      </page>"
+    `);
+    globalEnvManager.switchToBackground();
+    root.render(firstEntry.jsx, __root);
+    await waitSchedule();
+    lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+    globalEnvManager.switchToMainThread();
+    applyLatestNativeUpdate();
+
+    globalEnvManager.switchToBackground();
+    globalThis.__reloadStateTestOnTap();
+    await waitSchedule();
+    globalEnvManager.switchToMainThread();
+    const firstMtsRefAttach = globalThis.runWorklet.mock.calls.find(([ref, args]) =>
+      ref === firstEntry.mtsRef && args[0]?.elementRefptr
+    );
+    expect(firstMtsRefAttach).toBeDefined();
+    expect(firstMtsRefAttach[1][0].elementRefptr).toBe(elementTree.toTree().children[0]);
+    applyLatestNativeUpdate();
+
+    expect(firstEntry.getRenderedCount()).toBe(1);
+    expect(firstEntry.getModuleTapCount()).toBe(1);
+    expectViewState(1, 'idle');
+    triggerMtsTap();
+    expect(firstEntry.getMtsTapCount()).toBe(1);
+    expectViewState(1, 'tapped');
+
+    const lynxSymbols = lynx;
+    const originalEntryReloader = lynxSymbols[mainThreadEntryReloaderKey];
+    const originalReloadCompleter = lynxSymbols[mainThreadReloadCompleterKey];
+    const previousReloadVersion = lynxSymbols[reloadVersionKey];
+    const reloadedEntry = createEntry();
+    const uiSignsBeforeReload = getElementTreeUiSigns(elementTree.toTree());
+    const reloader = vi.fn(() => {
+      const newRoot = new SnapshotInstance('root');
+      newRoot.__jsx = reloadedEntry.jsx;
+      setRoot(newRoot);
+    });
+    const completeReload = originalReloadCompleter;
+    const completer = vi.fn(handoff => completeReload(handoff));
+
+    lynxSymbols[mainThreadEntryReloaderKey] = reloader;
+    lynxSymbols[entrySupportsReEvalKey] = true;
+    lynxSymbols[mainThreadReloadCompleterKey] = completer;
+    vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
+
+    try {
+      nativeMethodQueue.clear();
+      globalThis.runWorklet.mockClear();
+      reloadMainThread({}, { reloadTemplate: true });
+      await waitSchedule();
+
+      expect(reloader).toHaveBeenCalledTimes(1);
+      expect(completer).toHaveBeenCalledTimes(1);
+      expect(completer.mock.calls[0][0]).toEqual(expect.objectContaining({
+        oldRoot: expect.any(SnapshotInstance),
+        page: expect.anything(),
+        options: { reloadTemplate: true },
+        firstScreenSyncState: expect.any(Object),
+      }));
+      expect(elementTree).toMatchInlineSnapshot(`
+        "<page
+          cssId="default-entry-from-native:0"
+        >
+          <view
+            has-react-ref={true}
+            test-state="tapped"
+          >
+            <text>
+              <raw-text
+                text={0}
+              />
+            </text>
+            <text
+              event={
+                Object {
+                  "bindEvent:tap": "-5:1:",
+                }
+              }
+            >
+              <raw-text
+                text="tap"
+              />
+            </text>
+            <text>
+              <raw-text
+                text="MTS tap"
+              />
+            </text>
+          </view>
+        </page>"
+      `);
+      expect(reloadedEntry.getRenderedCount()).toBe(0);
+      expect(reloadedEntry.getModuleTapCount()).toBe(0);
+      expect(reloadedEntry.getMtsTapCount()).toBe(0);
+      expectViewState(0, 'tapped');
+      const reloadedMtsRefAttach = globalThis.runWorklet.mock.calls.find(([ref, args]) =>
+        ref === reloadedEntry.mtsRef && args[0]?.elementRefptr
+      );
+      expect(reloadedMtsRefAttach).toBeDefined();
+      expect(reloadedMtsRefAttach[1][0].elementRefptr.props['has-react-ref']).toBe(true);
+      expect(reloadedMtsRefAttach[1][0].elementRefptr).toBe(elementTree.toTree().children[0]);
+      const reloadPapiNames = nativeMethodQueue.map(([apiName]) => apiName);
+      const reloadPapiCounts = {};
+      for (const apiName of reloadPapiNames) {
+        reloadPapiCounts[apiName] = (reloadPapiCounts[apiName] ?? 0) + 1;
+      }
+      expect(reloadPapiNames.filter(apiName => apiName.startsWith('__Create'))).toEqual([]);
+      expect(getElementTreeUiSigns(elementTree.toTree())).toEqual(uiSignsBeforeReload);
+      expect(reloadPapiCounts).toMatchInlineSnapshot(`
+        {
+          "__AddEvent": 1,
+          "__FlushElementTree": 1,
+          "__GetElementUniqueID": 1,
+          "__GetTag": 1,
+          "__SetAttribute": 2,
+        }
+      `);
+
+      nativeMethodQueue.clear();
+      triggerMtsTap();
+      expect(reloadedEntry.getMtsTapCount()).toBe(1);
+      expectViewState(0, 'tapped');
+      const mtsTapPapiNames = nativeMethodQueue.map(([apiName]) => apiName);
+      const mtsTapPapiCounts = {};
+      for (const apiName of mtsTapPapiNames) {
+        mtsTapPapiCounts[apiName] = (mtsTapPapiCounts[apiName] ?? 0) + 1;
+      }
+      expect(mtsTapPapiNames.filter(apiName => apiName.startsWith('__Create'))).toEqual([]);
+      expect(mtsTapPapiCounts).toMatchInlineSnapshot(`
+        {
+          "__FlushElementTree": 1,
+          "__SetAttribute": 1,
+        }
+      `);
+      expect(elementTree).toMatchInlineSnapshot(`
+        "<page
+          cssId="default-entry-from-native:0"
+        >
+          <view
+            has-react-ref={true}
+            test-state="tapped"
+          >
+            <text>
+              <raw-text
+                text={0}
+              />
+            </text>
+            <text
+              event={
+                Object {
+                  "bindEvent:tap": "-5:1:",
+                }
+              }
+            >
+              <raw-text
+                text="tap"
+              />
+            </text>
+            <text>
+              <raw-text
+                text="MTS tap"
+              />
+            </text>
+          </view>
+        </page>"
+      `);
+      expect(
+        nativeMethodQueue.filter(([apiName]) => apiName.startsWith('__Create')),
+      ).toEqual([]);
+      expect(getElementTreeUiSigns(elementTree.toTree())).toEqual(uiSignsBeforeReload);
+
+      globalEnvManager.switchToBackground();
+      setRoot(new BackgroundSnapshotInstance('root'));
+      root.render(reloadedEntry.jsx, __root);
+      await waitSchedule();
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls.at(-1));
+      globalEnvManager.switchToMainThread();
+      applyLatestNativeUpdate();
+
+      globalEnvManager.switchToBackground();
+      globalThis.__reloadStateTestOnTap();
+      await waitForBackgroundUpdate();
+      expect(elementTree).toMatchInlineSnapshot(`
+        "<page
+          cssId="default-entry-from-native:0"
+        >
+          <view
+            has-react-ref={true}
+            test-state="tapped"
+          >
+            <text>
+              <raw-text
+                text={1}
+              />
+            </text>
+            <text
+              event={
+                Object {
+                  "bindEvent:tap": "-5:1:",
+                }
+              }
+            >
+              <raw-text
+                text="tap"
+              />
+            </text>
+            <text>
+              <raw-text
+                text="MTS tap"
+              />
+            </text>
+          </view>
+        </page>"
+      `);
+      expect(reloadedEntry.getRenderedCount()).toBe(1);
+      expect(reloadedEntry.getModuleTapCount()).toBe(1);
+      expectViewState(1, 'tapped');
+    } finally {
+      if (originalEntryReloader === undefined) {
+        delete lynxSymbols[mainThreadEntryReloaderKey];
+      } else {
+        lynxSymbols[mainThreadEntryReloaderKey] = originalEntryReloader;
+      }
+      if (originalReloadCompleter === undefined) {
+        delete lynxSymbols[mainThreadReloadCompleterKey];
+      } else {
+        lynxSymbols[mainThreadReloadCompleterKey] = originalReloadCompleter;
+      }
+      if (previousReloadVersion === undefined) {
+        delete lynxSymbols[reloadVersionKey];
+      } else {
+        lynxSymbols[reloadVersionKey] = previousReloadVersion;
+      }
+    }
+
+    vi.unstubAllGlobals();
+  });
+});

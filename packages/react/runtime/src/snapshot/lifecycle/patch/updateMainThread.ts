@@ -87,7 +87,7 @@ function updateMainThread(
     setEomShouldFlushElementTree(false);
     for (const data of delayedRunOnMainThreadData) {
       try {
-        runRunOnMainThreadTask(data.worklet, data.params as ClosureValueType[], data.resolveId);
+        runRunOnMainThreadTask(data.worklet, data.params as ClosureValueType[], data.resolveId, data.reloadVersion);
         /* v8 ignore next 3 */
       } catch (e) {
         lynx.reportError(e as Error);
