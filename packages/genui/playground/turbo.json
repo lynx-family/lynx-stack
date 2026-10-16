@@ -11,6 +11,7 @@
         "examples/**",
         "lynx.config.ts",
         "scripts/build-bench-zips.mjs",
+        "scripts/marked-compat/**",
         "tsconfig.json",
         "package.json"
       ],

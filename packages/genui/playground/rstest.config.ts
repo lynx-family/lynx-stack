@@ -7,7 +7,7 @@ import { DEFAULT_GENUI_SERVER_URL } from './genui-server-url.js';
 
 export default defineConfig({
   name: 'genui/genui-playground',
-  include: ['src/**/*.test.ts'],
+  include: ['src/**/*.test.ts', 'scripts/**/*.test.js'],
   source: {
     define: {
       __GENUI_SERVER_URL__: JSON.stringify(DEFAULT_GENUI_SERVER_URL),
