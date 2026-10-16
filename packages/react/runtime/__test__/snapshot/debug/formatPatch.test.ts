@@ -33,9 +33,6 @@ describe('formatPatch', () => {
       SnapshotOperation.DEV_ONLY_AddSnapshot,
       'unique-1',
       'snapshotCreator-val',
-      SnapshotOperation.DEV_ONLY_RegisterWorklet,
-      'hash-1',
-      '() => {}',
     ];
     const formatted = prettyFormatSnapshotPatch(snapshotPatch);
     expect(formatted).toEqual([
@@ -59,11 +56,6 @@ describe('formatPatch', () => {
         op: 'DEV_ONLY_AddSnapshot',
         uniqID: 'unique-1',
         snapshotCreator: 'snapshotCreator-val',
-      },
-      {
-        op: 'DEV_ONLY_RegisterWorklet',
-        hash: 'hash-1',
-        fnStr: '() => {}',
       },
     ]);
   });
