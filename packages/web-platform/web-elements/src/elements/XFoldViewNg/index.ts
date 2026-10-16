@@ -14,6 +14,15 @@
  * - `x-foldview-slot-ng`: Scrollable content area.
  * - `x-foldview-slot-drag-ng`: Area to drag for scrolling.
  *
+ * Layout:
+ * - Where CSS anchor positioning is supported (`anchor()` and `anchor-scope`),
+ *   the slot is absolutely positioned and anchored below the header by
+ *   `x-foldview-ng.css` alone. The header has to precede the slot in the
+ *   document, and the slot does not take part in the flex layout of
+ *   `x-foldview-ng`.
+ * - Elsewhere the slot stays in flow and `XFoldviewNg.ts` offsets it by the
+ *   measured height of the header and the toolbar.
+ *
  * `x-foldview-ng` attributes:
  * - `scroll-enable`: 'true' | 'false'.
  *
