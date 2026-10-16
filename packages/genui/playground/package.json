@@ -50,6 +50,9 @@
     "@types/react": "npm:@types/react@^19.2.18",
     "@types/react-dom": "^19.2.4",
     "fake-indexeddb": "^6.2.5",
+    "magic-string": "^1.4.3",
+    "marked": "^14.0.0",
+    "regexpu-core": "6.4.0",
     "typescript": "^6.0.3"
   }
 }
