@@ -114,6 +114,46 @@ it('loads a versioned Native bundle and evaluates the update section only once f
   expect(loaded).toEqual(['manifest', 'updates']);
 });
 
+it.each(['promise', 'thenable', 'throw'])(
+  'reports a Native bundle load failure from %s without waiting for the coordinator timeout',
+  async mode => {
+    const failure = new Error('Native bundle unavailable');
+    let received: Error | undefined;
+    let loaded = 0;
+    const context = createContext({
+      Promise,
+      __webpack_require__: { i: [], p: '/', c: {}, h: () => 'old' },
+      lynx: {
+        fetchBundle: () => {
+          if (mode === 'throw') throw failure;
+          if (mode === 'promise') return Promise.reject(failure);
+          return {
+            then: (
+              _resolve: (value: unknown) => void,
+              reject?: (error: Error) => void,
+            ) => {
+              reject?.(failure);
+              return null;
+            },
+          };
+        },
+        loadScript: () => {
+          loaded++;
+        },
+      },
+    });
+    runInContext(runtimeSource(mainThreadRuntime), context);
+    context['__webpack_require__'].lynxHMRLoad(
+      '/main.old.hot-update.json',
+      (error: Error) => {
+        received = error;
+      },
+    );
+    await expect.poll(() => received, { timeout: 500 }).toBe(failure);
+    expect(loaded).toBe(0);
+  },
+);
+
 it('reports a mismatched MTS version without applying and acknowledges the actual new hash after success', async () => {
   const acknowledgments: { sequence: number; hash: string; ok: boolean }[] = [];
   let hash = 'old';
