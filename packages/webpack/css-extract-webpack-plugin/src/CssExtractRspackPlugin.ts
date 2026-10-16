@@ -223,8 +223,16 @@ class CssExtractRspackPluginImpl {
           // Generate the hot update files of this template's own chunks —
           // `entryNames` cannot be used as the key since async lazy bundle
           // templates have none.
+          //
+          // A lazy bundle template's chunk groups can also reference the entry
+          // chunk (e.g. when `splitChunks` merges a shared module into the
+          // entry). That chunk belongs to the entry template, so a lazy bundle
+          // must not emit its hot-update file — otherwise both templates emit
+          // different content to the same filename, see #4044.
+          const isEntryTemplate = args.chunkGroups.some(cg => cg.isInitial());
           const chunkKeys = args.chunkGroups
             .flatMap(cg => cg.chunks)
+            .filter(chunk => isEntryTemplate || !chunk.canBeInitial())
             .map(chunk => String(chunk.name ?? chunk.id));
           for (const chunkKey of chunkKeys) {
             // generate hot update file which is required by cssHotUpdateList
