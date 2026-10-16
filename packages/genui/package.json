@@ -181,7 +181,7 @@
     "@lynx-js/react-rsbuild-plugin": "workspace:^",
     "@lynx-js/react-signals": "workspace:*",
     "@lynx-js/rsbuild-plugin": "workspace:*",
-    "@openuidev/lang-core": "^0.3.0",
+    "@openuidev/lang-core": "^1.0.0",
     "@rsbuild/core": "catalog:rsbuild",
     "eslint-scope": "^8.4.0",
     "marked": "^14.0.0",
