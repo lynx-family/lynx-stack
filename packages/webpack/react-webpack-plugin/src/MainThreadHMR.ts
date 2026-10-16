@@ -18,6 +18,7 @@ type ResourceModule = Module & { resource?: string };
 export function applyMainThreadHMR(
   compiler: Compiler,
   entryPairs: EntryPair[],
+  acceptEntryModules: boolean,
 ): void {
   const name = 'ReactMainThreadHMR';
   (compiler as unknown as Record<symbol, unknown>)[MAIN_THREAD_HMR] = true;
@@ -69,6 +70,21 @@ export function applyMainThreadHMR(
               return Template.getFunctionContent(
                 isMain ? mainThreadRuntime : backgroundRuntime,
               )
+                .replaceAll(
+                  '$ENTRY_MODULES$',
+                  JSON.stringify(
+                    acceptEntryModules
+                      ? [
+                        ...new Set(compilation.entries.get(pair.mainThread)!
+                          .dependencies.map(dependency =>
+                            compilation.chunkGraph.getModuleId(
+                              compilation.moduleGraph.getModule(dependency)!,
+                            )
+                          )),
+                      ]
+                      : [],
+                  ),
+                )
                 .replaceAll(
                   '$METHOD$',
                   JSON.stringify(`__lynxHMR_${pair.mainThread}`),
