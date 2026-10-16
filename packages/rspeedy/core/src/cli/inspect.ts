@@ -20,6 +20,10 @@ export async function inspect(
   cwd: string,
   inspectOptions: InspectOptions,
 ): Promise<void> {
+  if (inspectOptions.logLevel) {
+    logger.level = inspectOptions.logLevel
+  }
+
   try {
     const { createRspeedyOptions } = await init(cwd, inspectOptions)
     const rspeedy = await createRspeedy(createRspeedyOptions)
