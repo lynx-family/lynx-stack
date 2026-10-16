@@ -1,5 +1,11 @@
 # @lynx-js/react-signals
 
+## 0.0.6
+
+### Patch Changes
+
+- Allow the ReactLynx 0.128 runtime release in the peer dependency range. ([#4066](https://github.com/lynx-family/lynx-stack/pull/4066))
+
 ## 0.0.5
 
 ### Patch Changes

@@ -1,5 +1,23 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.13.0
+
+### Minor Changes
+
+- Deliver the main-thread runtime through named imports from its init entry, including background-only definitions that carry their registration dependencies into the main-thread graph. Runtime code participates in business defines and release processing. Every supported transform supplies semantic runtime requirements, including for definitions injected from background-only modules; watch rebuilds refresh their dependencies and metadata. ([#4066](https://github.com/lynx-family/lynx-stack/pull/4066))
+
+  Upgrade the build plugins and `@lynx-js/react` together. This release requires `@lynx-js/react@^0.128.0`; its runtime and bundled transform use the same module-delivery protocol. The refresh plugin adds support for `@lynx-js/react-webpack-plugin@^0.13.0` while retaining its existing supported versions. Older compiler output is unsupported. The prebuilt worklet-runtime chunk, its package entries, and `loadWorkletRuntime` are removed. Combined lazy chunks share their paired main runtime, and standalone lazy bundles bootstrap themselves.
+
+  The worklet init entry follows `worklet.runtimePkg`: remove a trailing `/internal`, if present, and append `/worklet-runtime/init`. Its `registerWorklet` export uses the existing host registration function when the runtime is already initialized. Default worklet options use `@lynx-js/react/internal` for helpers.
+
+  Testing-library initializes module-delivered worklets on its emulated main thread in Vitest and Rstest.
+
+### Patch Changes
+
+- Aggregate semantic runtime requirements over final emitted chunk modules, excluding tree-shaken candidates and including concatenated and injected definitions. Expose versioned semantic React compilation results through `Symbol.for('@lynx-js/react/internal:compile-result')`. Consumers can read main-thread programmability requirements from Stats or MultiStats without inspecting filenames. Missing or incompatible compilation results remain unknown rather than becoming an explicit false result. ([#4067](https://github.com/lynx-family/lynx-stack/pull/4067))
+
+  Export the shared `ReactCompileResult` type from both plugin packages and `ReactCompileResultExposureV1` from the Rsbuild plugin. Document how to consume original Stats objects and select a single environment in mixed builds.
+
 ## 0.12.1
 
 ### Patch Changes

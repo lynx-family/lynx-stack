@@ -1,5 +1,11 @@
 # @lynx-js/web-elements
 
+## 0.12.14
+
+### Patch Changes
+
+- Fix x-markdown rendering when content is appended rapidly. Preserve Markdown context across updates, show appended text without waiting for input to stop, and retain typewriter progress while continuing playback as new content arrives. ([#4162](https://github.com/lynx-family/lynx-stack/pull/4162))
+
 ## 0.12.13
 
 ### Patch Changes

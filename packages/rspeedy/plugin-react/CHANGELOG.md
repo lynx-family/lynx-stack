@@ -1,5 +1,34 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.21.0
+
+### Minor Changes
+
+- Deliver the main-thread runtime through named imports from its init entry, including background-only definitions that carry their registration dependencies into the main-thread graph. Runtime code participates in business defines and release processing. Every supported transform supplies semantic runtime requirements, including for definitions injected from background-only modules; watch rebuilds refresh their dependencies and metadata. ([#4066](https://github.com/lynx-family/lynx-stack/pull/4066))
+
+  Upgrade the build plugins and `@lynx-js/react` together. This release requires `@lynx-js/react@^0.128.0`; its runtime and bundled transform use the same module-delivery protocol. The refresh plugin adds support for `@lynx-js/react-webpack-plugin@^0.13.0` while retaining its existing supported versions. Older compiler output is unsupported. The prebuilt worklet-runtime chunk, its package entries, and `loadWorkletRuntime` are removed. Combined lazy chunks share their paired main runtime, and standalone lazy bundles bootstrap themselves.
+
+  The worklet init entry follows `worklet.runtimePkg`: remove a trailing `/internal`, if present, and append `/worklet-runtime/init`. Its `registerWorklet` export uses the existing host registration function when the runtime is already initialized. Default worklet options use `@lynx-js/react/internal` for helpers.
+
+  Testing-library initializes module-delivered worklets on its emulated main thread in Vitest and Rstest.
+
+### Patch Changes
+
+- Add the `@lynx-js/react/worklet-runtime/init` entry and resolve it to the published, unbundled runtime module in normal and lazy builds. The entry uses the existing runtime initialization guard, so loading it again preserves the runtime and its registrations. ([#4065](https://github.com/lynx-family/lynx-stack/pull/4065))
+
+  Existing compiler output continues to use the legacy runtime-loading path.
+- Aggregate semantic runtime requirements over final emitted chunk modules, excluding tree-shaken candidates and including concatenated and injected definitions. Expose versioned semantic React compilation results through `Symbol.for('@lynx-js/react/internal:compile-result')`. Consumers can read main-thread programmability requirements from Stats or MultiStats without inspecting filenames. Missing or incompatible compilation results remain unknown rather than becoming an explicit false result. ([#4067](https://github.com/lynx-family/lynx-stack/pull/4067))
+
+  Export the shared `ReactCompileResult` type from both plugin packages and `ReactCompileResultExposureV1` from the Rsbuild plugin. Document how to consume original Stats objects and select a single environment in mixed builds.
+- Updated dependencies [[`bdb7471`](https://github.com/lynx-family/lynx-stack/commit/bdb7471ce6e98461b062d1572df766ecccf6bca4), [`89b828a`](https://github.com/lynx-family/lynx-stack/commit/89b828aba5e4eff14d8d2b5c44baecc121856c7d), [`1625472`](https://github.com/lynx-family/lynx-stack/commit/16254726bc1da310e828c7aac796de6edc8ffa3a), [`8efa510`](https://github.com/lynx-family/lynx-stack/commit/8efa51010e03579c9c2d4a9e762aec828436e3e3), [`16b45de`](https://github.com/lynx-family/lynx-stack/commit/16b45defdc76e822086b5207c0c290d51224da0e)]:
+  - @lynx-js/react-webpack-plugin@0.13.0
+  - @lynx-js/react-alias-rsbuild-plugin@0.21.0
+  - @lynx-js/react-refresh-webpack-plugin@0.4.4
+  - @lynx-js/template-webpack-plugin@0.16.4
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/css-extract-webpack-plugin@0.11.1
+  - @lynx-js/rsbuild-plugin@0.1.5
+
 ## 0.20.4
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @lynx-js/config-rsbuild-plugin
 
+## 0.2.5
+
+### Patch Changes
+
+- Upgrade `@lynx-js/type-config` to `4.3.0`. ([#4146](https://github.com/lynx-family/lynx-stack/pull/4146))
+
 ## 0.2.4
 
 ### Patch Changes

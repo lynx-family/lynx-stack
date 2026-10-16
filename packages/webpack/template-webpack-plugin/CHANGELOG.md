@@ -1,5 +1,13 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.16.4
+
+### Patch Changes
+
+- Keep the `CSS` custom sections of an external bundle as custom sections on web. They still ride the `StyleInfo` section, and are now also written under their names into the `CustomSectionsStyleInfo` section. ([#4142](https://github.com/lynx-family/lynx-stack/pull/4142))
+- Updated dependencies [[`75c770f`](https://github.com/lynx-family/lynx-stack/commit/75c770fe259896601fedb187f96ef75ac39a7839)]:
+  - @lynx-js/web-core@0.26.4
+
 ## 0.16.3
 
 ### Patch Changes

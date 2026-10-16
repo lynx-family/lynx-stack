@@ -1,5 +1,13 @@
 # @lynx-js/rspeedy
 
+## 0.18.2
+
+### Patch Changes
+
+- Upgrade the bundled Rsdoctor packages from the 2.0 release candidate to 2.0.0. ([#4174](https://github.com/lynx-family/lynx-stack/pull/4174))
+- Updated dependencies []:
+  - @lynx-js/rsbuild-plugin@0.1.5
+
 ## 0.18.1
 
 ### Patch Changes

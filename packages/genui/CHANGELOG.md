@@ -1,5 +1,63 @@
 # @lynx-js/genui
 
+## 0.7.0
+
+### Minor Changes
+
+- Add the OpenUI Chat components Callout, CardHeader, Image, ImageBlock, InlineHeader, Separator, and TextArea with their upstream positional arguments, renderer and agent subpaths, and component styles. Support TextArea inside FormControl and Image inside CompositeCardItem, including reactive callout dismissal, multiline form validation, and image loading states. ([#4190](https://github.com/lynx-family/lynx-stack/pull/4190))
+
+- Expose individual OpenUI Chat renderers at `openui/chat/<Component>` and server-safe definitions at `openui/chat/agent/<Component>`. Combine selected renderers with `openui/explicit` to include only their component and shared styles, while preserving the full Chat library factory. ([#4147](https://github.com/lynx-family/lynx-stack/pull/4147))
+
+- Extend the OpenUI Chat library with image/text blocks, lists, steps, sections, column-based tables, and composite product cards using the upstream positional arguments. Add the document-specific ProductFeature extension and route display actions through the host callback. ([#4144](https://github.com/lynx-family/lynx-stack/pull/4144))
+
+- Add OpenUI Chat Form, FormControl, Input, RadioGroup/RadioItem, CheckBoxGroup/CheckBoxItem and array-valued Slider controls. Store values through reactive bindings or named form state, preserve other groups when updating a shared checkbox binding, and validate controls before form actions. ([#4144](https://github.com/lynx-family/lynx-stack/pull/4144))
+
+- Add an opt-in OpenUI Chat library with compatible Card, Text, BoldText, TextContent, Button, and Buttons arguments. Render Markdown and source citations on Lynx and expose a server-safe Chat schema entry without changing the default Stack catalog. ([#4143](https://github.com/lynx-family/lynx-stack/pull/4143))
+
+- Export ReactLynx generation prompts, source validation, and Web/Native build utilities through the root and `/reactlynx` entry points. Include the compiler worker and runtime dependencies in the published package, and add bilingual ReactLynx guides. ([#4127](https://github.com/lynx-family/lynx-stack/pull/4127))
+
+- Add the immutable `@Append(array, item)` OpenUI builtin, shared by the renderer and prompt library. Use it for Todo additions without a fixed list capacity and document data operations, nested-array semantics, and concurrency limits. ([#4173](https://github.com/lynx-family/lynx-stack/pull/4173))
+
+- Add a built-in Web Canvas component to OpenUI with incremental drawing from streamed code chunks, reactive redraws, and click actions that expose logical canvas coordinates through state bindings. ([#4188](https://github.com/lynx-family/lynx-stack/pull/4188))
+
+- Add the platform-independent `@lynx-js/genui/openui/data-tools` entry with ([#4168](https://github.com/lynx-family/lynx-stack/pull/4168))
+  `getQueryDefaults`, `createQueryDataStore`, and `createQueryDataTools`. Reuse parsed Query defaults,
+  inject scoped host storage, and restore saved values through
+  `initialQueryResults`. Playground now delegates complete Query value replacements to this API
+  while preserving its existing browser storage format. Share tool registration,
+  default initialization, and scope lifecycle handling independently of host transport.
+
+### Patch Changes
+
+- Fix OpenUI Chat Markdown tables to stack header and data rows vertically, keep columns aligned, and scroll horizontally when the table exceeds the available width. ([#4143](https://github.com/lynx-family/lynx-stack/pull/4143))
+
+- Keep the OpenUI Chat Markdown lexer on the background thread so native main-thread bundles compile successfully. Display text during the first frame before Markdown hydration. ([#4143](https://github.com/lynx-family/lynx-stack/pull/4143))
+
+- Support per-group reasoning effort selection in Bench, defaulting to the selected model configuration, and report first text latency from streamed generation across protocols. ([#4134](https://github.com/lynx-family/lynx-stack/pull/4134))
+
+- Fix GenUI type declarations to resolve React types through `@lynx-js/react`. ([#4135](https://github.com/lynx-family/lynx-stack/pull/4135))
+
+- Recover missing closing braces after complete ReactLynx source files while preserving strict validation and size limits. Report unsupported imports with source locations and correction guidance, and clarify the exact permitted module name in generation prompts. ([#4132](https://github.com/lynx-family/lynx-stack/pull/4132))
+
+- Add shared closed enum guidance to full and reduced OpenUI generation prompts and skill references. Require exact argument values and avoid borrowing values from other components or upstream libraries. ([#4133](https://github.com/lynx-family/lynx-stack/pull/4133))
+
+- Align the renderer and headless OpenUI library factories around shared component ordering, groups, and option handling. Support componentNames in renderer libraries and includeDefaultComponents in prompt libraries, and omit unavailable built-in examples from system prompts with disabled defaults. ([#4193](https://github.com/lynx-family/lynx-stack/pull/4193))
+
+- Guide generation to keep mutable ([#4168](https://github.com/lynx-family/lynx-stack/pull/4168))
+  business content in Query results and update it through Mutation and Query
+  refresh. Include the local data tool contract in the shared default OpenUI prompt
+  only when the host declares both local data tools and tool calls are enabled. Execute preview mutations deterministically in local storage without
+  model requests. Keep conversation history and shares as plain DSL with Query defaults. Restore
+  saved local data only through the host renderer’s initialQueryResults input.
+- Export a server-safe OpenUI catalog and share built-in component definitions between prompt generation and ReactLynx rendering. ([#4141](https://github.com/lynx-family/lynx-stack/pull/4141))
+
+- Preserve OpenUI Chat field declarations when controls mount after an empty live response, before the renderer initializes its store. ([#4147](https://github.com/lynx-family/lynx-stack/pull/4147))
+- Updated dependencies [[`bdb7471`](https://github.com/lynx-family/lynx-stack/commit/bdb7471ce6e98461b062d1572df766ecccf6bca4), [`89b828a`](https://github.com/lynx-family/lynx-stack/commit/89b828aba5e4eff14d8d2b5c44baecc121856c7d), [`1625472`](https://github.com/lynx-family/lynx-stack/commit/16254726bc1da310e828c7aac796de6edc8ffa3a), [`bdb7471`](https://github.com/lynx-family/lynx-stack/commit/bdb7471ce6e98461b062d1572df766ecccf6bca4), [`3d2b5e8`](https://github.com/lynx-family/lynx-stack/commit/3d2b5e8c3767c4f678e41cba5341386356b5e5dc)]:
+  - @lynx-js/react-rsbuild-plugin@0.21.0
+  - @lynx-js/react-signals@0.0.6
+  - @lynx-js/config-rsbuild-plugin@0.2.5
+  - @lynx-js/rsbuild-plugin@0.1.5
+
 ## 0.6.0
 
 ### Minor Changes

@@ -1,5 +1,14 @@
 # @lynx-js/web-core
 
+## 0.26.4
+
+### Patch Changes
+
+- Encode the custom sections whose `encoding` is `CSS` with the CSS encoder. They are written as a name-keyed map into the new `CustomSectionsStyleInfo` section instead of being kept as JSON in `CustomSections`. ([#4138](https://github.com/lynx-family/lynx-stack/pull/4138))
+- Updated dependencies [[`2616520`](https://github.com/lynx-family/lynx-stack/commit/2616520b975adce55b79b408742a47a3f59dd78c)]:
+  - @lynx-js/web-elements@0.12.14
+  - @lynx-js/web-worker-rpc@0.26.4
+
 ## 0.26.3
 
 ### Patch Changes
