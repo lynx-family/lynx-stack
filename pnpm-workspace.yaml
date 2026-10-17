@@ -169,7 +169,7 @@ overrides:
   # Windows path separators into page URLs. 4.13.1 fixes it, and the renderer
   # has to be the copy the plugin loads.
   # https://github.com/typedoc2md/typedoc-plugin-markdown/issues/903
-  "typedoc-plugin-markdown": "4.13.1"
+  "typedoc-plugin-markdown": "4.14.0"
 
   "@rspack/core": "catalog:rspack"
 
