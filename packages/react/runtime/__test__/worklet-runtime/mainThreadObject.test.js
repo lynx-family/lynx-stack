@@ -152,6 +152,52 @@ describe('MainThreadObject registry and realization', () => {
     }).not.toThrow();
   });
 
+  it('keeps the resolved factory when the same create is registered again', () => {
+    const create = vi.fn(value => ({ value }));
+    const createDescriptor = { _wkltId: 'create-repeat' };
+    globalThis.registerWorklet('main-thread', 'create-repeat', create);
+    const lookupFactory = vi.fn(() => create);
+    Object.defineProperty(lynxWorkletImpl._workletMap, 'create-repeat', { get: lookupFactory });
+
+    const register = () =>
+      globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType('@test/repeat', createDescriptor);
+    register();
+    updateWorkletRefInitValueChanges([[81, 'first', '@test/repeat']]);
+    // `useMainThreadObject` registers the type again on its first use.
+    register();
+    updateWorkletRefInitValueChanges([[82, 'second', '@test/repeat']]);
+
+    expect(lookupFactory).toHaveBeenCalledOnce();
+    removeValueFromWorkletRefMap(81);
+    removeValueFromWorkletRefMap(82);
+  });
+
+  it('uses the factory of the latest evaluation of the defining module', () => {
+    // Each evaluation of the module creates its own descriptor and its own
+    // module state; the worklet ID and source stay the same.
+    const evaluateModule = (generation) => {
+      globalThis.registerWorklet('main-thread', 'create-generation', value => ({ value, generation }));
+      globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
+        '@test/generation',
+        { _wkltId: 'create-generation' },
+      );
+    };
+
+    evaluateModule('old');
+    updateWorkletRefInitValueChanges([[91, 'a', '@test/generation']]);
+    const oldObject = getFromWorkletRefMap({ _wvid: 91 });
+    expect(oldObject).toMatchObject({ generation: 'old' });
+
+    evaluateModule('new');
+    updateWorkletRefInitValueChanges([[92, 'b', '@test/generation']]);
+    expect(getFromWorkletRefMap({ _wvid: 92 })).toMatchObject({ generation: 'new' });
+    // Objects that already exist keep their identity.
+    expect(getFromWorkletRefMap({ _wvid: 91 })).toBe(oldObject);
+
+    removeValueFromWorkletRefMap(91);
+    removeValueFromWorkletRefMap(92);
+  });
+
   it('rejects factories that do not create objects', () => {
     globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(
       '@test/invalid',

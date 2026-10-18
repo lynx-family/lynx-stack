@@ -2,13 +2,19 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { onMtsDestruction } from './mts-destroy.js';
+import {
+  canReEvalMainThreadEntry,
+  installMainThreadReloadCompleter,
+  reEvalMainThreadEntry,
+} from '../../core/entry-reload.js';
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
 import { increaseReloadVersion } from '../../core/reload-version.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX } from '../protocol/page.js';
 import type { SerializedEtNode, SerializedPageRoot } from '../protocol/types.js';
 import { destroyAllElementTemplateListStates } from '../runtime/list/list.js';
-import { __page } from '../runtime/page/page.js';
+import { __page, setupPage } from '../runtime/page/page.js';
 import { __root, setRoot } from '../runtime/page/root-instance.js';
 import { renderMainThread } from '../runtime/render/render-main-thread.js';
 import { resetTemplateId } from '../runtime/template/handle.js';
@@ -41,6 +47,12 @@ export function reloadMainThread(data: unknown, options: UpdatePageOption): void
       }
       deleteMainThreadDynamicAttrStateForSubtree(removedHandleIds);
     }
+    if (canReEvalMainThreadEntry()) {
+      onMtsDestruction();
+      increaseReloadVersion();
+      reEvalMainThreadEntry<MainThreadReloadHandoff>({ page: __page, options });
+      return;
+    }
     elementTemplateRegistry.clear();
     clearMainThreadDynamicAttrState();
     resetElementTemplateMainThreadBackgroundFunctionRuntime();
@@ -61,6 +73,19 @@ export function reloadMainThread(data: unknown, options: UpdatePageOption): void
     }
   }
 }
+
+interface MainThreadReloadHandoff {
+  page: ElementTemplateHandle;
+  options: UpdatePageOption;
+}
+
+export function completeMainThreadReload({ page, options }: MainThreadReloadHandoff): void {
+  setupPage(page);
+  renderMainThread();
+  __FlushElementTree(undefined, options);
+}
+
+installMainThreadReloadCompleter(completeMainThreadReload);
 
 function collectSerializedSubtreeHandleIds(
   node: SerializedEtNode,

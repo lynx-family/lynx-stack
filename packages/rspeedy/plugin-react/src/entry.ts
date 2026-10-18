@@ -62,6 +62,7 @@ export function applyEntry(
 
     experimental_isLazyBundle,
     experimental_transformBuiltinAttributeNames,
+    experimental_reEvalJSOnReload,
   } = options
 
   const lazyBundleFetcher = resolveLazyBundleFetcher(targetSdkVersion)
@@ -242,6 +243,7 @@ export function applyEntry(
             experimental_isLazyBundle,
             lazyBundleFetcher,
             cssPlugins: [],
+            enableReuseLoadScriptExports: experimental_reEvalJSOnReload,
           }])
           .end()
       })
@@ -276,6 +278,10 @@ export function applyEntry(
           },
           targetSdkVersion,
           experimental_isLazyBundle,
+          // External libraries share the host Lynx object and must not mark
+          // a legacy application entry as supporting re-evaluation.
+          experimental_reEvalJSOnReload: experimental_reEvalJSOnReload
+            && isApplication,
         }])
         .end()
         .plugin(`${LynxEncodePlugin.name}`)
@@ -322,6 +328,7 @@ export function applyEntry(
         profile: getDefaultProfile(),
         lazyBundleFetcher,
         runtimeVersion,
+        experimental_reEvalJSOnReload,
       }])
 
     // Runtime config belongs to the page host. Standalone lazy bundles and

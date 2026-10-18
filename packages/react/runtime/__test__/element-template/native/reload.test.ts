@@ -7,7 +7,8 @@ import { installElementTemplateHydrationListener } from '../../../src/element-te
 import { BackgroundPageRootInstance } from '../../../src/element-template/background/instance.js';
 import { profileEnd, profileStart } from '../../../src/element-template/debug/profile.js';
 import { reloadBackground } from '../../../src/element-template/native/reload-background.js';
-import { reloadMainThread } from '../../../src/element-template/native/reload-main-thread.js';
+import { onMtsDestruction } from '../../../src/element-template/native/mts-destroy.js';
+import { completeMainThreadReload, reloadMainThread } from '../../../src/element-template/native/reload-main-thread.js';
 import { resetEventStateForRuntime } from '../../../src/element-template/prop-adapters/event.js';
 import { destroyAllElementTemplateListStates } from '../../../src/element-template/runtime/list/list.js';
 import { setupPage } from '../../../src/element-template/runtime/page/page.js';
@@ -109,6 +110,10 @@ vi.mock('../../../src/element-template/background/instance.js', () => {
     },
   };
 });
+
+vi.mock('../../../src/element-template/native/mts-destroy.js', () => ({
+  onMtsDestruction: vi.fn(),
+}));
 
 vi.mock('../../../src/element-template/debug/profile.js', () => ({
   profileEnd: vi.fn(),
@@ -293,6 +298,50 @@ describe('ElementTemplate reloadMainThread', () => {
     } finally {
       globalThis.lynxWorkletImpl = previousWorkletImpl;
     }
+  });
+
+  it('evaluates the entry again and lets it render into the retained page', () => {
+    vi.mocked(mockRender).mockReturnValue({ pageAttributes: null, rootRefs: [], rootSubtreeHandles: [] });
+    const supportsReEvalKey = Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__');
+    const reloaderKey = Symbol.for('__LYNX_MAIN_THREAD_ENTRY_RELOADER__');
+    const completerKey = Symbol.for('__LYNX_MAIN_THREAD_RELOAD_COMPLETER__');
+    const host = lynx as unknown as Record<symbol, unknown>;
+    vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
+    const page = mockedState.page;
+    const newJsx = { type: 'NewApp' };
+    const events: string[] = [];
+    lynx.__initData = { kept: 'yes', count: 1 };
+    vi.mocked(onMtsDestruction).mockImplementation(() => events.push('retire'));
+    vi.mocked(increaseReloadVersion).mockImplementationOnce(() => {
+      events.push('advance-version');
+      return 2;
+    });
+    host[supportsReEvalKey] = true;
+    host[reloaderKey] = () => {
+      events.push('evaluate');
+      // What evaluating the entry does: reset init data, install its completer, render into a fresh root.
+      lynx.__initData = {};
+      host[completerKey] = completeMainThreadReload;
+      setRoot({ __jsx: newJsx });
+    };
+    const options = { reloadTemplate: true };
+
+    try {
+      reloadMainThread({ count: 2 }, options);
+    } finally {
+      delete host[supportsReEvalKey];
+      delete host[reloaderKey];
+      delete host[completerKey];
+    }
+
+    expect(events).toEqual(['retire', 'advance-version', 'evaluate']);
+    expect(increaseReloadVersion).toHaveBeenCalledOnce();
+    expect(lynx.__initData).toEqual({ kept: 'yes', count: 2 });
+    expect(setupPage).toHaveBeenLastCalledWith(page);
+    expect(mockRender).toHaveBeenCalledWith(newJsx, undefined);
+    expect(__FlushElementTree).toHaveBeenLastCalledWith(undefined, options);
+    // The retained page is not rebuilt by the previous entry.
+    expect(elementTemplateRegistry.clear).not.toHaveBeenCalled();
   });
 
   it('rebuilds when the physical page has no root slot', () => {

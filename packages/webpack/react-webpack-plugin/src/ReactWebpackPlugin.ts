@@ -381,6 +381,11 @@ interface ReactWebpackPluginOptions {
    * @public
    */
   runtimeVersion?: string | undefined;
+
+  /**
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_reEvalJSOnReload}
+   */
+  experimental_reEvalJSOnReload?: boolean;
 }
 
 /**
@@ -460,6 +465,7 @@ class ReactWebpackPlugin {
       experimental_transformBuiltinAttributeNames: false,
       lazyBundleFetcher: 'QueryComponent',
       runtimeVersion: undefined,
+      experimental_reEvalJSOnReload: false,
     });
 
   /**
@@ -478,9 +484,31 @@ class ReactWebpackPlugin {
       new BannerPlugin({
         // TODO: handle cases that do not have `'use strict'`
         banner:
-          `'use strict';var globDynamicComponentEntry=globDynamicComponentEntry||'__Card__';`,
+          `'use strict';var globDynamicComponentEntry=globDynamicComponentEntry||'__Card__';`
+          + (options.experimental_reEvalJSOnReload
+            ? `lynx[Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__')] = true;`
+            : ''),
         raw: true,
         test: options.mainThreadChunks!,
+      }).apply(compiler);
+    }
+
+    if (
+      options.experimental_reEvalJSOnReload
+      && !options.experimental_isLazyBundle
+    ) {
+      const reloader =
+        `lynx[Symbol.for('__LYNX_MAIN_THREAD_ENTRY_RELOADER__')]`;
+      new BannerPlugin({
+        banner: `${reloader} = () => {`,
+        raw: true,
+        test: options.mainThreadChunks!,
+      }).apply(compiler);
+      new BannerPlugin({
+        banner: `\n};\n${reloader}();\n`,
+        raw: true,
+        test: options.mainThreadChunks!,
+        footer: true,
       }).apply(compiler);
     }
 
@@ -533,6 +561,9 @@ class ReactWebpackPlugin {
       ),
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
       __RUNTIME_VERSION__: JSON.stringify(options.runtimeVersion),
+      __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__: JSON.stringify(
+        options.experimental_reEvalJSOnReload,
+      ),
     }).apply(compiler);
 
     const entryPairs = options.entryPairs ?? [];

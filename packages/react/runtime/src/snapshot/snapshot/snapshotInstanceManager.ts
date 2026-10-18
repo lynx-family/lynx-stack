@@ -3,20 +3,27 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { SnapshotInstance } from './snapshot.js';
+import { cardLifetime } from '../../core/card-lifetime.js';
 import { clearSnapshotVNodeSource } from '../debug/vnodeSource.js';
 
-export const snapshotInstanceManager: {
+interface SnapshotInstanceManager {
   nextId: number;
   values: Map<number, SnapshotInstance>;
   clear(): void;
-} = {
-  nextId: 0,
-  values: /* @__PURE__ */ new Map<number, SnapshotInstance>(),
-  clear() {
-    // not resetting `nextId` to prevent id collision
-    this.values.clear();
-    if (__DEV__) {
-      clearSnapshotVNodeSource();
-    }
-  },
-};
+}
+
+function clear(this: SnapshotInstanceManager): void {
+  // not resetting `nextId` to prevent id collision
+  this.values.clear();
+  if (__DEV__) {
+    clearSnapshotVNodeSource();
+  }
+}
+
+export const snapshotInstanceManager: SnapshotInstanceManager = /*#__PURE__*/ cardLifetime(
+  'snapshotInstanceManager',
+  () => ({ nextId: 0, values: new Map<number, SnapshotInstance>(), clear }),
+);
+
+// Rebound so that it clears the debug state of the current entry.
+snapshotInstanceManager.clear = clear;

@@ -70,7 +70,7 @@
     "typia-rspack-plugin": "3.0.1"
   },
   "peerDependencies": {
-    "@lynx-js/react": "^0.128.0",
+    "@lynx-js/react": "^0.128.0 || ^0.129.0",
     "@lynx-js/rspeedy": "^0.17.0 || ^0.18.0",
     "@rsbuild/core": "^2.0.0"
   },
