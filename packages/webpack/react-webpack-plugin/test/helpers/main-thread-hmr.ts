@@ -11,32 +11,30 @@ import { createContext, runInContext } from 'node:vm';
 
 import { rspack } from '@rspack/core';
 import type { Compilation, Compiler, Configuration, Stats } from '@rspack/core';
-import { rs } from '@rstest/core';
-
-import {
-  LynxEncodePlugin,
-  LynxTemplatePlugin,
-} from '@lynx-js/template-webpack-plugin';
 
 import type { ReactLoaderOptions } from '../../src/loaders/options.js';
-import { ReactWebpackPlugin } from '../../src/ReactWebpackPlugin.js';
 // @ts-expect-error Existing JavaScript fixture has no declaration file.
 import { createConfig } from '../create-react-config.js';
 
 const { ChunkLoadingWebpackPlugin } = createRequire(import.meta.url)(
   '../../../chunk-loading-webpack-plugin/lib/index.js',
 );
-
-// Rstest bundles source imports and renames its own __webpack_require__.
-// Load this stringified function from the actual package, as consumers do.
-rs.mock('../../src/runtime/hmr-main-thread.js', () => {
-  return createRequire(import.meta.url)('../../lib/runtime/hmr-main-thread.js');
-});
+const { LynxEncodePlugin, LynxTemplatePlugin } = createRequire(import.meta.url)(
+  '../../../template-webpack-plugin/lib/index.js',
+) as typeof import('@lynx-js/template-webpack-plugin');
+// Async boundary metadata is compiler-local; the plugin and its loaders must
+// share the same module instance, as they do in an application build.
+const { ReactWebpackPlugin } = createRequire(import.meta.url)(
+  '../../lib/index.js',
+) as typeof import('../../src/index.js');
 
 export function createHMRCompiler(
   context: string,
   loaderOptions: ReactLoaderOptions = {},
   entryImports: string[] = ['./index.js'],
+  moduleIds: 'named' | 'deterministic' = 'named',
+  splitChunks: NonNullable<Configuration['optimization']>['splitChunks'] =
+    false,
 ): Compiler {
   const entryPairs = [{
     mainThread: 'main__main-thread',
@@ -53,7 +51,11 @@ export function createHMRCompiler(
   });
   config.context = context;
   config.mode = 'development';
+  config.optimization!.moduleIds = moduleIds;
+  config.optimization!.splitChunks = splitChunks;
   config.devtool = false;
+  config.experiments = { ...config.experiments, css: true };
+  config.module!.rules!.push({ test: /\.css$/, type: 'css/auto' });
   config.module!.rules!.unshift({
     test: /\.[jt]sx?$/,
     type: 'javascript/auto',
@@ -122,13 +124,18 @@ export function createHMRCompiler(
         );
       }),
   );
-  return rspack(config);
+  const compiler = rspack(config);
+  // Keep split chunk assets distinct; this fixture executes the emitted JS
+  // directly instead of exercising the template plugin's lazy output layout.
+  compiler.options.output.chunkFilename = '[id].js';
+  return compiler;
 }
 
 export function createMainThreadRuntime(stats: Stats): {
   context: ReturnType<typeof createContext>;
   registrations: Map<string, (...args: unknown[]) => unknown>;
   events: string[];
+  loadAsyncModule: (compilation: Compilation, resource: string) => void;
   apply: (
     compilation: Compilation,
   ) => Promise<{ ok: boolean; hash: string; error?: string }>;
@@ -173,6 +180,31 @@ export function createMainThreadRuntime(stats: Stats): {
     context,
     registrations,
     events,
+    loadAsyncModule: (compilation, resource) => {
+      const module = [...compilation.modules].find(module =>
+        module.layer === 'react:main-thread'
+        && (module as { resource?: string }).resource === resource
+      )!;
+      const chunks = new Set(
+        [...compilation.chunkGraph.getModuleChunksIterable(module)].flatMap(
+          chunk => [...chunk.groupsIterable].flatMap(group => group.chunks),
+        ),
+      );
+      for (const chunk of chunks) {
+        for (const file of chunk.files) {
+          if (!file.endsWith('.js')) continue;
+          const result = runInContext(
+            compilation.getAsset(file)!.source.source().toString(),
+            context,
+          );
+          // Use the emitted lazy-bundle consumer to install and execute factories.
+          context['processEvalResult'](
+            result,
+            'https://example.com/route.bundle',
+          );
+        }
+      }
+    },
     apply: async compilation => {
       const hash = context['testRequire'].h();
       const encoded = JSON.parse(

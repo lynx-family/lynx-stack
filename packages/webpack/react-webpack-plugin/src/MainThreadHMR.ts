@@ -5,6 +5,7 @@
 import type { Chunk, Compiler, Module } from '@rspack/core';
 
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+import { RuntimeGlobals as LynxRuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { DEFINES_FOR_WORKLET_BUILD_INFO } from './Defines.js';
 import type { EntryPair } from './DefinesInjection.js';
@@ -58,7 +59,7 @@ export function applyMainThreadHMR(
           requirements.add(RuntimeGlobals.getFullHash);
           requirements.add(RuntimeGlobals.publicPath);
 
-          class MainThreadHMRRuntimeModule extends RuntimeModule {
+          class DualThreadHMRRuntimeModule extends RuntimeModule {
             constructor() {
               super(name, RuntimeModule.STAGE_ATTACH);
             }
@@ -70,6 +71,14 @@ export function applyMainThreadHMR(
               return Template.getFunctionContent(
                 isMain ? mainThreadRuntime : backgroundRuntime,
               )
+                .replaceAll(
+                  '$RuntimeGlobals_lynxHMR$',
+                  LynxRuntimeGlobals.lynxHMR,
+                )
+                .replaceAll(
+                  '$RuntimeGlobals_lynxHMRLoad$',
+                  LynxRuntimeGlobals.lynxHMRLoad,
+                )
                 .replaceAll(
                   '$ENTRY_MODULES$',
                   JSON.stringify(
@@ -99,7 +108,7 @@ export function applyMainThreadHMR(
                 );
             }
           }
-          compilation.addRuntimeModule(chunk, new MainThreadHMRRuntimeModule());
+          compilation.addRuntimeModule(chunk, new DualThreadHMRRuntimeModule());
         }
       },
     );

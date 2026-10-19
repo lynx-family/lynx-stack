@@ -6,6 +6,8 @@
 
 // @public
 export const RuntimeGlobals: {
+    readonly lynxHMR: "__webpack_require__.lynxHMR";
+    readonly lynxHMRLoad: "__webpack_require__.lynxHMRLoad";
     readonly lynxAsyncChunkIds: "__webpack_require__.lynx_aci";
     readonly lynxAsyncChunkMode: "__webpack_require__.lynx_acm";
     readonly lynxChunkEntries: "lynx.__chunk_entries__";

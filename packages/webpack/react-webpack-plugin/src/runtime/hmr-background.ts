@@ -40,6 +40,11 @@ export default function(): void {
     var waiter = pending;
     pending = undefined;
     clearTimeout(waiter.timer);
+    if (ack.supported === false) {
+      $RuntimeGlobals_lynxHMR$ = undefined;
+      waiter.resolve(false);
+      return;
+    }
     if (ack.ok) {
       expectedHash = ack.hash;
       applying = true;
@@ -49,7 +54,7 @@ export default function(): void {
     }
   });
 
-  __webpack_require__.lynxHMR = {
+  $RuntimeGlobals_lynxHMR$ = {
     prepare: function(hash) {
       if (failed) return Promise.reject(new Error('HMR transaction stopped'));
       executionError = undefined;

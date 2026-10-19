@@ -36,7 +36,7 @@ export default function(): void {
 
   // Only HMR loads use this adapter; normal lazy and external loads keep their
   // existing loaders. One section evaluation supplies every chunk in an update.
-  __webpack_require__.lynxHMRLoad = function(name, callback) {
+  $RuntimeGlobals_lynxHMRLoad$ = function(name, callback) {
     if (name.endsWith('.json')) {
       updates = undefined;
       new Promise(function(resolve, reject) {
@@ -65,7 +65,7 @@ export default function(): void {
   };
 
   globalThis[$METHOD$] = function(request) {
-    var acknowledge = function(ok, error) {
+    var acknowledge = function(ok, error, supported) {
       lynx.getJSContext().dispatchEvent({
         type: $EVENT$,
         data: JSON.stringify({
@@ -73,12 +73,21 @@ export default function(): void {
           sequence: request.sequence,
           hash: __webpack_require__.h(),
           ok: ok,
+          supported: supported,
           error: error && String(error),
         }),
       });
     };
     if (applying || request.hash !== __webpack_require__.h()) {
       acknowledge(false, new Error('Main-thread HMR version mismatch'));
+      return;
+    }
+    // Native loading is optional on older hosts; ordinary BTS HMR can continue.
+    if (
+      typeof lynx.fetchBundle !== 'function'
+      || typeof lynx.loadScript !== 'function'
+    ) {
+      acknowledge(false, undefined, false);
       return;
     }
     applying = true;

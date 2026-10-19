@@ -228,6 +228,7 @@ export function applyDefinesInjection(
               );
               await rebuildModule(mainThreadBoundary);
             },
+            keepEmpty,
           );
         }
       };
