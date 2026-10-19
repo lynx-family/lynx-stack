@@ -9,6 +9,8 @@ import { createContext, runInContext } from 'node:vm';
 
 import { expect, it } from '@rstest/core';
 
+import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
+
 import backgroundRuntime from '../src/runtime/hmr-background.js';
 import mainThreadRuntime from '../src/runtime/hmr-main-thread.js';
 
@@ -18,6 +20,8 @@ function runtimeSource(
 ): string {
   return `(${
     runtime.toString()
+      .replaceAll('$RuntimeGlobals_lynxHMR$', RuntimeGlobals.lynxHMR)
+      .replaceAll('$RuntimeGlobals_lynxHMRLoad$', RuntimeGlobals.lynxHMRLoad)
       .replaceAll('$METHOD$', '"applyUpdate"')
       .replaceAll('$EVENT$', '"ready"')
       .replaceAll('$HOT_MODULE$', '"entry"')
@@ -26,6 +30,52 @@ function runtimeSource(
 }
 
 const handler = () => undefined;
+
+it.each(['fetchBundle', 'loadScript', 'both'])(
+  'reports an unsupported MTS host missing %s without applying an update',
+  async missing => {
+    const acknowledgments: Record<string, unknown>[] = [];
+    let applications = 0;
+    const context = createContext({
+      Promise,
+      __webpack_require__: {
+        i: [],
+        h: () => 'old',
+        c: {
+          entry: {
+            hot: {
+              check: () => {
+                applications++;
+              },
+            },
+          },
+        },
+      },
+      lynx: {
+        fetchBundle: missing === 'loadScript' ? handler : undefined,
+        loadScript: missing === 'fetchBundle' ? handler : undefined,
+        getJSContext: () => ({
+          dispatchEvent: (event: { data: string }) =>
+            acknowledgments.push(JSON.parse(event.data)),
+        }),
+      },
+    });
+    runInContext(runtimeSource(mainThreadRuntime), context);
+    context['applyUpdate']({ session: 'page', sequence: 1, hash: 'wrong' });
+    expect(acknowledgments[0]).toMatchObject({ ok: false, hash: 'old' });
+    expect(acknowledgments[0]).not.toHaveProperty('supported', false);
+    context['applyUpdate']({ session: 'page', sequence: 2, hash: 'old' });
+    await expect.poll(() => acknowledgments.length).toBe(2);
+    expect(acknowledgments[1]).toMatchObject({
+      session: 'page',
+      sequence: 2,
+      hash: 'old',
+      ok: false,
+      supported: false,
+    });
+    expect(applications).toBe(0);
+  },
+);
 
 it.each(['default', 'accepted', 'declined', 'throwing', 'dependency'])(
   'preserves %s entry behavior when installing the root fallback',
@@ -177,6 +227,8 @@ it('reports a mismatched MTS version without applying and acknowledges the actua
       },
     },
     lynx: {
+      fetchBundle: handler,
+      loadScript: handler,
       getJSContext: () => ({
         dispatchEvent: (event: { data: string }) => {
           acknowledgments.push(JSON.parse(event.data));
@@ -291,6 +343,33 @@ it('fails a missing MTS completion at the deadline and ignores a late ACK', asyn
   await expect(background.coordinator.prepare('old')).rejects.toThrow(
     'transaction stopped',
   );
+});
+
+it('removes the BTS coordinator only after a matched unsupported-host ACK', async () => {
+  const background = createBackground();
+  const ready = background.coordinator.prepare('old');
+  let released = false;
+  ready.then(() => {
+    released = true;
+  });
+  background.acknowledge({
+    session: 'old-page',
+    sequence: 1,
+    ok: false,
+    supported: false,
+  });
+  background.acknowledge({ sequence: 0, ok: false, supported: false });
+  await Promise.resolve();
+  expect(released).toBe(false);
+  expect(background.context['__webpack_require__'].lynxHMR).toBe(
+    background.coordinator,
+  );
+  background.acknowledge({ sequence: 1, ok: false, supported: false });
+  await expect(ready).resolves.toBe(false);
+  expect(background.cleared()).toBe(1);
+  expect(background.context['__webpack_require__'].lynxHMR).toBeUndefined();
+  background.acknowledge({ sequence: 1, ok: true, hash: 'late' });
+  expect(background.context['__webpack_require__'].lynxHMR).toBeUndefined();
 });
 
 it.each([null, 0, '', undefined])(

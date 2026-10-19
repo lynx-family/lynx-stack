@@ -26,7 +26,9 @@ interface HotEmitter {
 }
 
 interface HotUpdateCoordinator {
-  prepare(hash: string): Promise<void>;
+  // `false` disables coordination when the host cannot load main-thread updates.
+  // biome-ignore lint/suspicious/noConfusingVoidType: Existing coordinators return Promise<void>; false is an optional opt-out.
+  prepare(hash: string): Promise<void | false>;
   finish(hash: string): void;
   stop(): void;
 }
@@ -55,7 +57,8 @@ function startHotDevServer(
     checking = true;
     Promise.resolve()
       .then(() => coordinator?.prepare(getCurrentHash()))
-      .then(() => {
+      .then((prepared) => {
+        if (prepared === false) coordinator = undefined;
         const application = webpackHot.check(true);
         if (!coordinator) return application;
         let timer: ReturnType<typeof setTimeout>;

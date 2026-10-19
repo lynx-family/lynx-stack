@@ -11,7 +11,7 @@
 
 export default function() {
   function loadUpdateChunk(chunkId, updatedModulesList) {
-    var load = __webpack_require__.lynxHMRLoad
+    var load = $RuntimeGlobals_lynxHMRLoad$
       || lynx.requireModuleAsync.bind(lynx);
     return new Promise((resolve, reject) => {
       load(

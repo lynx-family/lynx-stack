@@ -5,6 +5,8 @@ import type { RuntimeModule } from '@rspack/core';
 
 import { RuntimeGlobals as LynxRuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
+import { MAIN_THREAD_HMR } from './hmr/enabled.js';
+
 type LynxProcessEvalResultRuntimeModule = new() => RuntimeModule;
 
 export function createLynxProcessEvalResultRuntimeModule(
@@ -36,10 +38,18 @@ globalThis.processEvalResult = (${LynxRuntimeGlobals.lynxProcessEvalResultByHost
   if (chunk && chunk.ids && chunk.modules) {
     // We only deal with webpack chunk
     ${webpack.RuntimeGlobals.externalInstallChunk}(chunk);
-    // TODO: sort with preOrderIndex. See: https://github.com/web-infra-dev/rspack/pull/8588
-    for (var moduleId in chunk.modules) {
+    ${
+        (compilation.compiler as unknown as Record<symbol, unknown>)[
+            MAIN_THREAD_HMR
+          ]
+          ? `var moduleIds = chunk.entryModuleIds || Object.keys(chunk.modules);
+    for (var i = 0; i < moduleIds.length; i++) {
+      ${webpack.RuntimeGlobals.require}(moduleIds[i]);
+    }`
+          : `for (var moduleId in chunk.modules) {
       ${webpack.RuntimeGlobals.require}(moduleId);
-    }
+    }`
+      }
     return chunk;
   }
   return chunk
