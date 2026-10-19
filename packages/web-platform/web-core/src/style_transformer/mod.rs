@@ -21,6 +21,8 @@ mod transformer;
 pub(crate) use inline_style::transform_inline_style_key_value_vec;
 #[cfg(any(feature = "client", feature = "server"))]
 pub(crate) use inline_style::transform_inline_style_string;
+#[cfg(feature = "client")]
+pub(crate) use rules::get_rename_rule_value;
 #[cfg(any(feature = "client", feature = "server"))]
 pub(crate) use rules::query_transform_rules;
 pub use transformer::Generator;

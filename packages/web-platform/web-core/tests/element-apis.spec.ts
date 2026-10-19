@@ -1014,6 +1014,41 @@ describe('Element APIs', () => {
     expect(root.style.height).toBe('80px');
   });
 
+  test.each(
+    [
+      ['textStrokeWidth', '-webkit-text-stroke-width', '2px'],
+      ['text-stroke-width', '-webkit-text-stroke-width', '2px'],
+      [195, '-webkit-text-stroke-width', '2px'],
+      ['textStrokeColor', '-webkit-text-stroke-color', 'red'],
+      ['text-stroke-color', '-webkit-text-stroke-color', 'red'],
+      [196, '-webkit-text-stroke-color', 'red'],
+      ['--strokeColor', '--strokeColor', 'red'],
+    ] as const,
+  )('__AddInlineStyle sets and removes %s', (key, property, value) => {
+    const text = mtsGlobalThis.__CreateText(0);
+    for (const cleared of [null, undefined]) {
+      mtsGlobalThis.__AddInlineStyle(text, key, value);
+      expect(text.style.getPropertyValue(property)).toBe(value);
+      mtsGlobalThis.__AddInlineStyle(text, key, cleared);
+      expect(text.style.getPropertyValue(property)).toBe('');
+    }
+  });
+
+  test.each([
+    'text-stroke-width:2px;text-stroke-color:red;',
+    { textStrokeWidth: '2px', textStrokeColor: 'red' },
+    { 'text-stroke-width': '2px', 'text-stroke-color': 'red' },
+  ])('__SetInlineStyles prefixes text stroke properties: %j', (styles) => {
+    const text = mtsGlobalThis.__CreateText(0);
+    mtsGlobalThis.__SetInlineStyles(text, styles);
+    expect(text.style.getPropertyValue('-webkit-text-stroke-width')).toBe(
+      '2px',
+    );
+    expect(text.style.getPropertyValue('-webkit-text-stroke-color')).toBe(
+      'red',
+    );
+  });
+
   test('__AddInlineStyle_raw_string', () => {
     let root = mtsGlobalThis.__CreatePage('page', 0);
     mtsGlobalThis.__SetInlineStyles(root, 'height:80px');

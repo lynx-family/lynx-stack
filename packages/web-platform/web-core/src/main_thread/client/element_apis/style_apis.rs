@@ -6,9 +6,11 @@
 use super::MainThreadWasmContext;
 use crate::constants;
 use crate::style_transformer::{
-  query_transform_rules, transform_inline_style_key_value_vec, transform_inline_style_string,
+  get_rename_rule_value, query_transform_rules, transform_inline_style_key_value_vec,
+  transform_inline_style_string,
 };
 use crate::template::template_sections::style_info::css_property::CSSProperty;
+use crate::utils::hyphenate_style_name::hyphenate_style_name;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -84,18 +86,24 @@ pub fn add_inline_style_raw_string_key(
   key: &str,
   value: Option<String>,
 ) {
+  let key = if key.starts_with("--") {
+    key.to_string()
+  } else {
+    hyphenate_style_name(key)
+  };
+  let property_id: CSSProperty = key.as_str().into();
   if let Some(value) = value {
-    let property_id: CSSProperty = key.into();
     let (transformed, _) = query_transform_rules(&property_id, &value);
     let style = dom.style();
     if transformed.is_empty() {
-      let _ = style.set_property(key, &value);
+      let _ = style.set_property(&key, &value);
     } else {
       for (k, v) in transformed.iter() {
         let _ = style.set_property(k, v);
       }
     }
   } else {
+    let key = get_rename_rule_value(&property_id).unwrap_or(&key);
     let _ = dom.style().remove_property(key);
   }
 }
@@ -114,7 +122,9 @@ pub fn set_inline_styles_number_key(dom: &web_sys::HtmlElement, key: usize, valu
       }
     }
   } else {
-    let _ = dom.style().remove_property(&property_id.to_string());
+    let name = property_id.to_string();
+    let key = get_rename_rule_value(&property_id).unwrap_or(&name);
+    let _ = dom.style().remove_property(key);
   }
 }
 #[wasm_bindgen]
