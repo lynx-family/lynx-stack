@@ -25,7 +25,6 @@ export function reloadMainThread(data: unknown, options: UpdatePageOption): void
   }
 
   try {
-    increaseReloadVersion();
     applyUpdatePageData(data, options);
 
     destroyAllElementTemplateListStates();
@@ -46,6 +45,10 @@ export function reloadMainThread(data: unknown, options: UpdatePageOption): void
     clearMainThreadDynamicAttrState();
     resetElementTemplateMainThreadBackgroundFunctionRuntime();
     resetTemplateId();
+
+    // Ref cleanup still belongs to the old page. Advance only before rendering
+    // the new tree so calls queued by old ref/unmount callbacks remain stale.
+    increaseReloadVersion();
 
     const oldRoot = __root;
     setRoot({ __jsx: oldRoot.__jsx });

@@ -8,6 +8,7 @@ import { delayRunOnBackground } from '../../worklet-runtime/bindings/bindings.js
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxRetData } from '../../worklet-runtime/bindings/events.js';
 import type { ClosureValueType, JsFnHandle, Worklet } from '../../worklet-runtime/bindings/types.js';
+import { addReloadScopedEventListener, dispatchReloadScopedEvent } from '../reload-scoped-event.js';
 import { registerDestroyTask } from '../runtime-destroy.js';
 import { onFunctionCall } from '../thread-function-call/return-value.js';
 
@@ -26,19 +27,19 @@ let unregisterBackgroundFunctionCleanup: (() => void) | undefined;
 
 function initBackgroundFunctionRuntime(): void {
   'background only';
-  if (execIdMap) {
+  if (cleanupBackgroundFunctionRuntime) {
     return;
   }
 
-  execIdMap = new BackgroundFunctionExecMap();
+  execIdMap ??= new BackgroundFunctionExecMap();
   const context = lynx.getCoreContext();
-  context.addEventListener(WorkletEvents.runOnBackground, runBackgroundFunction);
+  const removeListener = addReloadScopedEventListener(context, WorkletEvents.runOnBackground, runBackgroundFunction);
   context.addEventListener(WorkletEvents.releaseBackgroundWorkletCtx, releaseBackgroundFunctionCtx);
 
   cleanupBackgroundFunctionRuntime = () => {
-    context.removeEventListener(WorkletEvents.runOnBackground, runBackgroundFunction);
+    removeListener();
     context.removeEventListener(WorkletEvents.releaseBackgroundWorkletCtx, releaseBackgroundFunctionCtx);
-    execIdMap = undefined;
+    execIdMap!.clear();
     cleanupBackgroundFunctionRuntime = undefined;
   };
 }
@@ -46,21 +47,17 @@ function initBackgroundFunctionRuntime(): void {
 /**
  * @internal
  */
-export function runBackgroundFunction(event: RuntimeProxy.Event): void {
+export function runBackgroundFunction(data: RunOnBackgroundData): void {
   'background only';
-  const data = JSON.parse(event.data as string) as RunOnBackgroundData;
   const obj = execIdMap!.findJsFnHandle(data.obj._execId!, data.obj._jsFnId!);
   const f = obj?._fn;
   if (!f) {
     throw new Error('runOnBackground: JS function not found: ' + JSON.stringify(data.obj));
   }
   const returnValue = f(...data.params);
-  lynx.getCoreContext().dispatchEvent({
+  dispatchReloadScopedEvent(lynx.getCoreContext(), {
     type: WorkletEvents.FunctionCallRet,
-    data: JSON.stringify({
-      resolveId: data.resolveId,
-      returnValue,
-    } as RunWorkletCtxRetData),
+    data: { resolveId: data.resolveId, returnValue } satisfies RunWorkletCtxRetData,
   });
 }
 
@@ -153,15 +150,15 @@ function dispatchRunBackgroundFunctionEvent(
   execId: number,
   resolveId: number,
 ): void {
-  lynx.getJSContext().dispatchEvent({
+  dispatchReloadScopedEvent(lynx.getJSContext(), {
     type: WorkletEvents.runOnBackground,
-    data: JSON.stringify({
+    data: {
       obj: {
         _jsFnId: fnId,
         _execId: execId,
       },
       params,
       resolveId,
-    } as RunOnBackgroundData),
+    } as RunOnBackgroundData,
   });
 }

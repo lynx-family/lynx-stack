@@ -7,13 +7,18 @@ import { __root } from '../../root.js';
 import { delayedEvents } from './event/delayEvents.js';
 import { delayedLifecycleEvents } from './event/delayLifecycleEvents.js';
 import { globalCommitTaskMap } from './patch/commit.js';
+import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { withSyncEffectFlush } from '../../utils.js';
+import { resetSnapshotMainThreadFunctionRuntime } from '../worklet/call/runOnMainThread.js';
+import { resetSnapshotBackgroundFunctionRuntime } from '../worklet/ctx.js';
 
 function destroyBackground(): void {
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::destroyBackground');
   }
+
+  deinitGlobalSnapshotPatch();
 
   withSyncEffectFlush(() => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -30,6 +35,8 @@ function destroyBackground(): void {
   if (delayedEvents) {
     delayedEvents.length = 0;
   }
+  resetSnapshotBackgroundFunctionRuntime();
+  resetSnapshotMainThreadFunctionRuntime();
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }

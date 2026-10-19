@@ -9,9 +9,12 @@
 
 import { render } from 'preact';
 
+import { clearDelayedRunOnBackgroundFunctions } from '@lynx-js/react/worklet-runtime/bindings';
+
 import { destroyBackground } from './destroy.js';
 import { renderMainThread } from './render.js';
 import { increaseReloadVersion } from '../../core/reload-version.js';
+import { resetFunctionCallReturnListener } from '../../core/thread-function-call/return-value.js';
 import { __root, setRoot } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isEmptyObject } from '../../utils.js';
@@ -22,7 +25,6 @@ import { __page } from '../snapshot/definition.js';
 import { SnapshotInstance, snapshotInstanceManager } from '../snapshot/snapshot.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
 import { clearFirstScreenEventIdSwap, isFirstScreenSynced } from './event/firstScreenSync.js';
-import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
 import { shouldDelayUiOps } from './ref/delay.js';
 
 function reloadMainThread(data: unknown, options: UpdatePageOption): void {
@@ -30,6 +32,8 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
     profileStart('ReactLynx::reloadMainThread');
   }
 
+  clearDelayedRunOnBackgroundFunctions();
+  resetFunctionCallReturnListener();
   increaseReloadVersion();
 
   if (typeof data == 'object' && data !== null && !isEmptyObject(data)) {
@@ -78,10 +82,7 @@ function reloadBackground(updateData: Record<string, any>): void {
     profileStart('ReactLynx::reloadBackground');
   }
 
-  deinitGlobalSnapshotPatch();
-
   destroyBackground();
-
   increaseReloadVersion();
 
   // COW when modify `lynx.__initData` to make sure Provider & Consumer works

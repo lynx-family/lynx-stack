@@ -5,6 +5,7 @@
 import { IndexMap } from '../../shared/index-map.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxRetData } from '../../worklet-runtime/bindings/events.js';
+import { addReloadScopedEventListener } from '../reload-scoped-event.js';
 import { registerDestroyTask } from '../runtime-destroy.js';
 
 let resolveMap: IndexMap<(value: any) => void> | undefined;
@@ -15,10 +16,10 @@ function initReturnValueListener(): void {
   const context: RuntimeProxy = __JS__ ? lynx.getCoreContext() : lynx.getJSContext();
 
   resolveMap = new IndexMap();
-  context.addEventListener(WorkletEvents.FunctionCallRet, onFunctionCallRet);
+  const removeListener = addReloadScopedEventListener(context, WorkletEvents.FunctionCallRet, onFunctionCallRet);
 
   cleanupReturnValueListener = () => {
-    context.removeEventListener(WorkletEvents.FunctionCallRet, onFunctionCallRet);
+    removeListener();
     resolveMap = undefined;
     cleanupReturnValueListener = undefined;
   };
@@ -62,8 +63,7 @@ export function dropFunctionCallReturnIds(resolveIds: readonly number[]): void {
   }
 }
 
-function onFunctionCallRet(event: RuntimeProxy.Event): void {
-  const data = JSON.parse(event.data as string) as RunWorkletCtxRetData;
+function onFunctionCallRet(data: RunWorkletCtxRetData): void {
   const map = resolveMap;
   if (!map) {
     return;

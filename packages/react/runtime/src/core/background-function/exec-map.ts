@@ -10,6 +10,10 @@ import type { JsFnHandle, Worklet } from '../../worklet-runtime/bindings/types.j
  * a handle to one of its background functions.
  */
 export class BackgroundFunctionExecMap extends IndexMap<Worklet> {
+  public clear(): void {
+    this.indexMap.clear();
+  }
+
   public override add(worklet: Worklet): number {
     const execId = super.add(worklet);
     worklet._execId = execId;
