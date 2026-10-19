@@ -19,6 +19,7 @@ export default defineConfig({
   plugins: [
     pluginMarkedUnicode(),
     pluginQRCode({
+      /** Open the generated preview URL in fullscreen mode when scanned. */
       schema(url) {
         return {
           default: `${url}?fullscreen=true`,

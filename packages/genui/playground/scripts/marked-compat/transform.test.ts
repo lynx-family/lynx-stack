@@ -185,6 +185,7 @@ test('transform tracks the package version and supplies a source map', () => {
   const output = transformMarkedModule({
     code: source,
     resourcePath: filename,
+    /** Record manifest dependencies so the test can verify rebuild tracking. */
     addDependency(file) {
       dependencies.push(file);
     },
