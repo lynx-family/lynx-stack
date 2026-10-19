@@ -186,30 +186,6 @@ describe('Server SSR', () => {
     expect(html).toContain('<iframe id="webview" part="webview"></iframe>');
   });
 
-  it.each(
-    [
-      ['textStrokeWidth', '-webkit-text-stroke-width', '2px'],
-      ['text-stroke-width', '-webkit-text-stroke-width', '2px'],
-      [195, '-webkit-text-stroke-width', '2px'],
-      ['textStrokeColor', '-webkit-text-stroke-color', 'red'],
-      ['text-stroke-color', '-webkit-text-stroke-color', 'red'],
-      [196, '-webkit-text-stroke-color', 'red'],
-      ['--strokeColor', '--strokeColor', 'red'],
-    ] as const,
-  )('should transform inline property %s', (key, property, value) => {
-    const { globalThisAPIs: api, wasmContext } = createElementAPI(
-      { ssrResult: '' },
-      undefined,
-      '',
-      X_ELEMENT_TEST_CONFIG,
-    );
-    const text = api.__CreateText(0);
-    api.__AddInlineStyle(text, key, value);
-    expect(wasmContext.generate_html(api.__GetElementUniqueID(text))).toContain(
-      `${property}:${value};`,
-    );
-  });
-
   it('should transform styles', () => {
     const binding: SSRBinding = {
       ssrResult: '',

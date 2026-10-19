@@ -11,7 +11,6 @@ use crate::style_transformer::{
 };
 use crate::template::template_sections::style_info::css_property::CSSProperty;
 use crate::template::template_sections::style_info::StyleSheetResource;
-use crate::utils::hyphenate_style_name::hyphenate_style_name;
 use std::borrow::Cow;
 use std::cell::RefCell;
 use wasm_bindgen::prelude::*;
@@ -300,12 +299,7 @@ impl MainThreadServerContext {
   ) {
     if let Some(Some(element)) = self.elements.get_mut(element_id) {
       if let Some(value) = value {
-        let key = if key.starts_with("--") {
-          key.to_string()
-        } else {
-          hyphenate_style_name(key)
-        };
-        let property_id: CSSProperty = key.as_str().into();
+        let property_id: CSSProperty = key.into();
         let (transformed, _) = query_transform_rules(&property_id, &value);
         if transformed.is_empty() {
           element.set_style(key.to_string(), value);
