@@ -22,6 +22,8 @@ lazy_static::lazy_static! {
       (CSSPropertyEnum::Flex.into(), "--flex"),
       (CSSPropertyEnum::TextStrokeWidth.into(), "-webkit-text-stroke-width"),
       (CSSPropertyEnum::TextStrokeColor.into(), "-webkit-text-stroke-color"),
+      ("textStrokeWidth".into(), "-webkit-text-stroke-width"),
+      ("textStrokeColor".into(), "-webkit-text-stroke-color"),
     ])
   };
 
