@@ -105,6 +105,10 @@ describe('main-thread dynamic attr state', () => {
     try {
       SystemInfo.lynxSdkVersion = '4.0';
       vi.stubGlobal('__JS__', false);
+      globalThis.lynxWorkletImpl = {
+        ...previousWorkletImpl,
+        _jsFunctionLifecycleManager: undefined,
+      };
       initWorklet();
       globalThis.registerWorklet('main-thread', 'shared-callback', function(this: { _jsFn: { callback: JsFnHandle } }) {
         return () => this._jsFn.callback;
