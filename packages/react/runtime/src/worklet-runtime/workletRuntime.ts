@@ -222,8 +222,13 @@ const transformWorkletInner = (
       const handle = lynxWorkletImpl._jsFunctionLifecycleManager?.materializeHandle(
         (ctx as Worklet)._execId,
         subObj as JsFnHandle,
+        ctx as object,
       );
-      if (handle) obj = replaceCapturedProperty(obj, value, key, handle);
+      if (handle && handle !== subObj) {
+        // Bindings can shallow-share capture containers before hydration.
+        if (obj === value && obj !== ctx) obj = copyAccessorCapture(obj);
+        obj = replaceCapturedProperty(obj, value, key, handle);
+      }
       continue;
     }
   }

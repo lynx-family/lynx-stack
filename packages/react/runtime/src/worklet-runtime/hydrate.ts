@@ -124,7 +124,8 @@ function hydrateDelayRunOnBackgroundTasks(
 ) {
   for (const fnName in fnObjs) {
     const descriptor = fnObjs[fnName]!;
-    const fnObj = lynxWorkletImpl._jsFunctionLifecycleManager?.materializeHandle(execId, descriptor) ?? descriptor;
+    const fnObj = lynxWorkletImpl._jsFunctionLifecycleManager?.materializeHandle(execId, descriptor, fnObjs)
+      ?? descriptor;
     fnObj._execId = execId;
     fnObjs[fnName] = fnObj;
     const firstScreenFnObj: JsFnHandle | undefined = firstScreenFnObjs[fnName];

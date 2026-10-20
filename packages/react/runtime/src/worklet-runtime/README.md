@@ -14,9 +14,11 @@ new background execution that reuses the same numeric ID.
 
 Worklet transformation materializes background-function descriptors into ordinary
 JavaScript handles and installs those handles in the captured context. Repeated
-captures in one background execution share a handle. The lifecycle manager only
-registers these local targets; registration succeeds before bookkeeping becomes
-visible. Neither a temporary clone used only for registration nor a strong
+captures in one background execution share a handle. Before hydration, each local
+context owns its own handles and captured containers so reusing one worklet for
+multiple bindings cannot retarget an escaped callback during another binding's
+hydration. The lifecycle manager only registers these local targets; registration
+succeeds before bookkeeping becomes visible. Neither a temporary clone used only for registration nor a strong
 canonicalization table can represent the ownership contract.
 
 A live binding retains its local context, and an escaped function retains its

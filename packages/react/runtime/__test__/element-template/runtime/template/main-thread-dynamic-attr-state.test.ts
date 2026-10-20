@@ -21,6 +21,12 @@ import {
   updateMainThreadRefAttrSlot as setMTRefSlotImpl,
 } from '../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
 
+import { prepareMTEventCtxForNative } from '../../../../src/element-template/runtime/template/main-thread-event-ctx.js';
+import type { MTEventNativeWrapper } from '../../../../src/element-template/runtime/template/main-thread-event-ctx.js';
+import type { JsFnHandle, Worklet } from '../../../../src/worklet-runtime/bindings/types.js';
+import { hydrateCtx } from '../../../../src/worklet-runtime/hydrate.js';
+import { initWorklet } from '../../../../src/worklet-runtime/workletRuntime.js';
+
 const MT_EVENT_TEMPLATE = '_et_mt_event';
 const MT_REF_TEMPLATE = '_et_mt_ref';
 const TEST_NATIVE_REF = { id: 'dynamic-attr-target' } as unknown as ElementTemplateHandle;
@@ -90,6 +96,48 @@ describe('main-thread dynamic attr state', () => {
   afterEach(() => {
     clearMainThreadDynamicAttrState();
     clearEtAttrPlanMap();
+  });
+
+  it('keeps escaped first-screen callbacks independent when a worklet is reused by two bindings', () => {
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    const previousSdkVersion = SystemInfo.lynxSdkVersion;
+    const register = vi.spyOn(FinalizationRegistry.prototype, 'register');
+    try {
+      SystemInfo.lynxSdkVersion = '4.0';
+      vi.stubGlobal('__JS__', false);
+      initWorklet();
+      globalThis.registerWorklet('main-thread', 'shared-callback', function(this: { _jsFn: { callback: JsFnHandle } }) {
+        return () => this._jsFn.callback;
+      });
+      const shared = { _isFirstScreen: true };
+      const raw = { _wkltId: 'shared-callback', _jsFn: { callback: shared, alias: shared } };
+      const first = prepareMTEventCtxForNative(raw) as unknown as MTEventNativeWrapper;
+      const second = prepareMTEventCtxForNative(raw) as unknown as MTEventNativeWrapper;
+      setMTEventSlot(17, 0, first);
+      setMTEventSlot(18, 0, second);
+      const escapedFirst = globalThis.runWorklet(JSON.parse(JSON.stringify(first.value)), []) as () => JsFnHandle;
+      const escapedSecond = globalThis.runWorklet(JSON.parse(JSON.stringify(second.value)), []) as () => JsFnHandle;
+      expect(escapedFirst()).not.toBe(escapedSecond());
+      expect(first.value._jsFn?.alias).toBe(escapedFirst());
+      expect(second.value._jsFn?.alias).toBe(escapedSecond());
+      for (const [execId, old] of [[11, first], [12, second]] as const) {
+        hydrateCtx(
+          { _wkltId: 'shared-callback', _execId: execId, _jsFn: { callback: { _jsFnId: 1 } } },
+          old.value as Worklet,
+        );
+      }
+      deleteMainThreadDynamicAttrStateForSubtree([17, 18]);
+      expect(escapedFirst()).toMatchObject({ _execId: 11, _jsFnId: 1 });
+      expect(escapedSecond()).toMatchObject({ _execId: 12, _jsFnId: 1 });
+      expect(register).toHaveBeenCalledWith(escapedFirst(), 11);
+      expect(register).toHaveBeenCalledWith(escapedSecond(), 12);
+      expect(raw._jsFn.callback).toEqual({ _isFirstScreen: true });
+    } finally {
+      register.mockRestore();
+      vi.unstubAllGlobals();
+      SystemInfo.lynxSdkVersion = previousSdkVersion;
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
   });
 
   it('records native-held MTEvent ctx by handle and slot without storing the wrapper', () => {
