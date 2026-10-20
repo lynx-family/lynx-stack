@@ -5,8 +5,6 @@
 /* istanbul ignore file -- stringified into the application runtime */
 
 export default function(): void {
-  var bundleName;
-  var updates;
   var applying = false;
   var executionError;
 
@@ -33,36 +31,6 @@ export default function(): void {
       }
     };
   });
-
-  // Only HMR loads use this adapter; normal lazy and external loads keep their
-  // existing loaders. One section evaluation supplies every chunk in an update.
-  $RuntimeGlobals_lynxHMRLoad$ = function(name, callback) {
-    if (name.endsWith('.json')) {
-      updates = undefined;
-      new Promise(function(resolve, reject) {
-        lynx.fetchBundle(name.slice(0, -5) + '.bundle', {}).then(
-          resolve,
-          reject,
-        );
-      }).then(function(response) {
-        if (response.code !== 0) throw new Error(JSON.stringify(response));
-        bundleName = response.url;
-        return lynx.loadScript('manifest', { bundleName: bundleName });
-      }).then(function(manifest) {
-        callback(null, manifest);
-      }, callback);
-    } else {
-      try {
-        if (!updates) {
-          updates = lynx.loadScript('updates', { bundleName: bundleName });
-        }
-        var filename = name.slice(__webpack_require__.p.length);
-        callback(null, updates[filename]);
-      } catch (error) {
-        callback(error);
-      }
-    }
-  };
 
   globalThis[$METHOD$] = function(request) {
     var acknowledge = function(ok, error, supported) {

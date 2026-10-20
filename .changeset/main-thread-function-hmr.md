@@ -7,3 +7,5 @@ Support Main Thread Function HMR in native ReactLynx development builds. Apply m
 Accept ordinary Snapshot component and helper updates at their actual main-thread entry roots, preserving explicit HMR handlers and declines. Keep a stable main-thread registration module so the first background-only worklet added during development is registered before Fast Refresh resumes.
 
 Allow up to ten seconds for matching main-thread completion before timeout recovery.
+
+Load background HMR updates through the same Native bundle adapter, preserve the SDK runtime wrapper in per-chunk sections, and retain the original background loader on hosts without Native app-scope initialization.

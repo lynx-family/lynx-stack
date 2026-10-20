@@ -12,6 +12,7 @@ import type { EntryPair } from './DefinesInjection.js';
 import { MAIN_THREAD_HMR } from './hmr/enabled.js';
 import { LAYERS } from './layer.js';
 import backgroundRuntime from './runtime/hmr-background.js';
+import loadRuntime from './runtime/hmr-load.js';
 import mainThreadRuntime from './runtime/hmr-main-thread.js';
 
 type ResourceModule = Module & { resource?: string };
@@ -29,7 +30,6 @@ export function applyMainThreadHMR(
 
   compiler.hooks.thisCompilation.tap(name, compilation => {
     const currentModules = new Map<string, string | null>();
-    const mainThreadFiles = new Map<string, Set<string>>();
     const getFilename = (
       chunk: Chunk,
       manifest: boolean,
@@ -68,9 +68,13 @@ export function applyMainThreadHMR(
               const dependency = compilation.entries.get(pair.mainThread)!
                 .dependencies[0]!;
               const module = compilation.moduleGraph.getModule(dependency)!;
-              return Template.getFunctionContent(
-                isMain ? mainThreadRuntime : backgroundRuntime,
-              )
+              return [
+                Template.getFunctionContent(loadRuntime),
+                Template.getFunctionContent(
+                  isMain ? mainThreadRuntime : backgroundRuntime,
+                ),
+              ].join('\n')
+                .replaceAll('$BACKGROUND$', JSON.stringify(!isMain))
                 .replaceAll(
                   '$RuntimeGlobals_lynxHMR$',
                   LynxRuntimeGlobals.lynxHMR,
@@ -186,15 +190,12 @@ export function applyMainThreadHMR(
         const manifest = JSON.parse(
           manifestAsset.source.source().toString(),
         ) as { c: (string | number)[] };
-        const files = new Set<string>();
-        mainThreadFiles.set(pair.mainThread, files);
         for (const id of manifest.c) {
           const target = [...compilation.chunks].find(chunk =>
             chunk.id === id
           )!;
           const file = getFilename(target, false);
           const asset = compilation.getAsset(file)!;
-          files.add(file);
           compilation.updateAsset(file, asset.source, {
             ...asset.info,
             'lynx:main-thread': true,
@@ -222,41 +223,60 @@ export function applyMainThreadHMR(
         if (!args.chunkGroups.some(group => group.name === pair.mainThread)) {
           continue;
         }
-        const chunk = compilation.entrypoints.get(pair.mainThread)!
-          .getRuntimeChunk()!;
-        const filename = getFilename(chunk, true);
-        const manifest = compilation.getAsset(filename);
-        if (!manifest || emitted.has(filename)) continue;
-        emitted.add(filename);
-        const content = [...mainThreadFiles.get(pair.mainThread)!].map(file =>
-          `\n{var exports={};${
-            compilation.getAsset(file)!.source.source().toString()
-          }\nupdates[${JSON.stringify(file)}]=exports;}`
-        ).join('');
-        const encodeOptions = {
-          ...args.finalEncodeOptions,
-          sourceContent: {
-            ...(args.finalEncodeOptions['sourceContent'] as Record<
-              string,
-              unknown
-            >),
-            appType: 'DynamicComponent',
-          },
-          lepusCode: undefined,
-          manifest: {},
-          customSections: {
-            manifest: { content: `(${manifest.source.source().toString()})` },
-            updates: {
-              content:
-                `(function(){var updates={};${content}\nreturn updates;})()`,
+        for (const entry of [pair.mainThread, pair.background]) {
+          const isMain = entry === pair.mainThread;
+          const chunk = compilation.entrypoints.get(entry)!.getRuntimeChunk()!;
+          const filename = getFilename(chunk, true);
+          const manifest = compilation.getAsset(filename);
+          if (!manifest || emitted.has(filename)) continue;
+          emitted.add(filename);
+          const manifestSource = manifest.source.source().toString();
+          const sections: Record<string, { content: string }> = {
+            // BTS loadScript must initialize the same app scope as normal JS
+            // chunks. This wrapper also detects hosts predating that support.
+            manifest: {
+              content: isMain
+                ? `(${manifestSource})`
+                : `({init:function(){return (${manifestSource});}})`,
             },
-          },
-        };
-        const { buffer } = await hooks.encode.promise({ encodeOptions });
-        compilation.emitAsset(
-          filename.replace(/\.json$/, '.bundle'),
-          new sources.RawSource(buffer),
-        );
+          };
+          const { c: ids } = JSON.parse(manifestSource) as {
+            c: (string | number)[];
+          };
+          for (const id of ids) {
+            const target = [...compilation.chunks].find(chunk =>
+              chunk.id === id
+            )!;
+            const file = getFilename(target, false);
+            const source = compilation.getAsset(file)!.source.source()
+              .toString();
+            // BTS assets already carry the runtime wrapper and its host scope.
+            // MTS chunks expose CommonJS exports without that SDK wrapper.
+            sections[file] = {
+              content: isMain
+                ? `(function(){var exports={};${source}\nreturn exports;})()`
+                : source,
+            };
+          }
+          const encodeOptions = {
+            ...args.finalEncodeOptions,
+            sourceContent: {
+              ...(args.finalEncodeOptions['sourceContent'] as Record<
+                string,
+                unknown
+              >),
+              appType: 'DynamicComponent',
+            },
+            lepusCode: undefined,
+            manifest: {},
+            customSections: sections,
+          };
+          const { buffer } = await hooks.encode.promise({ encodeOptions });
+          compilation.emitAsset(
+            filename.replace(/\.json$/, '.bundle'),
+            new sources.RawSource(buffer),
+          );
+        }
       }
       return args;
     });

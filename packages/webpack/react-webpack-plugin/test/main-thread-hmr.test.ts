@@ -203,11 +203,11 @@ it.each([
                       createContext(),
                     ),
                   ).toEqual(JSON.parse(manifest.source.source().toString()));
-                  const updates = runInContext(
-                    `(${encoded.customSections['updates']!.content as string})`,
-                    createContext(),
-                  ) as Record<string, { modules: Record<string, unknown> }>;
                   const file = `main__main-thread.${oldHash}.hot-update.js`;
+                  const update = runInContext(
+                    encoded.customSections[file]!.content as string,
+                    createContext(),
+                  ) as { modules: Record<string, unknown> };
                   expect(compilation.getAsset(file)!.info['lynx:main-thread'])
                     .toBe(
                       true,
@@ -216,7 +216,7 @@ it.each([
                     `main__background.${oldHash}.hot-update.js`,
                   )!.source.source().toString();
                   if (n === 2) {
-                    expect(Object.keys(updates[file]!.modules)).toEqual([]);
+                    expect(Object.keys(update.modules)).toEqual([]);
                     expect(background).not.toContain('lynxRefreshModules');
                     await fs.writeFile(
                       path.join(context, synthetic ? 'app.jsx' : 'mhelper.js'),
@@ -229,11 +229,10 @@ it.each([
                       const registrations: (() => number)[] = [];
                       const vm = createContext();
                       const vmUpdates = runInContext(
-                        `(${encoded.customSections['updates']!
-                          .content as string})`,
+                        encoded.customSections[file]!.content as string,
                         vm,
                       );
-                      const key = Object.keys(vmUpdates[file].modules).find(
+                      const key = Object.keys(vmUpdates.modules).find(
                         id => id.includes('__lynx-react-defines'),
                       )!;
                       expect(key).toBeDefined();
@@ -246,7 +245,7 @@ it.each([
                         },
                         exports: {},
                       };
-                      vmUpdates[file].modules[key](
+                      vmUpdates.modules[key](
                         module,
                         module.exports,
                         Object.assign(() => ({
@@ -263,7 +262,7 @@ it.each([
                       expect(accepted).toBe(true);
                       expect(registrations[0]!()).toBe(15);
                     } else {
-                      expect(Object.keys(updates[file]!.modules)).toEqual([
+                      expect(Object.keys(update.modules)).toEqual([
                         '(react:main-thread)/./mhelper.js',
                       ]);
                       expect(background).toContain(

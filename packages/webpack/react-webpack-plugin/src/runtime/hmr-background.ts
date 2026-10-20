@@ -42,6 +42,7 @@ export default function(): void {
     clearTimeout(waiter.timer);
     if (ack.supported === false) {
       $RuntimeGlobals_lynxHMR$ = undefined;
+      $RuntimeGlobals_lynxHMRLoad$ = undefined;
       waiter.resolve(false);
       return;
     }
