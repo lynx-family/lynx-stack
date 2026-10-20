@@ -64,7 +64,7 @@ function startHotDevServer(
           new Promise<never>((_resolve, reject) => {
             timer = setTimeout(() => {
               reject(new Error('Background HMR application timed out'));
-            }, 5000);
+            }, 10000);
           }),
         ]).finally(() => clearTimeout(timer));
       })

@@ -6,3 +6,5 @@
 Add internal HMR loading and update coordination hooks. Allow coordinated updates to refresh cached module factories, serialize application, detect timeouts, preserve runtime hashes on reconnect, and reload once on failure using a valid Native CDP request.
 
 Keep downloaded factories ahead of cached refresh fallbacks across update chunks, regardless of loading order.
+
+Allow up to ten seconds for coordinated background application before timeout recovery.
