@@ -7,7 +7,7 @@
 
 import { createContext, runInContext } from 'node:vm';
 
-import { expect, it } from '@rstest/core';
+import { expect, it, rs } from '@rstest/core';
 
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
@@ -257,14 +257,10 @@ it('reports a mismatched MTS version without applying and acknowledges the actua
 function createBackground() {
   const requests: { session: string; sequence: number; hash: string }[] = [];
   let listener: (event: { data: string }) => void;
-  let timeout: () => void;
   let cleared = 0;
   const context = createContext({
     Promise,
-    setTimeout: (callback: () => void) => {
-      timeout = callback;
-      return 1;
-    },
+    setTimeout: () => 1,
     clearTimeout: () => {
       cleared++;
     },
@@ -291,7 +287,6 @@ function createBackground() {
       listener({
         data: JSON.stringify({ session: requests[0]!.session, ...ack }),
       }),
-    expire: () => timeout(),
     cleared: () => cleared,
   };
 }
@@ -333,16 +328,32 @@ it('waits for a matching ACK and detects a factory exception even when an accept
   expect(background.requests).toHaveLength(1);
 });
 
-it('fails a missing MTS completion at the deadline and ignores a late ACK', async () => {
-  const background = createBackground();
-  const ready = background.coordinator.prepare('old');
-  background.expire();
-  await expect(ready).rejects.toThrow('completion timed out');
-  background.coordinator.stop();
-  background.acknowledge({ sequence: 1, ok: true, hash: 'late' });
-  await expect(background.coordinator.prepare('old')).rejects.toThrow(
-    'transaction stopped',
-  );
+it('fails a missing MTS completion at ten seconds and ignores a late ACK', async () => {
+  rs.useFakeTimers();
+  try {
+    const background = createBackground();
+    background.context['setTimeout'] = setTimeout;
+    background.context['clearTimeout'] = clearTimeout;
+    const ready = background.coordinator.prepare('old');
+    let settled = false;
+    ready.then(() => {
+      settled = true;
+    }, () => {
+      settled = true;
+    });
+    const failure = expect(ready).rejects.toThrow('completion timed out');
+    await rs.advanceTimersByTimeAsync(9999);
+    expect(settled).toBe(false);
+    await rs.advanceTimersByTimeAsync(1);
+    await failure;
+    background.coordinator.stop();
+    background.acknowledge({ sequence: 1, ok: true, hash: 'late' });
+    await expect(background.coordinator.prepare('old')).rejects.toThrow(
+      'transaction stopped',
+    );
+  } finally {
+    rs.useRealTimers();
+  }
 });
 
 it('removes the BTS coordinator only after a matched unsupported-host ACK', async () => {

@@ -67,7 +67,7 @@ export default function(): void {
           timer: setTimeout(function() {
             pending = undefined;
             reject(new Error('Main-thread HMR completion timed out'));
-          }, 5000),
+          }, 10000),
         };
         lynx.getNativeApp().callLepusMethod($METHOD$, {
           session: session,

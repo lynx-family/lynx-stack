@@ -13,8 +13,9 @@ added to a background-only module within an async scope.
 
 The main thread loads versioned updates through Native `fetchBundle` and
 `loadScript`. A failed update on either thread, or a missing main-thread
-completion, triggers a full page reload. Pending updates from the old page are
-discarded. Compatible component updates preserve `useState`; memoized values,
+completion, triggers a full page reload. Coordinated updates allow up to ten
+seconds for main-thread completion, then up to ten seconds for background
+application. Pending updates from the old page are discarded. Compatible component updates preserve `useState`; memoized values,
 including `useMainThreadRef`, follow the existing Fast Refresh reset behavior.
 
 This integration applies to application HMR and uses the host's existing Native
