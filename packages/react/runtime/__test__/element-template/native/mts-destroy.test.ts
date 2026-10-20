@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { JsFunctionLifecycleManager } from '../../../src/worklet-runtime/jsFunctionLifecycle.js';
 import { installOnMtsDestruction, onMtsDestruction } from '../../../src/element-template/native/mts-destroy.js';
 import {
   composeElementTemplateListAttributes,
@@ -89,6 +90,33 @@ describe('mts-destroy', () => {
     } finally {
       g.lynx.getNative = originalGetNative;
       g.lynx.performance = originalPerformance;
+    }
+  });
+
+  it('retires callback owners before a new runtime can reuse background execution IDs', () => {
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    const previous = new JsFunctionLifecycleManager();
+    const oldCtx = { _wkltId: 'tap', _execId: 3 };
+    previous.retainWorkletCtx(oldCtx);
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _jsFunctionLifecycleManager: previous,
+    } as typeof globalThis.lynxWorkletImpl;
+    const dispatch = vi.spyOn(lynx.getJSContext(), 'dispatchEvent');
+    try {
+      onMtsDestruction();
+      const current = globalThis.lynxWorkletImpl._jsFunctionLifecycleManager!;
+      const next = { _wkltId: 'tap', _execId: 3 };
+      current.retainWorkletCtx(next);
+      expect(current).not.toBe(previous);
+      expect(current.resolveWorkletCtx(oldCtx)).toBeUndefined();
+      expect(current.resolveWorkletCtx(next)).toBe(next);
+      previous.removeRef(3);
+      previous.fire();
+      expect(dispatch).not.toHaveBeenCalled();
+    } finally {
+      dispatch.mockRestore();
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
     }
   });
 

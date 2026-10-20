@@ -100,4 +100,62 @@ describe('jsFunctionLifecycle', () => {
     expect(register).toHaveBeenCalledTimes(2);
     expect(manager.execIdRefCount.get(3)).toBe(1);
   });
+
+  it('shares local handles within one execution without sharing across executions', () => {
+    const manager = new JsFunctionLifecycleManager();
+    const descriptor = { _jsFnId: 7 };
+    const first = manager.materializeHandle(3, descriptor);
+    expect(first).not.toBe(descriptor);
+    expect(manager.materializeHandle(3, { ...descriptor })).toBe(first);
+    expect(manager.materializeHandle(3, first)).toBe(first);
+    const second = manager.materializeHandle(4, first);
+    expect(second).not.toBe(first);
+    expect(first._execId).toBe(3);
+    expect(second._execId).toBe(4);
+    expect(manager.execIdRefCount.get(3)).toBe(1);
+    expect(manager.execIdRefCount.get(4)).toBe(1);
+  });
+
+  it('resolves retained context descriptors and never reuses IDs across runtime restarts', () => {
+    const manager = new JsFunctionLifecycleManager();
+    const ctx = { _wkltId: 'tap' };
+    manager.retainWorkletCtx(ctx);
+    expect(manager.resolveWorkletCtx(JSON.parse(JSON.stringify(ctx)))).toBe(ctx);
+    manager.retainWorkletCtx(ctx);
+    const replacement = new JsFunctionLifecycleManager(manager);
+    const next = { _wkltId: 'tap' };
+    replacement.retainWorkletCtx(next);
+    expect(next._runtimeCtxId).not.toBe(ctx._runtimeCtxId);
+    expect(replacement.resolveWorkletCtx(ctx)).toBeUndefined();
+  });
+  it('does not release a new runtime execution when retired finalizers run', () => {
+    const previous = new JsFunctionLifecycleManager();
+    previous.addRef(3, {});
+    previous.removeRef(3);
+    previous.dispose();
+    const current = new JsFunctionLifecycleManager(previous);
+    current.addRef(3, {});
+    previous.fire();
+    expect(events).toEqual([]);
+    expect(current.execIdRefCount.get(3)).toBe(1);
+  });
+
+  it('drops the descriptor lookup when its local owner is finalized', () => {
+    let collect;
+    const registry = vi.spyOn(globalThis, 'FinalizationRegistry').mockImplementation(function(callback) {
+      collect ??= callback;
+      return { register: vi.fn() };
+    });
+    try {
+      const manager = new JsFunctionLifecycleManager();
+      const owner = { _wkltId: 'tap' };
+      manager.retainWorkletCtx(owner);
+      const descriptor = JSON.parse(JSON.stringify(owner));
+      expect(manager.resolveWorkletCtx(descriptor)).toBe(owner);
+      collect(owner._runtimeCtxId);
+      expect(manager.resolveWorkletCtx(descriptor)).toBeUndefined();
+    } finally {
+      registry.mockRestore();
+    }
+  });
 });
