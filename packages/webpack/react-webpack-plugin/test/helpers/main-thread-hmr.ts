@@ -159,6 +159,8 @@ export function createMainThreadRuntime(stats: Stats): {
       },
     }),
     lynx: {
+      fetchBundle: () => undefined,
+      loadScript: () => undefined,
       getJSContext: () => ({
         addEventListener: () => undefined,
         dispatchEvent: (event: { data: string }) => {

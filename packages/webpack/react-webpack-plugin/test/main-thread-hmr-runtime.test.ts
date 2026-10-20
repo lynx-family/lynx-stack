@@ -12,21 +12,21 @@ import { expect, it, rs } from '@rstest/core';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import backgroundRuntime from '../src/runtime/hmr-background.js';
+import loadRuntime from '../src/runtime/hmr-load.js';
 import mainThreadRuntime from '../src/runtime/hmr-main-thread.js';
 
 function runtimeSource(
   runtime: () => void,
   entryModules: string[] = [],
 ): string {
-  return `(${
-    runtime.toString()
-      .replaceAll('$RuntimeGlobals_lynxHMR$', RuntimeGlobals.lynxHMR)
-      .replaceAll('$RuntimeGlobals_lynxHMRLoad$', RuntimeGlobals.lynxHMRLoad)
-      .replaceAll('$METHOD$', '"applyUpdate"')
-      .replaceAll('$EVENT$', '"ready"')
-      .replaceAll('$HOT_MODULE$', '"entry"')
-      .replaceAll('$ENTRY_MODULES$', JSON.stringify(entryModules))
-  })();`;
+  return [loadRuntime, runtime].map(fn => `(${fn.toString()})();`).join('\n')
+    .replaceAll('$BACKGROUND$', JSON.stringify(runtime === backgroundRuntime))
+    .replaceAll('$RuntimeGlobals_lynxHMR$', RuntimeGlobals.lynxHMR)
+    .replaceAll('$RuntimeGlobals_lynxHMRLoad$', RuntimeGlobals.lynxHMRLoad)
+    .replaceAll('$METHOD$', '"applyUpdate"')
+    .replaceAll('$EVENT$', '"ready"')
+    .replaceAll('$HOT_MODULE$', '"entry"')
+    .replaceAll('$ENTRY_MODULES$', JSON.stringify(entryModules));
 }
 
 const handler = () => undefined;
@@ -94,7 +94,10 @@ it.each(['default', 'accepted', 'declined', 'throwing', 'dependency'])(
         hot._selfAccepted = true;
       },
     };
-    const context = createContext({ __webpack_require__: { i: interceptors } });
+    const context = createContext({
+      lynx: {},
+      __webpack_require__: { i: interceptors },
+    });
     runInContext(runtimeSource(mainThreadRuntime, ['entry']), context);
     const options = {
       id: behavior === 'dependency' ? 'helper' : 'entry',
@@ -118,51 +121,69 @@ it.each(['default', 'accepted', 'declined', 'throwing', 'dependency'])(
   },
 );
 
-it('loads a versioned Native bundle and evaluates the update section only once for multiple chunks', async () => {
-  const fetched: string[] = [];
-  const loaded: string[] = [];
-  const context = createContext({
-    Promise,
-    __webpack_require__: {
-      i: [],
-      p: 'http://localhost/',
-      c: {},
-      h: () => 'old',
-    },
-    lynx: {
-      fetchBundle: (url: string) => ({
-        then: (resolve: (value: unknown) => void) => {
-          fetched.push(url);
-          resolve({ code: 0, url });
-          return null;
-        },
-      }),
-      loadScript: (section: string) => {
-        loaded.push(section);
-        return section === 'manifest'
-          ? { c: ['a', 'b'] }
-          : { 'a.old.js': { ids: ['a'] }, 'b.old.js': { ids: ['b'] } };
+it.each([mainThreadRuntime, backgroundRuntime])(
+  'loads versioned Native sections on either thread without reusing the previous bundle',
+  async runtime => {
+    const fetched: string[] = [];
+    const loaded: string[] = [];
+    const context = createContext({
+      Promise,
+      __webpack_require__: {
+        i: [],
+        p: 'http://localhost/',
+        c: {},
+        h: () => 'old',
       },
-    },
-  });
-  runInContext(runtimeSource(mainThreadRuntime), context);
-  const load = (name: string) =>
-    new Promise((resolve, reject) => {
-      context['__webpack_require__'].lynxHMRLoad(
-        `http://localhost/${name}`,
-        (error: Error, value: unknown) => {
-          if (error) reject(error);
-          else resolve(value);
+      lynx: {
+        fetchBundle: (url: string) => ({
+          then: (resolve: (value: unknown) => void) => {
+            fetched.push(url);
+            resolve({ code: 0, url });
+            return null;
+          },
+        }),
+        getCoreContext: () => ({ addEventListener: () => undefined }),
+        loadScript: (
+          section: string,
+          { bundleName }: { bundleName: string },
+        ) => {
+          loaded.push(bundleName + ':' + section);
+          return section === 'manifest'
+            ? { c: ['a', 'b'] }
+            : { ids: [section[0]], version: bundleName };
         },
-      );
+      },
     });
+    runInContext(runtimeSource(runtime), context);
+    const load = (name: string) =>
+      new Promise((resolve, reject) => {
+        context['__webpack_require__'].lynxHMRLoad(
+          `http://localhost/${name}`,
+          (error: Error, value: unknown) => {
+            if (error) reject(error);
+            else resolve(value);
+          },
+        );
+      });
 
-  expect(await load('main.old.hot-update.json')).toEqual({ c: ['a', 'b'] });
-  expect(await load('a.old.js')).toEqual({ ids: ['a'] });
-  expect(await load('b.old.js')).toEqual({ ids: ['b'] });
-  expect(fetched).toEqual(['http://localhost/main.old.hot-update.bundle']);
-  expect(loaded).toEqual(['manifest', 'updates']);
-});
+    expect(await load('main.old.hot-update.json')).toEqual({ c: ['a', 'b'] });
+    expect(await load('a.old.js')).toEqual({ ids: ['a'], version: fetched[0] });
+    expect(await load('b.old.js')).toEqual({ ids: ['b'], version: fetched[0] });
+    expect(await load('main.new.hot-update.json')).toEqual({ c: ['a', 'b'] });
+    expect(await load('a.new.js')).toEqual({ ids: ['a'], version: fetched[1] });
+    expect(fetched).toEqual([
+      'http://localhost/main.old.hot-update.bundle',
+      'http://localhost/main.new.hot-update.bundle',
+    ]);
+    expect(loaded).toEqual([
+      `${fetched[0]}:manifest`,
+      `${fetched[0]}:a.old.js`,
+      `${fetched[0]}:b.old.js`,
+      `${fetched[1]}:manifest`,
+      `${fetched[1]}:a.new.js`,
+    ]);
+  },
+);
 
 it.each(['promise', 'thenable', 'throw'])(
   'reports a Native bundle load failure from %s without waiting for the coordinator timeout',
@@ -254,7 +275,7 @@ it('reports a mismatched MTS version without applying and acknowledges the actua
   expect(applications).toBe(1);
 });
 
-function createBackground() {
+function createBackground(native = false) {
   const requests: { session: string; sequence: number; hash: string }[] = [];
   let listener: (event: { data: string }) => void;
   let cleared = 0;
@@ -266,6 +287,8 @@ function createBackground() {
     },
     __webpack_require__: { i: [] },
     lynx: {
+      fetchBundle: native ? handler : undefined,
+      loadScript: native ? handler : undefined,
       getCoreContext: () => ({
         addEventListener: (_name: string, callback: typeof listener) => {
           listener = callback;
@@ -357,7 +380,10 @@ it('fails a missing MTS completion at ten seconds and ignores a late ACK', async
 });
 
 it('removes the BTS coordinator only after a matched unsupported-host ACK', async () => {
-  const background = createBackground();
+  const background = createBackground(true);
+  expect(background.context['__webpack_require__'].lynxHMRLoad).toBeTypeOf(
+    'function',
+  );
   const ready = background.coordinator.prepare('old');
   let released = false;
   ready.then(() => {
@@ -379,8 +405,10 @@ it('removes the BTS coordinator only after a matched unsupported-host ACK', asyn
   await expect(ready).resolves.toBe(false);
   expect(background.cleared()).toBe(1);
   expect(background.context['__webpack_require__'].lynxHMR).toBeUndefined();
+  expect(background.context['__webpack_require__'].lynxHMRLoad).toBeUndefined();
   background.acknowledge({ sequence: 1, ok: true, hash: 'late' });
   expect(background.context['__webpack_require__'].lynxHMR).toBeUndefined();
+  expect(background.context['__webpack_require__'].lynxHMRLoad).toBeUndefined();
 });
 
 it.each([null, 0, '', undefined])(
@@ -400,5 +428,122 @@ it.each([null, 0, '', undefined])(
       background.context,
     );
     expect(() => background.coordinator.finish('new')).toThrow(String(value));
+  },
+);
+
+it('keeps legacy BTS loading when Native APIs exist but do not initialize the app wrapper', async () => {
+  const legacy: string[] = [];
+  const sections: string[] = [];
+  let wrapperRuns = 0;
+  const context = createContext({
+    Promise,
+    __webpack_require__: { p: '/', i: [] },
+    lynx: {
+      fetchBundle: (url: string) => Promise.resolve({ code: 0, url }),
+      loadScript: (section: string) => {
+        sections.push(section);
+        return {
+          init: () => {
+            wrapperRuns++;
+          },
+        };
+      },
+      getCoreContext: () => ({ addEventListener: () => undefined }),
+      requireModuleAsync: (
+        name: string,
+        callback: (error: null, result: unknown) => void,
+      ) => {
+        legacy.push(name);
+        callback(null, name.endsWith('.json') ? { c: ['a'] } : { modules: {} });
+      },
+    },
+  });
+  runInContext(runtimeSource(backgroundRuntime), context);
+  const load = (name: string) =>
+    new Promise((resolve, reject) => {
+      const loader = context['__webpack_require__'].lynxHMRLoad
+        ?? context['lynx'].requireModuleAsync;
+      loader(name, (error: Error, result: unknown) =>
+        error ? reject(error) : resolve(result));
+    });
+  await expect(load('/main.old.hot-update.json')).resolves.toEqual({
+    c: ['a'],
+  });
+  expect(context['__webpack_require__'].lynxHMRLoad).toBeUndefined();
+  await expect(load('/a.old.hot-update.js')).resolves.toEqual({ modules: {} });
+  expect(legacy).toEqual(['/main.old.hot-update.json', '/a.old.hot-update.js']);
+  expect(sections).toEqual(['manifest']);
+  expect(wrapperRuns).toBe(0);
+});
+
+it.each(['fetchBundle', 'loadScript', 'both'])(
+  'retains the original BTS loader when the host is missing %s',
+  missing => {
+    const context = createContext({
+      Promise,
+      __webpack_require__: { p: '/', i: [] },
+      lynx: {
+        fetchBundle: missing === 'loadScript' ? handler : undefined,
+        loadScript: missing === 'fetchBundle' ? handler : undefined,
+        getCoreContext: () => ({ addEventListener: () => undefined }),
+      },
+    });
+    runInContext(runtimeSource(backgroundRuntime), context);
+    expect(context['__webpack_require__'].lynxHMRLoad).toBeUndefined();
+  },
+);
+
+it.each(['fetch', 'code', 'manifest', 'chunk'])(
+  'propagates a BTS Native %s failure without switching to the legacy loader',
+  async stage => {
+    const failure = new Error('Native update failed');
+    const legacy = rs.fn();
+    const context = createContext({
+      Promise,
+      __webpack_require__: { p: '/', i: [] },
+      lynx: {
+        getCoreContext: () => ({ addEventListener: () => undefined }),
+        requireModuleAsync: legacy,
+        fetchBundle: (url: string) =>
+          stage === 'fetch'
+            ? Promise.reject(failure)
+            : Promise.resolve({
+              code: stage === 'code' ? 3 : 0,
+              url: 'canonical:' + url,
+            }),
+        loadScript: (
+          section: string,
+          { bundleName }: { bundleName: string },
+        ) => {
+          expect(bundleName).toBe('canonical:/main.old.hot-update.bundle');
+          if (
+            section === stage || stage === 'chunk' && section !== 'manifest'
+          ) throw failure;
+          return { c: ['a'] };
+        },
+      },
+    });
+    runInContext(runtimeSource(backgroundRuntime), context);
+    const loader = context['__webpack_require__'].lynxHMRLoad;
+    const load = (name: string) =>
+      new Promise((resolve, reject) =>
+        loader(
+          name,
+          (error: Error, result: unknown) =>
+            error ? reject(error) : resolve(result),
+        )
+      );
+    if (stage === 'chunk') {
+      await load('/main.old.hot-update.json');
+      await expect(load('/a.old.hot-update.js')).rejects.toThrow(
+        'Native update failed',
+      );
+    } else {
+      await expect(load('/main.old.hot-update.json')).rejects.toThrow(
+        stage === 'code' ? '"code":3' : 'Native update failed',
+      );
+    }
+    expect(context['__webpack_require__'].lynxHMRLoad).toBe(loader);
+    expect(legacy).not.toHaveBeenCalled();
   },
 );

@@ -11,8 +11,10 @@ changing the function's worklet ID. No additional application API is required.
 Application updates include already loaded async chunks and the first worklet
 added to a background-only module within an async scope.
 
-The main thread loads versioned updates through Native `fetchBundle` and
-`loadScript`. A failed update on either thread, or a missing main-thread
+Each thread loads its own versioned update bundle through Native `fetchBundle`
+and `loadScript`. The shared HMR loader reads a manifest section and the sections
+for the requested update chunks. Background sections retain the existing SDK
+runtime wrapper and app scope; normal lazy loading keeps its existing loader. A failed update on either thread, or a missing main-thread
 completion, triggers a full page reload. Coordinated updates allow up to ten
 seconds for main-thread completion, then up to ten seconds for background
 application. Pending updates from the old page are discarded. Compatible component updates preserve `useState`; memoized values,
@@ -24,5 +26,8 @@ HMR or change production bundles.
 
 If the host lacks main-thread `fetchBundle` or `loadScript`, the coordinator
 disables main-thread updates and retains the existing background HMR path.
-Hosts with these APIs still reload on load or application failure; this
-fallback does not provide Main Thread Function HMR on older hosts.
+Background Native loading also requires the SDK to initialize the app wrapper:
+hosts without these APIs or that initialization capability retain the original
+background loader. The manifest probes initialization before update code runs.
+Actual Native load or application failures still trigger a reload. These
+fallbacks do not add Main Thread Function HMR to hosts without main-thread loading.
