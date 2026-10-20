@@ -36,9 +36,14 @@ const entryWithPolicy = (
   if (${broken}) throw new Error('entry update failure');
 `;
 
-it.each(['wrapper', 'hook'])(
-  'accepts %s changes through the actual app entry and still replays worklet owners',
-  async changed => {
+it.each([
+  { changed: 'wrapper', moduleIds: 'named' as const },
+  { changed: 'hook', moduleIds: 'named' as const },
+  { changed: 'wrapper', moduleIds: 'deterministic' as const },
+  { changed: 'hook', moduleIds: 'deterministic' as const },
+])(
+  'accepts sequential $changed changes with $moduleIds IDs through the actual app entry and still replays worklet owners',
+  async ({ changed, moduleIds }) => {
     const tempRoot = path.resolve(
       __dirname,
       '../../../../.tmp/main-thread-hmr',
@@ -60,11 +65,14 @@ it.each(['wrapper', 'hook'])(
         fs.writeFile(path.join(context, name), content)
       ),
     );
-    const compiler = createHMRCompiler(context, {}, [
-      './index.js',
-      './other.js',
-    ]);
+    const compiler = createHMRCompiler(
+      context,
+      {},
+      ['./index.js', './other.js'],
+      moduleIds,
+    );
     let runtime: ReturnType<typeof createMainThreadRuntime>;
+    let version = 0;
     try {
       await new Promise<void>((resolve, reject) => {
         const watcher = compiler.watch(
@@ -75,37 +83,55 @@ it.each(['wrapper', 'hook'])(
               if (stats!.hasErrors()) {
                 throw new Error(stats!.toString({ all: false, errors: true }));
               }
+              version++;
               if (runtime) {
                 const ack = await runtime.apply(stats!.compilation);
                 expect(ack.error).toBeUndefined();
                 expect(ack).toMatchObject({ ok: true, hash: stats!.hash });
-                expect(runtime.context['read']()[0]).toBe(3);
+                expect(runtime.context['read']()[0]).toBe(version + 1);
                 expect(runtime.context['otherRead']()).toBe(
-                  changed === 'wrapper' ? 1 : 2,
+                  changed === 'wrapper' ? 1 : version,
                 );
-                expect(runtime.context['entryRuns']).toBe(2);
+                expect(runtime.context['entryRuns']).toBe(version);
                 expect(runtime.context['otherRuns']).toBe(
-                  changed === 'wrapper' ? 1 : 2,
+                  changed === 'wrapper' ? 1 : version,
                 );
                 // Accepting helpers themselves would leave the registered closure stale.
                 expect([...runtime.registrations.values()][0]!()).toBe(
-                  changed === 'wrapper' ? 1 : 2,
+                  changed === 'wrapper' ? 1 : version,
                 );
-                watcher.close(resolve);
               } else {
                 runtime = createMainThreadRuntime(stats!);
                 expect(runtime.context['read']()[0]).toBe(2);
                 expect([...runtime.registrations.values()][0]!()).toBe(1);
+              }
+              const compilation = stats!.compilation;
+              for (
+                const dependency of compilation.entries.get(
+                  'main__main-thread',
+                )!
+                  .dependencies
+              ) {
+                const id = compilation.chunkGraph.getModuleId(
+                  compilation.moduleGraph.getModule(dependency)!,
+                )!;
+                expect(typeof id).toBe(
+                  moduleIds === 'deterministic' ? 'number' : 'string',
+                );
+                expect(runtime.context['testRequire'].c[id].hot._selfAccepted)
+                  .toBe(true);
+              }
+              if (version < 3) {
                 await fs.writeFile(
                   path.join(
                     context,
                     changed === 'wrapper' ? 'app.js' : 'hook.js',
                   ),
                   changed === 'wrapper'
-                    ? app(2)
-                    : 'export function useLabel() { return 2; }',
+                    ? app(version + 1)
+                    : `export function useLabel() { return ${version + 1}; }`,
                 );
-              }
+              } else watcher.close(resolve);
             })().catch(error => watcher.close(() => reject(error as Error)));
           },
         );
