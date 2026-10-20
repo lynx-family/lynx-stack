@@ -111,7 +111,7 @@ describe('startHotDevServer', () => {
       );
       start(coordinator, () => hash);
       onHotUpdate('first');
-      await vi.advanceTimersByTimeAsync(6000);
+      await vi.advanceTimersByTimeAsync(11000);
       expect(check).toBeCalledTimes(1);
       expect(reloadPage).not.toBeCalled();
       hash = 'first';
