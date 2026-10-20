@@ -123,14 +123,17 @@ function hydrateDelayRunOnBackgroundTasks(
   execId: number,
 ) {
   for (const fnName in fnObjs) {
-    const fnObj = fnObjs[fnName]!;
+    const descriptor = fnObjs[fnName]!;
+    const fnObj = lynxWorkletImpl._jsFunctionLifecycleManager?.materializeHandle(execId, descriptor) ?? descriptor;
+    fnObj._execId = execId;
+    fnObjs[fnName] = fnObj;
     const firstScreenFnObj: JsFnHandle | undefined = firstScreenFnObjs[fnName];
+    if (firstScreenFnObj) {
+      Object.assign(firstScreenFnObj, fnObj);
+      firstScreenFnObj._isFirstScreen = false;
+      lynxWorkletImpl._jsFunctionLifecycleManager?.addRef(execId, firstScreenFnObj);
+    }
     if (!firstScreenFnObj?._delayIndices) {
-      if (firstScreenFnObj) {
-        firstScreenFnObj._isFirstScreen = false;
-        firstScreenFnObj._execId = execId;
-        Object.assign(firstScreenFnObj, fnObj);
-      }
       continue;
     }
     for (const index of firstScreenFnObj._delayIndices) {

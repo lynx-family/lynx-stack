@@ -89,6 +89,9 @@ export function prepareMainThreadDynamicAttrSlotsForNative(
   }
   let nativeSlots: SerializableValue[] | undefined;
   for (const [attrSlotIndex, kind] of slotKinds) {
+    if (kind === 'mt-event' && attributeSlots[attrSlotIndex] != null) {
+      retainMainThreadBackgroundFunctionCtx((attributeSlots[attrSlotIndex] as MTEventNativeWrapper).value);
+    }
     if (kind !== 'mt-ref') {
       continue;
     }

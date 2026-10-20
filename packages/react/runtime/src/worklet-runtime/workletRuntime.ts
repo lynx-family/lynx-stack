@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
-import type { ClosureValueType, RunWorkletOptions, Worklet, WorkletRefImpl } from './bindings/types.js';
+import type { ClosureValueType, JsFnHandle, RunWorkletOptions, Worklet, WorkletRefImpl } from './bindings/types.js';
 import { RunWorkletSource } from './bindings/types.js';
 import { initRunOnBackgroundDelay } from './delayRunOnBackground.js';
 import { delayExecUntilJsReady, initEventDelay } from './delayWorkletEvent.js';
@@ -17,6 +17,8 @@ import { profile } from './utils/profile.js';
 import { getFromWorkletRefMap, initWorkletRef } from './workletRef.js';
 
 function initWorklet(): void {
+  const previousManager = globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager;
+  previousManager?.dispose();
   globalThis.lynxWorkletImpl = {
     _workletMap: {},
     _refImpl: initWorkletRef(),
@@ -28,7 +30,7 @@ function initWorklet(): void {
   };
 
   if (isRunOnBackgroundEnabled()) {
-    globalThis.lynxWorkletImpl._jsFunctionLifecycleManager = new JsFunctionLifecycleManager();
+    globalThis.lynxWorkletImpl._jsFunctionLifecycleManager = new JsFunctionLifecycleManager(previousManager);
   }
 
   globalThis.registerWorklet = registerWorklet;
@@ -58,6 +60,10 @@ function runWorklet(ctx: Worklet, params: ClosureValueType[], options?: RunWorkl
   if (!validateWorklet(ctx)) {
     return;
   }
+
+  const localCtx = lynxWorkletImpl._jsFunctionLifecycleManager?.resolveWorkletCtx(ctx);
+  if (ctx._runtimeCtxId !== undefined && !localCtx) return;
+  ctx = localCtx ?? ctx;
 
   if (__DEV__) {
     if (options?.source === RunWorkletSource.EVENT && Array.isArray(params)) {
@@ -211,13 +217,13 @@ const transformWorkletInner = (
       if (obj === value && obj !== ctx) obj = copyAccessorCapture(obj);
       obj = replaceCapturedProperty(obj, value, key, transformedSubObj);
     }
-    const isJsFn = '_jsFnId' in subObj;
+    const isJsFn = '_jsFnId' in subObj || '_isFirstScreen' in subObj;
     if (isJsFn) {
-      (subObj as Record<string, ClosureValueType>)['_execId'] = (ctx as Worklet)._execId;
-      lynxWorkletImpl._jsFunctionLifecycleManager?.addRef(
-        (ctx as Worklet)._execId!,
-        subObj,
+      const handle = lynxWorkletImpl._jsFunctionLifecycleManager?.materializeHandle(
+        (ctx as Worklet)._execId,
+        subObj as JsFnHandle,
       );
+      if (handle) obj = replaceCapturedProperty(obj, value, key, handle);
       continue;
     }
   }

@@ -37,6 +37,7 @@ export type MainThreadRefInitValuePatch = (
 )[];
 
 export interface Worklet {
+  _runtimeCtxId?: number;
   _wkltId: string;
   _workletType?: string;
   _c?: Record<string, ClosureValueType>;

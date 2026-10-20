@@ -90,3 +90,13 @@ describe.each([0, 1, 2])('hydration at nesting depth %i', (depth) => {
     expect(globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.delayedBackgroundFunctionArray).toHaveLength(0);
   });
 });
+
+it('preserves handle metadata when background-function lifecycle support is unavailable', () => {
+  delete globalThis.lynxWorkletImpl._jsFunctionLifecycleManager;
+  const oldHandle = { _isFirstScreen: true };
+  const descriptor = { _jsFnId: 3 };
+  const firstScreen = { _wkltId: 'legacy', _jsFn: { callback: oldHandle } };
+  const background = { _wkltId: 'legacy', _execId: 8, _jsFn: { callback: descriptor } };
+  onWorkletCtxUpdate(background, firstScreen, true, {});
+  expect(oldHandle).toMatchObject({ _isFirstScreen: false, _jsFnId: 3, _execId: 8 });
+});

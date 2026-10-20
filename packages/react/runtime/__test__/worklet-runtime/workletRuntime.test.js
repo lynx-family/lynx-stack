@@ -61,6 +61,26 @@ describe('Worklet', () => {
     if (kind === 'metadata') expect(value.nested).toEqual({ _wvid: 999 });
   });
 
+  it('executes copied native descriptors through the local owner and shares captured handles', () => {
+    initWorklet();
+    registerWorklet('main-thread', 'background-owner', function() {
+      return this._jsFn;
+    });
+    const ctx = { _wkltId: 'background-owner', _execId: 3, _jsFn: { a: { _jsFnId: 7 }, b: { _jsFnId: 7 } } };
+    lynxWorkletImpl._jsFunctionLifecycleManager.retainWorkletCtx(ctx);
+    const nativeDescriptor = JSON.parse(JSON.stringify(ctx));
+    const first = runWorklet(nativeDescriptor, []);
+    expect(first.a).toBe(first.b);
+    expect(first.a).toBe(ctx._jsFn.a);
+    expect(runWorklet(JSON.parse(JSON.stringify(nativeDescriptor)), [])).toBe(first);
+    expect(lynxWorkletImpl._jsFunctionLifecycleManager.execIdRefCount.get(3)).toBe(2);
+    initWorklet();
+    const fn = vi.fn();
+    registerWorklet('main-thread', 'background-owner', fn);
+    expect(runWorklet(nativeDescriptor, [])).toBeUndefined();
+    expect(fn).not.toHaveBeenCalled();
+  });
+
   it('worklet should be called', () => {
     initWorklet();
 

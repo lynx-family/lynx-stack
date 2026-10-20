@@ -53,6 +53,9 @@ function installJsFunctionLifecycleManager(): {
     ...previousWorkletImpl,
     _jsFunctionLifecycleManager: {
       addRef,
+      retainWorkletCtx: (ctx: { _execId?: number }) => {
+        if (ctx._execId !== undefined) addRef(ctx._execId, ctx);
+      },
     },
   } as typeof globalThis.lynxWorkletImpl;
   return {

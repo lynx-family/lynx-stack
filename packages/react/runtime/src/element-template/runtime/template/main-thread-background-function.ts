@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { clearDelayedRunOnBackgroundFunctions, retainWorkletCtx } from '@lynx-js/react/worklet-runtime/bindings';
+import { clearDelayedRunOnBackgroundFunctions } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { createBackgroundFunctionHandle } from '../../../core/background-function/handle.js';
 import {
@@ -11,10 +11,10 @@ import {
   runOnBackground,
 } from '../../../core/background-function/run-on-background.js';
 import { resetFunctionCallReturnListener } from '../../../core/thread-function-call/return-value.js';
-import { isRunOnBackgroundEnabled } from '../../../worklet-runtime/jsFunctionLifecycle.js';
+import type { Worklet } from '../../../worklet-runtime/bindings/types.js';
+import { JsFunctionLifecycleManager, isRunOnBackgroundEnabled } from '../../../worklet-runtime/jsFunctionLifecycle.js';
 
 type BackgroundFunctionCtx = Parameters<typeof registerBackgroundFunctionCtx>[0];
-type RetainableMainThreadCtx = Parameters<typeof retainWorkletCtx>[0];
 
 interface MainThreadBackgroundFunctionCtx {
   _wkltId: string;
@@ -34,7 +34,7 @@ export function registerMainThreadBackgroundFunctionCtx(ctx: MainThreadBackgroun
 }
 
 export function retainMainThreadBackgroundFunctionCtx(ctx: MainThreadBackgroundFunctionCtx): void {
-  retainWorkletCtx(ctx as RetainableMainThreadCtx);
+  globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager?.retainWorkletCtx(ctx as Worklet);
 }
 
 export function resetElementTemplateBackgroundFunctionRuntime(): void {
@@ -43,6 +43,11 @@ export function resetElementTemplateBackgroundFunctionRuntime(): void {
 }
 
 export function resetElementTemplateMainThreadBackgroundFunctionRuntime(): void {
+  const manager = globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager;
+  if (manager) {
+    manager.dispose();
+    globalThis.lynxWorkletImpl._jsFunctionLifecycleManager = new JsFunctionLifecycleManager(manager);
+  }
   clearDelayedRunOnBackgroundFunctions();
   resetFunctionCallReturnListener();
 }
