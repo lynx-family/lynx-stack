@@ -114,7 +114,7 @@ function createBackgroundApp(initial: Compilation, appId: string) {
   const webpackRequire = vm['backgroundRequire'];
   const route = [...compilation.modules].find(module =>
     module.layer === 'react:background'
-    && module.nameForCondition()?.endsWith('/route.js')
+    && path.basename(module.nameForCondition() ?? '') === 'route.js'
   )!;
   const routeId = compilation.chunkGraph.getModuleId(route)!;
   for (const chunk of compilation.chunkGraph.getModuleChunksIterable(route)) {
