@@ -104,11 +104,11 @@ describe('jsFunctionLifecycle', () => {
   it('shares local handles within one execution without sharing across executions', () => {
     const manager = new JsFunctionLifecycleManager();
     const descriptor = { _jsFnId: 7 };
-    const first = manager.materializeHandle(3, descriptor);
+    const first = manager.materializeHandle(3, descriptor, descriptor);
     expect(first).not.toBe(descriptor);
-    expect(manager.materializeHandle(3, { ...descriptor })).toBe(first);
-    expect(manager.materializeHandle(3, first)).toBe(first);
-    const second = manager.materializeHandle(4, first);
+    expect(manager.materializeHandle(3, { ...descriptor }, descriptor)).toBe(first);
+    expect(manager.materializeHandle(3, first, descriptor)).toBe(first);
+    const second = manager.materializeHandle(4, first, descriptor);
     expect(second).not.toBe(first);
     expect(first._execId).toBe(3);
     expect(second._execId).toBe(4);

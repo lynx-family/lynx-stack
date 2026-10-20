@@ -25,7 +25,7 @@ class JsFunctionLifecycleManager {
   private nextContextId: number;
   private contextRegistry: FinalizationRegistry<number>;
   private handles = new Map<number, Map<number, WeakRef<JsFnHandle>>>();
-  private firstScreenHandles = new WeakMap<object, JsFnHandle>();
+  private firstScreenHandles = new WeakMap<object, WeakMap<object, JsFnHandle>>();
   private localHandles = new WeakSet<object>();
 
   constructor(previous?: JsFunctionLifecycleManager) {
@@ -63,17 +63,22 @@ class JsFunctionLifecycleManager {
     return ctx._runtimeCtxId === undefined ? ctx : this.contexts.get(ctx._runtimeCtxId)?.deref();
   }
 
-  materializeHandle(execId: number | undefined, descriptor: JsFnHandle): JsFnHandle {
+  materializeHandle(execId: number | undefined, descriptor: JsFnHandle, owner: object): JsFnHandle {
     if (this.localHandles.has(descriptor) && (execId === undefined || descriptor._execId === execId)) {
       if (execId !== undefined) this.addRef(execId, descriptor);
       return descriptor;
     }
     if (execId === undefined) {
-      let handle = this.firstScreenHandles.get(descriptor);
+      let handles = this.firstScreenHandles.get(owner);
+      if (!handles) {
+        handles = new WeakMap<object, JsFnHandle>();
+        this.firstScreenHandles.set(owner, handles);
+      }
+      let handle = handles.get(descriptor);
       if (!handle) {
         handle = { ...descriptor };
         this.localHandles.add(handle);
-        this.firstScreenHandles.set(descriptor, handle);
+        handles.set(descriptor, handle);
       }
       return handle;
     }
