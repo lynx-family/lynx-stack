@@ -231,7 +231,10 @@ describe('startHotDevServer', () => {
       );
       start(coordinator);
       onHotUpdate('next-hash');
-      await vi.advanceTimersByTimeAsync(5000);
+      await vi.advanceTimersByTimeAsync(9999);
+      expect(reloadPage).not.toBeCalled();
+      expect(coordinator.stop).not.toBeCalled();
+      await vi.advanceTimersByTimeAsync(1);
       expect(reloadPage).toBeCalledTimes(1);
       expect(coordinator.stop).toBeCalledTimes(1);
       complete!(['late']);
