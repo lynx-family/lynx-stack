@@ -108,7 +108,6 @@ export function installElementTemplateHydrationListener(): void {
         const delayedRunOnMainThreadPayload = hasDelayedRunOnMainThread
           ? takeDelayedRunOnMainThreadData()
           : undefined;
-        sendMTRefInitValueToMainThread();
         const pipelineOptions = globalPipelineOptions;
         if (pipelineOptions) {
           globalCommitContext.flushOptions.pipelineOptions = pipelineOptions;
@@ -122,6 +121,7 @@ export function installElementTemplateHydrationListener(): void {
         }
         markTiming('packChangesStart');
         try {
+          sendMTRefInitValueToMainThread();
           if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
             console.alog?.(
               '[ReactLynxDebug] ElementTemplate hydrate update commands:\n'

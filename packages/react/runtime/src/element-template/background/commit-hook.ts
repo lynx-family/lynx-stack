@@ -159,7 +159,17 @@ export function installElementTemplateCommitHook(): void {
   hook(options, COMMIT, (originalCommit, vnode, commitQueue) => {
     if (__BACKGROUND__) {
       clearElementTemplateRenderScope();
-      sendMTRefInitValueToMainThread();
+      try {
+        sendMTRefInitValueToMainThread();
+      } catch (error) {
+        const removedSubtreesAwaitingTeardown = takeRemovedSubtreesForPostDispatchTeardown();
+        dropFunctionCallReturnIds(takeDelayedRunOnMainThreadData().map(data => data.resolveId));
+        clearPendingRefs();
+        resetGlobalCommitContext();
+        setPipeline(undefined);
+        scheduleElementTemplateRemovedSubtreeCleanup(removedSubtreesAwaitingTeardown);
+        throw error;
+      }
     }
 
     if (__BACKGROUND__ && !hasHydrated && hasPendingRefs()) {
