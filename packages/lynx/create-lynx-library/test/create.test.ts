@@ -905,6 +905,12 @@ StorageModuleNapi.setValue('key', 123);
     expect(read(dir, 'android/CMakeLists.txt')).toContain(
       'lynx_primjs_napi_adapter',
     );
+    expect(read(dir, 'android/build.gradle.kts')).toContain(
+      '"**/libnapi.so"',
+    );
+    expect(read(dir, 'android/build.gradle.kts')).toContain(
+      '"**/libnapi_adapter.so"',
+    );
     expect(read(dir, 'ios/napi-library.podspec')).toContain(
       's.dependency \'LynxWeakNodeAPI/core\'',
     );
@@ -1171,6 +1177,12 @@ StorageModuleNapi.setValue('key', 123);
     );
     expect(read(dir, 'README.md')).toContain('`android/`');
     expect(read(dir, 'README.md')).not.toContain('`ios/`');
+    expect(read(dir, 'android/build.gradle.kts')).not.toContain(
+      '"**/libnapi.so"',
+    );
+    expect(read(dir, 'android/build.gradle.kts')).not.toContain(
+      '"**/libnapi_adapter.so"',
+    );
   });
 
   it('documents the shim only for selected NAPI mobile platforms', () => {

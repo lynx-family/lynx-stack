@@ -602,6 +602,7 @@ function createTemplateReplacements(
     ANDROID_NAPI_DEFAULT_CONFIG: androidNapiDefaultConfig(context),
     ANDROID_NAPI_DEPENDENCIES: androidNapiDependencies(context),
     ANDROID_NAPI_EXTERNAL_NATIVE_BUILD: androidNapiExternalNativeBuild(context),
+    ANDROID_NAPI_PACKAGING: androidNapiPackaging(context),
     ANDROID_NAPI_TASK_WIRING: androidNapiTaskWiring(context),
     ANDROID_PLATFORM_DEPENDENCIES: androidPlatformDependencies(context),
     IOS_SERVICE_API_DEPENDENCY: iosServiceApiDependency(context),
@@ -1019,6 +1020,23 @@ function androidNapiDependencies(context: TemplateContext): string {
   return `
   implementation("org.lynxsdk.lynx:primjs:${'$'}lynxPrimjsVersion")
   primjsNativeAar("org.lynxsdk.lynx:primjs:${'$'}lynxPrimjsVersion@aar")`;
+}
+
+function androidNapiPackaging(context: TemplateContext): string {
+  if (!hasAndroidNapiNativeModule(context)) {
+    return '';
+  }
+
+  return `
+
+  packaging {
+    jniLibs {
+      excludes += setOf(
+        "**/libnapi.so",
+        "**/libnapi_adapter.so",
+      )
+    }
+  }`;
 }
 
 function androidNapiTaskWiring(context: TemplateContext): string {
