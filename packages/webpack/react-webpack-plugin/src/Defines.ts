@@ -133,11 +133,7 @@ export function renderDefinesModule(
           imports.set(key, alias);
           const binding = namespace
             ? `* as ${alias}`
-            : `{ ${
-              /^[a-z_$][\w$]*$/i.test(imported)
-                ? imported
-                : JSON.stringify(imported)
-            } as ${alias} }`;
+            : `{ ${JSON.stringify(imported)} as ${alias} }`;
           prelude.push(
             `import ${binding} from ${JSON.stringify(source)};`,
           );

@@ -220,7 +220,7 @@ describe('renderDefinesModule', () => {
         },
       ],
     }]);
-    expect(code).toContain('import { default as __lynxDefineImport0 }');
+    expect(code).toContain('import { "default" as __lynxDefineImport0 }');
     expect(code).toContain('import * as __lynxDefineImport1');
     expect(code).toContain('const defaultValue = __lynxDefineImport0;');
     expect(code).toContain('const namespaceValue = __lynxDefineImport1;');
@@ -272,7 +272,7 @@ describe('renderDefinesModule', () => {
     ]);
     expect(code.match(/from "custom-runtime\/init"/g)).toHaveLength(1);
     expect(code).toContain(
-      'import { registerWorklet as __lynxDefineImport1 } from "custom-runtime/init";',
+      'import { "registerWorklet" as __lynxDefineImport1 } from "custom-runtime/init";',
     );
     expect(code).toContain(
       '// a\n{\nconst register = __lynxDefineImport1;\nregister("a");\n}',
