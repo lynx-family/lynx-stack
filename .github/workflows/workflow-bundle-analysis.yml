@@ -54,15 +54,7 @@ jobs:
           RSPEEDY_BUNDLE_ANALYSIS: 1
         run: |
           pnpm --filter ${{ matrix.project.path }} run build
-      - name: Prepare RelativeCI artifact
-        env:
-          WEBPACK_STATS_FILE: ${{ matrix.project.path }}/dist/stats.json
-        run: |
-          mkdir -p "$RUNNER_TEMP/relative-ci-artifacts"
-          cp "$WEBPACK_STATS_FILE" "$RUNNER_TEMP/relative-ci-artifacts/webpack-stats.json"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      - uses: relative-ci/agent-upload-artifact-action@a2b5741b4f7e6a989c84ec1a3059696b23c152e5 #v2
         with:
-          name: ${{ matrix.project.name }}-relative-ci-artifacts
-          path: ${{ runner.temp }}/relative-ci-artifacts
-          retention-days: 90
-          if-no-files-found: error
+          artifactName: ${{ matrix.project.name }}-relative-ci-artifacts
+          webpackStatsFile: ${{ matrix.project.path }}/dist/stats.json
