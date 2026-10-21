@@ -29,6 +29,8 @@ export interface Site {
   packagePage: (name: string) => string;
   /** The route of every package that has a section of its own, by name. */
   ownSections: Record<string, string>;
+  /** Additional package pages to generate without adding them to shownPackages. */
+  additionalPackages?: string[];
   /** The top navigation, by the section each entry opens. */
   nav: { text: Record<Locale, string>; route: string; active?: string }[];
   /** The sidebar of `/api`, one entry per section, in order. */
@@ -59,6 +61,7 @@ export const LYNX_STACK: Site = {
     '@lynx-js/react': 'react',
     '@lynx-js/genui': 'genui',
   },
+  additionalPackages: ['@lynx-js/testing-environment'],
   configReference: {
     plugin: '@lynx-js/rsbuild-plugin',
     config: '@lynx-js/rspeedy',

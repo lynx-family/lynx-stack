@@ -16,10 +16,10 @@ pnpm turbo dev --filter @lynx-js/lynx-stack-docs      # http://localhost:3000
 | `api/react`                 | `@lynx-js/react`, grouped by `@group`                    |
 | `api/react/testing-library` | `@lynx-js/react/testing-library`                         |
 | `api/genui`                 | the entry points listed in `packages/genui/typedoc.json` |
-| `api/packages`              | `shown-packages.json` entries without their own section  |
+| `api/packages`              | shown and additional packages without their own section  |
 | `api/build`                 | the Rspeedy `Config` and the `pluginLynx` options        |
 
-Only `shown-packages.json` entries are converted for standalone package pages. This list also retains packages exposed in a consumer's separate navigation, such as `@lynx-js/testing-environment` in lynxjs.org's Testing group. References to known hidden packages are rendered as text instead of links. When an explicit source annotation references a hidden import and resolves to `any`, its source spelling is retained. Unavailable inherited members and inferred types cannot be reconstructed. React, testing-library, GenUI and configuration sections retain their dedicated pages.
+Standalone package pages are generated for `shown-packages.json` entries and `Site.additionalPackages`. Only the shown list is published as the manifest's plugin menu. Additional packages retain pages for a consumer's separate navigation, such as `@lynx-js/testing-environment` in lynxjs.org's Testing group, without duplicating its menu entry. References to known hidden packages are rendered as text instead of links. When an explicit source annotation references a hidden import and resolves to `any`, its source spelling is retained. Unavailable inherited members and inferred types cannot be reconstructed. React, testing-library, GenUI and configuration sections retain their dedicated pages.
 
 Each package is converted with TypeDoc's `packages` strategy, from `src/index.ts` unless its own `typedoc.json` says otherwise. A package without an API gets a page with its links and `package.json` description. The build fails on any TypeDoc warning.
 

@@ -83,3 +83,14 @@ export function shownPackageNames(site: { docs: string }): Set<string> {
   ) as { packages: string[] }[];
   return new Set(groups.flatMap(group => group.packages));
 }
+
+/** Package pages needed by the plugins menu or a consumer's separate navigation. */
+export function generatedPackageNames(site: {
+  docs: string;
+  additionalPackages?: string[];
+}): Set<string> {
+  return new Set([
+    ...shownPackageNames(site),
+    ...site.additionalPackages ?? [],
+  ]);
+}

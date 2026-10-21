@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type { Site } from './site.ts';
-import { ROOT, hasEntryPoint, shownPackageNames } from './workspace.ts';
+import { ROOT, generatedPackageNames, hasEntryPoint } from './workspace.ts';
 import type { WorkspacePackage } from './workspace.ts';
 
 /**
@@ -73,11 +73,11 @@ export function referenceSections(
   site: Site,
   packages: WorkspacePackage[],
 ): Section[] {
-  const shown = shownPackageNames(site);
+  const generated = generatedPackageNames(site);
   return [
     ...site.sections(),
     packagesSection(
-      packages.filter(pkg => shown.has(pkg.name)),
+      packages.filter(pkg => generated.has(pkg.name)),
       site.ownSections,
     ),
   ];

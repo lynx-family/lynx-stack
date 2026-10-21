@@ -22,9 +22,9 @@ import { Translations } from './translate.ts';
 import { pluginApiSection } from './typedoc.ts';
 import {
   LOCALES,
+  generatedPackageNames,
   json,
   publicPackages,
-  shownPackageNames,
   write,
 } from './workspace.ts';
 import type { Locale, WorkspacePackage } from './workspace.ts';
@@ -271,9 +271,9 @@ export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
   const all = publicPackages(site.root);
   const packages = site.packages?.(all) ?? all;
   const rendered = referenceSections(site, packages);
-  const shown = shownPackageNames(site);
+  const generated = generatedPackageNames(site);
   const published = packages.filter(pkg =>
-    shown.has(pkg.name) || pkg.name in site.ownSections
+    generated.has(pkg.name) || pkg.name in site.ownSections
   );
   return [
     {

@@ -10,11 +10,5 @@
       "@lynx-js/lynx-bundle-rslib-config",
       "@lynx-js/rspeedy"
     ]
-  },
-  {
-    "group": "Testing",
-    "packages": [
-      "@lynx-js/testing-environment"
-    ]
   }
 ]

@@ -28,7 +28,7 @@ import type { Site } from './site.ts';
 import { hidePlatformTags } from './tags.ts';
 import type { Translations } from './translate.ts';
 import { assertNoWarnings } from './warnings.ts';
-import { shownPackageNames } from './workspace.ts';
+import { generatedPackageNames } from './workspace.ts';
 import type { Locale, WorkspacePackage } from './workspace.ts';
 import { renameWrappedPackages } from './wrappers.ts';
 
@@ -74,10 +74,10 @@ export function pluginApiSection(
       }
       app.options.setValue('lang', locale);
       app.internationalization.setLocale(locale);
-      const shown = shownPackageNames(site);
+      const generated = generatedPackageNames(site);
       const hidden = new Set(
         packages.filter(pkg =>
-          !shown.has(pkg.name) && !(pkg.name in site.ownSections)
+          !generated.has(pkg.name) && !(pkg.name in site.ownSections)
         ).map(pkg => pkg.name),
       );
       rewritePackageReferences(
