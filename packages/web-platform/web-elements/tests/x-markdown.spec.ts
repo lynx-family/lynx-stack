@@ -4,8 +4,10 @@ import type { Page } from '@playwright/test';
 const markdownInitialRenderTimeout = 5_000;
 const markdownRenderTimeout = 15_000;
 
-const goto = async (page: Page, fixtureName: string) => {
-  await page.goto(`tests/fixtures/${fixtureName}.html`, { waitUntil: 'load' });
+const goto = async (page: Page, fixtureName: string, query = '') => {
+  await page.goto(`tests/fixtures/${fixtureName}.html${query}`, {
+    waitUntil: 'load',
+  });
   await page.evaluate(() => document.fonts.ready);
 };
 
@@ -696,13 +698,11 @@ test.describe('x-markdown', () => {
 
   for (const typewriter of [false, true]) {
     test(`should inject block views via pre-set slots${typewriter ? ' in typewriter mode' : ''}`, async ({ page }) => {
-      await page.goto(
-        `tests/fixtures/x-markdown/blockview.html${
-          typewriter ? '?typewriter' : ''
-        }`,
-        { waitUntil: 'load' },
+      await goto(
+        page,
+        'x-markdown/blockview',
+        typewriter ? '?typewriter' : '',
       );
-      await page.evaluate(() => document.fonts.ready);
       const markdown = page.locator('x-markdown');
       const root = markdown.locator('#markdown-root');
       await expect(root.locator('slot')).toHaveCount(3);
@@ -737,6 +737,61 @@ test.describe('x-markdown', () => {
       await expect(root.locator('slot')).toHaveAttribute('name', 'dil-2');
       await expect(root.locator('img')).toHaveCount(0);
       await expect(markdown.locator('#second')).toBeVisible();
+    });
+  }
+
+  test('should preserve embedded view nodes when appending content', async ({ page }) => {
+    await goto(page, 'x-markdown/blockview');
+    const markdown = page.locator('x-markdown');
+    const root = markdown.locator('#markdown-root');
+    await expect(root.locator('slot')).toHaveCount(3);
+    const originalNodes = await root.evaluateHandle((el) => [
+      ...el.children,
+      ...el.querySelectorAll('slot'),
+    ]);
+
+    await markdown.evaluate((el) =>
+      el.setAttribute(
+        'content',
+        `${el.getAttribute('content')}\n\nAppended paragraph`,
+      )
+    );
+    await expect(root.locator('p').last()).toHaveText('Appended paragraph');
+    expect(
+      await originalNodes.evaluate((nodes) =>
+        nodes.every((node) => node.isConnected)
+      ),
+    ).toBe(true);
+    await expect(root.locator('slot')).toHaveCount(3);
+    await expect(markdown.locator('#first')).toBeVisible();
+    await expect(markdown.locator('#badge')).toBeVisible();
+    await originalNodes.dispose();
+  });
+
+  for (
+    const [protocol, id] of [['blockview', 'dil-1'], [
+      'inlineview',
+      'badge',
+    ]] as const
+  ) {
+    test(`should keep the typewriter cursor visible after an assigned ${protocol} slot`, async ({ page }) => {
+      await goto(page, 'x-markdown/blockview');
+      const markdown = page.locator('x-markdown');
+      const root = markdown.locator('#markdown-root');
+      await expect(root.locator('slot')).toHaveCount(3);
+
+      await markdown.evaluate((el, content) => {
+        el.setAttribute('content', content);
+        el.setAttribute('content-complete', 'false');
+        el.setAttribute('animation-paused', 'true');
+        el.setAttribute('initial-animation-step', String(content.length));
+        el.setAttribute('animation-type', 'typewriter');
+      }, `![](${protocol}://${id})`);
+
+      await expect(root.locator('slot')).toHaveCount(1);
+      await expect(root.locator('.md-typewriter-cursor')).toBeVisible();
+      await expect(root.locator('slot .md-typewriter-cursor')).toHaveCount(0);
+      await expect(root.locator('slot')).toHaveAttribute('name', id);
     });
   }
 
@@ -868,19 +923,9 @@ test.describe('x-markdown', () => {
 
   test('should render typewriter cursor after trailing text node', async ({ page }) => {
     await goto(page, 'x-markdown/typewriter-trailing-text');
-    await page.waitForTimeout(500);
-
-    const isCorrectParent = await page.evaluate(() => {
-      const el = document.querySelector('x-markdown')!;
-      const root = el.shadowRoot as ShadowRoot;
-      const cursor = root.querySelector('.md-typewriter-cursor');
-      if (!cursor) return false;
-
-      const parent = cursor.parentElement;
-      return parent && parent.tagName === 'P';
-    });
-
-    expect(isCorrectParent).toBe(true);
+    await expect(
+      page.locator('x-markdown').locator('p > .md-typewriter-cursor'),
+    ).toBeVisible();
   });
 
   test('should not hide cursor when content-complete is false', async ({ page }) => {

@@ -737,8 +737,8 @@ export class XMarkdownAttributes {
       this.#updateAppendedContent(root, html);
     } else {
       root.innerHTML = html;
+      this.#injectEmbeddedViews(root);
     }
-    this.#injectEmbeddedViews(root);
     this.#renderedContent = content;
     this.#dispatchParseEnd();
     this.#applyPostRenderPolicies(root);
@@ -747,6 +747,7 @@ export class XMarkdownAttributes {
   #updateAppendedContent(root: HTMLElement, html: string) {
     const template = document.createElement('template');
     template.innerHTML = html;
+    this.#injectEmbeddedViews(template.content);
     let previous = root.firstChild;
     while (
       previous && template.content.firstChild
@@ -1228,7 +1229,7 @@ export class XMarkdownAttributes {
     this.#scheduleRender();
   }
 
-  #injectEmbeddedViews(root: HTMLElement) {
+  #injectEmbeddedViews(root: HTMLElement | DocumentFragment) {
     try {
       const imgs = Array.from(
         root.querySelectorAll('img'),
@@ -1348,9 +1349,10 @@ export class XMarkdownAttributes {
       if (
         lastNode
         && lastNode.nodeType === Node.ELEMENT_NODE
-        && !['IMG', 'BR', 'HR', 'INPUT', 'TABLE', 'PRE', 'CODE'].includes(
-          (lastNode as HTMLElement).tagName,
-        )
+        && !['IMG', 'BR', 'HR', 'INPUT', 'TABLE', 'PRE', 'CODE', 'SLOT']
+          .includes(
+            (lastNode as HTMLElement).tagName,
+          )
       ) {
         target = lastNode as HTMLElement;
       } else {
