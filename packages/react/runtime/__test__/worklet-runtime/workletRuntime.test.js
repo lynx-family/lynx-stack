@@ -67,6 +67,7 @@ describe('Worklet', () => {
       return this._jsFn;
     });
     const ctx = { _wkltId: 'background-owner', _execId: 3, _jsFn: { a: { _jsFnId: 7 }, b: { _jsFnId: 7 } } };
+    lynxWorkletImpl._jsFunctionLifecycleManager.prepareWorkletCtx(ctx);
     lynxWorkletImpl._jsFunctionLifecycleManager.retainWorkletCtx(ctx);
     const nativeDescriptor = JSON.parse(JSON.stringify(ctx));
     const first = runWorklet(nativeDescriptor, []);
@@ -79,6 +80,20 @@ describe('Worklet', () => {
     registerWorklet('main-thread', 'background-owner', fn);
     expect(runWorklet(nativeDescriptor, [])).toBeUndefined();
     expect(fn).not.toHaveBeenCalled();
+  });
+
+  it.each(['2.15', '2.16'])('prepares captured execution metadata without a lifecycle manager on SDK %s', (version) => {
+    SystemInfo.lynxSdkVersion = version;
+    initWorklet();
+    lynxWorkletImpl._jsFunctionLifecycleManager = undefined;
+    registerWorklet('main-thread', 'fallback', function() {
+      return this._jsFn.callback;
+    });
+    const descriptor = { _jsFnId: 7 };
+    const ctx = { _wkltId: 'fallback', _execId: 3, _jsFn: { callback: descriptor } };
+    expect(runWorklet(ctx, [])).toEqual({ _jsFnId: 7, _execId: 3 });
+    expect(ctx._jsFn.callback).toEqual({ _jsFnId: 7, _execId: 3 });
+    expect(descriptor).toEqual({ _jsFnId: 7 });
   });
 
   it('worklet should be called', () => {

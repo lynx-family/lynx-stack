@@ -48,7 +48,7 @@ class JsFunctionLifecycleManager {
     );
   }
 
-  retainWorkletCtx(ctx: Worklet): void {
+  prepareWorkletCtx(ctx: Worklet): void {
     if (!this.contextIds.has(ctx)) {
       const id = ++this.nextContextId;
       this.contextRegistry.register(ctx, id);
@@ -56,11 +56,18 @@ class JsFunctionLifecycleManager {
       ctx._runtimeCtxId = id;
       this.contexts.set(id, new WeakRef(ctx));
     }
+  }
+
+  retainWorkletCtx(ctx: Worklet): void {
     if (ctx._execId !== undefined) this.addRef(ctx._execId, ctx);
   }
 
   resolveWorkletCtx(ctx: Worklet): Worklet | undefined {
     return ctx._runtimeCtxId === undefined ? ctx : this.contexts.get(ctx._runtimeCtxId)?.deref();
+  }
+
+  isMaterializedHandle(handle: JsFnHandle): boolean {
+    return this.localHandles.has(handle);
   }
 
   materializeHandle(execId: number | undefined, descriptor: JsFnHandle, owner: object): JsFnHandle {

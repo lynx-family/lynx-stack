@@ -41,7 +41,7 @@ describe('processGesture', () => {
     vi.stubGlobal('lynxWorkletImpl', {
       _hydrateCtx: hydrateCtx,
       _jsFunctionLifecycleManager: {
-        addRef: vi.fn(),
+        retainWorkletCtx: vi.fn(),
       },
       _eventDelayImpl: {
         runDelayedWorklet: vi.fn(),
@@ -248,7 +248,7 @@ describe('processGesture', () => {
     vi.stubGlobal('lynxWorkletImpl', {
       _hydrateCtx: hydrateCtx,
       _jsFunctionLifecycleManager: {
-        addRef: vi.fn(),
+        retainWorkletCtx: vi.fn(),
       },
       _eventDelayImpl: {
         runDelayedWorklet: vi.fn(),

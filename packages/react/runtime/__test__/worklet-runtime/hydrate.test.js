@@ -98,5 +98,6 @@ it('preserves handle metadata when background-function lifecycle support is unav
   const firstScreen = { _wkltId: 'legacy', _jsFn: { callback: oldHandle } };
   const background = { _wkltId: 'legacy', _execId: 8, _jsFn: { callback: descriptor } };
   onWorkletCtxUpdate(background, firstScreen, true, {});
-  expect(oldHandle).toMatchObject({ _isFirstScreen: false, _jsFnId: 3, _execId: 8 });
+  expect(oldHandle).toEqual({ _isFirstScreen: true });
+  expect(background._jsFn.callback).toEqual({ _jsFnId: 3, _execId: 8 });
 });

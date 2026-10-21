@@ -129,12 +129,15 @@ function hydrateDelayRunOnBackgroundTasks(
     fnObj._execId = execId;
     fnObjs[fnName] = fnObj;
     const firstScreenFnObj: JsFnHandle | undefined = firstScreenFnObjs[fnName];
-    if (firstScreenFnObj) {
-      Object.assign(firstScreenFnObj, fnObj);
-      firstScreenFnObj._isFirstScreen = false;
-      lynxWorkletImpl._jsFunctionLifecycleManager?.addRef(execId, firstScreenFnObj);
+    // Shared, unused first-screen descriptors are transport data, not local owners.
+    // Escaped functions may own a materialized handle without having queued a call.
+    if (!firstScreenFnObj || !lynxWorkletImpl._jsFunctionLifecycleManager?.isMaterializedHandle(firstScreenFnObj)) {
+      continue;
     }
-    if (!firstScreenFnObj?._delayIndices) {
+    Object.assign(firstScreenFnObj, fnObj);
+    firstScreenFnObj._isFirstScreen = false;
+    lynxWorkletImpl._jsFunctionLifecycleManager.addRef(execId, firstScreenFnObj);
+    if (!firstScreenFnObj._delayIndices) {
       continue;
     }
     for (const index of firstScreenFnObj._delayIndices) {

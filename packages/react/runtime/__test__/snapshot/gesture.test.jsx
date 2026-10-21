@@ -21,7 +21,7 @@ beforeAll(() => {
     },
     _hydrateCtx: vi.fn(),
     _jsFunctionLifecycleManager: {
-      addRef: vi.fn(),
+      retainWorkletCtx: vi.fn(),
     },
     _eventDelayImpl: {
       runDelayedWorklet: vi.fn(),
@@ -42,7 +42,7 @@ beforeEach(() => {
     },
     _hydrateCtx: vi.fn(),
     _jsFunctionLifecycleManager: {
-      addRef: vi.fn(),
+      retainWorkletCtx: vi.fn(),
     },
     _eventDelayImpl: {
       runDelayedWorklet: vi.fn(),

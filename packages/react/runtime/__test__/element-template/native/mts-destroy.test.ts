@@ -97,6 +97,7 @@ describe('mts-destroy', () => {
     const previousWorkletImpl = globalThis.lynxWorkletImpl;
     const previous = new JsFunctionLifecycleManager();
     const oldCtx = { _wkltId: 'tap', _execId: 3 };
+    previous.prepareWorkletCtx(oldCtx);
     previous.retainWorkletCtx(oldCtx);
     globalThis.lynxWorkletImpl = {
       ...previousWorkletImpl,
@@ -107,6 +108,7 @@ describe('mts-destroy', () => {
       onMtsDestruction();
       const current = globalThis.lynxWorkletImpl._jsFunctionLifecycleManager!;
       const next = { _wkltId: 'tap', _execId: 3 };
+      current.prepareWorkletCtx(next);
       current.retainWorkletCtx(next);
       expect(current).not.toBe(previous);
       expect(current.resolveWorkletCtx(oldCtx)).toBeUndefined();

@@ -119,12 +119,12 @@ describe('jsFunctionLifecycle', () => {
   it('resolves retained context descriptors and never reuses IDs across runtime restarts', () => {
     const manager = new JsFunctionLifecycleManager();
     const ctx = { _wkltId: 'tap' };
-    manager.retainWorkletCtx(ctx);
+    manager.prepareWorkletCtx(ctx);
     expect(manager.resolveWorkletCtx(JSON.parse(JSON.stringify(ctx)))).toBe(ctx);
-    manager.retainWorkletCtx(ctx);
+    manager.prepareWorkletCtx(ctx);
     const replacement = new JsFunctionLifecycleManager(manager);
     const next = { _wkltId: 'tap' };
-    replacement.retainWorkletCtx(next);
+    replacement.prepareWorkletCtx(next);
     expect(next._runtimeCtxId).not.toBe(ctx._runtimeCtxId);
     expect(replacement.resolveWorkletCtx(ctx)).toBeUndefined();
   });
@@ -149,7 +149,7 @@ describe('jsFunctionLifecycle', () => {
     try {
       const manager = new JsFunctionLifecycleManager();
       const owner = { _wkltId: 'tap' };
-      manager.retainWorkletCtx(owner);
+      manager.prepareWorkletCtx(owner);
       const descriptor = JSON.parse(JSON.stringify(owner));
       expect(manager.resolveWorkletCtx(descriptor)).toBe(owner);
       collect(owner._runtimeCtxId);

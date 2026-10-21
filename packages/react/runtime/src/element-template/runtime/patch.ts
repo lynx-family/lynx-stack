@@ -16,7 +16,7 @@ import {
 } from './list/list.js';
 import type { ETListFlushResult, ETListUpdateItem } from './list/list.js';
 import { insertElementTemplateSubtree } from './template/handle.js';
-import { retainMainThreadBackgroundFunctionCtx } from './template/main-thread-background-function.js';
+import { prepareMainThreadBackgroundFunctionCtx } from './template/main-thread-background-function.js';
 import type { MTEventNativeWrapper } from './template/main-thread-event-ctx.js';
 import { elementTemplateRegistry } from './template/registry.js';
 import { TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX } from './template/typed-attributes.js';
@@ -141,7 +141,7 @@ export function applyElementTemplateUpdateCommands(
           continue;
         }
         if (value != null) {
-          retainMainThreadBackgroundFunctionCtx((value as unknown as MTEventNativeWrapper).value);
+          prepareMainThreadBackgroundFunctionCtx((value as unknown as MTEventNativeWrapper).value);
         }
         __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, value);
         updateMainThreadEventAttrSlot(targetId, attrSlotIndex, value, isHydration);
