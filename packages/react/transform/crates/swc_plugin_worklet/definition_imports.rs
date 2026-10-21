@@ -40,3 +40,58 @@ pub fn collect_imports(stmt: &Stmt, imports: &[ImportDecl]) -> Vec<ModuleItem> {
   }
   items
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use swc_core::common::DUMMY_SP;
+  use swc_core::quote;
+
+  #[test]
+  fn excludes_type_only_unused_and_locally_declared_bindings() {
+    let named = |name: &str, is_type_only| {
+      ImportSpecifier::Named(ImportNamedSpecifier {
+        span: DUMMY_SP,
+        local: Ident::new_no_ctxt(name.into(), DUMMY_SP),
+        imported: None,
+        is_type_only,
+      })
+    };
+    let import = ImportDecl {
+      span: DUMMY_SP,
+      phase: ImportPhase::Evaluation,
+      specifiers: vec![named("needed", false)],
+      src: Box::new("./values.js".into()),
+      type_only: false,
+      with: None,
+    };
+    let stmt = quote!("function handler(captured) { return [needed, captured]; }" as Stmt);
+    let collected = collect_imports(
+      &stmt,
+      &[
+        ImportDecl {
+          type_only: true,
+          ..import.clone()
+        },
+        ImportDecl {
+          specifiers: vec![named("needed", true)],
+          ..import.clone()
+        },
+        ImportDecl {
+          specifiers: vec![
+            named("needed", false),
+            named("captured", false),
+            named("unused", false),
+          ],
+          ..import
+        },
+      ],
+    );
+    assert_eq!(collected.len(), 1);
+    let ModuleItem::ModuleDecl(ModuleDecl::Import(import)) = &collected[0] else {
+      panic!("expected a dependency import");
+    };
+    assert_eq!(import.specifiers.len(), 1);
+    assert_eq!(import.specifiers[0].local().sym, "needed");
+  }
+}

@@ -1245,6 +1245,121 @@ mod wasm {
 mod tests {
   use super::*;
 
+  fn worklet_definition(source: &str, filename: &str) -> Define {
+    let result = transform_react_lynx_inner(
+      source.into(),
+      TransformNodiffOptions {
+        filename: filename.into(),
+        worklet: Either::B(WorkletVisitorConfig {
+          target: swc_plugins_shared::target_napi::TransformTarget::JS,
+          custom_global_ident_names: Some(vec!["call".into(), "api".into(), "named".into()]),
+          ..Default::default()
+        }),
+        css_scope: Either::A(false),
+        ..Default::default()
+      },
+    );
+    assert!(result.errors.is_empty(), "{:?}", result.errors);
+    let mut definitions = result.defines_for_worklet.unwrap();
+    assert_eq!(definitions.len(), 1);
+    definitions.remove(0)
+  }
+
+  #[test]
+  fn should_collect_business_imports_for_background_only_worklets() {
+    let definition = worklet_definition(
+      r#"
+import { runOnBackground, useState } from '@lynx-js/react';
+export const handler = () => {
+  'main thread';
+  runOnBackground(() => {})();
+};
+"#,
+      "test.js",
+    );
+    let imports = definition.imports.unwrap();
+    let dependency = imports
+      .iter()
+      .find(|item| item.imported == "runOnBackground")
+      .unwrap();
+    assert_eq!(dependency.source, "@lynx-js/react");
+    assert!(definition
+      .code
+      .contains(&format!("{}(_jsFn1)()", dependency.local)));
+    assert!(!imports.iter().any(|item| item.imported == "useState"));
+    assert_eq!(imports.len(), 2);
+  }
+
+  #[test]
+  fn should_preserve_import_forms_and_rebase_relative_definition_dependencies() {
+    for (filename, expected) in [
+      ("/project/src/test.js", "/project/src/./bridge.js"),
+      ("C:\\project\\src\\test.js", "C:/project/src/./bridge.js"),
+      ("src/test.js", "./src/./bridge.js"),
+      ("test.js", "./bridge.js"),
+    ] {
+      let definition = worklet_definition(
+        r#"
+import call, * as api from './bridge.js';
+import { original as named } from './bridge.js';
+export const handler = () => {
+  'main thread';
+  return [call(), api.value, { named }];
+};
+"#,
+        filename,
+      );
+      let imports = definition.imports.unwrap();
+      let default = imports
+        .iter()
+        .find(|item| item.imported == "default")
+        .unwrap();
+      assert_eq!(default.source, expected);
+      assert_eq!(default.local, "call");
+      assert_eq!(default.namespace, None);
+      let namespace = imports
+        .iter()
+        .find(|item| item.namespace == Some(true))
+        .unwrap();
+      assert_eq!(namespace.imported, "*");
+      assert_eq!(namespace.source, expected);
+      let named = imports
+        .iter()
+        .find(|item| item.imported == "original")
+        .unwrap();
+      assert_eq!(named.source, expected);
+      assert!(definition.code.contains(&named.local));
+    }
+  }
+
+  #[test]
+  fn should_exclude_captured_and_shadowed_imports_from_worklet_dependencies() {
+    for source in [
+      "import { value } from './values.js'; export const handler = () => { 'main thread'; return value; };",
+      "import { runOnBackground } from './bridge.js'; export const handler = (runOnBackground) => { 'main thread'; runOnBackground(() => {})(); };",
+    ] {
+      let definition = worklet_definition(source, "test.js");
+      let imports = definition.imports.unwrap();
+      assert_eq!(imports.len(), 1);
+      assert_eq!(imports[0].imported, "registerWorklet");
+    }
+  }
+
+  #[test]
+  fn should_preserve_string_named_definition_imports() {
+    let definition = worklet_definition(
+      "import { 'string-name' as call } from 'bridge'; export const handler = () => { 'main thread'; return call(); };",
+      "test.js",
+    );
+    let imports = definition.imports.unwrap();
+    let dependency = imports
+      .iter()
+      .find(|item| item.imported == "string-name")
+      .unwrap();
+    assert_eq!(dependency.source, "bridge");
+    assert!(definition.code.contains(&format!("{}()", dependency.local)));
+  }
+
   #[test]
   fn test_syntax_serialize_and_deserialize() {
     use serde_json::json;
