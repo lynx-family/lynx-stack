@@ -1673,6 +1673,7 @@
   "The opt-in [OpenUI Chat library]() uses the official Chat positional contracts and provides a server-safe schema entry.": "可选的 [OpenUI Chat 组件库]() 使用官方 Chat 位置参数约定，并提供可在服务端使用的 schema 入口。",
   "The option `importLoaders` allows you to configure how many loaders before `css-loader` should be applied to `@imported` resources and CSS modules imports.": "`importLoaders` 选项用于配置在 `css-loader` 之前，有多少个 loader 应用于 `@imported` 资源和 CSS Modules 导入。",
   "The optional `constructorOpt` argument accepts a function. If given, all frames\nabove `constructorOpt`, including `constructorOpt`, will be omitted from the\ngenerated stack trace.": "可选参数 `constructorOpt` 接受一个函数。如果传入，生成的堆栈跟踪会省略 `constructorOpt` 及其之上的所有栈帧。",
+  "The options for @lynx-js/css-extract-webpack-plugin!CssExtractRspackPlugin": "@lynx-js/css-extract-webpack-plugin!CssExtractRspackPlugin 的配置选项",
   "The options for ChunkLoadingWebpackPlugin": "ChunkLoadingWebpackPlugin 的选项",
   "The options for LynxEncodePluginOptions": "LynxEncodePluginOptions 的选项",
   "The options for LynxTemplatePlugin": "LynxTemplatePlugin 的选项",

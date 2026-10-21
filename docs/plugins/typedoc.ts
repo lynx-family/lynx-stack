@@ -3,9 +3,22 @@
 // LICENSE file in the root directory of this source tree.
 import type { RspressPlugin } from '@rspress/core';
 import { pluginTypeDoc } from '@rspress/plugin-typedoc';
-import { Reflection, ReflectionKind, RendererEvent } from 'typedoc';
-import type { Application } from 'typedoc';
+import {
+  Converter,
+  Reflection,
+  ReflectionKind,
+  RendererEvent,
+  UnknownType,
+} from 'typedoc';
+import type {
+  Application,
+  Context,
+  DeclarationReflection,
+  ParameterReflection,
+  SignatureReflection,
+} from 'typedoc';
 import { MarkdownPageEvent } from 'typedoc-plugin-markdown';
+import ts from 'typescript';
 
 import { escapeEsmLines } from './mdx.ts';
 import { withPackageLinks } from './packages.ts';
@@ -15,6 +28,7 @@ import type { Site } from './site.ts';
 import { hidePlatformTags } from './tags.ts';
 import type { Translations } from './translate.ts';
 import { assertNoWarnings } from './warnings.ts';
+import { shownPackageNames } from './workspace.ts';
 import type { Locale, WorkspacePackage } from './workspace.ts';
 import { renameWrappedPackages } from './wrappers.ts';
 
@@ -60,7 +74,74 @@ export function pluginApiSection(
       }
       app.options.setValue('lang', locale);
       app.internationalization.setLocale(locale);
-      rewritePackageReferences(app);
+      const shown = shownPackageNames(site);
+      const hidden = new Set(
+        packages.filter(pkg =>
+          !shown.has(pkg.name) && !(pkg.name in site.ownSections)
+        ).map(pkg => pkg.name),
+      );
+      rewritePackageReferences(
+        app,
+        section.out === 'api/packages' ? hidden : undefined,
+      );
+      // Resolve after conversion, when declaration and signature types are assigned.
+      const pending: (() => void)[] = [];
+      const preserve = (
+        context: Context,
+        reflection:
+          | DeclarationReflection
+          | SignatureReflection
+          | ParameterReflection,
+        node: ts.Node | undefined,
+      ) => {
+        if (!node || !('type' in node) || !node.type) return;
+        const annotation = node.type as ts.TypeNode;
+        pending.push(() => {
+          if (
+            annotation.kind === ts.SyntaxKind.AnyKeyword
+            || reflection.type?.type !== 'intrinsic'
+            || reflection.type.name !== 'any'
+          ) return;
+          let unavailable = false;
+          const visit = (part: ts.Node) => {
+            if (ts.isIdentifier(part)) {
+              for (
+                let decl of context.getSymbolAtLocation(part)?.declarations
+                  ?? []
+              ) {
+                while (decl.parent && !ts.isImportDeclaration(decl)) {
+                  decl = decl.parent as ts.Declaration;
+                }
+                if (
+                  ts.isImportDeclaration(decl)
+                  && ts.isStringLiteral(decl.moduleSpecifier)
+                  && hidden.has(decl.moduleSpecifier.text)
+                ) unavailable = true;
+              }
+            }
+            ts.forEachChild(part, visit);
+          };
+          visit(annotation);
+          if (unavailable) {
+            reflection.type = new UnknownType(annotation.getText());
+          }
+        });
+      };
+      app.converter.on(
+        Converter.EVENT_CREATE_DECLARATION,
+        (context, reflection) =>
+          preserve(
+            context,
+            reflection,
+            context.getSymbolFromReflection(reflection)?.declarations?.[0],
+          ),
+      );
+      app.converter.on(Converter.EVENT_CREATE_SIGNATURE, preserve);
+      app.converter.on(Converter.EVENT_CREATE_PARAMETER, preserve);
+      app.converter.on(Converter.EVENT_RESOLVE_BEGIN, () => {
+        for (const apply of pending) apply();
+        pending.length = 0;
+      });
       hidePlatformTags(app);
       if (site.wrappers) renameWrappedPackages(app, site.wrappers);
       app.renderer.on(RendererEvent.BEGIN, (event: RendererEvent) => {

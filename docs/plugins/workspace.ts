@@ -75,3 +75,11 @@ export function write(file: string, content: string): void {
 export function json(value: unknown): string {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
+
+/** The packages for which the site publishes standalone package pages. */
+export function shownPackageNames(site: { docs: string }): Set<string> {
+  const groups = JSON.parse(
+    readFileSync(join(site.docs, 'shown-packages.json'), 'utf8'),
+  ) as { packages: string[] }[];
+  return new Set(groups.flatMap(group => group.packages));
+}

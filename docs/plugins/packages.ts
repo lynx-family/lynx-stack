@@ -125,8 +125,11 @@ function writePackagePages(
 
   const groups = site.groups.map(group => ({
     name: text(group.name),
-    packages: packages.filter(pkg => groupOf(pkg, site) === group.name),
-  }));
+    packages: packages.filter(pkg =>
+      groupOf(pkg, site) === group.name
+      && packageRoute(pkg, site).startsWith('packages/')
+    ),
+  })).filter(group => group.packages.length > 0);
 
   write(
     join(out, '_meta.json'),

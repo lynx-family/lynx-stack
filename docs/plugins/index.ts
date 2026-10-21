@@ -20,7 +20,13 @@ import { LYNX_STACK, contentDir } from './site.ts';
 import type { Site } from './site.ts';
 import { Translations } from './translate.ts';
 import { pluginApiSection } from './typedoc.ts';
-import { LOCALES, json, publicPackages, write } from './workspace.ts';
+import {
+  LOCALES,
+  json,
+  publicPackages,
+  shownPackageNames,
+  write,
+} from './workspace.ts';
 import type { Locale, WorkspacePackage } from './workspace.ts';
 
 /**
@@ -62,7 +68,7 @@ function writeManifest(packages: WorkspacePackage[], site: Site): void {
               LOCALES.map(locale => [locale, `content/${locale}/api/${name}`]),
             ),
           })),
-          // Every package, for a site that groups the pages it does not show.
+          // Only packages with published pages.
           packages: packageGroups(packages, site),
           shownPackages: JSON.parse(
             readFileSync(join(site.docs, 'shown-packages.json'), 'utf8'),
@@ -265,6 +271,10 @@ export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
   const all = publicPackages(site.root);
   const packages = site.packages?.(all) ?? all;
   const rendered = referenceSections(site, packages);
+  const shown = shownPackageNames(site);
+  const published = packages.filter(pkg =>
+    shown.has(pkg.name) || pkg.name in site.ownSections
+  );
   return [
     {
       name: 'lynx:api-reference-clean',
@@ -283,7 +293,7 @@ export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
         pluginApiSection(
           section,
           locale,
-          packages,
+          all,
           translations,
           site,
           section.out === 'api/packages' && site.configReference
@@ -299,7 +309,7 @@ export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
         )
       )
     ),
-    pluginPackagePages(packages, translations, site),
+    pluginPackagePages(published, translations, site),
     {
       name: 'lynx:api-reference-sidebar',
       config(config, _utils, isProd) {
@@ -344,7 +354,7 @@ export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
             }\n`,
           );
         }
-        writeManifest(packages, site);
+        writeManifest(published, site);
         translations.save();
         // `dev` shows the English text of a string the dictionary is missing;
         // a build stops, so it cannot ship.

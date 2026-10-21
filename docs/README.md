@@ -16,12 +16,14 @@ pnpm turbo dev --filter @lynx-js/lynx-stack-docs      # http://localhost:3000
 | `api/react`                 | `@lynx-js/react`, grouped by `@group`                    |
 | `api/react/testing-library` | `@lynx-js/react/testing-library`                         |
 | `api/genui`                 | the entry points listed in `packages/genui/typedoc.json` |
-| `api/packages`              | every other public package of the workspace              |
+| `api/packages`              | `shown-packages.json` entries without their own section  |
 | `api/build`                 | the Rspeedy `Config` and the `pluginLynx` options        |
+
+Only `shown-packages.json` entries are converted for standalone package pages. This list also retains packages exposed in a consumer's separate navigation, such as `@lynx-js/testing-environment` in lynxjs.org's Testing group. References to known hidden packages are rendered as text instead of links. When an explicit source annotation references a hidden import and resolves to `any`, its source spelling is retained. Unavailable inherited members and inferred types cannot be reconstructed. React, testing-library, GenUI and configuration sections retain their dedicated pages.
 
 Each package is converted with TypeDoc's `packages` strategy, from `src/index.ts` unless its own `typedoc.json` says otherwise. A package without an API gets a page with its links and `package.json` description. The build fails on any TypeDoc warning.
 
-Documented workspace packages must be listed in this package's `devDependencies`; Turbo's `^build` builds their dependencies before conversion. Run `pnpm --filter @lynx-js/lynx-stack-docs check:dependencies` after adding a package or section. CI runs this check even when the documentation build is cached, using the same section selection as the generator. Packages with separate production and test projects should set `tsconfig` in their `typedoc.json` to the production configuration. TypeScript diagnostics remain enabled.
+Documented workspace packages must be listed in this package's `devDependencies`; Turbo's `^build` builds their dependencies before conversion. Run `pnpm --filter @lynx-js/lynx-stack-docs check:dependencies` after adding a package or section. CI runs this check even when the documentation build is cached, using the same section selection as the generator. Packages with separate production and test projects should set `tsconfig` in their `typedoc.json` to the production configuration. TypeScript diagnostics remain enabled. TypeDoc warnings, including invalid links to shown or unknown packages, still fail the build. This does not remove Turbo dependency builds.
 
 The content comes from TSDoc only: a package introduction is its `@packageDocumentation`, ReactLynx guides such as the directives are `@document` pages under `packages/react/docs`, and a configuration option is tagged `@lynxDefaultChanged` when `pluginLynx` changes its Rsbuild default. When a page is wrong, change the TSDoc.
 
