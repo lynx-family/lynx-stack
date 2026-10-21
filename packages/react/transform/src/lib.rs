@@ -394,7 +394,7 @@ fn print_define(
     if let ModuleItem::ModuleDecl(ModuleDecl::Import(import)) = item {
       let mut source = import.src.value.to_string_lossy().into_owned();
       // std::path's absolute-path checks are unsupported on wasm.
-      if source.starts_with('.') {
+      if source == "." || source == ".." || source.starts_with("./") || source.starts_with("../") {
         if let Some((directory, _)) = filename.rsplit_once('/') {
           source = format!("{directory}/{source}");
           if !source.starts_with('/') && source.as_bytes().get(1) != Some(&b':') {
@@ -1329,6 +1329,32 @@ export const handler = () => {
         .unwrap();
       assert_eq!(named.source, expected);
       assert!(definition.code.contains(&named.local));
+    }
+  }
+
+  #[test]
+  fn should_rebase_only_relative_definition_imports() {
+    for (source, expected) in [
+      (".", "/project/src/."),
+      ("..", "/project/src/.."),
+      ("./bridge.js", "/project/src/./bridge.js"),
+      ("../bridge.js", "/project/src/../bridge.js"),
+      (".hidden/x", ".hidden/x"),
+      ("..hidden/x", "..hidden/x"),
+      ("bridge", "bridge"),
+    ] {
+      let definition = worklet_definition(
+        &format!(
+          "import call from '{source}'; export const handler = () => {{ 'main thread'; return call(); }};"
+        ),
+        "/project/src/test.js",
+      );
+      let imports = definition.imports.unwrap();
+      let dependency = imports
+        .iter()
+        .find(|item| item.imported == "default")
+        .unwrap();
+      assert_eq!(dependency.source, expected);
     }
   }
 
