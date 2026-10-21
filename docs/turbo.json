@@ -10,7 +10,8 @@
         "^build"
       ],
       "env": [
-        "NODE_ENV"
+        "NODE_ENV",
+        "LYNX_DOCS_PRUNE_TRANSLATIONS"
       ],
       "inputs": [
         "$TURBO_DEFAULT$",

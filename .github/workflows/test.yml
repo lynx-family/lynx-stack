@@ -223,12 +223,13 @@ jobs:
     with:
       runs-on: lynx-ubuntu-26.04-medium
       run: |
+        pnpm test --run --project docs-translations
         pnpm --filter @lynx-js/lynx-stack-docs check:dependencies
-        pnpm turbo build --filter @lynx-js/lynx-stack-docs
+        LYNX_DOCS_PRUNE_TRANSLATIONS=1 pnpm turbo build --filter @lynx-js/lynx-stack-docs --force
         if test "$(git status --porcelain -- docs/i18n | wc -l)" -gt 0 ; then
           echo "::error::API Docs Translations Changed"
           git diff -- docs/i18n
-          echo "::error::Please run 'pnpm turbo build --filter @lynx-js/lynx-stack-docs' and commit docs/i18n."
+          echo "::error::Please run 'LYNX_DOCS_PRUNE_TRANSLATIONS=1 pnpm turbo build --filter @lynx-js/lynx-stack-docs --force' and commit docs/i18n."
           exit 1;
         fi
   test-publish:

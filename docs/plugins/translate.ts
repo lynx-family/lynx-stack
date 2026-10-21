@@ -178,14 +178,16 @@ export class Translations {
     return [...this.#missing].sort();
   }
 
-  save(): void {
+  save(pruneUnused = false): void {
     // A translated string is kept even when this run did not render it: which
     // options a section renders depends on what the workspace has built, and a
     // dictionary that drops them would differ between two builds of the same
     // commit. An entry left untranslated is dropped, so it stops being listed.
     const entries = new Set([
       ...this.#used,
-      ...Object.keys(this.#dictionary).filter(en => this.#dictionary[en]),
+      ...(pruneUnused
+        ? []
+        : Object.keys(this.#dictionary).filter(en => this.#dictionary[en])),
     ]);
     const next: Dictionary = {};
     for (const en of [...entries].sort()) {

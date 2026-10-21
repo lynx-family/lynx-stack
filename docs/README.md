@@ -27,7 +27,7 @@ The content comes from TSDoc only: a package introduction is its `@packageDocume
 
 ## Chinese
 
-The Chinese pages are rendered again with TypeDoc's `lang: 'zh'`. Their prose is translated through `i18n/zh.json`, which maps each English paragraph or table cell to its Chinese text. A build adds new English strings with an empty value. Existing nonempty translations are retained even when a build does not render them. Commit `i18n/zh.json`; CI fails while a value is empty or the file is out of date.
+The Chinese pages are rendered again with TypeDoc's `lang: 'zh'`. Their prose is translated through `i18n/zh.json`, which maps each English paragraph or table cell to its Chinese text. A build adds new English strings with an empty value. Existing nonempty translations are retained even when a build does not render them. After a full workspace build, run `LYNX_DOCS_PRUNE_TRANSLATIONS=1 pnpm turbo build --filter @lynx-js/lynx-stack-docs --force` to remove unused entries. CI runs this cleanup and requires the resulting dictionary changes to be committed. Do not enable cleanup for partial builds; consuming sites can use the same option to clean only their local dictionary. Commit `i18n/zh.json`; CI fails while a value is empty or the file is out of date.
 
 ## Sync to lynxjs.org
 
