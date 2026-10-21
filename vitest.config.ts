@@ -83,6 +83,7 @@ export default defineConfig({
     },
 
     projects: [
+      'docs/vitest.config.ts',
       'examples/*/vitest.config.ts',
       'packages/react/*/vitest.config.ts',
       'packages/react/*/vitest.**.config.ts',

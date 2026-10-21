@@ -345,7 +345,7 @@ export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
           );
         }
         writeManifest(packages, site);
-        translations.save();
+        translations.save(process.env['LYNX_DOCS_PRUNE_TRANSLATIONS'] === '1');
         // `dev` shows the English text of a string the dictionary is missing;
         // a build stops, so it cannot ship.
         const missing = isProd ? translations.missing : [];
