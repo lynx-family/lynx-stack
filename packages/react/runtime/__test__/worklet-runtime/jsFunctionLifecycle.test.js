@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { JsFunctionLifecycleManager } from '../../src/worklet-runtime/jsFunctionLifecycle';
 
@@ -85,5 +85,19 @@ describe('jsFunctionLifecycle', () => {
         "type": "Lynx.Worklet.releaseBackgroundWorkletCtx",
       }
     `);
+  });
+  it('leaves failed registrations retryable', () => {
+    const manager = new JsFunctionLifecycleManager();
+    const target = {};
+    const error = new TypeError('target must be an object');
+    const register = vi.spyOn(manager.registry, 'register').mockImplementationOnce(() => {
+      throw error;
+    });
+    expect(() => manager.addRef(3, target)).toThrow(error);
+    expect(manager.execIdRefCount.size).toBe(0);
+    expect(manager.retainedObjects.has(target)).toBe(false);
+    manager.addRef(3, target);
+    expect(register).toHaveBeenCalledTimes(2);
+    expect(manager.execIdRefCount.get(3)).toBe(1);
   });
 });
