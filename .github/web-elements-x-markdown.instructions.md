@@ -9,3 +9,5 @@ For typewriter streaming, verify that already visible text survives content appe
 Derive partial-word typewriter expectations by slicing complete strings so the repository spelling check does not mistake intentionally incomplete text for a typo.
 
 Markdown appends can change earlier blocks, including through reference definitions. Parse the complete selected source and preserve unchanged leading DOM nodes instead of parsing appended lines independently. Typewriter appends should preserve the current step and restart a stopped timer when new text arrives, while replacements and clearing content reset progress.
+
+Embedded `inlineview://` and `blockview://` images must have their sources converted to data attributes before HTML sanitization, then be replaced with named slots after sanitization in both normal and typewriter rendering. Inline views retain their styled span wrapper; block views insert the slot directly at the image position. Consumers must pre-set the matching slot attribute on their light DOM children.

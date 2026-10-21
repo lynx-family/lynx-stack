@@ -694,6 +694,52 @@ test.describe('x-markdown', () => {
     expect(projected).toBe(true);
   });
 
+  for (const typewriter of [false, true]) {
+    test(`should inject block views via pre-set slots${typewriter ? ' in typewriter mode' : ''}`, async ({ page }) => {
+      await page.goto(
+        `tests/fixtures/x-markdown/blockview.html${
+          typewriter ? '?typewriter' : ''
+        }`,
+        { waitUntil: 'load' },
+      );
+      await page.evaluate(() => document.fonts.ready);
+      const markdown = page.locator('x-markdown');
+      const root = markdown.locator('#markdown-root');
+      await expect(root.locator('slot')).toHaveCount(3);
+      await expect(root.locator('p').first()).toHaveJSProperty(
+        'innerHTML',
+        'before <slot name="dil-1"></slot>\uFFFC between <slot name="dil-2"></slot> after',
+      );
+      const assignedIds = await root.locator('slot').evaluateAll((slots) =>
+        slots.map((slot) =>
+          (slot as HTMLSlotElement).assignedElements().map((node) => node.id)
+        )
+      );
+      expect(assignedIds).toEqual([['first'], ['second'], ['badge']]);
+      await expect(markdown.locator('#first')).toBeVisible();
+      await expect(markdown.locator('#second')).toBeVisible();
+      await expect(root.locator('.md-inline-view slot')).toHaveAttribute(
+        'name',
+        'badge',
+      );
+      await expect(root.locator('img')).toHaveCount(1);
+      await expect(root.locator('img')).toHaveAttribute(
+        'src',
+        '/tests/fixtures/resources/firefox-logo.png',
+      );
+
+      await markdown.evaluate((el) => {
+        const content = '![](blockview://dil-2)';
+        el.setAttribute('content', content);
+        el.setAttribute('initial-animation-step', String(content.length));
+      });
+      await expect(root.locator('slot')).toHaveCount(1);
+      await expect(root.locator('slot')).toHaveAttribute('name', 'dil-2');
+      await expect(root.locator('img')).toHaveCount(0);
+      await expect(markdown.locator('#second')).toBeVisible();
+    });
+  }
+
   test('should not create img for inline view in typewriter mode', async ({ page }) => {
     await goto(page, 'x-markdown/typewriter-inlineview');
     await page.waitForFunction(() =>

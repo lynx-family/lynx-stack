@@ -376,10 +376,10 @@ const getSelectionDetail = (
   };
 };
 
-const preprocessInlineView = (html: string) =>
+const preprocessEmbeddedViews = (html: string) =>
   html.replace(
-    /src\s*=\s*"inlineview:\/\/([^"]+)"/g,
-    (_m, id) => `data-inlineview="${id}"`,
+    /src\s*=\s*"(inlineview|blockview):\/\/([^"]+)"/g,
+    (_m, type, id) => `data-${type}="${id}"`,
   );
 
 const unitlessCssProperties = new Set([
@@ -727,7 +727,7 @@ export class XMarkdownAttributes {
     // Markdown blocks and reference definitions can span updates. Parse the
     // complete source, but retain unchanged leading DOM nodes when appending.
     const rendered = renderMarkdown(parser, content);
-    const html = sanitizeHtml(preprocessInlineView(rendered));
+    const html = sanitizeHtml(preprocessEmbeddedViews(rendered));
     this.#removeTruncationMarker();
     if (
       this.#renderedContent
@@ -738,7 +738,7 @@ export class XMarkdownAttributes {
     } else {
       root.innerHTML = html;
     }
-    this.#injectInlineViews(root);
+    this.#injectEmbeddedViews(root);
     this.#renderedContent = content;
     this.#dispatchParseEnd();
     this.#applyPostRenderPolicies(root);
@@ -1012,9 +1012,9 @@ export class XMarkdownAttributes {
       root.textContent = visible;
     } else {
       root.innerHTML = sanitizeHtml(
-        preprocessInlineView(renderMarkdown(parser, visible)),
+        preprocessEmbeddedViews(renderMarkdown(parser, visible)),
       );
-      this.#injectInlineViews(root);
+      this.#injectEmbeddedViews(root);
     }
 
     this.#appendTypewriterCursor(root);
@@ -1228,12 +1228,19 @@ export class XMarkdownAttributes {
     this.#scheduleRender();
   }
 
-  #injectInlineViews(root: HTMLElement) {
+  #injectEmbeddedViews(root: HTMLElement) {
     try {
       const imgs = Array.from(
         root.querySelectorAll('img'),
       ) as HTMLImageElement[];
       for (const img of imgs) {
+        const blockId = img.getAttribute('data-blockview');
+        if (blockId) {
+          const slot = document.createElement('slot');
+          slot.name = blockId;
+          img.replaceWith(slot);
+          continue;
+        }
         const inlineId = img.getAttribute('data-inlineview');
         if (inlineId) {
           const id = inlineId;
