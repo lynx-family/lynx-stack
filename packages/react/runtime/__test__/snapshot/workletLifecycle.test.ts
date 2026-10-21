@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { JsFunctionLifecycleManager } from '../../src/worklet-runtime/jsFunctionLifecycle.js';
 import { updateGesture } from '../../src/snapshot/snapshot/gesture';
 import { getListItemPlatformInfoFromIndexedValue } from '../../src/snapshot/snapshot/platformInfo';
 import { updateSpread } from '../../src/snapshot/snapshot/spread';
@@ -21,11 +22,10 @@ describe('worklet lifecycle without elements', () => {
   let addRef: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    addRef = vi.fn();
+    const manager = new JsFunctionLifecycleManager();
+    addRef = vi.spyOn(manager, 'addRef');
     globalThis.lynxWorkletImpl = {
-      _jsFunctionLifecycleManager: {
-        addRef,
-      },
+      _jsFunctionLifecycleManager: manager,
     } as any;
   });
 

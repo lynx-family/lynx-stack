@@ -63,6 +63,9 @@ describe('runOnBackground', () => {
       _execId: 8,
     };
 
+    globalThis.registerWorklet('main-thread', 'child', function() {});
+    globalThis.runWorklet(firstScreenChildCtx, []);
+
     globalThis.lynxWorkletImpl._hydrateCtx(worklet, firstScreenWorklet);
 
     expect(firstScreenChildCtx._jsFn._jsFn1._isFirstScreen).toBe(false);
@@ -93,13 +96,11 @@ describe('runOnBackground', () => {
       globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl
         .delayedBackgroundFunctionArray.length,
     ).toBe(0);
-    // functions in `firstScreenWorklet` should be hydrated
-    expect(firstScreenWorklet._jsFn._jsFn1._isFirstScreen).toBe(false);
-    expect(firstScreenWorklet._jsFn._jsFn1._jsFnId).toBe(1);
-    expect(firstScreenWorklet._jsFn._jsFn1._execId).toBe(8);
-    expect(firstScreenWorklet._jsFn._jsFn2._isFirstScreen).toBe(false);
-    expect(firstScreenWorklet._jsFn._jsFn2._jsFnId).toBe(2);
-    expect(firstScreenWorklet._jsFn._jsFn2._execId).toBe(8);
+    // Unused descriptors remain shared transport data rather than GC owners.
+    expect(firstScreenWorklet._jsFn).toEqual({
+      _jsFn1: { _isFirstScreen: true },
+      _jsFn2: { _isFirstScreen: true },
+    });
 
     // If the functions are used in the first screen, they will be hydrated
     const task = vi.fn();
@@ -167,6 +168,8 @@ describe('runOnBackground', () => {
       },
       _execId: 8,
     };
+    globalThis.registerWorklet('main-thread', 'ctx1', function() {});
+    globalThis.runWorklet(firstScreenWorklet, []);
     const task = vi.fn();
     globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl
       .delayedBackgroundFunctionArray[1] = { task };

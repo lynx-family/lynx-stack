@@ -17,10 +17,12 @@ import {
   detachMainThreadDynamicAttrRefsForSubtree,
   getMainThreadDynamicAttrState,
   initializeMainThreadDynamicAttrSlots,
+  prepareMainThreadDynamicAttrSlotsForNative,
   updateMainThreadEventAttrSlot as setMTEventSlot,
   updateMainThreadRefAttrSlot as setMTRefSlotImpl,
 } from '../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
 
+import { prepareMainThreadBackgroundFunctionCtx } from '../../../../src/element-template/runtime/template/main-thread-background-function.js';
 import { prepareMTEventCtxForNative } from '../../../../src/element-template/runtime/template/main-thread-event-ctx.js';
 import type { MTEventNativeWrapper } from '../../../../src/element-template/runtime/template/main-thread-event-ctx.js';
 import type { JsFnHandle, Worklet } from '../../../../src/worklet-runtime/bindings/types.js';
@@ -59,6 +61,7 @@ function installJsFunctionLifecycleManager(): {
     ...previousWorkletImpl,
     _jsFunctionLifecycleManager: {
       addRef,
+      prepareWorkletCtx: vi.fn(),
       retainWorkletCtx: (ctx: { _execId?: number }) => {
         if (ctx._execId !== undefined) addRef(ctx._execId, ctx);
       },
@@ -98,51 +101,75 @@ describe('main-thread dynamic attr state', () => {
     clearEtAttrPlanMap();
   });
 
-  it('keeps escaped first-screen callbacks independent when a worklet is reused by two bindings', () => {
-    const previousWorkletImpl = globalThis.lynxWorkletImpl;
-    const previousSdkVersion = SystemInfo.lynxSdkVersion;
-    const register = vi.spyOn(FinalizationRegistry.prototype, 'register');
-    try {
-      SystemInfo.lynxSdkVersion = '4.0';
-      vi.stubGlobal('__JS__', false);
-      globalThis.lynxWorkletImpl = {
-        ...previousWorkletImpl,
-        _jsFunctionLifecycleManager: undefined,
-      };
-      initWorklet();
-      globalThis.registerWorklet('main-thread', 'shared-callback', function(this: { _jsFn: { callback: JsFnHandle } }) {
-        return () => this._jsFn.callback;
-      });
-      const shared = { _isFirstScreen: true };
-      const raw = { _wkltId: 'shared-callback', _jsFn: { callback: shared, alias: shared } };
-      const first = prepareMTEventCtxForNative(raw) as unknown as MTEventNativeWrapper;
-      const second = prepareMTEventCtxForNative(raw) as unknown as MTEventNativeWrapper;
-      setMTEventSlot(17, 0, first);
-      setMTEventSlot(18, 0, second);
-      const escapedFirst = globalThis.runWorklet(JSON.parse(JSON.stringify(first.value)), []) as () => JsFnHandle;
-      const escapedSecond = globalThis.runWorklet(JSON.parse(JSON.stringify(second.value)), []) as () => JsFnHandle;
-      expect(escapedFirst()).not.toBe(escapedSecond());
-      expect(first.value._jsFn?.alias).toBe(escapedFirst());
-      expect(second.value._jsFn?.alias).toBe(escapedSecond());
-      for (const [execId, old] of [[11, first], [12, second]] as const) {
-        hydrateCtx(
-          { _wkltId: 'shared-callback', _execId: execId, _jsFn: { callback: { _jsFnId: 1 } } },
-          old.value as Worklet,
+  it.each([0, 1, 2, 3, 'interleaved'] as const)(
+    'isolates shared first-screen captures with execution mask %s',
+    (mask) => {
+      const previousWorkletImpl = globalThis.lynxWorkletImpl;
+      const previousSdkVersion = SystemInfo.lynxSdkVersion;
+      const register = vi.spyOn(FinalizationRegistry.prototype, 'register');
+      try {
+        SystemInfo.lynxSdkVersion = '4.0';
+        vi.stubGlobal('__JS__', false);
+        globalThis.lynxWorkletImpl = {
+          ...previousWorkletImpl,
+          _jsFunctionLifecycleManager: undefined,
+        };
+        initWorklet();
+        globalThis.registerWorklet(
+          'main-thread',
+          'shared-callback',
+          function(this: { _jsFn: { callback: JsFnHandle } }) {
+            return () => this._jsFn.callback;
+          },
         );
+        const shared = { _isFirstScreen: true };
+        const raw = { _wkltId: 'shared-callback', _jsFn: { callback: shared, alias: shared } };
+        const first = prepareMTEventCtxForNative(raw) as unknown as MTEventNativeWrapper;
+        const second = prepareMTEventCtxForNative(raw) as unknown as MTEventNativeWrapper;
+        prepareMainThreadBackgroundFunctionCtx(first.value);
+        prepareMainThreadBackgroundFunctionCtx(second.value);
+        setMTEventSlot(17, 0, first);
+        setMTEventSlot(18, 0, second);
+        const escaped: (() => JsFnHandle)[] = [];
+        const bindings = [first, second];
+        for (const [index, old] of bindings.entries()) {
+          if (typeof mask === 'number' && (mask & (1 << index))) {
+            escaped[index] = globalThis.runWorklet(JSON.parse(JSON.stringify(old.value)), []) as () => JsFnHandle;
+            expect(escaped[index]!()).toEqual({ _isFirstScreen: true });
+            expect(old.value._jsFn?.alias).toBe(escaped[index]!());
+          }
+        }
+        for (const [index, old] of bindings.entries()) {
+          if (mask === 'interleaved' && index === 1) {
+            escaped[index] = globalThis.runWorklet(JSON.parse(JSON.stringify(old.value)), []) as () => JsFnHandle;
+            expect(escaped[index]!()).toEqual({ _isFirstScreen: true });
+          }
+          hydrateCtx(
+            {
+              _wkltId: 'shared-callback',
+              _execId: 11 + index,
+              _jsFn: { callback: { _jsFnId: 1 }, alias: { _jsFnId: 1 } },
+            },
+            old.value as Worklet,
+          );
+        }
+        if (escaped[0] && escaped[1]) expect(escaped[0]()).not.toBe(escaped[1]());
+        deleteMainThreadDynamicAttrStateForSubtree([17, 18]);
+        for (const [index, callback] of escaped.entries()) {
+          if (!callback) continue;
+          expect(callback()).toMatchObject({ _isFirstScreen: false, _execId: 11 + index, _jsFnId: 1 });
+          expect(register).toHaveBeenCalledWith(callback(), 11 + index);
+        }
+        expect(register.mock.calls.some(([target]) => target === shared)).toBe(false);
+        expect(raw._jsFn.callback).toEqual({ _isFirstScreen: true });
+      } finally {
+        register.mockRestore();
+        vi.unstubAllGlobals();
+        SystemInfo.lynxSdkVersion = previousSdkVersion;
+        globalThis.lynxWorkletImpl = previousWorkletImpl;
       }
-      deleteMainThreadDynamicAttrStateForSubtree([17, 18]);
-      expect(escapedFirst()).toMatchObject({ _execId: 11, _jsFnId: 1 });
-      expect(escapedSecond()).toMatchObject({ _execId: 12, _jsFnId: 1 });
-      expect(register).toHaveBeenCalledWith(escapedFirst(), 11);
-      expect(register).toHaveBeenCalledWith(escapedSecond(), 12);
-      expect(raw._jsFn.callback).toEqual({ _isFirstScreen: true });
-    } finally {
-      register.mockRestore();
-      vi.unstubAllGlobals();
-      SystemInfo.lynxSdkVersion = previousSdkVersion;
-      globalThis.lynxWorkletImpl = previousWorkletImpl;
-    }
-  });
+    },
+  );
 
   it('records native-held MTEvent ctx by handle and slot without storing the wrapper', () => {
     const ctx = { _wkltId: 'tap' };
@@ -309,31 +336,33 @@ describe('main-thread dynamic attr state', () => {
     }
   });
 
-  it('retains native-held MTEvent ctx recorded from initial attribute slots', () => {
+  it('tracks prepared MTEvent input once before committing initial slots', () => {
     const { addRef, restore } = installJsFunctionLifecycleManager();
     const ctx = { _execId: 99, _wkltId: 'tap' };
     __etAttrPlanMap[MT_EVENT_TEMPLATE] = [0, adaptMTEventAttrSlot];
 
     try {
-      initializeMainThreadDynamicAttrSlots(17, MT_EVENT_TEMPLATE, [{
-        type: 'worklet',
-        value: ctx,
-      }]);
+      const slots = [{ type: 'worklet', value: ctx }];
+      prepareMainThreadDynamicAttrSlotsForNative(MT_EVENT_TEMPLATE, slots);
+      expect(getMainThreadDynamicAttrState(17, 0)).toBeUndefined();
+      initializeMainThreadDynamicAttrSlots(17, MT_EVENT_TEMPLATE, slots);
 
-      expect(addRef).toHaveBeenCalledWith(99, ctx);
+      expect(addRef).toHaveBeenCalledExactlyOnceWith(99, ctx);
     } finally {
       restore();
     }
   });
 
-  it('retains native-held MTEvent ctx recorded from updates', () => {
+  it('commits MTEvent updates without repeating prepared input tracking', () => {
     const { addRef, restore } = installJsFunctionLifecycleManager();
     const ctx = { _execId: 100, _wkltId: 'tap' };
 
     try {
+      prepareMainThreadBackgroundFunctionCtx(ctx);
+      expect(getMainThreadDynamicAttrState(17, 3)).toBeUndefined();
       setMTEventSlot(17, 3, { type: 'worklet', value: ctx });
 
-      expect(addRef).toHaveBeenCalledWith(100, ctx);
+      expect(addRef).toHaveBeenCalledExactlyOnceWith(100, ctx);
     } finally {
       restore();
     }

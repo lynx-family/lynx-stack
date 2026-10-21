@@ -33,6 +33,15 @@ export function registerMainThreadBackgroundFunctionCtx(ctx: MainThreadBackgroun
   }
 }
 
+// Native clones descriptors, so establish lookup identity before crossing that boundary.
+// Track the prepared input even if Native rejects it: collecting that input must
+// still release its already-registered background execution. Slot ownership commits later.
+export function prepareMainThreadBackgroundFunctionCtx(ctx: MainThreadBackgroundFunctionCtx): void {
+  const manager = globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager;
+  manager?.prepareWorkletCtx(ctx as Worklet);
+  manager?.retainWorkletCtx(ctx as Worklet);
+}
+
 export function retainMainThreadBackgroundFunctionCtx(ctx: MainThreadBackgroundFunctionCtx): void {
   globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager?.retainWorkletCtx(ctx as Worklet);
 }

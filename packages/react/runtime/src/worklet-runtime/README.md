@@ -4,10 +4,14 @@ Native worklet descriptors are transport data. Element Template can copy their
 nested values into Native dictionaries, so the identity or collection of a
 PrimJS wrapper is not the identity or lifetime of a JavaScript callback handle.
 
-The ET event adapter retains a local context before passing its descriptor to
-Native. A runtime-local `_runtimeCtxId` lets event delivery resolve that context
-through a weak index. The slot state owns the context; the index does not keep
-it alive. Context identifiers are not reused when the worklet runtime restarts.
+Before Native clones an ET event descriptor, identity preparation assigns a
+runtime-local `_runtimeCtxId` and records its local context in a weak index.
+Reference tracking also registers that prepared input once, so collecting an input
+rejected by Native still releases its background execution. Only Native success
+commits the slot's strong reference and hydration handoff; committing does not
+register the context again. The weak index does not keep the context alive.
+Snapshot observers only track references; they do not prepare ET lookup identities.
+Context identifiers are not reused when the worklet runtime restarts.
 Descriptors from retired contexts must not acquire a new owner during delivery.
 ET reload/destroy retires the previous manager so queued cleanup cannot release a
 new background execution that reuses the same numeric ID.
@@ -23,8 +27,12 @@ canonicalization table can represent the ownership contract.
 
 A live binding retains its local context, and an escaped function retains its
 captured handles. First-screen handles remain local while calls are delayed;
-hydration associates them with the background execution before releasing the
-old binding. Removing a binding only drops that owner's reference. Background
+hydration associates materialized handles with the background execution before
+releasing the old binding, including handles held by escaped functions that have
+not called `runOnBackground` yet. Unmaterialized first-screen descriptors remain
+read-only and are never registered as owners. With no lifecycle manager,
+transformation and hydration still prepare `_execId` metadata without GC tracking.
+Removing a binding only drops that owner's reference. Background
 execution state is released after every registered local owner has been collected.
 
 Delayed replay drops the consumed queue rather than truncating its array, so

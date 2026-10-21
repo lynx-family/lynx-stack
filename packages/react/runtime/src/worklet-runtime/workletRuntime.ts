@@ -223,8 +223,8 @@ const transformWorkletInner = (
         (ctx as Worklet)._execId,
         subObj as JsFnHandle,
         ctx as object,
-      );
-      if (handle && handle !== subObj) {
+      ) ?? { ...subObj, _execId: (ctx as Worklet)._execId };
+      if (handle !== subObj) {
         // Bindings can shallow-share capture containers before hydration.
         if (obj === value && obj !== ctx) obj = copyAccessorCapture(obj);
         obj = replaceCapturedProperty(obj, value, key, handle);

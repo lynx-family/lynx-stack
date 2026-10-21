@@ -6,7 +6,7 @@ import { hydrateWorkletCtx } from '@lynx-js/react/worklet-runtime/bindings';
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { getMainThreadDynamicAttrSlotKinds } from './attr-slot-plan.js';
-import { retainMainThreadBackgroundFunctionCtx } from './main-thread-background-function.js';
+import { prepareMainThreadBackgroundFunctionCtx } from './main-thread-background-function.js';
 import type { MTEventCtx, MTEventNativeWrapper } from './main-thread-event-ctx.js';
 import { attachMTRefValue, cleanupMTRefValue, hydrateMTRefValue, retainMTRefValue } from './main-thread-ref-ctx.js';
 import type { MTRefNativeWrapper, MTRefValue } from './main-thread-ref-ctx.js';
@@ -63,7 +63,6 @@ function setSlotState<T>(
 }
 
 function setMTEventSlotState(handleId: number, attrSlotIndex: number, nativeHeldValue: MTEventCtx): void {
-  retainMainThreadBackgroundFunctionCtx(nativeHeldValue);
   setSlotState(mtEventAttrState, handleId, attrSlotIndex, nativeHeldValue);
 }
 
@@ -90,7 +89,7 @@ export function prepareMainThreadDynamicAttrSlotsForNative(
   let nativeSlots: SerializableValue[] | undefined;
   for (const [attrSlotIndex, kind] of slotKinds) {
     if (kind === 'mt-event' && attributeSlots[attrSlotIndex] != null) {
-      retainMainThreadBackgroundFunctionCtx((attributeSlots[attrSlotIndex] as MTEventNativeWrapper).value);
+      prepareMainThreadBackgroundFunctionCtx((attributeSlots[attrSlotIndex] as MTEventNativeWrapper).value);
     }
     if (kind !== 'mt-ref') {
       continue;
