@@ -9,7 +9,9 @@ export interface Define {
   id: string;
   code: string;
   unmergeable?: boolean;
-  imports?: Array<{ source: string; imported: string; local: string }>;
+  imports?: Array<
+    { source: string; imported: string; local: string; namespace?: boolean }
+  >;
   runtimeRequirements?: { mainThreadProgrammability: boolean };
 }
 
@@ -64,13 +66,13 @@ export function collectDefines<TModule>(
       seen.code !== define.code
       || JSON.stringify(
           seen.imports?.map((
-            { source, imported, local },
-          ) => [source, imported, local]),
+            { source, imported, local, namespace },
+          ) => [source, imported, local, namespace === true]),
         )
         !== JSON.stringify(
           define.imports?.map((
-            { source, imported, local },
-          ) => [source, imported, local]),
+            { source, imported, local, namespace },
+          ) => [source, imported, local, namespace === true]),
         )
     ) {
       throw new Error(
@@ -121,18 +123,23 @@ export function renderDefinesModule(
   let nextImport = 0;
   const boundDefines = defines.map(define => {
     const bindings = (define.imports ?? []).map(
-      ({ source, imported, local }) => {
-        const key = JSON.stringify([source, imported]);
+      ({ source, imported, local, namespace }) => {
+        const key = JSON.stringify([source, imported, namespace === true]);
         let alias = imports.get(key);
         if (alias === undefined) {
           do {
             alias = `__lynxDefineImport${nextImport++}`;
           } while (locals.has(alias));
           imports.set(key, alias);
+          const binding = namespace
+            ? `* as ${alias}`
+            : `{ ${
+              /^[a-z_$][\w$]*$/i.test(imported)
+                ? imported
+                : JSON.stringify(imported)
+            } as ${alias} }`;
           prelude.push(
-            `import { ${imported} as ${alias} } from ${
-              JSON.stringify(source)
-            };`,
+            `import ${binding} from ${JSON.stringify(source)};`,
           );
         }
         return `const ${local} = ${alias};`;

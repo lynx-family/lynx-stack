@@ -804,7 +804,7 @@ export interface Define {
   unmergeable?: boolean
   /** @internal Compiler requirements of the extracted registration. */
   runtimeRequirements?: TransformRuntimeRequirements
-  /** @internal Compiler-owned named imports required by this definition. */
+  /** @internal Imports required by this definition. */
   imports?: DefineImport[]
 }
 /** @internal */
@@ -815,6 +815,8 @@ export interface DefineImport {
   imported: string
   /** @internal */
   local: string
+  /** @internal */
+  namespace?: boolean
 }
 /** @internal */
 export interface ElementTemplateAsset {

@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import { transformReactLynx } from '../main.js';
@@ -272,6 +274,111 @@ function legacy(target, extra = {}) {
     ...extra,
   });
 }
+
+describe('worklet definition imports', () => {
+  const source = `
+import { runOnBackground, useState } from '@lynx-js/react';
+export function Repro() {
+  const [count, setCount] = useState(0);
+  const onTap = () => {
+    'main thread';
+    runOnBackground(() => {
+      'background only';
+      setCount(value => value + 1);
+    })();
+  };
+  return <view main-thread:bindtap={onTap}>{count}</view>;
+}
+`;
+
+  it.each(['test', 'development'])(
+    'carries the runOnBackground import without unrelated component imports in %s mode',
+    async (mode) => {
+      const background = await transformReactLynx(source, options('JS', { mode }));
+      const mainThread = await transformReactLynx(source, options('LEPUS', { mode }));
+      expect(background.errors).toEqual([]);
+      expect(background.definesForWorklet).toEqual(mainThread.definesForWorklet);
+      const [definition] = background.definesForWorklet;
+      const dependency = definition.imports.find(item => item.imported === 'runOnBackground');
+      expect(dependency).toEqual({ source: '@lynx-js/react', imported: 'runOnBackground', local: dependency.local });
+      expect(definition.code).toContain(`${dependency.local}(_jsFn1)()`);
+      expect(definition.imports.some(item => item.imported === 'useState')).toBe(false);
+    },
+  );
+
+  it('resolves Windows relative imports in the Wasm transform', async () => {
+    const result = await transformReactLynx(
+      source.replace('\'@lynx-js/react\'', '\'./bridge.js\''),
+      options('JS', { filename: 'C:\\project\\src\\Repro.jsx' }),
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.definesForWorklet[0].imports).toContainEqual(
+      expect.objectContaining({ source: 'C:/project/src/./bridge.js', imported: 'runOnBackground' }),
+    );
+  });
+
+  it('resolves relative imports from the owning module directory', async () => {
+    const filename = path.resolve('src/components/Repro.jsx');
+    const result = await transformReactLynx(
+      source.replace('\'@lynx-js/react\'', '\'./bridge.js\''),
+      options('JS', { filename }),
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.definesForWorklet[0].imports).toContainEqual(expect.objectContaining({
+      source: `${path.dirname(filename)}/./bridge.js`.replaceAll('\\', '/'),
+      imported: 'runOnBackground',
+    }));
+  });
+
+  it('does not import bindings captured through the worklet context', async () => {
+    const result = await transformReactLynx(
+      `
+import { value } from './values.js';
+function worklet() { 'main thread'; return value; }
+`,
+      options('JS'),
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.definesForWorklet[0].imports).toHaveLength(1);
+    expect(result.definesForWorklet[0].code).toContain('this["_c"]');
+  });
+
+  it('preserves default, namespace and aliased imports and shorthand keys', async () => {
+    const opts = options('JS');
+    opts.worklet.customGlobalIdentNames = ['call', 'api', 'named'];
+    const result = await transformReactLynx(
+      `
+import call, * as api from './bridge.js';
+import { original as named } from './other.js';
+function worklet() { 'main thread'; return [call(), api.value, { named }]; }
+`,
+      opts,
+    );
+    expect(result.errors).toEqual([]);
+    const [definition] = result.definesForWorklet;
+    expect(definition.imports).toEqual(expect.arrayContaining([
+      { source: './bridge.js', imported: 'default', local: 'call' },
+      { source: './bridge.js', imported: '*', local: 'api', namespace: true },
+      { source: './other.js', imported: 'original', local: 'named' },
+    ]));
+    expect(definition.code).toContain('named');
+  });
+
+  it('does not carry an import shadowed by a worklet parameter', async () => {
+    const result = await transformReactLynx(
+      `
+import { runOnBackground } from './bridge.js';
+function worklet(runOnBackground) {
+  'main thread';
+  runOnBackground(() => {})();
+}
+`,
+      options('JS'),
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.definesForWorklet[0].imports).toHaveLength(1);
+  });
+});
 
 describe('legacy slot codegen', () => {
   it('collects the definitions its frozen codegen emits', async () => {

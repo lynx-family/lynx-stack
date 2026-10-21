@@ -206,6 +206,26 @@ describe('selectMissingDefines', () => {
 });
 
 describe('renderDefinesModule', () => {
+  it('renders default and namespace definition imports', () => {
+    const code = renderDefinesModule([], [{
+      id: 'imports',
+      code: 'use(defaultValue, namespaceValue);',
+      imports: [
+        { source: './values.js', imported: 'default', local: 'defaultValue' },
+        {
+          source: './values.js',
+          imported: '*',
+          local: 'namespaceValue',
+          namespace: true,
+        },
+      ],
+    }]);
+    expect(code).toContain('import { default as __lynxDefineImport0 }');
+    expect(code).toContain('import * as __lynxDefineImport1');
+    expect(code).toContain('const defaultValue = __lynxDefineImport0;');
+    expect(code).toContain('const namespaceValue = __lynxDefineImport1;');
+  });
+
   it('references the runtime through namespace member accesses', () => {
     const code = renderDefinesModule(
       [define('a', 'ReactLynx.createSnapshot(ReactLynx.__pageId);')],
@@ -304,6 +324,88 @@ describe('renderDefines', () => {
 describe('missing definitions injection', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const require = createRequire(import.meta.url);
+
+  it('executes imported runOnBackground calls from background-only definitions', async () => {
+    const fixture = path.join(__dirname, 'fixtures/worklet-imports');
+    const outputPath = mkdtempSync(path.join(tmpdir(), 'worklet-imports-'));
+    const compiler = rspack({
+      context: fixture,
+      mode: 'none',
+      entry: {
+        'main__main-thread': {
+          import: './index.jsx',
+          layer: LAYERS.MAIN_THREAD,
+        },
+        main: { import: './index.jsx', layer: LAYERS.BACKGROUND },
+      },
+      module: {
+        rules: [
+          {
+            test: /\.jsx$/,
+            issuerLayer: LAYERS.MAIN_THREAD,
+            use: ReactWebpackPlugin.loaders.MAIN_THREAD,
+          },
+          {
+            test: /\.jsx$/,
+            issuerLayer: LAYERS.BACKGROUND,
+            use: ReactWebpackPlugin.loaders.BACKGROUND,
+          },
+        ],
+      },
+      resolve: {
+        alias: {
+          '@lynx-js/react$': path.join(fixture, 'runtime.js'),
+          '@lynx-js/react/internal$': path.join(fixture, 'runtime.js'),
+          '@lynx-js/react/worklet-runtime/init$': path.join(
+            fixture,
+            'init-runtime.js',
+          ),
+        },
+      },
+      output: {
+        path: outputPath,
+        filename: '[name].cjs',
+        library: { type: 'commonjs2' },
+      },
+      plugins: [
+        new ReactWebpackPlugin({
+          mainThreadChunks: ['main__main-thread.cjs'],
+          entryPairs: [{ mainThread: 'main__main-thread', background: 'main' }],
+        }),
+      ],
+    });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        compiler.run((err, stats) => {
+          if (err || stats?.hasErrors()) {
+            reject(err ?? new Error(stats!.toString()));
+          } else {
+            resolve(undefined);
+          }
+        });
+      });
+      const exported = require(
+        path.join(outputPath, 'main__main-thread.cjs'),
+      ) as {
+        components: unknown;
+        worklets: Array<
+          (this: { _jsFn: { _jsFn1: (value: string) => void } }) => void
+        >;
+      };
+      expect(exported.components).toBeNull();
+      expect(exported.worklets).toHaveLength(2);
+      const calls: string[] = [];
+      for (const worklet of exported.worklets) {
+        worklet.call({ _jsFn: { _jsFn1: value => calls.push(value) } });
+      }
+      expect(calls.sort()).toEqual(['other', 'react']);
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        compiler.close(err => err ? reject(err) : resolve())
+      );
+      await fs.rm(outputPath, { recursive: true, force: true });
+    }
+  });
 
   function compile(
     definesByResource: Record<

@@ -305,7 +305,7 @@ pub struct Define {
   pub unmergeable: Option<bool>,
   /// @internal
   pub runtime_requirements: Option<TransformRuntimeRequirements>,
-  /// Compiler-owned imports needed when this definition moves to another module.
+  /// Imports needed when this definition moves to another module.
   /// @internal
   pub imports: Option<Vec<DefineImport>>,
 }
@@ -319,6 +319,8 @@ pub struct DefineImport {
   pub imported: String,
   /// @internal
   pub local: String,
+  /// @internal
+  pub namespace: Option<bool>,
 }
 
 #[napi(object)]
@@ -365,6 +367,7 @@ fn print_define(
   items: Vec<ModuleItem>,
   top_level_mark: Mark,
   comments: &SingleThreadedComments,
+  filename: &str,
 ) -> Result<(String, Vec<DefineImport>), String> {
   let mut module = match Program::Module(Module {
     span: DUMMY_SP,
@@ -384,23 +387,40 @@ fn print_define(
 
   // Print imports and statements through the same hygiene pass before
   // separating them. The consumer must not guess bindings from generated code.
+  let filename = filename.replace('\\', "/");
   let mut imports = vec![];
   let mut statements = vec![];
   for item in module.body {
     if let ModuleItem::ModuleDecl(ModuleDecl::Import(import)) = item {
+      let mut source = import.src.value.to_string_lossy().into_owned();
+      // std::path's absolute-path checks are unsupported on wasm.
+      if source.starts_with('.') {
+        if let Some((directory, _)) = filename.rsplit_once('/') {
+          source = format!("{directory}/{source}");
+          if !source.starts_with('/') && source.as_bytes().get(1) != Some(&b':') {
+            source = format!("./{source}");
+          }
+        }
+      }
       for specifier in import.specifiers {
-        let ImportSpecifier::Named(named) = specifier else {
-          return Err("definition dependency must be a named import".into());
-        };
-        let imported = match named.imported {
-          Some(ModuleExportName::Ident(ident)) => ident.sym.to_string(),
-          Some(ModuleExportName::Str(value)) => value.value.to_string_lossy().into_owned(),
-          None => named.local.sym.to_string(),
+        let local = specifier.local().sym.to_string();
+        let namespace = matches!(specifier, ImportSpecifier::Namespace(_)).then_some(true);
+        let imported = match specifier {
+          ImportSpecifier::Default(_) => "default".into(),
+          ImportSpecifier::Namespace(_) => "*".into(),
+          ImportSpecifier::Named(named) => match named.imported {
+            Some(ModuleExportName::Ident(ident)) => ident.sym.to_string(),
+            Some(ModuleExportName::Str(value)) => value.value.to_string_lossy().into_owned(),
+            None => named.local.sym.to_string(),
+          },
+          #[allow(unreachable_patterns)]
+          _ => return Err("unknown definition import specifier".into()),
         };
         imports.push(DefineImport {
-          source: import.src.value.to_string_lossy().into_owned(),
+          source: source.clone(),
           imported,
-          local: named.local.sym.to_string(),
+          local,
+          namespace,
         });
       }
     } else {
@@ -1004,7 +1024,7 @@ fn transform_react_lynx_inner(
         let mut defines_for_worklet: Vec<Define> = vec![];
         helpers::HELPERS.set(&helpers::Helpers::new(false), || {
           for define in defines_collector.borrow().iter() {
-            let (code, imports) = match print_define(&c, define.items.clone(), top_level_mark, &comments) {
+            let (code, imports) = match print_define(&c, define.items.clone(), top_level_mark, &comments, &options.filename) {
               Ok(printed) => printed,
               Err(err) => {
                 define_errors.push(esbuild::PartialMessage {

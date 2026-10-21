@@ -1,4 +1,5 @@
 mod decl_collect;
+mod definition_imports;
 mod extract_ident;
 mod gen_stmt;
 mod globals;
@@ -71,6 +72,7 @@ pub struct WorkletVisitor {
   register_worklet: Ident,
   main_thread_programmability: Option<Rc<Cell<bool>>>,
   defines_collector: Option<DefinesCollector>,
+  imports: Vec<ImportDecl>,
 }
 
 impl Default for WorkletVisitor {
@@ -694,6 +696,7 @@ impl VisitMut for WorkletVisitor {
     // First process imports to detect shared-runtime modules.
     for item in &n.body {
       if let ModuleItem::ModuleDecl(ModuleDecl::Import(import_decl)) = item {
+        self.imports.push(import_decl.clone());
         if is_shared_runtime_import(import_decl) {
           for specifier in &import_decl.specifiers {
             match specifier {
@@ -957,6 +960,7 @@ impl WorkletVisitor {
       register_worklet: private_ident!("__registerWorklet"),
       main_thread_programmability: None,
       defines_collector: None,
+      imports: vec![],
     }
   }
 
@@ -1008,12 +1012,9 @@ impl WorkletVisitor {
       collect_unmergeable_define(&self.defines_collector, DefineKind::Worklet, hash);
       return;
     }
-    collect_define(
-      &self.defines_collector,
-      DefineKind::Worklet,
-      hash,
-      vec![self.registration_import(), ModuleItem::Stmt(stmt)],
-    );
+    let mut items = definition_imports::collect_imports(&stmt, &self.imports);
+    items.extend([self.registration_import(), ModuleItem::Stmt(stmt)]);
+    collect_define(&self.defines_collector, DefineKind::Worklet, hash, items);
   }
 
   fn check_is_worklet_block(&self, n: &mut FunctionBody) -> Option<WorkletType> {
