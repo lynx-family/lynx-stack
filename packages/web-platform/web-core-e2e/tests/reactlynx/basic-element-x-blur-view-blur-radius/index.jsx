@@ -12,14 +12,14 @@ function App() {
         backgroundImage: `url(${Image})`,
       }}
     >
-      <x-blur-view
+      <blur-view
         style='width: 100%; height: 100px; margin-top: 50px; border: 1px solid red; padding: 10px;'
         blur-radius='25px'
       >
         <text class='text'>
           blur-radius 25
         </text>
-      </x-blur-view>
+      </blur-view>
     </view>
   );
 }
