@@ -213,7 +213,7 @@ describe('Config Validation', () => {
           [Error: Invalid configuration.
 
           Invalid config on \`$input.dev.progressBar\`.
-            - Expect to be (__type | boolean | undefined)
+            - Expect to be (object | boolean | undefined)
             - Got: null
           ]
         `)
@@ -341,7 +341,7 @@ describe('Config Validation', () => {
         [Error: Invalid configuration.
 
         Invalid config on \`$input.source.entry.foo\`.
-          - Expect to be (Array<string> | EntryDescription.o1 | string)
+          - Expect to be (Array<string> | EntryDescription | string)
           - Got: number
         ]
       `)
@@ -414,7 +414,7 @@ describe('Config Validation', () => {
         [Error: Invalid configuration.
 
         Invalid config on \`$input.source.entry.main\`.
-          - Expect to be (Array<string> | EntryDescription.o1 | string)
+          - Expect to be (Array<string> | EntryDescription | string)
           - Got: number
         ]
       `)
@@ -559,7 +559,7 @@ describe('Config Validation', () => {
         [Error: Invalid configuration.
 
         Invalid config on \`$input.output.minify.jsOptions.minimizerOptions.compress\`.
-          - Expect to be (TerserCompressOptions.o1 | boolean | undefined)
+          - Expect to be (TerserCompressOptions | boolean | undefined)
           - Got: null
         ]
       `)
@@ -1761,7 +1761,7 @@ describe('Config Validation', () => {
         [Error: Invalid configuration.
 
         Invalid config on \`$input.performance.removeConsole\`.
-          - Expect to be (Array<ConsoleType>.o1 | boolean | undefined)
+          - Expect to be (Array<ConsoleType> | boolean | undefined)
           - Got: string
         ]
       `)
@@ -1812,7 +1812,7 @@ describe('Config Validation', () => {
         [Error: Invalid configuration.
 
         Invalid config on \`$input.performance.printFileSize.compressed\`.
-          - Expect to be (__type.o64 | boolean | undefined)
+          - Expect to be (object | boolean | undefined)
           - Got: number
         ]
       `)
@@ -2326,7 +2326,7 @@ describe('Config Validation', () => {
           [Error: Invalid configuration.
 
           Invalid config on \`$input.source.decorators\`.
-            - Expect to be (Decorators.o1 | undefined)
+            - Expect to be (Decorators | undefined)
             - Got: boolean
           ]
         `)
@@ -2931,7 +2931,7 @@ describe('Config Validation', () => {
           [Error: Invalid configuration.
 
           Invalid config on \`$input.tools.bundlerChain\`.
-            - Expect to be (Array<__type> | undefined)
+            - Expect to be (Array<object> | undefined)
             - Got: object
           ]
         `)
@@ -2947,7 +2947,7 @@ describe('Config Validation', () => {
           [Error: Invalid configuration.
 
           Invalid config on \`$input.tools.bundlerChain\`.
-            - Expect to be (Array<__type> | undefined)
+            - Expect to be (Array<object> | undefined)
             - Got: number
           ]
         `)
