@@ -2,6 +2,8 @@
 applyTo: "packages/react/runtime/**"
 ---
 
+Configure Preact's `options.debounceRendering` with `lynxQueueMicrotask` in both Snapshot and Element Template background initialization. Reuse this helper to preserve the native `lynx.queueMicrotask` receiver and fallback behavior instead of patching the Preact dependency.
+
 When updating runtime snapshot tests for preview preact builds that carry named children props like `$0` and slot-index semantics, keep `list` host snapshots isolated from surrounding `view`/`text` snapshots by creating a standalone `__SNAPSHOT__(<list>{HOLE}</list>)` and inserting it into the outer snapshot.
 To cover SSR hydration of coalesced list snapshots, use a `*.legacy-slot.test.jsx` fixture and assert that the list slot has a nonzero element index. List callbacks and recycling maps must use the element selected by `slot[0][1]`, while `__element_root` remains `__elements[0]` for parent insertion and removal. Clear all three native list callbacks before SSR hydration so callbacks from the server render cannot mask a missing or misplaced callback binding.
 Default-slot SSR list coverage should assert an independent `ListSlotV2` snapshot at element index zero and preserve its slot index within its parent across hydration and updates. Mixed static and dynamic siblings can produce native wrapper elements; check their child placement rather than assuming a flat native tree. The SSR opcode decoder currently assumes every encoded snapshot and text node has native element references: encoding list items before their native elements are created produces null references and fails hydration in both slot modes. Treat partial native materialization as a separate compatibility gap from selecting the list's slot element.

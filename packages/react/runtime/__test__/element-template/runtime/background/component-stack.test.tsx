@@ -17,13 +17,13 @@ describe('ElementTemplate background component stack', () => {
 
   it('reports component owners for circular attributes in hydrated background updates', async () => {
     const scheduledRenders: Array<() => void> = [];
-    const previousDebounce = options.debounceRendering;
     const previousProfile = globalThis.__PROFILE__;
     const dispatchEvent = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
-    options.debounceRendering = callback => scheduledRenders.push(callback);
     globalThis.__PROFILE__ = false;
     const { root, useState } = await import('../../../../src/element-template/index.js');
     const { renderCompiledFixtureOnMainThread } = await import('../../test-utils/debug/compiledThreadRunner.js');
+    const previousDebounce = options.debounceRendering;
+    options.debounceRendering = callback => scheduledRenders.push(callback);
     let updateValue: (value: Record<string, unknown>) => void;
 
     function PassThrough({ children }: { children: ComponentChildren }) {

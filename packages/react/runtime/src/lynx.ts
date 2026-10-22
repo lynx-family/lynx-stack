@@ -72,6 +72,7 @@ if (typeof __ALOG_ELEMENT_API__ !== 'undefined' && __ALOG_ELEMENT_API__) {
 function initBackgroundRuntime(): void {
   // Trick Preact and TypeScript to accept our custom document adapter.
   options.document = document as unknown as Document;
+  options.debounceRendering = lynxQueueMicrotask;
   options.requestAnimationFrame = lynxQueueMicrotask;
   setupBackgroundDocument();
   injectTt();

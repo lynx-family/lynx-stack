@@ -70,6 +70,7 @@ function init(): void {
     if (__DEV__) {
       setupComponentStack();
     }
+    options.debounceRendering = lynxQueueMicrotask;
     options.requestAnimationFrame = lynxQueueMicrotask;
     console.log('experimental_useElementTemplate:', __USE_ELEMENT_TEMPLATE__);
     setRoot(new BackgroundPageRootInstance());
