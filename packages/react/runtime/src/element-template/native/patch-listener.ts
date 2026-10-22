@@ -17,6 +17,7 @@ import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant
 import type { ElementTemplateUpdateCommitContext } from '../protocol/types.js';
 import type { ElementTemplateUpdateEvent } from '../protocol/update-event.js';
 import { applyElementTemplateUpdateCommands } from '../runtime/patch.js';
+import { applyPendingMainThreadRefAttachments } from '../runtime/template/main-thread-dynamic-attr-state.js';
 
 let listener:
   | ((event: Pick<ElementTemplateUpdateEvent, 'data'>) => void)
@@ -59,34 +60,34 @@ export function installElementTemplatePatchListener(): void {
     const flushOptions = payload.flushOptions;
     const isHydration = payload.isHydration === true;
     const delayedRunOnMainThreadData = payload.delayedRunOnMainThreadData;
-    if (hasOps) {
-      if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
-        console.alog?.(
-          '[ReactLynxDebug] ElementTemplate main-thread patch:\n'
-            + JSON.stringify(
-              {
-                ops: formatElementTemplateUpdateCommands(payload.ops),
-                flushOptions,
-                flowIds,
-              },
-              null,
-              2,
-            ),
-        );
-      }
-      markTiming('patchChangesStart');
-      try {
-        applyElementTemplateUpdateCommands(payload.ops, isHydration);
-      } finally {
-        markTiming('patchChangesEnd');
-        markTiming('mtsRenderEnd');
-        if (isHydration) {
-          flushDelayedRunOnBackgroundFunctions();
-          clearFirstScreenMainThreadRefs();
+    try {
+      if (hasOps) {
+        if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+          console.alog?.(
+            '[ReactLynxDebug] ElementTemplate main-thread patch:\n'
+              + JSON.stringify(
+                {
+                  ops: formatElementTemplateUpdateCommands(payload.ops),
+                  flushOptions,
+                  flowIds,
+                },
+                null,
+                2,
+              ),
+          );
         }
+        markTiming('patchChangesStart');
+        try {
+          applyElementTemplateUpdateCommands(payload.ops, isHydration);
+        } finally {
+          markTiming('patchChangesEnd');
+          markTiming('mtsRenderEnd');
+        }
+      } else {
+        markTiming('mtsRenderEnd');
       }
-    } else {
-      markTiming('mtsRenderEnd');
+      applyPendingMainThreadRefAttachments();
+    } finally {
       if (isHydration) {
         flushDelayedRunOnBackgroundFunctions();
         clearFirstScreenMainThreadRefs();
@@ -106,7 +107,6 @@ export function installElementTemplatePatchListener(): void {
         setEomShouldFlushElementTree(true);
       }
     }
-
     __FlushElementTree(undefined, flushOptions);
 
     if (shouldProfilePatch) {

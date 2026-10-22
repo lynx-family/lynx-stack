@@ -41,6 +41,7 @@ import {
 } from '../../../../src/element-template/runtime/list/list.js';
 import {
   attachMainThreadDynamicAttrRefsForSubtree,
+  applyPendingMainThreadRefAttachments,
   clearMainThreadDynamicAttrState,
   detachMainThreadDynamicAttrRefsForSubtree,
   getMainThreadDynamicAttrState,
@@ -113,6 +114,7 @@ function createMaterializedListForFrontendTest(nativeId: number): FiberElement {
 
 const MT_EVENT_TEMPLATE = '_et_mt_event';
 const MT_REF_TEMPLATE = '_et_mt_ref';
+const REF_TARGET = { id: 'materialized-ref-node' } as unknown as ElementRef;
 
 function registerMTEventSlotsForTemplate(templateType: string, ...slotIndexes: number[]): void {
   __etAttrPlanMap[templateType] = slotIndexes.flatMap(slotIndex => [
@@ -158,6 +160,8 @@ function seedMTRefState(
   attributeSlots[attrSlotIndex] = { type: 'main-thread-ref', value };
   initializeMainThreadDynamicAttrSlots(handleId, MT_REF_TEMPLATE, attributeSlots);
   attachMainThreadDynamicAttrRefsForSubtree([{ uid: handleId, ref: nativeRef }]);
+  vi.mocked(__GetElementByAttrSlot).mockReturnValue(REF_TARGET);
+  applyPendingMainThreadRefAttachments();
 }
 
 function installWorkletRefRuntime(): {
@@ -606,7 +610,11 @@ describe('ElementTemplate patch stream (apply)', () => {
       ]);
 
       expect(mockInsertElementTemplateNodeIntoSlot).toHaveBeenCalledWith(parentRef, 0, nativeRef, null);
-      expect(updateWorkletRef).toHaveBeenCalledWith(ref, nativeRef);
+      expect(updateWorkletRef).not.toHaveBeenCalled();
+      applyPendingMainThreadRefAttachments();
+      const target = vi.mocked(__GetElementByAttrSlot).mock.results.at(-1)!.value;
+      expect(target).not.toBe(nativeRef);
+      expect(updateWorkletRef).toHaveBeenCalledWith(ref, target);
       expect(getMainThreadDynamicAttrState(handleId, 0)).toEqual({
         kind: 'mt-ref',
         value: ref,
@@ -761,19 +769,19 @@ describe('ElementTemplate patch stream (apply)', () => {
 
       expect(mockSetElementTemplateAttributeSlot).not.toHaveBeenCalled();
       expect(oldCleanup).toHaveBeenCalledTimes(1);
-      const mountedCallback = runWorklet.mock.calls[0]?.[0] as typeof nextCallback & {
-        _unmount?: () => void;
-      };
+      const mountedCallback = runWorklet.mock.calls[0]?.[0] as typeof nextCallback;
       expect(mountedCallback).toEqual(expect.objectContaining({
         _wkltId: 'next-ref-callback',
       }));
-      expect(runWorklet.mock.calls[0]?.[1]).toEqual([{ elementRefptr: nativeRef }]);
-      expect(mountedCallback._unmount).toBe(nextCleanup);
+      expect(runWorklet.mock.calls[0]?.[1]).toEqual([{ elementRefptr: REF_TARGET }]);
+      expect(mountedCallback).not.toHaveProperty('_unmount');
       expect(nextCallback).not.toHaveProperty('_unmount');
       expect(getMainThreadDynamicAttrState(targetId, 0)).toEqual({
         kind: 'mt-ref',
         value: mountedCallback,
       });
+      applyElementTemplateUpdateCommands([ElementTemplateUpdateOps.setMainThreadRef, targetId, 0, null]);
+      expect(nextCleanup).toHaveBeenCalledOnce();
     } finally {
       globalThis.runWorklet = previousRunWorklet;
     }
@@ -808,10 +816,11 @@ describe('ElementTemplate patch stream (apply)', () => {
         { type: 'main-thread-ref', value: nextCallback },
       ], true);
 
+      applyPendingMainThreadRefAttachments();
       expect(hydrateCtx).toHaveBeenCalledWith(nextCallback, oldCallback);
       expect(runDelayedWorklet).not.toHaveBeenCalled();
       expect(oldCleanup).toHaveBeenCalledTimes(1);
-      expect(globalThis.runWorklet).toHaveBeenCalledWith(nextCallback, [{ elementRefptr: nativeRef }]);
+      expect(globalThis.runWorklet).toHaveBeenCalledWith(nextCallback, [{ elementRefptr: REF_TARGET }]);
     } finally {
       globalThis.runWorklet = previousRunWorklet;
       globalThis.lynxWorkletImpl = previousWorkletImpl;
@@ -845,6 +854,7 @@ describe('ElementTemplate patch stream (apply)', () => {
         { type: 'main-thread-ref', value: nextCallback },
       ], true);
 
+      applyPendingMainThreadRefAttachments();
       expect(hydrateCtx).toHaveBeenCalledWith(nextCallback, oldCallback);
       expect(globalThis.runWorklet).not.toHaveBeenCalled();
       expect(getMainThreadDynamicAttrState(targetId, 0)).toEqual({
@@ -1392,6 +1402,55 @@ describe('ElementTemplate patch stream (apply)', () => {
     }
   });
 
+  it('cleans hydration handoff and propagates a ref callback error without running later work', () => {
+    const handle = { id: 'throwing-ref-template' } as unknown as ElementTemplateHandle;
+    const target = { id: 'inner-node' } as unknown as ElementRef;
+    const callback = { _wkltId: 'throwing-ref' };
+    const callbackError = new Error('ref callback failed');
+    const runDelayedBackgroundFunctions = vi.fn();
+    const clearFirstScreenWorkletRefMap = vi.fn();
+    const runRunOnMainThreadTask = vi.fn();
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    const previousRunWorklet = globalThis.runWorklet;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _refImpl: { ...createMainThreadRefImplMock(), clearFirstScreenWorkletRefMap },
+      _runOnBackgroundDelayImpl: { runDelayedBackgroundFunctions },
+      _runRunOnMainThreadTask: runRunOnMainThreadTask,
+    };
+    globalThis.runWorklet = vi.fn(() => {
+      throw callbackError;
+    });
+    try {
+      registerMTRefSlots(0);
+      initializeMainThreadDynamicAttrSlots(193, MT_REF_TEMPLATE, [{ type: 'main-thread-ref', value: callback }]);
+      attachMainThreadDynamicAttrRefsForSubtree([{ uid: 193, ref: handle }]);
+      vi.mocked(__GetElementByAttrSlot).mockReturnValue(target);
+      envManager.switchToMainThread();
+      installElementTemplatePatchListener();
+      mockFlushElementTree.mockClear();
+      expect(() => {
+        envManager.switchToBackground();
+        dispatchElementTemplateUpdate({
+          ops: [],
+          isHydration: true,
+          flushOptions: {},
+          delayedRunOnMainThreadData: [{ worklet: { _wkltId: 'should-not-run' }, params: [], resolveId: 33 }],
+        });
+        envManager.switchToMainThread();
+      }).toThrow(callbackError);
+      expect(globalThis.runWorklet).toHaveBeenCalledWith(callback, [{ elementRefptr: target }]);
+      expect(runDelayedBackgroundFunctions).toHaveBeenCalledTimes(1);
+      expect(clearFirstScreenWorkletRefMap).toHaveBeenCalledTimes(1);
+      expect(runRunOnMainThreadTask).not.toHaveBeenCalled();
+      expect(mockFlushElementTree).not.toHaveBeenCalled();
+    } finally {
+      clearMainThreadDynamicAttrState();
+      globalThis.runWorklet = previousRunWorklet;
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
   it('continues delayed lifecycle when patch apply reports a missing target', () => {
     const runDelayedBackgroundFunctions = vi.fn();
     const runRunOnMainThreadTask = vi.fn();
@@ -1439,6 +1498,99 @@ describe('ElementTemplate patch stream (apply)', () => {
       expect(mockFlushElementTree).toHaveBeenCalledTimes(1);
     } finally {
       resetReportedErrors();
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('delivers pending targets before hydration handoff and delayed tasks, then flushes their writes', () => {
+    const callOrder: string[] = [];
+    const handle = { id: 'pending-template' } as unknown as ElementTemplateHandle;
+    const target = { id: 'inner-node' } as unknown as ElementRef;
+    const ref = { _wvid: 91 };
+    const worklet = { _wkltId: 'uses-hydrated-ref' };
+    const updateWorkletRef = vi.fn(() => callOrder.push('attach'));
+    const clearFirstScreenWorkletRefMap = vi.fn(() => callOrder.push('clear-first-screen'));
+    const runDelayedBackgroundFunctions = vi.fn(() => callOrder.push('background-handoff'));
+    const runRunOnMainThreadTask = vi.fn(() => {
+      expect(updateWorkletRef).toHaveBeenCalledWith(ref, target);
+      callOrder.push('task');
+    });
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _refImpl: { updateWorkletRef, clearFirstScreenWorkletRefMap },
+      _runOnBackgroundDelayImpl: { runDelayedBackgroundFunctions },
+      _eomImpl: { setShouldFlush: vi.fn() },
+      _runRunOnMainThreadTask: runRunOnMainThreadTask,
+    };
+    try {
+      registerMTRefSlots(0);
+      initializeMainThreadDynamicAttrSlots(191, MT_REF_TEMPLATE, [{ type: 'main-thread-ref', value: ref }]);
+      attachMainThreadDynamicAttrRefsForSubtree([{ uid: 191, ref: handle }]);
+      vi.mocked(__GetElementByAttrSlot).mockReturnValue(target);
+      mockFlushElementTree.mockImplementationOnce(() => callOrder.push('initial-flush'));
+      envManager.switchToMainThread();
+      installElementTemplatePatchListener();
+      envManager.switchToBackground();
+      dispatchElementTemplateUpdate({
+        ops: [],
+        isHydration: true,
+        flushOptions: { emptyPatch: true },
+        delayedRunOnMainThreadData: [{ worklet, params: [], resolveId: 31 }],
+      });
+      envManager.switchToMainThread();
+      expect(callOrder).toEqual(['attach', 'background-handoff', 'clear-first-screen', 'task', 'initial-flush']);
+      expect(runRunOnMainThreadTask).toHaveBeenCalledWith(worklet, [], 31);
+      expect(mockFlushElementTree).toHaveBeenCalledOnce();
+      expect(mockFlushElementTree.mock.calls[0]![1]).toEqual({ emptyPatch: true });
+    } finally {
+      clearMainThreadDynamicAttrState();
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('delivers refs synchronously before a later delayed-task payload', () => {
+    const handleId = 192;
+    const handle = { id: 'pending-template' } as unknown as ElementTemplateHandle;
+    const target = { id: 'inner-node' } as unknown as ElementRef;
+    const ref = { _wvid: 92 };
+    const worklet = { _wkltId: 'later-payload-uses-ref' };
+    const updateWorkletRef = vi.fn();
+    const runRunOnMainThreadTask = vi.fn(() => expect(updateWorkletRef).toHaveBeenCalledWith(ref, target));
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _refImpl: { updateWorkletRef },
+      _eomImpl: { setShouldFlush: vi.fn() },
+      _runRunOnMainThreadTask: runRunOnMainThreadTask,
+    };
+    try {
+      elementTemplateRegistry.set(handleId, handle);
+      registerMTRefSlots(0);
+      attachMainThreadDynamicAttrRefsForSubtree([{ uid: handleId, ref: handle }]);
+      vi.mocked(__GetElementByAttrSlot).mockReturnValue(target);
+      envManager.switchToMainThread();
+      installElementTemplatePatchListener();
+      envManager.switchToBackground();
+      dispatchElementTemplateUpdate({
+        ops: [ElementTemplateUpdateOps.setMainThreadRef, handleId, 0, { type: 'main-thread-ref', value: ref }],
+        flushOptions: {},
+      });
+      envManager.switchToMainThread();
+      expect(updateWorkletRef).toHaveBeenCalledWith(ref, target);
+      envManager.switchToBackground();
+      dispatchElementTemplateUpdate({
+        ops: [],
+        flushOptions: { emptyPatch: true },
+        delayedRunOnMainThreadData: [{ worklet, params: [], resolveId: 32 }],
+      });
+      envManager.switchToMainThread();
+      expect(runRunOnMainThreadTask).toHaveBeenCalledWith(worklet, [], 32);
+      expect(__GetElementByAttrSlot).toHaveBeenCalledOnce();
+      expect(updateWorkletRef).toHaveBeenCalledOnce();
+      expect(mockFlushElementTree.mock.calls).toEqual([[undefined, {}], [undefined, { emptyPatch: true }]]);
+    } finally {
+      clearMainThreadDynamicAttrState();
       globalThis.lynxWorkletImpl = previousWorkletImpl;
     }
   });

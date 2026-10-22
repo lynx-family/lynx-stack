@@ -16,6 +16,7 @@ import { elementTemplateRegistry } from '../../../src/element-template/runtime/t
 import { resetTemplateId } from '../../../src/element-template/runtime/template/handle.js';
 import {
   attachMainThreadDynamicAttrRefsForSubtree,
+  applyPendingMainThreadRefAttachments,
   clearMainThreadDynamicAttrState,
   getMainThreadDynamicAttrState,
   initializeMainThreadDynamicAttrSlots,
@@ -215,6 +216,8 @@ describe('ElementTemplate reloadMainThread', () => {
         ],
       );
       attachMainThreadDynamicAttrRefsForSubtree([{ uid: -1, ref: oldRootRef }]);
+      vi.mocked(__GetElementByAttrSlot).mockReturnValue({ id: 'actual-element' } as unknown as ElementRef);
+      applyPendingMainThreadRefAttachments();
       expect(getMainThreadDynamicAttrState(-1, 0)).toBeDefined();
       expect(getMainThreadDynamicAttrState(-1, 1)).toBeDefined();
       vi.mocked(mockRender).mockReturnValueOnce({
@@ -416,6 +419,8 @@ describe('ElementTemplate reloadMainThread', () => {
         { uid: -2, ref: firstChildRef },
         { uid: -3, ref: secondRootRef },
       ]);
+      vi.mocked(__GetElementByAttrSlot).mockReturnValue({ id: 'actual-element' } as unknown as ElementRef);
+      applyPendingMainThreadRefAttachments();
       const nativeRefs = new Map([
         [-1, firstRootRef],
         [-2, firstChildRef],

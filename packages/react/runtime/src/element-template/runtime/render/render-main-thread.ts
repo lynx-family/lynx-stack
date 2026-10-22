@@ -16,6 +16,7 @@ import { flushInitialElementTemplateListUpdates } from '../list/list.js';
 import { __page } from '../page/page.js';
 import { __root } from '../page/root-instance.js';
 import { insertElementTemplateSubtree } from '../template/handle.js';
+import { applyPendingMainThreadRefAttachments } from '../template/main-thread-dynamic-attr-state.js';
 import { getElementTemplateNativeRef } from '../template/registry.js';
 import { TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX } from '../template/typed-attributes.js';
 
@@ -48,6 +49,7 @@ function renderMainThread(): void {
       );
     }
     flushInitialListUpdates();
+    applyPendingMainThreadRefAttachments();
   } finally {
     profileEnd();
   }

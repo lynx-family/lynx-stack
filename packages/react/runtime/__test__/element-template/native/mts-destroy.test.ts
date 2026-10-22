@@ -9,6 +9,7 @@ import {
 } from '../../../src/element-template/runtime/list/list.js';
 import {
   attachMainThreadDynamicAttrRefsForSubtree,
+  applyPendingMainThreadRefAttachments,
   clearMainThreadDynamicAttrState,
   getMainThreadDynamicAttrState,
   initializeMainThreadDynamicAttrSlots,
@@ -120,6 +121,8 @@ describe('mts-destroy', () => {
       ],
     );
     attachMainThreadDynamicAttrRefsForSubtree([{ uid: -1, ref: registryRef }]);
+    vi.mocked(__GetElementByAttrSlot).mockReturnValue({ id: 'actual-element' } as unknown as ElementRef);
+    applyPendingMainThreadRefAttachments();
 
     try {
       expect(elementTemplateRegistry.get(-1)).toBe(registryRef);

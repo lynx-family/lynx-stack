@@ -20,6 +20,7 @@ import {
 import {
   initializeMainThreadDynamicAttrSlots,
   attachMainThreadDynamicAttrRefsForSubtree,
+  applyPendingMainThreadRefAttachments,
 } from '../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
 import { reloadBackground } from '../../../src/element-template/native/reload-background.js';
 import { resetElementTemplateMainThreadBackgroundFunctionRuntime } from '../../../src/element-template/runtime/template/main-thread-background-function.js';
@@ -51,6 +52,8 @@ describe('ElementTemplate dual-thread communication delivery across ordinary rel
       { type: 'main-thread-ref', value: { _wkltId: 'ref-cleanup' } },
     ]);
     attachMainThreadDynamicAttrRefsForSubtree([{ uid: -1, ref: page }]);
+    vi.mocked(__GetElementByAttrSlot).mockReturnValueOnce({ id: 'actual-element' } as unknown as ElementRef);
+    applyPendingMainThreadRefAttachments();
 
     reloadMainThread({}, { reloadTemplate: true });
 
