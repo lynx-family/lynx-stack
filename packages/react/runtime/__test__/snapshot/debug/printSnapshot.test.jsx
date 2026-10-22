@@ -11,7 +11,11 @@ import {
   SnapshotInstance,
   snapshotInstanceManager,
 } from '../../../src/snapshot';
-import { printSerializedSnapshotInstance, printSnapshotInstance } from '../../../src/snapshot/debug/printSnapshot';
+import {
+  printCompactSnapshotSerialization,
+  printSerializedSnapshotInstance,
+  printSnapshotInstance,
+} from '../../../src/snapshot/debug/printSnapshot';
 
 const HOLE = null;
 
@@ -147,6 +151,14 @@ describe('printSnapshotInstance', () => {
     const serialized = JSON.stringify(si1);
     msg = '\n';
     printSerializedSnapshotInstance(JSON.parse(serialized));
+    expect(msg).toMatchInlineSnapshot(`
+      "
+      "
+    `);
+  });
+
+  it('printToScreen for compact serialization', () => {
+    printCompactSnapshotSerialization([1, ['root'], [-1, 0, 0]]);
     expect(msg).toMatchInlineSnapshot(`
       "
       "
