@@ -2,13 +2,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { flushElementTemplate } from './flush.js';
 import { onMtsDestruction } from './mts-destroy.js';
 import {
   canReEvalMainThreadEntry,
   installMainThreadReloadCompleter,
   reEvalMainThreadEntry,
 } from '../../core/entry-reload.js';
-import { flushElementTemplate } from './flush.js';
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
 import { increaseReloadVersion } from '../../core/reload-version.js';
 import { profileEnd, profileStart } from '../debug/profile.js';

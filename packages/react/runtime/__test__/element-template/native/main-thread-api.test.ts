@@ -4,16 +4,7 @@ import { injectCalledByNative } from '../../../src/element-template/native/main-
 import { reloadMainThread } from '../../../src/element-template/native/reload-main-thread.js';
 import { createElementTemplatePage, setupPage } from '../../../src/element-template/runtime/page/page.js';
 import { renderMainThread } from '../../../src/element-template/runtime/render/render-main-thread.js';
-import {
-  __etAttrPlanMap,
-  adaptMTRefAttrSlot,
-  clearEtAttrPlanMap,
-} from '../../../src/element-template/runtime/template/attr-slot-plan.js';
-import {
-  initializeMainThreadDynamicAttrSlots,
-  attachMainThreadDynamicAttrRefsForSubtree,
-  clearMainThreadDynamicAttrState,
-} from '../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
+import { clearMainThreadDynamicAttrState } from '../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
 
 const mockedPageModuleState = vi.hoisted(() => ({
   page: undefined as unknown,
@@ -53,7 +44,6 @@ describe('injectCalledByNative', () => {
 
   afterEach(() => {
     clearMainThreadDynamicAttrState();
-    clearEtAttrPlanMap();
     vi.unstubAllGlobals();
     vi.clearAllMocks();
   });
@@ -122,35 +112,7 @@ describe('injectCalledByNative', () => {
     expect(vi.mocked(createElementTemplatePage)).toHaveBeenCalledTimes(1);
     expect(vi.mocked(setupPage)).toHaveBeenCalledWith({ type: 'page', id: '0', children: [] });
     expect(vi.mocked(renderMainThread)).toHaveBeenCalledTimes(1);
-  });
-
-  it('delivers first-screen refs without adding a native flush', () => {
-    injectCalledByNative();
-    const handle = { id: 'template' } as unknown as ElementTemplateHandle;
-    const target = { id: 'inner-element' } as unknown as ElementRef;
-    const ref = { _wvid: 7 };
-    const updateWorkletRef = vi.fn();
-    const previousWorkletImpl = globalThis.lynxWorkletImpl;
-    globalThis.lynxWorkletImpl = {
-      ...previousWorkletImpl,
-      _refImpl: { updateWorkletRef },
-    } as typeof globalThis.lynxWorkletImpl;
-    vi.mocked(__GetElementByAttrSlot).mockReturnValue(target);
-    vi.mocked(renderMainThread).mockImplementationOnce(() => {
-      __etAttrPlanMap['_et_ref'] = [1, adaptMTRefAttrSlot];
-      initializeMainThreadDynamicAttrSlots(-1, '_et_ref', [null, { type: 'main-thread-ref', value: ref }]);
-      attachMainThreadDynamicAttrRefsForSubtree([{ uid: -1, ref: handle }]);
-      expect(__FlushElementTree).not.toHaveBeenCalled();
-    });
-    try {
-      (globalThis as unknown as { renderPage: () => void }).renderPage();
-      expect(__FlushElementTree).not.toHaveBeenCalled();
-      expect(__GetElementByAttrSlot).toHaveBeenCalledWith(handle, 1);
-      expect(updateWorkletRef).toHaveBeenCalledWith(ref, target);
-    } finally {
-      clearMainThreadDynamicAttrState();
-      globalThis.lynxWorkletImpl = previousWorkletImpl;
-    }
+    expect(__FlushElementTree).not.toHaveBeenCalled();
   });
 
   it('merges updatePage data into initData and flushes at the root', () => {

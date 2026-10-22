@@ -8,7 +8,7 @@ import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 import { getMainThreadDynamicAttrSlotKinds } from './attr-slot-plan.js';
 import { prepareMainThreadBackgroundFunctionCtx } from './main-thread-background-function.js';
 import type { MTEventCtx, MTEventNativeWrapper } from './main-thread-event-ctx.js';
-import { attachMTRefValue, cleanupMTRefValue, hydrateMTRefValue, retainMTRefValue } from './main-thread-ref-ctx.js';
+import { attachMTRefValue, hydrateMTRefValue, retainMTRefValue } from './main-thread-ref-ctx.js';
 import type { MTRefNativeWrapper, MTRefValue } from './main-thread-ref-ctx.js';
 import type { SerializableValue } from '../../protocol/types.js';
 
@@ -21,13 +21,14 @@ type MainThreadDynamicAttrStateMap<T> = Map<number, Map<number, T>>;
 const mtEventAttrState: MainThreadDynamicAttrStateMap<MTEventCtx> = new Map();
 interface MTRefSlotState {
   value: MTRefValue;
-  attached: boolean;
-  attaching?: boolean;
+  cleanup?: () => void;
 }
 
 const mtRefAttrState: MainThreadDynamicAttrStateMap<MTRefSlotState> = new Map();
 const attachedMTRefHandles = new Map<number, ElementTemplateHandle>();
 const pendingMTRefHandles = new Set<number>();
+let isApplyingMTRefAttachments = false;
+let mtRefCleanupDepth = 0;
 
 export interface MainThreadDynamicAttrSubtreeHandle {
   uid: number;
@@ -50,9 +51,15 @@ function deleteSlotState<T>(
 }
 
 function cleanupMTRefSlot(state: MTRefSlotState): void {
-  if (state.attached) {
-    state.attached = false;
-    cleanupMTRefValue(state.value);
+  const cleanup = state.cleanup;
+  delete state.cleanup;
+  // A replacement may be visible before its hydration and old subtree cleanup
+  // finish. Let the enclosing commit drain refs after user cleanup returns.
+  mtRefCleanupDepth += 1;
+  try {
+    cleanup?.();
+  } finally {
+    mtRefCleanupDepth -= 1;
   }
 }
 
@@ -84,11 +91,12 @@ function setMTRefSlotState(
   handleId: number,
   attrSlotIndex: number,
   value: MTRefValue,
-): void {
+): MTRefSlotState {
   retainMTRefValue(value);
-  const state: MTRefSlotState = { value, attached: false };
+  const state: MTRefSlotState = { value };
   setSlotState(mtRefAttrState, handleId, attrSlotIndex, state);
   if (attachedMTRefHandles.has(handleId)) pendingMTRefHandles.add(handleId);
+  return state;
 }
 
 export function prepareMainThreadDynamicAttrSlotsForNative(
@@ -187,15 +195,18 @@ export function updateMainThreadRefAttrSlot(
   isHydration = false,
 ): void {
   const previousState = mtRefAttrState.get(handleId)?.get(attrSlotIndex);
-  if (previousState) cleanupMTRefSlot(previousState);
   if (value == null) {
     deleteSlotState(mtRefAttrState, handleId, attrSlotIndex);
+    if (previousState) cleanupMTRefSlot(previousState);
     return;
   }
   const nextValue = (value as MTRefNativeWrapper).value;
-  if (isHydration) hydrateMTRefValue(nextValue, previousState?.value);
   if (attachedMTRefHandles.has(handleId)) attachedMTRefHandles.set(handleId, nativeRef);
-  setMTRefSlotState(handleId, attrSlotIndex, nextValue);
+  const nextState = setMTRefSlotState(handleId, attrSlotIndex, nextValue);
+  if (previousState) cleanupMTRefSlot(previousState);
+  if (isHydration && mtRefAttrState.get(handleId)?.get(attrSlotIndex) === nextState) {
+    hydrateMTRefValue(nextValue, previousState?.value);
+  }
 }
 
 export function attachMainThreadDynamicAttrRefsForSubtree(
@@ -215,22 +226,34 @@ export function hasPendingMainThreadRefAttachments(): boolean {
 // Deliver after the logical batch is complete. Native materializes each queried
 // instance on demand; no layout callback or cross-batch continuation is needed.
 export function applyPendingMainThreadRefAttachments(): void {
-  const pending = [...pendingMTRefHandles];
-  pendingMTRefHandles.clear();
-  for (const handleId of pending) {
-    const nativeRef = attachedMTRefHandles.get(handleId);
-    if (!nativeRef) continue;
-    const slots = [...(mtRefAttrState.get(handleId) ?? [])];
-    for (const [attrSlotIndex, state] of slots) {
-      if (state.attached || state.attaching || !isCurrentMTRefSlot(handleId, attrSlotIndex, nativeRef, state)) continue;
-      const element = __GetElementByAttrSlot(nativeRef, attrSlotIndex);
-      if (!element) {
-        throw new Error(
-          `ElementTemplate main-thread:ref target ${handleId}:${attrSlotIndex} could not be materialized.`,
-        );
+  if (isApplyingMTRefAttachments || mtRefCleanupDepth > 0) return;
+  isApplyingMTRefAttachments = true;
+  try {
+    while (pendingMTRefHandles.size > 0) {
+      const handleId = pendingMTRefHandles.values().next().value!;
+      // Remove only the current owner so reentrant changes can enqueue it again
+      // and an exception cannot discard owners that have not been visited yet.
+      pendingMTRefHandles.delete(handleId);
+      try {
+        const nativeRef = attachedMTRefHandles.get(handleId)!;
+        const slots = [...(mtRefAttrState.get(handleId) ?? [])];
+        for (const [attrSlotIndex, state] of slots) {
+          if (state.cleanup || !isCurrentMTRefSlot(handleId, attrSlotIndex, nativeRef, state)) continue;
+          const element = __GetElementByAttrSlot(nativeRef, attrSlotIndex);
+          if (!element) {
+            throw new Error(
+              `ElementTemplate main-thread:ref target ${handleId}:${attrSlotIndex} could not be materialized.`,
+            );
+          }
+          attachMTRefSlot(handleId, attrSlotIndex, nativeRef, state, element);
+        }
+      } catch (error) {
+        if (attachedMTRefHandles.has(handleId)) pendingMTRefHandles.add(handleId);
+        throw error;
       }
-      attachMTRefSlot(handleId, attrSlotIndex, nativeRef, state, element);
     }
+  } finally {
+    isApplyingMTRefAttachments = false;
   }
 }
 
@@ -251,35 +274,33 @@ function attachMTRefSlot(
   state: MTRefSlotState,
   element: ElementRef,
 ): void {
-  state.attaching = true;
-  try {
-    attachMTRefValue(state.value, element);
-  } finally {
-    state.attaching = false;
-  }
+  const cleanup = attachMTRefValue(state.value, element);
   if (isCurrentMTRefSlot(handleId, attrSlotIndex, nativeRef, state)) {
-    state.attached = true;
+    state.cleanup = cleanup;
   } else {
-    // A callback may synchronously remove its own binding before returning cleanup.
-    cleanupMTRefValue(state.value);
+    // The callback invalidated its binding before returning its own cleanup.
+    cleanup();
   }
 }
 
 export function detachMainThreadDynamicAttrRefsForSubtree(
   handles: readonly MainThreadDynamicAttrSubtreeHandle[],
 ): void {
+  const detachedStates: MTRefSlotState[] = [];
   for (const { uid } of handles) {
     attachedMTRefHandles.delete(uid);
     pendingMTRefHandles.delete(uid);
     const handleState = mtRefAttrState.get(uid);
     if (handleState) {
-      for (const [attrSlotIndex, state] of handleState) {
-        cleanupMTRefSlot(state);
-        // A callback may detach and reattach while this batch is delivering refs.
-        handleState.set(attrSlotIndex, { value: state.value, attached: false });
+      for (const [attrSlotIndex, state] of [...handleState]) {
+        handleState.set(attrSlotIndex, { value: state.value });
+        detachedStates.push(state);
       }
     }
   }
+  // Publish the whole detach before calling user code. Cleanup may replace a
+  // slot or reattach the subtree, and those newer states must survive.
+  for (const state of detachedStates) cleanupMTRefSlot(state);
 }
 
 export function deleteMainThreadDynamicAttrStateForSubtree(

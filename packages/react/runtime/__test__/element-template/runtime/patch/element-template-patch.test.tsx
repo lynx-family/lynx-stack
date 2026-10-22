@@ -807,19 +807,19 @@ describe('ElementTemplate patch stream (apply)', () => {
 
       expect(mockSetElementTemplateAttributeSlot).not.toHaveBeenCalled();
       expect(oldCleanup).toHaveBeenCalledTimes(1);
-      const mountedCallback = runWorklet.mock.calls[0]?.[0] as typeof nextCallback & {
-        _unmount?: () => void;
-      };
+      const mountedCallback = runWorklet.mock.calls[0]?.[0] as typeof nextCallback;
       expect(mountedCallback).toEqual(expect.objectContaining({
         _wkltId: 'next-ref-callback',
       }));
       expect(runWorklet.mock.calls[0]?.[1]).toEqual([{ elementRefptr: REF_TARGET }]);
-      expect(mountedCallback._unmount).toBe(nextCleanup);
+      expect(mountedCallback).not.toHaveProperty('_unmount');
       expect(nextCallback).not.toHaveProperty('_unmount');
       expect(getMainThreadDynamicAttrState(targetId, 0)).toEqual({
         kind: 'mt-ref',
         value: mountedCallback,
       });
+      applyElementTemplateUpdateCommands([ElementTemplateUpdateOps.setMainThreadRef, targetId, 0, null]);
+      expect(nextCleanup).toHaveBeenCalledOnce();
     } finally {
       globalThis.runWorklet = previousRunWorklet;
     }
