@@ -314,6 +314,56 @@ describe('chat protocol adapters', () => {
     });
   });
 
+  test('configures reasoning effort and omits the default override', () => {
+    const settings = {
+      ...createDefaultProviderSettings(),
+      provider: 'test-model',
+      models: [{ id: 'test-model', label: 'Test model' }],
+      status: 'ready' as const,
+    };
+    const control = CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings).find(
+      ({ id }) => id === 'reasoningEffort',
+    );
+    expect(control).toMatchObject({
+      kind: 'select',
+      value: '',
+      options: [
+        { value: '', label: 'Default' },
+        { value: 'none', label: 'None' },
+        { value: 'minimal', label: 'Minimal' },
+        { value: 'low', label: 'Low' },
+        { value: 'medium', label: 'Medium' },
+        { value: 'high', label: 'High' },
+        { value: 'xhigh', label: 'Extra high' },
+      ],
+    });
+
+    const explicit = CHAT_PROVIDER_SETTINGS_ADAPTER.update(
+      settings,
+      'reasoningEffort',
+      'high',
+    );
+    expect(toProviderRequestOptions(explicit)).toEqual({
+      model: 'test-model',
+      reasoningEffort: 'high',
+    });
+    expect(CHAT_PROVIDER_SETTINGS_ADAPTER.conversation.snapshot(explicit))
+      .toMatchObject({ reasoningEffort: 'high' });
+    expect(serializeProviderSettings(explicit)).toMatchObject({
+      reasoningEffort: 'high',
+    });
+
+    const inherited = CHAT_PROVIDER_SETTINGS_ADAPTER.update(
+      explicit,
+      'reasoningEffort',
+      '',
+    );
+    expect(inherited).not.toHaveProperty('reasoningEffort');
+    expect(toProviderRequestOptions(inherited)).toEqual({
+      model: 'test-model',
+    });
+  });
+
   test('loads the model list and default model from the server', async () => {
     const host = {
       origin: 'http://localhost:3000',
@@ -378,6 +428,7 @@ describe('chat protocol adapters', () => {
         'model',
         'apiKey',
         'baseURL',
+        'reasoningEffort',
         'enableDesignGuidance',
       ]);
       expect(CHAT_PROVIDER_SETTINGS_ADAPTER.controls(customSettings)[3])
@@ -537,6 +588,7 @@ describe('chat protocol adapters', () => {
         'model',
         'apiKey',
         'baseURL',
+        'reasoningEffort',
         'enableDesignGuidance',
       ]);
       expect(CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings)[0])
@@ -777,12 +829,21 @@ describe('chat protocol adapters', () => {
       data: {
         text: `Here is the artifact:\n${VALID_LYNX_XML}\n\`\`\``,
         usage: { inputTokens: 7, outputTokens: 11, totalTokens: 18 },
+        preview: {
+          sourceUrl: 'https://cdn.example.com/lynx-xml/preview/id/index.lynxml',
+        },
       },
     });
     expect(done.emissions).toEqual([
       {
         type: 'usage',
         usage: { promptTokens: 7, completionTokens: 11, totalTokens: 18 },
+      },
+      {
+        type: 'previewPayload',
+        value: {
+          sourceUrl: 'https://cdn.example.com/lynx-xml/preview/id/index.lynxml',
+        },
       },
       { type: 'final', output: { source: VALID_LYNX_XML } },
     ]);
@@ -878,10 +939,19 @@ describe('chat protocol adapters', () => {
         language: 'text',
       },
     ]);
-    const saved = LYNX_XML_CHAT_ADAPTER.persist(output);
+    const saved = LYNX_XML_CHAT_ADAPTER.persist(output, {
+      kind: 'create',
+      current: null,
+      previewPayloadUrls: {
+        sourceUrl: 'https://cdn.example.com/lynx-xml/preview/id/index.lynxml',
+      },
+    });
     expect(saved.assistantContent).toBe(VALID_LYNX_XML);
     expect(saved.lynxXmlFragment).toBe(xmlFragment);
     expect(saved.lynxXmlModelOutput).toBe(modelOutput);
+    expect(saved.previewPayloadUrls).toEqual({
+      sourceUrl: 'https://cdn.example.com/lynx-xml/preview/id/index.lynxml',
+    });
     const history = [{
       role: 'assistant' as const,
       content: saved.assistantContent,
@@ -945,7 +1015,11 @@ describe('chat protocol adapters', () => {
       { label: 'Original', text: VALID_LYNX_XML },
       { label: 'Transformed', text: source },
     ]);
-    expect(LYNX_XML_CHAT_ADAPTER.persist(output)).toMatchObject({
+    expect(LYNX_XML_CHAT_ADAPTER.persist(output, {
+      kind: 'create',
+      current: null,
+      previewPayloadUrls: null,
+    })).toMatchObject({
       assistantContent: source,
       lynxXmlModelOutput: VALID_LYNX_XML,
     });
@@ -1034,6 +1108,7 @@ describe('chat protocol adapters', () => {
       rawText: openuiOutput.rawText,
       theme: 'dark',
       liveAction: true,
+      liveStream: true,
     });
     expect(OPENUI_CHAT_ADAPTER.preview.merge(null, openuiOutput)).toBe(
       openuiOutput,
@@ -1048,10 +1123,13 @@ describe('chat protocol adapters', () => {
     expect(LYNX_XML_CHAT_ADAPTER.preview.source(lynxXmlOutput, {
       protocol: PROTOCOLS['lynx-xml'],
       theme: 'dark',
-      previewPayloadUrls: null,
+      previewPayloadUrls: {
+        sourceUrl: 'https://cdn.example.com/lynx-xml/preview/id/index.lynxml',
+      },
     })).toEqual({
       kind: 'lynx-xml',
       source: VALID_LYNX_XML,
+      sourcePath: 'https://cdn.example.com/lynx-xml/preview/id/index.lynxml',
       theme: 'dark',
     });
     expect(LYNX_XML_CHAT_ADAPTER.preview.merge(null, lynxXmlOutput)).toBe(
@@ -1605,7 +1683,10 @@ test('offers custom Jev in A2UI and OpenUI and forwards its connection without p
       settings,
       host,
     }).body,
-  ).toMatchObject(connection);
+  ).toMatchObject({
+    ...connection,
+    tools: ['openui_query', 'openui_mutation'],
+  });
   expect(
     OPENUI_CHAT_ADAPTER.action.request({
       action: {
@@ -1617,7 +1698,10 @@ test('offers custom Jev in A2UI and OpenUI and forwards its connection without p
       settings,
       host,
     }).body,
-  ).toMatchObject(connection);
+  ).toMatchObject({
+    ...connection,
+    tools: ['openui_query', 'openui_mutation'],
+  });
   expect(OPENUI_CHAT_ADAPTER.settings.serialize(settings)).toEqual({
     provider: CUSTOM_PROVIDER_ID,
     enableDesignGuidance: false,

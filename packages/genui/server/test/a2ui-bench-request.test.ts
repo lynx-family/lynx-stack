@@ -26,6 +26,39 @@ function body(groups: unknown[]) {
 }
 
 describe('A2UI Bench request protocol groups', () => {
+  test.each([
+    undefined,
+    'default',
+    'none',
+    'minimal',
+    'low',
+    'medium',
+    'high',
+    'xhigh',
+  ])(
+    'normalizes generation reasoning %s independently for every protocol',
+    reasoningEffort => {
+      const result = normalizeBenchJobRequest(body(
+        ['a2ui', 'openui', 'lynx-xml', 'html', 'reactweb', 'reactlynx'].map(
+          protocol => ({ id: protocol, protocol, reasoningEffort }),
+        ),
+      ));
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.request.groups.map(group => group.reasoningEffort))
+          .toEqual(Array(6).fill(reasoningEffort ?? 'default'));
+      }
+    },
+  );
+
+  test.each(['auto', '', null, 1, true])(
+    'rejects invalid generation reasoning %s',
+    reasoningEffort => {
+      expect(normalizeBenchJobRequest(body([{ id: 'group', reasoningEffort }])))
+        .toMatchObject({ ok: false, status: 400 });
+    },
+  );
+
   test.each([undefined, false, true, 'true'])(
     'validates ScriptReuse: %s',
     enableScriptReuse => {
@@ -105,7 +138,9 @@ describe('A2UI Bench request protocol groups', () => {
   });
   test('accepts Lynx XML native alongside both component protocols', () => {
     const normalized = normalizeBenchJobRequest(body(
-      ['a2ui', 'openui', 'lynx-xml', 'html'].map((protocol) => ({
+      ['a2ui', 'openui', 'lynx-xml', 'html', 'reactweb', 'reactlynx'].map((
+        protocol,
+      ) => ({
         id: protocol,
         protocol,
         catalog: 'Core Catalog',
@@ -121,6 +156,8 @@ describe('A2UI Bench request protocol groups', () => {
       ['openui', 'matched-core'],
       ['lynx-xml', 'native'],
       ['html', 'native'],
+      ['reactweb', 'native'],
+      ['reactlynx', 'native'],
     ]);
     expect(normalized.request.groups[2]).not.toHaveProperty('catalog');
     expect(normalized.request.groups[3]).not.toHaveProperty('catalog');
@@ -429,27 +466,30 @@ describe('A2UI Bench request protocol groups', () => {
   });
 });
 
-test('rejects matched-core for HTML and omits XML-only options', () => {
-  expect(
-    normalizeBenchJobRequest(
-      body([{ id: 'html', protocol: 'html', profile: 'matched-core' }]),
-    ),
-  ).toMatchObject({ ok: false });
-  const result = normalizeBenchJobRequest(
-    body([{
-      id: 'html',
-      protocol: 'html',
-      enableHtmlFragment: true,
-      catalog: 'Full Catalog',
-    }]),
-  );
-  expect(result.ok).toBe(true);
-  if (result.ok) {
-    expect(result.request.groups[0]).toMatchObject({
-      protocol: 'html',
-      profile: 'native',
-    });
-    expect(result.request.groups[0]).not.toHaveProperty('catalog');
-    expect(result.request.groups[0]).not.toHaveProperty('enableHtmlFragment');
-  }
-});
+test.each(['html', 'reactweb', 'reactlynx'])(
+  'rejects matched-core for %s and omits XML-only options',
+  (protocol) => {
+    expect(
+      normalizeBenchJobRequest(
+        body([{ id: 'html', protocol, profile: 'matched-core' }]),
+      ),
+    ).toMatchObject({ ok: false });
+    const result = normalizeBenchJobRequest(
+      body([{
+        id: 'html',
+        protocol,
+        enableHtmlFragment: true,
+        catalog: 'Full Catalog',
+      }]),
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.request.groups[0]).toMatchObject({
+        protocol,
+        profile: 'native',
+      });
+      expect(result.request.groups[0]).not.toHaveProperty('catalog');
+      expect(result.request.groups[0]).not.toHaveProperty('enableHtmlFragment');
+    }
+  },
+);

@@ -11,7 +11,11 @@ mod swc_plugin_refresh;
 mod swc_plugin_transform_builtin_attribute_names;
 mod swc_plugin_worklet_post_process;
 
-use std::{cell::RefCell, rc::Rc, vec};
+use std::{
+  cell::{Cell, RefCell},
+  rc::Rc,
+  vec,
+};
 
 use napi::{bindgen_prelude::AsyncTask, Either, Env, Task};
 
@@ -299,6 +303,31 @@ pub struct Define {
   pub code: String,
   /// @internal
   pub unmergeable: Option<bool>,
+  /// @internal
+  pub runtime_requirements: Option<TransformRuntimeRequirements>,
+  /// Imports needed when this definition moves to another module.
+  /// @internal
+  pub imports: Option<Vec<DefineImport>>,
+}
+
+/// @internal
+#[napi(object)]
+pub struct DefineImport {
+  /// @internal
+  pub source: String,
+  /// @internal
+  pub imported: String,
+  /// @internal
+  pub local: String,
+  /// @internal
+  pub namespace: Option<bool>,
+}
+
+#[napi(object)]
+pub struct TransformRuntimeRequirements {
+  /// @internal
+  #[napi(js_name = "mainThreadProgrammability")]
+  pub main_thread_programmability: bool,
 }
 
 #[napi(object)]
@@ -315,6 +344,9 @@ pub struct TransformNodiffOutput {
   #[napi(js_name = "elementTemplates")]
   pub element_templates: Option<Vec<ElementTemplateAsset>>,
   /// @internal
+  #[napi(js_name = "runtimeRequirements")]
+  pub runtime_requirements: TransformRuntimeRequirements,
+  /// @internal
   #[napi(js_name = "definesForSnapshot")]
   pub defines_for_snapshot: Option<Vec<Define>>,
   /// @internal
@@ -322,13 +354,22 @@ pub struct TransformNodiffOutput {
   pub defines_for_worklet: Option<Vec<Define>>,
 }
 
+fn transform_runtime_requirements(
+  main_thread_programmability: bool,
+) -> TransformRuntimeRequirements {
+  TransformRuntimeRequirements {
+    main_thread_programmability,
+  }
+}
+
 fn print_define(
   c: &Compiler,
   items: Vec<ModuleItem>,
   top_level_mark: Mark,
   comments: &SingleThreadedComments,
-) -> Result<String, String> {
-  let module = match Program::Module(Module {
+  filename: &str,
+) -> Result<(String, Vec<DefineImport>), String> {
+  let mut module = match Program::Module(Module {
     span: DUMMY_SP,
     body: items,
     shebang: None,
@@ -343,6 +384,50 @@ fn print_define(
     Program::Module(m) => m,
     _ => return Err("hygiene produced a non-module program".into()),
   };
+
+  // Print imports and statements through the same hygiene pass before
+  // separating them. The consumer must not guess bindings from generated code.
+  let filename = filename.replace('\\', "/");
+  let mut imports = vec![];
+  let mut statements = vec![];
+  for item in module.body {
+    if let ModuleItem::ModuleDecl(ModuleDecl::Import(import)) = item {
+      let mut source = import.src.value.to_string_lossy().into_owned();
+      // std::path's absolute-path checks are unsupported on wasm.
+      if source == "." || source == ".." || source.starts_with("./") || source.starts_with("../") {
+        if let Some((directory, _)) = filename.rsplit_once('/') {
+          source = format!("{directory}/{source}");
+          if !source.starts_with('/') && source.as_bytes().get(1) != Some(&b':') {
+            source = format!("./{source}");
+          }
+        }
+      }
+      for specifier in import.specifiers {
+        let local = specifier.local().sym.to_string();
+        let namespace = matches!(specifier, ImportSpecifier::Namespace(_)).then_some(true);
+        let imported = match specifier {
+          ImportSpecifier::Default(_) => "default".into(),
+          ImportSpecifier::Namespace(_) => "*".into(),
+          ImportSpecifier::Named(named) => match named.imported {
+            Some(ModuleExportName::Ident(ident)) => ident.sym.to_string(),
+            Some(ModuleExportName::Str(value)) => value.value.to_string_lossy().into_owned(),
+            None => named.local.sym.to_string(),
+          },
+          #[allow(unreachable_patterns)]
+          _ => return Err("unknown definition import specifier".into()),
+        };
+        imports.push(DefineImport {
+          source: source.clone(),
+          imported,
+          local,
+          namespace,
+        });
+      }
+    } else {
+      statements.push(item);
+    }
+  }
+  module.body = statements;
 
   c.print(
     &Program::Module(module),
@@ -367,7 +452,7 @@ fn print_define(
         .with_ascii_only(false),
     },
   )
-  .map(|r| r.code)
+  .map(|r| (r.code, imports))
   .map_err(|err| err.to_string())
 }
 
@@ -449,6 +534,7 @@ fn transform_react_lynx_inner(
 
   let snapshot_ui_source_map_records: Rc<RefCell<Vec<SnapshotCoreUISourceMapRecord>>> =
     Rc::new(RefCell::new(vec![]));
+  let main_thread_programmability = Rc::new(Cell::new(false));
 
   let result = GLOBALS.set(&Default::default(), || {
     let program = c.parse_js(
@@ -469,6 +555,7 @@ fn transform_react_lynx_inner(
           warnings: warnings.read().unwrap().clone(),
           ui_source_map_records: vec![],
           element_templates: None,
+          runtime_requirements: transform_runtime_requirements(main_thread_programmability.get()),
           defines_for_snapshot: None,
           defines_for_worklet: None,
         };
@@ -799,7 +886,9 @@ fn transform_react_lynx_inner(
       Either::A(config) => {
         let visitor = WorkletVisitor::default().with_content_hash(content_hash);
         let visitor =
-          visitor.with_defines_collector(defines_collector.clone());
+          visitor
+            .with_defines_collector(defines_collector.clone())
+            .with_main_thread_programmability(Rc::clone(&main_thread_programmability));
         Optional::new(visit_mut_pass(visitor), config)
       }
       Either::B(config) => {
@@ -807,7 +896,9 @@ fn transform_react_lynx_inner(
           WorkletVisitor::new(options.mode.unwrap_or(TransformMode::Production), config)
             .with_content_hash(content_hash);
         let visitor =
-          visitor.with_defines_collector(defines_collector.clone());
+          visitor
+            .with_defines_collector(defines_collector.clone())
+            .with_main_thread_programmability(Rc::clone(&main_thread_programmability));
         Optional::new(visit_mut_pass(visitor), true)
       }
     };
@@ -933,26 +1024,27 @@ fn transform_react_lynx_inner(
         let mut defines_for_worklet: Vec<Define> = vec![];
         helpers::HELPERS.set(&helpers::Helpers::new(false), || {
           for define in defines_collector.borrow().iter() {
+            let (code, imports) = match print_define(&c, define.items.clone(), top_level_mark, &comments, &options.filename) {
+              Ok(printed) => printed,
+              Err(err) => {
+                define_errors.push(esbuild::PartialMessage {
+                  id: None,
+                  plugin_name: Some(options.plugin_name.clone()),
+                  text: Some(format!("failed to print the collected definition `{}`: {}", define.id, err)),
+                  location: None,
+                  notes: None,
+                  detail: None,
+                });
+                (String::new(), vec![])
+              }
+            };
             let printed = Define {
               id: define.id.clone(),
               unmergeable: define.unmergeable.then_some(true),
-              code: match print_define(&c, define.items.clone(), top_level_mark, &comments) {
-                Ok(code) => code,
-                Err(err) => {
-                  define_errors.push(esbuild::PartialMessage {
-                    id: None,
-                    plugin_name: Some(options.plugin_name.clone()),
-                    text: Some(format!(
-                      "failed to print the collected definition `{}`: {}",
-                      define.id, err
-                    )),
-                    location: None,
-                    notes: None,
-                    detail: None,
-                  });
-                  "".into()
-                }
-              },
+              runtime_requirements: (define.kind == DefineKind::Worklet)
+                .then(|| transform_runtime_requirements(true)),
+              imports: (define.kind == DefineKind::Worklet).then_some(imports),
+              code,
             };
             match define.kind {
               DefineKind::Snapshot => defines_for_snapshot.push(printed),
@@ -972,6 +1064,7 @@ fn transform_react_lynx_inner(
             clone_snapshot_ui_source_map_records(&snapshot_ui_source_map_records, &options.filename)
           },
           element_templates,
+          runtime_requirements: transform_runtime_requirements(main_thread_programmability.get()),
           defines_for_snapshot: Some(defines_for_snapshot),
           defines_for_worklet: Some(defines_for_worklet),
         }
@@ -989,6 +1082,7 @@ fn transform_react_lynx_inner(
             clone_snapshot_ui_source_map_records(&snapshot_ui_source_map_records, &options.filename)
           },
           element_templates,
+          runtime_requirements: transform_runtime_requirements(main_thread_programmability.get()),
           defines_for_snapshot: None,
           defines_for_worklet: None,
         };
@@ -1008,6 +1102,7 @@ fn transform_react_lynx_inner(
     // Preserve the element-template assets collected in the successful transform
     // path instead of dropping them in the final wrapper object.
     element_templates: result.element_templates,
+    runtime_requirements: result.runtime_requirements,
     defines_for_snapshot: result.defines_for_snapshot,
     defines_for_worklet: result.defines_for_worklet,
   };
@@ -1150,6 +1245,147 @@ mod wasm {
 mod tests {
   use super::*;
 
+  fn worklet_definition(source: &str, filename: &str) -> Define {
+    let result = transform_react_lynx_inner(
+      source.into(),
+      TransformNodiffOptions {
+        filename: filename.into(),
+        worklet: Either::B(WorkletVisitorConfig {
+          target: swc_plugins_shared::target_napi::TransformTarget::JS,
+          custom_global_ident_names: Some(vec!["call".into(), "api".into(), "named".into()]),
+          ..Default::default()
+        }),
+        css_scope: Either::A(false),
+        ..Default::default()
+      },
+    );
+    assert!(result.errors.is_empty(), "{:?}", result.errors);
+    let mut definitions = result.defines_for_worklet.unwrap();
+    assert_eq!(definitions.len(), 1);
+    definitions.remove(0)
+  }
+
+  #[test]
+  fn should_collect_business_imports_for_background_only_worklets() {
+    let definition = worklet_definition(
+      r#"
+import { runOnBackground, useState } from '@lynx-js/react';
+export const handler = () => {
+  'main thread';
+  runOnBackground(() => {})();
+};
+"#,
+      "test.js",
+    );
+    let imports = definition.imports.unwrap();
+    let dependency = imports
+      .iter()
+      .find(|item| item.imported == "runOnBackground")
+      .unwrap();
+    assert_eq!(dependency.source, "@lynx-js/react");
+    assert!(definition
+      .code
+      .contains(&format!("{}(_jsFn1)()", dependency.local)));
+    assert!(!imports.iter().any(|item| item.imported == "useState"));
+    assert_eq!(imports.len(), 2);
+  }
+
+  #[test]
+  fn should_preserve_import_forms_and_rebase_relative_definition_dependencies() {
+    for (filename, expected) in [
+      ("/project/src/test.js", "/project/src/./bridge.js"),
+      ("C:\\project\\src\\test.js", "C:/project/src/./bridge.js"),
+      ("src/test.js", "./src/./bridge.js"),
+      ("test.js", "./bridge.js"),
+    ] {
+      let definition = worklet_definition(
+        r#"
+import call, * as api from './bridge.js';
+import { original as named } from './bridge.js';
+export const handler = () => {
+  'main thread';
+  return [call(), api.value, { named }];
+};
+"#,
+        filename,
+      );
+      let imports = definition.imports.unwrap();
+      let default = imports
+        .iter()
+        .find(|item| item.imported == "default")
+        .unwrap();
+      assert_eq!(default.source, expected);
+      assert_eq!(default.local, "call");
+      assert_eq!(default.namespace, None);
+      let namespace = imports
+        .iter()
+        .find(|item| item.namespace == Some(true))
+        .unwrap();
+      assert_eq!(namespace.imported, "*");
+      assert_eq!(namespace.source, expected);
+      let named = imports
+        .iter()
+        .find(|item| item.imported == "original")
+        .unwrap();
+      assert_eq!(named.source, expected);
+      assert!(definition.code.contains(&named.local));
+    }
+  }
+
+  #[test]
+  fn should_rebase_only_relative_definition_imports() {
+    for (source, expected) in [
+      (".", "/project/src/."),
+      ("..", "/project/src/.."),
+      ("./bridge.js", "/project/src/./bridge.js"),
+      ("../bridge.js", "/project/src/../bridge.js"),
+      (".hidden/x", ".hidden/x"),
+      ("..hidden/x", "..hidden/x"),
+      ("bridge", "bridge"),
+    ] {
+      let definition = worklet_definition(
+        &format!(
+          "import call from '{source}'; export const handler = () => {{ 'main thread'; return call(); }};"
+        ),
+        "/project/src/test.js",
+      );
+      let imports = definition.imports.unwrap();
+      let dependency = imports
+        .iter()
+        .find(|item| item.imported == "default")
+        .unwrap();
+      assert_eq!(dependency.source, expected);
+    }
+  }
+
+  #[test]
+  fn should_exclude_captured_and_shadowed_imports_from_worklet_dependencies() {
+    for source in [
+      "import { value } from './values.js'; export const handler = () => { 'main thread'; return value; };",
+      "import { runOnBackground } from './bridge.js'; export const handler = (runOnBackground) => { 'main thread'; runOnBackground(() => {})(); };",
+    ] {
+      let definition = worklet_definition(source, "test.js");
+      let imports = definition.imports.unwrap();
+      assert_eq!(imports.len(), 1);
+      assert_eq!(imports[0].imported, "registerWorklet");
+    }
+  }
+
+  #[test]
+  fn should_preserve_string_named_definition_imports() {
+    let definition = worklet_definition(
+      "import { 'string-name' as call } from 'bridge'; export const handler = () => { 'main thread'; return call(); };",
+      "test.js",
+    );
+    let imports = definition.imports.unwrap();
+    let dependency = imports
+      .iter()
+      .find(|item| item.imported == "string-name")
+      .unwrap();
+    assert_eq!(dependency.source, "bridge");
+    assert!(definition.code.contains(&format!("{}()", dependency.local)));
+  }
+
   #[test]
   fn test_syntax_serialize_and_deserialize() {
     use serde_json::json;
@@ -1164,6 +1400,101 @@ mod tests {
 
     assert!(s.typescript());
     assert!(!s.decorators()); // default to false
+  }
+
+  #[test]
+  fn should_report_runtime_requirements_from_each_transformed_module() {
+    let options = TransformNodiffOptions {
+      worklet: Either::A(true),
+      css_scope: Either::A(false),
+      ..Default::default()
+    };
+    let worklet = transform_react_lynx_inner(
+      r#"
+import '@lynx-js/react/worklet-runtime/init';
+export function handler() { 'main thread'; return 42; }
+"#
+      .into(),
+      options.clone(),
+    );
+
+    assert!(worklet.errors.is_empty());
+    assert!(worklet.runtime_requirements.main_thread_programmability);
+    assert!(worklet.code.contains("@lynx-js/react/worklet-runtime/init"));
+    assert_eq!(worklet.code.matches("__registerWorklet(").count(), 1);
+    assert!(!worklet.code.contains("loadWorkletRuntime"));
+
+    let plain =
+      transform_react_lynx_inner("export function handler() { return 42; }".into(), options);
+    assert!(plain.errors.is_empty());
+    assert!(!plain.runtime_requirements.main_thread_programmability);
+    assert!(!plain.code.contains("worklet-runtime/init"));
+    assert!(!plain.code.contains("registerWorkletInternal"));
+  }
+
+  #[test]
+  fn should_preserve_injected_worklet_requirements_without_retransforming_its_body() {
+    let result = transform_react_lynx_inner(
+      "export const handler = () => { 'main thread'; return 42; };".into(),
+      TransformNodiffOptions {
+        worklet: Either::B(WorkletVisitorConfig {
+          target: swc_plugins_shared::target_napi::TransformTarget::JS,
+          ..Default::default()
+        }),
+        css_scope: Either::A(false),
+        ..Default::default()
+      },
+    );
+
+    assert!(result.errors.is_empty());
+    assert!(!result.runtime_requirements.main_thread_programmability);
+    assert!(!result.code.contains("worklet-runtime/init"));
+    let definitions = result.defines_for_worklet.unwrap();
+    assert_eq!(definitions.len(), 1);
+    let definition = &definitions[0];
+    assert!(
+      definition
+        .runtime_requirements
+        .as_ref()
+        .unwrap()
+        .main_thread_programmability
+    );
+    assert!(!definition.code.contains("loadWorkletRuntime"));
+
+    let injected = transform_react_lynx_inner(
+      format!(
+        "import {{ {} as {} }} from {:?};\n{}",
+        definition.imports.as_ref().unwrap()[0].imported,
+        definition.imports.as_ref().unwrap()[0].local,
+        definition.imports.as_ref().unwrap()[0].source,
+        definition.code
+      ),
+      TransformNodiffOptions {
+        worklet: Either::A(true),
+        css_scope: Either::A(false),
+        ..Default::default()
+      },
+    );
+    assert!(injected.errors.is_empty());
+    assert!(injected.defines_for_worklet.unwrap().is_empty());
+    assert_eq!(injected.code.matches("__registerWorklet(").count(), 1);
+    assert!(injected.code.contains("return 42"));
+  }
+
+  #[test]
+  fn should_return_no_runtime_requirement_when_parsing_fails() {
+    let result = transform_react_lynx_inner(
+      "export function handler( {".into(),
+      TransformNodiffOptions {
+        worklet: Either::A(true),
+        ..Default::default()
+      },
+    );
+
+    assert!(!result.errors.is_empty());
+    assert!(result.code.is_empty());
+    assert!(!result.runtime_requirements.main_thread_programmability);
+    assert!(result.defines_for_worklet.is_none());
   }
 
   #[test]

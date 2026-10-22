@@ -1,0 +1,89 @@
+{
+  "name": "@lynx-js/lynx-stack-docs",
+  "version": "0.0.2",
+  "description": "The Lynx Stack API reference as MDX pages: the build configuration, the Rsbuild plugins, ReactLynx and every @lynx-js package.",
+  "keywords": [
+    "Lynx",
+    "documentation",
+    "API reference"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "docs"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    "./package.json": "./package.json",
+    "./manifest.json": "./manifest.json"
+  },
+  "files": [
+    "content/*/api",
+    "manifest.json"
+  ],
+  "scripts": {
+    "build": "node --max-old-space-size=8192 ./node_modules/@rspress/core/bin/rspress.js build",
+    "check:dependencies": "node check-dependencies.ts",
+    "dev": "node --max-old-space-size=8192 ./node_modules/@rspress/core/bin/rspress.js dev",
+    "preview": "rspress preview"
+  },
+  "devDependencies": {
+    "@lynx-js/autolink-codegen": "workspace:*",
+    "@lynx-js/cache-events-webpack-plugin": "workspace:*",
+    "@lynx-js/chunk-loading-webpack-plugin": "workspace:*",
+    "@lynx-js/config-rsbuild-plugin": "workspace:*",
+    "@lynx-js/create-lynx": "workspace:*",
+    "@lynx-js/css-extract-webpack-plugin": "workspace:*",
+    "@lynx-js/css-serializer": "workspace:*",
+    "@lynx-js/debug-metadata": "workspace:*",
+    "@lynx-js/debug-metadata-rsbuild-plugin": "workspace:*",
+    "@lynx-js/external-bundle-rsbuild-plugin": "workspace:*",
+    "@lynx-js/externals-loading-webpack-plugin": "workspace:*",
+    "@lynx-js/genui": "workspace:*",
+    "@lynx-js/genui-a2ui": "workspace:*",
+    "@lynx-js/genui-a2ui-catalog-extractor": "workspace:*",
+    "@lynx-js/genui-a2ui-prompt": "workspace:*",
+    "@lynx-js/genui-lynx-xml": "workspace:*",
+    "@lynx-js/genui-mcp-apps": "workspace:*",
+    "@lynx-js/genui-openui": "workspace:*",
+    "@lynx-js/genui-reactlynx": "workspace:*",
+    "@lynx-js/gesture-runtime": "workspace:*",
+    "@lynx-js/i18next-translation-dedupe": "workspace:*",
+    "@lynx-js/kitten-lynx-test-infra": "workspace:*",
+    "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
+    "@lynx-js/motion": "workspace:*",
+    "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/react-alias-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react-refresh-webpack-plugin": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/react-signals": "workspace:*",
+    "@lynx-js/react-webpack-plugin": "workspace:*",
+    "@lynx-js/reactlynx-testing-library": "workspace:*",
+    "@lynx-js/rsbuild-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/runtime-config-webpack-plugin": "workspace:*",
+    "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
+    "@lynx-js/template-webpack-plugin": "workspace:*",
+    "@lynx-js/testing-environment": "workspace:*",
+    "@lynx-js/vanilla-rsbuild-plugin": "workspace:*",
+    "@lynx-js/web-platform-rsbuild-plugin": "workspace:*",
+    "@lynx-js/web-worker-rpc": "workspace:*",
+    "@lynx-js/webpack-runtime-globals": "workspace:*",
+    "@lynx-js/websocket": "workspace:*",
+    "@rspress/core": "2.0.21",
+    "@rspress/plugin-typedoc": "2.0.21",
+    "@types/react": "npm:@types/react@^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "create-lynx-library": "workspace:*",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "typedoc": "^0.28.20",
+    "typedoc-plugin-markdown": "4.13.1",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": "^22 || ^24"
+  }
+}

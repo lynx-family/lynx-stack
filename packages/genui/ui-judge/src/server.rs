@@ -15,12 +15,13 @@ use std::time::{Duration, Instant};
 use axum::extract::multipart::{Field, Multipart, MultipartError};
 use axum::extract::{DefaultBodyLimit, FromRequest, Request, State};
 use axum::http::{
-  header::{CACHE_CONTROL, CONTENT_LENGTH, CONTENT_TYPE},
+  header::{CACHE_CONTROL, CONTENT_LENGTH},
   StatusCode,
 };
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
+use base64::prelude::{Engine, BASE64_STANDARD};
 use lynx_headless_rust_test_runner::{
   ContainerOptions, GotoOptions, LynxContainer, ScreenshotOptions,
 };
@@ -36,6 +37,8 @@ use tokio::sync::{oneshot, watch, Notify, OwnedSemaphorePermit, Semaphore};
 use crate::capture::{shared_workers, CaptureError, CaptureWorkers, WorkerPanicked};
 use crate::headless::{PageLoadOptions, DEFAULT_SCREENSHOT_SETTLE_MS};
 use crate::ssrf::{fetch_http_resource, HttpFetchError};
+pub use crate::tos::TosConfigError;
+use crate::tos::{ScreenshotStore, TosUploadError};
 use crate::visual::{
   compare_uploaded_images, ReferenceImageComparison, VisualEvaluationError, MAX_IMAGE_BYTES,
 };
@@ -263,6 +266,8 @@ pub enum ServerError {
   Io(#[from] io::Error),
   #[error("isolated ZIP capture failed")]
   IsolatedZipCapture,
+  #[error("invalid TOS screenshot storage configuration: {0}")]
+  Tos(#[from] TosConfigError),
 }
 
 impl From<WorkerPanicked> for ServerError {
@@ -274,17 +279,44 @@ impl From<WorkerPanicked> for ServerError {
 #[derive(Clone)]
 struct AppState {
   headless: Arc<CaptureWorkers>,
+  screenshot_store: ScreenshotStore,
   zip_capture_backend: ZipCaptureBackend,
   zip_capture_processes: ZipCaptureProcesses,
 }
 
+#[derive(Clone, Copy)]
+enum ScreenshotFormKind {
+  Page,
+  Zip,
+  LegacyTemplate,
+}
+
 #[derive(Debug)]
 struct ScreenshotForm {
+  parameters: ScreenshotParameters,
   capture_request: Option<CapturePageRequest>,
+  screenshot_settle_ms: u64,
   entry: ScreenshotEntry,
   viewport: ScreenshotViewport,
   load_options: PageLoadOptions,
   source: Vec<u8>,
+}
+
+/// One persisted input schema for every screenshot route. Source fields that
+/// do not apply are null; binary ZIP uploads use standard Base64.
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ScreenshotParameters {
+  entry: String,
+  width: usize,
+  height: usize,
+  global_props: Option<Value>,
+  init_data: Option<Value>,
+  screenshot_settle_ms: u64,
+  timeout_ms: u64,
+  url: Option<String>,
+  source: Option<String>,
+  file_base64: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -708,9 +740,16 @@ pub async fn serve(port: &str) -> Result<(), ServerError> {
 /// both IPv4 and IPv6 unspecified addresses when no host is provided. Ordinary
 /// native capture runs on one container-owning worker behind a bounded queue;
 /// untrusted uploads use one fresh child process each. Completed captures are
-/// returned as uncompressed BMP bytes.
+/// uploaded to Volcengine TOS and answered with the object's public URL. The
+/// TOS settings come from the `TOS_*` environment variables and are validated
+/// before the server binds, so a misconfigured deployment fails to start
+/// instead of failing every screenshot.
 pub async fn serve_on(host: Option<&str>, port: &str) -> Result<(), ServerError> {
   let port = parse_port(port)?;
+  let screenshot_store = ScreenshotStore::from_env().inspect_err(|error| {
+    // `main` reports errors with `Debug`; say what to fix in plain words too.
+    eprintln!("[ui-judge-server] invalid TOS screenshot storage configuration: {error}");
+  })?;
   let (ipv4_listener, ipv6_listener) = bind_listeners(host, port)?;
   let addresses = [ipv4_listener.as_ref(), ipv6_listener.as_ref()]
     .into_iter()
@@ -725,7 +764,7 @@ pub async fn serve_on(host: Option<&str>, port: &str) -> Result<(), ServerError>
   let zip_capture_processes = ZipCaptureProcesses::new();
   let state = AppState {
     headless: Arc::clone(&headless),
-
+    screenshot_store,
     zip_capture_backend: ZipCaptureBackend::IsolatedProcess,
     zip_capture_processes: zip_capture_processes.clone(),
   };
@@ -914,12 +953,33 @@ async fn render_page_screenshot(
     &request,
   )
   .await?;
-  Ok(
-    (
-      [(CONTENT_TYPE, "image/bmp"), (CACHE_CONTROL, "no-store")],
-      capture.into_bmp(),
-    )
-      .into_response(),
+  screenshot_response(state, capture.into_bmp(), &form.parameters).await
+}
+
+/// Uploads a finished capture to TOS and answers with its public URL. This runs
+/// after the render slot is released, so a slow upload never holds a renderer.
+async fn screenshot_response(
+  state: &AppState,
+  bmp: Vec<u8>,
+  parameters: &ScreenshotParameters,
+) -> Result<Response, ApiError> {
+  let parameters = serde_json::to_vec_pretty(parameters)
+    .expect("screenshot parameters contain only JSON-compatible values");
+  let url = state
+    .screenshot_store
+    .put_bmp(bmp, parameters)
+    .await
+    .map_err(screenshot_upload_api_error)?;
+  Ok(([(CACHE_CONTROL, "no-store")], Json(json!({ "url": url }))).into_response())
+}
+
+fn screenshot_upload_api_error(error: TosUploadError) -> ApiError {
+  // The detail may name the bucket or a TOS error code; keep it in the server
+  // log rather than the response.
+  eprintln!("[ui-judge-server] screenshot upload failed: {error}");
+  ApiError::new(
+    StatusCode::BAD_GATEWAY,
+    "The screenshot could not be uploaded to TOS.",
   )
 }
 
@@ -927,20 +987,20 @@ async fn read_page_screenshot_form(
   request: Request,
   source_name: &str,
 ) -> Result<ScreenshotForm, ApiError> {
-  read_screenshot_form_impl(request, source_name, true).await
+  read_screenshot_form_impl(request, source_name, ScreenshotFormKind::Page).await
 }
 
 async fn read_screenshot_form(
   request: Request,
   source_name: &str,
 ) -> Result<ScreenshotForm, ApiError> {
-  read_screenshot_form_impl(request, source_name, false).await
+  read_screenshot_form_impl(request, source_name, ScreenshotFormKind::Zip).await
 }
 
 async fn read_screenshot_form_impl(
   mut request: Request,
   source_name: &str,
-  page_options: bool,
+  kind: ScreenshotFormKind,
 ) -> Result<ScreenshotForm, ApiError> {
   if request.uri().query().is_some_and(|query| !query.is_empty()) {
     return Err(ApiError::new(
@@ -965,7 +1025,7 @@ async fn read_screenshot_form_impl(
     .await
     .map_err(|error| ApiError::new(StatusCode::UNSUPPORTED_MEDIA_TYPE, error.to_string()))?;
   read_screenshot_form_with_deadline(
-    parse_screenshot_form(multipart, source_name, page_options),
+    parse_screenshot_form(multipart, source_name, kind),
     LYNXML_UPLOAD_TIMEOUT,
   )
   .await
@@ -986,7 +1046,7 @@ async fn read_screenshot_form_with_deadline(
 async fn parse_screenshot_form(
   mut multipart: Multipart,
   source_name: &str,
-  page_options: bool,
+  kind: ScreenshotFormKind,
 ) -> Result<ScreenshotForm, ApiError> {
   let mut entry = None;
   let mut width = None;
@@ -1005,8 +1065,10 @@ async fn parse_screenshot_form(
       "height" => &mut height,
       "globalProps" => &mut global_props,
       "initData" => &mut init_data,
-      "screenshotSettleMs" if page_options => &mut screenshot_settle_ms,
-      "timeoutMs" if page_options => &mut timeout_ms,
+      "screenshotSettleMs" if !matches!(kind, ScreenshotFormKind::LegacyTemplate) => {
+        &mut screenshot_settle_ms
+      }
+      "timeoutMs" if matches!(kind, ScreenshotFormKind::Page) => &mut timeout_ms,
       name if name == source_name => &mut source,
       _ => {
         return Err(ApiError::new(
@@ -1034,7 +1096,9 @@ async fn parse_screenshot_form(
     }
     *slot = Some(bytes);
   }
-  let entry = ScreenshotEntry::parse(form_text("entry", &required_form_field("entry", entry)?)?)?;
+  let entry_bytes = required_form_field("entry", entry)?;
+  let entry_text = form_text("entry", &entry_bytes)?;
+  let entry = ScreenshotEntry::parse(entry_text)?;
   let viewport = ScreenshotViewport::new(
     form_dimension("width", width, DEFAULT_SCREENSHOT_WIDTH)?,
     form_dimension("height", height, DEFAULT_SCREENSHOT_HEIGHT)?,
@@ -1051,7 +1115,12 @@ async fn parse_screenshot_form(
     ));
   }
   let source = required_form_field(source_name, source)?;
-  let capture_request = if page_options {
+  let screenshot_settle_ms = form_duration(
+    "screenshotSettleMs",
+    screenshot_settle_ms,
+    DEFAULT_SCREENSHOT_SETTLE_MS,
+  )?;
+  let capture_request = if matches!(kind, ScreenshotFormKind::Page) {
     let timeout_ms = form_duration("timeoutMs", timeout_ms, DEFAULT_TIMEOUT_MS)?;
     if timeout_ms == 0 {
       return Err(ApiError::new(
@@ -1061,19 +1130,46 @@ async fn parse_screenshot_form(
     }
     Some(CapturePageRequest {
       url: entry.url.clone(),
-      screenshot_settle: Duration::from_millis(form_duration(
-        "screenshotSettleMs",
-        screenshot_settle_ms,
-        DEFAULT_SCREENSHOT_SETTLE_MS,
-      )?),
+      screenshot_settle: Duration::from_millis(screenshot_settle_ms),
       timeout: Duration::from_millis(timeout_ms),
       ..CapturePageRequest::default()
     })
   } else {
     None
   };
+  let page_data = |data: &Option<String>| {
+    data
+      .as_deref()
+      .map(|data| serde_json::from_str(data).expect("page data was validated as a JSON object"))
+  };
+  let parameters = ScreenshotParameters {
+    entry: entry_text.to_string(),
+    width: viewport.width,
+    height: viewport.height,
+    global_props: page_data(&load_options.global_props_json),
+    init_data: page_data(&load_options.initial_data_json),
+    screenshot_settle_ms,
+    timeout_ms: capture_request
+      .as_ref()
+      .map_or(DEFAULT_TIMEOUT_MS, |request| {
+        request.timeout.as_millis() as u64
+      }),
+    url: if source_name == "url" {
+      Some(form_text("url", &source)?.to_string())
+    } else {
+      None
+    },
+    source: if source_name == "source" {
+      Some(form_text("source", &source)?.to_string())
+    } else {
+      None
+    },
+    file_base64: (source_name == "file").then(|| BASE64_STANDARD.encode(&source)),
+  };
   Ok(ScreenshotForm {
+    parameters,
     capture_request,
+    screenshot_settle_ms,
     entry,
     viewport,
     load_options,
@@ -1147,12 +1243,13 @@ async fn screenshot_template_url(
   request: Request,
 ) -> Result<Response, ApiError> {
   let ScreenshotForm {
+    parameters,
     entry,
     viewport,
     load_options,
     source,
     ..
-  } = read_screenshot_form(request, "url").await?;
+  } = read_screenshot_form_impl(request, "url", ScreenshotFormKind::LegacyTemplate).await?;
   if !entry.path.to_string_lossy().ends_with(".js") {
     return Err(ApiError::new(
       StatusCode::BAD_REQUEST,
@@ -1168,6 +1265,7 @@ async fn screenshot_template_url(
     StagedSourceKind::Template,
     viewport,
     load_options,
+    parameters,
   )
   .await
 }
@@ -1190,13 +1288,24 @@ async fn screenshot_zip_upload(
   request: Request,
 ) -> Result<Response, ApiError> {
   let ScreenshotForm {
+    parameters,
     entry,
     viewport,
     load_options,
+    screenshot_settle_ms,
     source,
     ..
   } = read_screenshot_form(request, "file").await?;
-  render_zip(&state, entry, source, viewport, load_options).await
+  render_zip(
+    &state,
+    entry,
+    source,
+    viewport,
+    load_options,
+    screenshot_settle_ms,
+    parameters,
+  )
+  .await
 }
 
 async fn screenshot_zip_url(
@@ -1204,9 +1313,11 @@ async fn screenshot_zip_url(
   request: Request,
 ) -> Result<Response, ApiError> {
   let ScreenshotForm {
+    parameters,
     entry,
     viewport,
     load_options,
+    screenshot_settle_ms,
     source,
     ..
   } = read_screenshot_form(request, "url").await?;
@@ -1214,7 +1325,16 @@ async fn screenshot_zip_url(
   let resource = fetch_http_resource(&url, zip::MAX_ZIP_UPLOAD_BYTES, REMOTE_FETCH_TIMEOUT)
     .await
     .map_err(remote_fetch_api_error)?;
-  render_zip(&state, entry, resource.bytes, viewport, load_options).await
+  render_zip(
+    &state,
+    entry,
+    resource.bytes,
+    viewport,
+    load_options,
+    screenshot_settle_ms,
+    parameters,
+  )
+  .await
 }
 
 async fn render_zip(
@@ -1223,6 +1343,8 @@ async fn render_zip(
   upload: Vec<u8>,
   viewport: ScreenshotViewport,
   load_options: PageLoadOptions,
+  screenshot_settle_ms: u64,
+  parameters: ScreenshotParameters,
 ) -> Result<Response, ApiError> {
   let job_id = NEXT_ZIP_JOB_ID.fetch_add(1, Ordering::Relaxed);
   if upload.is_empty() {
@@ -1296,6 +1418,7 @@ async fn render_zip(
           IsolatedCaptureConfig {
             global_props_json: load_options.global_props_json,
             initial_data_json: load_options.initial_data_json,
+            screenshot_settle_ms,
             ..IsolatedCaptureConfig::default()
           },
         )
@@ -1313,7 +1436,10 @@ async fn render_zip(
       let capture_response = state
         .headless
         .capture_staged_zip(
-          staged_screenshot_request(&entry.url),
+          CapturePageRequest {
+            screenshot_settle: Duration::from_millis(screenshot_settle_ms),
+            ..staged_screenshot_request(&entry.url)
+          },
           PageLoadOptions {
             base_dir: Some(base_dir),
             ..load_options
@@ -1338,13 +1464,7 @@ async fn render_zip(
       capture.into_bmp()
     }
   };
-  Ok(
-    (
-      [(CONTENT_TYPE, "image/bmp"), (CACHE_CONTROL, "no-store")],
-      bmp,
-    )
-      .into_response(),
-  )
+  screenshot_response(state, bmp, &parameters).await
 }
 
 async fn render_staged_source(
@@ -1354,6 +1474,7 @@ async fn render_staged_source(
   kind: StagedSourceKind,
   viewport: ScreenshotViewport,
   load_options: PageLoadOptions,
+  parameters: ScreenshotParameters,
 ) -> Result<Response, ApiError> {
   let request = staged_screenshot_request(&entry.url);
   let capture = capture_staged_source(
@@ -1366,14 +1487,7 @@ async fn render_staged_source(
     &request,
   )
   .await?;
-  let bmp = capture.into_bmp();
-  Ok(
-    (
-      [(CONTENT_TYPE, "image/bmp"), (CACHE_CONTROL, "no-store")],
-      bmp,
-    )
-      .into_response(),
-  )
+  screenshot_response(state, capture.into_bmp(), &parameters).await
 }
 
 async fn capture_staged_source(
@@ -1542,7 +1656,6 @@ fn remote_url_too_large() -> ApiError {
 fn remote_fetch_api_error(error: HttpFetchError) -> ApiError {
   let status = match error {
     HttpFetchError::InvalidUrl | HttpFetchError::Credentials => StatusCode::BAD_REQUEST,
-    HttpFetchError::NonPublicAddress => StatusCode::FORBIDDEN,
     HttpFetchError::TimedOut => StatusCode::GATEWAY_TIMEOUT,
     HttpFetchError::TooLarge(_) => StatusCode::PAYLOAD_TOO_LARGE,
     HttpFetchError::Resolution | HttpFetchError::Request | HttpFetchError::Status(_) => {
@@ -2081,8 +2194,8 @@ mod tests {
   use ::zip::{CompressionMethod, ZipWriter};
   use axum::body::Body;
   use axum::extract::FromRequest;
+  use axum::http::header::CONTENT_TYPE;
   use axum::http::Request;
-  use base64::prelude::{Engine, BASE64_STANDARD};
   use image::{DynamicImage, ImageFormat, Rgba, RgbaImage};
 
   use super::*;
@@ -2090,6 +2203,94 @@ mod tests {
   use crate::headless::CapturedPage;
 
   const CONCURRENT_CAPTURE_REQUESTS: usize = 4;
+
+  /// Checks a successful screenshot response and returns the BMP that was
+  /// uploaded to the in-memory store for the URL it names.
+  async fn uploaded_screenshot(store: &ScreenshotStore, response: Response) -> Vec<u8> {
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.headers()[CONTENT_TYPE], "application/json");
+    assert_eq!(response.headers()[CACHE_CONTROL], "no-store");
+    let body = axum::body::to_bytes(response.into_body(), 4096)
+      .await
+      .expect("read screenshot response");
+    let body: Value = serde_json::from_slice(&body).expect("screenshot response is JSON");
+    assert_eq!(
+      body.as_object().map(|fields| fields.len()),
+      Some(1),
+      "{body}"
+    );
+    let url = body["url"].as_str().expect("response carries a URL");
+    let mut objects = store.stored_objects();
+    assert_eq!(
+      objects.len(),
+      2,
+      "one capture uploads a BMP and its input JSON"
+    );
+    let (stored_url, bmp) = objects.remove(0);
+    assert_eq!(url, stored_url);
+    let (parameters_url, parameters) = objects.remove(0);
+    assert_eq!(
+      parameters_url,
+      url.replace("screenshot.bmp", "screenshot.json")
+    );
+    let parameters: Value = serde_json::from_slice(&parameters).expect("stored inputs are JSON");
+    assert!(parameters["entry"].is_string());
+    assert!(parameters["width"].is_number());
+    assert!(parameters["height"].is_number());
+    assert!(
+      url.starts_with("https://screenshots.tos-cn-beijing.volces.com/screenshot/")
+        && url.ends_with("/screenshot.bmp"),
+      "{url}"
+    );
+    bmp
+  }
+
+  fn state_with_store(store: ScreenshotStore) -> AppState {
+    AppState {
+      headless: scripted_workers(|_| panic!("upload tests must not capture")),
+      zip_capture_backend: ZipCaptureBackend::SharedWorker,
+      zip_capture_processes: ZipCaptureProcesses::new(),
+      screenshot_store: store,
+    }
+  }
+
+  #[tokio::test]
+  async fn screenshot_response_returns_only_the_uploaded_url() {
+    let store = ScreenshotStore::in_memory();
+    let state = state_with_store(store.clone());
+    let bmp = vec![b'B', b'M', 1, 2, 3];
+
+    let form = read_page_screenshot_form(lynxml_request("index.lynxml", b"<lynx/>"), "source")
+      .await
+      .unwrap();
+    let response = screenshot_response(&state, bmp.clone(), &form.parameters)
+      .await
+      .unwrap();
+
+    assert_eq!(uploaded_screenshot(&store, response).await, bmp);
+    state.headless.shutdown().unwrap();
+  }
+
+  #[tokio::test]
+  async fn screenshot_upload_failures_are_bad_gateway_without_tos_details() {
+    let store = ScreenshotStore::failing_with_status(403);
+    let state = state_with_store(store.clone());
+
+    let form = read_page_screenshot_form(lynxml_request("index.lynxml", b"<lynx/>"), "source")
+      .await
+      .unwrap();
+    let error = screenshot_response(&state, vec![0; 8], &form.parameters)
+      .await
+      .unwrap_err();
+
+    assert_eq!(error.status, StatusCode::BAD_GATEWAY);
+    assert_eq!(
+      error.message,
+      "The screenshot could not be uploaded to TOS."
+    );
+    assert!(store.stored_objects().is_empty());
+    state.headless.shutdown().unwrap();
+  }
 
   /// Serves a queue with one deterministic reply per job.
   fn scripted_workers<F>(reply: F) -> Arc<CaptureWorkers>
@@ -2200,6 +2401,7 @@ mod tests {
       headless: Arc::clone(&headless),
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
+      screenshot_store: ScreenshotStore::in_memory(),
     };
     for xml in [false, true] {
       let request = Request::builder()
@@ -2277,6 +2479,101 @@ mod tests {
   }
 
   #[tokio::test]
+  async fn all_screenshot_sources_persist_the_same_input_schema() {
+    for (kind, source_name, source) in [
+      (
+        ScreenshotFormKind::Page,
+        "url",
+        b"https://example.com/template.js".as_slice(),
+      ),
+      (ScreenshotFormKind::Page, "source", b"<lynx/>".as_slice()),
+      (
+        ScreenshotFormKind::LegacyTemplate,
+        "url",
+        b"https://example.com/template.js".as_slice(),
+      ),
+      (
+        ScreenshotFormKind::Zip,
+        "url",
+        b"https://example.com/page.zip".as_slice(),
+      ),
+      (ScreenshotFormKind::Zip, "file", b"PK\x00\xff".as_slice()),
+    ] {
+      let entry = if source_name == "source" {
+        "index.lynxml"
+      } else {
+        "zip:///pages/template.js"
+      };
+      let mut fields = vec![("entry", entry.as_bytes()), (source_name, source)];
+      let defaults =
+        read_screenshot_form_impl(multipart_request("inputs", &fields), source_name, kind)
+          .await
+          .unwrap();
+      let defaults = serde_json::to_value(defaults.parameters).unwrap();
+      assert_eq!(defaults["width"], 800);
+      assert_eq!(defaults["height"], 600);
+      assert_eq!(defaults["screenshotSettleMs"], 100);
+      assert_eq!(defaults["timeoutMs"], 60000);
+      assert!(defaults["initData"].is_null());
+      assert!(defaults["globalProps"].is_null());
+
+      fields.extend_from_slice(&[
+        ("width", b"375"),
+        ("height", b"812"),
+        ("initData", br#"{"ready":true}"#),
+      ]);
+      if source_name != "source" {
+        fields.push(("globalProps", br#"{"nested":{"name":"test"}}"#));
+      }
+      if !matches!(kind, ScreenshotFormKind::LegacyTemplate) {
+        fields.push(("screenshotSettleMs", b"0"));
+      }
+      if matches!(kind, ScreenshotFormKind::Page) {
+        fields.push(("timeoutMs", b"1234"));
+      }
+      let mut form =
+        read_screenshot_form_impl(multipart_request("inputs", &fields), source_name, kind)
+          .await
+          .unwrap();
+      // Downloads replace source bytes before rendering; persist the original URL.
+      if source_name == "url" {
+        form.source = b"downloaded bytes".to_vec();
+      }
+      let state = state_with_store(ScreenshotStore::in_memory());
+      let response = screenshot_response(&state, b"BM-pixels".to_vec(), &form.parameters)
+        .await
+        .unwrap();
+      uploaded_screenshot(&state.screenshot_store, response).await;
+      let objects = state.screenshot_store.stored_objects();
+      let parameters: Value = serde_json::from_slice(&objects[1].1).unwrap();
+      assert_eq!(
+        parameters,
+        json!({
+          "entry": entry,
+          "width": 375,
+          "height": 812,
+          "globalProps": if source_name == "source" { Value::Null } else { json!({"nested":{"name":"test"}}) },
+          "initData": {"ready": true},
+          "screenshotSettleMs": if matches!(kind, ScreenshotFormKind::LegacyTemplate) { 100 } else { 0 },
+          "timeoutMs": if matches!(kind, ScreenshotFormKind::Page) { 1234 } else { 60000 },
+          "url": if source_name == "url" { Some(std::str::from_utf8(source).unwrap()) } else { None },
+          "source": if source_name == "source" { Some(std::str::from_utf8(source).unwrap()) } else { None },
+          "fileBase64": if source_name == "file" { Some(BASE64_STANDARD.encode(source)) } else { None },
+        })
+      );
+      if source_name == "file" {
+        assert_eq!(
+          BASE64_STANDARD
+            .decode(parameters["fileBase64"].as_str().unwrap())
+            .unwrap(),
+          source
+        );
+      }
+      state.headless.shutdown().unwrap();
+    }
+  }
+
+  #[tokio::test]
   async fn page_screenshot_forms_reject_invalid_and_duplicate_parameters() {
     for (entry, source_name, source) in [
       ("template.js", "url", "https://example.com/template.js"),
@@ -2322,22 +2619,90 @@ mod tests {
   }
 
   #[tokio::test]
-  async fn page_screenshot_options_do_not_extend_zip_forms() {
+  async fn zip_screenshot_forms_accept_settling_but_reject_timeout() {
     for source_name in ["file", "url"] {
       let base: [(&str, &[u8]); 2] = [("entry", b"index.lynxml"), (source_name, b"archive")];
       let form = read_screenshot_form(multipart_request("zip", &base), source_name)
         .await
         .unwrap();
       assert!(form.capture_request.is_none());
-      for key in ["timeoutMs", "screenshotSettleMs"] {
+      assert_eq!(form.screenshot_settle_ms, DEFAULT_SCREENSHOT_SETTLE_MS);
+      for value in ["0", "3000"] {
         let mut fields = base.to_vec();
-        fields.push((key, b"1"));
-        let error = read_screenshot_form(multipart_request("zip", &fields), source_name)
+        fields.push(("screenshotSettleMs", value.as_bytes()));
+        let form = read_screenshot_form(multipart_request("zip", &fields), source_name)
           .await
-          .unwrap_err();
-        assert!(error.message.contains("Unexpected multipart field"));
+          .unwrap();
+        assert_eq!(form.screenshot_settle_ms, value.parse::<u64>().unwrap());
+      }
+      let mut fields = base.to_vec();
+      fields.push(("timeoutMs", b"1"));
+      let error = read_screenshot_form(multipart_request("zip", &fields), source_name)
+        .await
+        .unwrap_err();
+      assert!(error.message.contains("Unexpected multipart field"));
+    }
+  }
+
+  #[tokio::test]
+  async fn zip_routes_reject_invalid_and_duplicate_settling_before_capture() {
+    let headless = scripted_workers(|_| panic!("invalid settling must not reach capture"));
+    let state = AppState {
+      headless: Arc::clone(&headless),
+      zip_capture_backend: ZipCaptureBackend::SharedWorker,
+      zip_capture_processes: ZipCaptureProcesses::new(),
+      screenshot_store: ScreenshotStore::in_memory(),
+    };
+    for source_name in ["file", "url"] {
+      for values in [
+        vec!["-1"],
+        vec!["1.5"],
+        vec![""],
+        vec!["abc"],
+        vec!["18446744073709551616"],
+        vec!["0", "3000"],
+      ] {
+        let mut fields: Vec<(&str, &[u8])> = vec![
+          ("entry", b"template.js"),
+          (source_name, b"https://example.com/archive.zip"),
+        ];
+        for value in &values {
+          fields.push(("screenshotSettleMs", value.as_bytes()));
+        }
+        let request = multipart_request("zip", &fields);
+        let error = if source_name == "file" {
+          screenshot_zip_upload(State(state.clone()), request).await
+        } else {
+          screenshot_zip_url(State(state.clone()), request).await
+        }
+        .unwrap_err();
+        assert_eq!(error.status, StatusCode::BAD_REQUEST);
+        assert!(error.message.contains("screenshotSettleMs"));
+        if values.len() == 2 {
+          assert!(error.message.contains("exactly once"));
+        }
       }
     }
+    headless.shutdown().unwrap();
+  }
+
+  #[tokio::test]
+  async fn legacy_template_route_rejects_settling_override() {
+    let error = read_screenshot_form_impl(
+      multipart_request(
+        "legacy",
+        &[
+          ("entry", b"template.js"),
+          ("url", b"https://example.com/template.js"),
+          ("screenshotSettleMs", b"3000"),
+        ],
+      ),
+      "url",
+      ScreenshotFormKind::LegacyTemplate,
+    )
+    .await
+    .unwrap_err();
+    assert!(error.message.contains("Unexpected multipart field"));
   }
 
   #[tokio::test]
@@ -2364,6 +2729,7 @@ mod tests {
         headless: Arc::clone(&headless),
         zip_capture_backend: ZipCaptureBackend::SharedWorker,
         zip_capture_processes: ZipCaptureProcesses::new(),
+        screenshot_store: ScreenshotStore::in_memory(),
       };
       let form = read_page_screenshot_form(
         multipart_request(
@@ -2381,11 +2747,8 @@ mod tests {
       .await
       .unwrap();
       let response = render_page_screenshot(&state, form, kind).await.unwrap();
-      assert_eq!(response.headers()[CONTENT_TYPE], "image/bmp");
-      let body = axum::body::to_bytes(response.into_body(), MAX_CAPTURE_BMP_BYTES)
-        .await
-        .unwrap();
-      assert_eq!(body.as_ref(), expected_bmp.as_slice());
+      let uploaded = uploaded_screenshot(&state.screenshot_store, response).await;
+      assert_eq!(uploaded.as_slice(), expected_bmp.as_slice());
       headless.shutdown().unwrap();
     }
   }
@@ -2686,6 +3049,7 @@ mod tests {
 
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
+      screenshot_store: ScreenshotStore::in_memory(),
     };
     for (entry, source) in [
       ("index.lynxml", b"".as_slice()),
@@ -2763,39 +3127,13 @@ mod tests {
   }
 
   #[tokio::test]
-  async fn remote_screenshot_endpoints_share_ssrf_protection() {
-    let headless = scripted_workers(|_| panic!("blocked URLs must not reach capture"));
-    let state = AppState {
-      headless: Arc::clone(&headless),
-      zip_capture_backend: ZipCaptureBackend::SharedWorker,
-      zip_capture_processes: ZipCaptureProcesses::new(),
-    };
-
-    let error = screenshot_zip_url(
-      State(state.clone()),
-      remote_url_request("index.lynxml", "http://127.0.0.1/archive.zip"),
-    )
-    .await
-    .expect_err("reject a private ZIP host");
-    assert_eq!(error.status, StatusCode::FORBIDDEN);
-
-    let error = screenshot_template_url(
-      State(state),
-      remote_url_request("template.js", "http://[::1]/template.js"),
-    )
-    .await
-    .expect_err("reject a private template host");
-    assert_eq!(error.status, StatusCode::FORBIDDEN);
-    headless.shutdown().expect("stop unused screenshot worker");
-  }
-
-  #[tokio::test]
   async fn template_url_requires_a_javascript_entry() {
     let headless = scripted_workers(|_| panic!("invalid entries must not reach capture"));
     let state = AppState {
       headless: Arc::clone(&headless),
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
+      screenshot_store: ScreenshotStore::in_memory(),
     };
 
     let error = screenshot_template_url(
@@ -2842,8 +3180,10 @@ mod tests {
       headless: Arc::clone(&headless),
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
+      screenshot_store: ScreenshotStore::in_memory(),
     };
 
+    let store = state.screenshot_store.clone();
     let response = screenshot_lynxml(
       State(state),
       multipart_request(
@@ -2858,13 +3198,12 @@ mod tests {
     .await
     .expect("render LynXML source");
 
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(response.headers()[CONTENT_TYPE], "image/bmp");
-    assert_eq!(response.headers()[CACHE_CONTROL], "no-store");
-    let body = axum::body::to_bytes(response.into_body(), MAX_CAPTURE_BMP_BYTES)
-      .await
-      .expect("read BMP screenshot response");
-    assert_eq!(body.as_ref(), expected_bmp.as_slice());
+    let uploaded = uploaded_screenshot(&store, response).await;
+    assert_eq!(uploaded.as_slice(), expected_bmp.as_slice());
+    let inputs: Value = serde_json::from_slice(&store.stored_objects()[1].1).unwrap();
+    assert_eq!(inputs["entry"], "pages/index.lynxml");
+    assert_eq!(inputs["source"], std::str::from_utf8(source).unwrap());
+    assert_eq!(inputs["initData"], json!({"ready": true}));
     let staged_path = staged_path
       .lock()
       .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -2911,6 +3250,7 @@ mod tests {
       headless: Arc::clone(&headless),
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
+      screenshot_store: ScreenshotStore::in_memory(),
     };
     let request = capture_request("https://example.com/template.js");
     let load_options = PageLoadOptions {
@@ -2957,15 +3297,12 @@ mod tests {
       StagedSourceKind::Template,
       form.viewport,
       form.load_options,
+      form.parameters,
     )
     .await
     .expect("render a staged template with multipart page data");
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(response.headers()[CONTENT_TYPE], "image/bmp");
-    let body = axum::body::to_bytes(response.into_body(), MAX_CAPTURE_BMP_BYTES)
-      .await
-      .expect("read multipart BMP screenshot response");
-    assert_eq!(body.as_ref(), expected_bmp.as_slice());
+    let uploaded = uploaded_screenshot(&state.screenshot_store, response).await;
+    assert_eq!(uploaded.as_slice(), expected_bmp.as_slice());
     let staged_path = staged_path
       .lock()
       .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -2992,6 +3329,7 @@ mod tests {
         job.load_options.initial_data_json.as_deref(),
         Some(r#"{"ready":true}"#)
       );
+      assert_eq!(job.request.screenshot_settle, Duration::from_millis(3000));
       assert_eq!(job.request.url, "zip:///pages/template.js");
       let base_dir = job
         .load_options
@@ -3013,8 +3351,10 @@ mod tests {
       headless: Arc::clone(&headless),
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
+      screenshot_store: ScreenshotStore::in_memory(),
     };
 
+    let store = state.screenshot_store.clone();
     let response = screenshot_zip_upload(
       State(state),
       multipart_request(
@@ -3022,6 +3362,7 @@ mod tests {
         &[
           ("entry", b"zip:///pages/template.js"),
           ("file", &upload),
+          ("screenshotSettleMs", b"3000"),
           ("globalProps", br#"{"messages":[]}"#),
           ("initData", br#"{"ready":true}"#),
         ],
@@ -3030,13 +3371,17 @@ mod tests {
     .await
     .expect("render uploaded ZIP");
 
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(response.headers()[CONTENT_TYPE], "image/bmp");
-    assert_eq!(response.headers()[CACHE_CONTROL], "no-store");
-    let body = axum::body::to_bytes(response.into_body(), MAX_CAPTURE_BMP_BYTES)
-      .await
-      .expect("read BMP screenshot response");
-    assert_eq!(body.as_ref(), expected_bmp.as_slice());
+    let uploaded = uploaded_screenshot(&store, response).await;
+    assert_eq!(uploaded.as_slice(), expected_bmp.as_slice());
+    let inputs: Value = serde_json::from_slice(&store.stored_objects()[1].1).unwrap();
+    assert_eq!(inputs["entry"], "zip:///pages/template.js");
+    assert_eq!(inputs["screenshotSettleMs"], 3000);
+    assert_eq!(
+      BASE64_STANDARD
+        .decode(inputs["fileBase64"].as_str().unwrap())
+        .unwrap(),
+      upload
+    );
     let staged_path = staged_path
       .lock()
       .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -3116,6 +3461,7 @@ mod tests {
       headless: Arc::clone(&headless),
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
+      screenshot_store: ScreenshotStore::in_memory(),
     }))
     .await
     .expect("healthy worker must pass readiness");
@@ -3502,6 +3848,7 @@ mod tests {
         headless: Arc::clone(&headless),
         zip_capture_backend: ZipCaptureBackend::IsolatedProcess,
         zip_capture_processes: ZipCaptureProcesses::new(),
+        screenshot_store: ScreenshotStore::in_memory(),
       }),
       zip_request(
         "zip:///missing.lynxml",
@@ -3671,13 +4018,14 @@ mod tests {
       &std::fs::read(&source).expect("read template fixture"),
     )]);
     let global_props = json!({"message": "x".repeat(256 * 1024)}).to_string();
+    let store = ScreenshotStore::in_memory();
     let response = runtime
       .block_on(screenshot_zip_upload(
         State(AppState {
           headless: Arc::clone(&headless),
-
           zip_capture_backend: ZipCaptureBackend::IsolatedProcess,
           zip_capture_processes: ZipCaptureProcesses::new(),
+          screenshot_store: store.clone(),
         }),
         multipart_request(
           "screenshot",
@@ -3690,9 +4038,7 @@ mod tests {
         ),
       ))
       .expect("render an isolated compiled template with large page data");
-    let bmp = runtime
-      .block_on(axum::body::to_bytes(response.into_body(), MAX_IMAGE_BYTES))
-      .unwrap();
+    let bmp = runtime.block_on(uploaded_screenshot(&store, response));
     let rgb = image::load_from_memory(&bmp)
       .expect("decode compiled template screenshot")
       .to_rgb8();
@@ -3712,6 +4058,7 @@ mod tests {
     });
   </script>
 </lynx>"#;
+    let lynxml_store = ScreenshotStore::in_memory();
     let response = runtime
       .block_on(screenshot_lynxml(
         State(AppState {
@@ -3719,6 +4066,7 @@ mod tests {
 
           zip_capture_backend: ZipCaptureBackend::IsolatedProcess,
           zip_capture_processes: ZipCaptureProcesses::new(),
+          screenshot_store: lynxml_store.clone(),
         }),
         multipart_request(
           "screenshot",
@@ -3732,9 +4080,7 @@ mod tests {
         ),
       ))
       .expect("render raw LynXML source");
-    let bmp = runtime
-      .block_on(axum::body::to_bytes(response.into_body(), MAX_IMAGE_BYTES))
-      .expect("read LynXML screenshot response");
+    let bmp = runtime.block_on(uploaded_screenshot(&lynxml_store, response));
     let rgb = image::load_from_memory(&bmp)
       .expect("decode LynXML screenshot")
       .to_rgb8();
@@ -3783,6 +4129,7 @@ mod tests {
         ("images/relative.png", relative_png),
         ("images/absolute.png", absolute_png),
       ]);
+      let store = ScreenshotStore::in_memory();
       let response = runtime
         .block_on(screenshot_zip_upload(
           State(AppState {
@@ -3790,14 +4137,20 @@ mod tests {
 
             zip_capture_backend: ZipCaptureBackend::IsolatedProcess,
             zip_capture_processes: ZipCaptureProcesses::new(),
+            screenshot_store: store.clone(),
           }),
-          zip_request("zip:///index.lynxml", upload),
+          // Image decode and presentation run after the first page frame.
+          multipart_request(
+            "screenshot",
+            &[
+              ("entry", b"zip:///index.lynxml"),
+              ("file", &upload),
+              ("screenshotSettleMs", b"1000"),
+            ],
+          ),
         ))
         .expect("render ZIP image resources");
-      assert_eq!(response.status(), StatusCode::OK);
-      let bmp = runtime
-        .block_on(axum::body::to_bytes(response.into_body(), MAX_IMAGE_BYTES))
-        .expect("read ZIP screenshot response");
+      let bmp = runtime.block_on(uploaded_screenshot(&store, response));
       let rgb = image::load_from_memory(&bmp)
         .expect("decode ZIP screenshot")
         .to_rgb8();
@@ -3957,6 +4310,7 @@ mod tests {
       headless: Arc::clone(&headless),
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
+      screenshot_store: ScreenshotStore::in_memory(),
     };
 
     for url in [
@@ -3970,29 +4324,6 @@ mod tests {
       assert_eq!(error.status, StatusCode::BAD_REQUEST);
     }
     headless.shutdown().expect("stop mock headless worker");
-  }
-
-  #[tokio::test]
-  async fn remote_template_screenshot_uses_screenshot_ssrf_protection() {
-    let headless = scripted_workers(|_| panic!("blocked URLs must not reach capture"));
-    let state = AppState {
-      headless: Arc::clone(&headless),
-      zip_capture_backend: ZipCaptureBackend::SharedWorker,
-      zip_capture_processes: ZipCaptureProcesses::new(),
-    };
-
-    for url in [
-      "http://127.0.0.1/private.lynx.js",
-      "HTTP://127.0.0.1/private.lynx.js",
-      "http://[::1]/private.lynx.js",
-    ] {
-      let error = screenshot_template(State(state.clone()), remote_url_request("template.js", url))
-        .await
-        .expect_err("the SSRF-safe downloader must reject private hosts");
-      assert_eq!(error.status, StatusCode::FORBIDDEN);
-      assert!(error.message.contains("non-public network address"));
-    }
-    headless.shutdown().expect("stop unused headless worker");
   }
 
   #[tokio::test]
@@ -4068,6 +4399,7 @@ mod tests {
       headless: Arc::clone(&headless),
       zip_capture_backend: ZipCaptureBackend::SharedWorker,
       zip_capture_processes: ZipCaptureProcesses::new(),
+      screenshot_store: ScreenshotStore::in_memory(),
     }))
     .await
     .expect_err("unhealthy worker must fail readiness");

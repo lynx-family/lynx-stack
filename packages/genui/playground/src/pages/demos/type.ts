@@ -51,6 +51,12 @@ export interface DemosPageSource<
   TMeta,
 > {
   scenarios: readonly TScenario[];
+  sections?: readonly {
+    id: string;
+    title: string;
+    hideScenarioBadges?: boolean;
+    scenarios: readonly DemoPageScenario[];
+  }[];
   findScenario: (id?: string) => TScenario | undefined;
   getEditorValue: (scenario: TScenario) => string;
   createScenarioPreviewInput: (scenario: TScenario) => TPreviewInput;

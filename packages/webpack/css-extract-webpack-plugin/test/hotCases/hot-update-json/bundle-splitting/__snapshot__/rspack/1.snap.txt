@@ -50,8 +50,7 @@
         "enableAccessibilityElement": false,
         "enableCSSInheritance": false,
         "enableNewGesture": false,
-        "removeDescendantSelectorScope": false,
-        "debugMetadataUrl": ""
+        "removeDescendantSelectorScope": false
       }
     },
     "css": {
@@ -106,8 +105,7 @@
         "enableAccessibilityElement": false,
         "enableCSSInheritance": false,
         "enableNewGesture": false,
-        "removeDescendantSelectorScope": false,
-        "debugMetadataUrl": ""
+        "removeDescendantSelectorScope": false
       }
     },
     "css": {
@@ -194,8 +192,7 @@
         "enableAccessibilityElement": false,
         "enableCSSInheritance": false,
         "enableNewGesture": false,
-        "removeDescendantSelectorScope": false,
-        "debugMetadataUrl": ""
+        "removeDescendantSelectorScope": false
       }
     },
     "css": {

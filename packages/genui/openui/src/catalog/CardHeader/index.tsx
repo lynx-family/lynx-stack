@@ -1,19 +1,14 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { z } from 'zod/v4';
 
-import { defineComponent } from '../../core/library.jsx';
+import { CardHeader as CardHeaderDefinition } from './definition.js';
+import type { DefinedComponent } from '../../core/library.jsx';
 
 import '../../../styles/catalog/CardHeader.css';
 
-export const CardHeader = defineComponent({
-  name: 'CardHeader',
-  props: z.object({
-    title: z.string(),
-    subtitle: z.string().optional(),
-  }),
-  description: 'Card header with title and optional subtitle.',
+export const CardHeader: DefinedComponent<typeof CardHeaderDefinition.props> = {
+  ...CardHeaderDefinition,
   component: ({ props }) => (
     <view className='OpenUICardHeader'>
       <text className='OpenUICardHeaderTitle'>{props.title}</text>
@@ -22,4 +17,4 @@ export const CardHeader = defineComponent({
         : null}
     </view>
   ),
-});
+};

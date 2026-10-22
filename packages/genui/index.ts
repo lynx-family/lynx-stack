@@ -110,3 +110,14 @@ export type {
   FunctionDefinition,
   JsonSchema as ExtractedJsonSchema,
 } from '@lynx-js/genui/a2ui-catalog-extractor';
+export {
+  buildReactLynx,
+  normalizeReactLynxSource,
+  parseReactLynxSource,
+  REACTLYNX_SYSTEM_PROMPT,
+} from '@lynx-js/genui/reactlynx';
+export type {
+  ReactLynxBuildAsset,
+  ReactLynxBuildStatus,
+  ReactLynxSource,
+} from '@lynx-js/genui/reactlynx';

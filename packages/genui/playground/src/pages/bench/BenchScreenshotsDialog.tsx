@@ -79,7 +79,8 @@ function getInitialScreenshotDialogWidth(): number {
   }
 }
 
-function formatMs(value: number): string {
+function formatMs(value: number | undefined): string {
+  if (value === undefined) return 'Not recorded';
   if (value >= 1000) return `${(value / 1000).toFixed(1)}s`;
   return `${Math.round(value)}ms`;
 }
@@ -451,7 +452,10 @@ export function BenchScreenshotsDialog(props: {
                                         item,
                                       )}
                                     </span>
-                                    <span>{formatMs(item.agentMs)}</span>
+                                    <span>
+                                      {formatMs(item.firstTextTokenMs)} 1st Text
+                                    </span>
+                                    <span>{formatMs(item.agentMs)} Agent</span>
                                     <span>
                                       {formatNumber(item.tokens)} tokens
                                     </span>

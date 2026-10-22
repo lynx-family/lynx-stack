@@ -196,6 +196,8 @@ jobs:
           pnpm exec pkg-pr-new publish \
             --compact \
             --pnpm \
+            --previewVersion \
+            --peerDeps \
             --commentWithSha \
             --packageManager=pnpm \
             --no-template \

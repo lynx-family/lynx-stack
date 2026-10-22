@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/motion",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "private": false,
   "description": "This is a motion adapter for Lynx.js",
   "keywords": [
@@ -47,9 +47,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "motion": "13.0.0",
-    "motion-dom": "13.0.0",
-    "motion-utils": "13.0.0"
+    "motion": "13.4.3",
+    "motion-dom": "13.4.2",
+    "motion-utils": "13.5.0"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",

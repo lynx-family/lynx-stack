@@ -33,8 +33,8 @@ function formatNumber(value: number): string {
   return Number.isFinite(value) ? numbers.format(value) : 'Not recorded';
 }
 
-function formatMs(value: number): string {
-  if (!Number.isFinite(value)) return 'Not recorded';
+function formatMs(value: number | undefined): string {
+  if (value === undefined || !Number.isFinite(value)) return 'Not recorded';
   return value >= 1000
     ? `${numbers.format(value / 1000)}s`
     : `${numbers.format(value)}ms`;
@@ -199,6 +199,9 @@ export function PublishedReportPage(
                   <th>
                     <BenchCostLabel>Est. cost (CNY)</BenchCostLabel>
                   </th>
+                  <th title='Time from generation start to the first text delta, excluding reasoning. Averaged over recorded runs.'>
+                    1st Text
+                  </th>
                   <th>Agent</th>
                   <th>Attempts</th>
                   <th>UI Judge</th>
@@ -234,6 +237,7 @@ export function PublishedReportPage(
                           average
                         />
                       </td>
+                      <td>{formatMs(summary.avgFirstTextTokenMs)}</td>
                       <td>{formatMs(summary.avgAgentMs)}</td>
                       <td>{formatNumber(summary.avgAttempts)}</td>
                       <td>{judgeScore(report, summary)}</td>
@@ -306,6 +310,10 @@ export function PublishedReportPage(
                     <div>
                       <dt>Model</dt>
                       <dd>{group.model}</dd>
+                    </div>
+                    <div>
+                      <dt>Reasoning</dt>
+                      <dd>{group.reasoningEffort ?? 'Not recorded'}</dd>
                     </div>
                     <div>
                       <dt>Catalog</dt>
@@ -439,7 +447,8 @@ export function PublishedReportPage(
                   <BenchCost cost={benchResultCost(result)} />
                 </span>
                 <span>
-                  tokens · {formatMs(result.agentMs)} Agent ·{' '}
+                  tokens · {formatMs(result.firstTextTokenMs)} 1st Text ·{' '}
+                  {formatMs(result.agentMs)} Agent ·{' '}
                   {formatNumber(result.attempts)} attempts
                 </span>
               </div>

@@ -1,5 +1,23 @@
 # @lynx-js/react-signals
 
+## 0.0.6
+
+### Patch Changes
+
+- Allow the ReactLynx 0.128 runtime release in the peer dependency range. ([#4066](https://github.com/lynx-family/lynx-stack/pull/4066))
+
+## 0.0.5
+
+### Patch Changes
+
+- Add typed `MainThreadObject` handles whose target factory is defined by a Main Thread Function, with identity-preserving capture and hydration, runtime-owned reference release, and exact-type handle downcasting for readonly creation-payload access. V1 intentionally exposes no user-land disposal API. Applications import the APIs from `@lynx-js/react`. ([#3788](https://github.com/lynx-family/lynx-stack/pull/3788))
+
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependency `@preact/signals` to `^2.11.2`. ([#3830](https://github.com/lynx-family/lynx-stack/pull/3830))
+
 ## 0.0.3
 
 ### Patch Changes

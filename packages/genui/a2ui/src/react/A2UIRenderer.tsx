@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { memo, useEffect, useMemo, useSyncExternalStore } from '@lynx-js/react';
-import type { ReactNode } from '@lynx-js/react';
+import type { MemoExoticComponent, ReactNode } from '@lynx-js/react';
 
 import { useA2UIContext } from './useA2UIContext.js';
 import { useAction } from './useAction.js';
@@ -228,7 +228,9 @@ function A2UIRendererImpl(
   return null;
 }
 
-export const A2UIRenderer = memo(A2UIRendererImpl);
+export const A2UIRenderer: MemoExoticComponent<
+  (props: A2UIRendererProps) => ReactNode
+> = memo(A2UIRendererImpl);
 
 function NodeRendererImpl(
   props: {

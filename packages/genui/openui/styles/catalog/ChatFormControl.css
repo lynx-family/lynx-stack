@@ -1,0 +1,16 @@
+.OpenUIChatFormControl {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+.OpenUIChatFormLabel {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--openui-color-text);
+  line-height: 1.5;
+}
+.OpenUIChatFormHint {
+  font-size: 22rpx;
+  color: var(--openui-color-text-muted);
+  line-height: 1.5;
+}

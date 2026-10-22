@@ -10,10 +10,16 @@ import type {
   ProtocolBenchRenderResult,
   ProtocolBenchScenario,
 } from './protocol-types.js';
+import type { ChatOptions } from '../types.js';
 
 export type { ProtocolBenchProviderConfig } from './protocol-types.js';
 
 export type ProtocolBenchJudgePayload =
+  | {
+    kind: 'reactlynx-bundle';
+    rawText: string;
+    zipUrl: string;
+  }
   | {
     kind: 'a2ui-messages';
     messages: unknown[];
@@ -23,11 +29,13 @@ export type ProtocolBenchJudgePayload =
     rawText: string;
   }
   | {
-    kind: 'lynx-xml-source' | 'html-source';
+    kind: 'lynx-xml-source' | 'html-source' | 'reactweb-html';
     rawText: string;
   };
 
 export interface ProtocolBenchAdapterInput {
+  reasoningEffort?: ChatOptions['reasoningEffort'];
+  onPerformanceEvent?: ChatOptions['onPerformanceEvent'];
   enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
   enableScriptReuse?: boolean;

@@ -19,14 +19,14 @@ const MACOS_AARCH64_RUNTIME_URL: &str = concat!(
 const MACOS_AARCH64_RUNTIME_SHA256: &str =
   "dfbf7848b03b5fcf145a5445f57f771c5175a551fb3cfa106bd03d924c7d025e";
 const LINUX_X86_64_RUNTIME_URL: &str = concat!(
-  "https://github.com/PupilTong/playground/releases/download/",
-  "lynx-runtime-clay-manual-0.0.4/linux-amd64-libLynx_clay.so"
+  "https://lynx-genui-storage.tos-cn-beijing.volces.com/",
+  "lynx_4_1_core_libs/liblynx_oss_amd64_linux.so"
 );
 const LINUX_X86_64_RUNTIME_SHA256: &str =
-  "db12b6d6e61a8fb378f6517b7c4df7f017304c52c54a6bd604c362a7d5f517a4";
+  "45904d9d065e5dd03d27d959145ea8d31f11f4331129a33b1c8aa020c307cf5e";
 const DEFAULT_LYNX_CORE_JS_URL: &str = concat!(
-  "https://github.com/PupilTong/playground/releases/download/",
-  "lynx-runtime-clay-manual-0.0.4/lynx_core.js"
+  "https://lynx-genui-storage.tos-cn-beijing.volces.com/",
+  "lynx_4_1_core_libs/lynx_core.jslynx_core.js"
 );
 const DEFAULT_LYNX_CORE_JS_SHA256: &str =
   "81f0b9dbf51684872de0489b037110eab448e42039f5ac69d6ebe18371ea3efa";

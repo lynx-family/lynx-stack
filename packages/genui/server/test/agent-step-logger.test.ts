@@ -139,6 +139,42 @@ test('logs upstream failure diagnostics without provider bodies, headers, or cre
   }
 });
 
+test('logs first reasoning and text token latency once per invocation', () => {
+  const log = rstest.fn(
+    (_event: string, _details?: Record<string, unknown>) => undefined,
+  );
+  const callbacks = createAgentStepLogger({
+    onPerformanceEvent: log,
+  }, 'test-agent');
+
+  callbacks.onChunk({
+    type: 'reasoning-delta',
+    payload: { id: 'reasoning', text: 'think' },
+  } as never);
+  callbacks.onChunk({
+    type: 'reasoning-delta',
+    payload: { id: 'reasoning', text: ' again' },
+  } as never);
+  callbacks.onChunk({
+    type: 'text-delta',
+    payload: { id: 'answer', text: 'done' },
+  } as never);
+  callbacks.onChunk({
+    type: 'text-delta',
+    payload: { id: 'answer', text: ' again' },
+  } as never);
+
+  expect(log.mock.calls.map(([event]) => event)).toEqual([
+    'agent.model.started',
+    'agent.model.first_reasoning_token',
+    'agent.model.first_text_token',
+  ]);
+  for (const [, details] of log.mock.calls.slice(1)) {
+    expect(details?.agent).toBe('test-agent');
+    expect(details?.durationMs).toBeTypeOf('number');
+  }
+});
+
 test('logs per-step usage and safe tool sizes with a matching aggregate', () => {
   const log = rstest.fn((_event: string, _details?: Record<string, unknown>) =>
     undefined

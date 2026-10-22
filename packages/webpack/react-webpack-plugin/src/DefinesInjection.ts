@@ -18,6 +18,10 @@ import {
   boundaryKey,
   definesImportByBoundary,
 } from './loaders/defines-import-by-boundary.js';
+import {
+  REACT_RUNTIME_REQUIREMENTS_BUILD_INFO,
+} from './loaders/main-thread.js';
+import type { ReactRuntimeRequirementsBuildInfo } from './loaders/main-thread.js';
 
 export interface EntryPair {
   mainThread: string;
@@ -43,7 +47,24 @@ export function applyDefinesInjection(
         layer?: string | null;
       };
       const definesImports = definesImportByBoundary(compiler);
+      const previousDefinesImports = new Map(definesImports);
       definesImports.clear();
+      const requirementsByRequest = new Map<
+        string,
+        ReactRuntimeRequirementsBuildInfo
+      >();
+      compilation.hooks.finishModules.tap(pluginName, modules => {
+        // Rebuilding an async boundary does not finish its new dependencies.
+        // Transfer compiler metadata only after all injected modules are built.
+        for (const module of modules) {
+          const resource = (module as ModuleWithMeta).resource;
+          const requirements = resource && requirementsByRequest.get(resource);
+          if (requirements) {
+            module.buildInfo![REACT_RUNTIME_REQUIREMENTS_BUILD_INFO] =
+              requirements;
+          }
+        }
+      });
 
       const traverse = (roots: Module[]) => {
         const visited = new Set<Module>();
@@ -154,11 +175,24 @@ export function applyDefinesInjection(
           );
         }
         if (missingSnapshot.length > 0 || missingWorklet.length > 0) {
+          const previousModule = [...compilation.modules].find(module =>
+            (module as ModuleWithMeta).resource === request
+          );
           virtualModules.writeModule(
             request,
             renderDefinesModule(missingSnapshot, missingWorklet),
           );
+          // Updating the virtual file does not invalidate a module already
+          // reused by this compilation. Rebuild it before reusing its imports.
+          if (previousModule) {
+            await rebuildModule(previousModule);
+          }
           await inject(request);
+          requirementsByRequest.set(request, {
+            mainThreadProgrammability: missingWorklet.some(
+              define => define.runtimeRequirements!.mainThreadProgrammability,
+            ),
+          });
         }
         for (
           const [resource, backgroundBoundary] of background.asyncBoundaries
@@ -224,6 +258,19 @@ export function applyDefinesInjection(
           );
         }),
       );
+      // A background boundary can lose its last definition or disappear
+      // entirely while its main-thread module remains cached and reachable.
+      // Rebuild every former owner that no longer needs a synthetic import.
+      await Promise.all([...compilation.modules].flatMap(module => {
+        const { resource, layer } = module as ModuleWithMeta;
+        if (!resource) {
+          return [];
+        }
+        const key = boundaryKey(layer, resource);
+        return previousDefinesImports.has(key) && !definesImports.has(key)
+          ? [rebuildModule(module)]
+          : [];
+      }));
     },
   );
 }

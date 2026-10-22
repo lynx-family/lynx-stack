@@ -6,6 +6,8 @@ import { RequestContext } from '@mastra/core/request-context';
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 
+import { emitToolPerformanceEvent } from './tool-performance.js';
+
 export const SEARCH_INFINITY_API_KEY_ENV = 'SEARCH_INFINITY_API_KEY';
 export const SEARCH_INFINITY_REQUEST_TIMEOUT_MS_ENV =
   'SEARCH_INFINITY_REQUEST_TIMEOUT_MS';
@@ -588,17 +590,30 @@ export async function searchDoubaoForRun(
   abortSignal?: AbortSignal,
 ): Promise<DoubaoSearchResult> {
   reserveSearchCall(scope);
-  const result = await searchDoubao(
-    config,
-    query,
-    fetchImpl,
-    abortSignal,
-  );
-  recordSearchDocumentURLs(
-    scope,
-    result.results.map((document) => document.url),
-  );
-  return result;
+  const callId = crypto.randomUUID();
+  const startedAt = performance.now();
+  let status = 'error';
+  try {
+    const result = await searchDoubao(
+      config,
+      query,
+      fetchImpl,
+      abortSignal,
+    );
+    recordSearchDocumentURLs(
+      scope,
+      result.results.map((document) => document.url),
+    );
+    status = 'success';
+    return result;
+  } finally {
+    emitToolPerformanceEvent(scope, {
+      callId,
+      toolName: 'web_search',
+      durationMs: performance.now() - startedAt,
+      status,
+    });
+  }
 }
 
 export async function searchDoubaoImagesForRun(
@@ -609,21 +624,36 @@ export async function searchDoubaoImagesForRun(
   abortSignal?: AbortSignal,
 ): Promise<DoubaoImageSearchResult> {
   reserveSearchCall(scope);
-  const result = await searchDoubaoImages(
-    config,
-    query,
-    fetchImpl,
-    abortSignal,
-  );
-  recordSearchImageURLs(
-    scope,
-    result.results.map((image) => image.imageUrl),
-  );
-  recordSearchDocumentURLs(
-    scope,
-    result.results.flatMap((image) => image.sourceUrl ? [image.sourceUrl] : []),
-  );
-  return result;
+  const callId = crypto.randomUUID();
+  const startedAt = performance.now();
+  let status = 'error';
+  try {
+    const result = await searchDoubaoImages(
+      config,
+      query,
+      fetchImpl,
+      abortSignal,
+    );
+    recordSearchImageURLs(
+      scope,
+      result.results.map((image) => image.imageUrl),
+    );
+    recordSearchDocumentURLs(
+      scope,
+      result.results.flatMap((image) =>
+        image.sourceUrl ? [image.sourceUrl] : []
+      ),
+    );
+    status = 'success';
+    return result;
+  } finally {
+    emitToolPerformanceEvent(scope, {
+      callId,
+      toolName: 'image_search',
+      durationMs: performance.now() - startedAt,
+      status,
+    });
+  }
 }
 
 const searchInputSchema = z.object({

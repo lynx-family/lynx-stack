@@ -212,13 +212,13 @@ describe('hydrate', () => {
     expect(stream).toEqual([]);
   });
 
-  it('forces MTRef hydrate clears when native serialization already contains null', () => {
+  it.each([null, undefined])('forces MTRef hydrate clears when native serialization contains %s', (before) => {
     __etAttrPlanMap.root = [0, adaptMTRefAttrSlot];
     const root = new BackgroundElementTemplateInstance('root', [null]);
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        attributeSlots: [null],
+        attributeSlots: [before],
       }),
       root,
     );
@@ -1309,18 +1309,52 @@ describe('hydrate', () => {
     expect(stream).toEqual([]);
   });
 
-  it('does not patch serialized null when the background attribute slot is missing', () => {
-    const root = new BackgroundElementTemplateInstance('root');
+  it.each([
+    { before: [null], after: [] },
+    { before: [], after: [null] },
+    { before: [undefined], after: [undefined] },
+    { before: [undefined], after: [null] },
+    { before: [null], after: [undefined] },
+  ])('does not patch absent hydration slots: $before -> $after', ({ before, after }) => {
+    const root = new BackgroundElementTemplateInstance('root', after);
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', { attributeSlots: before }),
+      root,
+    );
+    expect(stream).toEqual([]);
+    expect(root.attributeSlots).toEqual(after.map(value => value ?? null));
+  });
 
+  it('preserves real changes and removals around absent hydration slots', () => {
+    const root = new BackgroundElementTemplateInstance('root', [undefined, 0, false, '', '1']);
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        attributeSlots: [null],
+        attributeSlots: ['remove', undefined, null, undefined, 1],
       }),
       root,
     );
-
-    expect(stream).toEqual([]);
-    expect(root.attributeSlots).toEqual([]);
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      0,
+      null,
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      1,
+      0,
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      2,
+      false,
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      3,
+      '',
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      4,
+      '1',
+    ]);
   });
 
   it('skips sparse background slot indexes when checking trailing slots', () => {

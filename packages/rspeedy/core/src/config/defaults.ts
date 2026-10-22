@@ -30,14 +30,6 @@ export function applyDefaultRspeedyConfig(config: Config): Config {
       // inlineScripts defaults to false when chunk splitting is enabled, true otherwise
       inlineScripts: !enableChunkSplitting,
     },
-
-    tools: {
-      rsdoctor: {
-        experiments: {
-          enableNativePlugin: true,
-        },
-      },
-    },
   }, config)
 }
 

@@ -23,3 +23,5 @@ Changesets CLI v3 requires `changesets/action@v2`. For trusted publishing, compo
 Changesets v3 gives dependents a `patch` bump when an internal peer dependency moves outside their declared range. Major-release checks should inspect the final `releases` array without assuming the v2 peer-dependent major cascade.
 
 For each planned internal package release, validate that every publishable workspace package's normal semver `peerDependencies` range includes the planned `newVersion`. Treat `workspace:` peer ranges as explicitly pnpm-managed, and pair this range check with the dependency-changeset check so manual range changes are included in a release. Do not automatically widen peer ranges because keeping or dropping compatibility is a package-specific decision.
+
+PR previews publish the closure of workspace dependencies and internal peers, including peers declared with explicit semver ranges. Use `pkg-pr-new --previewVersion --peerDeps` so those packages and their cross-package peers share one commit-specific preview version; public peer compatibility ranges remain explicit in source manifests.

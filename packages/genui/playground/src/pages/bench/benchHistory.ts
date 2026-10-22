@@ -5,6 +5,8 @@ import {
   DEFAULT_BENCH_SCENARIOS,
   DEFAULT_BENCH_SETTINGS,
   createDefaultBenchGroups,
+  isBenchReasoningEffort,
+  isDocumentBenchProtocol,
 } from './benchData.js';
 import type {
   BenchGroup,
@@ -17,6 +19,7 @@ import type {
 } from './benchData.js';
 import { sanitizeBenchReportValue } from './benchReportSerialization.js';
 import type { BenchReport } from './benchReportTypes.js';
+import { isScreenshotSettleMs } from './benchScreenshotDelay.js';
 import { CUSTOM_PROVIDER_MODEL } from '../chat/shared.js';
 
 function createId(prefix: string): string {
@@ -70,7 +73,7 @@ function isBenchVariable(value: unknown): value is BenchVariable {
 
 function isBenchProtocol(value: unknown): value is BenchProtocol {
   return value === 'a2ui' || value === 'openui' || value === 'lynx-xml'
-    || value === 'html';
+    || value === 'html' || value === 'reactweb' || value === 'reactlynx';
 }
 
 function isBenchProfile(value: unknown): value is BenchProfile {
@@ -94,6 +97,9 @@ export function createBenchSettingsFromReport(
       reportSettings.judgeEnabled,
       DEFAULT_BENCH_SETTINGS.judgeEnabled,
     ),
+    ...(isScreenshotSettleMs(reportSettings.screenshotSettleMs)
+      ? { screenshotSettleMs: reportSettings.screenshotSettleMs }
+      : {}),
     ...(typeof reportSettings.uiJudgeModel === 'string'
         && reportSettings.uiJudgeModel.trim().length > 0
       ? { uiJudgeModel: reportSettings.uiJudgeModel.trim() }
@@ -143,7 +149,10 @@ export function createBenchGroupsFromReport(
       name: item.name ?? `Group ${index + 1}`,
       variable: isBenchVariable(item.variable) ? item.variable : 'custom',
       model: item.model ?? fallbackModel,
-      catalog: protocol === 'lynx-xml' || protocol === 'html'
+      reasoningEffort: isBenchReasoningEffort(item.reasoningEffort)
+        ? item.reasoningEffort
+        : 'default',
+      catalog: isDocumentBenchProtocol(protocol)
         ? 'none'
         : item.catalog ?? 'Full Catalog',
       extraInstruction: item.extraInstruction ?? '',

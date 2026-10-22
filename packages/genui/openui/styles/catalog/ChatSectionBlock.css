@@ -1,0 +1,35 @@
+.OpenUIChatSections {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+.OpenUIChatSection {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1rpx solid var(--openui-color-border);
+}
+.OpenUIChatSectionTrigger {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 0;
+}
+.OpenUIChatSectionTitle {
+  flex: 1;
+  font-size: 28rpx;
+  line-height: 1.5;
+  font-weight: 700;
+  color: var(--openui-color-text);
+}
+.OpenUIChatSectionChevron {
+  font-size: 28rpx;
+  color: var(--openui-color-text-muted);
+  padding-left: 16rpx;
+}
+.OpenUIChatSectionContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  padding-bottom: 20rpx;
+}

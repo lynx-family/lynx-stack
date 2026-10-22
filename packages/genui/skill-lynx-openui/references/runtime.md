@@ -101,6 +101,23 @@ Always keep a compact, shape-correct DSL default for hosts or Query IDs without
 a prefetched value. Never emit `initialQueryResults` host configuration in the
 OpenUI program.
 
+Business data that can change through later interactions must remain in Query
+results. Bind every dependent display field to the Query instead of copying its
+initial value into component literals. Keep input values and local UI controls
+in `$state`. Use `Action([@Run(save), @Run(openOrders)])` for a write followed by
+refresh, and reserve `@ToAssistant` for conversational or composition changes.
+The host supplies the data tools and their storage adapter. Data processing tools
+persist complete replacement values through host-owned storage. For example,
+`Mutation("openui_mutation", { key: "tasks", value: { items: @Filter(tasks.items, "id", "!=", $selectedId) } })`
+removes a selected row. Preserve all other fields explicitly when replacing an
+object. Use arithmetic and `@Each` to compute other updates. `@Set` and `@Reset`
+operate on input and selection state, not Query results. Natural-language
+instructions and op/path operation batches are unsupported. Use the Lynx OpenUI
+builtin `@Append(tasks.items, newItem)` to add one item without modifying the
+input. Save the resulting complete value through Mutation and refresh the Query.
+Append has no fixed capacity, generates no IDs, and provides no atomic concurrency
+control across clients.
+
 ## Mutation
 
 Declare a write tool without executing it:
@@ -126,6 +143,13 @@ Use `Action([@step, ...])`. Steps run in order:
 If a mutation fails, later steps do not run. Put a mutation before dependent
 refresh/reset steps only when that halt behavior is intended.
 
+Mutation arguments use the state snapshot from the render that created the
+action. Select a row with `@Set` in one action, then run its mutation from a
+separate editor action; setting a value and consuming its new value in a
+mutation within the same action is unsupported. Keep row-dependent expressions
+inline inside `@Each`, rather than declaring a row function or an action outside
+the loop's scope.
+
 ## Data Built-ins
 
 Use only these built-ins:
@@ -137,6 +161,10 @@ Use only these built-ins:
   `">"`, `"<"`, `">="`, `"<="`, or `"contains"`
 - `@Round(number, decimals?)`, `@Abs(number)`, `@Floor(number)`, `@Ceil(number)`
 - `@Each(array, variableName, inlineTemplate)`
+- `@Append(array, item)` returns a new array with exactly one item appended; an
+  array item stays nested. It requires exactly two arguments and rejects a
+  non-array first argument. This builtin is registered by the Lynx OpenUI runtime
+  and its prompt library.
 
 Keep the `@Each` loop variable inside the inline template:
 

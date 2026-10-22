@@ -14,6 +14,9 @@ import { buildOpenUIRenderUrl } from '../../utils/renderUrl.js';
 
 interface OpenUIPreviewInput {
   rawText: string;
+  inlineMode?: boolean;
+  rawTextUrl?: string;
+  openuiLibrary?: 'stack' | 'chat';
 }
 
 const OPENUI_PLAYBACK_CHUNK_SIZE = 240;
@@ -26,15 +29,39 @@ export const OPENUI_DEMOS_LIST_SOURCE = {
   scenarios: OPENUI_SCENARIOS,
   sections: [
     {
+      id: 'chat',
+      title: 'OpenUI Chat',
+      hideScenarioBadges: true,
+      scenarios: OPENUI_SCENARIOS.filter(scenario =>
+        scenario.library === 'chat'
+      ),
+      layout: 'flow',
+    },
+    {
       id: 'examples',
-      title: 'Examples',
-      scenarios: OPENUI_SCENARIOS,
+      title: 'Stack Examples',
+      scenarios: OPENUI_SCENARIOS.filter(scenario =>
+        scenario.library !== 'chat' && !scenario.id.startsWith('canvas-')
+      ),
+      layout: 'flow',
+    },
+    {
+      id: 'canvas',
+      title: 'Canvas · Web only',
+      hideScenarioBadges: true,
+      scenarios: OPENUI_SCENARIOS.filter(scenario =>
+        scenario.id.startsWith('canvas-')
+      ),
       layout: 'flow',
     },
   ],
   createPreviewUrl({ baseUrl, scenario, theme }) {
     return buildOpenUIRenderUrl({
-      rawText: scenario.raw,
+      ...(scenario.sourcePath
+        ? { rawTextUrl: new URL(scenario.sourcePath, baseUrl).href }
+        : { rawText: scenario.raw }),
+      openuiLibrary: scenario.library,
+      inlineMode: scenario.inlineMode,
       theme,
       instant: true,
     }, baseUrl);
@@ -63,18 +90,31 @@ function chunkOpenUI(rawText: string): string[] {
 
 export const OPENUI_DEMOS_PAGE_SOURCE = {
   scenarios: OPENUI_SCENARIOS,
+  sections: OPENUI_DEMOS_LIST_SOURCE.sections,
   findScenario: findDetailScenario,
   getEditorValue(scenario) {
     return scenario.raw;
   },
   createScenarioPreviewInput(scenario) {
-    return { rawText: scenario.raw };
+    return {
+      rawText: scenario.raw,
+      ...(scenario.inlineMode ? { inlineMode: true } : {}),
+      rawTextUrl: scenario.sourcePath,
+      openuiLibrary: scenario.library,
+    };
   },
-  commit({ editorValue }) {
+  commit({ editorValue, scenario }) {
     if (!editorValue.trim()) return { error: 'Raw output is empty.' };
     return {
       value: {
-        previewInput: { rawText: editorValue },
+        previewInput: {
+          rawText: editorValue,
+          ...(scenario?.inlineMode ? { inlineMode: true } : {}),
+          rawTextUrl: editorValue === scenario?.raw
+            ? scenario.sourcePath
+            : undefined,
+          openuiLibrary: scenario?.library,
+        },
         playbackChunks: chunkOpenUI(editorValue),
         meta: undefined,
       },
@@ -83,7 +123,10 @@ export const OPENUI_DEMOS_PAGE_SOURCE = {
   createPreviewSource({ input, isPlaybackActive, theme }) {
     return {
       kind: 'openui',
+      ...(input.openuiLibrary ? { openuiLibrary: input.openuiLibrary } : {}),
       rawText: input.rawText,
+      ...(input.inlineMode ? { inlineMode: true } : {}),
+      ...(input.rawTextUrl ? { rawTextUrl: input.rawTextUrl } : {}),
       theme,
       playbackMode: isPlaybackActive,
     };
@@ -126,10 +169,10 @@ export const OPENUI_DEMOS_PAGE_SOURCE = {
         label: 'JSON',
         title: 'Parsed JSON',
         editable: false,
-        getValue({ editorValue }) {
+        getValue({ editorValue, scenario }) {
           if (!editorValue.trim()) return '';
           try {
-            return parseOpenUIScenarioRaw(editorValue);
+            return parseOpenUIScenarioRaw(editorValue, scenario?.library);
           } catch (error) {
             return `Unable to parse OpenUI DSL:\n${String(error)}`;
           }

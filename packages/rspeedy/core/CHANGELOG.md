@@ -1,5 +1,45 @@
 # @lynx-js/rspeedy
 
+## 0.18.2
+
+### Patch Changes
+
+- Upgrade the bundled Rsdoctor packages from the 2.0 release candidate to 2.0.0. ([#4174](https://github.com/lynx-family/lynx-stack/pull/4174))
+- Updated dependencies []:
+  - @lynx-js/rsbuild-plugin@0.1.5
+
+## 0.18.1
+
+### Patch Changes
+
+- Upgrade the built-in Rsdoctor to `@rsdoctor/core@2.0.0-rc.1`, which supports the same Node.js range as Rspeedy (`^20.19.0 || >=22.12.0`). `RSDOCTOR=true` automatically enables Rsdoctor 2.0, and manually registered plugins are preserved without duplicate injection. ([#4043](https://github.com/lynx-family/lynx-stack/pull/4043))
+
+  `tools.rsdoctor` accepts legacy Rsdoctor 1.x fields and migrates them to the Rsdoctor 2.0 configuration. Rsdoctor 2 enables native graph collection and treemap visualization by default. Custom plugin registrations should import `RsdoctorRspackPlugin` from `@rsdoctor/core`.
+- Updated dependencies []:
+  - @lynx-js/rsbuild-plugin@0.1.4
+
+## 0.18.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Remove `entries` from `ExposedAPI`. Rspeedy never set it; `pluginQRCode` reads the entry points from the environments instead. ([#3971](https://github.com/lynx-family/lynx-stack/pull/3971))
+
+- Stop defaulting `output.cssModules.localIdentName` to `[local]-[hash:base64:6]`, so Rspeedy follows the Rsbuild default of `[path][name]__[local]-[hash:base64:6]` in development. ([#3972](https://github.com/lynx-family/lynx-stack/pull/3972))
+
+- Stop defaulting `dev.progressBar` to `true`, so Rspeedy follows the Rsbuild default and leaves the progress bar off. ([#3969](https://github.com/lynx-family/lynx-stack/pull/3969))
+
+### Patch Changes
+
+- Updated dependency `@rsdoctor/rspack-plugin` to `~1.6.4`. ([#3831](https://github.com/lynx-family/lynx-stack/pull/3831))
+
+- Default `performance.profile` to `true` in `pluginLynx` when `DEBUG` includes `lynx`, `rsbuild`, `rspeedy` or `*`, to align with Rspeedy. ([#3973](https://github.com/lynx-family/lynx-stack/pull/3973))
+
+- Write `stats.json` in chunks, so that a large project no longer fails with `RangeError: Invalid string length` when `performance.profile` is enabled. ([#3929](https://github.com/lynx-family/lynx-stack/pull/3929))
+
+- Upgrade Rspack, Rsbuild, Rslib, and Rstest as one compatible toolchain, and emit inspected Rspeedy configurations as `.mjs` files. ([#3997](https://github.com/lynx-family/lynx-stack/pull/3997))
+- Updated dependencies [[`f5779c6`](https://github.com/lynx-family/lynx-stack/commit/f5779c6364caba15152181baf7205a33b2037870), [`0cea2a3`](https://github.com/lynx-family/lynx-stack/commit/0cea2a3d34cb4dee019f0bc82ba07ef3a664ef23), [`c8a6aaf`](https://github.com/lynx-family/lynx-stack/commit/c8a6aafdde20972252898eae32da0aa385f31d6e)]:
+  - @lynx-js/rsbuild-plugin@0.1.3
+
 ## 0.17.2
 
 ### Patch Changes

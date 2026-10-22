@@ -69,6 +69,8 @@ export interface Config {
    *   },
    * })
    * ```
+   *
+   * @lynxDefaultChanged
    */
   environments?: RsbuildConfig['environments'] | undefined
 

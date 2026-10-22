@@ -16,10 +16,9 @@
   ],
   "scripts": {
     "build": "tsc6 --build",
-    "test": "pnpm run test:snapshot && pnpm run test:core && pnpm run test:et",
-    "test:core": "vitest run __test__/core",
+    "test": "pnpm run test:snapshot && pnpm run test:et",
     "test:et": "vitest run -c __test__/element-template/vitest.config.ts --coverage",
-    "test:snapshot": "vitest run --coverage __test__/snapshot __test__/worklet-runtime __test__/guardrails"
+    "test:snapshot": "vitest run --coverage __test__/snapshot __test__/core __test__/worklet-runtime __test__/guardrails"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",

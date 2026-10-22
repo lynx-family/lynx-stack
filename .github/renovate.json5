@@ -16,6 +16,11 @@
     ":automergeTypes",
   ],
 
+  // Default is `auto`, which resolves to `behind-base-branch` for automerge
+  // branches and `conflicted` for the rest. We want the reverse: keep PRs that
+  // need review up to date; automerge branches opt out below.
+  "rebaseWhen": "behind-base-branch",
+
   // Exclude `examples` from "config:recommended"
   "ignorePaths": [
     "**/node_modules/**",
@@ -60,6 +65,26 @@
       "rangeStrategy": "bump",
     },
     {
+      // Automerge branches: rebasing pushes a new commit, and renovate skips
+      // the merge check on any branch it pushed to in that run (`!commitSha`).
+      // Mirrors `:automergeStableNonMajor` / `:automergeTypes`; groups with
+      // `automerge: false` below set `behind-base-branch` again.
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchCurrentVersion": "!/^0/",
+      "rebaseWhen": "conflicted",
+    },
+    {
+      "matchPackageNames": ["@types/**"],
+      "rebaseWhen": "conflicted",
+    },
+    {
+      // 0.x patches are compatible (`^0.1.1` accepts 0.1.2); 0.0.z is not.
+      "matchUpdateTypes": ["patch"],
+      "matchCurrentVersion": "!/^0\\.0\\./",
+      "automerge": true,
+      "rebaseWhen": "conflicted",
+    },
+    {
       // The Lynx preset relies on Tailwind CSS v3 configuration and internal
       // APIs. Tailwind CSS v4 requires a dedicated migration across the preset,
       // integrations, examples, and website.
@@ -102,52 +127,28 @@
       "groupName": null,
     },
     {
-      "groupName": "Rspack",
-      "groupSlug": "Rspack",
+      // Rslib and Rstest depend on Rsbuild, which in turn pins a compatible
+      // Rspack range. Upgrade the complete toolchain in one PR so a newer
+      // transitive Rsbuild is never paired with an older Rspack override.
+      "groupName": "Rstack toolchain",
+      "groupSlug": "rstack-toolchain",
       "addLabels": ["upstream:rspack"],
       "matchDepTypes": [
         "devDependencies",
         "dependencies",
         "pnpm.catalog.rspack",
-      ],
-      "automerge": false,
-      "matchPackageNames": [
-        "/@rspack/*/",
-      ],
-      "rangeStrategy": "pin",
-    },
-    {
-      "groupName": "Rsbuild",
-      "groupSlug": "Rsbuild",
-      "addLabels": ["upstream:rspack"],
-      "matchDepTypes": [
-        "devDependencies",
-        "dependencies",
         "pnpm.catalog.rsbuild",
-      ],
-      "automerge": false,
-      "matchPackageNames": [
-        "/@rsbuild/*/",
-        "/rsbuild-plugin-*/",
-      ],
-      "rangeStrategy": "pin",
-    },
-    {
-      // `@rstest/adapter-rsbuild` and `@rstest/coverage-istanbul` both peer on
-      // `@rstest/core`, so bumping one without the others fails
-      // `strictPeerDependencies` and Renovate cannot write the lock file —
-      // the PR then carries a catalog bump with no matching `pnpm-lock.yaml`.
-      "groupName": "Rstest",
-      "groupSlug": "Rstest",
-      "addLabels": ["upstream:rspack"],
-      "matchDepTypes": [
-        "devDependencies",
-        "dependencies",
+        "pnpm.catalog.rslib",
         "pnpm.catalog.rstest",
       ],
       "automerge": false,
+      "rebaseWhen": "behind-base-branch",
       "matchPackageNames": [
-        "/@rstest/*/",
+        "/^@rspack\\//",
+        "/^@rsbuild\\//",
+        "/^@rslib\\//",
+        "/^@rstest\\//",
+        "/^rsbuild-plugin-/",
       ],
       "rangeStrategy": "pin",
     },
@@ -159,6 +160,7 @@
         "dependencies",
       ],
       "automerge": false,
+      "rebaseWhen": "behind-base-branch",
       "matchPackageNames": [
         "rspress",
         "/@rspress/*/",
@@ -210,6 +212,7 @@
       // builds above ship straight from `main`), so they get a human look
       // instead of riding on a green CI.
       "automerge": false,
+      "rebaseWhen": "behind-base-branch",
     },
     {
       "groupName": "API Extractor",
@@ -279,6 +282,7 @@
         "@typescript/native-preview",
       ],
       "automerge": false,
+      "rebaseWhen": "behind-base-branch",
     },
     {
       "groupName": "Lynx Engine",
@@ -292,6 +296,7 @@
         "* 0-3 1 * *",
       ],
       "automerge": false,
+      "rebaseWhen": "behind-base-branch",
     },
         {
       "groupName": "Rust Crates",
@@ -317,6 +322,7 @@
         "rkyv_derive",
       ],
       "automerge": false,
+      "rebaseWhen": "behind-base-branch",
     },
     {
       "groupName": "SWC",

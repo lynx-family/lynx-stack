@@ -1,5 +1,32 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.16.4
+
+### Patch Changes
+
+- Keep the `CSS` custom sections of an external bundle as custom sections on web. They still ride the `StyleInfo` section, and are now also written under their names into the `CustomSectionsStyleInfo` section. ([#4142](https://github.com/lynx-family/lynx-stack/pull/4142))
+- Updated dependencies [[`75c770f`](https://github.com/lynx-family/lynx-stack/commit/75c770fe259896601fedb187f96ef75ac39a7839)]:
+  - @lynx-js/web-core@0.26.4
+
+## 0.16.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-core@0.26.3
+
+## 0.16.2
+
+### Patch Changes
+
+- Correct the emitted page config key for enabling zero-percent flex basis behavior. ([#4015](https://github.com/lynx-family/lynx-stack/pull/4015))
+
+- Keep both layers of a lazy bundle that a `webpackChunkName` names. The name is the identity of a chunk group, so writing one collapsed the main-thread and the background compilation into a single chunk: the bundle shipped with an empty `lepusCode`, and its intermediate outputs landed outside of `.lynx/lazy-bundle/<name>/`. The transform now appends `-react__<layer>` to a user-written name and the plugin strips it again, the way it did for the names the transform used to inject, so a named lazy bundle is built exactly like an unnamed one. ([#4002](https://github.com/lynx-family/lynx-stack/pull/4002))
+
+- Updated dependency `tinypool` to `^2.2.0`. ([#3835](https://github.com/lynx-family/lynx-stack/pull/3835))
+- Updated dependencies []:
+  - @lynx-js/web-core@0.26.2
+
 ## 0.16.1
 
 ### Patch Changes

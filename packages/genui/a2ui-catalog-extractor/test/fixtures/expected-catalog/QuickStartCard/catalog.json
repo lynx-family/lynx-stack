@@ -4,9 +4,6 @@
       "title": {
         "oneOf": [
           {
-            "type": "string"
-          },
-          {
             "type": "object",
             "properties": {
               "path": {
@@ -17,6 +14,9 @@
               "path"
             ],
             "additionalProperties": false
+          },
+          {
+            "type": "string"
           }
         ],
         "description": "Card title text or data binding."
@@ -24,8 +24,8 @@
       "tone": {
         "type": "string",
         "enum": [
-          "neutral",
-          "accent"
+          "accent",
+          "neutral"
         ],
         "description": "Visual tone used by the renderer."
       },
@@ -60,13 +60,13 @@
         "additionalProperties": {
           "oneOf": [
             {
-              "type": "string"
+              "type": "boolean"
             },
             {
               "type": "number"
             },
             {
-              "type": "boolean"
+              "type": "string"
             }
           ]
         },

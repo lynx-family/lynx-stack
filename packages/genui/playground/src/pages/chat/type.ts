@@ -89,6 +89,11 @@ export interface ChatArtifactView {
   text: string;
   formattedText?: string;
   language: 'text' | 'json';
+  /** Subscribe to external data without changing the generated output or preview. */
+  liveText?: {
+    subscribe: (onChange: () => void) => () => void;
+    getSnapshot: () => string;
+  };
 }
 
 export interface ChatArtifact {

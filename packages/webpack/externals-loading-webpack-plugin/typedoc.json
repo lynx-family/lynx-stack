@@ -1,0 +1,4 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "tsconfig": "./tsconfig.build.json"
+}

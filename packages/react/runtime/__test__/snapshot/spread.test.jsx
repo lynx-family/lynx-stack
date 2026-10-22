@@ -210,7 +210,7 @@ describe('spreadUpdate', () => {
     render(<Comp />, scratchBackground);
     patch = hydrate(JSON.parse(JSON.stringify(scratch)), scratchBackground);
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     globalEnvManager.switchToBackground();
     initGlobalSnapshotPatch();
 
@@ -237,7 +237,7 @@ describe('spreadUpdate', () => {
     `);
 
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -314,7 +314,7 @@ describe('spreadUpdate', () => {
     // this update could be removed later
     expect(patch).toMatchInlineSnapshot(`[]`);
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     globalEnvManager.switchToBackground();
     initGlobalSnapshotPatch();
     setSpread_({
@@ -340,7 +340,7 @@ describe('spreadUpdate', () => {
     `);
 
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -417,7 +417,7 @@ describe('spreadUpdate', () => {
     // this update could be removed later
     expect(patch).toMatchInlineSnapshot(`[]`);
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     globalEnvManager.switchToBackground();
     initGlobalSnapshotPatch();
     setSpread_({});
@@ -433,7 +433,7 @@ describe('spreadUpdate', () => {
     `);
 
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -502,7 +502,7 @@ describe('spreadUpdate', () => {
     // this update could be removed later
     expect(patch).toMatchInlineSnapshot(`[]`);
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     globalEnvManager.switchToBackground();
     initGlobalSnapshotPatch();
     setSpread_(null);
@@ -518,7 +518,7 @@ describe('spreadUpdate', () => {
     `);
 
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -625,7 +625,7 @@ describe('spreadUpdate', () => {
     // this update could be removed later
     expect(patch).toMatchInlineSnapshot(`[]`);
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     globalEnvManager.switchToBackground();
     initGlobalSnapshotPatch();
     setSpread_({});
@@ -645,7 +645,7 @@ describe('spreadUpdate', () => {
     `);
 
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"

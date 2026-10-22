@@ -7,6 +7,7 @@ import { simple } from 'acorn-walk';
 import { analyze } from 'eslint-scope';
 
 import { generateMainThreadScriptResult } from './html-fragment.js';
+import { extractLynxXmlArtifact } from './output.js';
 import { generateSharedScript } from './script-reuse.js';
 import { generatePresetStyles, validateStylePreset } from './style-preset.js';
 import type { LynxXmlStylePreset } from './style-preset.js';
@@ -40,7 +41,7 @@ export function assembleLynxXmlArtifact(
   options: AssembleLynxXmlArtifactOptions = {},
 ): { text: string; xmlFragment?: string } {
   return transformLynxXmlArtifact(
-    source,
+    extractLynxXmlArtifact(source),
     options.enableHtmlFragment === true,
     options,
   );

@@ -234,6 +234,8 @@ export interface Output {
    *   },
    * })
    * ```
+   *
+   * @lynxDefaultChanged
    */
   dataUriLimit?: number | DataUriLimit | undefined
 
@@ -260,6 +262,8 @@ export interface Output {
    *   },
    * })
    * ```
+   *
+   * @lynxDefaultChanged
    */
   distPath?: DistPathConfig | undefined
 
@@ -378,6 +382,8 @@ export interface Output {
    * - `inline`: Preserve all legal comments in original position.
    *
    * - `none`: Remove all legal comments.
+   *
+   * @lynxDefaultChanged
    */
   legalComments?: 'none' | 'inline' | 'linked' | undefined
 
@@ -404,6 +410,8 @@ export interface Output {
    * The {@link SourceMap} configures whether and how to generate source-map for outputs.
    *
    * @defaultValue When this option is unset in Lynx builds, JavaScript source maps use `'cheap-module-source-map'` in development and `'source-map'` in production; CSS source maps are also generated. All `.map` assets are removed before emit.
+   *
+   * @lynxDefaultChanged
    */
   sourceMap?: boolean | SourceMap | undefined
 }

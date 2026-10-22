@@ -676,6 +676,10 @@ export interface WorkletVisitorConfig {
   filename: string
   /** @internal */
   target: 'LEPUS' | 'JS' | 'MIXED'
+  /**
+   * Module providing worklet helpers. The init entry uses this path with a
+   * trailing `/internal` removed, followed by `/worklet-runtime/init`.
+   */
   runtimePkg: string
 }
 /**
@@ -763,9 +767,16 @@ export interface TransformNodiffOutput {
   /** @internal */
   elementTemplates?: Array<ElementTemplateAsset>
   /** @internal */
+  runtimeRequirements: TransformRuntimeRequirements
+  /** @internal */
   definesForSnapshot?: Array<Define>
   /** @internal */
   definesForWorklet?: Array<Define>
+}
+/** @internal */
+export interface TransformRuntimeRequirements {
+  /** @internal */
+  mainThreadProgrammability: boolean
 }
 /**
  * @internal
@@ -781,7 +792,7 @@ export interface Define {
   id: string
   /**
    * @internal
-   * A self-contained statement list registering the definition.
+   * A statement list registering the definition, using the bindings in imports.
    */
   code: string
   /**
@@ -791,6 +802,21 @@ export interface Define {
    * the main thread lacks such a definition.
    */
   unmergeable?: boolean
+  /** @internal Compiler requirements of the extracted registration. */
+  runtimeRequirements?: TransformRuntimeRequirements
+  /** @internal Imports required by this definition. */
+  imports?: DefineImport[]
+}
+/** @internal */
+export interface DefineImport {
+  /** @internal */
+  source: string
+  /** @internal */
+  imported: string
+  /** @internal */
+  local: string
+  /** @internal */
+  namespace?: boolean
 }
 /** @internal */
 export interface ElementTemplateAsset {

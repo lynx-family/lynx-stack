@@ -27,6 +27,7 @@ import {
   searchedDoubaoDocumentURLs,
   searchedDoubaoImageURLs,
 } from '../agent/common/doubao-search-tool.js';
+import { registerToolPerformanceObserver } from '../agent/common/tool-performance.js';
 
 const CONFIG = {
   apiKey: 'search-secret',
@@ -420,6 +421,13 @@ describe('Doubao search request', () => {
 
   test('shares a request-wide call budget and records trusted URLs', async () => {
     const scope = createSearchRunScope();
+    const events: {
+      event: string;
+      details?: Record<string, unknown>;
+    }[] = [];
+    registerToolPerformanceObserver(scope, (event, details) => {
+      events.push({ event, details });
+    });
     initializeDoubaoSearchRunScope(scope, 2);
     await searchDoubaoForRun(scope, CONFIG, 'first', successfulFetch);
     await searchDoubaoImagesForRun(
@@ -435,11 +443,30 @@ describe('Doubao search request', () => {
     expect(searchedDoubaoImageURLs(scope)).toEqual([
       'https://images.example.com/beijing.jpeg?signature=trusted',
     ]);
+    expect(events).toHaveLength(2);
+    expect(events.map(event => event.event)).toEqual([
+      'agent.tool.completed',
+      'agent.tool.completed',
+    ]);
+    expect(events[0]?.details?.callId).toBeTypeOf('string');
+    expect(events[0]?.details?.toolName).toBe('web_search');
+    expect(events[0]?.details?.durationMs).toBeTypeOf('number');
+    expect(events[0]?.details?.status).toBe('success');
+    expect(events[1]?.details?.callId).toBeTypeOf('string');
+    expect(events[1]?.details?.toolName).toBe('image_search');
+    expect(events[1]?.details?.durationMs).toBeTypeOf('number');
+    expect(events[1]?.details?.status).toBe('success');
+    expect(JSON.stringify(events)).not.toContain('first');
+    expect(JSON.stringify(events)).not.toContain('second');
     await expect(
       searchDoubaoForRun(scope, CONFIG, 'third', successfulFetch),
     ).rejects.toThrow('call limit reached (2 per request)');
 
     const failedScope = createSearchRunScope();
+    const failedEvents: { details?: Record<string, unknown> }[] = [];
+    registerToolPerformanceObserver(failedScope, (_event, details) => {
+      failedEvents.push({ details });
+    });
     initializeDoubaoSearchRunScope(failedScope, 1);
     await expect(
       searchDoubaoForRun(failedScope, CONFIG, 'first', failingFetch),
@@ -447,6 +474,11 @@ describe('Doubao search request', () => {
     await expect(
       searchDoubaoForRun(failedScope, CONFIG, 'second', successfulFetch),
     ).rejects.toThrow('call limit reached (1 per request)');
+    expect(failedEvents).toHaveLength(1);
+    expect(failedEvents[0]?.details).toEqual(expect.objectContaining({
+      toolName: 'web_search',
+      status: 'error',
+    }));
   });
 });
 

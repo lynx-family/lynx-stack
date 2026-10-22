@@ -48,15 +48,22 @@ export default defineConfig({
     exclude: ['**/web-elements/dist/**'],
   },
   reporters,
+  // Compiler suites spawn their own native thread pools and child servers.
+  // Bound CI file concurrency so cold server startup can make progress.
+  pool: { maxWorkers: process.env.CI ? 4 : undefined },
   projects: [
     'packages/genui/a2ui/rstest.config.ts',
     'packages/genui/a2ui-catalog-extractor/rstest.config.ts',
     'packages/genui/cli/rstest.config.ts',
+    'packages/genui/html/rstest.config.ts',
     'packages/genui/lynx-xml/rstest.config.ts',
     'packages/genui/mcp-apps/rstest.config.ts',
-    'packages/genui/openui/rstest.config.ts',
+    // OpenUI's ReactLynx compiler changes shared bundler transforms. CI runs
+    // that project separately, after this aggregate suite (see test.yml).
     'packages/genui/playground/rstest.config.ts',
+    'packages/genui/reactlynx/rstest.config.ts',
     'packages/genui/server/rstest.config.ts',
+    'packages/genui/reactweb/rstest.config.ts',
     'packages/rspeedy/*/rstest.config.ts',
     'packages/web-platform/*/rstest.config.ts',
     'packages/webpack/*/rstest.config.ts',

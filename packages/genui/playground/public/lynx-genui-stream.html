@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<!-- Copyright 2026 The Lynx Authors. Licensed under the Apache License, Version 2.0. -->
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <meta
+      name="description"
+      content="编辑 Markdown、OpenUI 和 A2UI，实时查看 Lynx 渲染结果，支持流式播放、独立草稿与表单交互。"
+    >
+    <title>Lynx GenUI Preview</title>
+    <style>
+    :root {
+      color-scheme: light;
+      font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        sans-serif;
+      color: #202020;
+      background: #fff;
+      font-synthesis: none;
+      --border: #e8e8e8;
+      --muted: #737373;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+    }
+    button, select {
+      font: inherit;
+      font-size: 12px;
+      color: inherit;
+    }
+    button {
+      cursor: pointer;
+    }
+    button, select {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 11px;
+      background: #fff;
+      min-height: 32px;
+    }
+    button:hover {
+      background: #f5f5f5;
+      border-color: #c5c5c5;
+    }
+    button:disabled, select:disabled {
+      opacity: 0.45;
+      cursor: wait;
+    }
+    :focus-visible {
+      outline: 2px solid #555;
+      outline-offset: 3px;
+    }
+    [hidden] {
+      display: none !important;
+    }
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(380px, 1fr);
+      height: 100dvh;
+      min-height: 500px;
+    }
+    .source-panel, .render-panel {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+    }
+    .source-panel {
+      border-right: 1px solid var(--border);
+    }
+    .panel-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 64px;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    h1, h2 {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+      margin: 0;
+      white-space: nowrap;
+    }
+    h1 span {
+      font-weight: 400;
+      color: var(--muted);
+      margin-left: 5px;
+    }
+    .panel-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+    .source-options, .preview-meta {
+      min-height: 48px;
+      padding: 7px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+      border: 0;
+    }
+    .source-options {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .select-field {
+      display: block;
+      position: relative;
+      min-width: 0;
+    }
+    .example-field {
+      flex: 1 1 140px;
+      max-width: 240px;
+    }
+    .select-field select {
+      appearance: none;
+      -webkit-appearance: none;
+      display: block;
+      width: 100%;
+      height: 32px;
+      padding: 0 30px 0 11px;
+      border-color: #dedede;
+      background: #fff;
+      color: #333;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 20px;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+    .select-field::after {
+      content: "";
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      width: 6px;
+      height: 6px;
+      border-right: 1.5px solid #888;
+      border-bottom: 1.5px solid #888;
+      transform: rotate(45deg);
+      pointer-events: none;
+    }
+    .select-field select:hover {
+      border-color: #bcbcbc;
+    }
+    .select-field select:focus-visible {
+      outline: 2px solid #7b91ad;
+      outline-offset: 2px;
+    }
+    .source-options .text-button {
+      flex-shrink: 0;
+    }
+    .text-button {
+      background: none;
+      border-color: transparent;
+      color: var(--muted);
+      padding-inline: 5px;
+    }
+    .language-label, .preview-meta > span:last-child {
+      margin-left: auto;
+      white-space: nowrap;
+    }
+    .editor {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .line-gutter {
+      flex-shrink: 0;
+      min-width: 40px;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      background: #fafafa;
+      border-right: 1px solid #f0f0f0;
+    }
+    .line-gutter pre {
+      padding: 18px 9px 60px;
+      margin: 0;
+      color: #aaa;
+      text-align: right;
+      font:
+        11px/23px "SFMono-Regular",
+        Consolas,
+        "Liberation Mono",
+        monospace;
+    }
+    #raw-editor {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      border-radius: 0;
+      outline: 0;
+      resize: none;
+      margin: 0;
+      padding: 18px 18px 60px;
+      overflow: auto;
+      background: #fff;
+      color: #262626;
+      font:
+        13px/23px "SFMono-Regular",
+        Consolas,
+        "Liberation Mono",
+        monospace;
+      tab-size: 2;
+      caret-color: #171717;
+      white-space: pre;
+      overflow-wrap: normal;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+    #raw-editor:focus-visible {
+      box-shadow: inset 0 0 0 1px #b7c9dd;
+    }
+    #raw-editor::selection {
+      background: #b9d5f7;
+      color: #171717;
+    }
+    #raw-editor:disabled {
+      opacity: 0.6;
+    }
+    .source-footer, .preview-footer {
+      min-height: 34px;
+      padding: 8px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .source-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    #selection-status {
+      white-space: nowrap;
+    }
+    .diagnostic {
+      flex-shrink: 0;
+      max-height: 145px;
+      overflow: auto;
+      padding: 12px 20px;
+      border-top: 1px solid #eed5ab;
+      background: #fffbf3;
+      color: #8b4e0a;
+      font: 11px/1.7 "SFMono-Regular", Consolas, monospace;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .loading-copy {
+      padding: 10px 20px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .action-result {
+      flex-shrink: 0;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+    }
+    .action-result summary {
+      padding: 10px 20px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .action-result pre {
+      max-height: 150px;
+      overflow: auto;
+      margin: 0;
+      padding: 0 20px 12px;
+      font: 11px/1.6 "SFMono-Regular", Consolas, monospace;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .segmented {
+      display: flex;
+      background: #f4f4f4;
+      padding: 3px;
+      border-radius: 7px;
+    }
+    .segmented button {
+      border: 0;
+      background: none;
+      padding: 4px 9px;
+      min-height: 26px;
+      color: var(--muted);
+    }
+    .segmented button[aria-pressed="true"] {
+      color: #202020;
+      background: #fff;
+      box-shadow: 0 1px 3px #00000012;
+    }
+    .preview-meta {
+      justify-content: space-between;
+    }
+    #render-status {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    #render-status::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      flex-shrink: 0;
+      background: #9b9b9b;
+      border-radius: 50%;
+    }
+    #render-status[data-state="ready"]::before {
+      background: #448255;
+    }
+    #render-status[data-state="error"]::before {
+      background: #c98b3c;
+    }
+    .preview-stage {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      background: #fafafa;
+    }
+    .device {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      gap: 8px;
+      width: min(375px, 100%);
+      height: min(780px, 100%);
+      padding: 12px 10px 9px;
+      background: linear-gradient(155deg, #fff, #f4f4f4);
+      border: 1px solid #d5d5d5;
+      border-radius: 36px;
+      box-shadow: 0 18px 46px #0000000c, inset 0 0 0 2px #fff;
+    }
+    .device-status {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 12px;
+      font-size: 10px;
+      line-height: 12px;
+      font-weight: 600;
+    }
+    .device-indicators {
+      letter-spacing: 2px;
+      font-size: 8px;
+    }
+    .device-notch {
+      width: 94px;
+      height: 10px;
+      flex-shrink: 0;
+      border-radius: 12px;
+      background: #1e1e1e;
+      margin: 0 auto 3px;
+    }
+    .device-screen {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+      background: #fff;
+      border-radius: 4px;
+    }
+    #preview-frame {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+      background: #fff;
+    }
+    .device-home {
+      width: 90px;
+      height: 4px;
+      flex-shrink: 0;
+      border-radius: 5px;
+      margin-inline: auto;
+      background: #333;
+    }
+    .preview-placeholder {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      padding: 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      background: #fff;
+      pointer-events: none;
+    }
+    .preview-stage[data-size="wide"] {
+      padding: 0;
+    }
+    [data-size="wide"] .device {
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      gap: 0;
+    }
+    [data-size="wide"] .device-status,
+    [data-size="wide"] .device-notch,
+    [data-size="wide"] .device-home {
+      display: none;
+    }
+    [data-size="wide"] .device-screen {
+      border-radius: 0;
+    }
+    @media (max-width: 1100px) {
+      .language-label {
+        display: none;
+      }
+      .source-options {
+        gap: 8px;
+        padding-inline: 16px;
+      }
+    }
+    @media (max-width: 820px) and (min-width: 721px) {
+      .panel-toolbar, .source-options, .preview-meta {
+        padding-inline: 12px;
+        gap: 6px;
+      }
+      .language-label, .example-label {
+        display: none;
+      }
+      .panel-actions {
+        gap: 5px;
+      }
+    }
+    @media (max-width: 720px) {
+      .workspace {
+        height: auto;
+        min-height: 100dvh;
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .source-panel {
+        height: 55dvh;
+        min-height: 370px;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .render-panel {
+        height: 850px;
+        max-height: 100dvh;
+        min-height: 480px;
+      }
+      .panel-toolbar, .source-options, .preview-meta {
+        padding-inline: 16px;
+      }
+      .language-label {
+        display: none;
+      }
+      .preview-stage {
+        padding: 18px;
+      }
+      .panel-actions {
+        gap: 6px;
+      }
+    }
+
+    .protocol-field {
+      flex: 0 0 100px;
+    }
+    .playback-controls {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+    }
+    .inline-control {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-right: auto;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .inline-control input {
+      accent-color: #333;
+    }
+    #stream {
+      background: #262626;
+      color: #fff;
+      border-color: #262626;
+    }
+    #stream:hover {
+      background: #444;
+    }
+    #catalog-link {
+      color: inherit;
+      text-underline-offset: 3px;
+    }
+    .panel-toolbar,
+    .source-options,
+    .preview-meta,
+    .source-footer,
+    .preview-footer {
+      flex-shrink: 0;
+    }
+    @media (max-width: 1100px) {
+      .source-options {
+        gap: 6px;
+      }
+      .playback-controls button {
+        font-size: 11px;
+        padding-inline: 8px;
+      }
+    }
+    </style>
+  </head>
+  <body>
+    <main class="workspace">
+      <section class="source-panel" aria-labelledby="raw-title">
+        <header class="panel-toolbar">
+          <h1 id="raw-title">
+            <strong id="protocol-title">OpenUI</strong>
+            <span>Raw</span>
+          </h1>
+          <div class="panel-actions">
+            <button id="copy-source" type="button" disabled>复制</button>
+            <button id="download-source" type="button" disabled>下载</button>
+          </div>
+        </header>
+        <div class="source-options">
+          <label for="protocol" class="select-field protocol-field">
+            <span class="visually-hidden">协议</span>
+            <select id="protocol" disabled>
+              <option value="openui">OpenUI</option>
+              <option value="a2ui">A2UI</option>
+            </select>
+          </label>
+          <label for="example" class="select-field example-field">
+            <span class="visually-hidden">示例</span>
+            <select id="example" disabled>
+              <option value="basic">基础示例</option>
+              <option value="doc-hokkaido-turbo-v12">北海道旅行攻略</option>
+            </select>
+          </label>
+          <button id="restore-source" type="button" disabled>
+            重置示例
+          </button>
+        </div>
+        <div class="editor" id="editor">
+          <div class="line-gutter" aria-hidden="true">
+            <pre id="line-numbers">1</pre>
+          </div>
+          <textarea
+            id="raw-editor"
+            aria-label="OpenUI raw 编辑器"
+            wrap="off"
+            spellcheck="false"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            disabled
+            placeholder="正在载入编辑器…"
+          ></textarea>
+        </div>
+        <div
+          id="diagnostic"
+          class="diagnostic"
+          role="status"
+          aria-live="polite"
+          hidden
+        >
+        </div>
+        <div class="playback-controls">
+          <label id="inline-control" class="inline-control"><input
+              id="inline-mode"
+              type="checkbox"
+              disabled
+            > Markdown + OpenUI</label>
+          <button id="stream" type="button" disabled>流式渲染</button>
+          <button id="stop" type="button" disabled>停止</button>
+          <button id="clear-source" type="button" disabled>清空</button>
+        </div>
+        <footer class="source-footer">
+          <span id="draft-status">草稿仅保存在此浏览器</span>
+          <span id="selection-status"></span>
+          <span id="source-size"></span>
+        </footer>
+      </section>
+      <section class="render-panel" aria-labelledby="render-title">
+        <header class="panel-toolbar">
+          <h2 id="render-title">Lynx OpenUI</h2>
+          <div class="panel-actions">
+            <div class="segmented" aria-label="预览尺寸">
+              <button type="button" id="phone-view" aria-pressed="true">
+                手机
+              </button>
+              <button type="button" id="wide-view" aria-pressed="false">
+                宽屏
+              </button>
+            </div>
+            <button
+              id="reset-preview"
+              type="button"
+              disabled
+              title="重新载入预览，清空表单交互状态"
+            >
+              重置预览
+            </button>
+          </div>
+        </header>
+        <div class="preview-meta">
+          <span
+            id="render-status"
+            role="status"
+            aria-live="polite"
+            data-state="loading"
+          >正在载入运行时</span>
+          <a
+            id="catalog-link"
+            href="./#/openui/catalog"
+            target="_blank"
+            rel="noopener noreferrer"
+          >支持的组件</a>
+        </div>
+        <div class="preview-stage" id="preview-stage">
+          <div class="device" id="device">
+            <div class="device-status" aria-hidden="true">
+              <span>9:41</span>
+              <span class="device-indicators">▰ ▰ ▰</span>
+            </div>
+            <div class="device-notch" aria-hidden="true"></div>
+            <div class="device-screen">
+              <iframe
+                id="preview-frame"
+                title="Lynx OpenUI 实时预览"
+                allow="clipboard-write"
+              ></iframe>
+              <div id="preview-placeholder" class="preview-placeholder">
+                正在启动 Lynx…
+              </div>
+            </div>
+            <div class="device-home" aria-hidden="true"></div>
+          </div>
+        </div>
+        <details id="action-result" class="action-result" hidden>
+          <summary>交互事件 · 仅预览，不发起对话或打开链接</summary>
+          <pre id="action-payload"></pre>
+        </details>
+        <footer class="preview-footer">
+          修改 raw 实时生效 · 切换协议或重置预览会清空交互状态
+        </footer>
+      </section>
+    </main>
+    <noscript>请启用 JavaScript 以编辑和渲染 GenUI。</noscript>
+    <script id="preview-core">
+    'use strict';
+      const MAX_SOURCE_LENGTH = 500_000;
+      const openuiBasicExample =
+        `root = Card([heading, description, form, greeting])
+$count = 0
+$name = "朋友"
+heading = TextContent("# Hello, OpenUI")
+description = TextContent("在左侧修改代码，右侧实时更新。")
+nameField = FormControl("你的名字", Input("name", "请输入名字", "text", null, $name))
+greeting = Text("text", "你好，" + $name, null, null, "lg")
+increment = Action([@Set($count, $count + 1)])
+counter = Button("点击次数：" + $count, increment)
+form = Form("welcome", Buttons([counter]), [nameField])`;
+      const a2uiExample = [
+        {
+          version: 'v0.9',
+          createSurface: {
+            surfaceId: 'demo',
+            catalogId:
+              'https://a2ui.org/specification/v0_9/basic_catalog.json',
+          },
+        },
+        {
+          version: 'v0.9',
+          updateComponents: {
+            surfaceId: 'demo',
+            components: [{
+              id: 'root',
+              component: 'Text',
+              text: { path: '/text' },
+            }],
+          },
+        },
+        {
+          version: 'v0.9',
+          updateDataModel: {
+            surfaceId: 'demo',
+            path: '/text',
+            value: '你好，Lynx！',
+          },
+        },
+      ];
+      const operations = [
+        'createSurface',
+        'updateComponents',
+        'updateDataModel',
+        'deleteSurface',
+      ];
+      function normalize(input) {
+        const wrapper = input;
+        const messages = Array.isArray(input)
+          ? input
+          : Array.isArray(wrapper?.messages)
+          ? wrapper.messages
+          : [input];
+        for (const inputMessage of messages) {
+          const message = inputMessage;
+          const keys = message && typeof message === 'object'
+            ? operations.filter(key => key in message)
+            : [];
+          const payload = message?.[keys[0]];
+          if (
+            keys.length !== 1 || message?.version !== 'v0.9'
+            || typeof payload?.surfaceId !== 'string'
+            || !payload.surfaceId
+          ) {
+            throw new Error(
+              '每条消息需包含 version: "v0.9"、一个 A2UI 操作及非空 surfaceId。',
+            );
+          }
+        }
+        return messages;
+      }
+      function parsePreviewSource(source, protocol) {
+        if (source.length > MAX_SOURCE_LENGTH) {
+          throw new Error('内容过长，请控制在 500,000 个字符以内。');
+        }
+        const text = source.trim();
+        if (protocol === 'openui') {
+          return [{ rawText: source, isStreaming: false }];
+        }
+        if (!text) return [];
+        let parsed;
+        try {
+          parsed = JSON.parse(text);
+        } catch {
+          return text.split(/\r?\n/).filter(line => line.trim()).flatMap(
+            (line, index) => {
+              try {
+                return normalize(JSON.parse(line));
+              } catch (error) {
+                throw new Error(
+                  `JSON / NDJSON 第 ${index + 1} 行解析失败：${
+                    error instanceof Error ? error.message : String(error)
+                  }`,
+                );
+              }
+            },
+          );
+        }
+        return normalize(parsed);
+      }
+
+      function resolveExampleAssets(raw, base, resourceMap = {}) {
+        return raw.replace(
+          /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g,
+          literal => {
+            const path = literal.slice(1, -1);
+            const target = Object.hasOwn(resourceMap, path)
+              ? resourceMap[path]
+              : /^\.\/demos\/openui\/chat\/[^"'\\\s]+$/.test(path)
+              ? path
+              : null;
+            if (!target) return literal;
+            const url = new URL(target, base);
+            if (
+              !['http:', 'https:'].includes(url.protocol)
+            ) return literal;
+            return literal[0] + url.href.replace(/'/g, '%27')
+              + literal[0];
+          },
+        );
+      }
+
+      function draftKey(selection) {
+        return `lynx-genui-stream:draft:v1:${selection.protocol}:${selection.library}:${selection.id}:${
+          selection.inlineMode ? 'inline' : 'raw'
+        }`;
+      }
+      function readDraft(storage, selection) {
+        try {
+          const value = storage.getItem(draftKey(selection));
+          return typeof value === 'string'
+              && value.length <= MAX_SOURCE_LENGTH
+            ? value
+            : null;
+        } catch {
+          return null;
+        }
+      }
+      function exampleText(selection, trip) {
+        if (selection.protocol === 'a2ui') {
+          return JSON.stringify(a2uiExample, null, 2);
+        }
+        const basic = selection.id === 'basic';
+        const raw = basic ? openuiBasicExample : trip;
+        if (!selection.inlineMode) return raw;
+        const title = basic ? 'Hello, GenUI' : '北海道冬日旅行';
+        return `# ${title}\n\n这是一段 **Markdown**，下面的 OpenUI 卡片可以直接交互。\n\n\`\`\`openui\n${raw}\n\`\`\`\n\n### 继续阅读\n\n- 文字和卡片按回复顺序显示。\n- 流式播放完成后，可以操作卡片中的表单和按钮。\n`;
+      }
+      function readSelection(location, storage) {
+        const params = new URL(location).searchParams;
+        let saved;
+        try {
+          saved = JSON.parse(
+            storage.getItem('lynx-genui-stream:selection:v1'),
+          );
+        } catch { /* Optional browser storage. */ }
+        const explicit = ['protocol', 'library', 'case', 'inlineMode']
+          .some(key => params.has(key));
+        const input = explicit
+          ? {
+            protocol: params.get('protocol'),
+            library: params.get('library'),
+            id: params.get('case'),
+            inlineMode: params.get('inlineMode') === '1',
+          }
+          : saved;
+        const protocol = input?.protocol === 'a2ui' ? 'a2ui' : 'openui';
+        const basic = input?.id === 'basic'
+          && (input?.library == null || input.library === 'chat');
+        return {
+          protocol,
+          library: 'chat',
+          id: protocol === 'openui' && !basic
+            ? 'doc-hokkaido-turbo-v12'
+            : 'basic',
+          inlineMode: input?.inlineMode === true,
+        };
+      }
+      function renderUrl(location, token, selection) {
+        // The extensionless route redirects here before resolving sibling assets.
+        const url = new URL('./render.html', location);
+        url.search = new URLSearchParams({
+          protocol: selection.protocol,
+          ...(selection.protocol === 'openui'
+            ? {
+              demoUrl: './openui.web.js',
+              openuiLibrary: selection.library,
+              rawText: '',
+              liveStream: '1',
+              inlineMode: selection.inlineMode ? '1' : '0',
+            }
+            : { messages: '[]' }),
+          instant: '1',
+          theme: 'light',
+          liveAction: '1',
+          previewNavigationToken: token,
+        });
+        return url.href;
+      }
+      function createRendererBridge(
+        { frame, location, onReady, onError, onAction },
+      ) {
+        const origin = new URL(location).origin;
+        let ready = false;
+        let navigationToken = '';
+        let pending;
+        let readyTimer;
+        function flush() {
+          if (!ready || !pending) return;
+          frame.contentWindow.postMessage(pending, origin);
+          pending = undefined;
+        }
+        function onMessage(event) {
+          if (
+            event.origin !== origin
+            || event.source !== frame.contentWindow
+          ) return;
+          const data = event.data;
+          if (!data || typeof data !== 'object') return;
+          if (
+            ready
+            && ['OPENUI_USER_ACTION', 'A2UI_USER_ACTION'].includes(
+              data.type,
+            )
+          ) {
+            onAction(data.action);
+            return;
+          }
+          if (
+            data.navigationToken !== navigationToken
+            || (data.frameUrl && data.frameUrl !== frame.src)
+          ) return;
+          if (
+            data.type === 'A2UI_RENDER_READY'
+            && data.runtimeReady === true && !ready
+          ) {
+            ready = true;
+            clearTimeout(readyTimer);
+            flush();
+            onReady();
+          } else if (ready && data.type === 'OPENUI_RENDER_ERRORS') {
+            onError(
+              (Array.isArray(data.errors) ? data.errors : []).map(error =>
+                error.message ?? error.code
+              ).join('\n'),
+            );
+          }
+        }
+        window.addEventListener('message', onMessage);
+        return {
+          get ready() {
+            return ready;
+          },
+          reset(selection) {
+            clearTimeout(readyTimer);
+            ready = false;
+            pending = undefined;
+            navigationToken = crypto.randomUUID();
+            frame.src = renderUrl(location, navigationToken, selection);
+            readyTimer = setTimeout(() => {
+              if (!ready) {
+                onError('运行时 30 秒内未就绪，请点击「重置预览」重试。');
+              }
+            }, 30_000);
+          },
+          render(messages, replay = false) {
+            pending = {
+              type: replay
+                ? 'A2UI_REPLAY_MESSAGES'
+                : 'A2UI_LIVE_MESSAGES',
+              messages,
+            };
+            flush();
+          },
+          dispose() {
+            clearTimeout(readyTimer);
+            window.removeEventListener('message', onMessage);
+          },
+        };
+      }
+      function pause(ms, signal) {
+        return new Promise((resolve, reject) => {
+          const abort = () => {
+            clearTimeout(timer);
+            reject(new DOMException('已停止', 'AbortError'));
+          };
+          const timer = setTimeout(() => {
+            signal.removeEventListener('abort', abort);
+            resolve();
+          }, ms);
+          if (signal.aborted) abort();
+          else signal.addEventListener('abort', abort, { once: true });
+        });
+      }
+
+      async function playPreview(
+        bridge,
+        protocol,
+        messages,
+        signal,
+        wait = pause,
+      ) {
+        while (!bridge.ready) await wait(50, signal);
+        signal.throwIfAborted();
+        if (protocol === 'openui') {
+          const characters = Array.from(messages[0].rawText);
+          for (let end = 24; end < characters.length; end += 24) {
+            signal.throwIfAborted();
+            bridge.render([{
+              rawText: characters.slice(0, end).join(''),
+              isStreaming: true,
+            }]);
+            await wait(40, signal);
+          }
+          signal.throwIfAborted();
+          bridge.render(messages);
+        } else {
+          for (const [index, message] of messages.entries()) {
+            signal.throwIfAborted();
+            bridge.render([message]);
+            if (index < messages.length - 1) await wait(500, signal);
+          }
+        }
+      }
+    </script>
+    <script id="preview-app">
+    const element = id => document.getElementById(id);
+      const editor = element('raw-editor');
+      const frame = element('preview-frame');
+      const base = new URL('./', location.href);
+      let storage;
+      try {
+        storage = window.localStorage;
+      } catch { /* The editor also works without storage. */ }
+      let selection = readSelection(location.href, storage);
+      let trip = '';
+      let resources = {};
+      let debounceTimer;
+      let noteTimer;
+      let playback = null;
+      let errorText = '';
+      const protocolSelections = new Map();
+      const bridge = createRendererBridge({
+        frame,
+        location: location.href,
+        onReady() {
+          element('preview-placeholder').hidden = Boolean(
+            editor.value.trim(),
+          );
+          element('preview-placeholder').textContent =
+            '在左侧输入内容开始预览';
+          if (!errorText) {
+            status(
+              playback
+                ? '流式渲染中'
+                : editor.value.trim()
+                ? '实时预览'
+                : '等待输入',
+            );
+          }
+        },
+        onError(message) {
+          if (message) {
+            stopPlayback();
+            showError(message);
+          } else if (errorText) showError('');
+        },
+        onAction(action) {
+          element('action-result').hidden = false;
+          element('action-result').open = true;
+          element('action-payload').textContent = JSON.stringify(
+            action,
+            null,
+            2,
+          );
+        },
+      });
+      function status(text, state = 'ready') {
+        element('render-status').textContent = text;
+        element('render-status').dataset.state = state;
+      }
+      function showError(message) {
+        errorText = message;
+        element('diagnostic').hidden = !message;
+        element('diagnostic').textContent = message;
+        if (message) status('渲染遇到问题', 'error');
+        else if (bridge.ready && !playback) {
+          status(editor.value.trim() ? '实时预览' : '等待输入');
+        }
+      }
+      function persist() {
+        try {
+          storage.setItem(draftKey(selection), editor.value);
+          storage.setItem(
+            'lynx-genui-stream:selection:v1',
+            JSON.stringify(selection),
+          );
+          element('draft-status').textContent = '草稿已保存到此浏览器';
+        } catch {
+          element('draft-status').textContent =
+            '无法保存草稿，可下载到本地';
+        }
+      }
+      function showSelection() {
+        const { selectionStart, selectionEnd, value } = editor;
+        const before = value.slice(0, selectionStart);
+        element('selection-status').textContent =
+          selectionStart === selectionEnd
+            ? `行 ${before.split('\n').length}，列 ${
+              before.length - before.lastIndexOf('\n')
+            }`
+            : `已选 ${selectionEnd - selectionStart} 字符`;
+      }
+      function showSize() {
+        const lines = editor.value.split('\n').length;
+        element('source-size').textContent = `${lines} 行 · ${
+          (new TextEncoder().encode(editor.value).length / 1024).toFixed(
+            1,
+          )
+        } KB`;
+        element('line-numbers').textContent = Array.from({
+          length: lines,
+        }, (_, i) => i + 1).join('\n');
+        showSelection();
+      }
+      function setSource(value) {
+        editor.value = value;
+        editor.setSelectionRange(0, 0);
+        editor.scrollTop = 0;
+        editor.scrollLeft = 0;
+        element('line-numbers').style.transform = '';
+        showSize();
+      }
+      function sourceMessages() {
+        const source = selection.protocol === 'openui'
+          ? resolveExampleAssets(editor.value, base, resources)
+          : editor.value;
+        return parsePreviewSource(source, selection.protocol);
+      }
+      function render() {
+        clearTimeout(debounceTimer);
+        stopPlayback();
+        persist();
+        try {
+          const messages = sourceMessages();
+          showError('');
+          // A2UI edits replace the whole message sequence so removed surfaces disappear.
+          // OpenUI edits update the same renderer, retaining user-entered form state.
+          bridge.render(messages, selection.protocol === 'a2ui');
+          if (bridge.ready) {
+            element('preview-placeholder').hidden = Boolean(
+              editor.value.trim(),
+            );
+            element('preview-placeholder').textContent =
+              '在左侧输入内容开始预览';
+          }
+        } catch (error) {
+          showError(
+            error instanceof Error ? error.message : String(error),
+          );
+        }
+      }
+      function resetPreview(renderSource = true) {
+        clearTimeout(debounceTimer);
+        stopPlayback();
+        showError('');
+        element('action-result').hidden = true;
+        element('action-payload').textContent = '';
+        element('preview-placeholder').hidden = false;
+        element('preview-placeholder').textContent = '正在启动 Lynx…';
+        status('正在载入运行时', 'loading');
+        bridge.reset(selection);
+        if (renderSource) render();
+      }
+      function stopPlayback() {
+        if (!playback) return;
+        const run = playback;
+        playback = null;
+        run.controller.abort();
+        if (run.protocol === 'openui') {
+          bridge.render([{ rawText: '', isStreaming: false }]);
+        }
+        element('stop').disabled = true;
+        element('stream').disabled = false;
+        status('已停止');
+      }
+      async function stream() {
+        clearTimeout(debounceTimer);
+        stopPlayback();
+        persist();
+        let messages;
+        try {
+          messages = sourceMessages();
+        } catch (error) {
+          showError(error.message);
+          return;
+        }
+        resetPreview(false);
+        const run = {
+          controller: new AbortController(),
+          protocol: selection.protocol,
+        };
+        playback = run;
+        const { signal } = run.controller;
+        element('stop').disabled = false;
+        element('stream').disabled = true;
+        try {
+          status('流式渲染中', 'loading');
+          await playPreview(bridge, run.protocol, messages, signal);
+          status('渲染完成');
+        } catch (error) {
+          if (!signal.aborted) {
+            stopPlayback();
+            showError(error.message);
+          }
+        } finally {
+          if (playback === run) {
+            playback = null;
+            element('stop').disabled = true;
+            element('stream').disabled = false;
+          }
+        }
+      }
+      function selectExample(next, saveCurrent = true, carriedSource) {
+        if (saveCurrent) {
+          persist();
+          protocolSelections.set(selection.protocol, { ...selection });
+        }
+        clearTimeout(debounceTimer);
+        clearTimeout(noteTimer);
+        stopPlayback();
+        selection = next;
+        element('protocol').value = selection.protocol;
+        element('inline-mode').checked = selection.inlineMode;
+        const openui = selection.protocol === 'openui';
+        const example = element('example');
+        example.options[1].hidden = !openui;
+        example.options[1].disabled = !openui;
+        example.value = selection.id;
+        example.disabled = !openui;
+        element('inline-control').hidden = !openui;
+        element('protocol-title').textContent = openui
+          ? 'OpenUI'
+          : 'A2UI';
+        element('render-title').textContent = openui
+          ? 'Lynx OpenUI'
+          : 'Lynx A2UI';
+        element('catalog-link').href = openui
+          ? 'https://github.com/lynx-family/lynx-stack/blob/main/packages/genui/openui/docs/chat.md'
+          : new URL(`./#/${selection.protocol}/catalog`, base).href;
+        element('catalog-link').textContent = openui
+          ? 'Chat 组件说明'
+          : '支持的组件';
+        editor.setAttribute(
+          'aria-label',
+          openui ? 'OpenUI raw 编辑器' : 'A2UI 消息编辑器',
+        );
+        editor.placeholder = openui
+          ? '输入 OpenUI，或开启 inlineMode 输入 Markdown 与 OpenUI 代码块…'
+          : '输入 A2UI v0.9 JSON、消息数组或 NDJSON…';
+        frame.title = openui
+          ? 'Lynx OpenUI 实时预览'
+          : 'Lynx A2UI 实时预览';
+        const url = new URL(location.href);
+        for (
+          const [key, value] of Object.entries({
+            protocol: selection.protocol,
+            library: selection.library,
+            case: selection.id,
+            inlineMode: selection.inlineMode ? '1' : '0',
+          })
+        ) url.searchParams.set(key, value);
+        history.replaceState(null, '', url);
+        setSource(
+          readDraft(storage, selection) ?? carriedSource
+            ?? exampleText(selection, trip),
+        );
+        resetPreview();
+      }
+      editor.addEventListener('input', () => {
+        stopPlayback();
+        showSize();
+        element('draft-status').textContent = '正在保存…';
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(render, 250);
+      });
+      editor.addEventListener('scroll', () => {
+        element('line-numbers').style.transform = `translateY(${-editor
+          .scrollTop}px)`;
+      }, { passive: true });
+      for (const event of ['select', 'keyup', 'mouseup', 'focus']) {
+        editor.addEventListener(event, showSelection);
+      }
+      document.addEventListener('selectionchange', () => {
+        if (document.activeElement === editor) showSelection();
+      });
+      editor.addEventListener('keydown', event => {
+        if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+          event.preventDefault();
+          render();
+        }
+      });
+      element('protocol').addEventListener('change', () => {
+        const protocol = element('protocol').value;
+        selectExample(
+          protocolSelections.get(protocol)
+            ?? {
+              ...selection,
+              protocol,
+              id: protocol === 'openui'
+                ? 'doc-hokkaido-turbo-v12'
+                : 'basic',
+            },
+        );
+      });
+      element('inline-mode').addEventListener('change', () => {
+        const custom = editor.value !== exampleText(selection, trip)
+          ? editor.value
+          : undefined;
+        selectExample(
+          { ...selection, inlineMode: element('inline-mode').checked },
+          true,
+          custom,
+        );
+      });
+      element('example').addEventListener('change', () => {
+        selectExample({ ...selection, id: element('example').value });
+      });
+      element('restore-source').addEventListener('click', () => {
+        setSource(exampleText(selection, trip));
+        resetPreview();
+      });
+      element('reset-preview').addEventListener(
+        'click',
+        () => resetPreview(),
+      );
+      element('clear-source').addEventListener('click', () => {
+        setSource('');
+        resetPreview();
+      });
+      element('stream').addEventListener('click', () => {
+        void stream();
+      });
+      element('stop').addEventListener('click', stopPlayback);
+      for (
+        const [id, size] of [['phone-view', 'phone'], [
+          'wide-view',
+          'wide',
+        ]]
+      ) {
+        element(id).addEventListener('click', () => {
+          element('preview-stage').dataset.size = size;
+          element('phone-view').setAttribute(
+            'aria-pressed',
+            String(size === 'phone'),
+          );
+          element('wide-view').setAttribute(
+            'aria-pressed',
+            String(size === 'wide'),
+          );
+        });
+      }
+      function note(message) {
+        clearTimeout(noteTimer);
+        element('draft-status').textContent = message;
+        noteTimer = setTimeout(persist, 3000);
+      }
+      element('copy-source').addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(editor.value);
+          note('已复制源码');
+        } catch {
+          note('复制未获允许，请选中代码复制或下载');
+        }
+      });
+      element('download-source').addEventListener('click', () => {
+        const url = URL.createObjectURL(
+          new Blob([editor.value], { type: 'text/plain;charset=utf-8' }),
+        );
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${selection.id}.${
+          selection.protocol === 'a2ui'
+            ? 'json'
+            : selection.inlineMode
+            ? 'md'
+            : 'openui'
+        }`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        note('已下载当前源码');
+      });
+      window.addEventListener('pagehide', () => {
+        persist();
+        clearTimeout(debounceTimer);
+        clearTimeout(noteTimer);
+        stopPlayback();
+        bridge.dispose();
+      });
+      async function start() {
+        const [sourceResponse, resourceResponse] = await Promise.all([
+          fetch(
+            new URL(
+              'demos/openui/document/hokkaido-turbo-v12.openui',
+              base,
+            ),
+          ),
+          fetch(new URL('demos/openui/document/resources.json', base)),
+        ]);
+        if (!sourceResponse.ok || !resourceResponse.ok) {
+          throw new Error('示例资源加载失败，请刷新页面重试。');
+        }
+        [trip, resources] = await Promise.all([
+          sourceResponse.text(),
+          resourceResponse.json(),
+        ]);
+        for (
+          const id of [
+            'raw-editor',
+            'protocol',
+            'example',
+            'inline-mode',
+            'copy-source',
+            'download-source',
+            'restore-source',
+            'reset-preview',
+            'stream',
+            'clear-source',
+          ]
+        ) element(id).disabled = false;
+        selectExample(selection, false);
+      }
+      void start().catch(error => {
+        showError(error instanceof Error ? error.message : String(error));
+        element('preview-placeholder').textContent = '无法载入预览资源';
+      });
+    </script>
+  </body>
+</html>

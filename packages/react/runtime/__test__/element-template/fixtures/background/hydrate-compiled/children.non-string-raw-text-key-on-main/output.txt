@@ -2,7 +2,7 @@ Object {
   "ops": Array [
     Object {
       "attributeSlots": Array [
-        2,
+        "2",
       ],
       "bundleUrl": null,
       "childSlots": Array [],

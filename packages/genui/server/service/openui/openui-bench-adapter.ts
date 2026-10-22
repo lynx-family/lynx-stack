@@ -58,6 +58,8 @@ export type OpenUIBenchGenerateRaw = (
 export type OpenUIBenchRetrySleep = BenchRetrySleep;
 
 export interface OpenUIBenchGenerateAttemptInput {
+  reasoningEffort?: OpenUIChatOptions['reasoningEffort'];
+  onPerformanceEvent?: OpenUIChatOptions['onPerformanceEvent'];
   enableDesignGuidance?: boolean;
   index: number;
   messages: ChatMessage[];
@@ -263,6 +265,9 @@ class DefaultOpenUIBenchAdapter implements OpenUIBenchAdapter {
         ...input.provider,
         disableAgentCache: true,
         maxRetries: 0,
+        reasoningEffort: input.reasoningEffort,
+        streamRawGeneration: true,
+        onPerformanceEvent: input.onPerformanceEvent,
         enableWebSearch: false,
         enableImageGeneration: false,
         enableDesignGuidance: input.enableDesignGuidance !== false,
@@ -350,6 +355,8 @@ class DefaultOpenUIBenchAdapter implements OpenUIBenchAdapter {
     for (let index = 1; index <= maxAttempts; index += 1) {
       const attempt = await this.generateAttempt({
         index,
+        reasoningEffort: input.reasoningEffort,
+        onPerformanceEvent: input.onPerformanceEvent,
         enableDesignGuidance: input.enableDesignGuidance,
         messages,
         provider: input.provider,

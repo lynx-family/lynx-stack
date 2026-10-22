@@ -24,6 +24,37 @@ function conversationDoc(protocol?: string): SharedConversationDoc {
 }
 
 describe('publishConversation', () => {
+  test('publishes local development shares without server storage and preserves the document', async () => {
+    const doc = conversationDoc('openui');
+    const originalWindow = globalThis.window;
+    rs.stubGlobal('__A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__', true);
+    const fetchPayload = rs.fn(async () => ({
+      ok: true,
+      json: async () => ({ messagesUrl: '/__a2ui/test/messages' }),
+    }));
+    rs.stubGlobal('window', {
+      fetch: fetchPayload,
+      location: { origin: 'http://localhost:3001' },
+    });
+    try {
+      await expect(publishConversation(doc)).resolves.toBe(
+        'http://localhost:3001/__a2ui/test/messages',
+      );
+      expect(fetchPayload).toHaveBeenCalledWith(
+        '/__a2ui_payload',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ messages: doc }),
+        }),
+      );
+    } finally {
+      rs.unstubAllGlobals();
+      Object.defineProperty(globalThis, 'window', {
+        configurable: true,
+        value: originalWindow,
+      });
+    }
+  });
   test('stores conversations under their validated protocol method', async () => {
     const fetchPayload = rs.fn(async () => ({
       ok: true,

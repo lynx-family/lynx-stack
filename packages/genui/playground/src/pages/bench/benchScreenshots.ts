@@ -7,9 +7,14 @@
 import { strToU8, zipSync } from 'fflate';
 
 import type { BenchHtmlCapture } from './benchHtmlCapture.js';
+import {
+  DEFAULT_SCREENSHOT_SETTLE_MS,
+  isScreenshotSettleMs,
+} from './benchScreenshotDelay.js';
 
 const MAX_SCREENSHOT_BYTES = 10 * 1024 * 1024 + 1024;
 const MAX_CAPTURE_FORM_BYTES = 10 * 1024 * 1024;
+const MAX_SCREENSHOT_RESPONSE_CHARS = 4096;
 const CAPTURE_ID = /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/iu;
 
 interface ScreenshotRequest {
@@ -19,7 +24,10 @@ interface ScreenshotRequest {
   source?: string;
 }
 
-function screenshotForm(request: ScreenshotRequest): FormData {
+function screenshotForm(
+  request: ScreenshotRequest,
+  screenshotSettleMs: number,
+): FormData {
   const upload = request.path === 'screenshot/zip/upload';
   const allowedFields = new Set([
     'entry',
@@ -29,7 +37,9 @@ function screenshotForm(request: ScreenshotRequest): FormData {
     ...(upload ? [] : ['url', 'globalProps']),
   ]);
   const form = new FormData();
-  let bytes = 0;
+  const delay = String(screenshotSettleMs);
+  form.set('screenshotSettleMs', delay);
+  let bytes = delay.length;
   for (const [name, value] of Object.entries(request.fields)) {
     if (!allowedFields.has(name) || typeof value !== 'string') {
       throw new Error('Invalid screenshot parameter.');
@@ -66,9 +76,12 @@ function screenshotForm(request: ScreenshotRequest): FormData {
       new Blob([new Uint8Array(archive)], { type: 'application/zip' }),
       'page.zip',
     );
-  } else if (request.fields.entry !== 'template.js' || !request.fields.url) {
+  } else if (
+    !['template.js', 'main.lynx.js'].includes(request.fields.entry ?? '')
+    || !request.fields.url
+  ) {
     throw new Error(
-      'Template screenshot task requires a ZIP URL and entry=template.js.',
+      'Template screenshot task requires a ZIP URL and a supported entry.',
     );
   }
   if (bytes > MAX_CAPTURE_FORM_BYTES) {
@@ -152,10 +165,78 @@ async function screenshotBlob(
   }
 }
 
+function mediaType(response: Response): string | undefined {
+  return response.headers.get('content-type')?.split(';')[0]?.trim()
+    .toLowerCase();
+}
+
+/** Extracts the HTTP(S) object URL from the screenshot service's JSON reply. */
+function screenshotUrl(text: string): string {
+  let reply: unknown;
+  try {
+    reply = JSON.parse(text);
+  } catch {
+    reply = undefined;
+  }
+  const url = typeof reply === 'object' && reply !== null && 'url' in reply
+    ? (reply as { url?: unknown }).url
+    : undefined;
+  if (typeof url === 'string') {
+    try {
+      const parsed = new URL(url);
+      if (
+        (parsed.protocol === 'https:' || parsed.protocol === 'http:')
+        && !parsed.username
+        && !parsed.password
+      ) {
+        return parsed.href;
+      }
+    } catch {
+      // Fall through to the shared error.
+    }
+  }
+  throw new Error('Screenshot service returned an invalid screenshot URL.');
+}
+
+/**
+ * UI Judge uploads each capture to object storage and answers with its public
+ * URL, so the BMP is downloaded from there. The storage bucket must allow CORS
+ * reads from the Playground origin.
+ */
+async function downloadScreenshot(
+  response: Response,
+  fetchImpl: typeof fetch,
+  signal: AbortSignal,
+): Promise<Blob> {
+  if (mediaType(response) !== 'application/json') {
+    await response.body?.cancel().catch(() => undefined);
+    throw new Error('Screenshot service did not return a screenshot URL.');
+  }
+  const text = await response.text();
+  if (text.length > MAX_SCREENSHOT_RESPONSE_CHARS) {
+    throw new Error('Screenshot service returned an oversized response.');
+  }
+  const image = await fetchImpl(screenshotUrl(text), {
+    credentials: 'omit',
+    redirect: 'error',
+    signal,
+  });
+  if (!image.ok) {
+    await image.body?.cancel().catch(() => undefined);
+    throw new Error(`Screenshot download returned HTTP ${image.status}.`);
+  }
+  if (mediaType(image) !== 'image/bmp') {
+    await image.body?.cancel().catch(() => undefined);
+    throw new Error('The stored screenshot is not a BMP image.');
+  }
+  return screenshotBlob(image, signal);
+}
+
 /** One browser-owned capture worker per live Bench, safe across SSE replay. */
 export function createBenchScreenshotRelay(options: {
   jobUrl: string;
   serverUrl: string;
+  screenshotSettleMs?: number;
   signal: AbortSignal;
   onError: (error: string) => void;
   fetch?: typeof fetch;
@@ -201,6 +282,11 @@ export function createBenchScreenshotRelay(options: {
         options.signal,
         AbortSignal.timeout(Math.min(1_200_000, request.timeoutMs)),
       ]);
+      const screenshotSettleMs = options.screenshotSettleMs
+        ?? DEFAULT_SCREENSHOT_SETTLE_MS;
+      if (!isScreenshotSettleMs(screenshotSettleMs)) {
+        throw new Error('Screenshot delay must be a non-negative integer.');
+      }
       if (request.path === 'browser/html') {
         if (
           !options.captureHtml || typeof request.source !== 'string'
@@ -216,12 +302,13 @@ export function createBenchScreenshotRelay(options: {
           source: request.source,
           width: Number(request.fields.width),
           height: Number(request.fields.height),
+          screenshotSettleMs,
         }, signal);
         if (body.type !== 'image/bmp' || body.size > MAX_SCREENSHOT_BYTES) {
           throw new Error('Invalid or oversized HTML screenshot.');
         }
       } else {
-        const form = screenshotForm(request);
+        const form = screenshotForm(request, screenshotSettleMs);
         const screenshot = await fetchImpl(
           new URL(request.path, options.serverUrl),
           {
@@ -240,14 +327,7 @@ export function createBenchScreenshotRelay(options: {
             }`,
           );
         }
-        if (
-          screenshot.headers.get('content-type')?.split(';')[0]?.trim()
-            !== 'image/bmp'
-        ) {
-          await screenshot.body?.cancel().catch(() => undefined);
-          throw new Error('Screenshot service did not return a BMP image.');
-        }
-        body = await screenshotBlob(screenshot, signal);
+        body = await downloadScreenshot(screenshot, fetchImpl, signal);
       }
       contentType = 'image/bmp';
     } catch (error) {

@@ -40,7 +40,7 @@ describe('runOnBackground', () => {
       [
         [
           {
-            "data": "{"obj":{"_jsFnId":233,"_execId":244},"params":[1,["args"]],"resolveId":1}",
+            "data": "{"obj":{"_jsFnId":233,"_execId":244},"params":[1,["args"]],"resolveId":1,"reloadVersion":0}",
             "type": "Lynx.Worklet.runOnBackground",
           },
         ],
@@ -69,7 +69,7 @@ describe('runOnBackground', () => {
       [
         [
           {
-            "data": "{"obj":{"_jsFnId":7,"_execId":8},"params":[1,["args"]],"resolveId":1}",
+            "data": "{"obj":{"_jsFnId":7,"_execId":8},"params":[1,["args"]],"resolveId":1,"reloadVersion":0}",
             "type": "Lynx.Worklet.runOnBackground",
           },
         ],
@@ -111,14 +111,9 @@ describe('runOnBackground', () => {
 
     expect(() => {
       runJSFunction({
-        data: JSON.stringify({
-          obj: {
-            _jsFnId: 234,
-            _execId: id,
-          },
-          params: [],
-          resolveId: 1,
-        }),
+        obj: { _jsFnId: 234, _execId: id },
+        params: [],
+        resolveId: 1,
       });
     }).toThrowError('runOnBackground: JS function not found');
   });
@@ -229,6 +224,6 @@ describe('runJSFunction', () => {
       data: [id],
     });
 
-    expect(trigger).toThrow('runOnBackground: JS function not found: {"_jsFnId":233,"_execId":1}');
+    expect(trigger).toThrow(`runOnBackground: JS function not found: {"_jsFnId":233,"_execId":${id}}`);
   });
 });

@@ -151,7 +151,7 @@ export async function createRspeedy(
         rspeedyConfig,
         path.resolve(
           options.outputPath ?? rspeedy.context.distPath,
-          '.rsbuild/rspeedy.config.js',
+          '.rsbuild/rspeedy.config.mjs',
         ),
         options.verbose ?? false,
       )

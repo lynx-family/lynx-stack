@@ -62,7 +62,10 @@ export const makeSyncThen = function<T>(result: T): Promise<T>['then'] {
         // );
       }
 
-      const p = Promise.resolve(ret);
+      // The Lynx Promise polyfill shares resolved promises for primitive values.
+      // Own this promise before replacing `then`, or an undefined callback
+      // result would make unrelated Promise.resolve().then(...) calls synchronous.
+      const p = new Promise<TR1>(resolve => resolve(ret));
 
       const then = makeSyncThen(ret as TR1);
       p.then = then as Promise<Awaited<TR1>>['then'];

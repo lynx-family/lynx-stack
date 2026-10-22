@@ -111,6 +111,15 @@ function artifact(protocol: BenchProtocol): ProtocolBenchRunArtifact {
       kind: 'html-source',
       rawText: '<!doctype html><html><body>Ready</body></html>',
     },
+    reactlynx: {
+      kind: 'reactlynx-bundle',
+      rawText: '{}',
+      zipUrl: 'https://cdn.test/reactlynx-bench/preview/id/bundle.zip',
+    },
+    reactweb: {
+      kind: 'reactweb-html',
+      rawText: '<!doctype html><html><body>Ready</body></html>',
+    },
   } satisfies Record<BenchProtocol, ProtocolBenchRunArtifact['judgePayload']>;
   return {
     attempts: [{
@@ -202,6 +211,7 @@ describe('Bench generation, capture and scoring pipeline', () => {
       ['openui', 'matched-core'],
       ['lynx-xml', 'native'],
       ['html', 'native'],
+      ['reactlynx', 'native'],
     ] as const,
   )(
     'overlaps stages and waits for all scores for %s/%s',

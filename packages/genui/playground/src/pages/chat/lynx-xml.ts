@@ -93,6 +93,14 @@ function normalizeError(value: unknown): string {
       : 'Lynx XML generation failed');
 }
 
+function readPreviewSourceUrl(value: unknown): string | undefined {
+  if (!isRecord(value) || !isRecord(value.preview)) return undefined;
+  return typeof value.preview.sourceUrl === 'string'
+      && value.preview.sourceUrl.trim()
+    ? value.preview.sourceUrl
+    : undefined;
+}
+
 function requireCompleteOutput(value: unknown, fallback = ''): LynxXmlOutput {
   const source = extractLynxXmlSource(readResponseText(value, fallback));
   if (!isCompleteLynxXmlSource(source)) {
@@ -155,6 +163,10 @@ export const LYNX_XML_STREAM = {
       ? parseTokenUsage(frame.data.usage)
       : null;
     if (usage) emissions.push({ type: 'usage', usage });
+    const sourceUrl = readPreviewSourceUrl(frame.data);
+    if (sourceUrl) {
+      emissions.push({ type: 'previewPayload', value: { sourceUrl } });
+    }
     emissions.push({ type: 'final', output });
     return streamStep(
       { generatedText: output.source, ...output },
@@ -166,6 +178,10 @@ export const LYNX_XML_STREAM = {
     const emissions: ChatStreamEmission<LynxXmlOutput>[] = [];
     const usage = isRecord(payload) ? parseTokenUsage(payload.usage) : null;
     if (usage) emissions.push({ type: 'usage', usage });
+    const sourceUrl = readPreviewSourceUrl(payload);
+    if (sourceUrl) {
+      emissions.push({ type: 'previewPayload', value: { sourceUrl } });
+    }
     emissions.push({ type: 'final', output });
     return streamStep(
       { generatedText: output.source, ...output },
@@ -300,13 +316,17 @@ function createArtifact(output: LynxXmlOutput): ChatArtifact {
   };
 }
 
-function persistOutput(output: LynxXmlOutput): ChatTurnPersistence {
+function persistOutput(
+  output: LynxXmlOutput,
+  previewPayloadUrls?: ChatTurnPersistence['previewPayloadUrls'],
+): ChatTurnPersistence {
   return {
     assistantContent: output.source,
     ...(output.xmlFragment ? { lynxXmlFragment: output.xmlFragment } : {}),
     ...(output.modelOutput ? { lynxXmlModelOutput: output.modelOutput } : {}),
     a2uiMessages: [],
     previewMessages: [],
+    previewPayloadUrls,
   };
 }
 
@@ -459,8 +479,8 @@ export const LYNX_XML_CHAT_ADAPTER = {
   hydrate({ history }) {
     return hydrate(history);
   },
-  persist(output) {
-    return persistOutput(output);
+  persist(output, context?) {
+    return persistOutput(output, context?.previewPayloadUrls);
   },
   transcript: {
     pending() {
@@ -522,6 +542,9 @@ export const LYNX_XML_CHAT_ADAPTER = {
         ? {
           kind: 'lynx-xml',
           source: output.source,
+          ...(context.previewPayloadUrls?.sourceUrl
+            ? { sourcePath: context.previewPayloadUrls.sourceUrl }
+            : {}),
           theme: context.theme,
         }
         : undefined;

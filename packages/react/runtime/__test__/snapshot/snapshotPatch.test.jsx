@@ -103,7 +103,7 @@ describe('createElement', () => {
     `);
 
     expect(snapshotInstanceManager.values.size).toEqual(1);
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(snapshotInstanceManager.values.size).toEqual(3);
     const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
@@ -158,7 +158,7 @@ describe('insertBefore', () => {
     `);
 
     expect(snapshotInstanceManager.values.size).toEqual(1);
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(snapshotInstanceManager.values.size).toEqual(3);
     const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
@@ -272,7 +272,7 @@ describe('insertBefore', () => {
     `);
 
     expect(snapshotInstanceManager.values.size).toEqual(1);
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(snapshotInstanceManager.values.size).toEqual(4);
     const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
@@ -352,23 +352,23 @@ describe('insertBefore', () => {
     `);
 
     expect(snapshotInstanceManager.values.size).toEqual(1);
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(_ReportError.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null', parent: { id: 2, snapshot type: '__snapshot_a94a8_test_1', missing: false }, child: { id: 100, snapshot type: 'null', missing: true }, operation: 'InsertBefore', commitId: 42, isHydration: false. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
           {
             "errorCode": 1101,
           },
         ],
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null', parent: { id: 100, snapshot type: 'null', missing: true }, child: { id: 2, snapshot type: '__snapshot_a94a8_test_1', missing: false }, operation: 'InsertBefore', commitId: 42, isHydration: false. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
           {
             "errorCode": 1101,
           },
         ],
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: '__snapshot_a94a8_test_3'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: '__snapshot_a94a8_test_3', parent: { id: 4, snapshot type: '__snapshot_a94a8_test_3', missing: true }, child: { id: 100, snapshot type: 'null', missing: true }, operation: 'InsertBefore', commitId: 42, isHydration: false. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
           {
             "errorCode": 1101,
           },
@@ -402,7 +402,7 @@ describe('removeChild', () => {
     const bsi2 = new BackgroundSnapshotInstance(snapshot2);
     bsi1.insertBefore(bsi2);
     let patch = takeGlobalSnapshotPatch();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
 
     const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
@@ -434,7 +434,7 @@ describe('removeChild', () => {
         3,
       ]
     `);
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(si1.__element_root).toMatchInlineSnapshot(`
       <view>
         <text>
@@ -454,7 +454,7 @@ describe('removeChild', () => {
     bsi1.insertBefore(bsi2);
     bsi1.insertBefore(bsi3);
     let patch = takeGlobalSnapshotPatch();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
 
     const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
@@ -493,7 +493,7 @@ describe('removeChild', () => {
         3,
       ]
     `);
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(si1.__element_root).toMatchInlineSnapshot(`
       <view>
         <text>
@@ -525,19 +525,19 @@ describe('removeChild', () => {
         1,
       ]
     `);
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(_ReportError).toHaveBeenCalledTimes(2);
 
     expect(_ReportError.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'root'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'root', parent: { id: 1, snapshot type: 'root', missing: true }, child: { id: 2, snapshot type: '__snapshot_a94a8_test_1', missing: false }, operation: 'RemoveChild', commitId: 42, isHydration: false. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
           {
             "errorCode": 1101,
           },
         ],
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'root'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'root', parent: { id: 2, snapshot type: '__snapshot_a94a8_test_1', missing: false }, child: { id: 1, snapshot type: 'root', missing: true }, operation: 'RemoveChild', commitId: 42, isHydration: false. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
           {
             "errorCode": 1101,
           },
@@ -572,7 +572,7 @@ describe('removeChild', () => {
         4,
       ]
     `);
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(si1.__element_root).toMatchInlineSnapshot(`
       <view>
         <text>
@@ -613,7 +613,7 @@ describe('setAttribute', () => {
     `);
 
     expect(snapshotInstanceManager.values.size).toEqual(1);
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
     expect(si1.__element_root).toMatchInlineSnapshot(`
@@ -647,7 +647,7 @@ describe('setAttribute', () => {
     `);
 
     expect(snapshotInstanceManager.values.size).toEqual(1);
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
     expect(si1.__element_root).toMatchInlineSnapshot(`
@@ -683,7 +683,7 @@ describe('setAttribute', () => {
     patch.push(SnapshotOperation.SetAttributes, 2, ['attr 3', 'attr 4']);
 
     expect(snapshotInstanceManager.values.size).toEqual(1);
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
     expect(si1.__element_root).toMatchInlineSnapshot(`
@@ -718,12 +718,12 @@ describe('setAttribute', () => {
     patch.push(SnapshotOperation.SetAttributes, 2, ['attr 3', 'attr 4']);
 
     expect(snapshotInstanceManager.values.size).toEqual(1);
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(_ReportError).toHaveBeenCalledTimes(1);
     expect(_ReportError.mock.calls).toMatchInlineSnapshot(`
       [
         [
-          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
+          [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null', parent: null, operation: 'SetAttributes', commitId: 42, isHydration: false. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
           {
             "errorCode": 1101,
           },
@@ -762,12 +762,12 @@ describe('setAttribute', () => {
     `);
 
     expect(snapshotInstanceManager.values.size).toEqual(1);
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(_ReportError).toHaveBeenCalledTimes(1);
 
     expect(_ReportError.mock.calls[0]).toMatchInlineSnapshot(`
       [
-        [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null'. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
+        [Error: snapshotPatchApply failed: ctx not found, snapshot type: 'null', parent: null, operation: 'SetAttribute', commitId: 42, isHydration: false. You can set environment variable \`REACT_ALOG=true\` and restart your dev server for troubleshooting.],
         {
           "errorCode": 1101,
         },
@@ -864,7 +864,7 @@ describe('DEV_ONLY_addSnapshot', () => {
     delete snapshotCreatorMap[uniqID1];
 
     // Apply patches in main thread
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     new SnapshotInstance(uniqID1);
 
     expect(snapshotManager.values.size).toBe(originalSize);
@@ -969,7 +969,7 @@ describe('DEV_ONLY_addSnapshot', () => {
     const fn = vi.fn();
     vi.stubGlobal('__SetCSSId', fn);
     // Apply patches in main thread
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     new SnapshotInstance(uniqID1);
 
     expect(snapshotManager.values.size).toBe(originalSize);
@@ -1029,11 +1029,15 @@ describe('DEV_ONLY_addSnapshot', () => {
 
     expect(snapshotCreatorMap[uniqID1].toString()).toContain('[native code]');
     expect(() =>
-      snapshotPatchApply([
-        SnapshotOperation.DEV_ONLY_SetSnapshotEntryName,
-        uniqID1,
-        'https://example.com/lazy-bundle.js',
-      ])
+      snapshotPatchApply(
+        [
+          SnapshotOperation.DEV_ONLY_SetSnapshotEntryName,
+          uniqID1,
+          'https://example.com/lazy-bundle.js',
+        ],
+        42,
+        false,
+      )
     ).not.toThrow();
   });
 
@@ -1048,11 +1052,15 @@ describe('DEV_ONLY_addSnapshot', () => {
 
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     expect(() =>
-      snapshotPatchApply([
-        SnapshotOperation.DEV_ONLY_SetSnapshotEntryName,
-        uniqID1,
-        'https://example.com/lazy-bundle.js',
-      ])
+      snapshotPatchApply(
+        [
+          SnapshotOperation.DEV_ONLY_SetSnapshotEntryName,
+          uniqID1,
+          'https://example.com/lazy-bundle.js',
+        ],
+        42,
+        false,
+      )
     ).not.toThrow();
     expect(warn).toHaveBeenCalledTimes(1);
     warn.mockRestore();
@@ -1060,11 +1068,15 @@ describe('DEV_ONLY_addSnapshot', () => {
 
   it('with a creator that is missing', () => {
     expect(() =>
-      snapshotPatchApply([
-        SnapshotOperation.DEV_ONLY_SetSnapshotEntryName,
-        'first-screen-lazy-missing',
-        'https://example.com/lazy-bundle.js',
-      ])
+      snapshotPatchApply(
+        [
+          SnapshotOperation.DEV_ONLY_SetSnapshotEntryName,
+          'first-screen-lazy-missing',
+          'https://example.com/lazy-bundle.js',
+        ],
+        42,
+        false,
+      )
     ).not.toThrow();
   });
 
@@ -1141,7 +1153,7 @@ describe('DEV_ONLY_addSnapshot', () => {
     delete snapshotCreatorMap[uniqID1];
 
     // Apply patches in main thread
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     new SnapshotInstance(uniqID1);
 
     expect(snapshotManager.values.size).toBe(originalSize);
@@ -1236,7 +1248,7 @@ describe('DEV_ONLY_addSnapshot', () => {
     delete snapshotCreatorMap[uniqID1];
 
     // Apply patches in main thread
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     new SnapshotInstance(uniqID1);
 
     expect(snapshotManager.values.size).toBe(originalSize);
@@ -1326,7 +1338,7 @@ describe('DEV_ONLY_addSnapshot', () => {
     delete snapshotCreatorMap[uniqID1];
 
     // Apply patches in main thread
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     new SnapshotInstance(uniqID1);
 
     expect(snapshotManager.values.size).toBe(originalSize);
@@ -1416,7 +1428,7 @@ describe('DEV_ONLY_addSnapshot', () => {
     const fn = vi.fn();
     vi.stubGlobal('__SetCSSId', fn);
     // Apply patches in main thread
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     new SnapshotInstance(uniqID1);
 
     expect(snapshotManager.values.size).toBe(originalSize);
@@ -1608,7 +1620,7 @@ describe('DEV_ONLY_addSnapshot', () => {
     snapshotManager.values.delete(uniqID1);
     delete snapshotCreatorMap[uniqID1];
 
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     new SnapshotInstance(uniqID1);
 
     expect(snapshotManager.values.size).toBe(originalSize);
@@ -1645,7 +1657,7 @@ describe.skip('DEV_ONLY_RegisterWorklet', () => {
     `);
 
     // Apply patches in main thread
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
 
     expect(globalThis.registerWorklet).toBeCalledTimes(1);
     expect(globalThis.registerWorklet.mock.calls[0][0]).toMatch('main-thread');
@@ -1668,7 +1680,7 @@ describe('list', () => {
     let patch;
     patch = takeGlobalSnapshotPatch();
     expect(patch.length).toMatchInlineSnapshot(`3`);
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     const si1 = snapshotInstanceManager.values.get(bsi1.__id);
     si1.ensureElements();
 
@@ -1677,7 +1689,7 @@ describe('list', () => {
     bsi1.insertBefore(bsi2);
     patch = takeGlobalSnapshotPatch();
     expect(patch.length).toMatchInlineSnapshot(`11`);
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(si1.__element_root).toMatchInlineSnapshot(`
       <view>
         <text>

@@ -27,6 +27,7 @@ packages:
   - packages/web-platform/*
   - packages/webpack/*
   - website
+  - docs
 
 # From `@pnpm/plugin-better-defaults`
 enablePrePostScripts: false
@@ -51,6 +52,9 @@ minimumReleaseAge: 4320
 # would otherwise be blocked by `minimumReleaseAge`.
 minimumReleaseAgeExclude:
   - "@lynx-js/*"
+  # 4.13.1 carries the fix for the Windows page URLs we patched 4.12.0 for,
+  # published the day we take it: https://github.com/typedoc2md/typedoc-plugin-markdown/issues/903
+  - "typedoc-plugin-markdown"
   # typia-rspack-plugin uses trusted publish + staged publish
   - "typia-rspack-plugin"
   # First-party Rstack toolchain — trusted, upgraded deliberately.
@@ -60,6 +64,10 @@ minimumReleaseAgeExclude:
   - "rsbuild-plugin-dts"
   - "@rstest/*"
   - "@rstackjs/create-toolkit"
+  # Rsdoctor packages are upgraded deliberately as a coordinated release.
+  - "@rsdoctor/core"
+  - "@rsdoctor/client"
+  - "@rsdoctor/shared"
   # Changesets v3 packages were released as one coordinated set.
   - "@changesets/*"
 minimumReleaseAgeExcludePrune: true
@@ -74,6 +82,12 @@ peerDependencyRules:
     "sass-loader>@rspack/core": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/core@843bab005b2413345eb6efc3aaaba2a398fca908"
     "css-loader>@rspack/core": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/core@843bab005b2413345eb6efc3aaaba2a398fca908"
     "@rspack/test-tools>@rspack/core": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/core@843bab005b2413345eb6efc3aaaba2a398fca908"
+    # These unreleased workspace implementations still carry their previous
+    # release versions. Remove the scoped exceptions after release versioning;
+    # the published peers must continue to require React ^0.128.0.
+    "@lynx-js/react-rsbuild-plugin@0.20.4>@lynx-js/react": "0.127.0"
+    "@lynx-js/react-alias-rsbuild-plugin@0.20.4>@lynx-js/react": "0.127.0"
+    "@lynx-js/react-webpack-plugin@0.12.1>@lynx-js/react": "0.127.0"
     # `vite-plugin-babel` only calls `loadOptions`, `loadPartialConfig` and
     # `transformAsync`, which all still exist in Babel 8; its `^7.0.0` range
     # predates the release. Verified by building and testing the one package
@@ -109,7 +123,7 @@ peerDependencyRules:
 
 # Default catalogs
 catalog:
-  "@microsoft/api-extractor": "7.59.1"
+  "@microsoft/api-extractor": "7.59.4"
   typescript: &typescript-version "6.0.3"
 
 catalogs:
@@ -131,25 +145,25 @@ catalogs:
 
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "2.2.4"
+    "@rsbuild/core": "2.2.9"
 
   # Rslib monorepo packages
   rslib:
-    "@rslib/core": "1.0.0"
+    "@rslib/core": "1.0.2"
 
   # Rspack monorepo packages
   rspack:
     "@rspack/cli": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/cli@843bab005b2413345eb6efc3aaaba2a398fca908"
     "@rspack/core": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/core@843bab005b2413345eb6efc3aaaba2a398fca908"
     "@rspack/dev-server": "2.2.1"
-    "@rspack/test-tools": "2.2.2"
+    "@rspack/test-tools": "2.2.7"
 
   # Rstest monorepo packages
   rstest:
-    "@rstest/adapter-rsbuild": "0.11.12"
-    "@rstest/adapter-rslib": "0.11.12"
-    "@rstest/coverage-istanbul": "0.11.12"
-    "@rstest/core": "0.11.12"
+    "@rstest/adapter-rsbuild": "0.12.1"
+    "@rstest/adapter-rslib": "0.12.1"
+    "@rstest/coverage-istanbul": "0.12.1"
+    "@rstest/core": "0.12.1"
 
 overrides:
   # Published @lynx-js/lynx-ui-* (pulled in by packages/genui/a2ui) peer-depend on
@@ -158,6 +172,11 @@ overrides:
   # singletons, which breaks ReactLynx snapshot registration ("BackgroundSnapshot not
   # found"). Force every @lynx-js/react to the single workspace copy.
   "@lynx-js/react": "workspace:*"
+  # @rspress/plugin-typedoc pins 4.12.0, whose `excludeScopesInPaths` writes
+  # Windows path separators into page URLs. 4.13.1 fixes it, and the renderer
+  # has to be the copy the plugin loads.
+  # https://github.com/typedoc2md/typedoc-plugin-markdown/issues/903
+  "typedoc-plugin-markdown": "4.13.1"
 
   "@rspack/core": "catalog:rspack"
 

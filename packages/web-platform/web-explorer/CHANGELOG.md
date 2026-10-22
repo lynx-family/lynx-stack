@@ -1,5 +1,11 @@
 # @lynx-js/web-explorer
 
+## 0.0.18
+
+### Patch Changes
+
+- Upgrade the bundled Rsdoctor packages from the 2.0 release candidate to 2.0.0. ([#4174](https://github.com/lynx-family/lynx-stack/pull/4174))
+
 ## 0.0.17
 
 ### Patch Changes

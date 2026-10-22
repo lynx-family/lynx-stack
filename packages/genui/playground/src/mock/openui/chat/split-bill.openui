@@ -1,0 +1,1 @@
+root = Card([TextContent("680元由4人平分，每人170元。")])

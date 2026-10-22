@@ -9,11 +9,14 @@ import { errorMessage } from '../../common/errors';
 import { checkRateLimit, rateLimitJsonResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
 import {
+  TOS_STORAGE_METHODS,
   isTosStorageMethod,
   isTosStorageType,
-  publishA2UIPayload,
-} from '../payload-publisher.js';
-import type { TosStorageLocation } from '../payload-publisher.js';
+} from '../../common/tos-storage.js';
+import { publishA2UIPayload } from '../payload-publisher.js';
+import type { A2UIStorageLocation } from '../payload-publisher.js';
+
+const TOS_STORAGE_METHOD_NAMES = TOS_STORAGE_METHODS.join(', ');
 
 interface A2UIPayloadBody {
   messages?: unknown;
@@ -37,7 +40,10 @@ function isConversationMessage(value: unknown): boolean {
 
 function parseStorageLocation(
   body: A2UIPayloadBody,
-): { ok: true; location: TosStorageLocation } | { ok: false; error: string } {
+): { ok: true; location: A2UIStorageLocation } | {
+  ok: false;
+  error: string;
+} {
   const messageRecord = body.messages !== null
       && typeof body.messages === 'object'
       && !Array.isArray(body.messages)
@@ -60,7 +66,7 @@ function parseStorageLocation(
       return {
         ok: false,
         error:
-          'conversation protocol must be one of: a2ui, openui, mcp-apps, lynx-xml, html',
+          `conversation protocol must be one of: ${TOS_STORAGE_METHOD_NAMES}`,
       };
     }
     if (body.method !== undefined && body.method !== protocol) {
@@ -91,7 +97,7 @@ function parseStorageLocation(
   if (!isTosStorageMethod(method)) {
     return {
       ok: false,
-      error: 'method must be one of: a2ui, openui, mcp-apps, lynx-xml, html',
+      error: `method must be one of: ${TOS_STORAGE_METHOD_NAMES}`,
     };
   }
 

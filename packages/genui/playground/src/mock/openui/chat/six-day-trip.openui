@@ -1,0 +1,25 @@
+root = Card([intro, route, days, transferTitle, transfer, stayTitle, stays, prepareTitle, prepare, progress, nextTitle, refine], sources)
+$ready = {documents:false, connections:false, rooms:false, insurance:false, clothes:false, network:false}
+$departure = ""
+$origin = ""
+$style = "unsure"
+intro = TextContent("**建议先逛甲城，再去丙岛放松，回程前回甲城住一晚。** 先给可调整的6天方案，具体出发日和出发地还未知；以下早晚顺序是规划建议。")
+route = TextContent("甲城 → 乙港 → 丙岛 → 乙港 → 甲城。共5晚：甲城3晚（D1、D2、D5），丙岛2晚（D3、D4）。")
+days = SectionBlock([d1, d2, d3, d4, d5, d6], false)
+d1 = SectionItem("d1", "D1 · 抵达与老城散步", [ImageText("./demos/openui/chat/assets/place.png", "虚构老城街区实景", "先在老城找回旅行节奏", "入住后按体力逛老城、附近吃晚饭；晚到就直接休息。住甲城。", true, "horizontal", 104)])
+d2 = SectionItem("d2", "D2 · 博物馆与滨海步道", [ImageText("./demos/openui/chat/assets/place.png", "虚构海事博物馆外观", "上午文化，下午海边", "上午了解海洋文化，下午沿滨海步道散步；避免连续安排室内参观。提前确认当日开放。住甲城。", true, "horizontal", 104)])
+d3 = SectionItem("d3", "D3 · 经乙港上岛", [ImageText("./demos/openui/chat/assets/place.png", "虚构乙港实景", "今天把时间留给转场", "经乙港乘船到丙岛，到岛后入住、在附近吃饭休息，不再安排跨区活动。班次确认后再决定出发时刻。住丙岛。", true, "horizontal", 104)])
+d4 = SectionItem("d4", "D4 · 浮潜或东湾休息", [ImageText("./demos/openui/chat/assets/place.png", "虚构丙岛浮潜活动图", "海况好时体验浮潜", "向持证船家核对装备、保险和取消条件；不适合出海时留在东湾散步与休息，活动不是必选。住丙岛。", true, "horizontal", 104)])
+d5 = SectionItem("d5", "D5 · 回甲城留出返程缓冲", [TextContent("白天由丙岛经乙港返回甲城，晚上休息整理行李。不要把离岛船和最终返程航班压在同一天；早到且有精力再补逛老城。住甲城。[1][2]")])
+d6 = SectionItem("d6", "D6 · 返程", [TextContent("按已订班次安排退房和前往机场或车站，提前核对到场和行李要求，不再增加跨区景点。")])
+transferTitle = TextContent("### 转场怎么衔接")
+transfer = Steps([StepsItem("甲城 → 乙港", "先核对到港接驳，再看能否接上当天船班。"), StepsItem("乙港 → 丙岛", "确认运营方的当日班次、行李和天气取消规则；本轮没有精确时刻或票价。"), StepsItem("丙岛 → 乙港 → 甲城", "回程预留整段转场时间，在甲城过夜后再安排最终返程。")])
+stayTitle = TextContent("### 住哪里更适合这条路线")
+stays = ListBlock([ListItem("甲城：车站区或老城", "更重视接驳便利就看车站区，想步行逛街就看老城；最终按预算选具体酒店。图为区域实景，不代表已选酒店。", {src:"./demos/openui/chat/assets/place.png", alt:"虚构甲城老城区域"}, "查看区域资料", {type:"open_url", url:"./demos/openui/chat/references.html#city"}), ListItem("丙岛：东湾或码头区", "主要想休息可看东湾，想就近找餐饮可看码头区；确认接送、餐食和取消条件。图为东湾环境，不是某家酒店。", {src:"./demos/openui/chat/assets/place.png", alt:"虚构丙岛东湾环境"}, "查看区域资料", {type:"open_url", url:"./demos/openui/chat/references.html#island"})], "image", "default")
+prepareTitle = TextContent("### 出发前准备 · 勾选只记录你的准备进度")
+prepare = Form("preparation", Buttons([]), [FormControl("证件与预订", CheckBoxGroup("ready", [CheckBoxItem("核对证件与入境要求", "按本人国籍、护照和实际出发日查询官方要求，保存订单。", "documents", false), CheckBoxItem("确认接驳与船班", "核对行李、天气取消和错过接驳后的方案。", "connections", false), CheckBoxItem("订好各晚住宿", "与每日计划的住宿晚数对齐，核对退改条件。", "rooms", false)], null, $ready)), FormControl("装备与保障", CheckBoxGroup("ready", [CheckBoxItem("核对活动保险与装备", "向船家确认救生衣、装备和保障范围；个人用药遵医嘱或说明书。", "insurance", false), CheckBoxItem("整理衣物和防水用品", "好走的鞋、泳衣、防晒衣帽、雨具和防水袋。", "clothes", false), CheckBoxItem("准备通信与支付", "确认通信方案，保存订单并准备备用支付方式。", "network", false)], null, $ready))])
+progress = TextContent("准备进度：" + (($ready.documents ? 1 : 0) + ($ready.connections ? 1 : 0) + ($ready.rooms ? 1 : 0) + ($ready.insurance ? 1 : 0) + ($ready.clothes ? 1 : 0) + ($ready.network ? 1 : 0)) + " / 6 项；勾选不代表已替你预订。")
+nextTitle = TextContent("### 确定条件后继续细化
+以上方案已经可以阅读。若要匹配具体接驳与住宿，再补充已确定的信息；可以留空，不把默认值当作你的偏好。")
+refine = Form("trip", Buttons([Button("按我的条件细化行程", {type:"continue_conversation", context:"保留这份6天甲城与丙岛方案，结合提交的日期、出发地和住宿偏好核对交通衔接并细化住宿；保留准备清单进度，不把空白值猜成事实，不声称已订票"})]), [FormControl("出发日期（可留空）", Input("departure", "例如 2027-02-10，尚未确定可留空", "text", null, $departure)), FormControl("从哪里出发（可留空）", Input("origin", "城市或机场", "text", null, $origin)), FormControl("住宿优先级", RadioGroup("style", [RadioItem("还没确定", "先比较区域取舍", "unsure"), RadioItem("交通方便", "优先接驳与日常出行", "convenient"), RadioItem("安静休息", "优先环境与休息", "quiet")], "unsure", null, $style))])
+sources = [{url:"./demos/openui/chat/references.html#city",title:"甲城目的地介绍",sourceName:"虚构教学来源"},{url:"./demos/openui/chat/references.html#transport",title:"甲城与丙岛交通路径",sourceName:"虚构教学来源"},{url:"./demos/openui/chat/references.html#island",title:"丙岛活动与住宿区域",sourceName:"虚构教学来源"}]

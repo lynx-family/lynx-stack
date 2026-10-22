@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react",
-  "version": "0.126.1",
+  "version": "0.128.0",
   "description": "ReactLynx is a framework for developing Lynx applications with familiar React.",
   "repository": {
     "type": "git",
@@ -107,13 +107,9 @@
         "default": "./transform/main.js"
       }
     },
-    "./worklet-runtime": {
+    "./worklet-runtime/init": {
       "types": "./runtime/lib/worklet-runtime/index.d.ts",
-      "default": "./runtime/worklet-runtime/main.js"
-    },
-    "./worklet-dev-runtime": {
-      "types": "./runtime/lib/worklet-runtime/index.d.ts",
-      "default": "./runtime/worklet-runtime/dev.js"
+      "default": "./runtime/lib/worklet-runtime/index.js"
     },
     "./worklet-runtime/bindings": {
       "types": "./runtime/lib/worklet-runtime/bindings/index.d.ts",
@@ -203,10 +199,7 @@
       "runtime-components": [
         "./components/lib/index.d.ts"
       ],
-      "worklet-runtime": [
-        "./runtime/lib/worklet-runtime/index.d.ts"
-      ],
-      "worklet-dev-runtime": [
+      "worklet-runtime/init": [
         "./runtime/lib/worklet-runtime/index.d.ts"
       ],
       "worklet-runtime/bindings": [
@@ -225,14 +218,14 @@
     "types",
     "docs",
     "testing-library",
+    "!**/node_modules/**",
     "CHANGELOG.md",
     "internal.js",
     "README.md",
     "README.zh.md"
   ],
   "scripts": {
-    "api-extractor": "api-extractor run --verbose",
-    "build": "rslib"
+    "api-extractor": "api-extractor run --verbose"
   },
   "dependencies": {
     "preact": "catalog:lynxjs"

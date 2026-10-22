@@ -90,7 +90,7 @@ describe('runOnMainThread', () => {
       [
         [
           {
-            "data": "{"worklet":{"_wkltId":"835d:450ef:2"},"params":[1,["args"]],"resolveId":1}",
+            "data": "{"worklet":{"_wkltId":"835d:450ef:2"},"params":[1,["args"]],"resolveId":1,"reloadVersion":0}",
             "type": "Lynx.Worklet.runWorkletCtx",
           },
         ],

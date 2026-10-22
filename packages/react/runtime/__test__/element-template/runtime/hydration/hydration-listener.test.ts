@@ -1,3 +1,7 @@
+import {
+  installElementTemplateRefInitValueListener,
+  resetElementTemplateRefInitValueListener,
+} from '../../../../src/element-template/main-thread-ref-init-value.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
@@ -262,8 +266,12 @@ describe('ElementTemplate hydration listener', () => {
       isHydration: true,
       reloadVersion: getReloadVersion(),
       delayedRunOnMainThreadData: undefined,
-      mainThreadRefInitValuePatch: [[1, 'hydrate-init']],
     });
+    expect(dispatchSpy.mock.calls.map(([event]) => event.type)).toEqual([
+      ElementTemplateLifecycleConstant.updateMTRefInitValue,
+      ElementTemplateLifecycleConstant.update,
+    ]);
+    expect(dispatchSpy.mock.calls[0]![0].data).toBe(JSON.stringify([[1, 'hydrate-init']]));
     expect(takeMainThreadRefInitValuePatch()).toEqual([]);
   });
 
@@ -287,6 +295,7 @@ describe('ElementTemplate hydration listener', () => {
       new MainThreadRef('reload-init');
 
       envManager.switchToMainThread();
+      installElementTemplateRefInitValueListener();
       installElementTemplatePatchListener();
       dispatchHydrate([createSerializedTemplate(after.instanceId, '_et_test')]);
 
@@ -302,6 +311,7 @@ describe('ElementTemplate hydration listener', () => {
     } finally {
       envManager.switchToMainThread();
       resetElementTemplatePatchListener();
+      resetElementTemplateRefInitValueListener();
       globalThis.lynxWorkletImpl = previousWorkletImpl;
       envManager.switchToBackground();
     }
@@ -603,7 +613,7 @@ describe('ElementTemplate hydration listener', () => {
     }
   });
 
-  it('resets commit state when hydrate update serialization throws', () => {
+  it.each(['update', 'ref', 'circular-ref', 'dispatch'])('resets hydrate commit state when %s fails', (failure) => {
     SystemInfo.lynxSdkVersion = '4.0';
     const serializeError = new Error('hydrate update serialization failed');
     const oldReportError = lynx.reportError;
@@ -623,6 +633,12 @@ describe('ElementTemplate hydration listener', () => {
       envManager.switchToBackground();
       installElementTemplateHydrationListener();
       const removeEventListener = vi.spyOn(lynx.getCoreContext(), 'removeEventListener');
+      const dispatch = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
+      if (failure === 'dispatch') {
+        dispatch.mockImplementationOnce(() => {
+          throw serializeError;
+        });
+      }
 
       const backgroundRoot = __root as BackgroundElementTemplateInstance;
       const throwingValue = {
@@ -630,11 +646,19 @@ describe('ElementTemplate hydration listener', () => {
           throw serializeError;
         },
       } as unknown as SerializableValue;
-      const after = new BackgroundElementTemplateInstance('_et_serialize_failure', [throwingValue, eventHandler, ref]);
+      const after = new BackgroundElementTemplateInstance('_et_serialize_failure', [
+        failure === 'update' ? throwingValue : 'after',
+        eventHandler,
+        ref,
+      ]);
       backgroundRoot.appendChild(after);
       publishEvent('-1:1:', { type: 'tap' });
       new ElementTemplateRefProxy(after.instanceId, 2).setNativeProps({ opacity: 1 }).exec();
-      new MainThreadRef('failed-serialize-init');
+      const circularValue: { self?: unknown } = {};
+      circularValue.self = circularValue;
+      new MainThreadRef(
+        failure === 'ref' ? throwingValue : failure === 'circular-ref' ? circularValue : 'failed-serialize-init',
+      );
       void runOnMainThread({ _wkltId: 'failed-serialize-main-thread-function' } as unknown as () => void)();
 
       envManager.switchToMainThread();
@@ -646,7 +670,9 @@ describe('ElementTemplate hydration listener', () => {
       ]);
 
       expect(() => envManager.switchToBackground()).not.toThrow();
-      expect(reportError).toHaveBeenCalledWith(serializeError);
+      expect(reportError).toHaveBeenCalledExactlyOnceWith(
+        failure === 'circular-ref' ? expect.any(TypeError) : serializeError,
+      );
       expect(globalCommitContext.ops).toEqual([]);
       expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
       expect(takeMainThreadRefInitValuePatch()).toEqual([]);

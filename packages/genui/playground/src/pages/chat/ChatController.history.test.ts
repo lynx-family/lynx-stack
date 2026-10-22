@@ -23,11 +23,15 @@ import {
 import { getDB } from '../../storage/db.js';
 import { PROTOCOLS } from '../../utils/protocol.js';
 
+const { previewPanel } = rstest.hoisted(() => ({
+  previewPanel: rstest.fn((_props: unknown) => null),
+}));
+
 rstest.mock('../../components/PreviewViewport.js', () => ({
   PreviewViewport: () => null,
 }));
 rstest.mock('../../components/PreviewPanel.js', () => ({
-  PreviewPanel: () => null,
+  PreviewPanel: previewPanel,
 }));
 
 const DOCUMENT = '<!doctype lynx><lynx engine-version="4.2">'
@@ -66,6 +70,7 @@ beforeEach(async () => {
   window.history.replaceState(null, '', '/#/lynx-xml/create');
   rstest.stubGlobal('React', React);
   rstest.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  previewPanel.mockClear();
   container = document.createElement('div');
   document.body.append(container);
   root = createRoot(container);
@@ -131,6 +136,14 @@ async function reloadPage() {
   await mountPage();
 }
 
+function latestPreviewSource() {
+  const calls = previewPanel.mock.calls;
+  const props = calls[calls.length - 1]?.[0] as
+    | { previewSource?: unknown }
+    | undefined;
+  return props?.previewSource;
+}
+
 test('counts the selected Lynx XML artifact view in tokens and restores it from history', async () => {
   const original = '<template>\n  <text>杭州天气 ☀️</text>\n</template>';
   rstest.stubGlobal('fetch', (url: string) =>
@@ -163,6 +176,46 @@ test('counts the selected Lynx XML artifact view in tokens and restores it from 
   await verifyCount(DOCUMENT);
   await reloadPage();
   await verifyCount(original);
+});
+
+test('shows the published Lynx XML preview QR source and restores it from history', async () => {
+  const sourceUrl = 'https://cdn.example.com/lynx-xml/preview/id/index.lynxml';
+  rstest.stubGlobal('fetch', (url: string) =>
+    Promise.resolve(jsonResponse(
+      url.endsWith('/models') ? MODELS : {
+        text: DOCUMENT,
+        preview: { sourceUrl },
+      },
+    )));
+  await mountPage();
+  await updateUI(() => {
+    const textarea = container.querySelector('textarea')!;
+    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!
+      .set!.call(textarea, 'Build a native preview');
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await React.act(async () => button('Send').click());
+  await rstest.waitFor(() => {
+    expect(latestPreviewSource()).toMatchObject({
+      kind: 'lynx-xml',
+      source: DOCUMENT,
+      sourcePath: sourceUrl,
+    });
+  });
+
+  const saved = await loadConversation(
+    (await getActiveConversationId('lynx-xml'))!,
+  );
+  expect(saved?.snapshot?.previewPayloadUrls).toEqual({ sourceUrl });
+
+  await reloadPage();
+  await rstest.waitFor(() => {
+    expect(latestPreviewSource()).toMatchObject({
+      kind: 'lynx-xml',
+      source: DOCUMENT,
+      sourcePath: sourceUrl,
+    });
+  });
 });
 
 test('shows the failure and waits for an explicit retry, including after reload', async () => {

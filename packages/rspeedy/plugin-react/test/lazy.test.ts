@@ -15,6 +15,33 @@ import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 
+async function collectJsAssets(
+  rootDir: string,
+  relativeDir = '.',
+): Promise<Map<string, string>> {
+  const entries = await fs.readdir(path.join(rootDir, relativeDir), {
+    withFileTypes: true,
+  })
+  const assets = new Map<string, string>()
+
+  await Promise.all(entries.map(async (entry) => {
+    const relativePath = path.join(relativeDir, entry.name)
+    if (entry.isDirectory()) {
+      const nested = await collectJsAssets(rootDir, relativePath)
+      for (const asset of nested) {
+        assets.set(...asset)
+      }
+    } else if (entry.name.endsWith('.js')) {
+      assets.set(
+        path.normalize(relativePath),
+        await fs.readFile(path.join(rootDir, relativePath), 'utf8'),
+      )
+    }
+  }))
+
+  return assets
+}
+
 // Workaround for an upstream `@rstest/coverage-istanbul` bug: it injects the
 // coverage SWC plugin by `push`-ing onto a shallow-copied (hence shared)
 // `jsc.experimental.plugins` array, so under `--coverage` the instrumentation
@@ -55,6 +82,217 @@ function withLeakedCoverageCountersStubbed<T>(
 }
 
 describe('Lazy', () => {
+  test('unnamed lazy main-thread assets keep their runtime implementation inline', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const chunkGroupNames: (string | null | undefined)[][] = []
+    const encodedLepusChunkNames: string[][] = []
+    const tmp = await fs.mkdtemp(
+      path.join(tmpdir(), 'rspeedy-react-lazy-mtp-'),
+    )
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        mode: 'production',
+        source: {
+          entry: {
+            main: fileURLToPath(
+              new URL(
+                './fixtures/lazy-main-thread-programmability/index.tsx',
+                import.meta.url,
+              ),
+            ),
+          },
+        },
+        output: {
+          distPath: { root: tmp },
+          minify: false,
+        },
+        performance: {
+          chunkSplit: { strategy: 'split-by-experience' },
+        },
+        plugins: [
+          pluginReactLynx(),
+          {
+            name: 'force-runtime-split-attempt',
+            pre: ['lynx:react'],
+            setup(api) {
+              api.modifyRspackConfig((config) => {
+                const splitChunks = config.optimization?.splitChunks
+                if (splitChunks && typeof splitChunks === 'object') {
+                  splitChunks.cacheGroups = {
+                    ...splitChunks.cacheGroups,
+                    forceMainThreadRuntime: {
+                      test:
+                        /packages[\\/]react[\\/]runtime[\\/]lib[\\/]worklet-runtime/,
+                      name: 'forced-main-thread-runtime',
+                      enforce: true,
+                      minSize: 0,
+                    },
+                  }
+                }
+                return config
+              })
+            },
+          } as RsbuildPlugin,
+        ],
+        tools: {
+          rspack: {
+            plugins: [
+              {
+                name: 'capture-lazy-mtp-template-input',
+                apply(compiler) {
+                  compiler.hooks.compilation.tap(
+                    'capture-lazy-mtp-template-input',
+                    (compilation) => {
+                      const hooks = LynxTemplatePlugin
+                        .getLynxTemplatePluginHooks(
+                          compilation as unknown as Parameters<
+                            typeof LynxTemplatePlugin.getLynxTemplatePluginHooks
+                          >[0],
+                        )
+                      hooks.beforeEncode.tap(
+                        'capture-lazy-mtp-template-input',
+                        (args) => {
+                          chunkGroupNames.push(
+                            args.chunkGroups.map(group => group.name),
+                          )
+                          encodedLepusChunkNames.push(
+                            args.encodeData.lepusCode.chunks.map(
+                              chunk => chunk.name,
+                            ),
+                          )
+                          return args
+                        },
+                      )
+                    },
+                  )
+                },
+              } as Rspack.RspackPluginInstance,
+            ],
+          },
+        },
+      },
+    })
+
+    try {
+      const result = await rsbuild.build()
+      await result.close()
+
+      expect(
+        chunkGroupNames.some(names =>
+          names.length > 0 && names.every(name => name === undefined)
+        ),
+      ).toBe(true)
+      expect(encodedLepusChunkNames.flat()).not.toContain('worklet-runtime')
+
+      const assets = await collectJsAssets(tmp)
+      const runtimeOwners = [...assets.entries()].filter(([, source]) =>
+        source.includes('globalThis.lynxWorkletImpl = {')
+      )
+      const registrationOwners = [...assets.entries()].filter(([, source]) =>
+        source.includes('("main-thread",')
+      )
+
+      expect(runtimeOwners).toHaveLength(1)
+      expect(runtimeOwners[0]![0]).toContain('main-thread.js')
+      expect(runtimeOwners[0]![0]).not.toContain(
+        path.normalize('.lynx/main/main-thread.js'),
+      )
+      expect(runtimeOwners[0]![1].match(
+        /globalThis\.lynxWorkletImpl = \{/g,
+      )).toHaveLength(1)
+      expect(registrationOwners).toHaveLength(1)
+      expect(registrationOwners[0]![0]).toBe(runtimeOwners[0]![0])
+    } finally {
+      await fs.rm(tmp, { recursive: true, force: true })
+    }
+  })
+
+  test('standalone lazy bundles contain their runtime and registrations', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const encodedLepusChunkNames: string[][] = []
+    const tmp = await fs.mkdtemp(
+      path.join(tmpdir(), 'rspeedy-react-standalone-lazy-mtp-'),
+    )
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        mode: 'production',
+        source: {
+          entry: {
+            main: fileURLToPath(
+              new URL(
+                './fixtures/lazy-main-thread-programmability/LazyComponent.tsx',
+                import.meta.url,
+              ),
+            ),
+          },
+        },
+        output: {
+          distPath: { root: tmp },
+          minify: false,
+        },
+        plugins: [
+          pluginReactLynx({ experimental_isLazyBundle: true }),
+        ],
+        tools: {
+          rspack: {
+            plugins: [
+              {
+                name: 'capture-standalone-lazy-mtp-template-input',
+                apply(compiler) {
+                  compiler.hooks.compilation.tap(
+                    'capture-standalone-lazy-mtp-template-input',
+                    (compilation) => {
+                      const hooks = LynxTemplatePlugin
+                        .getLynxTemplatePluginHooks(
+                          compilation as unknown as Parameters<
+                            typeof LynxTemplatePlugin.getLynxTemplatePluginHooks
+                          >[0],
+                        )
+                      hooks.beforeEncode.tap(
+                        'capture-standalone-lazy-mtp-template-input',
+                        (args) => {
+                          encodedLepusChunkNames.push(
+                            args.encodeData.lepusCode.chunks.map(
+                              chunk => chunk.name,
+                            ),
+                          )
+                          return args
+                        },
+                      )
+                    },
+                  )
+                },
+              } as Rspack.RspackPluginInstance,
+            ],
+          },
+        },
+      },
+    })
+
+    try {
+      const result = await rsbuild.build()
+      await result.close()
+
+      expect(encodedLepusChunkNames.flat()).not.toContain('worklet-runtime')
+      const assets = await collectJsAssets(tmp)
+      const runtimeOwners = [...assets.entries()].filter(([, source]) =>
+        source.includes('globalThis.lynxWorkletImpl = {')
+      )
+      const registrationOwners = [...assets.entries()].filter(([, source]) =>
+        source.includes('("main-thread",')
+      )
+
+      expect(runtimeOwners).toHaveLength(1)
+      expect(runtimeOwners[0]![0]).toContain('main-thread.js')
+      expect(registrationOwners).toHaveLength(1)
+      expect(registrationOwners[0]![0]).toBe(runtimeOwners[0]![0])
+      expect(runtimeOwners[0]![1]).not.toContain('__workletRuntimeLoaded')
+    } finally {
+      await fs.rm(tmp, { recursive: true, force: true })
+    }
+  })
+
   test('alias for react', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -301,6 +539,50 @@ describe('Lazy', () => {
         expect(backgroundCode).not.toBe('')
         expect(mainThreadCode).not.toBe('')
 
+        type BootstrapTarget =
+          & (() => unknown)
+          & Record<
+            PropertyKey,
+            unknown
+          >
+        const bootstrapTarget = new Proxy(
+          (() => undefined) as BootstrapTarget,
+          {
+            get(target, property, receiver: unknown): unknown {
+              if (
+                typeof property === 'symbol'
+                || Reflect.has(target, property)
+              ) {
+                return Reflect.get(target, property, receiver) as unknown
+              }
+              return receiver
+            },
+            apply: (_target, thisArg: unknown): unknown => thisArg,
+          },
+        )
+        for (
+          const [name, value] of Object.entries({
+            __BACKGROUND__: true,
+            __DEV__: false,
+            __ENABLE_REACT_ONLY__: false,
+            __ENABLE_SSR__: false,
+            __FIRST_SCREEN_SYNC_TIMING__: false,
+            __JS__: true,
+            __LEPUS__: false,
+            __MAIN_THREAD__: false,
+            __PROFILE__: false,
+            __USE_ELEMENT_TEMPLATE__: true,
+            lynx: bootstrapTarget,
+          })
+        ) {
+          rstest.stubGlobal(name, value)
+        }
+        const {
+          RUNTIME_BACKEND_ELEMENT_TEMPLATE,
+          RUNTIME_BACKEND_SNAPSHOT,
+          registerRuntimeBackend,
+        } = await import('@lynx-js/react/element-template/internal')
+
         for (const thread of ['background', 'main-thread']) {
           const app = {
             callDestroyLifetimeFun: rstest.fn(),
@@ -318,15 +600,8 @@ describe('Lazy', () => {
             useEffect: rstest.fn(),
             useState: rstest.fn(),
           }
-          const hostInternal = { __root: {}, options: {} }
           const hostJSX = { jsx: rstest.fn(() => vnode) }
           const hostJSXDev = { jsxDEV: rstest.fn(() => vnode) }
-          const expectedRuntime = {
-            ...hostReact,
-            ...hostInternal,
-            ...hostJSX,
-            ...hostJSXDev,
-          }
           // The emitted module reads the real lazy ABI. A finite host makes any
           // accidental native initialization fail instead of absorbing it.
           const target: Record<string | symbol, unknown> = {
@@ -335,7 +610,23 @@ describe('Lazy', () => {
             getApp: () => app,
           }
           const backend = Symbol.for('__REACT_LYNX_RUNTIME_BACKEND__')
-          target[backend] = 'Element Template'
+          target[backend] = RUNTIME_BACKEND_ELEMENT_TEMPLATE
+          rstest.stubGlobal('__LEPUS__', false)
+          rstest.stubGlobal('lynx', target)
+          const hostInternal = {
+            __root: {},
+            options: {},
+            RUNTIME_BACKEND_ELEMENT_TEMPLATE,
+            RUNTIME_BACKEND_SNAPSHOT,
+            registerRuntimeBackend,
+          }
+          const expectedRuntime = {
+            ...hostReact,
+            __root: hostInternal.__root,
+            options: hostInternal.options,
+            ...hostJSX,
+            ...hostJSXDev,
+          }
           for (
             const [entry, value] of Object.entries({
               '@lynx-js/react': hostReact,
@@ -401,7 +692,7 @@ describe('Lazy', () => {
           }
 
           Object.defineProperty(target, backend, {
-            value: 'Snapshot',
+            value: RUNTIME_BACKEND_SNAPSHOT,
             configurable: true,
           })
           expect(execute).toThrow(
@@ -414,6 +705,7 @@ describe('Lazy', () => {
         }
       } finally {
         rstest.unstubAllEnvs()
+        rstest.unstubAllGlobals()
         await fs.rm(tmp, { recursive: true, force: true })
       }
     })

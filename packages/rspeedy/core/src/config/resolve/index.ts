@@ -187,6 +187,8 @@ export interface Resolve {
    *   },
    * }
    * ```
+   *
+   * @lynxDefaultChanged
    */
   extensions?: string[] | undefined
 }

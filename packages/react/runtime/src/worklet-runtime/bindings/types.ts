@@ -11,7 +11,7 @@ export type WorkletRefId = number;
 export interface WorkletRefImpl<T> {
   _wvid: WorkletRefId;
   _initValue: T;
-  _type: string;
+  _type?: string;
   _lifecycleObserver?: unknown;
   current?: T;
 }
@@ -23,22 +23,18 @@ export interface WorkletRef<T> {
   [key: string]: unknown;
 }
 
-interface ClosureValueType_ extends Record<string, ClosureValueType> {}
-
 export type ClosureValueType =
   | null
   | undefined
   | string
   | boolean
   | number
-  | Worklet
-  | WorkletRef<unknown>
-  | Element
-  | (((...args: unknown[]) => unknown) & {
-    boundCtx?: object;
-  })
-  | ClosureValueType_
-  | ClosureValueType[];
+  | object;
+
+export type MainThreadRefInitValuePatch = (
+  | [id: number, value: unknown]
+  | [id: number, value: unknown, type: string]
+)[];
 
 export interface Worklet {
   _wkltId: string;

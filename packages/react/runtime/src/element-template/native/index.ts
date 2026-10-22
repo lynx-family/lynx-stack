@@ -25,6 +25,7 @@ import { initElementTemplatePAPICallAlog } from '../debug/elementPAPICall.js';
 import { initProfileHook } from '../debug/profile.js';
 import { setupLynxEnv } from '../lynx/env.js';
 import { initTimingAPI } from '../lynx/performance.js';
+import { installElementTemplateRefInitValueListener } from '../main-thread-ref-init-value.js';
 import { publicComponentEvent, publishEvent, resetEventStateForRuntime } from '../prop-adapters/event.js';
 import { __root, setRoot } from '../runtime/page/root-instance.js';
 
@@ -57,6 +58,7 @@ function init(): void {
   if (__MAIN_THREAD__) {
     installMainThreadHooks();
     injectCalledByNative();
+    installElementTemplateRefInitValueListener();
     installElementTemplatePatchListener();
     installOnMtsDestruction();
     if (__PROFILE__) {

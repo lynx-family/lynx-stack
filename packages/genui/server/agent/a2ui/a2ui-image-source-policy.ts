@@ -2,8 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { createA2UISourcePolicy } from './a2ui-source-policy.js';
 import { isLoadableImageSource } from './a2ui-validator.js';
+import { createSourcePolicy } from '../common/source-policy.js';
 
 function normalizeImageSource(source: string): string | undefined {
   const trimmed = source.trim();
@@ -21,7 +21,7 @@ export function createA2UIImageSourcePolicy(
   providedValues: readonly unknown[],
   dynamicSources: () => readonly string[] = () => [],
 ): (source: string) => boolean {
-  return createA2UISourcePolicy(
+  return createSourcePolicy(
     providedValues,
     normalizeImageSource,
     dynamicSources,

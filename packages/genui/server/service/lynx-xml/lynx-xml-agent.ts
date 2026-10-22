@@ -2,20 +2,20 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { assembleLynxXmlArtifact } from '@lynx-js/genui-lynx-xml';
+import {
+  assembleLynxXmlArtifact,
+  normalizeLynxXmlArtifact,
+} from '@lynx-js/genui-lynx-xml';
 
 import { initializeArkImageGenerationRunScope } from '../../agent/common/ark-image-generation-tool.js';
 import { createSearchRunScope } from '../../agent/common/doubao-search-tool.js';
 import type { SearchRunScope } from '../../agent/common/doubao-search-tool.js';
+import { registerToolPerformanceObserver } from '../../agent/common/tool-performance.js';
 import { createLynxXmlAgent } from '../../agent/lynx-xml/lynx-xml-agent.js';
 import type {
   LynxXmlAgent,
   LynxXmlFragmentOptions,
 } from '../../agent/lynx-xml/lynx-xml-agent.js';
-import {
-  extractLynxXmlArtifact,
-  normalizeLynxXmlArtifact,
-} from '../../agent/lynx-xml/lynx-xml-output.js';
 import { pickAgentCapabilityConfig } from '../common/agent-capabilities.js';
 import { createAgentStepLogger } from '../common/agent-step-logger.js';
 import {
@@ -68,6 +68,7 @@ function buildLynxXmlScopedRunOptions(
   scope: SearchRunScope,
   maxOutputTokens?: number,
 ) {
+  registerToolPerformanceObserver(scope, opts.onPerformanceEvent);
   return {
     ...buildOpenAIRunOptions(opts, abortSignal, maxOutputTokens),
     ...createAgentStepLogger(opts, 'lynx-xml', {
@@ -88,7 +89,7 @@ function compileGeneration(
     const compiled =
       opts.enableHtmlFragment === true || opts.enableScriptReuse === true
         || opts.stylePreset
-        ? assembleLynxXmlArtifact(extractLynxXmlArtifact(result.text), {
+        ? assembleLynxXmlArtifact(result.text, {
           enableHtmlFragment: opts.enableHtmlFragment === true,
           enableScriptReuse: opts.enableScriptReuse === true,
           stylePreset: opts.stylePreset ?? false,
@@ -280,7 +281,10 @@ export default class LynxXmlAgentService {
     const agent = await this.getAgent(opts);
     abortSignal?.throwIfAborted();
     const scope = createLynxXmlRunScope();
-    const result = await agent.generate(
+    const generate = opts.streamRawGeneration
+      ? agent.stream.bind(agent)
+      : agent.generate.bind(agent);
+    const result = await generate(
       toModelMessages(buildConversationMessages(messages, conversation)),
       buildLynxXmlScopedRunOptions(opts, abortSignal, scope),
     ) as MastraResult;

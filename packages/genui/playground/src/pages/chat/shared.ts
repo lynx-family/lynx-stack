@@ -55,6 +55,29 @@ export const CUSTOM_PROVIDER_BASE_URL =
   CUSTOM_PROVIDER_BASE_URL_OPTIONS[0].value;
 export const CUSTOM_PROVIDER_MODEL = CUSTOM_PROVIDER_BASE_URL_OPTIONS[0].model;
 const MISSING_SERVER_MODEL_CONFIG_ERROR = 'GENUI_MODEL_CONFIG_JSON is required';
+const REASONING_EFFORT_OPTIONS = [
+  { value: '', label: 'Default' },
+  { value: 'none', label: 'None' },
+  { value: 'minimal', label: 'Minimal' },
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
+  { value: 'xhigh', label: 'Extra high' },
+] as const;
+
+export type ReasoningEffort =
+  | 'none'
+  | 'minimal'
+  | 'low'
+  | 'medium'
+  | 'high'
+  | 'xhigh';
+
+function isReasoningEffort(value: unknown): value is ReasoningEffort {
+  return REASONING_EFFORT_OPTIONS.some((option) =>
+    option.value !== '' && option.value === value
+  );
+}
 
 function getCustomProviderDefaultModel(baseURL: string): string {
   return COMPOSITION_CUSTOM_PROVIDER_BASE_URL_OPTIONS.find(
@@ -73,6 +96,7 @@ export interface ProviderSettings {
   enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
   stylePreset?: 'default' | false;
+  reasoningEffort?: ReasoningEffort;
   provider: string;
   apiKey: string;
   baseURL: string;
@@ -87,6 +111,7 @@ export interface ProviderRequestOptions {
   apiKey?: string;
   baseURL?: string;
   model?: string;
+  reasoningEffort?: ReasoningEffort;
 }
 
 export interface PersistedProviderSettings {
@@ -94,6 +119,7 @@ export interface PersistedProviderSettings {
   enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
   stylePreset?: 'default' | false;
+  reasoningEffort?: ReasoningEffort;
   provider: string;
 }
 
@@ -151,6 +177,9 @@ export function parseProviderSettings(value: unknown): ProviderSettings {
     ...(typeof enableDesignGuidance === 'boolean'
       ? { enableDesignGuidance }
       : {}),
+    ...(isReasoningEffort(record.reasoningEffort)
+      ? { reasoningEffort: record.reasoningEffort }
+      : {}),
     // Never restore custom-provider fields from browser storage. Older
     // versions wrote them here, so ignoring them also migrates those values
     // out when the settings are serialized again.
@@ -187,6 +216,9 @@ export function serializeProviderSettings(
     ...(settings.enableHtmlFragment === undefined
       ? {}
       : { enableHtmlFragment: settings.enableHtmlFragment }),
+    ...(settings.reasoningEffort === undefined
+      ? {}
+      : { reasoningEffort: settings.reasoningEffort }),
   };
 }
 
@@ -231,6 +263,14 @@ export function toProviderRequestOptions(
   settings: ProviderSettings,
   protocol?: 'a2ui' | 'openui',
 ): ProviderRequestOptions {
+  const isCompositionProvider = settings.provider === CUSTOM_PROVIDER_ID
+    ? settings.baseURL === CUSTOM_JEV_PROVIDER_OPTION.value
+    : settings.models.some((model) =>
+      model.id === settings.provider && model.composition === true
+    );
+  const reasoning = !isCompositionProvider && settings.reasoningEffort
+    ? { reasoningEffort: settings.reasoningEffort }
+    : {};
   if (settings.provider !== CUSTOM_PROVIDER_ID) {
     const model = settings.provider.trim();
     return {
@@ -238,6 +278,7 @@ export function toProviderRequestOptions(
       ...(settings.enableDesignGuidance === false
         ? { enableDesignGuidance: false }
         : {}),
+      ...reasoning,
     };
   }
 
@@ -257,6 +298,7 @@ export function toProviderRequestOptions(
     ...(settings.enableDesignGuidance === false
       ? { enableDesignGuidance: false }
       : {}),
+    ...reasoning,
   };
 }
 
@@ -373,6 +415,9 @@ export function createProviderSettingsAdapter(protocol?: 'a2ui' | 'openui') {
       snapshot: (settings) => ({
         ...(settings.provider ? { provider: settings.provider } : {}),
         enableDesignGuidance: settings.enableDesignGuidance !== false,
+        ...(settings.reasoningEffort
+          ? { reasoningEffort: settings.reasoningEffort }
+          : {}),
       }),
       restore: (settings, saved) => ({
         ...settings,
@@ -383,6 +428,7 @@ export function createProviderSettingsAdapter(protocol?: 'a2ui' | 'openui') {
           ? { provider: saved.provider }
           : {}),
         enableDesignGuidance: saved.enableDesignGuidance,
+        reasoningEffort: saved.reasoningEffort,
       }),
     },
     load: (settings, host, signal) =>
@@ -435,8 +481,25 @@ export function createProviderSettingsAdapter(protocol?: 'a2ui' | 'openui') {
         value: settings.enableDesignGuidance === false ? 'off' : 'on',
         kind: 'checkbox' as const,
       };
+      const isCompositionProvider = settings.provider === CUSTOM_PROVIDER_ID
+        ? settings.baseURL === CUSTOM_JEV_PROVIDER_OPTION.value
+        : settings.models.some((model) =>
+          model.id === settings.provider && model.composition === true
+        );
+      const reasoningControl = {
+        id: 'reasoningEffort',
+        label: 'Reasoning',
+        description: 'Override the selected model reasoning effort.',
+        value: settings.reasoningEffort ?? '',
+        kind: 'select' as const,
+        options: REASONING_EFFORT_OPTIONS,
+      };
       if (settings.provider !== CUSTOM_PROVIDER_ID) {
-        return [providerControl, designControl];
+        return [
+          providerControl,
+          ...(isCompositionProvider ? [] : [reasoningControl]),
+          designControl,
+        ];
       }
       return [
         providerControl,
@@ -461,12 +524,23 @@ export function createProviderSettingsAdapter(protocol?: 'a2ui' | 'openui') {
           kind: 'select' as const,
           options: endpoints,
         },
+        ...(isCompositionProvider ? [] : [reasoningControl]),
         designControl,
       ];
     },
     update(settings, id, next) {
       if (id === 'enableDesignGuidance') {
         return { ...settings, enableDesignGuidance: next !== 'off' };
+      }
+      if (id === 'reasoningEffort') {
+        if (next === '') {
+          const updated = { ...settings };
+          delete updated.reasoningEffort;
+          return updated;
+        }
+        return isReasoningEffort(next)
+          ? { ...settings, reasoningEffort: next }
+          : settings;
       }
       if (
         id === 'provider'

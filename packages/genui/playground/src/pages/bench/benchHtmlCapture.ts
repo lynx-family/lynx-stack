@@ -4,6 +4,10 @@
 
 /* eslint-disable n/no-unsupported-features/node-builtins -- Browser capture uses Web APIs. */
 
+import {
+  DEFAULT_SCREENSHOT_SETTLE_MS,
+  isScreenshotSettleMs,
+} from './benchScreenshotDelay.js';
 import { HTML_PREVIEW_SANDBOX } from '../../components/HtmlView.js';
 
 interface ElementCaptureTrack extends MediaStreamTrack {
@@ -19,6 +23,7 @@ export interface BenchHtmlCaptureRequest {
   source: string;
   width: number;
   height: number;
+  screenshotSettleMs?: number;
 }
 
 export type BenchHtmlCapture = (
@@ -222,6 +227,11 @@ export async function startBenchHtmlCapture(
     const result = queue.then(async () => {
       taskSignal.throwIfAborted();
       const { width, height } = request;
+      const screenshotSettleMs = request.screenshotSettleMs
+        ?? DEFAULT_SCREENSHOT_SETTLE_MS;
+      if (!isScreenshotSettleMs(screenshotSettleMs)) {
+        throw new Error('Screenshot delay must be a non-negative integer.');
+      }
       if (
         !Number.isInteger(width) || !Number.isInteger(height)
         || width < 1 || height < 1 || width > 8192 || height > 8192
@@ -273,6 +283,23 @@ export async function startBenchHtmlCapture(
         target.append(iframe);
         document.body.append(target);
         await abortable(loaded, taskSignal);
+        if (screenshotSettleMs > 0) {
+          let timer: ReturnType<typeof setTimeout> | undefined;
+          try {
+            await abortable(
+              new Promise<void>(resolve => {
+                // Avoid timer overflow; the task deadline still bounds this wait.
+                timer = setTimeout(
+                  resolve,
+                  Math.min(screenshotSettleMs, 2_147_483_647),
+                );
+              }),
+              taskSignal,
+            );
+          } finally {
+            clearTimeout(timer);
+          }
+        }
         const restriction = await abortable(
           targets.fromElement(target),
           taskSignal,

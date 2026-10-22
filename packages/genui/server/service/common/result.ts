@@ -210,12 +210,29 @@ export async function extractGenerationResult(result: MastraResult): Promise<{
   usage: unknown;
   finishReason: unknown;
 }> {
+  // Raw Bench generation uses the streaming API to observe first text arrival.
+  // Drain it before reading completion getters, retaining the upstream failure evidence.
+  let streamedText = '';
+  if ('textStream' in result) {
+    try {
+      for await (
+        const chunk of toAsyncIterable(
+          (result as MastraStreamResult).textStream,
+        )
+      ) {
+        streamedText += chunk;
+      }
+    } catch (error) {
+      await finalizeResult(result);
+      throw error;
+    }
+  }
   const [text, metadata] = await Promise.all([
     extractText(result),
     finalizeResult(result),
   ]);
   return {
-    text,
+    text: text || streamedText,
     usage: metadata.usage,
     finishReason: metadata.finishReason,
   };

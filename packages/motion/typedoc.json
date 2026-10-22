@@ -1,0 +1,7 @@
+{
+  "tsconfig": "./tsconfig.build.json",
+  "intentionallyNotExported": [
+    "ElementOrElements",
+    "Listenable"
+  ]
+}

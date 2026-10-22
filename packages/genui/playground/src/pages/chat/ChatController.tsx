@@ -1,7 +1,14 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import type { KeyboardEvent } from 'react';
 
 import { ChatAgentInteraction } from './ChatAgentInteraction.js';
@@ -54,6 +61,7 @@ import { SourceTokenCount } from '../../components/SourceTokenCount.js';
 import { useConversation } from '../../hooks/useConversation.js';
 import type { ModelChatMessage } from '../../hooks/useConversation.js';
 import { useResizablePanels } from '../../hooks/useResizablePanels.js';
+import { receiveOpenUIQueryDefaults } from '../../openui/inspector.js';
 import {
   loadConversation,
   saveConversationSharePayload,
@@ -74,6 +82,7 @@ import {
 } from '../../utils/modelPricing.js';
 import type { GenerationUsageRecord } from '../../utils/modelPricing.js';
 import type { Protocol } from '../../utils/protocol.js';
+import { isLocalPayloadUrl } from '../../utils/publishPayload.js';
 import {
   buildConversationShareUrl,
   clearImportConversationParam,
@@ -312,6 +321,38 @@ function MessageMetrics(props: { metrics: PreviewPerformanceMetrics }) {
       label: 'Generation',
       value: props.metrics.generationMs,
     },
+    {
+      key: 'artifactTransformMs',
+      label: 'Transform',
+      value: props.metrics.artifactTransformMs,
+    },
+    {
+      key: 'artifactBuildMs',
+      label: 'Build',
+      value: props.metrics.artifactBuildMs,
+    },
+    {
+      key: 'artifactUploadMs',
+      label: 'Upload',
+      value: props.metrics.artifactUploadMs,
+    },
+    {
+      key: 'firstReasoningTokenMs',
+      label: '1st Reasoning',
+      value: props.metrics.firstReasoningTokenMs,
+    },
+    {
+      key: 'firstTextTokenMs',
+      label: '1st Text',
+      value: props.metrics.firstTextTokenMs,
+    },
+    { key: 'modelMs', label: 'Model', value: props.metrics.modelMs },
+    { key: 'searchMs', label: 'Search', value: props.metrics.searchMs },
+    {
+      key: 'imageGenerationMs',
+      label: 'Image Gen',
+      value: props.metrics.imageGenerationMs,
+    },
     { key: 'renderMs', label: 'Render', value: props.metrics.renderMs },
   ].filter((item) => typeof item.value === 'number');
   if (items.length === 0) return null;
@@ -440,6 +481,11 @@ function MessageList(props: {
   );
 }
 
+const unsubscribeStaticArtifact = () => {
+  // Static views have no external store to unsubscribe from.
+};
+const subscribeStaticArtifact = () => unsubscribeStaticArtifact;
+
 function ArtifactViewer(props: {
   artifact: ChatArtifact;
   onCopy: (text: string) => void;
@@ -451,6 +497,10 @@ function ArtifactViewer(props: {
   );
   const activeView = artifact.views.find((view) => view.id === activeViewId)
     ?? artifact.views[0];
+  const liveText = useSyncExternalStore(
+    activeView?.liveText?.subscribe ?? subscribeStaticArtifact,
+    activeView?.liveText?.getSnapshot ?? (() => activeView?.text ?? ''),
+  );
 
   useEffect(() => {
     if (artifact.views.some((view) => view.id === activeViewId)) return;
@@ -459,8 +509,8 @@ function ArtifactViewer(props: {
 
   if (!activeView) return null;
   const displayedText = showFormatted
-    ? activeView.formattedText ?? activeView.text
-    : activeView.text;
+    ? activeView.formattedText ?? liveText
+    : liveText;
   return (
     <div className='chatGeneratedJson chatArtifact'>
       <div className='chatGeneratedJsonTitle chatArtifactHeader'>
@@ -554,6 +604,14 @@ function mergeMetrics(
       'fmpMs',
       'ttiMs',
       'generationMs',
+      'artifactTransformMs',
+      'artifactBuildMs',
+      'artifactUploadMs',
+      'firstReasoningTokenMs',
+      'firstTextTokenMs',
+      'modelMs',
+      'searchMs',
+      'imageGenerationMs',
       'renderMs',
     ] as const
   ) {
@@ -1500,16 +1558,19 @@ export function ChatController<
       }
       const cached = record.snapshot?.sharePayload;
       let conversationUrl = cached?.updatedAt === record.meta.updatedAt
+          && !isLocalPayloadUrl(cached.url)
         ? cached.url
         : undefined;
       if (!conversationUrl) {
         const doc = serializeConversation(record, protocol.name);
         conversationUrl = await publishConversation(doc);
-        await saveConversationSharePayload(
-          id,
-          conversationUrl,
-          record.meta.updatedAt,
-        );
+        if (!isLocalPayloadUrl(conversationUrl)) {
+          await saveConversationSharePayload(
+            id,
+            conversationUrl,
+            record.meta.updatedAt,
+          );
+        }
       }
       const link = buildConversationShareUrl(
         conversationUrl,
@@ -1517,8 +1578,11 @@ export function ChatController<
         protocol.name,
       );
       showCopyToast(await copyToClipboard(link));
-    } catch {
-      showCopyToast(false);
+    } catch (error) {
+      showCopyToast(
+        false,
+        `Unable to share conversation: ${getErrorMessage(error)}`,
+      );
     }
   }, [host.baseUrl, protocol.name, showCopyToast]);
 
@@ -1601,7 +1665,18 @@ export function ChatController<
     };
     let streamedResponseOutput: TOutput | null = null;
     metricsPersistenceReadyRef.current = false;
-    metricsRef.current = { ...metricsRef.current, generationMs: undefined };
+    metricsRef.current = {
+      ...metricsRef.current,
+      generationMs: undefined,
+      artifactTransformMs: undefined,
+      artifactBuildMs: undefined,
+      artifactUploadMs: undefined,
+      firstReasoningTokenMs: undefined,
+      firstTextTokenMs: undefined,
+      modelMs: undefined,
+      searchMs: undefined,
+      imageGenerationMs: undefined,
+    };
     setMetrics(metricsRef.current);
     setIsActionRunning(true);
     setMessages((current) => [
@@ -1807,12 +1882,19 @@ export function ChatController<
       const frame = previewFrameRef.current;
       if (!frame?.contentWindow || event.source !== frame.contentWindow) return;
       if (event.origin !== targetOriginForUrl(frame.src, host)) return;
+      if (
+        adapter.id === 'openui' && event.data && typeof event.data === 'object'
+        && 'navigationToken' in event.data
+        && event.data.navigationToken
+          === readLivePreviewNavigationToken(frame.src)
+        && receiveOpenUIQueryDefaults(event.data)
+      ) return;
       const action = actionAdapter.parseWindowMessage(event.data);
       if (action !== null) handleAction(action);
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [adapter.action, handleAction, host]);
+  }, [adapter.id, adapter.action, handleAction, host]);
 
   const lastUserMessage = persistedMessages[persistedMessages.length - 2];
   const retryMessage = !busy && messages[messages.length - 1]?.tone === 'error'
@@ -1875,6 +1957,14 @@ export function ChatController<
       busy
         || output !== null
         || typeof metrics.generationMs === 'number'
+        || typeof metrics.artifactTransformMs === 'number'
+        || typeof metrics.artifactBuildMs === 'number'
+        || typeof metrics.artifactUploadMs === 'number'
+        || typeof metrics.firstReasoningTokenMs === 'number'
+        || typeof metrics.firstTextTokenMs === 'number'
+        || typeof metrics.modelMs === 'number'
+        || typeof metrics.searchMs === 'number'
+        || typeof metrics.imageGenerationMs === 'number'
         || typeof metrics.renderMs === 'number'
         ? [
           ...(busy || typeof metrics.generationMs === 'number'
@@ -1887,6 +1977,86 @@ export function ChatController<
               value: metrics.generationMs,
             }]
             : []),
+          ...(typeof metrics.artifactTransformMs === 'number'
+            ? [{
+              key: 'artifactTransformMs',
+              label: 'Transform',
+              title: 'Artifact transform duration',
+              description:
+                'Server time spent transforming generated source into the final Lynx artifact.',
+              value: metrics.artifactTransformMs,
+            }]
+            : []),
+          ...(typeof metrics.artifactBuildMs === 'number'
+            ? [{
+              key: 'artifactBuildMs',
+              label: 'Build',
+              title: 'Artifact build duration',
+              description:
+                'Server time spent compiling generated source into runnable artifacts.',
+              value: metrics.artifactBuildMs,
+            }]
+            : []),
+          ...(typeof metrics.artifactUploadMs === 'number'
+            ? [{
+              key: 'artifactUploadMs',
+              label: 'Upload',
+              title: 'Artifact upload duration',
+              description:
+                'Server time spent publishing the finalized preview artifact.',
+              value: metrics.artifactUploadMs,
+            }]
+            : []),
+          ...(busy || typeof metrics.firstReasoningTokenMs === 'number'
+            ? [{
+              key: 'firstReasoningTokenMs',
+              label: '1st Reasoning',
+              title: 'First reasoning token',
+              description:
+                'Time from server generation start to the first non-empty reasoning delta.',
+              value: metrics.firstReasoningTokenMs,
+            }]
+            : []),
+          ...(busy || typeof metrics.firstTextTokenMs === 'number'
+            ? [{
+              key: 'firstTextTokenMs',
+              label: '1st Text',
+              title: 'First text token',
+              description:
+                'Time from server generation start to the first non-empty text delta.',
+              value: metrics.firstTextTokenMs,
+            }]
+            : []),
+          ...(busy || typeof metrics.modelMs === 'number'
+            ? [{
+              key: 'modelMs',
+              label: 'Model',
+              title: 'Cumulative model duration',
+              description:
+                'Sum of completed model invocation durations, including repairs; concurrent calls may overlap.',
+              value: metrics.modelMs,
+            }]
+            : []),
+          ...(busy || typeof metrics.searchMs === 'number'
+            ? [{
+              key: 'searchMs',
+              label: 'Search',
+              title: 'Cumulative search duration',
+              description:
+                'Sum of completed web and image search call durations; concurrent calls may overlap.',
+              value: metrics.searchMs,
+            }]
+            : []),
+          ...(busy || typeof metrics.imageGenerationMs === 'number'
+            ? [{
+              key: 'imageGenerationMs',
+              label: 'Image Gen',
+              title: 'Cumulative image generation duration',
+              description:
+                'Sum of completed image-generation call durations; concurrent calls may overlap.',
+              value: metrics.imageGenerationMs,
+            }]
+            : []),
           {
             key: 'renderMs',
             label: 'Render',
@@ -1897,7 +2067,20 @@ export function ChatController<
           },
         ]
         : [],
-    [busy, metrics.generationMs, metrics.renderMs, output],
+    [
+      busy,
+      metrics.firstReasoningTokenMs,
+      metrics.firstTextTokenMs,
+      metrics.artifactTransformMs,
+      metrics.artifactBuildMs,
+      metrics.artifactUploadMs,
+      metrics.generationMs,
+      metrics.imageGenerationMs,
+      metrics.modelMs,
+      metrics.renderMs,
+      metrics.searchMs,
+      output,
+    ],
   );
   const showStarterContent = messages.length <= 1;
 
@@ -2210,6 +2393,8 @@ export function ChatController<
       preview={{
         title: protocol.name === 'html' ? 'Web Preview' : 'Lynx Preview',
         showPreviewModeSwitch: true,
+        showImagePreview: protocol.name !== 'html'
+          && protocol.name !== 'reactweb',
         showSimulationBar: false,
         previewSource,
         previewInfoHint,

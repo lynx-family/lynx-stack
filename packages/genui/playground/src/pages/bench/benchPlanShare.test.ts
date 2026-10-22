@@ -4,6 +4,7 @@
 import { expect, test } from '@rstest/core';
 
 import {
+  BENCH_REASONING_EFFORTS,
   DEFAULT_BENCH_SCENARIOS,
   DEFAULT_BENCH_SETTINGS,
   createBenchPresetGroups,
@@ -38,9 +39,43 @@ function fixture() {
       ...DEFAULT_BENCH_SETTINGS,
       repeats: 4,
       uiJudgeModel: 'judge-model',
+      screenshotSettleMs: 3000,
     },
   };
 }
+
+test('preserves independent reasoning choices and defaults legacy plans to default', () => {
+  const plan = fixture();
+  for (const reasoningEffort of BENCH_REASONING_EFFORTS) {
+    const groups = plan.groups.map((group, index) => ({
+      ...group,
+      reasoningEffort: index === 0 ? reasoningEffort : 'none' as const,
+    }));
+    const restored = readBenchPlanShare(encodeBase64Url(JSON.stringify({
+      version: 1,
+      ...plan,
+      groups,
+    })));
+    expect(restored.groups).toEqual(groups);
+  }
+  const restored = readBenchPlanShare(encodeBase64Url(JSON.stringify({
+    version: 1,
+    ...plan,
+    groups: plan.groups.map(group => ({
+      ...group,
+      reasoningEffort: undefined,
+    })),
+  })));
+  expect(restored.groups.every(group => group.reasoningEffort === 'default'))
+    .toBe(true);
+  expect(() =>
+    readBenchPlanShare(encodeBase64Url(JSON.stringify({
+      version: 1,
+      ...plan,
+      groups: [{ ...plan.groups[0], reasoningEffort: 'auto' }],
+    })))
+  ).toThrow('invalid or unsupported');
+});
 
 test.each([false, 'default'] as const)(
   'round-trips independent options in a deployment-relative Bench link (preset=%s)',
@@ -166,3 +201,34 @@ test('rejects malformed, oversized, unsupported, and ambiguous plans', () => {
     })
   ).toThrow('too large');
 });
+
+test.each([undefined, 0, 3000])(
+  'preserves screenshot delay %s in shared plans',
+  screenshotSettleMs => {
+    const plan = fixture();
+    const settings = { ...plan.settings, screenshotSettleMs };
+    const restored = readBenchPlanShare(
+      encodeBase64Url(JSON.stringify({ version: 1, ...plan, settings })),
+    );
+    expect(restored.settings.screenshotSettleMs).toBe(screenshotSettleMs);
+  },
+);
+
+test.each([-1, 1.5, '3000', null, Number.MAX_SAFE_INTEGER + 1])(
+  'rejects invalid shared screenshot delay %s',
+  screenshotSettleMs => {
+    const plan = fixture();
+    expect(() =>
+      readBenchPlanShare(
+        encodeBase64Url(
+          JSON.stringify({
+            version: 1,
+            ...plan,
+            settings: { ...plan.settings, screenshotSettleMs },
+          }),
+        ),
+      )
+    )
+      .toThrow('invalid or unsupported');
+  },
+);

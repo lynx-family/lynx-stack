@@ -6,8 +6,8 @@
 
 // Print the directories of publishable workspace packages that appear in the
 // `releases` array of a `changeset status --output` JSON file, plus every
-// workspace package they depend on. One path per line, relative to the
-// repository root. Used by the pkg.pr.new workflow.
+// workspace dependency and internal peer. One absolute path per line.
+// Used by the pkg.pr.new workflow.
 //
 // A `workspace:` dependency that is not published alongside its dependent
 // resolves to the dependent's local version, which may never have been
@@ -51,9 +51,11 @@ function workspaceDependenciesOf(pkg, workspace) {
     const deps = pkg.manifest[field];
     if (!deps) continue;
     for (const [name, spec] of Object.entries(deps)) {
+      // Explicit peer ranges describe the public ABI, but preview peers still
+      // need the same commit even when they have no changeset of their own.
       if (
-        typeof spec === 'string' && spec.startsWith('workspace:')
-        && workspace.has(name)
+        typeof spec === 'string' && workspace.has(name)
+        && (field === 'peerDependencies' || spec.startsWith('workspace:'))
       ) names.push(name);
     }
   }

@@ -53,6 +53,7 @@ export interface BenchJudgeDimensionResult {
 export interface BenchResult {
   modelPrices?: ModelPrices;
   agentMs: number;
+  firstTextTokenMs?: number;
   attempts: number;
   catalog?: string;
   error?: string;
@@ -88,6 +89,8 @@ export interface BenchResult {
 
 export interface BenchGroupSummary {
   avgAgentMs: number;
+  avgFirstTextTokenMs?: number;
+  firstTextRunCount?: number;
   avgAttempts: number;
   avgFmpMs: number;
   avgJudgeGeqiScore?: number;

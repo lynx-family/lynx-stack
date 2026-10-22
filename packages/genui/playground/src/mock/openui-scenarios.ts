@@ -4,12 +4,28 @@
 import { createParser } from '@openuidev/lang-core';
 import type { ParseResult } from '@openuidev/lang-core';
 
+import { createOpenUiChatPromptLibrary } from '@lynx-js/genui/openui/chat/agent';
 import { createOpenUiPromptLibrary } from '@lynx-js/genui/openui/prompt';
+
+import { OPENUI_CANVAS_MATH_RAW } from './openui-canvas-math.js';
+import {
+  OPENUI_CANVAS_RELATIVITY_RAW,
+  OPENUI_CANVAS_STREAM_RAW,
+  OPENUI_GOMOKU_RAW,
+  OPENUI_SLIDER_ICON_RAW,
+} from './openui-canvas.js';
+import { OPENUI_CHAT_CASES } from './openui-chat-scenarios.js';
+import { splitOpenUiResponse } from '../../lynx-src/openui/inlineResponse.js';
+import { OPENUI_INLINE_TRIP_RAW } from '../../lynx-src/openui/mockData.js';
+import { OPENUI_TODO_RAW } from '../../lynx-src/openui/todo.js';
 
 export interface OpenUIScenario {
   id: string;
   title: string;
   badge?: string;
+  inlineMode?: boolean;
+  library?: 'stack' | 'chat';
+  sourcePath?: string;
   raw: string;
   parsed: string;
 }
@@ -20,12 +36,33 @@ const openUiScenarioParser = createParser(
   openUiLibrary.root,
 );
 
-export function parseOpenUIScenario(raw: string): ParseResult {
-  return openUiScenarioParser.parse(raw);
+const chatLibrary = createOpenUiChatPromptLibrary();
+const chatParser = createParser(chatLibrary.toJSONSchema(), chatLibrary.root);
+
+export function parseOpenUIScenario(
+  raw: string,
+  library: 'stack' | 'chat' = 'stack',
+): ParseResult {
+  return (library === 'chat' ? chatParser : openUiScenarioParser).parse(raw);
 }
 
-export function parseOpenUIScenarioRaw(raw: string): string {
-  return JSON.stringify(parseOpenUIScenario(raw), null, 2);
+export function parseOpenUIScenarioRaw(
+  raw: string,
+  library: 'stack' | 'chat' = 'stack',
+): string {
+  const parts = splitOpenUiResponse(raw);
+  if (parts.some(part => part.kind === 'code')) {
+    return JSON.stringify(
+      parts.map(part =>
+        part.kind === 'code'
+          ? { ...part, result: parseOpenUIScenario(part.content, library) }
+          : part
+      ),
+      null,
+      2,
+    );
+  }
+  return JSON.stringify(parseOpenUIScenario(raw, library), null, 2);
 }
 
 const V05_QUERY_WEATHER_RAW = `$city = "Seattle"
@@ -96,6 +133,25 @@ audioCard = Card([CardHeader("Podcast Preview", "AudioPlayer placeholder"), Audi
 videoCard = Card([CardHeader("Launch Walkthrough", "Video placeholder"), Video("https://example.com/openui-launch.mp4", "OpenUI component walkthrough"), List([Text("Covers layout primitives", "body"), Text("Shows tabs and modal", "body"), Text("Highlights media cards", "body")], null, "vertical", "stretch", "xs", true)], "card", "column", false, "m", "stretch", "start")`;
 
 export const OPENUI_SCENARIOS: OpenUIScenario[] = [
+  ...OPENUI_CHAT_CASES.map(scenario => ({
+    ...scenario,
+    parsed: parseOpenUIScenarioRaw(scenario.raw, 'chat'),
+  })),
+  {
+    id: 'inline-winter-trip',
+    title: 'Inline Winter Trip',
+    inlineMode: true,
+    raw: OPENUI_INLINE_TRIP_RAW,
+    badge: 'Markdown + UI',
+    parsed: parseOpenUIScenarioRaw(OPENUI_INLINE_TRIP_RAW),
+  },
+  {
+    id: 'todo-list',
+    title: 'Todo List',
+    badge: 'Action + Mutation',
+    raw: OPENUI_TODO_RAW,
+    parsed: parseOpenUIScenarioRaw(OPENUI_TODO_RAW),
+  },
   {
     id: 'new-layout-showcase',
     title: 'New Layout Showcase',
@@ -2005,5 +2061,41 @@ actionRow = Stack([Buttons([Button("Cancel", Action([@ToAssistant("Cancel order"
       null,
       2,
     ),
+  },
+  {
+    id: 'canvas-streaming',
+    title: 'Canvas Streaming',
+    badge: 'Canvas · Streaming',
+    raw: OPENUI_CANVAS_STREAM_RAW,
+    parsed: parseOpenUIScenarioRaw(OPENUI_CANVAS_STREAM_RAW),
+  },
+  {
+    id: 'canvas-relativity',
+    title: 'General Relativity',
+    badge: 'Canvas · Physics',
+    sourcePath: 'demos/openui/canvas-relativity.txt',
+    raw: OPENUI_CANVAS_RELATIVITY_RAW,
+    parsed: parseOpenUIScenarioRaw(OPENUI_CANVAS_RELATIVITY_RAW),
+  },
+  {
+    id: 'canvas-sine-wave',
+    title: 'Sine Wave Lab',
+    badge: 'Canvas · Math',
+    raw: OPENUI_CANVAS_MATH_RAW,
+    parsed: parseOpenUIScenarioRaw(OPENUI_CANVAS_MATH_RAW),
+  },
+  {
+    id: 'canvas-gomoku',
+    title: 'Canvas Gomoku',
+    badge: 'Canvas · Interactive',
+    raw: OPENUI_GOMOKU_RAW,
+    parsed: parseOpenUIScenarioRaw(OPENUI_GOMOKU_RAW),
+  },
+  {
+    id: 'canvas-slider-icon',
+    title: 'Canvas Icon Studio',
+    badge: 'Canvas + Slider',
+    raw: OPENUI_SLIDER_ICON_RAW,
+    parsed: parseOpenUIScenarioRaw(OPENUI_SLIDER_ICON_RAW),
   },
 ];

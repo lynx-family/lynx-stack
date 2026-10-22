@@ -9,7 +9,10 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, test } from '@rstest/core';
 
 import { runCli } from '../src/cli.js';
-import { writeCatalogArtifacts } from '../src/core.js';
+import {
+  extractCatalogComponentsFromTypeDocJson,
+  writeCatalogArtifacts,
+} from '../src/core.js';
 import type { TypeDocProject } from '../src/core.js';
 import {
   createA2UICatalog,
@@ -174,6 +177,50 @@ describe('extractCatalogComponents', () => {
         accentColor: { type: 'string' },
       },
     });
+  });
+
+  test('normalizes enum and oneOf order without reordering required fields', () => {
+    const project = createCliTypeDocProjectFixture();
+    const props = project.children![0]!.children!;
+    props.push({
+      kindString: 'Property',
+      name: 'tone',
+      type: {
+        type: 'union',
+        types: [
+          { type: 'literal', value: 'neutral' },
+          { type: 'literal', value: 'accent' },
+        ],
+      },
+    });
+    props.push({
+      kindString: 'Property',
+      name: 'columns',
+      type: {
+        type: 'union',
+        types: [
+          { type: 'literal', value: 3 },
+          { type: 'literal', value: 1 },
+          { type: 'literal', value: 2 },
+        ],
+      },
+    });
+    const reversed = structuredClone(project);
+    for (const prop of reversed.children![0]!.children!) {
+      prop.type?.types?.reverse();
+    }
+    const original = structuredClone(project);
+    const [a] = extractCatalogComponentsFromTypeDocJson(project);
+    const [b] = extractCatalogComponentsFromTypeDocJson(reversed);
+    expect(a).toEqual(b);
+    expect(a!.schema.properties!['tone']!.enum).toEqual(['accent', 'neutral']);
+    expect(a!.schema.properties!['columns']!.oneOf).toEqual([
+      { type: 'number', enum: [1] },
+      { type: 'number', enum: [2] },
+      { type: 'number', enum: [3] },
+    ]);
+    expect(a!.schema.required).toEqual(['label', 'tone', 'columns']);
+    expect(project).toEqual(original);
   });
 
   test('writes catalog files from an existing TypeDoc JSON project through the CLI', async () => {

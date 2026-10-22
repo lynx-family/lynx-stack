@@ -34,6 +34,44 @@ export default defineConfig({
 })
 ```
 
+## Version compatibility
+
+Upgrade this plugin and `@lynx-js/react` together. The module-delivery release requires `@lynx-js/react@^0.128.0`, which includes both the runtime and its matching transform. Custom transforms must implement the same registration-import and semantic runtime-requirements protocol.
+
+Main-thread functions import `@lynx-js/react/worklet-runtime/init` through the application module graph. Rebuild libraries and lazy bundles with the matching toolchain; precompiled output that calls `loadWorkletRuntime` or relies on the old runtime chunk is unsupported.
+
+## Compilation results
+
+Other Rsbuild plugins can read React's semantic runtime requirements through the versioned compile-result exposure. Import its types from the package root and obtain the exposure with `Symbol.for`:
+
+```ts
+import type { ReactCompileResultExposureV1 } from '@lynx-js/react-rsbuild-plugin'
+import type { RsbuildPlugin } from '@rsbuild/core'
+
+const consumeReactCompileResult: RsbuildPlugin = {
+  name: 'consume-react-compile-result',
+  setup(api) {
+    const exposure = api.useExposed<ReactCompileResultExposureV1>(
+      Symbol.for('@lynx-js/react/internal:compile-result'),
+    )
+
+    api.onAfterEnvironmentCompile(({ environment, stats }) => {
+      if (environment.name !== 'lynx' || !stats || stats.hasErrors()) {
+        return
+      }
+
+      const result = exposure?.getCompileResult(stats)
+      // result?.runtimeRequirements.mainThreadProgrammability is true,
+      // false, or undefined when no compatible result is available.
+    })
+  },
+}
+```
+
+Register this consumer after `pluginReactLynx()`. Pass the original `Stats` or `MultiStats` while the compiler is available, before closing the build; serialized `stats.toJson()` output is not supported. Hooks may omit `stats`, so check it before calling the exposure.
+
+A known result distinguishes an explicit `false` from `undefined` (unknown). For `MultiStats`, all child compilations must provide a compatible semantic result; their requirements are combined with OR. If any child has no compatible producer, the entire result is unknown. For a mixed Lynx/web build, pass the target environment's single `Stats`, as in the example, to read only that environment's requirements.
+
 ## Documentation
 
 Visit [Lynx Website](https://lynxjs.org/api/rspeedy/react-rsbuild-plugin.pluginreactlynx.html) to view the full documentation.

@@ -2,9 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { normalizeHtmlArtifact } from '@lynx-js/genui-html';
+
 import { getHtmlAgentService } from './html-agent.js';
 import type { HtmlChatOptions } from './html-agent.js';
-import { normalizeHtmlArtifact } from '../../agent/html/html-output.js';
 import type {
   ProtocolBenchAdapter,
   ProtocolBenchAdapterInput,
@@ -92,6 +93,9 @@ export function createHtmlBenchAdapter(
             resourceId: `genui-bench:${input.runId}:attempt-${index}`,
             disableAgentCache: true,
             maxRetries: 0,
+            reasoningEffort: input.reasoningEffort,
+            streamRawGeneration: true,
+            onPerformanceEvent: input.onPerformanceEvent,
             enableWebSearch: false,
             enableImageGeneration: false,
             enableDesignGuidance: input.enableDesignGuidance !== false,

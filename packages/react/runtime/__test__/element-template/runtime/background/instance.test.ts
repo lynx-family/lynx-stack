@@ -203,6 +203,20 @@ describe('BackgroundElementTemplateInstance', () => {
     expect(doc.createElement('_et_item')).not.toBeInstanceOf(BackgroundTypedElementTemplateInstance);
   });
 
+  it.each([0, 1500, -3.5, '1500', ''])('hydrates document text %j without rewriting unchanged content', (value) => {
+    const doc = setupBackgroundElementTemplateDocument();
+    const text = doc.createTextNode(value);
+    const serialized = { templateKey: BUILTIN_RAW_TEXT_TEMPLATE_KEY, uid: -10, attributeSlots: [String(value)] };
+    expect(hydrateBackground(serialized, text)).toEqual([]);
+    expect(text.attributeSlots).toEqual([String(value)]);
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+    text.data = String(value);
+    expect(globalCommitContext.ops).toEqual([]);
+    text.data = 'changed';
+    expect(globalCommitContext.ops).toEqual([ElementTemplateUpdateOps.setAttribute, -10, 0, 'changed']);
+  });
+
   it('emits exact list create as typed holder with logical children in command options', () => {
     const list = new BackgroundListElementTemplateInstance();
     const item = new BackgroundElementTemplateInstance('_et_list_item');

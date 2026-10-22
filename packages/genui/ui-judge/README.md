@@ -72,6 +72,7 @@ to `dist/linux-amd64`:
 dist/linux-amd64/
 ├── ui-judge-server
 ├── lynx_core.js
+├── lynx_core_dev.js -> lynx_core.js
 ├── start.sh
 └── lib/
     └── libLynx_clay.so
@@ -98,6 +99,82 @@ configuration comes from the caller's environment. Linux hosts must also provide
 `LYNX_USE_HOST` is unset, the process listens on both
 `0.0.0.0:{LYNX_USE_PORT}` and `[::]:{LYNX_USE_PORT}`. Set `LYNX_USE_HOST` to
 an IPv4 address, IPv6 address, or hostname to bind only its resolved address.
+
+### Screenshot storage
+
+The screenshot routes upload each captured BMP to a Volcengine TOS bucket and
+return its public URL instead of the image bytes. The server reads the same
+`TOS_*` variables as GenUI Server. It refuses to start unless the four required
+variables are set and every optional one is valid, so a misconfigured
+deployment fails at startup rather than on every screenshot.
+
+| Variable                        | Required | Description                                                         |
+| ------------------------------- | -------- | ------------------------------------------------------------------- |
+| `TOS_ACCESS_KEY`                | Yes      | Access key ID                                                       |
+| `TOS_SECRET_KEY`                | Yes      | Secret access key                                                   |
+| `TOS_BUCKET`                    | Yes      | Bucket name                                                         |
+| `TOS_REGION`                    | Yes      | Region, such as `cn-beijing`                                        |
+| `TOS_ENDPOINT`                  | No       | HTTP(S) endpoint host; defaults to `tos-{TOS_REGION}.volces.com`    |
+| `TOS_SECURITY_TOKEN`            | No       | STS session token when using temporary credentials                  |
+| `TOS_OVERRIDE_REQUEST_HEADER`   | No       | Use internal TOS V1 authentication: `true`/`1`; default `false`/`0` |
+| `TOS_SCREENSHOT_STORAGE_PREFIX` | No       | Object key prefix; defaults to `screenshot`                         |
+
+Uploads use the official [`ve-tos-rust-sdk`](https://crates.io/crates/ve-tos-rust-sdk),
+the Rust counterpart of the `@volcengine/tos-sdk` package GenUI Server uses. It
+verifies the object's CRC64, retries transient failures up to twice, does not
+follow redirects, and ignores `HTTP_PROXY`-style environment variables. It
+also rejects the S3-compatible `tos-s3-*` endpoints at startup; use the regular
+`tos-<region>` endpoint.
+
+For an internal TOS endpoint that requires V1 authentication, set
+`TOS_OVERRIDE_REQUEST_HEADER=true` and configure its `TOS_ENDPOINT` and
+`TOS_REGION`. This generates an `X-Tos-Signature` header for each upload through
+the SDK's custom request-header API, without adding a V4 `Authorization` header.
+The signature lasts ten minutes, covering the 100-second upload deadline and
+its retries. Optional `TOS_SECURITY_TOKEN` is forwarded in both modes. Unset,
+empty, `false`, or `0` keeps the existing SDK V4 signing; `true` or `1` enables
+the override. Boolean words are case-insensitive and whitespace is trimmed;
+other values fail startup. This switch applies only to UI Judge.
+
+Objects are written to `<prefix>/<uuid>/screenshot.bmp` with
+`Content-Type: image/bmp` and `Cache-Control: public, max-age=1800`; the server
+sets no object ACL. Grant the credential only `tos:PutObject` on that prefix.
+The bucket policy must allow public reads, because the returned URL is unsigned,
+and browser callers such as the Playground also need CORS reads enabled on it. It
+should expire the prefix with a lifecycle rule, since the server never
+deletes objects. The credentials stay in the server process; isolated render
+children do not inherit them.
+Every screenshot route also writes `<prefix>/<uuid>/screenshot.json` beside the
+BMP with `Content-Type: application/json` and the same cache policy. Both objects
+must upload successfully before the route returns the BMP URL. Either upload
+failure returns `502`; partial uploads remain subject to the bucket lifecycle rule.
+
+All five screenshot routes use this JSON structure, including effective defaults
+for omitted capture options:
+
+```json
+{
+  "entry": "pages/template.js",
+  "width": 800,
+  "height": 600,
+  "globalProps": null,
+  "initData": { "ready": true },
+  "screenshotSettleMs": 100,
+  "timeoutMs": 60000,
+  "url": "https://example.com/template.js",
+  "source": null,
+  "fileBase64": null
+}
+```
+
+`entry` retains the submitted relative path or `zip://` URL. `globalProps` and
+`initData` are JSON objects when supplied and `null` when omitted. URL routes keep
+the original `url`; the LynXML route stores its UTF-8 text in `source`; ZIP uploads
+store the complete archive as standard Base64 in `fileBase64`. Unused source
+fields are `null`. To read the inputs for a screenshot, replace `screenshot.bmp`
+with `screenshot.json` in its URL. The JSON has the same bucket read policy as the
+image and contains the supplied page data and source.
+
 Use `GET /health` for a readiness check returning `{"status":"ok"}`. Use `POST /compare` to compare two uploaded images without rendering a
 page or calling the VLM. Screenshot capture uses four source-specific routes:
 
@@ -112,7 +189,7 @@ a named part; query parameters and the former raw request bodies are rejected.
 | `POST /screenshot/zip/upload`   | `file`: ZIP archive bytes            |
 | `POST /screenshot/zip/url`      | `url`: HTTP(S) ZIP URL               |
 
-All four source-specific routes accept these additional parts:
+All screenshot routes accept these additional parts:
 
 | Part          | Required | Value                                                                                                |
 | ------------- | -------- | ---------------------------------------------------------------------------------------------------- |
@@ -134,11 +211,28 @@ return `400`. All part contents share a 10 MiB limit, with another 64 KiB allowe
 for multipart framing. The complete body has a ten-second read deadline.
 The server does not expose the former generic screenshot route, `POST /screenshot`.
 
+### Screenshot response
+
+A successful request to any screenshot route returns `200 application/json` with
+`Cache-Control: no-store`. The image is uploaded to TOS, not returned:
+
+```json
+{
+  "url": "https://genui.tos-cn-beijing.volces.com/screenshot/6f1c.../screenshot.bmp"
+}
+```
+
+The object is the runner's original uncompressed BMP, ready for `POST /compare`
+or for conversion by the caller. Download it with any HTTP client, for example
+`curl --output screenshot.bmp "$URL"`. If the upload fails, the route returns
+`502` with a generic message and logs the TOS error on the server only.
+
 `POST /screenshot/template` and `POST /screenshot/lynxml` both accept
 `multipart/form-data`. Template capture requires `entry` (ending in `.js`) and
 `url`; XML capture requires `entry` (ending in `.lynxml`) and `source`. JSON
-request bodies are not accepted. Template URLs retain the existing SSRF-safe
-download and private staging path; XML source is staged locally. Both return BMP.
+request bodies are not accepted. Template URLs use the shared HTTP
+download and private staging path; XML source is staged locally. Both respond
+as described under [Screenshot response](#screenshot-response).
 
 In addition to the shared fields above, these two endpoints accept:
 
@@ -152,9 +246,12 @@ Width and height default to `DEFAULT_SCREENSHOT_WIDTH` and
 viewport defaults (390 × 844), with per-dimension overrides when configured.
 `initData` and `globalProps` are JSON objects encoded as text fields;
 XML supports `initData` but rejects `globalProps`. All screenshot endpoints share
-the Rust API's default 100 ms settling period. The ZIP endpoints and the legacy
-`/screenshot/template/url` endpoint retain their existing fields; they do not
-accept `screenshotSettleMs` or `timeoutMs`.
+the Rust API's default 100 ms settling period. Both ZIP endpoints also accept
+`screenshotSettleMs` as an optional non-negative integer multipart field in
+milliseconds (including `0`), but do not accept `timeoutMs`. The legacy
+`/screenshot/template/url` endpoint accepts neither option. The settling delay
+allows asynchronous page content time to render; it does not guarantee that all
+application work has completed.
 
 ```bash
 curl --request POST http://127.0.0.1:8080/screenshot/template \
@@ -162,8 +259,7 @@ curl --request POST http://127.0.0.1:8080/screenshot/template \
   --form-string 'url=https://cdn.example.com/a2ui.lynx.js' \
   --form-string 'globalProps={"messages":[]}' \
   --form-string 'screenshotSettleMs=1000' \
-  --form-string 'timeoutMs=60000' \
-  --output screenshot.bmp
+  --form-string 'timeoutMs=60000'
 ```
 
 GenUI Server uses this endpoint before its screenshot evaluation. The former
@@ -171,7 +267,7 @@ GenUI Server uses this endpoint before its screenshot evaluation. The former
 belong in GenUI Server.
 
 To render a LynXML string without auxiliary local files, send a `source` part.
-A successful response is `image/bmp` with `Cache-Control: no-store`:
+A successful response is the JSON URL described above:
 
 ```bash
 curl --request POST http://127.0.0.1:8080/screenshot/lynxml \
@@ -179,8 +275,7 @@ curl --request POST http://127.0.0.1:8080/screenshot/lynxml \
   --form-string 'width=375' \
   --form-string 'height=812' \
   --form-string 'initData={"title":"Preview"}' \
-  --form-string 'source=<lynx engine-version="4.2"><script thread="main">/* ... */</script></lynx>' \
-  --output screenshot.bmp
+  --form-string 'source=<lynx engine-version="4.2"><script thread="main">/* ... */</script></lynx>'
 ```
 
 The server stages the source at the requested entry in a fresh private
@@ -196,11 +291,11 @@ directory, model options, or interaction steps:
 
 ```bash
 curl --request POST http://127.0.0.1:8080/screenshot/zip/upload \
+  --form-string 'screenshotSettleMs=3000' \
   --form-string 'entry=template.js' \
   --form 'file=@/absolute/path/to/page.zip;type=application/zip' \
   --form-string 'globalProps={"theme":"dark"}' \
-  --form-string 'initData={"title":"Preview"}' \
-  --output screenshot.bmp
+  --form-string 'initData={"title":"Preview"}'
 ```
 
 The entry must be a safe relative file path inside the archive. That document
@@ -208,17 +303,17 @@ may use paths relative to itself, such as `./images/logo.png`, or archive-root U
 `zip:///images/logo.png`. Local paths resolve only within the new private
 extraction directory created for that request. Explicit `file://` URLs and
 HTTP(S) URLs with IP address hosts are rejected; HTTP(S) resources with domain
-hosts remain available. A successful response is `200 image/bmp` with
-`Cache-Control: no-store`.
+hosts remain available. A successful response is the `200` JSON URL response
+described above.
 
 To fetch a ZIP remotely, send its URL in `url`:
 
 ```bash
 curl --request POST http://127.0.0.1:8080/screenshot/zip/url \
+  --form-string 'screenshotSettleMs=3000' \
   --form-string 'entry=index.lynxml' \
   --form-string 'url=https://cdn.example.com/page.zip' \
-  --form-string 'initData={"title":"Preview"}' \
-  --output screenshot.bmp
+  --form-string 'initData={"title":"Preview"}'
 ```
 
 To render a remote compiled template with global properties and initial data:
@@ -228,19 +323,18 @@ curl --request POST http://127.0.0.1:8080/screenshot/template/url \
   --form-string 'entry=main/template.js' \
   --form-string 'url=https://cdn.example.com/template.js' \
   --form-string 'globalProps={"theme":"dark"}' \
-  --form-string 'initData={"title":"Preview"}' \
-  --output screenshot.bmp
+  --form-string 'initData={"title":"Preview"}'
 ```
 
 For large JSON objects, read the part from a file, for example
 `--form 'globalProps=</absolute/path/to/global-props.json;type=application/json'`.
 Let your HTTP client generate the multipart boundary and `Content-Type` header.
 
-Both URL routes use the shared SSRF-safe downloader. It accepts only HTTP(S)
-URLs without credentials, disables redirects and ambient proxies, resolves DNS
-before connecting, pins the validated addresses for the request, and rejects
-any host that resolves to a non-public address. Remote responses are limited
-to 10 MiB; `url` parts are limited to 8 KiB.
+The template and ZIP URL routes use the shared HTTP downloader. It accepts only
+HTTP(S) URLs without credentials, disables redirects and ambient proxies, resolves DNS
+before connecting, pins the resolved addresses for the request, and allows
+public, private, and loopback addresses, including domains resolving to internal
+networks. Remote responses are limited to 10 MiB; `url` parts are limited to 8 KiB.
 
 To run only the deterministic image alignment and pixel comparison, upload the
 two BMP images as `multipart/form-data`:
@@ -261,16 +355,16 @@ It decodes each BMP once and compares RGBA buffers on the bounded Rayon pool;
 `diffImageBase64` contains base64-encoded BMP bytes without a data-URL prefix.
 Clients that display the diff as a data URL must use `data:image/bmp;base64,`.
 
-Remote-source routes reject non-HTTP(S) URLs with `400` and non-public network
-addresses with `403`. The source-specific
-screenshot routes return `422` with a JSON error when rendering cannot produce
+Remote-source routes reject non-HTTP(S) URLs and URL credentials with `400`.
+The source-specific screenshot routes return `422` with a JSON error when rendering cannot produce
 a frame. Uploads and remote responses return `413` when they exceed 10 MiB.
 Invalid upload media types return `415`. Body reading and isolated rendering
 return `408` when they exceed their deadlines; remote fetches return `504`. ZIP
 processing also applies its ten-second extraction deadline. A busy bounded queue keeps the
 HTTP callback pending until capacity becomes available or that deadline
 expires; eager load shedding belongs in an outer middleware. The server returns `503` when the
-headless worker is shutting down or no longer available. A headless-worker panic
+headless worker is shutting down or no longer available, and `502` when a
+finished screenshot cannot be uploaded to TOS. A headless-worker panic
 makes readiness return `503`, initiates graceful shutdown, and is propagated as
 a server error after the worker is joined. Each ZIP upload and each uploaded
 comparison image is limited to 10 MiB. Other request bodies are limited to 20
@@ -291,8 +385,8 @@ process-global image caches cannot return another request's bytes. The server
 admits up to eight isolated renders per process, shared by LynXML,
 template, and ZIP requests. Additional requests wait for capacity within their
 deadline. ZIP extraction retains its separate four-permit limit. Each child
-receives only server-selected paths and page-load data, inherits no model
-credentials, and has its stdout and stderr captured separately. A private
+receives only server-selected paths and page-load data, inherits no model or
+TOS credentials, and has its stdout and stderr captured separately. A private
 stdin lifeline makes the child exit if its parent dies. Cancellation and timeout
 kill and reap the child before its render slot and staged tree are released;
 graceful shutdown drains accepted children. Failure to confirm reaping exits the
@@ -302,8 +396,8 @@ dump. The same absolute deadline also covers output reading.
 
 The child writes its BMP to a temporary file, closes it, and atomically publishes
 the completed file before native page teardown. If it subsequently exits with
-`SIGSEGV`, the server can still return `200` with that BMP after reaping the child
-and validating the screenshot format, requested dimensions, and complete pixel
+`SIGSEGV`, the server can still upload that BMP and return `200` with its URL after
+reaping the child and validating the screenshot format, requested dimensions, and complete pixel
 data. Validation checks the runner's fixed BMP layout without decoding pixels.
 Missing, unpublished, or invalid output still returns `422`. Other abnormal exits,
 timeouts, and cancellations remain errors, even if a completed file exists.
@@ -322,7 +416,7 @@ number; it is `null` for normal exits, unavailable status, or non-Unix platforms
 Timeout responses include output collected before cleanup and the final reaped
 status. A signal in an HTTP 408 response can result from the supervisor killing
 the timed-out child; it does not by itself indicate an external kill or OOM.
-Successful requests still return the original BMP bytes; errors before child
+Successful requests return the uploaded screenshot's URL; errors before child
 startup retain the message-only response.
 
 ```json
@@ -392,6 +486,10 @@ free-form judging task.
 - `LYNX_USE_HOST`: optional HTTP server bind address or hostname; when unset,
   listens on both IPv4 and IPv6 unspecified addresses.
 - `LYNX_USE_PORT`: HTTP server port; defaults to `8080`.
+- `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, `TOS_REGION`, and the optional
+  `TOS_ENDPOINT`, `TOS_SECURITY_TOKEN`, `TOS_OVERRIDE_REQUEST_HEADER`, and
+  `TOS_SCREENSHOT_STORAGE_PREFIX`:
+  screenshot storage; see [Screenshot storage](#screenshot-storage).
 - `LYNX_LIB_PATH` or `LYNX_SDK_DIR`: override the Lynx runtime library or SDK.
   Without `LYNX_CORE_JS_PATH`, an SDK also supplies
   `resources/lynx_core.js`; Cargo downloads it there when missing.
@@ -427,4 +525,6 @@ cargo test -p ui_judge --lib --tests --all-features
 The generated `.generated/main.lynx.bundle` is ignored by Git. Runtime-backed
 headless coverage runs on Linux and macOS. The server test submits four distinct
 fixture bundles concurrently through the production single-owner worker and
-validates each result; it does not assert timing or throughput.
+validates each result; it does not assert timing or throughput. Server unit tests
+use an in-memory screenshot store and a local TOS stand-in, so no TOS credentials
+are needed.

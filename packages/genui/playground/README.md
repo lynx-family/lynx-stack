@@ -105,6 +105,7 @@ Create and Bench also retain their URL query overrides for local diagnosis:
 ?a2uiEndpoint=http://localhost:3060/a2ui/stream
 ?openuiEndpoint=http://localhost:3060/openui/stream
 ?mcp-appsEndpoint=http://localhost:3060/mcp-apps/stream
+?reactlynxEndpoint=http://localhost:3060/reactlynx/stream
 ?lynx-xmlEndpoint=http://localhost:3060/lynx-xml/stream
 ?htmlEndpoint=http://localhost:3060/html/stream
 ?a2uiBenchEndpoint=http://localhost:3060/a2ui/bench/jobs
@@ -132,6 +133,7 @@ Create and Bench also retain their URL query overrides for local diagnosis:
 | `SEARCH_INFINITY_REQUEST_TIMEOUT_MS`                           | Search timeout in ms (integer from 1 through 60000) | `10000`             |
 | `UI_JUDGE_BUNDLE_URL`                                          | `a2ui.lynx.js` bundle rendered by UI Judge          | hosted GenUI bundle |
 | `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, `TOS_REGION` | Short, shareable preview URLs via Volcengine TOS    | disabled            |
+| `TOS_REACTLYNX_STORAGE_PREFIX`                                 | ReactLynx artifact object prefix                    | `reactlynx`         |
 
 The Create tab and Bench runner load their model selectors from the server's `GET /models`
 endpoint. Server-owned provider credentials, upstream model ids, and upstream
@@ -196,7 +198,7 @@ exclude UI Judge. Comparison-group details use the same planned-run average as T
 Missing provider fields and unavailable historical breakdowns display `Not recorded`;
 cache and reasoning tokens are already included in input and output respectively.
 
-Bench supports A2UI, OpenUI, and Lynx XML comparison groups. Lynx XML uses
+Bench supports A2UI, OpenUI, Lynx XML, HTML, and ReactWeb comparison groups. Lynx XML uses
 the native profile without a component catalog, reuses the XML generation
 service, and submits the resulting source to UI Judge's `/screenshot/lynxml`
 endpoint for capture. Template and XML screenshot requests use multipart with
@@ -224,14 +226,26 @@ adopts site-wide localization; it has no page-local locale prop or translation
 layer and does not expose separate Runner, History, or language-switching
 views.
 
-Enter `UI_JUDGE_SERVER_URL` in Bench's inline run configuration when enabling UI
-Judge. A credential-free HTTP(S) URL is saved only in browser local storage;
+HTML and ReactWeb use the `native` profile without a catalog. ReactWeb compiles
+`App.tsx` and `App.css` into self-contained HTML and repairs compiler errors within
+the configured attempt budget. Both protocols use browser Element Capture of a
+sandboxed iframe for Judge screenshots. Start run asks you to share the current
+tab; keep it open until completion. These groups need no screenshot service, and
+ReactWeb Bench does not publish builds to TOS.
+
+Configure `UI_JUDGE_SERVER_URL` in Bench's inline run configuration when enabling UI
+Judge for A2UI, OpenUI, or Lynx XML groups. It defaults to
+`https://server-render.lynx-stack.dev/` when no value has been saved; saved values,
+including an explicitly cleared field, are preserved.
+A credential-free HTTP(S) URL is saved only in browser local storage;
 it is never sent to GenUI Server and has no server environment fallback. The
 Playground checks `/health`, requests each screenshot directly with multipart,
-and uploads the resulting BMP to GenUI Server for PNG conversion and model
-scoring. Keep the Bench page open during evaluation. The screenshot service or
-its gateway must permit the Playground origin through CORS, and its URL must
-be reachable under the browser's HTTPS and local-network policies. See
+downloads the BMP from the TOS URL the service returns, and uploads it to
+GenUI Server for PNG conversion and model scoring. Keep the Bench page open
+during evaluation. The screenshot service or its gateway must permit the
+Playground origin through CORS, the TOS bucket that stores the screenshots must
+allow CORS reads from it as well, and both URLs must be reachable under the
+browser's HTTPS and local-network policies. See
 [`../ui-judge/README.md`](../ui-judge/README.md#http-server) for service startup.
 
 Conversation **share** links and Web / Native Preview upload through the GenUI
@@ -247,3 +261,10 @@ for the server-side bucket setup and local toggles.
 | `pnpm build`   | Production build                                         |
 | `pnpm preview` | Serve the production build locally                       |
 | `pnpm test`    | Run the `rstest` suite                                   |
+
+Bench exposes **Screenshot delay (ms)** under UI Judge for all captures. It defaults
+to 100 ms and accepts non-negative integer values, including 0. Increase it for
+asynchronously rendered content. The value is saved with Bench history and shared
+parameters and sent as `screenshotSettleMs` to both ZIP screenshot routes. It does
+not guarantee that all application work has completed. HTML and ReactWeb wait
+after the iframe loads, then capture a frame. Cancelling the run interrupts this wait.

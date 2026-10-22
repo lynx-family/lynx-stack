@@ -159,6 +159,8 @@ export interface Server {
    *   },
    * })
    * ```
+   *
+   * @lynxDefaultChanged
    */
   host?: string | undefined
 

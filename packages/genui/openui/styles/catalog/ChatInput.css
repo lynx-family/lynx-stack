@@ -1,0 +1,22 @@
+.OpenUIChatInputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+.OpenUIChatInput {
+  width: 100%;
+  height: 72rpx;
+  padding: 12rpx 18rpx;
+  font-size: 26rpx;
+  color: var(--content, var(--openui-color-text));
+  background-color: var(--paper-clear, var(--openui-color-surface-strong));
+  border: 1rpx solid var(--line, var(--openui-color-border-input));
+  border-radius: 12rpx;
+}
+.OpenUIChatInputInvalid {
+  border-color: var(--openui-color-error);
+}
+.OpenUIChatInputError {
+  font-size: 22rpx;
+  color: var(--openui-color-error);
+}

@@ -404,6 +404,20 @@ impl VisitMut for ExtractingIdentsCollector {
     self.pop_scope();
   }
 
+  fn visit_mut_method_prop(&mut self, n: &mut MethodProp) {
+    // Only the outer worklet's key is evaluated at its definition site.
+    // Nested method keys execute inside the worklet, in the enclosing scope
+    // rather than the nested method's parameter/body scope.
+    if !self.scope_env.last().unwrap().is_worklet_fn_scope {
+      n.key.visit_mut_with(self);
+    }
+    self.push_fn_scope(collect_inner_scope_decls(n));
+    self.next_block_decls_collected = true;
+    n.function.visit_mut_with(self);
+    self.next_block_decls_collected = false;
+    self.pop_scope();
+  }
+
   fn visit_mut_class_method(&mut self, n: &mut ClassMethod) {
     self.push_fn_scope(collect_inner_scope_decls(n));
     self.next_block_decls_collected = true;

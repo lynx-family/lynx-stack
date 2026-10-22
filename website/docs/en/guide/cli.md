@@ -153,7 +153,7 @@ Options:
 
 When you run the command `rspeedy inspect` in the project root directory, the following files will be generated in the `dist/.rsbuild` directory of the project:
 
-- `rspeedy.config.js`: Represents the Rspeedy configuration used during the build.
+- `rspeedy.config.mjs`: Represents the Rspeedy configuration used during the build.
 - `rsbuild.config.mjs`: Represents the Rsbuild configuration used during the build.
 - `rspack.config.lynx.mjs`: Represents the Rspack configuration used during the build.
 
@@ -164,7 +164,7 @@ success config inspection completed, generated files:
   - Rsbuild config: /project/dist/.rsbuild/rsbuild.config.mjs
   - Rspack Config (lynx): /project/dist/.rsbuild/rspack.config.lynx.mjs
 success Inspect Rspeedy config succeed, open following files to view the content:
-  - Rspeedy: /project/dist/.rsbuild/rspeedy.config.js
+  - Rspeedy: /project/dist/.rsbuild/rspeedy.config.mjs
 ```
 
 ### Specifying Mode

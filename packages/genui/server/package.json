@@ -14,17 +14,21 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.53",
-    "@ai-sdk/typesafe-ai": "3.0.3",
-    "@hono/node-server": "^2.1.0",
+    "@ai-sdk/typesafe-ai": "3.0.6",
+    "@hono/node-server": "^2.1.4",
+    "@lynx-js/genui-html": "workspace:*",
     "@lynx-js/genui-lynx-xml": "workspace:*",
     "@lynx-js/genui-mcp-apps": "workspace:*",
     "@lynx-js/genui-openui": "workspace:*",
-    "@mastra/core": "1.63.2",
+    "@lynx-js/genui-reactlynx": "workspace:*",
+    "@lynx-js/genui-reactweb": "workspace:*",
+    "@mastra/core": "1.70.0",
     "@openuidev/lang-core": "^0.3.0",
     "@volcengine/tos-sdk": "^2.9.1",
-    "hono": "4.13.8",
+    "fflate": "0.8.3",
+    "hono": "4.13.13",
     "pngjs": "^7.0.0",
-    "zod": "^4.4.3"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@rslib/core": "catalog:rslib",

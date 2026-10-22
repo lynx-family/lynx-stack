@@ -2,9 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { normalizeLynxXmlArtifact } from '@lynx-js/genui-lynx-xml';
+
 import { getLynxXmlAgentService } from './lynx-xml-agent.js';
 import type { LynxXmlChatOptions } from './lynx-xml-agent.js';
-import { normalizeLynxXmlArtifact } from '../../agent/lynx-xml/lynx-xml-output.js';
 import type {
   ProtocolBenchAdapter,
   ProtocolBenchAdapterInput,
@@ -95,6 +96,9 @@ export function createLynxXmlBenchAdapter(
             resourceId: `genui-bench:${input.runId}:attempt-${index}`,
             disableAgentCache: true,
             maxRetries: 0,
+            reasoningEffort: input.reasoningEffort,
+            streamRawGeneration: true,
+            onPerformanceEvent: input.onPerformanceEvent,
             enableWebSearch: false,
             enableImageGeneration: false,
             enableDesignGuidance: input.enableDesignGuidance !== false,

@@ -22,8 +22,8 @@
 .exampleColumns {
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  padding: 24px 20px 24px;
+  gap: 20px;
+  padding: 16px;
 }
 
 .exampleSection {
@@ -35,7 +35,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--geist-border);
 }
@@ -64,15 +64,14 @@
 }
 
 .exampleGrid {
-  column-width: 300px;
-  column-gap: 14px;
+  column-width: 230px;
+  column-gap: 10px;
 }
 
 .exampleGridFlow {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 14px;
-  column-gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+  gap: 10px;
 }
 
 .exampleGridFlow .exampleCard {
@@ -82,11 +81,11 @@
 .exampleCard {
   display: inline-flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   min-height: 0;
-  padding: 12px;
+  padding: 8px;
   border: 1px solid var(--geist-border);
-  border-radius: 18px;
+  border-radius: 12px;
   background: var(--geist-surface);
   box-shadow: var(--geist-shadow-sm);
   cursor: pointer;
@@ -99,7 +98,7 @@
   position: relative;
   overflow: hidden;
   width: 100%;
-  margin: 0 0 14px;
+  margin: 0 0 10px;
   break-inside: avoid;
   page-break-inside: avoid;
   -webkit-column-break-inside: avoid;
@@ -129,9 +128,9 @@
 }
 
 .exampleCardPreviewWindow {
-  height: 240px;
+  height: 210px;
   border: 1px solid var(--geist-border);
-  border-radius: 16px;
+  border-radius: 8px;
   overflow: hidden;
   background: var(--geist-background);
   box-shadow: none;
@@ -151,15 +150,18 @@
 
 .exampleCardTop {
   display: flex;
+  flex-direction: column;
   align-items: start;
   justify-content: space-between;
-  gap: 8px;
+  gap: 4px;
   min-width: 0;
 }
 
 .exampleCardTitle {
   flex: 1;
-  font-size: 11px;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.01em;
   line-height: 1.35;
@@ -179,6 +181,10 @@
 .exampleCardBadge {
   flex-shrink: 0;
   align-self: flex-start;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   padding: 2px 6px;
   border-radius: 999px;
   border: 1px solid var(--geist-border);
@@ -311,11 +317,58 @@
   gap: 4px;
 }
 
+.scenarioGroups {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.scenarioGroupHeading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 4px;
+  cursor: pointer;
+  list-style: none;
+  border-radius: var(--geist-radius-sm);
+}
+
+.scenarioGroupHeading::-webkit-details-marker {
+  display: none;
+}
+
+.scenarioGroupHeading:hover {
+  background: var(--geist-surface);
+}
+
+.scenarioGroupHeading .scenarioName {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.scenarioGroupChevron {
+  flex-shrink: 0;
+  color: var(--geist-secondary);
+  transition: transform var(--geist-transition);
+}
+
+.scenarioGroup:not([open]) .scenarioGroupChevron {
+  transform: rotate(-90deg);
+}
+
+.scenarioGroupCount {
+  flex-shrink: 0;
+  color: var(--geist-secondary);
+  font-size: 11px;
+}
+
 .scenarioItem {
   position: relative;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
   padding: 10px 12px;
   min-height: 40px;
   border: 1px solid transparent;
@@ -328,10 +381,6 @@
     border-color var(--geist-transition),
     color var(--geist-transition);
   width: 100%;
-}
-
-.scenarioItem.hasBadge {
-  padding-right: 56px;
 }
 
 .scenarioItem:hover {
@@ -352,23 +401,24 @@
 }
 
 .scenarioName {
+  flex: 1;
+  min-width: 0;
   font-size: 14px;
   font-weight: 500;
   color: var(--geist-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .scenarioBadge {
-  position: absolute;
-  top: 6px;
-  right: 8px;
-  padding: 1px 5px;
-  border: 1px solid var(--geist-border);
-  border-radius: 4px;
-  background: var(--geist-background);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
   color: var(--geist-secondary);
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 1.2;
 }
 
 .scenarioTags {
@@ -1187,17 +1237,14 @@
     min-height: 0;
   }
 
-  /* Sidebar collapses into a single horizontal strip: back-icon on the
-     left, scenarios scrolling as chips on the right. SCENARIOS heading
-     hides — its label is redundant when the chips are the only thing in
-     the strip. Drops the band from ~180px to ~52px. */
+  /* Keep collapsible category headers above horizontally scrolling chips. */
   .demosPage[data-active-tab="edit"] .sidebar {
     flex-direction: row;
     align-items: stretch;
     width: 100%;
     max-height: none;
     min-height: 0;
-    height: 52px;
+    height: 96px;
     overflow: hidden;
     background: var(--geist-background);
   }
@@ -1230,6 +1277,17 @@
   .sidebarHeading {
     display: none;
   }
+  .scenarioGroups {
+    flex-direction: row;
+    align-items: flex-start;
+    overflow-x: auto;
+    width: 100%;
+    padding: 0 8px;
+  }
+  .scenarioGroup {
+    flex: 0 0 260px;
+    min-width: 0;
+  }
   .scenarioList {
     flex-direction: row;
     gap: 6px;
@@ -1248,21 +1306,12 @@
     border-radius: 999px;
     border-color: var(--geist-border);
   }
-  .scenarioItem.hasBadge {
-    padding-right: 12px;
-  }
   .scenarioItem .scenarioDesc {
     display: none;
   }
   .scenarioItem .scenarioName {
     white-space: nowrap;
     font-size: 12px;
-  }
-  .scenarioBadge {
-    position: static;
-    flex: 0 0 auto;
-    margin-left: 4px;
-    font-size: 9px;
   }
 
   /* Tighter toolbar so title + Reset/Clear/Render all stay on one row

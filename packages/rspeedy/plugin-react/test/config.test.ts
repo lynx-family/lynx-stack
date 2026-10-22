@@ -2044,6 +2044,45 @@ describe('Config', () => {
         `)
     })
 
+    test('splitChunks excludes chunks by runtime', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+          splitChunks: {
+            preset: 'default',
+          },
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      if (config?.optimization?.splitChunks === undefined) {
+        expect.fail('should have config.optimization.splitChunks')
+      }
+      if (config.optimization.splitChunks === false) {
+        expect.unreachable('splitChunks is not false')
+      }
+      if (typeof config.optimization.splitChunks.chunks !== 'function') {
+        expect.fail('splitChunks.chunks should be a function')
+      }
+
+      const chunks = config.optimization.splitChunks.chunks
+      const createChunk = (runtime: string[]) =>
+        ({ runtime: new Set(runtime) }) as unknown as Parameters<
+          typeof chunks
+        >[0]
+
+      expect(chunks(createChunk(['main__main-thread']))).toBe(false)
+      expect(chunks(createChunk(['lazy-main-thread']))).toBe(true)
+      expect(chunks(createChunk(['main']))).toBe(true)
+      expect(chunks(createChunk(['main__main-thread', 'main']))).toBe(true)
+    })
+
     test('splitChunks.preset: "default"', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -2972,101 +3011,6 @@ describe('Config', () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(ReactLynxWebpackPlugin?.options?.profile).toBe(false)
     })
-  })
-
-  test('worklet runtime (mode: production)', async () => {
-    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const rspeedy = await createRspeedy({
-      rspeedyConfig: {
-        mode: 'production',
-        plugins: [
-          pluginReactLynx(),
-          pluginStubRspeedyAPI(),
-        ],
-      },
-    })
-
-    const [config] = await rspeedy.initConfigs()
-
-    const reactWebpackPluginInstance = config?.plugins?.find((
-      p,
-    ): p is ReactWebpackPlugin =>
-      !!(p && p.constructor.name === 'ReactWebpackPlugin')
-    )
-
-    if (!reactWebpackPluginInstance) {
-      expect.fail('Should have ReactWebpackPlugin instance')
-    }
-
-    // @ts-expect-error private property
-    expect(reactWebpackPluginInstance.options).toHaveProperty(
-      'workletRuntimePath',
-      require.resolve('@lynx-js/react/worklet-runtime'),
-    )
-  })
-
-  test('worklet runtime (mode: development)', async () => {
-    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const rspeedy = await createRspeedy({
-      rspeedyConfig: {
-        mode: 'development',
-        plugins: [
-          pluginReactLynx(),
-          pluginStubRspeedyAPI(),
-        ],
-      },
-    })
-
-    const [config] = await rspeedy.initConfigs()
-
-    const reactWebpackPluginInstance = config?.plugins?.find((
-      p,
-    ): p is ReactWebpackPlugin =>
-      !!(p && p.constructor.name === 'ReactWebpackPlugin')
-    )
-
-    if (!reactWebpackPluginInstance) {
-      expect.fail('Should have ReactWebpackPlugin instance')
-    }
-
-    // @ts-expect-error private property
-    expect(reactWebpackPluginInstance.options).toHaveProperty(
-      'workletRuntimePath',
-      require.resolve('@lynx-js/react/worklet-dev-runtime'),
-    )
-  })
-
-  test('worklet runtime (mode: none)', async () => {
-    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const rspeedy = await createRspeedy({
-      rspeedyConfig: {
-        mode: 'none',
-        plugins: [
-          pluginReactLynx(),
-          pluginStubRspeedyAPI(),
-        ],
-      },
-    })
-
-    const [config] = await rspeedy.initConfigs()
-
-    const reactWebpackPluginInstance = config?.plugins?.find((
-      p,
-    ): p is ReactWebpackPlugin =>
-      !!(p && p.constructor.name === 'ReactWebpackPlugin')
-    )
-
-    if (!reactWebpackPluginInstance) {
-      expect.fail('Should have ReactWebpackPlugin instance')
-    }
-
-    const require = createRequire(import.meta.url)
-
-    // @ts-expect-error private property
-    expect(reactWebpackPluginInstance.options).toHaveProperty(
-      'workletRuntimePath',
-      require.resolve('@lynx-js/react/worklet-runtime'),
-    )
   })
 
   test('worklet runtime bindings resolve to the runtime-owned build output', () => {

@@ -36,9 +36,7 @@ export function pickProviderOptions(body: ProviderOptionsBody): ChatOptions {
     apiKey: hasCompleteCustomProvider ? apiKey : undefined,
     baseURL: hasCompleteCustomProvider ? baseURL : undefined,
     api: hasCompleteCustomProvider ? body.api : undefined,
-    reasoningEffort: hasCompleteCustomProvider
-      ? body.reasoningEffort
-      : undefined,
+    reasoningEffort: body.reasoningEffort,
     disableAgentCache: hasCompleteCustomProvider ? true : undefined,
   };
 }

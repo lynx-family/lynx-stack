@@ -1,0 +1,5 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "a2ui-catalog-extractor",
+  "tsconfig": "tsconfig.build.json"
+}

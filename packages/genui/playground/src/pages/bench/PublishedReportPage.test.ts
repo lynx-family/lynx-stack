@@ -110,6 +110,33 @@ function reportFixture(): BenchReport {
   };
 }
 
+test('shows first text separately from completion and preserves unknown legacy timings', () => {
+  const report = reportFixture();
+  report.results[0]!.firstTextTokenMs = 245;
+  report.summaries[0]!.avgFirstTextTokenMs = 245;
+  report.summaries[0]!.firstTextRunCount = 1;
+  report.groups[0]!.reasoningEffort = 'high';
+  const saved = sanitizeBenchReportValue(report) as BenchReport;
+  expect(saved.results[0]?.firstTextTokenMs).toBe(245);
+  for (const current of [saved, reportFixture()]) {
+    const pages = [
+      React.createElement(PublishedReportPage, { report: current }),
+      React.createElement(BenchReportPanel, {
+        report: current,
+        reportIsStale: false,
+        settings: current.settings,
+        onOpenScreenshots: noop,
+      }),
+    ];
+    for (const page of pages) {
+      const markup = renderToStaticMarkup(page);
+      expect(markup).toContain('1st Text');
+      expect(markup).toContain('10.8s');
+      expect(markup).toContain(current === saved ? '245ms' : 'Not recorded');
+    }
+  }
+});
+
 function historyEntry(report = reportFixture()) {
   return {
     id: 'history',

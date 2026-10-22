@@ -1812,7 +1812,7 @@ describe('Config Validation', () => {
         [Error: Invalid configuration.
 
         Invalid config on \`$input.performance.printFileSize.compressed\`.
-          - Expect to be (boolean | undefined)
+          - Expect to be (__type.o64 | boolean | undefined)
           - Got: number
         ]
       `)

@@ -2,6 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import {
+  installElementTemplateRefInitValueListener,
+  resetElementTemplateRefInitValueListener,
+} from '../../../../src/element-template/main-thread-ref-init-value.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getReloadVersion, increaseReloadVersion } from '../../../../src/core/reload-version.js';
@@ -1439,7 +1443,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     }
   });
 
-  it('applies MainThreadRef init patches before same-payload delayed main-thread tasks', () => {
+  it('applies independent ref initialization before delayed main-thread tasks', () => {
     const callOrder: string[] = [];
     const updateWorkletRefInitValueChanges = vi.fn(() => {
       callOrder.push('init-patch');
@@ -1461,12 +1465,17 @@ describe('ElementTemplate patch stream (apply)', () => {
 
     try {
       envManager.switchToMainThread();
+      installElementTemplateRefInitValueListener();
       installElementTemplatePatchListener();
       mockFlushElementTree.mockImplementationOnce(() => {
         callOrder.push('flushElementTree');
       });
 
       envManager.switchToBackground();
+      lynx.getCoreContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.updateMTRefInitValue,
+        data: JSON.stringify([[1, 'same-payload-init']]),
+      });
       dispatchElementTemplateUpdate({
         ops: [],
         flushOptions: {},
@@ -1477,7 +1486,6 @@ describe('ElementTemplate patch stream (apply)', () => {
             resolveId: 10,
           },
         ],
-        mainThreadRefInitValuePatch: [[1, 'same-payload-init']],
       });
       envManager.switchToMainThread();
 
@@ -1489,6 +1497,7 @@ describe('ElementTemplate patch stream (apply)', () => {
         'flushElementTree',
       ]);
     } finally {
+      resetElementTemplateRefInitValueListener();
       globalThis.lynxWorkletImpl = previousWorkletImpl;
     }
   });
@@ -1512,10 +1521,15 @@ describe('ElementTemplate patch stream (apply)', () => {
     try {
       increaseReloadVersion();
       envManager.switchToMainThread();
+      installElementTemplateRefInitValueListener();
       installElementTemplatePatchListener();
       mockFlushElementTree.mockClear();
 
       envManager.switchToBackground();
+      lynx.getCoreContext().dispatchEvent({
+        type: ElementTemplateLifecycleConstant.updateMTRefInitValue,
+        data: JSON.stringify([[1, 'stale-init']]),
+      });
       dispatchElementTemplateUpdate({
         ops: [],
         flushOptions: {},
@@ -1527,7 +1541,6 @@ describe('ElementTemplate patch stream (apply)', () => {
             resolveId: 10,
           },
         ],
-        mainThreadRefInitValuePatch: [[1, 'stale-init']],
       });
       envManager.switchToMainThread();
 
@@ -1535,6 +1548,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       expect(runRunOnMainThreadTask).not.toHaveBeenCalled();
       expect(mockFlushElementTree).not.toHaveBeenCalled();
     } finally {
+      resetElementTemplateRefInitValueListener();
       globalThis.lynxWorkletImpl = previousWorkletImpl;
     }
   });

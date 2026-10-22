@@ -298,8 +298,10 @@ export function applyEntry(
       extractStr = false
     }
 
-    const { resolve } = api.useExposed<
-      { resolve: (request: string) => Promise<string> }
+    const { version: runtimeVersion } = api.useExposed<
+      {
+        version: string
+      }
     >(Symbol.for('@lynx-js/react/internal:resolve'))!
 
     chain
@@ -318,10 +320,8 @@ export function applyEntry(
         experimental_useElementTemplate:
           options.experimental_useElementTemplate,
         profile: getDefaultProfile(),
-        workletRuntimePath: await resolve(
-          `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,
-        ),
         lazyBundleFetcher,
+        runtimeVersion,
       }])
 
     // Runtime config belongs to the page host. Standalone lazy bundles and

@@ -20,6 +20,8 @@ import type { ProtocolBenchScenario } from './protocol-types.js';
 import { sanitizeBenchPlanValue } from './redaction.js';
 import { resolveBenchRetryDelay, waitForBenchRetry } from './retry.js';
 import { getBenchJobStore } from './store.js';
+import { parseReasoningEffort } from '../provider.js';
+import { createBenchGenerationTiming } from './timing.js';
 import type {
   BenchCatalogLabel,
   BenchGroupRequest,
@@ -57,6 +59,8 @@ import type {
 import { createHtmlBenchAdapter } from '../../html/html-bench-adapter.js';
 import { createLynxXmlBenchAdapter } from '../../lynx-xml/lynx-xml-bench-adapter.js';
 import { createOpenUIBenchAdapter } from '../../openui/openui-bench-adapter.js';
+import { createReactLynxBenchAdapter } from '../../reactlynx/reactlynx-bench-adapter.js';
+import { createReactWebBenchAdapter } from '../../reactweb/reactweb-bench-adapter.js';
 import { buildGenerationRepairMessages } from '../generation-repair.js';
 import { defaultModelName, readModelConfig } from '../model-config.js';
 import { GenerationUpstreamError } from '../result.js';
@@ -176,6 +180,7 @@ async function generateA2UINative(
   catalog: ReturnType<typeof resolveBenchCatalog>,
   model: string | undefined,
   signal: AbortSignal,
+  onPerformanceEvent: (event: string) => void,
 ): Promise<{
   attempts: number;
   errors: string[];
@@ -219,6 +224,9 @@ async function generateA2UINative(
           catalog,
           disableAgentCache: true,
           maxRetries: 0,
+          reasoningEffort: parseReasoningEffort(item.group.reasoningEffort),
+          streamRawGeneration: true,
+          onPerformanceEvent,
           enableWebSearch: false,
           enableImageGeneration: false,
         },
@@ -307,6 +315,7 @@ async function runA2UINativeOne(
     { role: 'user', content: buildBenchPrompt(item.group, item.scenario) },
   ];
   const startedAt = performance.now();
+  const timing = createBenchGenerationTiming();
   emitRunPhase(jobId, item, 'agent');
 
   try {
@@ -318,6 +327,7 @@ async function runA2UINativeOne(
       catalog,
       model,
       signal,
+      timing.observe,
     );
     emitRunPhase(jobId, item, 'validate');
     const agentMs = performance.now() - startedAt;
@@ -361,6 +371,7 @@ async function runA2UINativeOne(
           0,
         ),
         agentMs: Math.round(agentMs),
+        ...timing.metrics(),
         // fmpMs: preview.fmpMs,
         fmpMs: 0,
         // ttiMs: preview.ttiMs,
@@ -407,6 +418,7 @@ async function runA2UINativeOne(
         catalog: catalogLabel,
         tokens: 0,
         agentMs: Math.round(agentMs),
+        ...timing.metrics(),
         fmpMs: 0,
         ttiMs: 0,
         renderMs: 0,
@@ -456,11 +468,13 @@ async function runProtocolAdapterOne(
   const protocol = protocolForGroup(item.group);
   const profile = profileForGroup(item.group);
   const model = pickRunModel(request, item.group);
-  const catalogLabel = protocol === 'lynx-xml' || protocol === 'html'
-    ? 'none' as const
-    : (profile === 'matched-core'
-      ? 'matched-core' as const
-      : pickRunCatalog(item.group));
+  const catalogLabel =
+    protocol === 'lynx-xml' || protocol === 'html' || protocol === 'reactweb'
+      || protocol === 'reactlynx'
+      ? 'none' as const
+      : (profile === 'matched-core'
+        ? 'matched-core' as const
+        : pickRunCatalog(item.group));
 
   store.emit(jobId, 'run-start', {
     runId,
@@ -473,6 +487,7 @@ async function runProtocolAdapterOne(
   });
   emitRunPhase(jobId, item, 'agent');
   const startedAt = performance.now();
+  const timing = createBenchGenerationTiming();
 
   try {
     if (!adapter) {
@@ -481,6 +496,8 @@ async function runProtocolAdapterOne(
       );
     }
     const artifact = await adapter.generate({
+      reasoningEffort: parseReasoningEffort(item.group.reasoningEffort),
+      onPerformanceEvent: timing.observe,
       enableDesignGuidance: item.group.enableDesignGuidance !== false,
       ...(protocol === 'lynx-xml'
         ? {
@@ -535,6 +552,7 @@ async function runProtocolAdapterOne(
       catalog: catalogLabel,
       tokens,
       agentMs: Math.round(agentMs),
+      ...timing.metrics(),
       fmpMs: 0,
       ttiMs: 0,
       renderMs: 0,
@@ -582,14 +600,21 @@ async function runProtocolAdapterOne(
                 BenchRunResult['messages']
               >,
             }
-            : {
-              protocol: judgePayload.kind === 'lynx-xml-source'
-                ? 'lynx-xml' as const
-                : (judgePayload.kind === 'html-source'
-                  ? 'html' as const
-                  : 'openui' as const),
-              rawText: judgePayload.rawText,
-            },
+            : (judgePayload.kind === 'reactlynx-bundle'
+              ? {
+                protocol: 'reactlynx' as const,
+                rawText: judgePayload.rawText,
+                zipUrl: judgePayload.zipUrl,
+              }
+              : {
+                protocol: ({
+                  'lynx-xml-source': 'lynx-xml',
+                  'reactweb-html': 'reactweb',
+                  'html-source': 'html',
+                  'openui-text': 'openui',
+                } as const)[judgePayload.kind],
+                rawText: judgePayload.rawText,
+              }),
         }
         : {}),
     };
@@ -613,6 +638,7 @@ async function runProtocolAdapterOne(
         catalog: catalogLabel,
         tokens: 0,
         agentMs: Math.round(agentMs),
+        ...timing.metrics(),
         fmpMs: 0,
         ttiMs: 0,
         renderMs: 0,
@@ -802,6 +828,12 @@ export function summarizeGroup(
     typeof item.judgeGeqiScore === 'number'
   );
   const failedRuns = Math.max(0, plannedRuns - successfulRuns);
+  const firstTextTimes = groupResults.flatMap(item =>
+    typeof item.firstTextTokenMs === 'number'
+      && Number.isFinite(item.firstTextTokenMs) && item.firstTextTokenMs >= 0
+      ? [item.firstTextTokenMs]
+      : []
+  );
   return {
     groupId: group.id,
     groupName: group.name,
@@ -820,6 +852,15 @@ export function summarizeGroup(
       groupResults.map((item) => item.agentMs),
       plannedRuns,
     ),
+    ...(firstTextTimes.length > 0
+      ? {
+        avgFirstTextTokenMs: averagePlanned(
+          firstTextTimes,
+          firstTextTimes.length,
+        ),
+        firstTextRunCount: firstTextTimes.length,
+      }
+      : {}),
     avgFmpMs: averagePlanned(
       groupResults.map((item) => item.fmpMs),
       plannedRuns,
@@ -979,6 +1020,8 @@ function resolveProtocolAdapters(
       openui: createOpenUIBenchAdapter,
       'lynx-xml': createLynxXmlBenchAdapter,
       html: createHtmlBenchAdapter,
+      reactweb: createReactWebBenchAdapter,
+      reactlynx: createReactLynxBenchAdapter,
     };
     adapters[protocol] = overrides?.[protocol] ?? factories[protocol]();
   }

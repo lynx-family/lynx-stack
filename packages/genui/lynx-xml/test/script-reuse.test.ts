@@ -28,12 +28,30 @@ definePage({
     ${
         template
           ? ''
-          : `ctx.nodes.count = __CreateText(ctx.pageId); __AppendElement(ctx.page, ctx.nodes.count);`
+          : `ctx.nodes.count = ctx.createText("0"); ctx.append(ctx.page, ctx.nodes.count);`
       }
+    const dynamic = ctx.createView();
+    const scroll = ctx.createScrollView();
+    const label = ctx.createText("ready");
+    const image = ctx.createImage();
+    const retained = ctx.createView();
+    const removed = ctx.createText("removed");
+    ctx.on(retained, "retained", onRetained);
+    ctx.on(removed, "removed", onRemoved);
+    ctx.setClasses(dynamic, "dynamic");
+    ctx.setAttribute(image, "src", "asset");
+    ctx.setInlineStyles(image, "opacity: 1;");
+    ctx.replaceChildren(dynamic, [retained, removed]);
+    ctx.replaceChildren(dynamic, [retained, label, image]);
+    ctx.append(scroll, dynamic);
+    ctx.append(ctx.page, scroll);
     count = data.count || 0;
     ctx.setText(ctx.nodes.count, count);
     ctx.on(ctx.nodes.count, "tap", () => { ctx.setText(ctx.nodes.count, ++count); });
-    ctx.listen(bridge, "patch", event => ctx.setText(ctx.nodes.count, event.data));
+    ctx.listen("patch", event => ctx.setText(ctx.nodes.count, event.data));
+    ctx.listen(bridge, "legacy", event => ctx.setText(ctx.nodes.count, event.data));
+    ctx.emit("request", { count });
+    ctx.flush();
   },
   update(ctx, patch) { ctx.setText(ctx.nodes.count, patch.count || 0); },
   destroy() { onDestroy(); }
@@ -53,8 +71,8 @@ definePage({
     expect(compiled.text.length).toBeGreaterThan(source.length);
     const lifecycle = new Map<string, (event?: unknown) => void>();
     const events = new Map<string, (event?: unknown) => void>();
+    const eventOptions = new Map<string, unknown>();
     const appEvents = new Map<string, (event?: unknown) => void>();
-    const registeredOptions: unknown[] = [];
     interface Node {
       children: unknown[];
     }
@@ -62,8 +80,43 @@ definePage({
     const create = (): Node => ({ children: [] });
     const flush = rstest.fn();
     const onDestroy = rstest.fn();
+    const onRetained = rstest.fn();
+    const onRemoved = rstest.fn();
     const createPage = rstest.fn(create);
+    const views: Node[] = [];
+    const scrollViews: Node[] = [];
+    const images: Node[] = [];
+    const createView = rstest.fn(() => {
+      const node = create();
+      views.push(node);
+      return node;
+    });
+    const createScrollView = rstest.fn(() => {
+      const node = create();
+      scrollViews.push(node);
+      return node;
+    });
+    const createImage = rstest.fn(() => {
+      const node = create();
+      images.push(node);
+      return node;
+    });
+    const setClasses = rstest.fn();
+    const setAttribute = rstest.fn();
+    const setInlineStyles = rstest.fn();
+    const dispatchedEvents: unknown[] = [];
+    const bridge = {
+      addEventListener: (name: string, handler: () => void) =>
+        appEvents.set(name, handler),
+      removeEventListener: (name: string, handler: () => void) => {
+        expect(appEvents.get(name)).toBe(handler);
+        appEvents.delete(name);
+      },
+      dispatchEvent: (event: unknown) => dispatchedEvents.push(event),
+    };
+    const getCoreContext = rstest.fn(() => bridge);
     const context = {
+      bridge,
       lynx: {
         getEngine: () => ({
           addEventListener: (name: string, handler: () => void) =>
@@ -73,28 +126,27 @@ definePage({
             lifecycle.delete(name);
           },
         }),
-      },
-      bridge: {
-        addEventListener: (name: string, handler: () => void) =>
-          appEvents.set(name, handler),
-        removeEventListener: (name: string, handler: () => void) => {
-          expect(appEvents.get(name)).toBe(handler);
-          appEvents.delete(name);
-        },
+        getCoreContext,
       },
       __CreatePage: createPage,
+      __CreateView: createView,
+      __CreateScrollView: createScrollView,
       __CreateText: () => {
         const node = create();
         texts.push(node);
         return node;
       },
+      __CreateImage: createImage,
       __CreateRawText: (text: string) => text,
       __GetElementUniqueID: () => 42,
       __SetID: rstest.fn(),
-      __SetClasses: rstest.fn(),
+      __SetClasses: setClasses,
+      __SetAttribute: setAttribute,
+      __SetInlineStyles: setInlineStyles,
       __AppendElement: (parent: Node, child: unknown) =>
         parent.children.push(child),
       __GetChildren: (node: Node) => node.children,
+      __ElementIsEqual: (left: unknown, right: unknown) => left === right,
       __ReplaceElements: (node: Node, children: unknown[]) => {
         node.children = children;
       },
@@ -105,7 +157,7 @@ definePage({
         options: unknown,
       ) => {
         events.set(name, handler);
-        registeredOptions.push(options);
+        eventOptions.set(name, options);
       },
       __RemoveEventListener: (
         _node: Node,
@@ -114,11 +166,14 @@ definePage({
         options: unknown,
       ) => {
         expect(events.get(name)).toBe(handler);
-        expect(options).toBe(registeredOptions[0]);
+        expect(options).toBe(eventOptions.get(name));
         events.delete(name);
+        eventOptions.delete(name);
       },
       __FlushElementTree: flush,
       onDestroy,
+      onRetained,
+      onRemoved,
     };
     const main = compiled.text.split('<script thread="main">')[1]!.split(
       '</script>',
@@ -133,8 +188,22 @@ definePage({
     render({ data: [{ count: 4 }] });
     render();
     expect(createPage).toHaveBeenCalledTimes(1);
+    expect(createView).toHaveBeenCalledWith(42);
+    expect(createScrollView).toHaveBeenCalledWith(42);
+    expect(createImage).toHaveBeenCalledWith(42);
+    expect(setClasses).toHaveBeenCalledWith(views[0], 'dynamic');
+    expect(setAttribute).toHaveBeenCalledWith(images[0], 'src', 'asset');
+    expect(setInlineStyles).toHaveBeenCalledWith(images[0], 'opacity: 1;');
+    expect(views[0]?.children).toEqual([views[1], texts[1], images[0]]);
+    expect(scrollViews[0]?.children).toEqual([views[0]]);
     expect(texts[0]?.children).toEqual(['4']);
-    expect(flush).not.toHaveBeenCalled();
+    expect(events.has('retained')).toBe(true);
+    expect(events.has('removed')).toBe(false);
+    expect(dispatchedEvents).toEqual([{ type: 'request', data: { count: 4 } }]);
+    expect(getCoreContext).toHaveBeenCalledTimes(1);
+    expect(flush).toHaveBeenCalledTimes(1);
+    events.get('retained')!();
+    expect(onRetained).toHaveBeenCalledTimes(1);
     const tap = events.get('tap')!;
     tap();
     expect(texts[0]?.children).toEqual(['5']);
@@ -144,7 +213,7 @@ definePage({
     expect(texts[0]?.children).toEqual(['0']);
     appEvents.get('patch')!({ data: 12 });
     expect(texts[0]?.children).toEqual(['12']);
-    expect(flush).toHaveBeenCalledTimes(4);
+    expect(flush).toHaveBeenCalledTimes(6);
     destroy();
     destroy();
     tap();
@@ -153,7 +222,7 @@ definePage({
     expect(onDestroy).toHaveBeenCalledTimes(1);
     expect(events.size + appEvents.size + lifecycle.size).toBe(0);
     expect(createPage).toHaveBeenCalledTimes(1);
-    expect(flush).toHaveBeenCalledTimes(4);
+    expect(flush).toHaveBeenCalledTimes(6);
   },
 );
 

@@ -15,12 +15,14 @@ import {
   BENCH_CATALOG_OPTIONS,
   DEFAULT_BENCH_SCENARIOS,
   DEFAULT_BENCH_SETTINGS,
+  DEFAULT_BENCH_UI_JUDGE_SERVER_URL,
   MAX_BENCH_GROUPS,
   createBenchPresetGroups,
   createCustomBenchScenario,
   findComparableBaseline,
   getBenchProtocolLabel,
   inferBenchVariable,
+  usesBrowserBenchCapture,
   usesCatalog,
   withBenchGroupPatch,
   withBenchProtocol,
@@ -243,11 +245,12 @@ const LOCAL_A2UI_SERVER_PORT = '3060';
 const UI_JUDGE_SERVER_URL_STORAGE_KEY = 'genui-bench-ui-judge-server-url';
 
 export function readBenchUiJudgeServerUrl(): string {
-  if (typeof window === 'undefined') return '';
+  if (typeof window === 'undefined') return DEFAULT_BENCH_UI_JUDGE_SERVER_URL;
   try {
-    return window.localStorage.getItem(UI_JUDGE_SERVER_URL_STORAGE_KEY) ?? '';
+    return window.localStorage.getItem(UI_JUDGE_SERVER_URL_STORAGE_KEY)
+      ?? DEFAULT_BENCH_UI_JUDGE_SERVER_URL;
   } catch {
-    return '';
+    return DEFAULT_BENCH_UI_JUDGE_SERVER_URL;
   }
 }
 
@@ -477,6 +480,7 @@ function createBenchRequestGroups(
     name: group.name,
     variable: group.variable,
     model: group.model,
+    reasoningEffort: group.reasoningEffort ?? 'default',
     catalog: group.catalog,
     ...(group.enableDesignGuidance === false
       ? { enableDesignGuidance: false }
@@ -525,6 +529,7 @@ function createBenchPlanSignature(
       profile: group.profile,
       name: group.name,
       model: group.model,
+      reasoningEffort: group.reasoningEffort ?? 'default',
       catalog: usesCatalog(group) ? group.catalog : undefined,
       enableDesignGuidance: group.enableDesignGuidance !== false,
       ...(group.protocol === 'lynx-xml'
@@ -814,14 +819,10 @@ export function BenchPage({ sharedPlan }: { sharedPlan?: string }) {
     const normalized = normalizeBenchUiJudgeServerUrl(uiJudgeServerUrl);
     if (normalized === null) return;
     try {
-      if (normalized) {
-        window.localStorage.setItem(
-          UI_JUDGE_SERVER_URL_STORAGE_KEY,
-          normalized,
-        );
-      } else {
-        window.localStorage.removeItem(UI_JUDGE_SERVER_URL_STORAGE_KEY);
-      }
+      window.localStorage.setItem(
+        UI_JUDGE_SERVER_URL_STORAGE_KEY,
+        normalized,
+      );
     } catch {
       // The field remains usable when localStorage is unavailable.
     }
@@ -921,9 +922,11 @@ export function BenchPage({ sharedPlan }: { sharedPlan?: string }) {
     }
     return undefined;
   }, [activeGroups, env, settings.judgeEnabled, settings.uiJudgeModel]);
-  const hasHtmlGroups = activeGroups.some((group) => group.protocol === 'html');
+  const hasHtmlGroups = activeGroups.some((group) =>
+    usesBrowserBenchCapture(group.protocol)
+  );
   const needsScreenshotService = activeGroups.some((group) =>
-    group.protocol !== 'html'
+    !usesBrowserBenchCapture(group.protocol)
   );
   const uiJudgeServerUrlValidationError = useMemo(() => {
     if (!needsScreenshotService || !settings.judgeEnabled) return '';
@@ -1488,6 +1491,7 @@ export function BenchPage({ sharedPlan }: { sharedPlan?: string }) {
         const captureScreenshot = createBenchScreenshotRelay({
           jobUrl: `${jobsEndpoint}/${encodeURIComponent(jobId)}`,
           serverUrl: normalizedUiJudgeServerUrl ?? '',
+          screenshotSettleMs: settings.screenshotSettleMs,
           signal: screenshotController.signal,
           captureHtml: captureResult.capture,
           onError: (text) => setRunMessage({ code: 'raw', text }),
@@ -2069,6 +2073,11 @@ export function BenchPage({ sharedPlan }: { sharedPlan?: string }) {
                   updateGroup(id, groupPatch('enabled', enabled))}
                 onModelChange={(id, model) =>
                   updateGroup(id, groupPatch('model', model))}
+                onReasoningChange={(id, reasoningEffort) =>
+                  updateGroup(
+                    id,
+                    groupPatch('reasoningEffort', reasoningEffort),
+                  )}
                 onNameChange={(id, name) => updateGroup(id, { name })}
                 onPromptChange={(id, extraInstruction) =>
                   updateGroup(

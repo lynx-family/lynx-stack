@@ -16,7 +16,10 @@ import { MainThreadRef, isMainThreadRef, useMainThreadRef } from '../../../src/c
 import { isMainThreadFunction } from '../../../src/core/main-thread-function';
 import { takeMainThreadRefInitValuePatch } from '../../../src/core/main-thread-ref-init-value';
 import { globalEnvManager } from '../utils/envManager';
-import { injectUpdateMTRefInitValue } from '../../../src/snapshot/worklet/ref/updateInitValue';
+import {
+  injectUpdateMTRefInitValue,
+  sendMTRefInitValueToMainThread,
+} from '../../../src/snapshot/worklet/ref/updateInitValue';
 
 const Comp = () => {
   const ref = useMainThreadRef(233);
@@ -32,6 +35,7 @@ beforeAll(() => {
     _refImpl: {
       updateWorkletRef: vi.fn(),
       updateWorkletRefInitValueChanges: vi.fn(),
+      registerMainThreadObjectType: vi.fn(),
       clearFirstScreenWorkletRefMap: vi.fn(),
     },
     _runOnBackgroundDelayImpl: {
@@ -50,6 +54,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  globalThis.__ALOG__ = true;
   destroyWorklet();
   vi.clearAllMocks();
 });
@@ -150,6 +155,13 @@ describe('WorkletRef in js', () => {
       expect(globalThis.lynxWorkletImpl._refImpl.updateWorkletRefInitValueChanges).toBeCalledTimes(1);
       globalThis[rLynxChange[1][0]](rLynxChange[1][1]);
       expect(globalThis.lynxWorkletImpl._refImpl.updateWorkletRefInitValueChanges).toBeCalledTimes(1);
+      const logs = console.alog.mock.calls.map(([message]) => message).filter(message =>
+        message.includes('MTRefInitValue')
+      );
+      expect(logs).toEqual([
+        '[ReactLynxDebug] Snapshot BTS -> MTS sendMTRefInitValue:\n[[1,233]]',
+        '[ReactLynxDebug] Snapshot MTS updateMTRefInitValue:\n[[1,233]]',
+      ]);
     }
   });
 
@@ -173,6 +185,18 @@ describe('WorkletRef in js', () => {
     expect(() => ref.current = 1).toThrowError(
       'MainThreadRef: value of a MainThreadRef cannot be accessed outside of main thread script.',
     );
+  });
+
+  it.each([false, undefined])('should initialize refs without alog when the flag is %s', (alog) => {
+    globalThis.__ALOG__ = alog;
+    globalEnvManager.switchToBackground();
+    new MainThreadRef(233);
+    sendMTRefInitValueToMainThread();
+    const [name, data] = lynx.getNativeApp().callLepusMethod.mock.calls.at(-1);
+    globalEnvManager.switchToMainThread();
+    globalThis[name](data);
+    expect(globalThis.lynxWorkletImpl._refImpl.updateWorkletRefInitValueChanges).toHaveBeenCalledWith([[1, 233]]);
+    expect(console.alog.mock.calls.some(([message]) => message.includes('MTRefInitValue'))).toBe(false);
   });
 
   it('should not send init value to the main thread when native capabilities not fulfilled', () => {

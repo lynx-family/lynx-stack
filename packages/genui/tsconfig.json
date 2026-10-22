@@ -7,6 +7,6 @@
     "lib": ["DOM", "ESNext"],
     "moduleResolution": "Bundler",
   },
-  "references": [],
+  "references": [{ "path": "./html" }, { "path": "./reactweb" }],
   "include": [],
 }

@@ -19,6 +19,12 @@ import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
 export const ELEMENT_TEMPLATE_BUILD_INFO = 'lynx:element-templates';
+export const REACT_RUNTIME_REQUIREMENTS_BUILD_INFO =
+  'lynx:react-runtime-requirements';
+
+export interface ReactRuntimeRequirementsBuildInfo {
+  mainThreadProgrammability: boolean;
+}
 
 const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
   this: LoaderContext<ReactLoaderOptions>,
@@ -111,6 +117,18 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     | undefined;
   if (buildInfo) {
     buildInfo[UI_SOURCE_MAP_RECORDS_BUILD_INFO] = result.uiSourceMapRecords;
+    if (
+      typeof result.runtimeRequirements !== 'object'
+      || result.runtimeRequirements === null
+      || typeof result.runtimeRequirements.mainThreadProgrammability
+        !== 'boolean'
+    ) {
+      throw new TypeError(
+        'react-transform must provide runtimeRequirements.mainThreadProgrammability as a boolean; upgrade the build plugins and @lynx-js/react (runtime and transform) together to the module-delivery release (^0.128.0).',
+      );
+    }
+    buildInfo[REACT_RUNTIME_REQUIREMENTS_BUILD_INFO] =
+      result.runtimeRequirements;
     if (result.elementTemplates && result.elementTemplates.length > 0) {
       buildInfo[ELEMENT_TEMPLATE_BUILD_INFO] = result.elementTemplates;
     } else {

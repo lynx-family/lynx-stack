@@ -43,6 +43,50 @@ definitions are exported from the aggregate `@lynx-js/genui/openui/catalog`
 entry and from individual subpaths such as
 `@lynx-js/genui/openui/catalog/Stack`.
 
+For server-side schema or prompt generation, import the same definitions with
+null renderers from `@lynx-js/genui/openui/catalog/agent` (or
+`@lynx-js/genui-openui/catalog/agent`). This entry shares names, descriptions,
+schemas, and component refs with the ReactLynx catalog without importing JSX,
+CSS, ReactLynx, or Lynx UI. `createOpenUiPromptLibrary()` uses these definitions
+directly.
+
+The two factories share component order, groups, and option handling. With
+matching options and custom definitions, they produce the same `toJSONSchema()`,
+`toSpec()`, and `.prompt()` output. The runtime library supplies ReactLynx
+renderers; the prompt library supplies null renderers and can load in Node.
+
+Both accept `componentNames` to select built-ins (automatically retaining the
+selected root) and `includeDefaultComponents: false` to use only caller-provided
+components and groups. Custom components are always appended, and later
+definitions with the same name override earlier ones. When defaults are
+disabled, `componentNames` has no effect and callers must supply the root.
+Selection controls the Library vocabulary; use `openui/explicit` and individual
+component imports when you also need to exclude unselected renderer modules.
+
+```ts
+// Use the same selection on the server and client.
+const options = { componentNames: ['Stack', 'Text'] };
+const promptLibrary = createOpenUiPromptLibrary(options);
+const rendererLibrary = createOpenUiLibrary(options);
+```
+
+`buildOpenUiSystemPrompt()` additionally supplies generation rules and examples;
+it is separate from the lower-level `.prompt()` parity above. Restricted
+libraries omit default examples and rules that assume unavailable components.
+
+Use `@lynx-js/genui/openui/catalog/agent/Stack` (or
+`@lynx-js/genui-openui/catalog/agent/Stack`) to load just one definition. Each
+subpath exports the same component name as the aggregate Agent catalog, and
+loads only that definition and its schema dependencies.
+
+```ts
+import { Stack, Text } from '@lynx-js/genui/openui/catalog/agent';
+import { createLibrary } from '@openuidev/lang-core';
+
+const library = createLibrary({ root: 'Stack', components: [Stack, Text] });
+const prompt = library.prompt();
+```
+
 ### Layout
 
 | Component | Purpose                                                                                                   |
@@ -72,14 +116,15 @@ entry and from individual subpaths such as
 
 ### Data display and media
 
-| Component     | Purpose                                                    |
-| ------------- | ---------------------------------------------------------- |
-| `Tag`         | Compact label or status tag.                               |
-| `Image`       | Remote image with fit and semantic size variants.          |
-| `Icon`        | Bundled Material Icons glyph with size and color variants. |
-| `Video`       | Video attachment placeholder with URL and optional title.  |
-| `AudioPlayer` | Audio attachment placeholder with URL and description.     |
-| `Loading`     | Inline or block skeleton/loading feedback.                 |
+| Component     | Purpose                                                      |
+| ------------- | ------------------------------------------------------------ |
+| `Tag`         | Compact label or status tag.                                 |
+| `Image`       | Remote image with fit and semantic size variants.            |
+| `Icon`        | Bundled Material Icons glyph with size and color variants.   |
+| `Video`       | Video attachment placeholder with URL and optional title.    |
+| `AudioPlayer` | Audio attachment placeholder with URL and description.       |
+| `Loading`     | Inline or block skeleton/loading feedback.                   |
+| `Canvas`      | Web Canvas 2D drawing from a string or streamed code chunks. |
 
 ### Overlays
 
@@ -281,9 +326,13 @@ const parser = createParser(library.toJSONSchema(), library.root);
 const result = parser.parse('root = Stack([TextContent("Hello")])');
 ```
 
-For streamed text, use `createStreamingParser`. Its `set(fullText)` method is
+For parsing streamed text outside the renderer, use `createStreamingParser`. Its `set(fullText)` method is
 convenient when your UI stores the accumulated response; `push(chunk)` accepts
 only the new delta.
+
+For rendering model output, pass the accumulated `response` and `isStreaming`;
+the renderer already owns its streaming parser. Do not parse the same response
+separately. See [Stream model output](./overview.md#stream-model-output).
 
 Use the renderer's `onParseResult` callback when you already render the same
 response. That avoids creating a second parser just to inspect `root`,

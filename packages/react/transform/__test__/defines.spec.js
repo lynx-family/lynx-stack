@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import { transformReactLynx } from '../main.js';
@@ -125,18 +127,29 @@ describe('collected defines', () => {
         ],
         "definesForWorklet": [
           {
-            "code": "const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "d3dd:test:1", function(e) {
+            "code": "__registerWorklet("main-thread", "d3dd:test:1", function(e) {
           const onScroll = lynxWorkletImpl._workletMap["d3dd:test:1"].bind(this);
           let { label } = this["_c"];
-          'main thread';
           console.info(label, e);
       });
       ",
             "id": "d3dd:test:1",
+            "imports": [
+              {
+                "imported": "registerWorklet",
+                "local": "__registerWorklet",
+                "source": "@lynx-js/react/worklet-runtime/init",
+              },
+            ],
+            "runtimeRequirements": {
+              "mainThreadProgrammability": true,
+            },
           },
         ],
         "errors": [],
+        "runtimeRequirements": {
+          "mainThreadProgrammability": false,
+        },
         "uiSourceMapRecords": [],
         "warnings": [],
       }
@@ -146,8 +159,17 @@ describe('collected defines', () => {
     expect(result.definesForSnapshot).toHaveLength(1);
     const [worklet] = result.definesForWorklet;
     const [snapshot] = result.definesForSnapshot;
-    expect(worklet.code).toContain('registerWorkletInternal');
-    expect(worklet.code).toContain('loadWorkletRuntime');
+    expect(worklet.code).toContain('__registerWorklet');
+    expect(worklet.imports).toEqual([{
+      source: '@lynx-js/react/worklet-runtime/init',
+      imported: 'registerWorklet',
+      local: '__registerWorklet',
+    }]);
+    expect(worklet.code).not.toContain('loadWorkletRuntime');
+    expect(worklet.runtimeRequirements).toEqual({
+      mainThreadProgrammability: true,
+    });
+    expect(result.runtimeRequirements.mainThreadProgrammability).toBe(false);
     expect(worklet.code).toContain('this["_c"]');
     expect(snapshot.id).toMatch(/^__snapshot_/);
     expect(snapshot.code).toContain('ReactLynx.createSnapshot');
@@ -171,6 +193,48 @@ describe('collected defines', () => {
     expect(fromBackground.definesForWorklet).toStrictEqual(
       fromMainThread.definesForWorklet,
     );
+  });
+
+  it.each(['JS', 'LEPUS'])('carries hygienic custom runtime imports with %s definitions', async target => {
+    const result = await transformReactLynx(
+      `
+      export function handler(__registerWorklet) {
+        'main thread';
+        return __registerWorklet + 1;
+      }
+    `,
+      options(target, {
+        worklet: { target, filename: 'test.jsx', runtimePkg: '@custom/react/internal' },
+      }),
+    );
+    expect(result.errors).toEqual([]);
+    const [definition] = result.definesForWorklet;
+    const [dependency] = definition.imports;
+    expect(dependency.source).toBe('@custom/react/worklet-runtime/init');
+    expect(dependency.imported).toBe('registerWorklet');
+    expect(definition.code).toContain(`${dependency.local}("main-thread"`);
+    const registrations = [];
+    new Function(dependency.local, definition.code)((...args) => registrations.push(args));
+    expect(registrations).toHaveLength(1);
+    // Execute the lowered body as well as the call site to catch capture by
+    // an authored parameter with the compiler's preferred helper name.
+    const [type, id, fn] = registrations[0];
+    expect(type).toBe('main-thread');
+    const oldImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = { _workletMap: { [id]: fn } };
+    try {
+      expect(fn.call({ _c: {} }, 41)).toBe(42);
+    } finally {
+      globalThis.lynxWorkletImpl = oldImpl;
+    }
+    if (target === 'JS') expect(result.code).not.toContain('/worklet-runtime/init');
+    const injected = await transformReactLynx(
+      `import { ${dependency.imported} as ${dependency.local} } from '${dependency.source}';\n${definition.code}`,
+      options('LEPUS'),
+    );
+    expect(injected.errors).toEqual([]);
+    expect(injected.definesForWorklet).toEqual([]);
+    expect(injected.code.match(/registerWorklet as/g)).toHaveLength(1);
   });
 
   it('hygienes each definition on its own', async () => {
@@ -211,6 +275,111 @@ function legacy(target, extra = {}) {
   });
 }
 
+describe('worklet definition imports', () => {
+  const source = `
+import { runOnBackground, useState } from '@lynx-js/react';
+export function Repro() {
+  const [count, setCount] = useState(0);
+  const onTap = () => {
+    'main thread';
+    runOnBackground(() => {
+      'background only';
+      setCount(value => value + 1);
+    })();
+  };
+  return <view main-thread:bindtap={onTap}>{count}</view>;
+}
+`;
+
+  it.each(['test', 'development'])(
+    'carries the runOnBackground import without unrelated component imports in %s mode',
+    async (mode) => {
+      const background = await transformReactLynx(source, options('JS', { mode }));
+      const mainThread = await transformReactLynx(source, options('LEPUS', { mode }));
+      expect(background.errors).toEqual([]);
+      expect(background.definesForWorklet).toEqual(mainThread.definesForWorklet);
+      const [definition] = background.definesForWorklet;
+      const dependency = definition.imports.find(item => item.imported === 'runOnBackground');
+      expect(dependency).toEqual({ source: '@lynx-js/react', imported: 'runOnBackground', local: dependency.local });
+      expect(definition.code).toContain(`${dependency.local}(_jsFn1)()`);
+      expect(definition.imports.some(item => item.imported === 'useState')).toBe(false);
+    },
+  );
+
+  it('resolves Windows relative imports in the Wasm transform', async () => {
+    const result = await transformReactLynx(
+      source.replace('\'@lynx-js/react\'', '\'./bridge.js\''),
+      options('JS', { filename: 'C:\\project\\src\\Repro.jsx' }),
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.definesForWorklet[0].imports).toContainEqual(
+      expect.objectContaining({ source: 'C:/project/src/./bridge.js', imported: 'runOnBackground' }),
+    );
+  });
+
+  it('resolves relative imports from the owning module directory', async () => {
+    const filename = path.resolve('src/components/Repro.jsx');
+    const result = await transformReactLynx(
+      source.replace('\'@lynx-js/react\'', '\'./bridge.js\''),
+      options('JS', { filename }),
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.definesForWorklet[0].imports).toContainEqual(expect.objectContaining({
+      source: `${path.dirname(filename)}/./bridge.js`.replaceAll('\\', '/'),
+      imported: 'runOnBackground',
+    }));
+  });
+
+  it('does not import bindings captured through the worklet context', async () => {
+    const result = await transformReactLynx(
+      `
+import { value } from './values.js';
+function worklet() { 'main thread'; return value; }
+`,
+      options('JS'),
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.definesForWorklet[0].imports).toHaveLength(1);
+    expect(result.definesForWorklet[0].code).toContain('this["_c"]');
+  });
+
+  it('preserves default, namespace and aliased imports and shorthand keys', async () => {
+    const opts = options('JS');
+    opts.worklet.customGlobalIdentNames = ['call', 'api', 'named'];
+    const result = await transformReactLynx(
+      `
+import call, * as api from './bridge.js';
+import { original as named } from './other.js';
+function worklet() { 'main thread'; return [call(), api.value, { named }]; }
+`,
+      opts,
+    );
+    expect(result.errors).toEqual([]);
+    const [definition] = result.definesForWorklet;
+    expect(definition.imports).toEqual(expect.arrayContaining([
+      { source: './bridge.js', imported: 'default', local: 'call' },
+      { source: './bridge.js', imported: '*', local: 'api', namespace: true },
+      { source: './other.js', imported: 'original', local: 'named' },
+    ]));
+    expect(definition.code).toContain('named');
+  });
+
+  it('does not carry an import shadowed by a worklet parameter', async () => {
+    const result = await transformReactLynx(
+      `
+import { runOnBackground } from './bridge.js';
+function worklet(runOnBackground) {
+  'main thread';
+  runOnBackground(() => {})();
+}
+`,
+      options('JS'),
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.definesForWorklet[0].imports).toHaveLength(1);
+  });
+});
+
 describe('legacy slot codegen', () => {
   it('collects the definitions its frozen codegen emits', async () => {
     const { definesForSnapshot, definesForWorklet } = await transformReactLynx(
@@ -247,15 +416,23 @@ describe('legacy slot codegen', () => {
         ],
         "definesForWorklet": [
           {
-            "code": "const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "d3dd:test:1", function(e) {
+            "code": "__registerWorklet("main-thread", "d3dd:test:1", function(e) {
           const onScroll = lynxWorkletImpl._workletMap["d3dd:test:1"].bind(this);
           let { label } = this["_c"];
-          'main thread';
           console.info(label, e);
       });
       ",
             "id": "d3dd:test:1",
+            "imports": [
+              {
+                "imported": "registerWorklet",
+                "local": "__registerWorklet",
+                "source": "@lynx-js/react/worklet-runtime/init",
+              },
+            ],
+            "runtimeRequirements": {
+              "mainThreadProgrammability": true,
+            },
           },
         ],
       }
@@ -289,13 +466,11 @@ function f() {
     const result = await transformReactLynx(sharedSource, options('LEPUS'));
 
     expect(result.code).toMatchInlineSnapshot(`
-      "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react/internal";
-      var loadWorkletRuntime = __loadWorkletRuntime;
+      "import { registerWorklet as __registerWorklet } from "@lynx-js/react/worklet-runtime/init";
       import { Foo } from './foo.js' with {
           runtime: 'shared'
       };
-      const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "d3dd:test:1", function() {
+      __registerWorklet("main-thread", "d3dd:test:1", function() {
           lynxWorkletImpl._workletMap["d3dd:test:1"].bind(this);
           'main thread';
           return new Foo();

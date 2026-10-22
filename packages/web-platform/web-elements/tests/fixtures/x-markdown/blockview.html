@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>blockview</title>
+    <meta content="width=device-width,initial-scale=1.0" name="viewport">
+    <link href="/main.css" rel="stylesheet" />
+  </head>
+  <body>
+    <script src="/main.js" defer></script>
+    <x-view class="page">
+      <x-markdown id="markdown" style="width: 300px">
+        <x-view id="first" slot="dil-1">First block</x-view>
+        <x-view id="second" slot="dil-2">Second block</x-view>
+        <x-view id="badge" slot="badge">Inline view</x-view>
+      </x-markdown>
+    </x-view>
+    <script>
+    window.addEventListener('load', async () => {
+        await customElements.whenDefined('x-markdown');
+        const el = document.getElementById('markdown');
+        const content =
+          'before ![](blockview://dil-1)\uFFFC between ![](blockview://dil-2) after\n\n'
+          + '![](inlineview://badge) ![](/tests/fixtures/resources/firefox-logo.png)';
+        el.setAttribute('content', content);
+        if (new URLSearchParams(location.search).has('typewriter')) {
+          el.setAttribute(
+            'initial-animation-step',
+            String(content.length),
+          );
+          el.setAttribute('animation-paused', 'true');
+          el.setAttribute('animation-type', 'typewriter');
+        }
+      });
+    </script>
+  </body>
+</html>

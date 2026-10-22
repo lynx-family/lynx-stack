@@ -8,7 +8,6 @@ import {
   flushDelayedRunOnBackgroundFunctions,
   runRunOnMainThreadTask,
   setEomShouldFlushElementTree,
-  updateWorkletRefInitValueChanges,
 } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { markTiming, setPipeline } from '../../core/performance.js';
@@ -44,10 +43,6 @@ export function installElementTemplatePatchListener(): void {
 
     const payload = JSON.parse(event.data.payload) as ElementTemplateUpdateCommitContext;
     markTiming('parseChangesEnd');
-
-    if (payload.mainThreadRefInitValuePatch?.length) {
-      updateWorkletRefInitValueChanges(payload.mainThreadRefInitValuePatch);
-    }
 
     if (
       typeof patchOptions.reloadVersion === 'number'

@@ -151,7 +151,7 @@ Options:
 
 在项目根目录执行 `rspeedy inspect` 命令后，会在项目的 `dist/.rsbuild` 目录下生成以下文件：
 
-- `rspeedy.config.js`: 表示构建时使用的 Rspeedy 配置
+- `rspeedy.config.mjs`: 表示构建时使用的 Rspeedy 配置
 - `rsbuild.config.mjs`: 表示构建时使用的 Rsbuild 配置
 - `rspack.config.lynx.mjs`: 表示构建时使用的 Rspack 配置
 
@@ -162,7 +162,7 @@ success config inspection completed, generated files:
   - Rsbuild config: /project/dist/.rsbuild/rsbuild.config.mjs
   - Rspack Config (lynx): /project/dist/.rsbuild/rspack.config.lynx.mjs
 success Inspect Rspeedy config succeed, open following files to view the content:
-  - Rspeedy: /project/dist/.rsbuild/rspeedy.config.js
+  - Rspeedy: /project/dist/.rsbuild/rspeedy.config.mjs
 ```
 
 ### 指定模式

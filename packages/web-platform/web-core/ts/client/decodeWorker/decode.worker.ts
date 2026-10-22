@@ -424,6 +424,10 @@ async function handleStream(
         );
         break;
       }
+      case TemplateSectionLabel.CustomSectionsStyleInfo: {
+        // Encoded for the style engine, not consumed by the runtime yet.
+        break;
+      }
       default:
         throw new Error(`Unknown section label: ${label}`);
     }

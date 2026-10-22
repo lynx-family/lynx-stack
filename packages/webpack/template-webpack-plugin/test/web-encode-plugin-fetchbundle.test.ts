@@ -86,6 +86,7 @@ describe('WebEncodePlugin: lepusCode-undefined safety (FetchBundle)', () => {
     expect(json.lepusCode['main-thread']).toBe('/* mts */');
     expect(json.styleInfo).toHaveProperty('0');
     expect(json.customSections).toEqual({
+      CSS: { encoding: 'CSS', content: { ruleList: [] } },
       metadata: { content: { version: 1 } },
     });
   });

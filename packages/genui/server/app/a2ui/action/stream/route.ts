@@ -178,11 +178,15 @@ async function postA2UIActionStream(req: Request) {
   };
 
   const reasoning = createFailureReasoning([body.apiKey, body.baseURL]);
+  let observeGenerationTiming:
+    | ((event: string, details?: Record<string, unknown>) => void)
+    | undefined;
   const opts = {
     ...pickA2UIChatOptions(body),
     onReasoning: reasoning.append,
     onPerformanceEvent: (event: string, details = {}) => {
       log(event, details);
+      observeGenerationTiming?.(event, details);
     },
   };
   const errorOptions = { secrets: [body.apiKey, opts.apiKey] };
@@ -271,6 +275,7 @@ async function postA2UIActionStream(req: Request) {
       };
       const run = async () => {
         const timing = createGenerationTiming();
+        observeGenerationTiming = timing.observe;
         const streamOptions: A2UIChatOptions = {
           ...optsWithCatalog,
           onModelInteraction: event => {

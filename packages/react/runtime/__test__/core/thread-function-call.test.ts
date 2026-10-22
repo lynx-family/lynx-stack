@@ -88,6 +88,7 @@ describe('thread-function-call main-thread primitives', () => {
         worklet,
         params: ['hello'],
         resolveId: 1,
+        reloadVersion: 0,
       }),
     });
   });

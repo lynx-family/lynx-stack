@@ -135,6 +135,8 @@ const useState: typeof usePreactState = (__BACKGROUND__ && isProfiling)
  *
  * @function
  * @public
+ *
+ * @group Hooks
  */
 const useEffect: (effect: EffectCallback, deps?: DependencyList) => void = (__BACKGROUND__ && isProfiling)
   ? useEffectProfiled
@@ -150,6 +152,8 @@ const useEffect: (effect: EffectCallback, deps?: DependencyList) => void = (__BA
  *
  * @function
  * @public
+ *
+ * @group Hooks
  *
  * @deprecated `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React.
  */

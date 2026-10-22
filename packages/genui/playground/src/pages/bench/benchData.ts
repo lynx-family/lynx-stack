@@ -2,8 +2,17 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+export const DEFAULT_BENCH_UI_JUDGE_SERVER_URL =
+  'https://server-render.lynx-stack.dev/';
+
 export type BenchRole = 'control' | 'experiment';
-export type BenchProtocol = 'a2ui' | 'openui' | 'lynx-xml' | 'html';
+export type BenchProtocol =
+  | 'a2ui'
+  | 'openui'
+  | 'lynx-xml'
+  | 'html'
+  | 'reactweb'
+  | 'reactlynx';
 export type BenchProfile = 'matched-core' | 'native';
 export type BenchVariable =
   | 'catalog'
@@ -16,6 +25,7 @@ export type BenchComparisonDirection = Extract<
   'model' | 'prompt' | 'protocol'
 >;
 export interface BenchGroup {
+  reasoningEffort?: BenchReasoningEffort;
   enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
   enableScriptReuse?: boolean;
@@ -30,6 +40,23 @@ export interface BenchGroup {
   protocol: BenchProtocol;
   role: BenchRole;
   variable: BenchVariable;
+}
+
+export const BENCH_REASONING_EFFORTS = [
+  'default',
+  'none',
+  'minimal',
+  'low',
+  'medium',
+  'high',
+  'xhigh',
+] as const;
+export type BenchReasoningEffort = typeof BENCH_REASONING_EFFORTS[number];
+
+export function isBenchReasoningEffort(
+  value: unknown,
+): value is BenchReasoningEffort {
+  return BENCH_REASONING_EFFORTS.includes(value as BenchReasoningEffort);
 }
 
 export interface BenchScenario {
@@ -65,10 +92,25 @@ export const BENCH_PROTOCOL_OPTIONS = [
     description: 'Self-contained Lynx XML page',
   },
   { value: 'html', label: 'HTML', description: 'Self-contained HTML page' },
+  {
+    value: 'reactweb',
+    label: 'ReactWeb',
+    description: 'Compiled React DOM page',
+  },
+  {
+    value: 'reactlynx',
+    label: 'ReactLynx',
+    description: 'Compiled native ReactLynx page',
+  },
 ] as const;
 
 export function isDocumentBenchProtocol(protocol: BenchProtocol): boolean {
-  return protocol === 'lynx-xml' || protocol === 'html';
+  return protocol === 'lynx-xml' || protocol === 'reactlynx'
+    || usesBrowserBenchCapture(protocol);
+}
+
+export function usesBrowserBenchCapture(protocol: BenchProtocol): boolean {
+  return protocol === 'html' || protocol === 'reactweb';
 }
 
 export function getBenchProtocolLabel(
@@ -160,6 +202,7 @@ export interface BenchSettings {
   repairEnabled: boolean;
   repeats: number;
   uiJudgeModel?: string;
+  screenshotSettleMs?: number;
 }
 
 export const BENCH_CATALOG_OPTIONS = [
@@ -218,6 +261,7 @@ export function createDefaultBenchGroups(model: string): BenchGroup[] {
       name: 'Baseline',
       variable: 'custom',
       model,
+      reasoningEffort: 'default',
       catalog: 'Full Catalog',
       extraInstruction: '',
       enabled: true,

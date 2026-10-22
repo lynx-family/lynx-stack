@@ -204,6 +204,7 @@ describe('BenchPage report recovery', () => {
       groups: createDefaultBenchGroups('test-model').map(group => ({
         ...group,
         name: 'Shared group',
+        reasoningEffort: 'high' as const,
         enableDesignGuidance: false,
         protocol: 'lynx-xml' as const,
         catalog: 'none',
@@ -263,6 +264,20 @@ describe('BenchPage report recovery', () => {
       .toBe(plan.uiJudgeServerUrl);
     expect(reloadedHistory[0]!.id).toBe(draftId);
     expect(reloadedHistory).toHaveLength(2);
+    const reasoning = container.querySelector<HTMLButtonElement>(
+      '[aria-label="Shared group Reasoning"]',
+    )!;
+    expect(reasoning.textContent).toBe('high');
+    await React.act(async () => reasoning.click());
+    const none = [...container.querySelectorAll<HTMLButtonElement>(
+      '[role="group"][aria-label="Shared group Reasoning"] button',
+    )].find(button => button.textContent === 'none')!;
+    await React.act(async () => none.click());
+    expect(reasoning.textContent).toBe('none');
+    await rstest.waitFor(async () => {
+      const history = await readBenchHistory();
+      expect(history[0]?.config.groups[0]?.reasoningEffort).toBe('none');
+    });
     const start = [...container.querySelectorAll('button')].find(button =>
       button.textContent === 'Start run'
     )!;
@@ -273,7 +288,9 @@ describe('BenchPage report recovery', () => {
       scenarios: unknown;
       settings: unknown;
     };
-    expect(body.groups).toMatchObject(plan.groups);
+    expect(body.groups).toMatchObject(
+      plan.groups.map(group => ({ ...group, reasoningEffort: 'none' })),
+    );
     expect(body.scenarios).toEqual(plan.scenarios);
     expect(body.settings).toMatchObject({
       repeats: 3,
@@ -347,6 +364,33 @@ describe('BenchPage report recovery', () => {
     );
   });
 
+  test.each([null, 'https://saved-judge.example.com/', ''])(
+    'restores the screenshot URL across remounts, defaulting only when unsaved (%s)',
+    async savedUrl => {
+      if (savedUrl !== null) {
+        window.localStorage.setItem(
+          'genui-bench-ui-judge-server-url',
+          savedUrl,
+        );
+      }
+      const expectedUrl = savedUrl ?? 'https://server-render.lynx-stack.dev/';
+      await mountPage();
+      expect(
+        container.querySelector<HTMLInputElement>('input[type="url"]')?.value,
+      ).toBe(expectedUrl);
+      expect(window.localStorage.getItem('genui-bench-ui-judge-server-url'))
+        .toBe(expectedUrl);
+
+      await React.act(async () => root.unmount());
+      root = createRoot(container);
+      await mountPage();
+      expect(
+        container.querySelector<HTMLInputElement>('input[type="url"]')?.value,
+      ).toBe(expectedUrl);
+      expect(benchRequests()).toHaveLength(0);
+    },
+  );
+
   test.each([undefined, ''])(
     'preserves the local screenshot URL for legacy links and clears it for an explicit empty URL (%s)',
     async uiJudgeServerUrl => {
@@ -365,7 +409,13 @@ describe('BenchPage report recovery', () => {
       )
         .toBe(uiJudgeServerUrl ?? localUrl);
       expect(window.localStorage.getItem('genui-bench-ui-judge-server-url'))
-        .toBe(uiJudgeServerUrl === '' ? null : localUrl);
+        .toBe(uiJudgeServerUrl ?? localUrl);
+      await React.act(async () => root.unmount());
+      root = createRoot(container);
+      await mountPage();
+      expect(
+        container.querySelector<HTMLInputElement>('input[type="url"]')?.value,
+      ).toBe(uiJudgeServerUrl ?? localUrl);
       expect(benchRequests()).toHaveLength(0);
     },
   );

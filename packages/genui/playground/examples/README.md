@@ -51,11 +51,13 @@ pnpm dev
 ```
 
 `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`, `TOS_BUCKET`, and `TOS_REGION` are required;
-payload publishing stays disabled when any of them is missing.
+payload publishing stays disabled when any of them is missing, and ReactLynx
+generation fails because its complete build output must be persisted.
 `TOS_STORAGE_PREFIX` defaults to `a2ui`, `TOS_OPENUI_STORAGE_PREFIX` defaults
-to `openui`, and `TOS_MCP_APPS_STORAGE_PREFIX` defaults to `mcp-apps`. These
-values select the method segment for each protocol. The native TOS endpoint
-defaults to `tos-${TOS_REGION}.volces.com`; set `TOS_ENDPOINT` to a host (an optional
+to `openui`, `TOS_MCP_APPS_STORAGE_PREFIX` defaults to `mcp-apps`, and
+`TOS_REACTLYNX_STORAGE_PREFIX` defaults to `reactlynx`. These values select the
+method segment for each protocol. The native TOS endpoint defaults to
+`tos-${TOS_REGION}.volces.com`; set `TOS_ENDPOINT` to a host (an optional
 `http://` or `https://` scheme is accepted) when the bucket uses a different
 endpoint. An optional `TOS_SECURITY_TOKEN` enables temporary STS credentials.
 
@@ -66,6 +68,7 @@ objects using these layouts:
 a2ui/preview/<uuid>/messages.json
 a2ui/preview/<uuid>/actionMocks.json
 openui/preview/<uuid>/raw.txt
+reactlynx/preview/<uuid>/<build-asset>
 a2ui/conversation/<uuid>/messages.json
 openui/conversation/<uuid>/messages.json
 mcp-apps/conversation/<uuid>/messages.json

@@ -30,6 +30,7 @@ import {
 import { dropFunctionCallReturnIds } from '../../core/thread-function-call/return-value.js';
 import { formatElementTemplateUpdateCommands, printElementTemplateTreeToString } from '../debug/alog.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
+import { sendMTRefInitValueToMainThread } from '../main-thread-ref-init-value.js';
 import { clearPendingEvents, flushPendingEvents } from '../prop-adapters/event.js';
 import { clearDelayedRefUiOps, clearPendingRefs, flushDelayedRefUiOps } from '../prop-adapters/ref.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
@@ -107,8 +108,6 @@ export function installElementTemplateHydrationListener(): void {
         const delayedRunOnMainThreadPayload = hasDelayedRunOnMainThread
           ? takeDelayedRunOnMainThreadData()
           : undefined;
-        const mainThreadRefInitValuePatch = takeMainThreadRefInitValuePatch();
-        const hasMainThreadRefInitValuePatch = mainThreadRefInitValuePatch.length > 0;
         const pipelineOptions = globalPipelineOptions;
         if (pipelineOptions) {
           globalCommitContext.flushOptions.pipelineOptions = pipelineOptions;
@@ -122,6 +121,7 @@ export function installElementTemplateHydrationListener(): void {
         }
         markTiming('packChangesStart');
         try {
+          sendMTRefInitValueToMainThread();
           if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
             console.alog?.(
               '[ReactLynxDebug] ElementTemplate hydrate update commands:\n'
@@ -132,7 +132,6 @@ export function installElementTemplateHydrationListener(): void {
                     flowIds: globalCommitContext.flowIds,
                     isHydration: true,
                     delayedRunOnMainThreadDataCount: delayedRunOnMainThreadPayload?.length,
-                    mainThreadRefInitValuePatchCount: mainThreadRefInitValuePatch.length,
                   },
                   null,
                   2,
@@ -146,9 +145,6 @@ export function installElementTemplateHydrationListener(): void {
             reloadVersion: getReloadVersion(),
             flowIds: globalCommitContext.flowIds,
             delayedRunOnMainThreadData: delayedRunOnMainThreadPayload,
-            mainThreadRefInitValuePatch: hasMainThreadRefInitValuePatch
-              ? mainThreadRefInitValuePatch
-              : undefined,
           });
         } catch (error) {
           if (delayedRunOnMainThreadPayload) {

@@ -38,8 +38,13 @@ export interface RenderInit {
 }
 
 export interface OpenUIRenderInit {
+  initialQueryResults?: Record<string, unknown>;
+  /** Explicit catalog selection; omitted values use the existing Stack library. */
+  openuiLibrary?: 'stack' | 'chat';
   rawText?: string;
   rawTextUrl?: string;
+  /** Keep the previous UI for text-only inline chat replies. */
+  inlineMode?: boolean;
   /** Theme forwarded to the OpenUI preview runtime. */
   theme?: 'light' | 'dark';
   speed?: number;
@@ -47,6 +52,8 @@ export interface OpenUIRenderInit {
   /** When true, actions are forwarded to the parent frame for live agent handling. */
   liveAction?: boolean;
   playbackMode?: boolean;
+  /** Receive real model snapshots through the live preview bridge. */
+  liveStream?: boolean;
 }
 
 export interface McpAppsRenderInit {
@@ -362,6 +369,17 @@ export function buildOpenUIRenderUrl(
   const url = new URL('render.html', baseUrl);
   url.searchParams.set('protocol', 'openui');
   url.searchParams.set('demoUrl', './openui.web.js');
+  if (init.initialQueryResults) {
+    url.searchParams.set(
+      'initialQueryResults',
+      JSON.stringify(init.initialQueryResults),
+    );
+  }
+  if (init.inlineMode) url.searchParams.set('inlineMode', '1');
+  if (init.openuiLibrary) {
+    url.searchParams.set('openuiLibrary', init.openuiLibrary);
+  }
+  if (init.liveStream) url.searchParams.set('liveStream', '1');
 
   if (init.theme) {
     url.searchParams.set('theme', init.theme);

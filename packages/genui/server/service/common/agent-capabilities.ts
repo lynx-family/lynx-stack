@@ -7,6 +7,8 @@ import { buildOpenAIRunOptions, pickProviderConfig } from './provider.js';
 import type { ChatOptions } from './types.js';
 import { initializeArkImageGenerationRunScope } from '../../agent/common/ark-image-generation-tool.js';
 import { createSearchRunScope } from '../../agent/common/doubao-search-tool.js';
+import type { SearchRunScope } from '../../agent/common/doubao-search-tool.js';
+import { registerToolPerformanceObserver } from '../../agent/common/tool-performance.js';
 
 export function pickAgentCapabilityConfig(opts: ChatOptions) {
   return {
@@ -22,9 +24,10 @@ export function buildCapabilityRunOptions(
   opts: ChatOptions,
   abortSignal?: AbortSignal,
   agent = 'genui',
+  scope: SearchRunScope = createSearchRunScope(),
 ) {
-  const scope = createSearchRunScope();
   initializeArkImageGenerationRunScope(scope);
+  registerToolPerformanceObserver(scope, opts.onPerformanceEvent);
   return {
     ...buildOpenAIRunOptions(opts, abortSignal),
     ...scope,

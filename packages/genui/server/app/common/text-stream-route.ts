@@ -23,6 +23,7 @@ import type {
   ChatMessage,
   ChatOptions,
   ConversationContext,
+  OpenAIReasoningEffort,
 } from '../../service/common/types.js';
 
 interface TextChatBody extends Record<string, unknown> {
@@ -33,6 +34,7 @@ interface TextChatBody extends Record<string, unknown> {
   apiKey?: string;
   baseURL?: string;
   api?: 'chat' | 'responses';
+  reasoningEffort?: OpenAIReasoningEffort;
 }
 
 interface TextStreamingService {
@@ -53,13 +55,26 @@ interface TextStreamingService {
 }
 
 export interface TextStreamRouteOptions {
+  /** Emit complete text lines, preserving the final unterminated line. */
+  deltaFraming?: 'line';
   parseOptions?: (body: Record<string, unknown>) =>
     | { ok: true; options: ChatOptions }
     | { ok: false; error: string };
+  publishFinalText?: (value: string) => Promise<unknown>;
   scope: string;
   path: string;
   getService: () => TextStreamingService;
   normalizeFinalText?: (value: string) => string;
+  postprocess?: (
+    text: string,
+    context: {
+      signal: AbortSignal;
+      requestUrl: string;
+      emit: (event: string, data: unknown) => boolean;
+      recordArtifactBuild: (durationMs: number) => void;
+      recordArtifactUpload: (durationMs: number) => void;
+    },
+  ) => Promise<Record<string, unknown>>;
 }
 
 async function postTextStream(req: Request, config: TextStreamRouteOptions) {
@@ -134,6 +149,9 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
     parsed.body.apiKey,
     parsed.body.baseURL,
   ]);
+  let observeGenerationTiming:
+    | ((event: string, details?: Record<string, unknown>) => void)
+    | undefined;
   const opts = {
     ...pickProviderOptions(parsed.body),
     ...(typeof parsed.body.enableDesignGuidance === 'boolean'
@@ -143,6 +161,7 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
     onReasoning: reasoning.append,
     onPerformanceEvent: (event: string, details = {}) => {
       log(event, details);
+      observeGenerationTiming?.(event, details);
     },
   };
   const errorOptions = { secrets: [parsed.body.apiKey, opts.apiKey] };
@@ -197,6 +216,7 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
 
       const run = async () => {
         const timing = createGenerationTiming();
+        observeGenerationTiming = timing.observe;
         try {
           const connectStartedAt = performance.now();
           log('agent.connect.started');
@@ -218,6 +238,7 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
           let streamedText = '';
           let chunkCount = 0;
           let firstChunkLogged = false;
+          let pendingDelta = '';
           log('upstream.stream.started');
 
           for await (const chunk of textStream) {
@@ -231,8 +252,19 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
               });
             }
             streamedText += chunk;
-            if (!enqueue('delta', { text: chunk })) break;
+            if (config.deltaFraming === 'line') {
+              pendingDelta += chunk;
+              let newline: number;
+              while ((newline = pendingDelta.indexOf('\n')) !== -1) {
+                const text = pendingDelta.slice(0, newline + 1);
+                pendingDelta = pendingDelta.slice(newline + 1);
+                if (!enqueue('delta', { text })) break;
+              }
+              if (closed) break;
+            } else if (!enqueue('delta', { text: chunk })) break;
           }
+
+          if (pendingDelta) enqueue('delta', { text: pendingDelta });
 
           generationController.signal.throwIfAborted();
           log('upstream.stream.ended', {
@@ -270,20 +302,53 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
             }
             throw error;
           }
+          const metrics = timing.finish();
+          if (config.publishFinalText) enqueue('metrics', { metrics });
+          let preview: unknown;
+          if (config.publishFinalText) {
+            const publishStartedAt = performance.now();
+            try {
+              preview = await config.publishFinalText(finalText);
+            } finally {
+              const artifactUploadMs = performance.now() - publishStartedAt;
+              timing.recordArtifactUpload(artifactUploadMs);
+              log('artifact.publish.completed', {
+                durationMs: artifactUploadMs,
+                published: preview !== undefined,
+              });
+            }
+          }
+          generationController.signal.throwIfAborted();
+          const postprocessMetadata = await config.postprocess?.(finalText, {
+            signal: generationController.signal,
+            requestUrl: req.url,
+            emit: enqueue,
+            recordArtifactBuild: durationMs => {
+              timing.recordArtifactBuild(durationMs);
+            },
+            recordArtifactUpload: durationMs => {
+              timing.recordArtifactUpload(durationMs);
+            },
+          });
+          generationController.signal.throwIfAborted();
           log('done.enqueued', {
             finalTextLength: finalText.length,
             finishReason,
             hasUsage: usage !== undefined,
+            hasPreviewUrl: preview !== undefined,
             requestId,
           });
           enqueue('done', {
-            metrics: timing.finish(),
+            metrics,
             ok: true,
             text: finalText,
-            ...(metadata ? { metadata } : {}),
+            ...(metadata || postprocessMetadata
+              ? { metadata: { ...metadata, ...postprocessMetadata } }
+              : {}),
             usage,
             tokenUsage: extractTokenUsage(usage),
             finishReason,
+            preview,
           });
         } catch (error: unknown) {
           if (

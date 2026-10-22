@@ -39,6 +39,9 @@ mkdir -p "${OUTPUT_DIR}/lib"
 install -m 0755 "${BINARY_SOURCE}" "${OUTPUT_DIR}/${BINARY}"
 install -m 0755 "${START_SCRIPT_SOURCE}" "${OUTPUT_DIR}/start.sh"
 install -m 0644 "${LYNX_CORE_SOURCE}" "${OUTPUT_DIR}/lynx_core.js"
+if [[ ! -e "${OUTPUT_DIR}/lynx_core_dev.js" && ! -L "${OUTPUT_DIR}/lynx_core_dev.js" ]]; then
+  ln -s lynx_core.js "${OUTPUT_DIR}/lynx_core_dev.js"
+fi
 install -m 0644 "${LYNX_RUNTIME_SOURCE}" "${OUTPUT_DIR}/lib/libLynx_clay.so"
 
 printf 'Built Linux AMD64 bundle at %s\n' "${OUTPUT_DIR}"

@@ -1,0 +1,5 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "lynx-xml",
+  "tsconfig": "tsconfig.build.json"
+}

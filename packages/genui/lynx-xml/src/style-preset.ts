@@ -317,7 +317,7 @@ export function generatePresetStyles(classNames: ReadonlySet<string>): string {
 /** Compact model-facing vocabulary for the built-in Lynx style preset. */
 export const LYNX_XML_STYLE_PRESET_INSTRUCTIONS: string =
   `Lynx StylePreset "default" is enabled:
-- Reuse the following classes instead of writing their CSS. The converter combines used preset rules followed by your custom CSS in a single <style> block; same-specificity custom CSS can override them. Write only additional styles not covered by this preset. Keep scripts and lifecycle logic authored in the document.
+- Reuse the following classes instead of writing their CSS. The converter combines used preset rules followed by your custom CSS in a single <style> block; same-specificity custom CSS can override them. Write only additional styles not covered by this preset.
 - This is a fixed Lynx utility vocabulary with literal px/hex values. It has no automatic reset, CSS variables, arbitrary values, fractions, variants (sm:, hover:, dark:), or @apply. Use custom CSS for unsupported styling. Avoid conflicting utilities for the same property.
 - Layout: flex with flex-row or flex-col (also row-reverse/col-reverse), flex-wrap/nowrap, flex-1/auto/none, grow, grow-0, shrink, shrink-0, items-start/end/center/stretch/baseline, justify-start/end/center/between/around/evenly, self-auto/start/end/center/stretch, hidden.
 - Spacing and sizes: p/px/py/pt/pr/pb/pl, m/mx/my/mt/mr/mb/ml, gap/gap-x/gap-y, w/h/min-w/min-h/max-w/max-h followed by -N. N is one of ${

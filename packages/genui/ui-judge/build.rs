@@ -12,6 +12,10 @@ use std::path::PathBuf;
 #[path = "../../lynx/engine-bridge/tools/runtime_build.rs"]
 mod runtime_build;
 
+#[cfg(unix)]
+#[path = "../../lynx/engine-bridge/tools/core_resources.rs"]
+mod core_resources;
+
 const START_SCRIPT: &str = r#"#!/bin/sh
 
 set -eu
@@ -52,6 +56,11 @@ fn main() -> io::Result<()> {
 
   copy_file(&runtime_source, &runtime_destination)?;
   copy_file(&lynx_core_source, &lynx_core_destination)?;
+  println!("cargo:rerun-if-changed=../../lynx/engine-bridge/tools/core_resources.rs");
+  #[cfg(unix)]
+  if env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("linux") {
+    core_resources::install_lynx_core_dev_fallback(&lynx_core_destination)?;
+  }
   fs::write(&start_script, START_SCRIPT)?;
 
   #[cfg(unix)]

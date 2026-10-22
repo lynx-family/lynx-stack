@@ -60,7 +60,7 @@ export default defineConfig({
 
 1. Install the Rsdoctor plugin:
 
-<PackageManagerTabs command="add @rsdoctor/rspack-plugin -D" />
+<PackageManagerTabs command="add @rsdoctor/core@latest -D" />
 
 2. Add the `RsdoctorRspackPlugin` to `lynx.config.ts`
 
@@ -72,7 +72,7 @@ export default defineConfig({
 :::
 
 ```ts title="lynx.config.ts"
-import { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin';
+import { RsdoctorRspackPlugin } from '@rsdoctor/core';
 
 export default {
   tools: {

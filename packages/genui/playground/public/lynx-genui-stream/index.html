@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!-- Copyright 2026 The Lynx Authors. Licensed under the Apache License, Version 2.0. -->
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lynx GenUI Preview</title>
+  </head>
+  <body>
+    <a href="../lynx-genui-stream.html">打开 GenUI 渲染预览</a>
+    <script>
+    const page = new URL(location.href);
+      page.pathname = page.pathname.replace(
+        /\/lynx-genui-stream\/?$/,
+        '/lynx-genui-stream.html',
+      );
+      location.replace(page.href);
+    </script>
+  </body>
+</html>

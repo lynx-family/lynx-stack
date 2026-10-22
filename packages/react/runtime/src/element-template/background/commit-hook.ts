@@ -11,8 +11,6 @@ import {
 } from './commit-context.js';
 import type { BackgroundElementTemplateInstance } from './instance.js';
 import { clearElementTemplateRenderScope, resetElementTemplateRenderScope } from './render-scope.js';
-import type { MainThreadRefInitValuePatch } from '../../core/main-thread-ref-init-value.js';
-import { takeMainThreadRefInitValuePatch } from '../../core/main-thread-ref-init-value.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../core/performance.js';
 import { getReloadVersion } from '../../core/reload-version.js';
 import {
@@ -24,6 +22,7 @@ import { COMMIT } from '../../shared/render-constants.js';
 import { hook, isEmptyObject } from '../../utils.js';
 import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
+import { sendMTRefInitValueToMainThread } from '../main-thread-ref-init-value.js';
 import { clearPendingRefs, flushPendingRefs, hasPendingRefs } from '../prop-adapters/ref.js';
 import { createElementTemplateUpdateEvent } from '../protocol/update-event.js';
 
@@ -68,14 +67,12 @@ export function cancelElementTemplateRemovedSubtreeCleanup(): void {
   scheduledRemovedSubtreeCleanupTimers.clear();
 }
 
-function flushElementTemplateCommitChanges(mainThreadRefInitValuePatch: MainThreadRefInitValuePatch): void {
+function flushElementTemplateCommitChanges(): void {
   const hasNativeOps = globalCommitContext.ops.length > 0;
   const hasDelayedRunOnMainThread = delayedRunOnMainThreadData.length > 0;
-  const hasMainThreadRefInitValuePatch = mainThreadRefInitValuePatch.length > 0;
   const hasUpdatePayload = hasNativeOps
     || !isEmptyObject(globalCommitContext.flushOptions)
-    || hasDelayedRunOnMainThread
-    || hasMainThreadRefInitValuePatch;
+    || hasDelayedRunOnMainThread;
   const removedSubtreesAwaitingTeardown = hasNativeOps ? takeRemovedSubtreesForPostDispatchTeardown() : [];
   if (hasUpdatePayload) {
     markTimingLegacy('updateDiffVdomEnd');
@@ -115,7 +112,6 @@ function flushElementTemplateCommitChanges(mainThreadRefInitValuePatch: MainThre
                 flushOptions: globalCommitContext.flushOptions,
                 flowIds: globalCommitContext.flowIds,
                 delayedRunOnMainThreadDataCount: delayedRunOnMainThreadPayload?.length,
-                mainThreadRefInitValuePatchCount: mainThreadRefInitValuePatch.length,
               },
               null,
               2,
@@ -129,9 +125,6 @@ function flushElementTemplateCommitChanges(mainThreadRefInitValuePatch: MainThre
         reloadVersion: getReloadVersion(),
         flowIds: globalCommitContext.flowIds,
         delayedRunOnMainThreadData: delayedRunOnMainThreadPayload,
-        mainThreadRefInitValuePatch: hasMainThreadRefInitValuePatch
-          ? mainThreadRefInitValuePatch
-          : undefined,
       });
     } catch (error) {
       if (delayedRunOnMainThreadPayload) {
@@ -166,23 +159,33 @@ export function installElementTemplateCommitHook(): void {
   hook(options, COMMIT, (originalCommit, vnode, commitQueue) => {
     if (__BACKGROUND__) {
       clearElementTemplateRenderScope();
+      try {
+        sendMTRefInitValueToMainThread();
+      } catch (error) {
+        const removedSubtreesAwaitingTeardown = takeRemovedSubtreesForPostDispatchTeardown();
+        dropFunctionCallReturnIds(takeDelayedRunOnMainThreadData().map(data => data.resolveId));
+        clearPendingRefs();
+        resetGlobalCommitContext();
+        setPipeline(undefined);
+        scheduleElementTemplateRemovedSubtreeCleanup(removedSubtreesAwaitingTeardown);
+        throw error;
+      }
     }
 
     if (__BACKGROUND__ && !hasHydrated && hasPendingRefs()) {
       // User effects can run before ET hydrate arrives, so ordinary refs must be
       // attached on the background commit even though native UI ops are delayed.
       flushPendingRefs();
-    } else if (__BACKGROUND__ && hasHydrated) {
-      const mainThreadRefInitValuePatch = takeMainThreadRefInitValuePatch();
-      if (
+    } else if (
+      __BACKGROUND__ && hasHydrated
+      && (
         globalCommitContext.ops.length > 0
         || !isEmptyObject(globalCommitContext.flushOptions)
         || hasPendingRefs()
         || delayedRunOnMainThreadData.length > 0
-        || mainThreadRefInitValuePatch.length > 0
-      ) {
-        flushElementTemplateCommitChanges(mainThreadRefInitValuePatch);
-      }
+      )
+    ) {
+      flushElementTemplateCommitChanges();
     }
 
     originalCommit?.(vnode, commitQueue);

@@ -37,6 +37,10 @@ updating Lynx libraries.
 - Keep generated package dependency versions as workspace placeholders in
   templates, then replace them from `create-lynx-library` package metadata at
   scaffold time so published CLIs emit published versions.
+- Android N-API libraries may extract PrimJS shared libraries for CMake linking,
+  but generated library AARs must exclude `libnapi.so` and
+  `libnapi_adapter.so`. Keep the PrimJS implementation dependency so the host
+  receives one runtime copy transitively.
 
 iOS scanners in the native repo may still recognize existing Lynx lazy
 registration forms for compatibility, but new generated templates should prefer

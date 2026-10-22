@@ -12,6 +12,7 @@ import {
 } from '../service/common/bench/judge.js';
 import type {
   ProtocolBenchAdapter,
+  ProtocolBenchAdapterInput,
 } from '../service/common/bench/protocol-adapter.js';
 import { runBenchJob, summarizeGroup } from '../service/common/bench/runner.js';
 import {
@@ -168,6 +169,7 @@ describe('A2UI Bench UI Judge integration', () => {
           model,
           protocol: 'openui',
           profile: 'matched-core',
+          reasoningEffort: 'default',
         }];
         benchRequest.scenarios = [{
           ...benchRequest.scenarios[0]!,
@@ -179,7 +181,8 @@ describe('A2UI Bench UI Judge integration', () => {
           adapters: {
             openui: {
               protocol: 'openui',
-              generate: () => {
+              generate: input => {
+                expect(input.reasoningEffort).toBeUndefined();
                 if (!success) throw new Error(`${model} private-key`);
                 return Promise.resolve({
                   attempts: [],
@@ -223,90 +226,118 @@ describe('A2UI Bench UI Judge integration', () => {
     },
   );
 
-  test('routes HTML source to Judge and preserves HTML results and summaries', async () => {
-    const rawText =
-      '<!doctype html><html><head></head><body>Hello</body></html>';
-    rstest.mocked(resolveGenuiBenchUiJudge).mockResolvedValueOnce({
-      enabled: true,
-      session: { screenshotPath: 'browser/html' },
-    });
-    rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
-      errors: [],
-      score: 4,
-      status: 'complete',
-      warnings: [],
-    });
-    const benchRequest = request();
-    benchRequest.groups = [{
-      ...group,
-      protocol: 'html',
-      profile: 'native',
-      model: 'html-model',
-    }];
-    const store = getBenchJobStore();
-    const job = store.createJob(benchRequest, 1);
-    await runBenchJob(job.id, {
-      adapters: {
-        'html': {
-          protocol: 'html',
-          generate: (input) => {
-            expect(input.enableHtmlFragment).toBeUndefined();
-            expect(input.enableScriptReuse).toBeUndefined();
-            return Promise.resolve({
-              attempts: [{
-                index: 1,
-                durationMs: 10,
-                inputTokens: 2,
-                outputTokens: 3,
-                totalTokens: 5,
-                usage: {
+  test.each(['html', 'reactweb', 'reactlynx'] as const)(
+    'routes %s artifacts to Judge and preserves protocol results and summaries',
+    async (protocol) => {
+      const rawText =
+        '<!doctype html><html><head></head><body>Hello</body></html>';
+      rstest.mocked(resolveGenuiBenchUiJudge).mockResolvedValueOnce({
+        enabled: true,
+        session: {
+          screenshotPath: protocol === 'reactlynx'
+            ? 'screenshot/zip/url'
+            : 'browser/html',
+        },
+      });
+      rstest.mocked(runGenuiBenchUiJudge).mockResolvedValueOnce({
+        errors: [],
+        score: 4,
+        status: 'complete',
+        warnings: [],
+      });
+      const benchRequest = request();
+      benchRequest.groups = [{
+        ...group,
+        protocol,
+        profile: 'native',
+        model: 'html-model',
+      }];
+      const store = getBenchJobStore();
+      const job = store.createJob(benchRequest, 1);
+      await runBenchJob(job.id, {
+        adapters: {
+          [protocol]: {
+            protocol,
+            generate: (input: ProtocolBenchAdapterInput) => {
+              expect(input.enableHtmlFragment).toBeUndefined();
+              expect(input.enableScriptReuse).toBeUndefined();
+              return Promise.resolve({
+                attempts: [{
+                  index: 1,
+                  durationMs: 10,
                   inputTokens: 2,
                   outputTokens: 3,
-                  inputTokenDetails: { cacheReadTokens: 1 },
-                },
-                valid: true,
-                validationErrors: [],
-                outputChars: rawText.length,
-              }],
-              finalValid: true,
-              finalText: rawText,
-              finalErrors: [],
-              judgePayload: { kind: 'html-source', rawText },
-            });
+                  totalTokens: 5,
+                  usage: {
+                    inputTokens: 2,
+                    outputTokens: 3,
+                    inputTokenDetails: { cacheReadTokens: 1 },
+                  },
+                  valid: true,
+                  validationErrors: [],
+                  outputChars: rawText.length,
+                }],
+                finalValid: true,
+                finalText: rawText,
+                finalErrors: [],
+                judgePayload: protocol === 'reactlynx'
+                  ? {
+                    kind: 'reactlynx-bundle',
+                    rawText,
+                    zipUrl:
+                      'https://cdn.test/reactlynx-bench/preview/id/bundle.zip',
+                  }
+                  : {
+                    kind: protocol === 'reactweb'
+                      ? 'reactweb-html'
+                      : 'html-source',
+                    rawText,
+                  },
+              });
+            },
           },
         },
-      },
-    });
-    expect(runGenuiBenchUiJudge).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        model: 'html-model',
-        artifact: { protocol: 'html', rawText },
-      }),
-      expect.any(Function),
-    );
-    const report = store.getJob(job.id)?.report;
-    expect(report?.results[0]).toMatchObject({
-      protocol: 'html',
-      profile: 'native',
-      catalog: 'none',
-      text: rawText,
-      tokens: 5,
-      usage: {
-        inputTokens: 2,
-        outputTokens: 3,
-        totalTokens: 5,
-        cachedTokens: 1,
-      },
-      judgeScore: 4,
-      status: 'complete',
-      ok: true,
-    });
-    expect(report?.summaries[0]).toMatchObject({
-      protocol: 'html',
-      profile: 'native',
-      judgeRunCount: 1,
-    });
-  });
+      });
+      expect(runGenuiBenchUiJudge).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          model: 'html-model',
+          artifact: {
+            protocol,
+            rawText,
+            ...(protocol === 'reactlynx'
+              ? {
+                zipUrl:
+                  'https://cdn.test/reactlynx-bench/preview/id/bundle.zip',
+              }
+              : {}),
+          },
+        }),
+        expect.any(Function),
+      );
+      const report = store.getJob(job.id)?.report;
+      expect(report?.results[0]).toMatchObject({
+        protocol,
+        profile: 'native',
+        catalog: 'none',
+        text: rawText,
+        tokens: 5,
+        usage: {
+          inputTokens: 2,
+          outputTokens: 3,
+          totalTokens: 5,
+          cachedTokens: 1,
+        },
+        judgeScore: 4,
+        status: 'complete',
+        ok: true,
+      });
+      expect(report?.summaries[0]).toMatchObject({
+        protocol,
+        profile: 'native',
+        judgeRunCount: 1,
+      });
+    },
+  );
 
   test('routes XML source to Judge and preserves XML results and summaries', async () => {
     const rawText =
@@ -336,7 +367,7 @@ describe('A2UI Bench UI Judge integration', () => {
       adapters: {
         'lynx-xml': {
           protocol: 'lynx-xml',
-          generate: (input) => {
+          generate: (input: ProtocolBenchAdapterInput) => {
             expect(input.enableHtmlFragment).toBe(true);
             expect(input.enableScriptReuse).toBe(true);
             return Promise.resolve({
@@ -440,6 +471,22 @@ describe('A2UI Bench UI Judge integration', () => {
     expect(summary.avgJudgeGeqiScore).toBe(80 / 3);
     expect(summary.judgeRunCount).toBe(1);
     expect(summary.plannedRuns).toBe(3);
+  });
+
+  test('averages only recorded first text timings, including failed runs', () => {
+    const runs = [
+      { ...result('first', 'complete', 4), firstTextTokenMs: 0 },
+      { ...result('failed', 'failed', 0), ok: false, firstTextTokenMs: 300 },
+      result('legacy', 'skipped', 0),
+      { ...result('invalid', 'skipped', 0), firstTextTokenMs: Number.NaN },
+    ];
+    expect(summarizeGroup(group, runs)).toMatchObject({
+      avgFirstTextTokenMs: 150,
+      firstTextRunCount: 2,
+    });
+    expect(summarizeGroup(group, [runs[2]!])).not.toHaveProperty(
+      'avgFirstTextTokenMs',
+    );
   });
 
   test('marks a matched-core run failed when Judge fails', async () => {

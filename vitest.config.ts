@@ -24,6 +24,7 @@ export default defineConfig({
         'packages/**/lib/**',
         'packages/**/test/**',
         'website/**',
+        'docs/**',
 
         'packages/react/transform/tests/__swc_snapshots__/**',
         '**/tests/__swc_snapshots__/**',
@@ -32,6 +33,20 @@ export default defineConfig({
         '**/eslint.config.js',
 
         'packages/tools/canary-release/**',
+        // Rspeedy core is covered by its Rstest project. Excluding this module
+        // prevents Codecov from merging that coverage with Vitest's unexecuted
+        // V8 report for the same source file.
+        'packages/rspeedy/core/src/plugins/rsdoctor.plugin.ts',
+        // These modules are covered by Rstest; an unexecuted V8 report would
+        // add uncovered lines when Codecov merges the two collectors.
+        'packages/rspeedy/plugin-react-alias/src/index.ts',
+        'packages/webpack/react-webpack-plugin/src/Defines.ts',
+        'packages/webpack/react-webpack-plugin/src/DefinesInjection.ts',
+        'packages/webpack/react-webpack-plugin/src/ReactWebpackPlugin.ts',
+        'packages/webpack/react-webpack-plugin/src/loaders/main-thread.ts',
+        'packages/rspeedy/plugin-react/src/splitChunks.ts',
+        'packages/rspeedy/plugin-react/src/compileResult.ts',
+        'packages/rspeedy/plugin-react/src/pluginReactLynx.ts',
         'packages/rspeedy/plugin-lynx/**',
         'packages/web-platform/web-core-e2e/**',
         'packages/webpack/test-tools/**',
@@ -73,6 +88,7 @@ export default defineConfig({
       'packages/react/*/vitest.**.config.ts',
       'packages/react/runtime/__test__/element-template/vitest.config.ts',
       'packages/rspeedy/*/vitest.config.ts',
+      'packages/web-platform/web-explorer/vitest.config.ts',
       'packages/testing-library/*/vitest.config.mts',
       'packages/testing-library/examples/*/vitest.config.ts',
       '!packages/testing-library/examples/react-compiler/vitest.config.ts',

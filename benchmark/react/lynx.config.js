@@ -79,6 +79,10 @@ const entries = {
   '019-use-signal-full-attribute-update': [
     './cases/019-use-signal-full-attribute-update/index.tsx',
   ],
+  '020-many-main-thread-refs': [
+    './src/patchProfile.ts',
+    './cases/020-many-main-thread-refs/index.tsx',
+  ],
 };
 
 export function createBenchmarkConfig(useElementTemplate = false) {

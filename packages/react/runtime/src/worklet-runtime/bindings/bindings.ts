@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { ClosureValueType, JsFnHandle, Worklet, WorkletRefImpl } from './types.js';
+import type { ClosureValueType, JsFnHandle, MainThreadRefInitValuePatch, Worklet, WorkletRefImpl } from './types.js';
 import type { Element } from '../api/element.js';
 
 /**
@@ -30,10 +30,24 @@ function updateWorkletRef(workletRef: WorkletRefImpl<Element>, element: ElementN
  *
  * @param patch - An array containing the index and new value of the worklet value.
  */
-function updateWorkletRefInitValueChanges(patch?: [number, unknown][]): void {
+function updateWorkletRefInitValueChanges(
+  patch?: MainThreadRefInitValuePatch,
+): void {
   if (patch) {
     globalThis.lynxWorkletImpl?._refImpl.updateWorkletRefInitValueChanges(patch);
   }
+}
+
+/**
+ * Register a definition for an opaque main-thread object type.
+ *
+ * @internal
+ */
+function registerMainThreadObjectType(
+  type: string,
+  create: ((initialValue: unknown) => object) | Worklet,
+): void {
+  globalThis.lynxWorkletImpl._refImpl.registerMainThreadObjectType(type, create);
 }
 
 /**
@@ -84,6 +98,7 @@ export {
   updateWorkletRef,
   updateWorkletRefInitValueChanges,
   clearFirstScreenMainThreadRefs,
+  registerMainThreadObjectType,
   registerWorklet,
   delayRunOnBackground,
   setEomShouldFlushElementTree,

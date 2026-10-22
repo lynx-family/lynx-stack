@@ -6,11 +6,17 @@ import { useState } from 'react';
 import {
   BENCH_PRESET_OPTIONS,
   BENCH_PROTOCOL_OPTIONS,
+  BENCH_REASONING_EFFORTS,
   MAX_BENCH_GROUPS,
   isDocumentBenchProtocol,
   usesCatalog,
 } from './benchData.js';
-import type { BenchGroup, BenchPreset, BenchProtocol } from './benchData.js';
+import type {
+  BenchGroup,
+  BenchPreset,
+  BenchProtocol,
+  BenchReasoningEffort,
+} from './benchData.js';
 import { BenchDropdown } from './BenchDropdown.js';
 import { Button } from '../../components/Button.js';
 import { MessageSquarePlus, Trash2 } from '../../components/Icon.js';
@@ -34,6 +40,10 @@ export function BenchComparisonGroupsSection(props: {
   onDesignGuidanceChange: (id: string, enabled: boolean) => void;
   onEnabledChange: (id: string, enabled: boolean) => void;
   onModelChange: (id: string, model: string) => void;
+  onReasoningChange: (
+    id: string,
+    reasoningEffort: BenchReasoningEffort,
+  ) => void;
   onNameChange: (id: string, name: string) => void;
   onPromptChange: (id: string, prompt: string) => void;
   onProtocolChange: (id: string, protocol: BenchProtocol) => void;
@@ -160,7 +170,26 @@ export function BenchComparisonGroupsSection(props: {
                       onChange={(model) => props.onModelChange(group.id, model)}
                     />
                   </div>
-                  {!isDocumentBenchProtocol(group.protocol) && (
+                  <div className='benchField'>
+                    <span className='benchFieldLabel'>Reasoning</span>
+                    <BenchDropdown
+                      ariaLabel={`${groupName} Reasoning`}
+                      value={group.reasoningEffort ?? 'default'}
+                      disabled={props.locked}
+                      options={BENCH_REASONING_EFFORTS.map(value => ({
+                        value,
+                        label: value,
+                        ...(value === 'default'
+                          ? { description: 'Use the selected model setting' }
+                          : {}),
+                      }))}
+                      onChange={value =>
+                        props.onReasoningChange(group.id, value)}
+                    />
+                  </div>
+                </div>
+                {!isDocumentBenchProtocol(group.protocol) && (
+                  <div className='benchGroupFields'>
                     <div className='benchField'>
                       <span className='benchFieldLabel benchFieldLabelWithHint'>
                         Catalog
@@ -192,8 +221,8 @@ export function BenchComparisonGroupsSection(props: {
                           props.onCatalogChange(group.id, catalog)}
                       />
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
                 <div className='benchGroupFields'>
                   <div className='benchField'>
                     <span className='benchFieldLabel'>Design skill</span>
