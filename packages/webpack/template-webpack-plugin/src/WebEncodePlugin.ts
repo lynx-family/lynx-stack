@@ -207,8 +207,8 @@ export class WebEncodePlugin {
 /**
  * Routes the custom sections of a bundle into the slots a web bundle carries.
  * The `JsBytecode` tag says which section is the main thread one; on web it
- * only selects the slot, the section stays raw source. A `CSS` section rides
- * the `StyleInfo` section and also stays a named custom section. Structured
+ * only selects the slot, the section stays raw source. A `CSS` section is stored
+ * in `StyleInfo` and retained as a named custom section. Structured
  * metadata remains in custom sections; background source moves to the manifest.
  *
  * @public
