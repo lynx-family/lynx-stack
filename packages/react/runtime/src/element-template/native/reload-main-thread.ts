@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { flushElementTemplate } from './flush.js';
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
 import { increaseReloadVersion } from '../../core/reload-version.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
@@ -54,7 +55,7 @@ export function reloadMainThread(data: unknown, options: UpdatePageOption): void
     setRoot({ __jsx: oldRoot.__jsx });
     renderMainThread();
 
-    __FlushElementTree(undefined, options);
+    flushElementTemplate(options);
   } finally {
     if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileEnd();

@@ -1,3 +1,4 @@
+import { flushElementTemplate } from '../../../../src/element-template/native/flush.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderMainThread } from '../../../../src/element-template/runtime/render/render-main-thread.js';
@@ -281,6 +282,8 @@ describe('renderMainThread', () => {
 
   it('attaches root MTRef state only after page insertion succeeds', () => {
     const rootRef = { type: 'root-ref' } as unknown as ElementTemplateHandle;
+    const target = { type: 'actual-element' } as unknown as ElementRef;
+    vi.mocked(__GetElementByAttrSlot).mockReturnValue(target);
     const ref = { _wvid: 80 };
     const updateWorkletRef = vi.fn();
     const previousWorkletImpl = globalThis.lynxWorkletImpl;
@@ -311,8 +314,10 @@ describe('renderMainThread', () => {
 
     try {
       renderMainThread();
+      expect(updateWorkletRef).not.toHaveBeenCalled();
+      flushElementTemplate();
 
-      expect(updateWorkletRef).toHaveBeenCalledWith(ref, rootRef);
+      expect(updateWorkletRef).toHaveBeenCalledWith(ref, target);
       expect(vi.mocked(__InsertNodeToElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
         updateWorkletRef.mock.invocationCallOrder[0]!,
       );
