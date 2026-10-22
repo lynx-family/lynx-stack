@@ -244,6 +244,12 @@ export function testingLibraryPlugin(
         const regex = /\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)(\?.*)?$/;
         if (!regex.test(id)) return null;
 
+        const syntax = /\.[mc]?tsx?(\?.*)?$/.test(id)
+          ? 'typescript'
+          : 'ecmascript';
+        // is '.ts' (one of '.js', '.jsx', '.ts', '.tsx')
+        const isTS = /\.[mc]?ts(\?.*)?$/.test(id);
+
         const { transformReactLynxSync } = require(
           '@lynx-js/react/transform',
         ) as typeof import('@lynx-js/react/transform');
@@ -257,6 +263,14 @@ export function testingLibraryPlugin(
           pluginName: '',
           filename: basename,
           sourcemap: true,
+          syntaxConfig: JSON.stringify({
+            syntax,
+            decorators: true,
+            // Only '.ts' conflicts with tsx, both '.js' and '.jsx' can be handled by tsx.
+            tsx: !isTS,
+            // `.js` is not conflicts with jsx, always pass true
+            jsx: true,
+          }),
           snapshot: {
             preserveJsx: false,
             runtimePkg: `${runtimePkgName}/internal`,
