@@ -7,10 +7,6 @@ import { reloadMainThread } from './reload-main-thread.js';
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
 import { createElementTemplatePage, setupPage } from '../runtime/page/page.js';
 import { renderMainThread } from '../runtime/render/render-main-thread.js';
-import {
-  applyPendingMainThreadRefAttachments,
-  hasPendingMainThreadRefAttachments,
-} from '../runtime/template/main-thread-dynamic-attr-state.js';
 
 function injectCalledByNative(): void {
   const calledByNative: LynxCallByNative = {
@@ -30,7 +26,6 @@ function renderPage(data: Record<string, unknown> | undefined): void {
   lynx.__initData = data ?? {};
   setupPage(createElementTemplatePage());
   renderMainThread();
-  if (hasPendingMainThreadRefAttachments()) applyPendingMainThreadRefAttachments();
 }
 
 function updatePage(data: Record<string, unknown> | undefined, options?: UpdatePageOption): void {

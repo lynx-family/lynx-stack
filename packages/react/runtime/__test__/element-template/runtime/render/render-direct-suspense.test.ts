@@ -1,4 +1,3 @@
-import { flushElementTemplate } from '../../../../src/element-template/native/flush.js';
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
@@ -137,7 +136,6 @@ describe('direct renderer Suspense', () => {
 
     try {
       renderMainThread();
-      flushElementTemplate();
       expect(attached).toEqual([surviving]);
       const abandonedUid = create.mock.calls[0]![4];
       const fallbackUid = create.mock.calls[1]![4];

@@ -1,4 +1,3 @@
-import { flushElementTemplate } from '../../../../src/element-template/native/flush.js';
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
@@ -96,7 +95,6 @@ describe('direct first-screen materialization', () => {
 
     try {
       renderMainThread();
-      flushElementTemplate();
       expect(events).toEqual([
         'render-first',
         'create:_et_direct_leaf',
