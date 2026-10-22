@@ -74,3 +74,19 @@ function CompListConditional() {
 }
 
 export const ListConditionalMT = <CompListConditional />;
+
+function CompListKeys() {
+  return (
+    <list>
+      {lynx.__initData.keys.map((key) => {
+        return (
+          <list-item item-key={key}>
+            <ListItem attr={key}></ListItem>
+          </list-item>
+        );
+      })}
+    </list>
+  );
+}
+
+export const ListKeysMT = <CompListKeys />;
