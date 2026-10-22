@@ -2,8 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { flushElementTemplate } from '../../../../src/element-template/native/flush.js';
 import {
   __etAttrPlanMap,
   adaptMTEventAttrSlot,
@@ -12,10 +13,12 @@ import {
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import {
   attachMainThreadDynamicAttrRefsForSubtree,
+  applyPendingMainThreadRefAttachments,
   clearMainThreadDynamicAttrState,
   deleteMainThreadDynamicAttrStateForSubtree,
   detachMainThreadDynamicAttrRefsForSubtree,
   getMainThreadDynamicAttrState,
+  hasPendingMainThreadRefAttachments,
   initializeMainThreadDynamicAttrSlots,
   prepareMainThreadDynamicAttrSlotsForNative,
   updateMainThreadEventAttrSlot as setMTEventSlot,
@@ -30,7 +33,17 @@ import { initWorklet } from '../../../../src/worklet-runtime/workletRuntime.js';
 
 const MT_EVENT_TEMPLATE = '_et_mt_event';
 const MT_REF_TEMPLATE = '_et_mt_ref';
-const TEST_NATIVE_REF = { id: 'dynamic-attr-target' } as unknown as ElementTemplateHandle;
+const TEST_NATIVE_REF = { id: 'dynamic-attr-template' } as unknown as ElementTemplateHandle;
+const TEST_ELEMENT_REF = { id: 'dynamic-attr-element' } as unknown as ElementRef;
+
+function completeRefAttachments(): void {
+  applyPendingMainThreadRefAttachments();
+}
+
+function attachAndComplete(handles: Parameters<typeof attachMainThreadDynamicAttrRefsForSubtree>[0]): void {
+  attachMainThreadDynamicAttrRefsForSubtree(handles);
+  completeRefAttachments();
+}
 
 function setMTRefSlot(
   handleId: number,
@@ -40,6 +53,7 @@ function setMTRefSlot(
   nativeRef: ElementTemplateHandle = TEST_NATIVE_REF,
 ): void {
   setMTRefSlotImpl(handleId, attrSlotIndex, value, nativeRef, isHydration);
+  completeRefAttachments();
 }
 
 function registerMTRefSlots(handleId: number, ...slotIndexes: number[]): void {
@@ -95,6 +109,9 @@ function installRefRuntime(): {
 }
 
 describe('main-thread dynamic attr state', () => {
+  beforeEach(() => {
+    vi.stubGlobal('__GetElementByAttrSlot', vi.fn(() => TEST_ELEMENT_REF));
+  });
   afterEach(() => {
     clearMainThreadDynamicAttrState();
     clearEtAttrPlanMap();
@@ -131,6 +148,129 @@ describe('main-thread dynamic attr state', () => {
       SystemInfo.lynxSdkVersion = previousSdkVersion;
       vi.unstubAllGlobals();
     }
+  });
+
+  it('resolves distinct inner nodes before native flush without a layout hook', () => {
+    const { updateWorkletRef, restore } = installRefRuntime();
+    const flush = vi.fn();
+    vi.stubGlobal('__FlushElementTree', flush);
+    const firstRef = { _wvid: 7 };
+    const secondRef = { _wvid: 8 };
+    const secondElement = { id: 'second-inner-node' } as unknown as ElementRef;
+    vi.mocked(__GetElementByAttrSlot).mockImplementation((_handle, slot) =>
+      slot === 0 ? TEST_ELEMENT_REF : secondElement
+    );
+    try {
+      registerMTRefSlots(17, 0, 1);
+      setMTRefSlot(17, 0, { type: 'main-thread-ref', value: firstRef });
+      setMTRefSlot(17, 1, { type: 'main-thread-ref', value: secondRef });
+      attachMainThreadDynamicAttrRefsForSubtree([{ uid: 17, ref: TEST_NATIVE_REF }]);
+      expect(updateWorkletRef).not.toHaveBeenCalled();
+      const options = { emptyPatch: true, asyncFlush: true };
+      flushElementTemplate(options);
+      expect(updateWorkletRef.mock.calls).toEqual([[firstRef, TEST_ELEMENT_REF], [secondRef, secondElement]]);
+      expect(flush).toHaveBeenCalledWith(undefined, options);
+      expect(updateWorkletRef.mock.invocationCallOrder.at(-1)).toBeLessThan(flush.mock.invocationCallOrder[0]!);
+      expect(hasPendingMainThreadRefAttachments()).toBe(false);
+    } finally {
+      restore();
+    }
+  });
+
+  it('delivers only the hydrated binding when it replaces an uncommitted ref', () => {
+    const { updateWorkletRef, restore } = installRefRuntime();
+    const hydrated = { _wvid: 8 };
+    try {
+      registerMTRefSlots(17, 0);
+      setMTRefSlot(17, 0, { type: 'main-thread-ref', value: { _wvid: -7 } });
+      attachMainThreadDynamicAttrRefsForSubtree([{ uid: 17, ref: TEST_NATIVE_REF }]);
+      setMTRefSlotImpl(17, 0, { type: 'main-thread-ref', value: hydrated }, TEST_NATIVE_REF, true);
+      applyPendingMainThreadRefAttachments();
+      expect(updateWorkletRef.mock.calls).toEqual([[hydrated, TEST_ELEMENT_REF]]);
+    } finally {
+      restore();
+    }
+  });
+
+  it('skips a pending owner removed by an earlier callback', () => {
+    const { updateWorkletRef, restore } = installRefRuntime();
+    try {
+      for (const id of [17, 18]) {
+        registerMTRefSlots(id, 0);
+        setMTRefSlotImpl(id, 0, { type: 'main-thread-ref', value: { _wvid: id } }, TEST_NATIVE_REF);
+        attachMainThreadDynamicAttrRefsForSubtree([{ uid: id, ref: TEST_NATIVE_REF }]);
+      }
+      updateWorkletRef.mockImplementationOnce(() => deleteMainThreadDynamicAttrStateForSubtree([18]));
+      applyPendingMainThreadRefAttachments();
+      expect(updateWorkletRef).toHaveBeenCalledOnce();
+      expect(__GetElementByAttrSlot).toHaveBeenCalledOnce();
+    } finally {
+      restore();
+    }
+  });
+
+  it('does not materialize a ref removed before the batch commits', () => {
+    const { updateWorkletRef, restore } = installRefRuntime();
+    try {
+      registerMTRefSlots(17, 0);
+      setMTRefSlot(17, 0, { type: 'main-thread-ref', value: { _wvid: 7 } });
+      attachMainThreadDynamicAttrRefsForSubtree([{ uid: 17, ref: TEST_NATIVE_REF }]);
+      setMTRefSlotImpl(17, 0, null, TEST_NATIVE_REF);
+      applyPendingMainThreadRefAttachments();
+      expect(__GetElementByAttrSlot).not.toHaveBeenCalled();
+      expect(updateWorkletRef).not.toHaveBeenCalled();
+    } finally {
+      restore();
+    }
+  });
+
+  it('keeps a replacement made during a reentrant ref callback and skips the stale binding', () => {
+    const { updateWorkletRef, restore } = installRefRuntime();
+    const first = { _wvid: 7 };
+    const oldSecond = { _wvid: 8 };
+    const nextSecond = { _wvid: 9 };
+    try {
+      registerMTRefSlots(17, 0, 1);
+      setMTRefSlot(17, 0, { type: 'main-thread-ref', value: first });
+      setMTRefSlot(17, 1, { type: 'main-thread-ref', value: oldSecond });
+      attachMainThreadDynamicAttrRefsForSubtree([{ uid: 17, ref: TEST_NATIVE_REF }]);
+      updateWorkletRef.mockImplementationOnce(() => {
+        setMTRefSlotImpl(17, 1, { type: 'main-thread-ref', value: nextSecond }, TEST_NATIVE_REF);
+        applyPendingMainThreadRefAttachments();
+      });
+      applyPendingMainThreadRefAttachments();
+      expect(updateWorkletRef.mock.calls).toEqual([[first, TEST_ELEMENT_REF], [nextSecond, TEST_ELEMENT_REF]]);
+    } finally {
+      restore();
+    }
+  });
+
+  it('runs returned callback cleanup if the binding removes itself during attachment', () => {
+    const previousRunWorklet = globalThis.runWorklet;
+    const cleanup = vi.fn();
+    const callback = { _wkltId: 'self-removing-ref' };
+    globalThis.runWorklet = vi.fn(() => {
+      deleteMainThreadDynamicAttrStateForSubtree([17]);
+      return cleanup;
+    });
+    try {
+      registerMTRefSlots(17, 0);
+      setMTRefSlot(17, 0, { type: 'main-thread-ref', value: callback });
+      attachAndComplete([{ uid: 17, ref: TEST_NATIVE_REF }]);
+      expect(globalThis.runWorklet).toHaveBeenCalledWith(callback, [{ elementRefptr: TEST_ELEMENT_REF }]);
+      expect(cleanup).toHaveBeenCalledOnce();
+      expect(getMainThreadDynamicAttrState(17, 0)).toBeUndefined();
+    } finally {
+      globalThis.runWorklet = previousRunWorklet;
+    }
+  });
+
+  it('fails visibly when native cannot resolve a submitted ref target during ref delivery', () => {
+    vi.mocked(__GetElementByAttrSlot).mockReturnValue(null);
+    registerMTRefSlots(17, 0);
+    setMTRefSlot(17, 0, { type: 'main-thread-ref', value: { _wvid: 7 } });
+    attachMainThreadDynamicAttrRefsForSubtree([{ uid: 17, ref: TEST_NATIVE_REF }]);
+    expect(() => applyPendingMainThreadRefAttachments()).toThrow('target 17:0 could not be materialized');
   });
 
   it('records native-held MTEvent ctx by handle and slot without storing the wrapper', () => {
@@ -183,16 +323,16 @@ describe('main-thread dynamic attr state', () => {
       registerMTRefSlots(17, 0);
       setMTRefSlot(17, 0, { type: 'main-thread-ref', value: firstRef });
 
-      attachMainThreadDynamicAttrRefsForSubtree([{ uid: 17, ref: nativeRef }]);
+      attachAndComplete([{ uid: 17, ref: nativeRef }]);
 
-      expect(updateWorkletRef).toHaveBeenCalledWith(firstRef, nativeRef);
+      expect(updateWorkletRef).toHaveBeenCalledWith(firstRef, TEST_ELEMENT_REF);
       expect(getMainThreadDynamicAttrState(17, 0)).toEqual({
         kind: 'mt-ref',
         value: firstRef,
       });
 
       updateWorkletRef.mockClear();
-      attachMainThreadDynamicAttrRefsForSubtree([{ uid: 17, ref: nativeRef }]);
+      attachAndComplete([{ uid: 17, ref: nativeRef }]);
       expect(updateWorkletRef).not.toHaveBeenCalled();
 
       updateWorkletRef.mockClear();
@@ -219,9 +359,9 @@ describe('main-thread dynamic attr state', () => {
 
       expect(updateWorkletRef).not.toHaveBeenCalled();
 
-      attachMainThreadDynamicAttrRefsForSubtree([{ uid: 17, ref: nativeRef }]);
+      attachAndComplete([{ uid: 17, ref: nativeRef }]);
 
-      expect(updateWorkletRef).toHaveBeenCalledWith(nextRef, nativeRef);
+      expect(updateWorkletRef).toHaveBeenCalledWith(nextRef, TEST_ELEMENT_REF);
       expect(getMainThreadDynamicAttrState(17, 0)).toEqual({
         kind: 'mt-ref',
         value: nextRef,
@@ -237,12 +377,12 @@ describe('main-thread dynamic attr state', () => {
 
     try {
       registerMTRefSlots(17, 0);
-      attachMainThreadDynamicAttrRefsForSubtree([{ uid: 17, ref: TEST_NATIVE_REF }]);
+      attachAndComplete([{ uid: 17, ref: TEST_NATIVE_REF }]);
       expect(updateWorkletRef).not.toHaveBeenCalled();
 
       setMTRefSlot(17, 0, { type: 'main-thread-ref', value: ref });
 
-      expect(updateWorkletRef).toHaveBeenCalledWith(ref, TEST_NATIVE_REF);
+      expect(updateWorkletRef).toHaveBeenCalledWith(ref, TEST_ELEMENT_REF);
     } finally {
       restore();
     }
@@ -259,11 +399,11 @@ describe('main-thread dynamic attr state', () => {
       setMTRefSlot(17, 0, { type: 'main-thread-ref', value: ref });
 
       updateWorkletRef.mockImplementationOnce(() => {
-        attachMainThreadDynamicAttrRefsForSubtree(subtree);
+        attachAndComplete(subtree);
       });
-      attachMainThreadDynamicAttrRefsForSubtree(subtree);
+      attachAndComplete(subtree);
       expect(updateWorkletRef).toHaveBeenCalledTimes(1);
-      expect(updateWorkletRef).toHaveBeenCalledWith(ref, nativeRef);
+      expect(updateWorkletRef).toHaveBeenCalledWith(ref, TEST_ELEMENT_REF);
 
       updateWorkletRef.mockClear();
       updateWorkletRef.mockImplementationOnce(() => {
@@ -285,7 +425,7 @@ describe('main-thread dynamic attr state', () => {
     try {
       registerMTRefSlots(17, 0);
       setMTRefSlot(17, 0, { type: 'main-thread-ref', value: ref });
-      attachMainThreadDynamicAttrRefsForSubtree(subtree);
+      attachAndComplete(subtree);
       detachMainThreadDynamicAttrRefsForSubtree(subtree);
 
       updateWorkletRef.mockClear();
@@ -476,7 +616,7 @@ describe('main-thread dynamic attr state', () => {
         false,
         { id: 'callback-target' } as unknown as ElementTemplateHandle,
       );
-      attachMainThreadDynamicAttrRefsForSubtree([
+      attachAndComplete([
         { uid: 17, ref: { id: 'ref-target' } as unknown as ElementTemplateHandle },
         { uid: 18, ref: { id: 'callback-target' } as unknown as ElementTemplateHandle },
       ]);
@@ -485,7 +625,7 @@ describe('main-thread dynamic attr state', () => {
 
       expect(updateWorkletRef).toHaveBeenCalledWith(ref, null);
       expect(callbackCleanup).toHaveBeenCalledTimes(1);
-      expect(globalThis.runWorklet).toHaveBeenCalledWith(callback, [{ elementRefptr: { id: 'callback-target' } }]);
+      expect(globalThis.runWorklet).toHaveBeenCalledWith(callback, [{ elementRefptr: TEST_ELEMENT_REF }]);
       expect(getMainThreadDynamicAttrState(17, 0)).toBeUndefined();
       expect(getMainThreadDynamicAttrState(18, 0)).toBeUndefined();
     } finally {
@@ -508,7 +648,7 @@ describe('main-thread dynamic attr state', () => {
         false,
         { id: 'callback-target' } as unknown as ElementTemplateHandle,
       );
-      attachMainThreadDynamicAttrRefsForSubtree([
+      attachAndComplete([
         { uid: 17, ref: { id: 'callback-target' } as unknown as ElementTemplateHandle },
       ]);
 
@@ -534,7 +674,7 @@ describe('main-thread dynamic attr state', () => {
         false,
         { id: 'target' } as unknown as ElementTemplateHandle,
       );
-      attachMainThreadDynamicAttrRefsForSubtree([
+      attachAndComplete([
         { uid: 17, ref: { id: 'target' } as unknown as ElementTemplateHandle },
       ]);
 
