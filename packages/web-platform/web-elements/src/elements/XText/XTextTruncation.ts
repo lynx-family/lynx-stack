@@ -95,7 +95,10 @@ export class XTextTruncation
     return !!this.#findValidInlineTruncation();
   }
   #findValidInlineTruncation(): Element | null {
-    return this.#dom.querySelector(':scope > inline-truncation');
+    // A conditionally rendered inline-truncation is mounted inside a transparent lynx-wrapper.
+    return this.#dom.querySelector(
+      ':scope > inline-truncation, :scope > lynx-wrapper > inline-truncation',
+    );
   }
   get #doExpensiveLineLayoutCalculation() {
     return (
@@ -264,6 +267,20 @@ export class XTextTruncation
             this.#getAllSiblings(targetNodeParentElement),
           );
           targetNodeParentElement = targetNodeParentElement.parentElement!;
+        }
+        const truncationWrapper = this.#findValidInlineTruncation()
+          ?.parentElement;
+        if (truncationWrapper && truncationWrapper !== this.#dom) {
+          // Hiding the lynx-wrapper would also hide the inline-truncation in it,
+          // so its children are hidden one by one instead.
+          toBeHideNodes = toBeHideNodes.flatMap((node) =>
+            node === truncationWrapper
+              ? Array.from(node.childNodes).filter((child) =>
+                child.nodeType === Node.TEXT_NODE
+                || child.nodeType === Node.ELEMENT_NODE
+              ) as (Text | Element)[]
+              : [node]
+          );
         }
 
         toBeHideNodes.forEach((node) => {
