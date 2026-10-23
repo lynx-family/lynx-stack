@@ -66,8 +66,13 @@ class JsFunctionLifecycleManager {
     return ctx._runtimeCtxId === undefined ? ctx : this.contexts.get(ctx._runtimeCtxId)?.deref();
   }
 
-  isMaterializedHandle(handle: JsFnHandle): boolean {
-    return this.localHandles.has(handle);
+  hydrateHandle(handle: JsFnHandle | undefined, target: JsFnHandle): void {
+    // Unused descriptors may be shared across bindings. Only actual local
+    // captures, including escaped functions without queued calls, receive handoff.
+    if (!handle || !this.localHandles.has(handle)) return;
+    this.addRef(target._execId!, handle);
+    Object.assign(handle, target);
+    handle._isFirstScreen = false;
   }
 
   materializeHandle(execId: number | undefined, descriptor: JsFnHandle, owner: object): JsFnHandle {

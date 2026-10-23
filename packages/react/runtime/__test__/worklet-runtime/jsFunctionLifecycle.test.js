@@ -101,6 +101,25 @@ describe('jsFunctionLifecycle', () => {
     expect(manager.execIdRefCount.get(3)).toBe(1);
   });
 
+  it('keeps a captured handle pending when hydration registration fails', () => {
+    const manager = new JsFunctionLifecycleManager();
+    const descriptor = { _isFirstScreen: true };
+    const handle = manager.materializeHandle(undefined, descriptor, {});
+    const target = { _jsFnId: 7, _execId: 3 };
+    const error = new TypeError('registration failed');
+    vi.spyOn(manager.registry, 'register').mockImplementationOnce(() => {
+      throw error;
+    });
+    expect(() => manager.hydrateHandle(handle, target)).toThrow(error);
+    expect(handle).toEqual({ _isFirstScreen: true });
+    expect(manager.execIdRefCount.size).toBe(0);
+    manager.hydrateHandle(handle, target);
+    manager.hydrateHandle(handle, target);
+    expect(handle).toEqual({ _isFirstScreen: false, _jsFnId: 7, _execId: 3 });
+    expect(descriptor).toEqual({ _isFirstScreen: true });
+    expect(manager.execIdRefCount.get(3)).toBe(1);
+  });
+
   it('shares local handles within one execution without sharing across executions', () => {
     const manager = new JsFunctionLifecycleManager();
     const descriptor = { _jsFnId: 7 };

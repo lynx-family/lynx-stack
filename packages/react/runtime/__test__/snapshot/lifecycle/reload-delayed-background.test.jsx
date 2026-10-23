@@ -45,7 +45,11 @@ it('clears old delayed background calls before rendering and preserves new calls
 
     expect(delay.delayedBackgroundFunctionArray).toHaveLength(1);
     expect(delay.delayedBackgroundFunctionArray[0]).not.toBe(oldTask);
-    delay.delayedBackgroundFunctionArray[0].jsFnHandle = { _jsFnId: 7, _execId: 9 };
+    Object.assign(delay.delayedBackgroundFunctionArray[0].jsFnHandle, {
+      _isFirstScreen: false,
+      _jsFnId: 7,
+      _execId: 9,
+    });
     delay.runDelayedBackgroundFunctions();
     expect(oldCallback).not.toHaveBeenCalled();
     expect(dispatch).toHaveBeenCalledOnce();

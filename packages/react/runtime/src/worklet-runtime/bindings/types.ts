@@ -60,8 +60,7 @@ export interface JsFnHandle {
   _error?: string;
   _isFirstScreen?: boolean;
   /**
-   * Stores an array of indexes of runOnBackground tasks that should be processed with a delay.
-   * This is used before hydration.
+   * Legacy queue indexes. Current runtimes retain the local handle directly.
    */
   _delayIndices?: number[];
 }

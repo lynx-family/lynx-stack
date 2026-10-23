@@ -59,7 +59,7 @@ function hydrateCtxImpl(
         firstScreenCtxObj as unknown as WorkletRefImpl<unknown>,
       );
     } else if (key === '_jsFn') {
-      hydrateDelayRunOnBackgroundTasks(
+      hydrateBackgroundFunctionHandles(
         ctxObj[key] as Record<string, JsFnHandle>,
         firstScreenCtxObj[key] as Record<string, JsFnHandle>,
         execId,
@@ -112,14 +112,12 @@ function hydrateWorkletValueHandle(
 }
 
 /**
- * Hydrates delayed `runOnBackground` tasks.
- * This function ensures that any `runOnBackground` calls that were delayed
- * during the first-screen rendering are correctly associated with their
- * respective JavaScript function handles in the hydrated Worklet context.
+ * Binds captured first-screen handles to their background execution, whether
+ * they are held by escaped functions, delayed calls, or both.
  */
-function hydrateDelayRunOnBackgroundTasks(
+function hydrateBackgroundFunctionHandles(
   fnObjs: Record<string, JsFnHandle>, // example: {"_jsFn1":{"_jsFnId":1}}
-  firstScreenFnObjs: Record<string, JsFnHandle>, // example: {"_jsFn1":{"_isFirstScreen":true,"_delayIndices":[0]}}
+  firstScreenFnObjs: Record<string, JsFnHandle>, // example: {"_jsFn1":{"_isFirstScreen":true}}
   execId: number,
 ) {
   for (const fnName in fnObjs) {
@@ -128,26 +126,6 @@ function hydrateDelayRunOnBackgroundTasks(
       ?? descriptor;
     fnObj._execId = execId;
     fnObjs[fnName] = fnObj;
-    const firstScreenFnObj: JsFnHandle | undefined = firstScreenFnObjs[fnName];
-    // Shared, unused first-screen descriptors are transport data, not local owners.
-    // Escaped functions may own a materialized handle without having queued a call.
-    if (!firstScreenFnObj || !lynxWorkletImpl._jsFunctionLifecycleManager?.isMaterializedHandle(firstScreenFnObj)) {
-      continue;
-    }
-    Object.assign(firstScreenFnObj, fnObj);
-    firstScreenFnObj._isFirstScreen = false;
-    lynxWorkletImpl._jsFunctionLifecycleManager.addRef(execId, firstScreenFnObj);
-    if (!firstScreenFnObj._delayIndices) {
-      continue;
-    }
-    for (const index of firstScreenFnObj._delayIndices) {
-      const details = lynxWorkletImpl!._runOnBackgroundDelayImpl
-        .delayedBackgroundFunctionArray[index];
-      if (!details) {
-        continue;
-      }
-      fnObj._execId = execId;
-      details.jsFnHandle = fnObj;
-    }
+    lynxWorkletImpl._jsFunctionLifecycleManager?.hydrateHandle(firstScreenFnObjs[fnName], fnObj);
   }
 }

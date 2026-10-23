@@ -26,8 +26,11 @@ succeeds before bookkeeping becomes visible. Neither a temporary clone used only
 canonicalization table can represent the ownership contract.
 
 A live binding retains its local context, and an escaped function retains its
-captured handles. First-screen handles remain local while calls are delayed;
-hydration associates materialized handles with the background execution before
+captured handles. A materialized handle starts pending during the first screen
+and becomes bound to a background execution during hydration. The lifecycle
+manager performs this handoff on the same local object, registering it before
+publishing its execution metadata. Hydration associates materialized handles with
+the background execution before
 releasing the old binding, including handles held by escaped functions that have
 not called `runOnBackground` yet. Unmaterialized first-screen descriptors remain
 read-only and are never registered as owners. With no lifecycle manager,
@@ -35,5 +38,8 @@ transformation and hydration still prepare `_execId` metadata without GC trackin
 Removing a binding only drops that owner's reference. Background
 execution state is released after every registered local owner has been collected.
 
+Delayed calls retain their local handle from enqueue through replay. Hydration
+binds that handle directly, without queue indexes or a second queue update.
+Replay preserves call order and skips handles that never received a handoff.
 Delayed replay drops the consumed queue rather than truncating its array, so
 PrimJS cannot retain completed tasks and handles through unused array storage.
