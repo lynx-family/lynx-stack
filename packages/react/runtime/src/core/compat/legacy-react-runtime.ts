@@ -17,7 +17,7 @@ export { ComponentFromReactRuntime as Component } from './lynxComponent.js';
 export { ComponentFromReactRuntime as PureComponent } from './lynxComponent.js';
 export { createContext } from 'preact';
 export { lazy } from 'preact/compat';
-export { useState, useReducer, useEffect, useMemo, useCallback /*, useInstance */ } from '../hooks/react.js';
+export { useState, useReducer, useEffect, useMemo, useCallback } from '../hooks/react.js';
 export { __runInJS, createRef, useRef };
 
 /**

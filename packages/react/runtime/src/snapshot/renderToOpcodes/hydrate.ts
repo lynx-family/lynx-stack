@@ -99,64 +99,6 @@ export function diffArrayLepus<A extends Typed, B extends Typed>(
   return result;
 }
 
-// export function diffIterableLepus<A extends Typed, B extends Typed>(
-//   before: A[],
-//   after: Iterable<B>,
-//   isSameType: (a: A, b: B) => boolean,
-//   onDiffChildren: (a: A, b: B) => void
-// ): DiffResult<B> {
-//   let returnResult = EMPTY_DIFF_RESULT as DiffResult<B>;
-//   let lastPlacedIndex = 0;
-//   const result: DiffResult<B> = {
-//     $$diff: true,
-//     i: {},
-//     r: [],
-//     m: {},
-//   };
-//   const beforeMap: Record<string, Set<[A, number]>> = {};
-
-//   for (let i = 0; i < before.length; i++) {
-//     let node = before[i];
-//     (beforeMap[node.type] ??= new Set()).add([node, i]);
-//   }
-
-//   let i = 0;
-//   for (const afterNode of after) {
-//     const beforeNodes = beforeMap[afterNode.type];
-//     let beforeNode: [A, number];
-
-//     if (beforeNodes && (([beforeNode] = beforeNodes), beforeNode) && isSameType(beforeNode[0], afterNode)) {
-//       // Reuse old node
-//       beforeNodes.delete(beforeNode);
-
-//       const oldIndex = beforeNode[1];
-//       onDiffChildren(beforeNode[0], afterNode);
-//       if (oldIndex < lastPlacedIndex) {
-//         result.m[oldIndex] = i;
-//         returnResult = result;
-//         i++;
-//         continue;
-//       } else {
-//         lastPlacedIndex = oldIndex;
-//       }
-//     } else {
-//       // Create new node
-//       result.i[i] = afterNode;
-//       returnResult = result;
-//     }
-//     i++;
-//   }
-//   // delete
-//   for (const k in beforeMap) {
-//     for (const [, i] of beforeMap[k]) {
-//       result.r.push(i);
-//       returnResult = result;
-//     }
-//   }
-
-//   return result;
-// }
-
 export function diffArrayAction<T, K>(
   before: T[],
   diffResult: DiffResult<K>,

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { prepareGestureForCommit } from '../../../src/snapshot/gesture/processGestureBagkround';
+import { prepareGestureForCommit } from '../../../src/snapshot/gesture/processGestureBackground';
 import { clearConfigCacheForTesting } from '../../../src/snapshot/worklet/functionality';
 
 describe('prepareGestureForCommit', () => {

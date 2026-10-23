@@ -2,14 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-// import { Suspense, createElement, lazy } from 'preact/compat';
-// import type { FC } from 'react';
-
 import './runtime-marker.js';
 import './native/index.js';
 
-// import { factory as factory2 } from '../compat/componentIs.js';
-// import { useMemo } from '../core/hooks/react.js';
 import { __root } from './runtime/page/root-instance.js';
 
 /**
@@ -46,15 +41,6 @@ export {
 export { withInitDataInState } from '../core/initData.js';
 
 export { wrapWithLynxComponent } from '../core/compat/lynxComponent.js';
-
-/**
- * @internal a polyfill for <component is=? />
- */
-// export const __ComponentIsPolyfill: FC<{ is: string }> = /* @__PURE__ */ factory2(
-//   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-//   { Suspense, lazy, createElement, useMemo } as any,
-//   loadLazyBundle,
-// );
 
 export { loadLazyBundle } from '../core/lynx/lazy-bundle.js';
 

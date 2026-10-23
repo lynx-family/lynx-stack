@@ -77,10 +77,4 @@ function setupDocument(_document: SnapshotDocumentAdapter = document): void {
   };
 }
 
-// if (__JS__) {
-//   setupBackgroundDocument();
-// } else if (__LEPUS__) {
-//   setupDocument();
-// }
-
 export { document, setupBackgroundDocument, setupDocument };

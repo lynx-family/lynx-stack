@@ -4,6 +4,10 @@
 
 import { flushCoreContextEvents, flushJSContextEvents } from '../mock/mockNativePapi/context.js';
 import { installMainThreadHooks } from '../../../../src/core/hooks/mainThreadImpl.js';
+import { takeMainThreadRefInitValuePatch } from '../../../../src/core/main-thread-ref-init-value.js';
+import { clearMainThreadRefLastIdForTesting } from '../../../../src/core/main-thread-ref.js';
+import { clearMtsConfigCacheForTesting } from '../../../../src/core/mts-capability.js';
+import { setPipeline } from '../../../../src/core/performance.js';
 import { setupBackgroundElementTemplateDocument } from '../../../../src/element-template/background/document.js';
 import { BackgroundPageRootInstance } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
@@ -19,11 +23,6 @@ type EnvTarget = typeof globalThis & {
   __MAIN_THREAD__: boolean | undefined;
   __BACKGROUND__: boolean | undefined;
   __USE_ELEMENT_TEMPLATE__: boolean | undefined;
-};
-
-type RootWithTemplates = RootRef & {
-  __jsx?: unknown;
-  __opcodes?: unknown;
 };
 
 export class ElementTemplateEnvManager {
@@ -77,11 +76,15 @@ export class ElementTemplateEnvManager {
     this.backgroundRoot = undefined;
     // @ts-expect-error - allow reset to undefined during tests
     setRoot(undefined);
+    setPipeline(undefined);
 
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
     elementTemplateRegistry.clear();
     resetTemplateId();
+    takeMainThreadRefInitValuePatch();
+    clearMainThreadRefLastIdForTesting();
+    clearMtsConfigCacheForTesting();
 
     if (initial === 'background') {
       this.switchToBackground();
