@@ -4,12 +4,17 @@
 
 import { IndexMap } from '../../shared/index-map.js';
 import type { JsFnHandle, Worklet } from '../../worklet-runtime/bindings/types.js';
+import { cardLifetime } from '../card-lifetime.js';
 
 /**
  * Keeps the background-thread worklet ctx alive while main thread still holds
  * a handle to one of its background functions.
  */
 export class BackgroundFunctionExecMap extends IndexMap<Worklet> {
+  constructor() {
+    super(cardLifetime('backgroundFunctionCtxId', () => ({ lastIndex: 0 })));
+  }
+
   public clear(): void {
     this.indexMap.clear();
   }

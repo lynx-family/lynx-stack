@@ -5,8 +5,10 @@
 import type { ComponentChild, ContainerNode } from 'preact';
 import { render } from 'preact';
 
+import { canReEvalBackgroundEntry, reEvalBackgroundEntry } from '../../core/entry-reload.js';
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
 import { increaseReloadVersion } from '../../core/reload-version.js';
+import { resetElementTemplateCommitState } from '../background/commit-hook.js';
 import { destroyElementTemplateBackgroundRuntime } from '../background/destroy.js';
 import { setupBackgroundElementTemplateDocument } from '../background/document.js';
 import { installElementTemplateHydrationListener } from '../background/hydration-listener.js';
@@ -15,7 +17,17 @@ import { profileEnd, profileStart } from '../debug/profile.js';
 import { resetEventStateForRuntime } from '../prop-adapters/event.js';
 import { __root, setRoot } from '../runtime/page/root-instance.js';
 
-export function reloadBackground(updateData: unknown): void {
+export function reloadBackground(updateData: unknown, options?: Record<string, unknown>): void {
+  if (canReEvalBackgroundEntry()) {
+    reEvalBackgroundEntry(updateData as Record<string, unknown>, options, () => {
+      // The unmount of the old tree must not reach the new entry.
+      resetElementTemplateCommitState();
+      // A queued `updateGlobalProps` callback must not render it again.
+      __root.__jsx = undefined;
+    });
+    return;
+  }
+
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::reloadBackground');
   }

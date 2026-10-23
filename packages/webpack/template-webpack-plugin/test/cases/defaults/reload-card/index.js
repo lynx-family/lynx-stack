@@ -1,0 +1,15 @@
+/// <reference types="@rstest/core/globals" />
+
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
+it('should enable script exports reuse with card reload', async () => {
+  const tasmJSON = await fs.readFile(
+    path.resolve(__dirname, '.rspeedy/main/tasm.json'),
+    'utf-8',
+  );
+
+  const { sourceContent } = JSON.parse(tasmJSON);
+
+  expect(sourceContent['config']).toMatchSnapshot();
+});

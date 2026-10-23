@@ -35,6 +35,7 @@ declare global {
   declare const __GLOBAL_PROPS_MODE__: 'reactive' | 'event' | undefined;
   declare const __LAZY_BUNDLE_FETCHER__: 'FetchBundle' | 'QueryComponent';
   declare const __RUNTIME_VERSION__: string | undefined;
+  declare const __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__: boolean | undefined;
   declare function __CreatePage(componentId: string, cssId: number): FiberElement;
   declare function __CreateElement(
     tag: string,
@@ -222,7 +223,8 @@ declare global {
     callDestroyLifetimeFun: () => void;
     updateGlobalProps: (newData: Record<string, unknown>) => void;
     updateCardData: (newData: Record<string, any>, options?: Record<string, unknown>) => void;
-    onAppReload: (updateData: Record<string, any>) => void;
+    onAppReload: (updateData: Record<string, any>, options?: Record<string, unknown>) => void;
+    reloadCard?: (updateData?: object, options?: Record<string, unknown>) => boolean;
     processCardConfig: () => void;
     callBeforePublishEvent?: (data: unknown) => void;
     getDynamicComponentExports: (schema: string) => { default: React.ComponentType<any> } | null | undefined;

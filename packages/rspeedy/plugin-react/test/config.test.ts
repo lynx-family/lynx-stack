@@ -2635,6 +2635,7 @@ describe('Config', () => {
         "enableCSSSelector": true,
         "enableNewGesture": false,
         "enableRemoveCSSScope": true,
+        "enableReuseLoadScriptExports": false,
         "experimental_isLazyBundle": false,
         "filename": "main.lynx.bundle",
         "intermediate": ".lynx/main",
@@ -2644,6 +2645,66 @@ describe('Config', () => {
       }
     `)
   })
+
+  test('reuses loadScript exports for experimental entry re-evaluation', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx({
+            experimental_reEvalJSOnReload: true,
+          }),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+    const templatePlugin = config?.plugins?.find((
+      p,
+    ): p is LynxTemplatePlugin => p?.constructor.name === 'LynxTemplatePlugin')
+
+    expect(templatePlugin).toBeDefined()
+    const templateOptions = (templatePlugin as unknown as {
+      options: { enableReuseLoadScriptExports?: boolean }
+    }).options
+    expect(templateOptions.enableReuseLoadScriptExports).toBe(true)
+  })
+
+  test.each([
+    { callerName: 'rspeedy', expectedEntrySupport: true },
+    { callerName: 'rslib', expectedEntrySupport: false },
+  ])(
+    'marks re-evaluation entry support only for applications: $callerName',
+    async ({
+      callerName,
+      expectedEntrySupport,
+    }) => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        callerName,
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx({ experimental_reEvalJSOnReload: true }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+      const [config] = await rsbuild.initConfigs()
+      const wrapper = config?.plugins?.find(plugin =>
+        plugin?.constructor.name === 'RuntimeWrapperWebpackPlugin'
+      ) as unknown as { options: { experimental_reEvalJSOnReload: boolean } }
+      const react = config?.plugins?.find(plugin =>
+        plugin?.constructor.name === 'ReactWebpackPlugin'
+      ) as unknown as { options: { experimental_reEvalJSOnReload: boolean } }
+
+      expect(wrapper.options.experimental_reEvalJSOnReload).toBe(
+        expectedEntrySupport,
+      )
+      expect(react.options.experimental_reEvalJSOnReload).toBe(true)
+    },
+  )
 
   test('targetSdkVersion', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')

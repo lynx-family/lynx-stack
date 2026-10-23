@@ -352,6 +352,8 @@ export interface LynxTemplatePluginOptions {
    * plugins passed to parser
    */
   cssPlugins: CSS.Plugin[];
+
+  enableReuseLoadScriptExports?: boolean | undefined;
 }
 
 interface EncodeRawData {
@@ -477,6 +479,7 @@ export class LynxTemplatePlugin {
       experimental_isLazyBundle: false,
       lazyBundleFetcher: 'QueryComponent',
       cssPlugins: [],
+      enableReuseLoadScriptExports: false,
     });
 
   /**
@@ -1217,6 +1220,7 @@ class LynxTemplatePluginImpl {
       defaultOverflowVisible,
       dsl,
       cssPlugins,
+      enableReuseLoadScriptExports,
     } = this.#options;
 
     const isDev = process.env['NODE_ENV'] === 'development'
@@ -1272,6 +1276,12 @@ class LynxTemplatePluginImpl {
           removeDescendantSelectorScope,
           // Will be filled later in `@lynx-js/debug-metadata-rsbuild-plugin`
           debugMetadataUrl: '',
+          ...(enableReuseLoadScriptExports
+            ? {
+              // Avoid extra loadScript; reuse the `init` function.
+              enableReuseLoadScriptExports: true,
+            }
+            : {}),
         },
       },
       css: {

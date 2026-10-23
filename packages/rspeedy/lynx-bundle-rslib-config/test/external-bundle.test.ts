@@ -104,6 +104,30 @@ function resolveExternal(
   })
 }
 
+describe('re-evaluation entry support', () => {
+  it('does not let external libraries mark the consumer entry', async () => {
+    const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+    const distRoot = path.join(fixtureDir, 'dist', 're-eval-entry-support')
+    await build(defineExternalBundleRslibConfig({
+      id: 'utils-re-eval',
+      source: { entry: { utils: path.join(fixtureDir, 'index.ts') } },
+      output: { distPath: { root: distRoot }, minify: false },
+      plugins: [pluginReactLynx({ experimental_reEvalJSOnReload: true })],
+    }, { enableJsBytecode: false }))
+
+    const decoded = await decodeTemplate(
+      path.join(distRoot, 'utils-re-eval.lynx.bundle'),
+    )
+    const entryMarker =
+      /Symbol\.for\(['"]__LYNX_ENTRY_SUPPORTS_RE_EVAL__['"]\)\]\s*=(?!=)/
+    for (const name of ['utils', 'utils__main-thread']) {
+      const source = decoded['custom-sections'][name]
+      expect(source).toBeTypeOf('string')
+      expect(source).not.toMatch(entryMarker)
+    }
+  })
+})
+
 describe('define config', () => {
   it('should return entry config', () => {
     const rslibConfig = defineExternalBundleRslibConfig({

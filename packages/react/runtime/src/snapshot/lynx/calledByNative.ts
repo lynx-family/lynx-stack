@@ -6,8 +6,7 @@ import { markTiming, setPipeline } from '../../core/performance.js';
 import { __root, setRoot } from '../../root.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
 import {
-  firstScreenEventIdSwap,
-  isFirstScreenSynced,
+  firstScreenSync,
   onFirstScreenSyncReady,
   onFirstScreenTreeReady,
   resetFirstScreenSyncState,
@@ -126,7 +125,7 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
   applyUpdatePageData(data, options);
 
   const flushOptions = options ?? {};
-  if (!isFirstScreenSynced) {
+  if (!firstScreenSync.isSynced) {
     if (__FIRST_SCREEN_SYNC_TIMING__ === 'manual') {
       // a `markFirstScreenSyncReady` call during the re-render below must not
       // sync the half-rendered tree; it is deferred to `onFirstScreenTreeReady`
@@ -147,7 +146,7 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
       hydrate(
         oldRoot as SnapshotInstance,
         __root as SnapshotInstance,
-        { skipUnRef: true, swap: firstScreenEventIdSwap },
+        { skipUnRef: true, swap: firstScreenSync.eventIdSwap },
       );
 
       // always call this before `__FlushElementTree`
