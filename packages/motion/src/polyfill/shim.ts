@@ -15,11 +15,15 @@ const timeOrigin =
     : Date.now();
 
 function shimQueueMicroTask() {
-  if (!globalThis.queueMicrotask) {
+  if (
+    !globalThis.queueMicrotask
+    || (typeof lynx !== 'undefined'
+      && globalThis.queueMicrotask === lynx.queueMicrotask)
+  ) {
     // Guard against undefined lynx global before accessing lynx.queueMicrotask
     if (typeof lynx !== 'undefined' && lynx.queueMicrotask) {
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      globalThis.queueMicrotask = lynx.queueMicrotask;
+      // The native scheduler needs its Lynx receiver, even when called detached.
+      globalThis.queueMicrotask = (callback) => lynx.queueMicrotask(callback);
     } else {
       const resolved = globalThis.Promise.resolve();
       globalThis.queueMicrotask = (fn) => {
