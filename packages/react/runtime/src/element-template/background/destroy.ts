@@ -7,6 +7,7 @@ import { render } from 'preact';
 import { cancelElementTemplateRemovedSubtreeCleanup, resetElementTemplateCommitState } from './commit-hook.js';
 import { resetElementTemplateHydrationListener } from './hydration-listener.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
+import { runDestroyTasks } from '../../core/runtime-destroy.js';
 import { withSyncEffectFlush } from '../../utils.js';
 import { clearEventState } from '../prop-adapters/event.js';
 import { clearRefState, flushPendingRefs } from '../prop-adapters/ref.js';
@@ -28,6 +29,7 @@ export function destroyElementTemplateBackgroundRuntime(): void {
   resetElementTemplateCommitState();
   resetElementTemplateBackgroundFunctionRuntime();
   resetElementTemplateMainThreadFunctionRuntime();
+  runDestroyTasks();
   clearEventState();
   clearRefState();
   backgroundElementTemplateInstanceManager.clear();

@@ -3,8 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 
 import { resetElementTemplatePatchListener } from './patch-listener.js';
+import { runDestroyTasks } from '../../core/runtime-destroy.js';
 import { resetElementTemplateRefInitValueListener } from '../main-thread-ref-init-value.js';
 import { destroyAllElementTemplateListStates } from '../runtime/list/list.js';
+import { resetTemplateId } from '../runtime/template/handle.js';
 import { resetElementTemplateMainThreadBackgroundFunctionRuntime } from '../runtime/template/main-thread-background-function.js';
 import { clearMainThreadDynamicAttrState } from '../runtime/template/main-thread-dynamic-attr-state.js';
 import { elementTemplateRegistry } from '../runtime/template/registry.js';
@@ -42,6 +44,8 @@ export function destroyElementTemplateMainThreadRuntime(): void {
   elementTemplateRegistry.clear();
   clearMainThreadDynamicAttrState();
   resetElementTemplateMainThreadBackgroundFunctionRuntime();
+  runDestroyTasks();
+  resetTemplateId();
 
   if (didPatchListenerResetThrow) {
     throw patchListenerResetError;

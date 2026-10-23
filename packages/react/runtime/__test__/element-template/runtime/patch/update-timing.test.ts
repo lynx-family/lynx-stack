@@ -4,7 +4,7 @@ import {
   installElementTemplatePatchListener,
   resetElementTemplatePatchListener,
 } from '../../../../src/element-template/native/patch-listener.js';
-import { setPipeline } from '../../../../src/core/performance.js';
+import { globalPipelineOptions, setPipeline } from '../../../../src/core/performance.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import {
@@ -105,6 +105,7 @@ describe('ElementTemplate update timing (main thread patch)', () => {
       ['pipelineID', 'patchChangesEnd'],
       ['pipelineID', 'mtsRenderEnd'],
     ]);
+    expect(globalPipelineOptions).toBeUndefined();
   });
 
   it('handles updates without pipeline options', () => {
@@ -154,6 +155,7 @@ describe('ElementTemplate update timing (main thread patch)', () => {
       ['pipelineID', 'parseChangesEnd'],
       ['pipelineID', 'mtsRenderEnd'],
     ]);
+    expect(globalPipelineOptions).toBeUndefined();
   });
 
   it('marks parse timing for empty update envelopes with pipeline options', () => {
@@ -179,6 +181,7 @@ describe('ElementTemplate update timing (main thread patch)', () => {
       ['pipelineID', 'parseChangesEnd'],
       ['pipelineID', 'mtsRenderEnd'],
     ]);
+    expect(globalPipelineOptions).toBeUndefined();
   });
 
   it('accepts update payloads from the current reload version', () => {

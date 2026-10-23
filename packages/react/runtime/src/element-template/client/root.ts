@@ -5,7 +5,7 @@ import type { ComponentChild, ContainerNode } from 'preact';
 import { render } from 'preact';
 import type { ReactNode } from 'react';
 
-import type { DataProcessorDefinition } from '../../lynx-api.js';
+import type { DataProcessorDefinition } from '../../core/lynx-data-processors.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { __root } from '../runtime/page/root-instance.js';
 

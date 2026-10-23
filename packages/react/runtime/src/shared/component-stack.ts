@@ -44,7 +44,7 @@ interface PatchedVNode extends VNode {
 /**
  * Get human readable name of the component/dom node
  */
-export function getDisplayName(vnode: PatchedVNode): string {
+function getVNodeDisplayName(vnode: PatchedVNode): string {
   if (vnode.type === Fragment) {
     return 'Fragment';
   } else if (typeof vnode.type == 'function') {
@@ -81,6 +81,7 @@ const renderStack: PatchedVNode[] = [];
  * optimization. In these cases the `_owner` will be different.
  */
 let ownerStack: PatchedVNode[] = [];
+let didInstallComponentStack = false;
 
 /**
  * Get the currently rendered `vnode`
@@ -108,7 +109,7 @@ export function getOwnerStack(vnode: PatchedVNode): string {
   }
 
   return stack.reduce((acc, owner) => {
-    acc += `  in ${getDisplayName(owner)}`;
+    acc += `  in ${getVNodeDisplayName(owner)}`;
 
     const source = owner.__source;
     if (source) {
@@ -125,6 +126,13 @@ export function getOwnerStack(vnode: PatchedVNode): string {
  * debug messages for `this.setState` where the `vnode` is `undefined`.
  */
 export function setupComponentStack(): void {
+  renderStack.length = 0;
+  ownerStack = [];
+  if (didInstallComponentStack) {
+    return;
+  }
+  didInstallComponentStack = true;
+
   /* eslint-disable @typescript-eslint/unbound-method */
   const oldDiff = options[DIFF];
   const oldDiffed = options[DIFFED];
@@ -149,6 +157,7 @@ export function setupComponentStack(): void {
   };
 
   options[ROOT] = (vnode, parent) => {
+    renderStack.length = 0;
     ownerStack = [];
     if (oldRoot) oldRoot(vnode, parent);
   };
