@@ -5,6 +5,10 @@ import { WorkletEvents } from './bindings/events.js';
 import type { Worklet } from './bindings/types.js';
 import { profile } from './utils/profile.js';
 import { isSdkVersionGt } from './utils/version.js';
+import { cardLifetime } from '../core/card-lifetime.js';
+
+// Native descriptors can outlive a manager or entry re-evaluation.
+const contextIdCounter = /*#__PURE__*/ cardLifetime('workletContextId', () => ({ lastId: 0 }));
 
 /**
  * `JsFunctionLifecycleManager` monitors references to JS function handles to be called by `runOnBackground()`.
@@ -22,12 +26,9 @@ class JsFunctionLifecycleManager {
 
   private contexts = new Map<number, WeakRef<Worklet>>();
   private contextIds = new WeakMap<Worklet, number>();
-  private nextContextId: number;
   private contextRegistry: FinalizationRegistry<number>;
 
-  constructor(previous?: JsFunctionLifecycleManager) {
-    // Native can retain descriptors across a reset; their IDs must not resolve new owners.
-    this.nextContextId = previous?.nextContextId ?? 0;
+  constructor() {
     this.contextRegistry = new FinalizationRegistry(this.contexts.delete.bind(this.contexts));
     this.registry = new FinalizationRegistry<number>(this.removeRef.bind(this));
   }
@@ -47,7 +48,7 @@ class JsFunctionLifecycleManager {
 
   prepareWorkletCtx(ctx: Worklet): void {
     if (!this.contextIds.has(ctx)) {
-      const id = ++this.nextContextId;
+      const id = ++contextIdCounter.lastId;
       this.contextRegistry.register(ctx, id);
       this.contextIds.set(ctx, id);
       ctx._runtimeCtxId = id;

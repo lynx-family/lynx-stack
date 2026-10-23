@@ -56,7 +56,7 @@ export function resetElementTemplateMainThreadBackgroundFunctionRuntime(): void 
   const manager = globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager;
   if (manager) {
     manager.dispose();
-    globalThis.lynxWorkletImpl._jsFunctionLifecycleManager = new JsFunctionLifecycleManager(manager);
+    globalThis.lynxWorkletImpl._jsFunctionLifecycleManager = new JsFunctionLifecycleManager();
   }
   clearDelayedRunOnBackgroundFunctions();
   resetFunctionCallReturnListener();

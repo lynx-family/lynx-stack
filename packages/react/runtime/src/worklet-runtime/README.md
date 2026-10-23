@@ -17,10 +17,11 @@ execution. Only Native success commits the slot's strong reference and hydration
 handoff; committing does not register the context again. Removal drops the slot's
 reference. Escaped callbacks follow the existing Snapshot capture and GC behavior.
 
-Context identifiers are not reused across runtime initialization or ET
-reload/destroy. Retire the previous manager so stale descriptors cannot resolve to
-new contexts and old finalizers cannot release a new execution with a reused ID.
-Snapshot observers continue to track references without preparing ET identities.
+Context identifiers use a card-lifetime counter independent of lifecycle manager
+instances, so runtime initialization and entry re-evaluation do not reuse IDs.
+Retire the previous manager to invalidate its lookup and stop old finalizers from
+sending release events into the new runtime. Snapshot observers continue to track
+references without preparing ET identities.
 
 This integration keeps Snapshot's existing callback transformation, first-screen
 hydration, and delayed-call replay semantics. It does not add per-binding callback

@@ -30,7 +30,7 @@ function initWorklet(): void {
   };
 
   if (isRunOnBackgroundEnabled()) {
-    globalThis.lynxWorkletImpl._jsFunctionLifecycleManager = new JsFunctionLifecycleManager(previousManager);
+    globalThis.lynxWorkletImpl._jsFunctionLifecycleManager = new JsFunctionLifecycleManager();
   }
 
   globalThis.registerWorklet = registerWorklet;
