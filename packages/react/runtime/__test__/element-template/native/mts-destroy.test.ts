@@ -1,12 +1,17 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { installOnMtsDestruction, onMtsDestruction } from '../../../src/element-template/native/mts-destroy.js';
+import { registerDestroyTask } from '../../../src/core/runtime-destroy.js';
 import {
   composeElementTemplateListAttributes,
   createElementTemplateListState,
   registerElementTemplateListItem,
   registerElementTemplateListState,
 } from '../../../src/element-template/runtime/list/list.js';
+import {
+  getNextElementTemplateId,
+  reserveElementTemplateId,
+} from '../../../src/element-template/runtime/template/handle.js';
 import {
   attachMainThreadDynamicAttrRefsForSubtree,
   clearMainThreadDynamicAttrState,
@@ -155,6 +160,19 @@ describe('mts-destroy', () => {
       1,
     );
     expect(delayedBackgroundFunctionArray).toHaveLength(0);
+  });
+
+  it('resets main-thread template id counter and runs registered destroy tasks on destruction', () => {
+    const destroyTask = vi.fn();
+    registerDestroyTask(destroyTask);
+    expect(reserveElementTemplateId()).toBe(-1);
+    expect(reserveElementTemplateId()).toBe(-2);
+    expect(getNextElementTemplateId()).toBe(-3);
+
+    onMtsDestruction();
+
+    expect(getNextElementTemplateId()).toBe(-1);
+    expect(destroyTask).toHaveBeenCalledTimes(1);
   });
 
   it('marks list callbacks destroyed on main-thread runtime destruction', () => {

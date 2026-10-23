@@ -22,6 +22,7 @@ const forbiddenExact = new Set([
   path.resolve(runtimeSrc, 'document.ts'),
   path.resolve(runtimeSrc, 'index.ts'),
   path.resolve(runtimeSrc, 'internal.ts'),
+  path.resolve(runtimeSrc, 'lynx-api.ts'),
   path.resolve(runtimeSrc, 'lynx.ts'),
   path.resolve(runtimeSrc, 'root.ts'),
   path.resolve(runtimeSrc, 'runtime-marker.ts'),

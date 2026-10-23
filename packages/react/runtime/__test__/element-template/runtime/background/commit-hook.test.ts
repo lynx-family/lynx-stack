@@ -8,6 +8,7 @@ import { MainThreadRef, clearMainThreadRefLastIdForTesting } from '../../../../s
 import { takeMainThreadRefInitValuePatch } from '../../../../src/core/main-thread-ref-init-value.js';
 import { clearMtsConfigCacheForTesting } from '../../../../src/core/mts-capability.js';
 import { getReloadVersion } from '../../../../src/core/reload-version.js';
+import { registerDestroyTask } from '../../../../src/core/runtime-destroy.js';
 import * as elementTemplateAlog from '../../../../src/element-template/debug/alog.js';
 import {
   installElementTemplateCommitHook,
@@ -795,6 +796,8 @@ describe('ElementTemplate commit hook', () => {
   it('cancels scheduled removed subtree cleanup on background destroy', () => {
     vi.useFakeTimers();
     try {
+      const destroyTask = vi.fn();
+      registerDestroyTask(destroyTask);
       const root = new BackgroundElementTemplateInstance('root');
       const tearDown = vi.spyOn(root, 'tearDown');
       scheduleElementTemplateRemovedSubtreeCleanup([root]);
@@ -802,6 +805,7 @@ describe('ElementTemplate commit hook', () => {
       destroyElementTemplateBackgroundRuntime();
       vi.advanceTimersByTime(10000);
 
+      expect(destroyTask).toHaveBeenCalledTimes(1);
       expect(tearDown).not.toHaveBeenCalled();
       expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBeUndefined();
     } finally {
