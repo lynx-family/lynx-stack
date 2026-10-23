@@ -6,13 +6,13 @@ import type { JsFnHandle } from './bindings/types.js';
 interface Details {
   task: (fnId: number, execId: number) => void;
 
-  // Hydration binds the same local object already owned by the caller.
-  jsFnHandle: JsFnHandle;
+  // This comes from the background thread, inserted here during ctx hydration.
+  jsFnHandle?: JsFnHandle;
 }
 
 interface RunOnBackgroundDelayImpl {
   // Elements should keep the order being called by the user.
-  delayedBackgroundFunctionArray: Details[];
+  delayedBackgroundFunctionArray: Array<Details | undefined>;
   clearDelayedBackgroundFunctions(): void;
   delayRunOnBackground(fnObj: JsFnHandle, fn: (fnId: number, execId: number) => void): void;
   runDelayedBackgroundFunctions(): void;
@@ -30,7 +30,9 @@ function initRunOnBackgroundDelay(): RunOnBackgroundDelayImpl {
 }
 
 function delayRunOnBackground(fnObj: JsFnHandle, task: (fnId: number, execId: number) => void) {
-  impl!.delayedBackgroundFunctionArray.push({ task, jsFnHandle: fnObj });
+  impl!.delayedBackgroundFunctionArray.push({ task });
+  const delayIndices = fnObj._delayIndices ??= [];
+  delayIndices.push(impl!.delayedBackgroundFunctionArray.length - 1);
 }
 
 function clearDelayedBackgroundFunctions(): void {
@@ -41,7 +43,7 @@ function clearDelayedBackgroundFunctions(): void {
 
 function runDelayedBackgroundFunctions(): void {
   for (const details of impl!.delayedBackgroundFunctionArray) {
-    if (!details.jsFnHandle._isFirstScreen) {
+    if (details?.jsFnHandle) {
       details.task(details.jsFnHandle._jsFnId!, details.jsFnHandle._execId!);
     }
   }

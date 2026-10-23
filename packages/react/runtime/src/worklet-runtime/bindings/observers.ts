@@ -37,7 +37,9 @@ export function onWorkletCtxUpdate(
 }
 
 export function retainWorkletCtx(worklet: Worklet): void {
-  globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager?.retainWorkletCtx(worklet);
+  if (worklet._execId !== undefined) {
+    globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager?.addRef(worklet._execId, worklet);
+  }
 }
 
 export function flushDelayedRunOnBackgroundFunctions(): void {

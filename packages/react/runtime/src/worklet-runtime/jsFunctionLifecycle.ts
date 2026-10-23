@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { WorkletEvents } from './bindings/events.js';
-import type { JsFnHandle, Worklet } from './bindings/types.js';
+import type { Worklet } from './bindings/types.js';
 import { profile } from './utils/profile.js';
 import { isSdkVersionGt } from './utils/version.js';
 
@@ -24,9 +24,6 @@ class JsFunctionLifecycleManager {
   private contextIds = new WeakMap<Worklet, number>();
   private nextContextId: number;
   private contextRegistry: FinalizationRegistry<number>;
-  private handles = new Map<number, Map<number, WeakRef<JsFnHandle>>>();
-  private firstScreenHandles = new WeakMap<object, WeakMap<object, JsFnHandle>>();
-  private localHandles = new WeakSet<object>();
 
   constructor(previous?: JsFunctionLifecycleManager) {
     // Native can retain descriptors across a reset; their IDs must not resolve new owners.
@@ -58,55 +55,8 @@ class JsFunctionLifecycleManager {
     }
   }
 
-  retainWorkletCtx(ctx: Worklet): void {
-    if (ctx._execId !== undefined) this.addRef(ctx._execId, ctx);
-  }
-
   resolveWorkletCtx(ctx: Worklet): Worklet | undefined {
     return ctx._runtimeCtxId === undefined ? ctx : this.contexts.get(ctx._runtimeCtxId)?.deref();
-  }
-
-  hydrateHandle(handle: JsFnHandle | undefined, target: JsFnHandle): void {
-    // Unused descriptors may be shared across bindings. Only actual local
-    // captures, including escaped functions without queued calls, receive handoff.
-    if (!handle || !this.localHandles.has(handle)) return;
-    this.addRef(target._execId!, handle);
-    Object.assign(handle, target);
-    handle._isFirstScreen = false;
-  }
-
-  materializeHandle(execId: number | undefined, descriptor: JsFnHandle, owner: object): JsFnHandle {
-    if (this.localHandles.has(descriptor) && (execId === undefined || descriptor._execId === execId)) {
-      if (execId !== undefined) this.addRef(execId, descriptor);
-      return descriptor;
-    }
-    if (execId === undefined) {
-      let handles = this.firstScreenHandles.get(owner);
-      if (!handles) {
-        handles = new WeakMap<object, JsFnHandle>();
-        this.firstScreenHandles.set(owner, handles);
-      }
-      let handle = handles.get(descriptor);
-      if (!handle) {
-        handle = { ...descriptor };
-        this.localHandles.add(handle);
-        handles.set(descriptor, handle);
-      }
-      return handle;
-    }
-    let handles = this.handles.get(execId);
-    let handle = handles?.get(descriptor._jsFnId!)?.deref();
-    if (!handle) {
-      handle = { ...descriptor, _execId: execId };
-      this.addRef(execId, handle);
-      this.localHandles.add(handle);
-      if (!handles) {
-        handles = new Map<number, WeakRef<JsFnHandle>>();
-        this.handles.set(execId, handles);
-      }
-      handles.set(descriptor._jsFnId!, new WeakRef(handle));
-    }
-    return handle;
   }
 
   removeRef(execId: number): void {
@@ -116,7 +66,6 @@ class JsFunctionLifecycleManager {
       return;
     }
     this.execIdRefCount.delete(execId);
-    this.handles.delete(execId);
     this.execIdSetToFire.add(execId);
     if (!this.willFire) {
       this.willFire = true;
@@ -129,7 +78,6 @@ class JsFunctionLifecycleManager {
   dispose(): void {
     this.active = false;
     this.contexts.clear();
-    this.handles.clear();
   }
 
   fire(): void {

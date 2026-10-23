@@ -37,6 +37,7 @@ export type MainThreadRefInitValuePatch = (
 )[];
 
 export interface Worklet {
+  /** Runtime-local lookup identity for descriptors copied by Native. */
   _runtimeCtxId?: number;
   _wkltId: string;
   _workletType?: string;
@@ -60,7 +61,8 @@ export interface JsFnHandle {
   _error?: string;
   _isFirstScreen?: boolean;
   /**
-   * Legacy queue indexes. Current runtimes retain the local handle directly.
+   * Stores an array of indexes of runOnBackground tasks that should be processed with a delay.
+   * This is used before hydration.
    */
   _delayIndices?: number[];
 }

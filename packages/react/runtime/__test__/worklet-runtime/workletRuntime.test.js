@@ -61,14 +61,15 @@ describe('Worklet', () => {
     if (kind === 'metadata') expect(value.nested).toEqual({ _wvid: 999 });
   });
 
-  it('executes copied native descriptors through the local owner and shares captured handles', () => {
+  it('executes copied native descriptors through the retained local context', () => {
     initWorklet();
     registerWorklet('main-thread', 'background-owner', function() {
       return this._jsFn;
     });
-    const ctx = { _wkltId: 'background-owner', _execId: 3, _jsFn: { a: { _jsFnId: 7 }, b: { _jsFnId: 7 } } };
+    const handle = { _jsFnId: 7 };
+    const ctx = { _wkltId: 'background-owner', _execId: 3, _jsFn: { a: handle, b: handle } };
     lynxWorkletImpl._jsFunctionLifecycleManager.prepareWorkletCtx(ctx);
-    lynxWorkletImpl._jsFunctionLifecycleManager.retainWorkletCtx(ctx);
+    lynxWorkletImpl._jsFunctionLifecycleManager.addRef(3, ctx);
     const nativeDescriptor = JSON.parse(JSON.stringify(ctx));
     const first = runWorklet(nativeDescriptor, []);
     expect(first.a).toBe(first.b);
@@ -93,7 +94,7 @@ describe('Worklet', () => {
     const ctx = { _wkltId: 'fallback', _execId: 3, _jsFn: { callback: descriptor } };
     expect(runWorklet(ctx, [])).toEqual({ _jsFnId: 7, _execId: 3 });
     expect(ctx._jsFn.callback).toEqual({ _jsFnId: 7, _execId: 3 });
-    expect(descriptor).toEqual({ _jsFnId: 7 });
+    expect(ctx._jsFn.callback).toBe(descriptor);
   });
 
   it('worklet should be called', () => {

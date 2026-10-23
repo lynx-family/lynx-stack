@@ -110,12 +110,12 @@ describe('ElementTemplateHandle', () => {
       const manager = new JsFunctionLifecycleManager();
       globalThis.lynxWorkletImpl = { ...previous, _jsFunctionLifecycleManager: manager };
       const ctx = { _wkltId: 'tap', _execId: 21 };
-      const retain = vi.spyOn(manager, 'retainWorkletCtx');
+      const retain = vi.spyOn(manager, 'addRef');
       const error = new Error('create failed');
       __etAttrPlanMap['__Card__:_et_test'] = [0, adaptMTEventAttrSlot];
       mockCreateCompiledElementTemplate.mockImplementationOnce((_key, _url, slots) => {
         expect(manager.resolveWorkletCtx(JSON.parse(JSON.stringify(slots[0].value)))).toBe(ctx);
-        expect(retain).toHaveBeenCalledExactlyOnceWith(ctx);
+        expect(retain).toHaveBeenCalledExactlyOnceWith(21, ctx);
         expect(getMainThreadDynamicAttrState(-1, 0)).toBeUndefined();
         if (outcome === 'throw') throw error;
         return outcome === 'null' ? null : mockCreatedNativeRef;
@@ -125,7 +125,7 @@ describe('ElementTemplateHandle', () => {
           createElementTemplateWithReservedHandle(-1, '_et_test', null, [{ type: 'worklet', value: ctx }], null);
         if (outcome === 'throw') expect(create).toThrow(error);
         else expect(create()).toBe(outcome === 'null' ? null : mockCreatedNativeRef);
-        expect(retain).toHaveBeenCalledExactlyOnceWith(ctx);
+        expect(retain).toHaveBeenCalledExactlyOnceWith(21, ctx);
         expect(getMainThreadDynamicAttrState(-1, 0)?.nativeHeldValue).toBe(outcome === 'success' ? ctx : undefined);
       } finally {
         manager.dispose();

@@ -1,45 +1,30 @@
-# Main-thread worklet ownership
+# Element Template worklet identity
 
-Native worklet descriptors are transport data. Element Template can copy their
-nested values into Native dictionaries, so the identity or collection of a
-PrimJS wrapper is not the identity or lifetime of a JavaScript callback handle.
+Element Template can clone event descriptors into Native dictionaries. A callback
+returned through that boundary can be a PrimJS wrapper rather than the ordinary
+JavaScript object accepted by `FinalizationRegistry.register`.
 
-Before Native clones an ET event descriptor, identity preparation assigns a
-runtime-local `_runtimeCtxId` and records its local context in a weak index.
-Reference tracking also registers that prepared input once, so collecting an input
-rejected by Native still releases its background execution. Only Native success
-commits the slot's strong reference and hydration handoff; committing does not
-register the context again. The weak index does not keep the context alive.
-Snapshot observers only track references; they do not prepare ET lookup identities.
-Context identifiers are not reused when the worklet runtime restarts.
-Descriptors from retired contexts must not acquire a new owner during delivery.
-ET reload/destroy retires the previous manager so queued cleanup cannot release a
-new background execution that reuses the same numeric ID.
+Keep the local worklet context as the owner, as Snapshot does. Before Native
+clones an ET event descriptor, assign a runtime-local `_runtimeCtxId` and record
+the context in a weak lookup. `runWorklet` resolves copied descriptors to that
+context before transforming captures, so the existing transformation registers
+ordinary local callback objects instead of Native wrappers. The weak lookup does
+not keep the context alive.
 
-Worklet transformation materializes background-function descriptors into ordinary
-JavaScript handles and installs those handles in the captured context. Repeated
-captures in one background execution share a handle. Before hydration, each local
-context owns its own handles and captured containers so reusing one worklet for
-multiple bindings cannot retarget an escaped callback during another binding's
-hydration. The lifecycle manager only registers these local targets; registration
-succeeds before bookkeeping becomes visible. Neither a temporary clone used only for registration nor a strong
-canonicalization table can represent the ownership contract.
+Track a prepared background input before calling Native. If Native rejects it,
+collecting that input must still release its already-registered background
+execution. Only Native success commits the slot's strong reference and hydration
+handoff; committing does not register the context again. Removal drops the slot's
+reference. Escaped callbacks follow the existing Snapshot capture and GC behavior.
 
-A live binding retains its local context, and an escaped function retains its
-captured handles. A materialized handle starts pending during the first screen
-and becomes bound to a background execution during hydration. The lifecycle
-manager performs this handoff on the same local object, registering it before
-publishing its execution metadata. Hydration associates materialized handles with
-the background execution before
-releasing the old binding, including handles held by escaped functions that have
-not called `runOnBackground` yet. Unmaterialized first-screen descriptors remain
-read-only and are never registered as owners. With no lifecycle manager,
-transformation and hydration still prepare `_execId` metadata without GC tracking.
-Removing a binding only drops that owner's reference. Background
-execution state is released after every registered local owner has been collected.
+Context identifiers are not reused across runtime initialization or ET
+reload/destroy. Retire the previous manager so stale descriptors cannot resolve to
+new contexts and old finalizers cannot release a new execution with a reused ID.
+Snapshot observers continue to track references without preparing ET identities.
 
-Delayed calls retain their local handle from enqueue through replay. Hydration
-binds that handle directly, without queue indexes or a second queue update.
-Replay preserves call order and skips handles that never received a handoff.
-Delayed replay drops the consumed queue rather than truncating its array, so
-PrimJS cannot retain completed tasks and handles through unused array storage.
+This integration keeps Snapshot's existing callback transformation, first-screen
+hydration, and delayed-call replay semantics. It does not add per-binding callback
+materialization, shared-capture isolation, or a new delayed queue representation.
+Shared first-screen descriptor mutation and escaped-callback lifetime limitations
+that also occur in Snapshot are outside this fix. Registration atomicity and
+consumed-queue cleanup already on the base remain unchanged.

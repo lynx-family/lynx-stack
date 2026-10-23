@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
-import type { ClosureValueType, JsFnHandle, RunWorkletOptions, Worklet, WorkletRefImpl } from './bindings/types.js';
+import type { ClosureValueType, RunWorkletOptions, Worklet, WorkletRefImpl } from './bindings/types.js';
 import { RunWorkletSource } from './bindings/types.js';
 import { initRunOnBackgroundDelay } from './delayRunOnBackground.js';
 import { delayExecUntilJsReady, initEventDelay } from './delayWorkletEvent.js';
@@ -217,18 +217,13 @@ const transformWorkletInner = (
       if (obj === value && obj !== ctx) obj = copyAccessorCapture(obj);
       obj = replaceCapturedProperty(obj, value, key, transformedSubObj);
     }
-    const isJsFn = '_jsFnId' in subObj || '_isFirstScreen' in subObj;
+    const isJsFn = '_jsFnId' in subObj;
     if (isJsFn) {
-      const handle = lynxWorkletImpl._jsFunctionLifecycleManager?.materializeHandle(
-        (ctx as Worklet)._execId,
-        subObj as JsFnHandle,
-        ctx as object,
-      ) ?? { ...subObj, _execId: (ctx as Worklet)._execId };
-      if (handle !== subObj) {
-        // Bindings can shallow-share capture containers before hydration.
-        if (obj === value && obj !== ctx) obj = copyAccessorCapture(obj);
-        obj = replaceCapturedProperty(obj, value, key, handle);
-      }
+      (subObj as Record<string, ClosureValueType>)['_execId'] = (ctx as Worklet)._execId;
+      lynxWorkletImpl._jsFunctionLifecycleManager?.addRef(
+        (ctx as Worklet)._execId!,
+        subObj,
+      );
       continue;
     }
   }

@@ -349,11 +349,11 @@ describe('ElementTemplate patch stream (apply)', () => {
     const nextCtx = { _wkltId: 'tap', _execId: 31 };
     elementTemplateRegistry.set(101, {} as ElementTemplateHandle);
     seedMTEventState(101, 0, oldCtx);
-    const retain = vi.spyOn(manager, 'retainWorkletCtx');
+    const retain = vi.spyOn(manager, 'addRef');
     const error = new Error('setter failed');
     mockSetElementTemplateAttributeSlot.mockImplementationOnce((_native, _slot, value) => {
       expect(manager.resolveWorkletCtx(JSON.parse(JSON.stringify(value.value)))).toBe(nextCtx);
-      expect(retain).toHaveBeenCalledExactlyOnceWith(nextCtx);
+      expect(retain).toHaveBeenCalledExactlyOnceWith(31, nextCtx);
       expect(getMainThreadDynamicAttrState(101, 0)?.nativeHeldValue).toBe(oldCtx);
       if (throws) throw error;
     });
@@ -368,7 +368,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       if (throws) expect(apply).toThrow(error);
       else apply();
       expect(getMainThreadDynamicAttrState(101, 0)?.nativeHeldValue).toBe(throws ? oldCtx : nextCtx);
-      expect(retain).toHaveBeenCalledExactlyOnceWith(nextCtx);
+      expect(retain).toHaveBeenCalledExactlyOnceWith(31, nextCtx);
       if (throws) expect(hydrate).not.toHaveBeenCalled();
       else expect(hydrate).toHaveBeenCalledExactlyOnceWith(nextCtx, oldCtx);
     } finally {

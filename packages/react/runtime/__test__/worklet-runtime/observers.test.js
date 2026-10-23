@@ -23,7 +23,10 @@ afterEach(() => {
 
 describe('MTFObservers', () => {
   it('should not add a lifecycle ref when execId is missing for an MTF', () => {
-    const addRef = vi.spyOn(globalThis.lynxWorkletImpl._jsFunctionLifecycleManager, 'addRef');
+    const addRef = vi.fn();
+    globalThis.lynxWorkletImpl._jsFunctionLifecycleManager = {
+      addRef,
+    };
 
     retainWorkletCtx(
       {
@@ -35,7 +38,10 @@ describe('MTFObservers', () => {
   });
 
   it('should add a lifecycle ref when execId exists for an MTF', () => {
-    const addRef = vi.spyOn(globalThis.lynxWorkletImpl._jsFunctionLifecycleManager, 'addRef');
+    const addRef = vi.fn();
+    globalThis.lynxWorkletImpl._jsFunctionLifecycleManager = {
+      addRef,
+    };
     const mtf = {
       _wkltId: 'ctx1',
       _execId: 8,
@@ -44,11 +50,13 @@ describe('MTFObservers', () => {
     retainWorkletCtx(mtf);
 
     expect(addRef).toHaveBeenCalledWith(8, mtf);
-    expect(mtf._runtimeCtxId).toBeUndefined();
   });
 
   it('should not add lifecycle refs during element updates', () => {
-    const addRef = vi.spyOn(globalThis.lynxWorkletImpl._jsFunctionLifecycleManager, 'addRef');
+    const addRef = vi.fn();
+    globalThis.lynxWorkletImpl._jsFunctionLifecycleManager = {
+      addRef,
+    };
 
     onWorkletCtxUpdate(
       {

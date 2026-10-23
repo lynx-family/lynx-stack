@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { clearDelayedRunOnBackgroundFunctions } from '@lynx-js/react/worklet-runtime/bindings';
+import { clearDelayedRunOnBackgroundFunctions, retainWorkletCtx } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { createBackgroundFunctionHandle } from '../../../core/background-function/handle.js';
 import {
@@ -15,6 +15,7 @@ import type { Worklet } from '../../../worklet-runtime/bindings/types.js';
 import { JsFunctionLifecycleManager, isRunOnBackgroundEnabled } from '../../../worklet-runtime/jsFunctionLifecycle.js';
 
 type BackgroundFunctionCtx = Parameters<typeof registerBackgroundFunctionCtx>[0];
+type RetainableMainThreadCtx = Parameters<typeof retainWorkletCtx>[0];
 
 interface MainThreadBackgroundFunctionCtx {
   _wkltId: string;
@@ -39,11 +40,11 @@ export function registerMainThreadBackgroundFunctionCtx(ctx: MainThreadBackgroun
 export function prepareMainThreadBackgroundFunctionCtx(ctx: MainThreadBackgroundFunctionCtx): void {
   const manager = globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager;
   manager?.prepareWorkletCtx(ctx as Worklet);
-  manager?.retainWorkletCtx(ctx as Worklet);
+  retainMainThreadBackgroundFunctionCtx(ctx);
 }
 
 export function retainMainThreadBackgroundFunctionCtx(ctx: MainThreadBackgroundFunctionCtx): void {
-  globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager?.retainWorkletCtx(ctx as Worklet);
+  retainWorkletCtx(ctx as RetainableMainThreadCtx);
 }
 
 export function resetElementTemplateBackgroundFunctionRuntime(): void {
