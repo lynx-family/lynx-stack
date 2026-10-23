@@ -27,8 +27,8 @@
   "dependencies": {
     "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-react": "2.1.0",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "typescript": "^6.0.3",
     "zod": "^4.6.5"
   },
