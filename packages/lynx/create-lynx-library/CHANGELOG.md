@@ -1,5 +1,12 @@
 # create-lynx-library
 
+## 0.6.2
+
+### Patch Changes
+
+- Exclude link-only PrimJS Node-API runtime libraries from generated Android ([#4217](https://github.com/lynx-family/lynx-stack/pull/4217))
+  library AARs so host packaging keeps the single transitive PrimJS copy.
+
 ## 0.6.1
 
 ### Patch Changes

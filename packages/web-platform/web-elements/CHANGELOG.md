@@ -1,5 +1,11 @@
 # @lynx-js/web-elements
 
+## 0.12.15
+
+### Patch Changes
+
+- Support `![](blockview://id)` in `x-markdown` by rendering a named slot at the image position, including in typewriter mode. Set `slot="id"` on the child element to project it into the slot. ([#4220](https://github.com/lynx-family/lynx-stack/pull/4220))
+
 ## 0.12.14
 
 ### Patch Changes

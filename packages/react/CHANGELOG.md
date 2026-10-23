@@ -1,5 +1,25 @@
 # @lynx-js/react
 
+## 0.129.0
+
+### Minor Changes
+
+- Add the experimental `experimental_reEvalJSOnReload` option. When it is enabled, `reloadTemplate` evaluates the main-thread and background entries again, so module-level state starts over while the native element tree is reused. It is disabled by default. ([#4026](https://github.com/lynx-family/lynx-stack/pull/4026))
+
+  Re-evaluating the background entry requires `reloadCard` from the Lynx client. Without it, the background keeps the existing reload behavior.
+
+### Patch Changes
+
+- Drop stale cross-thread function calls and return values after `reloadTemplate`. This prevents delayed calls from looking up cleared Element Template function contexts or resolving a newer call with an old result. Calls queued by old main-thread ref cleanup retain the old reload version. ([#4214](https://github.com/lynx-family/lynx-stack/pull/4214))
+
+- Keep synchronous lazy import chains from changing unrelated Promise callbacks to run synchronously when the Lynx Promise polyfill caches fulfilled primitive values. This prevents a lazy component's mount effect from re-entering when it updates a parent component. ([#4204](https://github.com/lynx-family/lynx-stack/pull/4204))
+
+- Keep failed background-function handle registrations retryable and release consumed delayed callback queues so completed callbacks can be garbage collected. ([#4222](https://github.com/lynx-family/lynx-stack/pull/4222))
+
+- Send Element Template main-thread ref initialization in a separate event, independently of UI patch serialization and reload filtering. Add alog messages for initialization sends and receives in both Snapshot and Element Template. ([#4213](https://github.com/lynx-family/lynx-stack/pull/4213))
+
+- Preserve imports such as `runOnBackground` when injecting background-only worklet definitions into the main thread. Keep imported bindings isolated between definitions and resolve relative imports from their original module. ([#4221](https://github.com/lynx-family/lynx-stack/pull/4221))
+
 ## 0.128.0
 
 ### Minor Changes

@@ -1,5 +1,9 @@
 # upgrade-rspeedy
 
+## 0.18.3
+
+No changes in this release.
+
 ## 0.18.2
 
 No changes in this release.

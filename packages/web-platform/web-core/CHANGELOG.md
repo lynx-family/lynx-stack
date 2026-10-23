@@ -1,5 +1,14 @@
 # @lynx-js/web-core
 
+## 0.26.5
+
+### Patch Changes
+
+- Convert `text-stroke-width` and `text-stroke-color` to their `-webkit-` prefixed CSS properties. ([#4208](https://github.com/lynx-family/lynx-stack/pull/4208))
+- Updated dependencies [[`3790ba3`](https://github.com/lynx-family/lynx-stack/commit/3790ba38abae8fbfc3613875b390a3f2906cfb52)]:
+  - @lynx-js/web-elements@0.12.15
+  - @lynx-js/web-worker-rpc@0.26.5
+
 ## 0.26.4
 
 ### Patch Changes

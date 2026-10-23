@@ -1,5 +1,13 @@
 # @lynx-js/react-alias-rsbuild-plugin
 
+## 0.22.0
+
+### Minor Changes
+
+- Add the experimental `experimental_reEvalJSOnReload` option. When it is enabled, `reloadTemplate` evaluates the main-thread and background entries again, so module-level state starts over while the native element tree is reused. It is disabled by default. ([#4026](https://github.com/lynx-family/lynx-stack/pull/4026))
+
+  Re-evaluating the background entry requires `reloadCard` from the Lynx client. Without it, the background keeps the existing reload behavior.
+
 ## 0.21.0
 
 ### Minor Changes

@@ -1,5 +1,13 @@
 # @lynx-js/lynx-stack-docs
 
+## 0.0.3
+
+### Patch Changes
+
+- Generate standalone API pages only for shown packages and explicitly configured additional packages, rendering hidden-package references as plain text and retaining explicit source type names when unavailable imports resolve to any. Consumers must update handwritten links to hidden package pages. ([#4218](https://github.com/lynx-family/lynx-stack/pull/4218))
+
+  Keep additional package pages independent of the plugin menu, preserving the testing environment pages without duplicating the Testing navigation entry.
+
 ## 0.0.2
 
 ### Patch Changes
