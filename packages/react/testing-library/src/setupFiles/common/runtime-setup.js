@@ -66,12 +66,14 @@ globalThis.onInjectMainThreadGlobals = (target) => {
 
   target.globalPipelineOptions = undefined;
 
-  if (
-    typeof target.__ALOG_ELEMENT_API__ !== 'undefined' && target.__ALOG_ELEMENT_API__
-    && !target.__initElementPAPICallAlogInjected
-  ) {
+  // Re-wrap on every injection. `injectMainThreadGlobals` reinstalls the
+  // element PAPIs (`__injectElementApi`) before calling this hook, so the
+  // wrappers installed for the previous test are already gone. Guarding this
+  // with a flag on `target` left the flag behind while the wrappers were
+  // replaced, which silently limited the element PAPI alog to the first test
+  // in a file.
+  if (typeof target.__ALOG_ELEMENT_API__ !== 'undefined' && target.__ALOG_ELEMENT_API__) {
     initElementPAPICallAlog(target);
-    target.__initElementPAPICallAlogInjected = true;
   }
 };
 globalThis.onInjectBackgroundThreadGlobals = (target) => {
