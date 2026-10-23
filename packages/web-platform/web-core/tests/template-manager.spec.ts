@@ -667,6 +667,96 @@ describe('Template Manager', () => {
     expect(instance1.onPageConfigReady).toHaveBeenCalled();
     expect(instance2.onPageConfigReady).toHaveBeenCalled();
   });
+
+  test('waits for async section handlers before resolving shared bundle loads', async () => {
+    const templateUrl = 'http://example.com/template_section_handler_race';
+    const encoded = encode(sampleTasm);
+    let streamController!: ReadableStreamDefaultController<Uint8Array>;
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        streamController = controller;
+      },
+    });
+
+    (globalThis.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      body: stream,
+    });
+
+    let resolveFirstInstance!: (instance: LynxViewInstance) => void;
+    const firstInstancePromise = new Promise<LynxViewInstance>((resolve) => {
+      resolveFirstInstance = resolve;
+    });
+    const firstInstance = {
+      ...mockLynxViewInstance,
+      onPageConfigReady: rstest.fn(),
+      onStyleInfoReady: rstest.fn(),
+      onMTSScriptsLoaded: rstest.fn(),
+      onBTSScriptsLoaded: rstest.fn(),
+      backgroundThread: { markTiming: rstest.fn() },
+    } as unknown as LynxViewInstance;
+    const secondInstance = {
+      ...mockLynxViewInstance,
+      onPageConfigReady: rstest.fn(),
+      onStyleInfoReady: rstest.fn((url: string) => {
+        expect(templateManager.getStyleSheet(url)).toBeDefined();
+      }),
+      onMTSScriptsLoaded: rstest.fn(),
+      onBTSScriptsLoaded: rstest.fn(),
+      backgroundThread: { markTiming: rstest.fn() },
+    } as unknown as LynxViewInstance;
+    const postMessageSpy = rstest.spyOn(globalThis, 'postMessage');
+
+    const firstLoad = templateManager.fetchBundle(
+      templateUrl,
+      firstInstancePromise,
+      false,
+      false,
+      false,
+    );
+    const secondLoad = templateManager.fetchBundle(
+      templateUrl,
+      Promise.resolve(secondInstance),
+      false,
+      false,
+      false,
+    );
+
+    try {
+      streamController.enqueue(encoded);
+      streamController.close();
+
+      const startedAt = performance.now();
+      const hasDoneMessage = () =>
+        postMessageSpy.mock.calls.some(([message]) =>
+          typeof message === 'object'
+          && message !== null
+          && (message as { type?: string; url?: string }).type === 'done'
+          && (message as { type?: string; url?: string }).url === templateUrl
+        );
+      while (!hasDoneMessage()) {
+        if (performance.now() - startedAt > 5000) {
+          throw new Error('Timed out waiting for the bundle done message');
+        }
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+
+      const secondLoadSettled = await Promise.race([
+        secondLoad.then(() => true, () => true),
+        new Promise<boolean>(resolve => setTimeout(() => resolve(false), 100)),
+      ]);
+      expect(secondLoadSettled).toBe(false);
+    } finally {
+      resolveFirstInstance(firstInstance);
+      await Promise.all([firstLoad, secondLoad]);
+      postMessageSpy.mockRestore();
+    }
+
+    expect(secondInstance.onStyleInfoReady).toHaveBeenCalledWith(templateUrl);
+  });
+
   /**
    * The markup path, end to end through the worker.
    *

@@ -7,6 +7,17 @@ import type { AttributeChangeHandler } from './registerAttributeHandler.js';
 import type { StyleChangeHandler } from './registerStyleChangeHandler.js';
 import { boostedQueueMicrotask } from './boostedQueueMicrotask.js';
 import type { EventStatusChangeHandler } from './registerEventStatusChangedHandler.js';
+
+const styleReactiveElementRefreshers = new Map<HTMLElement, () => void>();
+
+/** Refresh connected style-reactive elements after a stylesheet is applied. */
+export function refreshStyleReactiveElements(root: Node): void {
+  for (const [element, refresh] of styleReactiveElementRefreshers) {
+    if (root === element || root.contains(element)) {
+      refresh();
+    }
+  }
+}
 export interface WebComponentClass {
   new(): HTMLElement & {
     cssPropertyChangedHandler?: never;
@@ -150,6 +161,7 @@ export function Component<T extends WebComponentClass>(
               );
             }
           }
+          this.#previousStyle.set(propertyName, propertyValue);
         }
         this.#checking = false;
       }
@@ -250,6 +262,12 @@ export function Component<T extends WebComponentClass>(
           oneAttributeReactive.connectedCallback?.();
         });
         this.#responseStyleChange();
+        if (observedStyleProperties.size) {
+          styleReactiveElementRefreshers.set(
+            this,
+            () => this.#responseStyleChange(),
+          );
+        }
         boostedQueueMicrotask(
           this.#invokeAfterConnectedAttributeChangedHandler,
           this,
@@ -257,6 +275,8 @@ export function Component<T extends WebComponentClass>(
         this.#connected = true;
       }
       override disconnectedCallback() {
+        styleReactiveElementRefreshers.delete(this);
+        this.#previousStyle.clear();
         super.disconnectedCallback?.();
         this.#attributeReactives.forEach((oneAttributeReactive) => {
           oneAttributeReactive.dispose?.();
