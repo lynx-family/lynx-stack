@@ -74,6 +74,11 @@ x-swiper-item {
   flex-basis: var(--lynx-linear-weight-basis) !important;
 }
 
+/* Experimental specificity: (0,2,1) overrides scoped class selectors (0,2,0). */
+x-swiper-item:nth-child(n):nth-child(n) {
+  position: relative;
+}
+
 x-swiper-item:nth-child(n+20) {
   contain: strict;
   content-visibility: auto;
