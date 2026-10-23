@@ -194,7 +194,7 @@ function _renderToString(
         opcodes,
         /* v8 ignore start */
         __ENABLE_SSR__ ? opcodes.length : 0,
-        /* v8 ignore end */
+        /* v8 ignore stop */
         into,
       );
     }
@@ -282,7 +282,7 @@ function _renderToString(
         opcodes,
         /* v8 ignore start */
         __ENABLE_SSR__ ? opcodes.length : 0,
-        /* v8 ignore end */
+        /* v8 ignore stop */
         into,
       );
     } catch (e) {
@@ -312,7 +312,7 @@ function _renderToString(
             opcodes,
             /* v8 ignore start */
             __ENABLE_SSR__ ? opcodes.length : 0,
-            /* v8 ignore end */
+            /* v8 ignore stop */
             into,
           );
         }
@@ -406,7 +406,7 @@ function _renderToString(
       opcodes,
       /* v8 ignore start */
       __ENABLE_SSR__ ? opcodes.length : 0,
-      /* v8 ignore end */
+      /* v8 ignore stop */
       vnode,
     );
   }
