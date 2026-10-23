@@ -7,7 +7,7 @@ import { installMainThreadHooks } from '../../../../src/core/hooks/mainThreadImp
 import { takeMainThreadRefInitValuePatch } from '../../../../src/core/main-thread-ref-init-value.js';
 import { clearMainThreadRefLastIdForTesting } from '../../../../src/core/main-thread-ref.js';
 import { clearMtsConfigCacheForTesting } from '../../../../src/core/mts-capability.js';
-import { setPipeline } from '../../../../src/core/performance.js';
+import { resetTimingState } from '../../../../src/core/performance.js';
 import { setupBackgroundElementTemplateDocument } from '../../../../src/element-template/background/document.js';
 import { BackgroundPageRootInstance } from '../../../../src/element-template/background/instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
@@ -76,7 +76,7 @@ export class ElementTemplateEnvManager {
     this.backgroundRoot = undefined;
     // @ts-expect-error - allow reset to undefined during tests
     setRoot(undefined);
-    setPipeline(undefined);
+    resetTimingState();
 
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
