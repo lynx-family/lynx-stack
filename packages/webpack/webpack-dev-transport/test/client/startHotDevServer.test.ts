@@ -93,6 +93,47 @@ describe('startHotDevServer', () => {
 
     expect(check).not.toBeCalled();
   });
+
+  it('keeps ordinary BTS HMR after the captured coordinator reports an unsupported host', async () => {
+    vi.useFakeTimers();
+    try {
+      let complete: (modules: string[]) => void;
+      let hash = 'initial';
+      const coordinator = {
+        prepare: vi.fn().mockResolvedValue(false),
+        finish: vi.fn(),
+        stop: vi.fn(),
+      };
+      check.mockImplementationOnce(() =>
+        new Promise<string[]>(resolve => {
+          complete = resolve;
+        })
+      );
+      start(coordinator, () => hash);
+      onHotUpdate('first');
+      await vi.advanceTimersByTimeAsync(11000);
+      expect(check).toBeCalledTimes(1);
+      expect(reloadPage).not.toBeCalled();
+      hash = 'first';
+      complete!([]);
+      await vi.advanceTimersByTimeAsync(0);
+      check.mockRejectedValueOnce(new Error('transient BTS download failure'));
+      onHotUpdate('second');
+      await vi.advanceTimersByTimeAsync(0);
+      expect(check).toBeCalledTimes(2);
+      expect(coordinator.prepare).toBeCalledTimes(1);
+      expect(coordinator.finish).not.toBeCalled();
+      expect(coordinator.stop).not.toBeCalled();
+      expect(reloadPage).not.toBeCalled();
+      check.mockRejectedValueOnce(new Error('unaccepted BTS update'));
+      status.mockReturnValueOnce('idle').mockReturnValue('abort');
+      onHotUpdate('third');
+      await vi.advanceTimersByTimeAsync(0);
+      expect(reloadPage).toBeCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
   it('serializes notifications while MTS is preparing and advances an empty BTS update', async () => {
     let release: () => void;
     let hash = 'current-hash';

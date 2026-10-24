@@ -11,10 +11,14 @@ import type {
   ExtractStrConfig,
   TransformBuiltinAttributeNamesOptions,
 } from '@lynx-js/react/transform';
-import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+import {
+  LynxEncodePlugin,
+  LynxTemplatePlugin,
+} from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { applyDefinesInjection } from './DefinesInjection.js';
+import { MAIN_THREAD_HMR } from './hmr/enabled.js';
 import { LAYERS } from './layer.js';
 import {
   ELEMENT_TEMPLATE_BUILD_INFO,
@@ -22,6 +26,7 @@ import {
 } from './loaders/main-thread.js';
 import type { ReactRuntimeRequirementsBuildInfo } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
+import { applyMainThreadHMR } from './MainThreadHMR.js';
 
 const require = createRequire(import.meta.url);
 
@@ -569,6 +574,23 @@ class ReactWebpackPlugin {
     const entryPairs = options.entryPairs ?? [];
     if (entryPairs.length > 0) {
       applyDefinesInjection(compiler, entryPairs, this.constructor.name);
+      if (
+        isDev && !options.experimental_isLazyBundle
+        && compiler.options.plugins.some(plugin =>
+          plugin instanceof compiler.webpack.HotModuleReplacementPlugin
+        )
+        && compiler.options.plugins.some(plugin =>
+          plugin instanceof LynxEncodePlugin
+        )
+      ) {
+        // ET template structure HMR is unsupported, so retain its existing
+        // acceptance boundaries instead of adding a root fallback.
+        applyMainThreadHMR(
+          compiler,
+          entryPairs,
+          !options.experimental_useElementTemplate,
+        );
+      }
     }
 
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
@@ -684,6 +706,47 @@ class ReactWebpackPlugin {
           },
           () => {
             const wrappedFiles = new Set<string>();
+            const entryModuleIds = new Map<Chunk, Set<string | number>>();
+            if (
+              (compiler as unknown as Record<symbol, unknown>)[MAIN_THREAD_HMR]
+            ) {
+              // Only dynamic import targets are entries. Requiring helpers as
+              // roots prevents their updates from bubbling to their owners.
+              for (const module of compilation.modules) {
+                const blocks = [...module.blocks];
+                for (const block of blocks) {
+                  blocks.push(...block.blocks);
+                  const group = compilation.chunkGraph.getBlockChunkGroup(
+                    block,
+                  );
+                  if (
+                    !group || group.isInitial()
+                    || !group.origins.every(origin =>
+                      origin.module?.layer === LAYERS.MAIN_THREAD
+                    )
+                  ) continue;
+                  for (const chunk of group.chunks) {
+                    let ids = entryModuleIds.get(chunk);
+                    if (!ids) entryModuleIds.set(chunk, ids = new Set());
+                    const factories = new Set(
+                      compilation.chunkGraph
+                        .getChunkModulesIterableBySourceType(
+                          chunk,
+                          'javascript',
+                        ),
+                    );
+                    for (const dependency of block.dependencies) {
+                      const target = compilation.moduleGraph.getResolvedModule(
+                        dependency,
+                      );
+                      if (!target || !factories.has(target)) continue;
+                      const id = compilation.chunkGraph.getModuleId(target);
+                      if (id !== null) ids.add(id);
+                    }
+                  }
+                }
+              }
+            }
 
             compilation.chunkGroups.forEach(chunkGroup => {
               const isDynamicImport = !chunkGroup.isInitial()
@@ -713,6 +776,10 @@ class ReactWebpackPlugin {
                   if (!asset) {
                     continue;
                   }
+                  // HMR consumes CommonJS exports directly, not the lazy-bundle factory.
+                  if (asset.info.hotModuleReplacement) {
+                    continue;
+                  }
 
                   wrappedFiles.add(file);
                   compilation.updateAsset(
@@ -723,6 +790,11 @@ class ReactWebpackPlugin {
                         `  const module = { exports: {} }\n`,
                         `  const exports = module.exports;\n`,
                         old,
+                        entryModuleIds.has(chunk)
+                          ? `\n  module.exports.entryModuleIds = ${
+                            JSON.stringify([...entryModuleIds.get(chunk)!])
+                          };`
+                          : '',
                         `\n  ;return module.exports\n})`,
                       ),
                   );
