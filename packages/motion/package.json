@@ -47,7 +47,6 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@babel/core": "^8.0.1",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "4.1.0",
     "@rslib/core": "catalog:rslib",

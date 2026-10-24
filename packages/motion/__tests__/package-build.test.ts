@@ -11,11 +11,12 @@ test('published JavaScript and public declarations do not import build dependenc
     readFileSync(new NodeURL('../package.json', import.meta.url), 'utf8'),
   );
   for (
-    const dependency of ['@babel/core', 'motion', 'motion-dom', 'motion-utils']
+    const dependency of ['motion', 'motion-dom', 'motion-utils']
   ) {
     expect(manifest.devDependencies[dependency]).toBeDefined();
     expect(manifest.dependencies?.[dependency]).toBeUndefined();
   }
+  expect(manifest.devDependencies['@babel/core']).toBeUndefined();
 
   const dist = new NodeURL('../dist/', import.meta.url);
   const files = [

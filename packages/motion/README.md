@@ -49,10 +49,11 @@ For more comprehensive examples, please refer to the [examples/motion](https://g
 ## Runtime compatibility
 
 The published ESM includes a compiled copy of the upstream Motion APIs used by
-this adapter. An internal Rslib plugin replaces browser globals with imports of
+this adapter. A native Rslib plugin uses Rspack's `ProvidePlugin` to import
 private Lynx implementations, including `queueMicrotask`, `performance`, DOM
 constructors, selector queries, and computed styles. It also handles static
-`globalThis` property accesses. Importing Motion does not install these polyfills
+`globalThis` property accesses and uses `DefinePlugin` for matching `typeof`
+guards. Importing Motion does not install these polyfills
 on the host globals or replace the browser's DOM constructors.
 
 No consumer Babel or Rspeedy plugin is required. The main-thread adapter and its
@@ -63,8 +64,9 @@ implementation. Mini's existing callable registry for main-thread closures is
 separate from these polyfills.
 
 The upstream JavaScript and public type declarations are bundled into this
-package. `motion`, `motion-dom`, `motion-utils`, and Babel are build-time
-development dependencies; consumers do not need to install them.
+package. `motion`, `motion-dom`, and `motion-utils` are build-time development
+dependencies; consumers do not need to install them. The build uses Rslib/Rspack
+directly and has no Babel dependency.
 
 ## Motion Mini (`@lynx-js/motion/mini`)
 

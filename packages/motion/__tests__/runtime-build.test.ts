@@ -3,56 +3,142 @@
 // LICENSE file in the root directory of this source tree.
 
 import { execFile } from 'node:child_process';
-import { createRequire } from 'node:module';
+import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { promisify } from 'node:util';
-import { fileURLToPath, URL as NodeURL } from 'node:url';
-import { describe, expect, test } from 'vitest';
+import { fileURLToPath, pathToFileURL, URL as NodeURL } from 'node:url';
+import { createRslib } from '@rslib/core';
+import { describe, test } from 'vitest';
 
-type Loader = (this: {
-  resourcePath: string;
-  async(): (error: Error | null, code?: string) => void;
-}, source: string) => void;
-const loader = createRequire(import.meta.url)(
-  '../build/runtime-loader.cjs',
-) as Loader;
-
-function transform(source: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    loader.call({
-      resourcePath: 'fixture.mjs',
-      async: () => (error, code) => error ? reject(error) : resolve(code!),
-    }, source);
-  });
-}
+import { pluginMotionRuntime } from '../build/pluginMotionRuntime.js';
 
 describe('Motion build runtime imports', () => {
-  test('rewrites bare, qualified, computed and optional accesses while preserving local bindings', async () => {
-    const code = await transform(`
-      export const runtime = [document, typeof queueMicrotask,
-        globalThis.queueMicrotask, globalThis['document'], globalThis?.performance];
-      export function local(queueMicrotask, globalThis) {
-        return [queueMicrotask, globalThis.document];
+  test(
+    'native Rslib substitutions preserve scopes, property names and typeof guards',
+    async () => {
+      const directory = await mkdtemp(join(tmpdir(), 'motion-runtime-plugin-'));
+      const names = [
+        'document',
+        'window',
+        'Element',
+        'HTMLElement',
+        'SVGElement',
+        'NodeList',
+        'EventTarget',
+        'getComputedStyle',
+        'performance',
+        'queueMicrotask',
+      ];
+      const accessors = [
+        (name: string) => name,
+        (name: string) => `globalThis.${name}`,
+        (name: string) => `globalThis['${name}']`,
+        (name: string) => `globalThis?.${name}`,
+      ];
+      try {
+        await writeFile(join(directory, 'package.json'), '{"type":"module"}');
+        const entry = join(directory, 'input.js');
+        await writeFile(
+          entry,
+          `
+        export const values = [${
+            accessors.map(access => `[${names.map(access).join(',')}]`).join(
+              ',',
+            )
+          }];
+        export const types = [${
+            accessors.map(access =>
+              `[${names.map(name => `typeof ${access(name)}`).join(',')}]`
+            ).join(',')
+          }];
+        export function local(${names.join(',')}) {
+          return [{${names.join(',')}}, [${
+            names.map(name => `typeof ${name}`).join(',')
+          }]];
+        }
+        export function shadowed(globalThis) {
+          return [globalThis.document, globalThis['document'], globalThis?.document,
+            typeof globalThis.document, typeof globalThis['document'], typeof globalThis?.document];
+        }
+        export function declared() {
+          const window = { document: 1 };
+          function read(document) { return document; }
+          return [window.document, read(2)];
+        }
+      `,
+        );
+        const rslib = await createRslib({
+          cwd: directory,
+          config: {
+            lib: [{
+              format: 'esm',
+              syntax: 'es2022',
+              plugins: [pluginMotionRuntime()],
+            }],
+            source: { entry: { 'upstream/fixture': entry } },
+            output: { distPath: { root: 'dist' } },
+            performance: { printFileSize: false },
+          },
+        });
+        const build = await rslib.build();
+        await build.close();
+        const polyfill = join(directory, 'dist/polyfill');
+        await mkdir(polyfill, { recursive: true });
+        await writeFile(
+          join(polyfill, 'runtime.js'),
+          `
+        export const document = {}, window = {}, performance = {};
+        export class Element {} export class HTMLElement {} export class SVGElement {}
+        export class NodeList {} export class EventTarget {}
+        export function getComputedStyle() {}
+      `,
+        );
+        await writeFile(
+          join(polyfill, 'microtask.js'),
+          'export function queueMicrotask() {}',
+        );
+        for (const browser of [false, true]) {
+          await promisify(execFile)(process.execPath, [
+            '--input-type=module',
+            '-e',
+            `
+          import assert from 'node:assert/strict';
+          const names = ${JSON.stringify(names)};
+          for (const name of names) Object.defineProperty(globalThis, name, {
+            value: ${browser} ? Object.freeze(function HostAPI() {}) : undefined,
+            writable: false, configurable: true,
+          });
+          const before = names.map(name => Object.getOwnPropertyDescriptor(globalThis, name));
+          const fixture = await import(${
+              JSON.stringify(
+                pathToFileURL(join(directory, 'dist/upstream/fixture.js')).href,
+              )
+            });
+          const runtime = await import(${
+              JSON.stringify(pathToFileURL(join(polyfill, 'runtime.js')).href)
+            });
+          const microtask = await import(${
+              JSON.stringify(pathToFileURL(join(polyfill, 'microtask.js')).href)
+            });
+          const privateAPIs = { ...runtime, ...microtask };
+          for (const values of fixture.values) assert.deepEqual(values, names.map(name => privateAPIs[name]));
+          for (const types of fixture.types) assert.deepEqual(types, names.map(name => typeof privateAPIs[name]));
+          const [object, types] = fixture.local(...names.map(() => 123));
+          assert.deepEqual(object, Object.fromEntries(names.map(name => [name, 123])));
+          assert.deepEqual(types, names.map(() => 'number'));
+          assert.deepEqual(fixture.shadowed({document: 'local'}), ['local', 'local', 'local', 'string', 'string', 'string']);
+          assert.deepEqual(fixture.declared(), [1, 2]);
+          assert.deepEqual(names.map(name => Object.getOwnPropertyDescriptor(globalThis, name)), before);
+        `,
+          ]);
+        }
+      } finally {
+        await rm(directory, { recursive: true, force: true });
       }
-      export const object = { document };
-    `);
-    expect(code).toContain('from "lynx-motion-microtask"');
-    expect(code).toContain('from "lynx-motion-runtime"');
-    expect(code).toContain('typeof _queueMicrotask');
-    expect(code).toContain('return [queueMicrotask, globalThis.document]');
-    expect(code).toContain('document: _document');
-    expect(code).not.toContain('globalThis.queueMicrotask');
-    expect(code).not.toContain('globalThis[\'document\']');
-    expect(code).not.toContain('globalThis?.performance');
-  });
-
-  test('does not rewrite declarations, property names or shadowed browser identifiers', async () => {
-    const code = await transform(`
-      const window = { document: 1 };
-      function read(document) { return document; }
-      export { window, read };
-    `);
-    expect(code).not.toContain('lynx-motion-');
-  });
+    },
+    15_000,
+  );
 
   test.each(['absent', 'browser'])(
     'compiled full and mini feature suites preserve %s host globals',

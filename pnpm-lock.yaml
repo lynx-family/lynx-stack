@@ -1846,9 +1846,6 @@ importers:
 
   packages/motion:
     devDependencies:
-      '@babel/core':
-        specifier: ^8.0.1
-        version: 8.0.1
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../react

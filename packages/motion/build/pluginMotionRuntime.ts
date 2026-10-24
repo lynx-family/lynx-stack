@@ -2,9 +2,21 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { fileURLToPath } from 'node:url';
-
+import { rspack } from '@rslib/core';
 import type { RsbuildPlugin } from '@rslib/core';
+
+const runtimeGlobals = {
+  document: 'object',
+  window: 'object',
+  Element: 'function',
+  HTMLElement: 'function',
+  SVGElement: 'function',
+  NodeList: 'function',
+  EventTarget: 'function',
+  getComputedStyle: 'function',
+  performance: 'object',
+  queueMicrotask: 'function',
+};
 
 /** Compile Motion's browser globals into imports of the private Lynx runtime. */
 export function pluginMotionRuntime(): RsbuildPlugin {
@@ -12,17 +24,24 @@ export function pluginMotionRuntime(): RsbuildPlugin {
     name: 'lynx:motion-runtime',
     setup(api) {
       api.modifyRspackConfig((config) => {
-        config.module ??= {};
-        config.module.rules ??= [];
-        config.module.rules.push({
-          test: /\.[cm]?js$/,
-          include:
-            /node_modules[/\\](?:motion|motion-dom|motion-utils|framer-motion)[/\\]/,
-          enforce: 'pre',
-          loader: fileURLToPath(
-            new URL('./runtime-loader.cjs', import.meta.url),
-          ),
-        });
+        const provides: Record<string, string[]> = {};
+        const types: Record<string, string> = {};
+        for (const [name, type] of Object.entries(runtimeGlobals)) {
+          const runtime = name === 'queueMicrotask'
+            ? 'lynx-motion-microtask'
+            : 'lynx-motion-runtime';
+          for (const reference of [name, `globalThis.${name}`]) {
+            provides[reference] = [runtime, name];
+            // ProvidePlugin handles value references; typeof guards must also
+            // describe the private API when the host global is absent.
+            types[`typeof ${reference}`] = JSON.stringify(type);
+          }
+        }
+        config.plugins ??= [];
+        config.plugins.push(
+          new rspack.ProvidePlugin(provides),
+          new rspack.DefinePlugin(types),
+        );
         // Keep one ElementCompt constructor for both the adapter and vendor code.
         const externals = config.externals
           ? (Array.isArray(config.externals)
