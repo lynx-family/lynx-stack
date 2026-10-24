@@ -7,8 +7,8 @@ import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 import { pluginLynx } from '@lynx-js/rsbuild-plugin';
 
 const variant = process.env['MOTION_FEATURE_VARIANT'] ?? 'full';
-if (variant !== 'full' && variant !== 'mini') {
-  throw new Error('MOTION_FEATURE_VARIANT must be full or mini');
+if (!['full', 'mini', 'values'].includes(variant)) {
+  throw new Error('MOTION_FEATURE_VARIANT must be full, mini, or values');
 }
 export default defineConfig({
   environments: { lynx: {}, web: {} },

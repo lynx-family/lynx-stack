@@ -127,6 +127,7 @@ individual results. Build them separately from the repository root:
 ```sh
 MOTION_FEATURE_VARIANT=full pnpm turbo build --env-mode=loose --filter @lynx-js/motion-examples --only --force -- --config rsbuild.features.config.js
 MOTION_FEATURE_VARIANT=mini pnpm turbo build --env-mode=loose --filter @lynx-js/motion-examples --only --force -- --config rsbuild.features.config.js
+MOTION_FEATURE_VARIANT=values pnpm turbo build --env-mode=loose --filter @lynx-js/motion-examples --only --force -- --config rsbuild.features.config.js
 ```
 
 After the required full repository build, open `features.lynx.bundle` or
@@ -149,4 +150,12 @@ Keep imports of Motion's exported worklet functions as ordinary imports. The
 `runtime: 'shared'` attribute is appropriate for ordinary shared runtime helpers,
 not for bypassing the hydration of worklet descriptors. The pre-existing compiler
 limitation for a module referenced only through background-created worklets is
-outside this build-format change.
+tracked separately in [#4244](https://github.com/lynx-family/lynx-stack/issues/4244).
+
+The independent `values` example starts a `springValue`/`mix` animation from an
+effect. Until that compiler issue is fixed, it deliberately keeps the Motion
+implementation module reachable during main-thread rendering with
+`useMemo(() => springValue, [])`. This is a temporary example-only reference; it
+does not call the worklet descriptor during render or add a dummy public export.
+Open `features.lynx.bundle` or `features.web.bundle` from
+`examples/motion/dist/features-values`; the box should grow from 100px to 200px.
