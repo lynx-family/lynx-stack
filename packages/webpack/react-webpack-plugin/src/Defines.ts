@@ -114,7 +114,11 @@ export function renderDefinesModule(
   definesForSnapshot: readonly Define[],
   definesForWorklet: readonly Define[],
 ): string {
-  const prelude = [`import * as ReactLynx from '@lynx-js/react/internal';`];
+  const prelude = [
+    // Keep host setup ahead of worklet init even when this module has no snapshots.
+    `import '@lynx-js/react/internal';`,
+    `import * as ReactLynx from '@lynx-js/react/internal';`,
+  ];
   const defines = [...definesForWorklet, ...definesForSnapshot];
   const locals = new Set(
     defines.flatMap(define => define.imports?.map(({ local }) => local) ?? []),

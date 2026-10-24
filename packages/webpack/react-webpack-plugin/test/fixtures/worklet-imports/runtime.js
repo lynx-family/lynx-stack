@@ -1,3 +1,5 @@
+import { host } from './host-env.js';
+host.ready = true;
 export const snapshotCreatorMap = {};
 export const runOnBackground = fn => () => fn('react');
 export const useState = value => [value, () => undefined];

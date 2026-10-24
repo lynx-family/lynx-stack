@@ -1266,6 +1266,28 @@ mod tests {
   }
 
   #[test]
+  fn should_collect_shared_imports_without_serializing_them_in_the_closure() {
+    let definition = worklet_definition(
+      r#"
+import { create } from './runtime.js' with { runtime: 'shared' };
+export function handler(value) { 'main thread'; return create(value); }
+"#,
+      "/project/src/adapter.js",
+    );
+    assert_ne!(definition.unmergeable, Some(true));
+    assert!(definition.code.contains("return create(value)"));
+    assert!(!definition.code.contains("this[\"_c\"]"));
+    assert!(definition
+      .imports
+      .unwrap()
+      .iter()
+      .any(
+        |dependency| dependency.source == "/project/src/./runtime.js"
+          && dependency.imported == "create"
+      ));
+  }
+
+  #[test]
   fn should_collect_business_imports_for_background_only_worklets() {
     let definition = worklet_definition(
       r#"
