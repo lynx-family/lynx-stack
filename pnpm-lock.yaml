@@ -1454,8 +1454,8 @@ importers:
   packages/genui/lynx-xml:
     dependencies:
       '@lynx-js/skill-vanilla-lynx':
-        specifier: 0.2.0
-        version: 0.2.0
+        specifier: 0.2.1
+        version: 0.2.1
       acorn:
         specifier: ^8.19.0
         version: 8.19.0
@@ -5381,8 +5381,8 @@ packages:
     peerDependencies:
       '@lynx-js/react': workspace:*
 
-  '@lynx-js/skill-vanilla-lynx@0.2.0':
-    resolution: {integrity: sha512-TZ8qdZEkKQQcBVobpkThhjmxem/uqDp3KahlBxCfmjQ9tucFYCTNmdgiLBGzjdYcgWoCN1Fe+054NYepaFcgAQ==}
+  '@lynx-js/skill-vanilla-lynx@0.2.1':
+    resolution: {integrity: sha512-s7wv5PZVHtPnEm+CuW5eFAEELledGDf1fPoMByA0lb0CyA7vAaI4ByHtSr/g+HzRSL2CA55d1u+Cuq+LSaDfpA==}
     engines: {node: '>=18'}
 
   '@lynx-js/tasm@0.0.49':
@@ -15186,7 +15186,7 @@ snapshots:
       - react
       - react-dom
 
-  '@lynx-js/skill-vanilla-lynx@0.2.0': {}
+  '@lynx-js/skill-vanilla-lynx@0.2.1': {}
 
   '@lynx-js/tasm@0.0.49': {}
 
