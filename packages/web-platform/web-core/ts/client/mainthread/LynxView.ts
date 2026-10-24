@@ -94,6 +94,23 @@ export class LynxViewElement extends HTMLElement {
   #url?: string;
 
   /**
+   * Resolves image source and placeholder URLs before loading them.
+   *
+   * Set this synchronous hook before loading the view. It receives the original
+   * attribute value for images in this view's shadow root, including placeholder
+   * preloads and error fallbacks. Image attributes retain their original values.
+   * Images resolve their URLs again when connected or moved to another view.
+   * Changing the hook does not reload images that are already connected.
+   *
+   * @defaultValue undefined; image URLs are used unchanged.
+   * @example
+   * ```ts
+   * view.resolveResource = (src) => new URL(src, 'https://example.com/assets/').href;
+   * ```
+   */
+  declare resolveResource?: (src: string) => string;
+
+  /**
    * @public
    * @property nativeModulesMap
    * @default {}
