@@ -62,6 +62,10 @@ adapter; adding another upstream browser feature requires a corresponding Lynx
 implementation. Mini's existing callable registry for main-thread closures is
 separate from these polyfills.
 
+The upstream JavaScript and public type declarations are bundled into this
+package. `motion`, `motion-dom`, `motion-utils`, and Babel are build-time
+development dependencies; consumers do not need to install them.
+
 ## Motion Mini (`@lynx-js/motion/mini`)
 
 Motion Mini is a lightweight, **main-thread-optimized** version of the library. It provides a core subset of animation capabilities designed for high performance and low bundle size.

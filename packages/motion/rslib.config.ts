@@ -7,11 +7,34 @@ export default defineConfig({
     {
       format: 'esm',
       syntax: 'es2022',
-      dts: true,
+      dts: {
+        bundle: {
+          bundledPackages: [
+            'motion',
+            'motion-dom',
+            'motion-utils',
+            'framer-motion',
+          ],
+        },
+      },
       bundle: false,
       source: {
         entry: { index: ['./src/**', '!./src/upstream/**'] },
       },
+      plugins: [{
+        name: 'lynx:motion-declaration-entries',
+        setup(api) {
+          // Bundleless JS uses Rslib's glob-based Rspack entries. Its declaration
+          // bundler separately needs explicit public entry points.
+          api.modifyEnvironmentConfig((config) => {
+            config.source ??= {};
+            config.source.entry = {
+              index: './src/index.ts',
+              'mini/index': './src/mini/index.ts',
+            };
+          });
+        },
+      }],
     },
     {
       id: 'upstream',

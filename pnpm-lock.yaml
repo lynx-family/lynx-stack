@@ -1845,16 +1845,6 @@ importers:
         version: 1.0.0(@rsbuild/core@2.2.9(core-js@3.50.0))
 
   packages/motion:
-    dependencies:
-      motion:
-        specifier: 13.4.3
-        version: 13.4.3(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      motion-dom:
-        specifier: 13.4.2
-        version: 13.4.2
-      motion-utils:
-        specifier: 13.5.0
-        version: 13.5.0
     devDependencies:
       '@babel/core':
         specifier: ^8.0.1
@@ -1868,6 +1858,15 @@ importers:
       '@rslib/core':
         specifier: catalog:rslib
         version: 1.0.2(@microsoft/api-extractor@7.59.4(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
+      motion:
+        specifier: 13.4.3
+        version: 13.4.3(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      motion-dom:
+        specifier: 13.4.2
+        version: 13.4.2
+      motion-utils:
+        specifier: 13.5.0
+        version: 13.5.0
       rsbuild-plugin-publint:
         specifier: 1.0.0
         version: 1.0.0(@rsbuild/core@2.2.9(core-js@3.50.0))
