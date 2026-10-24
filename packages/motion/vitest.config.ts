@@ -1,8 +1,21 @@
 import { defineConfig } from 'vitest/config';
 import { vitestTestingLibraryPlugin } from '@lynx-js/react/testing-library/plugins';
+import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
   plugins: [
+    {
+      name: 'test-compiled-motion',
+      enforce: 'pre',
+      resolveId(id) {
+        const entry = /\/upstream\/(full|mini)\.js$/.exec(id)?.[1];
+        if (entry) {
+          return fileURLToPath(
+            new URL(`./dist/upstream/${entry}.js`, import.meta.url),
+          );
+        }
+      },
+    },
     vitestTestingLibraryPlugin(),
   ],
   test: {

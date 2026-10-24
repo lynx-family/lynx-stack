@@ -16,8 +16,8 @@
   },
   "license": "Apache-2.0",
   "sideEffects": [
-    "./dist/polyfill/shim.js",
-    "./dist/mini/polyfill.js"
+    "./dist/polyfill/MotionValue.js",
+    "./dist/utils/registeredFunction.js"
   ],
   "type": "module",
   "exports": {
@@ -52,8 +52,10 @@
     "motion-utils": "12.39.0"
   },
   "devDependencies": {
+    "@babel/core": "7.29.7",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "4.0.0",
+    "@rslib/core": "catalog:rslib",
     "rsbuild-plugin-publint": "1.0.0"
   },
   "peerDependencies": {

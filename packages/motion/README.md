@@ -46,6 +46,22 @@ export function MyComponent() {
 
 For more comprehensive examples, please refer to the [examples/motion](https://github.com/lynx-family/lynx-stack/tree/main/examples/motion) directory in this repository.
 
+## Runtime compatibility
+
+The published ESM includes a compiled copy of the upstream Motion APIs used by
+this adapter. An internal Rslib plugin replaces browser globals with imports of
+private Lynx implementations, including `queueMicrotask`, `performance`, DOM
+constructors, selector queries, and computed styles. It also handles static
+`globalThis` property accesses. Importing Motion does not install these polyfills
+on the host globals or replace the browser's DOM constructors.
+
+No consumer Babel or Rspeedy plugin is required. The main-thread adapter and its
+shared import boundaries are preserved, and Mini includes only its own upstream
+spring and easing dependencies. The private runtime covers the APIs used by this
+adapter; adding another upstream browser feature requires a corresponding Lynx
+implementation. Mini's existing callable registry for main-thread closures is
+separate from these polyfills.
+
 ## Motion Mini (`@lynx-js/motion/mini`)
 
 Motion Mini is a lightweight, **main-thread-optimized** version of the library. It provides a core subset of animation capabilities designed for high performance and low bundle size.
