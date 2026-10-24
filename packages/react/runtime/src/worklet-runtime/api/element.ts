@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { Animation } from './animation/animation.js';
 import { KeyframeEffect } from './animation/effect.js';
+import { restoreReusedElementStyle } from '../../snapshot/list/reuseTransition.js';
 import {
   mainThreadFlushLoopMark,
   mainThreadFlushLoopOnFlushMicrotask,
@@ -42,6 +43,7 @@ export class Element {
   }
 
   public setStyleProperty(name: string, value: string): void {
+    restoreReusedElementStyle(this.element);
     /* v8 ignore next 3 */
     if (__DEV__) {
       mainThreadFlushLoopMark(`element:setStyleProperty ${name}`);
@@ -51,6 +53,7 @@ export class Element {
   }
 
   public setStyleProperties(styles: Record<string, string>): void {
+    restoreReusedElementStyle(this.element);
     /* v8 ignore next 5 */
     if (__DEV__) {
       mainThreadFlushLoopMark(

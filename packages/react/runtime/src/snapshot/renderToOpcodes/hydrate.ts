@@ -10,6 +10,15 @@ import type { PlatformInfo } from '../snapshot/platformInfo.js';
 import { unref } from '../snapshot/ref.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 import { isEmptyObject } from '../../utils.js';
+import { restoreReuseTransition } from '../list/reuseTransition.js';
+import {
+  captureNestedListMeasurements,
+  getRetainedListItemPlatformInfo,
+  isNestedListSnapshot,
+  transferNestedListState,
+  updateNestedListChildren,
+} from '../list/nativeState.js';
+import { isMainThreadHydrating } from '../lifecycle/patch/isMainThreadHydrating.js';
 
 const UNREACHABLE_ITEM_KEY_NOT_FOUND = 'UNREACHABLE_ITEM_KEY_NOT_FOUND';
 
@@ -220,9 +229,48 @@ export interface HydrationOptions {
   swap?: Record<number, number>;
 }
 
-export function hydrate(before: SnapshotInstance, after: SnapshotInstance, options?: HydrationOptions): void {
+export function hydrate(
+  before: SnapshotInstance,
+  after: SnapshotInstance,
+  options?: HydrationOptions,
+  reuseRoot: FiberElement | undefined = before.__element_root,
+): void {
+  restoreReuseTransition(before);
+  if (
+    !isMainThreadHydrating && after.__snapshot_def.isListHolder
+    && before.__id !== after.__id && before.__element_root
+    && before.__element_root !== reuseRoot && isNestedListSnapshot(after)
+  ) {
+    // A list's opaque native anchor belongs to one logical owner. Reuse the
+    // containing row, but not another item's nested list binding state.
+    const oldRoot = before.__element_root;
+    captureNestedListMeasurements(before);
+    before.releaseElements();
+    // The fresh adapter needs the full source, not an old offscreen delta.
+    __pendingListUpdates.clear(after.__id);
+    after.ensureElements();
+    const newRoot = after.__element_root!;
+    __ReplaceElement(newRoot, oldRoot);
+    let parent = after.parentNode;
+    while (parent) {
+      parent.__elements?.forEach((element, index, elements) => {
+        if (element === oldRoot) elements[index] = newRoot;
+      });
+      if (parent.__element_root !== oldRoot) break;
+      parent.__element_root = newRoot;
+      parent = parent.parentNode;
+    }
+    return;
+  }
   after.__elements = before.__elements;
   after.__element_root = before.__element_root;
+
+  if (after.__snapshot_def.isListHolder) {
+    // Attribute updates can synchronously reset the native list's offset.
+    // Assign the new owner and guard its pending restore before those updates.
+    const listElement = after.__elements![after.__snapshot_def.slot[0]![1]]!;
+    transferNestedListState(after, listElement, isMainThreadHydrating);
+  }
 
   if (!(options?.skipUnRef)) {
     unref(before, false);
@@ -259,7 +307,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         // TODO: the following null assertions are not 100% safe
         const v1 = beforeChildNodes[index]!;
         const v2 = afterChildNodes[index]!;
-        hydrate(v1, v2, options);
+        hydrate(v1, v2, options, reuseRoot);
         break;
       }
       case DynamicPartType.SlotV2:
@@ -285,7 +333,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
           }
           if (samePairwise) {
             for (let i = 0; i < length; i++) {
-              hydrate(filteredBeforeChildNodes[i]!, filteredAfterChildNodes[i]!, options);
+              hydrate(filteredBeforeChildNodes[i]!, filteredAfterChildNodes[i]!, options, reuseRoot);
             }
             break;
           }
@@ -296,7 +344,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
           filteredAfterChildNodes,
           (a, b) => a.type === b.type,
           (a, b) => {
-            hydrate(a, b, options);
+            hydrate(a, b, options, reuseRoot);
           },
           false,
         );
@@ -359,7 +407,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
                 !== JSON.stringify(b.__listItemPlatformInfo)
             ) {
               updateAction.push({
-                ...b.__listItemPlatformInfo,
+                ...getRetainedListItemPlatformInfo(after, b),
                 from: newIndex,
                 to: newIndex,
                 // no flush
@@ -370,7 +418,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
 
             if (a.__elements) {
               // transfer a's elements to b
-              hydrate(a, b, options);
+              hydrate(a, b, options, reuseRoot);
 
               // if a list-item has `elements`, it may be:
               //   - `enqueueComponent` already called on it: so we need to update the `signMap` and the `recycleMap`
@@ -379,8 +427,9 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
               if (signMap.has(listItemID)) {
                 signMap.set(listItemID, b);
               }
-              if (recycleMap.has(a.type)) {
-                const recycleSignMap = recycleMap.get(a.type)!;
+              const reuseKey = a.type + (a.__listItemPlatformInfo?.['reuse-identifier'] ?? '');
+              if (recycleMap.has(reuseKey)) {
+                const recycleSignMap = recycleMap.get(reuseKey)!;
                 // Should only update `list-item` in the recycling pool
                 // Because if an on-screen `list-item` is added to the recycling pool,
                 // it could cause a blank screen when reused next time, as it may still be visible.
@@ -410,7 +459,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
           insertAction: insertions.map((it) => ({
             position: it,
             type: afterChildNodes[it]!.type,
-            ...afterChildNodes[it]!.__listItemPlatformInfo,
+            ...getRetainedListItemPlatformInfo(after, afterChildNodes[it]!),
           })),
           removeAction: removals,
           updateAction,
@@ -440,12 +489,13 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         }
 
         const listElement = before.__elements![elementIndex]!;
+        updateNestedListChildren(after, listElement, afterChildNodes);
         __SetAttribute(listElement, 'update-list-info', info);
         const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(afterChildNodes, hydrate);
         __UpdateListCallbacks(
           listElement,
           componentAtIndex,
-          enqueueComponentFactory(),
+          enqueueComponentFactory(afterChildNodes),
           componentAtIndexes,
         );
 

@@ -1,6 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { clearNestedListState, isNestedListReuse, prepareNestedListRestore, requestListFrame } from './nativeState.js';
+import { clearReuseTransitions, prepareReuseTransition } from './reuseTransition.js';
 import { cardLifetime } from '../../core/card-lifetime.js';
 import { maybePromise } from '../../utils.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
@@ -18,7 +20,66 @@ export const gRecycleMap: Record<number, Map<string, Map<number, SnapshotInstanc
 const gParentWeakMap: WeakMap<SnapshotInstance, unknown> = /*#__PURE__*/ new WeakMap();
 const resolvedPromise = /* @__PURE__ */ Promise.resolve();
 
+interface ListBindCompletion {
+  complete: () => void;
+  cancel: () => void;
+}
+let currentListCommit: ListBindCompletion[] | undefined;
+
+/** This scope is synchronous; deferred batches own their completion bucket. */
+function withListCommit<T>(work: () => T, bucket?: ListBindCompletion[]): T {
+  const parent = currentListCommit;
+  const completions = bucket ?? parent ?? [];
+  const start = completions.length;
+  currentListCommit = completions;
+  let result: T;
+  try {
+    result = work();
+  } catch (error) {
+    for (const completion of completions.splice(start)) completion.cancel();
+    throw error;
+  } finally {
+    currentListCommit = parent;
+  }
+  if (!bucket && !parent) finishListCommit(completions);
+  return result;
+}
+
+function finishListCommit(completions: ListBindCompletion[]): void {
+  if (currentListCommit && currentListCommit !== completions) {
+    currentListCommit.push(...completions);
+    completions.length = 0;
+    return;
+  }
+  const parent = currentListCommit;
+  currentListCommit = completions;
+  try {
+    // A native command can synchronously bind another nested cell.
+    for (let i = 0; i < completions.length; i++) completions[i]!.complete();
+  } finally {
+    completions.length = 0;
+    currentListCommit = parent;
+  }
+}
+
+function finishListBind(child: SnapshotInstance, restoreTransition?: () => void): void {
+  const restoreScroll = prepareNestedListRestore(child);
+  if (!restoreTransition && !restoreScroll) return;
+  const completion = {
+    complete: () => {
+      // Preserve CSS suppression timing; offset restoration does not wait a frame.
+      if (restoreTransition) requestListFrame(restoreTransition);
+      restoreScroll?.();
+    },
+    cancel: () => restoreTransition?.(),
+  };
+  if (currentListCommit) currentListCommit.push(completion);
+  else completion.complete();
+}
+
 export function clearListGlobal(): void {
+  clearReuseTransitions();
+  clearNestedListState();
   for (const key in gSignMap) {
     delete gSignMap[key];
   }
@@ -56,6 +117,7 @@ export function componentAtIndexFactory(
     enableReuseNotification: boolean,
     enableBatchRender: boolean = false,
     asyncFlush: boolean = false,
+    completions?: ListBindCompletion[],
   ) => {
     const signMap = gSignMap[listID];
     const recycleMap = gRecycleMap[listID];
@@ -106,7 +168,10 @@ export function componentAtIndexFactory(
 
               void resolvedPromise.then(() => {
                 // the cellIndex may be changed already, but the `childCtx` is the same
-                resolve(componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification));
+                resolve(withListCommit(
+                  () => componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification),
+                  completions,
+                ));
               });
             }
           },
@@ -157,6 +222,8 @@ export function componentAtIndexFactory(
       const [first] = recycleSignMap;
       const [sign, oldCtx] = first!;
       recycleSignMap.delete(sign);
+      // Hydration may remove the donor's last nested list.
+      const wasNested = isNestedListReuse(listID, oldCtx);
       hydrateFunction(oldCtx, childCtx);
       oldCtx.unRenderElements();
       if (!oldCtx.__id) {
@@ -170,37 +237,51 @@ export function componentAtIndexFactory(
       }
       const root = childCtx.__element_root!;
       applyRefQueue();
-      // In the defer `list-item` scenario, `componentAtIndex` occurs with delay.
-      // Within `componentAtIndex`, nodes that quickly appear and disappear due to re-layout will be enqueued again,
-      // causing the mapping relationship between sign and SnapshotInstance to become corrupted.
-      // This results in a SnapshotInstance without `__elements` being enqueued.
+      // Install the new owner before a style commit can invoke native list callbacks.
+      // This also preserves the deferred-item enqueue/relayout ordering below.
       signMap.set(sign, childCtx);
-      if (!enableBatchRender) {
-        const flushOptions: FlushOptions = {
-          triggerLayout: true,
-          operationID,
-          elementID: sign,
-          listID,
-        };
-        if (enableReuseNotification) {
-          flushOptions.listReuseNotification = {
-            listElement: list,
-            itemKey: platformInfo['item-key']!,
-          };
-        }
-        __FlushElementTree(root, flushOptions);
-      } else if (enableBatchRender && asyncFlush) {
-        const flushOptions: FlushOptions = {
-          asyncFlush: true,
-        };
-        if (enableReuseNotification) {
-          flushOptions.listReuseNotification = {
-            listElement: list,
-            itemKey: platformInfo['item-key']!,
-          };
-        }
-        __FlushElementTree(root, flushOptions);
+      let transition: ReturnType<typeof prepareReuseTransition>;
+      if (
+        (wasNested || isNestedListReuse(listID, childCtx))
+        && (oldCtx.__id !== childCtx.__id
+          || oldCtx.__listItemPlatformInfo?.['item-key'] !== platformInfo['item-key'])
+      ) {
+        transition = prepareReuseTransition(childCtx);
       }
+      try {
+        if (!enableBatchRender) {
+          const flushOptions: FlushOptions = {
+            triggerLayout: true,
+            operationID,
+            elementID: sign,
+            listID,
+          };
+          if (enableReuseNotification) {
+            flushOptions.listReuseNotification = {
+              listElement: list,
+              itemKey: platformInfo['item-key']!,
+            };
+          }
+          __FlushElementTree(root, flushOptions);
+        } else if (enableBatchRender && asyncFlush) {
+          const flushOptions: FlushOptions = {
+            asyncFlush: true,
+          };
+          if (enableReuseNotification) {
+            flushOptions.listReuseNotification = {
+              listElement: list,
+              itemKey: platformInfo['item-key']!,
+            };
+          }
+          __FlushElementTree(root, flushOptions);
+        }
+      } catch (error) {
+        transition?.restore();
+        throw error;
+      } finally {
+        transition?.finish();
+      }
+      finishListBind(childCtx, transition?.restore);
       return sign;
     }
 
@@ -222,6 +303,7 @@ export function componentAtIndexFactory(
         asyncFlush: true,
       });
     }
+    finishListBind(childCtx);
     return sign;
   };
 
@@ -236,7 +318,9 @@ export function componentAtIndexFactory(
     if (!childCtx) {
       throw new Error('childCtx not found');
     }
-    const r = componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification);
+    const r = withListCommit(
+      () => componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification),
+    );
 
     /* v8 ignore start */
     if (process.env['NODE_ENV'] === 'test') {
@@ -257,53 +341,69 @@ export function componentAtIndexFactory(
   ) {
     let hasUnready = false;
     const p: Array<Promise<number> | number> = [];
+    const completions: ListBindCompletion[] = [];
 
-    cellIndexes.forEach((cellIndex, index) => {
-      const operationID = operationIDs[index]!;
-      const childCtx = ctx[cellIndex];
-      if (!childCtx) {
-        throw new Error('childCtx not found');
-      }
+    withListCommit(() => {
+      cellIndexes.forEach((cellIndex, index) => {
+        const operationID = operationIDs[index]!;
+        const childCtx = ctx[cellIndex];
+        if (!childCtx) {
+          throw new Error('childCtx not found');
+        }
 
-      const u = componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification, true, asyncFlush);
-      if (typeof u === 'number') {
-        // ready
-      } else {
-        hasUnready = true;
-      }
-      p.push(u);
-    });
-
-    // We need __FlushElementTree twice:
-    // 1. The first time is sync, we flush the items that are ready, with unready items' uiSign as -1.
-    // 2. The second time is async, with all the uiSigns.
-    // NOTE: The `operationIDs` passed to __FlushElementTree must be the one passed in,
-    // not the one generated by any code here, to workaround a bug of Lynx Engine.
-    // So we CANNOT split the `operationIDs` into two parts: one for ready items, one for unready items.
-    if (hasUnready) {
-      // eslint-disable-next-line @typescript-eslint/await-thenable
-      void Promise.all(p).then((uiSigns) => {
-        __FlushElementTree(list, {
-          triggerLayout: true,
-          operationIDs,
-          elementIDs: uiSigns,
+        const u = componentAtChildCtx(
+          list,
           listID,
-        });
+          childCtx,
+          operationID,
+          enableReuseNotification,
+          true,
+          asyncFlush,
+          completions,
+        );
+        if (typeof u === 'number') {
+          // ready
+        } else {
+          hasUnready = true;
+        }
+        p.push(u);
       });
-    }
-    __FlushElementTree(list, {
-      triggerLayout: true,
-      operationIDs,
-      elementIDs: cellIndexes.map((_, index) => typeof p[index] === 'number' ? p[index] : -1),
-      listID,
-    });
+
+      // We need __FlushElementTree twice:
+      // 1. The first time is sync, we flush the items that are ready, with unready items' uiSign as -1.
+      // 2. The second time is async, with all the uiSigns.
+      // NOTE: The `operationIDs` passed to __FlushElementTree must be the one passed in,
+      // not the one generated by any code here, to workaround a bug of Lynx Engine.
+      // So we CANNOT split the `operationIDs` into two parts: one for ready items, one for unready items.
+      if (hasUnready) {
+        // eslint-disable-next-line @typescript-eslint/await-thenable
+        void Promise.all(p).then((uiSigns) => {
+          withListCommit(() => {
+            __FlushElementTree(list, {
+              triggerLayout: true,
+              operationIDs,
+              elementIDs: uiSigns,
+              listID,
+            });
+          }, completions);
+          finishListCommit(completions);
+        });
+      }
+      __FlushElementTree(list, {
+        triggerLayout: true,
+        operationIDs,
+        elementIDs: cellIndexes.map((_, index) => typeof p[index] === 'number' ? p[index] : -1),
+        listID,
+      });
+    }, completions);
+    if (!hasUnready) finishListCommit(completions);
   }
   return [componentAtIndex, componentAtIndexes] as const;
 }
 
-export function enqueueComponentFactory(): EnqueueComponentCallback {
-  // eslint-disable-next-line unicorn/consistent-function-scoping
-  const enqueueComponent = (_: FiberElement, listID: number, sign: number) => {
+export function enqueueComponentFactory(ctx?: readonly SnapshotInstance[]): EnqueueComponentCallback {
+  let currentKeys: Set<string | undefined> | undefined;
+  const enqueueComponent = (list: FiberElement, listID: number, sign: number) => {
     const signMap = gSignMap[listID];
     const recycleMap = gRecycleMap[listID];
     if (!signMap || !recycleMap) {
@@ -316,6 +416,28 @@ export function enqueueComponentFactory(): EnqueueComponentCallback {
     }
 
     const platformInfo = childCtx.__listItemPlatformInfo ?? {};
+
+    // A non-recyclable cell removed from this data source cannot be retained
+    // under the next owner's list: it still participates in the native tree.
+    // Ordinary offscreen cells whose keys remain in the source keep their cache.
+    if (ctx && !(platformInfo.recyclable ?? true) && isNestedListReuse(listID, childCtx)) {
+      currentKeys ??= new Set(ctx.map(child => child.__listItemPlatformInfo?.['item-key']));
+      if (!currentKeys.has(platformInfo['item-key'])) {
+        const root = childCtx.__element_root;
+        signMap.delete(sign);
+        for (const pool of recycleMap.values()) {
+          pool.delete(sign);
+        }
+        childCtx.releaseElements();
+        if (root) {
+          __RemoveElement(list, root);
+        }
+        if (!childCtx.__id) {
+          childCtx.tearDown();
+        }
+        return;
+      }
+    }
 
     const uniqID = childCtx.type + (platformInfo['reuse-identifier'] ?? '');
     if (!recycleMap.has(uniqID)) {

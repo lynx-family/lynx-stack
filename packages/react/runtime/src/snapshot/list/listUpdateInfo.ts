@@ -2,8 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { componentAtIndexFactory, enqueueComponentFactory } from './list.js';
+import { getRetainedListItemPlatformInfo, updateNestedListChildren } from './nativeState.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { hydrate } from '../renderToOpcodes/hydrate.js';
+import type { PlatformInfo } from '../snapshot/platformInfo.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
 export interface ListUpdateInfo {
@@ -109,12 +111,14 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
       );
     }
 
+    const children = this.list.childNodes;
+    updateNestedListChildren(this.list, listElement, children);
     __SetAttribute(listElement, 'update-list-info', updateListInfo);
-    const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(this.list.childNodes, hydrate);
+    const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(children, hydrate);
     __UpdateListCallbacks(
       listElement,
       componentAtIndex,
-      enqueueComponentFactory(),
+      enqueueComponentFactory(children),
       componentAtIndexes,
     );
 
@@ -181,7 +185,7 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
       const insertedBefore = insertBefore.get(child)?.length ?? 0;
       if (platformInfoUpdate.has(child)) {
         updates.push({
-          ...platformInfoUpdate.get(child),
+          ...getRetainedListItemPlatformInfo(this.list, child, platformInfoUpdate.get(child) as PlatformInfo),
           from: +j + insertedBefore,
           to: +j + insertedBefore,
           // no flush
@@ -195,7 +199,7 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
           insertions.push({
             position: j,
             type: c.type,
-            ...c.__listItemPlatformInfo,
+            ...getRetainedListItemPlatformInfo(this.list, c),
           } as InsertAction);
           j++;
         });
@@ -211,7 +215,7 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
       insertions.push({
         position: j + i,
         type: child.type,
-        ...child.__listItemPlatformInfo,
+        ...getRetainedListItemPlatformInfo(this.list, child),
       } as InsertAction);
     }
 
@@ -235,7 +239,7 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
         updates.length = 0;
         this.list.childNodes.forEach((child, index) => {
           updates.push({
-            ...child.__listItemPlatformInfo,
+            ...getRetainedListItemPlatformInfo(this.list, child),
             from: index,
             to: index,
             // no flush
