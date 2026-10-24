@@ -13,6 +13,17 @@ import type { DebugMetadataAsset, UiSourceMapData } from './types.js';
 export interface UiSourceLocation {
   /** `owner/repo` derived from the build's git remote, or `null`. */
   repo: string | null;
+  /**
+   * The build's git remote URL verbatim (SSH or HTTP form, whichever the
+   * builder reported), or `null`. `repo` above drops the host to normalize
+   * SSH and HTTP remotes to the same value, which also erases which host
+   * (or which internal vs. public mirror of the same path) `source` came
+   * from. Join this with `commit` and `source` to reach the exact file
+   * this build was compiled from.
+   */
+  remoteUrl: string | null;
+  /** The git commit this build was compiled from, or `null`. */
+  commit: string | null;
   /** Authored source path (relative to the project root), or `null`. */
   source: string | null;
   /** 1-based source line. */
@@ -51,6 +62,8 @@ export interface UiNode {
 export interface RemappedUiNode extends UiNode {
   children?: RemappedUiNode[];
   repo?: string | null;
+  remoteUrl?: string | null;
+  commit?: string | null;
   source?: string | null;
   line?: number;
   column?: number;
@@ -131,9 +144,12 @@ export function isUiSourceMapData(value: unknown): value is UiSourceMapData {
  */
 export function buildUiSourceMapLookup(
   uiSourceMap: UiSourceMapData,
-): Map<number, Omit<UiSourceLocation, 'repo'>> {
+): Map<number, Omit<UiSourceLocation, 'repo' | 'remoteUrl' | 'commit'>> {
   const { sources, mappings, uiMaps } = uiSourceMap;
-  const lookup = new Map<number, Omit<UiSourceLocation, 'repo'>>();
+  const lookup = new Map<
+    number,
+    Omit<UiSourceLocation, 'repo' | 'remoteUrl' | 'commit'>
+  >();
   for (let i = 0; i < uiMaps.length; i++) {
     const nodeIndex = uiMaps[i];
     const mapping = mappings[i];
@@ -195,8 +211,13 @@ export async function remapUiTree(
   loadMetadata: DebugMetadataLoader,
 ): Promise<RemappedUiNode> {
   interface Resolved {
-    lookup: Map<number, Omit<UiSourceLocation, 'repo'>>;
+    lookup: Map<
+      number,
+      Omit<UiSourceLocation, 'repo' | 'remoteUrl' | 'commit'>
+    >;
     repo: string | null;
+    remoteUrl: string | null;
+    commit: string | null;
   }
   const cache = new Map<string, Promise<Resolved>>();
 
@@ -218,11 +239,16 @@ export async function remapUiTree(
         const buildInfo = metadata['buildInfo'];
         const git: unknown = isRecord(buildInfo) ? buildInfo['git'] : undefined;
         const remoteUrl: unknown = isRecord(git) ? git['remoteUrl'] : undefined;
+        const commit: unknown = isRecord(git) ? git['commit'] : undefined;
         return {
           lookup: buildUiSourceMapLookup(metadata['uiSourceMap']),
           repo: normalizeRepo(
             typeof remoteUrl === 'string' ? remoteUrl : null,
           ),
+          remoteUrl: typeof remoteUrl === 'string' ? remoteUrl : null,
+          commit: typeof commit === 'string' && commit.length > 0
+            ? commit
+            : null,
         };
       });
       cache.set(debugMetadataUrl, pending);
@@ -242,10 +268,14 @@ export async function remapUiTree(
       && node.debugMetadataUrl.length > 0
       && typeof node.nodeIndex === 'number'
     ) {
-      const { lookup, repo } = await resolve(node.debugMetadataUrl);
+      const { lookup, repo, remoteUrl, commit } = await resolve(
+        node.debugMetadataUrl,
+      );
       const location = lookup.get(node.nodeIndex);
       if (location !== undefined) {
         out.repo = repo;
+        out.remoteUrl = remoteUrl;
+        out.commit = commit;
         out.source = location.source;
         out.line = location.line;
         out.column = location.column;
