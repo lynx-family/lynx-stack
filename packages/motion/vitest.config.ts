@@ -12,7 +12,7 @@ export default defineConfig({
         if (entry) {
           return fileURLToPath(
             new URL(`./dist/upstream/${entry}.js`, import.meta.url),
-          );
+          ).replaceAll('\\', '/');
         }
       },
     },

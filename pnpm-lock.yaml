@@ -1857,8 +1857,8 @@ importers:
         version: 13.5.0
     devDependencies:
       '@babel/core':
-        specifier: 7.29.7
-        version: 7.29.7(supports-color@10.2.2)
+        specifier: ^8.0.1
+        version: 8.0.1
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../react
