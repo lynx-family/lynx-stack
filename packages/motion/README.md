@@ -117,3 +117,36 @@ This package is licensed under the Apache-2.0 License.
 It adapts code from [Motion for React (framer-motion)](https://motion.dev/), [motion-dom](https://github.com/motiondivision/motion/tree/main/packages/motion-dom), and [motion-utils](https://github.com/motiondivision/motion/tree/main/packages/motion-utils) which are licensed under the MIT License.
 
 See [LICENSE](./LICENSE), [NOTICE](./NOTICE) for details.
+
+## Feature validation
+
+The Motion example includes independent full and Mini feature pages. Each page
+runs assertions against the public APIs in real main-thread worklets and displays
+individual results. Build them separately from the repository root:
+
+```sh
+MOTION_FEATURE_VARIANT=full pnpm turbo build --env-mode=loose --filter @lynx-js/motion-examples --only --force -- --config rsbuild.features.config.js
+MOTION_FEATURE_VARIANT=mini pnpm turbo build --env-mode=loose --filter @lynx-js/motion-examples --only --force -- --config rsbuild.features.config.js
+```
+
+After the required full repository build, open `features.lynx.bundle` or
+`features.web.bundle` from `examples/motion/dist/features-full` or
+`examples/motion/dist/features-mini`, then select **Run full cases** or
+**Run mini cases**. The full suite covers keyframes, colors, element refs,
+selectors, element arrays, stagger, sequences, playback controls, replacement,
+repeat, derived values, style-effect cleanup, springs, and React hooks. Mini
+covers every exported easing, tween and spring animation, callback and numeric
+inputs, cancellation, replacement, destruction, subscriptions, serialization,
+unsupported options, and hook-driven element updates.
+
+`runtime-build.test.ts` additionally runs the compiled full and Mini JavaScript
+in separate Node processes with absent or read-only host globals. These tests
+supply a minimal simulated Lynx host while exercising the real compiled
+animation code, callable registry, spring/easing implementations, and DOM adapter. They complement the native/Web pages;
+they do not replace runtime validation.
+
+Keep imports of Motion's exported worklet functions as ordinary imports. The
+`runtime: 'shared'` attribute is appropriate for ordinary shared runtime helpers,
+not for bypassing the hydration of worklet descriptors. The pre-existing compiler
+limitation for a module referenced only through background-created worklets is
+outside this build-format change.

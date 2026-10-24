@@ -479,7 +479,7 @@ function f() {
     `);
   });
 
-  it('collects shared bindings as module dependencies without capturing them', async () => {
+  it('marks a worklet that closes over a shared binding as unmergeable', async () => {
     const result = await transformReactLynx(
       sharedSource,
       options('JS'),
@@ -490,13 +490,7 @@ function f() {
     expect(result.definesForWorklet).toHaveLength(1);
     const [worklet] = result.definesForWorklet;
     expect(worklet.id).toBeTruthy();
-    expect(worklet.code).toContain('return new Foo()');
-    expect(worklet.code).not.toContain('this["_c"]');
-    expect(worklet.unmergeable).toBeUndefined();
-    expect(worklet.imports).toContainEqual({
-      source: './foo.js',
-      imported: 'Foo',
-      local: 'Foo',
-    });
+    expect(worklet.code).toBe('');
+    expect(worklet.unmergeable).toBe(true);
   });
 });

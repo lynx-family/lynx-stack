@@ -5,7 +5,7 @@
 import { execFile } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { promisify } from 'node:util';
-import { URL as NodeURL } from 'node:url';
+import { fileURLToPath, URL as NodeURL } from 'node:url';
 import { describe, expect, test } from 'vitest';
 
 type Loader = (this: {
@@ -53,6 +53,29 @@ describe('Motion build runtime imports', () => {
     `);
     expect(code).not.toContain('lynx-motion-');
   });
+
+  test.each(['absent', 'browser'])(
+    'compiled full and mini feature suites preserve %s host globals',
+    async (host) => {
+      try {
+        await promisify(execFile)(process.execPath, [
+          fileURLToPath(
+            new NodeURL('./fixtures/compiled-features.mjs', import.meta.url),
+          ),
+        ], {
+          env: { ...process.env, MOTION_TEST_HOST: host },
+          timeout: 10_000,
+        });
+      } catch (error) {
+        const failure = error as Error & { stdout?: string; stderr?: string };
+        throw new Error(
+          [failure.message, failure.stdout, failure.stderr].filter(Boolean)
+            .join('\n'),
+        );
+      }
+    },
+    15_000,
+  );
 
   test.each(['absent', 'browser'])(
     'compiled ESM preserves %s host globals',

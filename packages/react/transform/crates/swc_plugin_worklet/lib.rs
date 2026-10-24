@@ -24,7 +24,7 @@ use swc_core::ecma::visit::{noop_visit_mut_type, noop_visit_type, Visit, VisitMu
 use worklet_type::WorkletType;
 
 use swc_plugins_shared::{
-  defines::{collect_define, DefineKind, DefinesCollector},
+  defines::{collect_define, collect_unmergeable_define, DefineKind, DefinesCollector},
   target::TransformTarget,
   transform_mode::TransformMode,
 };
@@ -166,7 +166,11 @@ impl VisitMut for WorkletVisitor {
         value: worklet_object_expr,
       });
     }
-    self.collect_worklet_define(collected_hash, main_thread_stmt);
+    self.collect_worklet_define(
+      collected_hash,
+      main_thread_stmt,
+      collector.saw_shared_identifiers(),
+    );
     self
       .stmts_to_insert_at_top_level
       .push(register_worklet_stmt);
@@ -281,7 +285,11 @@ impl VisitMut for WorkletVisitor {
           }
           .into();
         }
-        self.collect_worklet_define(collected_hash, main_thread_stmt);
+        self.collect_worklet_define(
+          collected_hash,
+          main_thread_stmt,
+          collector.saw_shared_identifiers(),
+        );
         self
           .stmts_to_insert_at_top_level
           .push(register_worklet_stmt);
@@ -395,7 +403,11 @@ impl VisitMut for WorkletVisitor {
           p.value = Some(worklet_object_expr);
         }
 
-        self.collect_worklet_define(collected_hash, main_thread_stmt);
+        self.collect_worklet_define(
+          collected_hash,
+          main_thread_stmt,
+          collector.saw_shared_identifiers(),
+        );
         self
           .stmts_to_insert_at_top_level
           .push(register_worklet_stmt);
@@ -457,7 +469,11 @@ impl VisitMut for WorkletVisitor {
       }],
     }
     .into();
-    self.collect_worklet_define(collected_hash, main_thread_stmt);
+    self.collect_worklet_define(
+      collected_hash,
+      main_thread_stmt,
+      collector.saw_shared_identifiers(),
+    );
     self
       .stmts_to_insert_at_top_level
       .push(register_worklet_stmt);
@@ -528,7 +544,11 @@ impl VisitMut for WorkletVisitor {
           );
 
         *n = *worklet_object_expr;
-        self.collect_worklet_define(collected_hash, main_thread_stmt);
+        self.collect_worklet_define(
+          collected_hash,
+          main_thread_stmt,
+          collector.saw_shared_identifiers(),
+        );
         self
           .stmts_to_insert_at_top_level
           .push(register_worklet_stmt);
@@ -567,7 +587,11 @@ impl VisitMut for WorkletVisitor {
           );
 
         *n = *worklet_object_expr;
-        self.collect_worklet_define(collected_hash, main_thread_stmt);
+        self.collect_worklet_define(
+          collected_hash,
+          main_thread_stmt,
+          collector.saw_shared_identifiers(),
+        );
         self
           .stmts_to_insert_at_top_level
           .push(register_worklet_stmt);
@@ -654,7 +678,11 @@ impl VisitMut for WorkletVisitor {
       span: n.span(),
       expr: worklet_object_expr,
     });
-    self.collect_worklet_define(collected_hash, main_thread_stmt);
+    self.collect_worklet_define(
+      collected_hash,
+      main_thread_stmt,
+      collector.saw_shared_identifiers(),
+    );
     self
       .stmts_to_insert_at_top_level
       .push(register_worklet_stmt);
@@ -971,10 +999,19 @@ impl WorkletVisitor {
     }))
   }
 
-  fn collect_worklet_define(&mut self, hash: Option<String>, stmt: Option<Stmt>) {
+  fn collect_worklet_define(
+    &mut self,
+    hash: Option<String>,
+    stmt: Option<Stmt>,
+    closes_over_shared_import: bool,
+  ) {
     let (Some(hash), Some(stmt)) = (hash, stmt) else {
       return;
     };
+    if closes_over_shared_import {
+      collect_unmergeable_define(&self.defines_collector, DefineKind::Worklet, hash);
+      return;
+    }
     let mut items = definition_imports::collect_imports(&stmt, &self.imports);
     items.extend([self.registration_import(), ModuleItem::Stmt(stmt)]);
     collect_define(&self.defines_collector, DefineKind::Worklet, hash, items);

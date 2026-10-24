@@ -104,45 +104,12 @@ const backgroundLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     if (result.definesForSnapshot) {
       buildInfo[DEFINES_FOR_SNAPSHOT_BUILD_INFO] = result.definesForSnapshot;
     }
+    if (result.definesForWorklet) {
+      buildInfo[DEFINES_FOR_WORKLET_BUILD_INFO] = result.definesForWorklet;
+    }
   }
 
-  // The injected module lives beside the app entry. Resolve dependencies from
-  // this producer so package-private dependencies and aliases keep their owner.
-  const definitions = result.definesForWorklet ?? [];
-  if (!definitions.some(define => define.imports?.length)) {
-    if (buildInfo) {
-      buildInfo[DEFINES_FOR_WORKLET_BUILD_INFO] = definitions;
-    }
-    this.callback(null, result.code, result.map);
-    return;
-  }
-  const callback = this.async();
-  const resolve = this.getResolve({});
-  const requests = new Map<
-    string,
-    Promise<string | false | null | undefined>
-  >();
-  void Promise.all(
-    definitions.flatMap(define =>
-      (define.imports ?? []).map(async dependency => {
-        let request = requests.get(dependency.source);
-        if (!request) {
-          request = resolve(this.context ?? this.rootContext, dependency.source)
-            .catch(() => null);
-          requests.set(dependency.source, request);
-        }
-        const resolved = await request;
-        if (typeof resolved === 'string') {
-          dependency.source = resolved;
-        }
-      })
-    ),
-  ).then(() => {
-    if (buildInfo) {
-      buildInfo[DEFINES_FOR_WORKLET_BUILD_INFO] = definitions;
-    }
-    callback(null, result.code, result.map);
-  }, callback);
+  this.callback(null, result.code, result.map);
 };
 
 export default backgroundLoader;
