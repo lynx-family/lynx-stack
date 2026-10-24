@@ -1327,8 +1327,8 @@ importers:
         specifier: ^8.4.0
         version: 8.4.0
       marked:
-        specifier: ^14.0.0
-        version: 14.0.0
+        specifier: ^18.1.1
+        version: 18.1.1
       typedoc:
         specifier: ^0.28.20
         version: 0.28.20(typescript@6.0.3)
@@ -1500,8 +1500,8 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.6.5))(zod@4.6.5)
       marked:
-        specifier: ^14.0.0
-        version: 14.0.0
+        specifier: ^18.1.1
+        version: 18.1.1
       zod:
         specifier: ^3.25.76 || ^4.0.0
         version: 4.6.5
@@ -10363,6 +10363,11 @@ packages:
   marked@14.0.0:
     resolution: {integrity: sha512-uIj4+faQ+MgHgwUW1l2PsPglZLOLOT1uErt06dAPtx2kjteLAkbsd/0FiYg/MGS+i7ZKLb7w2WClxHkzOOuryQ==}
     engines: {node: '>= 18'}
+    hasBin: true
+
+  marked@18.1.1:
+    resolution: {integrity: sha512-zEGgrtUG8crk+TrMacJSVABU4DYDDkS8uqgU3ohrn/2fW9C2AEfUrO3m6IhpIpQpl7YcVpiXXC9cSMWDANT3dg==}
+    engines: {node: '>= 20'}
     hasBin: true
 
   math-intrinsics@1.1.0:
@@ -20412,6 +20417,8 @@ snapshots:
   markdown-table@3.0.4: {}
 
   marked@14.0.0: {}
+
+  marked@18.1.1: {}
 
   math-intrinsics@1.1.0: {}
 
