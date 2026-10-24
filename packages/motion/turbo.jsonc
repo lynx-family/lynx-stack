@@ -11,10 +11,11 @@
         "tsconfig.build.json",
         "package.json",
         "src/**",
+        "build/**",
         "rslib.config.ts",
       ],
       "outputs": [
-        "dist",
+        "dist/**",
       ],
     },
   },

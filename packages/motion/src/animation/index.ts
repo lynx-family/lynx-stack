@@ -1,23 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import '../polyfill/shim.js';
 
-import {
-  animate as animate_,
-  clamp as clamp_,
-  progress as progress_,
-  stagger as stagger_,
-} from 'motion' with { runtime: 'shared' };
 import type { AnimationSequence, ObjectTarget, SequenceOptions } from 'motion';
-import {
-  mapValue as mapValue_,
-  mix as mix_,
-  springValue as springValue_,
-  spring as spring_,
-  styleEffect as styleEffect_,
-  transformValue as transformValue_,
-} from 'motion-dom' with { runtime: 'shared' };
 import type {
   AnimationOptions,
   AnimationPlaybackControlsWithThen,
@@ -37,6 +22,18 @@ import type {
 import { useMotionValueRefEvent } from '../hooks/useMotionEvent.js';
 import { motionValue as motionValue_ } from '../polyfill/MotionValue.js' with { runtime: 'shared' };
 import type { ElementOrElements } from '../types/index.js';
+import {
+  animate as animate_,
+  clamp as clamp_,
+  mapValue as mapValue_,
+  mix as mix_,
+  progress as progress_,
+  springValue as springValue_,
+  spring as spring_,
+  stagger as stagger_,
+  styleEffect as styleEffect_,
+  transformValue as transformValue_,
+} from '../upstream/full.js' with { runtime: 'shared' };
 import { elementOrSelector2Dom } from '../utils/elementHelper.js';
 import { noopMT } from '../utils/noop.js';
 

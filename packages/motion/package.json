@@ -16,8 +16,8 @@
   },
   "license": "Apache-2.0",
   "sideEffects": [
-    "./dist/polyfill/shim.js",
-    "./dist/mini/polyfill.js"
+    "./dist/polyfill/MotionValue.js",
+    "./dist/utils/registeredFunction.js"
   ],
   "type": "module",
   "exports": {
@@ -46,14 +46,13 @@
     "dev": "rslib --watch",
     "test": "vitest run"
   },
-  "dependencies": {
-    "motion": "13.4.3",
-    "motion-dom": "13.4.2",
-    "motion-utils": "13.5.0"
-  },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/types": "4.1.0",
+    "@rslib/core": "catalog:rslib",
+    "motion": "13.4.3",
+    "motion-dom": "13.4.2",
+    "motion-utils": "13.5.0",
     "rsbuild-plugin-publint": "1.0.0"
   },
   "peerDependencies": {
