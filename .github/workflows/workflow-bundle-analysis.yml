@@ -24,6 +24,8 @@ jobs:
             name: example-react-main-thread-function
           - path: ./examples/react-externals
             name: example-react-externals
+          - path: ./examples/react-externals-web
+            name: example-react-externals-web
           - path: ./packages/web-platform/web-explorer
             name: web-explorer
           - path: ./packages/rspeedy/core
