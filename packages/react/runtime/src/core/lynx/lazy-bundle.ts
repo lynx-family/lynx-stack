@@ -333,7 +333,7 @@ export const loadLazyBundle: <
 })();
 
 function withSyncResolvers<T>() {
-  'background-only';
+  'background only';
 
   const resolver: {
     result: T | null;

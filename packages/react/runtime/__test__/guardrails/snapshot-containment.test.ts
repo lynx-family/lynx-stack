@@ -64,6 +64,19 @@ function walkFiles(dir: string, pattern = /\.(?:[cm]?[jt]sx?)$/): string[] {
   });
 }
 
+function getResolvedRelativeImports(file: string): string[] {
+  const source = fs.readFileSync(file, 'utf8');
+  const relativeImportPattern = /(?:from\s+|import\s*\(\s*|import\s+)['"](\.[^'"]+)['"]/g;
+  return Array.from(
+    source.matchAll(relativeImportPattern),
+    (match) => path.resolve(path.dirname(file), match[1]!),
+  );
+}
+
+function stripModuleExtension(filePath: string): string {
+  return filePath.replace(/\.(?:[cm]?[jt]sx?)$/, '');
+}
+
 describe('snapshot containment guardrails', () => {
   test('keeps legacy runtime implementation directories under snapshot backend', () => {
     for (const dir of legacySourceDirs) {
@@ -89,13 +102,14 @@ describe('snapshot containment guardrails', () => {
   });
 
   test('does not import old implementation paths outside the snapshot backend', () => {
-    const oldPathPattern = new RegExp(
-      String.raw`(?:from\s+|import\s*\(\s*)['"](?:\./|\../)+(?:${legacySourceDirPattern})(?:/|['"])`,
-    );
+    const legacyRootPrefixes = legacySourceDirs.map((dir) => `${path.join(srcRoot, dir)}${path.sep}`);
     const offenders = walkFiles(srcRoot)
       .filter((file) => !file.includes(`${path.sep}src${path.sep}snapshot${path.sep}`))
-      .filter((file) => !file.includes(`${path.sep}src${path.sep}element-template${path.sep}`))
-      .filter((file) => oldPathPattern.test(fs.readFileSync(file, 'utf8')))
+      .filter((file) =>
+        getResolvedRelativeImports(file).some((resolved) =>
+          legacyRootPrefixes.some((prefix) => resolved.startsWith(prefix))
+        )
+      )
       .map((file) => path.relative(runtimeRoot, file));
 
     expect(offenders).toEqual([]);
@@ -103,10 +117,16 @@ describe('snapshot containment guardrails', () => {
 
   test('prevents element-template from depending on snapshot private paths', () => {
     const elementTemplateRoot = path.join(srcRoot, 'element-template');
-    const forbiddenImportPattern =
-      /(?:from\s+|import\s*\(\s*)['"](?:\.\/|\.\.\/)+(?:snapshot|internal|root|lifecycle|renderToOpcodes)(?:\/|['"])/;
+    const snapshotPrefix = `${path.join(srcRoot, 'snapshot')}${path.sep}`;
+    const snapshotRootFiles = new Set(
+      ['document', 'index', 'internal', 'lynx', 'root', 'runtime-marker'].map((name) => path.join(srcRoot, name)),
+    );
     const offenders = walkFiles(elementTemplateRoot)
-      .filter((file) => forbiddenImportPattern.test(fs.readFileSync(file, 'utf8')))
+      .filter((file) =>
+        getResolvedRelativeImports(file).some((resolved) =>
+          resolved.startsWith(snapshotPrefix) || snapshotRootFiles.has(stripModuleExtension(resolved))
+        )
+      )
       .map((file) => path.relative(runtimeRoot, file));
 
     expect(offenders).toEqual([]);
@@ -135,13 +155,19 @@ describe('snapshot containment guardrails', () => {
   });
 
   test('prevents core and shared modules from depending on runtime backends', () => {
-    const backendImportPattern =
-      /(?:from\s+|import\s*\(\s*)['"](?:\.\/|\.\.\/)+(?:snapshot|element-template)(?:\/|['"])/;
+    const backendPrefixes = [
+      `${path.join(srcRoot, 'snapshot')}${path.sep}`,
+      `${path.join(srcRoot, 'element-template')}${path.sep}`,
+    ];
     const offenders = [
       ...walkFiles(coreRoot),
       ...walkFiles(sharedRoot),
     ]
-      .filter((file) => backendImportPattern.test(fs.readFileSync(file, 'utf8')))
+      .filter((file) =>
+        getResolvedRelativeImports(file).some((resolved) =>
+          backendPrefixes.some((prefix) => resolved.startsWith(prefix))
+        )
+      )
       .map((file) => path.relative(runtimeRoot, file));
 
     expect(offenders).toEqual([]);
